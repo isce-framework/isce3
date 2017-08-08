@@ -29,27 +29,27 @@ TERRASARX, and UAVSAR.
 Contents
 ========
 
-1.0 Software Dependencies
-1.1 Installing pyre and config
-1.2 Installing software dependencies with standard package managers
-1.3 Installing Virtual Machine Images with Dependencies Pre-Installed
-1.4 Installing dependencies with provided setup script
-1.5 Hints for installing dependencies by hand.
-1.6 Note On 'python3' Exectuable Convention
-2.0 Building ISCE
-2.1 Working with config's mm
-2.2 Install ISCE
-2.3 Setup Your Environment
-3.0 Running ISCE
-3.1 Running ISCE from the command line
-3.2 Running ISCE in the Python interpreter
-3.3 Running ISCE with steps
-3.4 NOTE on DEM
-4.0 Input Files
-5.0 Component Configurability
-5.1 Component Names: Family and Instance
-5.2 Component Configuration Files: Locations, Names, Priorities
-5.3 Component Configuration Help
+* 1.0 Software Dependencies
+* 1.1 Installing pyre and config
+* 1.2 Installing software dependencies with standard package managers
+* 1.3 Installing Virtual Machine Images with Dependencies Pre-Installed
+* 1.4 Installing dependencies with provided setup script
+* 1.5 Hints for installing dependencies by hand.
+* 1.6 Note On 'python3' Exectuable Convention
+* 2.0 Building ISCE
+* 2.1 Working with config's mm
+* 2.2 Install ISCE
+* 2.3 Setup Your Environment
+* 3.0 Running ISCE
+* 3.1 Running ISCE from the command line
+* 3.2 Running ISCE in the Python interpreter
+* 3.3 Running ISCE with steps
+* 3.4 NOTE on DEM
+* 4.0 Input Files
+* 5.0 Component Configurability
+* 5.1 Component Names: Family and Instance
+* 5.2 Component Configuration Files: Locations, Names, Priorities
+* 5.3 Component Configuration Help
 
 
 1.0 Software Dependencies
