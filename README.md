@@ -29,24 +29,24 @@ TERRASARX, and UAVSAR.
 Contents
 ========
 
-1.  Software Dependencies
+1.0 Software Dependencies
 1.1 Installing pyre and config
 1.2 Installing software dependencies with standard package managers
 1.3 Installing Virtual Machine Images with Dependencies Pre-Installed
 1.4 Installing dependencies with provided setup script
 1.5 Hints for installing dependencies by hand.
 1.6 Note On 'python3' Exectuable Convention
-2.  Building ISCE
+2.0 Building ISCE
 2.1 Working with config's mm
 2.2 Install ISCE
 2.3 Setup Your Environment
-3.  Running ISCE
+3.0 Running ISCE
 3.1 Running ISCE from the command line
 3.2 Running ISCE in the Python interpreter
 3.3 Running ISCE with steps
 3.4 NOTE on DEM
-4.  Input Files
-5.  Component Configurability
+4.0 Input Files
+5.0 Component Configurability
 5.1 Component Names: Family and Instance
 5.2 Component Configuration Files: Locations, Names, Priorities
 5.3 Component Configuration Help
@@ -57,24 +57,24 @@ Contents
 
 Basic:
 ------
-pyre-1.0
-config
-gcc >= 4.7
-fftw 3.2.2
-Python >= 3.3
-curl - for automatic DEM downloads
+* pyre-1.0
+* config
+* gcc >= 4.7
+* fftw 3.2.2
+* Python >= 3.3
+* curl - for automatic DEM downloads
 
 For a few sensor types:
 -----------------------
-gdal python bindings >= 2.0 - for RadarSAT2
-hdf5 >= 1.8.5 and h5py >= 1.3.1  - for COSMO-SkyMed
-spiceypy  - for RadarSAT1
+* gdal python bindings >= 2.0 - for RadarSAT2
+* hdf5 >= 1.8.5 and h5py >= 1.3.1  - for COSMO-SkyMed
+* spiceypy  - for RadarSAT1
 
 For mdx (image visualization tool):
 -----------------------------------
-Motif libraries and include files
-ImageMagick - for mdx production of kml file (advanced feature)
-grace - for mdx production of color table and line plots (advanced feature)
+* Motif libraries and include files
+* ImageMagick - for mdx production of kml file (advanced feature)
+* grace - for mdx production of color table and line plots (advanced feature)
 
 For the "unwrap 2 stage" option:
 --------------------------------
@@ -93,8 +93,8 @@ if you use easy_install or pip).
 
 Optional for splitSpectrum, GPUtopozero, and GPUgeo2rdr
 -------------------------------------------------------
-cython3 - must have an executable named cython3 (use a symbolic link)
-cuda - for GPUtopozero and GPUgeo2rdr
+* cython3 - must have an executable named cython3 (use a symbolic link)
+* cuda - for GPUtopozero and GPUgeo2rdr
 
 
 1.1 Installing pyre and config
@@ -214,18 +214,18 @@ Get the Python source code from http://www.python.org/ftp/python/3.3.5/Python-3.
 
 Untar the file Python-3.3.5.tgz using
 
-tar -zxvf Python-3.3.5.tgz
-cd Python-3.3.5
+> tar -zxvf Python-3.3.5.tgz
+> cd Python-3.3.5
 
 Then run
 
-./configure --prefix=<directory>
+> ./configure --prefix=<directory>
 
 where <directory> is the full path to an installation location where you
 have write access.  Then run,
 
-make
-make install
+> make
+> make install
 
 Building hdf5 [Only necessary for COSMO-SkyMed support]
 -------------
@@ -252,7 +252,7 @@ Else, if you already have gdal installed on your system but without python
 buindings, use easy_install corresponding to your python 3 version. You may
 need to setup LD_LIBRARY_PATH correctly to include path to libgdal.so
 
-easy_install GDAL
+> easy_install GDAL
 
 
 Building SpiceyPy  [Only necessary for Radarsat1]
