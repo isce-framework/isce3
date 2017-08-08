@@ -396,7 +396,7 @@ The full options for running insarApp.py with steps is the following:
 > insarApp.py insar.xml [--steps] [--start=<s>] [--end=<s>] [--dostep=<s>]
 ```
 
-where <s> is the name of a step.  To see the full ordered list of steps
+where ```<s>``` is the name of a step.  To see the full ordered list of steps
 the user can issue the following command:
 
 > insarApp.py insar.xml --steps --help
@@ -430,16 +430,18 @@ interpreter after a run and load the state of the workflow at any stage
 and introspect the objects in the flow and play with them as follows,
 for example:
 
-> > python3
-> >>> import isce
-> >>> f = open("PICKLE/formslc")
-> >>> import pickle
-> >>> a = pickle.load(f)
-> >>> o = f.getMasterOrbit()
-> >>> t, x, p, off = o._unpackOrbit()
-> >>> print t
-> >>> print x
-> >>>
+```
+> python3
+>>> import isce
+>>> f = open("PICKLE/formslc")
+>>> import pickle
+>>> a = pickle.load(f)
+>>> o = f.getMasterOrbit()
+>>> t, x, p, off = o._unpackOrbit()
+>>> print t
+>>> print x
+>>>
+```
 
 Someone with familiarity of the inner workings of ISCE can exploit
 this mode of interacting with the pickle object to discover much about
@@ -546,6 +548,7 @@ insarApp.xml
 
 20070215.xml
 ------------
+```
 <component name="Master">
     <property name="IMAGEFILE">
         /a/b/c/20070215/IMG-HH-ALPSRP056480670-H1.0__A
@@ -555,9 +558,11 @@ insarApp.xml
     </property>
     <property name="OUTPUT">20070215.raw </property>
 </component>
+```
 
 20061231.xml
 ------------
+```
 <component name="Slave">
     <property name="IMAGEFILE">
         /a/b/c/20061231/IMG-HH-ALPSRP049770670-H1.0__A
@@ -567,7 +572,7 @@ insarApp.xml
     </property>
     <property name="OUTPUT">20061231.raw</property>
 </component>
-
+```
 
 A "constant" tag can be used to define a constant for convenience inside
 an xml file.  For example, the dates '20070215' and '20061231' are used
@@ -579,6 +584,7 @@ example insarApp.xml file should make this clear:
 
 insarApp.xml
 ------------
+```
 <insarApp>
 <constant name="dir">/a/b/c </constant>
 <constant name="date1">20070215</constant>
@@ -607,6 +613,7 @@ insarApp.xml
     </component>
 </component>
 </insarApp>
+```
 
 Note: as of the time of this release constants do not work with catalog files.
 This will be fixed in a future release.
@@ -778,6 +785,7 @@ component tag 'name'.
 Example for SLC matching use of Nstage:
 
 Filename: insarapp_slcs_nstage.xml:
+
 ```
 <dummy>
 <component name="nstage">
