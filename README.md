@@ -356,12 +356,14 @@ are named appropriately.
 It is also possible to run ISCE from within the Python interpreter.  If you have
 an input file named insarInputs.xml you can do the following:
 
-> %> python3
-> >>> import isce
-> >>> from insarApp import Insar
-> >>> a = Insar(name="insarApp", cmdline="insarInputs.xml")
-> >>> a.configure()
-> >>> a.run()
+```
+%> python3
+>>> import isce
+>>> from insarApp import Insar
+>>> a = Insar(name="insarApp", cmdline="insarInputs.xml")
+>>> a.configure()
+>>> a.run()
+```
 
 (As explained in the Component Configurability section below, if the file
 insarInputs.xml were named insarApp.xml or insar.xml, then the 'cmdline' input
@@ -390,8 +392,9 @@ workflow at any predetermined point in the flow.
 
 The full options for running insarApp.py with steps is the following:
 
+```
 > insarApp.py insar.xml [--steps] [--start=<s>] [--end=<s>] [--dostep=<s>]
-
+```
 
 where <s> is the name of a step.  To see the full ordered list of steps
 the user can issue the following command:
@@ -469,29 +472,31 @@ The basic (ALOS) input file looks like this (indentation is optional):
 
 insarApp.xml:
 -------------
-* <insarApp>
-* <component name="insarApp">
-*     <property name="sensor name">ALOS</property>
-*     <component name="Master">
-*         <property name="IMAGEFILE">
-*             /a/b/c/20070215/IMG-HH-ALPSRP056480670-H1.0__A
-*         </property>
-*         <property name="LEADERFILE">
-*             /a/b/c/20070215/LED-ALPSRP056480670-H1.0__A
-*         </property>
-*         <property name="OUTPUT">20070215.raw </property>
-*     </component>
-*     <component name="Slave">
-*         <property name="IMAGEFILE">
-*             /a/b/c/20061231/IMG-HH-ALPSRP049770670-H1.0__A
-*         </property>
-*         <property name="LEADERFILE">
-*             /a/b/c/20061231/LED-ALPSRP049770670-H1.0__A
-*         </property>
-*         <property name="OUTPUT">20061231.raw </property>
-*     </component>
-* </component>
-* </insarApp>
+```
+<insarApp>
+ <component name="insarApp">
+     <property name="sensor name">ALOS</property>
+     <component name="Master">
+         <property name="IMAGEFILE">
+             /a/b/c/20070215/IMG-HH-ALPSRP056480670-H1.0__A
+         </property>
+         <property name="LEADERFILE">
+             /a/b/c/20070215/LED-ALPSRP056480670-H1.0__A
+         </property>
+         <property name="OUTPUT">20070215.raw </property>
+     </component>
+     <component name="Slave">
+         <property name="IMAGEFILE">
+             /a/b/c/20061231/IMG-HH-ALPSRP049770670-H1.0__A
+         </property>
+         <property name="LEADERFILE">
+             /a/b/c/20061231/LED-ALPSRP049770670-H1.0__A
+         </property>
+         <property name="OUTPUT">20061231.raw </property>
+     </component>
+ </component>
+</insarApp>
+```
 
 The data are enclosed between an opening tag and a closing tag.  The <insarApp>
 tag is closed by the </insarApp> tag for example.  This outer tag is necessary
@@ -525,41 +530,43 @@ between three files as follows:
 
 insarApp.xml
 ------------
-* <insarApp>
-*     <component name="insar">
-*         <property  name="Sensor name">ALOS</property>
-*         <component name="master">
-*             <catalog>20070215.xml</catalog>
-*         </component>
-*         <component name="slave">
-*             <catalog>20061231.xml</catalog>
-*         </component>
-*     </component>
-* </insarApp>
+```
+<insarApp>
+    <component name="insar">
+        <property  name="Sensor name">ALOS</property>
+        <component name="master">
+            <catalog>20070215.xml</catalog>
+        </component>
+        <component name="slave">
+            <catalog>20061231.xml</catalog>
+        </component>
+    </component>
+</insarApp>
+```
 
 20070215.xml
 ------------
-* <component name="Master">
-*     <property name="IMAGEFILE">
-*         /a/b/c/20070215/IMG-HH-ALPSRP056480670-H1.0__A
-*     </property>
-*     <property name="LEADERFILE">
-*         /a/b/c/20070215/LED-ALPSRP056480670-H1.0__A
-*     </property>
-*     <property name="OUTPUT">20070215.raw </property>
-* </component>
+<component name="Master">
+    <property name="IMAGEFILE">
+        /a/b/c/20070215/IMG-HH-ALPSRP056480670-H1.0__A
+    </property>
+    <property name="LEADERFILE">
+        /a/b/c/20070215/LED-ALPSRP056480670-H1.0__A
+    </property>
+    <property name="OUTPUT">20070215.raw </property>
+</component>
 
 20061231.xml
 ------------
-* <component name="Slave">
-*     <property name="IMAGEFILE">
-*         /a/b/c/20061231/IMG-HH-ALPSRP049770670-H1.0__A
-*     </property>
-*     <property name="LEADERFILE">
-*         /a/b/c/20061231/LED-ALPSRP049770670-H1.0__A
-*     </property>
-*     <property name="OUTPUT">20061231.raw</property>
-* </component>
+<component name="Slave">
+    <property name="IMAGEFILE">
+        /a/b/c/20061231/IMG-HH-ALPSRP049770670-H1.0__A
+    </property>
+    <property name="LEADERFILE">
+        /a/b/c/20061231/LED-ALPSRP049770670-H1.0__A
+    </property>
+    <property name="OUTPUT">20061231.raw</property>
+</component>
 
 
 A "constant" tag can be used to define a constant for convenience inside
@@ -572,34 +579,34 @@ example insarApp.xml file should make this clear:
 
 insarApp.xml
 ------------
-* <insarApp>
-* <constant name="dir">/a/b/c </constant>
-* <constant name="date1">20070215</constant>
-* <constant name="date2">20061231</constant>
-* <constant name="dir1">$dir$/$date1$</constant>
-* <constant name="dir2">$dir$/$date2$</constant>
-* <component name="insarApp">
-*     <property name="sensor name">ALOS</property>
-*     <component name="Master">
-*         <property name="IMAGEFILE">
-*             $dir1$/IMG-HH-ALPSRP056480670-H1.0__A
-*         </property>
-*         <property name="LEADERFILE">
-*             $dir1$/LED-ALPSRP056480670-H1.0__A
-*         </property>
-*         <property name="OUTPUT">$date1$.raw </property>
-*     </component>
-*     <component name="Slave">
-*         <property name="IMAGEFILE">
-*             $dir2$/IMG-HH-ALPSRP049770670-H1.0__A
-*         </property>
-*         <property name="LEADERFILE">
-*             $dir2$/LED-ALPSRP049770670-H1.0__A
-*         </property>
-*         <property name="OUTPUT">$date2$.raw </property>
-*     </component>
-* </component>
-* </insarApp>
+<insarApp>
+<constant name="dir">/a/b/c </constant>
+<constant name="date1">20070215</constant>
+<constant name="date2">20061231</constant>
+<constant name="dir1">$dir$/$date1$</constant>
+<constant name="dir2">$dir$/$date2$</constant>
+<component name="insarApp">
+    <property name="sensor name">ALOS</property>
+    <component name="Master">
+        <property name="IMAGEFILE">
+            $dir1$/IMG-HH-ALPSRP056480670-H1.0__A
+        </property>
+        <property name="LEADERFILE">
+            $dir1$/LED-ALPSRP056480670-H1.0__A
+        </property>
+        <property name="OUTPUT">$date1$.raw </property>
+    </component>
+    <component name="Slave">
+        <property name="IMAGEFILE">
+            $dir2$/IMG-HH-ALPSRP049770670-H1.0__A
+        </property>
+        <property name="LEADERFILE">
+            $dir2$/LED-ALPSRP049770670-H1.0__A
+        </property>
+        <property name="OUTPUT">$date2$.raw </property>
+    </component>
+</component>
+</insarApp>
 
 Note: as of the time of this release constants do not work with catalog files.
 This will be fixed in a future release.
@@ -771,12 +778,13 @@ component tag 'name'.
 Example for SLC matching use of Nstage:
 
 Filename: insarapp_slcs_nstage.xml:
-* <dummy>
-* <component name="nstage">
-*     <property name="ACROSS_GROSS_OFFSET">150</property>
-* </component>
-* </dummy>
-
+```
+<dummy>
+<component name="nstage">
+    <property name="ACROSS_GROSS_OFFSET">150</property>
+</component>
+</dummy>
+```
 
 
 END OF FILE
