@@ -1,6 +1,5 @@
-================================================================================
 ISCE - Insar Scientific Computing Environment
-================================================================================
+=============================================
 
 This is the Interferometric synthetic aperture radar Scientific Computing
 Environment (ISCE).  Its initial development was funded by NASA's Earth Science
@@ -26,9 +25,9 @@ At this time the sensors that are supported are the following: ALOS, ALOS2,
 COSMO_SKYMED, ENVISAT, ERS, KOMPSAT5, RADARSAT1, RADARSAT2, RISAT1, Sentinel1,
 TERRASARX, and UAVSAR.
 
-================================================================================
+
 Contents
-================================================================================
+========
 
 1.  Software Dependencies
 1.1 Installing pyre and config
@@ -52,9 +51,9 @@ Contents
 5.2 Component Configuration Files: Locations, Names, Priorities
 5.3 Component Configuration Help
 
-================================================================================
-1. Software Dependencies
-================================================================================
+
+1.0 Software Dependencies
+=========================
 
 Basic:
 ------
@@ -93,20 +92,21 @@ pulp.py is on your PYTHONPATH environment variable (it should be the case
 if you use easy_install or pip).
 
 Optional for splitSpectrum, GPUtopozero, and GPUgeo2rdr
+-------------------------------------------------------
 cython3 - must have an executable named cython3 (use a symbolic link)
 cuda - for GPUtopozero and GPUgeo2rdr
 
---------------------------------------------------------------------------------
+
 1.1 Installing pyre and config
---------------------------------------------------------------------------------
+------------------------------
 
 Detailed instructions for installing pyre and config are found at:
 
 pyre.orthologue.com/install
 
---------------------------------------------------------------------------------
+
 1.2 Installing software dependencies with standard package managers
---------------------------------------------------------------------------------
+-------------------------------------------------------------------
 
 The easiest way to install most of these is with package managers such as
 'apt-get' on Linux systems or 'macports' on MacOsX or anaconda.  To use these,
@@ -114,8 +114,7 @@ however, may require that you have superuser permission on your computer. The
 following URL gives additional information on installing prerequisites for
 ISCE:
 
-https://winsar.unavco.org/portal/wiki/Manual%20installation%20using%20repository%\
-20managers/
+https://winsar.unavco.org/portal/wiki/Manual%20installation%20using%20repository%20managers/
 
 If it is not possible for you to install the software yourself and you
 can't convince the System Administrator on your computer to install the
@@ -129,9 +128,9 @@ When you have installed the dependencies you can skip the other sections about
 installing the dependencies and read Section 1.6 about the 'python3' convention
 and then Section 2 on building ISCE and configuring your environment.
 
---------------------------------------------------------------------------------
+
 1.3 Installing Virtual Machine Images with Dependencies Pre-Installed
---------------------------------------------------------------------------------
+---------------------------------------------------------------------
 
 If you don't have superuser privileges on your machine and your system is not
 up to date with the software dependencies required to use ISCE, then you can
@@ -142,9 +141,9 @@ Simple link: http://tinyurl.com/iscevm
 
 Instructions on how to install the Virtual Machines are given there.
 
---------------------------------------------------------------------------------
+
 1.4 Installing dependencies with provided setup script
---------------------------------------------------------------------------------
+------------------------------------------------------
 
 This distribution includes a very **experimental** script that is designed to
 download, build, and install all relevant packages needed for ISCE (except for
@@ -181,9 +180,9 @@ Once all these packages are built, you must setup your PATH and LD_LIBRARY_PATH
 variables in the unix shell to ensure that these packages are used for compiling
 and linking rather than the default system packages.
 
---------------------------------------------------------------------------------
+
 1.5 Hints for installing dependencies by hand.
---------------------------------------------------------------------------------
+----------------------------------------------
 
 If you would prefer to install all these packages by hand, follow this procedure:
 
@@ -211,8 +210,7 @@ make install
 
 Building Python
 ---------------
-Get the Python source code from http://www.python.org/ftp/python/3.3.5/Python-3.3.5.t\
-gz
+Get the Python source code from http://www.python.org/ftp/python/3.3.5/Python-3.3.5.tgz
 
 Untar the file Python-3.3.5.tgz using
 
@@ -240,7 +238,7 @@ http://code.google.com/p/h5py/downloads/detail?name=h5py-1.3.1.tar.gz
 
 
 Building gdal-bindings [Only necessary for Radarsat2, Tandem-X and Sentinel 1A]
-----------------
+----------------------
 On most linux distributions, gdal can installed along with its python bindings
 using standard repository management tools.
 
@@ -258,7 +256,7 @@ easy_install GDAL
 
 
 Building SpiceyPy  [Only necessary for Radarsat1]
-----------------
+-----------------
 JPL's CSPICE library (http://naif.jpl.nasa.gov/naif/toolkit_C.html) is needed
 for this. Follow instructions at https://github.com/Apollo117/SpiceyPy to
 install SpiceyPy, after installing CSPICE.
@@ -273,9 +271,9 @@ the component/isceobj/Orbit/db/kernels.list file.  You should download those
 files into that directory (or else make soft links in that directory to where
 you download them) so that ISCE can find them in the place it expects.
 
---------------------------------------------------------------------------------
+
 1.6 Note On 'python3' Executable Convention
---------------------------------------------------------------------------------
+-------------------------------------------
 
 We follow the convention of most package managers in using the executable
 'python3' for Python3.x and 'python' for Python2.x.  This makes it easy to turn
@@ -289,13 +287,13 @@ have the command 'python3' on your path.  Then you will be able to execute an
 ISCE application such as 'insarApp.py as "> insarApp.py" rather than as
 "> /path-to-Python3/python insarApp.py".
 
-================================================================================
-2. Building ISCE
-================================================================================
 
---------------------------------------------------------------------------------
+2.0 Building ISCE
+=================
+
+
 2.1 Working with config's mm
---------------------------------------------------------------------------------
+----------------------------
 
 The config package builder uses the command "mm" to build and install the pyre
 and isce codes. To add non-standard paths to mm, such as the location of pyre,
@@ -304,20 +302,20 @@ pyre-1.0 is a dependency whose path must be know to mm before building isce.
 Go to the pyre-1.0 top directory and then issue the command, "mm.paths" at the
 command line.  That is all that is necessary to inform mm of the path.
 
---------------------------------------------------------------------------------
+
 2.2 Installing ISCE with mm
---------------------------------------------------------------------------------
+---------------------------
 
 To install ISCE, simply enter the top level of the ISCE directory and issue the
 command "mm".  The directory products will contain the installed libraries,
 headers, and Python applications and components.
 
---------------------------------------------------------------------------------
+
 2.3 Set up your environment
---------------------------------------------------------------------------------
+---------------------------
 
 Add the isce "products/packages" directory to your PYTHONPATH.
 
-==============================================================================
+
 END OF FILE
-==============================================================================
+===========
