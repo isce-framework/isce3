@@ -317,8 +317,8 @@ headers, and Python applications and components.
 Add the isce "products/packages" directory to your PYTHONPATH.
 
 
-3. Running ISCE
-===============
+3.0 Running ISCE
+================
 
 
 3.1 Running ISCE from the command line
@@ -456,14 +456,56 @@ on a subsequent run with --dostep or --start.
   (which is the case for SRTM DEMs) it will be converted into  WGS84.
   A new file with suffix wgs84 is created. If it is already in WGS84
   nothing happens.
-- If no dem component is specified in input a EGM96 will be downloaded
-  and the it will be converted into WGS84. There will be then two files,
+
+- If no dem component is specified in inputs a EGM96 will be downloaded
+  and then it will be converted into WGS84. There will be then two files,
   an EGM96 with no suffix, and the WGS84 with the wgs84 suffix.
 
+- To enable automatic downloading of dems, you need to have a user name
+and password from urs.earthdata.nasa.gov and you need to include LPDAAC
+applications to your account.
+* a. If you don't already have an earthdata username and password,
+you can set them at https://urs.earthdata.nasa.gov/
+* b. If you already have an earthdata account, please ensure that
+you add LPDAAC applications to your account:
+* Login to earthdata here: https://urs.earthdata.nasa.gov/home
+* Click on my applications on the profile
+* Click on “Add More Applications”
+* Search for “LP DAAC”
+* Select “LP DAAC Data Pool” and “LP DAAC OpenDAP” and approve.
+
+- create a file in your HOME directory named **.netrc** with the following 3
+lines:
+
+```
+machine urs.earthdata.nasa.gov
+   login your_earthdata_login_name
+   password your_earthdata_password
+```
+
+3. set permissions to prevent others from viewing your credentials:
+
+> chmod go-rwx .netrc
 
 
-4. Input Files
-==============
+- A note on making stitched dems and water masks globally available. Stitched
+dems and water body masks will be stored in and used from a directory indicated
+by the environment variable, $DEMDB, if you have defined this environment
+variable with a value pointing to a path where you want to store stitched dems
+and waterbody masks. The stitched dem or water mask will be globally available
+automatically (so long as the $DEMDB environment variable is valid) without
+needing to specify any information about the dem in your input files for ISCE
+processing applications. If you use dem.py or watermask.py, the stitched
+products are left in the directory where you run these apps.  If you want them
+to be globally available, then either run demdb.py or wbd.py (which will place
+the dems and water body masks in the $DEMDB directory if defined).  If you
+move dems and waterbody masks to the $DEMDB directory from other directories
+you will need to modify their meta data files (.xml) to indicate the new
+location.
+
+
+4.0 Input Files
+===============
 
 Input files are structured 'xml' documents.  This section will briefly
 introduce their structure using a special case appropriate for processing ALOS
@@ -619,8 +661,8 @@ Note: as of the time of this release constants do not work with catalog files.
 This will be fixed in a future release.
 
 
-5. Component Configurability
-============================
+5.0 Component Configurability
+=============================
 
 In the examples for running insarApp.py (Section 3.1 and 3.3 above) the input
 data were entered by giving the name of an 'xml' file on the command line.  The
