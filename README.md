@@ -317,13 +317,12 @@ headers, and Python applications and components.
 Add the isce "products/packages" directory to your PYTHONPATH.
 
 
-================================================================================
 3. Running ISCE
-================================================================================
+===============
 
----------------------------------------------------------------------------------
+
 3.1 Running ISCE from the command line
----------------------------------------------------------------------------------
+--------------------------------------
 
 Copy the example xml files located in the example directory in the ISCE source
 tree to a working directory and modify them to point to your own data.  Run
@@ -373,9 +372,9 @@ exists because the code defining insarApp.py gives all instances of it the
 'family' name 'insar'.  See the Component Configurability section below for
 details.)
 
----------------------------------------------------------------------------------
+
 3.3 Running ISCE with steps
----------------------------------------------------------------------------------
+---------------------------
 
 An other way to run ISCE is the following:
 
@@ -444,9 +443,9 @@ this mode of interacting with the pickle object to discover much about
 the workflow states and also to edit the state to see its effect
 on a subsequent run with --dostep or --start.
 
----------------------------------------------------------------------------------
+
 3.4 NOTE on DEM
----------------------------------------------------------------------------------
+---------------
 
 - If a dem component is provided but the dem is the EGM96 geo reference
   (which is the case for SRTM DEMs) it will be converted into  WGS84.
@@ -457,9 +456,9 @@ on a subsequent run with --dostep or --start.
   an EGM96 with no suffix, and the WGS84 with the wgs84 suffix.
 
 
-================================================================================
+
 4. Input Files
-================================================================================
+==============
 
 Input files are structured 'xml' documents.  This section will briefly
 introduce their structure using a special case appropriate for processing ALOS
@@ -470,29 +469,29 @@ The basic (ALOS) input file looks like this (indentation is optional):
 
 insarApp.xml:
 -------------
-> <insarApp>
-> <component name="insarApp">
->     <property name="sensor name">ALOS</property>
->     <component name="Master">
->         <property name="IMAGEFILE">
->             /a/b/c/20070215/IMG-HH-ALPSRP056480670-H1.0__A
->         </property>
->         <property name="LEADERFILE">
->             /a/b/c/20070215/LED-ALPSRP056480670-H1.0__A
->         </property>
->         <property name="OUTPUT">20070215.raw </property>
->     </component>
->     <component name="Slave">
->         <property name="IMAGEFILE">
->             /a/b/c/20061231/IMG-HH-ALPSRP049770670-H1.0__A
->         </property>
->         <property name="LEADERFILE">
->             /a/b/c/20061231/LED-ALPSRP049770670-H1.0__A
->         </property>
->         <property name="OUTPUT">20061231.raw </property>
->     </component>
-> </component>
-> </insarApp>
+* <insarApp>
+* <component name="insarApp">
+*     <property name="sensor name">ALOS</property>
+*     <component name="Master">
+*         <property name="IMAGEFILE">
+*             /a/b/c/20070215/IMG-HH-ALPSRP056480670-H1.0__A
+*         </property>
+*         <property name="LEADERFILE">
+*             /a/b/c/20070215/LED-ALPSRP056480670-H1.0__A
+*         </property>
+*         <property name="OUTPUT">20070215.raw </property>
+*     </component>
+*     <component name="Slave">
+*         <property name="IMAGEFILE">
+*             /a/b/c/20061231/IMG-HH-ALPSRP049770670-H1.0__A
+*         </property>
+*         <property name="LEADERFILE">
+*             /a/b/c/20061231/LED-ALPSRP049770670-H1.0__A
+*         </property>
+*         <property name="OUTPUT">20061231.raw </property>
+*     </component>
+* </component>
+* </insarApp>
 
 The data are enclosed between an opening tag and a closing tag.  The <insarApp>
 tag is closed by the </insarApp> tag for example.  This outer tag is necessary
@@ -526,41 +525,41 @@ between three files as follows:
 
 insarApp.xml
 ------------
-> <insarApp>
->     <component name="insar">
->         <property  name="Sensor name">ALOS</property>
->         <component name="master">
->             <catalog>20070215.xml</catalog>
->         </component>
->         <component name="slave">
->             <catalog>20061231.xml</catalog>
->         </component>
->     </component>
-> </insarApp>
+* <insarApp>
+*     <component name="insar">
+*         <property  name="Sensor name">ALOS</property>
+*         <component name="master">
+*             <catalog>20070215.xml</catalog>
+*         </component>
+*         <component name="slave">
+*             <catalog>20061231.xml</catalog>
+*         </component>
+*     </component>
+* </insarApp>
 
 20070215.xml
 ------------
-> <component name="Master">
->     <property name="IMAGEFILE">
->         /a/b/c/20070215/IMG-HH-ALPSRP056480670-H1.0__A
->     </property>
->     <property name="LEADERFILE">
->         /a/b/c/20070215/LED-ALPSRP056480670-H1.0__A
->     </property>
->     <property name="OUTPUT">20070215.raw </property>
-> </component>
+* <component name="Master">
+*     <property name="IMAGEFILE">
+*         /a/b/c/20070215/IMG-HH-ALPSRP056480670-H1.0__A
+*     </property>
+*     <property name="LEADERFILE">
+*         /a/b/c/20070215/LED-ALPSRP056480670-H1.0__A
+*     </property>
+*     <property name="OUTPUT">20070215.raw </property>
+* </component>
 
 20061231.xml
 ------------
-> <component name="Slave">
->     <property name="IMAGEFILE">
->         /a/b/c/20061231/IMG-HH-ALPSRP049770670-H1.0__A
->     </property>
->     <property name="LEADERFILE">
->         /a/b/c/20061231/LED-ALPSRP049770670-H1.0__A
->     </property>
->     <property name="OUTPUT">20061231.raw</property>
-> </component>
+* <component name="Slave">
+*     <property name="IMAGEFILE">
+*         /a/b/c/20061231/IMG-HH-ALPSRP049770670-H1.0__A
+*     </property>
+*     <property name="LEADERFILE">
+*         /a/b/c/20061231/LED-ALPSRP049770670-H1.0__A
+*     </property>
+*     <property name="OUTPUT">20061231.raw</property>
+* </component>
 
 
 A "constant" tag can be used to define a constant for convenience inside
@@ -573,41 +572,41 @@ example insarApp.xml file should make this clear:
 
 insarApp.xml
 ------------
-> <insarApp>
-> <constant name="dir">/a/b/c </constant>
-> <constant name="date1">20070215</constant>
-> <constant name="date2">20061231</constant>
-> <constant name="dir1">$dir$/$date1$</constant>
-> <constant name="dir2">$dir$/$date2$</constant>
-> <component name="insarApp">
->     <property name="sensor name">ALOS</property>
->     <component name="Master">
->         <property name="IMAGEFILE">
->             $dir1$/IMG-HH-ALPSRP056480670-H1.0__A
->         </property>
->         <property name="LEADERFILE">
->             $dir1$/LED-ALPSRP056480670-H1.0__A
->         </property>
->         <property name="OUTPUT">$date1$.raw </property>
->     </component>
->     <component name="Slave">
->         <property name="IMAGEFILE">
->             $dir2$/IMG-HH-ALPSRP049770670-H1.0__A
->         </property>
->         <property name="LEADERFILE">
->             $dir2$/LED-ALPSRP049770670-H1.0__A
->         </property>
->         <property name="OUTPUT">$date2$.raw </property>
->     </component>
-> </component>
-> </insarApp>
+* <insarApp>
+* <constant name="dir">/a/b/c </constant>
+* <constant name="date1">20070215</constant>
+* <constant name="date2">20061231</constant>
+* <constant name="dir1">$dir$/$date1$</constant>
+* <constant name="dir2">$dir$/$date2$</constant>
+* <component name="insarApp">
+*     <property name="sensor name">ALOS</property>
+*     <component name="Master">
+*         <property name="IMAGEFILE">
+*             $dir1$/IMG-HH-ALPSRP056480670-H1.0__A
+*         </property>
+*         <property name="LEADERFILE">
+*             $dir1$/LED-ALPSRP056480670-H1.0__A
+*         </property>
+*         <property name="OUTPUT">$date1$.raw </property>
+*     </component>
+*     <component name="Slave">
+*         <property name="IMAGEFILE">
+*             $dir2$/IMG-HH-ALPSRP049770670-H1.0__A
+*         </property>
+*         <property name="LEADERFILE">
+*             $dir2$/LED-ALPSRP049770670-H1.0__A
+*         </property>
+*         <property name="OUTPUT">$date2$.raw </property>
+*     </component>
+* </component>
+* </insarApp>
 
 Note: as of the time of this release constants do not work with catalog files.
 This will be fixed in a future release.
 
-================================================================================
+
 5. Component Configurability
-================================================================================
+============================
 
 In the examples for running insarApp.py (Section 3.1 and 3.3 above) the input
 data were entered by giving the name of an 'xml' file on the command line.  The
@@ -772,11 +771,11 @@ component tag 'name'.
 Example for SLC matching use of Nstage:
 
 Filename: insarapp_slcs_nstage.xml:
-> <dummy>
-> <component name="nstage">
->     <property name="ACROSS_GROSS_OFFSET">150</property>
-> </component>
-> </dummy>
+* <dummy>
+* <component name="nstage">
+*     <property name="ACROSS_GROSS_OFFSET">150</property>
+* </component>
+* </dummy>
 
 
 
