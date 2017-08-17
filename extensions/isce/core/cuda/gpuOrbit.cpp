@@ -1,0 +1,211 @@
+//
+// Author: Joshua Cohen
+// Copyright 2017
+//
+// This is a somewhat GPU-optimized implementation of isceLib's Orbit class (stripped down), and can only be
+// constructed by copy-construction from an existing Orbit object
+
+#include <cuda_runtime.h>
+#include "gpuOrbit.h"
+#include "Orbit.h"
+using isceLib::gpuOrbit;
+using isceLib::Orbit;
+
+// ONLY VALID CONSTRUCTOR FOR THE OBJECT SINCE WE DON'T WANT TO MAKE ANOTHER HOST-SIDE COPY OF THE DATA.
+// As an added bonus this cleans up the memory management immensely!
+gpuOrbit::gpuOrbit(const Orbit &orb) : 
+    nVectors(orb.nVectors),
+    owner(true) {
+    cudaMalloc((double**)&UTCtime, nVectors*sizeof(double));
+    cudaMalloc((double**)&position, 3*nVectors*sizeof(double));
+    cudaMalloc((double**)&velocity, 3*nVectors*sizeof(double));
+    cudaMemcpy(UTCtime, &(orb.UTCtime[0]), nVectors*sizeof(double));
+    cudaMemcpy(position, &(orb.position[0]), 3*nVectors*sizeof(double));
+    cudaMemcpy(velocity, &(orb.velocity[0]), 3*nVectors*sizeof(double));
+}
+
+// Need to make sure that this copy of the gpuOrbit object is allowed to dealloc the memory (i.e. will only happen on the host since
+// we want the device copy to leave its internals alone)
+gpuOrbit::~gpuOrbit() {
+    if (owner) {
+        cudaFree(UTCtime);
+        cudaFree(position);
+        cudaFree(velocity);
+    }
+}
+
+__device__ int gpuOrbit::interpolateWGS84Orbit(double tintp, double *opos, double *ovel) {
+    if (nVectors < 4) return 1;
+    if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) return 1;
+    int idx = -1;
+    for (int i=0; i<nVectors; i++) {
+        if ((UTCtime[i] >= tintp) && (idx == -1)) {
+            idx = min(max(i-2, 0), nVectors-4);
+        }
+    }
+    
+    double f0[4];
+    double f1[4] = {tintp - UTCtime[idx], tintp - UTCtime[idx+1], tintp - UTCtime[idx+2], tintp - UTCtime[idx+3]};
+    double sum = (1. / (UTCtime[idx] - UTCtime[idx+1])) + (1. / (UTCtime[idx] - UTCtime[idx+2])) + (1. / (UTCtime[idx] - UTCtime[idx+3]));
+    f0[0] = 1. - (2. * (tintp - UTCtime[idx]) * sum);
+    sum = (1. / (UTCtime[idx+1] - UTCtime[idx])) + (1. / (UTCtime[idx+1] - UTCtime[idx+2])) + (1. / (UTCtime[idx+1] - UTCtime[idx+3]));
+    f0[1] = 1. - (2. * (tintp - UTCtime[idx+1]) * sum);
+    sum = (1. / (UTCtime[idx+2] - UTCtime[idx])) + (1. / (UTCtime[idx+2] - UTCtime[idx+1])) + (1. / (UTCtime[idx+2] - UTCtime[idx+3]));
+    f0[2] = 1. - (2. * (tintp - UTCtime[idx+2]) * sum);
+    sum = (1. / (UTCtime[idx+3] - UTCtime[idx])) + (1. / (UTCtime[idx+3] - UTCtime[idx+1])) + (1. / (UTCtime[idx+3] - UTCtime[idx+2]));
+    f0[3] = 1. - (2. * (tintp - UTCtime[idx+3]) * sum);
+
+    double h[4] = {((tintp - UTCtime[idx+1]) / (UTCtime[idx] - UTCtime[idx+1])) * ((tintp - UTCtime[idx+2]) / (UTCtime[idx] - UTCtime[idx+2])) * 
+                    ((tintp - UTCtime[idx+3]) / (UTCtime[idx] - UTCtime[idx+3])),
+                   ((tintp - UTCtime[idx]) / (UTCtime[idx+1] - UTCtime[idx])) * ((tintp - UTCtime[idx+2]) / (UTCtime[idx+1] - UTCtime[idx+2])) * 
+                    ((tintp - UTCtime[idx+3]) / (UTCtime[idx+1] - UTCtime[idx+3])),
+                   ((tintp - UTCtime[idx]) / (UTCtime[idx+2] - UTCtime[idx])) * ((tintp - UTCtime[idx+1]) / (UTCtime[idx+2] - UTCtime[idx+1])) *
+                    ((tintp - UTCtime[idx+3]) / (UTCtime[idx+2] - UTCtime[idx+3])),
+                   ((tintp - UTCtime[idx]) / (UTCtime[idx+3] - UTCtime[idx])) * ((tintp - UTCtime[idx+1]) / (UTCtime[idx+3] - UTCtime[idx+1])) * 
+                    ((tintp - UTCtime[idx+2]) / (UTCtime[idx+3] - UTCtime[idx+2]))};
+
+    double hdot[4];
+    sum = ((tintp - UTCtime[idx+2]) / (UTCtime[idx] - UTCtime[idx+2])) * ((tintp - UTCtime[idx+3]) / (UTCtime[idx] - UTCtime[idx+3])) * 
+            (1. / (UTCtime[idx] - UTCtime[idx+1]));
+    sum += ((tintp - UTCtime[idx+1]) / (UTCtime[idx] - UTCtime[idx+1])) * ((tintp - UTCtime[idx+3]) / (UTCtime[idx] - UTCtime[idx+3])) * 
+            (1. / (UTCtime[idx] - UTCtime[idx+2]));
+    sum += ((tintp - UTCtime[idx+1]) / (UTCtime[idx] - UTCtime[idx+1])) * ((tintp - UTCtime[idx+2]) / (UTCtime[idx] - UTCtime[idx+2])) * 
+            (1. / (UTCtime[idx] - UTCtime[idx+3]));
+    hdot[0] = sum;
+
+    sum = ((tintp - UTCtime[idx+2]) / (UTCtime[idx+1] - UTCtime[idx+2])) * ((tintp - UTCtime[idx+3]) / (UTCtime[idx+1] - UTCtime[idx+3])) *
+            (1. / (UTCtime[idx+1] - UTCtime[idx]));
+    sum += ((tintp - UTCtime[idx]) / (UTCtime[idx+1] - UTCtime[idx])) * ((tintp - UTCtime[idx+3]) / (UTCtime[idx+1] - UTCtime[idx+3])) * 
+            (1. / (UTCtime[idx+1] - UTCtime[idx+2]));
+    sum += ((tintp - UTCtime[idx]) / (UTCtime[idx+1] - UTCtime[idx])) * ((tintp - UTCtime[idx+2]) / (UTCtime[idx+1] - UTCtime[idx+2])) *
+            (1. / (UTCtime[idx+1] - UTCtime[idx+3]));
+    hdot[1] = sum;
+
+    sum = ((tintp - UTCtime[idx+1]) / (UTCtime[idx+2] - UTCtime[idx+1])) * ((tintp - UTCtime[idx+3]) / (UTCtime[idx+2] - UTCtime[idx+3])) * 
+            (1. / (UTCtime[idx+2] - UTCtime[idx]));
+    sum += ((tintp - UTCtime[idx]) / (UTCtime[idx+2] - UTCtime[idx])) * ((tintp - UTCtime[idx+3]) / (UTCtime[idx+2] - UTCtime[idx+3])) * 
+            (1. / (UTCtime[idx+2] - UTCtime[idx+1]));
+    sum += ((tintp - UTCtime[idx]) / (UTCtime[idx+2] - UTCtime[idx])) * ((tintp - UTCtime[idx+1]) / (UTCtime[idx+2] - UTCtime[idx+1])) * 
+            (1. / (UTCtime[idx+2] - UTCtime[idx+3]));
+    hdot[2] = sum;
+
+    sum = ((tintp - UTCtime[idx+1]) / (UTCtime[idx+3] - UTCtime[idx+1])) * ((tintp - UTCtime[idx+2]) / (UTCtime[idx+3] - UTCtime[idx+2])) * 
+            (1. / (UTCtime[idx+3] - UTCtime[idx]));
+    sum += ((tintp - UTCtime[idx]) / (UTCtime[idx+3] - UTCtime[idx])) * ((tintp - UTCtime[idx+2]) / (UTCtime[idx+3] - UTCtime[idx+2])) * 
+            (1. / (UTCtime[idx+3] - UTCtime[idx+1]));
+    sum += ((tintp - UTCtime[idx]) / (UTCtime[idx+3] - UTCtime[idx])) * ((tintp - UTCtime[idx+1]) / (UTCtime[idx+3] - UTCtime[idx+1])) * 
+            (1. / (UTCtime[idx+3] - UTCtime[idx+2]));
+    hdot[3] = sum;
+
+    double g0[4];
+    double g1[4] = {h[0] + (2. * (tintp - UTCtime[idx]) * hdot[0]), h[1] + (2. * (tintp - UTCtime[idx+1]) * hdot[1]), 
+                    h[2] + (2. * (tintp - UTCtime[idx+2]) * hdot[2]), h[3] + (2. * (tintp - UTCtime[idx+3]) * hdot[3])};
+    sum = (1. / (UTCtime[idx] - UTCtime[idx+1])) + (1. / (UTCtime[idx] - UTCtime[idx+2])) + (1. / (UTCtime[idx] - UTCtime[idx+3]));
+    g0[0] = 2. * ((f0[0] * hdot[0]) - (h[0] * sum));
+    sum = (1. / (UTCtime[idx+1] - UTCtime[idx])) + (1. / (UTCtime[idx+1] - UTCtime[idx+2])) + (1. / (UTCtime[idx+1] - UTCtime[idx+3]));
+    g0[1] = 2. * ((f0[1] * hdot[1]) - (h[1] * sum));
+    sum = (1. / (UTCtime[idx+2] - UTCtime[idx])) + (1. / (UTCtime[idx+2] - UTCtime[idx+1])) + (1. / (UTCtime[idx+2] - UTCtime[idx+3]));
+    g0[2] = 2. * ((f0[2] * hdot[2]) - (h[2] * sum));
+    sum = (1. / (UTCtime[idx+3] - UTCtime[idx])) + (1. / (UTCtime[idx+3] - UTCtime[idx+1])) + (1. / (UTCtime[idx+3] - UTCtime[idx+2]));
+    g0[3] = 2. * ((f0[3] * hdot[3]) - (h[3] * sum));
+
+    opos[0] = (((position[3*idx] * f0[0]) + (velocity[3*idx] * f1[0])) * h[0] * h[0]) + 
+                (((position[3*(idx+1)] * f0[1]) + (velocity[3*(idx+1)] * f1[1])) * h[1] * h[1]) +
+                (((position[3*(idx+2)] * f0[2]) + (velocity[3*(idx+2)] * f1[2])) * h[2] * h[2]) + 
+                (((position[3*(idx+3)] * f0[3]) + (velocity[3*(idx+3)] * f1[3])) * h[3] * h[3]);
+    opos[1] = (((position[3*idx+1] * f0[0]) + (velocity[3*idx+1] * f1[0])) * h[0] * h[0]) +
+                (((position[3*(idx+1)+1] * f0[1]) + (velocity[3*(idx+1)+1] * f1[1])) * h[1] * h[1]) +
+                (((position[3*(idx+2)+1] * f0[2]) + (velocity[3*(idx+2)+1] * f1[2])) * h[2] * h[2]) +
+                (((position[3*(idx+3)+1] * f0[3]) + (velocity[3*(idx+3)+1] * f1[3])) * h[3] * h[3]);
+    opos[2] = (((position[3*idx+2] * f0[0]) + (velocity[3*idx+2] * f1[0])) * h[0] * h[0]) +
+                (((position[3*(idx+1)+2] * f0[1]) + (velocity[3*(idx+1)+2] * f1[1])) * h[1] * h[1]) +
+                (((position[3*(idx+2)+2] * f0[2]) + (velocity[3*(idx+2)+2] * f1[2])) * h[2] * h[2]) +
+                (((position[3*(idx+3)+2] * f0[3]) + (velocity[3*(idx+3)+2] * f1[3])) * h[3] * h[3]);
+
+    ovel[0] = (((position[3*idx] * g0[0]) + (velocity[3*idx] * g1[0])) * h[0]) +
+                (((position[3*(idx+1)] * g0[1]) + (velocity[3*(idx+1)] * g1[1])) * h[1]) +
+                (((position[3*(idx+2)] * g0[2]) + (velocity[3*(idx+2)] * g1[2])) * h[2]) +
+                (((position[3*(idx+3)] * g0[3]) + (velocity[3*(idx+3)] * g1[3])) * h[3]);
+    ovel[1] = (((position[3*idx+1] * g0[0]) + (velocity[3*idx+1] * g1[0])) * h[0]) +
+                (((position[3*(idx+1)+1] * g0[1]) + (velocity[3*(idx+1)+1] * g1[1])) * h[1]) +
+                (((position[3*(idx+2)+1] * g0[2]) + (velocity[3*(idx+2)+1] * g1[2])) * h[2]) +
+                (((position[3*(idx+3)+1] * g0[3]) + (velocity[3*(idx+3)+1] * g1[3])) * h[3]);
+    ovel[2] = (((position[3*idx+2] * g0[0]) + (velocity[3*idx+2] * g1[0])) * h[0]) +
+                (((position[3*(idx+1)+2] * g0[1]) + (velocity[3*(idx+1)+2] * g1[1])) * h[1]) +
+                (((position[3*(idx+2)+2] * g0[2]) + (velocity[3*(idx+2)+2] * g1[2])) * h[2]) +
+                (((position[3*(idx+3)+2] * g0[3]) + (velocity[3*(idx+3)+2] * g1[3])) * h[3]);
+
+    return 0;
+}
+
+__device__ int gpuOrbit::interpolateLegendreOrbit(double tintp, double *opos, double *ovel) {
+    if (nVectors < 9) return 1;
+    if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) return 1;
+    int idx = -1;
+    for (int i=0; i<nVectors; i++) {
+        if ((UTCtime[i] >= tintp) && (idx == -1)) {
+            idx = min(max(i-5, 0), nVectors-9);
+        }
+    }
+
+    double trel = (8. * (tintp - UTCtime[idx])) / (UTCtime[idx+8] - UTCtime[idx]);
+    double teller = 1.;
+    for (int i=0; i<9; i++) teller *= trel - i;
+    if (teller == 0.) {
+        opos[0] = position[3*(idx+int(trel))];
+        opos[1] = position[3*(idx+int(trel))+1];
+        opos[2] = position[3*(idx+int(trel))+2];
+        ovel[0] = velocity[3*(idx+int(trel))];
+        ovel[1] = velocity[3*(idx+int(trel))+1];
+        ovel[2] = velocity[3*(idx+int(trel))+2];
+    } else {
+        double noemer[9] = {40320.0, -5040.0, 1440.0, -720.0, 576.0, -720.0, 1440.0, -5040.0, 40320.0};
+        opos[0] = opos[1] = opos[2] = 0.;
+        ovel[0] = ovel[1] = ovel[2] = 0.;
+        double coeff;
+        for (int i=0; i<9; i++) {
+            coeff = (teller / noemer[i]) / (trel - i);
+            opos[0] += coeff * position[3*(idx+i)];
+            opos[1] += coeff * position[3*(idx+i)+1];
+            opos[2] += coeff * position[3*(idx+i)+2];
+            ovel[0] += coeff * velocity[3*(idx+i)];
+            ovel[1] += coeff * velocity[3*(idx+i)+1];
+            ovel[2] += coeff * velocity[3*(idx+i)+2];
+        }
+    }
+    return 0;
+}
+
+__device__ int gpuOrbit::interpolateSCHOrbit(double tintp, double *opos, double *ovel) {
+    if (nVectors < 2) return 1;
+    if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) return 1;
+    opos[0] = opos[1] = opos[2] = 0.;
+    ovel[0] = ovel[1] = ovel[2] = 0.;
+
+    double frac;
+    for (int i=0; i<nVectors; i++) {
+        frac = 1.;
+        for (int j=0; j<nVectors; j++) {
+            if (i != j) frac *= (UTCtime[j] - tintp) / (UTCtime[j] - UTCtime[i]);
+        }
+        opos[0] += frac * position[3*i];
+        opos[1] += frac * position[(3*i)+1];
+        opos[2] += frac * position[(3*i)+2];
+        ovel[0] += frac * velocity[3*i];
+        ovel[1] += frac * velocity[(3*i)+1];
+        ovel[2] += frac * velocity[(3*i)+2];
+
+    }
+    return 0;
+}
+
+__device__ int gpuOrbit::computeAcceleration(double tintp, double *acc) {
+    double dummy[3], vbef[3], vaft[3];
+    if (interpolateWGS84Orbit(tintp-.01, dummy, vbef) == 1) return 1;
+    if (interpolateWGS84Orbit(tintp+.01, dummy, vaft) == 1) return 1;
+    acc[0] = (vaft[0] - vbef[0]) / .02;
+    acc[1] = (vaft[1] - vbef[1]) / .02;
+    acc[2] = (vaft[2] - vbef[2]) / .02;
+    return 0;
+}
+
