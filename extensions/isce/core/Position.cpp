@@ -5,16 +5,18 @@
 
 #include <cmath>
 #include <vector>
-#include "LinAlg.h"
-#include "Position.h"
-#include "isceLibConstants.h"
+#include "isce/core/LinAlg.h"
+#include "isce/core/Position.h"
+#include "isce/core/Constants.h"
+using isce::core::LinAlg;
+using isce::core::Position;
 using std::vector;
-using isceLib::LinAlg;
-using isceLib::Position;
 
 
 void Position::lookVec(double look, double az, vector<double> &v) {
-    // Computes the look vector given the look angle, azimuth angle, and position vector
+    /*
+     * Computes the look vector given the look angle, azimuth angle, and position vector.
+     */
     
     checkVecLen(v,3);
 
@@ -37,3 +39,4 @@ void Position::lookVec(double look, double az, vector<double> &v) {
     LinAlg::linComb(cos(look), n, sin(look), temp, w);
     LinAlg::unitVec(w, v);
 }
+

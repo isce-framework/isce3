@@ -3,18 +3,18 @@
 // Copyright 2017
 //
 
-#ifndef ISCELIB_PEG_H
-#define ISCELIB_PEG_H
+#ifndef __ISCE_CORE_PEG_H__
+#define __ISCE_CORE_PEG_H__
 
-namespace isceLib {
+namespace isce::core {
     struct Peg {
         double lat;
         double lon;
         double hdg;
 
-        Peg(double lt, double ln, double hd) : lat(lt), lon(ln), hdg(hd) {}
-        Peg() : Peg(0.,0.,0.) {}
-        Peg(const Peg &p) : lat(p.lat), lon(p.lon), hdg(p.hdg) {}
+        Peg(double lt, double ln, double hd) : lat(lt), lon(ln), hdg(hd) {} // Value constructor
+        Peg() : Peg(0.,0.,0.) {}                                            // Default constructor (delegated)
+        Peg(const Peg &p) : lat(p.lat), lon(p.lon), hdg(p.hdg) {}           // Copy constructor
         inline Peg& operator=(const Peg&);
     };
 

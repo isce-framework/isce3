@@ -4,11 +4,11 @@
 //
 
 #include <iostream>
-#include "Poly2d.h"
-#include "isceLibConstants.h"
+#include "isce/core/Poly2d.h"
+#include "isce/core/Constants.h"
+using isce::core::Poly2d;
 using std::cout;
 using std::endl;
-using isceLib::Poly2d;
 
 double Poly2d::eval(double azi, double rng) {
     

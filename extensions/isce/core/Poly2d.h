@@ -3,13 +3,13 @@
 // Copyright 2017
 //
 
-#ifndef ISCELIB_POLY2D_H
-#define ISCELIB_POLY2D_H
+#ifndef __ISCE_CORE_POLY2D_H__
+#define __ISCE_CORE_POLY2D_H__
 
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "isceLibConstants.h"
+#include "isce/core/Constants.h"
 
 namespace isceLib {
     struct Poly2d {
@@ -21,11 +21,12 @@ namespace isceLib {
         double azimuthNorm;
         std::vector<double> coeffs;
 
-        Poly2d(int ro, int ao, double rm, double am, double rn, double an) : rangeOrder(ro), azimuthOrder(ao), rangeMean(rm), azimuthMean(am), 
-                                                                                rangeNorm(rn), azimuthNorm(an), coeffs((ro+1)*(ao+1)) {}
-        Poly2d() : Poly2d(-1,-1,0.,0.,1.,1.) {}
-        Poly2d(const Poly2d &p) : rangeOrder(p.rangeOrder), azimuthOrder(p.azimuthOrder), rangeMean(p.rangeMean), azimuthMean(p.azimuthMean),
-                                    rangeNorm(p.rangeNorm), azimuthNorm(p.azimuthNorm), coeffs(p.coeffs) {}
+        Poly2d(int ro, int ao, double rm, double am, double rn, double an) : rangeOrder(ro), azimuthOrder(ao), rangeMean(rm), azimuthMean(am),
+                                                                                rangeNorm(rn), azimuthNorm(an), coeffs((ro+1)*(ao+1)) {}        // Value constructor
+        Poly2d() : Poly2d(-1,-1,0.,0.,1.,1.) {}                                                                                                 // Default constructor
+                                                                                                                                                //  (delgated)
+        Poly2d(const Poly2d &p) : rangeOrder(p.rangeOrder), azimuthOrder(p.azimuthOrder), rangeMean(p.rangeMean), azimuthMean(p.azimuthMean), 
+                                    rangeNorm(p.rangeNorm), azimuthNorm(p.azimuthNorm), coeffs(p.coeffs) {}                                     // Copy constructor
         inline Poly2d& operator=(const Poly2d&);
 
         inline void setCoeff(int,int,double);

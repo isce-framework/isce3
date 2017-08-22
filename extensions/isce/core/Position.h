@@ -3,19 +3,19 @@
 // Copyright 2017
 //
 
-#ifndef ISCELIB_POSITION_H
-#define ISCELIB_POSITION_H
+#ifndef __ISCE_CORE_POSITION_H__
+#define __ISCE_CORE_POSITION_H_
 
 #include <vector>
 
-namespace isceLib {
+namespace isce::core {
     struct Position {
         std::vector<double> j;
         std::vector<double> jdot;
         std::vector<double> jddt;
 
-        Position() : j(3), jdot(3), jddt(3) {}
-        Position(const Position &p) : j(p.j), jdot(p.jdot), jddt(p.jddt) {}
+        Position() : j(3), jdot(3), jddt(3) {}                              // Default constructor
+        Position(const Position &p) : j(p.j), jdot(p.jdot), jddt(p.jddt) {} // Copy constructor
         inline Position& operator=(const Position&);
 
         void lookVec(double,double,std::vector<double>&);

@@ -10,8 +10,12 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "isceLibConstants.h"
-#include "Orbit.h"
+#include "isce/core/Constants.h"
+#include "isce/core/Orbit.h"
+using isce::core::Orbit;
+using isce::core::orbitHermite;
+using isce::core::orbitType;
+using isce::core::orbitInterpMethod;
 using std::cout;
 using std::endl;
 using std::getline;
@@ -26,15 +30,12 @@ using std::showpos;
 using std::string;
 using std::to_string;
 using std::vector;
-using isceLib::Orbit;
-using isceLib::orbitHermite;
-using isceLib::orbitType;
-using isceLib::orbitInterpMethod;
 
 
 void Orbit::getPositionVelocity(double tintp, vector<double> &pos, vector<double> &vel) {
     /*
-     * Separately-named wrapper for interpolate based on stored basis. Does not check for interpolate success/fail
+     * Separately-named wrapper for interpolate based on stored basis. Does not check for interpolate success/fail.
+     * NOTE: May be deprecated soon considering 'basis' member variable is rarely used.
      */
 
     // Each contained function has its own error checking for size, so no need to do it here
@@ -49,9 +50,9 @@ void Orbit::getPositionVelocity(double tintp, vector<double> &pos, vector<double
     }
 }
 
-int Orbit::interpolate(double tintp, vector<double> &opos, vector<double> &ovel, int intp_type) {
+int Orbit::interpolate(double tintp, vector<double> &opos, vector<double> &ovel, orbitInterpMethod intp_type) {
     /*
-     * Single-interface wrapper for orbit interpolation
+     * Single entry-point wrapper for orbit interpolation.
      */
 
     // Each contained function has its own error checking for size, so no need to do it here
@@ -105,7 +106,7 @@ int Orbit::interpolateWGS84Orbit(double tintp, vector<double> &opos, vector<doub
     return 0;
 }
 
-void isceLib::orbitHermite(vector<vector<double>> &x, vector<vector<double>> &v, vector<double> &t, double time, vector<double> &xx, vector<double> &vv) {
+void isce::core::orbitHermite(vector<vector<double>> &x, vector<vector<double>> &v, vector<double> &t, double time, vector<double> &xx, vector<double> &vv) {
     /*
      * Method used by interpolateWGS84Orbit but is not tied to an Orbit
      */
@@ -197,7 +198,7 @@ int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<d
     vector<double> t(9);
     for (int i=0; i<9; i++) getStateVector(idx+i, t[i], pos[i], vel[i]);
 
-    auto trel = (8. * (tintp - t[0])) / (t[8] - t[0]);
+    double trel = (8. * (tintp - t[0])) / (t[8] - t[0]);
     double teller = 1.;
     for (int i=0; i<9; i++) teller *= trel - i;
     
@@ -269,8 +270,8 @@ int Orbit::computeAcceleration(double tintp, vector<double> &acc) {
     checkVecLen(acc,3);
 
     vector<double> dummy(3), vbef(3);
-    auto temp = tintp - .01;
-    auto stat = interpolateWGS84Orbit(temp, dummy, vbef);
+    double temp = tintp - .01;
+    int stat = interpolateWGS84Orbit(temp, dummy, vbef);
     if (stat == 1) return stat;
 
     vector<double> vaft(3);
@@ -296,10 +297,14 @@ void Orbit::printOrbit() {
 }
 
 void Orbit::loadFromHDR(const char *filename, int bs) {
+    /*
+     *  Load Orbit from a saved HDR file using fstreams. This assumes that the Orbit was dumped to an HDR file using this interface (or a compatible one
+     *  given the reading scheme below), and will most likely fail on any other arbitrary file.
+     */
 
     ifstream fs(filename);
     if (!fs.is_open()) {
-        string errstr = "Unable to open orbit HDR file '"+string(filename)+"'";
+        string errstr = "Unable to open orbit HDR file '"+to_string(filename)+"'";
         fs.close();
         throw runtime_error(errstr);
     }
@@ -341,16 +346,19 @@ void Orbit::loadFromHDR(const char *filename, int bs) {
 }
 
 void Orbit::dumpToHDR(const char* filename) {
-    
+    /*
+     *  Save Orbit to a given HDR file using fstreams. This saving scheme is compatible with the above reading scheme.
+     */
+
     ofstream fs(filename);
     if (!fs.is_open()) {
-        string errstr = "Unable to open orbit HDR file '"+string(filename)+"'";
+        string errstr = "Unable to open orbit HDR file '"+to_string(filename)+"'";
         fs.close();
         throw runtime_error(errstr);
     }
 
     cout << "Writing " << nVectors << " vectors to '" << filename << "'" << endl;
-    fs << showpos;
+    fs << showpos; // In keeping with the original HDR file formatting for this object, force the + sign to display for positive values
     fs.precision(16);
     for (int i=0; i<nVectors; i++) {
         fs << UTCtime[i] << " " << position[3*i] << " " << position[3*i+1] << " " << position[3*i+2]

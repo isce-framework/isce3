@@ -3,23 +3,23 @@
 // Copyright 2017
 //
 
-#ifndef ISCELIB_POLY1D_H
-#define ISCELIB_POLY1D_H
+#ifndef __ISCE_CORE_POLY1D_H__
+#define __ISCE_CORE_POLY1D_H__
 
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-namespace isceLib {
+namespace isce::core {
     struct Poly1d {
         int order;
         double mean;
         double norm;
         std::vector<double> coeffs;
 
-        Poly1d(int ord, double mn, double nm) : order(ord), mean(mn), norm(nm), coeffs(ord+1) {}
-        Poly1d() : Poly1d(-1,0.,1.) {}
-        Poly1d(const Poly1d &p) : order(p.order), mean(p.mean), norm(p.norm), coeffs(p.coeffs) {}
+        Poly1d(int ord, double mn, double nm) : order(ord), mean(mn), norm(nm), coeffs(ord+1) {}    // Value constructor
+        Poly1d() : Poly1d(-1,0.,1.) {}                                                              // Default constructor (delegated)
+        Poly1d(const Poly1d &p) : order(p.order), mean(p.mean), norm(p.norm), coeffs(p.coeffs) {}   // Copy constructor
         inline Poly1d& operator=(const Poly1d&);
 
         inline void setCoeff(int,double);

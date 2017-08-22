@@ -3,22 +3,23 @@
 // Copyright 2017
 //
 
-#ifndef ISCELIB_PEGTRANS_H
-#define ISCELIB_PEGTRANS_H
+#ifndef __ISCE_CORE_PEGTRANS_H__
+#define __ISCE_CORE_PEGTRANS_H__
 
 #include <vector>
-#include "Ellipsoid.h"
-#include "Peg.h"
+#include "isce/core/Ellipsoid.h"
+#include "isce/core/Peg.h"
 
-namespace isceLib {
+namespace isce::core {
     struct Pegtrans {
         std::vector<std::vector<double>> mat;
         std::vector<std::vector<double>> matinv;
         std::vector<double> ov;
         double radcur;
-
-        Pegtrans() : mat(3,std::vector<double>(3,0.)), matinv(3,std::vector<double>(3,0.)), ov(3,0.), radcur(0.) {}
-        Pegtrans(const Pegtrans &p) : mat(p.mat), matinv(p.matinv), ov(p.ov), radcur(p.radcur) {}
+    
+        Pegtrans(double rd) : mat(3,std::vector<double>(3,0.)), matinv(3,std::vector<double>(3,0.)), ov(3,0.), radcur(rd) {}    // Value constructor
+        Pegtrans() : Pegtrans(0.) {}                                                                                            // Default constructor (delegated)
+        Pegtrans(const Pegtrans &p) : mat(p.mat), matinv(p.matinv), ov(p.ov), radcur(p.radcur) {}                               // Copy constructor
         inline Pegtrans& operator=(const Pegtrans&);
         
         void radarToXYZ(Ellipsoid&,Peg&);

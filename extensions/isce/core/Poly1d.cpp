@@ -4,10 +4,10 @@
 //
 
 #include <iostream>
-#include "Poly1d.h"
+#include "isce/core/Poly1d.h"
+using isce::core::Poly1d;
 using std::cout;
 using std::endl;
-using isceLib::Poly1d;
 
 
 double Poly1d::eval(double xin) {
@@ -15,7 +15,7 @@ double Poly1d::eval(double xin) {
 
     double val = 0.;
     double scalex = 1.;
-    auto xmod = (xin - mean) / norm;
+    double xmod = (xin - mean) / norm;
     for (int i=0; i<=order; i++,scalex*=xmod) val += scalex * coeffs[i];
     return val;
 }

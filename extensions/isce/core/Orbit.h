@@ -3,26 +3,26 @@
 // Copyright 2017
 //
 
-#ifndef ISCELIB_ORBIT_H
-#define ISCELIB_ORBIT_H
+#ifndef __ISCE_CORE_ORBIT_H__
+#define __ISCE_CORE_ORBIT_H__
 
 #include <ostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "isceLibConstants.h"
+#include "isce/core/Constants.h"
 
-namespace isceLib {
+namespace isce::core {
     struct Orbit {
-        int basis;
-        int nVectors;
-        std::vector<double> UTCtime;
-        std::vector<double> position;
-        std::vector<double> velocity;
+        int basis;                      // Needs to be deprecated if continued to be unused
+        int nVectors;                   // Number of State Vectors
+        std::vector<double> UTCtime;    // Linearized UTC time values of contained State Vectors
+        std::vector<double> position;   // Linearized position values of contained State Vectors
+        std::vector<double> velocity;   // Linearized velocity values of contained State Vectors
 
-        Orbit(int bs, int nv) : basis(bs), nVectors(nv), UTCtime(nv,0.), position(3*nv,0.), velocity(3*nv,0.) {}
-        Orbit() : Orbit(0,0) {}
-        Orbit(const Orbit &o) : basis(o.basis), nVectors(o.nVectors), UTCtime(o.UTCtime), position(o.position), velocity(o.velocity) {}
+        Orbit(int bs, int nv) : basis(bs), nVectors(nv), UTCtime(nv,0.), position(3*nv,0.), velocity(3*nv,0.) {}                        // Value constructor
+        Orbit() : Orbit(0,0) {}                                                                                                         // Default constructor (delegated)
+        Orbit(const Orbit &o) : basis(o.basis), nVectors(o.nVectors), UTCtime(o.UTCtime), position(o.position), velocity(o.velocity) {} // Copy constructor
         inline Orbit& operator=(const Orbit&);
         inline Orbit& operator+=(const Orbit&);
 
@@ -101,82 +101,6 @@ namespace isceLib {
         velocity.insert(velocity.begin()+(3*vec_idx), vel.begin(), vel.end());
         nVectors++;
     }
-    #ifdef __CUDACC__
-    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-     *
-     *      GPU-related Structs/Methods - Please note that the following code is prototype design code for the CUDA algorithms and is highly experimental in nature.
-     *
-     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-    
-    struct gpuOrbit {
-        int basis;
-        int nVectors;
-        double *UTCtime;
-        double *position;
-        double *velocity;
-    
-        __host__ __device__ gpuOrbit(int bs, int nv) : basis(bs), nVectors(nv), UTCtime(nullptr), position(nullptr), velocity(nullptr) {}
-        __host__ __device__ gpuOrbit() : gpuOrbit(0,0) {}
-        __host__ __device__ gpuOrbit(const gpuOrbit &o) : basis(o.basis), nVectors(o.nVectors) {
-                                                            UTCtime = new double[o.nVectors];
-                                                            position = new double[3*o.nVectors];
-                                                            velocity = new double[3*o.nVectors];
-                                                            for (int i=0; i<o.nVectors; i++) {
-                                                                UTCtime[i] = o.UTCtime[i];
-                                                                position[3*i] = o.position[3*i];
-                                                                position[3*i+1] = o.position[3*i+1];
-                                                                position[3*i+2] = o.position[3*i+2];
-                                                                velocity[3*i] = o.velocity[3*i];
-                                                                velocity[3*i+1] = o.velocity[3*i+1];
-                                                                velocity[3*i+2] = o.velocity[3*i+2];
-                                                            }
-                                                        }
-        __host__ __device__ gpuOrbit(const Orbit &o) : basis(o.basis), nVector(o.nVectors) {
-                                                            UTCtime = new double[o.nVectors];
-                                                            position = new double[3*o.nVectors];
-                                                            velocity = new double[3*o.nVectors];
-                                                            for (int i=0; i<o.nVectors; i++) {
-                                                                UTCtime[i] = o.UTCtime[i];
-                                                                position[3*i] = o.position[3*i];
-                                                                position[3*i+1] = o.position[3*i+1];
-                                                                position[3*i+2] = o.position[3*i+2];
-                                                                velocity[3*i] = o.velocity[3*i];
-                                                                velocity[3*i+1] = o.velocity[3*i+1];
-                                                                velocity[3*i+2] = o.velocity[3*i+2];
-                                                            }
-                                                        }
-        __host__ __device__ ~gpuOrbit() { delete[] UTCtime; delete[] position; delete[] velocity; }
-
-        __host__ __device__ inline void getStateVector(int,double&,double*,double*);
-        __host__ __device__ inline void setStateVector(int,double,double*,double*);
-        __host__ __device__ int interpolateWGS84Orbit(double,double*,double*);
-        __host__ __device__ int interpolateLegendreOrbit(double,double*,double*);
-        __host__ __device__ int interpolateSCHOrbit(double,double*,double*);
-        __host__ __device__ int computeAcceleration(double,double*);
-    };
-
-    __host__ __device__
-    inline void gpuOrbit::getStateVector(int idx, double &t, double *pos, double *vel) {
-        // Note: We cannot really bounds-check this since printing serializes threads (so print-debugging would always slow down the code even if never tripped).
-        if ((idx < 0) || (idx >= nVectors)) return;
-        t = UTCtime[idx];
-        for (int i=0; i<3; i++) {
-            pos[i] = position[3*idx+i];
-            vel[i] = velocity[3*idx+i];
-        }
-    }
-
-    __host__ __device__
-    inline void gpuOrbit::setStateVector(int idx, double t, double *pos, double *vel) {
-        // Note: We cannot really bounds-check this since printing serializes threads (so print-debugging would always slow down the code even if never tripped).
-        if ((idx < 0) || (idx >= nVectors)) return;
-        UTCtime[idx] = t;
-        for (int i=0; i<3; i++) {
-            position[3*idx+i] = pos[i];
-            velocity[3*idx+i] = vel[i];
-        }
-    }
-    #endif
 }
 
 #endif

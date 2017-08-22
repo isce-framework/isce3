@@ -10,8 +10,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "Interpolator.h"
-#include "isceLibConstants.h"
+#include "isce/core/Interpolator.h"
+#include "isce/core/Constants.h"
 using isce::core::Interpolator;
 using std::complex;
 using std::invalid_argument;
@@ -223,7 +223,7 @@ float Interpolator::interp_2d_spline(int order, int nx, int ny, vector<vector<fl
     return static_cast<float>(spline((y-i0),HC,order,R));
 }
 
-void isceLib::initSpline(vector<double> &Y, int n, vector<double> &R, vector<double> &Q) {
+void isce::core::initSpline(vector<double> &Y, int n, vector<double> &R, vector<double> &Q) {
 
     Q[0] = 0.;
     R[0] = 0.;
@@ -235,7 +235,7 @@ void isceLib::initSpline(vector<double> &Y, int n, vector<double> &R, vector<dou
     for (int i=(n-1); i>=2; i--) R[i-1] = (Q[i-1] * R[i]) + R[i-1];
 }
 
-double isceLib::spline(double x, vector<double> &Y, int n, vector<double> &R) {
+double isce::core::spline(double x, vector<double> &Y, int n, vector<double> &R) {
 
     if (x < 1.) return Y[0] + ((x - 1.) * (Y[1] - Y[0] - (R[1] / 6.)));
     else if (x > n) return Y[n-1] + ((x - n) * (Y[n-1] - Y[n-2] + (R[n-2] / 6.)));
@@ -308,37 +308,37 @@ double Interpolator::akima(int nx, int ny, vector<vector<float>> &z, double x, d
         }
     }
 
-    vector<double> d(9) = {(z[ix-1][iy-1] - z[ix][iy-1]) + (z[ix][iy] - z[ix-1][iy]),
-                           (sx[0][0] + sx[1][0]) - (sx[1][1] + sx[0][1]),
-                           (sy[0][0] - sy[1][0]) - (sy[1][1] - sy[0][1]),
-                           (sxy[0][0] + sxy[1][0]) + (sxy[1][1] + sxy[0][1]),
-                           ((2 * sx[0][0]) + sx[1][0]) - (sx[1][1] + (2 * sx[0][1])),
-                           (2 * (sy[0][0] - sy[1][0])) - (sy[1][1] - sy[0][1]),
-                           (2 * (sxy[0][0] + sxy[1][0])) + (sxy[1][1] + sxy[0][1]),
-                           ((2 * sxy[0][0]) + sxy[1][0]) + (sxy[1][1] + (2 * sxy[0][1])),
-                           (2 * ((2 * sxy[0][0]) + sxy[1][0])) + (sxy[1][1] + (2 * sxy[0][1]))};
+    vector<double> d = {(z[ix-1][iy-1] - z[ix][iy-1]) + (z[ix][iy] - z[ix-1][iy]),
+                        (sx[0][0] + sx[1][0]) - (sx[1][1] + sx[0][1]),
+                        (sy[0][0] - sy[1][0]) - (sy[1][1] - sy[0][1]),
+                        (sxy[0][0] + sxy[1][0]) + (sxy[1][1] + sxy[0][1]),
+                        ((2 * sx[0][0]) + sx[1][0]) - (sx[1][1] + (2 * sx[0][1])),
+                        (2 * (sy[0][0] - sy[1][0])) - (sy[1][1] - sy[0][1]),
+                        (2 * (sxy[0][0] + sxy[1][0])) + (sxy[1][1] + sxy[0][1]),
+                        ((2 * sxy[0][0]) + sxy[1][0]) + (sxy[1][1] + (2 * sxy[0][1])),
+                        (2 * ((2 * sxy[0][0]) + sxy[1][0])) + (sxy[1][1] + (2 * sxy[0][1]))};
 
-    vector<double> poly(16) = {(2 * ((2 * d[0]) + d[1])) + ((2 * d[2]) + d[3]),
-                               -((3 * ((2 * d[0]) + d[1])) + ((2 * d[5]) + d[6])),
-                               (2 * (sy[0][0] - sy[1][0])) + (sxy[0][0] + sxy[1][0]),
-                               (2 * (z[ix-1][iy-1] - z[ix][iy-1])) + (sx[0][0] + sx[1][0]),
-                               -((2 * ((3 * d[0]) + d[4])) + ((3 * d[2]) + d[7])),
-                               (3 * ((3 * d[0]) + d[4])) + ((3 * d[5]) + d[8]),
-                               -((3 * (sy[0][0] - sy[1][0])) + ((2 * sxy[0][0]) + sxy[1][0])),
-                               -((3 * (z[ix-1][iy-1] - z[ix][iy-1])) + ((2 * sx[0][0]) + sx[1][0])),
-                               (2 * (sx[0][0] - sx[0][1])) + (sxy[0][0] + sxy[0][1]),
-                               -((3 * (sx[0][0] - sx[0][1])) + ((2 * sxy[0][0]) + sxy[0][1])),
-                               sxy[0][0],
-                               sx[0][0],
-                               (2 * (z[ix-1][iy-1] - z[ix-1][iy])) + (sy[0][0] + sy[0][1]),
-                               -((3 * (z[ix-1][iy-1] - z[ix-1][iy])) + ((2 * sy[0][0]) + sy[0][1])),
-                               sy[0][0],
-                               z[ix-1][iy-1]};
+    vector<double> poly = {(2 * ((2 * d[0]) + d[1])) + ((2 * d[2]) + d[3]),
+                           -((3 * ((2 * d[0]) + d[1])) + ((2 * d[5]) + d[6])),
+                           (2 * (sy[0][0] - sy[1][0])) + (sxy[0][0] + sxy[1][0]),
+                           (2 * (z[ix-1][iy-1] - z[ix][iy-1])) + (sx[0][0] + sx[1][0]),
+                           -((2 * ((3 * d[0]) + d[4])) + ((3 * d[2]) + d[7])),
+                           (3 * ((3 * d[0]) + d[4])) + ((3 * d[5]) + d[8]),
+                           -((3 * (sy[0][0] - sy[1][0])) + ((2 * sxy[0][0]) + sxy[1][0])),
+                           -((3 * (z[ix-1][iy-1] - z[ix][iy-1])) + ((2 * sx[0][0]) + sx[1][0])),
+                           (2 * (sx[0][0] - sx[0][1])) + (sxy[0][0] + sxy[0][1]),
+                           -((3 * (sx[0][0] - sx[0][1])) + ((2 * sxy[0][0]) + sxy[0][1])),
+                           sxy[0][0],
+                           sx[0][0],
+                           (2 * (z[ix-1][iy-1] - z[ix-1][iy])) + (sy[0][0] + sy[0][1]),
+                           -((3 * (z[ix-1][iy-1] - z[ix-1][iy])) + ((2 * sy[0][0]) + sy[0][1])),
+                           sy[0][0],
+                           z[ix-1][iy-1]};
    
-    m[0] = (((((V[0] * (yy - iy)) + V[1]) * (yy - iy)) + V[2]) * (yy - iy)) + V[3];
-    m[1] = (((((V[4] * (yy - iy)) + V[5]) * (yy - iy)) + V[6]) * (yy - iy)) + V[7];
-    m[2] = (((((V[8] * (yy - iy)) + V[9]) * (yy - iy)) + V[10]) * (yy - iy)) + V[11];
-    m[3] = (((((V[12] * (yy - iy)) + V[13]) * (yy - iy)) + V[14]) * (yy - iy)) + V[15];
+    m[0] = (((((poly[0] * (yy - iy)) + poly[1]) * (yy - iy)) + poly[2]) * (yy - iy)) + poly[3];
+    m[1] = (((((poly[4] * (yy - iy)) + poly[5]) * (yy - iy)) + poly[6]) * (yy - iy)) + poly[7];
+    m[2] = (((((poly[8] * (yy - iy)) + poly[9]) * (yy - iy)) + poly[10]) * (yy - iy)) + poly[11];
+    m[3] = (((((poly[12] * (yy - iy)) + poly[13]) * (yy - iy)) + poly[14]) * (yy - iy)) + poly[15];
     return (((((m[0] * (x - ix)) + m[1]) * (x - ix)) + m[2]) * (x - ix)) + m[3];
 }
 

@@ -7,21 +7,21 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "isceLibConstants.h"
-#include "Ellipsoid.h"
-#include "LinAlg.h"
-#include "Peg.h"
-#include "Pegtrans.h"
+#include "isce/core/Constants.h"
+#include "isce/core/Ellipsoid.h"
+#include "isce/core/LinAlg.h"
+#include "isce/core/Peg.h"
+#include "isce/core/Pegtrans.h"
+using isce::core::Ellipsoid;
+using isce::core::LinAlg;
+using isce::core::latLonConvMethod;
+using isce::core::orbitConvMethod;
+using isce::core::Peg;
+using isce::core::Pegtrans;
 using std::invalid_argument;
 using std::string;
 using std::to_string;
 using std::vector;
-using isceLib::Ellipsoid;
-using isceLib::LinAlg;
-using isceLib::latLonConvMethod;
-using isceLib::orbitConvMethod;
-using isceLib::Peg;
-using isceLib::Pegtrans;
 
 
 void Pegtrans::radarToXYZ(Ellipsoid &elp, Peg &peg) {
@@ -39,26 +39,21 @@ void Pegtrans::radarToXYZ(Ellipsoid &elp, Peg &peg) {
     mat[2][0] = sin(peg.lat);
     mat[2][1] = cos(peg.lat) * cos(peg.hdg);
     mat[2][2] = cos(peg.lat) * sin(peg.hdg);
-    
-    for (int i=0; i<3; i++) {
-        for (int j=0; j<3; j++) {
-            matinv[i][j] = mat[j][i];
-        }
-    }
+
+    LinAlg::tranMat(mat, matinv);
     
     radcur = elp.rDir(peg.hdg, peg.lat);
 
     vector<double> llh = {peg.lat, peg.lon, 0.};
     vector<double> p(3);
     elp.latLon(p, llh, LLH_2_XYZ);
-    vector<double> up = {cos(peg.lat)*cos(peg.lon), cos(peg.lat)*sin(peg.lon), sin(peg.lat)};
-    for (int i=0; i<3; i++) ov[i] = p[i] - (radcur * up[i]);
+    vector<double> up = {cos(peg.lat) * cos(peg.lon), cos(peg.lat) * sin(peg.lon), sin(peg.lat)};
+    LinAlg::linComb(1., p, -radcur, up, ov);
 }
 
-void Pegtrans::convertSCHtoXYZ(vector<double> &schv, vector<double> &xyzv, int ctype) {
+void Pegtrans::convertSCHtoXYZ(vector<double> &schv, vector<double> &xyzv, orbitConvMethod ctype) {
     /*
-     * Applies the affine matrix provided to convert from the radar sch coordinates
-     * to WGS-84 xyz coordinates or vice-versa
+     * Applies the affine matrix provided to convert from the radar sch coordinates to WGS-84 xyz coordinates or vice-versa
     */
    
     // Error checking
@@ -87,10 +82,9 @@ void Pegtrans::convertSCHtoXYZ(vector<double> &schv, vector<double> &xyzv, int c
     }
 }
 
-void Pegtrans::convertSCHdotToXYZdot(vector<double> &sch, vector<double> &xyz, vector<double> &schdot, vector<double> &xyzdot, int ctype) {
+void Pegtrans::convertSCHdotToXYZdot(vector<double> &sch, vector<double> &xyz, vector<double> &schdot, vector<double> &xyzdot, orbitConvMethod ctype) {
     /*
-     * Applies the affine matrix provided to convert from the radar sch velocity
-     * to WGS-84 xyz velocity or vice-versa
+     * Applies the affine matrix provided to convert from the radar sch velociy to WGS-84 xyz velocity or vice-versa
     */
     
     checkVecLen(sch,3);
@@ -121,9 +115,10 @@ void Pegtrans::SCHbasis(vector<double> &sch, vector<vector<double>> &xyzschmat, 
     check2dVecLen(xyzschmat,3,3);
     check2dVecLen(schxyzmat,3,3);
 
-    vector<vector<double>> matschxyzp = {{-sin(sch[0]/radcur), -(sin(sch[1]/radcur)*cos(sch[0]/radcur)), cos(sch[0]/radcur)*cos(sch[1]/radcur)},
-                                         {cos(sch[0]/radcur),  -(sin(sch[1]/radcur)*sin(sch[0]/radcur)), sin(sch[0]/radcur)*cos(sch[1]/radcur)},
-                                         {0.,                  cos(sch[1]/radcur),                       sin(sch[1]/radcur)}};
+    vector<vector<double>> matschxyzp = {{-sin(sch[0]/radcur), -(sin(sch[1]/radcur) * cos(sch[0]/radcur)), cos(sch[0]/radcur) * cos(sch[1]/radcur)},
+                                         {cos(sch[0]/radcur),  -(sin(sch[1]/radcur) * sin(sch[0]/radcur)), sin(sch[0]/radcur) * cos(sch[1]/radcur)},
+                                         {0.,                  cos(sch[1]/radcur),                         sin(sch[1]/radcur)}};
     LinAlg::matMat(mat, matschxyzp, schxyzmat);
     LinAlg::tranMat(schxyzmat, xyzschmat);
 }
+

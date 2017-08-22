@@ -3,12 +3,12 @@
 // Copyright 2017
 //
 
-#ifndef ISCELIB_LINALG_H
-#define ISCELIB_LINALG_H
+#ifndef __ISCE_CORE_LINALG_H__
+#define __ISCE_CORE_LINALG_H__
 
 #include <vector>
 
-namespace isceLib {
+namespace isce::core {
     struct LinAlg {
         LinAlg() = default;
 
@@ -25,4 +25,3 @@ namespace isceLib {
 }
 
 #endif
-

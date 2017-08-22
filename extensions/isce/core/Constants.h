@@ -61,14 +61,8 @@ namespace isce::core {
     template<typename T>
     inline void checkVecLenDebug(std::vector<T> &vec, size_t len, const char *vec_name, const char *parent_func) {
         if (vec.size() != len) {
-            std::string errstr = "In '";
-            errstr += parent_func;
-            errstr += "': Vector '";
-            errstr += vec_name;
-            errstr += "' has size ";
-            errstr += std::to_string(vec.size());
-            errstr += ", expected size ";
-            errstr += std::to_string(len);
+            std::string errstr = "In '" + parent_func + "': Vector '" + vec_name + "' has size " + std::to_string(vec.size()) + 
+                                    ", expected size " + std::to_string(len) + ".";
             throw std::invalid_argument(errstr);
         }
     }
@@ -77,19 +71,8 @@ namespace isce::core {
     template<typename T>
     inline void check2dVecLenDebug(std::vector<std::vector<T>> &vec, size_t len, size_t width, const char *vec_name, const char *parent_func) {
         if ((vec.size() != len) && (vec[0].size() != width)) {
-            std::string errstr = "In '";
-            errstr += parent_func;
-            errstr += "': Vector '";
-            errstr += vec_name;
-            errstr += "' has size (";
-            errstr += std::to_string(vec.size());
-            errstr += " x ";
-            errstr += std::to_string(vec[0].size());
-            errstr += "), expected size (";
-            errstr += std::to_string(len);
-            errstr += " x ";
-            errstr += std::to_string(width);
-            errstr += ")";
+            std::string errstr = "In '" + parent_func + "': Vector '" + vec_name + "' has size (" + std::to_string(vec.size()) + " x " + 
+                                    std::to_string(vec[0].size()) + "), expected size (" + std::to_string(len) + " x " + std::to_string(width) + ").";
             throw std::invalid_argument(errstr);
         }
     }

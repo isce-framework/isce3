@@ -2,13 +2,14 @@
 // Author: Joshua Cohen
 // Copyright 2017
 //
+// Note: This class may be deprecated in the future given the existence of production linear algebra libraries
 
 #include <cmath>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "LinAlg.h"
-#include "isceLibConstants.h"
+#include "isce/core/Constants.h"
+#include "isce/core/LinAlg.h"
 using isceLib::LinAlg;
 using std::invalid_argument;
 using std::string;
@@ -17,7 +18,10 @@ using std::vector;
 
 
 void LinAlg::cross(vector<double> &u, vector<double> &v, vector<double> &w) {
-    
+    /*
+     *  Calculate the vector cross product of two 1x3 vectors (u, v) and store the resulting vector in w.
+     */
+
     // Error checking
     checkVecLen(u,3);
     checkVecLen(v,3);
@@ -29,6 +33,9 @@ void LinAlg::cross(vector<double> &u, vector<double> &v, vector<double> &w) {
 }
 
 double LinAlg::dot(vector<double> &v, vector<double> &w) {
+    /*
+     *  Calculate the vector dot product of two 1x3 vectors and return the result.
+     */
 
     // Error checking
     checkVecLen(v,3);
@@ -38,7 +45,10 @@ double LinAlg::dot(vector<double> &v, vector<double> &w) {
 }
 
 void LinAlg::linComb(double k1, vector<double> &u, double k2, vector<double> &v, vector<double> &w) {
-    
+    /*
+     *  Calculate the linear combination of two pairs of scalars and 1x3 vectors and store the resulting vector in w.
+     */
+
     // Error checking
     checkVecLen(u,3);
     checkVecLen(v,3);
@@ -48,8 +58,11 @@ void LinAlg::linComb(double k1, vector<double> &u, double k2, vector<double> &v,
 }
 
 void LinAlg::matMat(vector<vector<double>> &a, vector<vector<double>> &b, vector<vector<double>> &c) {
-    
-    // Error checking (not using checkVecLen since it's only 1D)
+    /*
+     *  Calculate the matrix product of two 3x3 matrices and store the resulting matrix in c.
+     */
+
+    // Error checking
     check2dVecLen(a,3,3);
     check2dVecLen(b,3,3);
     check2dVecLen(c,3,3);
@@ -62,7 +75,10 @@ void LinAlg::matMat(vector<vector<double>> &a, vector<vector<double>> &b, vector
 }
 
 void LinAlg::matVec(vector<vector<double>> &t, vector<double> &v, vector<double> &w) {
-    
+    /*
+     *  Calculate the matrix product of a 1x3 vector with a 3x3 matrix and store the resulting vector in w.
+     */
+
     // Error checking
     check2dVecLen(t,3,3);
     checkVecLen(v,3);
@@ -72,7 +88,10 @@ void LinAlg::matVec(vector<vector<double>> &t, vector<double> &v, vector<double>
 }
 
 double LinAlg::norm(vector<double> &v) {
-    
+    /*
+     *  Calculate the magnitude of a 1x3 vector and return the result
+     */
+
     // Error checking
     checkVecLen(v,3);
 
@@ -80,6 +99,10 @@ double LinAlg::norm(vector<double> &v) {
 }
 
 void LinAlg::tranMat(vector<vector<double>> &a, vector<vector<double>> &b) {
+    /*
+     *  Transpose a 3x3 matrix and store the resulting matrix in b.
+     */
+
 
     // Error checking
     check2dVecLen(a,3,3);
@@ -93,6 +116,9 @@ void LinAlg::tranMat(vector<vector<double>> &a, vector<vector<double>> &b) {
 }
 
 void LinAlg::unitVec(vector<double> &u, vector<double> &v) {
+    /*
+     *  Calculate the normalized unit vector from a 1x3 vector and store the resulting vector in v.
+     */
 
     // Error checking
     checkVecLen(u,3);
@@ -105,6 +131,13 @@ void LinAlg::unitVec(vector<double> &u, vector<double> &v) {
 }
 
 void LinAlg::enuBasis(double lat, double lon, vector<vector<double>> &enumat) {
+    /*
+     *
+     */
+
+    // Error checking
+    check2dVecLen(enumat,3,3);
+
     enumat = {-sin(lon), -sin(lat)*cos(lon), cos(lat)*cos(lon),
               cos(lon),  -sin(lat)*sin(lon), cos(lat)*sin(lon),
               0.,        cos(lat),           sin(lat)         };
