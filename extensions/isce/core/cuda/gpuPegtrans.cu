@@ -3,8 +3,7 @@
 // Copyright 2017
 //
 
-#include <cuda_runtime.h>
-#include <math.h>
+#include <cmath>
 #include "gpuEllipsoid.h"
 #include "gpuLinAlg.h"
 #include "gpuPeg.h"
@@ -14,7 +13,7 @@ using isceLib::gpuLinAlg;
 using isceLib::gpuPeg;
 using isceLib::gpuPegtrans;
 
-__device__ void radar2xyz(gpuEllipsoid &elp, gpuPeg &peg) {
+__device__ void gpuPegtrans::radar2xyz(gpuEllipsoid &elp, gpuPeg &peg) {
     mat[0][0] = cos(peg.lat) * cos(peg.lon);
     mat[0][1] = (-sin(peg.hdg) * sin(peg.lon)) - (sin(peg.lat) * cos(peg.lon) * cos(peg.hdg));
     mat[0][2] = (sin(peg.lon) * cos(peg.hdg)) - (sin(peg.lat) * cos(peg.lon) * sin(peg.hdg));
@@ -36,7 +35,7 @@ __device__ void radar2xyz(gpuEllipsoid &elp, gpuPeg &peg) {
     ov[2] = temp[2] - (radcur * sin(peg.lat));
 }
 
-__device__ void xyz2sch(double *schv, double *xyzv) {
+__device__ void gpuPegtrans::xyz2sch(double *schv, double *xyzv) {
     double schvt[3];
     gpuLinAlg::linComb(1., xyzv, -1., ov, schvt);
     schv[0] = (mat[0][0] * schvt[0]) + (mat[1][0] * schvt[1]) + (mat[2][0] * schvt[2]);

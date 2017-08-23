@@ -14,10 +14,11 @@ namespace isceLib {
         double a;
         double e2;
 
-        gpuEllipsoid(double _a, double _e2) : a(_a), e2(_e2) {}
-        gpuEllipsoid() : gpuEllipsoid(0.,0.) {}
-        gpuEllipsoid(const gpuEllipsoid &e) : a(e.a), e2(e.e2) {}
-        gpuEllipsoid(const Ellipsoid &e) : a(e.a), e2(e.e2) {}
+        __host__ __device__ gpuEllipsoid(double maj, double ecc) : a(maj), e2(ecc) {}   // Value constructor
+        __host__ __device__ gpuEllipsoid() : gpuEllipsoid(0.,0.) {}                     // Default constructor (delegated)
+        __host__ __device__ gpuEllipsoid(const gpuEllipsoid &e) : a(e.a), e2(e.e2) {}   // Copy constructor
+        __host__ gpuEllipsoid(const Ellipsoid &e) : a(e.a), e2(e.e2) {}      // Alternate "copy" constructor from Ellipsoid object
+        __host__ __device__ inline gpuEllipsoid& operator=(const gpuEllipsoid&);
 
         __device__ inline double rEast(double);
         __device__ inline double rNorth(double);
@@ -27,14 +28,21 @@ namespace isceLib {
         __device__ void TCNbasis(double*,double*,double*,double*,double*);
     };
 
-    __device__ inline double gpuEllipsoid::rEast(double lat) { return a / sqrt(1. - (e2 * pow(sin(lat), 2.))); }
+    __host__ __device__ inline gpuEllipsoid& gpuEllipsoid::operator=(const gpuEllipsoid &rhs) {
+        a = rhs.a;
+        e2 = rhs.e2;
+        return *this;
+    }
 
-    __device__ inline double gpuEllipsoid::rNorth(double lat) { return (a * (1. - e2)) / pow((1. - (e2 * pow(lat, 2.))), 1.5); }
+    __device__ inline double gpuEllipsoid::rEast(double lat) { return a / sqrt(1. - (e2 * pow(sin(lat), 2))); }
+
+    __device__ inline double gpuEllipsoid::rNorth(double lat) { return (a * (1. - e2)) / pow((1. - (e2 * pow(lat, 2))), 1.5); }
 
     __device__ inline double gpuEllipsoid::rDir(double hdg, double lat) {
         double re = rEast(lat);
         double rn = rNorth(lat);
-        return (re * rn) / ((re * pow(cos(hdg), 2.)) + (rn * pow(sin(hdg), 2.)));
+        return (re * rn) / ((re * pow(cos(hdg), 2)) + (rn * pow(sin(hdg), 2)));
     }
 }
 
+#endif

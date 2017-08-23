@@ -2,30 +2,34 @@
 // Author: Joshua Cohen
 // Copyright 2017
 //
-// This is a somewhat GPU-optimized implementation of isceLib's Orbit class (stripped down), and can only be
-// constructed by copy-construction from an existing Orbit object
+// NOTE: This class is the most complicated in the CUDA-specific subset of isceLib because we need to carefully
+//       manage the deep-copying in the constructors (so we don't have to worry about adding it to every code
+//       that uses this class)
 
-#include <cuda_runtime.h>
+#include <cuda_runtime.h>   // Needed to call the cudaMalloc/cudaFree APIs
 #include "gpuOrbit.h"
 #include "Orbit.h"
 using isceLib::gpuOrbit;
 using isceLib::Orbit;
 
-// ONLY VALID CONSTRUCTOR FOR THE OBJECT SINCE WE DON'T WANT TO MAKE ANOTHER HOST-SIDE COPY OF THE DATA.
-// As an added bonus this cleans up the memory management immensely!
-gpuOrbit::gpuOrbit(const Orbit &orb) : 
+// Advanced "copy" constructor to handle deep-copying of Orbit data (only callable by host). Owner member variable indicates that only the
+// host-side copy of the gpuOrbit can handle freeing the memory (device-side copy constructor for gpuOrbit sets owner to false)
+__host__ gpuOrbit::gpuOrbit(const Orbit &orb) : 
     nVectors(orb.nVectors),
     owner(true) {
+    // Malloc device-side memory (this API is host-side only)
     cudaMalloc((double**)&UTCtime, nVectors*sizeof(double));
     cudaMalloc((double**)&position, 3*nVectors*sizeof(double));
     cudaMalloc((double**)&velocity, 3*nVectors*sizeof(double));
-    cudaMemcpy(UTCtime, &(orb.UTCtime[0]), nVectors*sizeof(double));
-    cudaMemcpy(position, &(orb.position[0]), 3*nVectors*sizeof(double));
-    cudaMemcpy(velocity, &(orb.velocity[0]), 3*nVectors*sizeof(double));
+    // Copy Orbit data to device-side memory and keep device pointer in gpuOrbit object. Device-side copy constructor simply shallow-copies
+    // the device pointers when called
+    cudaMemcpy(UTCtime, &(orb.UTCtime[0]), nVectors*sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(position, &(orb.position[0]), 3*nVectors*sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(velocity, &(orb.velocity[0]), 3*nVectors*sizeof(double), cudaMemcpyHostToDevice);
 }
 
-// Need to make sure that this copy of the gpuOrbit object is allowed to dealloc the memory (i.e. will only happen on the host since
-// we want the device copy to leave its internals alone)
+// Both the host-side and device-side copies of the gpuOrbit will call the destructor, so we have to implement a way of having an arbitrary
+// copy on host OR device determine when to free the memory (since only the original host-side copy should free)
 gpuOrbit::~gpuOrbit() {
     if (owner) {
         cudaFree(UTCtime);
@@ -45,7 +49,10 @@ __device__ int gpuOrbit::interpolateWGS84Orbit(double tintp, double *opos, doubl
     }
     
     double f0[4];
-    double f1[4] = {tintp - UTCtime[idx], tintp - UTCtime[idx+1], tintp - UTCtime[idx+2], tintp - UTCtime[idx+3]};
+    double f1[4] = {tintp - UTCtime[idx], 
+                    tintp - UTCtime[idx+1], 
+                    tintp - UTCtime[idx+2], 
+                    tintp - UTCtime[idx+3]};
     double sum = (1. / (UTCtime[idx] - UTCtime[idx+1])) + (1. / (UTCtime[idx] - UTCtime[idx+2])) + (1. / (UTCtime[idx] - UTCtime[idx+3]));
     f0[0] = 1. - (2. * (tintp - UTCtime[idx]) * sum);
     sum = (1. / (UTCtime[idx+1] - UTCtime[idx])) + (1. / (UTCtime[idx+1] - UTCtime[idx+2])) + (1. / (UTCtime[idx+1] - UTCtime[idx+3]));
@@ -98,8 +105,10 @@ __device__ int gpuOrbit::interpolateWGS84Orbit(double tintp, double *opos, doubl
     hdot[3] = sum;
 
     double g0[4];
-    double g1[4] = {h[0] + (2. * (tintp - UTCtime[idx]) * hdot[0]), h[1] + (2. * (tintp - UTCtime[idx+1]) * hdot[1]), 
-                    h[2] + (2. * (tintp - UTCtime[idx+2]) * hdot[2]), h[3] + (2. * (tintp - UTCtime[idx+3]) * hdot[3])};
+    double g1[4] = {h[0] + (2. * (tintp - UTCtime[idx]) * hdot[0]), 
+                    h[1] + (2. * (tintp - UTCtime[idx+1]) * hdot[1]), 
+                    h[2] + (2. * (tintp - UTCtime[idx+2]) * hdot[2]), 
+                    h[3] + (2. * (tintp - UTCtime[idx+3]) * hdot[3])};
     sum = (1. / (UTCtime[idx] - UTCtime[idx+1])) + (1. / (UTCtime[idx] - UTCtime[idx+2])) + (1. / (UTCtime[idx] - UTCtime[idx+3]));
     g0[0] = 2. * ((f0[0] * hdot[0]) - (h[0] * sum));
     sum = (1. / (UTCtime[idx+1] - UTCtime[idx])) + (1. / (UTCtime[idx+1] - UTCtime[idx+2])) + (1. / (UTCtime[idx+1] - UTCtime[idx+3]));

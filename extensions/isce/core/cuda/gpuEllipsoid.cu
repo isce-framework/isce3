@@ -10,7 +10,7 @@ using isceLib::gpuEllipsoid;
 using isceLib::gpuLinAlg;
 
 __device__ void gpuEllipsoid::llh2xyz(double *xyz, double *llh) {
-    double re = a / sqrt(1. - (e2 * pow(sin(llh[0]),2)));
+    double re = rEast(llh[0]);
     xyz[0] = (re + llh[2]) * cos(llh[0]) * cos(llh[1]);
     xyz[1] = (re + llh[2]) * cos(llh[0]) * sin(llh[1]);
     xyz[2] = ((re * (1. - e2)) + llh[2]) * sin(llh[0]);

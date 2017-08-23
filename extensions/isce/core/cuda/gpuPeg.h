@@ -6,7 +6,6 @@
 #ifndef ISCELIB_GPUPEG_H
 #define ISCELIB_GPUPEG_H
 
-#include <cuda_runtime.h>
 #include "Peg.h"
 
 namespace isceLib {
@@ -15,10 +14,18 @@ namespace isceLib {
         double lon;
         double hdg;
 
-        gpuPeg() = delete;
-        __device__ gpuPeg(const gpuPeg &p) : lat(p.lat), lon(p.lon), hdg(p.hdg) {}
-        gpuPeg(const Peg &p) : lat(p.lat), lon(p.lon), hdg(p.hdg) {}
-        gpuPeg& operator=(const gpuPeg&) = delete;
+        __host__ __device__ gpuPeg(double _lat, double _lon, double _hdg) : lat(_lat), lon(_lon), hdg(_hdg) {}  // Value constructor
+        __host__ __device__ gpuPeg() : gpuPeg(0.,0.,0.) {}                                                      // Default constructor (delegated)
+        __host__ __device__ gpuPeg(const gpuPeg &p) : lat(p.lat), lon(p.lon), hdg(p.hdg) {}                     // Copy constructor
+        __host__ __device__ gpuPeg(const Peg &p) : lat(p.lat), lon(p.lon), hdg(p.hdg) {}                        // Alternate "copy" constructor from Peg object
+        __host__ __device__ inline gpuPeg& operator=(const gpuPeg&);
+    };
+
+    __host__ __device__ inline gpuPeg& gpuPeg::operator=(const gpuPeg &rhs) {
+        lat = rhs.lat;
+        lon = rhs.lon;
+        hdg = rhs.hdg;
+        return *this;
     }
 }
 
