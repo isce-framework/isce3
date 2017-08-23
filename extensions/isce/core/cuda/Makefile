@@ -1,11 +1,15 @@
-# Simple Makefile to compile the various GPU-compatible objects to linkable object code
+# Simple Makefile to compile the various GPU-compatible objects to linkable object code.
+# Deposits built objects into a new build/ directory in the source folder (will change,
+# is only a temporary solution while testing things)
 # Author: Joshua Cohen
 
 NVCC = nvcc
-CXXINCDIR = -I../include/
+CXXINCDIR = -I..
 # Need to include cuda_runtime.h for gpuOrbit since it does its own memory management
+# MIGHT NEED TO ALTER BASED ON YOUR OWN SYSTEM LAYOUT
 NVINCDIR = -I/usr/local/cuda/include/
-FLAGS =	-std=c++11 -c -Wno-deprecated-gpu-targets
+# no-deprecated-gpu-targets just supporessed the warning about future deprecation of arch_sm2X
+FLAGS =	-std=c++11 -Wno-deprecated-gpu-targets -c
 
 OBJS = gpuEllipsoid.o gpuLinAlg.o gpuOrbit.o gpuPeg.o gpuPegtrans.o
 

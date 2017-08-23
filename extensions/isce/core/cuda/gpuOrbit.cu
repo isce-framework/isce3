@@ -7,10 +7,10 @@
 //       that uses this class)
 
 #include <cuda_runtime.h>   // Needed to call the cudaMalloc/cudaFree APIs
-#include "gpuOrbit.h"
-#include "Orbit.h"
-using isceLib::gpuOrbit;
-using isceLib::Orbit;
+#include "isce/core/cuda/gpuOrbit.h"
+#include "isce/core/Orbit.h"
+using isce::core::cuda::gpuOrbit;
+using isce::core::Orbit;
 
 // Advanced "copy" constructor to handle deep-copying of Orbit data (only callable by host). Owner member variable indicates that only the
 // host-side copy of the gpuOrbit can handle freeing the memory (device-side copy constructor for gpuOrbit sets owner to false)

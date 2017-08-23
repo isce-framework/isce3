@@ -6,12 +6,12 @@
 //       manage the deep-copying in the constructors (so we don't have to worry about adding it to every code
 //       that uses this class)
 
-#ifndef ISCELIB_GPUORBIT_H
-#define ISCELIB_GPUORBIT_H
+#ifndef __ISCE_CORE_CUDA_GPUORBIT_H__
+#define __ISCE_CORE_CUDA_GPUORBIT_H__
 
-#include "Orbit.h"
+#include "isce/core/Orbit.h"
 
-namespace isceLib {
+namespace isce::core::cuda {
     struct gpuOrbit {
         int nVectors;
         double *UTCtime;

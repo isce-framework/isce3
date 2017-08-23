@@ -3,12 +3,12 @@
 // Copyright 2017
 //
 
-#ifndef ISCELIB_GPUPEG_H
-#define ISCELIB_GPUPEG_H
+#ifndef __ISCE_CORE_CUDA_GPUPEG_H__
+#define __ISCE_CORE_CUDA_GPUPEG_H__
 
-#include "Peg.h"
+#include "isce/core/Peg.h"
 
-namespace isceLib {
+namespace isce::core::cuda {
     struct gpuPeg {
         double lat;
         double lon;

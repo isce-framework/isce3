@@ -3,13 +3,13 @@
 // Copyright 2017
 //
 
-#ifndef ISCELIB_GPUELLIPSOID_H
-#define ISCELIB_GPUELLIPSOID_H
+#ifndef __ISCE_CORE_CUDA_GPUELLIPSOID_H__
+#define __ISCE_CORE_CUDA_GPUELLIPSOID_H__
 
 #include <cmath>
-#include "Ellipsoid.h"
+#include "isce/core/Ellipsoid.h"
 
-namespace isceLib {
+namespace isce::core::cuda {
     struct gpuEllipsoid {
         double a;
         double e2;

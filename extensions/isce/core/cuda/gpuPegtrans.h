@@ -3,11 +3,11 @@
 // Copyright 2017
 //
 
-#ifndef ISCELIB_GPUPEGTRANS_H
-#define ISCELIB_GPUPEGTRANS_H
+#ifndef __ISCE_CORE_CUDA_GPUPEGTRANS_H__
+#define __ISCE_CORE_CUDA_GPUPEGTRANS_H__
 
-#include "gpuEllipsoid.h"
-#include "gpuPeg.h"
+#include "isce/core/cuda/gpuEllipsoid.h"
+#include "isce/core/cuda/gpuPeg.h"
 
 namespace isceLib {
     struct gpuPegtrans {

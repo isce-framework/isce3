@@ -4,10 +4,10 @@
 //
 
 #include <cmath>
-#include "gpuEllipsoid.h"
-#include "gpuLinAlg.h"
-using isceLib::gpuEllipsoid;
-using isceLib::gpuLinAlg;
+#include "isce/core/cuda/gpuEllipsoid.h"
+#include "isce/core/cuda/gpuLinAlg.h"
+using isce::core::cuda::gpuEllipsoid;
+using isce::core::cuda::gpuLinAlg;
 
 __device__ void gpuEllipsoid::llh2xyz(double *xyz, double *llh) {
     double re = rEast(llh[0]);

@@ -4,14 +4,14 @@
 //
 
 #include <cmath>
-#include "gpuEllipsoid.h"
-#include "gpuLinAlg.h"
-#include "gpuPeg.h"
-#include "gpuPegtrans.h"
-using isceLib::gpuEllipsoid;
-using isceLib::gpuLinAlg;
-using isceLib::gpuPeg;
-using isceLib::gpuPegtrans;
+#include "isce/core/cuda/gpuEllipsoid.h"
+#include "isce/core/cuda/gpuLinAlg.h"
+#include "isce/core/cuda/gpuPeg.h"
+#include "isce/core/cuda/gpuPegtrans.h"
+using isce::core::cuda::gpuEllipsoid;
+using isce::core::cuda::gpuLinAlg;
+using isce::core::cuda::gpuPeg;
+using isce::core::cuda::gpuPegtrans;
 
 __device__ void gpuPegtrans::radar2xyz(gpuEllipsoid &elp, gpuPeg &peg) {
     mat[0][0] = cos(peg.lat) * cos(peg.lon);

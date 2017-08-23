@@ -3,12 +3,12 @@
 // Copyright 2017
 //
 
-#ifndef ISCELIB_GPULINALG_H
-#define ISCELIB_GPULINALG_H
+#ifndef __ISCE_CORE_CUDA_GPULINALG_H__
+#define __ISCE_CORE_CUDA_GPULINALG_H__
 
 #include <cmath>
 
-namespace isceLib {
+namespace isce::core::cuda {
     struct gpuLinAlg {
         __host__ __device__ gpuLinAlg() = delete;   // Deleted constructor to ensure no-one actually tries to instantiate this class (not needed)
 
