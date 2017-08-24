@@ -7,16 +7,18 @@ NVCC = nvcc
 # Alter based on own directory structure
 CXXINCDIR = -I/home/joshuac/isce_3/extensions
 # Need to include cuda_runtime.h for gpuOrbit since it does its own memory management
-# MIGHT NEED TO ALTER BASED ON YOUR OWN SYSTEM LAYOUT
+# Alter based on own directory structure
 NVINCDIR = -I/usr/local/cuda/include/
 # no-deprecated-gpu-targets just supporessed the warning about future deprecation of arch_sm2X
 FLAGS =	-std=c++11 -Wno-deprecated-gpu-targets -c
 
 OBJS = gpuEllipsoid.o gpuLinAlg.o gpuOrbit.o gpuPeg.o gpuPegtrans.o
 
+# Build objects and export them plus their public headers to build/ dir
 all : objbuild
 	mkdir -p build; mv *.o build/; cp -f *.h build/
 
+# Just build the objects in-place
 objbuild : $(OBJS)
 
 gpuEllipsoid.o : gpuEllipsoid.cu gpuEllipsoid.h gpuLinAlg.h
@@ -34,7 +36,8 @@ gpuPeg.o : gpuPeg.cu gpuPeg.h
 gpuPegtrans.o : gpuPegtrans.cu gpuPegtrans.h gpuEllipsoid.h gpuLinAlg.h gpuPeg.h
 	$(NVCC) $(FLAGS) $(CXXINCDIR) gpuPegtrans.cu
 
+# Clean objects and build/ dir
 .PHONY : clean
-
 clean : 
 	rm -f *.o; rm -rf build/
+
