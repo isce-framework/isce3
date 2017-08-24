@@ -10,7 +10,7 @@
 #include <vector>
 #include "isce/core/Constants.h"
 #include "isce/core/LinAlg.h"
-using isceLib::LinAlg;
+using isce::core::LinAlg;
 using std::invalid_argument;
 using std::string;
 using std::to_string;
@@ -138,8 +138,8 @@ void LinAlg::enuBasis(double lat, double lon, vector<vector<double>> &enumat) {
     // Error checking
     check2dVecLen(enumat,3,3);
 
-    enumat = {-sin(lon), -sin(lat)*cos(lon), cos(lat)*cos(lon),
-              cos(lon),  -sin(lat)*sin(lon), cos(lat)*sin(lon),
-              0.,        cos(lat),           sin(lat)         };
+    enumat = {{-sin(lon), -sin(lat)*cos(lon), cos(lat)*cos(lon)},
+              {cos(lon),  -sin(lat)*sin(lon), cos(lat)*sin(lon)},
+              {0.,        cos(lat),           sin(lat)         }};
 }
 

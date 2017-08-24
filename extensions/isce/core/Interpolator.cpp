@@ -10,8 +10,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "isce/core/Interpolator.h"
 #include "isce/core/Constants.h"
+#include "isce/core/Interpolator.h"
 using isce::core::Interpolator;
 using std::complex;
 using std::invalid_argument;
@@ -276,31 +276,31 @@ double Interpolator::akima(int nx, int ny, vector<vector<float>> &z, double x, d
     wx2 = wx3 = wy2 = wy3 = 0.;
     for (int ii=0; ii<2; ii++) {
         int xx = min(max((ix+ii+1),3),(nx-2)) - 1;
-        for (int jj=0; j<2; jj++) {
+        for (int jj=0; jj<2; jj++) {
             int yy = min(max((iy+jj+1),3),(ny-2)) - 1;
 
-            m = {ZZ[xx-1][yy] - ZZ[xx-2][yy], ZZ[xx][yy] - ZZ[xx-1][yy], ZZ[xx+1][yy] - ZZ[xx][yy], ZZ[xx+2][yy] - ZZ[xx+1][yy]};
+            m = {z[xx-1][yy] - z[xx-2][yy], z[xx][yy] - z[xx-1][yy], z[xx+1][yy] - z[xx][yy], z[xx+2][yy] - z[xx+1][yy]};
 
-            if ((abs(m[0] - m[1]) <= DBL_EPSILON) && (abs(m[2] - m[3]) <= DBL_EPSILON) sx[ii][jj] = 0.5 * (m[1] + m[2]);
+            if ((abs(m[0] - m[1]) <= DBL_EPSILON) && (abs(m[2] - m[3]) <= DBL_EPSILON)) sx[ii][jj] = 0.5 * (m[1] + m[2]);
             else {
                 wx2 = abs(m[3] - m[2]);
                 wx3 = abs(m[1] - m[0]);
                 sx[ii][jj] = ((wx2 * m[1]) + (wx3 * m[2])) / (wx2 + wx3);
             }
 
-            m = {ZZ[xx][yy-1] - ZZ[xx][yy-2], ZZ[xx][yy] - ZZ[xx][yy-1], ZZ[xx][yy+1] - ZZ[xx][yy], ZZ[xx][yy+2] - ZZ[xx][yy+1]};
+            m = {z[xx][yy-1] - z[xx][yy-2], z[xx][yy] - z[xx][yy-1], z[xx][yy+1] - z[xx][yy], z[xx][yy+2] - z[xx][yy+1]};
 
-            if ((abs(m[0] - m[1]) <= DBL_EPSILON) && (abs(m[2] - m[3]) <= DBL_EPSILON) sy[ii][jj] = 0.5 * (m[1] + m[2]);
+            if ((abs(m[0] - m[1]) <= DBL_EPSILON) && (abs(m[2] - m[3]) <= DBL_EPSILON)) sy[ii][jj] = 0.5 * (m[1] + m[2]);
             else {
                 wy2 = abs(m[3] - m[2]);
                 wy3 = abs(m[1] - m[0]);
                 sy[ii][jj] = ((wy2 * m[1]) + (wy3 * m[2])) / (wy2 + wy3);
             }
 
-            e[0][0] = m[1] - ZZ[xx-1][yy] - ZZ[xx-1][yy-1];
-            e[0][1] = m[2] - ZZ[xx-1][yy+1] - ZZ[xx-1][yy];
-            e[1][0] = ZZ[xx+1][yy] - ZZ[xx+1][yy-1] - m[1];
-            e[1][1] = ZZ[xx+1][yy+1] - ZZ[xx+1][yy] - m[2];
+            e[0][0] = m[1] - z[xx-1][yy] - z[xx-1][yy-1];
+            e[0][1] = m[2] - z[xx-1][yy+1] - z[xx-1][yy];
+            e[1][0] = z[xx+1][yy] - z[xx+1][yy-1] - m[1];
+            e[1][1] = z[xx+1][yy+1] - z[xx+1][yy] - m[2];
 
             if ((abs(wx2) <= DBL_EPSILON) && (abs(wx3) <= DBL_EPSILON)) wx2 = wx3 = 1.;
             if ((abs(wy2) <= DBL_EPSILON) && (abs(wy3) <= DBL_EPSILON)) wy2 = wy3 = 1.;
@@ -335,10 +335,10 @@ double Interpolator::akima(int nx, int ny, vector<vector<float>> &z, double x, d
                            sy[0][0],
                            z[ix-1][iy-1]};
    
-    m[0] = (((((poly[0] * (yy - iy)) + poly[1]) * (yy - iy)) + poly[2]) * (yy - iy)) + poly[3];
-    m[1] = (((((poly[4] * (yy - iy)) + poly[5]) * (yy - iy)) + poly[6]) * (yy - iy)) + poly[7];
-    m[2] = (((((poly[8] * (yy - iy)) + poly[9]) * (yy - iy)) + poly[10]) * (yy - iy)) + poly[11];
-    m[3] = (((((poly[12] * (yy - iy)) + poly[13]) * (yy - iy)) + poly[14]) * (yy - iy)) + poly[15];
+    m[0] = (((((poly[0] * (y - iy)) + poly[1]) * (y - iy)) + poly[2]) * (y - iy)) + poly[3];
+    m[1] = (((((poly[4] * (y - iy)) + poly[5]) * (y - iy)) + poly[6]) * (y - iy)) + poly[7];
+    m[2] = (((((poly[8] * (y - iy)) + poly[9]) * (y - iy)) + poly[10]) * (y - iy)) + poly[11];
+    m[3] = (((((poly[12] * (y - iy)) + poly[13]) * (y - iy)) + poly[14]) * (y - iy)) + poly[15];
     return (((((m[0] * (x - ix)) + m[1]) * (x - ix)) + m[2]) * (x - ix)) + m[3];
 }
 

@@ -8,7 +8,7 @@
 
 #include <vector>
 
-namespace isce::core {
+namespace isce { namespace core {
     struct Interpolator {
         Interpolator() = default; // Default constructor
 
@@ -33,6 +33,6 @@ namespace isce::core {
 
     void initSpline(std::vector<double>&,int,std::vector<double>&,std::vector<double>&);
     double spline(double,std::vector<double>&,int,std::vector<double>&);
-}
+}}
 
 #endif

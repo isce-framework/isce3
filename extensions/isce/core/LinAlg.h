@@ -8,7 +8,7 @@
 
 #include <vector>
 
-namespace isce::core {
+namespace isce { namespace core {
     struct LinAlg {
         LinAlg() = default;
 
@@ -20,8 +20,8 @@ namespace isce::core {
         static double norm(std::vector<double>&);
         static void tranMat(std::vector<std::vector<double>>&,std::vector<std::vector<double>>&);
         static void unitVec(std::vector<double>&,std::vector<double>&);
-        static void enuBasis(double,double,vector<vector<double>>&);
+        static void enuBasis(double,double,std::vector<std::vector<double>>&);
     };
-}
+}}
 
 #endif

@@ -5,9 +5,9 @@
 
 #include <cmath>
 #include <vector>
+#include "isce/core/Constants.h"
 #include "isce/core/LinAlg.h"
 #include "isce/core/Position.h"
-#include "isce/core/Constants.h"
 using isce::core::LinAlg;
 using isce::core::Position;
 using std::vector;

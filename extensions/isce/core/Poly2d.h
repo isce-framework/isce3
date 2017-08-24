@@ -11,7 +11,7 @@
 #include <vector>
 #include "isce/core/Constants.h"
 
-namespace isceLib {
+namespace isce { namespace core {
     struct Poly2d {
         int rangeOrder;
         int azimuthOrder;
@@ -68,6 +68,6 @@ namespace isceLib {
         }
         return coeffs[IDX1D(row,col,rangeOrder+1)];
     }
-}
+}}
 
 #endif

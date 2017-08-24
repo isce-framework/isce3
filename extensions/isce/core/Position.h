@@ -8,7 +8,7 @@
 
 #include <vector>
 
-namespace isce::core {
+namespace isce { namespace core {
     struct Position {
         std::vector<double> j;
         std::vector<double> jdot;
@@ -27,6 +27,6 @@ namespace isce::core {
         jddt = rhs.jddt;
         return *this;
     }
-}
+}}
 
 #endif

@@ -7,10 +7,11 @@
 #define __ISCE_CORE_PEGTRANS_H__
 
 #include <vector>
+#include "isce/core/Constants.h"
 #include "isce/core/Ellipsoid.h"
 #include "isce/core/Peg.h"
 
-namespace isce::core {
+namespace isce { namespace core {
     struct Pegtrans {
         std::vector<std::vector<double>> mat;
         std::vector<std::vector<double>> matinv;
@@ -23,8 +24,8 @@ namespace isce::core {
         inline Pegtrans& operator=(const Pegtrans&);
         
         void radarToXYZ(Ellipsoid&,Peg&);
-        void convertSCHtoXYZ(std::vector<double>&,std::vector<double>&,int);
-        void convertSCHdotToXYZdot(std::vector<double>&,std::vector<double>&,std::vector<double>&,std::vector<double>&,int);
+        void convertSCHtoXYZ(std::vector<double>&,std::vector<double>&,orbitConvMethod);
+        void convertSCHdotToXYZdot(std::vector<double>&,std::vector<double>&,std::vector<double>&,std::vector<double>&,orbitConvMethod);
         void SCHbasis(std::vector<double>&,std::vector<std::vector<double>>&,std::vector<std::vector<double>>&);
     };
 
@@ -35,6 +36,6 @@ namespace isce::core {
         radcur = rhs.radcur;
         return *this;
     }
-}
+}}
 
 #endif

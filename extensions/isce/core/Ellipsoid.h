@@ -8,8 +8,9 @@
 
 #include <cmath>
 #include <vector>
+#include "isce/core/Constants.h"
 
-namespace isce::core {
+namespace isce { namespace core {
     struct Ellipsoid {
         double a;   // Major semi-axis
         double e2;  // Eccentricity squared
@@ -22,7 +23,7 @@ namespace isce::core {
         inline double rEast(double);
         inline double rNorth(double);
         inline double rDir(double,double);
-        void latLon(std::vector<double>&,std::vector<double>&,int);
+        void latLon(std::vector<double>&,std::vector<double>&,latLonConvMethod);
         void getAngs(std::vector<double>&,std::vector<double>&,std::vector<double>&,double&,double&);
         void getTCN_TCvec(std::vector<double>&,std::vector<double>&,std::vector<double>&,std::vector<double>&);
         void TCNbasis(std::vector<double>&,std::vector<double>&,std::vector<double>&,std::vector<double>&,std::vector<double>&);
@@ -43,6 +44,6 @@ namespace isce::core {
         auto rn = rNorth(lat);
         return (re * rn) / ((re * pow(cos(hdg), 2)) + (rn * pow(sin(hdg), 2)));
     }
-}
+}}
 
 #endif

@@ -12,7 +12,7 @@
 #include <vector>
 #include "isce/core/Constants.h"
 
-namespace isce::core {
+namespace isce { namespace core {
     struct Orbit {
         int basis;                      // Needs to be deprecated if continued to be unused
         int nVectors;                   // Number of State Vectors
@@ -25,12 +25,12 @@ namespace isce::core {
         Orbit(const Orbit &o) : basis(o.basis), nVectors(o.nVectors), UTCtime(o.UTCtime), position(o.position), velocity(o.velocity) {} // Copy constructor
         inline Orbit& operator=(const Orbit&);
         inline Orbit& operator+=(const Orbit&);
-
+        inline const Orbit operator+(const Orbit&) const;
         void getPositionVelocity(double,std::vector<double>&,std::vector<double>&);
         inline void getStateVector(int,double&,std::vector<double>&,std::vector<double>&);
         inline void setStateVector(int,double,std::vector<double>&,std::vector<double>&);
         inline void addStateVector(double,std::vector<double>&,std::vector<double>&);
-        int interpolate(double,std::vector<double>&,std::vector<double>&,int);
+        int interpolate(double,std::vector<double>&,std::vector<double>&,orbitInterpMethod);
         int interpolateWGS84Orbit(double,std::vector<double>&,std::vector<double>&);
         int interpolateLegendreOrbit(double,std::vector<double>&,std::vector<double>&);
         int interpolateSCHOrbit(double,std::vector<double>&,std::vector<double>&);
@@ -101,6 +101,6 @@ namespace isce::core {
         velocity.insert(velocity.begin()+(3*vec_idx), vel.begin(), vel.end());
         nVectors++;
     }
-}
+}}
 
 #endif

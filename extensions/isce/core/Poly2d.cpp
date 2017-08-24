@@ -4,8 +4,8 @@
 //
 
 #include <iostream>
-#include "isce/core/Poly2d.h"
 #include "isce/core/Constants.h"
+#include "isce/core/Poly2d.h"
 using isce::core::Poly2d;
 using std::cout;
 using std::endl;

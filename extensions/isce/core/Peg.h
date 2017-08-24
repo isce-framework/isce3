@@ -6,7 +6,7 @@
 #ifndef __ISCE_CORE_PEG_H__
 #define __ISCE_CORE_PEG_H__
 
-namespace isce::core {
+namespace isce { namespace core {
     struct Peg {
         double lat;
         double lon;
@@ -24,6 +24,6 @@ namespace isce::core {
         hdg = rhs.hdg;
         return *this;
     }
-}
+}}
 
 #endif

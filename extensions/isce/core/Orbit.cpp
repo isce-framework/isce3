@@ -304,7 +304,7 @@ void Orbit::loadFromHDR(const char *filename, int bs) {
 
     ifstream fs(filename);
     if (!fs.is_open()) {
-        string errstr = "Unable to open orbit HDR file '"+to_string(filename)+"'";
+        string errstr = "Unable to open orbit HDR file '"+string(filename)+"'";
         fs.close();
         throw runtime_error(errstr);
     }
@@ -352,7 +352,7 @@ void Orbit::dumpToHDR(const char* filename) {
 
     ofstream fs(filename);
     if (!fs.is_open()) {
-        string errstr = "Unable to open orbit HDR file '"+to_string(filename)+"'";
+        string errstr = "Unable to open orbit HDR file '"+string(filename)+"'";
         fs.close();
         throw runtime_error(errstr);
     }

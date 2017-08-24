@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace isce::core {
+namespace isce { namespace core {
     struct Poly1d {
         int order;
         double mean;
@@ -51,6 +51,6 @@ namespace isce::core {
         }
         return coeffs[idx];
     }
-}
+}}
 
 #endif
