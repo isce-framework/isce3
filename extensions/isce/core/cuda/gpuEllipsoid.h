@@ -9,7 +9,7 @@
 #include <cmath>
 #include "isce/core/Ellipsoid.h"
 
-namespace isce::core::cuda {
+namespace isce { namespace core { namespace cuda {
     struct gpuEllipsoid {
         double a;
         double e2;
@@ -43,6 +43,6 @@ namespace isce::core::cuda {
         double rn = rNorth(lat);
         return (re * rn) / ((re * pow(cos(hdg), 2)) + (rn * pow(sin(hdg), 2)));
     }
-}
+}}}
 
 #endif

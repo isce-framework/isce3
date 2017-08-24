@@ -4,7 +4,8 @@
 # Author: Joshua Cohen
 
 NVCC = nvcc
-CXXINCDIR = -I..
+# Alter based on own directory structure
+CXXINCDIR = -I/home/joshuac/isce_3/extensions
 # Need to include cuda_runtime.h for gpuOrbit since it does its own memory management
 # MIGHT NEED TO ALTER BASED ON YOUR OWN SYSTEM LAYOUT
 NVINCDIR = -I/usr/local/cuda/include/

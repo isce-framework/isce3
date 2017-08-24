@@ -11,7 +11,7 @@
 
 #include "isce/core/Orbit.h"
 
-namespace isce::core::cuda {
+namespace isce { namespace core { namespace cuda {
     struct gpuOrbit {
         int nVectors;
         double *UTCtime;
@@ -42,6 +42,6 @@ namespace isce::core::cuda {
             vel[i] = (valid ? velocity[3*idx+i] : 0.);
         }
     }
-}
+}}}
 
 #endif

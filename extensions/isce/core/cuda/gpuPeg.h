@@ -8,7 +8,7 @@
 
 #include "isce/core/Peg.h"
 
-namespace isce::core::cuda {
+namespace isce { namespace core { namespace cuda {
     struct gpuPeg {
         double lat;
         double lon;
@@ -27,6 +27,6 @@ namespace isce::core::cuda {
         hdg = rhs.hdg;
         return *this;
     }
-}
+}}}
 
 #endif

@@ -8,7 +8,7 @@
 
 #include <cmath>
 
-namespace isce::core::cuda {
+namespace isce { namespace core { namespace cuda {
     struct gpuLinAlg {
         __host__ __device__ gpuLinAlg() = delete;   // Deleted constructor to ensure no-one actually tries to instantiate this class (not needed)
 
@@ -40,6 +40,6 @@ namespace isce::core::cuda {
         vhat[1] = v[1] / mag;
         vhat[2] = v[2] / mag;
     }
-}
+}}}
 
 #endif

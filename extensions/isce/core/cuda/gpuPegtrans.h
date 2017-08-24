@@ -9,7 +9,7 @@
 #include "isce/core/cuda/gpuEllipsoid.h"
 #include "isce/core/cuda/gpuPeg.h"
 
-namespace isceLib {
+namespace isce { namespace core { namespace cuda {
     struct gpuPegtrans {
         double mat[3][3];
         double matinv[3][3];
@@ -24,6 +24,6 @@ namespace isceLib {
         __device__ void radar2xyz(gpuEllipsoid&,gpuPeg&);
         __device__ void xyz2sch(double*,double*);
     };
-}
+}}}
 
 #endif
