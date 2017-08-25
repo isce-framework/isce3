@@ -12,13 +12,19 @@ OBJS = Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o Poly1d.o Pol
 .PHONY : clean build-cpp build-cuda build-cython
 
 # Build everything
-all : build-cpp build-cuda
+all : build-cpp build-cuda build-cython
 
 # Export the BUILDDIR to be visible to cuda/Makefile as MAINBUILDDIR
 build-cuda : export MAINBUILDDIR=$(BUILDDIR)
 # Build the CUDA objects (calls cuda/Makefile)
 build-cuda :
 	$(MAKE) -C cuda recurse
+
+# Export the BUILDDIR to be visible to cython/Makefile as MAINBUILDDIR
+build-cython : export MAINBUILDDIR=$(BUILDDIR)
+# Build the Python module of iscecore using Cython wrappers
+build-cython :
+	$(MAKE) -C cython recurse
 
 # Build the library and clean up
 build-cpp : $(OBJS)

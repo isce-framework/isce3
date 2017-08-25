@@ -8,7 +8,7 @@
 
 from libcpp.vector cimport vector
 
-cdef extern from "Poly2d.h" namespace "isceLib":
+cdef extern from "isce/core/Poly2d.h" namespace "isce::core":
     cdef cppclass Poly2d:
         int azimuthOrder
         int rangeOrder

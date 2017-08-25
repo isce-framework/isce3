@@ -6,7 +6,7 @@
 
 from libcpp.vector cimport vector
 
-cdef extern from "LinAlg.h" namespace "isceLib":
+cdef extern from "isce/core/LinAlg.h" namespace "isce::core":
     cdef cppclass LinAlg:
         LinAlg() except +
         @staticmethod

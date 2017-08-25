@@ -6,7 +6,7 @@
 
 from libcpp.vector cimport vector
 
-cdef extern from "Position.h" namespace "isceLib":
+cdef extern from "isce/core/Position.h" namespace "isce::core":
     cdef cppclass Position:
         vector[double] j
         vector[double] jdot

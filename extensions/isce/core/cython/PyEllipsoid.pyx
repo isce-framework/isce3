@@ -4,7 +4,7 @@
 # Copyright 2017
 #
 
-from Ellipsoid cimport Ellipsoid
+from Ellipsoid cimport Ellipsoid, latLonConvMethod
 from libcpp.vector cimport vector
 
 cdef class PyEllipsoid:
@@ -42,10 +42,20 @@ cdef class PyEllipsoid:
     def latLon(self, list a, list b, int c):
         cdef vector[double] _a
         cdef vector[double] _b
+        cdef latLonConvMethod _c
         for i in range(3):
             _a.push_back(a[i])
             _b.push_back(b[i])
-        self.c_ellipsoid.latLon(_a,_b,c)
+        if (c == latLonConvMethod.LLH_2_XYZ):
+            _c = latLonConvMethod.LLH_2_XYZ
+        elif (c == latLonConvMethod.XYZ_2_LLH):
+            _c = latLonConvMethod.XYZ_2_LLH
+        elif (c == latLonConvMethod.XYZ_2_LLH_OLD):
+            _c = latLonConvMethod.XYZ_2_LLH_OLD
+        else:
+            print("Error: Unknown conversion type passed in.")
+            return
+        self.c_ellipsoid.latLon(_a,_b,_c)
         for i in range(3):
             a[i] = _a[i]
             b[i] = _b[i]

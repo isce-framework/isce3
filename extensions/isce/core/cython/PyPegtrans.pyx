@@ -4,7 +4,7 @@
 # Copyright 2017
 #
 
-from Pegtrans cimport Pegtrans
+from Pegtrans cimport Pegtrans, orbitConvMethod
 
 cdef class PyPegtrans:
     cdef Pegtrans c_pegtrans
@@ -77,10 +77,18 @@ cdef class PyPegtrans:
     def convertSCHtoXYZ(self, list a, list b, int c):
         cdef vector[double] _a
         cdef vector[double] _b
+        cdef orbitConvMethod _c
         for i in range(3):
             _a.push_back(a[i])
             _b.push_back(b[i])
-        self.c_pegtrans.convertSCHtoXYZ(_a,_b,c)
+        if (c == orbitConvMethod.SCH_2_XYZ):
+            _c = orbitConvMethod.SCH_2_XYZ
+        elif (c == orbitConvMethod.XYZ_2_SCH):
+            _c = orbitConvMethod.XYZ_2_SCH
+        else:
+            print("Error: Unknown orbit conversion method.")
+            return
+        self.c_pegtrans.convertSCHtoXYZ(_a,_b,_c)
         for i in range(3):
             a[i] = _a[i]
             b[i] = _b[i]
@@ -89,12 +97,20 @@ cdef class PyPegtrans:
         cdef vector[double] _b
         cdef vector[double] _c
         cdef vector[double] _d
+        cdef orbitConvMethod _e
         for i in range(3):
             _a.push_back(a[i])
             _b.push_back(b[i])
             _c.push_back(c[i])
             _d.push_back(d[i])
-        self.c_pegtrans.convertSCHdotToXYZdot(_a,_b,_c,_d,e)
+        if (e == orbitConvMethod.SCH_2_XYZ):
+            _e = orbitConvMethod.SCH_2_XYZ
+        elif (e == orbitConvMethod.XYZ_2_SCH):
+            _e = orbitConvMethod.XYZ_2_SCH
+        else:
+            print("Error: Unknown orbit conversion method.")
+            return
+        self.c_pegtrans.convertSCHdotToXYZdot(_a,_b,_c,_d,_e)
         for i in range(3):
             a[i] = _a[i]
             b[i] = _b[i]

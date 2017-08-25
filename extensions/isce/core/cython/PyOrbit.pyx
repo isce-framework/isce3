@@ -6,7 +6,7 @@
 
 #################################################################
 
-from Orbit cimport Orbit
+from Orbit cimport Orbit, orbitInterpMethod
 from libcpp.vector cimport vector
 
 cdef class PyOrbit:
@@ -136,11 +136,21 @@ cdef class PyOrbit:
     def interpolate(self, double a, list b, list c, int d):
         cdef vector[double] _b
         cdef vector[double] _c
+        cdef orbitInterpMethod _d
         cdef int ret
         for i in range(3):
             _b.push_back(b[i])
             _c.push_back(c[i])
-        ret = self.c_orbit.interpolate(a,_b,_c,d)
+        if (d == orbitInterpMethod.HERMITE_METHOD):
+            _d = orbitInterpMethod.HERMITE_METHOD
+        elif (d == orbitInterpMethod.SCH_METHOD):
+            _d = orbitInterpMethod.SCH_METHOD
+        elif (d == orbitInterpMethod.LEGENDRE_METHOD):
+            _d = orbitInterpMethod.LEGENDRE_METHOD
+        else:
+            print("Error: Unknown orbit interpolation method")
+            return
+        ret = self.c_orbit.interpolate(a,_b,_c,_d)
         for i in range(3):
             b[i] = _b[i]
             c[i] = _c[i]
