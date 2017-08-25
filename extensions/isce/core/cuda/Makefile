@@ -15,22 +15,19 @@ FLAGS =	-std=c++11 -Wno-deprecated-gpu-targets -c
 
 OBJS = gpuEllipsoid.o gpuLinAlg.o gpuOrbit.o gpuPeg.o gpuPegtrans.o
 
-.PHONY : clean obj sub-make
+.PHONY : clean recurse
 
 # Build objects and export them plus their public headers to build dir (passed in from core/Makefile)
-all : obj
+all : $(OBJS)
 	mkdir -p $(BUILDDIR); \
 	mv *.o $(BUILDDIR); \
 	cp *.h $(BUILDDIR)
 
 # Build objects as called from isce/core/Makefile (same as all but is moved into ../$(BUILDDIR)/cuda instead of $(BUILDDIR))
-sub-make : obj
+recurse : $(OBJS)
 	mkdir -p ../$(MAINBUILDDIR)/cuda; \
 	mv *.o ../$(MAINBUILDDIR)/cuda; \
 	cp *.h ../$(MAINBUILDDIR)/cuda
-
-# Just build the objects in-place
-obj : $(OBJS)
 
 gpuEllipsoid.o : gpuEllipsoid.cu gpuEllipsoid.h gpuLinAlg.h
 	$(NVCC) $(FLAGS) $(CXXINCDIR) gpuEllipsoid.cu

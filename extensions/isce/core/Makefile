@@ -9,27 +9,24 @@ BUILDDIR = export
 
 OBJS = Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o Poly1d.o Poly2d.o Position.o
 
-.PHONY : clean cuda cython lib lib-clean $(BUILDDIR)
+.PHONY : clean build-cpp build-cuda build-cython
 
 # Build everything
-all : lib-clean cuda
+all : build-cpp build-cuda
 
 # Export the BUILDDIR to be visible to cuda/Makefile as MAINBUILDDIR
-cuda : export MAINBUILDDIR=$(BUILDDIR)
+build-cuda : export MAINBUILDDIR=$(BUILDDIR)
 # Build the CUDA objects (calls cuda/Makefile)
-cuda :
-	$(MAKE) -C cuda sub-make
+build-cuda :
+	$(MAKE) -C cuda recurse
 
 # Build the library and clean up
-lib-clean : lib
+build-cpp : $(OBJS)
+	ar rc libiscecore.a $(OBJS); \
 	mkdir -p $(BUILDDIR); \
 	mv libiscecore.a $(BUILDDIR); \
 	cp *.h $(BUILDDIR); \
 	rm *.o
-
-# Just build the library, no cleaning
-lib : $(OBJS)
-	ar rc libiscecore.a $(OBJS);
 
 # Individual object compilation
 Ellipsoid.o : Ellipsoid.cpp Ellipsoid.h Constants.h LinAlg.h
