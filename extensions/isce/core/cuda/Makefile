@@ -9,17 +9,28 @@ CXXINCDIR = -I/home/joshuac/isce_3/extensions
 # Need to include cuda_runtime.h for gpuOrbit since it does its own memory management
 # Alter based on own directory structure
 NVINCDIR = -I/usr/local/cuda/include/
+BUILDDIR = export
 # no-deprecated-gpu-targets just supporessed the warning about future deprecation of arch_sm2X
 FLAGS =	-std=c++11 -Wno-deprecated-gpu-targets -c
 
 OBJS = gpuEllipsoid.o gpuLinAlg.o gpuOrbit.o gpuPeg.o gpuPegtrans.o
 
-# Build objects and export them plus their public headers to build/ dir
-all : objbuild
-	mkdir -p build; mv *.o build/; cp -f *.h build/
+.PHONY : clean obj sub-make
+
+# Build objects and export them plus their public headers to build dir (passed in from core/Makefile)
+all : obj
+	mkdir -p $(BUILDDIR); \
+	mv *.o $(BUILDDIR); \
+	cp *.h $(BUILDDIR)
+
+# Build objects as called from isce/core/Makefile (same as all but is moved into ../$(BUILDDIR)/cuda instead of $(BUILDDIR))
+sub-make : obj
+	mkdir -p ../$(MAINBUILDDIR)/cuda; \
+	mv *.o ../$(MAINBUILDDIR)/cuda; \
+	cp *.h ../$(MAINBUILDDIR)/cuda
 
 # Just build the objects in-place
-objbuild : $(OBJS)
+obj : $(OBJS)
 
 gpuEllipsoid.o : gpuEllipsoid.cu gpuEllipsoid.h gpuLinAlg.h
 	$(NVCC) $(FLAGS) $(CXXINCDIR) gpuEllipsoid.cu
@@ -37,7 +48,7 @@ gpuPegtrans.o : gpuPegtrans.cu gpuPegtrans.h gpuEllipsoid.h gpuLinAlg.h gpuPeg.h
 	$(NVCC) $(FLAGS) $(CXXINCDIR) gpuPegtrans.cu
 
 # Clean objects and build/ dir
-.PHONY : clean
 clean : 
-	rm -f *.o; rm -rf build/
+	rm -f *.o; \
+	rm -rf $(BUILDDIR)
 

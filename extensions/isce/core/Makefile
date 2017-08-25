@@ -5,23 +5,33 @@ FDEBUG = -g
 #FDEBUG = 
 CFLAGS = $(FDEBUG) -Wall -std=c++11 -c
 INCBASE = -I/home/joshuac/isce_3/extensions
+BUILDDIR = export
+
+# Add BUILDDIR to the envs of sub-makes (cuda/cython)
+export BUILDDIR
 
 OBJS = Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o Poly1d.o Poly2d.o Position.o
 
-# Build the static library and export it (with public headers) to build/ dir
-all : lib
-	mkdir -p build; mv libiscecore.a build/; cp *.h build/; rm *.o
+.PHONY : clean cuda cython lib lib-clean $(BUILDDIR)
 
-# Just build the objects and library
-lib : obj
-	ar rc libiscecore.a $(OBJS)
+# Build everything
+all : lib-clean cuda
 
-# Just build the objects
-obj : $(OBJS)
+# Build the CUDA objects (calls cuda/Makefile)
+cuda : export MAINBUILDDIR=$(BUILDDIR)
+cuda :
+	$(MAKE) -C cuda sub-make
 
-# Build cuda library (convenience)
-cudaobj :
-	$(MAKE) -C cuda
+# Build the library and clean up
+lib-clean : lib
+	mkdir -p $(BUILDDIR); \
+	mv libiscecore.a $(BUILDDIR); \
+	cp *.h $(BUILDDIR); \
+	rm *.o
+
+# Just build the library, no cleaning
+lib : $(OBJS)
+	ar rc libiscecore.a $(OBJS);
 
 # Individual object compilation
 Ellipsoid.o : Ellipsoid.cpp Ellipsoid.h Constants.h LinAlg.h
@@ -52,7 +62,8 @@ Position.o : Position.cpp Position.h Constants.h LinAlg.h
 	$(CC) $(CFLAGS) $(INCBASE) Position.cpp
 
 # Clean up objects, library, and build directory
-.PHONY : clean
 clean :
-	rm -f *.o; rm -f libiscecore.a; rm -rf build/
+	rm -f *.o; \
+	rm -f libiscecore.a; \
+	rm -rf $(BUILDDIR)
 
