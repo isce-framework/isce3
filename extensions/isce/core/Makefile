@@ -7,9 +7,6 @@ CFLAGS = $(FDEBUG) -Wall -std=c++11 -c
 INCBASE = -I/home/joshuac/isce_3/extensions
 BUILDDIR = export
 
-# Add BUILDDIR to the envs of sub-makes (cuda/cython)
-export BUILDDIR
-
 OBJS = Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o Poly1d.o Poly2d.o Position.o
 
 .PHONY : clean cuda cython lib lib-clean $(BUILDDIR)
@@ -17,8 +14,9 @@ OBJS = Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o Poly1d.o Pol
 # Build everything
 all : lib-clean cuda
 
-# Build the CUDA objects (calls cuda/Makefile)
+# Export the BUILDDIR to be visible to cuda/Makefile as MAINBUILDDIR
 cuda : export MAINBUILDDIR=$(BUILDDIR)
+# Build the CUDA objects (calls cuda/Makefile)
 cuda :
 	$(MAKE) -C cuda sub-make
 
