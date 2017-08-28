@@ -32,7 +32,8 @@ def Poly1d(order=-1, mean=0., norm=1.):
     from .iscecore import PyPoly1d
     return PyPoly1d(order,mean,norm)
 
-def Poly2d(azimuthOrder=-1, rangeOrder=-1, azimuthMean=0., rangeMean=0., azimuthNorm=1., rangeNorm=1.):
+def Poly2d(azimuthOrder=-1, rangeOrder=-1, azimuthMean=0., rangeMean=0., azimuthNorm=1., 
+           rangeNorm=1.):
     from .iscecore import PyPoly2d
     return PyPoly2d(azimuthOrder,rangeOrder,azimuthMean,rangeMean,azimuthNorm,rangeNorm)
 

@@ -39,5 +39,7 @@ cdef class PyPeg:
             self.lat = pg.lat
             self.lon = pg.lon
             self.hdg = pg.hdg
-        except: # Note: this allows for a dummy class object to be passed in that just has lat, lon, and hdg as parameters!
+        # Note: this allows for a dummy class object to be passed in that just has lat, lon, and hdg 
+        # as parameters!
+        except:
             print("Error: Object passed in to copy is incompatible with object of type PyPeg.")

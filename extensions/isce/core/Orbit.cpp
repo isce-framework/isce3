@@ -34,7 +34,8 @@ using std::vector;
 
 void Orbit::getPositionVelocity(double tintp, vector<double> &pos, vector<double> &vel) {
     /*
-     * Separately-named wrapper for interpolate based on stored basis. Does not check for interpolate success/fail.
+     * Separately-named wrapper for interpolate based on stored basis. Does not check for 
+     * interpolate success/fail.
      * NOTE: May be deprecated soon considering 'basis' member variable is rarely used.
      */
 
@@ -42,7 +43,8 @@ void Orbit::getPositionVelocity(double tintp, vector<double> &pos, vector<double
     if (basis == WGS84_ORBIT) interpolateWGS84Orbit(tintp, pos, vel);
     else if (basis == SCH_ORBIT) interpolateSCHOrbit(tintp, pos, vel);
     else {
-        string errstr = "Unrecognized stored Orbit basis in Orbit::getPositionVelocity. Expected one of:\n";
+        string errstr = "Unrecognized stored Orbit basis in Orbit::getPositionVelocity.\n";
+        errstr += "Expected one of:\n";
         errstr += "  WGS84_ORBIT (== "+to_string(WGS84_ORBIT)+")\n";
         errstr += "  SCH_ORBIT (== "+to_string(SCH_ORBIT)+")\n";
         errstr += "Encountered stored Orbit basis "+to_string(basis);
@@ -50,7 +52,8 @@ void Orbit::getPositionVelocity(double tintp, vector<double> &pos, vector<double
     }
 }
 
-int Orbit::interpolate(double tintp, vector<double> &opos, vector<double> &ovel, orbitInterpMethod intp_type) {
+int Orbit::interpolate(double tintp, vector<double> &opos, vector<double> &ovel, 
+                       orbitInterpMethod intp_type) {
     /*
      * Single entry-point wrapper for orbit interpolation.
      */
@@ -60,7 +63,8 @@ int Orbit::interpolate(double tintp, vector<double> &opos, vector<double> &ovel,
     else if (intp_type == SCH_METHOD) return interpolateSCHOrbit(tintp, opos, ovel);
     else if (intp_type == LEGENDRE_METHOD) return interpolateLegendreOrbit(tintp, opos, ovel);
     else {
-        string errstr = "Unrecognized interpolation type in Orbit::interpolate. Expected one of:\n";
+        string errstr = "Unrecognized interpolation type in Orbit::interpolate.\n";
+        errstr += "Expected one of:\n";
         errstr += "  HERMITE_METHOD (== "+to_string(HERMITE_METHOD)+")\n";
         errstr += "  SCH_METHOD (== "+to_string(SCH_METHOD)+")\n";
         errstr += "  LEGENDRE_METHOD (== "+to_string(LEGENDRE_METHOD)+")\n";
@@ -78,13 +82,17 @@ int Orbit::interpolateWGS84Orbit(double tintp, vector<double> &opos, vector<doub
     checkVecLen(opos,3);
     checkVecLen(ovel,3);
     if (nVectors < 4) {
-        string errstr = "Orbit::interpolateWGS84Orbit requires at least 4 state vectors to interpolate, Orbit only contains "+to_string(nVectors);
+        string errstr = "Orbit::interpolateWGS84Orbit requires at least 4 state vectors to ";
+        errstr += "interpolate, Orbit only contains "+to_string(nVectors);
         throw length_error(errstr);
     }
-    // Totally possible that a time is passed to interpolate that's out-of-epoch, but not exception-worthy (so it just returns a 1 status)
+    // Totally possible that a time is passed to interpolate that's out-of-epoch, but not 
+    // exception-worthy (so it just returns a 1 status)
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) {
-        cout << "Error in Orbit::interpolateWGS84Orbit - Interpolation time requested (" << tintp << ") is outside the epoch range of the stored vectors" << endl;
-        return 1; // Don't stop the whole program, just flag this particular result
+        cout << "Error in Orbit::interpolateWGS84Orbit - Interpolation time requested (" << tintp << 
+                ") is outside the epoch range of the stored vectors" << endl;
+        // Don't stop the whole program, just flag this particular result
+        return 1;
     }
 
     int idx = -1;
@@ -106,12 +114,15 @@ int Orbit::interpolateWGS84Orbit(double tintp, vector<double> &opos, vector<doub
     return 0;
 }
 
-void isce::core::orbitHermite(vector<vector<double>> &x, vector<vector<double>> &v, vector<double> &t, double time, vector<double> &xx, vector<double> &vv) {
+void isce::core::orbitHermite(vector<vector<double>> &x, vector<vector<double>> &v, 
+                              vector<double> &t, double time, vector<double> &xx, 
+                              vector<double> &vv) {
     /*
      * Method used by interpolateWGS84Orbit but is not tied to an Orbit
      */
    
-    // No error checking needed, x/v/t were created (not passed) and xx/vv were size-checked before passing through
+    // No error checking needed, x/v/t were created (not passed) and xx/vv were size-checked before 
+    // passing through
 
     vector<double> f0(4), f1(4);
     double sum;
@@ -175,13 +186,17 @@ int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<d
     checkVecLen(opos,3);
     checkVecLen(ovel,3);
     if (nVectors < 9) {
-        string errstr = "Orbit::interpolateLegendreOrbit requires at least 9 state vectors to interpolate, Orbit only contains "+to_string(nVectors);
+        string errstr = "Orbit::interpolateLegendreOrbit requires at least 9 state vectors to ";
+        errstr += "interpolate, Orbit only contains "+to_string(nVectors);
         throw length_error(errstr);
     }
-    // Totally possible that a time is passed to interpolate that's out-of-epoch, but not exception-worthy (so it just returns a 1 status)
+    // Totally possible that a time is passed to interpolate that's out-of-epoch, but not 
+    // exception-worthy (so it just returns a 1 status)
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) {
-        cout << "Error in Orbit::interpolateLegendreOrbit - Interpolation time requested (" << tintp << ") is outside the epoch range of the stored vectors" << endl;
-        return 1; // Don't stop the whole program, just flag this particular result
+        cout << "Error in Orbit::interpolateLegendreOrbit - Interpolation time requested (" << 
+                tintp << ") is outside the epoch range of the stored vectors" << endl;
+        // Don't stop the whole program, just flag this particular result
+        return 1;
     }
 
     int idx = -1;
@@ -208,7 +223,8 @@ int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<d
             ovel[i] = vel[int(trel)][i];
         }
     } else {
-        vector<double> noemer = {40320.0, -5040.0, 1440.0, -720.0, 576.0, -720.0, 1440.0, -5040.0, 40320.0};
+        vector<double> noemer = {40320.0, -5040.0, 1440.0, -720.0, 576.0, -720.0, 1440.0, -5040.0, 
+                                 40320.0};
         double coeff;
         opos.assign(3,0.);
         ovel.assign(3,0.);
@@ -231,13 +247,17 @@ int Orbit::interpolateSCHOrbit(double tintp, vector<double> &opos, vector<double
     checkVecLen(opos,3);
     checkVecLen(ovel,3);
     if (nVectors < 2) {
-        string errstr = "Orbit::interpolateSCHOrbit requires at least 2 state vectors to interpolate, Orbit only contains "+to_string(nVectors);
+        string errstr = "Orbit::interpolateSCHOrbit requires at least 2 state vectors to ";
+        errstr += "interpolate, Orbit only contains "+to_string(nVectors);
         throw length_error(errstr);
     }
-    // Totally possible that a time is passed to interpolate that's out-of-epoch, but not exception-worthy (so it just returns a 1 status)
+    // Totally possible that a time is passed to interpolate that's out-of-epoch, but not 
+    // exception-worthy (so it just returns a 1 status)
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) {
-        cout << "Error in Orbit::interpolateSCHOrbit - Interpolation time requested (" << tintp << ") is outside the epoch range of the stored vectors" << endl;
-        return 1; // Don't stop the whole program, just flag this particular result
+        cout << "Error in Orbit::interpolateSCHOrbit - Interpolation time requested (" << tintp << 
+                ") is outside the epoch range of the stored vectors" << endl;
+        // Don't stop the whole program, just flag this particular result
+        return 1;
     }
 
     opos.assign(3,0.);
@@ -291,15 +311,18 @@ void Orbit::printOrbit() {
     cout << "Orbit - Basis: " << basis << ", nVectors: " << nVectors << endl;
     for (int i=0; i<nVectors; i++) {
         cout << "  UTC = " << UTCtime[i] << endl;
-        cout << "  Position = [ " << position[3*i] << " , " << position[3*i+1] << " , " << position[3*i+2] << " ]" << endl;
-        cout << "  Velocity = [ " << velocity[3*i] << " , " << velocity[3*i+1] << " , " << velocity[3*i+2] << " ]" << endl;
+        cout << "  Position = [ " << position[3*i] << " , " << position[3*i+1] << " , " << 
+                position[3*i+2] << " ]" << endl;
+        cout << "  Velocity = [ " << velocity[3*i] << " , " << velocity[3*i+1] << " , " << 
+                velocity[3*i+2] << " ]" << endl;
     }
 }
 
 void Orbit::loadFromHDR(const char *filename, int bs) {
     /*
-     *  Load Orbit from a saved HDR file using fstreams. This assumes that the Orbit was dumped to an HDR file using this interface (or a compatible one
-     *  given the reading scheme below), and will most likely fail on any other arbitrary file.
+     *  Load Orbit from a saved HDR file using fstreams. This assumes that the Orbit was dumped to 
+     *  an HDR file using this interface (or a compatible one given the reading scheme below), and 
+     *  will most likely fail on any other arbitrary file.
      */
 
     ifstream fs(filename);
@@ -347,7 +370,8 @@ void Orbit::loadFromHDR(const char *filename, int bs) {
 
 void Orbit::dumpToHDR(const char* filename) {
     /*
-     *  Save Orbit to a given HDR file using fstreams. This saving scheme is compatible with the above reading scheme.
+     *  Save Orbit to a given HDR file using fstreams. This saving scheme is compatible with the 
+     *  above reading scheme.
      */
 
     ofstream fs(filename);
@@ -358,7 +382,9 @@ void Orbit::dumpToHDR(const char* filename) {
     }
 
     cout << "Writing " << nVectors << " vectors to '" << filename << "'" << endl;
-    fs << showpos; // In keeping with the original HDR file formatting for this object, force the + sign to display for positive values
+    // In keeping with the original HDR file formatting for this object, force the + sign to display 
+    // for positive values
+    fs << showpos;
     fs.precision(16);
     for (int i=0; i<nVectors; i++) {
         fs << UTCtime[i] << " " << position[3*i] << " " << position[3*i+1] << " " << position[3*i+2]

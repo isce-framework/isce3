@@ -25,6 +25,7 @@ cdef extern from "isce/core/Pegtrans.h" namespace "isce::core":
         Pegtrans(const Pegtrans&) except +
         void radarToXYZ(Ellipsoid&,Peg&)
         void convertSCHtoXYZ(vector[double]&,vector[double]&,orbitConvMethod)
-        void convertSCHdotToXYZdot(vector[double]&,vector[double]&,vector[double]&,vector[double]&,orbitConvMethod)
+        void convertSCHdotToXYZdot(vector[double]&,vector[double]&,vector[double]&,vector[double]&,
+                                   orbitConvMethod)
         void SCHbasis(vector[double]&,vector[vector[double]]&,vector[vector[double]]&)
 

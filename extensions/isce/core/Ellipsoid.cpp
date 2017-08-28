@@ -20,9 +20,8 @@ using std::vector;
 
 void Ellipsoid::latLon(vector<double> &v, vector<double> &llh, latLonConvMethod ctype) {
     /* 
-     * Given a conversion type ('ctype'), either converts a vector to lat, lon, and height
-     * above the reference ellipsoid, or given a lat, lon, and height produces a geocentric
-     * vector.
+     * Given a conversion type ('ctype'), either converts a vector to lat, lon, and height above the
+     * reference ellipsoid, or given a lat, lon, and height produces a geocentric vector.
      */
 
     // Error checking to make sure inputs have expected characteristics
@@ -34,7 +33,8 @@ void Ellipsoid::latLon(vector<double> &v, vector<double> &llh, latLonConvMethod 
         v[0] = (re + llh[2]) * cos(llh[0]) * cos(llh[1]);
         v[1] = (re + llh[2]) * cos(llh[0]) * sin(llh[1]);
         v[2] = ((re * (1. - e2)) + llh[2]) * sin(llh[0]);
-    } else if (ctype == XYZ_2_LLH) {  // Translated from prior Python implementation (isceobj.Ellipsoid.xyz_to_llh)
+    } else if (ctype == XYZ_2_LLH) {
+        // Translated from prior isceobj.Ellipsoid.xyz_to_llh implementation
         double p = (pow(v[0], 2) + pow(v[1], 2)) / pow(a, 2);
         double q = ((1. - e2) * pow(v[2], 2)) / pow(a, 2);
         double r = (p + q - pow(e2, 2)) / 6.;
@@ -48,12 +48,14 @@ void Ellipsoid::latLon(vector<double> &v, vector<double> &llh, latLonConvMethod 
         llh[0] = atan2(v[2], d);
         llh[1] = atan2(v[1], v[0]);
         llh[2] = ((k + e2 - 1.) * sqrt(pow(d, 2) + pow(v[2], 2))) / k;
-    } else if (ctype == XYZ_2_LLH_OLD) {  // Translated from prior Fortran implementation
+    } else if (ctype == XYZ_2_LLH_OLD) {
+        // Translated from prior isceobj/Util/Library implementation
         double b = a * sqrt(1. - e2);
         double p = sqrt(pow(v[0], 2) + pow(v[1], 2));
         double tant = (v[2] / p) * sqrt(1. / (1. - e2));
         double theta = atan(tant);
-        tant = (v[2] + (((1. / (1. - e2)) - 1.) * b * pow(sin(theta), 3))) / (p - (e2 * a * pow(cos(theta), 3)));
+        tant = (v[2] + (((1. / (1. - e2)) - 1.) * b * pow(sin(theta), 3))) / 
+               (p - (e2 * a * pow(cos(theta), 3)));
         llh[0] = atan(tant);
         llh[1] = atan2(v[1], v[0]);
         llh[2] = (p / cos(llh[0])) - rEast(llh[0]);
@@ -67,7 +69,8 @@ void Ellipsoid::latLon(vector<double> &v, vector<double> &llh, latLonConvMethod 
     }
 }
 
-void Ellipsoid::getAngs(vector<double> &pos, vector<double> &vel, vector<double> &vec, double &az, double &lk) {
+void Ellipsoid::getAngs(vector<double> &pos, vector<double> &vel, vector<double> &vec, double &az, 
+                        double &lk) {
     /*
      * Computes the look vector given the look angle, azimuth angle, and position vector
      */
@@ -95,7 +98,8 @@ void Ellipsoid::getAngs(vector<double> &pos, vector<double> &vel, vector<double>
     az = atan2(LinAlg::dot(c, vec), LinAlg::dot(t, vec));
 }
 
-void Ellipsoid::getTCN_TCvec(vector<double> &pos, vector<double> &vel, vector<double> &vec, vector<double> &TCVec) {
+void Ellipsoid::getTCN_TCvec(vector<double> &pos, vector<double> &vel, vector<double> &vec, 
+                             vector<double> &TCVec) {
     /*
      * Computes the projection of an xyz vector on the TC plane in xyz
      */
@@ -123,7 +127,8 @@ void Ellipsoid::getTCN_TCvec(vector<double> &pos, vector<double> &vel, vector<do
     LinAlg::linComb(LinAlg::dot(t, vec), t, LinAlg::dot(c, vec), c, TCVec);
 }
 
-void Ellipsoid::TCNbasis(vector<double> &pos, vector<double> &vel, vector<double> &t, vector<double> &c, vector<double> &n) {
+void Ellipsoid::TCNbasis(vector<double> &pos, vector<double> &vel, vector<double> &t, 
+                         vector<double> &c, vector<double> &n) {
     /*
      *
      */

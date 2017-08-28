@@ -14,15 +14,22 @@
 
 namespace isce { namespace core {
     struct Orbit {
-        int basis;                      // Needs to be deprecated if continued to be unused
-        int nVectors;                   // Number of State Vectors
-        std::vector<double> UTCtime;    // Linearized UTC time values of contained State Vectors
-        std::vector<double> position;   // Linearized position values of contained State Vectors
-        std::vector<double> velocity;   // Linearized velocity values of contained State Vectors
+        // Should be deprecated (unused)
+        int basis;
+        // Number of State Vectors
+        int nVectors;
+        // Linearized UTC time values of contained State Vectors
+        std::vector<double> UTCtime;
+        // Linearized position values of contained State Vectors
+        std::vector<double> position;
+        // Linearized velocity values of contained State Vectors
+        std::vector<double> velocity;
 
-        Orbit(int bs, int nv) : basis(bs), nVectors(nv), UTCtime(nv,0.), position(3*nv,0.), velocity(3*nv,0.) {}                        // Value constructor
-        Orbit() : Orbit(0,0) {}                                                                                                         // Default constructor (delegated)
-        Orbit(const Orbit &o) : basis(o.basis), nVectors(o.nVectors), UTCtime(o.UTCtime), position(o.position), velocity(o.velocity) {} // Copy constructor
+        Orbit(int bs, int nv) : basis(bs), nVectors(nv), UTCtime(nv,0.), position(3*nv,0.), 
+                                velocity(3*nv,0.) {}
+        Orbit() : Orbit(0,0) {}
+        Orbit(const Orbit &o) : basis(o.basis), nVectors(o.nVectors), UTCtime(o.UTCtime), 
+                                position(o.position), velocity(o.velocity) {}
         inline Orbit& operator=(const Orbit&);
         inline Orbit& operator+=(const Orbit&);
         inline const Orbit operator+(const Orbit&) const;
@@ -40,7 +47,8 @@ namespace isce { namespace core {
         void dumpToHDR(const char*);
     };
 
-    void orbitHermite(std::vector<std::vector<double>>&,std::vector<std::vector<double>>&,std::vector<double>&,double,std::vector<double>&,std::vector<double>&);
+    void orbitHermite(std::vector<std::vector<double>>&,std::vector<std::vector<double>>&,
+                      std::vector<double>&,double,std::vector<double>&,std::vector<double>&);
 
     inline Orbit& Orbit::operator=(const Orbit &rhs) {
         basis = rhs.basis;
@@ -65,9 +73,12 @@ namespace isce { namespace core {
         return (Orbit(*this) += rhs);
     }
 
-    inline void Orbit::getStateVector(int idx, double &t, std::vector<double> &pos, std::vector<double> &vel) {
+    inline void Orbit::getStateVector(int idx, double &t, std::vector<double> &pos, 
+                                      std::vector<double> &vel) {
         if ((idx < 0) || (idx >= nVectors)) {
-            std::string errstr = "Orbit::getStateVector - Trying to access vector "+std::to_string(idx+1)+" out of "+std::to_string(nVectors)+" possible vectors";
+            std::string errstr = "Orbit::getStateVector - Trying to access vector " +
+                                 std::to_string(idx+1) + " out of " + std::to_string(nVectors) +
+                                 " possible vectors";
             throw std::out_of_range(errstr);
         }
         checkVecLen(pos,3);
@@ -77,9 +88,12 @@ namespace isce { namespace core {
         vel.assign(velocity.begin()+(3*idx), position.begin()+(3*idx)+3);
     }
 
-    inline void Orbit::setStateVector(int idx, double t, std::vector<double> &pos, std::vector<double> &vel) {
+    inline void Orbit::setStateVector(int idx, double t, std::vector<double> &pos, 
+                                      std::vector<double> &vel) {
         if ((idx < 0) || (idx >= nVectors)) {
-            std::string errstr = "Orbit::setStateVector - Trying to access vector "+std::to_string(idx+1)+" out of "+std::to_string(nVectors)+" possible vectors";
+            std::string errstr = "Orbit::setStateVector - Trying to access vector " + 
+                                 std::to_string(idx+1) + " out of " + std::to_string(nVectors) +
+                                 " possible vectors";
             throw std::out_of_range(errstr);
         }
         checkVecLen(pos,3);
@@ -91,7 +105,8 @@ namespace isce { namespace core {
         }
     }
 
-    inline void Orbit::addStateVector(double t, std::vector<double> &pos, std::vector<double> &vel) {
+    inline void Orbit::addStateVector(double t, std::vector<double> &pos, 
+                                      std::vector<double> &vel) {
         checkVecLen(pos,3);
         checkVecLen(vel,3);
         int vec_idx = 0;

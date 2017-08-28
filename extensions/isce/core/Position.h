@@ -14,8 +14,8 @@ namespace isce { namespace core {
         std::vector<double> jdot;
         std::vector<double> jddt;
 
-        Position() : j(3), jdot(3), jddt(3) {}                              // Default constructor
-        Position(const Position &p) : j(p.j), jdot(p.jdot), jddt(p.jddt) {} // Copy constructor
+        Position() : j(3), jdot(3), jddt(3) {}
+        Position(const Position &p) : j(p.j), jdot(p.jdot), jddt(p.jddt) {}
         inline Position& operator=(const Position&);
 
         void lookVec(double,double,std::vector<double>&);

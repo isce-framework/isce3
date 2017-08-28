@@ -14,10 +14,11 @@ namespace isce { namespace core { namespace cuda {
         double a;
         double e2;
 
-        __host__ __device__ gpuEllipsoid(double maj, double ecc) : a(maj), e2(ecc) {}   // Value constructor
-        __host__ __device__ gpuEllipsoid() : gpuEllipsoid(0.,0.) {}                     // Default constructor (delegated)
-        __host__ __device__ gpuEllipsoid(const gpuEllipsoid &e) : a(e.a), e2(e.e2) {}   // Copy constructor
-        __host__ gpuEllipsoid(const Ellipsoid &e) : a(e.a), e2(e.e2) {}      // Alternate "copy" constructor from Ellipsoid object
+        __host__ __device__ gpuEllipsoid(double maj, double ecc) : a(maj), e2(ecc) {}
+        __host__ __device__ gpuEllipsoid() : gpuEllipsoid(0.,0.) {}
+        __host__ __device__ gpuEllipsoid(const gpuEllipsoid &e) : a(e.a), e2(e.e2) {}
+        // Alternate "copy" constructor from Ellipsoid object
+        __host__ gpuEllipsoid(const Ellipsoid &e) : a(e.a), e2(e.e2) {}
         __host__ __device__ inline gpuEllipsoid& operator=(const gpuEllipsoid&);
 
         __device__ inline double rEast(double);
@@ -34,9 +35,13 @@ namespace isce { namespace core { namespace cuda {
         return *this;
     }
 
-    __device__ inline double gpuEllipsoid::rEast(double lat) { return a / sqrt(1. - (e2 * pow(sin(lat), 2))); }
+    __device__ inline double gpuEllipsoid::rEast(double lat) { 
+        return a / sqrt(1. - (e2 * pow(sin(lat), 2))); 
+    }
 
-    __device__ inline double gpuEllipsoid::rNorth(double lat) { return (a * (1. - e2)) / pow((1. - (e2 * pow(lat, 2))), 1.5); }
+    __device__ inline double gpuEllipsoid::rNorth(double lat) { 
+        return (a * (1. - e2)) / pow((1. - (e2 * pow(lat, 2))), 1.5); 
+    }
 
     __device__ inline double gpuEllipsoid::rDir(double hdg, double lat) {
         double re = rEast(lat);

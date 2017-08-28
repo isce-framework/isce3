@@ -53,7 +53,8 @@ void Pegtrans::radarToXYZ(Ellipsoid &elp, Peg &peg) {
 
 void Pegtrans::convertSCHtoXYZ(vector<double> &schv, vector<double> &xyzv, orbitConvMethod ctype) {
     /*
-     * Applies the affine matrix provided to convert from the radar sch coordinates to WGS-84 xyz coordinates or vice-versa
+     * Applies the affine matrix provided to convert from the radar sch coordinates to WGS-84 xyz 
+     * coordinates or vice-versa
     */
    
     // Error checking
@@ -74,7 +75,8 @@ void Pegtrans::convertSCHtoXYZ(vector<double> &schv, vector<double> &xyzv, orbit
         sph.latLon(schv, llh, XYZ_2_LLH);
         schv = {radcur*llh[1], radcur*llh[0], llh[2]};
     } else {
-        string errstr = "Unrecognized conversion type in Pegtrans::convertSCHtoXYZ. Expected one of:\n";
+        string errstr = "Unrecognized conversion type in Pegtrans::convertSCHtoXYZ.\n";
+        errstr += "Expected one of:\n";
         errstr += "  SCH_2_XYZ (== "+to_string(SCH_2_XYZ)+")\n";
         errstr += "  XYZ_2_SCH (== "+to_string(XYZ_2_SCH)+")\n";
         errstr += "Encountered conversion type "+to_string(ctype);
@@ -82,9 +84,12 @@ void Pegtrans::convertSCHtoXYZ(vector<double> &schv, vector<double> &xyzv, orbit
     }
 }
 
-void Pegtrans::convertSCHdotToXYZdot(vector<double> &sch, vector<double> &xyz, vector<double> &schdot, vector<double> &xyzdot, orbitConvMethod ctype) {
+void Pegtrans::convertSCHdotToXYZdot(vector<double> &sch, vector<double> &xyz, 
+                                     vector<double> &schdot, vector<double> &xyzdot, 
+                                     orbitConvMethod ctype) {
     /*
-     * Applies the affine matrix provided to convert from the radar sch velociy to WGS-84 xyz velocity or vice-versa
+     * Applies the affine matrix provided to convert from the radar sch velociy to WGS-84 xyz 
+     * velocity or vice-versa
     */
     
     checkVecLen(sch,3);
@@ -98,7 +103,8 @@ void Pegtrans::convertSCHdotToXYZdot(vector<double> &sch, vector<double> &xyz, v
     if (ctype == SCH_2_XYZ) LinAlg::matVec(schxyzmat, schdot, xyzdot);
     else if (ctype == XYZ_2_SCH) LinAlg::matVec(xyzschmat, xyzdot, schdot);
     else {
-        string errstr = "Unrecognized conversion type in Pegtrans::convertSCHdotToXYZdot. Expected one of:\n";
+        string errstr = "Unrecognized conversion type in Pegtrans::convertSCHdotToXYZdot.\n";
+        errstr += "Expected one of:\n";
         errstr += "  SCH_2_XYZ (== "+to_string(SCH_2_XYZ)+")\n";
         errstr += "  XYZ_2_SCH (== "+to_string(XYZ_2_SCH)+")\n";
         errstr += "Encountered conversion type "+to_string(ctype);
@@ -106,7 +112,8 @@ void Pegtrans::convertSCHdotToXYZdot(vector<double> &sch, vector<double> &xyz, v
     }
 }
 
-void Pegtrans::SCHbasis(vector<double> &sch, vector<vector<double>> &xyzschmat, vector<vector<double>> &schxyzmat) {
+void Pegtrans::SCHbasis(vector<double> &sch, vector<vector<double>> &xyzschmat, 
+                        vector<vector<double>> &schxyzmat) {
     /*
      * Computes the transformation matrix from xyz to a local sch frame
      */
@@ -115,9 +122,15 @@ void Pegtrans::SCHbasis(vector<double> &sch, vector<vector<double>> &xyzschmat, 
     check2dVecLen(xyzschmat,3,3);
     check2dVecLen(schxyzmat,3,3);
 
-    vector<vector<double>> matschxyzp = {{-sin(sch[0]/radcur), -(sin(sch[1]/radcur) * cos(sch[0]/radcur)), cos(sch[0]/radcur) * cos(sch[1]/radcur)},
-                                         {cos(sch[0]/radcur),  -(sin(sch[1]/radcur) * sin(sch[0]/radcur)), sin(sch[0]/radcur) * cos(sch[1]/radcur)},
-                                         {0.,                  cos(sch[1]/radcur),                         sin(sch[1]/radcur)}};
+    vector<vector<double>> matschxyzp = {{-sin(sch[0]/radcur), 
+                                          -(sin(sch[1]/radcur) * cos(sch[0]/radcur)), 
+                                          cos(sch[0]/radcur) * cos(sch[1]/radcur)},
+                                         {cos(sch[0]/radcur),  
+                                          -(sin(sch[1]/radcur) * sin(sch[0]/radcur)), 
+                                          sin(sch[0]/radcur) * cos(sch[1]/radcur)},
+                                         {0.,                  
+                                          cos(sch[1]/radcur),                         
+                                          sin(sch[1]/radcur)}};
     LinAlg::matMat(mat, matschxyzp, schxyzmat);
     LinAlg::tranMat(schxyzmat, xyzschmat);
 }

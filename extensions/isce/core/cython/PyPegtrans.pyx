@@ -9,7 +9,8 @@ from Pegtrans cimport Pegtrans, orbitConvMethod
 cdef class PyPegtrans:
     cdef Pegtrans c_pegtrans
 
-    def __cinit__(self): # Never will be initialized with values, so no need to check
+    def __cinit__(self):
+        # Never will be initialized with values, so no need to check
         return
     
     @property
@@ -62,7 +63,8 @@ cdef class PyPegtrans:
     def radcur(self, double a):
         self.c_pegtrans.radcur = a
     def dPrint(self):
-        print("Mat = "+str(self.mat)+", matinv = "+str(self.matinv)+", ov = "+str(self.ov)+", radcur = "+str(self.radcur))
+        print("Mat = "+str(self.mat)+", matinv = "+str(self.matinv)+", ov = "+str(self.ov)+
+              ", radcur = "+str(self.radcur))
     def copy(self, pt):
         try:
             self.mat = pt.mat

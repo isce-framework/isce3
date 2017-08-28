@@ -2,7 +2,8 @@
 // Author: Joshua Cohen
 // Copyright 2017
 //
-// Note: This class may be deprecated in the future given the existence of production linear algebra libraries
+// Note: This class may be deprecated in the future given the existence of production linear algebra
+// libraries
 
 #include <cmath>
 #include <stdexcept>
@@ -19,7 +20,8 @@ using std::vector;
 
 void LinAlg::cross(vector<double> &u, vector<double> &v, vector<double> &w) {
     /*
-     *  Calculate the vector cross product of two 1x3 vectors (u, v) and store the resulting vector in w.
+     *  Calculate the vector cross product of two 1x3 vectors (u, v) and store the resulting vector 
+     *  in w.
      */
 
     // Error checking
@@ -44,9 +46,11 @@ double LinAlg::dot(vector<double> &v, vector<double> &w) {
     return (v[0] * w[0]) + (v[1] * w[1]) + (v[2] * w[2]);
 }
 
-void LinAlg::linComb(double k1, vector<double> &u, double k2, vector<double> &v, vector<double> &w) {
+void LinAlg::linComb(double k1, vector<double> &u, double k2, vector<double> &v, 
+                     vector<double> &w) {
     /*
-     *  Calculate the linear combination of two pairs of scalars and 1x3 vectors and store the resulting vector in w.
+     *  Calculate the linear combination of two pairs of scalars and 1x3 vectors and store the 
+     *  resulting vector in w.
      */
 
     // Error checking
@@ -57,7 +61,8 @@ void LinAlg::linComb(double k1, vector<double> &u, double k2, vector<double> &v,
     for (int i=0; i<3; i++) w[i] = (k1 * u[i]) + (k2 * v[i]);
 }
 
-void LinAlg::matMat(vector<vector<double>> &a, vector<vector<double>> &b, vector<vector<double>> &c) {
+void LinAlg::matMat(vector<vector<double>> &a, vector<vector<double>> &b, 
+                    vector<vector<double>> &c) {
     /*
      *  Calculate the matrix product of two 3x3 matrices and store the resulting matrix in c.
      */
@@ -76,7 +81,8 @@ void LinAlg::matMat(vector<vector<double>> &a, vector<vector<double>> &b, vector
 
 void LinAlg::matVec(vector<vector<double>> &t, vector<double> &v, vector<double> &w) {
     /*
-     *  Calculate the matrix product of a 1x3 vector with a 3x3 matrix and store the resulting vector in w.
+     *  Calculate the matrix product of a 1x3 vector with a 3x3 matrix and store the resulting 
+     *  vector in w.
      */
 
     // Error checking

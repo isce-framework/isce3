@@ -12,9 +12,9 @@ namespace isce { namespace core {
         double lon;
         double hdg;
 
-        Peg(double lt, double ln, double hd) : lat(lt), lon(ln), hdg(hd) {} // Value constructor
-        Peg() : Peg(0.,0.,0.) {}                                            // Default constructor (delegated)
-        Peg(const Peg &p) : lat(p.lat), lon(p.lon), hdg(p.hdg) {}           // Copy constructor
+        Peg(double lt, double ln, double hd) : lat(lt), lon(ln), hdg(hd) {}
+        Peg() : Peg(0.,0.,0.) {}
+        Peg(const Peg &p) : lat(p.lat), lon(p.lon), hdg(p.hdg) {}
         inline Peg& operator=(const Peg&);
     };
 

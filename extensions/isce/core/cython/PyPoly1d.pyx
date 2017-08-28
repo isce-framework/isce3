@@ -4,8 +4,6 @@
 # Copyright 2017
 #
 
-#################################################################
-
 from Poly1d cimport Poly1d
 
 cdef class PyPoly1d:

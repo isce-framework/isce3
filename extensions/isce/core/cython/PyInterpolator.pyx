@@ -4,8 +4,6 @@
 # Copyright 2017
 #
 
-#################################################################
-
 from Interpolator cimport Interpolator
 from libcpp.vector cimport vector
 #from libcpp.complex cimport complex
@@ -42,9 +40,12 @@ cdef class PyInterpolator:
         cdef int _g
         cdef vector[double] _h
         if (h):
-            print("Error: Python does not allow for pass-by-reference, therefore the function call is modified.")
-            print("       Please pass the pair of reference arguments (sixth and seventh position) as a tuple,")
-            print("       and the 0th and 1st element of the tuple will contain the modified return value.")
+            print("Error: Python does not allow for pass-by-reference, therefore the function " +
+                  "call is modified.")
+            print("       Please pass the pair of reference arguments (sixth and seventh " +
+                  "position) as a tuple,")
+            print("       and the 0th and 1st element of the tuple will contain the modified " +
+                  "return value.")
             return
         _f = 0
         _g = 0

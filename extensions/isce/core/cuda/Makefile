@@ -11,19 +11,21 @@ CXXINCDIR = -I/home/joshuac/isce_3/extensions
 NVINCDIR = -I/usr/local/cuda/include/
 BUILDDIR = export
 # no-deprecated-gpu-targets just supporessed the warning about future deprecation of arch_sm2X
-FLAGS =	-std=c++11 -Wno-deprecated-gpu-targets -c
+FLAGS =	-std=c++11 -Wno-deprecated-gpu-targets -O3 -c
 
 OBJS = gpuEllipsoid.o gpuLinAlg.o gpuOrbit.o gpuPeg.o gpuPegtrans.o
 
 .PHONY : clean recurse
 
-# Build objects and export them plus their public headers to build dir (passed in from core/Makefile)
+# Build objects and export them plus their public headers to build dir (passed in from 
+# core/Makefile)
 all : $(OBJS)
 	mkdir -p $(BUILDDIR); \
 	mv *.o $(BUILDDIR); \
 	cp *.h $(BUILDDIR)
 
-# Build objects as called from isce/core/Makefile (same as all but is moved into ../$(BUILDDIR)/cuda instead of $(BUILDDIR))
+# Build objects as called from isce/core/Makefile (same as all but is moved into ../$(BUILDDIR)/cuda 
+# instead of $(BUILDDIR))
 recurse : $(OBJS)
 	mkdir -p ../$(MAINBUILDDIR)/cuda; \
 	mv *.o ../$(MAINBUILDDIR)/cuda; \

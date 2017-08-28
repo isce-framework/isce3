@@ -4,14 +4,13 @@
 # Copyright 2017
 #
 
-#################################################################
-
 from Poly2d cimport Poly2d
 
 cdef class PyPoly2d:
     cdef Poly2d c_poly2d
 
-    def __cinit__(self, int azimuthOrder=-1, int rangeOrder=-1, double azimuthMean=0., double rangeMean=0., double azimuthNorm=1., double rangeNorm=1.):
+    def __cinit__(self, int azimuthOrder=-1, int rangeOrder=-1, double azimuthMean=0., 
+                  double rangeMean=0., double azimuthNorm=1., double rangeNorm=1.):
         self.c_poly2d.azimuthOrder = azimuthOrder
         self.c_poly2d.rangeOrder = rangeOrder
         self.c_poly2d.azimuthMean = azimuthMean
@@ -54,9 +53,11 @@ cdef class PyPoly2d:
                     ncs.append(c[i*(self.rangeOrder+1)+j])
                 nc.append(ncs)
             # nc is now the 2D reshape of coeffs
-            for i in range(self.azimuthOrder+1): # Go row-by-row...
-                for j in range(a-self.rangeOrder): # Add 0s to each row (if
-                    nc[i].append(0.)               # a > self.rangeOrder)
+            # Go row-by-row...
+            for i in range(self.azimuthOrder+1):
+                # Add 0s to each row (if a > self.rangeOrder)
+                for j in range(a-self.rangeOrder):
+                    nc[i].append(0.)
             self.c_poly2d.rangeOrder = a
             self.c_poly2d.coeffs.resize((self.azimuthOrder+1)*(self.rangeOrder+1))
             c = []
@@ -97,7 +98,8 @@ cdef class PyPoly2d:
     @coeffs.setter
     def coeffs(self, a):
         if ((self.azimuthOrder+1)*(self.rangeOrder+1) != len(a)):
-            print("Error: Invalid input size (expected 1D list of length "+str(self.azimuthOrder+1)+"*"+str(self.rangeOrder+1)+")")
+            print("Error: Invalid input size (expected 1D list of length "+str(self.azimuthOrder+1)+
+                  "*"+str(self.rangeOrder+1)+")")
             return
         for i in range((self.azimuthOrder+1)*(self.rangeOrder+1)):
             self.c_poly2d.coeffs[i] = a[i]

@@ -17,9 +17,9 @@ namespace isce { namespace core {
         double norm;
         std::vector<double> coeffs;
 
-        Poly1d(int ord, double mn, double nm) : order(ord), mean(mn), norm(nm), coeffs(ord+1) {}    // Value constructor
-        Poly1d() : Poly1d(-1,0.,1.) {}                                                              // Default constructor (delegated)
-        Poly1d(const Poly1d &p) : order(p.order), mean(p.mean), norm(p.norm), coeffs(p.coeffs) {}   // Copy constructor
+        Poly1d(int ord, double mn, double nm) : order(ord), mean(mn), norm(nm), coeffs(ord+1) {}
+        Poly1d() : Poly1d(-1,0.,1.) {}
+        Poly1d(const Poly1d &p) : order(p.order), mean(p.mean), norm(p.norm), coeffs(p.coeffs) {}
         inline Poly1d& operator=(const Poly1d&);
 
         inline void setCoeff(int,double);
@@ -38,7 +38,8 @@ namespace isce { namespace core {
 
     inline void Poly1d::setCoeff(int idx, double val) {
         if ((idx < 0) || (idx > order)){
-            std::string errstr = "Poly1d::setCoeff - Trying to set coefficient "+std::to_string(idx+1)+" out of "+std::to_string(order+1);
+            std::string errstr = "Poly1d::setCoeff - Trying to set coefficient " + 
+                                 std::to_string(idx+1) + " out of " + std::to_string(order+1);
             throw std::out_of_range(errstr);
         }
         coeffs[idx] = val;
@@ -46,7 +47,8 @@ namespace isce { namespace core {
 
     inline double Poly1d::getCoeff(int idx) {
         if ((idx < 0) || (idx > order)) {
-            std::string errstr = "Poly1d::getCoeff - Trying to get coefficient "+std::to_string(idx+1)+" out of "+std::to_string(order+1);
+            std::string errstr = "Poly1d::getCoeff - Trying to get coefficient " + 
+                                 std::to_string(idx+1) + " out of " + std::to_string(order+1);
             throw std::out_of_range(errstr);
         }
         return coeffs[idx];

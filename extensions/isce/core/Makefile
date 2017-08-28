@@ -3,13 +3,13 @@
 CC = g++
 FDEBUG = -g
 #FDEBUG = 
-CFLAGS = $(FDEBUG) -Wall -std=c++11 -c
+CFLAGS = $(FDEBUG) -Wall -std=c++11 -c -O3
 INCBASE = -I/home/joshuac/isce_3/extensions
 BUILDDIR = export
 
 OBJS = Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o Poly1d.o Poly2d.o Position.o
 
-.PHONY : clean build-cpp build-cuda build-cython
+.PHONY : clean clean-all build-cpp build-cuda build-cython
 
 # Build everything
 all : build-cpp build-cuda build-cython
@@ -67,4 +67,9 @@ clean :
 	rm -f *.o; \
 	rm -f libiscecore.a; \
 	rm -rf $(BUILDDIR)
+
+# Clean up all sub-directories as well
+clean-all : clean
+	$(MAKE) -C cuda clean
+	$(MAKE) -C cython clean
 

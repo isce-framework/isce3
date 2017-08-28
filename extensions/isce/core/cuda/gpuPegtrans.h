@@ -16,10 +16,10 @@ namespace isce { namespace core { namespace cuda {
         double ov[3];
         double radcur;
 
-        __host__ __device__ gpuPegtrans(double rdc) : radcur(rdc) {}                // Value constructor
-        __host__ __device__ gpuPegtrans() : gpuPegtrans(0.) {}                      // Default constructor (delegated)
-        __host__ __device__ gpuPegtrans(const gpuPegtrans&) = delete;               // Delete copy constructors (managing the internal memory of this is tricky and
-        __host__ __device__ gpuPegtrans& operator=(const gpuPegtrans&) = delete;    //  this Pegtrans class only gets created on the device)
+        __host__ __device__ gpuPegtrans(double rdc) : radcur(rdc) {}
+        __host__ __device__ gpuPegtrans() : gpuPegtrans(0.) {}
+        __host__ __device__ gpuPegtrans(const gpuPegtrans&) = delete;
+        __host__ __device__ gpuPegtrans& operator=(const gpuPegtrans&) = delete;
 
         __device__ void radar2xyz(gpuEllipsoid&,gpuPeg&);
         __device__ void xyz2sch(double*,double*);

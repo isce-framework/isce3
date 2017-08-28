@@ -10,7 +10,7 @@
 
 namespace isce { namespace core {
     struct Interpolator {
-        Interpolator() = default; // Default constructor
+        Interpolator() = default;
 
         template<class U>
         static U bilinear(double,double,std::vector<std::vector<U>>&);
@@ -24,7 +24,8 @@ namespace isce { namespace core {
         static U sinc_eval(std::vector<U>&,std::vector<V>&,int,int,int,double,int);
         
         template<class U, class V>
-        static U sinc_eval_2d(std::vector<std::vector<U>>&,std::vector<V>&,int,int,int,int,double,double,int,int);
+        static U sinc_eval_2d(std::vector<std::vector<U>>&,std::vector<V>&,int,int,int,int,double,
+                              double,int,int);
         
         static float interp_2d_spline(int,int,int,std::vector<std::vector<float>>&,double,double);
         static double quadInterpolate(std::vector<double>&,std::vector<double>&,double);

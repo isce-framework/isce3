@@ -26,12 +26,16 @@ cdef class PyEllipsoid:
     @e2.setter
     def e2(self, double a):
         self.c_ellipsoid.e2 = a
-    def copyFrom(self, elp): # Replaces copy-constructor functionality
+    def copyFrom(self, elp):
+        # Replaces copy-constructor functionality
         try:
             self.a = elp.a
             self.e2 = elp.e2
-        except: # Note: this allows for a dummy class object to be passed in that just has a and e2 as parameters!
-            print("Error: Object passed in to copy is incompatible with object of type PyEllipsoid.")
+        # Note: this allows for a dummy class object to be passed in that just has a and e2 as 
+        # parameters!
+        except: 
+            print("Error: Object passed in to copy is incompatible with object of type " +
+                  "PyEllipsoid.")
 
     def rEast(self, double a):
         return self.c_ellipsoid.rEast(a)

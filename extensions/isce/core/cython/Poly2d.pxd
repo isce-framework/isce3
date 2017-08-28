@@ -4,8 +4,6 @@
 # Copyright 2017
 #
 
-#################################################################
-
 from libcpp.vector cimport vector
 
 cdef extern from "isce/core/Poly2d.h" namespace "isce::core":

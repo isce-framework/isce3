@@ -10,7 +10,7 @@
 
 namespace isce { namespace core { namespace cuda {
     struct gpuLinAlg {
-        __host__ __device__ gpuLinAlg() = delete;   // Deleted constructor to ensure no-one actually tries to instantiate this class (not needed)
+        __host__ __device__ gpuLinAlg() = delete;
 
         __device__ static inline void cross(double*,double*,double*);
         __device__ static inline double dot(double*,double*);

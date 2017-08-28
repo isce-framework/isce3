@@ -4,8 +4,6 @@
 # Copyright 2017
 #
 
-#################################################################
-
 from Orbit cimport Orbit, orbitInterpMethod
 from libcpp.vector cimport vector
 

@@ -4,8 +4,6 @@
 # Copyright 2017
 #
 
-#################################################################
-
 from LinAlg cimport LinAlg
 from libcpp.vector cimport vector
 
@@ -75,7 +73,7 @@ cdef class PyLinAlg:
         cdef vector[double] _b
         cdef vector[double] _c
         for i in range(3):
-            _b.push_back(0.) # Borrowing
+            _b.push_back(0.)
         for i in range(3):
             _a.push_back(_b)
         for i in range(3):
