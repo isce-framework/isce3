@@ -4,7 +4,7 @@
 //
 
 #ifndef __ISCE_CORE_POSITION_H__
-#define __ISCE_CORE_POSITION_H_
+#define __ISCE_CORE_POSITION_H__
 
 #include <vector>
 
