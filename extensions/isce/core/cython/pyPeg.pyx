@@ -6,7 +6,7 @@
 
 from Peg cimport Peg
 
-cdef class PyPeg:
+cdef class pyPeg:
     cdef Peg c_peg
 
     def __cinit__(self, lat=0., lon=0., hdg=0.):
@@ -42,4 +42,4 @@ cdef class PyPeg:
         # Note: this allows for a dummy class object to be passed in that just has lat, lon, and hdg 
         # as parameters!
         except:
-            print("Error: Object passed in to copy is incompatible with object of type PyPeg.")
+            print("Error: Object passed in to copy is incompatible with object of type pyPeg.")

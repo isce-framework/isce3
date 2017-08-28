@@ -6,7 +6,7 @@
 
 from Poly2d cimport Poly2d
 
-cdef class PyPoly2d:
+cdef class pyPoly2d:
     cdef Poly2d c_poly2d
 
     def __cinit__(self, int azimuthOrder=-1, int rangeOrder=-1, double azimuthMean=0., 

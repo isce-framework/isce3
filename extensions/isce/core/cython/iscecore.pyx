@@ -4,12 +4,12 @@
 # Copyright 2017
 #
 
-include "PyEllipsoid.pyx"
-include "PyInterpolator.pyx"
-include "PyPeg.pyx"
-include "PyPegtrans.pyx"
-include "PyPosition.pyx"
-include "PyLinAlg.pyx"
-include "PyOrbit.pyx"
-include "PyPoly1d.pyx"
-include "PyPoly2d.pyx"
+include "pyEllipsoid.pyx"
+include "pyInterpolator.pyx"
+include "pyPeg.pyx"
+include "pyPegtrans.pyx"
+include "pyPosition.pyx"
+include "pyLinAlg.pyx"
+include "pyOrbit.pyx"
+include "pyPoly1d.pyx"
+include "pyPoly2d.pyx"

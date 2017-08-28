@@ -7,7 +7,7 @@
 from Ellipsoid cimport Ellipsoid, latLonConvMethod
 from libcpp.vector cimport vector
 
-cdef class PyEllipsoid:
+cdef class pyEllipsoid:
     cdef Ellipsoid c_ellipsoid
 
     def __cinit__(self, a=0., e2=0.):
@@ -35,7 +35,7 @@ cdef class PyEllipsoid:
         # parameters!
         except: 
             print("Error: Object passed in to copy is incompatible with object of type " +
-                  "PyEllipsoid.")
+                  "pyEllipsoid.")
 
     def rEast(self, double a):
         return self.c_ellipsoid.rEast(a)

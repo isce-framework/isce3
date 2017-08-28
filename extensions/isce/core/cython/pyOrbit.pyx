@@ -7,7 +7,7 @@
 from Orbit cimport Orbit, orbitInterpMethod
 from libcpp.vector cimport vector
 
-cdef class PyOrbit:
+cdef class pyOrbit:
     cdef Orbit c_orbit
 
     def __cinit__(self, basis=1, nVectors=0):
@@ -81,7 +81,7 @@ cdef class PyOrbit:
             self.position = orb.position
             self.velocity = orb.velocity
         except:
-            print("Error: Object passed in to copy is incompatible with object of type PyOrbit.")
+            print("Error: Object passed in to copy is incompatible with object of type pyOrbit.")
     def dPrint(self):
         self.printOrbit()
 

@@ -8,7 +8,7 @@ from Interpolator cimport Interpolator
 from libcpp.vector cimport vector
 #from libcpp.complex cimport complex
 
-cdef class PyInterpolator:
+cdef class pyInterpolator:
     cdef Interpolator c_interp
 
     def __cinit__(self):

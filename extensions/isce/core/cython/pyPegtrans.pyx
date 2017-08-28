@@ -6,7 +6,7 @@
 
 from Pegtrans cimport Pegtrans, orbitConvMethod
 
-cdef class PyPegtrans:
+cdef class pyPegtrans:
     cdef Pegtrans c_pegtrans
 
     def __cinit__(self):
@@ -72,9 +72,9 @@ cdef class PyPegtrans:
             self.ov = pt.ov
             self.radcur = pt.radcur
         except:
-            print("Error: Object passed in is incompatible with object of type PyPegtrans.")
+            print("Error: Object passed in is incompatible with object of type pyPegtrans.")
 
-    def radarToXYZ(self, PyEllipsoid a, PyPeg b):
+    def radarToXYZ(self, pyEllipsoid a, pyPeg b):
         self.c_pegtrans.radarToXYZ(a.c_ellipsoid,b.c_peg)
     def convertSCHtoXYZ(self, list a, list b, int c):
         cdef vector[double] _a

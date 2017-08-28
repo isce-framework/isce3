@@ -7,7 +7,7 @@
 from LinAlg cimport LinAlg
 from libcpp.vector cimport vector
 
-cdef class PyLinAlg:
+cdef class pyLinAlg:
     cdef LinAlg c_linAlg
 
     def __cinit__(self):

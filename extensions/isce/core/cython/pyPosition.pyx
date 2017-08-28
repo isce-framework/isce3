@@ -7,7 +7,7 @@
 from libcpp.vector cimport vector
 from Position cimport Position
 
-cdef class PyPosition:
+cdef class pyPosition:
     cdef Position c_position
 
     def __cinit__(self):

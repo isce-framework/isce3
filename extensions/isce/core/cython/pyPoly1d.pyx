@@ -6,7 +6,7 @@
 
 from Poly1d cimport Poly1d
 
-cdef class PyPoly1d:
+cdef class pyPoly1d:
     cdef Poly1d c_poly1d
 
     def __cinit__(self, order=-1, mean=0., norm=1.):
@@ -56,7 +56,7 @@ cdef class PyPoly1d:
             self.norm = poly.norm
             self.coeffs = poly.coeffs
         except:
-            print("Error: Object passed in to copy is incompatible with object of type PyPoly1d.")
+            print("Error: Object passed in to copy is incompatible with object of type pyPoly1d.")
     def dPrint(self):
         self.printPoly()
 
