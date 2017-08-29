@@ -9,7 +9,11 @@ LFLAGS = -L$(INCBASE)/isce/core/export -liscecore
 .PHONY : clean 
 
 # Build tests
-all : orbit-test
+all : tests
+	./test; \
+	$(MAKE) clean
+
+tests : orbit-test
 
 orbit-test : testOrbit.cpp $(INCBASE)/isce/core/Orbit.h $(INCBASE)/isce/core/Constants.h
 	$(CC) $(CFLAGS) $(IFLAGS) testOrbit.cpp -o test $(LFLAGS)
