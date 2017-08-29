@@ -144,7 +144,7 @@ void isce::core::orbitHermite(vector<vector<double>> &x, vector<vector<double>> 
         }
         h[i] = product;
         sum = 0.;
-        for (int j=0; i<4; j++) {
+        for (int j=0; j<4; j++) {
             product = 1.;
             for (int k=0; k<4; k++) {
                 if ((i != k) && (j != k)) product *= (time - t[k]) / (t[i] - t[k]);
@@ -182,7 +182,7 @@ int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<d
     /*
      * Interpolate Legendre orbit
      */
-
+    
     checkVecLen(opos,3);
     checkVecLen(ovel,3);
     if (nVectors < 9) {
@@ -198,7 +198,7 @@ int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<d
         // Don't stop the whole program, just flag this particular result
         return 1;
     }
-
+    
     int idx = -1;
     for (int i=0; i<nVectors; i++) {
         if (UTCtime[i] >= tintp) {
@@ -212,7 +212,7 @@ int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<d
     vector<vector<double>> pos(9, vector<double>(3)), vel(9, vector<double>(3));
     vector<double> t(9);
     for (int i=0; i<9; i++) getStateVector(idx+i, t[i], pos[i], vel[i]);
-
+    
     double trel = (8. * (tintp - t[0])) / (t[8] - t[0]);
     double teller = 1.;
     for (int i=0; i<9; i++) teller *= trel - i;

@@ -84,8 +84,12 @@ namespace isce { namespace core {
         checkVecLen(pos,3);
         checkVecLen(vel,3);
         t = UTCtime[idx];
-        pos.assign(position.begin()+(3*idx), position.begin()+(3*idx)+3);
-        vel.assign(velocity.begin()+(3*idx), position.begin()+(3*idx)+3);
+        for (int i=0; i<3; i++) {
+            pos[i] = position[(3*idx)+i];
+            vel[i] = velocity[(3*idx)+i];
+        }
+        //pos.assign(position.begin()+(3*idx), position.begin()+(3*(idx+1)));
+        //vel.assign(velocity.begin()+(3*idx), position.begin()+(3*(idx+1)));
     }
 
     inline void Orbit::setStateVector(int idx, double t, std::vector<double> &pos, 
@@ -101,7 +105,7 @@ namespace isce { namespace core {
         UTCtime[idx] = t;
         for (int i=0; i<3; i++) {
             position[3*idx+i] = pos[i];
-            velocity[3*idx+i] = pos[i];
+            velocity[3*idx+i] = vel[i];
         }
     }
 
