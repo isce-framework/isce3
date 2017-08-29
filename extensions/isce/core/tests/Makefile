@@ -6,19 +6,24 @@ CFLAGS = -std=c++11 -O3
 IFLAGS = -I$(INCBASE)
 LFLAGS = -L$(INCBASE)/isce/core/export -liscecore
 
-.PHONY : clean 
+.PHONY : clean tests builds
 
-# Build tests
 all : tests
-	./test; \
+
+# Build tests, running each individually, and clean up
+tests : orbit
 	$(MAKE) clean
 
-tests : orbit-test
+# Just build the unit tests but don't run or clean them
+builds : orbit-build
 
-orbit-test : testOrbit.cpp $(INCBASE)/isce/core/Orbit.h $(INCBASE)/isce/core/Constants.h
-	$(CC) $(CFLAGS) $(IFLAGS) testOrbit.cpp -o test $(LFLAGS)
+orbit : orbit-build
+	./orbit-test
+
+orbit-build : testOrbit.cpp $(INCBASE)/isce/core/Orbit.h $(INCBASE)/isce/core/Constants.h
+	$(CC) $(CFLAGS) $(IFLAGS) testOrbit.cpp -o orbit-test $(LFLAGS)
 
 # Clean up generated test file
 clean :
-	rm -f test
+	rm -f orbit-test
 
