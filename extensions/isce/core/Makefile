@@ -7,7 +7,7 @@ CFLAGS = $(FDEBUG) -Wall -std=c++11 -c -O3
 INCBASE = -I/home/joshuac/isce_3/extensions
 BUILDDIR = export
 
-OBJS = Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o Poly1d.o Poly2d.o Position.o
+OBJS = DateTime.o Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o Poly1d.o Poly2d.o Position.o
 
 .PHONY : clean clean-all build-cpp build-cuda build-cython
 
@@ -35,6 +35,9 @@ build-cpp : $(OBJS)
 	rm *.o
 
 # Individual object compilation
+DateTime.o : DateTime.cpp DateTime.h
+	$(CC) $(CFLAGS) $(INCBASE) DateTime.cpp
+
 Ellipsoid.o : Ellipsoid.cpp Ellipsoid.h Constants.h LinAlg.h
 	$(CC) $(CFLAGS) $(INCBASE) Ellipsoid.cpp
 
