@@ -15,13 +15,17 @@ using isce::core::DateTime;
 using std::chrono::duration;
 using std::chrono::duration_cast;
 using std::chrono::high_resolution_clock;
-using std::chrono::nanoseconds;
 using std::chrono::system_clock;
 using std::chrono::time_point;
+#define GCC_VERSION (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__)
+#if GCC_VERSION >= 50000
+using std::chrono::nanoseconds;
 using std::invalid_argument;
 using std::istringstream;
+using std::get_time;            // GCC 5 and greater
 using std::gmtime;
 using std::mktime;
+using std::put_time;            // GCC 5 and greater
 using std::regex;
 using std::regex_match;
 using std::stod;
@@ -30,10 +34,6 @@ using std::stringstream;
 using std::time_t;
 using std::tm;
 using std::to_string;
-#define GCC_VERSION (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__)
-#if GCC_VERSION >= 50000
-using std::get_time;
-using std::put_time;
 #endif
 
 #if GCC_VERSION >= 50000
@@ -112,7 +112,7 @@ string DateTime::toIsoString() const {
      *      hh   == Hour (24h notation)
      *      mm   == Minute
      *      SS   == Integral second
-     *      s    == Fractional second of the format [0-9]{1,16}
+     *      s    == Fractional second
      */
 
     // C-type time_t-parsed copy of internal std::chrono::time_point
@@ -129,8 +129,8 @@ string DateTime::toIsoString() const {
     // fractional part. We can use time_since_epoch() on the internal time_point since the
     // fractional second is independent of the reference point and the reference is fixed to POSIX
     // epoch besides
-    long int nanosec = duration_cast<nanoseconds>(t.time_since_epoch()).count();
-    datetime_str += to_string(nanosec % static_cast<long int>(1e9));
+    auto nanosec = duration_cast<nanoseconds>(t.time_since_epoch()).count();
+    datetime_str += to_string(nanosec % 1e9);
     return datetime_str;
 }
 #endif
