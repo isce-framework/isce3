@@ -34,7 +34,6 @@ namespace isce { namespace core {
         #if GCC_VERSION >= 50000
         DateTime& operator=(const std::string&);
         #endif
-        #undef GCC_VERSION
         DateTime& operator=(const double);
 
         // Wrapped boolean comparisons
@@ -59,7 +58,10 @@ namespace isce { namespace core {
             return static_cast<std::chrono::duration<double>>(t.time_since_epoch()).count();
         }
 
+        #if GCC_VERSION >= 50000
         std::string toIsoString() const;
+        #endif
+        #undef GCC_VERSION
     };
 
     inline DateTime& DateTime::operator=(const DateTime &rhs) {

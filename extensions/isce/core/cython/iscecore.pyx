@@ -4,6 +4,7 @@
 # Copyright 2017
 #
 
+#include "pyDateTime.pyx"
 include "pyEllipsoid.pyx"
 include "pyInterpolator.pyx"
 include "pyPeg.pyx"

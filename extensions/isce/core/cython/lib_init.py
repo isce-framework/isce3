@@ -4,6 +4,12 @@
 #       objects, while still being able to call 'from iscecore import Orbit' e.g. instead
 #       of 'from iscecore import pyOrbit'
 
+'''     CURRENTLY DEPRECATED
+def DateTime():
+    from .iscecore import pyDateTime
+    return pyDateTime()
+'''
+
 def Ellipsoid(a=0., e2=0.):
     from .iscecore import pyEllipsoid
     return pyEllipsoid(a,e2)
