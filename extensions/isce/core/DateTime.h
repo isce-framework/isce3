@@ -2,6 +2,14 @@
 // Author: Joshua Cohen
 // Copyright 2017
 //
+// AUTHOR'S NOTE: Current implementations of string parsing (copy/= from string and toIsoString to
+//                string) use the put_time/get_time methods defined in <iomanip> from the C++11
+//                standard, however the function wasn't actually added until GCC 5. Therefore to
+//                allow for building at the moment, these functions are protected from being
+//                defined (both here and in the .cpp implementation) by version checking the
+//                preprocessor macros (similar to the issue with std::isnan between gcc and clang).
+//                These guards will be replaced with internal guards in the functions themselves
+//                that will have implementations for GCCs earlier than GCC 5.
 
 #ifndef __ISCE_CORE_DATETIME_H__
 #define __ISCE_CORE_DATETIME_H__
@@ -15,12 +23,18 @@ namespace isce { namespace core {
 
         DateTime() : t() {}
         DateTime(const DateTime &dt) : t(dt.t) {}
+        #define GCC_VERSION (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__)
+        #if GCC_VERSION >= 50000
+        DateTime(const std::string &dts) { *this = dts; }
+        #endif
         // Note that these constructors leverage the assignment operators given their relative
         // complexity
-        DateTime(const std::string &dts) { *this = dts; }
         DateTime(const double dtd) { *this = dtd; }
         inline DateTime& operator=(const DateTime&);
+        #if GCC_VERSION >= 50000
         DateTime& operator=(const std::string&);
+        #endif
+        #undef GCC_VERSION
         DateTime& operator=(const double);
 
         // Wrapped boolean comparisons

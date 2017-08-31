@@ -20,10 +20,8 @@ using std::chrono::system_clock;
 using std::chrono::time_point;
 using std::invalid_argument;
 using std::istringstream;
-using std::get_time;
 using std::gmtime;
 using std::mktime;
-using std::put_time;
 using std::regex;
 using std::regex_match;
 using std::stod;
@@ -32,7 +30,13 @@ using std::stringstream;
 using std::time_t;
 using std::tm;
 using std::to_string;
+#define GCC_VERSION (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__)
+#if GCC_VERSION >= 50000
+using std::get_time;
+using std::put_time;
+#endif
 
+#if GCC_VERSION >= 50000
 DateTime& DateTime::operator=(const string &dts) {
     /*
      *  Assignment operator for passing in a string. Note that this is usually a challenging
@@ -74,7 +78,7 @@ DateTime& DateTime::operator=(const string &dts) {
     t += duration_cast<system_clock::duration>(duration<double>(fractional));
     return *this;
 }
-
+#endif
 DateTime& DateTime::operator=(const double dtd) {
     /*
      *  Simple assignment operator that takes a double, assumes it's expressed in seconds-since-
@@ -88,6 +92,7 @@ DateTime& DateTime::operator=(const double dtd) {
     return *this;
 }
 
+#if GCC_VERSION >= 50000
 string DateTime::toIsoString() const {
     /*
      *  String formatting is always a tricky subject, so full description of the parsing and
@@ -128,4 +133,6 @@ string DateTime::toIsoString() const {
     datetime_str += to_string(nanosec % static_cast<long int>(1e9));
     return datetime_str;
 }
+#endif
+#undef GCC_VERSION
 
