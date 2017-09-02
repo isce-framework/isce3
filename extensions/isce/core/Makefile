@@ -5,6 +5,7 @@ FDEBUG = -g
 #FDEBUG = 
 CFLAGS = $(FDEBUG) -Wall -std=c++11 -c -O3
 INCBASE = -I/home/joshuac/isce_3/extensions
+#INCBASE = -I/Users/agram/tools/isce_git/src/isce/extensions
 BUILDDIR = export
 
 OBJS = Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o Poly1d.o Poly2d.o Position.o
@@ -12,7 +13,8 @@ OBJS = Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o Poly1d.o Pol
 .PHONY : clean clean-all build-cpp build-cuda build-cython
 
 # Build everything
-all : build-cpp build-cuda build-cython
+all : build-cpp build-cython 
+	#build-cuda build-cython
 
 # Export the BUILDDIR to be visible to cuda/Makefile as MAINBUILDDIR
 build-cuda : export MAINBUILDDIR=$(BUILDDIR)
