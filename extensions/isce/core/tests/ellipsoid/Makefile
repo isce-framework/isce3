@@ -1,8 +1,8 @@
 # Makefile for building isce::core
 
 CC = g++
-#INCBASE = /home/joshuac/isce_3/extensions
-INCBASE = /Users/agram/tools/isce_git/src/isce/extensions
+INCBASE = /home/joshuac/isce_3/extensions
+#INCBASE = /Users/agram/tools/isce_git/src/isce/extensions
 CFLAGS = -std=c++11 -O3
 IFLAGS = -I$(INCBASE)
 LFLAGS = -L$(INCBASE)/isce/core/export -liscecore

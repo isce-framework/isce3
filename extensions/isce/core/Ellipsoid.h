@@ -50,11 +50,6 @@ namespace isce { namespace core {
         auto rn = rNorth(lat);
         return (re * rn) / ((re * pow(cos(hdg), 2)) + (rn * pow(sin(hdg), 2)));
     }
-
-    Ellipsoid WGS84Ellipsoid()
-    {
-        return Ellipsoid(6378137.0, 0.0066943799901);
-    }
 }}
 
 #endif
