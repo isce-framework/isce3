@@ -129,8 +129,8 @@ string DateTime::toIsoString() const {
     // fractional part. We can use time_since_epoch() on the internal time_point since the
     // fractional second is independent of the reference point and the reference is fixed to POSIX
     // epoch besides
-    auto nanosec = duration_cast<nanoseconds>(t.time_since_epoch()).count();
-    datetime_str += to_string(nanosec % 1e9);
+    long int nanosec = duration_cast<nanoseconds>(t.time_since_epoch()).count();
+    datetime_str += to_string(nanosec % static_cast<long int>(1e9));
     return datetime_str;
 }
 #endif
