@@ -131,6 +131,13 @@ string DateTime::toIsoString() const {
     // epoch besides
     long int nanosec = duration_cast<nanoseconds>(t.time_since_epoch()).count();
     datetime_str += to_string(nanosec % static_cast<long int>(1e9));
+    // Just for "pretty-ness", strip trailing 0s from the string if there are fractional seconds (by
+    // default, if nanosec == 0 then there will only be one 0 as the fractional part, but if it != 0
+    // then there will always be 9 digits trailing, so we'll string trailing zeros for conciseness).
+    // Uses safer string::compare() to check
+    if (nanosec != 0) {
+        while (datetime_str.compare(datetime_str.size()-1, 1, "0") == 0) datetime_str.pop_back();
+    }
     return datetime_str;
 }
 #endif
