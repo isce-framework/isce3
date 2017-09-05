@@ -11,7 +11,8 @@ from Cython.Build import cythonize
 
 source_dir = ".."
 
-obj_files = ['Ellipsoid',
+obj_files = [#'DateTime',
+             'Ellipsoid',
              'Interpolator',
              'LinAlg',
              'Orbit',
