@@ -1,11 +1,12 @@
 # Makefile for building isce::core
 
 CC = g++
-INCBASE = /home/joshuac/isce_3/extensions
-#INCBASE = /Users/agram/tools/isce_git/src/isce/extensions
+# As with main core Makefile, use hybrid pathing to identify include dir
+INCBASE = $(PWD)/../../../..
+COREBASE = $(INCBASE)/isce/core
 CFLAGS = -std=c++11 -O3
 IFLAGS = -I$(INCBASE)
-LFLAGS = -L$(INCBASE)/isce/core/export -liscecore
+LFLAGS = -L$(COREBASE)/export -liscecore
 
 .PHONY : clean tests builds
 
@@ -23,13 +24,13 @@ orbit : orbit-build orbit-bounds orbit-sort
 	./orbit-bounds
 	./orbit-sort
 
-orbit-build : testOrbit.cpp $(INCBASE)/isce/core/Orbit.h $(INCBASE)/isce/core/Constants.h
+orbit-build : testOrbit.cpp $(COREBASE)/Orbit.h $(COREBASE)/Constants.h
 	$(CC) $(CFLAGS) $(IFLAGS) testOrbit.cpp -o orbit-test $(LFLAGS)
 
-orbit-bounds: testOrbitBounds.cpp $(INCBASE)/isce/core/Orbit.h $(INCBASE)/isce/core/Constants.h
+orbit-bounds: testOrbitBounds.cpp $(COREBASE)/Orbit.h $(COREBASE)/Constants.h
 	$(CC) $(CFLAGS) $(IFLAGS) testOrbitBounds.cpp -o orbit-bounds $(LFLAGS)
 
-orbit-sort: testOrbitSort.cpp $(INCBASE)/isce/core/Orbit.h $(INCBASE)/isce/core/Constants.h
+orbit-sort: testOrbitSort.cpp $(COREBASE)/Orbit.h $(COREBASE)/Constants.h
 	$(CC) $(CFLAGS) $(IFLAGS) testOrbitSort.cpp -o orbit-sort $(LFLAGS)
 
 # Clean up generated test file

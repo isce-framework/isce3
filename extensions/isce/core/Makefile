@@ -2,10 +2,11 @@
 
 CC = g++
 FDEBUG = -g
-#FDEBUG = 
 CFLAGS = $(FDEBUG) -Wall -std=c++11 -c -O3
-INCBASE = -I/home/joshuac/isce_3/extensions
-#INCBASE = -I/Users/agram/tools/isce_git/src/isce/extensions
+# INCBASE is set using hybrid of relative and hard pathing (since we're in isce/extensions/isce/core and
+# need to include isce/extensions). This will change with a full build system (ideally which will set env
+# variables to handle this)
+INCBASE = -I$(PWD)/../..
 BUILDDIR = export
 
 OBJS = DateTime.o Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o Poly1d.o Poly2d.o Position.o
@@ -14,7 +15,7 @@ OBJS = DateTime.o Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o P
 
 # Build everything
 all : build-cpp build-cython 
-	#build-cuda build-cython
+#all : build-cpp build-cython build-cuda
 
 # Export the BUILDDIR to be visible to cuda/Makefile as MAINBUILDDIR
 build-cuda : export MAINBUILDDIR=$(BUILDDIR)

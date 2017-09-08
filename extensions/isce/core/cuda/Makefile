@@ -4,12 +4,15 @@
 # Author: Joshua Cohen
 
 NVCC = nvcc
-# Alter based on own directory structure
-CXXINCDIR = -I/home/joshuac/isce_3/extensions
+# As in main core Makefile use hybrid pathing to identify proper include dir
+CXXINCDIR = -I$(PWD)/../..
 # Need to include cuda_runtime.h for gpuOrbit since it does its own memory management
-# Alter based on own directory structure
+# ***** ALTER BASED ON YOUR OWN DIRECTORY STRUCTURE *****
 NVINCDIR = -I/usr/local/cuda/include/
 BUILDDIR = export
+# Point nvcc to the gcc5 bin
+# ***** ALTER BASED ON YOUR OWN DIRECTORY STRUCTURE *****
+NVFLAGS = -ccbin $(HOME)/opt/gcc-5.4.0/bin
 # no-deprecated-gpu-targets just supporessed the warning about future deprecation of arch_sm2X
 FLAGS =	-std=c++11 -Wno-deprecated-gpu-targets -O3 -c
 
@@ -32,19 +35,19 @@ recurse : $(OBJS)
 	cp *.h ../$(MAINBUILDDIR)/cuda
 
 gpuEllipsoid.o : gpuEllipsoid.cu gpuEllipsoid.h gpuLinAlg.h
-	$(NVCC) $(FLAGS) $(CXXINCDIR) gpuEllipsoid.cu
+	$(NVCC) $(NVFLAGS) $(FLAGS) $(CXXINCDIR) gpuEllipsoid.cu
 
 gpuLinAlg.o : gpuLinAlg.cu gpuLinAlg.h
-	$(NVCC) $(FLAGS) $(CXXINCDIR) gpuLinAlg.cu
+	$(NVCC) $(NVFLAGS) $(FLAGS) $(CXXINCDIR) gpuLinAlg.cu
 
 gpuOrbit.o : gpuOrbit.cu gpuOrbit.h
-	$(NVCC) $(FLAGS) $(CXXINCDIR) $(NVINCDIR) gpuOrbit.cu
+	$(NVCC) $(NVFLAGS) $(FLAGS) $(CXXINCDIR) $(NVINCDIR) gpuOrbit.cu
 
 gpuPeg.o : gpuPeg.cu gpuPeg.h
-	$(NVCC) $(FLAGS) $(CXXINCDIR) gpuPeg.cu
+	$(NVCC) $(NVFLAGS) $(FLAGS) $(CXXINCDIR) gpuPeg.cu
 
 gpuPegtrans.o : gpuPegtrans.cu gpuPegtrans.h gpuEllipsoid.h gpuLinAlg.h gpuPeg.h
-	$(NVCC) $(FLAGS) $(CXXINCDIR) gpuPegtrans.cu
+	$(NVCC) $(NVFLAGS) $(FLAGS) $(CXXINCDIR) gpuPegtrans.cu
 
 # Clean objects and build/ dir
 clean : 
