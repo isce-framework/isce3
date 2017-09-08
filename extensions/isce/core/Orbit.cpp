@@ -89,8 +89,8 @@ int Orbit::interpolateWGS84Orbit(double tintp, vector<double> &opos, vector<doub
     // Totally possible that a time is passed to interpolate that's out-of-epoch, but not 
     // exception-worthy (so it just returns a 1 status)
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) {
-        cout << "Error in Orbit::interpolateWGS84Orbit - Interpolation time requested (" << tintp << 
-                ") is outside the epoch range of the stored vectors" << endl;
+        //cout << "Error in Orbit::interpolateWGS84Orbit - Interpolation time requested (" << tintp << 
+        //        ") is outside the epoch range of the stored vectors" << endl;
         // Don't stop the whole program, just flag this particular result
         return 1;
     }
@@ -193,8 +193,8 @@ int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<d
     // Totally possible that a time is passed to interpolate that's out-of-epoch, but not 
     // exception-worthy (so it just returns a 1 status)
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) {
-        cout << "Error in Orbit::interpolateLegendreOrbit - Interpolation time requested (" << 
-                tintp << ") is outside the epoch range of the stored vectors" << endl;
+        //cout << "Error in Orbit::interpolateLegendreOrbit - Interpolation time requested (" << 
+        //        tintp << ") is outside the epoch range of the stored vectors" << endl;
         // Don't stop the whole program, just flag this particular result
         return 1;
     }
@@ -254,8 +254,8 @@ int Orbit::interpolateSCHOrbit(double tintp, vector<double> &opos, vector<double
     // Totally possible that a time is passed to interpolate that's out-of-epoch, but not 
     // exception-worthy (so it just returns a 1 status)
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) {
-        cout << "Error in Orbit::interpolateSCHOrbit - Interpolation time requested (" << tintp << 
-                ") is outside the epoch range of the stored vectors" << endl;
+        //cout << "Error in Orbit::interpolateSCHOrbit - Interpolation time requested (" << tintp << 
+        //        ") is outside the epoch range of the stored vectors" << endl;
         // Don't stop the whole program, just flag this particular result
         return 1;
     }

@@ -178,6 +178,122 @@ void testCircle() {
     }
 }
 
+
+
+void makePolynomialSV(double dt, vector<double> &xpoly, vector<double> &ypoly,
+                                 vector<double> &zpoly, vector<double> &pos,
+                                 vector<double> &vel) {
+
+    pos[0] = 0.0;
+    double fact = 1.0;
+    for (int i=0; i < xpoly.size(); i++, fact*=dt)
+    {
+        pos[0] += fact * xpoly[i];
+    }
+
+    vel[0] = 0.0;
+    fact = 1.0;
+    for(int i=1; i < xpoly.size(); i++, fact*=dt)
+    {
+        vel[0] += i * xpoly[i] * fact;
+    }
+
+
+    pos[1] = 0.0;
+    fact = 1.0;
+    for (int i=0; i < ypoly.size(); i++, fact*=dt)
+    {
+        pos[1] += fact * ypoly[i];
+    }
+
+    vel[1] = 0.0;
+    fact = 1.0;
+    for(int i=1; i < ypoly.size(); i++, fact*=dt)
+    {
+        vel[1] += i * ypoly[i] * fact;
+    }
+
+
+    pos[2] = 0.0;
+    fact = 1.0;
+    for (int i=0; i < zpoly.size(); i++, fact*=dt)
+    {
+        pos[2] += fact * zpoly[i];
+    }
+
+    vel[2] = 0.0;
+    fact = 1.0;
+    for(int i=1; i < zpoly.size(); i++, fact*=dt)
+    {
+        vel[2] += i * zpoly[i] * fact;
+    }
+
+}
+
+void testPolynomial() {
+    /*
+     * Test linear orbit.
+     */
+
+    Orbit orb(1,11);
+    double t = 1000.;
+    vector<double> pos(3), vel(3);
+
+    vector<double> xpoly = {-7000000., 5435., -45.0, 7.3};
+    vector<double> ypoly = {5400000., -4257., 23.0, 3.9, 0.01};
+    vector<double> zpoly = {0.0, 7000., 11.0};
+
+    // Create straight-line orbit with 11 state vectors, each 10 s apart
+    for (int i=0; i<11; i++) {
+        makePolynomialSV(i*10., xpoly, ypoly, zpoly, pos, vel);
+        orb.setStateVector(i, t+(i*10.), pos, vel);
+    }
+    
+    // Interpolation test times
+    double test_t[] = {23.3, 36.7, 54.5, 89.3};
+    vector<double> ref_pos(3), ref_vel(3);
+
+    cout << endl << "[Polynomial orbit interpolation]" << endl;
+
+    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
+    bool stat = true;
+    cout << " [SCH Interpolation]" << endl;
+    for (int i=0; i<4; i++) {
+        makePolynomialSV(test_t[i], xpoly, ypoly, zpoly, ref_pos, ref_vel);
+        cout << "  [t = " << test_t[i] << "] ";
+        orb.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
+        stat = stat & checkAlmostEqual(ref_pos, pos, 3);
+        stat = stat & checkAlmostEqual(ref_vel, vel, 4);
+        if (stat) cout << "PASSED";
+        cout << endl;
+    }
+
+    stat = true;
+    cout << " [Hermite Interpolation]" << endl;
+    for (int i=0; i<4; i++) {
+        makePolynomialSV(test_t[i], xpoly, ypoly, zpoly, ref_pos, ref_vel);
+        cout << "  [t = " << test_t[i] << "] ";
+        orb.interpolate(t+test_t[i], pos, vel, HERMITE_METHOD);
+        stat = stat & checkAlmostEqual(ref_pos, pos, 3);
+        stat = stat & checkAlmostEqual(ref_vel, vel, 4);
+        if (stat) cout << "PASSED";
+        cout << endl;
+    }
+
+    stat = true;
+    cout << " [Legendre Interpolation]" << endl;
+    for (int i=0; i<4; i++) {
+        makePolynomialSV(test_t[i], xpoly, ypoly, zpoly, ref_pos, ref_vel);
+        cout << "  [t = " << test_t[i] << "] ";
+        orb.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD);
+        stat = stat & checkAlmostEqual(ref_pos, pos, 3);
+        stat = stat & checkAlmostEqual(ref_vel, vel, 4);
+        if (stat) cout << "PASSED";
+        cout << endl;
+    }
+}
+
+
 int main(int argc, char **argv) {
     /*
      * Orbit unit-testing script.
@@ -185,6 +301,7 @@ int main(int argc, char **argv) {
 
     testStraightLine();
     testCircle();
+    testPolynomial();
 
     return 0;
 }
