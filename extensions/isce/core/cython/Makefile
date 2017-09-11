@@ -9,27 +9,27 @@
 # first before trying to build since we want to force Cython to recompile the primary iscecore.pyx 
 # -> iscecore.cpp (which it won't do unless the dependent files are changed)
 all : clean
-	mkdir -p export; \
-	python3 lib_build.py build_ext --inplace; \
-	mv *.so export; \
-	cp lib_init.py export/__init__.py; \
-	rm -rf build; \
+	mkdir -p export
+	python3 lib_build.py build_ext --inplace
+	mv *.so export
+	cp lib_init.py export/__init__.py
+	rm -rf build
 	rm -f iscecore.cpp
 
 # Build Python module using setup file, clean intermediary files, and move everything up to
 # the main export/ directory. See above about needing to run 'clean' first
 recurse : clean
-	python3 lib_build.py build_ext --inplace; \
-	mkdir -p ../$(MAINBUILDDIR)/cython; \
-	mv *.so ../$(MAINBUILDDIR)/cython; \
+	python3 lib_build.py build_ext --inplace
+	mkdir -p ../$(MAINBUILDDIR)/cython
+	mv *.so ../$(MAINBUILDDIR)/cython
 	cp lib_init.py ../$(MAINBUILDDIR)/cython/__init__.py
-	rm -rf build; \
+	rm -rf build
 	rm -f iscecore.cpp
 
 # Clean module, auto-gen'ed .cpp, and build/ dir
 clean : 
-	rm -rf export; \
-	rm -rf build; \
-	rm -f iscecore.cpp; \
+	rm -rf export
+	rm -rf build
+	rm -f iscecore.cpp
 	rm -f *.so
 

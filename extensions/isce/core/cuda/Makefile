@@ -9,11 +9,14 @@ CXXINCDIR = -I$(PWD)/../..
 # Need to include cuda_runtime.h for gpuOrbit since it does its own memory management
 # ***** ALTER BASED ON YOUR OWN DIRECTORY STRUCTURE *****
 NVINCDIR = -I/usr/local/cuda/include/
+# *******************************************************
 BUILDDIR = export
 # Point nvcc to the gcc5 bin
 # ***** ALTER BASED ON YOUR OWN DIRECTORY STRUCTURE *****
 NVFLAGS = -ccbin $(HOME)/opt/gcc-5.4.0/bin
-# no-deprecated-gpu-targets just supporessed the warning about future deprecation of arch_sm2X
+# *******************************************************
+# no-deprecated-gpu-targets just supporessed the warning about future deprecation of arch_sm2X,
+# should be removable in CUDA 9.0 when SM_2X support is deprecated officially
 FLAGS =	-std=c++11 -Wno-deprecated-gpu-targets -O3 -c
 
 OBJS = gpuEllipsoid.o gpuLinAlg.o gpuOrbit.o gpuPeg.o gpuPegtrans.o
@@ -23,15 +26,15 @@ OBJS = gpuEllipsoid.o gpuLinAlg.o gpuOrbit.o gpuPeg.o gpuPegtrans.o
 # Build objects and export them plus their public headers to build dir (passed in from 
 # core/Makefile)
 all : $(OBJS)
-	mkdir -p $(BUILDDIR); \
-	mv *.o $(BUILDDIR); \
+	mkdir -p $(BUILDDIR)
+	mv *.o $(BUILDDIR)
 	cp *.h $(BUILDDIR)
 
 # Build objects as called from isce/core/Makefile (same as all but is moved into ../$(BUILDDIR)/cuda 
 # instead of $(BUILDDIR))
 recurse : $(OBJS)
-	mkdir -p ../$(MAINBUILDDIR)/cuda; \
-	mv *.o ../$(MAINBUILDDIR)/cuda; \
+	mkdir -p ../$(MAINBUILDDIR)/cuda
+	mv *.o ../$(MAINBUILDDIR)/cuda
 	cp *.h ../$(MAINBUILDDIR)/cuda
 
 gpuEllipsoid.o : gpuEllipsoid.cu gpuEllipsoid.h gpuLinAlg.h
@@ -51,6 +54,6 @@ gpuPegtrans.o : gpuPegtrans.cu gpuPegtrans.h gpuEllipsoid.h gpuLinAlg.h gpuPeg.h
 
 # Clean objects and build/ dir
 clean : 
-	rm -f *.o; \
+	rm -f *.o
 	rm -rf $(BUILDDIR)
 

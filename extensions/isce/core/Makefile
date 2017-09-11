@@ -31,10 +31,10 @@ build-cython :
 
 # Build the library and clean up
 build-cpp : $(OBJS)
-	ar rc libiscecore.a $(OBJS); \
-	mkdir -p $(BUILDDIR); \
-	mv libiscecore.a $(BUILDDIR); \
-	cp *.h $(BUILDDIR); \
+	ar rc libiscecore.a $(OBJS)
+	mkdir -p $(BUILDDIR)
+	mv libiscecore.a $(BUILDDIR)
+	cp *.h $(BUILDDIR)
 	rm *.o
 
 # Individual object compilation
@@ -70,8 +70,8 @@ Position.o : Position.cpp Position.h Constants.h LinAlg.h
 
 # Clean up objects, library, and build directory
 clean :
-	rm -f *.o; \
-	rm -f libiscecore.a; \
+	rm -f *.o
+	rm -f libiscecore.a
 	rm -rf $(BUILDDIR)
 
 # Clean up all sub-directories as well
