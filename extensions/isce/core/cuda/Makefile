@@ -27,33 +27,21 @@ OBJS = gpuEllipsoid.o gpuLinAlg.o gpuOrbit.o gpuPeg.o gpuPegtrans.o
 # core/Makefile)
 all : $(OBJS)
 	mkdir -p $(BUILDDIR)
-	mv *.o $(BUILDDIR)
-	cp *.h $(BUILDDIR)
+	mv $(OBJS) $(BUILDDIR)
+	cp $(OBJS:.o=.h) $(BUILDDIR)
 
 # Build objects as called from isce/core/Makefile (same as all but is moved into ../$(BUILDDIR)/cuda 
 # instead of $(BUILDDIR))
 recurse : $(OBJS)
 	mkdir -p ../$(MAINBUILDDIR)/cuda
-	mv *.o ../$(MAINBUILDDIR)/cuda
-	cp *.h ../$(MAINBUILDDIR)/cuda
+	mv $(OBJS) ../$(MAINBUILDDIR)/cuda
+	cp $(OBJS:.o=.h) ../$(MAINBUILDDIR)/cuda
 
-gpuEllipsoid.o : gpuEllipsoid.cu gpuEllipsoid.h gpuLinAlg.h
-	$(NVCC) $(NVFLAGS) $(FLAGS) $(CXXINCDIR) gpuEllipsoid.cu
-
-gpuLinAlg.o : gpuLinAlg.cu gpuLinAlg.h
-	$(NVCC) $(NVFLAGS) $(FLAGS) $(CXXINCDIR) gpuLinAlg.cu
-
-gpuOrbit.o : gpuOrbit.cu gpuOrbit.h
-	$(NVCC) $(NVFLAGS) $(FLAGS) $(CXXINCDIR) $(NVINCDIR) gpuOrbit.cu
-
-gpuPeg.o : gpuPeg.cu gpuPeg.h
-	$(NVCC) $(NVFLAGS) $(FLAGS) $(CXXINCDIR) gpuPeg.cu
-
-gpuPegtrans.o : gpuPegtrans.cu gpuPegtrans.h gpuEllipsoid.h gpuLinAlg.h gpuPeg.h
-	$(NVCC) $(NVFLAGS) $(FLAGS) $(CXXINCDIR) gpuPegtrans.cu
+%.o : %.cu
+	$(NVCC) $(NVFLAGS) $(FLAGS) $(CXXINCDIR) $(NVINCDIR) $<
 
 # Clean objects and build/ dir
 clean : 
-	rm -f *.o
+	rm -f $(OBJS)
 	rm -rf $(BUILDDIR)
 

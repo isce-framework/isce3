@@ -11,6 +11,8 @@ BUILDDIR = export
 
 OBJS = DateTime.o Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o Poly1d.o Poly2d.o Position.o
 
+LIBTARGET = libiscecore.a
+
 .PHONY : clean clean-all build-cpp build-cuda build-cython
 
 # Build everything
@@ -31,47 +33,20 @@ build-cython :
 
 # Build the library and clean up
 build-cpp : $(OBJS)
-	ar rc libiscecore.a $(OBJS)
+	ar rc $(LIBTARGET) $(OBJS)
 	mkdir -p $(BUILDDIR)
-	mv libiscecore.a $(BUILDDIR)
-	cp *.h $(BUILDDIR)
-	rm *.o
+	mv $(LIBTARGET) $(BUILDDIR)
+	cp $(OBJS:.o=.h) $(BUILDDIR)
+	rm $(OBJS)
 
 # Individual object compilation
-DateTime.o : DateTime.cpp DateTime.h
-	$(CC) $(CFLAGS) $(INCBASE) DateTime.cpp
-
-Ellipsoid.o : Ellipsoid.cpp Ellipsoid.h Constants.h LinAlg.h
-	$(CC) $(CFLAGS) $(INCBASE) Ellipsoid.cpp
-
-Interpolator.o : Interpolator.cpp Interpolator.h Constants.h
-	$(CC) $(CFLAGS) $(INCBASE) Interpolator.cpp
-
-LinAlg.o : LinAlg.cpp LinAlg.h Constants.h
-	$(CC) $(CFLAGS) $(INCBASE) LinAlg.cpp
-
-Orbit.o : Orbit.cpp Orbit.h Constants.h
-	$(CC) $(CFLAGS) $(INCBASE) Orbit.cpp
-
-Peg.o : Peg.cpp Peg.h
-	$(CC) $(CFLAGS) $(INCBASE) Peg.cpp
-
-Pegtrans.o : Pegtrans.cpp Pegtrans.h Constants.h Ellipsoid.h LinAlg.h Peg.h
-	$(CC) $(CFLAGS) $(INCBASE) Pegtrans.cpp
-
-Poly1d.o : Poly1d.cpp Poly1d.h
-	$(CC) $(CFLAGS) $(INCBASE) Poly1d.cpp
-
-Poly2d.o : Poly2d.cpp Poly2d.h Constants.h
-	$(CC) $(CFLAGS) $(INCBASE) Poly2d.cpp
-
-Position.o : Position.cpp Position.h Constants.h LinAlg.h
-	$(CC) $(CFLAGS) $(INCBASE) Position.cpp
+%.o : %.cpp
+	$(CC) $(CFLAGS) $(INCBASE) $<
 
 # Clean up objects, library, and build directory
 clean :
-	rm -f *.o
-	rm -f libiscecore.a
+	rm -f $(OBJS)
+	rm -f $(LIBTARGET)
 	rm -rf $(BUILDDIR)
 
 # Clean up all sub-directories as well
