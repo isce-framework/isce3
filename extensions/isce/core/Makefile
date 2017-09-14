@@ -2,7 +2,7 @@
 
 CC = g++
 FDEBUG = -g
-CFLAGS = $(FDEBUG) -Wall -std=c++11 -c -O3
+CFLAGS = $(FDEBUG) -Wall -fPIC -std=c++11 -O3 -c
 # INCBASE is set using hybrid of relative and hard pathing (since we're in isce/extensions/isce/core and
 # need to include isce/extensions). This will change with a full build system (ideally which will set env
 # variables to handle this)
