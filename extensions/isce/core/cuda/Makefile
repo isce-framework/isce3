@@ -31,7 +31,6 @@ OBJS = gpuEllipsoid.o gpuLinAlg.o gpuOrbit.o gpuPeg.o gpuPegtrans.o
 # core/Makefile)
 all : obj-build
 	mkdir -p $(BUILDDIR)
-#	mv $(OBJS) $(BUILDDIR)
 	mv gpuDevCode.o $(OBJS) $(BUILDDIR)
 	cp $(OBJS:.o=.h) $(BUILDDIR)
 	rm -f $(OBJS)
@@ -40,13 +39,11 @@ all : obj-build
 # instead of $(BUILDDIR))
 recurse : obj-build
 	mkdir -p ../$(MAINBUILDDIR)/cuda
-#	mv $(OBJS) ../$(MAINBUILDDIR)/cuda
 	mv gpuDevCode.o $(OBJS) ../$(MAINBUILDDIR)/cuda
 	cp $(OBJS:.o=.h) ../$(MAINBUILDDIR)/cuda
 	rm -f $(OBJS)
 
 obj-build : $(OBJS)
-	$(NVCC) -dlink $(OBJS) -o gpuDevCode.o
 
 %.o : %.cu
 	$(NVCC) $(NVFLAGS) $(FLAGS) $(CXXINCDIR) $(NVINCDIR) $<
