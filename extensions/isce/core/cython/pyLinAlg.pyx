@@ -4,14 +4,22 @@
 # Copyright 2017
 #
 
-from LinAlg cimport LinAlg
+from libcpp cimport bool
 from libcpp.vector cimport vector
+from LinAlg cimport LinAlg
 
 cdef class pyLinAlg:
-    cdef LinAlg c_linAlg
+    cdef LinAlg *c_linAlg
+    cdef bool __owner
 
     def __cinit__(self):
-        return
+        self.c_linAlg = new LinAlg()
+        self.__owner = True
+    def __dealloc__(self):
+        if self.__owner:
+            del self.c_linAlg
+    # Note no static binder since we'll never need to pass any particular LinAlg object
+    # around...
 
     def cross(self, list a, list b, list c):
         cdef vector[double] _a

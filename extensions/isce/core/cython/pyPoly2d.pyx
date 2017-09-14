@@ -4,21 +4,29 @@
 # Copyright 2017
 #
 
+from libcpp cimport bool
 from Poly2d cimport Poly2d
 
 cdef class pyPoly2d:
-    cdef Poly2d c_poly2d
+    cdef Poly2d *c_poly2d
+    cdef bool __owner
 
     def __cinit__(self, int azimuthOrder=-1, int rangeOrder=-1, double azimuthMean=0., 
                   double rangeMean=0., double azimuthNorm=1., double rangeNorm=1.):
-        self.c_poly2d.azimuthOrder = azimuthOrder
-        self.c_poly2d.rangeOrder = rangeOrder
-        self.c_poly2d.azimuthMean = azimuthMean
-        self.c_poly2d.rangeMean = rangeMean
-        self.c_poly2d.azimuthNorm = azimuthNorm
-        self.c_poly2d.rangeNorm = rangeNorm
-        self.c_poly2d.coeffs.resize((azimuthOrder+1)*(rangeOrder+1))
-    
+        self.c_poly2d = new Poly2d(azimuthOrder,rangeOrder,azimuthMean,rangeMean,azimuthNorm,
+                                    rangeNorm)
+        self.__owner = True
+    def __dealloc__(self):
+        if self.__owner:
+            del self.c_poly2d
+    @staticmethod
+    def bind(pyPoly2d poly):
+        new_poly = pyPoly2d()
+        del new_poly.c_poly2d
+        new_poly.c_poly2d = poly.c_poly2d
+        new_poly.__owner = False
+        return new_poly
+
     @property
     def azimuthOrder(self):
         return self.c_poly2d.azimuthOrder

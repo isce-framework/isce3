@@ -4,16 +4,27 @@
 # Copyright 2017
 #
 
+from libcpp cimport bool
 from Peg cimport Peg
 
 cdef class pyPeg:
-    cdef Peg c_peg
+    cdef Peg *c_peg
+    cdef bool __owner
 
     def __cinit__(self, lat=0., lon=0., hdg=0.):
-        self.c_peg.lat = lat
-        self.c_peg.lon = lon
-        self.c_peg.hdg = hdg
-    
+        self.c_peg = new Peg(lat,lon,hdg)
+        self.__owner = True
+    def __dealloc__(self):
+        if self.__owner:
+            del self.c_peg
+    @staticmethod
+    def bind(pyPeg peg):
+        new_peg = pyPeg()
+        del new_peg.c_peg
+        new_peg.c_peg = peg.c_peg
+        new_peg.__owner = False
+        return new_peg
+
     @property
     def lat(self):
         return self.c_peg.lat

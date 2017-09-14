@@ -4,15 +4,27 @@
 # Copyright 2017
 #
 
-from Ellipsoid cimport Ellipsoid, latLonConvMethod
+from libcpp cimport bool
 from libcpp.vector cimport vector
+from Ellipsoid cimport Ellipsoid, latLonConvMethod
 
 cdef class pyEllipsoid:
-    cdef Ellipsoid c_ellipsoid
+    cdef Ellipsoid *c_ellipsoid
+    cdef bool __owner
 
     def __cinit__(self, a=0., e2=0.):
-        self.c_ellipsoid.a = a
-        self.c_ellipsoid.e2 = e2
+        self.c_ellipsoid = new Ellipsoid(a, e2)
+        self.__owner = True
+    def __dealloc__(self):
+        if self.__owner:
+            del self.c_ellipsoid
+    @staticmethod
+    def bind(pyEllipsoid elp):
+        new_elp = pyEllipsoid()
+        del new_elp.c_ellipsoid
+        new_elp.c_ellipsoid = elp.c_ellipsoid
+        new_elp.__owner = False
+        return new_elp
 
     @property
     def a(self):

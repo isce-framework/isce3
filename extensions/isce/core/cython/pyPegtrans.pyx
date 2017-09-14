@@ -4,15 +4,28 @@
 # Copyright 2017
 #
 
+from cython.operator cimport dereference as deref
+from libcpp cimport bool
 from Pegtrans cimport Pegtrans, orbitConvMethod
 
 cdef class pyPegtrans:
-    cdef Pegtrans c_pegtrans
+    cdef Pegtrans *c_pegtrans
+    cdef bool __owner
 
     def __cinit__(self):
-        # Never will be initialized with values, so no need to check
-        return
-    
+        self.c_pegtrans = new Pegtrans()
+        self.__owner = True
+    def __dealloc__(self):
+        if self.__owner:
+            del self.c_pegtrans
+    @staticmethod
+    def bind(pyPegtrans pgt):
+        new_pgt = pyPegtrans()
+        del new_pgt.c_pegtrans
+        new_pgt.c_pegtrans = pgt.c_pegtrans
+        new_pgt.__owner = False
+        return new_pgt
+
     @property
     def mat(self):
         a = [[0.,0.,0.],[0.,0.,0.],[0.,0.,0.]]
@@ -75,7 +88,7 @@ cdef class pyPegtrans:
             print("Error: Object passed in is incompatible with object of type pyPegtrans.")
 
     def radarToXYZ(self, pyEllipsoid a, pyPeg b):
-        self.c_pegtrans.radarToXYZ(a.c_ellipsoid,b.c_peg)
+        self.c_pegtrans.radarToXYZ(deref(a.c_ellipsoid),deref(b.c_peg))
     def convertSCHtoXYZ(self, list a, list b, int c):
         cdef vector[double] _a
         cdef vector[double] _b

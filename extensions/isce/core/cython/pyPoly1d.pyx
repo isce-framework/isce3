@@ -4,16 +4,26 @@
 # Copyright 2017
 #
 
+from libcpp cimport bool
 from Poly1d cimport Poly1d
 
 cdef class pyPoly1d:
-    cdef Poly1d c_poly1d
+    cdef Poly1d *c_poly1d
+    cdef bool __owner
 
     def __cinit__(self, order=-1, mean=0., norm=1.):
-        self.c_poly1d.order = order
-        self.c_poly1d.mean = mean
-        self.c_poly1d.norm = norm
-        self.c_poly1d.coeffs.resize(order+1)
+        self.c_poly1d = new Poly1d(order,mean,norm)
+        self.__owner = True
+    def __dealloc__(self):
+        if self.__owner:
+            del self.c_poly1d
+    @staticmethod
+    def bind(pyPoly1d poly):
+        new_poly = pyPoly1d()
+        del new_poly.c_poly1d
+        new_poly.c_poly1d = poly.c_poly1d
+        new_poly.__owner = False
+        return new_poly
 
     @property
     def order(self):

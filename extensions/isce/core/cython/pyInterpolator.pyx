@@ -4,15 +4,23 @@
 # Copyright 2017
 #
 
-from Interpolator cimport Interpolator
+from libcpp cimport bool
 from libcpp.vector cimport vector
 #from libcpp.complex cimport complex
+from Interpolator cimport Interpolator
 
 cdef class pyInterpolator:
-    cdef Interpolator c_interp
+    cdef Interpolator *c_interp
+    cdef bool __owner
 
     def __cinit__(self):
-        return
+        self.c_interp = new Interpolator()
+        self.__owner = True
+    def __dealloc__(self):
+        if self.__owner:
+            del self.c_interp
+    # Note no static binder since we'll never need to pass any particular Interpolator object
+    # around...
     '''
     def bilinear(self, double a, double b, c):
         cdef vector[vector[double]] _c0 = c

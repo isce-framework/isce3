@@ -4,14 +4,27 @@
 # Copyright 2017
 #
 
+from libcpp cimport bool
 from libcpp.vector cimport vector
 from Position cimport Position
 
 cdef class pyPosition:
-    cdef Position c_position
+    cdef Position *c_position
+    cdef bool __owner
 
     def __cinit__(self):
-        return
+        self.c_position = new Position()
+        self.__owner = True
+    def __dealloc__(self):
+        if self.__owner:
+            del self.c_position
+    @staticmethod
+    def bind(pyPosition pos):
+        new_pos = pyPosition()
+        del new_pos.c_position
+        new_pos.c_position = pos.c_position
+        new_pos.__owner = True
+        return new_pos
     
     @property
     def j(self):

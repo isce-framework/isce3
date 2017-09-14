@@ -4,18 +4,27 @@
 # Copyright 2017
 #
 
-from Orbit cimport Orbit, orbitInterpMethod
+from libcpp cimport bool
 from libcpp.vector cimport vector
+from Orbit cimport Orbit, orbitInterpMethod
 
 cdef class pyOrbit:
-    cdef Orbit c_orbit
+    cdef Orbit *c_orbit
+    cdef bool __owner
 
     def __cinit__(self, basis=1, nVectors=0):
-        self.c_orbit.basis = basis
-        self.c_orbit.nVectors = nVectors
-        self.c_orbit.position.resize(3*nVectors)
-        self.c_orbit.velocity.resize(3*nVectors)
-        self.c_orbit.UTCtime.resize(nVectors)
+        self.c_orbit = new Orbit(basis,nVectors)
+        self.__owner = True
+    def __dealloc__(self):
+        if self.__owner:
+            del self.c_orbit
+    @staticmethod
+    def bind(pyOrbit orb):
+        new_orb = pyOrbit()
+        del new_orb.c_orbit
+        new_orb.c_orbit = orb.c_orbit
+        new_orb.__owner = False
+        return new_orb
 
     @property
     def basis(self):

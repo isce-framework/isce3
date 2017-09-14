@@ -4,13 +4,26 @@
 # Copyright 2017
 #
 
+from libcpp cimport bool
 from DateTime cimport DateTime
 
 cdef class pyDateTime:
-    cdef DateTime c_dateTime
+    cdef DateTime *c_dateTime
+    cdef bool __owner
 
     def __cinit__(self):
-        return
+        self.c_dateTime = new DateTime()
+        self.__owner = True
+    def __dealloc__(self):
+        if self.__owner:
+            del self.c_dateTime
+    @staticmethod
+    def bind(pyDateTime dt):
+        new_dt = pyDateTime()
+        del new_dt.c_dateTime
+        new_dt.c_dateTime = dt.c_dateTime
+        new_dt.__owner = False
+        return new_dt
 
     def __richcmp__(self, pyDateTime dt, int comp):
         if (comp == 0):
