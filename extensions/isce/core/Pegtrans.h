@@ -7,9 +7,9 @@
 #define __ISCE_CORE_PEGTRANS_H__
 
 #include <vector>
-#include "isce/core/Constants.h"
-#include "isce/core/Ellipsoid.h"
-#include "isce/core/Peg.h"
+#include "Constants.h"
+#include "Ellipsoid.h"
+#include "Peg.h"
 
 namespace isce { namespace core {
     struct Pegtrans {
