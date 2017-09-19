@@ -23,17 +23,17 @@ namespace isce { namespace core {
         int epsgcode;
 
         //Print function for debugging
-        virtual void print()= 0 ;
+        virtual void print() const = 0;
     
         //Function for transforming from LLH
         //This is similar to fwd or fwd3d in PROJ.4
-        virtual int forward( std::vector<double>&,
-                std::vector<double>&) = 0 ;
+        virtual int forward( const std::vector<double>&,
+                std::vector<double>&) const = 0 ;
 
         //Function for transforming to LLH
         //This is similar to inv or inv3d in PROJ.4
-        virtual int inverse( std::vector<double>&,
-                std::vector<double>&) = 0 ;
+        virtual int inverse( const std::vector<double>&,
+                std::vector<double>&) const = 0 ;
       
         //ructor with Ellipsoid as input
         ProjectionBase(Ellipsoid &elp, int code):ellipse(elp), epsgcode(code){};
@@ -42,13 +42,13 @@ namespace isce { namespace core {
 
     //Standard WGS84 Lat/Lon 
     struct LatLon : public ProjectionBase {
-        virtual void print() ;
+        virtual void print() const;
 
         //This will be a pass through for Lat/Lon
-        virtual int forward( std::vector<double>& in, std::vector<double>& out) ;
+        virtual int forward( const std::vector<double>& in, std::vector<double>& out) const;
 
         //This will also be a pass through for Lat/Lon
-        virtual int inverse( std::vector<double>& in, std::vector<double>& out) ;
+        virtual int inverse( const std::vector<double>& in, std::vector<double>& out) const;
 
         //ructor
         LatLon(Ellipsoid &elp):ProjectionBase(elp,4326){};
@@ -57,13 +57,13 @@ namespace isce { namespace core {
 
     //Standard WGS84 ECEF coordinates
     struct Geocent : public ProjectionBase {
-        void print() ;
+        virtual void print() const;
 
         //This is same as LLH2XYZ
-        virtual int forward( std::vector<double>&, std::vector<double>&) ;
+        virtual int forward( const std::vector<double>&, std::vector<double>&) const;
 
         //This is same as XYZ2LLH
-        virtual int inverse( std::vector<double>&, std::vector<double>&) ;
+        virtual int inverse( const std::vector<double>&, std::vector<double>&) const;
 
         //ructor
         Geocent(Ellipsoid &elp):ProjectionBase(elp, 4978){};
@@ -86,13 +86,13 @@ namespace isce { namespace core {
         double utg[6];
         double gtu[6];
 
-        virtual void print() ;
+        virtual void print() const;
 
         //Transform from LLH to UTM
-        virtual int forward( std::vector<double>&, std::vector<double>&) ;
+        virtual int forward( const std::vector<double>&, std::vector<double>&) const;
 
         //Transform from UTM to LLH
-        virtual int inverse( std::vector<double>&, std::vector<double>&) ;
+        virtual int inverse( const std::vector<double>&, std::vector<double>&) const;
 
         //Private methods. Not part of public interface.
         void setup();
@@ -112,13 +112,13 @@ namespace isce { namespace core {
         double akm1;
         double e;
 
-        virtual void print() ;
+        virtual void print() const;
 
         //Transfrom from LLH to Polar Stereo
-        virtual int forward( std::vector<double>&, std::vector<double> &) ;
+        virtual int forward( const std::vector<double>&, std::vector<double> &) const;
 
         //Transform from Polar Stereo to LLH
-        virtual int inverse( std::vector<double>&, std::vector<double> &) ;
+        virtual int inverse( const std::vector<double>&, std::vector<double> &) const;
 
         //Private methods. Not part of public interface.
         void setup();
@@ -136,7 +136,7 @@ namespace isce { namespace core {
     //This is to transform a point from one coordinate system
     //to another
     int projTransform(ProjectionBase* in, ProjectionBase *out,
-                   std::vector<double> &inpts,
+                  const std::vector<double> &inpts,
                   std::vector<double> &outpts);
 
 }}

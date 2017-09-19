@@ -22,9 +22,9 @@ namespace isce { namespace core {
         Ellipsoid(const Ellipsoid &e) : a(e.a), e2(e.e2) {}
         inline Ellipsoid& operator=(const Ellipsoid&);
 
-        inline double rEast(double);
-        inline double rNorth(double);
-        inline double rDir(double,double);
+        inline double rEast(double) const;
+        inline double rNorth(double) const;
+        inline double rDir(double,double) const;
         void latLon(std::vector<double>&,std::vector<double>&,latLonConvMethod);
         void getAngs(std::vector<double>&,std::vector<double>&,std::vector<double>&,double&,
                      double&);
@@ -40,12 +40,12 @@ namespace isce { namespace core {
         return *this;
     }
 
-    inline double Ellipsoid::rEast(double lat) { return a / sqrt(1. - (e2 * pow(sin(lat), 2))); }
+    inline double Ellipsoid::rEast(double lat) const{ return a / sqrt(1. - (e2 * pow(sin(lat), 2))); }
 
-    inline double Ellipsoid::rNorth(double lat) { return (a * (1. - e2)) / 
+    inline double Ellipsoid::rNorth(double lat) const { return (a * (1. - e2)) / 
                                                           pow((1. - (e2 * pow(lat, 2))), 1.5); }
 
-    inline double Ellipsoid::rDir(double hdg, double lat) {
+    inline double Ellipsoid::rDir(double hdg, double lat) const {
         auto re = rEast(lat);
         auto rn = rNorth(lat);
         return (re * rn) / ((re * pow(cos(hdg), 2)) + (rn * pow(sin(hdg), 2)));

@@ -15,21 +15,22 @@ namespace isce { namespace core {
 
 /*******************LatLon Projection*****************/
 
-void LatLon::print() 
+void LatLon::print() const 
 {
     std::cout << "Projection: Latlon, EPSG: " << epsgcode << "\n";
 }
 
 //This is just a pass through
-int LatLon::forward( std::vector<double>& in, std::vector<double>& out) 
+int LatLon::forward( const std::vector<double>& in,
+                        std::vector<double>& out) const
 {
     out = in;
     return 0;
 }
 
 //This is just a pass through
-int LatLon::inverse( std::vector<double>& in,
-                                    std::vector<double>& out) 
+int LatLon::inverse( const std::vector<double>& in,
+                        std::vector<double>& out) const
 {
     out = in;
     return 0;
@@ -40,20 +41,21 @@ int LatLon::inverse( std::vector<double>& in,
 
 /*******************Geocent Projection****************/
 
-void Geocent::print() 
+void Geocent::print() const 
 {
     std::cout << "Projection: Geocent, EPSG: " << epsgcode << "\n";
 }
 
 //This is to transform LLH to Geocent
 //This is same as LLH_2_XYZ
-int Geocent::forward( std::vector<double>& llh,
-                                    std::vector<double>& out) 
+int Geocent::forward( const std::vector<double>& llh,
+                        std::vector<double>& out) const
 {
 
     //Radius of Earth in East direction
     //This is a function of latitude only assuming symmetricity 
-    auto re = ellipse.rEast(llh[0]);
+    double lat = llh[0];
+    double re = ellipse.rEast(lat);
 
     //Standard parametric representation of circle as function of longitude
     out[0] = (re + llh[2]) * cos(llh[0]) * cos(llh[1]);
@@ -64,8 +66,8 @@ int Geocent::forward( std::vector<double>& llh,
     return 0;
 }
 
-int Geocent::inverse( std::vector<double>& v,
-                                    std::vector<double>& llh) 
+int Geocent::inverse( const std::vector<double>& v,
+                        std::vector<double>& llh) const
 {
     //Lateral distance normalized by major axis
     double p = (pow(v[0], 2) + pow(v[1], 2)) / pow(ellipse.a, 2);
@@ -100,7 +102,7 @@ int Geocent::inverse( std::vector<double>& v,
 
 /****************UTM Projection**********************/
 
-void UTM::print() 
+void UTM::print() const
 {
     std::cout << "Projection: UTM, Zone: "<< zone ;
     std::cout << ((isnorth)? "N" : "S");
@@ -109,9 +111,9 @@ void UTM::print()
 
 //Meant to be a private function
 //For computation of Gaussian Latitude
-double gatg(double *p1, int len_p1, double B) 
+double gatg(const double *p1, int len_p1, double B) 
 {
-    double *p;
+    double const *p;
     double h=0.0;
     double h2=0.0;
     double h1, cos_2B;
@@ -125,9 +127,10 @@ double gatg(double *p1, int len_p1, double B)
 
 //Meant to be a private function
 //Real clenshaw summation
-double clens(double *a, int size, double arg_r) 
+double clens(const double *a, int size, double arg_r) 
 {
-    double      *p, r, hr, hr1, hr2, cos_arg_r;
+    double const *p;
+    double r, hr, hr1, hr2, cos_arg_r;
 
     p = a + size;
     cos_arg_r  = cos(arg_r);
@@ -144,8 +147,9 @@ double clens(double *a, int size, double arg_r)
 
 //Meant to be a private function
 //Complex Clenshaw summation
-double clenS(double *a, int size, double arg_r, double arg_i, double *R, double *I) {
-    double      *p, r, i, hr, hr1, hr2, hi, hi1, hi2;
+double clenS(const double *a, int size, double arg_r, double arg_i, double *R, double *I) {
+    double const *p;
+    double r, i, hr, hr1, hr2, hi, hi1, hi2;
     double      sin_arg_r, cos_arg_r, sinh_arg_i, cosh_arg_i;
 
     /* arguments */
@@ -309,8 +313,8 @@ void UTM::setup()
 
 
 //Transform from LLH to UTM
-int UTM::forward( std::vector<double>& llh,
-                                std::vector<double> &utm) 
+int UTM::forward( const std::vector<double>& llh,
+                    std::vector<double> &utm) const
 {
     //Elliptical Lat, Lon -> Gaussian Lat, Lon
     double Cn = gatg(cbg, 6, llh[0]);
@@ -351,8 +355,8 @@ int UTM::forward( std::vector<double>& llh,
 
 
 //Transform UTM to LLH
-int UTM::inverse( std::vector<double>& utm,
-                                std::vector<double>& llh) 
+int UTM::inverse( const std::vector<double>& utm,
+                        std::vector<double>& llh) const
 {
     double Cn = utm[1];
     Cn -= (isnorth)?0.0:10000000.0;
@@ -396,7 +400,7 @@ int UTM::inverse( std::vector<double>& utm,
 };
 
 /******************End of UTM Projection************************/
-void PolarStereo::print() 
+void PolarStereo::print() const 
 {
     std::cout << "Projection: ";
     std::cout << ((isnorth)? "North":"South");
@@ -448,8 +452,8 @@ void PolarStereo::setup()
 
 
 //Transform from LLH to Polar Stereo
-int PolarStereo::forward( std::vector<double> &llh, 
-                                std::vector<double> & out) 
+int PolarStereo::forward( const std::vector<double> &llh, 
+                                std::vector<double> & out) const
 {
     double phi = llh[0] - lat0;
     double lam = llh[1] - lon0;
@@ -477,8 +481,8 @@ int PolarStereo::forward( std::vector<double> &llh,
 
 
 //Transform from Polar Stereo to LLH
-int PolarStereo::inverse( std::vector<double> &ups, 
-                                std::vector<double> &llh) 
+int PolarStereo::inverse( const std::vector<double> &ups, 
+                                std::vector<double> &llh) const
 {
     double rho = hypot(ups[0], ups[1]);
     double tp = -rho / akm1;
@@ -516,6 +520,8 @@ int PolarStereo::inverse( std::vector<double> &ups,
 
 /****************End of Polar Stereo Projection***************/
 
+
+/****************Projection Factory*********************/
 ProjectionBase* createProj(int epsgcode)
 {
     //This is the factory method to return a pointer to transformation object.
@@ -550,8 +556,43 @@ ProjectionBase* createProj(int epsgcode)
     }
 }
 
+/*****************End of Projection Factory**************/
 
+/*****************Projection Transformer*****************/
+int projTransform(ProjectionBase *in, ProjectionBase* out,
+                    const std::vector<double> &inpts,
+                    std::vector<double> &outpts)
+{
+    //Consider case where input and output projections are the same
+    if (in->epsgcode == out->epsgcode)
+    {
+        outpts = inpts;
+        return 0;
+    }
+    //Consider case where input is Lat/Lon
+    else if (in->epsgcode == 4326)
+    {
+        return out->forward(inpts, outpts);
+    }
+    //Consider case where output is Lat/Lon
+    else if (out->epsgcode == 4326)
+    {
+        return -(out->inverse(inpts, outpts));
+    }
+    else
+    {
+        std::vector<double> temp(3);
+        int status = in->inverse(inpts, temp);
 
+        if (status != 0)
+            return -2;
+
+        status = out->forward(temp, outpts);
+        if (status != 0)
+            return 2;
+    }
+    return 0;
+};
 
 
 }}
