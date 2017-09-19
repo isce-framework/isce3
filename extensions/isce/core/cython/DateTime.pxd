@@ -8,7 +8,7 @@
 
 from libcpp cimport bool
 
-cdef extern from "isce/core/DateTime.h" namespace "isce::core":
+cdef extern from "DateTime.h" namespace "isce::core":
     cdef cppclass DateTime:
         #std::chrono::time_point<> t
 

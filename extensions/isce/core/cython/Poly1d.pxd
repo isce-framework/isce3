@@ -6,7 +6,7 @@
 
 from libcpp.vector cimport vector
 
-cdef extern from "isce/core/Poly1d.h" namespace "isce::core":
+cdef extern from "Poly1d.h" namespace "isce::core":
     cdef cppclass Poly1d:
         int order
         double mean

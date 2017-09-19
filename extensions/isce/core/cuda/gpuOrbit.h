@@ -9,7 +9,7 @@
 #ifndef __ISCE_CORE_CUDA_GPUORBIT_H__
 #define __ISCE_CORE_CUDA_GPUORBIT_H__
 
-#include "isce/core/Orbit.h"
+#include "../Orbit.h"
 
 namespace isce { namespace core { namespace cuda {
     struct gpuOrbit {

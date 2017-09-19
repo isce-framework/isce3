@@ -6,8 +6,8 @@
 #ifndef __ISCE_CORE_CUDA_GPUPEGTRANS_H__
 #define __ISCE_CORE_CUDA_GPUPEGTRANS_H__
 
-#include "isce/core/cuda/gpuEllipsoid.h"
-#include "isce/core/cuda/gpuPeg.h"
+#include "gpuEllipsoid.h"
+#include "gpuPeg.h"
 
 namespace isce { namespace core { namespace cuda {
     struct gpuPegtrans {

@@ -6,7 +6,7 @@
 #ifndef __ISCE_CORE_CUDA_GPUPEG_H__
 #define __ISCE_CORE_CUDA_GPUPEG_H__
 
-#include "isce/core/Peg.h"
+#include "../Peg.h"
 
 namespace isce { namespace core { namespace cuda {
     struct gpuPeg {

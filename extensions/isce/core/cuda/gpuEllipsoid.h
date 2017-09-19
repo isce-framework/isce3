@@ -7,7 +7,7 @@
 #define __ISCE_CORE_CUDA_GPUELLIPSOID_H__
 
 #include <cmath>
-#include "isce/core/Ellipsoid.h"
+#include "../Ellipsoid.h"
 
 namespace isce { namespace core { namespace cuda {
     struct gpuEllipsoid {

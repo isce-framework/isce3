@@ -6,13 +6,13 @@
 
 from libcpp.vector cimport vector
 
-cdef extern from "isce/core/Constants.h" namespace "isce::core":
+cdef extern from "Constants.h" namespace "isce::core":
     cdef enum orbitInterpMethod:
         HERMITE_METHOD = 0
         SCH_METHOD = 1
         LEGENDRE_METHOD = 2
 
-cdef extern from "isce/core/Orbit.h" namespace "isce::core":
+cdef extern from "Orbit.h" namespace "isce::core":
     cdef cppclass Orbit:
         int basis
         int nVectors
