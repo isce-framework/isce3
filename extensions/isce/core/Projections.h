@@ -41,7 +41,7 @@ namespace isce { namespace core {
     };
 
     //Standard WGS84 Lat/Lon 
-    struct LatLon : public ProjectionBase {
+    struct LonLat : public ProjectionBase {
         virtual void print() const;
 
         //This will be a pass through for Lat/Lon
@@ -51,7 +51,7 @@ namespace isce { namespace core {
         virtual int inverse( const std::vector<double>& in, std::vector<double>& out) const;
 
         //ructor
-        LatLon(Ellipsoid &elp):ProjectionBase(elp,4326){};
+        LonLat(Ellipsoid &elp):ProjectionBase(elp,4326){};
 
     };
 

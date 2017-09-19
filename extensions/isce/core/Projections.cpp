@@ -13,15 +13,15 @@
 namespace isce { namespace core {
 
 
-/*******************LatLon Projection*****************/
+/*******************LonLat Projection*****************/
 
-void LatLon::print() const 
+void LonLat::print() const 
 {
     std::cout << "Projection: Latlon, EPSG: " << epsgcode << "\n";
 }
 
 //This is just a pass through
-int LatLon::forward( const std::vector<double>& in,
+int LonLat::forward( const std::vector<double>& in,
                         std::vector<double>& out) const
 {
     out = in;
@@ -29,14 +29,14 @@ int LatLon::forward( const std::vector<double>& in,
 }
 
 //This is just a pass through
-int LatLon::inverse( const std::vector<double>& in,
+int LonLat::inverse( const std::vector<double>& in,
                         std::vector<double>& out) const
 {
     out = in;
     return 0;
 }
 
-/****************End of LatLon Projection************/
+/****************End of LonLat Projection************/
 
 
 /*******************Geocent Projection****************/
@@ -54,15 +54,15 @@ int Geocent::forward( const std::vector<double>& llh,
 
     //Radius of Earth in East direction
     //This is a function of latitude only assuming symmetricity 
-    double lat = llh[0];
+    double lat = llh[1];
     double re = ellipse.rEast(lat);
 
     //Standard parametric representation of circle as function of longitude
-    out[0] = (re + llh[2]) * cos(llh[0]) * cos(llh[1]);
-    out[1] = (re + llh[2]) * cos(llh[0]) * sin(llh[1]);
+    out[0] = (re + llh[2]) * cos(llh[1]) * cos(llh[0]);
+    out[1] = (re + llh[2]) * cos(llh[1]) * sin(llh[0]);
 
     //Parametric representation with Radius adjusted for eccentricity
-    out[2] = ((re * (1. - ellipse.e2)) + llh[2]) * sin(llh[0]);
+    out[2] = ((re * (1. - ellipse.e2)) + llh[2]) * sin(llh[1]);
     return 0;
 }
 
@@ -87,11 +87,11 @@ int Geocent::inverse( const std::vector<double>& v,
     //Radius adjusted for eccentricity
     double d = (k * sqrt(pow(v[0], 2) + pow(v[1], 2))) / (k + ellipse.e2);
 
-    //Latitude is function of z and radius
-    llh[0] = atan2(v[2], d);
-
     //Longitude is function of x and y
-    llh[1] = atan2(v[1], v[0]);
+    llh[0] = atan2(v[1], v[0]);
+
+    //Latitude is function of z and radius
+    llh[1] = atan2(v[2], d);
 
     //Height is function of lcation and radius
     llh[2] = ((k + ellipse.e2 - 1.) * sqrt(pow(d, 2) + pow(v[2], 2))) / k;
@@ -317,14 +317,14 @@ int UTM::forward( const std::vector<double>& llh,
                     std::vector<double> &utm) const
 {
     //Elliptical Lat, Lon -> Gaussian Lat, Lon
-    double Cn = gatg(cbg, 6, llh[0]);
+    double Cn = gatg(cbg, 6, llh[1]);
 
     double sin_Cn = sin(Cn);
     double cos_Cn = cos(Cn);
 
     //Adjust longitude for zone offset
-    double sin_Ce = sin(llh[1] - lon0);
-    double cos_Ce = cos(llh[1] - lon0);
+    double sin_Ce = sin(llh[0] - lon0);
+    double cos_Ce = cos(llh[0] - lon0);
 
     //Account for longitude and get Spherical N,E
     Cn = atan2(sin_Cn, cos_Ce * cos_Cn);
@@ -386,8 +386,8 @@ int UTM::inverse( const std::vector<double>& utm,
         Cn = atan2(sin_Cn*cos_Ce, hypot(sin_Ce, cos_Ce*cos_Cn));
 
         //Gaussian Lat, Lon to Elliptical Lat, Lon
-        llh[0] = gatg(cgb, 6, Cn);
-        llh[1] = Ce + lon0;
+        llh[0] = Ce + lon0;
+        llh[1] = gatg(cgb, 6, Cn);
         
         //UTM is a lateral projection only. Height is pass through.
         llh[2] = utm[2];
@@ -455,8 +455,8 @@ void PolarStereo::setup()
 int PolarStereo::forward( const std::vector<double> &llh, 
                                 std::vector<double> & out) const
 {
-    double phi = llh[0] - lat0;
-    double lam = llh[1] - lon0;
+    double lam = llh[0];// - lon0;
+    double phi = llh[1];// - lat0;
     double coslam = cos(lam);
     double sinlam = sin(lam);
     double sinphi = sin(phi);
@@ -472,7 +472,7 @@ int PolarStereo::forward( const std::vector<double> &llh,
 
     out[0] = temp * sinlam;
     out[1] = -temp * coslam;
-
+    
     //Height is just pass through
     out[2] = llh[2];
 
@@ -507,8 +507,8 @@ int PolarStereo::inverse( const std::vector<double> &ups,
             if (!isnorth) phi = -phi;
             lam = (x == 0. &&  y == 0.) ? 0. : atan2(x, y);
 
-            llh[0] = phi + lat0;
-            llh[1] = lam + lon0;
+            llh[0] = lam; // +lon0;
+            llh[1] = phi; // +lat0;
             llh[2] = ups[2];
 
             return 0;
@@ -533,7 +533,7 @@ ProjectionBase* createProj(int epsgcode)
     //Check for Lat/Lon
     if (epsgcode == 4326)
     {
-        return new LatLon{wgs84};
+        return new LonLat{wgs84};
     }
     //Check for Geocentric
     else if (epsgcode == 4978)
