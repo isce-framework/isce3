@@ -4,7 +4,7 @@ CC = g++
 # As with main core Makefile, use hybrid pathing to identify include dir
 INCBASE = $(PWD)/../../../..
 COREBASE = $(INCBASE)/isce/core
-CFLAGS = -std=c++11 -O3
+CFLAGS = -fPIC -std=c++11 -O3
 IFLAGS = -I$(INCBASE)
 LFLAGS = -L$(COREBASE)/export -liscecore
 

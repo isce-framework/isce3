@@ -6,13 +6,13 @@
 
 from libcpp.vector cimport vector
 
-cdef extern from "isce/core/Constants.h" namespace "isce::core":
+cdef extern from "Constants.h" namespace "isce::core":
     cdef enum latLonConvMethod:
         LLH_2_XYZ = 0
         XYZ_2_LLH = 1
         XYZ_2_LLH_OLD = 2
 
-cdef extern from "isce/core/Ellipsoid.h" namespace "isce::core":
+cdef extern from "Ellipsoid.h" namespace "isce::core":
     cdef cppclass Ellipsoid:
         double a
         double e2

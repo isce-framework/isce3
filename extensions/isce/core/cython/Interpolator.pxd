@@ -6,7 +6,7 @@
 
 from libcpp.vector cimport vector
 
-cdef extern from "isce/core/Interpolator.h" namespace "isce::core":
+cdef extern from "Interpolator.h" namespace "isce::core":
     cdef cppclass Interpolator:
         Interpolator() except +
         @staticmethod

@@ -8,7 +8,7 @@
 
 #include <cmath>
 #include <vector>
-#include "isce/core/Constants.h"
+#include "Constants.h"
 
 namespace isce { namespace core {
     struct Ellipsoid {

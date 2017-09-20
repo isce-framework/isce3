@@ -15,7 +15,7 @@ NVLIBDIR = -L/usr/local/cuda/lib64/
 BUILDDIR = export
 # Point nvcc to the gcc5 bin
 # ***** ALTER BASED ON YOUR OWN DIRECTORY STRUCTURE *****
-NVFLAGS = -ccbin $(HOME)/opt/gcc-5.4.0/bin -x cu -dc
+NVFLAGS = -ccbin $(HOME)/opt/gcc-5.4.0/bin -x cu -Xcompiler -fPIC -dc
 # *******************************************************
 # no-deprecated-gpu-targets just supporessed the warning about future deprecation of arch_sm2X,
 # should be removable in CUDA 9.0 when SM_2X support is deprecated officially. Note that we omit

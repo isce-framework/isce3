@@ -31,7 +31,7 @@ os.environ["CXX"] = 'g++'
 setup(ext_modules = cythonize(Extension(
     "iscecore",
     sources=source_files+['iscecore.pyx'],
-    include_dirs=['../../../'],
+    include_dirs=['..','../../..'],
     extra_compile_args=['-std=c++11'],
     extra_link_args=['-lm'],
     language="c++"
