@@ -73,7 +73,7 @@ namespace isce { namespace core {
     //UTM coordinates
     struct UTM : public ProjectionBase {
         
-        //ants related to the projection system
+        //Constants related to the projection system
         bool isnorth;
         double lon0;
         int zone;
@@ -98,13 +98,13 @@ namespace isce { namespace core {
         void setup();
 
         //ructor
-        UTM(Ellipsoid &elp, int code):ProjectionBase(ellipse,code){ setup(); };
+        UTM(Ellipsoid &elp, int code):ProjectionBase(elp,code){ setup(); };
 
     };
 
     //Polar stereographic coordinate system
     struct PolarStereo : public ProjectionBase {
-        //ants related to projection system
+        //Constants related to projection system
         bool isnorth;
         double lat0;
         double lon0;
@@ -123,11 +123,37 @@ namespace isce { namespace core {
         //Private methods. Not part of public interface.
         void setup();
 
-        //ructor
+        //Constructor
         PolarStereo(Ellipsoid &elp, int code): ProjectionBase(elp,code){ setup(); };
 
     };
 
+
+    //Equal Area Projection System for SMAP
+    struct CEA: public ProjectionBase {
+        //Constants realted to projection system
+        double lat_ts;
+        double k0;
+        double e;
+        double one_es;
+        double qp;
+        double apa[3];
+
+        virtual void print() const;
+
+        //Transform from LLH to CEA
+        virtual int forward(const std::vector<double>&, std::vector<double> &) const;
+
+        //Transform from CEA to LLH
+        virtual int inverse(const std::vector<double>&, std::vector<double> &) const;
+
+        //Private methods. Not part of public interface.
+        void setup();
+
+        //Constructor
+        CEA(Ellipsoid &elp, int code): ProjectionBase(elp, code){ setup(); };
+
+    };
 
     /*******************General functions - user interface***********/
     //This is the factory for generating a projection transformer

@@ -181,21 +181,20 @@ double clenS(const double *a, int size, double arg_r, double arg_i, double *R, d
 //Meant to be a private function
 //Compute log(1+x) accurately
 double log1py(double x) {           
-    volatile double
-      y = 1 + x,
-      z = y - 1;
+    double y = 1 + x;
+    double z = y - 1;
     /* Here's the explanation for this magic: y = 1 + z, exactly, and z
      * approx x, thus log(y)/z (which is nearly constant near z = 0) returns
      * a good approximation to the true log(1 + x)/x.  The multiplication x *
      * (log(y)/z) introduces little additional error. */
-    return z == 0 ? x : x * log(y) / z;
+    return ((z == 0) ? x : x * log(y) / z);
 }
 
 
 //Meant to be a private function
 //Compute asinh(x) accurately
 double asinhy(double x) {              
-    double y = abs(x);
+    double y = fabs(x);
     y = log1py(y * (1 + y/(hypot(1.0, y) + 1)));
     return x < 0 ? -y : y;
 }
@@ -211,7 +210,7 @@ void UTM::setup()
         zone = epsgcode - 32600;
         isnorth = true;
     }
-    else if ((epsgcode > 32700) && (epsgcode <= 32700))
+    else if ((epsgcode > 32700) && (epsgcode <= 32760))
     {
         zone = epsgcode - 32700;
         isnorth = false;
@@ -223,7 +222,6 @@ void UTM::setup()
 
     lon0 = (zone - 0.5) * M_PI/30.0 - M_PI;
 
-    
     //Ellipsoid flattening
     double f = ellipse.e2 / (1 + sqrt(1 - ellipse.e2));
 
@@ -265,7 +263,7 @@ void UTM::setup()
     cbg[5] = np*(444337/155925.0);
 
 
-    //Computing some ants of the projection
+    //Computing some Constants of the projection
     np = n * n;
 
     //We have fixed k0 = 0.9996 here. This is standard for WGS84 zones.
@@ -318,13 +316,15 @@ int UTM::forward( const std::vector<double>& llh,
 {
     //Elliptical Lat, Lon -> Gaussian Lat, Lon
     double Cn = gatg(cbg, 6, llh[1]);
+    double lam = llh[0] - lon0;
 
     double sin_Cn = sin(Cn);
     double cos_Cn = cos(Cn);
 
+
     //Adjust longitude for zone offset
-    double sin_Ce = sin(llh[0] - lon0);
-    double cos_Ce = cos(llh[0] - lon0);
+    double sin_Ce = sin(lam);
+    double cos_Ce = cos(lam);
 
     //Account for longitude and get Spherical N,E
     Cn = atan2(sin_Cn, cos_Ce * cos_Cn);
@@ -336,10 +336,11 @@ int UTM::forward( const std::vector<double>& llh,
     Cn += clenS(gtu,6,2*Cn, 2*Ce, &dCn, &dCe);
     Ce += dCe;
 
-    if (abs(Ce) <= 2.623395162778)
+
+    if (fabs(Ce) <= 2.623395162778)
     {
-        utm[0] = Qn * Ce + 500000.0;
-        double y = Qn * Cn + Zb;
+        utm[0] = Qn * Ce *ellipse.a + 500000.0;
+        double y = (Qn * Cn + Zb)*ellipse.a;
         y += (isnorth)? 0.0:10000000.0;
         utm[1] = y;
 
@@ -364,12 +365,15 @@ int UTM::inverse( const std::vector<double>& utm,
     double Ce = utm[0] - 500000.0;
     double dCn, dCe;
 
+    Cn /= ellipse.a;
+    Ce /= ellipse.a;
+
     //Normalize N,E to Spherical N,E
     Cn = (Cn - Zb)/Qn;
     Ce = Ce/Qn;
 
 
-    if (abs(Ce) <= 2.623395162778)
+    if (fabs(Ce) <= 2.623395162778)
     {
         //N,E to Spherical Lat, Lon
         Cn += clenS(utg,6,2*Cn,2*Ce,&dCn,&dCe);
@@ -411,11 +415,9 @@ void PolarStereo::print() const
 //Determine small t from PROJ.4
 double pj_tsfn(double phi, double sinphi, double e) 
 {
-    double denominator;
     sinphi *= e;
 
-    denominator = 1.0 + sinphi;
-    return (tan(0.5 * (0.5*M_PI - phi)) / pow((1.0 - sinphi)/(denominator), 0.5*e));
+    return (tan(0.5 * (0.5*M_PI - phi)) / pow((1.0 - sinphi)/(1.0+sinphi), 0.5*e));
 };
 
 //Setup various parameters for polar stereographic projection
@@ -447,7 +449,7 @@ void PolarStereo::setup()
     double t = sin(lat_ts);
     akm1 = cos(lat_ts) / pj_tsfn(lat_ts, t, e);
     t *= e;
-    akm1 /= sqrt(1.0 - t*t);
+    akm1 *= (ellipse.a/sqrt(1.0 - t*t));
 };
 
 
@@ -455,7 +457,7 @@ void PolarStereo::setup()
 int PolarStereo::forward( const std::vector<double> &llh, 
                                 std::vector<double> & out) const
 {
-    double lam = llh[0];// - lon0;
+    double lam = llh[0] - lon0;
     double phi = llh[1];// - lat0;
     double coslam = cos(lam);
     double sinlam = sin(lam);
@@ -502,7 +504,7 @@ int PolarStereo::inverse( const std::vector<double> &ups,
         double sinphi = e * sin(phi);
         phi = 2.0 * atan(tp * pow((1.0+sinphi)/(1.0-sinphi),halfe) - halfpi);
 
-        if (abs(phi_l - phi) < 1.0e-10)
+        if (fabs(phi_l - phi) < 1.0e-10)
         {
             if (!isnorth) phi = -phi;
             lam = (x == 0. &&  y == 0.) ? 0. : atan2(x, y);
@@ -520,6 +522,70 @@ int PolarStereo::inverse( const std::vector<double> &ups,
 
 /****************End of Polar Stereo Projection***************/
 
+/****************CEA Projection*************************/
+void CEA::print() const
+{
+    std::cout << "Projection: Cylindrical Equal Area, EPSG: " << epsgcode << "\n";
+};
+
+//Meant to be a private function
+//Not part of public interface
+double pj_qsfn(double sinphi, double e, double one_es)
+{
+    double con, div1, div2;
+    con = e * sinphi;
+    div1 = 1.0 - con*con;
+    div2 = 1.0 + con;
+
+    return (one_es * (sinphi / div1 - (0.5/e) * log((1.0-con)/div2)));
+};
+
+
+//Setup parameters for equal area projection
+void CEA::setup()
+{
+
+    if (epsgcode == 6933)
+    {
+        lat_ts = M_PI / 6.0;
+        double t = sin(lat_ts);
+        k0 = cos(lat_ts) / sqrt(1.0 - ellipse.e2 * t * t);
+        e = sqrt(ellipse.e2);
+        one_es = 1.0 - ellipse.e2;
+        apa[0] = ellipse.e2 * ((1.0/ 3.0) + ellipse.e2 * ((31.0/180.0) 
+                    + ellipse.e2 * 517.0/5040.0));
+        apa[1] = ellipse.e2 * ellipse.e2 * ((23.0/360.0) + ellipse.e2 * (251.0/3780.0));
+        apa[2] = (761.0/45360.0) * ellipse.e2 * ellipse.e2 * ellipse.e2;
+        qp = pj_qsfn(1.0, e, one_es);
+    }
+    else
+    {
+        throw "Unsupported EPSG code for CEA projection";
+    }
+}
+
+
+//Transform from LLH to CEA
+int CEA::forward(const std::vector<double> & llh,
+                    std::vector<double> &enu) const
+{
+    enu[0] = k0 * llh[0] * ellipse.a;
+    enu[1] = 0.5 * ellipse.a * pj_qsfn( sin(llh[1]), e, one_es)/ k0;
+    enu[2] = llh[2];
+    return 0;
+};
+
+//Transform from CEA to LLH
+int CEA::inverse(const std::vector<double>& enu,
+                    std::vector<double> &llh) const
+{
+    llh[0] = enu[0] / (k0 * ellipse.a);
+    double beta = asin(2.0 * enu[1] * k0 /(ellipse.a * qp));
+    double t = beta + beta;
+    llh[1] = beta + apa[0] * sin(t) + apa[1] * sin(t+t) + apa[2] * sin(t+t+t);  
+    llh[2] = enu[2];
+    return 0;
+};
 
 /****************Projection Factory*********************/
 ProjectionBase* createProj(int epsgcode)
@@ -549,6 +615,11 @@ ProjectionBase* createProj(int epsgcode)
     else if (epsgcode == 3031  || epsgcode == 3413)
     {
         return new PolarStereo{wgs84, epsgcode};
+    }
+    //EASE2 grid
+    else if (epsgcode == 6933)
+    {
+        return new CEA{wgs84, epsgcode};
     }
     else
     {
