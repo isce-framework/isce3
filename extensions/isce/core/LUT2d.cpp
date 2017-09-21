@@ -31,38 +31,6 @@ template isce::core::LUT2d<std::complex<double>>::LUT2d(std::vector<double> & x_
     std::vector<double> & y_index, std::vector<std::vector<std::complex<double>>> & values);
 
 
-//// Method to fill LUT values from an isce raster object
-//template <typename T>
-//void isce::core::LUT2d<T>::setValuesFromRaster(isce::core::Raster<T> & raster) {
-//
-//    // Consistency checks
-//    assert((size_t) raster.numRows == _ysize);
-//    assert((size_t) raster.numCols == _xsize);
-//
-//    // Re-size values vector
-//    values.resize(_ysize);
-//
-//    // Loop over lines to fill values
-//    for (size_t i = 0; i < _ysize; ++i) {
-//        // Raster reads a line of data
-//        raster.getLine(i);
-//        // Re-size row of values
-//        values[i].resize(_xsize);
-//        // Copy values from data line to internal values vector
-//        for (size_t j = 0; j < _xsize; ++j) {
-//            values[i][j] = raster.getValue(j);
-//        }
-//    }
-//
-//}
-
-//// Forward declrations for each type
-//template void isce::core::LUT2d<double>::setValuesFromRaster(
-//    isce::core::Raster<double> & raster);
-//template void isce::core::LUT2d<std::complex<double>>::setValuesFromRaster(
-//    isce::core::Raster<std::complex<double>> & raster);
-
-
 // Evaluation
 template <typename T>
 T isce::core::LUT2d<T>::eval(double y, double x) {

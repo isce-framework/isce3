@@ -10,7 +10,6 @@
 
 #include <cstddef>
 #include <vector>
-//#include "Raster.h"
 
 namespace isce { namespace core {
 
@@ -42,7 +41,6 @@ namespace isce { namespace core {
             void setDimensions();
             void reset();
             T eval(double, double);
-            //void setValuesFromRaster(Raster<T> &);
 
         private:
 
