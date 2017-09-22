@@ -9,7 +9,7 @@ CFLAGS = $(FDEBUG) -Wall -fPIC -std=c++11 -O3 -c
 INCBASE = -I$(PWD)/../..
 BUILDDIR = export
 
-OBJS = DateTime.o Ellipsoid.o Interpolator.o LinAlg.o Orbit.o Peg.o Pegtrans.o Poly1d.o Poly2d.o Position.o Projections.o
+OBJS = Baseline.o DateTime.o Ellipsoid.o Interpolator.o LinAlg.o LUT2d.o Metadata.o Orbit.o Peg.o Pegtrans.o Poly1d.o Poly2d.o Position.o Projections.o
 
 LIBTARGET = libiscecore.a
 
