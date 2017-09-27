@@ -119,7 +119,7 @@ void isce::core::Baseline::_calculateLookVector(double t) {
     
     // Interpolate orbit to azimuth time
     orbit1.interpolate(t, xyz, vel, orbit_method);
-    ellp.latLon(xyz, llh, XYZ_2_LLH);
+    ellp.xyzToLatLon(xyz, llh);
 
     // Make a peg
     Peg peg;

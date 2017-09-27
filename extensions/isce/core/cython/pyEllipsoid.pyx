@@ -6,7 +6,7 @@
 
 from libcpp cimport bool
 from libcpp.vector cimport vector
-from Ellipsoid cimport Ellipsoid, latLonConvMethod
+from Ellipsoid cimport Ellipsoid
 
 cdef class pyEllipsoid:
     cdef Ellipsoid *c_ellipsoid
@@ -55,23 +55,23 @@ cdef class pyEllipsoid:
         return self.c_ellipsoid.rNorth(a)
     def rDir(self, double a, double b):
         return self.c_ellipsoid.rDir(a,b)
-    def latLon(self, list a, list b, int c):
+    def latLonToXyz(self, list a, list b):
         cdef vector[double] _a
         cdef vector[double] _b
-        cdef latLonConvMethod _c
         for i in range(3):
             _a.push_back(a[i])
             _b.push_back(b[i])
-        if (c == latLonConvMethod.LLH_2_XYZ):
-            _c = latLonConvMethod.LLH_2_XYZ
-        elif (c == latLonConvMethod.XYZ_2_LLH):
-            _c = latLonConvMethod.XYZ_2_LLH
-        elif (c == latLonConvMethod.XYZ_2_LLH_OLD):
-            _c = latLonConvMethod.XYZ_2_LLH_OLD
-        else:
-            print("Error: Unknown conversion type passed in.")
-            return
-        self.c_ellipsoid.latLon(_a,_b,_c)
+        self.c_ellipsoid.latLonToXyz(_a,_b)
+        for i in range(3):
+            a[i] = _a[i]
+            b[i] = _b[i]
+    def xyzToLatLon(self, list a, list b):
+        cdef vector[double] _a
+        cdef vector[double] _b
+        for i in range(3):
+            _a.push_back(a[i])
+            _b.push_back(b[i])
+        self.c_ellipsoid.xyzToLatLon(_a,_b)
         for i in range(3):
             a[i] = _a[i]
             b[i] = _b[i]

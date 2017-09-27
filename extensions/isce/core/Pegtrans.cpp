@@ -14,7 +14,6 @@
 #include "isce/core/Pegtrans.h"
 using isce::core::Ellipsoid;
 using isce::core::LinAlg;
-using isce::core::latLonConvMethod;
 using isce::core::orbitConvMethod;
 using isce::core::Peg;
 using isce::core::Pegtrans;
@@ -46,7 +45,7 @@ void Pegtrans::radarToXYZ(Ellipsoid &elp, Peg &peg) {
 
     vector<double> llh = {peg.lat, peg.lon, 0.};
     vector<double> p(3);
-    elp.latLon(p, llh, LLH_2_XYZ);
+    elp.latLonToXyz(p, llh);
     vector<double> up = {cos(peg.lat) * cos(peg.lon), cos(peg.lat) * sin(peg.lon), sin(peg.lat)};
     LinAlg::linComb(1., p, -radcur, up, ov);
 }
@@ -66,13 +65,13 @@ void Pegtrans::convertSCHtoXYZ(vector<double> &schv, vector<double> &xyzv, orbit
 
     if (ctype == SCH_2_XYZ) {
         llh = {schv[1]/radcur, schv[0]/radcur, schv[2]};
-        sph.latLon(schvt, llh, LLH_2_XYZ);
+        sph.latLonToXyz(schvt, llh);
         LinAlg::matVec(mat, schvt, xyzv);
         LinAlg::linComb(1., xyzv, 1., ov, xyzv);
     } else if (ctype == XYZ_2_SCH) {
         LinAlg::linComb(1., xyzv, -1., ov, schvt);
         LinAlg::matVec(matinv, schvt, schv);
-        sph.latLon(schv, llh, XYZ_2_LLH);
+        sph.xyzToLatLon(schv, llh);
         schv = {radcur*llh[1], radcur*llh[0], llh[2]};
     } else {
         string errstr = "Unrecognized conversion type in Pegtrans::convertSCHtoXYZ.\n";

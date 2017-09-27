@@ -8,7 +8,6 @@
 #include <vector>
 #include "isce/core/Constants.h"
 #include "isce/core/Ellipsoid.h"
-using isce::core::latLonConvMethod;
 using isce::core::Ellipsoid;
 using isce::core::LLH_2_XYZ;
 using isce::core::XYZ_2_LLH;
@@ -49,14 +48,14 @@ void testCorners() {
         vector<double> xyz(3), llh(3);
 
         llh = ref_llh;
-        wgs84.latLon(xyz, llh, LLH_2_XYZ);
+        wgs84.latLonToXyz(xyz, llh);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [LLH_2_XYZ] ";
         if (stat) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        wgs84.latLon(xyz, llh, XYZ_2_LLH);
+        wgs84.xyzToLatLon(xyz, llh);
         stat = checkAlmostEqual(llh, ref_llh,9);
         cout << " [XYZ_2_LLH] ";
         if(stat) cout << "PASSED";
@@ -70,14 +69,14 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        wgs84.latLon(xyz, llh, LLH_2_XYZ);
+        wgs84.latLonToXyz(xyz, llh);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [LLH_2_XYZ] ";
         if (stat) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        wgs84.latLon(xyz, llh, XYZ_2_LLH);
+        wgs84.xyzToLatLon(xyz, llh);
         stat = checkAlmostEqual(llh, ref_llh,9);
         cout << " [XYZ_2_LLH] ";
         if(stat) cout << "PASSED";
@@ -91,14 +90,14 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        wgs84.latLon(xyz, llh, LLH_2_XYZ);
+        wgs84.latLonToXyz(xyz, llh);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [LLH_2_XYZ] ";
         if (stat) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        wgs84.latLon(xyz, llh, XYZ_2_LLH);
+        wgs84.xyzToLatLon(xyz, llh);
         stat = checkAlmostEqual(llh, ref_llh,9);
         cout << " [XYZ_2_LLH] ";
         if(stat) cout << "PASSED";
@@ -112,14 +111,14 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        wgs84.latLon(xyz, llh, LLH_2_XYZ);
+        wgs84.latLonToXyz(xyz, llh);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [LLH_2_XYZ] ";
         if (stat) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        wgs84.latLon(xyz, llh, XYZ_2_LLH);
+        wgs84.xyzToLatLon(xyz, llh);
         stat = checkAlmostEqual(llh, ref_llh,9);
         cout << " [XYZ_2_LLH] ";
         if(stat) cout << "PASSED";
@@ -133,14 +132,14 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        wgs84.latLon(xyz, llh, LLH_2_XYZ);
+        wgs84.latLonToXyz(xyz, llh);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [LLH_2_XYZ] ";
         if (stat) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        wgs84.latLon(xyz, llh, XYZ_2_LLH);
+        wgs84.xyzToLatLon(xyz, llh);
         stat = checkAlmostEqual(llh, ref_llh,9);
         cout << " [XYZ_2_LLH] ";
         if(stat) cout << "PASSED";
@@ -154,14 +153,14 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        wgs84.latLon(xyz, llh, LLH_2_XYZ);
+        wgs84.latLonToXyz(xyz, llh);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [LLH_2_XYZ] ";
         if (stat) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        wgs84.latLon(xyz, llh, XYZ_2_LLH);
+        wgs84.xyzToLatLon(xyz, llh);
         stat = checkAlmostEqual(llh, ref_llh,9);
         cout << " [XYZ_2_LLH] ";
         if(stat) cout << "PASSED";
@@ -251,14 +250,14 @@ void testCoords() {
             rxyz.assign( ref_xyz[i], ref_xyz[i] + 3);
 
             llh = rllh;
-            wgs84.latLon(xyz, llh, LLH_2_XYZ);
+            wgs84.latLonToXyz(xyz, llh);
             bool stat = checkAlmostEqual(xyz, rxyz, 9);
             cout << " [LLH_2_XYZ] ";
             if (stat) cout << "PASSED";
             cout << endl;
 
             xyz = rxyz;
-            wgs84.latLon(xyz, llh, XYZ_2_LLH);
+            wgs84.xyzToLatLon(xyz, llh);
             stat = checkAlmostEqual(llh, rllh,9);
             cout << " [XYZ_2_LLH] ";
             if(stat) cout << "PASSED";

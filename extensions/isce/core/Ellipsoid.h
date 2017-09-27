@@ -25,7 +25,9 @@ namespace isce { namespace core {
         inline double rEast(double) const;
         inline double rNorth(double) const;
         inline double rDir(double,double) const;
-        void latLon(std::vector<double>&,std::vector<double>&,latLonConvMethod);
+        //void latLon(std::vector<double>&,std::vector<double>&,latLonConvMethod);
+        void latLonToXyz(std::vector<double>&,std::vector<double>&);
+        void xyzToLatLon(std::vector<double>&,std::vector<double>&);
         void getAngs(std::vector<double>&,std::vector<double>&,std::vector<double>&,double&,
                      double&);
         void getTCN_TCvec(std::vector<double>&,std::vector<double>&,std::vector<double>&,

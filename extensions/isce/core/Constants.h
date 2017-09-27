@@ -23,12 +23,6 @@ namespace isce { namespace core {
         XYZ_2_SCH
     };
 
-    enum latLonConvMethod {
-        LLH_2_XYZ,
-        XYZ_2_LLH,
-        XYZ_2_LLH_OLD
-    };
-
     enum orbitType {
         WGS84_ORBIT,
         SCH_ORBIT
