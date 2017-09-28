@@ -21,9 +21,12 @@ void Ellipsoid::latLonToXyz(vector<double> &llh, vector<double> &xyz) {
     checkVecLen(llh,3);
     checkVecLen(xyz,3);
 
+    // Radius of Earth in East direction
     auto re = rEast(llh[0]);
+    // Parametric representation of a circle as a function of longitude
     xyz[0] = (re + llh[2]) * cos(llh[0]) * cos(llh[1]);
     xyz[1] = (re + llh[2]) * cos(llh[0]) * sin(llh[1]);
+    // Parametric representation with the radius adjusted for eccentricity
     xyz[2] = ((re * (1. - e2)) + llh[2]) * sin(llh[0]);
 }
 
@@ -37,7 +40,9 @@ void Ellipsoid::xyzToLatLon(vector<double> &xyz, vector<double> &llh) {
     checkVecLen(llh,3);
     checkVecLen(xyz,3);
 
+    // Lateral distance normalized by the major axis
     double p = (pow(xyz[0], 2) + pow(xyz[1], 2)) / pow(a, 2);
+    // Polar distance normalized by the minor axis
     double q = ((1. - e2) * pow(xyz[2], 2)) / pow(a, 2);
     double r = (p + q - pow(e2, 2)) / 6.;
     double s = (pow(e2, 2) * p * q) / (4. * pow(r, 3.));
@@ -46,9 +51,13 @@ void Ellipsoid::xyzToLatLon(vector<double> &xyz, vector<double> &llh) {
     double rv = sqrt(pow(u, 2) + (pow(e2, 2) * q));
     double w = (e2 * (u + rv - q)) / (2. * rv);
     double k = sqrt(u + rv + pow(w, 2)) - w;
+    // Radius adjusted for eccentricity
     double d = (k * sqrt(pow(xyz[0], 2) + pow(xyz[1], 2))) / (k + e2);
+    // Latitude is a function of z and radius
     llh[0] = atan2(xyz[2], d);
+    // Longitude is a function of x and y
     llh[1] = atan2(xyz[1], xyz[0]);
+    // Height is a function of location and radius
     llh[2] = ((k + e2 - 1.) * sqrt(pow(d, 2) + pow(xyz[2], 2))) / k;
 }
 

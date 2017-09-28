@@ -1,5 +1,6 @@
 //
-// Author: Piyush Agram
+// Source Author: Piyush Agram
+// Co-Author: Joshua Cohen
 // Copyright 2017
 //
 
@@ -9,126 +10,56 @@
 #include <vector>
 #include <iostream>
 #include "isce/core/Projections.h"
+using std::cout;
+using std::endl;
+using std::vector;
 
-namespace isce { namespace core {
+/* * * * * * * * * * * * * * * * * * * * Geocent Projection * * * * * * * * * * * * * * * * * * * */
+int Geocent::forward(const vector<double> &llh, vector<double>& xyz) const {
+    /*
+     * This is to transform LLH to Geocent, which is just a pass-through to latLonToXyz.
+     */
 
-
-/*******************LonLat Projection*****************/
-
-void LonLat::print() const 
-{
-    std::cout << "Projection: Latlon, EPSG: " << epsgcode << "\n";
-}
-
-//This is just a pass through
-int LonLat::forward( const std::vector<double>& in,
-                        std::vector<double>& out) const
-{
-    out = in;
+    // May need to implement to temporarily swap lon/lat/height to lat/lon/height for pass-through
+    // vector<double> llh_swapped = {llh[1], llh[0], llh[2]};
+    // ellipse.latLonToXyz(llh_swapped, out);
+    ellipse.latLonToXyz(llh, xyz);
     return 0;
 }
 
-//This is just a pass through
-int LonLat::inverse( const std::vector<double>& in,
-                        std::vector<double>& out) const
-{
-    out = in;
+int Geocent::inverse(const vector<double> &xyz, vector<double>& llh) const {
+    /*
+     * This is to transform Geocent to LLH, which is just a pass-through to xyzToLatLon.
+     */
+
+    // May need to implement to temporarily swap lat/lon/height to lon/lat/height for output
+    // ellipse.xyzToLatLon(xyz, llh);
+    // llh = { llh[1], llh[0], llh[2] };
+    ellipse.xyzToLatLon(xyz, llh);
     return 0;
 }
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/****************End of LonLat Projection************/
-
-
-/*******************Geocent Projection****************/
-
-void Geocent::print() const 
-{
-    std::cout << "Projection: Geocent, EPSG: " << epsgcode << "\n";
-}
-
-//This is to transform LLH to Geocent
-//This is same as LLH_2_XYZ
-int Geocent::forward( const std::vector<double>& llh,
-                        std::vector<double>& out) const
-{
-
-    //Radius of Earth in East direction
-    //This is a function of latitude only assuming symmetricity 
-    double lat = llh[1];
-    double re = ellipse.rEast(lat);
-
-    //Standard parametric representation of circle as function of longitude
-    out[0] = (re + llh[2]) * cos(llh[1]) * cos(llh[0]);
-    out[1] = (re + llh[2]) * cos(llh[1]) * sin(llh[0]);
-
-    //Parametric representation with Radius adjusted for eccentricity
-    out[2] = ((re * (1. - ellipse.e2)) + llh[2]) * sin(llh[1]);
-    return 0;
-}
-
-int Geocent::inverse( const std::vector<double>& v,
-                        std::vector<double>& llh) const
-{
-    //Lateral distance normalized by major axis
-    double p = (pow(v[0], 2) + pow(v[1], 2)) / pow(ellipse.a, 2);
-
-    //Polar distance normalized by minor axis
-    double q = ((1. - ellipse.e2) * pow(v[2], 2)) / pow(ellipse.a, 2);
-
-
-    double r = (p + q - pow(ellipse.e2, 2)) / 6.;
-    double s = (pow(ellipse.e2, 2) * p * q) / (4. * pow(r, 3.));
-    double t = pow(1. + s + sqrt(s * (2. + s)), (1./3.));
-    double u = r * (1. + t + (1. / t));
-    double rv = sqrt(pow(u, 2) + (pow(ellipse.e2, 2) * q));
-    double w = (ellipse.e2 * (u + rv - q)) / (2. * rv);
-    double k = sqrt(u + rv + pow(w, 2)) - w;
-
-    //Radius adjusted for eccentricity
-    double d = (k * sqrt(pow(v[0], 2) + pow(v[1], 2))) / (k + ellipse.e2);
-
-    //Longitude is function of x and y
-    llh[0] = atan2(v[1], v[0]);
-
-    //Latitude is function of z and radius
-    llh[1] = atan2(v[2], d);
-
-    //Height is function of lcation and radius
-    llh[2] = ((k + ellipse.e2 - 1.) * sqrt(pow(d, 2) + pow(v[2], 2))) / k;
-    return 0;
-}
-
-/***************End of Geocent Projection**************/
-
-/****************UTM Projection**********************/
-
-void UTM::print() const
-{
-    std::cout << "Projection: UTM, Zone: "<< zone ;
-    std::cout << ((isnorth)? "N" : "S");
-    std::cout << ", EPSG: " << epsgcode << "\n";
-};
-
-//Meant to be a private function
-//For computation of Gaussian Latitude
-double gatg(const double *p1, int len_p1, double B) 
-{
+/* * * * * * * * * * * * * * * * * * * * * UTM Projection * * * * * * * * * * * * * * * * * * * * */
+double gatg(const double *p1, int len_p1, double B) {
+    /*
+     * Local function - Compute a Gaussian latitude.
+     */
     double const *p;
-    double h=0.0;
-    double h2=0.0;
-    double h1, cos_2B;
+    double h = 0.0;
+    double h2 = 0.0;
+    double cos_2B;
 
     cos_2B = 2 * cos(2 * B);
-    for(p=p1+len_p1, h1 = *--p; p-p1; h2 = h1, h1 = h)
+    for(double const *p = p1 + 6, double h1 = *(--p); p-p1; h2 = h1, h1 = h)
         h = -h2 + cos_2B*h1 + *--p;
 
     return (B + h * sin(2*B));
-};
+}
 
 //Meant to be a private function
 //Real clenshaw summation
-double clens(const double *a, int size, double arg_r) 
-{
+double clens(const double *a, int size, double arg_r) {
     double const *p;
     double r, hr, hr1, hr2, cos_arg_r;
 
@@ -143,7 +74,7 @@ double clens(const double *a, int size, double arg_r)
         hr  = -hr2 + r*hr1 + *--p;
     }
     return sin (arg_r)*hr;    
-};
+}
 
 //Meant to be a private function
 //Complex Clenshaw summation
@@ -176,34 +107,11 @@ double clenS(const double *a, int size, double arg_r, double arg_i, double *R, d
     *R  = r*hr - i*hi;
     *I  = r*hi + i*hr;
     return *R;
-};
-
-//Meant to be a private function
-//Compute log(1+x) accurately
-double log1py(double x) {           
-    double y = 1 + x;
-    double z = y - 1;
-    /* Here's the explanation for this magic: y = 1 + z, exactly, and z
-     * approx x, thus log(y)/z (which is nearly constant near z = 0) returns
-     * a good approximation to the true log(1 + x)/x.  The multiplication x *
-     * (log(y)/z) introduces little additional error. */
-    return ((z == 0) ? x : x * log(y) / z);
 }
-
-
-//Meant to be a private function
-//Compute asinh(x) accurately
-double asinhy(double x) {              
-    double y = fabs(x);
-    y = log1py(y * (1 + y/(hypot(1.0, y) + 1)));
-    return x < 0 ? -y : y;
-}
-
 
 //This is called as part of the Constructor
 //This is similar to PROJ.4 setup function for each projection
-void UTM::setup() 
-{
+void UTM::setup() {
     //Northern Hemisphere codes are between 32601 and 32660
     if ((epsgcode > 32600) && (epsgcode <= 32660))
     {
@@ -307,13 +215,10 @@ void UTM::setup()
     double Z = gatg(cbg, 6, 0.0);
 
     Zb = -Qn * (Z + clens(gtu, 6, 2*Z));
-};
-
+}
 
 //Transform from LLH to UTM
-int UTM::forward( const std::vector<double>& llh,
-                    std::vector<double> &utm) const
-{
+int UTM::forward( const std::vector<double>& llh, std::vector<double> &utm) const {
     //Elliptical Lat, Lon -> Gaussian Lat, Lon
     double Cn = gatg(cbg, 6, llh[1]);
     double lam = llh[0] - lon0;
@@ -332,7 +237,7 @@ int UTM::forward( const std::vector<double>& llh,
 
     //Spherical N,E to Elliptical N,E
     double dCn, dCe;
-    Ce = asinhy( tan(Ce) );
+    Ce = asinh( tan(Ce) );
     Cn += clenS(gtu,6,2*Cn, 2*Ce, &dCn, &dCe);
     Ce += dCe;
 
@@ -352,13 +257,10 @@ int UTM::forward( const std::vector<double>& llh,
     {
         return 1;
     }
-};
-
+}
 
 //Transform UTM to LLH
-int UTM::inverse( const std::vector<double>& utm,
-                        std::vector<double>& llh) const
-{
+int UTM::inverse( const std::vector<double>& utm, std::vector<double>& llh) const {
     double Cn = utm[1];
     Cn -= (isnorth)?0.0:10000000.0;
 
@@ -401,30 +303,27 @@ int UTM::inverse( const std::vector<double>& utm,
     {
         return 1;
     }
-};
+}
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/******************End of UTM Projection************************/
-void PolarStereo::print() const 
-{
-    std::cout << "Projection: ";
-    std::cout << ((isnorth)? "North":"South");
-    std::cout << " Polar Stereographic, EPSG: " << epsgcode << "\n";
-};
-
+/* * * * * * * * * * * * * * * * * * * PolarStereo Projection * * * * * * * * * * * * * * * * * * */
+void PolarStereo::print() const {
+    cout << "Projection: ";
+    cout << ((isnorth)? "North":"South");
+    cout << " Polar Stereographic, EPSG: " << epsgcode << "\n";
+}
 
 //Determine small t from PROJ.4
-double pj_tsfn(double phi, double sinphi, double e) 
-{
+double pj_tsfn(double phi, double sinphi, double e) {
     sinphi *= e;
 
     return (tan(0.5 * (0.5*M_PI - phi)) / pow((1.0 - sinphi)/(1.0+sinphi), 0.5*e));
-};
+}
 
 //Setup various parameters for polar stereographic projection
 //Currently only EPSG:3031 (Antarctic) and EPSG:3413 (Greenland)
 //are supported
-void PolarStereo::setup()
-{
+void PolarStereo::setup() {
     //Standard Antarctic projection
     if (epsgcode == 3031)
     {
@@ -450,13 +349,10 @@ void PolarStereo::setup()
     akm1 = cos(lat_ts) / pj_tsfn(lat_ts, t, e);
     t *= e;
     akm1 *= (ellipse.a/sqrt(1.0 - t*t));
-};
-
+}
 
 //Transform from LLH to Polar Stereo
-int PolarStereo::forward( const std::vector<double> &llh, 
-                                std::vector<double> & out) const
-{
+int PolarStereo::forward( const std::vector<double> &llh, std::vector<double> & out) const {
     double lam = llh[0] - lon0;
     double phi = llh[1];// - lat0;
     double coslam = cos(lam);
@@ -479,13 +375,10 @@ int PolarStereo::forward( const std::vector<double> &llh,
     out[2] = llh[2];
 
     return 0;
-};
-
+}
 
 //Transform from Polar Stereo to LLH
-int PolarStereo::inverse( const std::vector<double> &ups, 
-                                std::vector<double> &llh) const
-{
+int PolarStereo::inverse( const std::vector<double> &ups, std::vector<double> &llh) const {
     double rho = hypot(ups[0], ups[1]);
     double tp = -rho / akm1;
 
@@ -518,32 +411,27 @@ int PolarStereo::inverse( const std::vector<double> &ups,
     }
 
     return 1;
-};
+}
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/****************End of Polar Stereo Projection***************/
-
-/****************CEA Projection*************************/
-void CEA::print() const
-{
-    std::cout << "Projection: Cylindrical Equal Area, EPSG: " << epsgcode << "\n";
-};
+/* * * * * * * * * * * * * * * * * * * * * CEA Projection * * * * * * * * * * * * * * * * * * * * */
+void CEA::print() const {
+    cout << "Projection: Cylindrical Equal Area, EPSG: " << epsgcode << "\n";
+}
 
 //Meant to be a private function
 //Not part of public interface
-double pj_qsfn(double sinphi, double e, double one_es)
-{
+double pj_qsfn(double sinphi, double e, double one_es) {
     double con, div1, div2;
     con = e * sinphi;
     div1 = 1.0 - con*con;
     div2 = 1.0 + con;
 
     return (one_es * (sinphi / div1 - (0.5/e) * log((1.0-con)/div2)));
-};
-
+}
 
 //Setup parameters for equal area projection
-void CEA::setup()
-{
+void CEA::setup() {
 
     if (epsgcode == 6933)
     {
@@ -564,28 +452,24 @@ void CEA::setup()
     }
 }
 
-
 //Transform from LLH to CEA
-int CEA::forward(const std::vector<double> & llh,
-                    std::vector<double> &enu) const
-{
+int CEA::forward(const std::vector<double> & llh, std::vector<double> &enu) const {
     enu[0] = k0 * llh[0] * ellipse.a;
     enu[1] = 0.5 * ellipse.a * pj_qsfn( sin(llh[1]), e, one_es)/ k0;
     enu[2] = llh[2];
     return 0;
-};
+}
 
 //Transform from CEA to LLH
-int CEA::inverse(const std::vector<double>& enu,
-                    std::vector<double> &llh) const
-{
+int CEA::inverse(const std::vector<double>& enu, std::vector<double> &llh) const {
     llh[0] = enu[0] / (k0 * ellipse.a);
     double beta = asin(2.0 * enu[1] * k0 /(ellipse.a * qp));
     double t = beta + beta;
     llh[1] = beta + apa[0] * sin(t) + apa[1] * sin(t+t) + apa[2] * sin(t+t+t);  
     llh[2] = enu[2];
     return 0;
-};
+}
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /****************Projection Factory*********************/
 ProjectionBase* createProj(int epsgcode)
@@ -665,5 +549,3 @@ int projTransform(ProjectionBase *in, ProjectionBase* out,
     return 0;
 };
 
-
-}}

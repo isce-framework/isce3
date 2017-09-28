@@ -25,7 +25,6 @@ namespace isce { namespace core {
         inline double rEast(double) const;
         inline double rNorth(double) const;
         inline double rDir(double,double) const;
-        //void latLon(std::vector<double>&,std::vector<double>&,latLonConvMethod);
         void latLonToXyz(std::vector<double>&,std::vector<double>&);
         void xyzToLatLon(std::vector<double>&,std::vector<double>&);
         void getAngs(std::vector<double>&,std::vector<double>&,std::vector<double>&,double&,
@@ -42,10 +41,15 @@ namespace isce { namespace core {
         return *this;
     }
 
-    inline double Ellipsoid::rEast(double lat) const{ return a / sqrt(1. - (e2 * pow(sin(lat), 2))); }
+    inline double Ellipsoid::rEast(double lat) const {
+        // Radius of Ellipsoid in East direction (assuming latitude-wise symmetry)
+        return a / sqrt(1. - (e2 * pow(sin(lat), 2)));
+    }
 
-    inline double Ellipsoid::rNorth(double lat) const { return (a * (1. - e2)) / 
-                                                          pow((1. - (e2 * pow(lat, 2))), 1.5); }
+    inline double Ellipsoid::rNorth(double lat) const {
+        // Radius of Ellipsoid in North direction (assuming latitude-wise symmetry)
+        return (a * (1. - e2)) / pow((1. - (e2 * pow(lat, 2))), 1.5);
+    }
 
     inline double Ellipsoid::rDir(double hdg, double lat) const {
         auto re = rEast(lat);

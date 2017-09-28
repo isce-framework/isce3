@@ -48,7 +48,7 @@ void testCorners() {
         vector<double> xyz(3), llh(3);
 
         llh = ref_llh;
-        wgs84.latLonToXyz(xyz, llh);
+        wgs84.latLonToXyz(llh, xyz);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [LLH_2_XYZ] ";
         if (stat) cout << "PASSED";
@@ -69,7 +69,7 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        wgs84.latLonToXyz(xyz, llh);
+        wgs84.latLonToXyz(llh, xyz);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [LLH_2_XYZ] ";
         if (stat) cout << "PASSED";
@@ -90,7 +90,7 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        wgs84.latLonToXyz(xyz, llh);
+        wgs84.latLonToXyz(llh, xyz);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [LLH_2_XYZ] ";
         if (stat) cout << "PASSED";
@@ -111,7 +111,7 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        wgs84.latLonToXyz(xyz, llh);
+        wgs84.latLonToXyz(llh, xyz);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [LLH_2_XYZ] ";
         if (stat) cout << "PASSED";
@@ -132,7 +132,7 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        wgs84.latLonToXyz(xyz, llh);
+        wgs84.latLonToXyz(llh, xyz);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [LLH_2_XYZ] ";
         if (stat) cout << "PASSED";
@@ -153,7 +153,7 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        wgs84.latLonToXyz(xyz, llh);
+        wgs84.latLonToXyz(llh, xyz);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [LLH_2_XYZ] ";
         if (stat) cout << "PASSED";
@@ -250,7 +250,7 @@ void testCoords() {
             rxyz.assign( ref_xyz[i], ref_xyz[i] + 3);
 
             llh = rllh;
-            wgs84.latLonToXyz(xyz, llh);
+            wgs84.latLonToXyz(llh, xyz);
             bool stat = checkAlmostEqual(xyz, rxyz, 9);
             cout << " [LLH_2_XYZ] ";
             if (stat) cout << "PASSED";

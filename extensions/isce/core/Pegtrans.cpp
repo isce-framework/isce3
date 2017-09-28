@@ -45,7 +45,7 @@ void Pegtrans::radarToXYZ(Ellipsoid &elp, Peg &peg) {
 
     vector<double> llh = {peg.lat, peg.lon, 0.};
     vector<double> p(3);
-    elp.latLonToXyz(p, llh);
+    elp.latLonToXyz(llh, p);
     vector<double> up = {cos(peg.lat) * cos(peg.lon), cos(peg.lat) * sin(peg.lon), sin(peg.lat)};
     LinAlg::linComb(1., p, -radcur, up, ov);
 }
@@ -65,7 +65,7 @@ void Pegtrans::convertSCHtoXYZ(vector<double> &schv, vector<double> &xyzv, orbit
 
     if (ctype == SCH_2_XYZ) {
         llh = {schv[1]/radcur, schv[0]/radcur, schv[2]};
-        sph.latLonToXyz(schvt, llh);
+        sph.latLonToXyz(llh, schvt);
         LinAlg::matVec(mat, schvt, xyzv);
         LinAlg::linComb(1., xyzv, 1., ov, xyzv);
     } else if (ctype == XYZ_2_SCH) {
