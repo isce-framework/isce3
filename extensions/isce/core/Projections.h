@@ -16,14 +16,15 @@ namespace isce { namespace core {
 
     // Abstract base class for individual projections
     struct ProjectionBase {
+        // Ellipsoid to be used for all transformations
+        Ellipsoid ellipse;
         // Type of projection system. This can be used to check if projection systems are equal
         // Private member and should not be modified after initialization
         int _epsgcode;
-        // Ellipsoid to be used for all transformations
-        Ellipsoid ellipse;
 
-        // Value constructor with Ellipsoid as input (will not be called directly, only as delegate)
-        ProjectionBase(Ellipsoid &elp, int code) : ellipse(elp), _epsgcode(code) {}
+        // Value constructor with EPSG code as input. Ellipsoid is always initialized to standard
+        // WGS84 ellipse.
+        ProjectionBase(int code) : ellipse(6378137.,.0066943799901), _epsgcode(code) {}
 
         // Print function for debugging
         virtual void print() const = 0;
@@ -36,7 +37,7 @@ namespace isce { namespace core {
     // Standard WGS84 Lat/Lon Projection 
     struct LatLon : public ProjectionBase {
         // Value constructor
-        LatLon(Ellipsoid &elp) : ProjectionBase(elp,4326) {}
+        LatLon() : ProjectionBase(4326) {}
         
         inline void print() const;
         // This will be a pass through for Lat/Lon
@@ -62,7 +63,7 @@ namespace isce { namespace core {
     // Standard WGS84 ECEF coordinates
     struct Geocent : public ProjectionBase {
         // Value constructor
-        Geocent(Ellipsoid &elp) : ProjectionBase(elp,4978) {}
+        Geocent() : ProjectionBase(4978) {}
         
         inline void print() const;
         // This is same as latLonToXyz
@@ -77,25 +78,23 @@ namespace isce { namespace core {
 
     // UTM coordinates
     struct UTM : public ProjectionBase { 
-        //Constants related to the projection system
+        // Constants related to the projection system
         double lon0;
         int zone;
         bool isnorth;
-        //Parameters from Proj.4
+        // Parameters from Proj.4
         double cgb[6], cbg[6], utg[6], gtu[6];
         double Qn, Zb;
-        double Zb; 
 
         // Value constructor
-        UTM(Ellipsoid &elp, int code) : ProjectionBase(elp,code) { _setup(); }
+        //UTM(Ellipsoid &elp, int code) : ProjectionBase(elp,code) { _setup(); }
+        UTM(int);
 
         inline void print() const;
         // Transform from LLH to UTM
         int forward(const std::vector<double>&,std::vector<double>&) const;
         // Transform from UTM to LLH
         int inverse(const std::vector<double>&,std::vector<double>&) const;
-        // Private methods. Not part of public interface.
-        void _setup();
     };
 
     inline void UTM::print() const {
@@ -110,17 +109,20 @@ namespace isce { namespace core {
         bool isnorth;
 
         // Value constructor
-        PolarStereo(Ellipsoid &elp, int code) : ProjectionBase(elp,code) { _setup(); }
+        //PolarStereo(Ellipsoid &elp, int code) : ProjectionBase(elp,code) { _setup(); }
+        PolarStereo(int);
 
-        void print() const;
+        inline void print() const;
         // Transfrom from LLH to Polar Stereo
         int forward(const std::vector<double>&,std::vector<double>&) const;
         // Transform from Polar Stereo to LLH
         int inverse(const std::vector<double>&,std::vector<double>&) const;
-        // Private methods. Not part of public interface.
-        void _setup();
     };
-
+    
+    inline void PolarStereo::print() const {
+        std::cout << "Projection: " << (isnorth ? "North" : "South") << " Polar Stereographic" <<
+                     std::endl << "EPSG: " << _epsgcode << std::endl;
+    }
 
     // Equal Area Projection System for SMAP
     struct CEA: public ProjectionBase {
@@ -129,16 +131,20 @@ namespace isce { namespace core {
         double lat_ts, k0, e, one_es, qp;
 
         // Value constructor
-        CEA(Ellipsoid &elp, int code) : ProjectionBase(elp, code) { _setup(); }
+        //CEA(Ellipsoid &elp, int code) : ProjectionBase(elp, code) { _setup(); }
+        CEA();
 
-        void print() const;
+        inline void print() const;
         // Transform from LLH to CEA
         int forward(const std::vector<double>&,std::vector<double>&) const;
         // Transform from CEA to LLH
         int inverse(const std::vector<double>&,std::vector<double>&) const;
-        // Private methods. Not part of public interface.
-        void _setup();
     };
+
+    inline void CEA::print() const {
+        std::cout << "Projection: Cylindrical Equal Area" << std::endl << "EPSG: " << _epsgcode <<
+                     std::endl;
+    }
 
     // This is to transform a point from one coordinate system to another
     int projTransform(ProjectionBase* in, ProjectionBase *out, const std::vector<double> &inpts,

@@ -7,8 +7,7 @@
 #include <iostream>
 #include <vector>
 #include "isce/core/Projections.h"
-using isce::core::createProj;
-using isce::core::ProjectionBase;
+using isce::core::Geocent;
 using std::cout;
 using std::endl;
 using std::vector;
@@ -35,9 +34,10 @@ void testCorners() {
      * Test corners for lat/lon
      */
 
-    ProjectionBase* proj = createProj(4978);
-    double a = proj->ellipse.a;
-    double e2 = proj->ellipse.e2;
+    // Alternately can use 'Geocent *proj = new Geocent()' or 'ProjectionBase *proj = new Geocent()'
+    Geocent proj;
+    double a = proj.ellipse.a;
+    double e2 = proj.ellipse.e2;
     double b = a * sqrt(1.0-e2);
 
     cout << endl << " [Origin]" << endl;
@@ -47,14 +47,14 @@ void testCorners() {
         vector<double> xyz(3), llh(3);
 
         llh = ref_llh;
-        int flag = proj->forward(llh, xyz);
+        int flag = proj.forward(llh, xyz);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [Forward] ";
         if (stat && (flag == 0)) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        flag = proj->inverse(xyz, llh);
+        flag = proj.inverse(xyz, llh);
         stat = checkAlmostEqual(llh, ref_llh,9);
         cout << " [Inverse] ";
         if(stat && (flag==0)) cout << "PASSED";
@@ -68,14 +68,14 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        int flag = proj->forward(llh, xyz);
+        int flag = proj.forward(llh, xyz);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [Forward] ";
         if (stat && (flag==0)) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        flag = proj->inverse(xyz, llh);
+        flag = proj.inverse(xyz, llh);
         stat = checkAlmostEqual(llh, ref_llh,9);
         cout << " [Inverse] ";
         if(stat && (flag==0)) cout << "PASSED";
@@ -89,14 +89,14 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        int flag = proj->forward(llh,xyz);
+        int flag = proj.forward(llh,xyz);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [Forward] ";
         if (stat && (flag==0)) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        flag = proj->inverse(xyz,llh);
+        flag = proj.inverse(xyz,llh);
         stat = checkAlmostEqual(llh, ref_llh,9);
         cout << " [Inverse] ";
         if(stat && (flag==0)) cout << "PASSED";
@@ -110,14 +110,14 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        int flag = proj->forward(llh,xyz);
+        int flag = proj.forward(llh,xyz);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [Forward] ";
         if (stat && (flag==0)) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        flag = proj->inverse(xyz, llh);
+        flag = proj.inverse(xyz, llh);
         stat = checkAlmostEqual(llh, ref_llh,9);
         cout << " [XYZ_2_LLH] ";
         if(stat && (flag==0)) cout << "PASSED";
@@ -131,14 +131,14 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        int flag = proj->forward(llh,xyz);
+        int flag = proj.forward(llh,xyz);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [Forward] ";
         if (stat && (flag==0)) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        flag = proj->inverse(xyz, llh);
+        flag = proj.inverse(xyz, llh);
         stat = checkAlmostEqual(llh, ref_llh,9);
         cout << " [Inverse] ";
         if(stat && (flag==0)) cout << "PASSED";
@@ -152,14 +152,14 @@ void testCorners() {
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        int flag = proj->forward(llh,xyz);
+        int flag = proj.forward(llh,xyz);
         bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
         cout << " [Forward] ";
         if (stat && (flag==0)) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        flag = proj->inverse(xyz, llh);
+        flag = proj.inverse(xyz, llh);
         stat = checkAlmostEqual(llh, ref_llh,9);
         cout << " [Inverse] ";
         if(stat && (flag==0)) cout << "PASSED";
@@ -170,7 +170,7 @@ void testCorners() {
 
 void testCoords() {
    
-    ProjectionBase* proj = createProj(4978);
+    Geocent proj;
 
     //Test data was generated using pyproj and random numbers
     double ref_llh[15][3] = {{ 1.134431523585921e+00, -1.180097204507889e+00,   
@@ -246,14 +246,14 @@ void testCoords() {
             rxyz.assign( ref_xyz[i], ref_xyz[i] + 3);
 
             llh = rllh;
-            int flag = proj->forward(llh,xyz);
+            int flag = proj.forward(llh,xyz);
             bool stat = checkAlmostEqual(xyz, rxyz, 9);
             cout << " [Forward] ";
             if (stat && (flag==0)) cout << "PASSED";
             cout << endl;
 
             xyz = rxyz;
-            flag = proj->inverse(xyz, llh);
+            flag = proj.inverse(xyz, llh);
             stat = checkAlmostEqual(llh, rllh,9);
             cout << " [Inverse] ";
             if(stat && (flag==0)) cout << "PASSED";

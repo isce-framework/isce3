@@ -7,8 +7,7 @@
 #include <iostream>
 #include <vector>
 #include "isce/core/Projections.h"
-using isce::core::createProj;
-using isce::core::ProjectionBase;
+using isce::core::CEA;
 using std::cout;
 using std::endl;
 using std::vector;
@@ -32,7 +31,8 @@ bool checkAlmostEqual(vector<double> &ref, vector<double> &calc, int n_digits) {
 
 void testCoords() {
    
-    ProjectionBase* proj = createProj(6933);
+    // Alternately can use 'CEA *proj = new CEA()' or 'ProjectionBase *proj = new CEA()'
+    CEA proj;
 
     //Test data was generated using pyproj and random numbers
     double ref_llh[15][3] = {{-1.397694375733237e+00,   8.496490909249732e-01,
@@ -108,14 +108,14 @@ void testCoords() {
             rxyz.assign( ref_xyz[i], ref_xyz[i] + 3);
 
             llh = rllh;
-            int flag = proj->forward(llh,xyz);
+            int flag = proj.forward(llh,xyz);
             bool stat = checkAlmostEqual(rxyz, xyz, 9);
             cout << " [Forward] ";
             if (stat && (flag==0)) cout << "PASSED";
             cout << endl;
 
             xyz = rxyz;
-            flag = proj->inverse(xyz, llh);
+            flag = proj.inverse(xyz, llh);
             stat = checkAlmostEqual(rllh, llh,9);
             cout << " [Inverse] ";
             if(stat && (flag==0)) cout << "PASSED";

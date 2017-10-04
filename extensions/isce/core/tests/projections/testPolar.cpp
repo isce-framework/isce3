@@ -7,8 +7,7 @@
 #include <iostream>
 #include <vector>
 #include "isce/core/Projections.h"
-using isce::core::createProj;
-using isce::core::ProjectionBase;
+using isce::core::PolarStereo;
 using std::cout;
 using std::endl;
 using std::vector;
@@ -33,20 +32,22 @@ bool checkAlmostEqual(vector<double> &ref, vector<double> &calc, int n_digits) {
 void testPoles() {
     cout << endl << " [South Pole]" << endl;
     {
-        ProjectionBase* proj = createProj(3031);
+        // Alternately can use 'PolarStereo *proj = new PolarStereo(3031)' or 'ProjectionBase *proj
+        // = new PolarStereo(3031)'
+        PolarStereo proj(3031);
         vector<double> ref_llh = {0., -M_PI/2.0,0.};
         vector<double> ref_xyz = {0.,0.,0.};
         vector<double> xyz(3), llh(3);
 
         llh = ref_llh;
-        int flag = proj->forward(llh, xyz);
+        int flag = proj.forward(llh, xyz);
         cout << " [Forward] ";
         bool stat = checkAlmostEqual(ref_xyz, xyz, 9);
         if (stat && (flag == 0)) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        flag = proj->inverse(xyz, llh);
+        flag = proj.inverse(xyz, llh);
         cout << " [Inverse] ";
         stat = checkAlmostEqual(ref_llh, llh,9);
         if(stat && (flag==0)) cout << "PASSED";
@@ -55,20 +56,20 @@ void testPoles() {
 
     cout << endl << " [North Pole]" << endl;
     {
-        ProjectionBase* proj = createProj(3413);
+        PolarStereo proj(3413);
         vector<double> ref_llh = {0.,0.5*M_PI,0.};
         vector<double> ref_xyz = {0.,0.,0.};
         vector<double> xyz(3),llh(3);
 
         llh = ref_llh;
-        int flag = proj->forward(llh, xyz);
+        int flag = proj.forward(llh, xyz);
         cout << " [Forward] ";
         bool stat = checkAlmostEqual(ref_xyz, xyz, 9);
         if (stat && (flag==0)) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        flag = proj->inverse(xyz, llh);
+        flag = proj.inverse(xyz, llh);
         cout << " [Inverse] ";
         stat = checkAlmostEqual(ref_llh, llh,9);
         if(stat && (flag==0)) cout << "PASSED";
@@ -78,7 +79,7 @@ void testPoles() {
 
 void testSouthPolar() {
    
-    ProjectionBase* proj = createProj(3031);
+    PolarStereo proj(3031);
 
     //Test data was generated using pyproj and random numbers
     double ref_llh[15][3] = {{  3.083894546782417e-02,  -1.344622005845314e+00,
@@ -157,14 +158,14 @@ void testSouthPolar() {
             rxyz.assign( ref_xyz[i], ref_xyz[i] + 3);
 
             llh = rllh;
-            int flag = proj->forward(llh,xyz);
+            int flag = proj.forward(llh,xyz);
             cout << " [Forward] ";
             bool stat = checkAlmostEqual(rxyz, xyz, 9);
             if (stat && (flag==0)) cout << "PASSED";
             cout << endl;
 
             xyz = rxyz;
-            flag = proj->inverse(xyz, llh);
+            flag = proj.inverse(xyz, llh);
             cout << " [Inverse] ";
             stat = checkAlmostEqual(rllh, llh,9);
             if(stat && (flag==0)) cout << "PASSED";
@@ -178,7 +179,7 @@ void testSouthPolar() {
 
 void testNorthPolar() {
    
-    ProjectionBase* proj = createProj(3413);
+    PolarStereo proj(3413);
 
     //Test data was generated using pyproj and random numbers
     double ref_llh[15][3] = {{ 1.526573781702310e+00,   1.204871941981861e+00,
@@ -255,14 +256,14 @@ void testNorthPolar() {
             rxyz.assign( ref_xyz[i], ref_xyz[i] + 3);
 
             llh = rllh;
-            int flag = proj->forward(llh,xyz);
+            int flag = proj.forward(llh,xyz);
             cout << " [Forward] ";
             bool stat = checkAlmostEqual(rxyz, xyz, 9);
             if (stat && (flag==0)) cout << "PASSED";
             cout << endl;
 
             xyz = rxyz;
-            flag = proj->inverse(xyz, llh);
+            flag = proj.inverse(xyz, llh);
             cout << " [Inverse] ";
             stat = checkAlmostEqual(rllh, llh,9);
             if(stat && (flag==0)) cout << "PASSED";

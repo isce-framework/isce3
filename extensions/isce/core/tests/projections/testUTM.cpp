@@ -7,8 +7,7 @@
 #include <iostream>
 #include <vector>
 #include "isce/core/Projections.h"
-using isce::core::createProj;
-using isce::core::ProjectionBase;
+using isce::core::UTM;
 using std::cout;
 using std::endl;
 using std::vector;
@@ -36,20 +35,22 @@ void testUTMOrigin() {
     {
         cout << endl << " [North Origin-" << ii << "]" << endl;
         
-        ProjectionBase* proj = createProj(32600+ii);
+        // Alternately can use 'UTM *proj = new UTM(32600+ii)' or 'ProjectionBase *proj = new
+        // UTM(32600+ii)'
+        UTM proj(32600+ii);
         vector<double> ref_llh = {(-177.0 + (ii-1)*6) * M_PI/180.0,0.,0.};
         vector<double> ref_xyz = {500000.,0.,0.};
         vector<double> xyz(3), llh(3);
 
         llh = ref_llh;
-        int flag = proj->forward(llh, xyz);
+        int flag = proj.forward(llh, xyz);
         cout << " [Forward] ";
         bool stat = checkAlmostEqual(ref_xyz, xyz, 9);
         if (stat && (flag == 0)) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        flag = proj->inverse(xyz, llh);
+        flag = proj.inverse(xyz, llh);
         cout << " [Inverse] ";
         stat = checkAlmostEqual(ref_llh, llh,9);
         if(stat && (flag==0)) cout << "PASSED";
@@ -60,20 +61,20 @@ void testUTMOrigin() {
     {
         cout << endl << " [South Origin-" << ii << "]" << endl;
         
-        ProjectionBase* proj = createProj(32700+ii);
+        UTM proj(32700+ii);
         vector<double> ref_llh = {(-177.0 + (ii-1)*6) * M_PI/180.0,0.,0.};
         vector<double> ref_xyz = {500000.,10000000.,0.};
         vector<double> xyz(3), llh(3);
 
         llh = ref_llh;
-        int flag = proj->forward(llh, xyz);
+        int flag = proj.forward(llh, xyz);
         cout << " [Forward] ";
         bool stat = checkAlmostEqual(ref_xyz, xyz, 9);
         if (stat && (flag == 0)) cout << "PASSED";
         cout << endl;
 
         xyz = ref_xyz;
-        flag = proj->inverse(xyz, llh);
+        flag = proj.inverse(xyz, llh);
         cout << " [Inverse] ";
         stat = checkAlmostEqual(ref_llh, llh,9);
         if(stat && (flag==0)) cout << "PASSED";
@@ -332,7 +333,7 @@ void testUTMNorth() {
 
     for(int i=0; i<60;i++)
     {
-        ProjectionBase* proj = createProj(32600+i+1);
+        UTM proj(32600+i+1);
         cout << endl << " [North UTM " << i+1 << " ]" << endl;
         {
             vector<double> rxyz(3), rllh(3);
@@ -342,14 +343,14 @@ void testUTMNorth() {
             rxyz.assign( ref_xyz[i], ref_xyz[i] + 3);
 
             llh = rllh;
-            int flag = proj->forward(llh,xyz);
+            int flag = proj.forward(llh,xyz);
             cout << " [Forward] ";
             bool stat = checkAlmostEqual(rxyz, xyz, 9);
             if (stat && (flag==0)) cout << "PASSED";
             cout << endl;
 
             xyz = rxyz;
-            flag = proj->inverse(xyz, llh);
+            flag = proj.inverse(xyz, llh);
             cout << " [Inverse] ";
             stat = checkAlmostEqual(rllh, llh,9);
             if(stat && (flag==0)) cout << "PASSED";
@@ -607,7 +608,7 @@ void testUTMSouth() {
 
     for(int i=0; i<60;i++)
     {
-        ProjectionBase* proj = createProj(32700+i+1);
+        UTM proj(32700+i+1);
         cout << endl << " [South UTM " << i+1 << " ]" << endl;
         {
             vector<double> rxyz(3), rllh(3);
@@ -617,14 +618,14 @@ void testUTMSouth() {
             rxyz.assign( ref_xyz[i], ref_xyz[i] + 3);
 
             llh = rllh;
-            int flag = proj->forward(llh,xyz);
+            int flag = proj.forward(llh,xyz);
             cout << " [Forward] ";
             bool stat = checkAlmostEqual(rxyz, xyz, 9);
             if (stat && (flag==0)) cout << "PASSED";
             cout << endl;
 
             xyz = rxyz;
-            flag = proj->inverse(xyz, llh);
+            flag = proj.inverse(xyz, llh);
             cout << " [Inverse] ";
             stat = checkAlmostEqual(rllh, llh,9);
             if(stat && (flag==0)) cout << "PASSED";
