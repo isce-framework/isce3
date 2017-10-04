@@ -32,7 +32,7 @@ using std::to_string;
 using std::vector;
 
 
-void Orbit::getPositionVelocity(double tintp, vector<double> &pos, vector<double> &vel) {
+void Orbit::getPositionVelocity(double tintp, vector<double> &pos, vector<double> &vel) const {
     /*
      * Separately-named wrapper for interpolate based on stored basis. Does not check for 
      * interpolate success/fail.
@@ -53,7 +53,7 @@ void Orbit::getPositionVelocity(double tintp, vector<double> &pos, vector<double
 }
 
 int Orbit::interpolate(double tintp, vector<double> &opos, vector<double> &ovel, 
-                       orbitInterpMethod intp_type) {
+                       orbitInterpMethod intp_type) const {
     /*
      * Single entry-point wrapper for orbit interpolation.
      */
@@ -73,7 +73,7 @@ int Orbit::interpolate(double tintp, vector<double> &opos, vector<double> &ovel,
     }
 }
 
-int Orbit::interpolateWGS84Orbit(double tintp, vector<double> &opos, vector<double> &ovel) {
+int Orbit::interpolateWGS84Orbit(double tintp, vector<double> &opos, vector<double> &ovel) const {
     /* 
      * Interpolate WGS-84 orbit
      */
@@ -114,8 +114,8 @@ int Orbit::interpolateWGS84Orbit(double tintp, vector<double> &opos, vector<doub
     return 0;
 }
 
-void isce::core::orbitHermite(vector<vector<double>> &x, vector<vector<double>> &v, 
-                              vector<double> &t, double time, vector<double> &xx, 
+void isce::core::orbitHermite(const vector<vector<double>> &x, const vector<vector<double>> &v, 
+                              const vector<double> &t, double time, vector<double> &xx, 
                               vector<double> &vv) {
     /*
      * Method used by interpolateWGS84Orbit but is not tied to an Orbit
@@ -178,7 +178,8 @@ void isce::core::orbitHermite(vector<vector<double>> &x, vector<vector<double>> 
     }
 }
 
-int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<double> &ovel) {
+int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<double> &ovel) const
+                                      {
     /*
      * Interpolate Legendre orbit
      */
@@ -239,7 +240,7 @@ int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<d
     return 0;
 }
 
-int Orbit::interpolateSCHOrbit(double tintp, vector<double> &opos, vector<double> &ovel) {
+int Orbit::interpolateSCHOrbit(double tintp, vector<double> &opos, vector<double> &ovel) const {
     /*
      * Interpolate SCH orbit
      */
@@ -282,9 +283,9 @@ int Orbit::interpolateSCHOrbit(double tintp, vector<double> &opos, vector<double
     return 0;
 }
 
-int Orbit::computeAcceleration(double tintp, vector<double> &acc) {
+int Orbit::computeAcceleration(double tintp, vector<double> &acc) const {
     /*
-     * Interpolate acceleration
+     * Interpolate acceleration.
      */
 
     checkVecLen(acc,3);
@@ -303,9 +304,9 @@ int Orbit::computeAcceleration(double tintp, vector<double> &acc) {
     return 0;
 }
 
-void Orbit::printOrbit() {
+void Orbit::printOrbit() const {
     /*
-     * Debug print the stored orbit
+     * Debug print the stored orbit.
      */
 
     cout << "Orbit - Basis: " << basis << ", nVectors: " << nVectors << endl;
@@ -368,7 +369,7 @@ void Orbit::loadFromHDR(const char *filename, int bs) {
     }
 }
 
-void Orbit::dumpToHDR(const char* filename) {
+void Orbit::dumpToHDR(const char* filename) const {
     /*
      *  Save Orbit to a given HDR file using fstreams. This saving scheme is compatible with the 
      *  above reading scheme.

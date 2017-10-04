@@ -37,9 +37,9 @@ namespace isce { namespace core {
         inline Poly2d& operator=(const Poly2d&);
 
         inline void setCoeff(int,int,double);
-        inline double getCoeff(int,int);
-        double eval(double,double);
-        void printPoly();
+        inline double getCoeff(int,int) const;
+        double eval(double,double) const;
+        void printPoly() const;
     };
 
     inline Poly2d& Poly2d::operator=(const Poly2d &rhs) {
@@ -67,7 +67,7 @@ namespace isce { namespace core {
         coeffs[IDX1D(row,col,rangeOrder+1)] = val;
     }
 
-    inline double Poly2d::getCoeff(int row, int col) {
+    inline double Poly2d::getCoeff(int row, int col) const {
         if ((row < 0) || (row > azimuthOrder)) {
             std::string errstr = "Poly2d::getCoeff - Trying to get coefficient for row " +
                                  std::to_string(row+1) + " out of " + 

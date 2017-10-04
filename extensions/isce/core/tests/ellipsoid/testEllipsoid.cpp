@@ -9,8 +9,6 @@
 #include "isce/core/Constants.h"
 #include "isce/core/Ellipsoid.h"
 using isce::core::Ellipsoid;
-using isce::core::LLH_2_XYZ;
-using isce::core::XYZ_2_LLH;
 using std::cout;
 using std::endl;
 using std::vector;

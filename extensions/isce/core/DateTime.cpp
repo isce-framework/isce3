@@ -79,7 +79,7 @@ DateTime& DateTime::operator=(const string &dts) {
     return *this;
 }
 #endif
-DateTime& DateTime::operator=(const double dtd) {
+DateTime& DateTime::operator=(double dtd) {
     /*
      *  Simple assignment operator that takes a double, assumes it's expressed in seconds-since-
      *  epoch, and initialize the corresponding internal chrono::time_point to match the input.

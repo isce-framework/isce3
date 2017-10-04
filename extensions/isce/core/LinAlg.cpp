@@ -18,7 +18,7 @@ using std::to_string;
 using std::vector;
 
 
-void LinAlg::cross(vector<double> &u, vector<double> &v, vector<double> &w) {
+void LinAlg::cross(const vector<double> &u, const vector<double> &v, vector<double> &w) {
     /*
      *  Calculate the vector cross product of two 1x3 vectors (u, v) and store the resulting vector 
      *  in w.
@@ -34,7 +34,7 @@ void LinAlg::cross(vector<double> &u, vector<double> &v, vector<double> &w) {
     w[2] = (u[0] * v[1]) - (u[1] * v[0]);
 }
 
-double LinAlg::dot(vector<double> &v, vector<double> &w) {
+double LinAlg::dot(const vector<double> &v, const vector<double> &w) {
     /*
      *  Calculate the vector dot product of two 1x3 vectors and return the result.
      */
@@ -46,7 +46,7 @@ double LinAlg::dot(vector<double> &v, vector<double> &w) {
     return (v[0] * w[0]) + (v[1] * w[1]) + (v[2] * w[2]);
 }
 
-void LinAlg::linComb(double k1, vector<double> &u, double k2, vector<double> &v, 
+void LinAlg::linComb(double k1, const vector<double> &u, double k2, const vector<double> &v, 
                      vector<double> &w) {
     /*
      *  Calculate the linear combination of two pairs of scalars and 1x3 vectors and store the 
@@ -61,7 +61,7 @@ void LinAlg::linComb(double k1, vector<double> &u, double k2, vector<double> &v,
     for (int i=0; i<3; i++) w[i] = (k1 * u[i]) + (k2 * v[i]);
 }
 
-void LinAlg::matMat(vector<vector<double>> &a, vector<vector<double>> &b, 
+void LinAlg::matMat(const vector<vector<double>> &a, const vector<vector<double>> &b, 
                     vector<vector<double>> &c) {
     /*
      *  Calculate the matrix product of two 3x3 matrices and store the resulting matrix in c.
@@ -79,7 +79,7 @@ void LinAlg::matMat(vector<vector<double>> &a, vector<vector<double>> &b,
     }
 }
 
-void LinAlg::matVec(vector<vector<double>> &t, vector<double> &v, vector<double> &w) {
+void LinAlg::matVec(const vector<vector<double>> &t, const vector<double> &v, vector<double> &w) {
     /*
      *  Calculate the matrix product of a 1x3 vector with a 3x3 matrix and store the resulting 
      *  vector in w.
@@ -93,7 +93,7 @@ void LinAlg::matVec(vector<vector<double>> &t, vector<double> &v, vector<double>
     for (int i=0; i<3; i++) w[i] = (t[i][0] * v[0]) + (t[i][1] * v[1]) + (t[i][2] * v[2]);
 }
 
-double LinAlg::norm(vector<double> &v) {
+double LinAlg::norm(const vector<double> &v) {
     /*
      *  Calculate the magnitude of a 1x3 vector and return the result
      */
@@ -104,7 +104,7 @@ double LinAlg::norm(vector<double> &v) {
     return sqrt(pow(v[0], 2.) + pow(v[1], 2.) + pow(v[2], 2.));
 }
 
-void LinAlg::tranMat(vector<vector<double>> &a, vector<vector<double>> &b) {
+void LinAlg::tranMat(const vector<vector<double>> &a, vector<vector<double>> &b) {
     /*
      *  Transpose a 3x3 matrix and store the resulting matrix in b.
      */
@@ -121,7 +121,7 @@ void LinAlg::tranMat(vector<vector<double>> &a, vector<vector<double>> &b) {
     }
 }
 
-void LinAlg::unitVec(vector<double> &u, vector<double> &v) {
+void LinAlg::unitVec(const vector<double> &u, vector<double> &v) {
     /*
      *  Calculate the normalized unit vector from a 1x3 vector and store the resulting vector in v.
      */

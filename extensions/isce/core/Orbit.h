@@ -33,22 +33,24 @@ namespace isce { namespace core {
         inline Orbit& operator=(const Orbit&);
         inline Orbit& operator+=(const Orbit&);
         inline const Orbit operator+(const Orbit&) const;
-        void getPositionVelocity(double,std::vector<double>&,std::vector<double>&);
-        inline void getStateVector(int,double&,std::vector<double>&,std::vector<double>&);
-        inline void setStateVector(int,double,std::vector<double>&,std::vector<double>&);
-        inline void addStateVector(double,std::vector<double>&,std::vector<double>&);
-        int interpolate(double,std::vector<double>&,std::vector<double>&,orbitInterpMethod);
-        int interpolateWGS84Orbit(double,std::vector<double>&,std::vector<double>&);
-        int interpolateLegendreOrbit(double,std::vector<double>&,std::vector<double>&);
-        int interpolateSCHOrbit(double,std::vector<double>&,std::vector<double>&);
-        int computeAcceleration(double,std::vector<double>&);
-        void printOrbit();
+        void getPositionVelocity(double,std::vector<double>&,std::vector<double>&) const;
+        inline void getStateVector(int,double&,std::vector<double>&,std::vector<double>&) const;
+        inline void setStateVector(int,double,const std::vector<double>&,
+                                   const std::vector<double>&);
+        inline void addStateVector(double,const std::vector<double>&,const std::vector<double>&);
+        int interpolate(double,std::vector<double>&,std::vector<double>&,orbitInterpMethod) const;
+        int interpolateWGS84Orbit(double,std::vector<double>&,std::vector<double>&) const;
+        int interpolateLegendreOrbit(double,std::vector<double>&,std::vector<double>&) const;
+        int interpolateSCHOrbit(double,std::vector<double>&,std::vector<double>&) const;
+        int computeAcceleration(double,std::vector<double>&) const;
+        void printOrbit() const;
         void loadFromHDR(const char*,int);
-        void dumpToHDR(const char*);
+        void dumpToHDR(const char*) const;
     };
 
-    void orbitHermite(std::vector<std::vector<double>>&,std::vector<std::vector<double>>&,
-                      std::vector<double>&,double,std::vector<double>&,std::vector<double>&);
+    void orbitHermite(const std::vector<std::vector<double>>&,
+                      const std::vector<std::vector<double>>&,
+                      const std::vector<double>&,double,std::vector<double>&,std::vector<double>&);
 
     inline Orbit& Orbit::operator=(const Orbit &rhs) {
         basis = rhs.basis;
@@ -74,7 +76,7 @@ namespace isce { namespace core {
     }
 
     inline void Orbit::getStateVector(int idx, double &t, std::vector<double> &pos, 
-                                      std::vector<double> &vel) {
+                                      std::vector<double> &vel) const {
         if ((idx < 0) || (idx >= nVectors)) {
             std::string errstr = "Orbit::getStateVector - Trying to access vector " +
                                  std::to_string(idx+1) + " out of " + std::to_string(nVectors) +
@@ -92,8 +94,8 @@ namespace isce { namespace core {
         //vel.assign(velocity.begin()+(3*idx), position.begin()+(3*(idx+1)));
     }
 
-    inline void Orbit::setStateVector(int idx, double t, std::vector<double> &pos, 
-                                      std::vector<double> &vel) {
+    inline void Orbit::setStateVector(int idx, double t, const std::vector<double> &pos, 
+                                      const std::vector<double> &vel) {
         if ((idx < 0) || (idx >= nVectors)) {
             std::string errstr = "Orbit::setStateVector - Trying to access vector " + 
                                  std::to_string(idx+1) + " out of " + std::to_string(nVectors) +
@@ -109,8 +111,8 @@ namespace isce { namespace core {
         }
     }
 
-    inline void Orbit::addStateVector(double t, std::vector<double> &pos, 
-                                      std::vector<double> &vel) {
+    inline void Orbit::addStateVector(double t, const std::vector<double> &pos, 
+                                      const std::vector<double> &vel) {
         checkVecLen(pos,3);
         checkVecLen(vel,3);
         int vec_idx = 0;

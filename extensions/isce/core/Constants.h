@@ -54,7 +54,7 @@ namespace isce { namespace core {
     // by the wrapper macro (stringified vector name), and 'parent_func' is passed in the same way 
     // through __PRETTY_FUNCTION__
     template<typename T>
-    inline void checkVecLenDebug(std::vector<T> &vec, size_t len, const char *vec_name, 
+    inline void checkVecLenDebug(const std::vector<T> &vec, size_t len, const char *vec_name, 
                                  const char *parent_func) {
         if (vec.size() != len) {
             std::string errstr = "In '" + std::string(parent_func) + "': Vector '" + 
@@ -67,7 +67,7 @@ namespace isce { namespace core {
 
     // Same as above but for 2D vectors
     template<typename T>
-    inline void check2dVecLenDebug(std::vector<std::vector<T>> &vec, size_t len, size_t width, 
+    inline void check2dVecLenDebug(const std::vector<std::vector<T>> &vec, size_t len, size_t width, 
                                    const char *vec_name, const char *parent_func) {
         if ((vec.size() != len) && (vec[0].size() != width)) {
             std::string errstr = "In '" + std::string(parent_func) + "': Vector '" + 

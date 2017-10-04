@@ -12,7 +12,7 @@ using isce::core::Ellipsoid;
 using isce::core::LinAlg;
 using std::vector;
 
-void Ellipsoid::latLonToXyz(vector<double> &llh, vector<double> &xyz) {
+void Ellipsoid::latLonToXyz(const vector<double> &llh, vector<double> &xyz) const {
     /*
      * Given a lat, lon, and height, produces a geocentric vector.
      */
@@ -30,7 +30,7 @@ void Ellipsoid::latLonToXyz(vector<double> &llh, vector<double> &xyz) {
     xyz[2] = ((re * (1. - e2)) + llh[2]) * sin(llh[0]);
 }
 
-void Ellipsoid::xyzToLatLon(vector<double> &xyz, vector<double> &llh) {
+void Ellipsoid::xyzToLatLon(const vector<double> &xyz, vector<double> &llh) const {
     /*
      * Given a geocentric XYZ, produces a lat, lon, and height above the reference ellipsoid.
      *      VERMEILLE IMPLEMENTATION
@@ -84,8 +84,8 @@ void Ellipsoid::xyzToLatLon(vector<double> &xyz, vector<double> &llh) {
 }
 */
 
-void Ellipsoid::getAngs(vector<double> &pos, vector<double> &vel, vector<double> &vec, double &az, 
-                        double &lk) {
+void Ellipsoid::getAngs(const vector<double> &pos, const vector<double> &vel, 
+                        const vector<double> &vec, double &az, double &lk) const {
     /*
      * Computes the look vector given the look angle, azimuth angle, and position vector
      */
@@ -113,8 +113,8 @@ void Ellipsoid::getAngs(vector<double> &pos, vector<double> &vel, vector<double>
     az = atan2(LinAlg::dot(c, vec), LinAlg::dot(t, vec));
 }
 
-void Ellipsoid::getTCN_TCvec(vector<double> &pos, vector<double> &vel, vector<double> &vec, 
-                             vector<double> &TCVec) {
+void Ellipsoid::getTCN_TCvec(const vector<double> &pos, const vector<double> &vel, 
+                             const vector<double> &vec, vector<double> &TCVec) const {
     /*
      * Computes the projection of an xyz vector on the TC plane in xyz
      */
@@ -142,8 +142,8 @@ void Ellipsoid::getTCN_TCvec(vector<double> &pos, vector<double> &vel, vector<do
     LinAlg::linComb(LinAlg::dot(t, vec), t, LinAlg::dot(c, vec), c, TCVec);
 }
 
-void Ellipsoid::TCNbasis(vector<double> &pos, vector<double> &vel, vector<double> &t, 
-                         vector<double> &c, vector<double> &n) {
+void Ellipsoid::TCNbasis(const vector<double> &pos, const vector<double> &vel, vector<double> &t, 
+                         vector<double> &c, vector<double> &n) const {
     /*
      *
      */

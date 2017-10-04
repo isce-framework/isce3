@@ -10,7 +10,7 @@ using std::cout;
 using std::endl;
 
 
-double Poly1d::eval(double xin) {
+double Poly1d::eval(double xin) const {
     // Evaluate the polynomial at a given position
 
     double val = 0.;
@@ -20,7 +20,7 @@ double Poly1d::eval(double xin) {
     return val;
 }
 
-void Poly1d::printPoly() {
+void Poly1d::printPoly() const {
     cout << "Polynomial Order: " << order << endl;
     for (int i=0; i<=order; i++) cout << getCoeff(i) << " ";
     cout << endl;

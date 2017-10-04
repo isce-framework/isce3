@@ -29,12 +29,12 @@ namespace isce { namespace core {
         #endif
         // Note that these constructors leverage the assignment operators given their relative
         // complexity
-        DateTime(const double dtd) { *this = dtd; }
+        DateTime(double dtd) { *this = dtd; }
         inline DateTime& operator=(const DateTime&);
         #if GCC_VERSION >= 50000
         DateTime& operator=(const std::string&);
         #endif
-        DateTime& operator=(const double);
+        DateTime& operator=(double);
 
         // Wrapped boolean comparisons
         inline bool operator==(const DateTime &dt) const { return t == dt.t; }
@@ -45,10 +45,10 @@ namespace isce { namespace core {
         inline bool operator>=(const DateTime &dt) const { return t >= dt.t; }
 
         // DateTime + duration arithmetic
-        inline DateTime& operator+=(const double);
-        inline DateTime& operator-=(const double);
-        inline DateTime operator+(const double) const;
-        inline DateTime operator-(const double) const;
+        inline DateTime& operator+=(double);
+        inline DateTime& operator-=(double);
+        inline DateTime operator+(double) const;
+        inline DateTime operator-(double) const;
         
         // DateTime - DateTime differential
         inline double operator-(const DateTime&) const;
@@ -69,23 +69,23 @@ namespace isce { namespace core {
         return *this;
     }
 
-    inline DateTime& DateTime::operator+=(const double rhs) {
+    inline DateTime& DateTime::operator+=(double rhs) {
         t += std::chrono::duration_cast<std::chrono::system_clock::duration>(
                 std::chrono::duration<double>(rhs));
         return *this;
     }
 
-    inline DateTime& DateTime::operator-=(const double rhs) {
+    inline DateTime& DateTime::operator-=(double rhs) {
         t -= std::chrono::duration_cast<std::chrono::system_clock::duration>(
                 std::chrono::duration<double>(rhs));
         return *this;
     }
 
-    inline DateTime DateTime::operator+(const double rhs) const {
+    inline DateTime DateTime::operator+(double rhs) const {
         return DateTime(*this) += rhs;
     }
 
-    inline DateTime DateTime::operator-(const double rhs) const {
+    inline DateTime DateTime::operator-(double rhs) const {
         return DateTime(*this) -= rhs;
     }
 

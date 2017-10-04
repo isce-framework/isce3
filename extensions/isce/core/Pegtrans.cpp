@@ -23,7 +23,7 @@ using std::to_string;
 using std::vector;
 
 
-void Pegtrans::radarToXYZ(Ellipsoid &elp, Peg &peg) {
+void Pegtrans::radarToXYZ(const Ellipsoid &elp, const Peg &peg) {
     /* 
      * Computes the transformation matrix and translation vector needed to convert
      * between radar (s,c,h) coordinates and WGS-84 (x,y,z) coordinates
@@ -50,7 +50,8 @@ void Pegtrans::radarToXYZ(Ellipsoid &elp, Peg &peg) {
     LinAlg::linComb(1., p, -radcur, up, ov);
 }
 
-void Pegtrans::convertSCHtoXYZ(vector<double> &schv, vector<double> &xyzv, orbitConvMethod ctype) {
+void Pegtrans::convertSCHtoXYZ(vector<double> &schv, vector<double> &xyzv, orbitConvMethod ctype) 
+                               const {
     /*
      * Applies the affine matrix provided to convert from the radar sch coordinates to WGS-84 xyz 
      * coordinates or vice-versa
@@ -83,9 +84,9 @@ void Pegtrans::convertSCHtoXYZ(vector<double> &schv, vector<double> &xyzv, orbit
     }
 }
 
-void Pegtrans::convertSCHdotToXYZdot(vector<double> &sch, vector<double> &xyz, 
+void Pegtrans::convertSCHdotToXYZdot(const vector<double> &sch, const vector<double> &xyz, 
                                      vector<double> &schdot, vector<double> &xyzdot, 
-                                     orbitConvMethod ctype) {
+                                     orbitConvMethod ctype) const {
     /*
      * Applies the affine matrix provided to convert from the radar sch velociy to WGS-84 xyz 
      * velocity or vice-versa
@@ -111,8 +112,8 @@ void Pegtrans::convertSCHdotToXYZdot(vector<double> &sch, vector<double> &xyz,
     }
 }
 
-void Pegtrans::SCHbasis(vector<double> &sch, vector<vector<double>> &xyzschmat, 
-                        vector<vector<double>> &schxyzmat) {
+void Pegtrans::SCHbasis(const vector<double> &sch, vector<vector<double>> &xyzschmat, 
+                        vector<vector<double>> &schxyzmat) const {
     /*
      * Computes the transformation matrix from xyz to a local sch frame
      */

@@ -23,9 +23,9 @@ namespace isce { namespace core {
         inline Poly1d& operator=(const Poly1d&);
 
         inline void setCoeff(int,double);
-        inline double getCoeff(int);
-        double eval(double);
-        void printPoly();
+        inline double getCoeff(int) const;
+        double eval(double) const;
+        void printPoly() const;
     };
 
     inline Poly1d& Poly1d::operator=(const Poly1d &rhs) {
@@ -45,7 +45,7 @@ namespace isce { namespace core {
         coeffs[idx] = val;
     }
 
-    inline double Poly1d::getCoeff(int idx) {
+    inline double Poly1d::getCoeff(int idx) const {
         if ((idx < 0) || (idx > order)) {
             std::string errstr = "Poly1d::getCoeff - Trying to get coefficient " + 
                                  std::to_string(idx+1) + " out of " + std::to_string(order+1);

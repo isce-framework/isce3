@@ -25,14 +25,14 @@ namespace isce { namespace core {
         inline double rEast(double) const;
         inline double rNorth(double) const;
         inline double rDir(double,double) const;
-        void latLonToXyz(std::vector<double>&,std::vector<double>&);
-        void xyzToLatLon(std::vector<double>&,std::vector<double>&);
-        void getAngs(std::vector<double>&,std::vector<double>&,std::vector<double>&,double&,
-                     double&);
-        void getTCN_TCvec(std::vector<double>&,std::vector<double>&,std::vector<double>&,
-                          std::vector<double>&);
-        void TCNbasis(std::vector<double>&,std::vector<double>&,std::vector<double>&,
-                      std::vector<double>&,std::vector<double>&);
+        void latLonToXyz(const std::vector<double>&,std::vector<double>&) const;
+        void xyzToLatLon(const std::vector<double>&,std::vector<double>&) const;
+        void getAngs(const std::vector<double>&,const std::vector<double>&,
+                     const std::vector<double>&,double&,double&) const;
+        void getTCN_TCvec(const std::vector<double>&,const std::vector<double>&,
+                          const std::vector<double>&,std::vector<double>&) const;
+        void TCNbasis(const std::vector<double>&,const std::vector<double>&,std::vector<double>&,
+                      std::vector<double>&,std::vector<double>&) const;
     };
 
     inline Ellipsoid& Ellipsoid::operator=(const Ellipsoid &rhs) {

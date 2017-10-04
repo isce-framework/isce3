@@ -13,7 +13,7 @@ using isce::core::Position;
 using std::vector;
 
 
-void Position::lookVec(double look, double az, vector<double> &v) {
+void Position::lookVec(double look, double az, vector<double> &v) const {
     /*
      * Computes the look vector given the look angle, azimuth angle, and position vector.
      */

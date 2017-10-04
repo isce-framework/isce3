@@ -22,8 +22,10 @@ using std::to_string;
 using std::vector;
 
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 template<class U>
-U Interpolator::bilinear(double x, double y, vector<vector<U>> &z) {
+U Interpolator::bilinear(double x, double y, const vector<vector<U>> &z) {
     
     int x1 = floor(x);
     int x2 = ceil(x);
@@ -55,13 +57,16 @@ U Interpolator::bilinear(double x, double y, vector<vector<U>> &z) {
     }
 }
 
-template complex<double> Interpolator::bilinear(double,double,vector<vector<complex<double>>>&);
-template complex<float> Interpolator::bilinear(double,double,vector<vector<complex<float>>>&);
-template double Interpolator::bilinear(double,double,vector<vector<double>>&);
-template float Interpolator::bilinear(double,double,vector<vector<float>>&);
+template complex<double> Interpolator::bilinear(double,double,
+                                                const vector<vector<complex<double>>>&);
+template complex<float> Interpolator::bilinear(double,double,const vector<vector<complex<float>>>&);
+template double Interpolator::bilinear(double,double,const vector<vector<double>>&);
+template float Interpolator::bilinear(double,double,const vector<vector<float>>&);
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 template<class U>
-U Interpolator::bicubic(double x, double y, vector<vector<U>> &z) {
+U Interpolator::bicubic(double x, double y, const vector<vector<U>> &z) {
     
     vector<vector<float>> wt = 
                  {{1.0, 0.0,-3.0, 2.0, 0.0, 0.0, 0.0, 0.0,-3.0, 0.0, 9.0,-6.0, 2.0, 0.0,-6.0, 4.0},
@@ -128,10 +133,13 @@ U Interpolator::bicubic(double x, double y, vector<vector<U>> &z) {
     return ret;
 }
 
-template complex<double> Interpolator::bicubic(double,double,vector<vector<complex<double>>>&);
-template complex<float> Interpolator::bicubic(double,double,vector<vector<complex<float>>>&);
-template double Interpolator::bicubic(double,double,vector<vector<double>>&);
-template float Interpolator::bicubic(double,double,vector<vector<float>>&);
+template complex<double> Interpolator::bicubic(double,double,
+                                               const vector<vector<complex<double>>>&);
+template complex<float> Interpolator::bicubic(double,double,const vector<vector<complex<float>>>&);
+template double Interpolator::bicubic(double,double,const vector<vector<double>>&);
+template float Interpolator::bicubic(double,double,const vector<vector<float>>&);
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 void Interpolator::sinc_coef(double beta, double relfiltlen, int decfactor, double pedestal, 
                              int weight, int &intplength, int &filtercoef, vector<double> &filter) {
@@ -150,9 +158,11 @@ void Interpolator::sinc_coef(double beta, double relfiltlen, int decfactor, doub
     }
 }
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 template<class U, class V>
-U Interpolator::sinc_eval(vector<U> &arr, vector<V> &intarr, int idec, int ilen, int intp, 
-                          double frp, int nsamp) {
+U Interpolator::sinc_eval(const vector<U> &arr, const vector<V> &intarr, int idec, int ilen,
+                          int intp, double frp, int nsamp) {
     
     U ret = 0.;
     if ((intp >= (ilen-1)) && (intp < nsamp)) {
@@ -162,22 +172,29 @@ U Interpolator::sinc_eval(vector<U> &arr, vector<V> &intarr, int idec, int ilen,
     return ret;
 }
 
-template complex<double> Interpolator::sinc_eval(vector<complex<double>>&,vector<double>&,int,int,
-                                                 int,double,int);
-template complex<double> Interpolator::sinc_eval(vector<complex<double>>&,vector<float>&,int,int,
-                                                 int,double,int);
-template complex<float> Interpolator::sinc_eval(vector<complex<float>>&,vector<double>&,int,int,int,
-                                                 double,int);
-template complex<float> Interpolator::sinc_eval(vector<complex<float>>&,vector<float>&,int,int,int,
-                                                 double,int);
-template double Interpolator::sinc_eval(vector<double>&,vector<double>&,int,int,int,double,int);
-template double Interpolator::sinc_eval(vector<double>&,vector<float>&,int,int,int,double,int);
-template float Interpolator::sinc_eval(vector<float>&,vector<double>&,int,int,int,double,int);
-template float Interpolator::sinc_eval(vector<float>&,vector<float>&,int,int,int,double,int);
+template complex<double> Interpolator::sinc_eval(const vector<complex<double>>&,
+                                                 const vector<double>&,int,int,int,double,int);
+template complex<double> Interpolator::sinc_eval(const vector<complex<double>>&,
+                                                 const vector<float>&,int,int,int,double,int);
+template complex<float> Interpolator::sinc_eval(const vector<complex<float>>&,const vector<double>&,
+                                                int,int,int,double,int);
+template complex<float> Interpolator::sinc_eval(const vector<complex<float>>&,const vector<float>&,
+                                                int,int,int,double,int);
+template double Interpolator::sinc_eval(const vector<double>&,const vector<double>&,int,int,int,
+                                        double,int);
+template double Interpolator::sinc_eval(const vector<double>&,const vector<float>&,int,int,int,
+                                        double,int);
+template float Interpolator::sinc_eval(const vector<float>&,const vector<double>&,int,int,int,
+                                       double,int);
+template float Interpolator::sinc_eval(const vector<float>&,const vector<float>&,int,int,int,double,
+                                       int);
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 template<class U, class V>
-U Interpolator::sinc_eval_2d(vector<vector<U>> &arrin, vector<V> &intarr, int idec, int ilen, 
-                             int intpx, int intpy, double frpx, double frpy, int xlen, int ylen) {
+U Interpolator::sinc_eval_2d(const vector<vector<U>> &arrin, const vector<V> &intarr, int idec, 
+                             int ilen, int intpx, int intpy, double frpx, double frpy, int xlen, 
+                             int ylen) {
     
     U ret(0.);
     if ((intpx >= (ilen-1)) && (intpx < xlen) && (intpy >= (ilen-1)) && (intpy < ylen)) {
@@ -193,26 +210,31 @@ U Interpolator::sinc_eval_2d(vector<vector<U>> &arrin, vector<V> &intarr, int id
     return ret;
 }
 
-template complex<double> Interpolator::sinc_eval_2d(vector<vector<complex<double>>>&,
-                                                    vector<double>&,int,int,int,int,double,double,
-                                                    int,int);
-template complex<double> Interpolator::sinc_eval_2d(vector<vector<complex<double>>>&,vector<float>&,
-                                                    int,int,int,int,double,double,int,int);
-template complex<float> Interpolator::sinc_eval_2d(vector<vector<complex<float>>>&,vector<double>&,
-                                                   int,int,int,int,double,double,int,int);
-template complex<float> Interpolator::sinc_eval_2d(vector<vector<complex<float>>>&,vector<float>&,
-                                                   int,int,int,int,double,double,int,int);
-template double Interpolator::sinc_eval_2d(vector<vector<double>>&,vector<double>&,int,int,int,int,
-                                           double,double,int,int);
-template double Interpolator::sinc_eval_2d(vector<vector<double>>&,vector<float>&,int,int,int,int,
-                                           double,double,int,int);
-template float Interpolator::sinc_eval_2d(vector<vector<float>>&,vector<double>&,int,int,int,int,
-                                           double,double,int,int);
-template float Interpolator::sinc_eval_2d(vector<vector<float>>&,vector<float>&,int,int,int,int,
-                                           double,double,int,int);
+template complex<double> Interpolator::sinc_eval_2d(const vector<vector<complex<double>>>&,
+                                                    const vector<double>&,int,int,int,int,double,
+                                                    double,int,int);
+template complex<double> Interpolator::sinc_eval_2d(const vector<vector<complex<double>>>&,
+                                                    const vector<float>&,int,int,int,int,double,
+                                                    double,int,int);
+template complex<float> Interpolator::sinc_eval_2d(const vector<vector<complex<float>>>&,
+                                                   const vector<double>&,int,int,int,int,double,
+                                                   double,int,int);
+template complex<float> Interpolator::sinc_eval_2d(const vector<vector<complex<float>>>&,
+                                                   const vector<float>&,int,int,int,int,double,
+                                                   double,int,int);
+template double Interpolator::sinc_eval_2d(const vector<vector<double>>&,const vector<double>&,int,
+                                           int,int,int,double,double,int,int);
+template double Interpolator::sinc_eval_2d(const vector<vector<double>>&,const vector<float>&,int,
+                                           int,int,int,double,double,int,int);
+template float Interpolator::sinc_eval_2d(const vector<vector<float>>&,const vector<double>&,int,
+                                          int,int,int,double,double,int,int);
+template float Interpolator::sinc_eval_2d(const vector<vector<float>>&,const vector<float>&,int,int,
+                                          int,int,double,double,int,int);
 
-float Interpolator::interp_2d_spline(int order, int nx, int ny, vector<vector<float>> &z, double x, 
-                                     double y) {
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+float Interpolator::interp_2d_spline(int order, int nx, int ny, const vector<vector<float>> &z, 
+                                     double x, double y) {
 
     // Error checking
     if ((order < 3) || (order > 20)) {
@@ -248,7 +270,7 @@ float Interpolator::interp_2d_spline(int order, int nx, int ny, vector<vector<fl
     return static_cast<float>(spline((y-i0),HC,order,R));
 }
 
-void isce::core::initSpline(vector<double> &Y, int n, vector<double> &R, vector<double> &Q) {
+void isce::core::initSpline(const vector<double> &Y, int n, vector<double> &R, vector<double> &Q) {
 
     Q[0] = 0.;
     R[0] = 0.;
@@ -260,7 +282,7 @@ void isce::core::initSpline(vector<double> &Y, int n, vector<double> &R, vector<
     for (int i=(n-1); i>=2; i--) R[i-1] = (Q[i-1] * R[i]) + R[i-1];
 }
 
-double isce::core::spline(double x, vector<double> &Y, int n, vector<double> &R) {
+double isce::core::spline(double x, const vector<double> &Y, int n, const vector<double> &R) {
 
     if (x < 1.) return Y[0] + ((x - 1.) * (Y[1] - Y[0] - (R[1] / 6.)));
     else if (x > n) return Y[n-1] + ((x - n) * (Y[n-1] - Y[n-2] + (R[n-2] / 6.)));
@@ -273,7 +295,10 @@ double isce::core::spline(double x, vector<double> &Y, int n, vector<double> &R)
     }
 }
 
-double Interpolator::quadInterpolate(vector<double> &x, vector<double> &y, double xintp) {
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+double Interpolator::quadInterpolate(const vector<double> &x, const vector<double> &y, 
+                                     double xintp) {
 
     auto xin = xintp - x[0];
     vector<double> x1(3), y1(3);
@@ -287,7 +312,9 @@ double Interpolator::quadInterpolate(vector<double> &x, vector<double> &y, doubl
     return y[0] + (a * xin * xin) + (b * xin);
 }
 
-double Interpolator::akima(int nx, int ny, vector<vector<float>> &z, double x, double y) {
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+double Interpolator::akima(int nx, int ny, const vector<vector<float>> &z, double x, double y) {
     
     vector<vector<double>> sx(2,vector<double>(2)), sy(2,vector<double>(2));
     vector<vector<double>> sxy(2,vector<double>(2)), e(2,vector<double>(2));

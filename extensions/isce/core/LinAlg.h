@@ -12,17 +12,20 @@ namespace isce { namespace core {
     struct LinAlg {
         LinAlg() = default;
 
-        static void cross(std::vector<double>&,std::vector<double>&,std::vector<double>&);
-        static double dot(std::vector<double>&,std::vector<double>&);
-        static void linComb(double,std::vector<double>&,double,std::vector<double>&,
+        static void cross(const std::vector<double>&,const std::vector<double>&,
+                          std::vector<double>&);
+        static double dot(const std::vector<double>&,const std::vector<double>&);
+        static void linComb(double,const std::vector<double>&,double,const std::vector<double>&,
                             std::vector<double>&);
-        static void matMat(std::vector<std::vector<double>>&,std::vector<std::vector<double>>&,
+        static void matMat(const std::vector<std::vector<double>>&,
+                           const std::vector<std::vector<double>>&,
                            std::vector<std::vector<double>>&);
-        static void matVec(std::vector<std::vector<double>>&,std::vector<double>&,
+        static void matVec(const std::vector<std::vector<double>>&,const std::vector<double>&,
                            std::vector<double>&);
-        static double norm(std::vector<double>&);
-        static void tranMat(std::vector<std::vector<double>>&,std::vector<std::vector<double>>&);
-        static void unitVec(std::vector<double>&,std::vector<double>&);
+        static double norm(const std::vector<double>&);
+        static void tranMat(const std::vector<std::vector<double>>&,
+                            std::vector<std::vector<double>>&);
+        static void unitVec(const std::vector<double>&,std::vector<double>&);
         static void enuBasis(double,double,std::vector<std::vector<double>>&);
     };
 }}

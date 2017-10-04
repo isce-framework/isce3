@@ -24,12 +24,12 @@ namespace isce { namespace core {
         Pegtrans(const Pegtrans &p) : mat(p.mat), matinv(p.matinv), ov(p.ov), radcur(p.radcur) {}
         inline Pegtrans& operator=(const Pegtrans&);
         
-        void radarToXYZ(Ellipsoid&,Peg&);
-        void convertSCHtoXYZ(std::vector<double>&,std::vector<double>&,orbitConvMethod);
-        void convertSCHdotToXYZdot(std::vector<double>&,std::vector<double>&,std::vector<double>&,
-                                   std::vector<double>&,orbitConvMethod);
-        void SCHbasis(std::vector<double>&,std::vector<std::vector<double>>&,
-                      std::vector<std::vector<double>>&);
+        void radarToXYZ(const Ellipsoid&,const Peg&);
+        void convertSCHtoXYZ(std::vector<double>&,std::vector<double>&,orbitConvMethod) const;
+        void convertSCHdotToXYZdot(const std::vector<double>&,const std::vector<double>&,
+                                   std::vector<double>&,std::vector<double>&,orbitConvMethod) const;
+        void SCHbasis(const std::vector<double>&,std::vector<std::vector<double>>&,
+                      std::vector<std::vector<double>>&) const;
     };
 
     inline Pegtrans& Pegtrans::operator=(const Pegtrans &rhs) {

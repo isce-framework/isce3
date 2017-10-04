@@ -10,7 +10,7 @@ using isce::core::Poly2d;
 using std::cout;
 using std::endl;
 
-double Poly2d::eval(double azi, double rng) {
+double Poly2d::eval(double azi, double rng) const {
     
     double xval = (rng - rangeMean) / rangeNorm;
     double yval = (azi - azimuthMean) / azimuthNorm;
@@ -27,7 +27,7 @@ double Poly2d::eval(double azi, double rng) {
     return val;
 }
 
-void Poly2d::printPoly() {
+void Poly2d::printPoly() const {
     cout << "Polynomial Order: " << azimuthOrder << " - by - " << rangeOrder << endl;
     for (int i=0; i<=azimuthOrder; i++) {
         for (int j=0; j<=rangeOrder; j++) {
