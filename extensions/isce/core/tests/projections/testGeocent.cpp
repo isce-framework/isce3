@@ -119,7 +119,7 @@ void testCorners() {
         xyz = ref_xyz;
         flag = proj.inverse(xyz, llh);
         stat = checkAlmostEqual(llh, ref_llh,9);
-        cout << " [XYZ_2_LLH] ";
+        cout << " [Inverse] ";
         if(stat && (flag==0)) cout << "PASSED";
         cout << endl;
     }

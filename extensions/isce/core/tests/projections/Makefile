@@ -20,16 +20,20 @@ tests : geocent polar utm cea
 builds: geocent-build
 
 geocent : geocent-build
-	./geocent-test
+	./geocent-test; \
+    rm -f geocent-test
 
 polar : polar-build
-	./polar-test
+	./polar-test; \
+    rm -f polar-test
 
 utm: utm-build
-	./utm-test
+	./utm-test; \
+    rm -f utm-test
 
 cea: cea-build
-	./cea-test
+	./cea-test; \
+    rm -f cea-test
 
 geocent-build : testGeocent.cpp $(COREBASE)/Ellipsoid.h $(COREBASE)/Constants.h $(COREBASE)/Projections.h
 	$(CC) $(CFLAGS) $(IFLAGS) testGeocent.cpp -o geocent-test $(LFLAGS)

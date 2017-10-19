@@ -26,56 +26,36 @@ using std::vector;
 int Geocent::forward(const vector<double> &llh, vector<double>& xyz) const {
     /*
      * This is to transform LLH to Geocent, which is just a pass-through to latLonToXyz.
+     *
+     * There's a discrepancy between ISCE's and proj4's ordering of LLH in that ISCE treats it as
+     * Lat-Lon-Height, and proj4 as Lon-Lat-Height. To resolve this without altering the isce::core
+     * objects, we pass a temporary input vector to latLonToXyz that contains the first two elements
+     * swapped (resolving the discrepancy and preserving the inputs).
      */
 
-    // May need to implement to temporarily swap lon/lat/height to lat/lon/height for pass-through
-    // vector<double> llh_swapped = {llh[1], llh[0], llh[2]};
-    // ellipse.latLonToXyz(llh_swapped, out);
-    ellipse.latLonToXyz(llh, xyz);
+    vector<double> llh_swapped = {llh[1], llh[0], llh[2]};
+    ellipse.latLonToXyz(llh_swapped, xyz);
     return 0;
 }
 
 int Geocent::inverse(const vector<double> &xyz, vector<double>& llh) const {
     /*
-     * This is to transform Geocent to LLH, which is just a pass-through to xyzToLatLon.
+     * This is to transform Geocent to LLH, which is just a pass-through to xyzToLatLon. As with
+     * ::forward, there's an issue with internal LLH ordering (lat/lon vs lon/lat), so we swap the
+     * first two elements of the output llh vector before returning.
      */
 
-    // May need to implement to temporarily swap lat/lon/height to lon/lat/height for output
-    // ellipse.xyzToLatLon(xyz, llh);
-    // llh = { llh[1], llh[0], llh[2] };
     ellipse.xyzToLatLon(xyz, llh);
+    llh = {llh[1], llh[0], llh[2]};
     return 0;
 }
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* * * * * * * * * * * * * * * * * * * * * UTM Projection * * * * * * * * * * * * * * * * * * * * */
-/*  
- *  PROPOSE REMOVING - gatg() has a direct relation to clens() as clens(a, len(a), 2*B) + B == 
- *                     gatg(a, len(a), B). The internal function implementations differed only in
- *                     variable names and orders of operation that were transitive in nature. The
- *                     clens() function has been modified to generalize for both the original 
- *                     implementation as well as to accomodate for encapsulating gatg().
- *
-double gatg(const double *p1, int len_p1, double B) {
-    //
-    // Local function - Compute a Gaussian latitude.
-    //
-    double const *p;
-    double h = 0.0;
-    double h2 = 0.0;
-    double cos_2B;
-
-    cos_2B = 2 * cos(2 * B);
-    for(double const *p = p1 + 6, double h1 = *(--p); p-p1; h2 = h1, h1 = h)
-        h = -h2 + cos_2B*h1 + *--p;
-
-    return (B + h * sin(2*B));
-}
-*/
 double clens(const double *a, int size, double real) {
     /*
      * Local function - Compute the real clenshaw summation. Also computes Gaussian latitude for
-     * some B as (clens(a, len(a), 2*B) + B).
+     * some B as clens(a, len(a), 2*B) + B.
      *
      * NOTE: The implementation here has been modified to allow for encapsulating the gatg()
      *       implementation, as well as to make the implementation details much clearer/cleaner.
@@ -83,7 +63,7 @@ double clens(const double *a, int size, double real) {
     const double *p;
     double hr, hr1, hr2;
     for (p = a + size, hr2 = 0., hr1 = *(--p), hr=0.; 
-         a - p > 0; 
+         a - p; 
          hr2 = hr1, hr1 = hr) {
         hr = -hr2 + (2. * hr1 * cos(real)) + *(--p);
     }
@@ -102,7 +82,7 @@ double clenS(const double *a, int size, double real, double imag, double &R, dou
     const double *p;
     double hr, hr1, hr2, hi, hi1, hi2;
     for (p = a + size, hr2 = 0., hi2 = 0., hi1 = 0., hr1 = *(--p), hi1 = 0., hr = 0., hi = 0.;
-         a - p > 0;
+         a - p;
          hr2 = hr1, hi2 = hi1, hr1 = hr, hi1 = hi) {
         hr = -hr2 + (2. * hr1 * cos(real) * cosh(imag)) - (-2. * hi1 * sin(real) * sinh(imag)) + 
              *(--p);
@@ -191,8 +171,8 @@ UTM::UTM(int code) : ProjectionBase(code) {
     gtu[5] = pow(n,6) * (212378941./319334400.);
 
     // Gaussian latitude of origin latitude
-    //double Z = gatg(cbg, 6, 0.);
-    double Z = clens(cbg, 6, 0.); // clens(a,len(a),2*b) + b == gatg(a,len(a),b)
+    // JC - clens(_,_,0.) is always 0, should we hardcode/eliminate this?
+    double Z = clens(cbg, 6, 0.);
     Zb = -Qn * (Z + clens(gtu, 6, 2*Z));
 }
 
@@ -201,14 +181,13 @@ int UTM::forward(const vector<double> &llh, vector<double> &utm) const {
      * Transform from LLH to UTM.
      */
     // Elliptical Lat, Lon -> Gaussian Lat, Lon
-    //double Cn = gatg(cbg, 6, llh[1]);
-    double Cn = clens(cbg, 6, 2.*llh[1]) + llh[1]; // clens(a,len(a),2*B) + B == gatg(a,len(a),B)
+    double gauss = clens(cbg, 6, 2.*llh[1]) + llh[1];
     // Adjust longitude for zone offset
     double lam = llh[0] - lon0;
 
     // Account for longitude and get Spherical N,E
-    Cn = atan2(sin(Cn), cos(lam)*cos(Cn));
-    double Ce = atan2(sin(lam)*cos(Cn), hypot(sin(Cn), cos(Cn)*cos(lam)));
+    double Cn = atan2(sin(gauss), cos(lam)*cos(gauss));
+    double Ce = atan2(sin(lam)*cos(gauss), hypot(sin(gauss), cos(gauss)*cos(lam)));
 
     //Spherical N,E to Elliptical N,E
     Ce = asinh(tan(Ce));
@@ -216,8 +195,7 @@ int UTM::forward(const vector<double> &llh, vector<double> &utm) const {
     Cn += clenS(gtu, 6, 2*Cn, 2*Ce, dCn, dCe);
     Ce += dCe;
 
-
-    if (abs(Ce) <= 2.623395162778) {
+    if (fabs(Ce) <= 2.623395162778) {
         utm[0] = (Qn * Ce * ellipse.a) + 500000.;
         utm[1] = (((Qn * Cn) + Zb) * ellipse.a) + (isnorth ? 0. : 10000000.);
         // UTM is lateral projection only, height is pass through.
@@ -239,7 +217,7 @@ int UTM::inverse(const vector<double> &utm, vector<double> &llh) const {
     Cn = (Cn - Zb) / Qn;
     Ce /= Qn;
 
-    if (abs(Ce) <= 2.623395162778) {
+    if (fabs(Ce) <= 2.623395162778) {
         //N,E to Spherical Lat, Lon
         double dCn, dCe;
         Cn += clenS(utg, 6, 2*Cn, 2*Ce, dCn, dCe);
@@ -251,8 +229,7 @@ int UTM::inverse(const vector<double> &utm, vector<double> &llh) const {
 
         //Gaussian Lat, Lon to Elliptical Lat, Lon
         llh[0] = Ce + lon0;
-        //llh[1] = gatg(cgb, 6, Cn);
-        llh[1] = clens(cgb, 6, 2*Cn) + Cn; // clens(a,len(a),2*B) + B == gatg(a,len(a),B)
+        llh[1] = clens(cgb, 6, 2*Cn) + Cn;
         //UTM is a lateral projection only. Height is pass through.
         llh[2] = utm[2];
         return 0;

@@ -87,7 +87,7 @@ void testUTMOrigin() {
 
 
 void testUTMNorth() {
-   
+  
     //Test data was generated using pyproj and random numbers
     double ref_llh[60][3] = {{ -3.090970668593823e+00,   3.623975597550786e-02,
           1.744676256950977e+03},
