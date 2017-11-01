@@ -26,6 +26,11 @@ namespace isce { namespace core {
         inline double getCoeff(int) const;
         double eval(double) const;
         void printPoly() const;
+
+
+        //Helper functions
+        Poly1d derivative() const;
+
     };
 
     inline Poly1d& Poly1d::operator=(const Poly1d &rhs) {

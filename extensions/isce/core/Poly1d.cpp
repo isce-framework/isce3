@@ -26,3 +26,26 @@ void Poly1d::printPoly() const {
     cout << endl;
 }
 
+
+//Helper function to adjust the mean
+//Use case - when image is being cropped and starting range is changed
+Poly1d Poly1d::derivative() const
+{
+    //If the input polynomial is a constant, return 0
+    if (order == 0)
+    {
+        return Poly1d(0, 0., 0.); 
+    }
+    else
+    {
+        //Initialize polynomial of same size
+        Poly1d newP(order-1, mean, norm);
+        for(int ii=0; ii < order; ii++)
+        {
+            double coeff = getCoeff(ii+1);
+            newP.setCoeff(ii, (ii+1.0) * coeff / norm);
+        }
+
+        return newP;
+    }
+}
