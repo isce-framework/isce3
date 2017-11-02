@@ -34,7 +34,10 @@ Poly1d Poly1d::derivative() const
     //If the input polynomial is a constant, return 0
     if (order == 0)
     {
-        return Poly1d(0, 0., 0.); 
+        Poly1d newP(0, 0., 1.);
+        newP.setCoeff(0, 0.0);
+
+        return newP;
     }
     else
     {
