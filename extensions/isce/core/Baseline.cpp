@@ -1,143 +1,113 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
+//
+// Source Author: Bryan Riel
+// Co-Author: Joshua Cohen
+// Copyright 2017
+//
 
-// Standard
-#include <iostream>
+#include <cmath>
+#include <vector>
+#include "isce/core/Baseline.h"
+#include "isce/core/Constants.h"
+#include "isce/core/LinAlg.h"
+#include "isce/core/Peg.h"
+#include "isce/core/Pegtrans.h"
+using std::vector;
+using isce::core::Baseline;
+using isce::core::LinAlg;
+using isce::core::orbitInterpMethod;
+using isce::core::HERMITE_METHOD;
+using isce::core::Peg;
+using isce::core::Pegtrans;
 
-// isce::core
-#include "Baseline.h"
-#include "Peg.h"
-#include "Pegtrans.h"
-
-
-// Empty constructor
-isce::core::Baseline::Baseline() {
-}
-
-
-// Initialization function to compute look vector and set basis vectors
-void isce::core::Baseline::init() {
-
+void Baseline::init() {
+    /*
+     * Initialization function to compute look vector and set basis vectors.
+     */
     // Set orbit method
     orbit_method = HERMITE_METHOD;
-
     // Initialize basis for the first orbit using the middle of the orbit
-    int index_mid = orbit1.nVectors / 2;
-    double tmid = orbit1.UTCtime[index_mid];
+    vector<double> _1(3), _2(3);
+    double tmid;
+    orbit1.getStateVector(orbit1.nVectors/2, tmid, _1, _2);
     initBasis(tmid);
-
     // Use radar metadata to compute look vector at midpoint
-    _calculateLookVector(tmid);
-
+    calculateLookVector(tmid);
 }
 
-
-// For a given time, calculate an orthogonal basis for cross-track and velocity
-// directions for orbit1
-void isce::core::Baseline::initBasis(double t) {
-
+void Baseline::initBasis(double t) {
+    /*
+     * For a given time, calculate an orthogonal basis for cross-track and velocity directions for
+     * orbit1.
+     */
     // Local working vectors
-    std::vector<double> xyz(3), vel(3), crossvec(3), vertvec(3), vel_norm(3);
-
+    vector<double> xyz(3), vel(3), crossvec(3), vertvec(3), vel_norm(3);
     // Interpolate orbit to azimuth time
     orbit1.interpolate(t, xyz, vel, orbit_method);
-    _refxyz = xyz;
-    _velocityMagnitude = linalg.norm(vel);
-
+    refxyz = xyz;
+    velocityMagnitude = LinAlg::norm(vel);
     // Get normalized vectors
-    linalg.unitVec(xyz, _rhat);
-    linalg.unitVec(vel, vel_norm);
-
-    // Compute cross-track vector
-    linalg.cross(_rhat, vel_norm, crossvec);
-    linalg.unitVec(crossvec, _chat);
-
+    LinAlg::unitVec(xyz, rhat);
+    LinAlg::unitVec(vel, vel_norm);
+    // Compute cross-track vectors
+    LinAlg::cross(rhat, vel_norm, crossvec);
+    LinAlg::unitVec(crossvec, chat);
     // Compute velocity vector perpendicular to cross-track vector
-    linalg.cross(_chat, _rhat, vertvec);
-    linalg.unitVec(vertvec, _vhat); 
-
+    LinAlg::cross(chat, rhat, vertvec);
+    LinAlg::unitVec(vertvec, vhat);
 }
 
-
-// Given a position vector, calculate offset between reference position
-// and that vector, projected in the reference basis
-std::vector<double> isce::core::Baseline::calculateBasisOffset(
-    std::vector<double> & position) {
-
-    std::vector<double> dx(3), off(3);
-
-    // Compute difference
-    for (int i = 0; i < 3; ++i) {
-        dx[i] = position[i] - _refxyz[i];
-    }
-
-    // Project offset onto velocity vector
-    off[0] = linalg.dot(dx, _vhat);
-
-    // Project offset onto position vector
-    off[1] = linalg.dot(dx, _rhat);
-
-    // Project offset onto cross-track vector
-    off[2] = linalg.dot(dx, _chat);
-
+vector<double> Baseline::calculateBasisOffset(const vector<double> &position) {
+    /*
+     * Given a position vector, calculate offset between reference position and that vector,
+     * projected in the reference basis.
+     */
+    vector<double> dx = {position[0] - refxyz[0],
+                         position[1] - refxyz[1],
+                         position[2] - refxyz[2]};
+    vector<double> off = {LinAlg::dot(dx, vhat),
+                          LinAlg::dot(dx, rhat),
+                          LinAlg::dot(dx, chat)};
     return off;
-
 }
 
-// Compute horizontal and vertical baselines
-void isce::core::Baseline::computeBaselines() {
-
-    std::vector<double> xyz2(3), vel2(3), offset(3);
+void Baseline::computeBaselines() {
+    /*
+     * Compute horizontal and vertical baselines.
+     */
+    vector<double> xyz2(3), vel2(3), offset(3);
     double t, delta_t;
-
     // Start with sensing mid of orbit 2
-    int index_mid = orbit2.nVectors / 2;
-    t = orbit2.UTCtime[index_mid];
-
-    for (int iter = 0; iter < 2; ++iter) {
-
-        // Interpolate orbit to azimuth time
+    orbit2.getStateVector(orbit2.nVectors/2, t, xyz2, vel2);
+    for (int iter=0; iter<2; ++iter) {
+        //Interpolate orbit to azimuth time
         orbit2.interpolate(t, xyz2, vel2, orbit_method);
-   
         // Compute adjustment to slave time
         offset = calculateBasisOffset(xyz2);
-        delta_t = offset[0] / _velocityMagnitude;
+        delta_t = offset[0] / velocityMagnitude;
         t -= delta_t;
     }
-     
-    _bh = offset[2];
-    _bv = offset[1];
-
+    bh = offset[2];
+    bv = offset[1];
 }
 
-
-// Calculate look vector
-void isce::core::Baseline::_calculateLookVector(double t) {
-
+void Baseline::calculateLookVector(double t) {
+    /*
+     * Calculate look vector.
+     */
     // Local working vectors
-    std::vector<double> xyz(3), vel(3), llh(3);
-    
+    vector<double> xyz(3), vel(3), llh(3);
     // Interpolate orbit to azimuth time
     orbit1.interpolate(t, xyz, vel, orbit_method);
-    ellp.xyzToLatLon(xyz, llh);
-
-    // Make a peg
-    Peg peg;
-    peg.lat = llh[0];
-    peg.lon = llh[1];
-    peg.hdg = radar.pegHeading;
-
-    // And a peg transformation
+    elp.xyzToLatLon(xyz, llh);
+    // Make a Peg
+    Peg peg(llh[0], llh[1], radar.pegHeading);
+    // And a Peg Transformation
     Pegtrans ptm;
-    ptm.radarToXYZ(ellp, peg);
-
+    ptm.radarToXYZ(elp, peg);
     double Ra = ptm.radcur;
     double height = llh[2];
     double R0 = radar.rangeFirstSample;
-
-    _coslook = (height * (2.0*Ra + height) + R0*R0) / (2*R0*(Ra + height));
-    _sinlook = std::sqrt(1.0 - _coslook * _coslook);
-
+    coslook = (height * ((2. * Ra) + height) + (R0 * R0)) / (2. * R0 * (Ra + height));
+    sinlook = sqrt(1. - (coslook * coslook));
 }
 
-// end of file

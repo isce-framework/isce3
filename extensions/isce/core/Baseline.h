@@ -1,79 +1,67 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
+//
+// Source Author: Bryan Riel
+// Co-Author: Joshua Cohen
+// Copyright 2017
+//
 
-#ifndef ISCELIB_BASELINE_H
-#define ISCELIB_BASELINE_H
+#ifndef __ISCE_CORE_BASELINE_H__
+#define __ISCE_CORE_BASELINE_H__
 
-// Standard
 #include <vector>
-#include <cmath>
-#include <cstdio>
-
-// isceLib
-#include "Orbit.h"
-#include "Metadata.h"
 #include "Ellipsoid.h"
-#include "Constants.h"
-#include "LinAlg.h"
+#include "Metadata.h"
+#include "Orbit.h"
 
 namespace isce { namespace core {
+    struct Baseline {
+        Orbit orbit1, orbit2;
+        RadarMetadata radar;
+        Ellipsoid elp;
+        orbitInterpMethod orbit_method;
+        // Basis vectors
+        std::vector<double> refxyz, look, rhat, chat, vhat;
+        // Baseline scalars
+        double bh, bv;
+        // Look vector components
+        double sinlook, coslook;
+        // Velocity magnitude
+        double velocityMagnitude;
 
-    typedef std::size_t size_t;
+        Baseline() : refxyz(3), look(3), rhat(3), chat(3), vhat(3) {}
+        Baseline(const Baseline &b) : orbit1(b.orbit1), orbit2(b.orbit2), radar(b.radar),
+                                      elp(b.elp), orbit_method(b.orbit_method), refxyz(b.refxyz),
+                                      look(b.look), rhat(b.rhat), chat(b.chat), vhat(b.vhat),
+                                      bh(b.bh), bv(b.bv), sinlook(b.sinlook), coslook(b.coslook),
+                                      velocityMagnitude(b.velocityMagnitude) {}
+        inline Baseline& operator=(const Baseline&);
 
-    class Baseline {
+        inline double getHorizontalBaseline() { return bh; }
+        inline double getVerticalBaseline() { return bv; }
+        inline double getPerpendicularBaseline() { return (-1. * bh * coslook) + (bv * sinlook); }
+        void init();
+        void initBasis(double);
+        std::vector<double> calculateBasisOffset(const std::vector<double>&);
+        void computeBaselines();
+        void calculateLookVector(double);
+    };
 
-        public:
-            orbitInterpMethod orbit_method;
-
-            // Visible isce::core objects
-            LinAlg linalg;
-            Orbit orbit1, orbit2;
-            RadarMetadata radar;
-            Ellipsoid ellp;
-
-            // Constructors
-            Baseline();
-
-            // Methods
-            void init();
-            void initBasis(double);
-            std::vector<double> calculateBasisOffset(std::vector<double> &);
-            void computeBaselines();
-
-            // Utility methods
-            double getHorizontalBaseline() {return _bh;}
-            double getVerticalBaseline() {return _bv;}
-            double getPerpendicularBaseline() {
-                return (-1.0 * _bh * _coslook + _bv * _sinlook);
-            }
-
-        private:
-
-            // Baseline scalars
-            double _bh;
-            double _bv;
-
-            // Look vector components
-            double _coslook, _sinlook;
-
-            // Basis vectors
-            std::vector<double> _refxyz = std::vector<double>(3);
-            std::vector<double> _look = std::vector<double>(3);
-            std::vector<double> _rhat = std::vector<double>(3);
-            std::vector<double> _chat = std::vector<double>(3);
-            std::vector<double> _vhat = std::vector<double>(3);
-
-            // Velocity magnitude
-            double _velocityMagnitude;
-
-            // Private methods
-            void _calculateLookVector(double);
-
-    }; // class Baseline
-
-} // namespace core
-} // namespace isce
+    inline Baseline& Baseline::operator=(const Baseline &rhs) {
+        orbit1 = rhs.orbit1;
+        orbit2 = rhs.orbit2;
+        radar = rhs.radar;
+        orbit_method = rhs.orbit_method;
+        refxyz = rhs.refxyz;
+        look = rhs.look;
+        rhat = rhs.rhat;
+        chat = rhs.chat;
+        vhat = rhs.vhat;
+        bh = rhs.bh;
+        bv = rhs.bv;
+        sinlook = rhs.sinlook;
+        coslook = rhs.coslook;
+        velocityMagnitude = rhs.velocityMagnitude;
+        return *this;
+    }
+}}
 
 #endif
-
-// end of file
