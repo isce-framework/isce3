@@ -14,7 +14,8 @@ using std::vector;
 template <typename T>
 T LUT2d<T>::eval(double y, double x) const {
     /*
-     * Evaluate the LUT at the given indices.
+     * Evaluate the LUT at the given indices. Note that because we've template-bound the class-type,
+     * not the function-type, we don't need to forward-declare the compatible types!
      */
     size_t i0, i1, j0, j1, i, j;
     // Iterate over x indices to find x bounds
@@ -52,7 +53,6 @@ T LUT2d<T>::eval(double y, double x) const {
     return result;
 }
 
-// Forward declarations for each type
-template double LUT2d<double>::eval(double y, double x);
-template complex<double> LUT2d<complex<double>>::eval(double y, double x);
-
+// Forward declare the compatible types
+template double LUT2d<double>::eval(double,double) const;
+template complex<double> LUT2d<complex<double>>::eval(double,double) const;
