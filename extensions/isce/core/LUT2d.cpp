@@ -12,7 +12,7 @@ using std::complex;
 using std::vector;
 
 template <typename T>
-T LUT2d<T>::eval(double y, double x) {
+T LUT2d<T>::eval(double y, double x) const {
     /*
      * Evaluate the LUT at the given indices.
      */

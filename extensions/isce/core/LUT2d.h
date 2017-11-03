@@ -21,7 +21,7 @@ namespace isce { namespace core {
         LUT2d() = default;
         LUT2d(std::vector<double> &_xidx, std::vector<double> &_yidx, 
               std::vector<std::vector<T>> &_vals) : x_index(_xidx), y_index(_yidx), values(_vals) {}
-        T eval(double, double);
+        T eval(double, double) const;
     };
 
     // Forward declarations for the constructor
