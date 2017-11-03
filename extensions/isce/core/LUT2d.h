@@ -1,56 +1,34 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
 //
-// Author: Bryan Riel
+// Source Author: Bryan Riel
+// Co-Author: Joshua Cohen
 // Copyright 2017
 //
 
-#ifndef ISCELIB_LUT2D_H
-#define ISCELIB_LUT2D_H
+#ifndef __ISCE_CORE_LUT2D_H__
+#define __ISCE_CORE_LUT2D_H__
 
-#include <cstddef>
+#include <complex>
 #include <vector>
 
 namespace isce { namespace core {
-
     template <typename T>
-    class LUT2d {
+    struct LUT2d {
+        // Vectors to hold indices in both dimensions
+        std::vector<double> x_index, y_index;
+        // 2D vector to hold values
+        std::vector<std::vector<T>> values;
 
-        // Convenience
-        typedef std::size_t size_t;
+        LUT2d() = default;
+        LUT2d(std::vector<double> &_xidx, std::vector<double> &_yidx, 
+              std::vector<std::vector<T>> &_vals) : x_index(_xidx), y_index(_yidx), values(_vals) {}
+        T eval(double, double);
+    };
 
-        public:
-
-            // Vectors to hold indices in both dimensions
-            std::vector<double> x_index;
-            std::vector<double> y_index;
-
-            // 2D vector to hold values
-            std::vector<std::vector<T>> values;
-
-            // Basic constructor does nothing
-            LUT2d() {};
-            // Constructor from vectors of indices and values
-            LUT2d(std::vector<double> &, std::vector<double> &,
-                  std::vector<std::vector<T>> &);
-
-            // Destructor
-            ~LUT2d();
-
-            // Methods 
-            void setDimensions();
-            void reset();
-            T eval(double, double);
-
-        private:
-
-            // Sizes of each dimension
-            size_t _xsize;
-            size_t _ysize;
-
-    }; // class LUT2d
-
-} // namespace core
-} // namespace isce
+    // Forward declarations for the constructor
+    template LUT2d<double>::LUT2d(std::vector<double>&,std::vector<double>&,
+                                  std::vector<std::vector<double>>&);
+    template LUT2d<std::complex<double>>::LUT2d(std::vector<double>&,std::vector<double>&,
+                                                std::vector<std::vector<std::complex<double>>>&);
+}}
 
 #endif

@@ -56,7 +56,7 @@ void Baseline::initBasis(double t) {
     LinAlg::unitVec(vertvec, vhat);
 }
 
-vector<double> Baseline::calculateBasisOffset(const vector<double> &position) {
+vector<double> Baseline::calculateBasisOffset(const vector<double> &position) const {
     /*
      * Given a position vector, calculate offset between reference position and that vector,
      * projected in the reference basis.

@@ -35,12 +35,13 @@ namespace isce { namespace core {
                                       velocityMagnitude(b.velocityMagnitude) {}
         inline Baseline& operator=(const Baseline&);
 
-        inline double getHorizontalBaseline() { return bh; }
-        inline double getVerticalBaseline() { return bv; }
-        inline double getPerpendicularBaseline() { return (-1. * bh * coslook) + (bv * sinlook); }
+        inline double getHorizontalBaseline() const { return bh; }
+        inline double getVerticalBaseline() const { return bv; }
+        inline double getPerpendicularBaseline() const { return (-1. * bh * coslook) + 
+                                                                (bv * sinlook); }
         void init();
         void initBasis(double);
-        std::vector<double> calculateBasisOffset(const std::vector<double>&);
+        std::vector<double> calculateBasisOffset(const std::vector<double>&) const;
         void computeBaselines();
         void calculateLookVector(double);
     };

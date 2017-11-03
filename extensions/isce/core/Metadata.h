@@ -1,47 +1,45 @@
-//-*- C++ -*-
-//-*- coding: utf-8 -*-
+//
+// Source Author: Bryan Riel
+// Co-Author: Joshua Cohen
+// Copyright 2017
 
-#ifndef ISCELIB_METADATA_H
-#define ISCELIB_METADATA_H
+#ifndef __ISCE_CORE_METADATA_H__
+#define __ISCE_CORE_METADATA_H__
 
 #include <iostream>
-#include <sstream>
-#include "isce/core/DateTime.h"
+#include "DateTime.h"
 
 namespace isce { namespace core {
-
     struct RadarMetadata {
-
         // Acquisition related parameters
-        double radarWavelength;
-        double prf;
-        double rangeFirstSample;
-        double slantRangePixelSpacing;
+        double radarWavelength, prf, rangeFirstSample, slantRangePixelSpacing, pegHeading;
         int lookSide;
-        isce::core::DateTime sensingStart;
-        double pegHeading;
-
-        // Image formation related parametesr
-        int numberRangeLooks;
-        int numberAzimuthLooks;
-
+        DateTime sensingStart;
+        // Image formation related parameters
+        int numberRangeLooks, numberAzimuthLooks;
         // Geometry parameters
-        int width;
-        int length;
+        int width, length;
 
-        // Constructors
-        RadarMetadata() : sensingStart() {};
+        RadarMetadata() : sensingStart() {}
+    };
+}}
 
-    }; // struct RadarMetadata
-
-} // namespace core
-} // namespace isce
-
-// Declare the << operator for debugging purposes
-extern std::ostream &operator<<(std::ostream & os,
-    isce::core::RadarMetadata const & radar);
-
+std::ostream& operator<<(std::ostream &os, const isce::core::RadarMetadata &radar) {
+    /*
+     * Define the << operator for a Radar object for debugging purposes.
+     */
+    os << "Radar parameters:" << std::endl;
+    os << "  - width: " << radar.width << std::endl;
+    os << "  - length: " << radar.length << std::endl;
+    os << "  - numberRangeLooks: " << radar.numberRangeLooks << std::endl;
+    os << "  - numberAzimuthLooks: " << radar.numberAzimuthLooks << std::endl;
+    os << "  - slantRangePixelSpacing: " << radar.slantRangePixelSpacing << std::endl;
+    os << "  - rangeFirstSample: " << radar.rangeFirstSample << std::endl;
+    os << "  - lookSide: " << radar.lookSide << std::endl;
+    os << "  - prf: " << radar.prf << std::endl;
+    os << "  - radarWavelength: " << radar.radarWavelength << std::endl;
+    os << "  - sensingStart: " << radar.sensingStart.toIsoString() << std::endl;
+    return os;
+}
 
 #endif
-
-// end of file
