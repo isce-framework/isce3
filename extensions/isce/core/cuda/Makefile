@@ -38,9 +38,8 @@ all : obj-build
 # Build objects as called from isce/core/Makefile (same as all but is moved into ../$(BUILDDIR)/cuda 
 # instead of $(BUILDDIR))
 recurse : obj-build
-	mkdir -p ../$(MAINBUILDDIR)/cuda
-	mv $(OBJS) ../$(MAINBUILDDIR)/cuda
-	cp $(OBJS:.o=.h) ../$(MAINBUILDDIR)/cuda
+	mv $(OBJS) ../$(MAINBUILDDIR)/lib/cuda
+	cp $(OBJS:.o=.h) ../$(MAINBUILDDIR)/include/cuda
 	rm -f $(OBJS)
 
 obj-build : $(OBJS)

@@ -20,9 +20,8 @@ all : clean
 # the main export/ directory. See above about needing to run 'clean' first
 recurse : clean
 	python3 lib_build.py build_ext --inplace
-	mkdir -p ../$(MAINBUILDDIR)/cython
-	mv *.so ../$(MAINBUILDDIR)/cython
-	cp lib_init.py ../$(MAINBUILDDIR)/cython/__init__.py
+	mv *.so ../$(MAINBUILDDIR)/packages
+	cp lib_init.py ../$(MAINBUILDDIR)/packages/__init__.py
 	rm -rf build
 	rm -f iscecore.cpp
 
