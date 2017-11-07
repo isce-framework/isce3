@@ -13,7 +13,7 @@ void testConstant() {
 
     // Interpolate N values in x and y
     bool stat = true;
-    for (size_t i = 0; i < 5; ++i) 
+    for (size_t i = 1; i < 5; ++i) 
     {
         //Mean and norm should not matter
         isce::core::Poly1d poly(0, i*1.0, i*i*1.0);
