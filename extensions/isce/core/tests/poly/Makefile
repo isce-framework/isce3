@@ -6,7 +6,7 @@ INCBASE = $(PWD)/../../../..
 COREBASE = $(INCBASE)/isce/core
 CFLAGS = -std=c++11 -O3
 IFLAGS = -I$(INCBASE)
-LFLAGS = -L$(COREBASE)/export -liscecore
+LFLAGS = -L$(COREBASE)/export/lib -liscecore
 
 .PHONY : clean tests builds
 
