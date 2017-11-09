@@ -4,20 +4,24 @@
 //
 
 #include <iostream>
-#include "Poly1d.h"
+#include <stdexcept>
+#include "isce/core/Poly1d.h"
 using isce::core::Poly1d;
 using std::cout;
+using std::domain_error;
 using std::endl;
 
 
 double Poly1d::eval(double xin) const {
-    // Evaluate the polynomial at a given position
+    /*
+     * Evaluate the polynomial at a given position.
+     */
 
-    // throw an exception if class member norm has value 0
-    if ( norm == 0. ) {
-        throw std::overflow_error("Poly1d::eval norm==0.: Divide by zero exception");
+    // Throw an exception if class member norm has value 0
+    if (norm == 0.) {
+        throw domain_error("Poly1d::eval - Divide by zero exception for polynomial norm.");
     }
-
+    
     double val = 0.;
     double scalex = 1.;
     double xmod = (xin - mean) / norm;
@@ -31,29 +35,23 @@ void Poly1d::printPoly() const {
     cout << endl;
 }
 
-
-//Helper function to adjust the mean
-//Use case - when image is being cropped and starting range is changed
-Poly1d Poly1d::derivative() const
-{
-    //If the input polynomial is a constant, return 0
-    if (order == 0)
-    {
+Poly1d Poly1d::derivative() const {
+    /*
+     * Helper function to adjust the mean.
+     * Use case - when image is being cropped and starting range is changed.
+     */
+    // If the input polynomial is a constant, return 0
+    if (order == 0) {
         Poly1d newP(0, 0., 1.);
-        newP.setCoeff(0, 0.0);
-
+        newP.setCoeff(0, 0.);
         return newP;
-    }
-    else
-    {
-        //Initialize polynomial of same size
+    } else {
+        // Initialize polynomial of same size
         Poly1d newP(order-1, mean, norm);
-        for(int ii=0; ii < order; ii++)
-        {
+        for (int ii=0; ii<order; ii++) {
             double coeff = getCoeff(ii+1);
-            newP.setCoeff(ii, (ii+1.0) * coeff / norm);
+            newP.setCoeff(ii, ((ii + 1.) * coeff) / norm);
         }
-
         return newP;
     }
 }
