@@ -18,7 +18,7 @@ bool checkAlmostEqual(vector<double> &ref, vector<double> &calc, int n_digits) {
      */
 
     bool stat = true;
-    for (int i=0; i<ref.size(); i++) {
+    for (int i=0; i<static_cast<int>(ref.size()); i++) {
         stat = stat & (abs(ref[i] - calc[i]) < pow(10., -n_digits));
     }
     if (!stat) {
@@ -78,7 +78,7 @@ void testPoles() {
 }
 
 void testSouthPolar() {
-   
+
     PolarStereo proj(3031);
 
     //Test data was generated using pyproj and random numbers
@@ -111,9 +111,9 @@ void testSouthPolar() {
         { -2.439357770938500e+00,  -1.442480697904947e+00,
           1.469661241145656e+03},
         {  3.425915795274763e-01,  -1.340153122367854e+00,
-          1.586442146039017e+03}}; 
-    
-    
+          1.586442146039017e+03}};
+
+
     double ref_xyz[15][3] = {{  4.359317146290433e+04,   1.413127144940603e+06,
           1.912700155961942e+03},
         { -2.283273518457955e+05,  -5.499261910668013e+05,
@@ -143,9 +143,9 @@ void testSouthPolar() {
         {-5.166500161522263e+05,  -6.106136854812840e+05,
           1.469661241145656e+03},
         { 4.844001591422016e+05,   1.358174101228337e+06,
-          1.586442146039017e+03}}; 
-    
-    
+          1.586442146039017e+03}};
+
+
 
     for(int i=0; i<15;i++)
     {
@@ -172,13 +172,13 @@ void testSouthPolar() {
             cout << endl;
         }
     }
-	
+
 
 }
 
 
 void testNorthPolar() {
-   
+
     PolarStereo proj(3413);
 
     //Test data was generated using pyproj and random numbers
@@ -211,8 +211,8 @@ void testNorthPolar() {
         {-2.044058884889994e+00,   1.467509794204064e+00,
           1.355282188196872e+03},
         { 1.896312874775227e+00,   1.411713711367596e+00,
-          1.689205800030411e+03}}; 
-    
+          1.689205800030411e+03}};
+
     double ref_xyz[15][3] = {{ 1.693588103815650e+06,   1.550052481860258e+06,
           8.667190129005166e+02},
         {  1.174137939572316e+06,   1.557187175159873e+06,
@@ -242,8 +242,8 @@ void testNorthPolar() {
         {-6.106128932646384e+05,  -1.970349252242279e+05,
           1.355282188196872e+03},
         { 4.391289593706741e+05,   8.865894956770649e+05,
-          1.689205800030411e+03}};  
-    
+          1.689205800030411e+03}};
+
 
     for(int i=0; i<15;i++)
     {
@@ -270,7 +270,7 @@ void testNorthPolar() {
             cout << endl;
         }
     }
-	
+
 
 }
 

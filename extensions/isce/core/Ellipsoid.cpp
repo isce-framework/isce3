@@ -5,9 +5,9 @@
 
 #include <cmath>
 #include <vector>
-#include "isce/core/Constants.h"
-#include "isce/core/Ellipsoid.h"
-#include "isce/core/LinAlg.h"
+#include "Constants.h"
+#include "Ellipsoid.h"
+#include "LinAlg.h"
 using isce::core::Ellipsoid;
 using isce::core::LinAlg;
 using std::vector;
@@ -67,7 +67,7 @@ void Ellipsoid::xyzToLatLon(vector<double> &xyz, vector<double> &llh) {
     // Given a geocentric XYZ, produces a lat, lon, and height above the reference ellipsoid.
     //      SCOTT HENSLEY IMPLEMENTATION
     //
-    
+
     // Error checking to make sure inputs have expected characteristics
     checkVecLen(llh,3);
     checkVecLen(xyz,3);
@@ -84,12 +84,12 @@ void Ellipsoid::xyzToLatLon(vector<double> &xyz, vector<double> &llh) {
 }
 */
 
-void Ellipsoid::getAngs(const vector<double> &pos, const vector<double> &vel, 
+void Ellipsoid::getAngs(const vector<double> &pos, const vector<double> &vel,
                         const vector<double> &vec, double &az, double &lk) const {
     /*
      * Computes the look vector given the look angle, azimuth angle, and position vector
      */
-    
+
     // Error checking to make sure inputs have expected characteristics
     checkVecLen(pos,3);
     checkVecLen(vel,3);
@@ -97,28 +97,28 @@ void Ellipsoid::getAngs(const vector<double> &pos, const vector<double> &vel,
 
     vector<double> temp(3);
     xyzToLatLon(pos, temp);
-    
-    vector<double> n = {-cos(temp[0]) * cos(temp[1]), 
+
+    vector<double> n = {-cos(temp[0]) * cos(temp[1]),
                         -cos(temp[0]) * sin(temp[1]),
                         -sin(temp[0])};
     lk = acos(LinAlg::dot(n, vec) / LinAlg::norm(vec));
     LinAlg::cross(n, vel, temp);
-    
+
     vector<double> c(3);
     LinAlg::unitVec(temp, c);
     LinAlg::cross(c, n, temp);
-    
+
     vector<double> t(3);
     LinAlg::unitVec(temp, t);
     az = atan2(LinAlg::dot(c, vec), LinAlg::dot(t, vec));
 }
 
-void Ellipsoid::getTCN_TCvec(const vector<double> &pos, const vector<double> &vel, 
+void Ellipsoid::getTCN_TCvec(const vector<double> &pos, const vector<double> &vel,
                              const vector<double> &vec, vector<double> &TCVec) const {
     /*
      * Computes the projection of an xyz vector on the TC plane in xyz
      */
-    
+
     // Error checking to make sure inputs have expected characteristics
     checkVecLen(pos,3);
     checkVecLen(vel,3);
@@ -127,22 +127,22 @@ void Ellipsoid::getTCN_TCvec(const vector<double> &pos, const vector<double> &ve
 
     vector<double> temp(3);
     xyzToLatLon(pos, temp);
-    
-    vector<double> n = {-cos(temp[0]) * cos(temp[1]), 
-                        -cos(temp[0]) * sin(temp[1]), 
+
+    vector<double> n = {-cos(temp[0]) * cos(temp[1]),
+                        -cos(temp[0]) * sin(temp[1]),
                         -sin(temp[0])};
     LinAlg::cross(n, vel, temp);
-    
+
     vector<double> c(3);
     LinAlg::unitVec(temp, c);
     LinAlg::cross(c, n, temp);
-    
+
     vector<double> t(3);
     LinAlg::unitVec(temp, t);
     LinAlg::linComb(LinAlg::dot(t, vec), t, LinAlg::dot(c, vec), c, TCVec);
 }
 
-void Ellipsoid::TCNbasis(const vector<double> &pos, const vector<double> &vel, vector<double> &t, 
+void Ellipsoid::TCNbasis(const vector<double> &pos, const vector<double> &vel, vector<double> &t,
                          vector<double> &c, vector<double> &n) const {
     /*
      *
@@ -158,14 +158,13 @@ void Ellipsoid::TCNbasis(const vector<double> &pos, const vector<double> &vel, v
     vector<double> llh(3);
     xyzToLatLon(pos, llh);
 
-    n = {-cos(llh[0]) * cos(llh[1]), 
-         -cos(llh[0]) * sin(llh[1]), 
+    n = {-cos(llh[0]) * cos(llh[1]),
+         -cos(llh[0]) * sin(llh[1]),
          -sin(llh[0])};
-    
+
     vector<double> temp(3);
     LinAlg::cross(n, vel, temp);
     LinAlg::unitVec(temp, c);
     LinAlg::cross(c, n, temp);
     LinAlg::unitVec(temp, t);
 }
-

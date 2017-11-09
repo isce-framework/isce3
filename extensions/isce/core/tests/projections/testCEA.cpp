@@ -18,7 +18,7 @@ bool checkAlmostEqual(vector<double> &ref, vector<double> &calc, int n_digits) {
      */
 
     bool stat = true;
-    for (int i=0; i<ref.size(); i++) {
+    for (int i=0; i<static_cast<int>(ref.size()); i++) {
         stat = stat & (abs(ref[i] - calc[i]) < pow(10., -n_digits));
     }
     if (!stat) {
@@ -30,7 +30,7 @@ bool checkAlmostEqual(vector<double> &ref, vector<double> &calc, int n_digits) {
 }
 
 void testCoords() {
-   
+
     // Alternately can use 'CEA *proj = new CEA()' or 'ProjectionBase *proj = new CEA()'
     CEA proj;
 
@@ -64,8 +64,8 @@ void testCoords() {
        {  5.371427733359488e-01,  -9.104187460566963e-01,
           3.830848656141965e+03},
        {  2.032593025432839e+00,   1.474564625955619e+00,
-          3.491994915674123e+03}}; 
-    
+          3.491994915674123e+03}};
+
     double ref_xyz[15][3] = {{-7.726813212349523e+06,   5.503591184289403e+06,
           6.397636527923552e+03},
        { -1.329595334189561e+05,  -1.539489150010470e+06,
@@ -95,7 +95,7 @@ void testCoords() {
        {  2.969463102942626e+06,  -5.788814966911813e+06,
           3.830848656141965e+03},
        {  1.123669588782941e+07,   7.307956458783941e+06,
-          3.491994915674123e+03}}; 
+          3.491994915674123e+03}};
 
     for(int i=0; i<15;i++)
     {

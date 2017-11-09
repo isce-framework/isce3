@@ -6,14 +6,15 @@ INCBASE = $(PWD)/../../../..
 COREBASE = $(INCBASE)/isce/core
 CFLAGS = -std=c++11 -O3
 IFLAGS = -I$(INCBASE)
-LFLAGS = -L$(COREBASE)/export -liscecore
+#LFLAGS = -L$(COREBASE)/export/lib -liscecore
+LFLAGS = -L$(COREBASE)/export/lib -liscecore
 
 .PHONY : clean tests builds
 
 all : tests
 
 # Build tests, running each individually, and clean up
-tests : poly1d 
+tests : poly1d
 	$(MAKE) clean
 
 # Just build the unit tests but don't run or clean them
@@ -37,4 +38,3 @@ poly2d-build: testPoly2d.cpp $(COREBASE)/Poly2d.h
 clean :
 	rm -f poly1d-test
 	rm -f poly2d-test
-

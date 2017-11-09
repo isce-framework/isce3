@@ -19,7 +19,7 @@ bool checkAlmostEqual(vector<double> &ref, vector<double> &calc, int n_digits) {
      */
 
     bool stat = true;
-    for (int i=0; i<ref.size(); i++) {
+    for (int i=0; i<static_cast<int>(ref.size()); i++) {
         stat = stat & (abs(ref[i] - calc[i]) < pow(10., -n_digits));
     }
     if (!stat) {
@@ -173,7 +173,7 @@ void testCoords() {
      */
 
     Ellipsoid wgs84(6378137.0, 0.0066943799901);
-    
+
     //Test data was generated using pyproj and random numbers
     double ref_llh[15][3] = {{ -1.180097204507889e+00,   1.134431523585921e+00,
           7.552767636707697e+03},
@@ -205,7 +205,7 @@ void testCoords() {
           4.298201230045657e+03},
        { 1.076512019764726e+00,  -1.498660315787147e+00,
           8.472554905622580e+02}};
-    
+
     double ref_xyz[15][3] = {{ 1030784.925758840050548,  2210337.910070449113846,
         -5881839.839890958741307},
        {-2457926.302319798618555, -5531693.075449729338288,
@@ -262,7 +262,7 @@ void testCoords() {
             cout << endl;
         }
     }
-	
+
 
 }
 

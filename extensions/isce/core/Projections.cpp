@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include "isce/core/Projections.h"
+#include "Projections.h"
 using isce::core::CEA;
 using isce::core::Geocent;
 using isce::core::PolarStereo;
@@ -62,12 +62,12 @@ double clens(const double *a, int size, double real) {
      */
     const double *p;
     double hr, hr1, hr2;
-    for (p = a + size, hr2 = 0., hr1 = *(--p), hr=0.; 
-         a - p; 
+    for (p = a + size, hr2 = 0., hr1 = *(--p), hr=0.;
+         a - p;
          hr2 = hr1, hr1 = hr) {
         hr = -hr2 + (2. * hr1 * cos(real)) + *(--p);
     }
-    return sin(real) * hr;    
+    return sin(real) * hr;
 }
 
 double clenS(const double *a, int size, double real, double imag, double &R, double &I) {
@@ -84,7 +84,7 @@ double clenS(const double *a, int size, double real, double imag, double &R, dou
     for (p = a + size, hr2 = 0., hi2 = 0., hi1 = 0., hr1 = *(--p), hi1 = 0., hr = 0., hi = 0.;
          a - p;
          hr2 = hr1, hi2 = hi1, hr1 = hr, hi1 = hi) {
-        hr = -hr2 + (2. * hr1 * cos(real) * cosh(imag)) - (-2. * hi1 * sin(real) * sinh(imag)) + 
+        hr = -hr2 + (2. * hr1 * cos(real) * cosh(imag)) - (-2. * hi1 * sin(real) * sinh(imag)) +
              *(--p);
         hi = -hi2 + (-2. * hr1 * sin(real) * sinh(imag)) + (2. * hi1 * cos(real) * cosh(imag));
     }
@@ -124,13 +124,13 @@ UTM::UTM(int code) : ProjectionBase(code) {
 
     // Gaussian -> Geodetic == cgb
     // Geodetic -> Gaussian == cbg
-    cgb[0] = n * (2 + n * ((-2./3.) + n * (-2 + n * ((116./45.) + n * ((26./45.) + 
+    cgb[0] = n * (2 + n * ((-2./3.) + n * (-2 + n * ((116./45.) + n * ((26./45.) +
                                                                        n * (2854./675.))))));
-    cbg[0] = n * (-2 + n * ((2./3.) + n * ((4./3.) + n * ((-82./45.) + n * ((32./45.) + 
+    cbg[0] = n * (-2 + n * ((2./3.) + n * ((4./3.) + n * ((-82./45.) + n * ((32./45.) +
                                                                             n * (4642./4725.))))));
-    cgb[1] = pow(n,2) * ((7./3.) + n * ((-8./5.) + n * ((-227./45.) + n * ((2704./315.) + 
+    cgb[1] = pow(n,2) * ((7./3.) + n * ((-8./5.) + n * ((-227./45.) + n * ((2704./315.) +
                                                                      n * (2323./945.)))));
-    cbg[1] = pow(n,2) * ((5./3.) + n * ((-16./15.) + n * ((-13./9.) + n * ((904./315.) + 
+    cbg[1] = pow(n,2) * ((5./3.) + n * ((-16./15.) + n * ((-13./9.) + n * ((904./315.) +
                                                                      n * (-1522./945.)))));
     cgb[2] = pow(n,3) * ((56./15.) + n * ((-136./35.) + n * ((-1262./105.) + n * (73814./2835.))));
     cbg[2] = pow(n,3) * ((-26./15.) + n * ((34./21.) + n * ((8./5.) + n * (-12686./2835.))));
@@ -153,11 +153,11 @@ UTM::UTM(int code) : ProjectionBase(code) {
     gtu[0] = n * (.5 + n * ((-2./3.) + n * ((5./16.) + n * ((41./180.) +
                                                             n * ((-127./288.) +
                                                                  n * (7891./37800.))))));
-    utg[1] = pow(n,2) * ((-1./48.) + n * ((-1./15.) + n * ((437./1440.) + 
-                                                           n * ((-46./105.) + 
+    utg[1] = pow(n,2) * ((-1./48.) + n * ((-1./15.) + n * ((437./1440.) +
+                                                           n * ((-46./105.) +
                                                                 n * (1118711./3870720.)))));
     gtu[1] = pow(n,2) * ((13./48.) + n * ((-3./5.) + n * ((557./1440.) +
-                                                          n * ((281./630.) + 
+                                                          n * ((281./630.) +
                                                                n * (-1983433./1935360.)))));
     utg[2] = pow(n,3) * ((-17./480.) + n * ((37./840.) + n * ((209./4480.) +
                                                               n * (-5569./90720.))));
@@ -222,7 +222,7 @@ int UTM::inverse(const vector<double> &utm, vector<double> &llh) const {
         double dCn, dCe;
         Cn += clenS(utg, 6, 2*Cn, 2*Ce, dCn, dCe);
         Ce = atan(sinh(Ce + dCe));
-        
+
         //Spherical Lat, Lon to Gaussian Lat, Lon
         Ce = atan2(sin(Ce), cos(Ce)*cos(Cn));
         Cn = atan2(sin(Cn)*cos(Ce), hypot(sin(Ce), cos(Ce)*cos(Cn)));
@@ -362,15 +362,15 @@ int CEA::inverse(const vector<double> &enu, vector<double> &llh) const {
      */
     llh[0] = enu[0] / (k0 * ellipse.a);
     double beta = asin((2. * enu[1] * k0) / (ellipse.a * qp));
-    llh[1] = beta + (apa[0] * sin(2. * beta)) + (apa[1] * sin(4. * beta)) + 
-             (apa[2] * sin(6. * beta));  
+    llh[1] = beta + (apa[0] * sin(2. * beta)) + (apa[1] * sin(4. * beta)) +
+             (apa[2] * sin(6. * beta));
     llh[2] = enu[2];
     return 0;
 }
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* * * * * * * * * * * * * * * * * * * Projection Transformer * * * * * * * * * * * * * * * * * * */
-int projTransform(ProjectionBase &in, ProjectionBase &out, const vector<double> &inpts, 
+int projTransform(ProjectionBase &in, ProjectionBase &out, const vector<double> &inpts,
                   vector<double> &outpts) {
     if (in._epsgcode == out._epsgcode) {
         // If input/output projections are the same don't even bother processing
@@ -390,4 +390,3 @@ int projTransform(ProjectionBase &in, ProjectionBase &out, const vector<double> 
     return 0;
 };
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-

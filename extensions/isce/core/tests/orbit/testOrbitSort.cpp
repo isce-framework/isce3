@@ -23,7 +23,7 @@ bool checkEqual(vector<double> &ref, vector<double> &calc) {
      */
 
     bool stat = true;
-    for (int i=0; i<ref.size(); i++) {
+    for (int i=0; i<static_cast<int>(ref.size()); i++) {
         stat = stat & (ref[i] == calc[i]);
     }
     if (!stat) {
@@ -57,7 +57,7 @@ void testReverse() {
         makeLinearSV(i*10., opos, ovel, pos, vel);
         orb.setStateVector(i, t+(i*10.), pos, vel);
     }
-   
+
 
     Orbit newOrb(1,0);
 
@@ -103,7 +103,7 @@ void testOutOfOrder() {
         makeLinearSV(i*10., opos, ovel, pos, vel);
         orb.setStateVector(i, t+(i*10.), pos, vel);
     }
-   
+
 
     Orbit newOrb(1,0);
 

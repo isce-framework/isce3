@@ -18,7 +18,7 @@ bool checkAlmostEqual(vector<double> &ref, vector<double> &calc, int n_digits) {
      */
 
     bool stat = true;
-    for (int i=0; i<ref.size(); i++) {
+    for (int i=0; i<static_cast<int>(ref.size()); i++) {
         stat = stat & (abs(ref[i] - calc[i]) < pow(10., -n_digits));
     }
     if (!stat) {
@@ -34,7 +34,7 @@ void testUTMOrigin() {
     for(int ii=1; ii<60; ii++)
     {
         cout << endl << " [North Origin-" << ii << "]" << endl;
-        
+
         // Alternately can use 'UTM *proj = new UTM(32600+ii)' or 'ProjectionBase *proj = new
         // UTM(32600+ii)'
         UTM proj(32600+ii);
@@ -60,7 +60,7 @@ void testUTMOrigin() {
     for(int ii=1; ii<60; ii++)
     {
         cout << endl << " [South Origin-" << ii << "]" << endl;
-        
+
         UTM proj(32700+ii);
         vector<double> ref_llh = {(-177.0 + (ii-1)*6) * M_PI/180.0,0.,0.};
         vector<double> ref_xyz = {500000.,10000000.,0.};
@@ -87,7 +87,7 @@ void testUTMOrigin() {
 
 
 void testUTMNorth() {
-  
+
     //Test data was generated using pyproj and random numbers
     double ref_llh[60][3] = {{ -3.090970668593823e+00,   3.623975597550786e-02,
           1.744676256950977e+03},
@@ -208,8 +208,8 @@ void testUTMNorth() {
        {  2.988940641526327e+00,   7.054352553468708e-01,
           1.123442923990343e+03},
        {  3.139969074874963e+00,   1.090397747278831e+00,
-          4.221467180650762e+02}}; 
-    
+          4.221467180650762e+02}};
+
     double ref_xyz[60][3] = {{  4.889271377427764e+05,   2.295042945422887e+05,
           1.744676256950977e+03},
        {  6.145110544533111e+05,   6.096939002906235e+06,
@@ -329,7 +329,7 @@ void testUTMNorth() {
        {  5.215216360746034e+05,   4.474235076855149e+06,
           1.123442923990343e+03},
        {  6.498459590456143e+05,   6.930490576489620e+06,
-          4.221467180650762e+02}}; 
+          4.221467180650762e+02}};
 
     for(int i=0; i<60;i++)
     {
@@ -354,15 +354,15 @@ void testUTMNorth() {
             cout << " [Inverse] ";
             stat = checkAlmostEqual(rllh, llh,9);
             if(stat && (flag==0)) cout << "PASSED";
-            cout << endl; 
+            cout << endl;
         }
     }
-	
+
 }
 
 
 void testUTMSouth() {
-   
+
     //Test data was generated using pyproj and random numbers
     double ref_llh[60][3] = {{-3.093927794291543e+00,  -1.067144322057127e+00,
           4.748737687030280e+01},
@@ -484,7 +484,7 @@ void testUTMSouth() {
           1.991679650882862e+03},
        {  3.038341419519374e+00,  -8.883583150753551e-01,
           1.479453617383727e+03}};
-    
+
     double ref_xyz[60][3] = {{4.855160732325171e+05,   3.221269661690438e+06,
           4.748737687030280e+01},
        {  4.697754426835759e+05,   2.679039200865542e+06,
@@ -629,10 +629,10 @@ void testUTMSouth() {
             cout << " [Inverse] ";
             stat = checkAlmostEqual(rllh, llh,9);
             if(stat && (flag==0)) cout << "PASSED";
-            cout << endl; 
+            cout << endl;
         }
     }
-	
+
 }
 
 

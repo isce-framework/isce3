@@ -9,8 +9,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "isce/core/Constants.h"
-#include "isce/core/LinAlg.h"
+#include "Constants.h"
+#include "LinAlg.h"
 using isce::core::LinAlg;
 using std::invalid_argument;
 using std::string;
@@ -20,7 +20,7 @@ using std::vector;
 
 void LinAlg::cross(const vector<double> &u, const vector<double> &v, vector<double> &w) {
     /*
-     *  Calculate the vector cross product of two 1x3 vectors (u, v) and store the resulting vector 
+     *  Calculate the vector cross product of two 1x3 vectors (u, v) and store the resulting vector
      *  in w.
      */
 
@@ -46,10 +46,10 @@ double LinAlg::dot(const vector<double> &v, const vector<double> &w) {
     return (v[0] * w[0]) + (v[1] * w[1]) + (v[2] * w[2]);
 }
 
-void LinAlg::linComb(double k1, const vector<double> &u, double k2, const vector<double> &v, 
+void LinAlg::linComb(double k1, const vector<double> &u, double k2, const vector<double> &v,
                      vector<double> &w) {
     /*
-     *  Calculate the linear combination of two pairs of scalars and 1x3 vectors and store the 
+     *  Calculate the linear combination of two pairs of scalars and 1x3 vectors and store the
      *  resulting vector in w.
      */
 
@@ -61,7 +61,7 @@ void LinAlg::linComb(double k1, const vector<double> &u, double k2, const vector
     for (int i=0; i<3; i++) w[i] = (k1 * u[i]) + (k2 * v[i]);
 }
 
-void LinAlg::matMat(const vector<vector<double>> &a, const vector<vector<double>> &b, 
+void LinAlg::matMat(const vector<vector<double>> &a, const vector<vector<double>> &b,
                     vector<vector<double>> &c) {
     /*
      *  Calculate the matrix product of two 3x3 matrices and store the resulting matrix in c.
@@ -81,7 +81,7 @@ void LinAlg::matMat(const vector<vector<double>> &a, const vector<vector<double>
 
 void LinAlg::matVec(const vector<vector<double>> &t, const vector<double> &v, vector<double> &w) {
     /*
-     *  Calculate the matrix product of a 1x3 vector with a 3x3 matrix and store the resulting 
+     *  Calculate the matrix product of a 1x3 vector with a 3x3 matrix and store the resulting
      *  vector in w.
      */
 
@@ -148,4 +148,3 @@ void LinAlg::enuBasis(double lat, double lon, vector<vector<double>> &enumat) {
               {cos(lon),  -sin(lat)*sin(lon), cos(lat)*sin(lon)},
               {0.,        cos(lat),           sin(lat)         }};
 }
-

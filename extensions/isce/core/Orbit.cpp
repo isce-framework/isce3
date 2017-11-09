@@ -10,8 +10,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "isce/core/Constants.h"
-#include "isce/core/Orbit.h"
+#include "Constants.h"
+#include "Orbit.h"
 using isce::core::Orbit;
 using isce::core::orbitHermite;
 using isce::core::orbitType;
@@ -34,7 +34,7 @@ using std::vector;
 
 void Orbit::getPositionVelocity(double tintp, vector<double> &pos, vector<double> &vel) const {
     /*
-     * Separately-named wrapper for interpolate based on stored basis. Does not check for 
+     * Separately-named wrapper for interpolate based on stored basis. Does not check for
      * interpolate success/fail.
      * NOTE: May be deprecated soon considering 'basis' member variable is rarely used.
      */
@@ -52,7 +52,7 @@ void Orbit::getPositionVelocity(double tintp, vector<double> &pos, vector<double
     }
 }
 
-int Orbit::interpolate(double tintp, vector<double> &opos, vector<double> &ovel, 
+int Orbit::interpolate(double tintp, vector<double> &opos, vector<double> &ovel,
                        orbitInterpMethod intp_type) const {
     /*
      * Single entry-point wrapper for orbit interpolation.
@@ -74,7 +74,7 @@ int Orbit::interpolate(double tintp, vector<double> &opos, vector<double> &ovel,
 }
 
 int Orbit::interpolateWGS84Orbit(double tintp, vector<double> &opos, vector<double> &ovel) const {
-    /* 
+    /*
      * Interpolate WGS-84 orbit
      */
 
@@ -86,10 +86,10 @@ int Orbit::interpolateWGS84Orbit(double tintp, vector<double> &opos, vector<doub
         errstr += "interpolate, Orbit only contains "+to_string(nVectors);
         throw length_error(errstr);
     }
-    // Totally possible that a time is passed to interpolate that's out-of-epoch, but not 
+    // Totally possible that a time is passed to interpolate that's out-of-epoch, but not
     // exception-worthy (so it just returns a 1 status)
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) {
-        //cout << "Error in Orbit::interpolateWGS84Orbit - Interpolation time requested (" << tintp << 
+        //cout << "Error in Orbit::interpolateWGS84Orbit - Interpolation time requested (" << tintp <<
         //        ") is outside the epoch range of the stored vectors" << endl;
         // Don't stop the whole program, just flag this particular result
         return 1;
@@ -104,24 +104,24 @@ int Orbit::interpolateWGS84Orbit(double tintp, vector<double> &opos, vector<doub
     }
     idx -= 2;
     idx = min(max(idx, 0), nVectors-4);
-    
+
     vector<vector<double>> pos(4, vector<double>(3)), vel(4, vector<double>(3));
     vector<double> t(4);
     for (int i=0; i<4; i++) getStateVector(idx+i, t[i], pos[i], vel[i]);
-    
+
     orbitHermite(pos, vel, t, tintp, opos, ovel);
 
     return 0;
 }
 
-void isce::core::orbitHermite(const vector<vector<double>> &x, const vector<vector<double>> &v, 
-                              const vector<double> &t, double time, vector<double> &xx, 
+void isce::core::orbitHermite(const vector<vector<double>> &x, const vector<vector<double>> &v,
+                              const vector<double> &t, double time, vector<double> &xx,
                               vector<double> &vv) {
     /*
      * Method used by interpolateWGS84Orbit but is not tied to an Orbit
      */
-   
-    // No error checking needed, x/v/t were created (not passed) and xx/vv were size-checked before 
+
+    // No error checking needed, x/v/t were created (not passed) and xx/vv were size-checked before
     // passing through
 
     vector<double> f0(4), f1(4);
@@ -183,7 +183,7 @@ int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<d
     /*
      * Interpolate Legendre orbit
      */
-    
+
     checkVecLen(opos,3);
     checkVecLen(ovel,3);
     if (nVectors < 9) {
@@ -191,15 +191,15 @@ int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<d
         errstr += "interpolate, Orbit only contains "+to_string(nVectors);
         throw length_error(errstr);
     }
-    // Totally possible that a time is passed to interpolate that's out-of-epoch, but not 
+    // Totally possible that a time is passed to interpolate that's out-of-epoch, but not
     // exception-worthy (so it just returns a 1 status)
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) {
-        //cout << "Error in Orbit::interpolateLegendreOrbit - Interpolation time requested (" << 
+        //cout << "Error in Orbit::interpolateLegendreOrbit - Interpolation time requested (" <<
         //        tintp << ") is outside the epoch range of the stored vectors" << endl;
         // Don't stop the whole program, just flag this particular result
         return 1;
     }
-    
+
     int idx = -1;
     for (int i=0; i<nVectors; i++) {
         if (UTCtime[i] >= tintp) {
@@ -209,22 +209,22 @@ int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<d
     }
     idx -= 5;
     idx = min(max(idx, 0), nVectors-9);
-    
+
     vector<vector<double>> pos(9, vector<double>(3)), vel(9, vector<double>(3));
     vector<double> t(9);
     for (int i=0; i<9; i++) getStateVector(idx+i, t[i], pos[i], vel[i]);
-    
+
     double trel = (8. * (tintp - t[0])) / (t[8] - t[0]);
     double teller = 1.;
     for (int i=0; i<9; i++) teller *= trel - i;
-    
+
     if (teller == 0.) {
         for (int i=0; i<3; i++) {
             opos[i] = pos[int(trel)][i];
             ovel[i] = vel[int(trel)][i];
         }
     } else {
-        vector<double> noemer = {40320.0, -5040.0, 1440.0, -720.0, 576.0, -720.0, 1440.0, -5040.0, 
+        vector<double> noemer = {40320.0, -5040.0, 1440.0, -720.0, 576.0, -720.0, 1440.0, -5040.0,
                                  40320.0};
         double coeff;
         opos.assign(3,0.);
@@ -252,10 +252,10 @@ int Orbit::interpolateSCHOrbit(double tintp, vector<double> &opos, vector<double
         errstr += "interpolate, Orbit only contains "+to_string(nVectors);
         throw length_error(errstr);
     }
-    // Totally possible that a time is passed to interpolate that's out-of-epoch, but not 
+    // Totally possible that a time is passed to interpolate that's out-of-epoch, but not
     // exception-worthy (so it just returns a 1 status)
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) {
-        //cout << "Error in Orbit::interpolateSCHOrbit - Interpolation time requested (" << tintp << 
+        //cout << "Error in Orbit::interpolateSCHOrbit - Interpolation time requested (" << tintp <<
         //        ") is outside the epoch range of the stored vectors" << endl;
         // Don't stop the whole program, just flag this particular result
         return 1;
@@ -312,17 +312,17 @@ void Orbit::printOrbit() const {
     cout << "Orbit - Basis: " << basis << ", nVectors: " << nVectors << endl;
     for (int i=0; i<nVectors; i++) {
         cout << "  UTC = " << UTCtime[i] << endl;
-        cout << "  Position = [ " << position[3*i] << " , " << position[3*i+1] << " , " << 
+        cout << "  Position = [ " << position[3*i] << " , " << position[3*i+1] << " , " <<
                 position[3*i+2] << " ]" << endl;
-        cout << "  Velocity = [ " << velocity[3*i] << " , " << velocity[3*i+1] << " , " << 
+        cout << "  Velocity = [ " << velocity[3*i] << " , " << velocity[3*i+1] << " , " <<
                 velocity[3*i+2] << " ]" << endl;
     }
 }
 
 void Orbit::loadFromHDR(const char *filename, int bs) {
     /*
-     *  Load Orbit from a saved HDR file using fstreams. This assumes that the Orbit was dumped to 
-     *  an HDR file using this interface (or a compatible one given the reading scheme below), and 
+     *  Load Orbit from a saved HDR file using fstreams. This assumes that the Orbit was dumped to
+     *  an HDR file using this interface (or a compatible one given the reading scheme below), and
      *  will most likely fail on any other arbitrary file.
      */
 
@@ -347,7 +347,7 @@ void Orbit::loadFromHDR(const char *filename, int bs) {
 
     fs.clear();
     fs.seekg(0);
-    
+
     vector<double> pos(3), vel(3);
     double t;
     int count = 0;
@@ -357,7 +357,7 @@ void Orbit::loadFromHDR(const char *filename, int bs) {
         count++;
     }
     fs.close();
-    
+
     if (fs.bad()) {
         nVectors = 0;
         UTCtime.resize(0);
@@ -371,7 +371,7 @@ void Orbit::loadFromHDR(const char *filename, int bs) {
 
 void Orbit::dumpToHDR(const char* filename) const {
     /*
-     *  Save Orbit to a given HDR file using fstreams. This saving scheme is compatible with the 
+     *  Save Orbit to a given HDR file using fstreams. This saving scheme is compatible with the
      *  above reading scheme.
      */
 
@@ -383,7 +383,7 @@ void Orbit::dumpToHDR(const char* filename) const {
     }
 
     cout << "Writing " << nVectors << " vectors to '" << filename << "'" << endl;
-    // In keeping with the original HDR file formatting for this object, force the + sign to display 
+    // In keeping with the original HDR file formatting for this object, force the + sign to display
     // for positive values
     fs << showpos;
     fs.precision(16);
@@ -393,4 +393,3 @@ void Orbit::dumpToHDR(const char* filename) const {
     }
     fs.close();
 }
-

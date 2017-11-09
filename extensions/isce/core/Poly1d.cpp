@@ -4,7 +4,7 @@
 //
 
 #include <iostream>
-#include "isce/core/Poly1d.h"
+#include "Poly1d.h"
 using isce::core::Poly1d;
 using std::cout;
 using std::endl;
@@ -17,7 +17,7 @@ double Poly1d::eval(double xin) const {
     if ( norm == 0. ) {
         throw std::overflow_error("Poly1d::eval norm==0.: Divide by zero exception");
     }
-    
+
     double val = 0.;
     double scalex = 1.;
     double xmod = (xin - mean) / norm;

@@ -23,7 +23,7 @@ bool checkAlmostEqual(vector<double> &ref, vector<double> &calc, int n_digits) {
      */
 
     bool stat = true;
-    for (int i=0; i<ref.size(); i++) {
+    for (int i=0; i<static_cast<int>(ref.size()); i++) {
         stat = stat & (abs(ref[i] - calc[i]) < pow(10., -n_digits));
     }
     if (!stat) {
@@ -56,7 +56,7 @@ void testStraightLine() {
         makeLinearSV(i*10., opos, ovel, pos, vel);
         orb.setStateVector(i, t+(i*10.), pos, vel);
     }
-    
+
     // Interpolation test times
     double test_t[] = {23.3, 36.7, 54.5, 89.3};
     vector<double> ref_pos(3), ref_vel(3);
@@ -133,11 +133,11 @@ void testCircle() {
         makeCircularSV(i*5., opos, ovel, pos, vel);
         orb.setStateVector(i, t+(i*5.), pos, vel);
     }
-    
+
     // Interpolation test times
     double test_t[] = {11.65, 18.35, 27.25, 44.65};
     vector<double> ref_pos(3), ref_vel(3);
-   
+
     cout << endl << "[Circular orbit interpolation]" << endl;
 
     // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
@@ -150,7 +150,7 @@ void testCircle() {
         stat = stat & checkAlmostEqual(ref_pos, pos, 3);
         stat = stat & checkAlmostEqual(ref_vel, vel, 4);
         if (stat) cout << "PASSED";
-        cout <<endl;    
+        cout <<endl;
     }
 
     stat = true;
@@ -186,14 +186,14 @@ void makePolynomialSV(double dt, vector<double> &xpoly, vector<double> &ypoly,
 
     pos[0] = 0.0;
     double fact = 1.0;
-    for (int i=0; i < xpoly.size(); i++, fact*=dt)
+    for (int i=0; i < static_cast<int>(xpoly.size()); i++, fact*=dt)
     {
         pos[0] += fact * xpoly[i];
     }
 
     vel[0] = 0.0;
     fact = 1.0;
-    for(int i=1; i < xpoly.size(); i++, fact*=dt)
+    for(int i=1; i < static_cast<int>(xpoly.size()); i++, fact*=dt)
     {
         vel[0] += i * xpoly[i] * fact;
     }
@@ -201,14 +201,14 @@ void makePolynomialSV(double dt, vector<double> &xpoly, vector<double> &ypoly,
 
     pos[1] = 0.0;
     fact = 1.0;
-    for (int i=0; i < ypoly.size(); i++, fact*=dt)
+    for (int i=0; i < static_cast<int>(ypoly.size()); i++, fact*=dt)
     {
         pos[1] += fact * ypoly[i];
     }
 
     vel[1] = 0.0;
     fact = 1.0;
-    for(int i=1; i < ypoly.size(); i++, fact*=dt)
+    for(int i=1; i < static_cast<int>(ypoly.size()); i++, fact*=dt)
     {
         vel[1] += i * ypoly[i] * fact;
     }
@@ -216,14 +216,14 @@ void makePolynomialSV(double dt, vector<double> &xpoly, vector<double> &ypoly,
 
     pos[2] = 0.0;
     fact = 1.0;
-    for (int i=0; i < zpoly.size(); i++, fact*=dt)
+    for (int i=0; i < static_cast<int>(zpoly.size()); i++, fact*=dt)
     {
         pos[2] += fact * zpoly[i];
     }
 
     vel[2] = 0.0;
     fact = 1.0;
-    for(int i=1; i < zpoly.size(); i++, fact*=dt)
+    for(int i=1; i < static_cast<int>(zpoly.size()); i++, fact*=dt)
     {
         vel[2] += i * zpoly[i] * fact;
     }
@@ -248,7 +248,7 @@ void testPolynomial() {
         makePolynomialSV(i*10., xpoly, ypoly, zpoly, pos, vel);
         orb.setStateVector(i, t+(i*10.), pos, vel);
     }
-    
+
     // Interpolation test times
     double test_t[] = {23.3, 36.7, 54.5, 89.3};
     vector<double> ref_pos(3), ref_vel(3);

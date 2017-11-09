@@ -4,17 +4,17 @@
 //
 
 #include <iostream>
-#include "isce/core/Constants.h"
-#include "isce/core/Poly2d.h"
+#include "Constants.h"
+#include "Poly2d.h"
 using isce::core::Poly2d;
 using std::cout;
 using std::endl;
 
 double Poly2d::eval(double azi, double rng) const {
-    
+
     double xval = (rng - rangeMean) / rangeNorm;
     double yval = (azi - azimuthMean) / azimuthNorm;
-    
+
     double scalex;
     double scaley = 1.;
     double val = 0.;
@@ -36,4 +36,3 @@ void Poly2d::printPoly() const {
         cout << endl;
     }
 }
-
