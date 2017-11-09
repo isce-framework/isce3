@@ -6,7 +6,7 @@
 
 #include <complex>
 #include <vector>
-#include "isce/core/LUT2d.h"
+#include "LUT2d.h"
 using isce::core::LUT2d;
 using std::complex;
 using std::vector;
@@ -35,7 +35,7 @@ T LUT2d<T>::eval(double y, double x) const {
 
     // The indices of the x bounds
     j0 = j - 1;
-    j1 = j; 
+    j1 = j;
     // The indices of the y bounds
     i0 = i - 1;
     i1 = i;

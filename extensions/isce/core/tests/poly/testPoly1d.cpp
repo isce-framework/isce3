@@ -13,7 +13,7 @@ void testConstant() {
 
     // Interpolate N values in x and y
     bool stat = true;
-    for (size_t i = 1; i < 5; ++i) 
+    for (size_t i = 1; i < 5; ++i)
     {
         //Mean and norm should not matter
         isce::core::Poly1d poly(0, i*1.0, i*i*1.0);
@@ -24,7 +24,7 @@ void testConstant() {
     }
 
     std::cout << "\n[Poly1d constant] ";
-    if (stat) 
+    if (stat)
         std::cout << "PASSED";
     else
         std::cout << "FAILED";
@@ -48,7 +48,7 @@ void testMeanShift()
         newpoly.mean = 0.5 * i * i;
 
         double refval = refpoly.eval(2.0 * i);
-        double newval = newpoly.eval(2.0 * i + 0.5 * i * i); 
+        double newval = newpoly.eval(2.0 * i + 0.5 * i * i);
         stat = stat & (std::abs(newval - refval) == 0);
     }
 
@@ -103,7 +103,7 @@ void testDerivative()
         isce::core::Poly1d refpoly(i, 0.0, 1.0);
         refpoly.norm = i;
         refpoly.setCoeff(0, 10.0);
-        for (int ii=1; ii<=i; ii++)
+        for (int ii=1; ii<=static_cast<int>(i); ii++)
         {
             refpoly.setCoeff(ii, 1.0/ii);
         }

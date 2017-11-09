@@ -6,11 +6,11 @@
 
 #include <cmath>
 #include <vector>
-#include "isce/core/Baseline.h"
-#include "isce/core/Constants.h"
-#include "isce/core/LinAlg.h"
-#include "isce/core/Peg.h"
-#include "isce/core/Pegtrans.h"
+#include "Baseline.h"
+#include "Constants.h"
+#include "LinAlg.h"
+#include "Peg.h"
+#include "Pegtrans.h"
 using std::vector;
 using isce::core::Baseline;
 using isce::core::LinAlg;
@@ -110,4 +110,3 @@ void Baseline::calculateLookVector(double t) {
     coslook = (height * ((2. * Ra) + height) + (R0 * R0)) / (2. * R0 * (Ra + height));
     sinlook = sqrt(1. - (coslook * coslook));
 }
-

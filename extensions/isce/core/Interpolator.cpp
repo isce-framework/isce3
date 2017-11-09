@@ -10,8 +10,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "isce/core/Constants.h"
-#include "isce/core/Interpolator.h"
+#include "Constants.h"
+#include "Interpolator.h"
 using isce::core::Interpolator;
 using std::complex;
 using std::invalid_argument;
@@ -26,7 +26,7 @@ using std::vector;
 
 template<class U>
 U Interpolator::bilinear(double x, double y, const vector<vector<U>> &z) {
-    
+
     int x1 = floor(x);
     int x2 = ceil(x);
     int y1 = ceil(y);
@@ -37,22 +37,22 @@ U Interpolator::bilinear(double x, double y, const vector<vector<U>> &z) {
     auto q22 = z[y2-1][x2-1];
 
     // Future work: static_cast<> was applied below bc the compiler complained about things (complex
-    // dtype probably), but the complex operators are overloaded to work with non-complex values on 
-    // lhs and rhs, so not sure why this wasn't working. In the future need to pull these out 
+    // dtype probably), but the complex operators are overloaded to work with non-complex values on
+    // lhs and rhs, so not sure why this wasn't working. In the future need to pull these out
     // (mostly just because of kludginess).
     if ((y1 == y2) && (x1 == x2)) return q11;
-    else if (y1 == y2) return (static_cast<U>((x2 - x) / (x2 - x1)) * q11) + 
+    else if (y1 == y2) return (static_cast<U>((x2 - x) / (x2 - x1)) * q11) +
                               (static_cast<U>((x - x1) / (x2 - x1)) * q21);
-    else if (x1 == x2) return (static_cast<U>((y2 - y) / (y2 - y1)) * q11) + 
+    else if (x1 == x2) return (static_cast<U>((y2 - y) / (y2 - y1)) * q11) +
                               (static_cast<U>((y - y1) / (y2 - y1)) * q12);
     else {
-        return  ((q11 * static_cast<U>((x2 - x) * (y2 - y))) / 
+        return  ((q11 * static_cast<U>((x2 - x) * (y2 - y))) /
                  static_cast<U>((x2 - x1) * (y2 - y1))) +
-                ((q21 * static_cast<U>((x - x1) * (y2 - y))) / 
+                ((q21 * static_cast<U>((x - x1) * (y2 - y))) /
                  static_cast<U>((x2 - x1) * (y2 - y1))) +
-                ((q12 * static_cast<U>((x2 - x) * (y - y1))) / 
+                ((q12 * static_cast<U>((x2 - x) * (y - y1))) /
                  static_cast<U>((x2 - x1) * (y2 - y1))) +
-                ((q22 * static_cast<U>((x - x1) * (y - y1))) / 
+                ((q22 * static_cast<U>((x - x1) * (y - y1))) /
                  static_cast<U>((x2 - x1) * (y2 - y1)));
     }
 }
@@ -67,8 +67,8 @@ template float Interpolator::bilinear(double,double,const vector<vector<float>>&
 
 template<class U>
 U Interpolator::bicubic(double x, double y, const vector<vector<U>> &z) {
-    
-    vector<vector<float>> wt = 
+
+    vector<vector<float>> wt =
                  {{1.0, 0.0,-3.0, 2.0, 0.0, 0.0, 0.0, 0.0,-3.0, 0.0, 9.0,-6.0, 2.0, 0.0,-6.0, 4.0},
                   {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0,-9.0, 6.0,-2.0, 0.0, 6.0,-4.0},
                   {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 9.0,-6.0, 0.0, 0.0,-6.0, 4.0},
@@ -90,26 +90,26 @@ U Interpolator::bicubic(double x, double y, const vector<vector<U>> &z) {
     int x2 = ceil(x) - 1;
     int y1 = floor(y) - 1;
     int y2 = ceil(y) - 1;
-    
+
     // Future work: See "Future work" note from Interpolator::bilinear.
     vector<U> zz = {z[y1][x1], z[y1][x2], z[y2][x2], z[y2][x1]};
-    vector<U> dzdx = {(z[y1][x1+1] - z[y1][x1-1]) / static_cast<U>(2.0), 
-                      (z[y1][x2+1] - z[y1][x2-1]) / static_cast<U>(2.0), 
-                      (z[y2][x2+1] - z[y2][x2-1]) / static_cast<U>(2.0), 
+    vector<U> dzdx = {(z[y1][x1+1] - z[y1][x1-1]) / static_cast<U>(2.0),
+                      (z[y1][x2+1] - z[y1][x2-1]) / static_cast<U>(2.0),
+                      (z[y2][x2+1] - z[y2][x2-1]) / static_cast<U>(2.0),
                       (z[y2][x1+1] - z[y2][x1-1]) / static_cast<U>(2.0)};
-    vector<U> dzdy = {(z[y1+1][x1] - z[y1-1][x1]) / static_cast<U>(2.0), 
+    vector<U> dzdy = {(z[y1+1][x1] - z[y1-1][x1]) / static_cast<U>(2.0),
                       (z[y1+1][x2+1] - z[y1-1][x2]) / static_cast<U>(2.0),
-                      (z[y2+1][x2+1] - z[y2-1][x2]) / static_cast<U>(2.0), 
+                      (z[y2+1][x2+1] - z[y2-1][x2]) / static_cast<U>(2.0),
                       (z[y2+1][x1+1] - z[y2-1][x1]) / static_cast<U>(2.0)};
-    vector<U> dzdxy = {static_cast<U>(.25)*(z[y1+1][x1+1] - z[y1-1][x1+1] - 
+    vector<U> dzdxy = {static_cast<U>(.25)*(z[y1+1][x1+1] - z[y1-1][x1+1] -
                                             z[y1+1][x1-1] + z[y1-1][x1-1]),
-                       static_cast<U>(.25)*(z[y1+1][x2+1] - z[y1-1][x2+1] - 
+                       static_cast<U>(.25)*(z[y1+1][x2+1] - z[y1-1][x2+1] -
                                             z[y1+1][x2-1] + z[y1-1][x2-1]),
-                       static_cast<U>(.25)*(z[y2+1][x2+1] - z[y2-1][x2+1] - 
+                       static_cast<U>(.25)*(z[y2+1][x2+1] - z[y2-1][x2+1] -
                                             z[y2+1][x2-1] + z[y2-1][x2-1]),
-                       static_cast<U>(.25)*(z[y2+1][x1+1] - z[y2-1][x1+1] - 
+                       static_cast<U>(.25)*(z[y2+1][x1+1] - z[y2-1][x1+1] -
                                             z[y2+1][x1-1] + z[y2-1][x1-1])};
-    
+
     vector<U> q(16);
     for (int i=0; i<4; i++) {
         q[i] = zz[i];
@@ -124,11 +124,11 @@ U Interpolator::bicubic(double x, double y, const vector<vector<U>> &z) {
             c[i] += static_cast<U>(wt[i][j]) * q[j];
         }
     }
-    
+
     U t = x - x1;
     U u = y - y1;
     U ret = 0.;
-    for (int i=3; i>=0; i--) ret = (t * ret) + c[IDX1D(i,0,4)] + (((((c[IDX1D(i,3,4)] * u) + 
+    for (int i=3; i>=0; i--) ret = (t * ret) + c[IDX1D(i,0,4)] + (((((c[IDX1D(i,3,4)] * u) +
                                     c[IDX1D(i,2,4)]) * u) + c[IDX1D(i,1,4)]) * u);
     return ret;
 }
@@ -141,9 +141,9 @@ template float Interpolator::bicubic(double,double,const vector<vector<float>>&)
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-void Interpolator::sinc_coef(double beta, double relfiltlen, int decfactor, double pedestal, 
+void Interpolator::sinc_coef(double beta, double relfiltlen, int decfactor, double pedestal,
                              int weight, int &intplength, int &filtercoef, vector<double> &filter) {
-    
+
     intplength = round(relfiltlen / beta);
     filtercoef = intplength * decfactor;
     double wgthgt = 1. - (pedestal / 2.);
@@ -163,7 +163,7 @@ void Interpolator::sinc_coef(double beta, double relfiltlen, int decfactor, doub
 template<class U, class V>
 U Interpolator::sinc_eval(const vector<U> &arr, const vector<V> &intarr, int idec, int ilen,
                           int intp, double frp, int nsamp) {
-    
+
     U ret = 0.;
     if ((intp >= (ilen-1)) && (intp < nsamp)) {
         int ifrc = min(max(0, int(frp*idec)), idec-1);
@@ -192,17 +192,17 @@ template float Interpolator::sinc_eval(const vector<float>&,const vector<float>&
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 template<class U, class V>
-U Interpolator::sinc_eval_2d(const vector<vector<U>> &arrin, const vector<V> &intarr, int idec, 
-                             int ilen, int intpx, int intpy, double frpx, double frpy, int xlen, 
+U Interpolator::sinc_eval_2d(const vector<vector<U>> &arrin, const vector<V> &intarr, int idec,
+                             int ilen, int intpx, int intpy, double frpx, double frpy, int xlen,
                              int ylen) {
-    
+
     U ret(0.);
     if ((intpx >= (ilen-1)) && (intpx < xlen) && (intpy >= (ilen-1)) && (intpy < ylen)) {
         int ifracx = min(max(0, int(frpx*idec)), idec-1);
         int ifracy = min(max(0, int(frpy*idec)), idec-1);
         for (int i=0; i<ilen; i++) {
             for (int j=0; j<ilen; j++) {
-                ret += arrin[intpx-i][intpy-j] * static_cast<U>(intarr[IDX1D(ifracx,i,ilen)]) * 
+                ret += arrin[intpx-i][intpy-j] * static_cast<U>(intarr[IDX1D(ifracx,i,ilen)]) *
                        static_cast<U>(intarr[IDX1D(ifracy,j,ilen)]);
             }
         }
@@ -233,7 +233,7 @@ template float Interpolator::sinc_eval_2d(const vector<vector<float>>&,const vec
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-float Interpolator::interp_2d_spline(int order, int nx, int ny, const vector<vector<float>> &z, 
+float Interpolator::interp_2d_spline(int order, int nx, int ny, const vector<vector<float>> &z,
                                      double x, double y) {
 
     // Error checking
@@ -297,7 +297,7 @@ double isce::core::spline(double x, const vector<double> &Y, int n, const vector
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-double Interpolator::quadInterpolate(const vector<double> &x, const vector<double> &y, 
+double Interpolator::quadInterpolate(const vector<double> &x, const vector<double> &y,
                                      double xintp) {
 
     auto xin = xintp - x[0];
@@ -306,7 +306,7 @@ double Interpolator::quadInterpolate(const vector<double> &x, const vector<doubl
         x1[i] = x[i] - x[0];
         y1[i] = y[i] - y[0];
     }
-    double a = ((-y1[1] * x1[2]) + (y1[2] * x1[1])) / ((-x1[2] * x1[1] * x1[1]) + (x1[1] * x1[2] * 
+    double a = ((-y1[1] * x1[2]) + (y1[2] * x1[1])) / ((-x1[2] * x1[1] * x1[1]) + (x1[1] * x1[2] *
                                                                                    x1[2]));
     double b = (y1[1] - (a * x1[1] * x1[1])) / x1[1];
     return y[0] + (a * xin * xin) + (b * xin);
@@ -315,7 +315,7 @@ double Interpolator::quadInterpolate(const vector<double> &x, const vector<doubl
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 double Interpolator::akima(int nx, int ny, const vector<vector<float>> &z, double x, double y) {
-    
+
     vector<vector<double>> sx(2,vector<double>(2)), sy(2,vector<double>(2));
     vector<vector<double>> sxy(2,vector<double>(2)), e(2,vector<double>(2));
     vector<double> m(4);
@@ -329,12 +329,12 @@ double Interpolator::akima(int nx, int ny, const vector<vector<float>> &z, doubl
         for (int jj=0; jj<2; jj++) {
             int yy = min(max((iy+jj+1),3),(ny-2)) - 1;
 
-            m = {z[xx-1][yy] - z[xx-2][yy], 
-                 z[xx][yy] - z[xx-1][yy], 
-                 z[xx+1][yy] - z[xx][yy], 
+            m = {z[xx-1][yy] - z[xx-2][yy],
+                 z[xx][yy] - z[xx-1][yy],
+                 z[xx+1][yy] - z[xx][yy],
                  z[xx+2][yy] - z[xx+1][yy]};
 
-            if ((abs(m[0] - m[1]) <= DBL_EPSILON) && (abs(m[2] - m[3]) <= DBL_EPSILON)) 
+            if ((abs(m[0] - m[1]) <= DBL_EPSILON) && (abs(m[2] - m[3]) <= DBL_EPSILON))
                 sx[ii][jj] = 0.5 * (m[1] + m[2]);
             else {
                 wx2 = abs(m[3] - m[2]);
@@ -342,12 +342,12 @@ double Interpolator::akima(int nx, int ny, const vector<vector<float>> &z, doubl
                 sx[ii][jj] = ((wx2 * m[1]) + (wx3 * m[2])) / (wx2 + wx3);
             }
 
-            m = {z[xx][yy-1] - z[xx][yy-2], 
-            z[xx][yy] - z[xx][yy-1], 
-            z[xx][yy+1] - z[xx][yy], 
+            m = {z[xx][yy-1] - z[xx][yy-2],
+            z[xx][yy] - z[xx][yy-1],
+            z[xx][yy+1] - z[xx][yy],
             z[xx][yy+2] - z[xx][yy+1]};
 
-            if ((abs(m[0] - m[1]) <= DBL_EPSILON) && (abs(m[2] - m[3]) <= DBL_EPSILON)) 
+            if ((abs(m[0] - m[1]) <= DBL_EPSILON) && (abs(m[2] - m[3]) <= DBL_EPSILON))
                 sy[ii][jj] = 0.5 * (m[1] + m[2]);
             else {
                 wy2 = abs(m[3] - m[2]);
@@ -362,8 +362,8 @@ double Interpolator::akima(int nx, int ny, const vector<vector<float>> &z, doubl
 
             if ((abs(wx2) <= DBL_EPSILON) && (abs(wx3) <= DBL_EPSILON)) wx2 = wx3 = 1.;
             if ((abs(wy2) <= DBL_EPSILON) && (abs(wy3) <= DBL_EPSILON)) wy2 = wy3 = 1.;
-            sxy[ii][jj] = ((wx2 * ((wy2 * e[0][0]) + (wy3 * e[0][1]))) + 
-                           (wx3 * ((wy2 * e[1][0]) + (wy3 * e[1][1])))) / 
+            sxy[ii][jj] = ((wx2 * ((wy2 * e[0][0]) + (wy3 * e[0][1]))) +
+                           (wx3 * ((wy2 * e[1][0]) + (wy3 * e[1][1])))) /
                           ((wx2 + wx3) * (wy2 + wy3));
         }
     }
@@ -394,11 +394,10 @@ double Interpolator::akima(int nx, int ny, const vector<vector<float>> &z, doubl
                            -((3 * (z[ix-1][iy-1] - z[ix-1][iy])) + ((2 * sy[0][0]) + sy[0][1])),
                            sy[0][0],
                            z[ix-1][iy-1]};
-   
+
     m[0] = (((((poly[0] * (y - iy)) + poly[1]) * (y - iy)) + poly[2]) * (y - iy)) + poly[3];
     m[1] = (((((poly[4] * (y - iy)) + poly[5]) * (y - iy)) + poly[6]) * (y - iy)) + poly[7];
     m[2] = (((((poly[8] * (y - iy)) + poly[9]) * (y - iy)) + poly[10]) * (y - iy)) + poly[11];
     m[3] = (((((poly[12] * (y - iy)) + poly[13]) * (y - iy)) + poly[14]) * (y - iy)) + poly[15];
     return (((((m[0] * (x - ix)) + m[1]) * (x - ix)) + m[2]) * (x - ix)) + m[3];
 }
-

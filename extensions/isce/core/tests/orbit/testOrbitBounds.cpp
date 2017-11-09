@@ -24,7 +24,7 @@ bool checkAlmostEqual(vector<double> &ref, vector<double> &calc, int n_digits) {
      */
 
     bool stat = true;
-    for (int i=0; i<ref.size(); i++) {
+    for (int i=0; i<static_cast<int>(ref.size()); i++) {
         stat = stat & (abs(ref[i] - calc[i]) < pow(10., -n_digits));
     }
     if (!stat) {
@@ -59,7 +59,7 @@ void testOutOfBounds() {
         makeLinearSV(i*10., opos, ovel, pos, vel);
         orb.setStateVector(i, t+(i*10.), pos, vel);
     }
-    
+
     // Interpolation test times
     double test_t[] = {-23.0, -1.0, 101.0, 112.0};
     vector<double> ref_pos(3), ref_vel(3);
@@ -115,7 +115,7 @@ void testEdges() {
         makeLinearSV(i*10., opos, ovel, pos, vel);
         orb.setStateVector(i, t+(i*10.), pos, vel);
     }
-    
+
     // Interpolation test times
     double test_t[] = {0.0, 100.0};
     vector<double> ref_pos(3), ref_vel(3);

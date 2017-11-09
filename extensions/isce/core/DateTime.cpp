@@ -10,7 +10,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include "isce/core/DateTime.h"
+#include "DateTime.h"
 using isce::core::DateTime;
 using std::chrono::duration;
 using std::chrono::duration_cast;
@@ -45,7 +45,7 @@ DateTime& DateTime::operator=(const string &dts) {
      *  assignment cannot guarantee a valid string beyond the pattern needed to parse properly.
      */
 
-    // Generate regex pattern to match ISO-formatted string of YYYY-MM-DDThh:mm:SS.s (see 
+    // Generate regex pattern to match ISO-formatted string of YYYY-MM-DDThh:mm:SS.s (see
     // ::toIsoString()'s docstring for further info)
     regex iso_pattern("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]*");
     // Check input string against regex. Assume we're okay to parse if the formatting is ISO-
@@ -142,4 +142,3 @@ string DateTime::toIsoString() const {
 }
 #endif
 #undef GCC_VERSION
-
