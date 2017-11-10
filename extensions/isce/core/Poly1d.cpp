@@ -5,7 +5,7 @@
 
 #include <iostream>
 #include <stdexcept>
-#include "isce/core/Poly1d.h"
+#include "Poly1d.h"
 using isce::core::Poly1d;
 using std::cout;
 using std::domain_error;
@@ -21,7 +21,7 @@ double Poly1d::eval(double xin) const {
     if (norm == 0.) {
         throw domain_error("Poly1d::eval - Divide by zero exception for polynomial norm.");
     }
-    
+
     double val = 0.;
     double scalex = 1.;
     double xmod = (xin - mean) / norm;
