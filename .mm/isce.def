@@ -16,6 +16,9 @@ PROJECT = isce
 PROJECT_MAJOR = 3
 PROJECT_MINOR = 0
 
+# place the public headers here
+EXPORT_INCDIR = $(EXPORT_ROOT)/include/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)
+
 # the repository
 PROJ_REPO_ADMIN = root
 PROJ_REPO_HOST = https://github-fn.jpl.nasa.gov/ericmg/isce.git
