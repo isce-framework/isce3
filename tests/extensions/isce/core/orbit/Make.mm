@@ -9,10 +9,9 @@ include isce.def
 
 # the pile of tests
 TESTS = \
-    testCEA \
-    testGeocent \
-    testPolar \
-    testUTM \
+    orbit \
+    orbitBounds \
+    orbitSort \
 
 all: test clean
 

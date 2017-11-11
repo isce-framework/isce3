@@ -9,7 +9,10 @@ include isce.def
 
 # the pile of tests
 TESTS = \
-    testPoly1d \
+    cea \
+    geocent \
+    polar \
+    utm \
 
 all: test clean
 

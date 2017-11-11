@@ -9,7 +9,7 @@ include isce.def
 
 # the pile of tests
 TESTS = \
-    testLUT2d \
+    lut2d \
 
 all: test clean
 
