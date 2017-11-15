@@ -3,8 +3,10 @@
 // Copyright 2017
 //
 
+#include <portinfo>
 #include <iostream>
 #include <stdexcept>
+#include <pyre/journal.h>
 #include "Poly1d.h"
 using isce::core::Poly1d;
 using std::cout;
@@ -19,7 +21,16 @@ double Poly1d::eval(double xin) const {
 
     // Throw an exception if class member norm has value 0
     if (norm == 0.) {
-        throw domain_error("Poly1d::eval - Divide by zero exception for polynomial norm.");
+            // make a channel
+            pyre::journal::firewall_t channel("isce.core.domain");
+            // complain
+            channel
+                << pyre::journal::at(__HERE__)
+                << "divide by zero domain_error: norm == 0"
+                << pyre::journal::endl;
+            // and bail
+            return 1;
+//        throw domain_error("Poly1d::eval - Divide by zero exception for polynomial norm.");
     }
 
     double val = 0.;
