@@ -268,6 +268,65 @@ void Raster::setLine(vector<T> &buffer, size_t line) {
 }
 
 template<typename T>
+RasterLineIter<T> Raster::line_iterator_as_type(size_t band) {
+    /*
+     * Return strongly-typed iterator.
+     */
+    return RasterLineIter<T>(*this, band);
+}
+
+template<typename T>
+RasterLineIter<T> Raster::line_iterator_as_type() {
+    /*
+     * Return strongly-typed iterator with default band number.
+     */
+    return RasterLineIter<T>(*this, 1);
+}
+
+template<typename T>
+RasterLineIter<T> Raster::line_iterator(size_t band) {
+    /*
+     * Return iterator with type matching source file datatype. For this function, the switch/case
+     * statement format is a clean way to implement the reverse type mapping (this can't be solved
+     * using the _gdts strategy since we're mapping GDALDataTypes to actual template type
+     * deductions).
+     */
+    GDALDataType fdtype = _dataset->GetRasterBand(band)->GetRasterDataType();
+    switch (fdtype) {
+        case GDT_Byte     : return RasterLineIter<uint8_t>(*this, band);
+                            break;
+        case GDT_UInt16   : return RasterLineIter<uint16_t>(*this, band);
+                            break;
+        case GDT_Int16    : return RasterLineIter<int16_t>(*this, band);
+                            break;
+        case GDT_UInt32   : return RasterLineIter<uint32_t>(*this, band);
+                            break;
+        case GDT_Int32    : return RasterLineIter<int32_t>(*this, band);
+                            break;
+        case GDT_Float32  : return RasterLineIter<float>(*this, band);
+                            break;
+        case GDT_Float64  : return RasterLineIter<double>(*this, band);
+                            break;
+        case GDT_CInt16   : return RasterLineIter<complex<int16_t>>(*this, band);
+                            break;
+        case GDT_CInt32   : return RasterLineIter<complex<int32_t>>(*this, band);
+                            break;
+        case GDT_CFloat32 : return RasterLineIter<complex<float>>(*this, band);
+                            break;
+        case GDT_CFloat64 : return RasterLineIter<complex<double>>(*this, band);
+                            break;
+    }
+}
+
+template<typename T>
+RasterLineIter<T> Raster::line_iterator() {
+    /*
+     * Pass-through for line_iterator(size_t) with default band number.
+     */
+    return line_iterator<T>(1);
+}
+
+template<typename T>
 void Raster::getLineSequential(vector<T> &buffer, size_t band) {
     /*
      *  Serves as a pass-through for getSetLine, but uses the internal line counter to determine

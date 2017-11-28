@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <vector>
 #include "gdal_priv.h"
+#include "RasterLineIter.h"
 
 namespace isce { namespace dataio {
     struct Raster {
@@ -52,10 +53,16 @@ namespace isce { namespace dataio {
         template<typename T> void getLine(std::vector<T>&,size_t);
         template<typename T> void setLine(std::vector<T>&,size_t,size_t);
         template<typename T> void setLine(std::vector<T>&,size_t);
-        template<typename T> void getLineSequential(std::vector<T>&,size_t);
-        template<typename T> void getLineSequential(std::vector<T>&);
-        template<typename T> void setLineSequential(std::vector<T>&,size_t);
-        template<typename T> void setLineSequential(std::vector<T>&);
+        
+        template<typename T> RasterLineIter<T> line_iterator_as_type(size_t);
+        template<typename T> RasterLineIter<T> line_iterator_as_type();
+        template<typename T> RasterLineIter<T> line_iterator(size_t);
+        template<typename T> RasterLineIter<T> line_iterator();
+
+        //template<typename T> void getLineSequential(std::vector<T>&,size_t);
+        //template<typename T> void getLineSequential(std::vector<T>&);
+        //template<typename T> void setLineSequential(std::vector<T>&,size_t);
+        //template<typename T> void setLineSequential(std::vector<T>&);
     };
 
     // Define the GDALDataType mappings
