@@ -294,27 +294,16 @@ RasterLineIter<T> Raster::line_iterator(size_t band) {
     GDALDataType fdtype = _dataset->GetRasterBand(band)->GetRasterDataType();
     switch (fdtype) {
         case GDT_Byte     : return RasterLineIter<uint8_t>(*this, band);
-                            break;
         case GDT_UInt16   : return RasterLineIter<uint16_t>(*this, band);
-                            break;
         case GDT_Int16    : return RasterLineIter<int16_t>(*this, band);
-                            break;
         case GDT_UInt32   : return RasterLineIter<uint32_t>(*this, band);
-                            break;
         case GDT_Int32    : return RasterLineIter<int32_t>(*this, band);
-                            break;
         case GDT_Float32  : return RasterLineIter<float>(*this, band);
-                            break;
         case GDT_Float64  : return RasterLineIter<double>(*this, band);
-                            break;
         case GDT_CInt16   : return RasterLineIter<complex<int16_t>>(*this, band);
-                            break;
         case GDT_CInt32   : return RasterLineIter<complex<int32_t>>(*this, band);
-                            break;
         case GDT_CFloat32 : return RasterLineIter<complex<float>>(*this, band);
-                            break;
         case GDT_CFloat64 : return RasterLineIter<complex<double>>(*this, band);
-                            break;
     }
 }
 

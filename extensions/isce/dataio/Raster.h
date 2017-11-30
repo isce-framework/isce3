@@ -6,6 +6,7 @@
 #ifndef __ISCE_DATAIO_RASTER_H__
 #define __ISCE_DATAIO_RASTER_H__
 
+#include <array>
 #include <complex>
 #include <cstdint>
 #include <string>
@@ -25,13 +26,10 @@ namespace isce { namespace dataio {
         // needs to be declared here but defined as an inline-like implementation below.
         static const std::unordered_map<std::type_index,GDALDataType> _gdts;
         GDALDataset *_dataset;
-        size_t _linecount;
         bool _readonly;
 
         Raster();
         Raster(const std::string&,bool);
-        // Prevent copy/etc constructors because we would need to do a deep-copy of the _dataset
-        // (since the ~Raster destructor explicitly closes/deletes the _dataset)
         Raster(const Raster&);
         inline Raster& operator=(const Raster&);
         ~Raster();
@@ -40,29 +38,58 @@ namespace isce { namespace dataio {
         inline size_t getLength() { return _dataset ? _dataset->GetRasterXSize() : 0; }
         inline size_t getWidth() { return _dataset ? _dataset->GetRasterYSize() : 0; }
         inline size_t getNumBands() { return _dataset ? _dataset->GetRasterCount() : 0; }
-        inline void resetLineCounter() { _linecount = 0; }
-        inline std::string getSourceDataType(size_t);
 
+        /*
+         *  Pixel operations
+         */
+        // (buffer, x-index, y-index, band-index, read/write)
         template<typename T> void getSetValue(T&,size_t,size_t,size_t,bool);
+        // (buffer, x-index, y-index, [band-index])
         template<typename T> void getValue(T&,size_t,size_t,size_t);
         template<typename T> void getValue(T&,size_t,size_t);
+        // (buffer, x-index, y-index, [band-index])
         template<typename T> void setValue(T&,size_t,size_t,size_t);
         template<typename T> void setValue(T&,size_t,size_t);
+        
+        /*
+         *  Line operations
+         */
+        // (buffer, line-index, nelem, band-index, read/write)
         template<typename T> void getSetLine(T*,size_t,size_t,size_t,bool);
+        // (buffer, line-index, nelem, [band-index])
+        template<typename T> void getLine(T*,size_t,size_t,size_t);
+        template<typename T> void getLine(T*,size_t,size_t);
+        // (buffer, line-index, [band-index])
+        template<typename T> void getLine(std::array<T>&,size_t,size_t);
+        template<typename T> void getLine(std::array<T>&,size_t);
         template<typename T> void getLine(std::vector<T>&,size_t,size_t);
         template<typename T> void getLine(std::vector<T>&,size_t);
+        // (buffer, line-index, nelem, [band-index])
+        template<typename T> void setLine(T*,size_t,size_t,size_t);
+        template<typename T> void setLine(T*,size_t,size_t);
+        // (buffer, line-index, [band-index])
+        template<typename T> void setLine(std::array<T>&,size_t,size_t);
+        template<typename T> void setLine(std::array<T>&,size_t);
         template<typename T> void setLine(std::vector<T>&,size_t,size_t);
         template<typename T> void setLine(std::vector<T>&,size_t);
         
-        template<typename T> RasterLineIter<T> line_iterator_as_type(size_t);
-        template<typename T> RasterLineIter<T> line_iterator_as_type();
-        template<typename T> RasterLineIter<T> line_iterator(size_t);
-        template<typename T> RasterLineIter<T> line_iterator();
+        /*
+         *  Block operations
+         */
+        // (buffer, x-index, y-index, nXelem, nYelem, band-index, read/write)
+        template<typename T> void getSetBlock(T*,size_t,size_t,size_t,size_t,size_t,bool);
+        // (buffer, x-index, y-index, nXelem, nYelem, [band-index])
+        template<typename T> void getBlock(T*,size_t,size_t,size_t,size_t,size_t);
+        template<typename T> void getBlock(T*,size_t,size_t,size_t,size_t);
+        template<typename T> void getBlock(std::vector<T>&,size_t,size_t,size_t,size_t,size_t);
+        template<typename T> void getBlock(std::vector<T>&,size_t,size_t,size_t,size_t);
+        template<typename T> void getBlock(std::array<T>&,size_t,size_t,size_t,size_t,size_t);
+        template<typename T> void getBlock(std::array<T>&,size_t,size_t,size_t,size_t);
+        // (buffer, x-index, y-index, [band-index])
+        
 
-        //template<typename T> void getLineSequential(std::vector<T>&,size_t);
-        //template<typename T> void getLineSequential(std::vector<T>&);
-        //template<typename T> void setLineSequential(std::vector<T>&,size_t);
-        //template<typename T> void setLineSequential(std::vector<T>&);
+        inline RasterLineIter getLineIter(size_t band=1) { return RasterLineIter(*this, band); }
+        inline RasterBlockIter getBlockIter(size_t band=1) { return RasterBlockIter(*this, band); }
     };
 
     // Define the GDALDataType mappings
