@@ -4,15 +4,18 @@
 //
 
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include "gdal_priv.h"
 #include "Raster.h"
+using std::array;
 using std::cout;
 using std::domain_error;
 using std::endl;
+using std::length_error;
 using std::min;
 using std::runtime_error;
 using std::string;
@@ -20,6 +23,9 @@ using std::vector;
 using isce::dataio::Raster;
 
 
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+//                                          OBJECT MANAGEMENT
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 Raster::Raster() : _dataset(nullptr), _linecount(0), _readonly(true) {
     /*
      *  Empty constructor also handles initializing the GDAL Drivers (if needed).
@@ -76,12 +82,11 @@ void Raster::loadFrom(const string &fname, bool readOnly=true) {
      *  Will also try to delete any existing dataset that has been previously loaded (releasing
      *  stored resources).
      */
-    // Remember that delete's behavior doesn't throw an exception if dataset is NULL, so no need to
-    // check in advance
-    delete _dataset;
+    // Dereference the currently-loaded GDALDataset (safer way to 'delete' since the loaded
+    // GDALDataset might have come from copy-construction
+    _dataset->Release();
     if (readOnly) _dataset = static_cast<GDALDataset*>(GDALOpen(fname.data(), GA_ReadOnly));
     else _dataset = static_cast<GDALDataset*>(GDALOpen(fname.data(), GA_Update));
-    _linecount = 0;
     _readonly = readOnly;
     // Note that in most cases if GDALOpen fails it will throw a CPL_ERROR anyways
     if (_dataset == nullptr) {
@@ -92,6 +97,10 @@ void Raster::loadFrom(const string &fname, bool readOnly=true) {
     }
 }
 
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+//                                          PIXEL OPERATIONS
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 template<typename T>
 void Raster::getSetValue(T &buffer, size_t xidx, size_t yidx, size_t band, bool set) {
     /*
@@ -132,9 +141,7 @@ void Raster::getSetValue(T &buffer, size_t xidx, size_t yidx, size_t band, bool 
 template<typename T>
 void Raster::getValue(T &buffer, size_t xidx, size_t yidx, size_t band) {
     /*
-     *  Grab the value at an arbitrary pixel location. Using templates cleans up any sort of
-     *  type conversions we'd need. We don't need to worry about checking for parameters, that's
-     *  done by the general getSetValue method.
+     *  Gets a single pixel at a given location in the image from a given raster band.
      */
     // False as the final value indicates we want to get the value (true means set)
     getSetValue(buffer, xidx, yidx, band, false);
@@ -143,10 +150,8 @@ void Raster::getValue(T &buffer, size_t xidx, size_t yidx, size_t band) {
 template<typename T>
 void Raster::getValue(T &buffer, size_t xidx, size_t yidx) {
     /*
-     *  Function overload to get around the dumb legacy requirement preventing default arguments
-     *  in template functions. Basically be able to optionally pass in the Raster band (if you don't
-     *  explicitly pass a band, it will default to this function as a pass-through, otherwise it
-     *  calls the above getValue with the explicit 'band' parameter).
+     *  Gets a single pixel at a given location in the image with a default raster band. Note this
+     *  is only necessary because of a legacy requirement on default parameters and template methods.
      */
     getValue(buffer, xidx, yidx, 1, false);
 }
@@ -154,9 +159,7 @@ void Raster::getValue(T &buffer, size_t xidx, size_t yidx) {
 template<typename T>
 void Raster::setValue(T &buffer, size_t xidx, size_t yidx, size_t band) {
     /*
-     *  Set the value at an arbitrary pixel location. Using templates cleans up any sort of
-     *  type conversions we'd need. We don't need to worry about checking for parameters, that's
-     *  done by the general getSetValue method.
+     *  Sets a single pixel at a given location in the image in a given raster band.
      */
     // Check first if we are even allowed to write to the image (opened in read-only mode or not)
     if (!_readonly) {
@@ -171,12 +174,15 @@ void Raster::setValue(T &buffer, size_t xidx, size_t yidx, size_t band) {
 template<typename T>
 void Raster::setValue(T &buffer, size_t xidx, size_t yidx) {
     /*
-     *  Overload to treat image band number as a pseudo-default argument. Passing a band number
-     *  calls the above setValue, otherwise it calls this as a pass-through.
+     *  Sets a single pixel at a given location in the image in the default raster band.
      */
     setValue(buffer, xidx, yidx, 1, false);
 }
 
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+//                                          LINE OPERATIONS
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 template<typename T>
 void Raster::getSetLine(T *buffer, size_t line, size_t iowidth, size_t band, bool set) {
     /*
@@ -186,10 +192,6 @@ void Raster::getSetLine(T *buffer, size_t line, size_t iowidth, size_t band, boo
      *  restricting it to just accepting std::vectors). The added cost is the callers need to pass
      *  in the width of the data to be written/read, since we cannot find that information from the
      *  buffer pointer.
-     *  
-     *  FUTURE DEV NOTE - Would it make sense to unify getSetValue and getSetLine? Can't do it for
-     *                    getSetBlock though (unless we map getSetBlock to be a looped call to
-     *                    getSetLine...).
      */
     // Test if the buffer datatype is mappable to a GDALDataType
     if (_gdts.count(typeid(T))) {
@@ -199,8 +201,11 @@ void Raster::getSetLine(T *buffer, size_t line, size_t iowidth, size_t band, boo
             if ((line < getLength()) && (band <= getNumBands())) {
                 // Determine I/O direction
                 GDALDataType iodir = set ? GF_Write : GF_Read;
-                auto _ = _dataset->GetRasterBand(band)->RasterIO(iodir, 0, line, iowidth, 1, buffer,
-                                                                 iowidth, 1, _gdts.at(typeid(T)), 0,
+                // Determine number of elements to read (smaller of requested number of elements
+                // and number of elements in the image line)
+                size_t rdwidth = min(iowidth, getWidth());
+                auto _ = _dataset->GetRasterBand(band)->RasterIO(iodir, 0, line, rdwidth, 1, buffer,
+                                                                 rdwidth, 1, _gdts.at(typeid(T)), 0,
                                                                  0);
             } else {
                 throw domain_error("In Raster::get/setLine() - Line/band index is out-of-bounds.");
@@ -215,44 +220,74 @@ void Raster::getSetLine(T *buffer, size_t line, size_t iowidth, size_t band, boo
 }
 
 template<typename T>
+void Raster::getLine(T *buffer, size_t line, size_t iowidth, size_t band) {
+    /*
+     *  Gets a single line at a given location in the image from a given raster band. Also accounts
+     *  for iowidth, which is the size of the buffer. This needs to be passed in explicitly since it
+     *  can't be derived from the buffer pointer itself.
+     */
+    // False as the last value indicates we want to read from the image (true indicates write)
+    getSetLine(buffer, line, iowidth, band, false);
+}
+
+template<typename T>
+void Raster::getLine(T *buffer, size_t line, size_t iowidth) {
+    /*
+     *  Gets a single line at a given location in the image from the default raster band. Also
+     *  accounts for iowidth, which is the size of the buffer.
+     */
+    getLine(buffer, line, iowidth, 1);
+}
+
+template<typename T>
+void Raster::getLine(array<T> &buffer, size_t line, size_t band) {
+    /*
+     *  Gets a single line at a given location in the image from a given raster band. Since we're
+     *  reading into an STL container, we don't need the size to be passed in, we assume the caller
+     *  wants the buffer filled based on the array.size().
+     */
+    // .data() returns the pointer to the underlying memory container
+    getLine(buffer.data(), line, buffer.size(), band);
+}
+
+template<typename T>
+void Raster::getLine(array<T> &buffer, size_t line) {
+    /*
+     *  Gets a single line at a given location in the image from the default raster band. As above,
+     *  we derive iowidth from the actual STL container.
+     */
+    getLine(buffer.data(), line, buffer.size(), 1);
+}
+
+template<typename T>
 void Raster::getLine(vector<T> &buffer, size_t line, size_t band) {
     /*
-     *  Read a given line from the file into buffer. As with get/setValue(), this really is just
-     *  a wrapper that indicates to getSetLine which direction the data is moving. This also allows
-     *  for the flexibility to write other versions of this method that take other buffer containers
-     *  with linearly-contiguous storage.
+     *  Gets a single line at a given location in the image from a given raster band. As above, we
+     *  derive iowidth from the actual STL container.
      */
-    // Determine the number of elements to read (the smaller of the width of the buffer and the
-    // image width)
-    size_t iowidth = min(getWidth(), buffer.size());
-    // False as the final value indicates we want to get the line (true means set)
-    getSetLine(buffer.data(), line, iowidth, band, false);
+    getLine(buffer.data(), line, buffer.size(), band);
 }
 
 template<typename T>
 void Raster::getLine(vector<T> &buffer, size_t line) {
     /*
-     *  Pass-through for getLine with a default band number (see get/setValue for rationale).
+     *  Gets a single line at a given location in the image from the default raster band. As above,
+     *  we derive iowidth from the actual STL container.
      */
-    getLine(buffer, line, 1);
+    getLine(buffer.data(), line, buffer.size(), 1);
 }
 
 template<typename T>
-void Raster::setLine(vector<T> &buffer, size_t line, size_t band) {
+void Raster::setLine(T* buffer, size_t line, size_t iowidth, size_t band) {
     /*
-     *  Write a given line from buffer into the file. As with get/setValue(), this really is just
-     *  a wrapper that indicates to getSetLine which direction the data is moving. As with getLine,
-     *  this design allows for the flexibility to write other non-std::vector interfaces to
-     *  getSetLine (the only requirement is that the buffer container has linearly-contiguous
-     *  memory).
+     *  Sets a single line at a given location in the image in a given raster band. Also accounts
+     *  for iowidth, which is the size of the buffer. This needs to be passed in explicitly since it
+     *  can't be derived from the buffer pointer itself.
      */
-    // Check first if we are even allowed to write to the image (opened in read-only mode or not)
+    // Check if we are even allowed to write to the image (i.e. check if we opened in read-only)
     if (!_readonly) {
-        // Determine the number of elements to write (the smaller of the width of the buffer and the
-        // image width)
-        size_t iowidth = min(getWidth(), buffer.size());
-        // True as the final value indicates we want to set the line (false means get)
-        getSetLine(buffer.data(), line, iowidth, band, true);
+        // True as the final value indicates we want to write to the image (false means read)
+        getSetLine(buffer, line, iowidth, band, true);
     } else {
         cout << "In Raster::setLine() - Image was opened in read-only mode and cannot be " <<
                 "written to." << endl;
@@ -260,98 +295,377 @@ void Raster::setLine(vector<T> &buffer, size_t line, size_t band) {
 }
 
 template<typename T>
+void Raster::setLine(T* buffer, size_t line, size_t iowidth) {
+    /*
+     *  Sets a single line at a given location in the image in the default raster band. Also
+     *  accounts for iowidth, which is the size of the buffer.
+     */
+    setLine(buffer, line, iowidth, 1);
+}
+
+template<typename T>
+void Raster::setLine(array<T> &buffer, size_t line, size_t band) {
+    /*
+     *  Sets a single line at a given location in the image in a given raster band. Since the caller
+     *  is passing in an STL container, we can derive the iowidth directly from assuming it
+     *  implicitly from buffer.size().
+     */
+    setLine(buffer.data(), line, buffer.size(), band);
+}
+
+template<typename T>
+void Raster::setLine(array<T> &buffer, size_t line) {
+    /*
+     *  Sets a single line at a given location in the image in the default raster band. As above,
+     *  we derive iowidth from the actual STL container.
+     */
+    setLine(buffer.data(), line, buffer.size(), 1);
+}
+
+template<typename T>
+void Raster::setLine(vector<T> &buffer, size_t line, size_t band) {
+    /*
+     *  Sets a single line at a given location in the image in a given raster band. As above, we
+     *  derive iowidth from the actual STL container.
+     */
+    setLine(buffer.data(), line, buffer.size(), band);
+}
+
+template<typename T>
 void Raster::setLine(vector<T> &buffer, size_t line) {
     /*
-     *  Pass-through for setLine with a default band number.
+     *  Sets a single line at a given location in the image in the default raster band. As above,
+     *  we derive iowidth from the actual STL container.
      */
-    setLine(buffer, line, 1);
+    setLine(buffer.data(), line, buffer.size(), 1);
 }
 
-template<typename T>
-RasterLineIter<T> Raster::line_iterator_as_type(size_t band) {
-    /*
-     * Return strongly-typed iterator.
-     */
-    return RasterLineIter<T>(*this, band);
-}
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+//                                      BLOCK OPERATIONS
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 template<typename T>
-RasterLineIter<T> Raster::line_iterator_as_type() {
+void Raster::getSetBlock(T *buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth,
+                         size_t band, bool set) {
     /*
-     * Return strongly-typed iterator with default band number.
+     *  As with getSetValue/getSetLine, this serves as a single entry point for reading/writing a
+     *  block of data to/from the image. The key thing to note about this function is that due to
+     *  the way GDAL interfaces with files, the buffer needs to be a 1D-contiguous block of memory
+     *  for efficient read/write block operations. This means buffer must be 1D and linearly
+     *  contiguous. We also need to know (in addition to the positional offset in the image), both
+     *  the length and width of the buffer.
+     *
+     *  The only concern at the moment is I'm unsure how exactly this maps to RasterIO underneath.
+     *  The implementation below should be the correct API call, but this needs to be tested.
      */
-    return RasterLineIter<T>(*this, 1);
-}
-
-template<typename T>
-RasterLineIter<T> Raster::line_iterator(size_t band) {
-    /*
-     * Return iterator with type matching source file datatype. For this function, the switch/case
-     * statement format is a clean way to implement the reverse type mapping (this can't be solved
-     * using the _gdts strategy since we're mapping GDALDataTypes to actual template type
-     * deductions).
-     */
-    GDALDataType fdtype = _dataset->GetRasterBand(band)->GetRasterDataType();
-    switch (fdtype) {
-        case GDT_Byte     : return RasterLineIter<uint8_t>(*this, band);
-        case GDT_UInt16   : return RasterLineIter<uint16_t>(*this, band);
-        case GDT_Int16    : return RasterLineIter<int16_t>(*this, band);
-        case GDT_UInt32   : return RasterLineIter<uint32_t>(*this, band);
-        case GDT_Int32    : return RasterLineIter<int32_t>(*this, band);
-        case GDT_Float32  : return RasterLineIter<float>(*this, band);
-        case GDT_Float64  : return RasterLineIter<double>(*this, band);
-        case GDT_CInt16   : return RasterLineIter<complex<int16_t>>(*this, band);
-        case GDT_CInt32   : return RasterLineIter<complex<int32_t>>(*this, band);
-        case GDT_CFloat32 : return RasterLineIter<complex<float>>(*this, band);
-        case GDT_CFloat64 : return RasterLineIter<complex<double>>(*this, band);
+    // Check to see if the buffer datatype is mappable to a GDALDataType
+    if (_gdts.count(typeid(T))) {
+        // Check if we have an image loaded
+        if (_dataset) {
+            // Check bounds
+            if (((xidx + iolength) < getLength()) && ((yidx + iowidth) < getWidth()) &&
+                (band <= getNumBands())) {
+                // Determine I/O direction based on whether the "set" flag was set (true ==
+                // GF_Write, false == GF_Read)
+                GDALDataType iodir = set ? GF_Write : GF_Read;
+                // As with getSetValue/getSetLine, use the typeid magic to translate datatypes on
+                // the fly with RTTI.
+                auto _ = _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, iowidth,
+                                                                 ioheight, buffer, iowidth,
+                                                                 ioheight, _gdts.at(typeid(T)),
+                                                                 0, 0);
+            } else {
+                throw domain_error("In Raster::get/setBlock() - 2D/band index is out-of-bounds.");
+            }
+        } else {
+            cout << "In Raster::get/setBlock() - No dataset loaded." << endl;
+        }
+    } else {
+        cout << "In Raster::get/setBlock() - Buffer datatype (type " << typeid(T).name() << ") " <<
+                "is not mappable to a GDALDataType." << endl;
     }
 }
 
 template<typename T>
-RasterLineIter<T> Raster::line_iterator() {
+void Raster::getBlock(T *buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth, 
+                      size_t band) {
     /*
-     * Pass-through for line_iterator(size_t) with default band number.
+     *  Gets a block at a given location in the image from a given raster band. Needs to account for
+     *  both block dimensions since we're passing in a 1D pointer.
      */
-    return line_iterator<T>(1);
+    // False as the last parameter indicates we want to read from the image (true == write)
+    getSetBlock(buffer, xidx, yidx, iolength, iowidth, band, false);
 }
 
 template<typename T>
-void Raster::getLineSequential(vector<T> &buffer, size_t band) {
+void Raster::getBlock(T *buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth) {
     /*
-     *  Serves as a pass-through for getSetLine, but uses the internal line counter to determine
-     *  which line to read (not recommended but conforms with legacy design).
+     *  Gets a block at a given location in the image from the default raster band.
      */
-    // Determine number of elements to read
-    size_t iowidth = min(getWidth(), buffer.size());
-    // Final parameter of false means read the line
-    getSetLine(buffer.data(), _linecount++, iowidth, band, false);
+    getSetBlock(buffer, xidx, yidx, iolength, iowidth, 1, false);
 }
 
 template<typename T>
-void Raster::getLineSequential(vector<T> &buffer) {
+void Raster::getBlock(vector<T> &buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth,
+                      size_t band) {
     /*
-     *  Pass-through for getLineSequential with a default band number.
+     *  Gets a block at a given location in the image from a given raster band. Even though the
+     *  caller passes in an STL container, we need to know the 2D layout of the data the caller
+     *  wants (inferred from iolength/iowidth). We can provide an extra layer of security though
+     *  and make sure the container can hold the requested data (we can only check the size of the
+     *  container against the number of requested elements). Note that if there's a size mismatch
+     *  (i.e. if iolength*iowidth < buffer.size()), that will interfere with the layout of the data
+     *  in the buffer, which may not be transparent to the caller if it was unintentional. The best
+     *  we can do in this case is report the size mismatch to the caller.
      */
-    getLineSequential(buffer, 1);
+    // Check for valid buffer sizing
+    if ((iolength * iowidth) <= buffer.size()) {
+        getBlock(buffer.data(), xidx, yidx, iolength, iowidth, band);
+        // Check if there's a size mismatch
+        if ((iolength * iowidth) < buffer.size()) {
+            cout << "In Raster::getBlock() - Requested fewer elements than the buffer can fit. " <<
+                    "Internal data layout in the buffer may be different than expected." << endl;
+        }
+    } else {
+        throw length_error("In Raster::getBlock() - Requested more elements than the buffer size.");
+    }
 }
 
 template<typename T>
-void Raster::setLineSequential(vector<T> &buffer, size_t band) {
+void Raster::getBlock(vector<T> &buffer, size_t xidx, size_t yidx, size_t iolength, 
+                      size_t iowidth) {
     /*
-     *  Serves as a pass-through for getSetLine, but uses the internal line counter to determine
-     *  which line to write (not recommended but conforms with legacy design).
+     *  Gets a block at a given location in the image from the default raster band.
      */
-    // Determine number of elements to write
-    size_t iowidth = min(getWidth(), buffer.size());
-    // Final parameter of true means write the line
-    getSetLine(buffer.data(), _linecount++, iowidth, band, true);
+    getBlock(buffer, xidx, yidx, iolength, iowidth, 1);
 }
 
 template<typename T>
-void Raster::setLineSequential(vector<T> &buffer) {
+void Raster::getBlock(array<T> &buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth,
+                      size_t band) {
     /*
-     *  Pass-through for setLineSequential with a default band number.
+     *  Gets a block at a given location in the image from a given raster band. See getBlock() with
+     *  the vector<> container for details about implementation.
      */
-    setLineSequential(buffer, 1);
+    if ((iolength * iowidth) <= buffer.size()) {
+        getBlock(buffer.data(), xidx, yidx, iolength, iowidth, band);
+        if ((iolength * iowidth) < buffer.size()) {
+            cout << "In Raster::getBlock() - Requested fewer elements than the buffer can fit. " <<
+                    "Internal data layout in the buffer may be different than expected." << endl;
+        }
+    } else {
+        throw length_error("In Raster::getBlock() - Requested more elements than the buffer size.");
+    }
 }
+
+template<typename T>
+void Raster::getBlock(array<T> &buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth) {
+    /*
+     *  Gets a block at a given location in the image from the default raster band.
+     */
+    getBlock(buffer, xidx, yidx, iolength, iowidth, 1);
+}
+
+template<typename T>
+void Raster::getBlock(vector<vector<T>> &buffer, size_t xidx, size_t yidx, size_t band) {
+    /*
+     *  Gets a block at a given location in the image from a given raster band. In this case, since
+     *  the caller is passing an implicitly-size 2D STL container, we can check sizing appropriately
+     *  before trying to read data (i.e. make sure the width/height of the STL container is valid).
+     *
+     *  NOTE: THIS IMPLEMENTATION ACTUALLY CALLS ITERATIONS OF BLOCK READER AND MAY BE SIGNIFICANTLY
+     *  SLOWER THAN THE OTHER BLOCK READERS. THIS METHOD IS ONLY IMPLEMENTED FOR CALLER CONVENIENCE
+     *  AND IS NOT RECOMMENDED FOR FAST I/O NEEDS.
+     */
+    // Check boundaries of attempted block read (this is mostly to make sure size_t arithmetic
+    // doesn't have unexpected results)
+    if ((xidx < getLength()) && (yidx < getWidth()) && (band <= getNumBands())) {
+        // Number of lines to read is minimum of number of lines available (based on xidx) and the
+        // length of the container
+        size_t iolength = min(getLength()-xidx, buffer.size());
+        for (size_t line=0; line<iolength; line++) {
+            // Call getBlock() on a 1D vector (basically getLine with an offset)
+            getBlock(buffer[line], xidx+line, yidx, 1, buffer[line].size(), band);
+        }
+    } else {
+        throw domain_error("In Raster::getBlock() - 2D/band index is out-of-bounds.");
+    }
+}
+
+template<typename T>
+void Raster::getBlock(vector<vector<T>> &buffer, size_t xidx, size_t yidx) {
+    /*
+     *  Gets a block at a given location in the image from the default raster band. As above, sizing
+     *  is determined by the STL container methods.
+     */
+    getBlock(buffer, xidx, yidx, 1);
+}
+
+template<typename T>
+void Raster::getBlock(array<array<T>> &buffer, size_t xidx, size_t yidx, size_t band) {
+    /*
+     *  Gets a block at a given location in the image from a given raster band. As above, sizing is
+     *  determined by the STL container methods.
+     */
+    if ((xidx < getLength()) && (yidx < getWidth()) && (band <= getNumBands())) {
+        size_t iolength = min(getLength()-xidx, buffer.size());
+        for (size_t line=0; line<iolength; line++) {
+            getBlock(buffer[line], xidx+line, yidx, 1, buffer[line].size(), band);
+        }
+    } else {
+        throw domain_error("In Raster::getBlock() - 2D/band index is out-of-bounds.");
+    }
+}
+
+template<typename T>
+void Raster::getBlock(array<array<T>> &buffer, size_t xidx, size_t yidx) {
+    /*
+     *  Gets a block at a given location in the image from the default raster band. As above, sizing
+     *  is determined by the STL container methods.
+     */
+    getBlock(buffer, xidx, yidx, 1);
+}
+
+template<typename T>
+void Raster::setBlock(T *buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth,
+                      size_t band) {
+    /*
+     *  Sets a block at a given location in the image to a given raster band. Needs to account for
+     *  both block dimensions since we're passing in a 1D pointer.
+     */
+    // True as the last parameter indicates we want to write to the image (false == read)
+    getSetBlock(buffer, xidx, yidx, iolength, iowidth, band, true);
+}
+
+template<typename T>
+void Raster::setBlock(T *buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth) {
+    /*
+     *  Sets a block at a given location in the image to the default raster band.
+     */
+    getSetBlock(buffer, xidx, yidx, iolength, iowidth, 1, true);
+}
+
+template<typename T>
+void Raster::setBlock(vector<T> &buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth,
+                      size_t band) {
+    /*
+     *  Sets a block at a given location in the image to a given raster band. As with getBlock(),
+     *  we need to know the 2D layout of the data the caller wants, so we check for size mismatch.
+     *  In the case of writing the data, if you try to write fewer elements than the input buffer
+     *  contains, you may be writing the wrong shape/size of the data to the file. Therefore we try
+     *  to at least alert the caller that this might be the case (in case it was unintentional).
+     */
+    // Check for valid buffer sizing (otherwise we'll write data from outside the container to the
+    // file; BIG security hole if left unchecked)
+    if ((iolength * iowidth) <= buffer.size()) {
+        setBlock(buffer.data(), xidx, yidx, iolength, iowidth, band);
+        // Check for size mismatch
+        if ((iolength * iowidth) < buffer.size()) {
+            cout << "In Raster::setBlock() - Writing fewer elements than the buffer is sized " <<
+                    "for. Data layout in the file may be different than expected." << endl;
+        }
+    } else {
+        throw length_error("In Raster::setBlock() - Setting more elements than the buffer size.");
+    }
+}
+
+template<typename T>
+void Raster::setBlock(vector<T> &buffer, size_t xidx, size_t yidx, size_t iolength,
+                      size_t iowidth) {
+    /*
+     *  Sets a block at a given location in the image to the default raster band.
+     */
+    setBlock(buffer, xidx, yidx, iolength, iowidth, 1);
+}
+
+template<typename T>
+void Raster::setBlock(array<T> &buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth,
+                      size_t band) {
+    /*
+     *  Sets a block at a given location in the image to a given raster band. See setBlock() with
+     *  the vector<> container for implementation details.
+     */
+    if ((iolength * iowidth) <= buffer.size()) {
+        setBlock(buffer.data(), xidx, yidx, iolength, iowidth, band);
+        if ((iolength * iowidth) < buffer.size()) {
+            cout << "In Raster::setBlock() - Writing fewer elements than the buffer is sized " <<
+                    "for. Data layout in the file may be different than expected." << endl;
+        }
+    } else {
+        throw length_error("In Raster::setBlock() - Setting more elements than the buffer size.");
+    }
+}
+
+template<typename T>
+void Raster::setBlock(array<T> &buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth) {
+    /*
+     *  Sets a block at a given location in the image to the default raster band.
+     */
+    setBlock(buffer, xidx, yidx, iolength, iowidth, 1);
+}
+
+template<typename T>
+void Raster::setBlock(vector<vector<T>> &buffer, size_t xidx, size_t yidx, size_t band) {
+    /*
+     *  Sets a block at a given location in the image to a given raster band. In this case, since
+     *  the caller is passing an implicitly-sized 2D STL container, we can check sizing
+     *  appropriately before trying to read data (i.e. make sure the width/height of the STL
+     *  container is valid).
+     *
+     *  NOTE: THIS IMPLEMENTATION ACTUALLY CALLS ITERATIONS OF BLOCK WRITER AND MAY BE SIGNIFICANTLY
+     *  SLOWER THAN THE OTHER BLOCK WRITERS. THIS METHOD IS ONLY IMPLEMENTED FOR CALLER CONVENIENCE
+     *  AND IS NOT RECOMMENDED FOR FAST I/O NEEDS.
+     */
+    // Check boundaries of attempted block write
+    if ((xidx < getLength()) && (yidx < getWidth()) && (band <= getNumBands())) {
+        // Number of lines to read is min number of lines available (based on xidx) and the length
+        // of the container
+        size_t iolength = min(getLength()-xidx, buffer.size());
+        for (size_t line=0; line<iolength; line++) {
+            setBlock(buffer[line], xidx+line, yidx, 1, buffer[line].size(), band);
+        }
+    } else {
+        throw domain_error("In Raster::setBlock() - 2D/band index is out-of-bounds.");
+    }
+}
+
+template<typename T>
+void Raster::setBlock(vector<vector<T>> &buffer, size_t xidx, size_t yidx) {
+    /*
+     *  Sets a block at a given location in the image to the default raster band. As above, sizing
+     *  is determined by the STL container methods.
+     */
+    setBlock(buffer, xidx, yidx, 1);
+}
+
+template<typename T>
+void Raster::setBlock(array<array<T>> &buffer, size_t xidx, size_t yidx, size_t band) {
+    /*
+     *  Sets a block at a given location in the image to a given raster band. As above, sizing is
+     *  determined by the STL container methods.
+     */
+    if ((xidx < getLength()) && (yidx < getWidth()) && (band <= getNumBands())) {
+        size_t iolength = min(getLength()-xidx, buffer.size());
+        for (size_t line=0; line<iolength; line++) {
+            setBlock(buffer[line], xidx+line, yidx, 1, buffer[line].size(), band);
+        }
+    } else {
+        throw domain_error("In Raster::setBlock() - 2D/band index is out-of-bounds.");
+    }
+}
+
+template<typename T>
+void Raster::setBlock(array<array<T>> &buffer, size_t xidx, size_t yidx) {
+    /*
+     *  Sets a block at a given location in the image to the default raster band. As above, sizing
+     *  is determined by the STL container methods.
+     */
+    setBlock(buffer, xidx, yidx, 1);
+}
+
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+//                                      ITERATORS ETC
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 

@@ -3,59 +3,136 @@
 // Copyright 2017
 //
 
-#include "gdal_priv.h"
+#include <array>
+#include <iostream>
+#include <vector>
 #include "RasterLineIter.h"
-
+using std::array;
+using std::cout;
+using std::endl;
+using std::vector;
+using isce::dataio::RasterLineIter;
 
 template<typename T>
-const T* RasterLineIter<T>::operator*() {
+void RasterLineIter::getNext(T *buffer, size_t width, size_t band) {
     /*
-     * Rvalue indirection operator. For now to save re-access time, this reads the current line into
-     * the internal buffer and returns the pointer to the buffer. Since this is the rvalue
-     * indirection, we don't have to worry about the user assuming this sets the line.
+     *  Gets the current line pointed to by _lineidx and increments the iterator. Since this uses
+     *  an arbitrary memory buffer, we need to know how wide the buffer is being passed in (using
+     *  width parameter). Points to a specific band in the image.
      */
-    // We're using getSetLine because getLine currently uses the vector<> container (will probably
-    // change). Check first to see if _linebuf already contains the line we want.
-    if (_lineidx != _linebufidx) {
-        // Read the line pointed to by the iterator
-        _raster->getSetLine(_linebuf, _lineidx, _linewidth, _rasterband, false);
-        // Update the iterator info to be aware that we've read line _lineidx to _linebuf
-        _linebufidx = _lineidx;
+    // Check to see if we have the off-the-end iterator
+    if (!atEOF()) {
+        // Read line pointed to by _lineidx
+        _raster->getLine(buffer, _lineidx, width, band);
+        operator++;
+    } else {
+        cout << "In RasterLineIter::getNext() - Iterator has reached EOF." << endl;
     }
-    // Send back the pointer to the buffer. Since we're qualifying this as the const form we
-    // don't have to worry about the user modifying this buffer memory.
-    return _linebuf;
 }
 
 template<typename T>
-const T* getLineSequential() {
+void RasterLineIter::getNext(T *buffer, size_t width) {
     /*
-     * Essentially the same as dereferencing the iterator. Leaving this in here for legacy
-     * semantics, but it's a pass-through for dereferencing.
+     *  Gets the current line pointed to by _lineidx and increments the iterator. Needs to know the
+     *  width of the buffer since it's a raw pointer. Points to the default band.
      */
-    // Read the line if needed. out will be the same pointer as _linebuf
-    const T *out = operator*();
-    // Increment the iterator
-    operator++();
-    return out;
+    // Check to see if we have the off-the-end iterator
+    getNext(buffer, width, 1);
 }
 
 template<typename T>
-void setLineSequential(const T *inbuf) {
+void RasterLineIter::getNext(array<T> &buffer, size_t band) {
     /*
-     * Write the next line to the Raster file. We don't want to copy the data entirely, so ignore
-     * _linebuf and write straight from the input.
-     *
-     * DEV NOTE: Two things. One, we can only assume that inbuf is long enough to fill a line in
-     * the image (since we can't get size from an arbitrary container pointer). Two, we may want
-     * to create two different Raster iterators, one to serve as input, one to serve as output.
-     * This might allow us to comply fully with "output iterator" design, which requires the
-     * indirection operator to return as an lvalue reference (we can't really do that with this
-     * iterator given how the rvalue reference indirection returns).
+     *  Gets the current line pointed to by _lineidx and increments the iterator. The width of the
+     *  container is inferred by the Raster::getLine() function. Points to a specific image band.
      */
-    // Write the line to file
-    _raster->getSetLine(inbuf, _lineidx, _linewidth, _rasterband, true);
-    // Increment the iterator
-    operator++();
+    getNext(buffer.data(), buffer.size(), band);
+}
+
+template<typename T>
+void RasterLineIter::getNext(array<T> &buffer) {
+    /*
+     *  Gets the current line pointed to by _lineidx and increments the iterator. Points to the
+     *  default image band.
+     */
+    getNext(buffer.data(), buffer.size());
+}
+
+template<typename T>
+void RasterLineIter::getNext(vector<T> &buffer, size_t band) {
+    /*
+     *  Gets the current line pointed to by _lineidx and increments the iterator. The width of the
+     *  container is inferred by the Raster::getLine() function. Points to a specific image band.
+     */
+    getNext(buffer.data(), buffer.size(), band);
+}
+
+template<typename T>
+void RasterLineIter::getNext(vector<T> &buffer) {
+    /*
+     *  Gets the current line pointed to by _lineidx and increments the iterator. Points to the
+     *  default image band.
+     */
+    getNext(buffer.data(), buffer.size());
+}
+
+template<typename T>
+void RasterLineIter::setNext(T *buffer, size_t width, size_t band) {
+    /*
+     *  Sets the current line pointed to by _lineidx and increments the iterator. Points to a 
+     *  specific image band.
+     */
+    if (!atEOF()) {
+        _raster->setLine(buffer, _lineidx, width, band);
+        operator++;
+    } else {
+        cout << "In RasterLineIter::setNext() - Iterator has reached EOF." << endl;
+    }
+}
+
+template<typename T>
+void RasterLineIter::setNext(T *buffer, size_t width) {
+    /*
+     *  Sets the current line pointed to by _lineidx and increments the iterator. Points to the
+     *  default image band.
+     */
+    setNext(buffer, width, 1);
+}
+
+template<typename T>
+void RasterLineIter::setNext(array<T> &buffer, size_t band) {
+    /*
+     *  Sets the current line pointed to by _lineidx and increments the iterator. Points to a
+     *  specific image band. As with other I/O methods using STL containers as a buffer, the width
+     *  is derived from the container itself and doesn't need to be explicitly passed in.
+     */
+    setNext(buffer.data(), buffer.size(), band);
+}
+
+template<typename T>
+void RasterLineIter::setNext(array<T> &buffer) {
+    /*
+     *  Sets the current line pointed to by _lineidx and increments the iterator. Points to the
+     *  default image band.
+     */
+    setNext(buffer.data(), buffer.size());
+}
+
+template<typename T>
+void RasterLineIter::setNext(vector<T> &buffer, size_t band) {
+    /*
+     *  Sets the current line pointed to by _lineidx and increments the iterator. Points to a
+     *  specific image band.
+     */
+    setNext(buffer.data(), buffer.size(), band);
+}
+
+template<typename T>
+void RasterLineIter::setNext(vector<T> &buffer) {
+    /*
+     *  Sets the current line pointed to by _lineidx and increments the iterator. Points to the
+     *  default image band.
+     */
+    setNext(buffer.data(), buffer.size());
 }
 
