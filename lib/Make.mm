@@ -11,8 +11,7 @@ include isce.def
 
 # the list of directories to visit
 RECURSE_DIRS = \
-    lib \
-    tests \
+    isce \
 
 #--------------------------------------------------------------------------
 # the recursive targets
