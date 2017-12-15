@@ -34,7 +34,7 @@ namespace isce { namespace dataio {
         inline RasterLineIter& operator--();
         // Postfix decrement
         inline RasterLineIter& operator--(int);
-        inline bool operator==(const RasterLineIter &rhs)
+        inline bool operator==(const RasterLineIter&);
         inline bool operator!=(const RasterLineIter &rhs) { return !(*this == rhs); }
 
         inline void rewind() { _lineidx = 0; }
@@ -60,7 +60,7 @@ namespace isce { namespace dataio {
         template<typename T> void setNext(std::vector<T>&);
         template<typename T> void setNext(std::array<T>&,size_t);
         template<typename T> void setNext(std::array<T>&);
-    }
+    };
 
     inline RasterLineIter& RasterLineIter::operator=(const RasterLineIter &rhs) {
         _raster = rhs._raster;
