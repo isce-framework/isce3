@@ -22,42 +22,43 @@ endfunction()
 function(InitInstallDirLayout)
     ###install/bin
     if (NOT ISCE_BINDIR)
-        set (ISCE_BINDIR bin)
+        set (ISCE_BINDIR bin CACHE STRING "isce/bin")
     endif(NOT ISCE_BINDIR)
 
     ###install/packages
     if (NOT ISCE_PACKAGESDIR)
-        set (ISCE_PACKAGESDIR packages)
+        set (ISCE_PACKAGESDIR packages CACHE STRING "isce/packages")
     endif(NOT ISCE_PACKAGESDIR)
 
     ###install/lib
     if (NOT ISCE_LIBDIR)
-        set(ISCE_LIBDIR lib)
+        set (ISCE_LIBDIR lib CACHE STRING "isce/lib") 
     endif(NOT ISCE_LIBDIR)
 
     ###install/include
     if (NOT ISCE_INCLUDEDIR)
-        set(ISCE_INCLUDEDIR include)
+        set (ISCE_INCLUDEDIR include/isce-${ISCE_MAJOR_VERSION}.${ISCE_MINOR_VERSION}/isce CACHE STRING "isce/include")
     endif(NOT ISCE_INCLUDEDIR)
 
     ###install/defaults
     if (NOT ISCE_DEFAULTSDIR)
-        set(ISCE_DEFAULTSDIR defaults)
+        set (ISCE_DEFAULTSDIR defaults CACHE STRING "isce/defaults")
     endif(NOT ISCE_DEFAULTSDIR)
 
     ###install/var
     if (NOT ISCE_VARDIR)
-        set(ISCE_VARDIR var)
+        set (ISCE_VARDIR var CACHE STRING "isce/var")
     endif(NOT ISCE_VARDIR)
 
     ###install/etc
     if (NOT ISCE_ETCDIR)
-        set(ISCE_ETCDIR etc)
+        set (ISCE_ETCDIR etc CACHE STRING "isce/etc")
     endif(NOT ISCE_ETCDIR)
 
     ###install/templates
     if (NOT ISCE_TEMPLATESDIR)
-        set(ISCE_TEMPLATESDIR templates)
+        set (ISCE_TEMPLATESDIR templates CACHE STRING "isce/templates")
     endif(NOT ISCE_TEMPLATESDIR)
+
 endfunction()
 
