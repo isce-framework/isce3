@@ -1,5 +1,8 @@
 # -*- Makefile -*-
 
+# build a shared library
+include shared/target.def
+
 # global project settings
 PROJECT = gtest
 
