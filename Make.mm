@@ -12,6 +12,7 @@ include isce.def
 # the list of directories to visit
 RECURSE_DIRS = \
     lib \
+    contrib \
     tests \
 
 #--------------------------------------------------------------------------
@@ -37,32 +38,9 @@ release::
 
 #--------------------------------------------------------------------------
 #  shortcuts to building in subdirectories
+.PHONY: $(RECURSE_DIRS)
 
-.PHONY: bin defaults doc examples tests
-
-bin:
-	(cd bin; $(MM))
-
-defaults:
-	(cd defaults; $(MM))
-
-doc:
-	(cd doc; $(MM))
-
-examples:
-	(cd examples; $(MM))
-
-extensions:
-	(cd extensions; $(MM))
-
-packages:
-	(cd packages; $(MM))
-
-tests:
-	(cd tests; $(MM))
-
-users:
-	(cd users; $(MM))
-
+$(RECURSE_DIRS):
+	(cd $@; $(MM))
 
 # end of file
