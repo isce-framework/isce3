@@ -31,7 +31,7 @@ live:
 
 
 # shortcuts for building specific subdirectories
-.PHONY: include src
+.PHONY: $(RECURSE_DIRS)
 
 $(RECURSE_DIRS):
 	(cd $@; $(MM))
