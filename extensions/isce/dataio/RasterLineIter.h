@@ -7,19 +7,19 @@
 #define __ISCE_DATAIO_RASTERLINEITER_H__
 
 #include <algorithm>
-#include <array>
 #include <vector>
+#include "Raster.h"
 
 namespace isce { namespace dataio {
     struct RasterLineIter {
-        Raster *_raster;
+        Raster _raster;
         size_t _lineidx;
 
         // RasterLineIter should *only* be generated from a valid Raster object (otherwise we have
         // to deal with checking for nullptr _raster values)
         RasterLineIter() = delete;
         RasterLineIter(const RasterLineIter &rli) : _raster(rli._raster), _lineidx(rli._lineidx) {}
-        RasterLineIter(const Raster *r) : _raster(r), _lineidx(0) {}
+        RasterLineIter(const Raster &r) : _raster(r), _lineidx(0) {}
 
         inline RasterLineIter& operator=(const RasterLineIter&);
         inline RasterLineIter& operator+=(const size_t);
@@ -29,26 +29,24 @@ namespace isce { namespace dataio {
         // Prefix increment
         inline RasterLineIter& operator++();
         // Postfix increment
-        inline RasterLineIter& operator++(int);
+        inline RasterLineIter operator++(int);
         // Prefix decrement
         inline RasterLineIter& operator--();
         // Postfix decrement
-        inline RasterLineIter& operator--(int);
+        inline RasterLineIter operator--(int);
         inline bool operator==(const RasterLineIter&);
         inline bool operator!=(const RasterLineIter &rhs) { return !(*this == rhs); }
 
         inline void rewind() { _lineidx = 0; }
-        inline void ffwd() { _lineidx = _raster->getLength(); }
-        inline bool atEOF() { return _lineidx == _raster->getLength(); }
-        inline RasterLineIter& atBeginning();
-        inline RasterLineIter& atEnd();
+        inline void ffwd() { _lineidx = _raster.getLength(); }
+        inline bool atEOF() { return _lineidx == _raster.getLength(); }
+        inline RasterLineIter atBeginning();
+        inline RasterLineIter atEnd();
 
         // (buffer, nelem, [band])
         template<typename T> void getNext(T*,size_t,size_t);
         template<typename T> void getNext(T*,size_t);
         // (buffer, [band])
-        template<typename T> void getNext(std::array<T>&,size_t);
-        template<typename T> void getNext(std::array<T>&);
         template<typename T> void getNext(std::vector<T>&,size_t);
         template<typename T> void getNext(std::vector<T>&);
 
@@ -58,8 +56,6 @@ namespace isce { namespace dataio {
         // (buffer, [band])
         template<typename T> void setNext(std::vector<T>&,size_t);
         template<typename T> void setNext(std::vector<T>&);
-        template<typename T> void setNext(std::array<T>&,size_t);
-        template<typename T> void setNext(std::array<T>&);
     };
 
     inline RasterLineIter& RasterLineIter::operator=(const RasterLineIter &rhs) {
@@ -69,7 +65,7 @@ namespace isce { namespace dataio {
     }
 
     inline RasterLineIter& RasterLineIter::operator+=(const size_t rhs) {
-        _lineidx = std::min(_lineidx+rhs, _raster->getLength());
+        _lineidx = std::min(_lineidx+rhs, _raster.getLength());
         return *this;
     }
 
@@ -80,11 +76,11 @@ namespace isce { namespace dataio {
     }
 
     inline RasterLineIter& RasterLineIter::operator++() {
-        _lineidx = (_lineidx == _raster->getLength()) ? _lineidx : (_lineidx + 1);
+        _lineidx = (_lineidx == _raster.getLength()) ? _lineidx : (_lineidx + 1);
         return *this;
     }
 
-    inline RasterLineIter& RasterLineIter::operator++(int) {
+    inline RasterLineIter RasterLineIter::operator++(int) {
         RasterLineIter old(*this);
         operator++();
         return old;
@@ -95,24 +91,24 @@ namespace isce { namespace dataio {
         return *this;
     }
 
-    inline RasterLineIter& RasterLineIter::operator--(int) {
+    inline RasterLineIter RasterLineIter::operator--(int) {
         RasterLineIter old(*this);
         operator--();
         return old;
     }
 
     inline bool RasterLineIter::operator==(const RasterLineIter &rhs) {
-        return (_raster == rhs._raster) && (_lineidx == rhs._lineidx); 
+        return (_raster._dataset == rhs._raster._dataset) && (_lineidx == rhs._lineidx); 
     }
 
-    inline RasterLineIter& RasterLineIter::atBeginning() {
+    inline RasterLineIter RasterLineIter::atBeginning() {
         // This and atEnd() are not truly begin()/end(), so slightly different naming
         RasterLineIter ret(*this);
         ret.rewind();
         return ret;
     }
 
-    inline RasterLineIter& RasterLineIter::atEnd() {
+    inline RasterLineIter RasterLineIter::atEnd() {
         RasterLineIter ret(*this);
         ret.ffwd();
         return ret;

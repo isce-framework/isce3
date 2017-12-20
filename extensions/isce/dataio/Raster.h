@@ -6,7 +6,6 @@
 #ifndef __ISCE_DATAIO_RASTER_H__
 #define __ISCE_DATAIO_RASTER_H__
 
-#include <array>
 #include <complex>
 #include <cstdint>
 #include <string>
@@ -14,7 +13,6 @@
 #include <unordered_map>
 #include <vector>
 #include "gdal_priv.h"
-#include "RasterLineIter.h"
 
 namespace isce { namespace dataio {
     struct Raster {
@@ -64,8 +62,6 @@ namespace isce { namespace dataio {
         template<typename T> void getLine(T*,size_t,size_t);
         // Single line read, STL containers, optional band index
         // (buffer, line-index, [band-index])
-        template<typename T> void getLine(std::array<T>&,size_t,size_t);
-        template<typename T> void getLine(std::array<T>&,size_t);
         template<typename T> void getLine(std::vector<T>&,size_t,size_t);
         template<typename T> void getLine(std::vector<T>&,size_t);
         // Single line write, non-specific container w/ container width, optional band index
@@ -74,8 +70,6 @@ namespace isce { namespace dataio {
         template<typename T> void setLine(T*,size_t,size_t);
         // Single line write, STL containers, optional band index
         // (buffer, line-index, [band-index])
-        template<typename T> void setLine(std::array<T>&,size_t,size_t);
-        template<typename T> void setLine(std::array<T>&,size_t);
         template<typename T> void setLine(std::vector<T>&,size_t,size_t);
         template<typename T> void setLine(std::vector<T>&,size_t);
         /*
@@ -90,32 +84,20 @@ namespace isce { namespace dataio {
         template<typename T> void getBlock(T*,size_t,size_t,size_t,size_t);
         template<typename T> void getBlock(std::vector<T>&,size_t,size_t,size_t,size_t,size_t);
         template<typename T> void getBlock(std::vector<T>&,size_t,size_t,size_t,size_t);
-        template<typename T> void getBlock(std::array<T>&,size_t,size_t,size_t,size_t,size_t);
-        template<typename T> void getBlock(std::array<T>&,size_t,size_t,size_t,size_t);
         // Single block read, 2D STL containers, optional band index
         // (buffer, x-index, y-index, [band-index])
         template<typename T> void getBlock(std::vector<std::vector<T>>&,size_t,size_t,size_t);
         template<typename T> void getBlock(std::vector<std::vector<T>>&,size_t,size_t);
-        template<typename T> void getBlock(std::array<std::array<T>>&,size_t,size_t,size_t);
-        template<typename T> void getBlock(std::array<std::array<T>>&,size_t,size_t);
         // Single block write, linear containers w/ x/y sizes, optional band index
         // (buffer, x-index, y-index, nXelem, nYelem, [band-index])
         template<typename T> void setBlock(T*,size_t,size_t,size_t,size_t,size_t);
         template<typename T> void setBlock(T*,size_t,size_t,size_t,size_t);
         template<typename T> void setBlock(std::vector<T>&,size_t,size_t,size_t,size_t,size_t);
         template<typename T> void setBlock(std::vector<T>&,size_t,size_t,size_t,size_t);
-        template<typename T> void setBlock(std::array<T>&,size_t,size_t,size_t,size_t,size_t);
-        template<typename T> void setBlock(std::array<T>&,size_t,size_t,size_t,size_t);
         // Single block write, 2D STL containers, optional band index
         // (buffer, x-index, y-index, [band-index])
         template<typename T> void setBlock(std::vector<std::vector<T>>&,size_t,size_t,size_t);
         template<typename T> void setBlock(std::vector<std::vector<T>>&,size_t,size_t);
-        template<typename T> void setBlock(std::array<std::array<T>>&,size_t,size_t,size_t);
-        template<typename T> void setBlock(std::array<std::array<T>>&,size_t,size_t);
-
-        // Return line iterator bound to this Raster
-        inline RasterLineIter lineIter() { return RasterLineIter(this); }
-        //inline RasterBlockIter blockIter() { return RasterBlockIter(this); }
     };
 
     // Define the GDALDataType mappings
@@ -137,7 +119,6 @@ namespace isce { namespace dataio {
         // Since we're sharing the dataset between objects, and only weak-copying the pointer,
         // increment the GDALDataset reference counter appropriately
         _dataset->Reference();
-        _linecount = rhs._linecount;
         _readonly = rhs._readonly;
         return *this;
     }

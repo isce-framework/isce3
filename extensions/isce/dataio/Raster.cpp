@@ -4,14 +4,12 @@
 //
 
 #include <algorithm>
-#include <array>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include "gdal_priv.h"
 #include "Raster.h"
-using std::array;
 using std::cout;
 using std::domain_error;
 using std::endl;
@@ -26,7 +24,7 @@ using isce::dataio::Raster;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 //                                          OBJECT MANAGEMENT
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Raster::Raster() : _dataset(nullptr), _linecount(0), _readonly(true) {
+Raster::Raster() : _dataset(nullptr), _readonly(true) {
     /*
      *  Empty constructor also handles initializing the GDAL Drivers (if needed).
      */
@@ -37,7 +35,7 @@ Raster::Raster() : _dataset(nullptr), _linecount(0), _readonly(true) {
     }
 }
 
-Raster::Raster(const string &fname, bool readOnly=true) : _linecount(0), _readonly(readOnly) {
+Raster::Raster(const string &fname, bool readOnly=true) : _readonly(readOnly) {
     /*
      *  Construct a Raster object referring to a particular image file, so load the dataset now.
      */
@@ -55,14 +53,13 @@ Raster::Raster(const string &fname, bool readOnly=true) : _linecount(0), _readon
     }
 }
 
-Raster::Raster(const Raster &rast) : _dataset(rast._dataset), _linecount(rast._linecount),
-                                     _readonly(rast._readonly) {
+Raster::Raster(const Raster &rast) : _dataset(rast._dataset), _readonly(rast._readonly) {
     /*
      *  Slightly enhanced copy constructor since we can't simply weak-copy the GDALDataset* pointer.
      *  Increment the reference to the GDALDataset's internal reference counter after weak-copying
      *  the pointer.
      */
-    _dataset->Reference();
+    if (_dataset) _dataset->Reference();
 }
 
 Raster::~Raster() {
@@ -72,7 +69,7 @@ Raster::~Raster() {
      *  reference/release system to handle GDALDataset* management. If you call release and the
      *  dataset's reference counter is 1, it automatically deletes the dataset.
      */
-    _dataset->Release();
+    if (_dataset) _dataset->Release();
 }
 
 void Raster::loadFrom(const string &fname, bool readOnly=true) {
@@ -240,26 +237,6 @@ void Raster::getLine(T *buffer, size_t line, size_t iowidth) {
 }
 
 template<typename T>
-void Raster::getLine(array<T> &buffer, size_t line, size_t band) {
-    /*
-     *  Gets a single line at a given location in the image from a given raster band. Since we're
-     *  reading into an STL container, we don't need the size to be passed in, we assume the caller
-     *  wants the buffer filled based on the array.size().
-     */
-    // .data() returns the pointer to the underlying memory container
-    getLine(buffer.data(), line, buffer.size(), band);
-}
-
-template<typename T>
-void Raster::getLine(array<T> &buffer, size_t line) {
-    /*
-     *  Gets a single line at a given location in the image from the default raster band. As above,
-     *  we derive iowidth from the actual STL container.
-     */
-    getLine(buffer.data(), line, buffer.size(), 1);
-}
-
-template<typename T>
 void Raster::getLine(vector<T> &buffer, size_t line, size_t band) {
     /*
      *  Gets a single line at a given location in the image from a given raster band. As above, we
@@ -301,25 +278,6 @@ void Raster::setLine(T* buffer, size_t line, size_t iowidth) {
      *  accounts for iowidth, which is the size of the buffer.
      */
     setLine(buffer, line, iowidth, 1);
-}
-
-template<typename T>
-void Raster::setLine(array<T> &buffer, size_t line, size_t band) {
-    /*
-     *  Sets a single line at a given location in the image in a given raster band. Since the caller
-     *  is passing in an STL container, we can derive the iowidth directly from assuming it
-     *  implicitly from buffer.size().
-     */
-    setLine(buffer.data(), line, buffer.size(), band);
-}
-
-template<typename T>
-void Raster::setLine(array<T> &buffer, size_t line) {
-    /*
-     *  Sets a single line at a given location in the image in the default raster band. As above,
-     *  we derive iowidth from the actual STL container.
-     */
-    setLine(buffer.data(), line, buffer.size(), 1);
 }
 
 template<typename T>
@@ -372,8 +330,8 @@ void Raster::getSetBlock(T *buffer, size_t xidx, size_t yidx, size_t iolength, s
                 // As with getSetValue/getSetLine, use the typeid magic to translate datatypes on
                 // the fly with RTTI.
                 auto _ = _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, iowidth,
-                                                                 ioheight, buffer, iowidth,
-                                                                 ioheight, _gdts.at(typeid(T)),
+                                                                 iolength, buffer, iowidth,
+                                                                 iolength, _gdts.at(typeid(T)),
                                                                  0, 0);
             } else {
                 throw domain_error("In Raster::get/setBlock() - 2D/band index is out-of-bounds.");
@@ -442,32 +400,6 @@ void Raster::getBlock(vector<T> &buffer, size_t xidx, size_t yidx, size_t ioleng
 }
 
 template<typename T>
-void Raster::getBlock(array<T> &buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth,
-                      size_t band) {
-    /*
-     *  Gets a block at a given location in the image from a given raster band. See getBlock() with
-     *  the vector<> container for details about implementation.
-     */
-    if ((iolength * iowidth) <= buffer.size()) {
-        getBlock(buffer.data(), xidx, yidx, iolength, iowidth, band);
-        if ((iolength * iowidth) < buffer.size()) {
-            cout << "In Raster::getBlock() - Requested fewer elements than the buffer can fit. " <<
-                    "Internal data layout in the buffer may be different than expected." << endl;
-        }
-    } else {
-        throw length_error("In Raster::getBlock() - Requested more elements than the buffer size.");
-    }
-}
-
-template<typename T>
-void Raster::getBlock(array<T> &buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth) {
-    /*
-     *  Gets a block at a given location in the image from the default raster band.
-     */
-    getBlock(buffer, xidx, yidx, iolength, iowidth, 1);
-}
-
-template<typename T>
 void Raster::getBlock(vector<vector<T>> &buffer, size_t xidx, size_t yidx, size_t band) {
     /*
      *  Gets a block at a given location in the image from a given raster band. In this case, since
@@ -495,31 +427,6 @@ void Raster::getBlock(vector<vector<T>> &buffer, size_t xidx, size_t yidx, size_
 
 template<typename T>
 void Raster::getBlock(vector<vector<T>> &buffer, size_t xidx, size_t yidx) {
-    /*
-     *  Gets a block at a given location in the image from the default raster band. As above, sizing
-     *  is determined by the STL container methods.
-     */
-    getBlock(buffer, xidx, yidx, 1);
-}
-
-template<typename T>
-void Raster::getBlock(array<array<T>> &buffer, size_t xidx, size_t yidx, size_t band) {
-    /*
-     *  Gets a block at a given location in the image from a given raster band. As above, sizing is
-     *  determined by the STL container methods.
-     */
-    if ((xidx < getLength()) && (yidx < getWidth()) && (band <= getNumBands())) {
-        size_t iolength = min(getLength()-xidx, buffer.size());
-        for (size_t line=0; line<iolength; line++) {
-            getBlock(buffer[line], xidx+line, yidx, 1, buffer[line].size(), band);
-        }
-    } else {
-        throw domain_error("In Raster::getBlock() - 2D/band index is out-of-bounds.");
-    }
-}
-
-template<typename T>
-void Raster::getBlock(array<array<T>> &buffer, size_t xidx, size_t yidx) {
     /*
      *  Gets a block at a given location in the image from the default raster band. As above, sizing
      *  is determined by the STL container methods.
@@ -580,32 +487,6 @@ void Raster::setBlock(vector<T> &buffer, size_t xidx, size_t yidx, size_t ioleng
 }
 
 template<typename T>
-void Raster::setBlock(array<T> &buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth,
-                      size_t band) {
-    /*
-     *  Sets a block at a given location in the image to a given raster band. See setBlock() with
-     *  the vector<> container for implementation details.
-     */
-    if ((iolength * iowidth) <= buffer.size()) {
-        setBlock(buffer.data(), xidx, yidx, iolength, iowidth, band);
-        if ((iolength * iowidth) < buffer.size()) {
-            cout << "In Raster::setBlock() - Writing fewer elements than the buffer is sized " <<
-                    "for. Data layout in the file may be different than expected." << endl;
-        }
-    } else {
-        throw length_error("In Raster::setBlock() - Setting more elements than the buffer size.");
-    }
-}
-
-template<typename T>
-void Raster::setBlock(array<T> &buffer, size_t xidx, size_t yidx, size_t iolength, size_t iowidth) {
-    /*
-     *  Sets a block at a given location in the image to the default raster band.
-     */
-    setBlock(buffer, xidx, yidx, iolength, iowidth, 1);
-}
-
-template<typename T>
 void Raster::setBlock(vector<vector<T>> &buffer, size_t xidx, size_t yidx, size_t band) {
     /*
      *  Sets a block at a given location in the image to a given raster band. In this case, since
@@ -638,34 +519,4 @@ void Raster::setBlock(vector<vector<T>> &buffer, size_t xidx, size_t yidx) {
      */
     setBlock(buffer, xidx, yidx, 1);
 }
-
-template<typename T>
-void Raster::setBlock(array<array<T>> &buffer, size_t xidx, size_t yidx, size_t band) {
-    /*
-     *  Sets a block at a given location in the image to a given raster band. As above, sizing is
-     *  determined by the STL container methods.
-     */
-    if ((xidx < getLength()) && (yidx < getWidth()) && (band <= getNumBands())) {
-        size_t iolength = min(getLength()-xidx, buffer.size());
-        for (size_t line=0; line<iolength; line++) {
-            setBlock(buffer[line], xidx+line, yidx, 1, buffer[line].size(), band);
-        }
-    } else {
-        throw domain_error("In Raster::setBlock() - 2D/band index is out-of-bounds.");
-    }
-}
-
-template<typename T>
-void Raster::setBlock(array<array<T>> &buffer, size_t xidx, size_t yidx) {
-    /*
-     *  Sets a block at a given location in the image to the default raster band. As above, sizing
-     *  is determined by the STL container methods.
-     */
-    setBlock(buffer, xidx, yidx, 1);
-}
-
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-//                                      ITERATORS ETC
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
