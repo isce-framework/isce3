@@ -6,7 +6,7 @@
 
 from libcpp.vector cimport vector
 
-cdef extern from "Ellipsoid.h" namespace "isce::core":
+cdef extern from "isce/core/Ellipsoid.h" namespace "isce::core":
     cdef cppclass Ellipsoid:
         double a
         double e2
@@ -24,4 +24,3 @@ cdef extern from "Ellipsoid.h" namespace "isce::core":
         void getTCN_TCvec(vector[double]&,vector[double]&,vector[double]&,vector[double]&)
         void TCNbasis(vector[double]&,vector[double]&,vector[double]&,vector[double]&,
                       vector[double]&)
-

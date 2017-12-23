@@ -6,7 +6,7 @@
 
 from libcpp.vector cimport vector
 
-cdef extern from "LinAlg.h" namespace "isce::core":
+cdef extern from "isce/core/LinAlg.h" namespace "isce::core":
     cdef cppclass LinAlg:
         LinAlg() except +
         @staticmethod
@@ -27,4 +27,3 @@ cdef extern from "LinAlg.h" namespace "isce::core":
         void unitVec(vector[double]&,vector[double]&)
         @staticmethod
         void enuBasis(double,double,vector[vector[double]]&)
-
