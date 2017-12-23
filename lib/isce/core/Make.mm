@@ -3,7 +3,7 @@
 # global project settings
 include isce.def
 # package isce/core
-PACKAGE = core
+PACKAGE = isce/core
 
 # the list of sources
 PROJ_SRCS = \
