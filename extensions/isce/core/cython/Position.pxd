@@ -6,7 +6,7 @@
 
 from libcpp.vector cimport vector
 
-cdef extern from "Position.h" namespace "isce::core":
+cdef extern from "isce/core/Position.h" namespace "isce::core":
     cdef cppclass Position:
         vector[double] j
         vector[double] jdot
@@ -15,4 +15,3 @@ cdef extern from "Position.h" namespace "isce::core":
         Position() except +
         Position(const Position&) except +
         void lookVec(double,double,vector[double]&)
-

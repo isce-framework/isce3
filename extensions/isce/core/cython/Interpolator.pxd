@@ -6,7 +6,7 @@
 
 from libcpp.vector cimport vector
 
-cdef extern from "Interpolator.h" namespace "isce::core":
+cdef extern from "isce/core/Interpolator.h" namespace "isce::core":
     cdef cppclass Interpolator:
         Interpolator() except +
         @staticmethod
@@ -25,4 +25,3 @@ cdef extern from "Interpolator.h" namespace "isce::core":
         double quadInterpolate(vector[double]&,vector[double]&,double)
         @staticmethod
         double akima(int,int,vector[vector[float]]&,double,double)
-

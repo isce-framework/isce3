@@ -8,12 +8,12 @@ from libcpp.vector cimport vector
 from Ellipsoid cimport Ellipsoid
 from Peg cimport Peg
 
-cdef extern from "Constants.h" namespace "isce::core":
+cdef extern from "isce/core/Constants.h" namespace "isce::core":
     cdef enum orbitConvMethod:
         SCH_2_XYZ = 0
         XYZ_2_SCH = 1
 
-cdef extern from "Pegtrans.h" namespace "isce::core":
+cdef extern from "isce/core/Pegtrans.h" namespace "isce::core":
     cdef cppclass Pegtrans:
         vector[vector[double]] mat
         vector[vector[double]] matinv
@@ -28,4 +28,3 @@ cdef extern from "Pegtrans.h" namespace "isce::core":
         void convertSCHdotToXYZdot(vector[double]&,vector[double]&,vector[double]&,vector[double]&,
                                    orbitConvMethod)
         void SCHbasis(vector[double]&,vector[vector[double]]&,vector[vector[double]]&)
-
