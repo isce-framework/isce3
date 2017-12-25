@@ -7,270 +7,113 @@
 #include <iostream>
 #include <vector>
 #include "isce/core/Projections.h"
+#include "gtest/gtest.h"
+
 using isce::core::Geocent;
 using std::cout;
 using std::endl;
 using std::vector;
 
-bool checkAlmostEqual(vector<double> &ref, vector<double> &calc, int n_digits) {
-    /*
-     *  Calculate if two vectors are almost equal to n_digits of precision.
-     */
+Geocent proj;
+const double a = proj.ellipse.a;
+const double b = a * std::sqrt(1.0 - proj.ellipse.e2);
 
-    bool stat = true;
-    for (int i=0; i<static_cast<int>(ref.size()); i++) {
-        stat = stat & (abs(ref[i] - calc[i]) < pow(10., -n_digits));
+
+struct GeocentTest : public ::testing::Test {
+    virtual void SetUp() {
+        fails = 0;
     }
-    if (!stat) {
-        cout << "    Error:" << endl;
-        cout << "    Expected [" << ref[0] << ", " << ref[1] << ", " << ref[2] << "]" << endl;
-        cout << "    Received [" << calc[0] << ", " << calc[1] << ", " << calc[2] << "]" << endl;
-    }
-    return stat;
-}
-
-void testCorners() {
-    /*
-     * Test corners for lat/lon
-     */
-
-    // Alternately can use 'Geocent *proj = new Geocent()' or 'ProjectionBase *proj = new Geocent()'
-    Geocent proj;
-    double a = proj.ellipse.a;
-    double e2 = proj.ellipse.e2;
-    double b = a * sqrt(1.0-e2);
-
-    cout << endl << " [Origin]" << endl;
-    {
-        vector<double> ref_llh = {0.,0.,0.};
-        vector<double> ref_xyz = {a,0.,0.};
-        vector<double> xyz(3), llh(3);
-
-        llh = ref_llh;
-        int flag = proj.forward(llh, xyz);
-        bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
-        cout << " [Forward] ";
-        if (stat && (flag == 0)) cout << "PASSED";
-        cout << endl;
-
-        xyz = ref_xyz;
-        flag = proj.inverse(xyz, llh);
-        stat = checkAlmostEqual(llh, ref_llh,9);
-        cout << " [Inverse] ";
-        if(stat && (flag==0)) cout << "PASSED";
-        cout << endl;
-    }
-
-    cout << endl << " [90-degrees]" << endl;
-    {
-        vector<double> ref_llh = {0.5*M_PI,0.,0.};
-        vector<double> ref_xyz = {0.,a,0.};
-        vector<double> xyz(3),llh(3);
-
-        llh = ref_llh;
-        int flag = proj.forward(llh, xyz);
-        bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
-        cout << " [Forward] ";
-        if (stat && (flag==0)) cout << "PASSED";
-        cout << endl;
-
-        xyz = ref_xyz;
-        flag = proj.inverse(xyz, llh);
-        stat = checkAlmostEqual(llh, ref_llh,9);
-        cout << " [Inverse] ";
-        if(stat && (flag==0)) cout << "PASSED";
-        cout << endl;
-    }
-
-    cout << endl << " [270-degrees]" << endl;
-    {
-        vector<double> ref_llh = {-0.5*M_PI,0.,0.};
-        vector<double> ref_xyz = {0.,-a,0.};
-        vector<double> xyz(3),llh(3);
-
-        llh = ref_llh;
-        int flag = proj.forward(llh,xyz);
-        bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
-        cout << " [Forward] ";
-        if (stat && (flag==0)) cout << "PASSED";
-        cout << endl;
-
-        xyz = ref_xyz;
-        flag = proj.inverse(xyz,llh);
-        stat = checkAlmostEqual(llh, ref_llh,9);
-        cout << " [Inverse] ";
-        if(stat && (flag==0)) cout << "PASSED";
-        cout << endl;
-    }
-
-    cout << endl << " [180-degrees]" << endl;
-    {
-        vector<double> ref_llh = {M_PI,0.,0.};
-        vector<double> ref_xyz = {-a,0.,0.};
-        vector<double> xyz(3),llh(3);
-
-        llh = ref_llh;
-        int flag = proj.forward(llh,xyz);
-        bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
-        cout << " [Forward] ";
-        if (stat && (flag==0)) cout << "PASSED";
-        cout << endl;
-
-        xyz = ref_xyz;
-        flag = proj.inverse(xyz, llh);
-        stat = checkAlmostEqual(llh, ref_llh,9);
-        cout << " [Inverse] ";
-        if(stat && (flag==0)) cout << "PASSED";
-        cout << endl;
-    }
-
-    cout << endl << " [North pole]" << endl;
-    {
-        vector<double> ref_llh = {0.,0.5*M_PI,0.};
-        vector<double> ref_xyz = {0.,0.,b};
-        vector<double> xyz(3),llh(3);
-
-        llh = ref_llh;
-        int flag = proj.forward(llh,xyz);
-        bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
-        cout << " [Forward] ";
-        if (stat && (flag==0)) cout << "PASSED";
-        cout << endl;
-
-        xyz = ref_xyz;
-        flag = proj.inverse(xyz, llh);
-        stat = checkAlmostEqual(llh, ref_llh,9);
-        cout << " [Inverse] ";
-        if(stat && (flag==0)) cout << "PASSED";
-        cout << endl;
-    }
-
-    cout << endl << " [South pole]" << endl;
-    {
-        vector<double> ref_llh = {0.,-0.5*M_PI,0.};
-        vector<double> ref_xyz = {0.,0.,-b};
-        vector<double> xyz(3),llh(3);
-
-        llh = ref_llh;
-        int flag = proj.forward(llh,xyz);
-        bool stat = checkAlmostEqual(xyz, ref_xyz, 9);
-        cout << " [Forward] ";
-        if (stat && (flag==0)) cout << "PASSED";
-        cout << endl;
-
-        xyz = ref_xyz;
-        flag = proj.inverse(xyz, llh);
-        stat = checkAlmostEqual(llh, ref_llh,9);
-        cout << " [Inverse] ";
-        if(stat && (flag==0)) cout << "PASSED";
-        cout << endl;
-    }
-
-}
-
-void testCoords() {
-
-    Geocent proj;
-
-    //Test data was generated using pyproj and random numbers
-    double ref_llh[15][3] = {{ 1.134431523585921e+00, -1.180097204507889e+00,
-          7.552767636707697e+03},
-       {  -1.988929481271171e+00, -3.218156967477281e-01,
-          4.803829875484664e+02},
-       { 3.494775870065641e-01, 1.321028021250511e+00,
-          6.684702668405185e+03},
-       {  1.157071150199438e+00, 1.539241336260909e+00,
-          2.075539115269004e+03},
-       { 2.903217190227029e+00, 3.078348660646868e-02,
-          1.303664510818545e+03},
-       { 1.404003364812063e+00, 9.844570757478284e-01,
-          1.242074588639294e+03},
-       { 1.786087533202875e+00, -1.404475795144668e+00,
-           3.047509859826395e+03},
-       {-1.535570572315143e+00, -1.394372375292064e+00,
-           2.520818495701064e+01},
-       {2.002720719284312e+00, -6.059309705813630e-01,
-           -7.671870434220574e+01},
-       { -2.340221964131008e-01, 1.162119493774084e+00,
-           6.948177664180818e+03},
-       { 6.067080997777370e-01, -9.030342054807169e-01,
-          4.244471400804430e+02},
-       { -2.118133740176279e+00, 9.812354487540356e-01,
-          2.921301812478523e+03},
-       { -2.005023821660764e+00, 1.535487121535718e+00,
-          2.182275729585851e+02},
-       { 2.719747828172381e+00, -1.552548149921413e+00,
-           4.298201230045657e+03},
-       { -1.498660315787147e+00, 1.076512019764726e+00,
-          8.472554905622580e+02}};
-
-    double ref_xyz[15][3] = {{ 1030784.925758840050548,  2210337.910070449113846,
-        -5881839.839890958741307},
-       {-2457926.302319798618555, -5531693.075449729338288,
-        -2004656.608288598246872},
-       {1487474.649522442836314,   542090.182021118933335,
-         6164710.02066358923912 },
-       {  81196.748833858233411,   184930.081202651723288,
-         6355641.007061666809022},
-       {-6196130.955770593136549,  1505632.319945097202435,
-          195036.854449656093493},
-       { 587386.746772550744936,  3488933.817566382698715,
-         5290575.784156281501055},
-       {-226426.343401445570635,  1035421.647801387240179,
-        -6271459.446578867733479},
-       {  39553.214744714961853, -1122384.858932408038527,
-        -6257455.705907705239952},
-       {-2197035.039946643635631,  4766296.481927301734686,
-        -3612087.398071805480868},
-       {2475217.167525716125965,  -590067.244431337225251,
-         5836531.74855871964246 },
-       {3251592.655810729600489,  2256703.30570419318974 ,
-        -4985277.930962197482586},
-       {-1850635.103680874686688, -3036577.247930331621319,
-         5280569.380736761726439},
-       { -95048.576977927994449,  -204957.529435861855745,
-         6352981.530775795690715},
-       {-106608.855637043248862,    47844.679874961388123,
-        -6359984.3118050172925  },
-       { 218676.696484291809611, -3026189.824885316658765,
-         5592409.664520519785583}};
-
-    for(int i=0; i<15;i++)
-    {
-        cout << endl << " [Geocent " << i+1 << " ]" << endl;
-        {
-            vector<double> rxyz(3), rllh(3);
-            vector<double> xyz(3),llh(3);
-
-            rllh.assign( ref_llh[i], ref_llh[i] + 3);
-            rxyz.assign( ref_xyz[i], ref_xyz[i] + 3);
-
-            llh = rllh;
-            int flag = proj.forward(llh,xyz);
-            bool stat = checkAlmostEqual(xyz, rxyz, 9);
-            cout << " [Forward] ";
-            if (stat && (flag==0)) cout << "PASSED";
-            cout << endl;
-
-            xyz = rxyz;
-            flag = proj.inverse(xyz, llh);
-            stat = checkAlmostEqual(llh, rllh,9);
-            cout << " [Inverse] ";
-            if(stat && (flag==0)) cout << "PASSED";
-            cout << endl;
+    virtual void TearDown() {
+        if (fails > 0) {
+            std::cerr << "Polar::TearDown sees failures" << std::endl;
         }
     }
+    unsigned fails;
+};
 
 
-}
+//Reusing the same test suite as ellipsoid.
+
+#define geocentTest(name,p,q,r,x,y,z)       \
+    TEST_F(GeocentTest, name) {       \
+        vector<double> ref_llh({p,q,r});    \
+        vector<double> ref_xyz({x,y,z});    \
+        vector<double> xyz(3), llh(3);  \
+        llh = ref_llh;                  \
+        proj.forward(llh, xyz);    \
+        EXPECT_NEAR(xyz[0], ref_xyz[0], 1.0e-6);\
+        EXPECT_NEAR(xyz[1], ref_xyz[1], 1.0e-6);\
+        EXPECT_NEAR(xyz[2], ref_xyz[2], 1.0e-6);\
+        xyz = ref_xyz;                  \
+        proj.inverse(xyz, llh);    \
+        EXPECT_NEAR(llh[0], ref_llh[0], 1.0e-9);\
+        EXPECT_NEAR(llh[1], ref_llh[1], 1.0e-9);\
+        EXPECT_NEAR(llh[2], ref_llh[2], 1.0e-6);\
+        fails += ::testing::Test::HasFailure();\
+    }
+
+
+geocentTest(Origin, {0.,0.,0.}, {a,0.,0.});
+
+geocentTest(Equator90E, {0.5*M_PI, 0., 0.}, {0.,a,0.});
+
+geocentTest(Equator90W,{-0.5*M_PI,0.,0.}, {0.,-a,0.});
+
+geocentTest(EquatorDateline, {M_PI,0.,0.}, {-a,0.,0.});
+
+geocentTest(NorthPole, {0.,0.5*M_PI,0.}, {0.,0.,b});
+
+geocentTest(SouthPole, {0.,-0.5*M_PI,0.}, {0.,0.,-b});
+
+
+geocentTest(Point1, {1.134431523585921e+00,-1.180097204507889e+00,7.552767636707697e+03},
+        {1030784.925758840050548,2210337.910070449113846,-5881839.839890958741307});
+
+geocentTest(Point2, {-1.988929481271171e+00,-3.218156967477281e-01,4.803829875484664e+02},
+        {-2457926.302319798618555,-5531693.075449729338288,-2004656.608288598246872});
+
+geocentTest(Point3, { 3.494775870065641e-01,1.321028021250511e+00, 6.684702668405185e+03},
+        {1487474.649522442836314,542090.182021118933335, 6164710.02066358923912});
+
+geocentTest(Point4, { 1.157071150199438e+00,1.539241336260909e+00,  2.075539115269004e+03},
+        {81196.748833858233411,   184930.081202651723288, 6355641.007061666809022});
+
+geocentTest(Point5, { 2.903217190227029e+00,3.078348660646868e-02, 1.303664510818545e+03},
+          {-6196130.955770593136549,  1505632.319945097202435,195036.854449656093493});
+
+geocentTest(Point6, { 1.404003364812063e+00,9.844570757478284e-01, 1.242074588639294e+03},
+    {587386.746772550744936,  3488933.817566382698715, 5290575.784156281501055});
+
+geocentTest(Point7, {1.786087533202875e+00,-1.404475795144668e+00,  3.047509859826395e+03},
+        {-226426.343401445570635,  1035421.647801387240179, -6271459.446578867733479});
+
+geocentTest(Point8, { -1.535570572315143e+00,-1.394372375292064e+00, 2.520818495701064e+01},
+        {39553.214744714961853, -1122384.858932408038527, -6257455.705907705239952});
+
+geocentTest(Point9, { 2.002720719284312e+00,-6.059309705813630e-01, -7.671870434220574e+01},
+        {-2197035.039946643635631,  4766296.481927301734686, -3612087.398071805480868});
+
+geocentTest(Point10, { -2.340221964131008e-01,1.162119493774084e+00,  6.948177664180818e+03},
+         {2475217.167525716125965,  -590067.244431337225251, 5836531.74855871964246 });
+
+geocentTest(Point11, {6.067080997777370e-01,-9.030342054807169e-01, 4.244471400804430e+02},
+        {3251592.655810729600489,  2256703.30570419318974 ,-4985277.930962197482586});
+
+geocentTest(Point12, { -2.118133740176279e+00,9.812354487540356e-01, 2.921301812478523e+03},
+         {-1850635.103680874686688, -3036577.247930331621319,5280569.380736761726439});
+
+geocentTest(Point13, { -2.005023821660764e+00,1.535487121535718e+00, 2.182275729585851e+02},
+         { -95048.576977927994449,  -204957.529435861855745, 6352981.530775795690715});
+
+geocentTest(Point14, {2.719747828172381e+00,-1.552548149921413e+00,  4.298201230045657e+03},
+        {-106608.855637043248862,    47844.679874961388123, -6359984.3118050172925});
+
+geocentTest(Point15, { -1.498660315787147e+00,1.076512019764726e+00, 8.472554905622580e+02},
+         {218676.696484291809611, -3026189.824885316658765, 5592409.664520519785583});
+
 
 int main(int argc, char **argv) {
-    /*
-     * Ellipsoid unit-testing script.
-     */
 
-    testCorners();
-    testCoords();
-
-    return 0;
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
