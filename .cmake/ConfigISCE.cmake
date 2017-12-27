@@ -19,6 +19,10 @@ function(CheckISCEPython)
 endfunction()
 
 
+function(CheckPyre)
+    FIND_PACKAGE(Pyre REQUIRED)
+endfunction()
+
 function(InitInstallDirLayout)
     ###install/bin
     if (NOT ISCE_BINDIR)
@@ -37,7 +41,7 @@ function(InitInstallDirLayout)
 
     ###install/include
     if (NOT ISCE_INCLUDEDIR)
-        set (ISCE_INCLUDEDIR include/isce-${ISCE_MAJOR_VERSION}.${ISCE_MINOR_VERSION}/isce CACHE STRING "isce/include")
+        set (ISCE_INCLUDEDIR include/isce-${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR}/isce CACHE STRING "isce/include")
     endif(NOT ISCE_INCLUDEDIR)
 
     ###install/defaults

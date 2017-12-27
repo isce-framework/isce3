@@ -18,11 +18,13 @@ set(${PACKAGENAME}_SRCS Baseline.cpp
               Position.cpp
               Projections.cpp)
 
-set(${PACKAGENAME}_DLL ${PACKAGENAME}.${ISCE_MAJOR_VERSION}.${ISCE_MINOR_VERSION})
+set(${PACKAGENAME}_DLL isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
-add_library(${PACKAGENAME}_DLL SHARED
+add_library(${${PACKAGENAME}_DLL} SHARED
                                ${${PACKAGENAME}_SRCS})
 
+#Pyre stuff is needed for logging
+target_include_directories(${${PACKAGENAME}_DLL} PUBLIC ${PYRE_INCLUDE_DIR}) 
 
 #####Post building - installation
 set(${PACKAGENAME}_EXPORT_HEADERS   Baseline.h
@@ -42,12 +44,12 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Baseline.h
                                     Projections.h)
 
 #Install headers as files
-install(FILES ${PACKAGENAME}_EXPORT_HEADERS
+install(FILES ${${PACKAGENAME}_EXPORT_HEADERS}
     DESTINATION ${ISCE_INCLUDEDIR}/${PACKAGENAME}
     COMPONENT isce_headers)
 
 #Install shared library
-install(TARGETS ${PACKAGENAME}_DLL
-        LIBRARY DESTINATION ${ISCE_LIBDIR}
+install(TARGETS ${${PACKAGENAME}_DLL}
+        DESTINATION ${ISCE_LIBDIR}
         COMPONENT isce_libs)
 

@@ -297,26 +297,36 @@ int PolarStereo::inverse(const vector<double> &ups, vector<double> &llh) const {
     /*
      * Transform from Polar Stereo to LLH.
      */
-    double tp = -hypot(ups[0], ups[1]) / akm1;
-    double phi_l = (.5*M_PI) - (2. * atan(tp));
+    double fact, halfe, halfpi, phi_l, tp;
+    double rho = hypot(ups[0], ups[1]);
+
+    if(isnorth)
+    {
+        fact = 1;
+        halfe = 0.0;
+        halfpi = 0.0;
+        tp = 0.0;
+        phi_l = 0.0;
+    }
+    else
+    {
+        fact = -1;
+        halfe = -0.5 * e;
+        halfpi = -0.5 * M_PI;
+        tp = -rho / akm1;
+        phi_l = (.5*M_PI) - (2. * atan(tp));
+    }
 
     double sinphi;
     double phi = 0.;
     for(int i=8; i--; phi_l = phi) {
-        sinphi = e * sin(phi);
-        phi = 2. * atan((tp * pow((1. + sinphi) / (1. - sinphi), -.5 * e)) + (.5*M_PI));
-        if (abs(phi_l - phi) < 1.e-10) {
-            if (isnorth) {
-                llh[0] = ((ups[0] == 0.) && (ups[1] == 0.)) ? 0. : atan2(ups[0], -ups[1]);
-                llh[1] = phi;
-                llh[2] = ups[2];
-                return 0;
-            } else {
-                llh[0] = ((ups[0] == 0.) && (ups[1] == 0.)) ? 0. : atan2(ups[0], ups[1]);
-                llh[1] = -phi;
-                llh[2] = ups[2];
-                return 0;
-            }
+        sinphi = e * sin(phi_l);
+        phi = 2. * atan((tp * pow((1. + sinphi) / (1. - sinphi), halfe)) - halfpi;
+        if (fabs(phi_l - phi) < 1.e-10) {
+            llh[0] = ((ups[0] == 0.) && (ups[1] == 0.)) ? 0. : atan2(ups[0], -fact*ups[1]);
+            llh[1] = phi*fact;
+            llh[2] = ups[2];
+            return 0;
         }
     }
     return 1;
