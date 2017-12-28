@@ -1,2 +1,2 @@
 add_subdirectory(contrib)
-#add_subdirectory(extensions)
+add_subdirectory(extensions)

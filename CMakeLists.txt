@@ -14,6 +14,10 @@ project(ISCE
 ###Add .cmake to CMAKE MODULE PATH
 list(APPEND CMAKE_MODULE_PATH ${ISCE_SOURCE_DIR}/.cmake)
 
+
+###Ensure tracking is own for testing
+enable_testing()
+
 ###Include custom installation paths and checks for the project
 include(ConfigISCE)
 
@@ -39,6 +43,5 @@ add_subdirectory(contrib)
 ###Recurs directories
 add_subdirectory(lib)
 
-###Run tests
-#enable_testing()
-#add_subdirectory(tests)
+###Setup tests
+add_subdirectory(tests)
