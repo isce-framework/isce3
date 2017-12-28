@@ -19,7 +19,7 @@ struct UTMTest : public ::testing::Test {
     }
     virtual void TearDown() {
         if (fails > 0) {
-            std::cerr << "CEA::TearDown sees failures" << std::endl;
+            std::cerr << "UTM::TearDown sees failures" << std::endl;
         }
     }
     unsigned fails;

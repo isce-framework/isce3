@@ -25,7 +25,7 @@ struct GeocentTest : public ::testing::Test {
     }
     virtual void TearDown() {
         if (fails > 0) {
-            std::cerr << "Polar::TearDown sees failures" << std::endl;
+            std::cerr << "Geocent::TearDown sees failures" << std::endl;
         }
     }
     unsigned fails;
