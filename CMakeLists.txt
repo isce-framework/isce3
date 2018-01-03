@@ -34,6 +34,15 @@ CheckISCEPython()
 ##Check for Pyre
 CheckPyre()
 
+##Check for CUDA
+CheckCUDA()
+
+##Check for GDAL
+CheckGDAL()
+
+##Check for Armadillo
+CheckArmadillo()
+
 ###Layout same install directory structure as pyre
 InitInstallDirLayout()
 
@@ -42,6 +51,9 @@ add_subdirectory(contrib)
 
 ###Recurs directories
 add_subdirectory(lib)
+
+###Cython extensions
+#add_subdirectory(extensions)
 
 ###Setup tests
 add_subdirectory(tests)

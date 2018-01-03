@@ -12,6 +12,8 @@ function(AssureOutOfSourceBuilds)
     endif()
 endfunction()
 
+
+##Make sure that a reasonable version of Python is installed
 function(CheckISCEPython)
     FIND_PACKAGE(PythonInterp 3.5)
     FIND_PACKAGE(PythonInterp 3.5)
@@ -19,9 +21,52 @@ function(CheckISCEPython)
 endfunction()
 
 
+##Check for Pyre installation
 function(CheckPyre)
     FIND_PACKAGE(Pyre REQUIRED)
 endfunction()
+
+
+##Check for GDAL installation
+function(CheckGDAL)
+    FIND_PACKAGE(GDAL REQUIRED)
+    execute_process( COMMAND gdal-config --version
+                    OUTPUT_VARIABLE GDAL_VERSION)
+    string(REGEX MATCHALL "[0-9]+" GDAL_VERSION_PARTS ${GDAL_VERSION})
+    list(GET GDAL_VERSION_PARTS 0 GDAL_MAJOR)
+    list(GET GDAL_VERSION_PARTS 1 GDAL_MINOR)
+
+    if ((GDAL_VERSION VERSION_GREATER 2.0.0) OR (GDAL_VERSION VERSION_EQUAL 2.0.0))
+        message (STATUS "Found gdal:  ${GDAL_VERSION}")
+    else()
+        message (FATAL_ERROR "Did not find GDAL version >= 2.1")
+    endif()
+endfunction()
+
+##Check for Armadillo installation
+function(CheckArmadillo)
+    FIND_PACKAGE(Armadillo REQUIRED)
+    message (STATUS "Found Armadillo:  ${ARMADILLO_VERSION_STRING}")
+endfunction()
+
+
+##Check for CUDA installation
+function(CheckCUDA)
+    FIND_PACKAGE(CUDA)
+    if (CUDA_FOUND)
+        if ((CUDA_VERSION VERSION_GREATER 8.0) OR (CUDA_VERSION VERSION_EQUAL 8.0))
+            message (STATUS "Found CUDA: ${CUDA_VERSION}")
+            set (CUDA_PROPAGATE_HOST_FLAGS ON)
+        else()
+            message (STATUS "Did not find a suitable CUDA version >= 8.0")
+            set(CUDA_FOUND FALSE)
+        endif()
+    else()
+        message (STATUS "CUDA not found. Continuing ... ")
+    endif()
+endfunction()
+
+
 
 function(InitInstallDirLayout)
     ###install/bin
@@ -41,8 +86,13 @@ function(InitInstallDirLayout)
 
     ###install/include
     if (NOT ISCE_INCLUDEDIR)
-        set (ISCE_INCLUDEDIR include/isce-${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR}/isce CACHE STRING "isce/include")
+        set (ISCE_INCLUDEDIR include/isce-${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR} CACHE STRING "isce/include")
     endif(NOT ISCE_INCLUDEDIR)
+
+    ###build/include
+    if (NOT ISCE_BUILDINCLUDEDIR)
+        set (ISCE_BUILDINCLUDEDIR ${CMAKE_BINARY_DIR}/include/isce-${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR} CACHE STRING "build/isce/include")
+    endif(NOT ISCE_BUILDINCLUDEDIR)
 
     ###install/defaults
     if (NOT ISCE_DEFAULTSDIR)
