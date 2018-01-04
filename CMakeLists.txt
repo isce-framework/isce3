@@ -34,6 +34,9 @@ CheckISCEPython()
 ##Check for Pyre
 CheckPyre()
 
+##Check for Cython
+include(useCython)
+
 ##Check for CUDA
 CheckCUDA()
 
@@ -53,7 +56,7 @@ add_subdirectory(contrib)
 add_subdirectory(lib)
 
 ###Cython extensions
-#add_subdirectory(extensions)
+add_subdirectory(extensions)
 
 ###Setup tests
 add_subdirectory(tests)

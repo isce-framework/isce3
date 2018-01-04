@@ -17,7 +17,6 @@ endfunction()
 function(CheckISCEPython)
     FIND_PACKAGE(PythonInterp 3.5)
     FIND_PACKAGE(PythonInterp 3.5)
-    include(useCython)
 endfunction()
 
 

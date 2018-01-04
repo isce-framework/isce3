@@ -74,8 +74,8 @@ mark_as_advanced( CYTHON_ANNOTATE CYTHON_NO_DOCSTRINGS CYTHON_FLAGS )
 find_package( Cython REQUIRED )
 find_package( PythonLibs REQUIRED )
 
-set( CYTHON_CXX_EXTENSION "cxx" )
-set( CYTHON_C_EXTENSION "c" )
+set( CYTHON_CXX_EXTENSION "cxx" CACHE STRING "cython cxx ext")
+set( CYTHON_C_EXTENSION "c" CACHE STRING "cython c ext")
 
 # Create a *.c or *.cxx file from a *.pyx file.
 # Input the generated file basename.  The generate file will put into the variable
