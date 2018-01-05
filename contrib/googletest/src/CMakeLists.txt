@@ -9,6 +9,7 @@ set (PROJECT_SRCS   gtest.cc
 add_library(gtest SHARED
                   ${PROJECT_SRCS})
 target_include_directories(gtest PUBLIC .. ../include)
+target_link_libraries(gtest pthread)
 
 
 install(TARGETS gtest
