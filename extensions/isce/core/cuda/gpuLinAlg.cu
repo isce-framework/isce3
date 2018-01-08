@@ -3,5 +3,5 @@
 // Copyright 2017
 //
 
-#include "isce/core/cuda/gpuLinAlg.h"
+#include "gpuLinAlg.h"
 

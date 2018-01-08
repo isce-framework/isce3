@@ -4,19 +4,23 @@
 //
 
 #include <cmath>
-#include "isce/core/cuda/gpuEllipsoid.h"
-#include "isce/core/cuda/gpuLinAlg.h"
+#include <cuda_runtime.h>
+#include <vector>
+#include "Constants.h"
+#include "gpuEllipsoid.h"
+#include "gpuLinAlg.h"
+using std::vector;
 using isce::core::cuda::gpuEllipsoid;
 using isce::core::cuda::gpuLinAlg;
 
-__device__ void gpuEllipsoid::llh2xyz(double *xyz, double *llh) {
+__device__ void gpuEllipsoid::latLonToXyz(double *llh, double *xyz) {
     double re = rEast(llh[0]);
     xyz[0] = (re + llh[2]) * cos(llh[0]) * cos(llh[1]);
     xyz[1] = (re + llh[2]) * cos(llh[0]) * sin(llh[1]);
     xyz[2] = ((re * (1. - e2)) + llh[2]) * sin(llh[0]);
 }
 
-__device__ void gpuEllipsoid::xyz2llh(double *xyz, double *llh) {
+__device__ void gpuEllipsoid::xyzToLatLon(double *xyz, double *llh) {
     double p = (pow(xyz[0],2) + pow(xyz[1],2)) / pow(a,2);
     double q = ((1. - e2) * pow(xyz[2],2)) / pow(a,2);
     double r = (p + q - pow(e2,2)) / 6.;
@@ -34,7 +38,7 @@ __device__ void gpuEllipsoid::xyz2llh(double *xyz, double *llh) {
 
 __device__ void gpuEllipsoid::TCNbasis(double *pos, double *vel, double *t, double *c, double *n) {
     double temp[3];
-    xyz2llh(pos,temp);
+    xyzToLatLon(pos,temp);
     n[0] = -cos(temp[0]) * cos(temp[1]);
     n[1] = -cos(temp[0]) * sin(temp[1]);
     n[2] = -sin(temp[0]);
@@ -42,5 +46,69 @@ __device__ void gpuEllipsoid::TCNbasis(double *pos, double *vel, double *t, doub
     gpuLinAlg::unitVec(temp,c);
     gpuLinAlg::cross(c,n,temp);
     gpuLinAlg::unitVec(temp,t);
+}
+
+__global__ void latLonToXyz_d(gpuEllipsoid elp, double *llh, double *xyz) {
+    /*
+     *  GPU-side helper kernel for latLonToXyz_h to use as a consistency check. Note that elp, llh,
+     *  and xyz are GPU-side memory constructs.
+     */
+    elp.latLonToXyz(llh, xyz);
+}
+
+__host__ void gpuEllipsoid::latLonToXyz_h(vector<double> &llh, vector<double> &xyz) {
+    /*
+     *  CPU-side function to call the corresponding GPU function on a single thread. This function
+     *  is primarily meant to be used as a consistency check in the test suite, but may be used in
+     *  other contexts.
+     */
+    // Check inputs for valid length
+    checkVecLen(llh,3);
+    checkVecLen(xyz,3);
+    // Malloc memory on the GPU and copy the llh inputs over
+    double *llh_d, *xyz_d;
+    cudaSetDevice(0);
+    cudaMalloc((double**)&llh_d, 3*sizeof(double));
+    cudaMalloc((double**)&xyz_d, 3*sizeof(double));
+    cudaMemcpy(llh_d, llh.data(), 3*sizeof(double), cudaMemcpyHostToDevice);
+    // Run the latLonToXyz function on the gpuEllipsoid object on the GPU
+    dim3 grid(1), block(1);
+    latLonToXyz_d <<<grid,block>>>(*this, llh_d, xyz_d);
+    // Copy the resulting xyz back to the CPU-side vector
+    cudaMemcpy(xyz.data(), xyz_d, 3*sizeof(double), cudaMemcpyDeviceToHost);
+    cudaFree(llh_d);
+    cudaFree(xyz_d);
+}
+
+__global__ void xyzToLatLon_d(gpuEllipsoid elp, double *xyz, double *llh) {
+    /*
+     * GPU-side helper kernel for xyzToLatLon_h to use as a consistency check. Note that elp, xyz,
+     * and llh are GPU-side memory constructs.
+     */
+    elp.xyzToLatLon(xyz, llh);
+}
+
+__host__ void gpuEllipsoid::xyzToLatLon_h(vector<double> &xyz, vector<double> &llh) {
+    /*
+     *  CPU-side function to call the corresponding GPU function on a single thread. This function
+     *  is primarily meant to be used as a consistency check in the test suite, but may be used in
+     *  other contexts.
+     */
+     // Check inputs for valid length
+     checkVecLen(xyz,3);
+     checkVecLen(llh,3);
+     // Malloc memory on the GPU and copy the xyz inputs over
+     double *xyz_d, *llh_d;
+     cudaSetDevice(0);
+     cudaMalloc((double**)&xyz_d, 3*sizeof(double));
+     cudaMalloc((double**)&llh_d, 3*sizeof(double));
+     cudaMemcpy(xyz_d, xyz.data(), 3*sizeof(double), cudaMemcpyHostToDevice);
+     // Run the xyzToLatLon function on the gpuEllipsoid object on the GPU
+     dim3 grid(1), block(1);
+     xyzToLatLon_d <<<grid,block>>>(*this, xyz_d, llh_d);
+     // Copy the resulting xyz back to the CPU-side vector
+     cudaMemcpy(llh.data(), llh_d, 3*sizeof(double), cudaMemcpyDeviceToHost);
+     cudaFree(xyz_d);
+     cudaFree(llh_d);
 }
 

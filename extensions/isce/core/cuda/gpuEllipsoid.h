@@ -7,7 +7,8 @@
 #define __ISCE_CORE_CUDA_GPUELLIPSOID_H__
 
 #include <cmath>
-#include "../Ellipsoid.h"
+#include <vector>
+#include "Ellipsoid.h"
 
 namespace isce { namespace core { namespace cuda {
     struct gpuEllipsoid {
@@ -24,9 +25,13 @@ namespace isce { namespace core { namespace cuda {
         __device__ inline double rEast(double);
         __device__ inline double rNorth(double);
         __device__ inline double rDir(double,double);
-        __device__ void llh2xyz(double*,double*);
-        __device__ void xyz2llh(double*,double*);
+        __device__ void latLonToXyz(double*,double*);
+        __device__ void xyzToLatLon(double*,double*);
         __device__ void TCNbasis(double*,double*,double*,double*,double*);
+
+        // Host functions to test underlying device functions in a single-threaded context
+        __host__ void latLonToXyz_h(std::vector<double>&,std::vector<double>&);
+        __host__ void xyzToLatLon_h(std::vector<double>&,std::vector<double>&);
     };
 
     __host__ __device__ inline gpuEllipsoid& gpuEllipsoid::operator=(const gpuEllipsoid &rhs) {

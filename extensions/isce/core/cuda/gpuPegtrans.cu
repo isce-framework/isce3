@@ -4,10 +4,10 @@
 //
 
 #include <cmath>
-#include "isce/core/cuda/gpuEllipsoid.h"
-#include "isce/core/cuda/gpuLinAlg.h"
-#include "isce/core/cuda/gpuPeg.h"
-#include "isce/core/cuda/gpuPegtrans.h"
+#include "gpuEllipsoid.h"
+#include "gpuLinAlg.h"
+#include "gpuPeg.h"
+#include "gpuPegtrans.h"
 using isce::core::cuda::gpuEllipsoid;
 using isce::core::cuda::gpuLinAlg;
 using isce::core::cuda::gpuPeg;
@@ -28,7 +28,7 @@ __device__ void gpuPegtrans::radar2xyz(gpuEllipsoid &elp, gpuPeg &peg) {
 
     double llh[3] = {peg.lat, peg.lon, 0.};
     double temp[3];
-    elp.llh2xyz(temp,llh);
+    elp.latLonToXyz(temp,llh);
 
     ov[0] = temp[0] - (radcur * cos(peg.lat) * cos(peg.lon));
     ov[1] = temp[1] - (radcur * cos(peg.lat) * sin(peg.lon));
@@ -44,7 +44,7 @@ __device__ void gpuPegtrans::xyz2sch(double *schv, double *xyzv) {
  
     double llh[3];
     gpuEllipsoid sph(radcur,0.);
-    sph.xyz2llh(schv, llh);
+    sph.xyzToLatLon(schv, llh);
     schv[0] = radcur * llh[1];
     schv[1] = radcur * llh[0];
     schv[2] = llh[2];

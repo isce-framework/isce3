@@ -8,8 +8,10 @@
 
 // Needed to call the cudaMalloc/cudaFree APIs
 #include <cuda_runtime.h>
-#include "isce/core/cuda/gpuOrbit.h"
-#include "isce/core/Orbit.h"
+#include <vector>
+#include "Constants.h"
+#include "gpuOrbit.h"
+#include "Orbit.h"
 using isce::core::cuda::gpuOrbit;
 using isce::core::Orbit;
 
@@ -19,6 +21,7 @@ using isce::core::Orbit;
 __host__ gpuOrbit::gpuOrbit(const Orbit &orb) : 
     nVectors(orb.nVectors),
     owner(true) {
+    cudaDeviceSet(0);
     // Malloc device-side memory (this API is host-side only)
     cudaMalloc((double**)&UTCtime, nVectors*sizeof(double));
     cudaMalloc((double**)&position, 3*nVectors*sizeof(double));
@@ -244,5 +247,120 @@ __device__ int gpuOrbit::computeAcceleration(double tintp, double *acc) {
     acc[1] = (vaft[1] - vbef[1]) / .02;
     acc[2] = (vaft[2] - vbef[2]) / .02;
     return 0;
+}
+
+__global__ void interpolateWGS84Orbit_d(gpuOrbit orb, double tintp, double *opos, double *ovel, 
+                                        int *retcode) {
+    /*
+     *  GPU kernel to test interpolateWGS84Orbit() on the device for consistency. Since kernels must
+     *  be void-type on the return, we store the return code in a variable that gets copied out.
+     */
+    *retcode = orb.interpolateWGS84Orbit(tintp, opos, ovel);
+}
+
+__host__ int gpuOrbit::interpolateWGS84Orbit_h(double tintp, vector<double> &opos, 
+                                               vector<double> &ovel) {
+    /*
+     *  CPU-side function to call the corresponding GPU function on a single thread for consistency
+     *  checking.
+     */
+    // Check inputs for valid length
+    checkVecLen(opos, 3);
+    checkVecLen(ovel, 3);
+    // Malloc memory on the GPU and copy inputs over
+    double *opos_d, *ovel_d;
+    int *retcode_d;
+    int retcode_h;
+    cudaSetDevice(0);
+    cudaMalloc((double**)&opos_d, 3*sizeof(double));
+    cudaMalloc((double**)&ovel_d, 3*sizeof(double));
+    cudaMalloc((int**)&retcode_d, sizeof(int));
+    // Run the interpolateWGS84Orbit function on the gpuOrbit object on the GPU
+    dim3 grid(1), block(1);
+    interpolateWGS84Orbit_d <<<grid,block>>>(*this, tintp, opos_d, ovel_d, retcode_d);
+    // Copy the results back to the CPU side and return any error code
+    cudaMemcpy(opos.data(), opos_d, 3*sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(ovel.data(), ovel_d, 3*sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&retcode_h, retcode_d, sizeof(int), cudaMemcpyDeviceToHost);
+    cudaFree(opos_d);
+    cudaFree(ovel_d);
+    return retcode_h;
+}
+
+__global__ void interpolateLegendreOrbit_d(gpuOrbit orb, double tintp, double *opos, double *ovel,
+                                           int *retcode) {
+    /*
+     *  GPU kernel to test interpolateLegendreOrbit() on the device for consistency. Since kernels
+     *  must be void-type on the return, we store the return code in a variable that gets copied
+     *  out.
+     */
+    *retcode = orb.interpolateLegendreOrbit(tintp, opos, ovel);
+}
+
+__host__ int gpuOrbit::interpolateLegendreOrbit_h(double tintp, vector<double> &opos,
+                                               vector<double> &ovel) {
+    /*
+     *  CPU-side function to call the corresponding GPU function on a single thread for consistency
+     *  checking.
+     */
+    // Check inputs for valid length
+    checkVecLen(opos, 3);
+    checkVecLen(ovel, 3);
+    // Malloc memory on the GPU and copy inputs over
+    double *opos_d, *ovel_d;
+    int *retcode_d;
+    int retcode_h;
+    cudaSetDevice(0);
+    cudaMalloc((double**)&opos_d, 3*sizeof(double));
+    cudaMalloc((double**)&ovel_d, 3*sizeof(double));
+    cudaMalloc((int**)&retcode_d, sizeof(int));
+    // Run the interpolateWGS84Orbit function on the gpuOrbit object on the GPU
+    dim3 grid(1), block(1);
+    interpolateWGS84Orbit_d <<<grid,block>>>(*this, tintp, opos_d, ovel_d, retcode_d);
+    // Copy the results back to the CPU side and return any error code
+    cudaMemcpy(opos.data(), opos_d, 3*sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(ovel.data(), ovel_d, 3*sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&retcode_h, retcode_d, sizeof(int), cudaMemcpyDeviceToHost);
+    cudaFree(opos_d);
+    cudaFree(ovel_d);
+    return retcode_h;
+}
+
+__global__ void interpolateSCHOrbit_d(gpuOrbit orb, double tintp, double *opos, double *ovel,
+                                      int *retcode) {
+    /*
+     *  GPU kernel to test interpolateSCHOrbit() on the device for consistency. Since kernels must
+     *  be void-type on the return, we store the return code in a variable that gets copied out.
+     */
+    *retcode = orb.interpolateSCHOrbit(tintp, opos, ovel);
+}
+
+__host__ int gpuOrbit::interpolateSCHOrbit_h(double tintp, vector<double> &opos,
+                                               vector<double> &ovel) {
+    /*
+     *  CPU-side function to call the corresponding GPU function on a single thread for consistency
+     *  checking.
+     */
+    // Check inputs for valid length
+    checkVecLen(opos, 3);
+    checkVecLen(ovel, 3);
+    // Malloc memory on the GPU and copy inputs over
+    double *opos_d, *ovel_d;
+    int *retcode_d;
+    int retcode_h;
+    cudaSetDevice(0);
+    cudaMalloc((double**)&opos_d, 3*sizeof(double));
+    cudaMalloc((double**)&ovel_d, 3*sizeof(double));
+    cudaMalloc((int**)&retcode_d, sizeof(int));
+    // Run the interpolateWGS84Orbit function on the gpuOrbit object on the GPU
+    dim3 grid(1), block(1);
+    interpolateWGS84Orbit_d <<<grid,block>>>(*this, tintp, opos_d, ovel_d, retcode_d);
+    // Copy the results back to the CPU side and return any error code
+    cudaMemcpy(opos.data(), opos_d, 3*sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(ovel.data(), ovel_d, 3*sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&retcode_h, retcode_d, sizeof(int), cudaMemcpyDeviceToHost);
+    cudaFree(opos_d);
+    cudaFree(ovel_d);
+    return retcode_h;
 }
 

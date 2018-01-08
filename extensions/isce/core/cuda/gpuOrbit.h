@@ -9,7 +9,8 @@
 #ifndef __ISCE_CORE_CUDA_GPUORBIT_H__
 #define __ISCE_CORE_CUDA_GPUORBIT_H__
 
-#include "../Orbit.h"
+#include <vector>
+#include "Orbit.h"
 
 namespace isce { namespace core { namespace cuda {
     struct gpuOrbit {
@@ -37,6 +38,11 @@ namespace isce { namespace core { namespace cuda {
         __device__ int interpolateLegendreOrbit(double,double*,double*);
         __device__ int interpolateSCHOrbit(double,double*,double*);
         __device__ int computeAcceleration(double,double*);
+
+        // Host functions to test underlying device functions in a single-threaded context
+        __host__ int interpolateWGS84Orbit_h(double,std::vector<double>&,std::vector<double>&);
+        __host__ int interpolateLegendreOrbit_h(double,std::vector<double>&,std::vector<double>&);
+        __host__ int interpolateSCHOrbit_h(double,std::vector<double>&,std::vector<double>&);
     };
 
     __device__ inline void gpuOrbit::getStateVector(int idx, double &t, double *pos, double *vel) {

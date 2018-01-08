@@ -3,5 +3,5 @@
 // Copyright 2017
 //
 
-#include "isce/core/cuda/gpuPeg.h"
+#include "gpuPeg.h"
 
