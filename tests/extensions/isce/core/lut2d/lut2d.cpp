@@ -6,8 +6,22 @@
 #include <cmath>
 #include <vector>
 #include "isce/core/LUT2d.h"
+#include "gtest/gtest.h"
 
-void testLUT() {
+
+struct LUT2DTest : public ::testing::Test {
+    virtual void SetUp() {
+        fails = 0;
+    }
+    virtual void TearDown() {
+        if (fails > 0) {
+            std::cerr << "LUT2D::TearDown sees failures" << std::endl;
+        }
+    }
+    unsigned fails;
+};
+
+TEST_F(LUT2DTest, Lookup) {
 
     // The LUT indices
     std::vector<double> x_index{0.0, 1.0, 2.0};
@@ -36,22 +50,14 @@ void testLUT() {
     const size_t N = ref_values.size();
 
     // Interpolate N values in x and y
-    bool stat = true;
     for (size_t i = 0; i < N; ++i) {
         double yi = i / (N - 2.0);
         for (size_t j = 0; j < N; ++j) {
             double xj = j / (N - 2.0);
             double interp_value = lut.eval(yi, xj);
-            stat = stat & (std::abs(interp_value - ref_values[i][j]) < tol);
+            EXPECT_NEAR(interp_value, ref_values[i][j], tol);
         }
     }
-
-    std::cout << "\n[LUT2D] ";
-    if (stat) 
-        std::cout << "PASSED";
-    else
-        std::cout << "FAILED";
-    std::cout << std::endl << std::endl;
 
     // Clear vectors
     x_index.clear();
@@ -61,14 +67,16 @@ void testLUT() {
     for (size_t i = 0; i < N; ++i)
         ref_values[i].clear();
 
+    fails += ::testing::Test::HasFailure();
+
 }
 
 
-int main() {
+int main(int argc, char **argv) {
 
-    testLUT();
+    ::testing::InitGoogleTest(&argc, argv);
 
-    return 0;
+    return RUN_ALL_TESTS();
 }
 
 // end of file

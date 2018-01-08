@@ -1,0 +1,5 @@
+add_subdirectory(ellipsoid)
+add_subdirectory(projections)
+add_subdirectory(poly)
+add_subdirectory(orbit)
+add_subdirectory(lut2d)

@@ -125,7 +125,7 @@ UTM::UTM(int code) : ProjectionBase(code) {
     // Gaussian -> Geodetic == cgb
     // Geodetic -> Gaussian == cbg
     cgb[0] = n * (2 + n * ((-2./3.) + n * (-2 + n * ((116./45.) + n * ((26./45.) +
-                                                                       n * (2854./675.))))));
+                                                                       n * (-2854./675.))))));
     cbg[0] = n * (-2 + n * ((2./3.) + n * ((4./3.) + n * ((-82./45.) + n * ((32./45.) +
                                                                             n * (4642./4725.))))));
     cgb[1] = pow(n,2) * ((7./3.) + n * ((-8./5.) + n * ((-227./45.) + n * ((2704./315.) +
@@ -210,8 +210,8 @@ int UTM::inverse(const vector<double> &utm, vector<double> &llh) const {
     /*
      * Transform from UTM to LLH.
      */
-    double Cn = (utm[1] - (isnorth ? 0. : 10000000.)) / ellipse.a;
-    double Ce = (utm[0] - 500000.) / ellipse.a;
+    double Cn = (utm[1] - (isnorth ? 0. : 10000000.)) /  ellipse.a;
+    double Ce = (utm[0] - 500000.) /  ellipse.a;
 
     //Normalize N,E to Spherical N,E
     Cn = (Cn - Zb) / Qn;
@@ -224,8 +224,10 @@ int UTM::inverse(const vector<double> &utm, vector<double> &llh) const {
         Ce = atan(sinh(Ce + dCe));
 
         //Spherical Lat, Lon to Gaussian Lat, Lon
-        Ce = atan2(sin(Ce), cos(Ce)*cos(Cn));
-        Cn = atan2(sin(Cn)*cos(Ce), hypot(sin(Ce), cos(Ce)*cos(Cn)));
+        double sinCe = sin(Ce);
+        double cosCe = cos(Ce);
+        Ce = atan2(sinCe, cosCe*cos(Cn));
+        Cn = atan2(sin(Cn)*cosCe, hypot(sinCe, cosCe*cos(Cn)));
 
         //Gaussian Lat, Lon to Elliptical Lat, Lon
         llh[0] = Ce + lon0;
@@ -297,26 +299,20 @@ int PolarStereo::inverse(const vector<double> &ups, vector<double> &llh) const {
     /*
      * Transform from Polar Stereo to LLH.
      */
-    double tp = -hypot(ups[0], ups[1]) / akm1;
+    double tp = -hypot(ups[0], ups[1])/akm1;
+    double fact = (isnorth)?1:-1;
     double phi_l = (.5*M_PI) - (2. * atan(tp));
 
     double sinphi;
     double phi = 0.;
     for(int i=8; i--; phi_l = phi) {
-        sinphi = e * sin(phi);
-        phi = 2. * atan((tp * pow((1. + sinphi) / (1. - sinphi), -.5 * e)) + (.5*M_PI));
-        if (abs(phi_l - phi) < 1.e-10) {
-            if (isnorth) {
-                llh[0] = ((ups[0] == 0.) && (ups[1] == 0.)) ? 0. : atan2(ups[0], -ups[1]);
-                llh[1] = phi;
-                llh[2] = ups[2];
-                return 0;
-            } else {
-                llh[0] = ((ups[0] == 0.) && (ups[1] == 0.)) ? 0. : atan2(ups[0], ups[1]);
-                llh[1] = -phi;
-                llh[2] = ups[2];
-                return 0;
-            }
+        sinphi = e * sin(phi_l);
+        phi = 2. * atan(tp * pow((1. + sinphi) / (1. - sinphi), -0.5*e)) +0.5 * M_PI;
+        if (fabs(phi_l - phi) < 1.e-10) {
+            llh[0] = ((ups[0] == 0.) && (ups[1] == 0.)) ? 0. : atan2(ups[0], -fact*ups[1]) + lon0;
+            llh[1] = phi*fact;
+            llh[2] = ups[2];
+            return 0;
         }
     }
     return 1;

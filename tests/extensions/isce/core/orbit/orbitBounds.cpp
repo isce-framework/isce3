@@ -8,6 +8,8 @@
 #include <vector>
 #include "isce/core/Constants.h"
 #include "isce/core/Orbit.h"
+#include "gtest/gtest.h"
+
 using isce::core::orbitInterpMethod;
 using isce::core::HERMITE_METHOD;
 using isce::core::LEGENDRE_METHOD;
@@ -18,22 +20,23 @@ using std::endl;
 using std::vector;
 
 
-bool checkAlmostEqual(vector<double> &ref, vector<double> &calc, int n_digits) {
-    /*
-     *  Calculate if two vectors are almost equal to n_digits of precision.
-     */
+struct OrbitTest : public ::testing::Test {
+    virtual void SetUp() {
+        fails = 0;
+    }
+    virtual void TearDown() {
+        if (fails > 0) {
+            std::cerr << "Orbit::TearDown sees failures" << std::endl;
+        }
+    }
+    unsigned fails;
+};
 
-    bool stat = true;
-    for (int i=0; i<static_cast<int>(ref.size()); i++) {
-        stat = stat & (abs(ref[i] - calc[i]) < pow(10., -n_digits));
-    }
-    if (!stat) {
-        cout << "    Error:" << endl;
-        cout << "    Expected [" << ref[0] << ", " << ref[1] << ", " << ref[2] << "]" << endl;
-        cout << "    Received [" << calc[0] << ", " << calc[1] << ", " << calc[2] << "]" << endl;
-    }
-    return stat;
-}
+
+#define compareTriplet(a,b,c)\
+    EXPECT_NEAR(a[0], b[0], c); \
+    EXPECT_NEAR(a[1], b[1], c); \
+    EXPECT_NEAR(a[2], b[2], c);
 
 
 
@@ -43,7 +46,7 @@ void makeLinearSV(double dt, vector<double> &opos, vector<double> &ovel, vector<
     vel = ovel;
 }
 
-void testOutOfBounds() {
+TEST_F(OrbitTest, OutOfBoundsSCH) {
     /*
      * Test linear orbit.
      */
@@ -64,42 +67,78 @@ void testOutOfBounds() {
     double test_t[] = {-23.0, -1.0, 101.0, 112.0};
     vector<double> ref_pos(3), ref_vel(3);
 
-    cout << endl << "[Out of bounds cases for orbit interpolation]" << endl;
 
-    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
-    bool stat = true;
-    cout << " [SCH Interpolation]" << endl;
     for (int i=0; i<4; i++) {
-        makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
-        cout << "  [t = " << test_t[i] << "] ";
-        stat = (orb.interpolate(t+test_t[i], pos, vel, SCH_METHOD) == 1);
-        if (stat) cout << "PASSED";
-        cout << endl;
+        int stat = orb.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
+        EXPECT_EQ(stat,1);
     }
 
-    stat = true;
-    cout << " [Hermite Interpolation]" << endl;
-    for (int i=0; i<4; i++) {
-        makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
-        cout << "  [t = " << test_t[i] << "] ";
-        stat = (orb.interpolate(t+test_t[i], pos, vel, HERMITE_METHOD) == 1);
-        if (stat) cout << "PASSED";
-        cout << endl;
+    fails += ::testing::Test::HasFailure();
+}
+
+TEST_F(OrbitTest, OutOfBoundsHermite) {
+    /*
+     * Test linear orbit.
+     */
+
+    Orbit orb(1,11);
+    double t = 1000.;
+    vector<double> opos = {0., 0., 0.};
+    vector<double> ovel = {4000., -1000., 4500.};
+    vector<double> pos(3), vel(3);
+
+    // Create straight-line orbit with 11 state vectors, each 10 s apart
+    for (int i=0; i<11; i++) {
+        makeLinearSV(i*10., opos, ovel, pos, vel);
+        orb.setStateVector(i, t+(i*10.), pos, vel);
     }
 
-    stat = true;
-    cout << " [Legendre Interpolation]" << endl;
+    // Interpolation test times
+    double test_t[] = {-23.0, -1.0, 101.0, 112.0};
+    vector<double> ref_pos(3), ref_vel(3);
+
+
     for (int i=0; i<4; i++) {
-        makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
-        cout << "  [t = " << test_t[i] << "] ";
-        stat = (orb.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD) == 1);
-        if (stat) cout << "PASSED";
-        cout << endl;
+        int stat = orb.interpolate(t+test_t[i], pos, vel, HERMITE_METHOD);
+        EXPECT_EQ(stat,1);
     }
+
+    fails += ::testing::Test::HasFailure();
+}
+
+TEST_F(OrbitTest, OutOfBoundsLegendre) {
+    /*
+     * Test linear orbit.
+     */
+
+    Orbit orb(1,11);
+    double t = 1000.;
+    vector<double> opos = {0., 0., 0.};
+    vector<double> ovel = {4000., -1000., 4500.};
+    vector<double> pos(3), vel(3);
+
+    // Create straight-line orbit with 11 state vectors, each 10 s apart
+    for (int i=0; i<11; i++) {
+        makeLinearSV(i*10., opos, ovel, pos, vel);
+        orb.setStateVector(i, t+(i*10.), pos, vel);
+    }
+
+    // Interpolation test times
+    double test_t[] = {-23.0, -1.0, 101.0, 112.0};
+    vector<double> ref_pos(3), ref_vel(3);
+
+
+    for (int i=0; i<4; i++) {
+        int stat = orb.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD);
+        EXPECT_EQ(stat,1);
+    }
+
+    fails += ::testing::Test::HasFailure();
 }
 
 
-void testEdges() {
+
+TEST_F(OrbitTest, EdgesSCH){
     /*
      * Test linear orbit.
      */
@@ -120,55 +159,90 @@ void testEdges() {
     double test_t[] = {0.0, 100.0};
     vector<double> ref_pos(3), ref_vel(3);
 
-    cout << endl << "[Edge case for orbit interpolation]" << endl;
-
-    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
-    bool stat = true;
-    cout << " [SCH Interpolation]" << endl;
     for (int i=0; i<2; i++) {
         makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
-        cout << "  [t = " << test_t[i] << "] ";
-        stat = (orb.interpolate(t+test_t[i], pos, vel, SCH_METHOD) == 0);
-        stat = stat & checkAlmostEqual(ref_pos, pos, 3);
-        stat = stat & checkAlmostEqual(ref_vel, vel, 3);
-        if (stat) cout << "PASSED";
-        cout << endl;
+        int stat = orb.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
+        EXPECT_EQ(stat, 0);
+        compareTriplet(pos, ref_pos, 1.0e-5);
+        compareTriplet(vel, ref_vel, 1.0e-6);
     }
 
-    stat = true;
-    cout << " [Hermite Interpolation]" << endl;
-    for (int i=0; i<2; i++) {
-        makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
-        cout << "  [t = " << test_t[i] << "] ";
-        stat = (orb.interpolate(t+test_t[i], pos, vel, HERMITE_METHOD) == 0);
-        stat = stat & checkAlmostEqual(ref_pos, pos, 3);
-        stat = stat & checkAlmostEqual(ref_vel, vel, 3);
-        if (stat) cout << "PASSED";
-        cout << endl;
+    fails += ::testing::Test::HasFailure();
+}
+
+TEST_F(OrbitTest, EdgesHermite){
+    /*
+     * Test linear orbit.
+     */
+
+    Orbit orb(1,11);
+    double t = 1000.;
+    vector<double> opos = {0., 0., 0.};
+    vector<double> ovel = {4000., -1000., 4500.};
+    vector<double> pos(3), vel(3);
+
+    // Create straight-line orbit with 11 state vectors, each 10 s apart
+    for (int i=0; i<11; i++) {
+        makeLinearSV(i*10., opos, ovel, pos, vel);
+        orb.setStateVector(i, t+(i*10.), pos, vel);
     }
 
-    stat = true;
-    cout << " [Legendre Interpolation]" << endl;
+    // Interpolation test times
+    double test_t[] = {0.0, 100.0};
+    vector<double> ref_pos(3), ref_vel(3);
+
     for (int i=0; i<2; i++) {
         makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
-        cout << "  [t = " << test_t[i] << "] ";
-        stat = (orb.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD) == 0);
-        stat = stat & checkAlmostEqual(ref_pos, pos, 3);
-        stat = stat & checkAlmostEqual(ref_vel, vel, 3);
-        if (stat) cout << "PASSED";
-        cout << endl;
+        int stat = orb.interpolate(t+test_t[i], pos, vel, HERMITE_METHOD);
+        EXPECT_EQ(stat, 0);
+        compareTriplet(pos, ref_pos, 1.0e-5);
+        compareTriplet(vel, ref_vel, 1.0e-6);
     }
+
+    fails += ::testing::Test::HasFailure();
 }
 
 
+TEST_F(OrbitTest, EdgesLegendre){
+    /*
+     * Test linear orbit.
+     */
+
+    Orbit orb(1,11);
+    double t = 1000.;
+    vector<double> opos = {0., 0., 0.};
+    vector<double> ovel = {4000., -1000., 4500.};
+    vector<double> pos(3), vel(3);
+
+    // Create straight-line orbit with 11 state vectors, each 10 s apart
+    for (int i=0; i<11; i++) {
+        makeLinearSV(i*10., opos, ovel, pos, vel);
+        orb.setStateVector(i, t+(i*10.), pos, vel);
+    }
+
+    // Interpolation test times
+    double test_t[] = {0.0, 100.0};
+    vector<double> ref_pos(3), ref_vel(3);
+
+    for (int i=0; i<2; i++) {
+        makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
+        int stat = orb.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD);
+        EXPECT_EQ(stat, 0);
+        compareTriplet(pos, ref_pos, 1.0e-5);
+        compareTriplet(vel, ref_vel, 1.0e-6);
+    }
+
+    fails += ::testing::Test::HasFailure();
+}
 
 int main(int argc, char **argv) {
     /*
      * Orbit unit-testing script.
      */
 
-    testOutOfBounds();
-    testEdges();
+    ::testing::InitGoogleTest(&argc, argv);
+
+    return RUN_ALL_TESTS();
 
     return 0;
 }

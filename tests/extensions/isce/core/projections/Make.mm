@@ -12,7 +12,7 @@ TESTS = \
     cea \
     geocent \
     polar \
-    utm \
+    utm 
 
 all: test clean
 
@@ -26,7 +26,7 @@ test: $(TESTS)
 # build
 PROJ_CLEAN += $(TESTS)
 PROJ_CXX_INCLUDES += $(EXPORT_ROOT)/include/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)
-PROJ_LIBRARIES = -lisce.$(PROJECT_MAJOR).$(PROJECT_MINOR) -lpyre -ljournal
+PROJ_LIBRARIES = -lisce.$(PROJECT_MAJOR).$(PROJECT_MINOR) -lpyre -ljournal -lgtest
 LIBRARIES = $(PROJ_LIBRARIES) $(EXTERNAL_LIBS)
 
 %: %.cpp

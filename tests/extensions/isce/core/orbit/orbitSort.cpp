@@ -8,6 +8,7 @@
 #include <vector>
 #include "isce/core/Constants.h"
 #include "isce/core/Orbit.h"
+#include "gtest/gtest.h"
 using isce::core::orbitInterpMethod;
 using isce::core::HERMITE_METHOD;
 using isce::core::LEGENDRE_METHOD;
@@ -17,22 +18,24 @@ using std::cout;
 using std::endl;
 using std::vector;
 
-bool checkEqual(vector<double> &ref, vector<double> &calc) {
-    /*
-     *  Calculate if two vectors are almost equal to n_digits of precision.
-     */
+struct OrbitTest : public ::testing::Test {
+    virtual void SetUp() {
+        fails = 0;
+    }
+    virtual void TearDown() {
+        if (fails > 0) {
+            std::cerr << "Orbit::TearDown sees failures" << std::endl;
+        }
+    }
+    unsigned fails;
+};
 
-    bool stat = true;
-    for (int i=0; i<static_cast<int>(ref.size()); i++) {
-        stat = stat & (ref[i] == calc[i]);
-    }
-    if (!stat) {
-        cout << "    Error:" << endl;
-        cout << "    Expected [" << ref[0] << ", " << ref[1] << ", " << ref[2] << "]" << endl;
-        cout << "    Received [" << calc[0] << ", " << calc[1] << ", " << calc[2] << "]" << endl;
-    }
-    return stat;
-}
+
+#define compareTriplet(a,b)\
+    EXPECT_EQ(a[0], b[0]); \
+    EXPECT_EQ(a[1], b[1]); \
+    EXPECT_EQ(a[2], b[2]);
+
 
 void makeLinearSV(double dt, vector<double> &opos, vector<double> &ovel, vector<double> &pos,
                   vector<double> &vel) {
@@ -40,7 +43,7 @@ void makeLinearSV(double dt, vector<double> &opos, vector<double> &ovel, vector<
     vel = ovel;
 }
 
-void testReverse() {
+TEST_F(OrbitTest,Reverse) {
     /*
      * Test linear orbit.
      */
@@ -67,26 +70,21 @@ void testReverse() {
         newOrb.addStateVector(t,pos,vel);
     }
 
-    bool stat = true;
-
-    cout << " [Add State Vector in reverse] " << endl;
-
     // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
     for (int i=0; i<10; i++) {
         orb.getStateVector(i, t, pos, vel);
         newOrb.getStateVector(i, t1, opos, ovel);
 
-        stat = stat & (t == t1);
-        stat = stat & checkEqual(pos, opos);
-        stat = stat & checkEqual(vel, ovel);
-        cout << " [index = " << i <<"] ";
-        if (stat) cout << "PASSED";
-        cout << endl;
+        EXPECT_EQ(t1,t);
+        compareTriplet(opos, pos);
+        compareTriplet(ovel, vel);
     }
+
+    fails += ::testing::Test::HasFailure();
 
 }
 
-void testOutOfOrder() {
+TEST_F(OrbitTest,OutOfOrder) {
     /*
      * Test linear orbit.
      */
@@ -120,22 +118,17 @@ void testOutOfOrder() {
         newOrb.addStateVector(t, pos, vel);
     }
 
-    bool stat = true;
-
-    cout << " [Add State Vector out of order] " << endl;
 
     // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
     for (int i=0; i<10; i++) {
         orb.getStateVector(i, t, pos, vel);
         newOrb.getStateVector(i, t1, opos, ovel);
 
-        stat = stat & (t == t1);
-        stat = stat & checkEqual(pos, opos);
-        stat = stat & checkEqual(vel, ovel);
-        cout << " [index = " << i <<"] ";
-        if (stat) cout << "PASSED";
-        cout << endl;
+        EXPECT_EQ(t1, t);
+        compareTriplet(pos, opos);
+        compareTriplet(vel, ovel);
     }
+    fails += ::testing::Test::HasFailure();
 
 }
 
@@ -144,9 +137,8 @@ int main(int argc, char **argv) {
     /*
      * Orbit unit-testing script.
      */
+    ::testing::InitGoogleTest(&argc, argv);
 
-    testReverse();
-    testOutOfOrder();
+    return RUN_ALL_TESTS();
 
-    return 0;
 }
