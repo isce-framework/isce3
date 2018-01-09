@@ -17,8 +17,7 @@ using std::chrono::duration_cast;
 using std::chrono::high_resolution_clock;
 using std::chrono::system_clock;
 using std::chrono::time_point;
-#define GCC_VERSION (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__)
-#if GCC_VERSION >= 50000
+#if __cplusplus >= 201103L
 using std::chrono::nanoseconds;
 using std::invalid_argument;
 using std::istringstream;
@@ -36,7 +35,7 @@ using std::tm;
 using std::to_string;
 #endif
 
-#if GCC_VERSION >= 50000
+#if __cplusplus >= 201103L
 DateTime& DateTime::operator=(const string &dts) {
     /*
      *  Assignment operator for passing in a string. Note that this is usually a challenging
@@ -92,7 +91,7 @@ DateTime& DateTime::operator=(double dtd) {
     return *this;
 }
 
-#if GCC_VERSION >= 50000
+#if __cplusplus >= 201103L
 string DateTime::toIsoString() const {
     /*
      *  String formatting is always a tricky subject, so full description of the parsing and
@@ -141,4 +140,4 @@ string DateTime::toIsoString() const {
     return datetime_str;
 }
 #endif
-#undef GCC_VERSION
+
