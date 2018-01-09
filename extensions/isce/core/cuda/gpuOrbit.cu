@@ -14,6 +14,7 @@
 #include "Orbit.h"
 using isce::core::cuda::gpuOrbit;
 using isce::core::Orbit;
+using std::vector;
 
 // Advanced "copy" constructor to handle deep-copying of Orbit data (only callable by host). Owner 
 // member variable indicates that only the host-side copy of the gpuOrbit can handle freeing the 
@@ -21,7 +22,7 @@ using isce::core::Orbit;
 __host__ gpuOrbit::gpuOrbit(const Orbit &orb) : 
     nVectors(orb.nVectors),
     owner(true) {
-    cudaDeviceSet(0);
+    cudaSetDevice(0);
     // Malloc device-side memory (this API is host-side only)
     cudaMalloc((double**)&UTCtime, nVectors*sizeof(double));
     cudaMalloc((double**)&position, 3*nVectors*sizeof(double));
