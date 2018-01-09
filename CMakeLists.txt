@@ -55,8 +55,8 @@ add_subdirectory(contrib)
 ###Recurs directories
 add_subdirectory(lib)
 
-###Cython extensions
-add_subdirectory(extensions)
+###Cython lib
+add_subdirectory(lib)
 
 ###Setup tests
 add_subdirectory(tests)
