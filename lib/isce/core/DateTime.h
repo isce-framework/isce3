@@ -23,14 +23,16 @@ namespace isce { namespace core {
 
         DateTime() : t() {}
         DateTime(const DateTime &dt) : t(dt.t) {}
-        #if __cplusplus >= 201103L
+        //#if __cplusplus >= 201103L
+        #if 0
         DateTime(const std::string &dts) { *this = dts; }
         #endif
         // Note that these constructors leverage the assignment operators given their relative
         // complexity
         DateTime(double dtd) { *this = dtd; }
         inline DateTime& operator=(const DateTime&);
-        #if __cplusplus >= 201103L
+        //#if __cplusplus >= 201103L
+        #if 0
         DateTime& operator=(const std::string&);
         #endif
         DateTime& operator=(double);
@@ -57,7 +59,8 @@ namespace isce { namespace core {
             return static_cast<std::chrono::duration<double>>(t.time_since_epoch()).count();
         }
 
-        #if __cplusplus >= 201103L
+        //#if __cplusplus >= 201103L
+        #if 0
         std::string toIsoString() const;
         #endif
     };

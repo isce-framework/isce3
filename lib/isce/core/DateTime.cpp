@@ -17,14 +17,15 @@ using std::chrono::duration_cast;
 using std::chrono::high_resolution_clock;
 using std::chrono::system_clock;
 using std::chrono::time_point;
-#if __cplusplus >= 201103L
+//#if __cplusplus >= 201103L
+#if 0
 using std::chrono::nanoseconds;
 using std::invalid_argument;
 using std::istringstream;
-using std::get_time;            // GCC 5 and greater
+using std::get_time;            // GCC 5 and greater, unknown for other compilers
 using std::gmtime;
 using std::mktime;
-using std::put_time;            // GCC 5 and greater
+using std::put_time;            // GCC 5 and greater, unknown for other compilers
 using std::regex;
 using std::regex_match;
 using std::stod;
@@ -35,7 +36,8 @@ using std::tm;
 using std::to_string;
 #endif
 
-#if __cplusplus >= 201103L
+//#if __cplusplus >= 201103L
+#if 0
 DateTime& DateTime::operator=(const string &dts) {
     /*
      *  Assignment operator for passing in a string. Note that this is usually a challenging
@@ -91,7 +93,8 @@ DateTime& DateTime::operator=(double dtd) {
     return *this;
 }
 
-#if __cplusplus >= 201103L
+//#if __cplusplus >= 201103L
+#if 0
 string DateTime::toIsoString() const {
     /*
      *  String formatting is always a tricky subject, so full description of the parsing and
