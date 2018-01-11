@@ -3,6 +3,7 @@
 
 # project defaults
 include isce.def
+
 # the module
 MODULE = iscecore
 # use a tmp directory that knows the name of the module

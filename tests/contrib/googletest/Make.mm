@@ -22,7 +22,7 @@ test: $(TESTS)
 
 # build
 PROJ_CLEAN += $(TESTS)
-PROJ_LIBRARIES = -lisce.$(PROJECT_MAJOR).$(PROJECT_MINOR) -lpyre -ljournal -lgtest
+PROJ_LIBRARIES = -lisce.$(PROJECT_MAJOR).$(PROJECT_MINOR) -lgtest
 LIBRARIES = $(PROJ_LIBRARIES) $(EXTERNAL_LIBS)
 
 %: %.$(EXT_CXX)

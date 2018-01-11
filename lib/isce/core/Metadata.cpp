@@ -21,6 +21,6 @@ std::ostream& operator<<(std::ostream &os, const isce::core::RadarMetadata &rada
     os << "  - lookSide: " << radar.lookSide << std::endl;
     os << "  - prf: " << radar.prf << std::endl;
     os << "  - radarWavelength: " << radar.radarWavelength << std::endl;
-    os << "  - sensingStart: " << radar.sensingStart.toIsoString() << std::endl;
+    //os << "  - sensingStart: " << radar.sensingStart.toIsoString() << std::endl;
     return os;
 }
