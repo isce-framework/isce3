@@ -1,60 +1,51 @@
 # -*- Makefile -*-
+#
+# eric m. gurrola
+# Jet Propulsion Lab/Caltech
+# (c) 2017 all rights reserved
+#
 
-# global project settings
+# project global settings
 include isce.def
-# package isce/core
-PACKAGE = core
 
-# the list of sources
-PROJ_SRCS = \
-    Baseline.cpp \
-    DateTime.cpp \
-    Ellipsoid.cpp \
-    Interpolator.cpp \
-    LUT2d.cpp \
-    LinAlg.cpp \
-    Metadata.cpp \
-    Orbit.cpp \
-    Peg.cpp \
-    Pegtrans.cpp \
-    Poly1d.cpp \
-    Poly2d.cpp \
-    Position.cpp \
-    Projections.cpp \
+# my subdirectories
+RECURSE_DIRS = \
+    $(PACKAGES)
 
-# products
-# the library
-PROJ_DLL = $(BLD_LIBDIR)/lib$(PROJECT).$(PROJECT_MAJOR).$(PROJECT_MINOR).$(EXT_SO)
-EXPORT_LIBS = $(PROJ_DLL)
-# the headers
-EXPORT_PKG_HEADERS = \
-    Baseline.h \
-    Constants.h \
-    DateTime.h \
-    Ellipsoid.h \
-    Interpolator.h \
-    LUT2d.h \
-    LinAlg.h \
-    Metadata.h \
-    Orbit.h \
-    Peg.h \
-    Pegtrans.h \
-    Poly1d.h \
-    Poly2d.h \
-    Position.h \
-    Projections.h \
+# the ones that are always available
+PACKAGES = \
+    cython \
 
-# standard targets
-all: $(PROJ_DLL) export
+# project settings: do not remove core directory (core usually refers core dump file)
+# filter-out info at: https://www.gnu.org/software/make/manual/html_node/index.html
+PROJ_TIDY := ${filter-out core, $(PROJ_TIDY)}
 
-export:: export-package-headers export-libraries
+# the standard targets
 
-# configuration
-# the extension of the c++ sources
-EXT_CXX = cpp
+all:
+	BLD_ACTION="all" $(MM) recurse
 
-# the private build location
-PROJ_TMPDIR = $(BLD_TMPDIR)/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)/lib
+tidy::
+	BLD_ACTION="tidy" $(MM) recurse
+
+clean::
+	BLD_ACTION="clean" $(MM) recurse
+
+distclean::
+	BLD_ACTION="distclean" $(MM) recurse
+
+live:
+	BLD_ACTION="live" $(MM) recurse
+
+# archiving support
+zipit:
+	cd $(EXPORT_ROOT); zip -r $(PYRE_ZIP) ${addprefix packages/, $(PACKAGES) --include \*.py}
+
+# shortcuts for building specific subdirectories
+.PHONY: $(RECURSE_DIRS)
+
+$(RECURSE_DIRS):
+	(cd $@; $(MM))
 
 
-# end-of-file
+# end of file

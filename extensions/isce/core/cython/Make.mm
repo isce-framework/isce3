@@ -13,7 +13,7 @@ PROJ_CXX_INCLUDES = $(EXPORT_INCDIR)
 # point to the location of my libraries
 PROJ_LCXX_LIBPATH = $(BLD_LIBDIR)
 # link against these
-PROJ_LIBRARIES = -lisce.$(PROJECT_MAJOR).$(PROJECT_MINOR)
+PROJ_LIBRARIES = -lisce.$(PROJECT_MAJOR).$(PROJECT_MINOR) -ljournal
 
 # the sources
 MODULE_CYTHON_PYX = \
