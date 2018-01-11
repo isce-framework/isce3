@@ -3,6 +3,9 @@
 
 # project defaults
 include isce.def
+# get support for pyre
+include pyre/default.def
+
 # the module
 MODULE = iscecore
 # use a tmp directory that knows the name of the module
