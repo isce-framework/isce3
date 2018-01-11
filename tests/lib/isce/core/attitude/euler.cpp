@@ -12,10 +12,9 @@
 struct EulerTest : public ::testing::Test {
 
     typedef isce::core::EulerAngles EulerAngles;
-    typedef isce::core::matrix_t matrix_t;
 
     double yaw, pitch, roll, tol;
-    matrix_t R_ypr_ref, R_rpy_ref;
+    std::vector<std::vector<double>> R_ypr_ref, R_rpy_ref;
     EulerAngles attitude;
 
     protected:
@@ -55,7 +54,7 @@ struct EulerTest : public ::testing::Test {
 };
 
 TEST_F(EulerTest, CheckYPR) {
-    matrix_t R_ypr = attitude.rotmat("ypr");
+    std::vector<std::vector<double>> R_ypr = attitude.rotmat("ypr");
     for (size_t i = 0; i < 3; ++i) {
         for (size_t j = 0; j < 3; ++j) {
             ASSERT_NEAR(R_ypr_ref[i][j], R_ypr[i][j], tol);
@@ -64,7 +63,7 @@ TEST_F(EulerTest, CheckYPR) {
 }
 
 TEST_F(EulerTest, CheckRPY) {
-    matrix_t R_rpy = attitude.rotmat("rpy");
+    std::vector<std::vector<double>> R_rpy = attitude.rotmat("rpy");
     for (size_t i = 0; i < 3; ++i) {
         for (size_t j = 0; j < 3; ++j) {
             ASSERT_NEAR(R_rpy_ref[i][j], R_rpy[i][j], tol);

@@ -6,13 +6,14 @@ from libcpp cimport bool
 
 from Orbit cimport Orbit
 from Ellipsoid cimport Ellipsoid
+from Attitude cimport Attitude
 
 cdef extern from "isce/core/Doppler.h" namespace "isce::core":
-    cdef cppclass Doppler[Attitude]:
+    cdef cppclass Doppler:
         vector[double] satxyz
         vector[double] satvel
         vector[double] satllh
-        Doppler(Orbit *, Attitude *, Ellipsoid *, double) except +
+        Doppler(Orbit &, Attitude *, Ellipsoid &, double) except +
         double centroid(double, double, string, int, int, bool)
 
 # end of file

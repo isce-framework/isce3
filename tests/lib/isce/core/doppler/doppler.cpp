@@ -18,14 +18,12 @@ struct DopplerTest : public ::testing::Test {
     typedef isce::core::Ellipsoid Ellipsoid;
     typedef isce::core::EulerAngles EulerAngles;
     typedef isce::core::Orbit Orbit;
-    typedef isce::core::vector_t vector_t;
-    typedef isce::core::matrix_t matrix_t;
 
     double yaw, pitch, roll, t_az, slantRange, wvl, fd, tol;
     EulerAngles attitude;
     Ellipsoid ellipsoid;
     Orbit orbit;
-    isce::core::Doppler<EulerAngles> doppler;
+    isce::core::Doppler doppler;
     std::vector<double> ranges, wvls, fd_ref;
 
     protected:
@@ -51,7 +49,7 @@ struct DopplerTest : public ::testing::Test {
             orbit = loadOrbitData();
 
             // Make Doppler
-            doppler = isce::core::Doppler<EulerAngles>(&orbit, &attitude, &ellipsoid, t_az);
+            doppler = isce::core::Doppler(orbit, &attitude, ellipsoid, t_az);
 
             // Set the slant range pixels to test
             ranges = {847417.0, 847467.0, 847517.0, 847567.0};

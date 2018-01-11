@@ -3,35 +3,84 @@
 cimport cython
 import numpy as np
 cimport numpy as np
+from cython.operator cimport dereference as deref
 from libcpp.vector cimport vector
 from libcpp.string cimport string
 from libcpp cimport bool
 
 from Doppler cimport Doppler
-from Attitude cimport EulerAngles, Quaternion
 
+cdef class pyDoppler:
 
-cdef class pyDopplerEuler:
-    cdef Doppler[EulerAngles] * c_doppler
-    cdef pyEulerAngles eulerangles
+    cdef Doppler * c_doppler
     cdef int side
     cdef bool precession
+    cdef bool __owner
     cdef string frame
+
+    def __cinit__(self):
+        pass
+
+    def __dealloc__(self):
+        if self.__owner:
+            del self.c_doppler
+
+    def centroid(self, double slantRange, double wvl, int max_iter=10):
+        cdef double fd = self.c_doppler.centroid(slantRange, wvl, self.frame, max_iter,
+            self.side, self.precession)
+        return fd
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def centroidProfile(self, np.ndarray[np.float64_t, ndim=1] slantRange,
+        double wvl, int max_iter=10):
+
+        cdef int i
+        cdef int nr = slantRange.shape[0]
+        cdef np.ndarray[np.float64_t, ndim=1] fd = np.zeros((nr,), dtype=slantRange.dtype)
+        for i in range(nr):
+            fd[i] = self.c_doppler.centroid(slantRange[i], wvl, self.frame, max_iter,
+                self.side, self.precession) 
+        return fd
+
+    @property
+    def satxyz(self):
+        return [self.c_doppler.satxyz[i] for i in range(3)]
+    @satxyz.setter
+    def satxyz(self, value):
+        raise ValueError('Cannot set satxyz')
+
+    @property
+    def satvel(self):
+        return [self.c_doppler.satvel[i] for i in range(3)]
+    @satvel.setter
+    def satvel(self, value):
+        raise ValueError('Cannot set satvel')
+
+    @property
+    def satllh(self):
+        return [self.c_doppler.satllh[i] for i in range(3)]
+    @satllh.setter
+    def satllh(self, value):
+        raise ValueError('Cannot set satllh')
+
+
+cdef class pyDopplerEuler(pyDoppler):
+    cdef pyEulerAngles eulerangles
     
-    def __cinit__(self, pyOrbit orbit, pyEulerAngles eulerangles,
-        pyEllipsoid ellipsoid, double epoch, int side=-1, bool precession=False, frame='inertial'):
-        self.c_doppler = new Doppler[EulerAngles](
-            orbit.c_orbit,
+    def __cinit__(self, pyOrbit orbit, pyEulerAngles eulerangles, pyEllipsoid ellipsoid,
+        double epoch, int side=-1, bool precession=False, frame='inertial'):
+        self.c_doppler = new Doppler(
+            deref(orbit.c_orbit),
             eulerangles.c_eulerangles,
-            ellipsoid.c_ellipsoid, epoch
+            deref(ellipsoid.c_ellipsoid), epoch
         )
         self.eulerangles = eulerangles
         self.side = side
         self.precession = precession
         self.frame = frame.encode('utf-8')
+        self.__owner = True
 
-    def __dealloc__(self):
-        del self.c_doppler
 
     def derivs(self, np.ndarray[np.float64_t, ndim=1] slantRange, double wvl, int max_iter=10):
          
@@ -82,61 +131,18 @@ cdef class pyDopplerEuler:
         return outDerivs
         
 
-    def centroid(self, double slantRange, double wvl, int max_iter=10):
-        cdef double fd = self.c_doppler.centroid(slantRange, wvl, self.frame, max_iter,
-            self.side, self.precession)
-        return fd
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    def centroidProfile(self, np.ndarray[np.float64_t, ndim=1] slantRange,
-        double wvl, int max_iter=10):
-
-        cdef int i
-        cdef int nr = slantRange.shape[0]
-        cdef np.ndarray[np.float64_t, ndim=1] fd = np.zeros((nr,), dtype=slantRange.dtype)
-        for i in range(nr):
-            fd[i] = self.c_doppler.centroid(slantRange[i], wvl, self.frame, max_iter,
-                self.side, self.precession) 
-        return fd
-
-    @property
-    def satxyz(self):
-        return [self.c_doppler.satxyz[i] for i in range(3)]
-    @satxyz.setter
-    def satxyz(self, value):
-        raise ValueError('Cannot set satxyz')
-
-    @property
-    def satvel(self):
-        return [self.c_doppler.satvel[i] for i in range(3)]
-    @satvel.setter
-    def satvel(self, value):
-        raise ValueError('Cannot set satvel')
-
-    @property
-    def satllh(self):
-        return [self.c_doppler.satllh[i] for i in range(3)]
-    @satllh.setter
-    def satllh(self, value):
-        raise ValueError('Cannot set satllh')
-
-
-cdef class pyDopplerQuaternion:
-    cdef Doppler[Quaternion] * c_doppler
+cdef class pyDopplerQuaternion(pyDoppler):
     cdef pyQuaternion quaternion
     
-    def __cinit__(self, pyOrbit orbit, pyQuaternion quaternion,
-        pyEllipsoid ellipsoid, double epoch):
-        self.c_doppler = new Doppler[Quaternion](
-            orbit.c_orbit,
+    def __cinit__(self, pyOrbit orbit, pyQuaternion quaternion, pyEllipsoid ellipsoid,
+        double epoch):
+        self.c_doppler = new Doppler(
+            deref(orbit.c_orbit),
             quaternion.c_quaternion,
-            ellipsoid.c_ellipsoid, epoch
+            deref(ellipsoid.c_ellipsoid), epoch
         )
         self.quaternion = quaternion
-
-    def __dealloc__(self):
-        del self.c_doppler
+        self.__owner = True
 
     def derivs(self, np.ndarray[np.float64_t, ndim=1] slantRange, double wvl,
         string frame, int max_iter, int side, bool precession,
@@ -169,33 +175,6 @@ cdef class pyDopplerQuaternion:
                 self.quaternion.c_quaternion.qvec[k] = qref[k]
 
         return
-
-    def centroid(self, double slantRange, double wvl, string frame, int max_iter,
-        int side, bool precession):
-        cdef double fd = self.c_doppler.centroid(slantRange, wvl, frame, max_iter,
-            side, precession)
-        return fd
-
-    @property
-    def satxyz(self):
-        return [self.c_doppler.satxyz[i] for i in range(3)]
-    @satxyz.setter
-    def satxyz(self, value):
-        raise ValueError('Cannot set satxyz')
-
-    @property
-    def satvel(self):
-        return [self.c_doppler.satvel[i] for i in range(3)]
-    @satvel.setter
-    def satvel(self, value):
-        raise ValueError('Cannot set satvel')
-
-    @property
-    def satllh(self):
-        return [self.c_doppler.satllh[i] for i in range(3)]
-    @satllh.setter
-    def satllh(self, value):
-        raise ValueError('Cannot set satllh')
 
 
 # end of file

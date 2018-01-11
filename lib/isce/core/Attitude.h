@@ -13,35 +13,35 @@
 namespace isce {
 namespace core {
 
-// Some useful typedefs
-typedef std::vector<double> vector_t;
-typedef std::vector<std::vector<double>> matrix_t;
-
 // Pure abstract Attitude class to be inherited
-struct BaseAttitude {
-    virtual vector_t ypr() = 0;
-    virtual matrix_t rotmat(const std::string) = 0;
+struct Attitude {
+    // Basic constructor to set the attitude type string
+    std::string attitude_type;
+    Attitude(std::string type_name) : attitude_type(type_name) {};
+    // Virtual functions
+    virtual std::vector<double> ypr() = 0;
+    virtual std::vector<std::vector<double>> rotmat(const std::string) = 0;
 };
 
 // Quaternion representation of attitude
-struct Quaternion : public BaseAttitude {
+struct Quaternion : public Attitude {
 
     // Attributes
     DateTime time;
-    vector_t qvec;
+    std::vector<double> qvec;
 
     // Constructor
     Quaternion();
-    Quaternion(vector_t &);
+    Quaternion(std::vector<double> &);
 
     // Representations
-    vector_t ypr();
-    matrix_t rotmat(const std::string);
-    vector_t factoredYPR(vector_t &, vector_t &, Ellipsoid *);
+    std::vector<double> ypr();
+    std::vector<std::vector<double>> rotmat(const std::string);
+    std::vector<double> factoredYPR(std::vector<double> &, std::vector<double> &, Ellipsoid *);
 };
 
 // Euler angle attitude representation
-struct EulerAngles : public BaseAttitude {
+struct EulerAngles : public Attitude {
 
     // Attributes
     DateTime time;
@@ -51,18 +51,18 @@ struct EulerAngles : public BaseAttitude {
     EulerAngles(double yaw=0.0, double pitch=0.0, double roll=0.0, bool deg=false);
 
     // Representations
-    vector_t ypr();
-    matrix_t rotmat(const std::string);
-    vector_t toQuaternionElements();
+    std::vector<double> ypr();
+    std::vector<std::vector<double>> rotmat(const std::string);
+    std::vector<double> toQuaternionElements();
     Quaternion toQuaternion();
 
     // Elementary rotation matrices
-    matrix_t T3(double);
-    matrix_t T2(double);
-    matrix_t T1(double);
+    std::vector<std::vector<double>> T3(double);
+    std::vector<std::vector<double>> T2(double);
+    std::vector<std::vector<double>> T1(double);
 
     // Utility method to convert rotation matrix to Euler angles
-    static vector_t rotmat2ypr(matrix_t &);
+    static std::vector<double> rotmat2ypr(std::vector<std::vector<double>> &);
 };
 
 } // namespace core

@@ -13,32 +13,29 @@
 namespace isce {
 namespace core {
 
-template<class Attitude>
 struct Doppler {
 
     // Structs
-    Ellipsoid * ellipsoid;
-    Orbit * orbit;
-    Attitude * attitude;
+    Ellipsoid ellipsoid;
+    Orbit orbit;
     Pegtrans ptm;
+    // Pointer to base Attitude class
+    Attitude * attitude;
 
     // State vectors
-    vector_t satxyz;
-    vector_t satvel;
-    vector_t satllh;
+    std::vector<double> satxyz;
+    std::vector<double> satvel;
+    std::vector<double> satllh;
     double epoch;
 
     // Constructors
     Doppler() {};
-    Doppler(Orbit *, Attitude *, Ellipsoid *, double);
+    Doppler(Orbit &, Attitude *, Ellipsoid &, double);
 
     double centroid(double, double, std::string, size_t max_iter=10, int side=-1,
         bool precession=false);
 
 };
-
-template struct Doppler<EulerAngles>;
-template struct Doppler<Quaternion>;
 
 } // namespace core
 } // namespace isce
