@@ -13,6 +13,7 @@
 #include "Constants.h"
 #include "Interpolator.h"
 using isce::core::Interpolator;
+using std::abs;
 using std::complex;
 using std::invalid_argument;
 using std::max;
