@@ -3,8 +3,6 @@
 
 # project defaults
 include isce.def
-# get support for pyre
-include pyre/default.def
 
 # the module
 MODULE = iscecore

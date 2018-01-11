@@ -8,6 +8,8 @@
 # dependencies
 # make sure code is relocatable
 include shared/target.def
+# pull in pyre support
+include pyre/default.def
 
 # global options for spisce
 PROJECT = isce
