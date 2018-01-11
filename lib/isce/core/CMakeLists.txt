@@ -6,8 +6,11 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 set(${PACKAGENAME}_DLL isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 ####Library sources
-set(${PACKAGENAME}_SRCS Baseline.cpp
+set(${PACKAGENAME}_SRCS 
+              Attitude.cpp
+              Baseline.cpp
               DateTime.cpp
+              Doppler.cpp
               Ellipsoid.cpp
               Interpolator.cpp
               LUT2d.cpp
@@ -22,9 +25,11 @@ set(${PACKAGENAME}_SRCS Baseline.cpp
               Projections.cpp)
 
 #####Library headers
-set(${PACKAGENAME}_EXPORT_HEADERS   Baseline.h
+set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h 
+                                    Baseline.h
                                     Constants.h
                                     DateTime.h
+                                    Doppler.h
                                     Ellipsoid.h
                                     Interpolator.h
                                     LUT2d.h
