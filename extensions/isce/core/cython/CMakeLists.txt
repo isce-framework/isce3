@@ -10,7 +10,9 @@ set (CYISCE_PYX pyDateTime.pyx
                 pyPegTrans.pyx
                 pyPoly1d.pyx
                 pyPoly2d.pyx
-                pyPosition.pyx)
+                pyPosition.pyx
+                pyDoppler.pyx
+                pyAttitude.pyx)
 
 set (CYISCE_PXD DateTime.pxd
                 Ellipsoid.pxd
@@ -21,17 +23,20 @@ set (CYISCE_PXD DateTime.pxd
                 Pegtrans.pxd
                 Poly1d.pxd
                 Poly2d.pxd
-                Position.pxd)
+                Position.pxd
+                Doppler.pxd
+                Attitude.pxd)
 
 set (LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
+find_package(Numpy REQUIRED)
 
 set_source_files_properties(
     iscecore.pyx
     PROPERTIES CYTHON_IS_CXX TRUE)
 
 cython_add_module(iscecore iscecore.pyx)
-target_include_directories(iscecore PUBLIC ${ISCE_BUILDINCLUDEDIR} .)
-target_link_libraries(iscecore ${LISCE} m)
+target_include_directories(iscecore PUBLIC ${ISCE_BUILDINCLUDEDIR} ${PYTHON_NUMPY_INCLUDE_DIR} .)
+target_link_libraries(iscecore PUBLIC ${LISCE} m)
 install (TARGETS
         iscecore
         DESTINATION ${ISCE_PACKAGESDIR}

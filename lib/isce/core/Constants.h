@@ -49,6 +49,10 @@ namespace isce { namespace core {
         BIQUINTIC_METHOD
     };
 
+    // Ellipsoid parameters for Earth
+    const double EarthSemiMajorAxis = 6378137.0;
+    const double EarthEccentricitySquared = 0.0066943799901;
+
     // Inline function for input checking on vector lengths (primarily to check to see if 3D vector 
     // has the correct number of inputs, but is generalized to any length). 'vec_name' is passed in
     // by the wrapper macro (stringified vector name), and 'parent_func' is passed in the same way 

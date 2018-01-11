@@ -43,6 +43,7 @@ namespace isce { namespace core {
         int interpolateLegendreOrbit(double,std::vector<double>&,std::vector<double>&) const;
         int interpolateSCHOrbit(double,std::vector<double>&,std::vector<double>&) const;
         int computeAcceleration(double,std::vector<double>&) const;
+        double getENUHeading(double);
         void printOrbit() const;
         void loadFromHDR(const char*,int);
         void dumpToHDR(const char*) const;
