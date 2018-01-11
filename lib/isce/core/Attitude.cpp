@@ -11,7 +11,7 @@
 
 // EulerAngle constructor
 isce::core::EulerAngles::
-EulerAngles(double yaw, double pitch, double roll, bool deg) {
+EulerAngles(double yaw, double pitch, double roll, bool deg) : Attitude("euler") {
     double factor = 1.0;
     if (deg) {
         factor = M_PI / 180.0;
@@ -22,25 +22,25 @@ EulerAngles(double yaw, double pitch, double roll, bool deg) {
 }
 
 // Return vector of Euler angles
-isce::core::vector_t
+std::vector<double>
 isce::core::EulerAngles::ypr() {
-    vector_t v = {yaw, pitch, roll};
+    std::vector<double> v = {yaw, pitch, roll};
     return v;
 }
 
 // Rotation matrix for a given sequence
-isce::core::matrix_t
+std::vector<std::vector<double>>
 isce::core::EulerAngles::rotmat(const std::string sequence) {
     
     // Construct map for Euler angles to elementary rotation matrices
-    std::map<const char, matrix_t> R_map;
+    std::map<const char, std::vector<std::vector<double>>> R_map;
     R_map['y'] = T3(yaw);
     R_map['p'] = T2(pitch);
     R_map['r'] = T1(roll);
 
     // Build composite matrix
-    matrix_t R(3, std::vector<double>(3, 0.0));
-    matrix_t R_tmp(3, std::vector<double>(3, 0.0));
+    std::vector<std::vector<double>> R(3, std::vector<double>(3, 0.0));
+    std::vector<std::vector<double>> R_tmp(3, std::vector<double>(3, 0.0));
     LinAlg::matMat(R_map[sequence[1]], R_map[sequence[2]], R_tmp);
     LinAlg::matMat(R_map[sequence[0]], R_tmp, R);
 
@@ -49,11 +49,11 @@ isce::core::EulerAngles::rotmat(const std::string sequence) {
 }
 
 // Rotation around Z-axis
-isce::core::matrix_t
+std::vector<std::vector<double>>
 isce::core::EulerAngles::T3(double angle) {
     const double cos = std::cos(angle);
     const double sin = std::sin(angle);
-    matrix_t T{{
+    std::vector<std::vector<double>> T{{
         {cos, -sin, 0.0},
         {sin, cos, 0.0},
         {0.0, 0.0, 1.0}
@@ -62,11 +62,11 @@ isce::core::EulerAngles::T3(double angle) {
 }
 
 // Rotation around Y-axis
-isce::core::matrix_t
+std::vector<std::vector<double>>
 isce::core::EulerAngles::T2(double angle) {
     const double cos = std::cos(angle);
     const double sin = std::sin(angle);
-    matrix_t T{{
+    std::vector<std::vector<double>> T{{
         {cos, 0.0, sin},
         {0.0, 1.0, 0.0},
         {-sin, 0.0, cos}
@@ -75,11 +75,11 @@ isce::core::EulerAngles::T2(double angle) {
 }
 
 // Rotation around X-axis
-isce::core::matrix_t
+std::vector<std::vector<double>>
 isce::core::EulerAngles::T1(double angle) {
     const double cos = std::cos(angle);
     const double sin = std::sin(angle);
-    matrix_t T{{
+    std::vector<std::vector<double>> T{{
         {1.0, 0.0, 0.0},
         {0.0, cos, -sin},
         {0.0, sin, cos}
@@ -88,8 +88,8 @@ isce::core::EulerAngles::T1(double angle) {
 }
 
 // Extract YPR angles from a rotation matrix
-isce::core::vector_t
-isce::core::EulerAngles::rotmat2ypr(matrix_t & R) {
+std::vector<double>
+isce::core::EulerAngles::rotmat2ypr(std::vector<std::vector<double>> & R) {
 
     const double sy = std::sqrt(R[0][0]*R[0][0] + R[1][0]*R[1][0]);
     double yaw, pitch, roll;
@@ -104,12 +104,12 @@ isce::core::EulerAngles::rotmat2ypr(matrix_t & R) {
     }
 
     // Make vector and return
-    vector_t angles{yaw, pitch, roll};
+    std::vector<double> angles{yaw, pitch, roll};
     return angles;
 }
 
 // Return quaternion elements; multiply by -1 to get consistent signs
-isce::core::vector_t
+std::vector<double>
 isce::core::EulerAngles::toQuaternionElements() {
     // Compute trig quantities
     const double cy = std::cos(yaw * 0.5);
@@ -119,7 +119,7 @@ isce::core::EulerAngles::toQuaternionElements() {
     const double cr = std::cos(roll * 0.5);
     const double sr = std::sin(roll * 0.5);
     // Make a vector
-    vector_t q = {
+    std::vector<double> q = {
         -1.0 * (cy * cr * cp + sy * sr * sp),
         -1.0 * (cy * sr * cp - sy * cr * sp),
         -1.0 * (cy * cr * sp + sy * sr * cp),
@@ -132,7 +132,7 @@ isce::core::EulerAngles::toQuaternionElements() {
 isce::core::Quaternion
 isce::core::EulerAngles::toQuaternion() {
     // Get elements
-    vector_t qvec = toQuaternionElements();
+    std::vector<double> qvec = toQuaternionElements();
     // Make a quaternion
     Quaternion quat(qvec);
     return quat;
@@ -140,13 +140,13 @@ isce::core::EulerAngles::toQuaternion() {
 
 // Quaternion default constructor
 isce::core::Quaternion::
-Quaternion() : qvec{0.0, 0.0, 0.0, 0.0} {}
+Quaternion() : Attitude("quaternion"), qvec{0.0, 0.0, 0.0, 0.0} {}
 // Quaternion constructor with vector
 isce::core::Quaternion::
-Quaternion(isce::core::vector_t & q) : qvec(q) {}
+Quaternion(std::vector<double> & q) : Attitude("quaternion"), qvec(q) {}
 
 // Return vector of Euler angles
-isce::core::vector_t
+std::vector<double>
 isce::core::Quaternion::ypr() {
 
     // Get quaternion elements
@@ -174,14 +174,14 @@ isce::core::Quaternion::ypr() {
     const double roll = std::atan2(r31, r32);
 
     // Make vector and return
-    vector_t angles{yaw, pitch, roll};
+    std::vector<double> angles{yaw, pitch, roll};
     return angles;
     
 }
 
 
 // Convert quaternion to rotation matrix
-isce::core::matrix_t
+std::vector<std::vector<double>>
 isce::core::Quaternion::rotmat(const std::string dummy) {
 
     // Cache quaternion elements
@@ -194,7 +194,7 @@ isce::core::Quaternion::rotmat(const std::string dummy) {
     const double d = qvec[3];
 
     // Construct rotation matrix
-    matrix_t R{{
+    std::vector<std::vector<double>> R{{
         {a*a + b*b - c*c - d*d,
          2*b*c - 2*a*d,
          2*b*d + 2*a*c},
@@ -210,8 +210,8 @@ isce::core::Quaternion::rotmat(const std::string dummy) {
 }
 
 // Extract YPR after factoring out orbit matrix
-isce::core::vector_t
-isce::core::Quaternion::factoredYPR(vector_t & satxyz, vector_t & satvel,
+std::vector<double>
+isce::core::Quaternion::factoredYPR(std::vector<double> & satxyz, std::vector<double> & satvel,
     Ellipsoid * ellipsoid) {
 
     // Compute ECI velocity assuming attitude angles are provided in inertial frame
@@ -222,7 +222,7 @@ isce::core::Quaternion::factoredYPR(vector_t & satxyz, vector_t & satvel,
         Va[i] += satvel[i];
 
     // Compute vectors for TCN-like basis
-    vector_t q(3), c(3), b(3), a(3), temp(3);
+    std::vector<double> q(3), c(3), b(3), a(3), temp(3);
     temp = {satxyz[0], satxyz[1], satxyz[2] / (1 - ellipsoid->e2)};
     LinAlg::unitVec(temp, q);
     c = {-q[0], -q[1], -q[2]};
@@ -231,7 +231,7 @@ isce::core::Quaternion::factoredYPR(vector_t & satxyz, vector_t & satvel,
     LinAlg::cross(b, c, a);
 
     // Stack basis vectors to get transposed orbit matrix
-    matrix_t L0(3, std::vector<double>(3, 0.0));
+    std::vector<std::vector<double>> L0(3, std::vector<double>(3, 0.0));
     for (size_t i = 0; i < 3; ++i) {
         L0[0][i] = a[i];
         L0[1][i] = b[i];
@@ -239,14 +239,14 @@ isce::core::Quaternion::factoredYPR(vector_t & satxyz, vector_t & satvel,
     }
 
     // Get total rotation matrix
-    matrix_t R = rotmat("");
+    std::vector<std::vector<double>> R = rotmat("");
 
     // Multiply by transpose to get pure attitude matrix
-    matrix_t L(3, std::vector<double>(3, 0.0));
+    std::vector<std::vector<double>> L(3, std::vector<double>(3, 0.0));
     LinAlg::matMat(L0, R, L);
 
     // Extract Euler angles from rotation matrix
-    vector_t angles = EulerAngles::rotmat2ypr(L);
+    std::vector<double> angles = EulerAngles::rotmat2ypr(L);
     return angles;
 }
 

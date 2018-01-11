@@ -60,9 +60,6 @@ cdef class pyEulerAngles:
     def roll(self, value):
         self.c_eulerangles.roll = value
 
-    #def archive(self, string metadata):
-    #    Archive.load_archive[EulerAngles](metadata, 'EulerAngles', self.c_eulerangles)
-
 
 cdef class pyQuaternion:
     cdef Quaternion * c_quaternion
