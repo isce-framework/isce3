@@ -5,6 +5,8 @@
 #
 
 #include "pyDateTime.pyx"
+include "pyAttitude.pyx"
+include "pyDoppler.pyx"
 include "pyEllipsoid.pyx"
 include "pyInterpolator.pyx"
 include "pyPeg.pyx"

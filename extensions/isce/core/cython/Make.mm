@@ -18,7 +18,9 @@ PROJ_LIBRARIES = -lisce.$(PROJECT_MAJOR).$(PROJECT_MINOR)
 
 # the sources
 MODULE_CYTHON_PYX = \
+    pyAttitude.pyx \
     pyDateTime.pyx \
+    pyDoppler.pyx \
     pyEllipsoid.pyx \
     pyInterpolator.pyx \
     pyLinAlg.pyx \
@@ -31,7 +33,9 @@ MODULE_CYTHON_PYX = \
 
 # the headers
 MODULE_CYTHON_PXD = \
+    Attitude.pxd \
     DateTime.pxd \
+    Doppler.pxd \
     Ellipsoid.pxd \
     Interpolator.pxd \
     LinAlg.pxd \
