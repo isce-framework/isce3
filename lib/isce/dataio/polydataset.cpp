@@ -86,7 +86,7 @@ CPLErr PolyRasterBand::IReadBlock(int nBlockXOff, int nBlockYOff, void *pImage) 
     int xOff = nBlockXOff * nBlockXSize;
     // Fill pImage buffer with poly-calculated values
     for (int idx=0; idx<nBlockXSize; ++idx) {
-        static_cast<double*>(pImage)[idx] = poGDS->poly(nBlockYOff, xOff + idx);
+        static_cast<double*>(pImage)[idx] = poGDS->poly.eval(nBlockYOff, xOff + idx);
     }
     return CE_None;
 }
