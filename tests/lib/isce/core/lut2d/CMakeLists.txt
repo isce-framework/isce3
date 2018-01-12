@@ -1,4 +1,3 @@
-##Find pyre and journal libraries
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 add_executable(lut2d lut2d.cpp)
