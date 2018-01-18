@@ -70,6 +70,7 @@ cdef class pyQuaternion:
         for i in range(4):
             _q.push_back(q[i])
         self.c_quaternion = new Quaternion(_q)
+        self.__owner = True
 
     def __dealloc__(self):
         if self.__owner:

@@ -15,11 +15,14 @@ cdef class pyDoppler:
     cdef Doppler * c_doppler
     cdef int side
     cdef bool precession
-    cdef bool __owner
     cdef string frame
+    cdef bool __owner 
 
     def __cinit__(self):
-        pass
+        """
+        Set __owner to False to prevent creation of base class
+        """
+        self.__owner = False 
 
     def __dealloc__(self):
         if self.__owner:

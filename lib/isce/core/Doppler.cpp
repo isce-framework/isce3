@@ -53,7 +53,7 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
 
     // Compute ECI velocity if attitude angles are provided in inertial frame
     std::vector<double> Va(3);
-    if (frame == "inertial") {
+    if (frame.compare("inertial") == 0) {
         std::vector<double> w{0.0, 0.0, 0.00007292115833};
         LinAlg::cross(w, satxyz, Va);
         for (size_t i = 0; i < 3; ++i) {
