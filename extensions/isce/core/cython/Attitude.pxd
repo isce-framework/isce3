@@ -20,7 +20,7 @@ cdef extern from "isce/core/Attitude.h" namespace "isce::core":
         double yaw
         double pitch
         double roll
-        EulerAngles(double, double, double, bool) except +
+        EulerAngles(double, double, double, string, bool) except +
         vector[double] toQuaternionElements()
 
 # end of file

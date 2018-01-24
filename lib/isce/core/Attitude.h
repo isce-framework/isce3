@@ -21,6 +21,8 @@ struct Attitude {
     // Virtual functions
     virtual std::vector<double> ypr() = 0;
     virtual std::vector<std::vector<double>> rotmat(const std::string) = 0;
+    // Attributes needed for Euler Angle representation
+    std::string yaw_orientation;
 };
 
 // Quaternion representation of attitude
@@ -48,7 +50,8 @@ struct EulerAngles : public Attitude {
     double yaw, pitch, roll;
 
     // Constructor
-    EulerAngles(double yaw=0.0, double pitch=0.0, double roll=0.0, bool deg=false);
+    EulerAngles(double yaw=0.0, double pitch=0.0, double roll=0.0,
+        const std::string yaw_orientation="normal", bool deg=false);
 
     // Representations
     std::vector<double> ypr();

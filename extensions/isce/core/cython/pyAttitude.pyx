@@ -10,8 +10,9 @@ cdef class pyEulerAngles:
     cdef EulerAngles * c_eulerangles
     cdef bool __owner
 
-    def __cinit__(self, double yaw, double pitch, double roll):
-        self.c_eulerangles = new EulerAngles(yaw, pitch, roll, False)
+    def __cinit__(self, double yaw, double pitch, double roll, yaw_orientation='normal'):
+        self.c_eulerangles = new EulerAngles(yaw, pitch, roll,
+            yaw_orientation.encode('utf-8'), False)
         self.__owner = True
         
     def __dealloc__(self):

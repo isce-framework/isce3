@@ -11,7 +11,8 @@
 
 // EulerAngle constructor
 isce::core::EulerAngles::
-EulerAngles(double yaw, double pitch, double roll, bool deg) : Attitude("euler") {
+EulerAngles(double yaw, double pitch, double roll, const std::string yaw_orientation, bool deg) 
+    : Attitude("euler") {
     double factor = 1.0;
     if (deg) {
         factor = M_PI / 180.0;
@@ -19,6 +20,12 @@ EulerAngles(double yaw, double pitch, double roll, bool deg) : Attitude("euler")
     this->yaw = yaw * factor;
     this->pitch = pitch * factor;
     this->roll = roll * factor;
+    if (yaw_orientation.compare("normal") == 0 || yaw_orientation.compare("center") == 0) {
+        this->yaw_orientation = yaw_orientation;
+    } else {
+        std::cerr << "Unsupported yaw orientation. Must be normal or center." << std::endl;
+        throw std::invalid_argument("Unsupported yaw orientation.");
+    }
 }
 
 // Return vector of Euler angles
