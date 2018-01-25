@@ -1,4 +1,6 @@
+add_subdirectory(attitude)
 add_subdirectory(ellipsoid)
+add_subdirectory(doppler)
 add_subdirectory(projections)
 add_subdirectory(poly)
 add_subdirectory(orbit)

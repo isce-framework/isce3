@@ -14,6 +14,8 @@ RECURSE_DIRS = \
 
 # the ones that are always available
 PACKAGES = \
+    attitude \
+    doppler \
     ellipsoid \
     lut2d \
     orbit \
