@@ -7,8 +7,10 @@ PACKAGE = isce/core
 
 # the list of sources
 PROJ_SRCS = \
+    Attitude.cpp \
     Baseline.cpp \
     DateTime.cpp \
+    Doppler.cpp \
     Ellipsoid.cpp \
     Interpolator.cpp \
     LUT2d.cpp \
@@ -28,9 +30,11 @@ PROJ_DLL = $(BLD_LIBDIR)/lib$(PROJECT).$(PROJECT_MAJOR).$(PROJECT_MINOR).$(EXT_S
 EXPORT_LIBS = $(PROJ_DLL)
 # the headers
 EXPORT_PKG_HEADERS = \
+    Attitude.h \
     Baseline.h \
     Constants.h \
     DateTime.h \
+    Doppler.h \
     Ellipsoid.h \
     Interpolator.h \
     LUT2d.h \

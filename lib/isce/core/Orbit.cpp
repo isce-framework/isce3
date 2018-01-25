@@ -12,6 +12,8 @@
 #include <vector>
 #include "Constants.h"
 #include "Orbit.h"
+#include "LinAlg.h"
+#include "Ellipsoid.h"
 using isce::core::Orbit;
 using isce::core::orbitHermite;
 using isce::core::orbitType;
@@ -302,6 +304,27 @@ int Orbit::computeAcceleration(double tintp, vector<double> &acc) const {
 
     for (int i=0; i<3; i++) acc[i] = (vaft[i] - vbef[i]) / .02;
     return 0;
+}
+
+double Orbit::getENUHeading(double aztime) {
+    // Computes heading at a given azimuth time using a single state vector
+
+    vector<double> pos(3), vel(3), llh(3), enuvel(3);
+    vector<vector<double>> enumat(3,vector<double>(3,0)), xyz2enu(3,vector<double>(3,0));
+    isce::core::Ellipsoid refElp(EarthSemiMajorAxis, EarthEccentricitySquared);
+
+    // Interpolate orbit to azimuth time
+    interpolateWGS84Orbit(aztime, pos, vel);
+    // Convert platform position to LLH
+    refElp.xyzToLatLon(pos, llh);
+    // Get ENU transformation matrix
+    LinAlg::enuBasis(llh[0], llh[1], enumat);
+    // Compute velocity in ENU
+    LinAlg::tranMat(enumat, xyz2enu);
+    LinAlg::matVec(xyz2enu, vel, enuvel);
+    // Get heading from velocity
+    return std::atan2(enuvel[0], enuvel[1]);
+
 }
 
 void Orbit::printOrbit() const {
