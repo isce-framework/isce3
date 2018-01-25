@@ -1,8 +1,11 @@
 #cython: language_level=3
+#
+# Author: Bryan V. Riel
+# Copyright 2018
+#
 
 from libcpp.vector cimport vector
 from libcpp.string cimport string
-from libcpp cimport bool
 from Ellipsoid cimport Ellipsoid
 
 cdef extern from "isce/core/Attitude.h" namespace "isce::core":
@@ -20,7 +23,7 @@ cdef extern from "isce/core/Attitude.h" namespace "isce::core":
         double yaw
         double pitch
         double roll
-        EulerAngles(double, double, double, string, bool) except +
+        EulerAngles(double, double, double, string) except +
         vector[double] toQuaternionElements()
 
 # end of file

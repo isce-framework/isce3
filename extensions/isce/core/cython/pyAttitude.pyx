@@ -1,4 +1,8 @@
 #cython: language_level=3
+#
+# Author: Bryan V. Riel
+# Copyright 2018
+#
 
 from libcpp.vector cimport vector
 from libcpp.string cimport string
@@ -12,7 +16,7 @@ cdef class pyEulerAngles:
 
     def __cinit__(self, double yaw, double pitch, double roll, yaw_orientation='normal'):
         self.c_eulerangles = new EulerAngles(yaw, pitch, roll,
-            yaw_orientation.encode('utf-8'), False)
+            yaw_orientation.encode('utf-8'))
         self.__owner = True
         
     def __dealloc__(self):

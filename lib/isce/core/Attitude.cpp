@@ -1,5 +1,9 @@
 //-*- C++ -*-
 //-*- coding: utf-8 -*-
+//
+// Author: Bryan V. Riel
+// Copyright 2018
+//
 
 #include <iostream>
 #include <string>
@@ -11,15 +15,11 @@
 
 // EulerAngle constructor
 isce::core::EulerAngles::
-EulerAngles(double yaw, double pitch, double roll, const std::string yaw_orientation, bool deg) 
+EulerAngles(double yaw, double pitch, double roll, const std::string yaw_orientation) 
     : Attitude("euler") {
-    double factor = 1.0;
-    if (deg) {
-        factor = M_PI / 180.0;
-    }
-    this->yaw = yaw * factor;
-    this->pitch = pitch * factor;
-    this->roll = roll * factor;
+    this->yaw = yaw;
+    this->pitch = pitch;
+    this->roll = roll;
     if (yaw_orientation.compare("normal") == 0 || yaw_orientation.compare("center") == 0) {
         this->yaw_orientation = yaw_orientation;
     } else {

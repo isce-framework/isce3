@@ -1,5 +1,8 @@
 //-*- C++ -*-
 //-*- coding: utf-8 -*-
+//
+// Author: Bryan V. Riel
+// Copyright 2018
 
 #ifndef DOPPLER_H
 #define DOPPLER_H

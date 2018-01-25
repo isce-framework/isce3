@@ -1,6 +1,6 @@
 # -*- Makefile -*-
 #
-# eric m. gurrola
+# Bryan V. Riel
 # (c) 2017 all rights reserved
 #
 

@@ -1,4 +1,8 @@
 #cython: language_level=3
+#
+# Author: Bryan V. Riel
+# Copyright 2018
+#
 
 from libcpp.vector cimport vector
 from libcpp.string cimport string

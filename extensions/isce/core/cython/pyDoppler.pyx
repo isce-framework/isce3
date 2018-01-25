@@ -1,4 +1,8 @@
 #cython: language_level=3
+#
+# Author: Bryan V. Riel
+# Copyright 2018
+#
 
 cimport cython
 import numpy as np

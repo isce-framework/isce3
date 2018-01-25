@@ -1,5 +1,9 @@
 //-*- C++ -*-
 //-*- coding: utf-8 -*-
+//
+// Author: Bryan V. Riel
+// Copyright 2018
+//
 
 #ifndef ATTITUDE_H
 #define ATTITUDE_H
@@ -51,7 +55,7 @@ struct EulerAngles : public Attitude {
 
     // Constructor
     EulerAngles(double yaw=0.0, double pitch=0.0, double roll=0.0,
-        const std::string yaw_orientation="normal", bool deg=false);
+        const std::string yaw_orientation="normal");
 
     // Representations
     std::vector<double> ypr();
