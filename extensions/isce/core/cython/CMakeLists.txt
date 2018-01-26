@@ -36,7 +36,7 @@ set_source_files_properties(
 
 cython_add_module(iscecore iscecore.pyx)
 target_include_directories(iscecore PUBLIC ${ISCE_BUILDINCLUDEDIR} ${PYTHON_NUMPY_INCLUDE_DIR} .)
-target_link_libraries(iscecore PUBLIC ${LISCE} m)
+target_link_libraries(iscecore ${LISCE} m)
 install (TARGETS
         iscecore
         DESTINATION ${ISCE_PACKAGESDIR}
