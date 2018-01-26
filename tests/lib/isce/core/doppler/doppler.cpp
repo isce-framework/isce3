@@ -26,8 +26,6 @@ struct DopplerTest : public ::testing::Test {
     double yaw, pitch, roll, t_az, slantRange, wvl, fd, tol;
     EulerAngles attitude;
     Ellipsoid ellipsoid;
-    Orbit orbit;
-    isce::core::Doppler doppler;
     std::vector<double> ranges, wvls, fd_ref;
 
     protected:
@@ -49,12 +47,6 @@ struct DopplerTest : public ::testing::Test {
             ellipsoid = Ellipsoid(isce::core::EarthSemiMajorAxis,
                 isce::core::EarthEccentricitySquared);
 
-            // Load orbit
-            orbit = loadOrbitData();
-
-            // Make Doppler
-            doppler = isce::core::Doppler(orbit, &attitude, ellipsoid, t_az);
-
             // Set the slant range pixels to test
             ranges = {847417.0, 847467.0, 847517.0, 847567.0};
             // Set the wavelengths to test
@@ -71,7 +63,16 @@ struct DopplerTest : public ::testing::Test {
         }
 };
 
+// Check for successful construction of a doppler object
+TEST_F(DopplerTest, CheckConstruction) {
+    Orbit orbit = loadOrbitData();
+    isce::core::Doppler doppler = isce::core::Doppler(orbit, &attitude, ellipsoid, t_az);
+} 
+
+// Check computation of Doppler centroid
 TEST_F(DopplerTest, CheckCentroid) {
+    Orbit orbit = loadOrbitData();
+    isce::core::Doppler doppler = isce::core::Doppler(orbit, &attitude, ellipsoid, t_az);
     for (size_t i = 0; i < fd_ref.size(); ++i) {
         double fd = doppler.centroid(ranges[i], wvls[i], "inertial");
         ASSERT_NEAR(fd, fd_ref[i], 1.0e-5);
@@ -90,6 +91,10 @@ isce::core::Orbit loadOrbitData() {
 
     // Open file for reading
     std::ifstream fid("orbit_data.txt");
+    // Check if file open was successful
+    if (fid.fail()) {
+        std::cout << "Error: Failed to open orbit file for Doppler test." << std::endl;
+    }
 
     // Loop over state vectors 
     while (fid) {

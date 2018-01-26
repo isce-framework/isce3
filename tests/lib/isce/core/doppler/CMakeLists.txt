@@ -1,9 +1,5 @@
-#Find pyre and journal libraries
-#find_library(LPYRE pyre HINTS ${PYRE_LIB_DIR})
-#find_library(LJOURNAL journal HINTS ${PYRE_LIB_DIR})
-set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
-message("DOPPLER CMAKE BEFORE" ${CMAKE_CURRENT_BINARY_DIR})
+set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 foreach (TESTNAME doppler)
     add_executable(${TESTNAME} ${TESTNAME}.cpp)
@@ -12,7 +8,5 @@ foreach (TESTNAME doppler)
     add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
     file(COPY orbit_data.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endforeach ()
-
-message("DOPPLER CMAKE AFTER" ${CMAKE_CURRENT_BINARY_DIR})
 
 include(CTest)
