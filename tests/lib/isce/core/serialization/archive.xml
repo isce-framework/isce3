@@ -1,0 +1,138 @@
+<cereal>
+  <Orbit CoordinateSystem="EPSG:4326" Quality="Precise">
+    <StateVectors size="dynamic">
+      <value0>
+        <Time>2014-08-29T17:45:08.978154</Time>
+        <Position>-2661636.767139 -4238071.605204 3960944.165162</Position>
+        <Velocity>-198.409368 29.180626 -101.420769</Velocity>
+      </value0>
+      <value1>
+        <Time>2014-08-29T17:45:11.420512</Time>
+        <Position>-2662121.344040 -4238000.320056 3960696.444647</Position>
+        <Velocity>-198.401338 29.193411 -101.432797</Velocity>
+      </value1>
+      <value2>
+        <Time>2014-08-29T17:45:13.862870</Time>
+        <Position>-2662605.901328 -4237929.003684 3960448.694756</Position>
+        <Velocity>-198.393307 29.206195 -101.444825</Velocity>
+      </value2>
+      <value3>
+        <Time>2014-08-29T17:45:16.305228</Time>
+        <Position>-2663090.438999 -4237857.656090 3960200.915489</Position>
+        <Velocity>-198.385274 29.218979 -101.456852</Velocity>
+      </value3>
+      <value4>
+        <Time>2014-08-29T17:45:18.747585</Time>
+        <Position>-2663574.956851 -4237786.277301 3959953.106950</Position>
+        <Velocity>-198.377240 29.231762 -101.468878</Velocity>
+      </value4>
+      <value5>
+        <Time>2014-08-29T17:45:21.187267</Time>
+        <Position>-2664058.924441 -4237714.945520 3959705.540502</Position>
+        <Velocity>-198.369213 29.244532 -101.480890</Velocity>
+      </value5>
+      <value6>
+        <Time>2014-08-29T17:45:23.629625</Time>
+        <Position>-2664543.403261 -4237643.504293 3959457.673153</Position>
+        <Velocity>-198.361176 29.257315 -101.492915</Velocity>
+      </value6>
+      <value7>
+        <Time>2014-08-29T17:45:26.069308</Time>
+        <Position>-2665027.331855 -4237572.110142 3959210.047962</Position>
+        <Velocity>-198.353146 29.270084 -101.504926</Velocity>
+      </value7>
+      <value8>
+        <Time>2014-08-29T17:45:28.511666</Time>
+        <Position>-2665511.771431 -4237500.606507 3958962.121911</Position>
+        <Velocity>-198.345106 29.282867 -101.516949</Velocity>
+      </value8>
+      <value9>
+        <Time>2014-08-29T17:45:30.954024</Time>
+        <Position>-2665996.191368 -4237429.071652 3958714.166496</Position>
+        <Velocity>-198.337065 29.295650 -101.528972</Velocity>
+      </value9>
+      <value10>
+        <Time>2014-08-29T17:45:33.396381</Time>
+        <Position>-2666480.591465 -4237357.505607 3958466.181821</Position>
+        <Velocity>-198.329022 29.308432 -101.540993</Velocity>
+      </value10>
+      <value11>
+        <Time>2014-08-29T17:45:35.838739</Time>
+        <Position>-2666964.972115 -4237285.908313 3958218.167683</Position>
+        <Velocity>-198.320977 29.321214 -101.553014</Velocity>
+      </value11>
+      <value12>
+        <Time>2014-08-29T17:45:38.281097</Time>
+        <Position>-2667449.333115 -4237214.279802 3957970.124187</Position>
+        <Velocity>-198.312932 29.333996 -101.565035</Velocity>
+      </value12>
+      <value13>
+        <Time>2014-08-29T17:45:40.720780</Time>
+        <Position>-2667933.143998 -4237142.698574 3957722.323053</Position>
+        <Velocity>-198.304893 29.346764 -101.577041</Velocity>
+      </value13>
+      <value14>
+        <Time>2014-08-29T17:45:43.163138</Time>
+        <Position>-2668417.465711 -4237071.007661 3957474.220877</Position>
+        <Velocity>-198.296844 29.359546 -101.589060</Velocity>
+      </value14>
+      <value15>
+        <Time>2014-08-29T17:45:45.605496</Time>
+        <Position>-2668901.767765 -4236999.285531 3957226.089348</Position>
+        <Velocity>-198.288794 29.372327 -101.601078</Velocity>
+      </value15>
+      <value16>
+        <Time>2014-08-29T17:45:48.047854</Time>
+        <Position>-2669386.050155 -4236927.532185 3956977.928467</Position>
+        <Velocity>-198.280742 29.385108 -101.613095</Velocity>
+      </value16>
+      <value17>
+        <Time>2014-08-29T17:45:50.490211</Time>
+        <Position>-2669870.312680 -4236855.747652 3956729.738339</Position>
+        <Velocity>-198.272689 29.397889 -101.625111</Velocity>
+      </value17>
+      <value18>
+        <Time>2014-08-29T17:45:52.932569</Time>
+        <Position>-2670354.555732 -4236783.931874 3956481.518761</Position>
+        <Velocity>-198.264635 29.410670 -101.637127</Velocity>
+      </value18>
+      <value19>
+        <Time>2014-08-29T17:45:55.374927</Time>
+        <Position>-2670838.779111 -4236712.084882 3956233.269838</Position>
+        <Velocity>-198.256578 29.423450 -101.649142</Velocity>
+      </value19>
+    </StateVectors>
+  </Orbit>
+  <Ellipsoid>
+    <a>6378137.0</a>
+    <e2>0.00669437999</e2>
+  </Ellipsoid>
+  <Doppler>
+    <rangeMean>0.0</rangeMean>
+    <azimuthMean>0.0</azimuthMean>
+    <rangeNorm>1.0</rangeNorm>
+    <azimuthNorm>1.0</azimuthNorm>
+    <rangeOrder>3</rangeOrder>
+    <azimuthOrder>0</azimuthOrder>
+    <coeffs size="dynamic">
+      <value0>0.0</value0>
+      <value1>0.0</value1>
+      <value2>0.0</value2>
+      <value3>0.0</value3>
+    </coeffs>
+  </Doppler>
+  <Radar>
+    <width>9900</width>
+    <length>8672</length>
+    <numberRangeLooks>1</numberRangeLooks>
+    <numberAzimuthLooks>1</numberAzimuthLooks>
+    <slantRangePixelSpacing>1.66551366</slantRangePixelSpacing>
+    <rangeFirstSample>13449.6591</rangeFirstSample>
+    <lookSide>1</lookSide>
+    <prf>373.819092</prf>
+    <radarWavelength>0.238403545</radarWavelength>
+    <pegHeading>-2.18619205838</pegHeading>
+    <sensingStart>2014-08-29T17:45:20.577347</sensingStart>
+  </Radar>
+</cereal>
+

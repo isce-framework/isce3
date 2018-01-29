@@ -41,7 +41,8 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Poly1d.h
                                     Poly2d.h
                                     Position.h
-                                    Projections.h)
+                                    Projections.h
+                                    Serialization.h)
 
 ###Install headers into build/include
 ###This is where regex can be used on the header files if needed

@@ -21,6 +21,7 @@ PACKAGES = \
     orbit \
     poly \
     projections \
+    serialization \
 
 # the standard targets
 all:

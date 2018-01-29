@@ -9,7 +9,7 @@ include isce.def
 
 # the pile of tests
 TESTS = \
-    doppler \
+    serializeEllipsoid \
 
 all: test clean
 
