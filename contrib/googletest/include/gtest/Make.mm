@@ -43,7 +43,7 @@ live:
 	BLD_ACTION="live" $(MM) recurse
 
 export:: export-headers
-        BLD_ACTION="export $(MM) recurse
+        BLD_ACTION="export" $(MM) recurse
 
 # shortcuts for building specific subdirectories
 .PHONY: $(RECURSE_DIRS)
