@@ -5,27 +5,31 @@
 # (c) 2017 all rights reserved
 #
 
+# get the cereal defaults
+include cereal.def
+
 # project global settings
-include isce.def
+PROJECT = cereal
+
+PACKAGE = external/rapidxml
 
 # my subdirectories
 RECURSE_DIRS = \
-    $(PACKAGES)
 
-# the ones that are always available
-PACKAGES = \
-    attitude \
-    doppler \
-    ellipsoid \
-    lut2d \
-    orbit \
-    poly \
-    projections \
-    serialization \
+EXPORT_PKG_HEADERS = \
+    rapidxml.hpp \
+    rapidxml_iterators.hpp \
+    rapidxml_print.hpp \
+    rapidxml_utils.hpp \
+
 
 # the standard targets
-all:
+
+all: export
 	BLD_ACTION="all" $(MM) recurse
+
+export:: export-headers export-package-headers
+        BLD_ACTION="export $(MM) recurse
 
 tidy::
 	BLD_ACTION="tidy" $(MM) recurse
@@ -39,9 +43,6 @@ distclean::
 live:
 	BLD_ACTION="live" $(MM) recurse
 
-# archiving support
-zipit:
-	cd $(EXPORT_ROOT); zip -r $(PYRE_ZIP) ${addprefix packages/, $(PACKAGES) --include \*.py}
 
 # shortcuts for building specific subdirectories
 .PHONY: $(RECURSE_DIRS)

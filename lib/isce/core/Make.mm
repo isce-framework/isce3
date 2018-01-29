@@ -47,6 +47,7 @@ EXPORT_PKG_HEADERS = \
     Poly2d.h \
     Position.h \
     Projections.h \
+    Serialization.h \
 
 # standard targets
 all: $(PROJ_DLL) export
