@@ -3,7 +3,9 @@
 //
 // Author: Bryan V. Riel
 // Copyright 2018
-//
+
+#ifndef ISCE_CORE_SERIALIZATION_H
+#define ISCE_CORE_SERIALIZATION_H
 
 #include <iostream>
 #include <memory>
@@ -32,5 +34,7 @@ namespace isce { namespace core {
     }
 
 }}
+
+#endif
 
 // end of file

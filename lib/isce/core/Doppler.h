@@ -4,8 +4,8 @@
 // Author: Bryan V. Riel
 // Copyright 2018
 
-#ifndef DOPPLER_H
-#define DOPPLER_H
+#ifndef ISCE_CORE_DOPPLER_H
+#define ISCE_CORE_DOPPLER_H
 
 #include <string>
 #include "Orbit.h"
