@@ -46,24 +46,24 @@ cdef class pyEulerAngles:
 
     @property
     def yaw(self):
-        return self.c_eulerangles.yaw
+        return self.c_eulerangles.getYaw()
     @yaw.setter
     def yaw(self, value):
-        self.c_eulerangles.yaw = value
+        self.c_eulerangles.setYaw(value)
 
     @property
     def pitch(self):
-        return self.c_eulerangles.pitch
+        return self.c_eulerangles.getPitch()
     @pitch.setter
     def pitch(self, value):
-        self.c_eulerangles.pitch = value
+        self.c_eulerangles.setPitch(value)
 
     @property
     def roll(self):
-        return self.c_eulerangles.roll
+        return self.c_eulerangles.getRoll()
     @roll.setter
     def roll(self, value):
-        self.c_eulerangles.roll = value
+        self.c_eulerangles.setRoll(value)
 
 
 cdef class pyQuaternion:
@@ -110,11 +110,14 @@ cdef class pyQuaternion:
 
     @property
     def qvec(self):
-        q = [self.c_quaternion.qvec[i] for i in range(4)]
+        cdef vector[double] qv = self.c_quaternion.getQvec()
+        q = [qv[i] for i in range(4)]
         return q
     @qvec.setter
     def qvec(self, vec):
+        cdef vector[double] qv
         for i in range(4):
-            self.c_quaternion.qvec[i] = vec[i]
+            qv.push_back(vec[i])
+        self.c_quaternion.setQvec(qv) 
 
 # end of file
