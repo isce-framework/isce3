@@ -7,11 +7,11 @@ set(${PACKAGENAME}_DLL isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 ####Library sources
 set(${PACKAGENAME}_SRCS 
-              Attitude.cpp
               Baseline.cpp
               DateTime.cpp
               Doppler.cpp
               Ellipsoid.cpp
+              EulerAngles.cpp
               Interpolator.cpp
               LUT2d.cpp
               LinAlg.cpp
@@ -22,7 +22,8 @@ set(${PACKAGENAME}_SRCS
               Poly1d.cpp
               Poly2d.cpp
               Position.cpp
-              Projections.cpp)
+              Projections.cpp
+              Quaternion.cpp)
 
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h 

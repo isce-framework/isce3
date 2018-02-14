@@ -16,6 +16,12 @@
 isce::core::Doppler::
 Doppler(Orbit & orbit, Attitude * attitude, Ellipsoid & ellipsoid, double epoch) {
 
+    // Perform check that input attitude is supported
+    AttitudeType atype = attitude->getAttitudeType();
+    if (atype != QUATERNION_T && atype != EULERANGLES_T) {
+        throw std::invalid_argument("Unsupported attitude object.");
+    }
+
     // Initialize state vectors
     satxyz = {0.0, 0.0, 0.0};
     satvel = {0.0, 0.0, 0.0};
@@ -69,22 +75,22 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
 
     // Compute u0 directly if quaternion
     std::vector<double> u0(3), temp(3);
-    if (attitude->attitude_type.compare("quaternion") == 0) {
+    if (attitude->getAttitudeType() == QUATERNION_T) {
         
         temp = {1.0, 0.0, 0.0};
         std::vector<std::vector<double>> R = attitude->rotmat("");
         LinAlg::matVec(R, temp, u0); 
 
     // Else multiply orbit and attitude matrix
-    } else if (attitude->attitude_type.compare("euler") == 0) {
+    } else if (attitude->getAttitudeType() == EULERANGLES_T) {
 
         // Compute vectors for TCN-like basis
         std::vector<double> q(3), c(3), b(3), a(3);
-        if (attitude->yaw_orientation.compare("normal") == 0) {
+        if (attitude->getYawOrientation().compare("normal") == 0) {
             temp = {std::cos(satllh[0]) * std::cos(satllh[1]),
                     std::cos(satllh[0]) * std::sin(satllh[1]),
                     std::sin(satllh[0])};
-        } else if (attitude->yaw_orientation.compare("center") == 0) {
+        } else if (attitude->getYawOrientation().compare("center") == 0) {
             temp = {satxyz[0], satxyz[1], satxyz[2]};
         }
         LinAlg::unitVec(temp, q);
