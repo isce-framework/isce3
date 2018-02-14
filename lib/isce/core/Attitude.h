@@ -5,8 +5,8 @@
 // Copyright 2018
 //
 
-#ifndef ATTITUDE_H
-#define ATTITUDE_H
+#ifndef ISCE_CORE_ATTITUDE_H
+#define ISCE_CORE_ATTITUDE_H
 
 #include <string>
 #include <vector>
@@ -14,66 +14,113 @@
 #include "DateTime.h"
 #include "Ellipsoid.h"
 
+// Declarations
 namespace isce {
-namespace core {
+    namespace core {
+        // The attitude classes
+        class Attitude;
+        class Quaternion;
+        class EulerAngles;
+        // Enum for specifying attitude types
+        enum AttitudeType {QUATERNION_T, EULERANGLES_T};
+    }
+}
 
-// Pure abstract Attitude class to be inherited
-struct Attitude {
-    // Basic constructor to set the attitude type string
-    std::string attitude_type;
-    Attitude(std::string type_name) : attitude_type(type_name) {};
-    // Virtual functions
-    virtual std::vector<double> ypr() = 0;
-    virtual std::vector<std::vector<double>> rotmat(const std::string) = 0;
-    // Attributes needed for Euler Angle representation
-    std::string yaw_orientation;
+// Parent Attitude class to be inherited
+class isce::core::Attitude {
+
+    public:
+        // Basic constructor to set the attitude type string
+        Attitude(AttitudeType atype) : _attitude_type(atype) {};
+
+        // Virtual functions
+        virtual std::vector<double> ypr() = 0;
+        virtual std::vector<std::vector<double>> rotmat(const std::string) = 0;
+
+        // Getter functions
+        AttitudeType getAttitudeType() const {return _attitude_type;}
+        std::string getYawOrientation() const {return _yaw_orientation;}
+
+        // Setter functions
+        inline void setYawOrientation(const std::string);
+
+    // Private data members
+    private:
+        DateTime _time;
+        AttitudeType _attitude_type;
+        std::string _yaw_orientation;
+        
 };
 
+// Go ahead and define setYawOrientation here
+void isce::core::Attitude::setYawOrientation(const std::string orientation) {
+    _yaw_orientation = orientation;
+}
+
 // Quaternion representation of attitude
-struct Quaternion : public Attitude {
+class isce::core::Quaternion : public isce::core::Attitude {
 
-    // Attributes
-    DateTime time;
-    std::vector<double> qvec;
+    public:
+        // Constructors
+        Quaternion();
+        Quaternion(std::vector<double> &);
 
-    // Constructor
-    Quaternion();
-    Quaternion(std::vector<double> &);
+        // Representations
+        std::vector<double> ypr();
+        std::vector<std::vector<double>> rotmat(const std::string);
+        std::vector<double> factoredYPR(std::vector<double> &,
+            std::vector<double> &, Ellipsoid *);
 
-    // Representations
-    std::vector<double> ypr();
-    std::vector<std::vector<double>> rotmat(const std::string);
-    std::vector<double> factoredYPR(std::vector<double> &, std::vector<double> &, Ellipsoid *);
+        // Get a copy of the quaternion elements
+        std::vector<double> getQvec() const;
+        // Set individual quaternion element
+        void setQvecElement(const double, const int);
+        // Set all quaternion elements from a vector
+        void setQvec(const std::vector<double> &);
+        
+    // Private data members
+    private:
+        std::vector<double> _qvec;
 };
 
 // Euler angle attitude representation
-struct EulerAngles : public Attitude {
+class isce::core::EulerAngles : public isce::core::Attitude {
 
-    // Attributes
-    DateTime time;
-    double yaw, pitch, roll;
+    public:
+        // Constructors
+        EulerAngles(double yaw=0.0, double pitch=0.0, double roll=0.0,
+            const std::string yaw_orientation="normal");
 
-    // Constructor
-    EulerAngles(double yaw=0.0, double pitch=0.0, double roll=0.0,
-        const std::string yaw_orientation="normal");
+        // Representations
+        std::vector<double> ypr();
+        std::vector<std::vector<double>> rotmat(const std::string);
+        std::vector<double> toQuaternionElements();
+        Quaternion toQuaternion();
 
-    // Representations
-    std::vector<double> ypr();
-    std::vector<std::vector<double>> rotmat(const std::string);
-    std::vector<double> toQuaternionElements();
-    Quaternion toQuaternion();
+        // Elementary rotation matrices
+        std::vector<std::vector<double>> T3(double);
+        std::vector<std::vector<double>> T2(double);
+        std::vector<std::vector<double>> T1(double);
 
-    // Elementary rotation matrices
-    std::vector<std::vector<double>> T3(double);
-    std::vector<std::vector<double>> T2(double);
-    std::vector<std::vector<double>> T1(double);
+        // Utility method to convert rotation matrix to Euler angles
+        static std::vector<double> rotmat2ypr(std::vector<std::vector<double>> &);
 
-    // Utility method to convert rotation matrix to Euler angles
-    static std::vector<double> rotmat2ypr(std::vector<std::vector<double>> &);
+        // Get the attitude angles
+        double getYaw() const {return _yaw;}
+        double getPitch() const {return _pitch;}
+        double getRoll() const {return _roll;}
+
+        // Set the attitude angles
+        void setYaw(const double);
+        void setPitch(const double);
+        void setRoll(const double);
+
+    // Private data members
+    private:
+        // Attitude angles
+        double _yaw, _pitch, _roll;
+
 };
-
-} // namespace core
-} // namespace isce
 
 #endif
 
