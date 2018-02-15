@@ -4,6 +4,8 @@
 # project defaults
 include isce.def
 
+# the package
+PACKAGE = extensions
 # the module
 MODULE = iscecore
 # use a tmp directory that knows the name of the module
@@ -46,7 +48,7 @@ MODULE_CYTHON_PXD = \
     Poly2d.pxd \
     Position.pxd \
 
-# use cytohn to build a python extension
+# use cython to build a python extension
 include std-cython.def
 
 # end of file

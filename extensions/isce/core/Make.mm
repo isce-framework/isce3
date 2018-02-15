@@ -1,51 +1,54 @@
 # -*- Makefile -*-
 #
-# eric m. gurrola
-# Jet Propulsion Lab/Caltech
-# (c) 2017 all rights reserved
-#
 
-# project global settings
+# project defaults
 include isce.def
 
-# my subdirectories
-RECURSE_DIRS = \
-    $(PACKAGES)
+# the package
+PACKAGE = extensions
+# the module
+MODULE = iscecore
+# use a tmp directory that knows the name of the module
+PROJ_TMPDIR = $(BLD_TMPDIR)/extensions/$(PROJECT)/$(MODULE)
 
-# the ones that are always available
-PACKAGES = \
-    cython \
+# my includes
+PROJ_CXX_INCLUDES = $(EXPORT_INCDIR)
+# point to the location of my libraries
+PROJ_LCXX_LIBPATH = $(BLD_LIBDIR)
+# link against these
+PROJ_LIBRARIES = -lisce.$(PROJECT_MAJOR).$(PROJECT_MINOR) -ljournal
 
-# project settings: do not remove core directory (core usually refers core dump file)
-# filter-out info at: https://www.gnu.org/software/make/manual/html_node/index.html
-PROJ_TIDY := ${filter-out core, $(PROJ_TIDY)}
+# the sources
+MODULE_CYTHON_PYX = \
+    pyAttitude.pyx \
+    pyDateTime.pyx \
+    pyDoppler.pyx \
+    pyEllipsoid.pyx \
+    pyInterpolator.pyx \
+    pyLinAlg.pyx \
+    pyOrbit.pyx \
+    pyPeg.pyx \
+    pyPegtrans.pyx \
+    pyPoly1d.pyx \
+    pyPoly2d.pyx \
+    pyPosition.pyx \
 
-# the standard targets
+# the headers
+MODULE_CYTHON_PXD = \
+    Attitude.pxd \
+    DateTime.pxd \
+    Doppler.pxd \
+    Ellipsoid.pxd \
+    Interpolator.pxd \
+    LinAlg.pxd \
+    Orbit.pxd \
+    Peg.pxd \
+    Pegtrans.pxd \
+    Poly1d.pxd \
+    Poly2d.pxd \
+    Position.pxd \
 
-all:
-	BLD_ACTION="all" $(MM) recurse
-
-tidy::
-	BLD_ACTION="tidy" $(MM) recurse
-
-clean::
-	BLD_ACTION="clean" $(MM) recurse
-
-distclean::
-	BLD_ACTION="distclean" $(MM) recurse
-
-live:
-	BLD_ACTION="live" $(MM) recurse
-
-# archiving support
-zipit:
-	cd $(EXPORT_ROOT); zip -r $(PYRE_ZIP) ${addprefix packages/, $(PACKAGES) --include \*.py}
-
-# shortcuts for building specific subdirectories
-.PHONY: $(RECURSE_DIRS)
-
-$(RECURSE_DIRS):
-	(cd $@; $(MM))
-
+# use cython to build a python extension
+include std-cython.def
 
 # end of file
