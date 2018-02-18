@@ -52,7 +52,7 @@ struct DopplerTest : public ::testing::Test {
             // Set the wavelengths to test
             wvls = {0.21, 0.22, 0.23, 0.24};
             // Set the reference Doppler values
-            fd_ref = {-3375.49106567, -3222.95549713, -3083.68365585, -2956.01757605};
+            fd_ref = {-3363.3063363, -3211.32523053, -3072.55963778, -2945.35761904};
 
         }
 
