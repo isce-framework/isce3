@@ -81,7 +81,9 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
         // Compute vectors for TCN-like basis
         std::vector<double> q(3), c(3), b(3), a(3);
         if (attitude->yaw_orientation.compare("normal") == 0) {
-            temp = {satxyz[0], satxyz[1], satxyz[2] / (1 - ellipsoid.e2)};
+            temp = {std::cos(satllh[0]) * std::cos(satllh[1]),
+                    std::cos(satllh[0]) * std::sin(satllh[1]),
+                    std::sin(satllh[0])};
         } else if (attitude->yaw_orientation.compare("center") == 0) {
             temp = {satxyz[0], satxyz[1], satxyz[2]};
         }
