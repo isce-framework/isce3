@@ -16,10 +16,10 @@ cdef extern from "isce/core/Attitude.h" namespace "isce::core":
     
     cdef cppclass Quaternion(Attitude):
         # Get copy of quaternion elements
-        vector[double] getQvec()
+        vector[double] qvec()
         # Set quaternion elements
-        void setQvecElement(double, int)
-        void setQvec(vector[double])
+        void qvecElement(double, int)
+        void qvec(vector[double])
         # Constructor
         Quaternion(vector[double]) except +
         # Convert quaternion to yaw, pitch, and roll angles
@@ -27,13 +27,13 @@ cdef extern from "isce/core/Attitude.h" namespace "isce::core":
 
     cdef cppclass EulerAngles(Attitude):
         # Getter functions for attitude angles
-        double getYaw()
-        double getPitch()
-        double getRoll()
+        double yaw()
+        double pitch()
+        double roll()
         # Setter functions for attitude angles
-        void setYaw(double)
-        void setPitch(double)
-        void setRoll(double)
+        void yaw(double)
+        void pitch(double)
+        void roll(double)
         # Constructor 
         EulerAngles(double, double, double, string) except +
         # Convert to quaternion

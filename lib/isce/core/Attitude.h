@@ -38,11 +38,11 @@ class isce::core::Attitude {
         virtual std::vector<std::vector<double>> rotmat(const std::string) = 0;
 
         // Getter functions
-        AttitudeType getAttitudeType() const {return _attitude_type;}
-        std::string getYawOrientation() const {return _yaw_orientation;}
+        inline AttitudeType attitudeType() const {return _attitude_type;}
+        inline std::string yawOrientation() const {return _yaw_orientation;}
 
         // Setter functions
-        inline void setYawOrientation(const std::string);
+        inline void yawOrientation(const std::string);
 
     // Private data members
     private:
@@ -53,7 +53,7 @@ class isce::core::Attitude {
 };
 
 // Go ahead and define setYawOrientation here
-void isce::core::Attitude::setYawOrientation(const std::string orientation) {
+void isce::core::Attitude::yawOrientation(const std::string orientation) {
     _yaw_orientation = orientation;
 }
 
@@ -72,11 +72,14 @@ class isce::core::Quaternion : public isce::core::Attitude {
             std::vector<double> &, Ellipsoid *);
 
         // Get a copy of the quaternion elements
-        std::vector<double> getQvec() const;
-        // Set individual quaternion element
-        void setQvecElement(const double, const int);
+        inline std::vector<double> qvec() const;
         // Set all quaternion elements from a vector
-        void setQvec(const std::vector<double> &);
+        inline void qvec(const std::vector<double> &);
+
+        // Get an individual quaternion element
+        inline double qvecElement(const int) const;
+        // Set individual quaternion element
+        inline void qvecElement(const double, const int);
         
     // Private data members
     private:
@@ -106,14 +109,14 @@ class isce::core::EulerAngles : public isce::core::Attitude {
         static std::vector<double> rotmat2ypr(std::vector<std::vector<double>> &);
 
         // Get the attitude angles
-        double getYaw() const {return _yaw;}
-        double getPitch() const {return _pitch;}
-        double getRoll() const {return _roll;}
+        inline double yaw() const;
+        inline double pitch() const;
+        inline double roll() const;
 
         // Set the attitude angles
-        void setYaw(const double);
-        void setPitch(const double);
-        void setRoll(const double);
+        inline void yaw(const double);
+        inline void pitch(const double);
+        inline void roll(const double);
 
     // Private data members
     private:
@@ -121,6 +124,16 @@ class isce::core::EulerAngles : public isce::core::Attitude {
         double _yaw, _pitch, _roll;
 
 };
+
+// Get inline implementations for Quaternion
+#define ISCE_CORE_QUATERNION_ICC
+#include "Quaternion.icc"
+#undef ISCE_CORE_QUATERNION_ICC
+
+// Get inline implementations for EulerAngles
+#define ISCE_CORE_EULERANGLES_ICC
+#include "EulerAngles.icc"
+#undef ISCE_CORE_EULERANGLES_ICC
 
 #endif
 

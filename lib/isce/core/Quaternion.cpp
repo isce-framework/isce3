@@ -124,22 +124,4 @@ isce::core::Quaternion::factoredYPR(std::vector<double> & satxyz,
     return angles;
 }
 
-// Get a copy of the quaternion elements
-std::vector<double> isce::core::Quaternion::getQvec() const {
-    std::vector<double> qvec(_qvec);
-    return qvec;
-}
-
-// Set individual quaternion element
-void isce::core::Quaternion::setQvecElement(const double value, const int index) {
-    if (index < 0 || index > 3)
-        throw std::out_of_range("Quaternion index must be between 0 and 3.");
-    _qvec[index] = value;
-}
-
-// Set the quaternion elements
-void isce::core::Quaternion::setQvec(const std::vector<double> & qvec) {
-    _qvec = qvec;
-}
-
 // end of file

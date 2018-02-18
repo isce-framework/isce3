@@ -162,22 +162,22 @@ cdef class pyDopplerQuaternion(pyDoppler):
         nr = slantRange.shape[0]
 
         # Cache the old attitude values
-        cdef vector[double] qref = self.quaternion.c_quaternion.getQvec()
+        cdef vector[double] qref = self.quaternion.c_quaternion.qvec()
 
         # Loop over range values
         for j in range(nr):
             # Loop over quaternion elements
             for k in range(4):
                 # Positive
-                self.quaternion.c_quaternion.setQvecElement(qref[k] + dx, k)
+                self.quaternion.c_quaternion.qvecElement(qref[k] + dx, k)
                 fd_pos = self.centroid(slantRange[j], wvl, frame, max_iter, side, precession)
                 # Negative
-                self.quaternion.c_quaternion.setQvecElement(qref[k] - dx, k)
+                self.quaternion.c_quaternion.qvecElement(qref[k] - dx, k)
                 fd_neg = self.centroid(slantRange[j], wvl, frame, max_iter, side, precession)
                 # Derivative
                 outDerivs[j,k] = (fd_pos - fd_neg) / (2.0 * dx)
                 # Reset
-                self.quaternion.c_quaternion.setQvecElement(qref[k], k)
+                self.quaternion.c_quaternion.qvecElement(qref[k], k)
 
         return
 

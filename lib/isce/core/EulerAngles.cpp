@@ -21,7 +21,7 @@ EulerAngles(double yaw, double pitch, double roll, const std::string yaw_orienta
     _pitch = pitch;
     _roll = roll;
     if (yaw_orientation.compare("normal") == 0 || yaw_orientation.compare("center") == 0) {
-        setYawOrientation(yaw_orientation);
+        yawOrientation(yaw_orientation);
     } else {
         std::cerr << "Unsupported yaw orientation. Must be normal or center." << std::endl;
         throw std::invalid_argument("Unsupported yaw orientation.");
@@ -144,21 +144,5 @@ isce::core::EulerAngles::toQuaternion() {
     Quaternion quat(qvec);
     return quat;
 }
-
-// Set the yaw angle
-void isce::core::EulerAngles::setYaw(const double yaw) {
-    _yaw = yaw;
-}
-
-// Set the pitch angle
-void isce::core::EulerAngles::setPitch(const double pitch) {
-    _pitch = pitch;
-}
-
-// Set the roll angle
-void isce::core::EulerAngles::setRoll(const double roll) {
-    _roll = roll;
-}
-
 
 // end of file

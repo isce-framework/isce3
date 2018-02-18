@@ -37,6 +37,7 @@ EXPORT_PKG_HEADERS = \
     DateTime.h \
     Doppler.h \
     Ellipsoid.h \
+    EulerAngles.icc \
     Interpolator.h \
     LUT2d.h \
     LinAlg.h \
@@ -48,6 +49,7 @@ EXPORT_PKG_HEADERS = \
     Poly2d.h \
     Position.h \
     Projections.h \
+    Quaternion.icc \
     Serialization.h \
 
 # standard targets
