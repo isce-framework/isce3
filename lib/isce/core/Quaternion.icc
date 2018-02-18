@@ -1,0 +1,33 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+
+#if !defined(ISCE_CORE_QUATERNION_ICC)
+#error "Quaternion.icc is an implementation detail of class Quaternion"
+#endif
+
+// Get a copy of the quaternion elements
+std::vector<double> isce::core::Quaternion::qvec() const {
+    std::vector<double> qvec(_qvec);
+    return qvec;
+}
+
+// Set the quaternion elements
+void isce::core::Quaternion::qvec(const std::vector<double> & qvec) {
+    _qvec = qvec;
+}
+
+// Get individual quaternion element
+double isce::core::Quaternion::qvecElement(const int index) const {
+    if (index < 0 || index > 3)
+        throw std::out_of_range("Quaternion index must be between 0 and 3.");
+    return _qvec[index];
+}
+
+// Set individual quaternion element
+void isce::core::Quaternion::qvecElement(const double value, const int index) {
+    if (index < 0 || index > 3)
+        throw std::out_of_range("Quaternion index must be between 0 and 3.");
+    _qvec[index] = value;
+}
+
+//end of file
