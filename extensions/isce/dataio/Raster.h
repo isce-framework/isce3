@@ -100,20 +100,6 @@ namespace isce { namespace dataio {
         template<typename T> void setBlock(std::vector<std::vector<T>>&,size_t,size_t);
     };
 
-    // Define the GDALDataType mappings
-    const std::unordered_map<std::type_index,GDALDataType> Raster::_gdts =
-                                                    {{typeid(uint8_t),               GDT_Byte},
-                                                     {typeid(uint16_t),              GDT_UInt16},
-                                                     {typeid(int16_t),               GDT_Int16},
-                                                     {typeid(uint32_t),              GDT_UInt32},
-                                                     {typeid(int32_t),               GDT_Int32},
-                                                     {typeid(float),                 GDT_Float32},
-                                                     {typeid(double),                GDT_Float64},
-                                                     {typeid(std::complex<int16_t>), GDT_CInt16},
-                                                     {typeid(std::complex<int32_t>), GDT_CInt32},
-                                                     {typeid(std::complex<float>),   GDT_CFloat32},
-                                                     {typeid(std::complex<double>),  GDT_CFloat64}};
-
     inline Raster& Raster::operator=(const Raster &rhs) {
         _dataset = rhs._dataset;
         // Since we're sharing the dataset between objects, and only weak-copying the pointer,
