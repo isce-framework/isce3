@@ -1,0 +1,11 @@
+<VRTDataset rasterXSize="230" rasterYSize="850">
+    <SRS>EPSG:4326</SRS>
+    <GeoTransform>0, 1, 0.0, 0, 0.0, 1</GeoTransform>
+    <VRTRasterBand band="1" dataType="Float64" subClass="VRTRawRasterBand">
+        <SourceFilename relativeToVRT="1">kz.bin</SourceFilename>
+        <ByteOrder>LSB</ByteOrder>
+        <ImageOffset>0</ImageOffset>
+        <PixelOffset>8</PixelOffset>
+        <LineOffset>1840</LineOffset>
+    </VRTRasterBand>
+</VRTDataset>
