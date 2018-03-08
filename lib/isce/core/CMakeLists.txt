@@ -32,6 +32,7 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     DateTime.h
                                     Doppler.h
                                     Ellipsoid.h
+                                    EulerAngles.h
                                     EulerAngles.icc
                                     Interpolator.h
                                     LUT2d.h
@@ -44,6 +45,7 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Poly2d.h
                                     Position.h
                                     Projections.h
+                                    Quaternion.h
                                     Quaternion.icc
                                     Serialization.h)
 

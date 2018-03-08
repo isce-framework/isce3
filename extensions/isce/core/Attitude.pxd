@@ -9,11 +9,11 @@ from libcpp.string cimport string
 from Ellipsoid cimport Ellipsoid
 
 cdef extern from "isce/core/Attitude.h" namespace "isce::core":
-
     cdef cppclass Attitude:
         vector[double] ypr()
         vector[vector[double]] rotmat(string)
-    
+   
+cdef extern from "isce/core/Quaternion.h" namespace "isce::core": 
     cdef cppclass Quaternion(Attitude):
         # Get copy of quaternion elements
         vector[double] qvec()
@@ -25,6 +25,7 @@ cdef extern from "isce/core/Attitude.h" namespace "isce::core":
         # Convert quaternion to yaw, pitch, and roll angles
         vector[double] factoredYPR(vector[double], vector[double], Ellipsoid *)
 
+cdef extern from "isce/core/EulerAngles.h" namespace "isce::core":
     cdef cppclass EulerAngles(Attitude):
         # Getter functions for attitude angles
         double yaw()

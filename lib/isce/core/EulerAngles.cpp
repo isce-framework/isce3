@@ -11,7 +11,7 @@
 #include <map>
 
 #include "LinAlg.h"
-#include "Attitude.h"
+#include "EulerAngles.h"
 
 // EulerAngle constructor
 isce::core::EulerAngles::

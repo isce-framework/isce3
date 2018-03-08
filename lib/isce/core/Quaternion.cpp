@@ -11,7 +11,8 @@
 #include <map>
 
 #include "LinAlg.h"
-#include "Attitude.h"
+#include "Quaternion.h"
+#include "EulerAngles.h"
 
 // Quaternion default constructor
 isce::core::Quaternion::

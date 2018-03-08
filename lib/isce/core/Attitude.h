@@ -12,7 +12,6 @@
 #include <vector>
 #include <array>
 #include "DateTime.h"
-#include "Ellipsoid.h"
 
 // Declarations
 namespace isce {
@@ -56,84 +55,6 @@ class isce::core::Attitude {
 void isce::core::Attitude::yawOrientation(const std::string orientation) {
     _yaw_orientation = orientation;
 }
-
-// Quaternion representation of attitude
-class isce::core::Quaternion : public isce::core::Attitude {
-
-    public:
-        // Constructors
-        Quaternion();
-        Quaternion(std::vector<double> &);
-
-        // Representations
-        std::vector<double> ypr();
-        std::vector<std::vector<double>> rotmat(const std::string);
-        std::vector<double> factoredYPR(std::vector<double> &,
-            std::vector<double> &, Ellipsoid *);
-
-        // Get a copy of the quaternion elements
-        inline std::vector<double> qvec() const;
-        // Set all quaternion elements from a vector
-        inline void qvec(const std::vector<double> &);
-
-        // Get an individual quaternion element
-        inline double qvecElement(const int) const;
-        // Set individual quaternion element
-        inline void qvecElement(const double, const int);
-        
-    // Private data members
-    private:
-        std::vector<double> _qvec;
-};
-
-// Euler angle attitude representation
-class isce::core::EulerAngles : public isce::core::Attitude {
-
-    public:
-        // Constructors
-        EulerAngles(double yaw=0.0, double pitch=0.0, double roll=0.0,
-            const std::string yaw_orientation="normal");
-
-        // Representations
-        std::vector<double> ypr();
-        std::vector<std::vector<double>> rotmat(const std::string);
-        std::vector<double> toQuaternionElements();
-        Quaternion toQuaternion();
-
-        // Elementary rotation matrices
-        std::vector<std::vector<double>> T3(double);
-        std::vector<std::vector<double>> T2(double);
-        std::vector<std::vector<double>> T1(double);
-
-        // Utility method to convert rotation matrix to Euler angles
-        static std::vector<double> rotmat2ypr(std::vector<std::vector<double>> &);
-
-        // Get the attitude angles
-        inline double yaw() const;
-        inline double pitch() const;
-        inline double roll() const;
-
-        // Set the attitude angles
-        inline void yaw(const double);
-        inline void pitch(const double);
-        inline void roll(const double);
-
-    // Private data members
-    private:
-        // Attitude angles
-        double _yaw, _pitch, _roll;
-
-};
-
-// Get inline implementations for Quaternion
-#define ISCE_CORE_QUATERNION_ICC
-#include "Quaternion.icc"
-#undef ISCE_CORE_QUATERNION_ICC
-
-// Get inline implementations for EulerAngles
-#define ISCE_CORE_EULERANGLES_ICC
-#include "EulerAngles.icc"
-#undef ISCE_CORE_EULERANGLES_ICC
 
 #endif
 
