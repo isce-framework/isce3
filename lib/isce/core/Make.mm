@@ -7,11 +7,11 @@ PACKAGE = isce/core
 
 # the list of sources
 PROJ_SRCS = \
-    Attitude.cpp \
     Baseline.cpp \
     DateTime.cpp \
     Doppler.cpp \
     Ellipsoid.cpp \
+    EulerAngles.cpp \
     Interpolator.cpp \
     LUT2d.cpp \
     LinAlg.cpp \
@@ -23,6 +23,7 @@ PROJ_SRCS = \
     Poly2d.cpp \
     Position.cpp \
     Projections.cpp \
+    Quaternion.cpp \
 
 # products
 # the library
@@ -36,6 +37,8 @@ EXPORT_PKG_HEADERS = \
     DateTime.h \
     Doppler.h \
     Ellipsoid.h \
+    EulerAngles.h \
+    EulerAngles.icc \
     Interpolator.h \
     LUT2d.h \
     LinAlg.h \
@@ -47,6 +50,8 @@ EXPORT_PKG_HEADERS = \
     Poly2d.h \
     Position.h \
     Projections.h \
+    Quaternion.h \
+    Quaternion.icc \
     Serialization.h \
 
 # standard targets

@@ -10,7 +10,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
-#include "isce/core/Attitude.h"
+#include "isce/core/EulerAngles.h"
 
 
 struct EulerTest : public ::testing::Test {

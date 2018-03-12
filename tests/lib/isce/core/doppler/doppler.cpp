@@ -13,6 +13,7 @@
 #include <gtest/gtest.h>
 
 #include "isce/core/Doppler.h"
+#include "isce/core/EulerAngles.h"
 
 isce::core::Orbit loadOrbitData();
 
