@@ -25,6 +25,8 @@ namespace isce { namespace dataio {
                                                       _yidx(rli._yidx), xskip(rli.xskip),
                                                       yskip(rli.yskip) {}
         RasterBlockIter(const Raster &r) : _raster(r), _xidx(0), _yidx(0), xskip(128), yskip(128) {}
+        RasterBlockIter(const Raster &r, const int x, const int y) : _raster(r),
+	                                                        _xidx(0), _yidx(0), xskip(x), yskip(y) {}
 
         inline RasterBlockIter& operator=(const RasterBlockIter&);
         RasterBlockIter& operator+=(const size_t);
@@ -45,7 +47,7 @@ namespace isce { namespace dataio {
         inline void rewind();
         inline void ffwd();
         // Since the only way to have this _xidx is to increment to the end, no need to check _yidx
-        inline bool atEOF() { return (_xidx == ceil((1. * _raster.getLength()) / xskip)); };
+        inline bool atEOF() { return (_yidx == ceil((1. * _raster.getLength()) / yskip)); };
         inline RasterBlockIter atBeginning();
         inline RasterBlockIter atEnd();
     
@@ -114,8 +116,8 @@ namespace isce { namespace dataio {
     inline void RasterBlockIter::ffwd() {
         // Off-the-end block is the first block in the first nonvalid block-line in the image (the
         // index is simply the number of block-lines in the image)
-        _xidx = ceil((1. * _raster.getLength()) / xskip);
-        _yidx = 0;
+      _xidx = ceil((1. * _raster.getWidth()) / xskip);
+      _yidx = 0;
     }
 
     inline RasterBlockIter RasterBlockIter::atBeginning() {
@@ -131,5 +133,9 @@ namespace isce { namespace dataio {
         return ret;
     }
 }}
+
+#define ISCE_DATAIO_RASTERBLOCKITER_ICC
+#include "RasterBlockIter.icc"
+#undef ISCE_DATAIO_RASTERBLOCKITER_ICC
 
 #endif

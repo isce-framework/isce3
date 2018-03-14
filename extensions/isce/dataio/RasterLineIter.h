@@ -115,4 +115,8 @@ namespace isce { namespace dataio {
     }
 }}
 
+#define ISCE_DATAIO_RASTERLINEITER_ICC
+#include "RasterLineIter.icc"
+#undef ISCE_DATAIO_RASTERLINEITER_ICC
+
 #endif

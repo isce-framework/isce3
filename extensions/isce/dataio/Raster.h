@@ -33,10 +33,12 @@ namespace isce { namespace dataio {
         ~Raster();
 
         void loadFrom(const std::string&,bool);
-        inline size_t getLength() { return _dataset ? _dataset->GetRasterXSize() : 0; }
-        inline size_t getWidth() { return _dataset ? _dataset->GetRasterYSize() : 0; }
+        inline size_t getLength() { return _dataset ? _dataset->GetRasterYSize() : 0; }
+        inline size_t getWidth() { return _dataset ? _dataset->GetRasterXSize() : 0; }
         inline size_t getNumBands() { return _dataset ? _dataset->GetRasterCount() : 0; }
-        /*
+
+            
+      /*
          *  Pixel operations
          */
         // Single pixel read/write
@@ -109,5 +111,9 @@ namespace isce { namespace dataio {
         return *this;
     }
 }}
+
+#define ISCE_DATAIO_RASTER_ICC
+#include "Raster.icc"
+#undef ISCE_DATAIO_RASTER_ICC
 
 #endif
