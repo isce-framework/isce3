@@ -1,0 +1,21 @@
+<VRTDataset rasterXSize="230" rasterYSize="850">
+    <SRS>EPSG:4326</SRS>
+    <GeoTransform>0, 1, 0.0, 0, 0.0, 1</GeoTransform>
+
+    <VRTRasterBand band="1" dataType="Float64" subClass="VRTRawRasterBand">
+        <SourceFilename relativeToVRT="1">sampledata_float64.bin</SourceFilename>
+        <ByteOrder>LSB</ByteOrder>
+        <ImageOffset>0</ImageOffset>
+        <PixelOffset>8</PixelOffset>
+        <LineOffset>1840</LineOffset>
+    </VRTRasterBand>
+
+    <VRTRasterBand band="2" dataType="Float32" subClass="VRTRawRasterBand">
+        <SourceFilename relativeToVRT="1">sampledata_float32.bin</SourceFilename>
+        <ByteOrder>LSB</ByteOrder>
+        <ImageOffset>0</ImageOffset>
+        <PixelOffset>4</PixelOffset>
+        <LineOffset>920</LineOffset>
+    </VRTRasterBand>
+
+</VRTDataset>
