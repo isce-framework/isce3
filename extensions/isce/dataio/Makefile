@@ -22,7 +22,7 @@ build-cpp : setup $(OBJS)
 	$(CC) -shared $(LIB_GDAL) -o $(LIBTARGET_SO) $(OBJS)
 	mv $(LIBTARGET_A) $(BUILDDIR)/lib
 	mv $(LIBTARGET_SO) $(BUILDDIR)/lib
-	rm $(OBJS)
+	#rm $(OBJS)
 
 setup :
 	mkdir -p $(BUILDDIR)/include $(BUILDDIR)/lib $(BUILDDIR)/packages
