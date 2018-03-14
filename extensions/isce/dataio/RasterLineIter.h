@@ -10,12 +10,12 @@
 #include <vector>
 #include "Raster.h"
 
-namespace isce { namespace dataio {
-    struct RasterLineIter {
-        Raster _raster;
-        size_t _lineidx;
+namespace isce {
+  namespace dataio {
+    class RasterLineIter {
 
-        // RasterLineIter should *only* be generated from a valid Raster object (otherwise we have
+    public:
+      // RasterLineIter should *only* be generated from a valid Raster object (otherwise we have
         // to deal with checking for nullptr _raster values)
         RasterLineIter() = delete;
         RasterLineIter(const RasterLineIter &rli) : _raster(rli._raster), _lineidx(rli._lineidx) {}
@@ -56,6 +56,11 @@ namespace isce { namespace dataio {
         // (buffer, [band])
         template<typename T> void setNext(std::vector<T>&,size_t);
         template<typename T> void setNext(std::vector<T>&);
+
+    private:
+	Raster _raster;
+        size_t _lineidx;
+
     };
 
     inline RasterLineIter& RasterLineIter::operator=(const RasterLineIter &rhs) {

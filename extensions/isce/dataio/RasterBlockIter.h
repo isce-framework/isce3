@@ -10,16 +10,10 @@
 #include <vector>
 #include "Raster.h"
 
-namespace isce { namespace dataio {
-    struct RasterBlockIter {
-        Raster _raster;
-        // Idxs are the actual block numbers
-        size_t _xidx;
-        size_t _yidx;
-        // Skips are used to determine block spacing (a "natural" block size is the skip size)
-        size_t xskip;
-        size_t yskip;
-
+namespace isce {
+  namespace dataio {
+    class RasterBlockIter {
+    public:
         RasterBlockIter() = delete;
         RasterBlockIter(const RasterBlockIter &rli) : _raster(rli._raster), _xidx(rli._xidx),
                                                       _yidx(rli._yidx), xskip(rli.xskip),
@@ -68,6 +62,16 @@ namespace isce { namespace dataio {
         // (buffer, [band-index])
         template<typename T> void setNext(std::vector<std::vector<T>>&,size_t);
         template<typename T> void setNext(std::vector<std::vector<T>>&);
+
+    private:
+	Raster _raster;
+        // Idxs are the actual block numbers
+        size_t _xidx;
+        size_t _yidx;
+        // Skips are used to determine block spacing (a "natural" block size is the skip size)
+        size_t xskip;
+        size_t yskip;
+
     };
 
     inline RasterBlockIter& RasterBlockIter::operator=(const RasterBlockIter &rhs) {
