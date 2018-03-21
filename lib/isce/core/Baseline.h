@@ -15,7 +15,7 @@
 namespace isce { namespace core {
     struct Baseline {
         Orbit orbit1, orbit2;
-        RadarMetadata radar;
+        Metadata radar;
         Ellipsoid elp;
         orbitInterpMethod orbit_method;
         // Basis vectors

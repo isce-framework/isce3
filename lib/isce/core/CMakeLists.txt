@@ -24,8 +24,8 @@ set(${PACKAGENAME}_SRCS
               Position.cpp
               Projections.cpp
               Quaternion.cpp
-	      Raster.cpp
-)
+	          Raster.cpp
+              ResampSlc.cpp)
 
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h 
@@ -51,8 +51,10 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Quaternion.icc
                                     Serialization.h
                                     Raster.h
-				    Raster.icc
-)
+				                    Raster.icc
+                                    ResampSlc.h
+                                    ResampSlc.icc
+                                    Serialization.h)
 
 ###Install headers into build/include
 ###This is where regex can be used on the header files if needed

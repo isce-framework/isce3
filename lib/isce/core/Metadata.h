@@ -1,22 +1,24 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
 //
 // Source Author: Bryan Riel
 // Co-Author: Joshua Cohen
-// Copyright 2017
+// Copyright 2017-2018
 
-// double underbar compiler reserved namespace.  don't use it.
-#if !defined(isce_core_metadata_h)
-#define isce_core_metadata_h
+#ifndef ISCE_CORE_METADATA_H
+#define ISCE_CORE_METADATA_H
 
 #include <iosfwd>
 #include "DateTime.h"
 
+// Declarations
 namespace isce {
     namespace core {
-        struct RadarMetadata ;
+        struct Metadata;
     }
 }
 
-struct isce::core::RadarMetadata {
+struct isce::core::Metadata {
     // Acquisition related parameters
     double radarWavelength, prf, rangeFirstSample, slantRangePixelSpacing, pegHeading;
     int lookSide;
@@ -25,10 +27,13 @@ struct isce::core::RadarMetadata {
     int numberRangeLooks, numberAzimuthLooks;
     // Geometry parameters
     int width, length;
-
-    RadarMetadata() : sensingStart() {}
+    // Basic constructor
+    Metadata() : sensingStart() {}
 };
 
-std::ostream& operator<<(std::ostream &os, const isce::core::RadarMetadata &radar);
+// Define std::cout interaction for debugging
+std::ostream& operator<<(std::ostream &os, const isce::core::Metadata &radar);
 
 #endif
+
+// end of file
