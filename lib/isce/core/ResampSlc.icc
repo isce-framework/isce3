@@ -1,0 +1,122 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+
+#if !defined(ISCE_CORE_RESAMPSLC_ICC)
+#error "ResampSlc.icc is an implementation detail of class ResampSlc"
+#endif
+
+// Default constructor
+isce::core::ResampSlc::ResampSlc() {
+    _rgCarrier = new Poly2d();
+    _azCarrier = new Poly2d();
+    _rgOffsetsPoly = new Poly2d();
+    _azOffsetsPoly = new Poly2d();
+    _dopplerPoly = new Poly2d();
+}
+
+// Destructor
+isce::core::ResampSlc::~ResampSlc() {
+    _clearPolys();
+}
+
+// Set range carrier polynomial
+void isce::core::ResampSlc::setRgCarrier(Poly2d * poly) {
+    if (_rgCarrier != NULL) delete _rgCarrier;
+    _rgCarrier = poly;
+}
+
+// Set azimuth carrier polynomial
+void isce::core::ResampSlc::setAzCarrier(Poly2d * poly) {
+    if (_azCarrier != NULL) delete _azCarrier;
+    _azCarrier = poly;
+}
+
+// Set range offsets polynomial
+void isce::core::ResampSlc::setRgOffsets(Poly2d * poly) {
+    if (_rgOffsetsPoly != NULL) delete _rgOffsetsPoly;
+    _rgOffsetsPoly = poly;
+}
+
+// Set azimuth offsets polynomial
+void isce::core::ResampSlc::setAzOffsets(Poly2d * poly) {
+    if (_azOffsetsPoly != NULL) delete _azOffsetsPoly;
+    _azOffsetsPoly = poly;
+}
+
+// Set Doppler polynomial
+void isce::core::ResampSlc::setDoppler(Poly2d * poly) {
+    if (_dopplerPoly != NULL) delete _dopplerPoly;
+    _dopplerPoly = poly;
+}
+
+// Get input width
+size_t isce::core::ResampSlc::inputWidth() const {
+    return _inWidth;
+}
+
+// Get input length
+size_t isce::core::ResampSlc::inputLength() const {
+    return _inLength;
+}
+
+// Get output width
+size_t isce::core::ResampSlc::outputWidth() const {
+    return _outWidth;
+}
+
+// Get output length
+size_t isce::core::ResampSlc::outputLength() const {
+    return _outLength;
+}
+
+// Clear polynomials
+void isce::core::ResampSlc::_clearPolys() {
+    if (_rgCarrier != NULL) delete _rgCarrier;
+    if (_azCarrier != NULL) delete _azCarrier;
+    if (_rgOffsetsPoly != NULL) delete _rgOffsetsPoly;
+    if (_azOffsetsPoly != NULL) delete _azOffsetsPoly;
+    if (_dopplerPoly != NULL) delete _dopplerPoly;
+}
+
+// Clear polynomials and create new ones
+void isce::core::ResampSlc::resetPolys() {
+    _clearPolys();
+    _rgCarrier = new Poly2d();
+    _azCarrier = new Poly2d();
+    _rgOffsetsPoly = new Poly2d();
+    _azOffsetsPoly = new Poly2d();
+    _dopplerPoly = new Poly2d();
+}
+
+// Announce my properties to the world
+void isce::core::ResampSlc::declare() {
+    // Basic info
+    printf("\n << Resample one image to another image coordinates >> \n\n");
+    printf("Input Image Dimensions:  %6d lines, %6d pixels\n\n", inLength, inWidth);
+    printf("Output Image Dimensions: %6d lines, %6d pixels\n\n", outLength, outWidth);
+    printf("Number of threads: %d\n", omp_get_max_threads());
+    printf("Complex data interpolation\n");
+    // Polynomial info
+    printf("Azimuth Carrier Poly\n");
+    _azCarrier->printPoly();
+    printf("Range Carrier Poly\n");
+    _rgCarrier->printPoly();
+    printf("Range Offsets Poly\n");
+    _rgOffsetsPoly->printPoly();
+    printf("Azimuth Offsets Poly\n");
+    _azOffsetsPoly->printPoly();
+}
+
+// Compute number of tiles given a specified nominal tile size
+size_t isce::core::ResampSlc::_computeNumberOfTiles(size_t linesPerTile) {
+    // Compute floor(nTiles)
+    size_t nTiles = _outLength / linesPerTile;
+    // See if there are any leftover lines to add an extra tile
+    size_t extraLines = _outLength - nTiles * linesPerTile;
+    if (extraLines > 0) {
+        nTiles += 1;
+    }
+    return nTiles
+}
+
+// end of file

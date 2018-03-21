@@ -1,0 +1,37 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Author: Bryan Riel
+// Copyright 2018
+//
+
+#if !defined(ISCE_CORE_TILE_ICC)
+#error "Tile.icc is an implementation detail of class Tile"
+#endif
+
+// Default constructor
+template <typename T>
+isce::core::Tile<T>::Tile() : length(0), width(0), rowStart(0), rowEnd(0) {};
+
+// Destructor
+template <typename T>
+isce::core::Tile<T>::~Tile() {
+    clear();
+}
+
+// Allocate dynamic memory
+template <typename T>
+void isce::core::Tile<T>::allocate() {
+    size_t nPixels = length * width;
+    if (nPixels > 0) {
+        _data = new T[nPixels];
+    }
+}
+
+// Clear dynamic memory
+template <typename T>
+void isce::core::Tile<T>::clear() {
+    if (_data != NULL) delete [] _data;
+}
+
+// end of file

@@ -23,7 +23,8 @@ set(${PACKAGENAME}_SRCS
               Poly2d.cpp
               Position.cpp
               Projections.cpp
-              Quaternion.cpp)
+              Quaternion.cpp
+              ResampSlc.cpp)
 
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h 
@@ -47,6 +48,8 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Projections.h
                                     Quaternion.h
                                     Quaternion.icc
+                                    ResampSlc.h
+                                    ResampSlc.icc
                                     Serialization.h)
 
 ###Install headers into build/include
