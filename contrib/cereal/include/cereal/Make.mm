@@ -5,16 +5,31 @@
 # (c) 2017 all rights reserved
 #
 
+# get the cereal defaults
+include cereal.def
+
 # project global settings
-PROJECT = gtest
+PROJECT = cereal
+
 # my subdirectories
 RECURSE_DIRS = \
-    include \
+    archives \
+    details \
+    external \
+    types \
+
+EXPORT_HEADERS = \
+    access.hpp \
+    cereal.hpp \
+    macros.hpp \
 
 # the standard targets
 
-all:
+all: export
 	BLD_ACTION="all" $(MM) recurse
+
+export:: export-headers
+        BLD_ACTION="export" $(MM) recurse
 
 tidy::
 	BLD_ACTION="tidy" $(MM) recurse

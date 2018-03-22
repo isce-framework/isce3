@@ -9,7 +9,7 @@
 PROJECT = gtest
 # my subdirectories
 RECURSE_DIRS = \
-    include \
+    cereal \
 
 # the standard targets
 
