@@ -1,6 +1,6 @@
 //
 // Author: Joshua Cohen
-// Copyright 2017
+// Copyright 2018
 //
 
 #include <iostream>

@@ -1,18 +1,20 @@
 //
 // Author: Joshua Cohen
-// Copyright 2017
+// Update: ml
+// Copyright 2018
 //
 
 #include <iostream>
 #include <vector>
 #include "RasterLineIter.h"
-using std::cout;
-using std::endl;
-using std::vector;
-using isce::dataio::RasterLineIter;
+
+#if !defined(ISCE_CORE_RASTERLINEITER_ICC)
+#error "RasterLineIter.icc is an implementation detail of class RasterLineIter"
+#endif
+
 
 template<typename T>
-void RasterLineIter::getNext(T *buffer, size_t width, size_t band) {
+void isce::core::RasterLineIter::getNext(T *buffer, size_t width, size_t band) {
     /*
      *  Gets the current line pointed to by _lineidx and increments the iterator. Since this uses
      *  an arbitrary memory buffer, we need to know how wide the buffer is being passed in (using
@@ -24,12 +26,12 @@ void RasterLineIter::getNext(T *buffer, size_t width, size_t band) {
         _raster.getLine(buffer, _lineidx, width, band);
         operator++();
     } else {
-        cout << "In RasterLineIter::getNext() - Iterator has reached EOF." << endl;
+        std::cout << "In isce::core::RasterLineIter::getNext() - Iterator has reached EOF." << std::endl;
     }
 }
 
 template<typename T>
-void RasterLineIter::getNext(T *buffer, size_t width) {
+void isce::core::RasterLineIter::getNext(T *buffer, size_t width) {
     /*
      *  Gets the current line pointed to by _lineidx and increments the iterator. Needs to know the
      *  width of the buffer since it's a raw pointer. Points to the default band.
@@ -39,7 +41,7 @@ void RasterLineIter::getNext(T *buffer, size_t width) {
 }
 
 template<typename T>
-void RasterLineIter::getNext(vector<T> &buffer, size_t band) {
+void isce::core::RasterLineIter::getNext(std::vector<T> &buffer, size_t band) {
     /*
      *  Gets the current line pointed to by _lineidx and increments the iterator. The width of the
      *  container is inferred by the Raster::getLine() function. Points to a specific image band.
@@ -48,7 +50,7 @@ void RasterLineIter::getNext(vector<T> &buffer, size_t band) {
 }
 
 template<typename T>
-void RasterLineIter::getNext(vector<T> &buffer) {
+void isce::core::RasterLineIter::getNext(std::vector<T> &buffer) {
     /*
      *  Gets the current line pointed to by _lineidx and increments the iterator. Points to the
      *  default image band.
@@ -57,7 +59,7 @@ void RasterLineIter::getNext(vector<T> &buffer) {
 }
 
 template<typename T>
-void RasterLineIter::setNext(T *buffer, size_t width, size_t band) {
+void isce::core::RasterLineIter::setNext(T *buffer, size_t width, size_t band) {
     /*
      *  Sets the current line pointed to by _lineidx and increments the iterator. Points to a 
      *  specific image band.
@@ -66,12 +68,12 @@ void RasterLineIter::setNext(T *buffer, size_t width, size_t band) {
         _raster.setLine(buffer, _lineidx, width, band);
         operator++();
     } else {
-        cout << "In RasterLineIter::setNext() - Iterator has reached EOF." << endl;
+        std::cout << "In isce::core::RasterLineIter::setNext() - Iterator has reached EOF." << std::endl;
     }
 }
 
 template<typename T>
-void RasterLineIter::setNext(T *buffer, size_t width) {
+void isce::core::RasterLineIter::setNext(T *buffer, size_t width) {
     /*
      *  Sets the current line pointed to by _lineidx and increments the iterator. Points to the
      *  default image band.
@@ -80,7 +82,7 @@ void RasterLineIter::setNext(T *buffer, size_t width) {
 }
 
 template<typename T>
-void RasterLineIter::setNext(vector<T> &buffer, size_t band) {
+void isce::core::RasterLineIter::setNext(std::vector<T> &buffer, size_t band) {
     /*
      *  Sets the current line pointed to by _lineidx and increments the iterator. Points to a
      *  specific image band.
@@ -89,7 +91,7 @@ void RasterLineIter::setNext(vector<T> &buffer, size_t band) {
 }
 
 template<typename T>
-void RasterLineIter::setNext(vector<T> &buffer) {
+void isce::core::RasterLineIter::setNext(std::vector<T> &buffer) {
     /*
      *  Sets the current line pointed to by _lineidx and increments the iterator. Points to the
      *  default image band.

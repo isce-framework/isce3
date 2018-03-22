@@ -1,17 +1,18 @@
 //
 // Author: Joshua Cohen
-// Copyright 2017
+// Update: ml
+// Copyright 2018
 //
 
-#ifndef __ISCE_DATAIO_RASTERLINEITER_H__
-#define __ISCE_DATAIO_RASTERLINEITER_H__
+#ifndef __ISCE_CORE_RASTERLINEITER_H__
+#define __ISCE_CORE_RASTERLINEITER_H__
 
 #include <algorithm>
 #include <vector>
 #include "Raster.h"
 
 namespace isce {
-  namespace dataio {
+  namespace core {
     class RasterLineIter {
 
     public:
@@ -34,8 +35,8 @@ namespace isce {
         inline RasterLineIter& operator--();
         // Postfix decrement
         inline RasterLineIter operator--(int);
-        inline bool operator==(const RasterLineIter&);
-        inline bool operator!=(const RasterLineIter &rhs) { return !(*this == rhs); }
+        inline bool operator==(const RasterLineIter&) const;
+        inline bool operator!=(const RasterLineIter &rhs) const { return !(*this == rhs); }
 
         inline void rewind() { _lineidx = 0; }
         inline void ffwd() { _lineidx = _raster.length(); }
@@ -102,7 +103,7 @@ namespace isce {
         return old;
     }
 
-    inline bool RasterLineIter::operator==(const RasterLineIter &rhs) {
+    inline bool RasterLineIter::operator==(const RasterLineIter &rhs) const {
         return (_raster.dataset == rhs._raster.dataset) && (_lineidx == rhs._lineidx); 
     }
 
@@ -120,8 +121,8 @@ namespace isce {
     }
 }}
 
-#define ISCE_DATAIO_RASTERLINEITER_ICC
+#define ISCE_CORE_RASTERLINEITER_ICC
 #include "RasterLineIter.icc"
-#undef ISCE_DATAIO_RASTERLINEITER_ICC
+#undef ISCE_CORE_RASTERLINEITER_ICC
 
 #endif
