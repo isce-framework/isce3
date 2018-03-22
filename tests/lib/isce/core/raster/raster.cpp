@@ -13,13 +13,13 @@
 #include <numeric>
 #include <gtest/gtest.h>
 
-#include "isce/dataio/Raster.h"
+#include "isce/core/Raster.h"
 
-isce::dataio::Raster loadTestData();
+isce::core::Raster loadTestData();
 
 struct RasterTest : public ::testing::Test {
   
-  isce::dataio::Raster img;
+  isce::core::Raster img;
   
   protected:
 
@@ -161,9 +161,9 @@ int main(int argc, char * argv[]) {
     return RUN_ALL_TESTS();
 }
 
-isce::dataio::Raster loadTestData() {
+isce::core::Raster loadTestData() {
 
-  isce::dataio::Raster img = isce::dataio::Raster("test_data/test_data.bin.vrt", false);
+  isce::core::Raster img = isce::core::Raster("test_data/test_data.bin.vrt", false);
 
   return img;
 }
