@@ -6,8 +6,8 @@
 // Copyright 2018
 //
 
-#ifndef __ISCE_DATAIO_RASTER_H__
-#define __ISCE_DATAIO_RASTER_H__
+#ifndef __ISCE_CORE_RASTER_H__
+#define __ISCE_CORE_RASTER_H__
 
 #include <complex>
 #include <cstdint>
@@ -18,7 +18,7 @@
 #include "gdal_priv.h"
 
 namespace isce {
-  namespace dataio {
+  namespace core {
 
     class Raster {
       // Since we need to pass an output datatype to GDAL's RasterIO using the GDALDataTypes,
@@ -129,8 +129,8 @@ namespace isce {
   }
 }
 
-#define ISCE_DATAIO_RASTER_ICC
+#define ISCE_CORE_RASTER_ICC
 #include "Raster.icc"
-#undef ISCE_DATAIO_RASTER_ICC
+#undef ISCE_CORE_RASTER_ICC
 
 #endif

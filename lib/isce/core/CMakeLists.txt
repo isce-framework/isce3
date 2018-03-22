@@ -23,7 +23,9 @@ set(${PACKAGENAME}_SRCS
               Poly2d.cpp
               Position.cpp
               Projections.cpp
-              Quaternion.cpp)
+              Quaternion.cpp
+	      Raster.cpp
+)
 
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h 
@@ -47,7 +49,10 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Projections.h
                                     Quaternion.h
                                     Quaternion.icc
-                                    Serialization.h)
+                                    Serialization.h
+                                    Raster.h
+				    Raster.icc
+)
 
 ###Install headers into build/include
 ###This is where regex can be used on the header files if needed
@@ -63,8 +68,11 @@ add_library(${${PACKAGENAME}_DLL} SHARED
                                ${${PACKAGENAME}_SRCS})
 
 #Pyre stuff is needed for logging
-target_include_directories(${${PACKAGENAME}_DLL} PUBLIC ${PYRE_INCLUDE_DIR} ${ISCE_BUILDINCLUDEDIR}) 
+#Gdal is needed for Raster IO 
+target_include_directories(${${PACKAGENAME}_DLL} PUBLIC ${PYRE_INCLUDE_DIR} ${ISCE_BUILDINCLUDEDIR} ${GDAL_INCLUDE_DIR}) 
 
+# Add library dependencies 
+target_link_libraries(${${PACKAGENAME}_DLL} ${GDAL_LIBRARY})
 
 #Install headers as files
 ###This may be changed in future to install from build/include

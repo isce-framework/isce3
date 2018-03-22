@@ -1,3 +1,3 @@
 #Mimicking mm behaviour
 add_subdirectory(core)
-add_subdirectory(dataio)
+#add_subdirectory(dataio)
