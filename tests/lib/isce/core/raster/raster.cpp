@@ -63,7 +63,7 @@ TEST_F(RasterTest, CheckGetValue) {
   
   double a, b, c;
 
-  for (int i=0; i<img.width(); i++) {
+  for (size_t i=0; i<img.width(); i++) {
     img.getValue(a, i, i, 1);
     img.getValue(b, i, i, 2);
     img.getValue(c, i, i, 3);
@@ -81,7 +81,7 @@ TEST_F(RasterTest, CheckSetValue) {
   double a, b;
   int refValue = -1; // note the different type
 
-  for (int i=0; i<img.width(); i++) {
+  for (size_t i=0; i<img.width(); i++) {
     img.setValue(refValue, i, i, 1);
     img.getValue(a, i, i, 1);
     ASSERT_EQ(a, -1);
@@ -101,10 +101,10 @@ TEST_F(RasterTest, CheckGetLine) {
   float refSum  = 0.;
   float maskSum = 0.;
   
-  for (int i=0; i<img.width(); i++)
+  for (size_t i=0; i<img.width(); i++)
     refSum += i;
   
-  for (int i=0; i<img.length(); i++) {
+  for (size_t i=0; i<img.length(); i++) {
 
     img.getLine( line, i, 1 );
     sum = std::accumulate( line.begin(), line.end(), 0. );
@@ -136,12 +136,12 @@ TEST_F(RasterTest, CheckGetBlock) {
   float refSum  = 0.;
   float maskSum = 0.;
   
-  int numBlocks = ceil( img.length() / blockHeight);
+  size_t numBlocks = ceil( img.length() / blockHeight);
   
-  for (int i=0; i<img.width(); i++)
+  for (size_t i=0; i<img.width(); i++)
     refSum += i;
  
-  for (int i=0; i<numBlocks; i++) {
+  for (size_t i=0; i<numBlocks; i++) {
     img.getBlock (block, 0, 0, blockWidth, blockHeight, 2);
     sum = std::accumulate( block.begin(), block.end(), 0. );
     // By construction band 2 has the col-number in each column

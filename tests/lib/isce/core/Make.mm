@@ -21,6 +21,7 @@ PACKAGES = \
     orbit \
     poly \
     projections \
+    raster \
     serialization \
 
 # the standard targets

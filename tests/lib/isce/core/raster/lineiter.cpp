@@ -74,7 +74,7 @@ TEST_F(RasterTest, CheckGetNext) {
   float maskSum = 0.;
   int i;
   
-  for (int i=0; i<img.width(); i++)
+  for (size_t i=0; i<img.width(); i++)
     refSum += i;
 
   i = 0;

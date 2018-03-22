@@ -24,6 +24,8 @@ PROJ_SRCS = \
     Position.cpp \
     Projections.cpp \
     Quaternion.cpp \
+    Raster.cpp \
+    RasterLineIter.cpp \
 
 # products
 # the library
@@ -52,6 +54,10 @@ EXPORT_PKG_HEADERS = \
     Projections.h \
     Quaternion.h \
     Quaternion.icc \
+    Raster.h \
+    Raster.icc \
+    RasterLineIter.h \
+    RasterLineIter.icc \
     Serialization.h \
 
 # standard targets

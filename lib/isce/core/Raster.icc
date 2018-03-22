@@ -40,16 +40,21 @@ void isce::core::Raster::getSetValue(T &buffer, size_t xidx, size_t yidx, size_t
     if (dataset) {
       // Check bounds
       if ((xidx < length()) && (yidx < width()) && (band <= numBands())) {
-	// Determine I/O direction based on whether the "set" flag was set (true ==
-	// GF_Write, false == GF_Read)
-	GDALRWFlag iodir = set ? GF_Write : GF_Read;
-	// Here there be dragons. This uses typeid magic to index the GDALDataTypes map such
-	// that we can translate things like std::complex<float> -> GDT_CFLoat32 on the fly
-	// using RTTI! This is by far the cleanest way to accomplish this given that GDAL
-	// doesn't come with this ability built in (maybe we suggest it to them...?). Also
-	// note we're just discarding the result since it's unused.
-	auto _ = dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, 1, 1, &buffer,
-							1, 1, _gdts.at(typeid(T)), 0, 0);
+	    // Determine I/O direction based on whether the "set" flag was set (true ==
+	    // GF_Write, false == GF_Read)
+	    GDALRWFlag iodir = set ? GF_Write : GF_Read;
+	    // Here there be dragons. This uses typeid magic to index the GDALDataTypes map such
+	    // that we can translate things like std::complex<float> -> GDT_CFLoat32 on the fly
+	    // using RTTI! This is by far the cleanest way to accomplish this given that GDAL
+	    // doesn't come with this ability built in (maybe we suggest it to them...?). Also
+	    // note we're just discarding the result since it's unused.
+	    auto iostat = dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, 1, 1, &buffer,
+	    						1, 1, _gdts.at(typeid(T)), 0, 0);
+        // Check RasterIO status
+        if (iostat != CPLE_None) {
+          std::cout << "In isce::core::Raster::get/setValue() - error in RasterIO." << std::endl;
+        }
+
       } else {
 	throw std::domain_error("In isce::core::Raster::get/setValue() - 2D/band index is out-of-bounds.");
       }
@@ -123,14 +128,18 @@ void isce::core::Raster::getSetLine(T *buffer, size_t line, size_t iowidth, size
     if (dataset) {
       // Check bounds
       if ((line < length()) && (band <= numBands())) {
-	// Determine I/O direction
-	GDALRWFlag iodir = set ? GF_Write : GF_Read;
-	// Determine number of elements to read (smaller of requested number of elements
-	// and number of elements in the image line)
-	size_t rdwidth = std::min(iowidth, width());
-	auto _ = dataset->GetRasterBand(band)->RasterIO(iodir, 0, line, rdwidth, 1, buffer,
-							rdwidth, 1, _gdts.at(typeid(T)), 0,
-							0);
+	    // Determine I/O direction
+	    GDALRWFlag iodir = set ? GF_Write : GF_Read;
+	    // Determine number of elements to read (smaller of requested number of elements
+	    // and number of elements in the image line)
+	    size_t rdwidth = std::min(iowidth, width());
+	    auto iostat = dataset->GetRasterBand(band)->RasterIO(iodir, 0, line, rdwidth, 1, buffer,
+	    						rdwidth, 1, _gdts.at(typeid(T)), 0,
+	    						0);
+        // Check RasterIO status
+        if (iostat != CPLE_None) {
+          std::cout << "In isce::core::Raster::get/setLine() - error in RasterIO." << std::endl;
+        }
       } else {
 	throw std::domain_error("In isce::core::Raster::get/setLine() - Line/band index is out-of-bounds.");
       }
@@ -251,15 +260,19 @@ void isce::core::Raster::getSetBlock(T *buffer, size_t xidx, size_t yidx, size_t
       // Check bounds
       if (((xidx) < length()) && ((yidx) < width()) &&
 	  (band <= numBands())) {
-	// Determine I/O direction based on whether the "set" flag was set (true ==
-	// GF_Write, false == GF_Read)
-	GDALRWFlag iodir = set ? GF_Write : GF_Read;
-	// As with getSetValue/getSetLine, use the typeid magic to translate datatypes on
-	// the fly with RTTI.
-	auto _ = dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, iowidth,
-							iolength, buffer, iowidth,
-							iolength, _gdts.at(typeid(T)),
-							0, 0);
+	    // Determine I/O direction based on whether the "set" flag was set (true ==
+	    // GF_Write, false == GF_Read)
+	    GDALRWFlag iodir = set ? GF_Write : GF_Read;
+	    // As with getSetValue/getSetLine, use the typeid magic to translate datatypes on
+	    // the fly with RTTI.
+	    auto iostat = dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, iowidth,
+	    						iolength, buffer, iowidth,
+	    						iolength, _gdts.at(typeid(T)),
+	    						0, 0);
+        // Check RasterIO status
+        if (iostat != CPLE_None) {
+          std::cout << "In isce::core::Raster::get/setValue() - error in RasterIO." << std::endl;
+        }
       } else {
 	throw std::domain_error("In isce::core::Raster::get/setBlock() - 2D/band index is out-of-bounds.");
       }
