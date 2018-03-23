@@ -5,6 +5,11 @@
 #error "ResampSlc.icc is an implementation detail of class ResampSlc"
 #endif
 
+// Since fmod(a,b) in C++ != MODULO(a,b) in Fortran for all a,b, define a C++ equivalent
+#define modulo_f(a,b) fmod(fmod(a,b)+(b),(b))
+// Visually access 1D array as 2D
+#define IDX1D(i,j,w) (((i)*(w))+(j))
+
 // Default constructor
 isce::core::ResampSlc::ResampSlc() {
     _rgCarrier = new Poly2d();
@@ -117,6 +122,77 @@ size_t isce::core::ResampSlc::_computeNumberOfTiles(size_t linesPerTile) {
         nTiles += 1;
     }
     return nTiles
+}
+
+// Prepare sinc interpolation methods and internal data
+void isce::core::ResampSlc::_prepareMethods(int method) {
+    // Compute filter coefficients    
+    if (method == SINC_METHOD) {
+        std::valarray<double> filter((SINC_SUB * SINC_LEN) + 1);
+        int intplength, filtercoef;
+        double ssum;
+        Interpolator interp;
+
+        // Initialize sinc coefficients
+        interp.sinc_coef(1.0, SINC_LEN, SINC_SUB, 0.0, 1, intplength, filtercoef, filter);
+
+        // Normalize filter
+        for (int i = 0; i < SINC_SUB; ++i) {
+            // Compute filter sum
+            ssum = 0.0;
+            for (int j = 0; j < SINC_LEN; ++j) {
+                ssum += filter[i + SINC_SUB*j];
+            }
+            // Normalize the filter
+            for (int j = 0; j < SINC_LEN; ++j) {
+                filter[i + SINC_SUB*j] /= ssum;
+            }
+        }
+
+        // Copy transpose of filter coefficients to member data
+        _fintp.resize(SINC_SUB * SINC_LEN);
+        for (int i = 0; i < SINC_LEN; ++i) {
+            for (int j = 0; j < SINC_SUB; ++j) {
+                _fintp[i + SINC_LEN*j] = filter[j + SINC_SUB*i];
+            }
+        }
+        _fDelay = 0.5 * SINC_LEN;
+    } else {
+        std::cerr << "Error: other interpolation methods for ResampSlc not implemented yet."
+                  << std::endl;
+    }
+    // done
+}
+
+// Complex sinc interpolation
+std::complex<float> isce::core::ResampSlc::_interpolateComplex(
+    std::valarray<std::complex<float>> & ifg, int x, int y, double fx, double fy, int nx,
+    int ny) {
+    // Check edge conditions
+    if ((x < SINC_HALF) || (x > (nx - SINC_HALF)))
+        return std::complex<float>(0.0, 0.0);
+    if ((y < SINC_HALF) || (y > (ny - SINC_HALF)))
+        return std::complex<float>(0.0, 0.0);
+    // Modify interpolation coordinates
+    const int xx = x + SINC_HALF - 1;
+    const int yy = y + SINC_HALF - 1;
+    // Perform interpolation
+    std::complex<float> retValue(0.0, 0.0);
+    if ((xx >= (SINC_LEN - 1)) && (xx < nx) && (yy >= (SINC_LEN-1)) && (yy < ny)) {
+        const int ifracx = std::min(std::max(0, int(frpx*SINC_SUB)), SINC_SUB-1);
+        const int ifracy = std::min(std::max(0, int(frpy*SINC_SUB)), SINC_SUB-1);
+        for (int i = 0; i < SINC_LEN; ++i) {
+            for (int j = 0; j < SINC_LEN; ++j) {
+                // Compute interpolation weight
+                const float weight = _fintp[IDX1D(ifracx,i,SINC_LEN)] 
+                    * _fintp[IDX1D(ifracy,j,SINC_LEN)];
+                // Accumulate interpolated value
+                retValue += ifg[IDX1d(xx-1,yy-j,SINC_ONE)] * weight;
+            }
+        }
+    }
+    // Done
+    return retValue;
 }
 
 // end of file

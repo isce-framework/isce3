@@ -24,6 +24,7 @@ PROJ_SRCS = \
     Position.cpp \
     Projections.cpp \
     Quaternion.cpp \
+    ResampSlc.cpp \
 
 # products
 # the library
@@ -52,6 +53,8 @@ EXPORT_PKG_HEADERS = \
     Projections.h \
     Quaternion.h \
     Quaternion.icc \
+    ResampSlc.h \
+    ResampSlc.icc \
     Serialization.h \
 
 # standard targets

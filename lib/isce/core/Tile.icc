@@ -11,27 +11,91 @@
 
 // Default constructor
 template <typename T>
-isce::core::Tile<T>::Tile() : length(0), width(0), rowStart(0), rowEnd(0) {};
+isce::core::Tile<T>::Tile() {};
 
-// Destructor
+// Copy constructor
 template <typename T>
-isce::core::Tile<T>::~Tile() {
-    clear();
-}
+isce::core::Tile<T>::Tile(Tile & refTile) : _width(refTile.width()),
+    _rowStart(refTile.rowStart()), _rowEnd(refTile.rowEnd()),
+    _firstImageRow(refTile.firstImageRow()), _lastImageRow(refTile.lastImageRow()) {}
+
+// Set line of tile data
+template <typename T>
+void isce::core::Tile<T>::setLineData(Raster & raster, size_t rasterLine) {
+    size_t tileLine = rasterLine - _firstImageRow;
+    raster.getLine(&_data[IDX1D(tileLine,0,_width)], rasterLine, _width, 1);  
+} 
 
 // Allocate dynamic memory
 template <typename T>
 void isce::core::Tile<T>::allocate() {
-    size_t nPixels = length * width;
-    if (nPixels > 0) {
-        _data = new T[nPixels];
-    }
+    _data.resize(length() * _width);
 }
 
-// Clear dynamic memory
+// Get tile length (disallow setting of tile length)
 template <typename T>
-void isce::core::Tile<T>::clear() {
-    if (_data != NULL) delete [] _data;
+size_t isce::core::Tile<T>::length() const {
+    return _lastImageRow - _firstImageRow + 1;
+}
+
+// Get tile width
+template <typename T>
+size_t isce::core::Tile<T>::width() const {
+    return _width;
+}
+
+// Set tile width
+template <typename T>
+void isce::core::Tile<T>::width(size_t widthVal) {
+    _width = widthVal;
+}
+
+// Get row start index
+template <typename T>
+size_t isce::core::Tile<T>::rowStart() const {
+    return _rowStart;
+}
+
+// Set row start index
+template <typename T>
+void isce::core::Tile<T>::rowStart(size_t value) {
+    _rowStart = value;
+}
+
+// Get row end index
+template <typename T>
+size_t isce::core::Tile<T>::rowEnd() const {
+    return _rowEnd;
+}
+
+// Set row end index
+template <typename T>
+void isce::core::Tile<T>::rowEnd(size_t value) {
+    _rowEnd = value;
+}
+
+// Get index of first row of image
+template <typename T>
+size_t isce::core::Tile<T>::firstImageRow() const {
+    return _firstImageRow;
+}
+
+// Set index of first row of image
+template <typename T>
+void isce::core::Tile<T>::firstImageRow(size_t value) {
+    _firstImageRow = value;
+}
+
+// Get index of last row of image
+template <typename T>
+size_t isce::core::Tile<T>::lastImageRow() const {
+    return _lastImageRow;
+}
+
+// Set index of last row of image
+template <typename T>
+void isce::core::Tile<T>::lastImageRow(size_t value) {
+    _lastImageRow = value;
 }
 
 // end of file

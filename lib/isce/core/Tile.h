@@ -9,6 +9,7 @@
 #define ISCE_CORE_TILE_H
 
 #include <complex>
+#include <valarray>
 
 // Declarations
 namespace isce {
@@ -22,25 +23,39 @@ template <typename T>
 class isce::core::Tile {
     
     public:
-        // Geometry
-        size_t length;
-        size_t width;
-        size_t rowStart;
-        size_t rowEnd;
-
-        // Constructor
+        // Constructors
         inline Tile();
-        // Destructor
-        inline ~Tile();
+        inline Tile(const Tile &);
+
+        // Getters for geometry
+        inline size_t length() const;
+        inline size_t width() const;
+        inline size_t rowStart() const;
+        inline size_t rowEnd() const;
+        inline size_t firstImageRow() const;
+        inline size_t lastImageRow() const;
+
+        // Setters for geometry
+        inline void width(size_t);
+        inline void rowStart(size_t);
+        inline void rowEnd(size_t);
+        inline void firstImageRow(size_t);
+        inline void lastImageRow(size_t);
 
         // Allocate memory
         inline void allocate();
-        // Clear memory
-        inline void clear();
+
+        // Overload subscript operators to access valarray data
+        T & operator[](size_t index) {return _data[index];}
+        const T & operator[](size_t index) const {return _data[index];}
 
     private:
+        // Geometry
+        size_t _width, _rowStart, _rowEnd;
+        size_t _firstImageRow, _lastImageRow;
+
         // Data
-        T * _data;
+        std::valarray<T> _data;
 };
 
 // Get inline implementations of Tile

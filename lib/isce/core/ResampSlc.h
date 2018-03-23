@@ -11,6 +11,9 @@
 #include <cstdint>
 #include <cstdio>
 #include <complex>
+#include <valarray>
+
+// isce::core
 #include "Poly2d.h"
 #include "Metadata.h"
 #include "Tile.h"
@@ -55,7 +58,8 @@ class isce::core::ResampSlc {
         inline void declare() const;
 
         // Main resamp entry point
-        void resamp(bool flatten=true, bool isComplex=true, size_t rowBuffer=40);
+        void resamp(const std::string &, const std::string &, const std::string &,
+            const std::string &, bool flatten=true, bool isComplex=true, size_t rowBuffer=40);
 
     // Data members
     private:
@@ -70,18 +74,27 @@ class isce::core::ResampSlc {
         size_t _outWidth, _outLength;
         size_t _inWidth, _inLength;
 
+        // Interpolation work data
+        std::valarray<float> _fintp;
+        float _fDelay;
+
         // Tile initialization
-        void _initializeTile(Tile<std::complex<float>> &, size_t, size_t &, size_t &);
+        void _initializeTile(Tile &, Raster &, size_t);
 
         // Tile transformation
-        void _transformTile(Tile<std::complex<float>> &,
-            std::vector<std::complex<float>> &,
-            std::vector<std::complex<float>> &,
+        void _transformTile(Tile &,
+            std::valarray<std::complex<float>> &,
+            std::valarray<std::complex<float>> &,
             size_t, size_t);
 
         // Convenience functions
         inline void _clearPolys();
         inline size_t _computeNumberOfTiles(size_t);
+
+        // Resampling interpolation methods
+        void _prepareInterpMethods(int) const;
+        inline std::complex<float> _interpolateComplex(std::valarray<std::complex<float>> &,
+            int, int, double, double, int, int);
 };
 
 // Get inline implementations for ResampSlc
