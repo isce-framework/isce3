@@ -41,21 +41,14 @@ class isce::core::ResampSlc {
         inline ~ResampSlc();
 
         // Set the various polynomial attributes
-        inline void setRgCarrier(Poly2d*);
-        inline void setAzCarrier(Poly2d*);
-        inline void setRgOffsets(Poly2d*);
-        inline void setAzOffsets(Poly2d*);
-        inline void setDoppler(Poly2d*);
-
-        // Geometry getters
-        inline size_t inputWidth() const;
-        inline size_t inputLength() const;
-        inline size_t outputWidth() const;
-        inline size_t outputLength() const;
-
+        inline void setRgCarrier(Poly2d);
+        inline void setAzCarrier(Poly2d);
+        inline void setRgOffsets(Poly2d);
+        inline void setAzOffsets(Poly2d);
+        inline void setDoppler(Poly2d);
+        
         // Convenience functions
-        inline void resetPolys();
-        inline void declare() const;
+        inline void declare(size_t, size_t, size_t, size_t) const;
 
         // Main resamp entry point
         void resamp(const std::string &, const std::string &, const std::string &,
@@ -64,15 +57,11 @@ class isce::core::ResampSlc {
     // Data members
     private:
         // Polynomials
-        Poly2d * _rgCarrier;            // range carrier polynomial
-        Poly2d * _azCarrier;            // azimuth carrier polynomial
-        Poly2d * _rgOffsetsPoly;        // range offsets polynomial
-        Poly2d * _azOffsetsPoly;        // azimuth offsets polynomial
-        Poly2d * _dopplerPoly;          // Doppler polynomial
-
-        // Geometry
-        size_t _outWidth, _outLength;
-        size_t _inWidth, _inLength;
+        Poly2d _rgCarrier;            // range carrier polynomial
+        Poly2d _azCarrier;            // azimuth carrier polynomial
+        Poly2d _rgOffsetsPoly;        // range offsets polynomial
+        Poly2d _azOffsetsPoly;        // azimuth offsets polynomial
+        Poly2d _dopplerPoly;          // Doppler polynomial
 
         // Interpolation work data
         std::valarray<float> _fintp;
@@ -88,8 +77,7 @@ class isce::core::ResampSlc {
             size_t, size_t);
 
         // Convenience functions
-        inline void _clearPolys();
-        inline size_t _computeNumberOfTiles(size_t);
+        inline size_t _computeNumberOfTiles(size_t, size_t);
 
         // Resampling interpolation methods
         void _prepareInterpMethods(int) const;

@@ -45,8 +45,9 @@ class isce::core::Tile {
         // Allocate memory
         inline void allocate();
 
-        // Overload subscript operators to access valarray data
+        // Overload subscript operator to access valarray data
         T & operator[](size_t index) {return _data[index];}
+        // Read-only subscript operator
         const T & operator[](size_t index) const {return _data[index];}
 
     private:

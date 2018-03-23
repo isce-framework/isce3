@@ -11,90 +11,39 @@
 #define IDX1D(i,j,w) (((i)*(w))+(j))
 
 // Default constructor
-isce::core::ResampSlc::ResampSlc() {
-    _rgCarrier = new Poly2d();
-    _azCarrier = new Poly2d();
-    _rgOffsetsPoly = new Poly2d();
-    _azOffsetsPoly = new Poly2d();
-    _dopplerPoly = new Poly2d();
-}
+isce::core::ResampSlc::ResampSlc() {}
 
 // Destructor
-isce::core::ResampSlc::~ResampSlc() {
-    _clearPolys();
-}
+isce::core::ResampSlc::~ResampSlc() {}
 
-// Set range carrier polynomial
-void isce::core::ResampSlc::setRgCarrier(Poly2d * poly) {
-    if (_rgCarrier != NULL) delete _rgCarrier;
+// Set range carrier polynomial via copy
+void isce::core::ResampSlc::setRgCarrier(Poly2d poly) {
     _rgCarrier = poly;
 }
 
-// Set azimuth carrier polynomial
-void isce::core::ResampSlc::setAzCarrier(Poly2d * poly) {
-    if (_azCarrier != NULL) delete _azCarrier;
+// Set azimuth carrier polynomial via copy
+void isce::core::ResampSlc::setAzCarrier(Poly2d poly) {
     _azCarrier = poly;
 }
 
-// Set range offsets polynomial
-void isce::core::ResampSlc::setRgOffsets(Poly2d * poly) {
-    if (_rgOffsetsPoly != NULL) delete _rgOffsetsPoly;
+// Set range offsets polynomial via copy
+void isce::core::ResampSlc::setRgOffsets(Poly2d poly) {
     _rgOffsetsPoly = poly;
 }
 
-// Set azimuth offsets polynomial
-void isce::core::ResampSlc::setAzOffsets(Poly2d * poly) {
-    if (_azOffsetsPoly != NULL) delete _azOffsetsPoly;
+// Set azimuth offsets polynomial via copy
+void isce::core::ResampSlc::setAzOffsets(Poly2d poly) {
     _azOffsetsPoly = poly;
 }
 
-// Set Doppler polynomial
-void isce::core::ResampSlc::setDoppler(Poly2d * poly) {
-    if (_dopplerPoly != NULL) delete _dopplerPoly;
+// Set Doppler polynomial via copy
+void isce::core::ResampSlc::setDoppler(Poly2d poly) {
     _dopplerPoly = poly;
 }
 
-// Get input width
-size_t isce::core::ResampSlc::inputWidth() const {
-    return _inWidth;
-}
-
-// Get input length
-size_t isce::core::ResampSlc::inputLength() const {
-    return _inLength;
-}
-
-// Get output width
-size_t isce::core::ResampSlc::outputWidth() const {
-    return _outWidth;
-}
-
-// Get output length
-size_t isce::core::ResampSlc::outputLength() const {
-    return _outLength;
-}
-
-// Clear polynomials
-void isce::core::ResampSlc::_clearPolys() {
-    if (_rgCarrier != NULL) delete _rgCarrier;
-    if (_azCarrier != NULL) delete _azCarrier;
-    if (_rgOffsetsPoly != NULL) delete _rgOffsetsPoly;
-    if (_azOffsetsPoly != NULL) delete _azOffsetsPoly;
-    if (_dopplerPoly != NULL) delete _dopplerPoly;
-}
-
-// Clear polynomials and create new ones
-void isce::core::ResampSlc::resetPolys() {
-    _clearPolys();
-    _rgCarrier = new Poly2d();
-    _azCarrier = new Poly2d();
-    _rgOffsetsPoly = new Poly2d();
-    _azOffsetsPoly = new Poly2d();
-    _dopplerPoly = new Poly2d();
-}
-
 // Announce my properties to the world
-void isce::core::ResampSlc::declare() {
+void isce::core::ResampSlc::declare(size_t inLength, size_t inWidth,
+    size_t outLength, size_t outWidth) {
     // Basic info
     printf("\n << Resample one image to another image coordinates >> \n\n");
     printf("Input Image Dimensions:  %6d lines, %6d pixels\n\n", inLength, inWidth);
@@ -103,21 +52,21 @@ void isce::core::ResampSlc::declare() {
     printf("Complex data interpolation\n");
     // Polynomial info
     printf("Azimuth Carrier Poly\n");
-    _azCarrier->printPoly();
+    _azCarrier.printPoly();
     printf("Range Carrier Poly\n");
-    _rgCarrier->printPoly();
+    _rgCarrier.printPoly();
     printf("Range Offsets Poly\n");
-    _rgOffsetsPoly->printPoly();
+    _rgOffsetsPoly.printPoly();
     printf("Azimuth Offsets Poly\n");
-    _azOffsetsPoly->printPoly();
+    _azOffsetsPoly.printPoly();
 }
 
 // Compute number of tiles given a specified nominal tile size
-size_t isce::core::ResampSlc::_computeNumberOfTiles(size_t linesPerTile) {
+size_t isce::core::ResampSlc::_computeNumberOfTiles(size_t outLength, size_t linesPerTile) {
     // Compute floor(nTiles)
-    size_t nTiles = _outLength / linesPerTile;
+    size_t nTiles = outLength / linesPerTile;
     // See if there are any leftover lines to add an extra tile
-    size_t extraLines = _outLength - nTiles * linesPerTile;
+    size_t extraLines = outLength - nTiles * linesPerTile;
     if (extraLines > 0) {
         nTiles += 1;
     }
