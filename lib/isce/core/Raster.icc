@@ -16,11 +16,14 @@ inline isce::core::Raster& isce::core::Raster::operator=(const Raster &rhs) {
   // Since we're sharing the _dataset between objects, and only weak-copying the pointer,
   // increment the GDALDataset reference counter appropriately
   _dataset->Reference();
-  _readonly = rhs._readonly;
+  _access = rhs._access;
   return *this;
 }
     
-
+// Construct a Raster object referring to new file fname assuming ENVI driver, float dataype and one band.
+template<typename T>
+isce::core::Raster::Raster(const std::string &fname, const std::vector<T> &buffer, size_t length) :
+  isce::core::Raster(fname, buffer.size(), length, 1, _gdts.at(typeid(T)), "ENVI") {}
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 //                                          PIXEL OPERATIONS
@@ -37,7 +40,7 @@ void isce::core::Raster::getSetValue(T &buffer, size_t xidx, size_t yidx, size_t
    */
   // Check if the datatype of the buffer is mappable to a GDALDataType. Count returns 1 if the key
   // is in the map, 0 if not (since unordered_map is hash-indexed, the key can only exist once!)
-  std::cout << "GDTS COUNT: " << _gdts.count(typeid(T)) << std::endl;
+
   if (_gdts.count(typeid(T))) {
     // Check bounds
     if ((xidx < length()) && (yidx < width()) && (band <= numBands())) {
@@ -87,15 +90,10 @@ template<typename T>
 void isce::core::Raster::setValue(T &buffer, size_t xidx, size_t yidx, size_t band) {
   /*
    *  Sets a single pixel at a given location in the image in a given raster band.
+   *  Note that GDAL will raise an exception if image was open in readonly mode.
    */
-  // Check first if we are even allowed to write to the image (opened in read-only mode or not)
-  if (!_readonly) {
-    // True as the final value indicates we want to set the value (false means get)
-    getSetValue(buffer, xidx, yidx, band, true);
-  } else {
-    std::cout << "In isce::core::Raster::setValue() - Image was opened in read-only mode and cannot be " <<
-      "written to." << std::endl;
-  }
+  getSetValue(buffer, xidx, yidx, band, true);
+
 }
 
 template<typename T>
@@ -190,14 +188,7 @@ void isce::core::Raster::setLine(T* buffer, size_t line, size_t iowidth, size_t 
    *  for iowidth, which is the size of the buffer. This needs to be passed in explicitly since it
    *  can't be derived from the buffer pointer itself.
    */
-  // Check if we are even allowed to write to the image (i.e. check if we opened in read-only)
-  if (!_readonly) {
-    // True as the final value indicates we want to write to the image (false means read)
-    getSetLine(buffer, line, iowidth, band, true);
-  } else {
-    std::cout << "In isce::core::Raster::setLine() - Image was opened in read-only mode and cannot be " <<
-      "written to." << std::endl;
-  }
+  getSetLine(buffer, line, iowidth, band, true);
 }
 
 template<typename T>

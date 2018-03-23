@@ -108,11 +108,10 @@ TEST_F(RasterTest, CheckGetBlock) {
   int blockWidth  = img.width();
   std::vector<float> block( blockWidth * blockHeight );
   std::vector<float> fullImage( img.width() * img.length() );
-  float sum     = 0.;
-  float refSum  = 0.;
-  float maskSum = 0.;
-  
-  size_t numBlocks = ceil( img.length() / blockHeight);
+  float  sum     = 0.;
+  float  refSum  = 0.;
+  float  maskSum = 0.;
+  size_t numBlocks = ceil( img.length() / blockHeight );
   
   for (size_t i=0; i<img.width(); ++i)
     refSum += i;
@@ -132,14 +131,33 @@ TEST_F(RasterTest, CheckGetBlock) {
 /* CheckFileCreation */
 TEST_F(RasterTest, CheckFileCreation) {
   double a;
-  isce::core::Raster img2 = isce::core::Raster("created_testdata.bin",
+  std::string fname = "created_testdata2.bin";
+  isce::core::Raster img2 = isce::core::Raster(fname,
 					       100, 200, 2, GDT_Float32, "ENVI");
+
   for (int i=0; i < (int) img2.width(); ++i) {
     img2.setValue( i, i, i, 1);
     img2.getValue(a, i, i, 1);
     ASSERT_EQ(i, a);
   }  
+  std::remove(fname.c_str());
 }
+
+/* Check file creation using std::vector as input */
+TEST_F(RasterTest, CheckFileCreationUsingStdVector) {
+  double a;
+  std::string fname = "created_testdata4.bin";
+  std::vector<float> dataLine( 321 );
+  isce::core::Raster img3 = isce::core::Raster(fname, dataLine, 400);
+
+  for (int i=0; i < (int) img3.width(); ++i) {
+    img3.setValue( i, i, i, 1);
+    img3.getValue(a, i, i, 1);
+    ASSERT_EQ(i, a);
+  }
+  std::remove(fname.c_str());
+}
+
 
 
 int main(int argc, char * argv[]) {
@@ -149,7 +167,7 @@ int main(int argc, char * argv[]) {
 
 isce::core::Raster loadTestData() {
 
-  isce::core::Raster img = isce::core::Raster("test_data/test_data.bin.vrt", false);
+  isce::core::Raster img = isce::core::Raster("test_data/test_data.bin.vrt", true);
 
   return img;
 }
