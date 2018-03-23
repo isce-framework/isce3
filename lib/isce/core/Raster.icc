@@ -10,16 +10,18 @@
 #error "Raster.icc is an implementation detail of class Raster"
 #endif
 
+
 inline isce::core::Raster& isce::core::Raster::operator=(const Raster &rhs) {
-  dataset = rhs.dataset;
-  // Since we're sharing the dataset between objects, and only weak-copying the pointer,
+  _dataset = rhs._dataset;
+  // Since we're sharing the _dataset between objects, and only weak-copying the pointer,
   // increment the GDALDataset reference counter appropriately
-  dataset->Reference();
+  _dataset->Reference();
   _readonly = rhs._readonly;
   return *this;
 }
     
-    
+
+
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 //                                          PIXEL OPERATIONS
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -35,31 +37,27 @@ void isce::core::Raster::getSetValue(T &buffer, size_t xidx, size_t yidx, size_t
    */
   // Check if the datatype of the buffer is mappable to a GDALDataType. Count returns 1 if the key
   // is in the map, 0 if not (since unordered_map is hash-indexed, the key can only exist once!)
+  std::cout << "GDTS COUNT: " << _gdts.count(typeid(T)) << std::endl;
   if (_gdts.count(typeid(T))) {
-    // Check if we have an image loaded
-    if (dataset) {
-      // Check bounds
-      if ((xidx < length()) && (yidx < width()) && (band <= numBands())) {
-	    // Determine I/O direction based on whether the "set" flag was set (true ==
-	    // GF_Write, false == GF_Read)
-	    GDALRWFlag iodir = set ? GF_Write : GF_Read;
-	    // Here there be dragons. This uses typeid magic to index the GDALDataTypes map such
-	    // that we can translate things like std::complex<float> -> GDT_CFLoat32 on the fly
-	    // using RTTI! This is by far the cleanest way to accomplish this given that GDAL
-	    // doesn't come with this ability built in (maybe we suggest it to them...?). Also
-	    // note we're just discarding the result since it's unused.
-	    auto iostat = dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, 1, 1, &buffer,
-	    						1, 1, _gdts.at(typeid(T)), 0, 0);
-        // Check RasterIO status
-        if (iostat != CPLE_None) {
-          std::cout << "In isce::core::Raster::get/setValue() - error in RasterIO." << std::endl;
-        }
-
-      } else {
-	throw std::domain_error("In isce::core::Raster::get/setValue() - 2D/band index is out-of-bounds.");
+    // Check bounds
+    if ((xidx < length()) && (yidx < width()) && (band <= numBands())) {
+      // Determine I/O direction based on whether the "set" flag was set (true ==
+      // GF_Write, false == GF_Read)
+      GDALRWFlag iodir = set ? GF_Write : GF_Read;
+      // Here there be dragons. This uses typeid magic to index the GDALDataTypes map such
+      // that we can translate things like std::complex<float> -> GDT_CFLoat32 on the fly
+      // using RTTI! This is by far the cleanest way to accomplish this given that GDAL
+      // doesn't come with this ability built in (maybe we suggest it to them...?). Also
+      // note we're just discarding the result since it's unused.
+      auto iostat = _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, 1, 1, &buffer,
+							    1, 1, _gdts.at(typeid(T)), 0, 0);
+      // Check RasterIO status
+      if (iostat != CPLE_None) {
+	std::cout << "In isce::core::Raster::get/setValue() - error in RasterIO." << std::endl;
       }
+
     } else {
-      std::cout << "In isce::core::Raster::get/setValue() - No dataset loaded." << std::endl;
+      throw std::domain_error("In isce::core::Raster::get/setValue() - 2D/band index is out-of-bounds.");
     }
   } else {
     std::cout << "In isce::core::Raster::get/setValue() - Buffer datatype (type " << typeid(T).name() << ") " <<
@@ -124,27 +122,22 @@ void isce::core::Raster::getSetLine(T *buffer, size_t line, size_t iowidth, size
    */
   // Test if the buffer datatype is mappable to a GDALDataType
   if (_gdts.count(typeid(T))) {
-    // Check if we have an image loaded
-    if (dataset) {
-      // Check bounds
-      if ((line < length()) && (band <= numBands())) {
-	    // Determine I/O direction
-	    GDALRWFlag iodir = set ? GF_Write : GF_Read;
-	    // Determine number of elements to read (smaller of requested number of elements
-	    // and number of elements in the image line)
-	    size_t rdwidth = std::min(iowidth, width());
-	    auto iostat = dataset->GetRasterBand(band)->RasterIO(iodir, 0, line, rdwidth, 1, buffer,
-	    						rdwidth, 1, _gdts.at(typeid(T)), 0,
-	    						0);
-        // Check RasterIO status
-        if (iostat != CPLE_None) {
-          std::cout << "In isce::core::Raster::get/setLine() - error in RasterIO." << std::endl;
-        }
-      } else {
-	throw std::domain_error("In isce::core::Raster::get/setLine() - Line/band index is out-of-bounds.");
+    // Check bounds
+    if ((line < length()) && (band <= numBands())) {
+      // Determine I/O direction
+      GDALRWFlag iodir = set ? GF_Write : GF_Read;
+      // Determine number of elements to read (smaller of requested number of elements
+      // and number of elements in the image line)
+      size_t rdwidth = std::min(iowidth, width());
+      auto iostat = _dataset->GetRasterBand(band)->RasterIO(iodir, 0, line, rdwidth, 1, buffer,
+							    rdwidth, 1, _gdts.at(typeid(T)), 0,
+							    0);
+      // Check RasterIO status
+      if (iostat != CPLE_None) {
+	std::cout << "In isce::core::Raster::get/setLine() - error in RasterIO." << std::endl;
       }
     } else {
-      std::cout << "In isce::core::Raster::get/setLine() - No dataset loaded." << std::endl;
+      throw std::domain_error("In isce::core::Raster::get/setLine() - Line/band index is out-of-bounds.");
     }
   } else {
     std::cout << "In isce::core::Raster::get/setLine() - Buffer datatype (type " << typeid(T).name() << ") " <<
@@ -241,7 +234,7 @@ void isce::core::Raster::setLine(std::vector<T> &buffer, size_t line) {
 
 template<typename T>
 void isce::core::Raster::getSetBlock(T *buffer, size_t xidx, size_t yidx, size_t iowidth, size_t iolength,
-			 size_t band, bool set) {
+				     size_t band, bool set) {
   /*
    *  As with getSetValue/getSetLine, this serves as a single entry point for reading/writing a
    *  block of data to/from the image. The key thing to note about this function is that due to
@@ -255,29 +248,24 @@ void isce::core::Raster::getSetBlock(T *buffer, size_t xidx, size_t yidx, size_t
    */
   // Check to see if the buffer datatype is mappable to a GDALDataType
   if (_gdts.count(typeid(T))) {
-    // Check if we have an image loaded
-    if (dataset) {
-      // Check bounds
-      if (((xidx) < length()) && ((yidx) < width()) &&
-	  (band <= numBands())) {
-	    // Determine I/O direction based on whether the "set" flag was set (true ==
-	    // GF_Write, false == GF_Read)
-	    GDALRWFlag iodir = set ? GF_Write : GF_Read;
-	    // As with getSetValue/getSetLine, use the typeid magic to translate datatypes on
-	    // the fly with RTTI.
-	    auto iostat = dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, iowidth,
-	    						iolength, buffer, iowidth,
-	    						iolength, _gdts.at(typeid(T)),
-	    						0, 0);
-        // Check RasterIO status
-        if (iostat != CPLE_None) {
-          std::cout << "In isce::core::Raster::get/setValue() - error in RasterIO." << std::endl;
-        }
-      } else {
-	throw std::domain_error("In isce::core::Raster::get/setBlock() - 2D/band index is out-of-bounds.");
+    // Check bounds
+    if (((xidx) < length()) && ((yidx) < width()) &&
+	(band <= numBands())) {
+      // Determine I/O direction based on whether the "set" flag was set (true ==
+      // GF_Write, false == GF_Read)
+      GDALRWFlag iodir = set ? GF_Write : GF_Read;
+      // As with getSetValue/getSetLine, use the typeid magic to translate datatypes on
+      // the fly with RTTI.
+      auto iostat = _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, iowidth,
+							    iolength, buffer, iowidth,
+							    iolength, _gdts.at(typeid(T)),
+							    0, 0);
+      // Check RasterIO status
+      if (iostat != CPLE_None) {
+	std::cout << "In isce::core::Raster::get/setValue() - error in RasterIO." << std::endl;
       }
     } else {
-      std::cout << "In isce::core::Raster::get/setBlock() - No dataset loaded." << std::endl;
+      throw std::domain_error("In isce::core::Raster::get/setBlock() - 2D/band index is out-of-bounds.");
     }
   } else {
     std::cout << "In isce::core::Raster::get/setBlock() - Buffer datatype (type " << typeid(T).name() << ") " <<
@@ -287,7 +275,7 @@ void isce::core::Raster::getSetBlock(T *buffer, size_t xidx, size_t yidx, size_t
 
 template<typename T>
 void isce::core::Raster::getBlock(T *buffer, size_t xidx, size_t yidx, size_t iowidth, size_t iolength, 
-		      size_t band) {
+				  size_t band) {
   /*
    *  Gets a block at a given location in the image from a given raster band. Needs to account for
    *  both block dimensions since we're passing in a 1D pointer.
@@ -306,7 +294,7 @@ void isce::core::Raster::getBlock(T *buffer, size_t xidx, size_t yidx, size_t io
 
 template<typename T>
 void isce::core::Raster::getBlock(std::vector<T> &buffer, size_t xidx, size_t yidx, size_t iowidth, size_t iolength,
-		      size_t band) {
+				  size_t band) {
   /*
    *  Gets a block at a given location in the image from a given raster band. Even though the
    *  caller passes in an STL container, we need to know the 2D layout of the data the caller
@@ -375,7 +363,7 @@ void isce::core::Raster::getBlock(std::vector<std::vector<T>> &buffer, size_t xi
 
 template<typename T>
 void isce::core::Raster::setBlock(T *buffer, size_t xidx, size_t yidx, size_t iowidth, size_t iolength, 
-		      size_t band) {
+				  size_t band) {
   /*
    *  Sets a block at a given location in the image to a given raster band. Needs to account for
    *  both block dimensions since we're passing in a 1D pointer.
@@ -394,7 +382,7 @@ void isce::core::Raster::setBlock(T *buffer, size_t xidx, size_t yidx, size_t io
 
 template<typename T>
 void isce::core::Raster::setBlock(std::vector<T> &buffer, size_t xidx, size_t yidx, size_t iowidth, size_t iolength,
-		      size_t band) {
+				  size_t band) {
   /*
    *  Sets a block at a given location in the image to a given raster band. As with getBlock(),
    *  we need to know the 2D layout of the data the caller wants, so we check for size mismatch.

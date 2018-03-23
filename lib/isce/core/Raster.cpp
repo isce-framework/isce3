@@ -29,28 +29,43 @@ const std::unordered_map<std::type_index,GDALDataType> isce::core::Raster::_gdts
    {typeid(std::complex<float>),   GDT_CFloat32},
    {typeid(std::complex<double>),  GDT_CFloat64}};
 
-isce::core::Raster::Raster() : dataset(nullptr), _readonly(true) {
+isce::core::Raster::Raster(const std::string &fname, size_t width, size_t length, size_t numBands, GDALDataType dtype, const std::string & driverName) {
   /*
-   *  Empty constructor also handles initializing the GDAL Drivers (if needed).
+   *  Construct a Raster object referring to a particular image file, so load the dataset now.
    */
-  // Check if we've already registered the drivers by trying to load the VRT driver (the choice of
-  // driver is arbitrary)
-  if (GetGDALDriverManager()->GetDriverByName("VRT") == nullptr) {
+  if (GetGDALDriverManager()->GetDriverByName("VRT") == nullptr)
     GDALAllRegister();
-  }
+  
+  GDALDriver * outputDriver = GetGDALDriverManager()->GetDriverByName(driverName.c_str());
+   _dataset = outputDriver->Create (fname.c_str(),
+				     width, length, numBands,
+				     dtype, NULL);
+   _readonly = false; 
 }
+
+isce::core::Raster::Raster(const std::string &fname, size_t width, size_t length, size_t numBands, GDALDataType dtype) : isce::core::Raster(fname, width, length, numBands, dtype, "ENVI") {}
+
+isce::core::Raster::Raster(const std::string &fname, size_t width, size_t length, size_t numBands) : isce::core::Raster(fname, width, length, numBands, GDT_Float32, "ENVI") {}
+
+isce::core::Raster::Raster(const std::string &fname, size_t width, size_t length, GDALDataType dtype) : isce::core::Raster(fname, width, length, 1, dtype, "ENVI") {}
+
+isce::core::Raster::Raster(const std::string &fname, size_t width, size_t length) : isce::core::Raster(fname, width, length, 1, GDT_Float32, "ENVI") {}
+
 
 isce::core::Raster::Raster(const std::string &fname, bool readOnly=true) : _readonly(readOnly) {
   /*
    *  Construct a Raster object referring to a particular image file, so load the dataset now.
    */
-  if (GetGDALDriverManager()->GetDriverByName("VRT") == nullptr) {
+  if (GetGDALDriverManager()->GetDriverByName("VRT") == nullptr)
     GDALAllRegister();
-  }
-  if (readOnly) dataset = static_cast<GDALDataset*>(GDALOpen(fname.data(), GA_ReadOnly));
-  else dataset = static_cast<GDALDataset*>(GDALOpen(fname.data(), GA_Update));
+  
+  if (readOnly)
+    _dataset = static_cast<GDALDataset*>(GDALOpen(fname.data(), GA_ReadOnly));
+  else
+    _dataset = static_cast<GDALDataset*>(GDALOpen(fname.data(), GA_Update));
+
   // Note that in most cases if GDALOpen fails it will throw a CPL_ERROR anyways
-  if (dataset == nullptr) {
+  if (_dataset == nullptr) {
     std::string errstr = "In isce::core::Raster::Raster() - Cannot open file '";
     errstr += fname;
     errstr += "'.";
@@ -58,13 +73,13 @@ isce::core::Raster::Raster(const std::string &fname, bool readOnly=true) : _read
   }
 }
 
-isce::core::Raster::Raster(const Raster &rast) : dataset(rast.dataset), _readonly(rast._readonly) {
+isce::core::Raster::Raster(const Raster &rast) : _dataset(rast._dataset), _readonly(rast._readonly) {
   /*
    *  Slightly enhanced copy constructor since we can't simply weak-copy the GDALDataset* pointer.
    *  Increment the reference to the GDALDataset's internal reference counter after weak-copying
    *  the pointer.
    */
-  if (dataset) dataset->Reference();
+  if (_dataset) _dataset->Reference();
 }
 
 isce::core::Raster::~Raster() {
@@ -74,7 +89,7 @@ isce::core::Raster::~Raster() {
    *  reference/release system to handle GDALDataset* management. If you call release and the
    *  dataset's reference counter is 1, it automatically deletes the dataset.
    */
-  if (dataset) dataset->Release();
+  if (_dataset) _dataset->Release();
 }
 
 void isce::core::Raster::loadFrom(const std::string &fname, bool readOnly=true) {
@@ -86,12 +101,16 @@ void isce::core::Raster::loadFrom(const std::string &fname, bool readOnly=true) 
    */
   // Dereference the currently-loaded GDALDataset (safer way to 'delete' since the loaded
   // GDALDataset might have come from copy-construction
-  dataset->Release();
-  if (readOnly) dataset = static_cast<GDALDataset*>(GDALOpen(fname.data(), GA_ReadOnly));
-  else dataset = static_cast<GDALDataset*>(GDALOpen(fname.data(), GA_Update));
+  _dataset->Release();
   _readonly = readOnly;
+  
+  if (readOnly)
+    _dataset = static_cast<GDALDataset*>(GDALOpen(fname.data(), GA_ReadOnly));
+  else
+    _dataset = static_cast<GDALDataset*>(GDALOpen(fname.data(), GA_Update));
+
   // Note that in most cases if GDALOpen fails it will throw a CPL_ERROR anyways
-  if (dataset == nullptr) {
+  if (_dataset == nullptr) {
     std::string errstr = "In isce::core::Raster::loadFrom() - Cannot open file '";
     errstr += fname;
     errstr += "'.";

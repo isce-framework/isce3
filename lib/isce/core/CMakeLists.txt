@@ -25,7 +25,6 @@ set(${PACKAGENAME}_SRCS
               Projections.cpp
               Quaternion.cpp
 	      Raster.cpp
-	      RasterLineIter.cpp		
 )
 
 #####Library headers
@@ -53,8 +52,6 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Serialization.h
                                     Raster.h
 				    Raster.icc
-				    RasterLineIter.h
-				    RasterLineIter.icc	
 )
 
 ###Install headers into build/include

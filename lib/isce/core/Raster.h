@@ -29,20 +29,23 @@ namespace isce {
       // needs to be declared here but defined as an inline-like implementation below.
       
     public:
-
-      GDALDataset *dataset;
       
-      Raster();
-      Raster(const std::string&,bool);
+      Raster(const std::string&, bool);
+      Raster(const std::string&, size_t, size_t, size_t, GDALDataType, const std::string&);
+      Raster(const std::string&, size_t, size_t, size_t, GDALDataType);
+      Raster(const std::string&, size_t, size_t, size_t);
+      Raster(const std::string&, size_t, size_t, GDALDataType);
+      Raster(const std::string&, size_t, size_t);
+      //Raster(const std::string&, T*, size_t, size_t); 
       Raster(const Raster&);
       inline Raster& operator=(const Raster&);
       ~Raster();
       
       void loadFrom(const std::string&,bool);
-      inline size_t length()   const { return dataset ? dataset->GetRasterYSize() : 0; }
-      inline size_t width()    const { return dataset ? dataset->GetRasterXSize() : 0; }
-      inline size_t numBands() const { return dataset ? dataset->GetRasterCount() : 0; }
-      
+      inline size_t length()   const { return _dataset->GetRasterYSize(); }
+      inline size_t width()    const { return _dataset->GetRasterXSize(); }
+      inline size_t numBands() const { return _dataset->GetRasterCount(); }
+      inline GDALDataset* dataset() const { return _dataset; }
       
       /*
        *  Pixel operations
@@ -120,12 +123,11 @@ namespace isce {
       template<typename T> void setBlock(std::vector<std::vector<T>>&,size_t,size_t);
       
     private:
-
-      static const std::unordered_map<std::type_index,GDALDataType> _gdts;
+      GDALDataset * _dataset;
       bool _readonly;
-      
+      static const std::unordered_map<std::type_index,GDALDataType> _gdts;
     };
-
+    
   }
 }
 
