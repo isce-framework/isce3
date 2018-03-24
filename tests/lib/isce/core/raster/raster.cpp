@@ -159,6 +159,28 @@ TEST_F(RasterTest, CheckFileCreationUsingStdVector) {
 }
 
 
+/* Check getLine */
+TEST_F(RasterTest, CheckGetLineValarray) {
+  std::valarray<float> line( img.width() );
+  float sum     = 0.;
+  float refSum  = 0.;
+  float maskSum = 0.;
+  
+  for (size_t i=0; i<img.width(); ++i)
+    refSum += i;
+  
+  for (size_t i=0; i<img.length(); ++i) {
+    img.getLine( line, i, 1 );
+    ASSERT_EQ( line.sum(), i*img.width());  // Band 1 has the row-number in each column
+    img.getLine( line, i, 2 );
+    ASSERT_EQ( line.sum(), refSum);   // Band 2 has the col-number in each column
+    img.getLine( line, i, 3 );
+    maskSum += line.sum();
+  }
+  ASSERT_EQ( maskSum, 0.5*img.width()*img.length());   // Band 3 is half zeros and half ones
+}
+
+
 
 int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);
