@@ -189,7 +189,7 @@ int main(int argc, char * argv[]) {
 
 isce::core::Raster loadTestData() {
 
-  isce::core::Raster img = isce::core::Raster("test_data/test_data.bin.vrt", true);
+  isce::core::Raster img = isce::core::Raster("test_data/test_data.bin.vrt", GA_Update);
 
   return img;
 }

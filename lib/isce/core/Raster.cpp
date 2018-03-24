@@ -29,19 +29,25 @@ const std::unordered_map<std::type_index, GDALDataType> isce::core::Raster::_gdt
    {typeid(std::complex<double>),  GDT_CFloat64}};
 
 
-// Construct a Raster object referring to existing file fname.
-isce::core::Raster::Raster( const std::string &fname, bool writeAccess=false) {
-  if (GetGDALDriverManager()->GetDriverByName("VRT") == nullptr)
+// Construct a Raster object referring to existing file
+isce::core::Raster::Raster(const std::string &fname,          // filename
+			   GDALAccess access=GA_ReadOnly) {   // GA_ReadOnly or GA_Update
+
+  if (GetGDALDriverManager()->GetDriverByName("ENVI") == nullptr)
     GDALAllRegister();
-  _access  = (GDALAccess) writeAccess;
-  _dataset = static_cast<GDALDataset*>(GDALOpenShared(fname.data(), _access));
+
+  _access  = access;
+  _dataset = static_cast<GDALDataset*>(GDALOpenShared(fname.c_str(), _access));
 }
 
-// Construct a Raster object referring to new file fname.
-isce::core::Raster::Raster(const std::string &fname,
-			   size_t width, size_t length, size_t numBands,
-			   GDALDataType dtype, const std::string & driverName) {  
-  if (GetGDALDriverManager()->GetDriverByName("VRT") == nullptr)
+// Construct a Raster object referring to new file
+isce::core::Raster::Raster(const std::string &fname,          // filename 
+			   size_t width,                      // number of columns
+			   size_t length,                     // number of lines
+			   size_t numBands,                   // number of bands
+			   GDALDataType dtype,                // band datatype
+			   const std::string & driverName) {  // GDAL raster format
+  if (GetGDALDriverManager()->GetDriverByName("ENVI") == nullptr)
     GDALAllRegister();
   GDALDriver * outputDriver = GetGDALDriverManager()->GetDriverByName(driverName.c_str());
   _access  = GA_Update;
@@ -80,8 +86,9 @@ isce::core::Raster::~Raster() {
 }
 
 // Load a dataset on existing Raster object after releasing the old dataset
-void isce::core::Raster::load(const std::string &fname, bool writeAccess=false) {
+void isce::core::Raster::load(const std::string &fname,
+			      GDALAccess access=GA_ReadOnly) {
   GDALClose( _dataset );
-  _access  = (GDALAccess) writeAccess;
-  _dataset = static_cast<GDALDataset*>(GDALOpenShared(fname.data(), _access));
+  _access  = access;
+  _dataset = static_cast<GDALDataset*>(GDALOpenShared(fname.c_str(), _access));
 }

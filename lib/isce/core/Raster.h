@@ -26,7 +26,7 @@ namespace isce {
     public:
       
       // Constructors and destructors
-      Raster(const std::string&, bool);
+      Raster(const std::string&, GDALAccess);
       Raster(const std::string&, size_t, size_t, size_t, GDALDataType, const std::string&);
       Raster(const std::string&, size_t, size_t, size_t, GDALDataType);
       Raster(const std::string&, size_t, size_t, size_t);
@@ -45,9 +45,8 @@ namespace isce {
       inline size_t       numBands() const { return _dataset->GetRasterCount(); }
       inline GDALDataType dtype()    const { return _dataset->GetRasterBand(1)->GetRasterDataType(); }
 
-      void load(const std::string&,bool);
-      
-  
+      void load(const std::string&, GDALAccess);
+        
       // Pixel read/write, optional band index	  
       // (buffer, x-index, y-index, [band-index=1])
       template<typename T> void getSetValue(T&, size_t, size_t, size_t, GDALRWFlag);
