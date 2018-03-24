@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include "gdal_priv.h"
 
 // Macro wrapper to check vector lengths (adds calling function and variable name information to the
 // exception)
@@ -82,6 +83,11 @@ namespace isce { namespace core {
             throw std::invalid_argument(errstr);
         }
     }
-}}
+
+    // Constants for Raster class
+    const std::string defaultGDALDriver = "ENVI"; 
+    const GDALDataType defaultGDALDataType = GDT_Float32;
+  }
+}
 
 #endif
