@@ -6,10 +6,16 @@
 #ifndef __ISCE_CORE_CONSTANTS_H__
 #define __ISCE_CORE_CONSTANTS_H__
 
+
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <typeindex>
+#include <complex>
+#include <cstdint>
 #include "gdal_priv.h"
+
 
 // Macro wrapper to check vector lengths (adds calling function and variable name information to the
 // exception)
@@ -87,6 +93,19 @@ namespace isce { namespace core {
     // Constants for Raster class
     const std::string defaultGDALDriver = "ENVI"; 
     const GDALDataType defaultGDALDataType = GDT_Float32;
+    // Unordered_map to map typeids to GDALDataTypes
+    const std::unordered_map<std::type_index, GDALDataType> GDT =
+      {{typeid(uint8_t),               GDT_Byte},
+       {typeid(uint16_t),              GDT_UInt16},
+       {typeid(int16_t),               GDT_Int16},
+       {typeid(uint32_t),              GDT_UInt32},
+       {typeid(int32_t),               GDT_Int32},
+       {typeid(float),                 GDT_Float32},
+       {typeid(double),                GDT_Float64},
+       {typeid(std::complex<int16_t>), GDT_CInt16},
+       {typeid(std::complex<int32_t>), GDT_CInt32},
+       {typeid(std::complex<float>),   GDT_CFloat32},
+       {typeid(std::complex<double>),  GDT_CFloat64}};
   }
 }
 
