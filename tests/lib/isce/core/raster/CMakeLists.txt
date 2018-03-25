@@ -8,7 +8,6 @@ foreach (TESTNAME raster )
     target_link_libraries(${TESTNAME} PUBLIC ${LISCE} ${LPYRE} ${LJOURNAL} ${GDAL_LIBRARY} gtest)
     target_include_directories(${TESTNAME} PUBLIC ${ISCE_BUILDINCLUDEDIR} ${GDAL_INCLUDE_DIR})
     add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
-    file(COPY test_data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endforeach ()
 
 include(CTest)
