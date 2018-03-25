@@ -11,21 +11,29 @@
 #endif
 
 
-// Copy constructor
-inline isce::core::Raster& isce::core::Raster::operator=(const Raster &rhs) {
-  _dataset = rhs._dataset; // weak-copy pointer
-  _access  = rhs._access;
-  _dataset->Reference();   // increment GDALDataset reference counter
-  return *this;
-}
 
-
-// Construct a Raster object referring to new file assuming default driver, float type and one band.
+// Construct a Raster object referring to new file assuming default GDAL driver, type and band.
 template<typename T>
 isce::core::Raster::Raster(const std::string & fname,       // filename of new file to be created
 			   const std::vector<T> & buffer,   // buffer used to infer width and type
 			   size_t length) :                 // length of raster
   isce::core::Raster(fname, buffer.size(), length, 1, _gdts.at(typeid(T))) {}
+
+
+// Construct a Raster object referring to new file assuming default GDAL driver, type and band.
+template<typename T>
+isce::core::Raster::Raster(const std::string & fname,       // filename of new file to be created
+			   const std::valarray<T> & buffer, // buffer used to infer width and type
+			   size_t length) :                 // length of raster
+  isce::core::Raster(fname, buffer.size(), length, 1, _gdts.at(typeid(T))) {}
+
+
+// Copy constructor
+inline isce::core::Raster& isce::core::Raster::operator=(const Raster &rhs) {
+  dataset( rhs._dataset );  // weak-copy pointer
+  dataset()->Reference();   // increment GDALDataset reference counter
+  return *this;
+}
 
 /* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
  *                                          PIXEL OPERATIONS

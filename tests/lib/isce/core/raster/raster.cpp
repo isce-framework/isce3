@@ -5,6 +5,8 @@
 // Copyright 2018
 //
 
+#include <sys/stat.h>
+#include <unistd.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -15,12 +17,120 @@
 
 #include "isce/core/Raster.h"
 
+inline bool exists(const std::string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
+}
+
 isce::core::Raster loadTestData();
 
 struct RasterTest : public ::testing::Test {
+  const uint nc = 100;  // number of columns
+  const uint nl = 200;  // number of lines
+  const uint nb = 5;    // block side
+  const std::string latFilename = "lat.tif";
+  const std::string lonFilename = "lon.rdr";
+  const std::string incFilename = "inc.bin";
   isce::core::Raster img = loadTestData();
 };
 
+
+// Create GeoTiff Float dataset
+TEST_F(RasterTest, createGeoTiffFloat) {
+  std::remove(latFilename.c_str());
+  isce::core::Raster lat = isce::core::Raster(latFilename, nc, nl, 1, GDT_Float32, "GTiff");
+  ASSERT_EQ (exists(latFilename), true);
+  ASSERT_EQ (lat.width(), nc);
+  ASSERT_EQ (lat.length(), nl);
+  ASSERT_EQ (lat.numBands(), 1);
+  ASSERT_EQ (lat.dtype(), 6);  // GDT_Float32 = 6
+}
+
+
+// Create ISCE double dataset
+TEST_F(RasterTest, createISCEDoubleSetValue) {
+  std::remove(lonFilename.c_str());
+  isce::core::Raster lon = isce::core::Raster(lonFilename, nc, nl, 1, GDT_Float64, "ISCE");
+  ASSERT_EQ (exists(lonFilename), true);
+  ASSERT_EQ (lon.dtype(), 7);  // GDT_Float64 = 7
+  for ( uint y=0; y<lon.length(); ++y)
+    for ( uint x=0; x<lon.width(); ++x)
+      lon.setValue(y, x, y, 1);  // lon stores the line number in each pixel      
+}
+
+
+// GetValue from ISCE double dataset
+TEST_F(RasterTest, openISCEDoubleGetValue) {
+  double a;
+  isce::core::Raster lon = isce::core::Raster(lonFilename);
+  ASSERT_EQ (lon.access(), GA_ReadOnly);  // by default files are opened in readonly mode
+  for (uint i=0; i<std::min(lon.width(), lon.length()); ++i) {
+    lon.getValue(a, i, i, 1);
+    ASSERT_EQ(a, i); // Diagonal elements must be equal
+  }
+}
+
+
+// Update GeoTiff with set/get line and check valarray
+TEST_F(RasterTest, updateGeoTiffFloat) {
+  isce::core::Raster lat = isce::core::Raster(latFilename, GA_Update);
+  std::vector<int> lineIn(nc);
+  std::valarray<double> lineOut(nc);
+  std::iota (std::begin(lineIn), std::end(lineIn), 0);
+   for (uint y=0; y<lat.length(); ++y) {
+    lat.setLine( lineIn, y );
+    lat.getLine( lineOut, y );
+    for (uint x=0; x<lat.width(); ++x)
+      ASSERT_EQ ( lineOut[x], (double) x);
+  }
+}
+
+
+// Create a 2-band file with ENVI format
+TEST_F(RasterTest, createENVITwoBands) {
+  std::remove(lonFilename.c_str());
+  isce::core::Raster inc = isce::core::Raster(incFilename, nc, nl, 2, GDT_Int16);
+  ASSERT_EQ (exists(incFilename), true);
+  ASSERT_STREQ (inc.dataset()->GetDriverName(), isce::core::defaultGDALDriver.c_str());
+}
+
+
+// Populate first band ENVI file with setBlock
+TEST_F(RasterTest, setblockENVIBandOne) {
+  isce::core::Raster inc = isce::core::Raster(incFilename, GA_Update);
+  //TODO: Check why it passes with GA_ReadOnly
+  std::valarray<int> block( nb*nb );
+  float a;
+  for (uint y=0; y<ceil(inc.length()/nb); ++y) {
+    for (uint x=0; x<ceil(inc.width()/nb); ++x) {
+      block = x*y;
+      inc.setBlock(block, x*nb, y*nb, nb, nb, 1);
+      inc.getValue(a, x*nb+ceil(nb/2), y*nb+ceil(nb/2), 1);
+      ASSERT_EQ (a, x*y);
+    }
+  }
+}
+
+
+// Populate second band ENVI file with setBlock
+TEST_F(RasterTest, setblockENVIBandTwo) {
+  isce::core::Raster inc = isce::core::Raster(incFilename, GA_Update);
+  std::valarray<int> fullimg( nc*nl );
+  std::valarray<int> block( 0, nb*nb );
+  fullimg = 1;
+  ASSERT_EQ (inc.numBands(), 2);
+  inc.setBlock (fullimg, 0, 0, nc, nl, 2);
+  inc.getBlock (block, 0, 0, nb, nb, 2);
+  ASSERT_EQ ( block.sum(), nb*nb);
+  //block = 0;
+  //inc.getBlock (block, nc-2, nl-2, nb, nb, 2);
+  //ASSERT_EQ ( block.sum(), nb*nb);
+}
+
+
+
+
+//////////////////
 /* Check number of bands */
 TEST_F(RasterTest, CheckNumBands) {
   const int refNumBands = 3;
@@ -28,6 +138,12 @@ TEST_F(RasterTest, CheckNumBands) {
 }
 
 
+
+
+
+
+
+//////////////////////////////////
 /* Check data types */
 TEST_F(RasterTest, CheckDataType) {
   const std::vector<int> refDataType = {6, 7, 1};
@@ -180,7 +296,15 @@ TEST_F(RasterTest, CheckGetLineValarray) {
   ASSERT_EQ( maskSum, 0.5*img.width()*img.length());   // Band 3 is half zeros and half ones
 }
 
-
+TEST_F(RasterTest, createMultiBandVRT) {
+  
+  isce::core::Raster im1 = isce::core::Raster("test_data/cols_float64.bin", GA_ReadOnly);  
+  std::cout << "reference :" << im1.dataset()->GetRefCount() << std::endl;
+  isce::core::Raster im2 = isce::core::Raster("test_data/rows_float32.bin", GA_ReadOnly);  
+  isce::core::Raster im_vrt = isce::core::Raster("test_data/test_multiband.vrt", {im1, im2});  
+  std::cout << "reference :" << im1.dataset()->GetRefCount() << std::endl;
+ 
+}
 
 int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);
