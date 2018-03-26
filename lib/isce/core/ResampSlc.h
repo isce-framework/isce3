@@ -13,6 +13,10 @@
 #include <complex>
 #include <valarray>
 
+// pyre
+#include <portinfo>
+#include <pyre/journal.h>
+
 // isce::core
 #include "Poly2d.h"
 #include "Metadata.h"
@@ -30,6 +34,7 @@ class isce::core::ResampSlc {
 
     // Public data members
     public:
+        typedef isce::core::Tile<std::complex> Tile_t;
         Metadata meta;
         Metadata refMeta;
 
@@ -43,8 +48,6 @@ class isce::core::ResampSlc {
         // Set the various polynomial attributes
         inline void setRgCarrier(Poly2d);
         inline void setAzCarrier(Poly2d);
-        inline void setRgOffsets(Poly2d);
-        inline void setAzOffsets(Poly2d);
         inline void setDoppler(Poly2d);
         
         // Convenience functions
@@ -59,8 +62,6 @@ class isce::core::ResampSlc {
         // Polynomials
         Poly2d _rgCarrier;            // range carrier polynomial
         Poly2d _azCarrier;            // azimuth carrier polynomial
-        Poly2d _rgOffsetsPoly;        // range offsets polynomial
-        Poly2d _azOffsetsPoly;        // azimuth offsets polynomial
         Poly2d _dopplerPoly;          // Doppler polynomial
 
         // Interpolation work data
@@ -68,10 +69,10 @@ class isce::core::ResampSlc {
         float _fDelay;
 
         // Tile initialization
-        void _initializeTile(Tile &, Raster &, size_t);
+        void _initializeTile(Tile_t &, Raster &, size_t);
 
         // Tile transformation
-        void _transformTile(Tile &,
+        void _transformTile(Tile_t &,
             std::valarray<std::complex<float>> &,
             std::valarray<std::complex<float>> &,
             size_t, size_t);

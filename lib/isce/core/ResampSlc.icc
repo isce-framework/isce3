@@ -26,16 +26,6 @@ void isce::core::ResampSlc::setAzCarrier(Poly2d poly) {
     _azCarrier = poly;
 }
 
-// Set range offsets polynomial via copy
-void isce::core::ResampSlc::setRgOffsets(Poly2d poly) {
-    _rgOffsetsPoly = poly;
-}
-
-// Set azimuth offsets polynomial via copy
-void isce::core::ResampSlc::setAzOffsets(Poly2d poly) {
-    _azOffsetsPoly = poly;
-}
-
 // Set Doppler polynomial via copy
 void isce::core::ResampSlc::setDoppler(Poly2d poly) {
     _dopplerPoly = poly;
@@ -44,21 +34,26 @@ void isce::core::ResampSlc::setDoppler(Poly2d poly) {
 // Announce my properties to the world
 void isce::core::ResampSlc::declare(size_t inLength, size_t inWidth,
     size_t outLength, size_t outWidth) {
+    // Make info channel
+    pyre::journal::info_t channel("isce.core.ResampSlc");
+    typedef pyre::journal::newline newl;
     // Basic info
-    printf("\n << Resample one image to another image coordinates >> \n\n");
-    printf("Input Image Dimensions:  %6d lines, %6d pixels\n\n", inLength, inWidth);
-    printf("Output Image Dimensions: %6d lines, %6d pixels\n\n", outLength, outWidth);
-    printf("Number of threads: %d\n", omp_get_max_threads());
-    printf("Complex data interpolation\n");
+    channel << newl
+            << "Resample one image to another image coordinates >>"
+            << newl << newl;
+    channel << "Input Image Dimensions:  " << inLength << " lines, "
+            << inWidth << " pixels" << newl << newl;
+    channel << "Output Image Dimensions: " outLength << " lines, "
+            << outWidth << " pixels" << newl << newl;
+    channel << "Number of threads: " << omp_get_max_threads() << newl;
+    channel << "Complex data interpolation" << pyre::journal::endl;
     // Polynomial info
     printf("Azimuth Carrier Poly\n");
     _azCarrier.printPoly();
     printf("Range Carrier Poly\n");
     _rgCarrier.printPoly();
-    printf("Range Offsets Poly\n");
-    _rgOffsetsPoly.printPoly();
-    printf("Azimuth Offsets Poly\n");
-    _azOffsetsPoly.printPoly();
+    printf("Doppler Poly\n");
+    _dopplerPoly.printPoly(); 
 }
 
 // Compute number of tiles given a specified nominal tile size

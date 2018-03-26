@@ -7,6 +7,8 @@
 
 #include <iostream>
 #include <cmath>
+
+// isce::core
 #include "Constants.h"
 #include "ResampSlc.h"
 using isce::core::SINC_HALF;
@@ -14,30 +16,40 @@ using isce::core::SINC_LEN;
 using isce::core::SINC_ONE;
 using isce::core::SINC_SUB;
 
+#define LINES_PER_TILE 1000
+
 // Main resamp entry point
 void isce::core::ResampSlc::resamp(
     const std::string & inputFilename,          // filename of input SLC
     const std::string & outputFilename,         // filename of output resampled SLC
-    const std::string & rgResidFilename,        // filename of range offsets
-    const std::string & azResidFilename,        // filename of azimuth offsets
+    const std::string & rgOffsetFilename,       // filename of range offsets
+    const std::string & azOffsetFilename,       // filename of azimuth offsets
     bool flatten, bool isComplex, size_t rowBuffer) {
+
+    // Initialize journal channels
+    pyre::journal::info_t infoChannel("isce.core.ResampSlc");
+    pyre::journal::error_t errorChannel("isce.core.ResampSlc");
 
     // Check if data are not complex
     if (!isComplex) {
-        printf("Real data interpolation not implemented yet.\n");
+        errorChannel
+            << pyre::journal::at(__HERE__)
+            << "Real data interpolation not implemented yet."
+            << pyre::journal::newline
+            << pyre::journal::endl;
         return;
     }
         
     // Make input rasters
     Raster inputSlc(inputFilename, true);
-    Raster rgResidRaster(rgResidFilename, true);
-    Raster azResidRaster(azResidFilename, true);
+    Raster rgOffsetRaster(rgOffsetFilename, true);
+    Raster azOffsetRaster(azOffsetFilename, true);
     // Cache width of SLC image
     const size_t inLength = inputSlc.length();
     const size_t inWidth = inputSlc.width();
-    // Cache output length and width
-    const size_t outLength = rgResidRaster.length();
-    const size_t outWidth = rgResidRaster.width();
+    // Cache output length and width from offset images
+    const size_t outLength = rgOffsetRaster.length();
+    const size_t outWidth = rgOffsetRaster.width();
 
     // Make output raster
     Raster outputSlc(outputFilename, outWidth, outLength, 1, GDT_CFloat32, "ISCE");
@@ -53,14 +65,15 @@ void isce::core::ResampSlc::resamp(
    
     // Determine number of tiles needed to process image
     const size_t nTiles = _computeNumberOfTiles(LINES_PER_TILE);
-    std::cout << "Resampling using " << nTiles << " of " << LINES_PER_TILE << " lines\n\n";
+    infoChannel << "Resampling using " << nTiles << " of " << LINES_PER_TILE << " lines"
+        << pyre::journal::newline << pyre::journal::endl;
 
     // For each full tile of LINES_PER_TILE lines...
     size_t outputLine = 0;
     for (size_t tileCount = 0; tileCount < nTiles; tile++) {
 
         // Make a tile for representing input SLC data
-        isce::core::Tile tile;
+        Tile_t tile;
         tile.width(inWidth);
         // Set its line index bounds (line number in output image)
         tile.rowStart = tileCount * LINES_PER_TILE;
@@ -71,25 +84,26 @@ void isce::core::ResampSlc::resamp(
         }
        
         // Get corresponding image indices
-        std::cout << "Reading in image data for tile " << tileCount << std::endl;
-        _initializeTile(tile, azResidRaster, rowBuffer); 
+        infoChannel << "Reading in image data for tile " << tileCount << pyre::journal::endl;
+        _initializeTile(tile, azOffsetRaster, rowBuffer); 
     
         // Perform interpolation
-        std::cout << "Interpolating tile " << tileCount << std::endl;
-        _transformTile(tile, outputSlc, rgResidRaster, azResidRaster, outputLine);
+        infoChannel << "Interpolating tile " << tileCount << pyre::journal::endl;
+        _transformTile(tile, outputSlc, rgOffsetRaster, azOffsetRaster, outputLine);
     }
-    printf("Elapsed time: %f\n", (omp_get_wtime() - procT0));
+    infoChannel << "Elapsed time: " << (omp_get_wtime() - procT0) << " seconds"
+        << pyre::journal::endl;
 }
 
 // Initialize tile bounds
-void isce::core::ResampSlc::_initializeTile(Tile & tile, Raster & inputSlc,
-    Raster & azResidRaster, size_t rowBuffer) {
+void isce::core::ResampSlc::_initializeTile(Tile_t & tile, Raster & inputSlc,
+    Raster & azOffsetRaster, size_t rowBuffer) {
 
     // Cache geometry values
     const size_t inLength = inputSlc.length();
     const size_t inWidth = inputSlc.width();
-    const size_t outLength = azResidRaster.length();
-    const size_t outWidth = azResidRaster.width();
+    const size_t outLength = azOffsetRaster.length();
+    const size_t outWidth = azOffsetRaster.width();
     
     // Allocate array for storing residual azimuth
     std::valarray<double> residAz(outWidth, 0.0);
@@ -99,7 +113,7 @@ void isce::core::ResampSlc::_initializeTile(Tile & tile, Raster & inputSlc,
     // Iterate over first rowBuffer lines of tile
     for (size_t i = tile.rowStart; i < (tile.rowStart + rowBuffer); ++i) {
         // Read in azimuth residual
-        azResidRaster.getLine(&residAz[0], i, outWidth);
+        azOffsetRaster.getLine(&residAz[0], i, outWidth);
         // Now iterate over width of the tile
         for (int j = 0; j < outWidth; ++j) {
             // Compute total azimuth offset of current pixel
@@ -118,7 +132,7 @@ void isce::core::ResampSlc::_initializeTile(Tile & tile, Raster & inputSlc,
     // Iterate over last rowBuffer lines of tile
     for (size_t i = (tile.rowStart - rowBuffer); i < tile.rowEnd; ++i) {
         // Read in azimuth residual
-        azResidRaster.getLine(residAz, i, outWidth);
+        azOffsetRaster.getLine(residAz, i, outWidth);
         // Now iterate over width of the tile
         for (size_t j = 0; j < outWidth; j++) {
             // Compute total azimuth offset of current pixel
@@ -154,14 +168,14 @@ void isce::core::ResampSlc::_initializeTile(Tile & tile, Raster & inputSlc,
 }
 
 // Interpolate tile to perform transformation
-void isce::core::ResampSlc::_transformTile(Tile & tile, Raster & outputSlc,
-    Raster & rgResidRaster, Raster & azResidRaster, size_t & outputLine) {
+void isce::core::ResampSlc::_transformTile(Tile_t & tile, Raster & outputSlc,
+    Raster & rgOffsetRaster, Raster & azOffsetRaster, size_t & outputLine) {
 
     // Cache geometry values
     const size_t inLength = inputSlc.length();
     const size_t inWidth = inputSlc.width();
-    const size_t outLength = azResidRaster.length();
-    const size_t outWidth = azResidRaster.width();
+    const size_t outLength = azOffsetRaster.length();
+    const size_t outWidth = azOffsetRaster.width();
 
     // Allocate valarrays for work
     std::valarray<double> residAz(0.0, outWidth), residRg(0.0, outWidth);
@@ -171,8 +185,8 @@ void isce::core::ResampSlc::_transformTile(Tile & tile, Raster & outputSlc,
     // Loop over lines to perform interpolation
     for (size_t i = tile.rowStart; i < tile.rowEnd; ++i) {
         // Get lines for residual offsets
-        rgResidRaster.getLine(&residRg[0], i, outWidth);
-        azResidRaster.getLine(&residAz[0], i, outWidth);
+        rgOffsetRaster.getLine(&residRg[0], i, outWidth);
+        azOffsetRaster.getLine(&residAz[0], i, outWidth);
         // Loop over width
         #pragma omp parallel for firstPrivate(chip)
         for (size_t j = 0; j < outWidth; ++j) {
