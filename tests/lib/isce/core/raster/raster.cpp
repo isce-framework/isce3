@@ -73,7 +73,7 @@ TEST_F(RasterTest, createISCEDouble_setGetValue) {
 // GetValue from ISCE double dataset
 TEST_F(RasterTest, openISCERasterReadOnlyMode_getValue) {
   isce::core::Raster lon = isce::core::Raster( lonFilename );
-  int a;
+  uint a;
 
   ASSERT_EQ (lon.access(), GA_ReadOnly);  // files are opened in readonly mode by default 
   for (uint i=0; i<std::min( nl, nc ); ++i) {
