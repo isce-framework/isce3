@@ -238,12 +238,10 @@ TEST_F(RasterTest, addRasterToVRT) {
 }
 
 // Add Raster to existing VRT and loop over all pixels in multiband VRT
-TEST_F(RasterTest, addRasterToVRT_Journal) {
-  isce::core::Raster vrt = isce::core::Raster( vrtFilename, GA_Update);
-  
-  vrt.getValue ( vrt, 1, 0, 1 );          // get value for each pixel
-
-}
+// TEST_F(RasterTest, addRasterToVRT_Journal) {
+//   isce::core::Raster vrt = isce::core::Raster( vrtFilename, GA_Update);
+//   vrt.getValue ( vrt, 1, 0, 1 );          // get value for each pixel
+// }
 
 
 
