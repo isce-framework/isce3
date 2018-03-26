@@ -153,6 +153,7 @@ TEST_F(RasterTest, createMultiBandVRT) {
   isce::core::Raster lon = isce::core::Raster( lonFilename );
   isce::core::Raster inc = isce::core::Raster( incFilename );
 
+  std::remove( vrtFilename.c_str() );
   ASSERT_EQ( lat.dataset()->GetRefCount(), 1 );  // one Raster points to lat
   isce::core::Raster vrt = isce::core::Raster( vrtFilename, {lat, lon, inc} );
   ASSERT_EQ( lat.dataset()->GetRefCount(), 2 );  // lat is now shared
@@ -223,7 +224,7 @@ TEST_F(RasterTest, addRasterToVRT) {
   isce::core::Raster vrt = isce::core::Raster( vrtFilename, GA_Update);
   isce::core::Raster msk = isce::core::Raster( mskFilename );
   uint refNumBands = 5;
-  double val = NAN;
+  double val;
   
   vrt.addRasterToVRT( msk );                    // add all bands in msk to vrt
   ASSERT_EQ( vrt.numBands(), refNumBands);      // must be five due to previous tests
@@ -232,16 +233,11 @@ TEST_F(RasterTest, addRasterToVRT) {
   for (uint b=1; b<=vrt.numBands(); ++b)        // for each 1-indexed band
     for (uint l=0; l<vrt.length(); ++l)         // for each 0-indexed line
       for (uint c=0; c<vrt.width(); ++c) {      // for each 0-indexed cols
+	val = NAN;
 	vrt.getValue ( val, c, l, b );          // get value for each pixel
 	ASSERT_EQ( std::isfinite(val), true);   // value must be finite
       }
 }
-
-// Add Raster to existing VRT and loop over all pixels in multiband VRT
-// TEST_F(RasterTest, addRasterToVRT_Journal) {
-//   isce::core::Raster vrt = isce::core::Raster( vrtFilename, GA_Update);
-//   vrt.getValue ( vrt, 1, 0, 1 );          // get value for each pixel
-// }
 
 
 
