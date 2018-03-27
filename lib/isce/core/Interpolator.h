@@ -17,7 +17,8 @@ namespace isce { namespace core {
         
         template<class U>
         static U bicubic(double,double,const std::vector<std::vector<U>>&);
-        
+       
+        static void sinc_coef(double,double,int,double,int,int&,int&, double *); 
         static void sinc_coef(double,double,int,double,int,int&,int&,std::vector<double>&);
         
         template<class U, class V>

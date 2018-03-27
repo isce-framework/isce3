@@ -7,8 +7,6 @@
 
 // Since fmod(a,b) in C++ != MODULO(a,b) in Fortran for all a,b, define a C++ equivalent
 #define modulo_f(a,b) fmod(fmod(a,b)+(b),(b))
-// Visually access 1D array as 2D
-#define IDX1D(i,j,w) (((i)*(w))+(j))
 
 // Default constructor
 isce::core::ResampSlc::ResampSlc() {}
@@ -33,19 +31,20 @@ void isce::core::ResampSlc::setDoppler(Poly2d poly) {
 
 // Announce my properties to the world
 void isce::core::ResampSlc::declare(size_t inLength, size_t inWidth,
-    size_t outLength, size_t outWidth) {
+    size_t outLength, size_t outWidth) const {
     // Make info channel
     pyre::journal::info_t channel("isce.core.ResampSlc");
-    typedef pyre::journal::newline newl;
     // Basic info
-    channel << newl
+    channel << pyre::journal::newline
             << "Resample one image to another image coordinates >>"
-            << newl << newl;
+            << pyre::journal::newline << pyre::journal::newline;
     channel << "Input Image Dimensions:  " << inLength << " lines, "
-            << inWidth << " pixels" << newl << newl;
-    channel << "Output Image Dimensions: " outLength << " lines, "
-            << outWidth << " pixels" << newl << newl;
-    channel << "Number of threads: " << omp_get_max_threads() << newl;
+            << inWidth << " pixels" 
+            << pyre::journal::newline << pyre::journal::newline;
+    channel << "Output Image Dimensions: " << outLength << " lines, "
+            << outWidth << " pixels"
+            << pyre::journal::newline << pyre::journal::newline;
+    channel << "Number of threads: " << omp_get_max_threads() << pyre::journal::newline;
     channel << "Complex data interpolation" << pyre::journal::endl;
     // Polynomial info
     printf("Azimuth Carrier Poly\n");
@@ -65,11 +64,11 @@ size_t isce::core::ResampSlc::_computeNumberOfTiles(size_t outLength, size_t lin
     if (extraLines > 0) {
         nTiles += 1;
     }
-    return nTiles
+    return nTiles;
 }
 
 // Prepare sinc interpolation methods and internal data
-void isce::core::ResampSlc::_prepareMethods(int method) {
+void isce::core::ResampSlc::_prepareInterpMethods(int method) {
     // Compute filter coefficients    
     if (method == SINC_METHOD) {
         std::valarray<double> filter((SINC_SUB * SINC_LEN) + 1);
@@ -78,7 +77,7 @@ void isce::core::ResampSlc::_prepareMethods(int method) {
         Interpolator interp;
 
         // Initialize sinc coefficients
-        interp.sinc_coef(1.0, SINC_LEN, SINC_SUB, 0.0, 1, intplength, filtercoef, filter);
+        interp.sinc_coef(1.0, SINC_LEN, SINC_SUB, 0.0, 1, intplength, filtercoef, &filter[0]);
 
         // Normalize filter
         for (int i = 0; i < SINC_SUB; ++i) {
@@ -123,15 +122,15 @@ std::complex<float> isce::core::ResampSlc::_interpolateComplex(
     // Perform interpolation
     std::complex<float> retValue(0.0, 0.0);
     if ((xx >= (SINC_LEN - 1)) && (xx < nx) && (yy >= (SINC_LEN-1)) && (yy < ny)) {
-        const int ifracx = std::min(std::max(0, int(frpx*SINC_SUB)), SINC_SUB-1);
-        const int ifracy = std::min(std::max(0, int(frpy*SINC_SUB)), SINC_SUB-1);
+        const int ifracx = std::min(std::max(0, int(fx*SINC_SUB)), SINC_SUB-1);
+        const int ifracy = std::min(std::max(0, int(fy*SINC_SUB)), SINC_SUB-1);
         for (int i = 0; i < SINC_LEN; ++i) {
             for (int j = 0; j < SINC_LEN; ++j) {
                 // Compute interpolation weight
                 const float weight = _fintp[IDX1D(ifracx,i,SINC_LEN)] 
                     * _fintp[IDX1D(ifracy,j,SINC_LEN)];
                 // Accumulate interpolated value
-                retValue += ifg[IDX1d(xx-1,yy-j,SINC_ONE)] * weight;
+                retValue += ifg[IDX1D(xx-1,yy-j,SINC_ONE)] * weight;
             }
         }
     }

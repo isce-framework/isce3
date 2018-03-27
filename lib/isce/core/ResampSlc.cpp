@@ -5,6 +5,7 @@
 // Copyright 2017-2018
 //
 
+#include <algorithm>
 #include <iostream>
 #include <cmath>
 
@@ -41,9 +42,9 @@ void isce::core::ResampSlc::resamp(
     }
         
     // Make input rasters
-    Raster inputSlc(inputFilename, true);
-    Raster rgOffsetRaster(rgOffsetFilename, true);
-    Raster azOffsetRaster(azOffsetFilename, true);
+    Raster inputSlc(inputFilename, GA_ReadOnly);
+    Raster rgOffsetRaster(rgOffsetFilename, GA_ReadOnly);
+    Raster azOffsetRaster(azOffsetFilename, GA_ReadOnly);
     // Cache width of SLC image
     const size_t inLength = inputSlc.length();
     const size_t inWidth = inputSlc.width();
@@ -61,35 +62,36 @@ void isce::core::ResampSlc::resamp(
     declare(inLength, inWidth, outLength, outWidth);
 
     // Initialize resampling methods
-    _prepareMethods(SINC_METHOD);
+    _prepareInterpMethods(SINC_METHOD);
    
     // Determine number of tiles needed to process image
-    const size_t nTiles = _computeNumberOfTiles(LINES_PER_TILE);
+    const size_t nTiles = _computeNumberOfTiles(outLength, LINES_PER_TILE);
     infoChannel << "Resampling using " << nTiles << " of " << LINES_PER_TILE << " lines"
         << pyre::journal::newline << pyre::journal::endl;
 
     // For each full tile of LINES_PER_TILE lines...
     size_t outputLine = 0;
-    for (size_t tileCount = 0; tileCount < nTiles; tile++) {
+    for (size_t tileCount = 0; tileCount < nTiles; tileCount++) {
 
         // Make a tile for representing input SLC data
         Tile_t tile;
         tile.width(inWidth);
         // Set its line index bounds (line number in output image)
-        tile.rowStart = tileCount * LINES_PER_TILE;
+        tile.rowStart(tileCount * LINES_PER_TILE);
         if (tileCount == (nTiles - 1)) {
-            tile.rowEnd = outLength - tile.rowStart + 1;
+            tile.rowEnd(outLength - tile.rowStart() + 1);
         } else {
-            tile.rowEnd = tile.rowStart + LINES_PER_TILE;
+            tile.rowEnd(tile.rowStart() + LINES_PER_TILE);
         }
        
         // Get corresponding image indices
         infoChannel << "Reading in image data for tile " << tileCount << pyre::journal::endl;
-        _initializeTile(tile, azOffsetRaster, rowBuffer); 
+        _initializeTile(tile, inputSlc, azOffsetRaster, rowBuffer); 
     
         // Perform interpolation
         infoChannel << "Interpolating tile " << tileCount << pyre::journal::endl;
-        _transformTile(tile, outputSlc, rgOffsetRaster, azOffsetRaster, outputLine);
+        _transformTile(tile, outputSlc, rgOffsetRaster, azOffsetRaster, inLength,
+            flatten, outputLine);
     }
     infoChannel << "Elapsed time: " << (omp_get_wtime() - procT0) << " seconds"
         << pyre::journal::endl;
@@ -111,13 +113,13 @@ void isce::core::ResampSlc::_initializeTile(Tile_t & tile, Raster & inputSlc,
     // Compute minimum row index needed from input image
     tile.firstImageRow(outLength - 1);
     // Iterate over first rowBuffer lines of tile
-    for (size_t i = tile.rowStart; i < (tile.rowStart + rowBuffer); ++i) {
+    for (size_t i = tile.rowStart(); i < (tile.rowStart() + rowBuffer); ++i) {
         // Read in azimuth residual
         azOffsetRaster.getLine(&residAz[0], i, outWidth);
         // Now iterate over width of the tile
-        for (int j = 0; j < outWidth; ++j) {
+        for (size_t j = 0; j < outWidth; ++j) {
             // Compute total azimuth offset of current pixel
-            double azOff = _azOffsetsPoly.eval(i+1, j+1) + residAz[j];
+            double azOff = residAz[j];
             // Calculate corresponding minimum line index of input image
             size_t imageLine = size_t(i + azOff) - SINC_HALF;
             // Update minimum row index
@@ -125,18 +127,18 @@ void isce::core::ResampSlc::_initializeTile(Tile_t & tile, Raster & inputSlc,
         }
     }
     // Final update
-    tile.firstImageRow(std::max(tile.firstImageRow(), 0));
+    tile.firstImageRow(std::max(tile.firstImageRow(), (size_t) 0));
 
     // Compute maximum row index needed from input image
     tile.lastImageRow(0);
     // Iterate over last rowBuffer lines of tile
-    for (size_t i = (tile.rowStart - rowBuffer); i < tile.rowEnd; ++i) {
+    for (size_t i = (tile.rowStart() - rowBuffer); i < tile.rowEnd(); ++i) {
         // Read in azimuth residual
         azOffsetRaster.getLine(residAz, i, outWidth);
         // Now iterate over width of the tile
         for (size_t j = 0; j < outWidth; j++) {
             // Compute total azimuth offset of current pixel
-            double azOff = _azOffsetsPoly.eval(i+1, j+1) + residAz[j];
+            double azOff = residAz[j];
             // Calculate corresponding minimum line index of input image
             size_t imageLine = size_t(i + azOff) + SINC_HALF;
             // Update maximum row index
@@ -151,10 +153,10 @@ void isce::core::ResampSlc::_initializeTile(Tile_t & tile, Raster & inputSlc,
 
     // Read in tile.length() lines of data from the input image to the image block
     for (size_t i = 0; i < tile.length(); i++) {
-        // Read line of data
-        tile.setLineData(inputSlc, tile.firstImageRow() + i);
+        // Read line of data into tile
+        inputSlc.getLine(&tile[i*tile.width()], tile.firstImageRow() + i, tile.width());
         // Remove the carrier phases in parallel
-        #pragma omp parallel for
+        //#pragma omp parallel for
         for (size_t j = 0; j < inWidth; j++) {
             // Evaluate the pixel's carrier phase
             double phase = modulo_f(
@@ -169,12 +171,11 @@ void isce::core::ResampSlc::_initializeTile(Tile_t & tile, Raster & inputSlc,
 
 // Interpolate tile to perform transformation
 void isce::core::ResampSlc::_transformTile(Tile_t & tile, Raster & outputSlc,
-    Raster & rgOffsetRaster, Raster & azOffsetRaster, size_t & outputLine) {
+    Raster & rgOffsetRaster, Raster & azOffsetRaster, size_t inLength, bool flatten,
+    size_t & outputLine) {
 
     // Cache geometry values
-    const size_t inLength = inputSlc.length();
-    const size_t inWidth = inputSlc.width();
-    const size_t outLength = azOffsetRaster.length();
+    const size_t inWidth = tile.width();
     const size_t outWidth = azOffsetRaster.width();
 
     // Allocate valarrays for work
@@ -183,21 +184,23 @@ void isce::core::ResampSlc::_transformTile(Tile_t & tile, Raster & outputSlc,
     std::valarray<std::complex<float>> imgOut(outWidth);
     
     // Loop over lines to perform interpolation
-    for (size_t i = tile.rowStart; i < tile.rowEnd; ++i) {
+    for (size_t i = tile.rowStart(); i < tile.rowEnd(); ++i) {
         // Get lines for residual offsets
         rgOffsetRaster.getLine(&residRg[0], i, outWidth);
         azOffsetRaster.getLine(&residAz[0], i, outWidth);
         // Loop over width
-        #pragma omp parallel for firstPrivate(chip)
+        //#pragma omp parallel for firstPrivate(chip)
         for (size_t j = 0; j < outWidth; ++j) {
            
-            // Evaluate offset polynomials 
-            const double azOff = _azOffsetsPoly.eval(i+1, j+1) + residAz[j];
-            const double rgOff = _rgOffsetsPoly.eval(i+1, j+1) + residRg[j];
+            // Unpack offsets
+            const double azOff = residAz[j];
+            const double rgOff = residRg[j];
             // Break into fractional and integer parts
-            size_t k, kk;
-            const double fracAz = std::modf(i + azOff, &k);
-            const double fracRg = std::modf(j + rgOff, &kk);
+            double k_float, kk_float;
+            const double fracAz = std::modf(i + azOff, &k_float);
+            const double fracRg = std::modf(j + rgOff, &kk_float);
+            size_t k = size_t(k_float);
+            size_t kk = size_t(kk_float);
             // Check bounds
             if ((k < SINC_HALF) || (k >= (inLength - SINC_HALF))) continue;
             if ((kk < SINC_HALF) || (kk >= (inWidth  -SINC_HALF))) continue;
@@ -237,8 +240,8 @@ void isce::core::ResampSlc::_transformTile(Tile_t & tile, Raster & outputSlc,
             phase = modulo_f(phase, 2.0*M_PI);
            
             // Interpolate 
-            cval = _interpolateComplex(chip, (SINC_HALF + 1), (SINC_HALF + 1),
-                fracAz, fracRg, SINC_ONE, SINC_ONE, SINC_METHOD);
+            std::complex<float> cval = _interpolateComplex(chip, (SINC_HALF + 1), (SINC_HALF + 1),
+                fracAz, fracRg, SINC_ONE, SINC_ONE);
 
             // Add doppler to interpolated value and save
             imgOut[j] = cval * std::complex<float>(std::cos(phase), std::sin(phase));

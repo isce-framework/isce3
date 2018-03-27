@@ -12,14 +12,17 @@
 #include <cstdio>
 #include <complex>
 #include <valarray>
+#include <omp.h>
 
 // pyre
 #include <portinfo>
 #include <pyre/journal.h>
 
 // isce::core
+#include "Interpolator.h"
 #include "Poly2d.h"
 #include "Metadata.h"
+#include "Raster.h"
 #include "Tile.h"
 
 // Declarations
@@ -34,7 +37,7 @@ class isce::core::ResampSlc {
 
     // Public data members
     public:
-        typedef isce::core::Tile<std::complex> Tile_t;
+        typedef isce::core::Tile<std::complex<float>> Tile_t;
         Metadata meta;
         Metadata refMeta;
 
@@ -69,19 +72,16 @@ class isce::core::ResampSlc {
         float _fDelay;
 
         // Tile initialization
-        void _initializeTile(Tile_t &, Raster &, size_t);
+        void _initializeTile(Tile_t &, Raster &, Raster &, size_t);
 
         // Tile transformation
-        void _transformTile(Tile_t &,
-            std::valarray<std::complex<float>> &,
-            std::valarray<std::complex<float>> &,
-            size_t, size_t);
+        void _transformTile(Tile_t &, Raster &, Raster &, Raster &, size_t, bool, size_t &);
 
         // Convenience functions
         inline size_t _computeNumberOfTiles(size_t, size_t);
 
         // Resampling interpolation methods
-        void _prepareInterpMethods(int) const;
+        void _prepareInterpMethods(int);
         inline std::complex<float> _interpolateComplex(std::valarray<std::complex<float>> &,
             int, int, double, double, int, int);
 };

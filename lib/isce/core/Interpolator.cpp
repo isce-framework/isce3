@@ -142,8 +142,10 @@ template float Interpolator::bicubic(double,double,const vector<vector<float>>&)
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+
+
 void Interpolator::sinc_coef(double beta, double relfiltlen, int decfactor, double pedestal,
-                             int weight, int &intplength, int &filtercoef, vector<double> &filter) {
+                             int weight, int &intplength, int &filtercoef, double * filter) {
 
     intplength = round(relfiltlen / beta);
     filtercoef = intplength * decfactor;
@@ -158,6 +160,14 @@ void Interpolator::sinc_coef(double beta, double relfiltlen, int decfactor, doub
         filter[i] = ((weight == 1) ? (fct * wgt) : fct);
     }
 }
+
+void Interpolator::sinc_coef(double beta, double relfiltlen, int decfactor, double pedestal,
+                             int weight, int &intplength, int &filtercoef, vector<double> &filter)
+{
+    Interpolator::sinc_coef(beta, relfiltlen, decfactor, pedestal, weight, intplength,
+        filtercoef, filter.data());
+}
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

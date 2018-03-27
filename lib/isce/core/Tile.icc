@@ -9,22 +9,17 @@
 #error "Tile.icc is an implementation detail of class Tile"
 #endif
 
+#define IDX1D(i,j,w) (((i)*(w))+(j))
+
 // Default constructor
 template <typename T>
 isce::core::Tile<T>::Tile() {};
 
 // Copy constructor
 template <typename T>
-isce::core::Tile<T>::Tile(Tile & refTile) : _width(refTile.width()),
+isce::core::Tile<T>::Tile(const Tile & refTile) : _width(refTile.width()),
     _rowStart(refTile.rowStart()), _rowEnd(refTile.rowEnd()),
     _firstImageRow(refTile.firstImageRow()), _lastImageRow(refTile.lastImageRow()) {}
-
-// Set line of tile data
-template <typename T>
-void isce::core::Tile<T>::setLineData(Raster & raster, size_t rasterLine) {
-    size_t tileLine = rasterLine - _firstImageRow;
-    raster.getLine(&_data[IDX1D(tileLine,0,_width)], rasterLine, _width, 1);  
-} 
 
 // Allocate dynamic memory
 template <typename T>
