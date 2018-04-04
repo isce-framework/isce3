@@ -19,16 +19,27 @@ namespace isce {
 }
 
 struct isce::core::Metadata {
+
     // Acquisition related parameters
-    double radarWavelength, prf, rangeFirstSample, slantRangePixelSpacing, pegHeading;
+    double radarWavelength;
+    double prf;
+    double rangeFirstSample;
+    double slantRangePixelSpacing;
+    double pulseDuration;
+    double chirpSlope;
+    double antennaLength;
     int lookSide;
-    DateTime sensingStart;
-    // Image formation related parameters
-    int numberRangeLooks, numberAzimuthLooks;
+    //DateTime sensingStart;
+    double pegHeading, pegLatitude, pegLongitude;
+
+    // Image formation related parametesr
+    int numberRangeLooks;
+    int numberAzimuthLooks;
+
     // Geometry parameters
-    int width, length;
-    // Basic constructor
-    Metadata() : sensingStart() {}
+    int width;
+    int length;
+
 };
 
 // Define std::cout interaction for debugging
