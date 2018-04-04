@@ -14,24 +14,59 @@ isce::core::ResampSlc::ResampSlc() {}
 // Destructor
 isce::core::ResampSlc::~ResampSlc() {}
 
-// Set range carrier polynomial via copy
-void isce::core::ResampSlc::setRgCarrier(Poly2d poly) {
+// Get range carrier polynomial
+isce::core::Poly2d isce::core::ResampSlc::rgCarrier() const {
+    return _rgCarrier;
+}
+
+// Set range carrier polynomial
+void isce::core::ResampSlc::rgCarrier(Poly2d & poly) {
     _rgCarrier = poly;
 }
 
-// Set azimuth carrier polynomial via copy
-void isce::core::ResampSlc::setAzCarrier(Poly2d poly) {
+// Get azimuth carrier polynomial
+isce::core::Poly2d isce::core::ResampSlc::azCarrier() const {
+    return _azCarrier;
+}
+
+// Set azimuth carrier polynomial
+void isce::core::ResampSlc::azCarrier(Poly2d & poly) {
     _azCarrier = poly;
 }
 
-// Set Doppler polynomial via copy
-void isce::core::ResampSlc::setDoppler(Poly2d poly) {
+// Get Doppler polynomial
+isce::core::Poly2d isce::core::ResampSlc::doppler() const {
+    return _dopplerPoly;
+}
+
+// Set Doppler polynomial
+void isce::core::ResampSlc::doppler(Poly2d & poly) {
     _dopplerPoly = poly;
 }
 
+// Get metadata
+isce::core::Metadata isce::core::ResampSlc::metadata() const {
+    return _meta;
+}
+
+// Set metadata from copy
+void isce::core::ResampSlc::metadata(Metadata meta) {
+    _meta = meta;
+}
+
+// Get reference metadata
+isce::core::Metadata isce::core::ResampSlc::refMetadata() const {
+    return _refMeta;
+}
+
+// Set reference metadata from copy
+void isce::core::ResampSlc::refMetadata(Metadata meta) {
+    _refMeta = meta;
+}
+
 // Announce my properties to the world
-void isce::core::ResampSlc::declare(size_t inLength, size_t inWidth,
-    size_t outLength, size_t outWidth) const {
+void isce::core::ResampSlc::declare(int inLength, int inWidth,
+    int outLength, int outWidth) const {
     // Make info channel
     pyre::journal::info_t channel("isce.core.ResampSlc");
     // Basic info
@@ -40,11 +75,11 @@ void isce::core::ResampSlc::declare(size_t inLength, size_t inWidth,
             << pyre::journal::newline << pyre::journal::newline;
     channel << "Input Image Dimensions:  " << inLength << " lines, "
             << inWidth << " pixels" 
-            << pyre::journal::newline << pyre::journal::newline;
+            << pyre::journal::newline;
     channel << "Output Image Dimensions: " << outLength << " lines, "
             << outWidth << " pixels"
             << pyre::journal::newline << pyre::journal::newline;
-    channel << "Number of threads: " << omp_get_max_threads() << pyre::journal::newline;
+    //channel << "Number of threads: " << omp_get_max_threads() << pyre::journal::newline;
     channel << "Complex data interpolation" << pyre::journal::endl;
     // Polynomial info
     printf("Azimuth Carrier Poly\n");
@@ -56,11 +91,11 @@ void isce::core::ResampSlc::declare(size_t inLength, size_t inWidth,
 }
 
 // Compute number of tiles given a specified nominal tile size
-size_t isce::core::ResampSlc::_computeNumberOfTiles(size_t outLength, size_t linesPerTile) {
+int isce::core::ResampSlc::_computeNumberOfTiles(int outLength, int linesPerTile) {
     // Compute floor(nTiles)
-    size_t nTiles = outLength / linesPerTile;
+    int nTiles = outLength / linesPerTile;
     // See if there are any leftover lines to add an extra tile
-    size_t extraLines = outLength - nTiles * linesPerTile;
+    int extraLines = outLength - nTiles * linesPerTile;
     if (extraLines > 0) {
         nTiles += 1;
     }
@@ -119,6 +154,10 @@ std::complex<float> isce::core::ResampSlc::_interpolateComplex(
     // Modify interpolation coordinates
     const int xx = x + SINC_HALF - 1;
     const int yy = y + SINC_HALF - 1;
+
+    //Interpolator interp;
+    //return interp.sinc_eval_2d(ifg, _fintp, SINC_SUB, SINC_LEN, xx, yy, fx, fy, nx, nx);
+
     // Perform interpolation
     std::complex<float> retValue(0.0, 0.0);
     if ((xx >= (SINC_LEN - 1)) && (xx < nx) && (yy >= (SINC_LEN-1)) && (yy < ny)) {
@@ -130,11 +169,11 @@ std::complex<float> isce::core::ResampSlc::_interpolateComplex(
                 const float weight = _fintp[IDX1D(ifracx,i,SINC_LEN)] 
                     * _fintp[IDX1D(ifracy,j,SINC_LEN)];
                 // Accumulate interpolated value
-                retValue += ifg[IDX1D(xx-1,yy-j,SINC_ONE)] * weight;
+                retValue += ifg[IDX1D(xx-i,yy-j,SINC_ONE)] * weight;
             }
         }
     }
-    // Done
+    //Done
     return retValue;
 }
 
