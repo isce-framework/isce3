@@ -28,19 +28,19 @@ class isce::core::Tile {
         inline Tile(const Tile &);
 
         // Getters for geometry
-        inline size_t length() const;
-        inline size_t width() const;
-        inline size_t rowStart() const;
-        inline size_t rowEnd() const;
-        inline size_t firstImageRow() const;
-        inline size_t lastImageRow() const;
+        inline int length() const;
+        inline int width() const;
+        inline int rowStart() const;
+        inline int rowEnd() const;
+        inline int firstImageRow() const;
+        inline int lastImageRow() const;
 
         // Setters for geometry
-        inline void width(size_t);
-        inline void rowStart(size_t);
-        inline void rowEnd(size_t);
-        inline void firstImageRow(size_t);
-        inline void lastImageRow(size_t);
+        inline void width(int);
+        inline void rowStart(int);
+        inline void rowEnd(int);
+        inline void firstImageRow(int);
+        inline void lastImageRow(int);
 
         // Allocate memory
         inline void allocate();
@@ -52,12 +52,15 @@ class isce::core::Tile {
 
     private:
         // Geometry
-        size_t _width, _rowStart, _rowEnd;
-        size_t _firstImageRow, _lastImageRow;
+        int _width, _rowStart, _rowEnd, _firstImageRow, _lastImageRow;
 
         // Data
         std::valarray<T> _data;
 };
+
+// Print out relevant attributes
+template <typename T>
+std::ostream &operator<<(std::ostream &, const isce::core::Tile<T> &);
 
 // Get inline implementations of Tile
 #define ISCE_CORE_TILE_ICC
