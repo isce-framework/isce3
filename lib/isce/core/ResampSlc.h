@@ -38,8 +38,6 @@ class isce::core::ResampSlc {
     // Public data members
     public:
         typedef isce::core::Tile<std::complex<float>> Tile_t;
-        Metadata meta;
-        Metadata refMeta;
 
     // Meta-methods
     public:
@@ -48,17 +46,28 @@ class isce::core::ResampSlc {
         // Destructor
         inline ~ResampSlc();
 
-        // Set the various polynomial attributes
-        inline void setRgCarrier(Poly2d);
-        inline void setAzCarrier(Poly2d);
-        inline void setDoppler(Poly2d);
-        
+        // Polynomial getters
+        inline Poly2d rgCarrier() const;
+        inline Poly2d azCarrier() const;
+        inline Poly2d doppler() const;
+        // Polynomial setters
+        inline void rgCarrier(Poly2d &);
+        inline void azCarrier(Poly2d &);
+        inline void doppler(Poly2d &);
+
+        // Get metadata
+        inline Metadata metadata() const;
+        inline Metadata refMetadata() const;
+        // Set metadata
+        inline void metadata(Metadata);
+        inline void refMetadata(Metadata);
+                
         // Convenience functions
-        inline void declare(size_t, size_t, size_t, size_t) const;
+        inline void declare(int, int, int, int) const;
 
         // Main resamp entry point
         void resamp(const std::string &, const std::string &, const std::string &,
-            const std::string &, bool flatten=true, bool isComplex=true, size_t rowBuffer=40);
+            const std::string &, bool flatten=false, bool isComplex=true, int rowBuffer=40);
 
     // Data members
     private:
@@ -67,18 +76,22 @@ class isce::core::ResampSlc {
         Poly2d _azCarrier;            // azimuth carrier polynomial
         Poly2d _dopplerPoly;          // Doppler polynomial
 
+        // Metadata
+        Metadata _meta;               // radar metadata for image to be resampled
+        Metadata _refMeta;            // radar metadata for reference master image
+
         // Interpolation work data
         std::valarray<float> _fintp;
         float _fDelay;
 
         // Tile initialization
-        void _initializeTile(Tile_t &, Raster &, Raster &, size_t);
+        void _initializeTile(Tile_t &, Raster &, Raster &, int);
 
         // Tile transformation
-        void _transformTile(Tile_t &, Raster &, Raster &, Raster &, size_t, bool, size_t &);
+        void _transformTile(Tile_t &, Raster &, Raster &, Raster &, int, bool, int &);
 
         // Convenience functions
-        inline size_t _computeNumberOfTiles(size_t, size_t);
+        inline int _computeNumberOfTiles(int, int);
 
         // Resampling interpolation methods
         void _prepareInterpMethods(int);
