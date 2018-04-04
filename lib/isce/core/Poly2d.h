@@ -49,6 +49,7 @@ namespace isce { namespace core {
         azimuthMean = rhs.azimuthMean;
         rangeNorm = rhs.rangeNorm;
         azimuthNorm = rhs.azimuthNorm;
+        coeffs = rhs.coeffs;
         return *this;
     }
 
