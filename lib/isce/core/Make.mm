@@ -59,6 +59,8 @@ EXPORT_PKG_HEADERS = \
     ResampSlc.h \
     ResampSlc.icc \
     Serialization.h \
+    Tile.h \
+    Tile.icc \
 
 # standard targets
 all: $(PROJ_DLL) export
