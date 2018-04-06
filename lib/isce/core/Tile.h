@@ -50,6 +50,9 @@ class isce::core::Tile {
         // Read-only subscript operator
         const T & operator[](size_t index) const {return _data[index];}
 
+        // Get reference to underlying data
+        inline std::valarray<T> & data();
+
     private:
         // Geometry
         int _width, _rowStart, _rowEnd, _firstImageRow, _lastImageRow;

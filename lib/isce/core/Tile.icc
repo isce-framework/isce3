@@ -93,6 +93,12 @@ void isce::core::Tile<T>::lastImageRow(int value) {
     _lastImageRow = value;
 }
 
+// Get reference to underlying data
+template <typename T>
+std::valarray<T> & isce::core::Tile<T>::data() {
+    return _data;
+}
+
 // Print out relevant attributes
 template <typename T>
 std::ostream &operator<<(std::ostream & os, const isce::core::Tile<T> & tile) {
