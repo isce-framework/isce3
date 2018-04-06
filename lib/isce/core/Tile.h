@@ -50,6 +50,11 @@ class isce::core::Tile {
         // Read-only subscript operator
         const T & operator[](size_t index) const {return _data[index];}
 
+        // Overload () operator for 2D access
+        T & operator()(size_t row, size_t col) {return _data[row*_width+col];}
+        // Read-only () operator for 2D access
+        const T & operator()(size_t row, size_t col) const {return _data[row*_width+col];}
+
         // Get reference to underlying data
         inline std::valarray<T> & data();
 

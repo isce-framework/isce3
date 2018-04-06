@@ -173,7 +173,7 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, Raster & azOffsetRaster, int r
                 + _azCarrier.eval(tile.firstImageRow() + i, j), 2.0*M_PI);
             // Remove the carrier
             std::complex<float> cpxPhase(std::cos(phase), -std::sin(phase));
-            tile[IDX1D(i,j,inWidth)] *= cpxPhase;
+            tile(i,j) *= cpxPhase;
         }
     }
 }
@@ -189,8 +189,8 @@ _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
 
     // Allocate valarrays for work
     std::valarray<float> residAz(outWidth), residRg(outWidth);
-    std::valarray<std::complex<float>> chip(SINC_ONE * SINC_ONE);
     std::valarray<std::complex<float>> imgOut(outWidth);
+    Matrix<std::complex<float>> chip(SINC_ONE, SINC_ONE);
     
     // Loop over lines to perform interpolation
     for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
@@ -254,7 +254,7 @@ _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
                 for (int jj = 0; jj < SINC_ONE; ++jj) {
                     // Column to read from
                     const int chipCol = intRg + jj - SINC_HALF;
-                    chip[IDX1D(ii,jj,SINC_ONE)] = tile[IDX1D(chipRow,chipCol,inWidth)] * cval;
+                    chip(ii,jj) = tile(chipRow,chipCol) * cval;
                 }
             }
 

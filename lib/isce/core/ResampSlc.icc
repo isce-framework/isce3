@@ -157,10 +157,10 @@ _prepareInterpMethods(int method) {
         }
 
         // Copy transpose of filter coefficients to member data
-        _fintp.resize(SINC_SUB * SINC_LEN);
+        _fintp.resize(SINC_SUB, SINC_LEN);
         for (int i = 0; i < SINC_LEN; ++i) {
             for (int j = 0; j < SINC_SUB; ++j) {
-                _fintp[i + SINC_LEN*j] = filter[j + SINC_SUB*i];
+                _fintp(j,i) = filter[j + SINC_SUB*i];
             }
         }
     } else {
@@ -172,7 +172,7 @@ _prepareInterpMethods(int method) {
 
 // Complex sinc interpolation
 std::complex<float> isce::core::ResampSlc::
-_interpolateComplex(std::valarray<std::complex<float>> & ifg, int x, int y,
+_interpolateComplex(Matrix<std::complex<float>> & ifg, int x, int y,
                     double fx, double fy, int nx, int ny) {
 
     // Check edge conditions
@@ -187,7 +187,7 @@ _interpolateComplex(std::valarray<std::complex<float>> & ifg, int x, int y,
 
     // Call sinc interpolator
     std::complex<float> interpVal = Interpolator::sinc_eval_2d(
-        ifg, _fintp, nx, SINC_SUB, SINC_LEN, xx, yy, fx, fy, nx, nx
+        ifg, _fintp, xx, yy, fx, fy, nx, nx
     );
     return interpVal;
 }

@@ -88,7 +88,7 @@ class isce::core::ResampSlc {
         Metadata _refMeta;            // radar metadata for reference master image
 
         // Array of sinc coefficient
-        std::valarray<float> _fintp;
+        Matrix<float> _fintp;
 
         // Tile initialization
         void _initializeTile(Tile_t &, Raster &, Raster &, int);
@@ -101,7 +101,7 @@ class isce::core::ResampSlc {
 
         // Resampling interpolation methods
         void _prepareInterpMethods(int);
-        inline std::complex<float> _interpolateComplex(std::valarray<std::complex<float>> &,
+        inline std::complex<float> _interpolateComplex(Matrix<std::complex<float>> &,
             int, int, double, double, int, int);
 };
 
