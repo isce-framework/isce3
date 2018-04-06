@@ -60,7 +60,7 @@ find_path(PYRE_JOURNAL_DIR  journal.h
 
 if (PYRE_JOURNAL_DIR)
     set(PYRE_FOUND 1 CACHE INTERNAL "Pyre found")
-    set(PYRE_INCLUDE_DIR ${PYRE_JOURNAL_DIR} CACHE INTERNAL "Pyre inc dir")
+    set(PYRE_INCLUDE_DIR "${PYRE_JOURNAL_DIR}/.." CACHE INTERNAL "Pyre inc dir")
     set(PYRE_LIB_DIR "${PYRE_JOURNAL_DIR}/../../lib" CACHE INTERNAL "Pyre lib dir")
     find_library(PYRE_LIBRARY NAMES pyre HINTS ${PYRE_LIB_DIR})
     find_library(PYRE_JOURNAL_LIBRARY NAMES journal HINTS ${PYRE_LIB_DIR})
