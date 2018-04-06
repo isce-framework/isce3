@@ -9,63 +9,81 @@
 #define modulo_f(a,b) fmod(fmod(a,b)+(b),(b))
 
 // Default constructor
-isce::core::ResampSlc::ResampSlc() {}
+isce::core::ResampSlc::
+ResampSlc() {}
 
 // Destructor
-isce::core::ResampSlc::~ResampSlc() {}
+isce::core::ResampSlc::
+~ResampSlc() {}
 
 // Get range carrier polynomial
-isce::core::Poly2d isce::core::ResampSlc::rgCarrier() const {
+isce::core::Poly2d
+isce::core::ResampSlc::
+rgCarrier() const {
     return _rgCarrier;
 }
 
 // Set range carrier polynomial
-void isce::core::ResampSlc::rgCarrier(Poly2d & poly) {
+void isce::core::ResampSlc::
+rgCarrier(Poly2d & poly) {
     _rgCarrier = poly;
 }
 
 // Get azimuth carrier polynomial
-isce::core::Poly2d isce::core::ResampSlc::azCarrier() const {
+isce::core::Poly2d
+isce::core::ResampSlc::
+azCarrier() const {
     return _azCarrier;
 }
 
 // Set azimuth carrier polynomial
-void isce::core::ResampSlc::azCarrier(Poly2d & poly) {
+void isce::core::ResampSlc::
+azCarrier(Poly2d & poly) {
     _azCarrier = poly;
 }
 
 // Get Doppler polynomial
-isce::core::Poly2d isce::core::ResampSlc::doppler() const {
+isce::core::Poly2d
+isce::core::ResampSlc::
+doppler() const {
     return _dopplerPoly;
 }
 
 // Set Doppler polynomial
-void isce::core::ResampSlc::doppler(Poly2d & poly) {
+void isce::core::ResampSlc::
+doppler(Poly2d & poly) {
     _dopplerPoly = poly;
 }
 
 // Get metadata
-isce::core::Metadata isce::core::ResampSlc::metadata() const {
+isce::core::Metadata
+isce::core::ResampSlc::
+metadata() const {
     return _meta;
 }
 
 // Set metadata from copy
-void isce::core::ResampSlc::metadata(Metadata meta) {
+void isce::core::ResampSlc::
+metadata(Metadata meta) {
     _meta = meta;
 }
 
 // Get reference metadata
-isce::core::Metadata isce::core::ResampSlc::refMetadata() const {
+isce::core::Metadata
+isce::core::ResampSlc::
+refMetadata() const {
     return _refMeta;
 }
 
 // Set reference metadata from copy
-void isce::core::ResampSlc::refMetadata(Metadata meta) {
+void isce::core::ResampSlc::
+refMetadata(Metadata meta) {
     _refMeta = meta;
 }
 
 // Announce my properties to the world
-void isce::core::ResampSlc::declare(int inLength, int inWidth,
+void isce::core::ResampSlc::
+declare(int inLength, int inWidth,
     int outLength, int outWidth) const {
     // Make info channel
     pyre::journal::info_t channel("isce.core.ResampSlc");
@@ -90,8 +108,21 @@ void isce::core::ResampSlc::declare(int inLength, int inWidth,
     _dopplerPoly.printPoly(); 
 }
 
+// Get the number of lines per tile
+size_t isce::core::ResampSlc::
+linesPerTile() const {
+    return _linesPerTile;
+}
+
+// Set the number of lines per tile
+void isce::core::ResampSlc::
+linesPerTile(size_t value) {
+    _linesPerTile = value;
+}
+
 // Compute number of tiles given a specified nominal tile size
-int isce::core::ResampSlc::_computeNumberOfTiles(int outLength, int linesPerTile) {
+int isce::core::ResampSlc::
+_computeNumberOfTiles(int outLength, int linesPerTile) {
     // Compute floor(nTiles)
     int nTiles = outLength / linesPerTile;
     // See if there are any leftover lines to add an extra tile
@@ -103,21 +134,19 @@ int isce::core::ResampSlc::_computeNumberOfTiles(int outLength, int linesPerTile
 }
 
 // Prepare sinc interpolation methods and internal data
-void isce::core::ResampSlc::_prepareInterpMethods(int method) {
+void isce::core::ResampSlc::
+_prepareInterpMethods(int method) {
     // Compute filter coefficients    
     if (method == SINC_METHOD) {
-        std::valarray<double> filter((SINC_SUB * SINC_LEN) + 1);
-        int intplength, filtercoef;
-        double ssum;
-        Interpolator interp;
 
         // Initialize sinc coefficients
-        interp.sinc_coef(1.0, SINC_LEN, SINC_SUB, 0.0, 1, intplength, filtercoef, &filter[0]);
+        std::valarray<double> filter(0.0, SINC_SUB * SINC_LEN + 1);
+        Interpolator::sinc_coef(1.0, SINC_LEN, SINC_SUB, 0.0, 1, filter);
 
         // Normalize filter
         for (int i = 0; i < SINC_SUB; ++i) {
             // Compute filter sum
-            ssum = 0.0;
+            double ssum = 0.0;
             for (int j = 0; j < SINC_LEN; ++j) {
                 ssum += filter[i + SINC_SUB*j];
             }
@@ -134,7 +163,6 @@ void isce::core::ResampSlc::_prepareInterpMethods(int method) {
                 _fintp[i + SINC_LEN*j] = filter[j + SINC_SUB*i];
             }
         }
-        _fDelay = 0.5 * SINC_LEN;
     } else {
         std::cerr << "Error: other interpolation methods for ResampSlc not implemented yet."
                   << std::endl;
@@ -143,38 +171,25 @@ void isce::core::ResampSlc::_prepareInterpMethods(int method) {
 }
 
 // Complex sinc interpolation
-std::complex<float> isce::core::ResampSlc::_interpolateComplex(
-    std::valarray<std::complex<float>> & ifg, int x, int y, double fx, double fy, int nx,
-    int ny) {
+std::complex<float> isce::core::ResampSlc::
+_interpolateComplex(std::valarray<std::complex<float>> & ifg, int x, int y,
+                    double fx, double fy, int nx, int ny) {
+
     // Check edge conditions
     if ((x < SINC_HALF) || (x > (nx - SINC_HALF)))
         return std::complex<float>(0.0, 0.0);
     if ((y < SINC_HALF) || (y > (ny - SINC_HALF)))
         return std::complex<float>(0.0, 0.0);
+
     // Modify interpolation coordinates
     const int xx = x + SINC_HALF - 1;
     const int yy = y + SINC_HALF - 1;
 
-    //Interpolator interp;
-    //return interp.sinc_eval_2d(ifg, _fintp, SINC_SUB, SINC_LEN, xx, yy, fx, fy, nx, nx);
-
-    // Perform interpolation
-    std::complex<float> retValue(0.0, 0.0);
-    if ((xx >= (SINC_LEN - 1)) && (xx < nx) && (yy >= (SINC_LEN-1)) && (yy < ny)) {
-        const int ifracx = std::min(std::max(0, int(fx*SINC_SUB)), SINC_SUB-1);
-        const int ifracy = std::min(std::max(0, int(fy*SINC_SUB)), SINC_SUB-1);
-        for (int i = 0; i < SINC_LEN; ++i) {
-            for (int j = 0; j < SINC_LEN; ++j) {
-                // Compute interpolation weight
-                const float weight = _fintp[IDX1D(ifracx,i,SINC_LEN)] 
-                    * _fintp[IDX1D(ifracy,j,SINC_LEN)];
-                // Accumulate interpolated value
-                retValue += ifg[IDX1D(xx-i,yy-j,SINC_ONE)] * weight;
-            }
-        }
-    }
-    //Done
-    return retValue;
+    // Call sinc interpolator
+    std::complex<float> interpVal = Interpolator::sinc_eval_2d(
+        ifg, _fintp, nx, SINC_SUB, SINC_LEN, xx, yy, fx, fy, nx, nx
+    );
+    return interpVal;
 }
 
 // end of file

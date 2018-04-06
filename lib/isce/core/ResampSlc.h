@@ -61,6 +61,10 @@ class isce::core::ResampSlc {
         // Set metadata
         inline void metadata(Metadata);
         inline void refMetadata(Metadata);
+
+        // Get/set number of lines per processing tile
+        inline size_t linesPerTile() const;
+        inline void linesPerTile(size_t);
                 
         // Convenience functions
         inline void declare(int, int, int, int) const;
@@ -71,6 +75,9 @@ class isce::core::ResampSlc {
 
     // Data members
     private:
+        // Number of lines per tile
+        size_t _linesPerTile = 1000;
+
         // Polynomials
         Poly2d _rgCarrier;            // range carrier polynomial
         Poly2d _azCarrier;            // azimuth carrier polynomial
@@ -80,9 +87,8 @@ class isce::core::ResampSlc {
         Metadata _meta;               // radar metadata for image to be resampled
         Metadata _refMeta;            // radar metadata for reference master image
 
-        // Interpolation work data
+        // Array of sinc coefficient
         std::valarray<float> _fintp;
-        float _fDelay;
 
         // Tile initialization
         void _initializeTile(Tile_t &, Raster &, Raster &, int);
