@@ -54,7 +54,9 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
 				                    Raster.icc
                                     ResampSlc.h
                                     ResampSlc.icc
-                                    Serialization.h)
+                                    Serialization.h
+                                    Tile.h
+                                    Tile.icc)
 
 ###Install headers into build/include
 ###This is where regex can be used on the header files if needed
@@ -74,7 +76,8 @@ add_library(${${PACKAGENAME}_DLL} SHARED
 target_include_directories(${${PACKAGENAME}_DLL} PUBLIC ${PYRE_INCLUDE_DIR} ${ISCE_BUILDINCLUDEDIR} ${GDAL_INCLUDE_DIR}) 
 
 # Add library dependencies 
-target_link_libraries(${${PACKAGENAME}_DLL} ${GDAL_LIBRARY})
+target_link_libraries(${${PACKAGENAME}_DLL} ${GDAL_LIBRARY} ${PYRE_LIBRARY}
+                      ${PYRE_JOURNAL_LIBRARY})
 
 #Install headers as files
 ###This may be changed in future to install from build/include
