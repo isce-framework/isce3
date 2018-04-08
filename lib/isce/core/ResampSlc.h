@@ -12,7 +12,6 @@
 #include <cstdio>
 #include <complex>
 #include <valarray>
-#include <omp.h>
 
 // pyre
 #include <portinfo>
