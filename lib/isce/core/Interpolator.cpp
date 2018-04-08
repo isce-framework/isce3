@@ -409,11 +409,11 @@ akima(int nx, int ny, const Matrix<float> & z, double x, double y) {
                  z(xx+1,yy) - z(xx,yy),
                  z(xx+2,yy) - z(xx+1,yy)};
 
-            if ((abs(m[0] - m[1]) <= DBL_EPSILON) && (abs(m[2] - m[3]) <= DBL_EPSILON)) {
+            if ((std::abs(m[0] - m[1]) <= DBL_EPSILON) && (std::abs(m[2] - m[3]) <= DBL_EPSILON)) {
                 sx(ii,jj) = 0.5 * (m[1] + m[2]);
             } else {
-                wx2 = abs(m[3] - m[2]);
-                wx3 = abs(m[1] - m[0]);
+                wx2 = std::abs(m[3] - m[2]);
+                wx3 = std::abs(m[1] - m[0]);
                 sx(ii,jj) = ((wx2 * m[1]) + (wx3 * m[2])) / (wx2 + wx3);
             }
 
@@ -422,11 +422,11 @@ akima(int nx, int ny, const Matrix<float> & z, double x, double y) {
                  z(xx,yy+1) - z(xx,yy),
                  z(xx,yy+2) - z(xx,yy+1)};
 
-            if ((abs(m[0] - m[1]) <= DBL_EPSILON) && (abs(m[2] - m[3]) <= DBL_EPSILON))
+            if ((std::abs(m[0] - m[1]) <= DBL_EPSILON) && (std::abs(m[2] - m[3]) <= DBL_EPSILON))
                 sy(ii,jj) = 0.5 * (m[1] + m[2]);
             else {
-                wy2 = abs(m[3] - m[2]);
-                wy3 = abs(m[1] - m[0]);
+                wy2 = std::abs(m[3] - m[2]);
+                wy3 = std::abs(m[1] - m[0]);
                 sy(ii,jj) = ((wy2 * m[1]) + (wy3 * m[2])) / (wy2 + wy3);
             }
 
@@ -435,8 +435,8 @@ akima(int nx, int ny, const Matrix<float> & z, double x, double y) {
             e(1,0) = z(xx+1,yy) - z(xx+1,yy-1) - m[1];
             e(1,1) = z(xx+1,yy+1) - z(xx+1,yy) - m[2];
 
-            if ((abs(wx2) <= DBL_EPSILON) && (abs(wx3) <= DBL_EPSILON)) wx2 = wx3 = 1.;
-            if ((abs(wy2) <= DBL_EPSILON) && (abs(wy3) <= DBL_EPSILON)) wy2 = wy3 = 1.;
+            if ((std::abs(wx2) <= DBL_EPSILON) && (std::abs(wx3) <= DBL_EPSILON)) wx2 = wx3 = 1.;
+            if ((std::abs(wy2) <= DBL_EPSILON) && (std::abs(wy3) <= DBL_EPSILON)) wy2 = wy3 = 1.;
             sxy(ii,jj) = ((wx2 * ((wy2 * e(0,0)) + (wy3 * e(0,1)))) +
                            (wx3 * ((wy2 * e(1,0)) + (wy3 * e(1,1))))) /
                            ((wx2 + wx3) * (wy2 + wy3));
