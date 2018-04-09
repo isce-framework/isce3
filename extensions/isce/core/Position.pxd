@@ -5,6 +5,7 @@
 #
 
 from libcpp.vector cimport vector
+from Cartesian cimport cartesian_t
 
 cdef extern from "isce/core/Position.h" namespace "isce::core":
     cdef cppclass Position:
@@ -14,4 +15,4 @@ cdef extern from "isce/core/Position.h" namespace "isce::core":
 
         Position() except +
         Position(const Position&) except +
-        void lookVec(double,double,vector[double]&)
+        void lookVec(double,double,cartesian_t&)

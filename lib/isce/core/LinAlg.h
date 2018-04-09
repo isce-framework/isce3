@@ -1,33 +1,45 @@
 //
-// Author: Joshua Cohen
+// Author: Joshua Cohen, Bryan V. Riel
 // Copyright 2017
 //
 
-#ifndef __ISCE_CORE_LINALG_H__
-#define __ISCE_CORE_LINALG_H__
+#ifndef ISCE_CORE_LINALG_H
+#define ISCE_CORE_LINALG_H
 
 #include <vector>
+#include "Constants.h"
 
-namespace isce { namespace core {
-    struct LinAlg {
-        LinAlg() = default;
+// Declaration
+namespace isce {
+    namespace core {
+        struct LinAlg;
+    }
+}
 
-        static void cross(const std::vector<double>&,const std::vector<double>&,
-                          std::vector<double>&);
-        static double dot(const std::vector<double>&,const std::vector<double>&);
-        static void linComb(double,const std::vector<double>&,double,const std::vector<double>&,
-                            std::vector<double>&);
-        static void matMat(const std::vector<std::vector<double>>&,
-                           const std::vector<std::vector<double>>&,
-                           std::vector<std::vector<double>>&);
-        static void matVec(const std::vector<std::vector<double>>&,const std::vector<double>&,
-                           std::vector<double>&);
-        static double norm(const std::vector<double>&);
-        static void tranMat(const std::vector<std::vector<double>>&,
-                            std::vector<std::vector<double>>&);
-        static void unitVec(const std::vector<double>&,std::vector<double>&);
-        static void enuBasis(double,double,std::vector<std::vector<double>>&);
-    };
-}}
+// LinAlg declaration
+struct isce::core::LinAlg {
+    LinAlg() = default;
+    // Cross product
+    static void cross(const cartesian_t &, const cartesian_t &, cartesian_t &);
+    // Dot product
+    static double dot(const cartesian_t &,const cartesian_t &);
+    // Linear combination of vectors
+    static void linComb(double, const cartesian_t &, double, const cartesian_t &,
+                        cartesian_t &);
+    // Matrix-matrix multiplication
+    static void matMat(const cartmat_t &, const cartmat_t &, cartmat_t &);
+    // Matrix-vector multiplication
+    static void matVec(const cartmat_t &, const cartesian_t &, cartesian_t &);
+    // Norm of vector
+    static double norm(const cartesian_t &);
+    // Transpose matrix
+    static void tranMat(const cartmat_t &, cartmat_t &);
+    // Unit vector
+    static void unitVec(const cartesian_t &,cartesian_t &);
+    // Compute ENU basis
+    static void enuBasis(double, double, cartmat_t &);
+};
 
 #endif
+
+// end of file

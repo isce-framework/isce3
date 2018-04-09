@@ -62,9 +62,9 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
     int side, bool precession) {
 
     // Compute ECI velocity if attitude angles are provided in inertial frame
-    std::vector<double> Va(3);
+    cartesian_t Va;
     if (frame.compare("inertial") == 0) {
-        std::vector<double> w{0.0, 0.0, 0.00007292115833};
+        cartesian_t w{0.0, 0.0, 0.00007292115833};
         LinAlg::cross(w, satxyz, Va);
         for (size_t i = 0; i < 3; ++i) {
             Va[i] += satvel[i];
@@ -74,18 +74,18 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
     }
 
     // Compute u0 directly if quaternion
-    std::vector<double> u0(3), temp(3);
+    cartesian_t u0, temp;
     if (attitude->attitudeType() == QUATERNION_T) {
         
         temp = {1.0, 0.0, 0.0};
-        std::vector<std::vector<double>> R = attitude->rotmat("");
+        cartmat_t R = attitude->rotmat("");
         LinAlg::matVec(R, temp, u0); 
 
     // Else multiply orbit and attitude matrix
     } else if (attitude->attitudeType() == EULERANGLES_T) {
 
         // Compute vectors for TCN-like basis
-        std::vector<double> q(3), c(3), b(3), a(3);
+        cartesian_t q, c, b, a;
         if (attitude->yawOrientation().compare("normal") == 0) {
             temp = {std::cos(satllh[0]) * std::cos(satllh[1]),
                     std::cos(satllh[0]) * std::sin(satllh[1]),
@@ -100,7 +100,7 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
         LinAlg::cross(b, c, a);
 
         // Stack basis vectors to get orbit matrix
-        std::vector<std::vector<double>> L0(3, std::vector<double>(3, 0.0));
+        cartmat_t L0;
         for (size_t i = 0; i < 3; ++i) {
             L0[i][0] = a[i];
             L0[i][1] = b[i];
@@ -108,7 +108,7 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
         }
 
         // Get attitude matrix
-        std::vector<std::vector<double>> L = attitude->rotmat("ypr");
+        cartmat_t L = attitude->rotmat("ypr");
 
         // Compute u0
         u0 = {1.0, 0.0, 0.0};
@@ -118,15 +118,15 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
 
     // Fake the velocity vector by using u0 scaled by absolute velocity
     double vmag = LinAlg::norm(Va);
-    std::vector<double> vel = {u0[0] * vmag, u0[1] * vmag, u0[2] * vmag};
+    cartesian_t vel = {u0[0] * vmag, u0[1] * vmag, u0[2] * vmag};
 
     // Set up TCN basis
-    std::vector<double> that(3), chat(3), nhat(3), vhat(3);
+    cartesian_t that, chat, nhat, vhat;
     ellipsoid.TCNbasis(satxyz, vel, that, chat, nhat);
     LinAlg::unitVec(vel, vhat);
 
     // Iterate
-    std::vector<double> targetVec(3), targetSCH(3), targetLLH(3), delta(3), lookVec(3);
+    cartesian_t targetVec, targetSCH, targetLLH, delta, lookVec;
     double height = 0.0;
     double zsch = height;
     double dopfact = 0.0;
@@ -165,7 +165,7 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
     }
 
     // Compute unitary look vector
-    std::vector<double> R(3), Rhat(3);
+    cartesian_t R, Rhat;
     ellipsoid.latLonToXyz(targetLLH, targetVec);
     LinAlg::linComb(1.0, satxyz, -1.0, targetVec, R);
     LinAlg::unitVec(R, Rhat);
@@ -173,9 +173,6 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
     // Compute doppler
     double fd = -2.0 / wvl * LinAlg::dot(satvel, Rhat);
     return fd;
-
 }
-
-    
 
 // end of file

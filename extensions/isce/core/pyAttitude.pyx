@@ -8,6 +8,7 @@ from libcpp.vector cimport vector
 from libcpp.string cimport string
 from libcpp cimport bool
 
+from Cartesian cimport cartesian_t, cartmat_t
 from Attitude cimport EulerAngles, Quaternion
 
 cdef class pyEulerAngles:
@@ -24,13 +25,13 @@ cdef class pyEulerAngles:
             del self.c_eulerangles
 
     def ypr(self):
-        cdef vector[double] _ypr
+        cdef cartesian_t _ypr
         _ypr = self.c_eulerangles.ypr()
         angles = [_ypr[i] for i in range(3)]
         return angles
 
     def rotmat(self, sequence):
-        cdef vector[vector[double]] Rvec
+        cdef cartmat_t Rvec
         cdef string sequence_str = sequence
         Rvec = self.c_eulerangles.rotmat(sequence_str)
         R = []
@@ -82,24 +83,24 @@ cdef class pyQuaternion:
             del self.c_quaternion
 
     def ypr(self):
-        cdef vector[double] _ypr
+        cdef cartesian_t _ypr
         _ypr = self.c_quaternion.ypr()
         angles = [_ypr[i] for i in range(3)]
         return angles
 
     def factoredYPR(self, list position, list velocity, pyEllipsoid pyEllps):
-        cdef vector[double] xyz
-        cdef vector[double] vel
+        cdef cartesian_t xyz
+        cdef cartesian_t vel
         cdef int i
         for i in range(3):
-            xyz.push_back(position[i])
-            vel.push_back(velocity[i])
-        cdef vector[double] ypr_vec = self.c_quaternion.factoredYPR(xyz, vel, pyEllps.c_ellipsoid)
+            xyz[i] = position[i]
+            vel[i] = velocity[i]
+        cdef cartesian_t ypr_vec = self.c_quaternion.factoredYPR(xyz, vel, pyEllps.c_ellipsoid)
         angles = [ypr_vec[i] for i in range(3)]
         return angles
 
     def rotmat(self):
-        cdef vector[vector[double]] Rvec
+        cdef cartmat_t Rvec
         cdef string sequence_str = "".encode('utf-8')
         Rvec = self.c_quaternion.rotmat(sequence_str)
         R = []

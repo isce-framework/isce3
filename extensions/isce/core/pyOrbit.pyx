@@ -6,6 +6,7 @@
 
 from libcpp cimport bool
 from libcpp.vector cimport vector
+from Cartesian cimport cartesian_t
 from Orbit cimport Orbit, orbitInterpMethod
 
 cdef class pyOrbit:
@@ -95,18 +96,18 @@ cdef class pyOrbit:
         self.printOrbit()
 
     def getPositionVelocity(self, double a, list b, list c):
-        cdef vector[double] _b
-        cdef vector[double] _c
+        cdef cartesian_t _b
+        cdef cartesian_t _c
         for i in range(3):
-            _b.push_back(b[i])
-            _c.push_back(c[i])
+            _b[i] = b[i]
+            _c[i] = c[i]
         self.c_orbit.getPositionVelocity(a,_b,_c)
         for i in range(3):
             b[i] = _b[i]
             c[i] = _c[i]
     def getStateVector(self, int a, b, list c, list d):
-        cdef vector[double] _c
-        cdef vector[double] _d
+        cdef cartesian_t _c
+        cdef cartesian_t _d
         cdef double _b
         if (type(b) != type([])):
             print("Error: Python cannot pass primitives by reference.")
@@ -116,38 +117,38 @@ cdef class pyOrbit:
         else:
             _b = 0.
             for i in range(3):
-                _c.push_back(c[i])
-                _d.push_back(d[i])
+                _c[i] = c[i]
+                _d[i] = d[i]
             self.c_orbit.getStateVector(a,_b,_c,_d)
             for i in range(3):
                 c[i] = _c[i]
                 d[i] = _d[i]
             b[0] = _b
     def setStateVector(self, int a, double b, list c, list d):
-        cdef vector[double] _c
-        cdef vector[double] _d
+        cdef cartesian_t _c
+        cdef cartesian_t _d
         for i in range(3):
-            _c.push_back(c[i])
-            _d.push_back(d[i])
+            _c[i] = c[i]
+            _d[i] = d[i]
         self.c_orbit.setStateVector(a,b,_c,_d)
         for i in range(3):
             c[i] = _c[i]
             d[i] = _d[i]
     def addStateVector(self, double a, list b, list c):
-        cdef vector[double] _b
-        cdef vector[double] _c
+        cdef cartesian_t _b
+        cdef cartesian_t _c
         for i in range(3):
-            _b.push_back(b[i])
-            _c.push_back(c[i])
+            _b[i] = b[i]
+            _c[i] = c[i]
         self.c_orbit.addStateVector(a,_b,_c)
     def interpolate(self, double a, list b, list c, int d):
-        cdef vector[double] _b
-        cdef vector[double] _c
+        cdef cartesian_t _b
+        cdef cartesian_t _c
         cdef orbitInterpMethod _d
         cdef int ret
         for i in range(3):
-            _b.push_back(b[i])
-            _c.push_back(c[i])
+            _b[i] = b[i]
+            _c[i] = c[i]
         if (d == orbitInterpMethod.HERMITE_METHOD):
             _d = orbitInterpMethod.HERMITE_METHOD
         elif (d == orbitInterpMethod.SCH_METHOD):
@@ -163,46 +164,46 @@ cdef class pyOrbit:
             c[i] = _c[i]
         return ret
     def interpolateWGS84Orbit(self, double a, list b, list c):
-        cdef vector[double] _b
-        cdef vector[double] _c
+        cdef cartesian_t _b
+        cdef cartesian_t _c
         cdef int ret
         for i in range(3):
-            _b.push_back(b[i])
-            _c.push_back(c[i])
+            _b[i] = b[i]
+            _c[i] = c[i]
         ret = self.c_orbit.interpolateWGS84Orbit(a,_b,_c)
         for i in range(3):
             b[i] = _b[i]
             c[i] = _c[i]
         return ret
     def interpolateLegendreOrbit(self, double a, list b, list c):
-        cdef vector[double] _b
-        cdef vector[double] _c
+        cdef cartesian_t _b
+        cdef cartesian_t _c
         cdef int ret
         for i in range(3):
-            _b.push_back(b[i])
-            _c.push_back(c[i])
+            _b[i] = b[i]
+            _c[i] = c[i]
         ret = self.c_orbit.interpolateLegendreOrbit(a,_b,_c)
         for i in range(3):
             b[i] = _b[i]
             c[i] = _c[i]
         return ret
     def interpolateSCHOrbit(self, double a, list b, list c):
-        cdef vector[double] _b
-        cdef vector[double] _c
+        cdef cartesian_t _b
+        cdef cartesian_t _c
         cdef int ret
         for i in range(3):
-            _b.push_back(b[i])
-            _c.push_back(c[i])
+            _b[i] = b[i]
+            _c[i] = c[i]
         ret = self.c_orbit.interpolateSCHOrbit(a,_b,_c)
         for i in range(3):
             b[i] = _b[i]
             c[i] = _c[i]
         return ret
     def computeAcceleration(self, double a, list b):
-        cdef vector[double] _b
+        cdef cartesian_t _b
         cdef int ret
         for i in range(3):
-            _b.push_back(b[i])
+            _b[i] = b[i]
         ret = self.c_orbit.computeAcceleration(a,_b)
         for i in range(3):
             b[i] = _b[i]

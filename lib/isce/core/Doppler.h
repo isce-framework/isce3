@@ -8,6 +8,7 @@
 #define ISCE_CORE_DOPPLER_H
 
 #include <string>
+#include "Constants.h"
 #include "Orbit.h"
 #include "Pegtrans.h"
 #include "Ellipsoid.h"
@@ -26,9 +27,9 @@ struct Doppler {
     Attitude * attitude;
 
     // State vectors
-    std::vector<double> satxyz;
-    std::vector<double> satvel;
-    std::vector<double> satllh;
+    cartesian_t satxyz;
+    cartesian_t satvel;
+    cartesian_t satllh;
     double epoch;
 
     // Constructors

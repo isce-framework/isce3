@@ -8,6 +8,7 @@
 #define __ISCE_CORE_BASELINE_H__
 
 #include <vector>
+#include "Constants.h"
 #include "Ellipsoid.h"
 #include "Metadata.h"
 #include "Orbit.h"
@@ -19,7 +20,7 @@ namespace isce { namespace core {
         Ellipsoid elp;
         orbitInterpMethod orbit_method;
         // Basis vectors
-        std::vector<double> refxyz, look, rhat, chat, vhat;
+        cartesian_t refxyz, look, rhat, chat, vhat;
         // Baseline scalars
         double bh, bv;
         // Look vector components
@@ -27,7 +28,7 @@ namespace isce { namespace core {
         // Velocity magnitude
         double velocityMagnitude;
 
-        Baseline() : refxyz(3), look(3), rhat(3), chat(3), vhat(3) {}
+        Baseline() {}
         Baseline(const Baseline &b) : orbit1(b.orbit1), orbit2(b.orbit2), radar(b.radar),
                                       elp(b.elp), orbit_method(b.orbit_method), refxyz(b.refxyz),
                                       look(b.look), rhat(b.rhat), chat(b.chat), vhat(b.vhat),
@@ -41,7 +42,7 @@ namespace isce { namespace core {
                                                                 (bv * sinlook); }
         void init();
         void initBasis(double);
-        std::vector<double> calculateBasisOffset(const std::vector<double>&) const;
+        cartesian_t calculateBasisOffset(const cartesian_t &) const;
         void computeBaselines();
         void calculateLookVector(double);
     };

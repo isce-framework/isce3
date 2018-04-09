@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include "Constants.h"
 #include "DateTime.h"
 
 // Declarations
@@ -33,8 +34,8 @@ class isce::core::Attitude {
         Attitude(AttitudeType atype) : _attitude_type(atype) {};
 
         // Virtual functions
-        virtual std::vector<double> ypr() = 0;
-        virtual std::vector<std::vector<double>> rotmat(const std::string) = 0;
+        virtual cartesian_t ypr() = 0;
+        virtual cartmat_t rotmat(const std::string) = 0;
 
         // Getter functions
         inline AttitudeType attitudeType() const {return _attitude_type;}

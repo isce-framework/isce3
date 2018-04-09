@@ -26,7 +26,7 @@ void Baseline::init() {
     // Set orbit method
     orbit_method = HERMITE_METHOD;
     // Initialize basis for the first orbit using the middle of the orbit
-    vector<double> _1(3), _2(3);
+    cartesian_t _1, _2;
     double tmid;
     orbit1.getStateVector(orbit1.nVectors/2, tmid, _1, _2);
     initBasis(tmid);
@@ -40,7 +40,7 @@ void Baseline::initBasis(double t) {
      * orbit1.
      */
     // Local working vectors
-    vector<double> xyz(3), vel(3), crossvec(3), vertvec(3), vel_norm(3);
+    cartesian_t xyz, vel, crossvec, vertvec, vel_norm;
     // Interpolate orbit to azimuth time
     orbit1.interpolate(t, xyz, vel, orbit_method);
     refxyz = xyz;
@@ -56,17 +56,17 @@ void Baseline::initBasis(double t) {
     LinAlg::unitVec(vertvec, vhat);
 }
 
-vector<double> Baseline::calculateBasisOffset(const vector<double> &position) const {
+isce::core::cartesian_t Baseline::calculateBasisOffset(const cartesian_t &position) const {
     /*
      * Given a position vector, calculate offset between reference position and that vector,
      * projected in the reference basis.
      */
-    vector<double> dx = {position[0] - refxyz[0],
-                         position[1] - refxyz[1],
-                         position[2] - refxyz[2]};
-    vector<double> off = {LinAlg::dot(dx, vhat),
-                          LinAlg::dot(dx, rhat),
-                          LinAlg::dot(dx, chat)};
+    cartesian_t dx = {position[0] - refxyz[0],
+                      position[1] - refxyz[1],
+                      position[2] - refxyz[2]};
+    cartesian_t off = {LinAlg::dot(dx, vhat),
+                       LinAlg::dot(dx, rhat),
+                       LinAlg::dot(dx, chat)};
     return off;
 }
 
@@ -74,7 +74,7 @@ void Baseline::computeBaselines() {
     /*
      * Compute horizontal and vertical baselines.
      */
-    vector<double> xyz2(3), vel2(3), offset(3);
+    cartesian_t xyz2, vel2, offset;
     double t, delta_t;
     // Start with sensing mid of orbit 2
     orbit2.getStateVector(orbit2.nVectors/2, t, xyz2, vel2);
@@ -95,7 +95,7 @@ void Baseline::calculateLookVector(double t) {
      * Calculate look vector.
      */
     // Local working vectors
-    vector<double> xyz(3), vel(3), llh(3);
+    cartesian_t xyz, vel, llh;
     // Interpolate orbit to azimuth time
     orbit1.interpolate(t, xyz, vel, orbit_method);
     elp.xyzToLatLon(xyz, llh);

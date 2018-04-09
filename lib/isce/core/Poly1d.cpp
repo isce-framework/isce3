@@ -8,13 +8,9 @@
 #include <stdexcept>
 #include <pyre/journal.h>
 #include "Poly1d.h"
-using isce::core::Poly1d;
-using std::cout;
-using std::domain_error;
-using std::endl;
 
-
-double Poly1d::eval(double xin) const {
+double isce::core::Poly1d::
+eval(double xin) const {
     /*
      * Evaluate the polynomial at a given position.
      */
@@ -39,13 +35,15 @@ double Poly1d::eval(double xin) const {
     return val;
 }
 
-void Poly1d::printPoly() const {
-    cout << "Polynomial Order: " << order << endl;
-    for (int i=0; i<=order; i++) cout << getCoeff(i) << " ";
-    cout << endl;
+void isce::core::Poly1d::
+printPoly() const {
+    std::cout << "Polynomial Order: " << order << std::endl;
+    for (int i=0; i<=order; i++) std::cout << getCoeff(i) << " ";
+    std::cout << std::endl;
 }
 
-Poly1d Poly1d::derivative() const {
+isce::core::Poly1d isce::core::Poly1d::
+derivative() const {
     /*
      * Helper function to adjust the mean.
      * Use case - when image is being cropped and starting range is changed.
@@ -65,3 +63,5 @@ Poly1d Poly1d::derivative() const {
         return newP;
     }
 }
+
+// end of file

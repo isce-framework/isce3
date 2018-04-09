@@ -7,12 +7,10 @@
 #include <complex>
 #include <vector>
 #include "LUT2d.h"
-using isce::core::LUT2d;
-using std::complex;
-using std::vector;
 
 template <typename T>
-T LUT2d<T>::eval(double y, double x) const {
+T isce::core::LUT2d<T>::
+eval(double y, double x) const {
     /*
      * Evaluate the LUT at the given indices. Note that because we've template-bound the class-type,
      * not the function-type, we don't need to forward-declare the compatible types!
@@ -54,5 +52,10 @@ T LUT2d<T>::eval(double y, double x) const {
 }
 
 // Forward declare the compatible types
-template double LUT2d<double>::eval(double,double) const;
-template complex<double> LUT2d<complex<double>>::eval(double,double) const;
+template double isce::core::LUT2d<double>::
+eval(double,double) const;
+
+template std::complex<double> isce::core::LUT2d<std::complex<double>>::
+eval(double,double) const;
+
+// end of file

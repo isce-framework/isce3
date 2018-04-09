@@ -17,8 +17,8 @@ using std::vector;
 
 //Some commonly used values
 Ellipsoid wgs84(6378137.0, 0.0066943799901);
-const double a = wgs84.a;
-const double b = a * std::sqrt(1.0 - wgs84.e2);
+const double a = wgs84.a();
+const double b = a * std::sqrt(1.0 - wgs84.e2());
 
 
 struct EllipsoidTest : public ::testing::Test {
@@ -37,9 +37,9 @@ struct EllipsoidTest : public ::testing::Test {
 
 #define ellipsoidTest(name,x,y,z,p,q,r)       \
     TEST_F(EllipsoidTest, name) {       \
-        vector<double> ref_llh({p,q,r});    \
-        vector<double> ref_xyz({x,y,z});    \
-        vector<double> xyz(3), llh(3);  \
+        isce::core::cartesian_t ref_llh{p,q,r};    \
+        isce::core::cartesian_t ref_xyz = {x,y,z};    \
+        isce::core::cartesian_t xyz, llh;  \
         llh = ref_llh;                  \
         wgs84.latLonToXyz(llh, xyz);    \
         EXPECT_NEAR(xyz[0], ref_xyz[0], 1.0e-6);\

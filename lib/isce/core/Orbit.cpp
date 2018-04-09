@@ -1,6 +1,8 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
 //
-// Author: Joshua Cohen
-// Copyright 2017
+// Author: Joshua Cohen, Bryan V. Riel
+// Copyright 2017-2018
 //
 
 #include <algorithm>
@@ -14,27 +16,10 @@
 #include "Orbit.h"
 #include "LinAlg.h"
 #include "Ellipsoid.h"
-using isce::core::Orbit;
-using isce::core::orbitHermite;
-using isce::core::orbitType;
-using isce::core::orbitInterpMethod;
-using std::cout;
-using std::endl;
-using std::getline;
-using std::ifstream;
-using std::invalid_argument;
-using std::length_error;
-using std::max;
-using std::min;
-using std::ofstream;
-using std::runtime_error;
-using std::showpos;
-using std::string;
-using std::to_string;
-using std::vector;
 
 
-void Orbit::getPositionVelocity(double tintp, vector<double> &pos, vector<double> &vel) const {
+void isce::core::Orbit::
+getPositionVelocity(double tintp, cartesian_t & pos, cartesian_t & vel) const {
     /*
      * Separately-named wrapper for interpolate based on stored basis. Does not check for
      * interpolate success/fail.
@@ -45,17 +30,18 @@ void Orbit::getPositionVelocity(double tintp, vector<double> &pos, vector<double
     if (basis == WGS84_ORBIT) interpolateWGS84Orbit(tintp, pos, vel);
     else if (basis == SCH_ORBIT) interpolateSCHOrbit(tintp, pos, vel);
     else {
-        string errstr = "Unrecognized stored Orbit basis in Orbit::getPositionVelocity.\n";
+        std::string errstr = "Unrecognized stored Orbit basis in Orbit::getPositionVelocity.\n";
         errstr += "Expected one of:\n";
-        errstr += "  WGS84_ORBIT (== "+to_string(WGS84_ORBIT)+")\n";
-        errstr += "  SCH_ORBIT (== "+to_string(SCH_ORBIT)+")\n";
-        errstr += "Encountered stored Orbit basis "+to_string(basis);
-        throw invalid_argument(errstr);
+        errstr += "  WGS84_ORBIT (== "+std::to_string(WGS84_ORBIT)+")\n";
+        errstr += "  SCH_ORBIT (== "+std::to_string(SCH_ORBIT)+")\n";
+        errstr += "Encountered stored Orbit basis "+std::to_string(basis);
+        throw std::invalid_argument(errstr);
     }
 }
 
-int Orbit::interpolate(double tintp, vector<double> &opos, vector<double> &ovel,
-                       orbitInterpMethod intp_type) const {
+int isce::core::Orbit::
+interpolate(double tintp, cartesian_t & opos, cartesian_t & ovel,
+            orbitInterpMethod intp_type) const {
     /*
      * Single entry-point wrapper for orbit interpolation.
      */
@@ -65,34 +51,31 @@ int Orbit::interpolate(double tintp, vector<double> &opos, vector<double> &ovel,
     else if (intp_type == SCH_METHOD) return interpolateSCHOrbit(tintp, opos, ovel);
     else if (intp_type == LEGENDRE_METHOD) return interpolateLegendreOrbit(tintp, opos, ovel);
     else {
-        string errstr = "Unrecognized interpolation type in Orbit::interpolate.\n";
+        std::string errstr = "Unrecognized interpolation type in Orbit::interpolate.\n";
         errstr += "Expected one of:\n";
-        errstr += "  HERMITE_METHOD (== "+to_string(HERMITE_METHOD)+")\n";
-        errstr += "  SCH_METHOD (== "+to_string(SCH_METHOD)+")\n";
-        errstr += "  LEGENDRE_METHOD (== "+to_string(LEGENDRE_METHOD)+")\n";
-        errstr += "Encountered interpolation type "+to_string(intp_type);
-        throw invalid_argument(errstr);
+        errstr += "  HERMITE_METHOD (== "+std::to_string(HERMITE_METHOD)+")\n";
+        errstr += "  SCH_METHOD (== "+std::to_string(SCH_METHOD)+")\n";
+        errstr += "  LEGENDRE_METHOD (== "+std::to_string(LEGENDRE_METHOD)+")\n";
+        errstr += "Encountered interpolation type "+std::to_string(intp_type);
+        throw std::invalid_argument(errstr);
     }
 }
 
-int Orbit::interpolateWGS84Orbit(double tintp, vector<double> &opos, vector<double> &ovel) const {
+int isce::core::Orbit::
+interpolateWGS84Orbit(double tintp, cartesian_t & opos, cartesian_t & ovel) const {
     /*
      * Interpolate WGS-84 orbit
      */
-
-    // Error checking for inputs
-    checkVecLen(opos,3);
-    checkVecLen(ovel,3);
     if (nVectors < 4) {
-        string errstr = "Orbit::interpolateWGS84Orbit requires at least 4 state vectors to ";
-        errstr += "interpolate, Orbit only contains "+to_string(nVectors);
-        throw length_error(errstr);
+        std::string errstr = "Orbit::interpolateWGS84Orbit requires at least 4 state vectors to ";
+        errstr += "interpolate, Orbit only contains "+std::to_string(nVectors);
+        throw std::length_error(errstr);
     }
     // Totally possible that a time is passed to interpolate that's out-of-epoch, but not
     // exception-worthy (so it just returns a 1 status)
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) {
-        //cout << "Error in Orbit::interpolateWGS84Orbit - Interpolation time requested (" << tintp <<
-        //        ") is outside the epoch range of the stored vectors" << endl;
+        //std::cout << "Error in Orbit::interpolateWGS84Orbit - Interpolation time requested (" << tintp <<
+        //        ") is outside the epoch range of the stored vectors" << std::endl;
         // Don't stop the whole program, just flag this particular result
         return 1;
     }
@@ -105,10 +88,10 @@ int Orbit::interpolateWGS84Orbit(double tintp, vector<double> &opos, vector<doub
         }
     }
     idx -= 2;
-    idx = min(max(idx, 0), nVectors-4);
+    idx = std::min(std::max(idx, 0), nVectors-4);
 
-    vector<vector<double>> pos(4, vector<double>(3)), vel(4, vector<double>(3));
-    vector<double> t(4);
+    std::vector<cartesian_t> pos(4), vel(4);
+    std::vector<double> t(4);
     for (int i=0; i<4; i++) getStateVector(idx+i, t[i], pos[i], vel[i]);
 
     orbitHermite(pos, vel, t, tintp, opos, ovel);
@@ -116,9 +99,10 @@ int Orbit::interpolateWGS84Orbit(double tintp, vector<double> &opos, vector<doub
     return 0;
 }
 
-void isce::core::orbitHermite(const vector<vector<double>> &x, const vector<vector<double>> &v,
-                              const vector<double> &t, double time, vector<double> &xx,
-                              vector<double> &vv) {
+void isce::core::
+orbitHermite(const std::vector<cartesian_t> &x, const std::vector<cartesian_t> &v,
+             const std::vector<double> &t, double time, cartesian_t &xx,
+             cartesian_t &vv) {
     /*
      * Method used by interpolateWGS84Orbit but is not tied to an Orbit
      */
@@ -126,7 +110,7 @@ void isce::core::orbitHermite(const vector<vector<double>> &x, const vector<vect
     // No error checking needed, x/v/t were created (not passed) and xx/vv were size-checked before
     // passing through
 
-    vector<double> f0(4), f1(4);
+    std::vector<double> f0(4), f1(4);
     double sum;
     for (int i=0; i<4; i++) {
         f1[i] = time - t[i];
@@ -137,7 +121,7 @@ void isce::core::orbitHermite(const vector<vector<double>> &x, const vector<vect
         f0[i] = 1. - (2. * (time - t[i]) * sum);
     }
 
-    vector<double> h(4), hdot(4);
+    std::vector<double> h(4), hdot(4);
     double product;
     for (int i=0; i<4; i++) {
         product = 1.;
@@ -156,7 +140,7 @@ void isce::core::orbitHermite(const vector<vector<double>> &x, const vector<vect
         hdot[i] = sum;
     }
 
-    vector<double> g0(4), g1(4);
+    std::vector<double> g0(4), g1(4);
     for (int i=0; i<4; i++) {
         g1[i] = h[i] + (2. * (time - t[i]) * hdot[i]);
         sum = 0.;
@@ -180,24 +164,21 @@ void isce::core::orbitHermite(const vector<vector<double>> &x, const vector<vect
     }
 }
 
-int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<double> &ovel) const
-                                      {
+int isce::core::Orbit::
+interpolateLegendreOrbit(double tintp, cartesian_t & opos, cartesian_t & ovel) const {
     /*
      * Interpolate Legendre orbit
      */
-
-    checkVecLen(opos,3);
-    checkVecLen(ovel,3);
     if (nVectors < 9) {
-        string errstr = "Orbit::interpolateLegendreOrbit requires at least 9 state vectors to ";
-        errstr += "interpolate, Orbit only contains "+to_string(nVectors);
-        throw length_error(errstr);
+        std::string errstr = "Orbit::interpolateLegendreOrbit requires at least 9 state vectors to ";
+        errstr += "interpolate, Orbit only contains "+std::to_string(nVectors);
+        throw std::length_error(errstr);
     }
     // Totally possible that a time is passed to interpolate that's out-of-epoch, but not
     // exception-worthy (so it just returns a 1 status)
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) {
-        //cout << "Error in Orbit::interpolateLegendreOrbit - Interpolation time requested (" <<
-        //        tintp << ") is outside the epoch range of the stored vectors" << endl;
+        //std::cout << "Error in Orbit::interpolateLegendreOrbit - Interpolation time requested (" <<
+        //        tintp << ") is outside the epoch range of the stored vectors" << std::endl;
         // Don't stop the whole program, just flag this particular result
         return 1;
     }
@@ -210,27 +191,27 @@ int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<d
         }
     }
     idx -= 5;
-    idx = min(max(idx, 0), nVectors-9);
+    idx = std::min(std::max(idx, 0), nVectors-9);
 
-    vector<vector<double>> pos(9, vector<double>(3)), vel(9, vector<double>(3));
-    vector<double> t(9);
+    std::vector<cartesian_t> pos(9), vel(9);
+    std::vector<double> t(9);
     for (int i=0; i<9; i++) getStateVector(idx+i, t[i], pos[i], vel[i]);
 
     double trel = (8. * (tintp - t[0])) / (t[8] - t[0]);
     double teller = 1.;
     for (int i=0; i<9; i++) teller *= trel - i;
 
+    opos = {0.0, 0.0, 0.0};
+    ovel = {0.0, 0.0, 0.0};
     if (teller == 0.) {
         for (int i=0; i<3; i++) {
             opos[i] = pos[int(trel)][i];
             ovel[i] = vel[int(trel)][i];
         }
     } else {
-        vector<double> noemer = {40320.0, -5040.0, 1440.0, -720.0, 576.0, -720.0, 1440.0, -5040.0,
+        std::vector<double> noemer = {40320.0, -5040.0, 1440.0, -720.0, 576.0, -720.0, 1440.0, -5040.0,
                                  40320.0};
         double coeff;
-        opos.assign(3,0.);
-        ovel.assign(3,0.);
         for (int i=0; i<9; i++) {
             coeff = (teller / noemer[i]) / (trel - i);
             for (int j=0; j<3; j++) {
@@ -242,32 +223,29 @@ int Orbit::interpolateLegendreOrbit(double tintp, vector<double> &opos, vector<d
     return 0;
 }
 
-int Orbit::interpolateSCHOrbit(double tintp, vector<double> &opos, vector<double> &ovel) const {
+int isce::core::Orbit::
+interpolateSCHOrbit(double tintp, cartesian_t & opos, cartesian_t & ovel) const {
     /*
      * Interpolate SCH orbit
      */
-
-    checkVecLen(opos,3);
-    checkVecLen(ovel,3);
     if (nVectors < 2) {
-        string errstr = "Orbit::interpolateSCHOrbit requires at least 2 state vectors to ";
-        errstr += "interpolate, Orbit only contains "+to_string(nVectors);
-        throw length_error(errstr);
+        std::string errstr = "Orbit::interpolateSCHOrbit requires at least 2 state vectors to ";
+        errstr += "interpolate, Orbit only contains "+std::to_string(nVectors);
+        throw std::length_error(errstr);
     }
     // Totally possible that a time is passed to interpolate that's out-of-epoch, but not
     // exception-worthy (so it just returns a 1 status)
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) {
-        //cout << "Error in Orbit::interpolateSCHOrbit - Interpolation time requested (" << tintp <<
-        //        ") is outside the epoch range of the stored vectors" << endl;
+        //std::cout << "Error in Orbit::interpolateSCHOrbit - Interpolation time requested (" << tintp <<
+        //        ") is outside the epoch range of the stored vectors" << std::endl;
         // Don't stop the whole program, just flag this particular result
         return 1;
     }
 
-    opos.assign(3,0.);
-    ovel.assign(3,0.);
-
-    vector<vector<double>> pos(2, vector<double>(3)), vel(2, vector<double>(3));
-    vector<double> t(2);
+    std::vector<cartesian_t> pos(2), vel(2);
+    std::vector<double> t(2);
+    opos = {0.0, 0.0, 0.0};
+    ovel = {0.0, 0.0, 0.0};
     double frac;
     for (int i=0; i<nVectors; i++) {
         frac = 1.;
@@ -285,19 +263,17 @@ int Orbit::interpolateSCHOrbit(double tintp, vector<double> &opos, vector<double
     return 0;
 }
 
-int Orbit::computeAcceleration(double tintp, vector<double> &acc) const {
+int isce::core::Orbit::
+computeAcceleration(double tintp, cartesian_t &acc) const {
     /*
      * Interpolate acceleration.
      */
-
-    checkVecLen(acc,3);
-
-    vector<double> dummy(3), vbef(3);
+    cartesian_t dummy, vbef;
     double temp = tintp - .01;
     int stat = interpolateWGS84Orbit(temp, dummy, vbef);
     if (stat == 1) return stat;
 
-    vector<double> vaft(3);
+    cartesian_t vaft;
     temp = tintp + .01;
     stat = interpolateWGS84Orbit(temp, dummy, vaft);
     if (stat == 1) return stat;
@@ -306,11 +282,12 @@ int Orbit::computeAcceleration(double tintp, vector<double> &acc) const {
     return 0;
 }
 
-double Orbit::getENUHeading(double aztime) {
+double isce::core::Orbit::
+getENUHeading(double aztime) {
     // Computes heading at a given azimuth time using a single state vector
 
-    vector<double> pos(3), vel(3), llh(3), enuvel(3);
-    vector<vector<double>> enumat(3,vector<double>(3,0)), xyz2enu(3,vector<double>(3,0));
+    cartesian_t pos, vel, llh, enuvel;
+    cartmat_t enumat, xyz2enu;
     isce::core::Ellipsoid refElp(EarthSemiMajorAxis, EarthEccentricitySquared);
 
     // Interpolate orbit to azimuth time
@@ -327,39 +304,41 @@ double Orbit::getENUHeading(double aztime) {
 
 }
 
-void Orbit::printOrbit() const {
+void isce::core::Orbit::
+printOrbit() const {
     /*
      * Debug print the stored orbit.
      */
 
-    cout << "Orbit - Basis: " << basis << ", nVectors: " << nVectors << endl;
+    std::cout << "Orbit - Basis: " << basis << ", nVectors: " << nVectors << std::endl;
     for (int i=0; i<nVectors; i++) {
-        cout << "  UTC = " << UTCtime[i] << endl;
-        cout << "  Position = [ " << position[3*i] << " , " << position[3*i+1] << " , " <<
-                position[3*i+2] << " ]" << endl;
-        cout << "  Velocity = [ " << velocity[3*i] << " , " << velocity[3*i+1] << " , " <<
-                velocity[3*i+2] << " ]" << endl;
+        std::cout << "  UTC = " << UTCtime[i] << std::endl;
+        std::cout << "  Position = [ " << position[3*i] << " , " << position[3*i+1] << " , " <<
+                position[3*i+2] << " ]" << std::endl;
+        std::cout << "  Velocity = [ " << velocity[3*i] << " , " << velocity[3*i+1] << " , " <<
+                velocity[3*i+2] << " ]" << std::endl;
     }
 }
 
-void Orbit::loadFromHDR(const char *filename, int bs) {
+void isce::core::Orbit::
+loadFromHDR(const char *filename, int bs) {
     /*
      *  Load Orbit from a saved HDR file using fstreams. This assumes that the Orbit was dumped to
      *  an HDR file using this interface (or a compatible one given the reading scheme below), and
      *  will most likely fail on any other arbitrary file.
      */
 
-    ifstream fs(filename);
+    std::ifstream fs(filename);
     if (!fs.is_open()) {
-        string errstr = "Unable to open orbit HDR file '"+string(filename)+"'";
+        std::string errstr = "Unable to open orbit HDR file '"+std::string(filename)+"'";
         fs.close();
-        throw runtime_error(errstr);
+        throw std::runtime_error(errstr);
     }
 
     basis = bs;
     nVectors = 0;
-    string line;
-    while (getline(fs, line)) nVectors++;
+    std::string line;
+    while (std::getline(fs, line)) nVectors++;
 
     UTCtime.clear();
     UTCtime.resize(nVectors);
@@ -371,7 +350,7 @@ void Orbit::loadFromHDR(const char *filename, int bs) {
     fs.clear();
     fs.seekg(0);
 
-    vector<double> pos(3), vel(3);
+    cartesian_t pos, vel;
     double t;
     int count = 0;
     // Take advantage of the power of fstreams
@@ -386,33 +365,36 @@ void Orbit::loadFromHDR(const char *filename, int bs) {
         UTCtime.resize(0);
         position.resize(0);
         velocity.resize(0);
-        cout << "Error reading orbit HDR file '" << filename << "'" << endl;
+        std::cout << "Error reading orbit HDR file '" << filename << "'" << std::endl;
     } else {
-        cout << "Read in " << nVectors << " state vectors from " << filename << endl;
+        std::cout << "Read in " << nVectors << " state vectors from " << filename << std::endl;
     }
 }
 
-void Orbit::dumpToHDR(const char* filename) const {
+void isce::core::Orbit::
+dumpToHDR(const char* filename) const {
     /*
      *  Save Orbit to a given HDR file using fstreams. This saving scheme is compatible with the
      *  above reading scheme.
      */
 
-    ofstream fs(filename);
+    std::ofstream fs(filename);
     if (!fs.is_open()) {
-        string errstr = "Unable to open orbit HDR file '"+string(filename)+"'";
+        std::string errstr = "Unable to open orbit HDR file '"+std::string(filename)+"'";
         fs.close();
-        throw runtime_error(errstr);
+        throw std::runtime_error(errstr);
     }
 
-    cout << "Writing " << nVectors << " vectors to '" << filename << "'" << endl;
+    std::cout << "Writing " << nVectors << " vectors to '" << filename << "'" << std::endl;
     // In keeping with the original HDR file formatting for this object, force the + sign to display
     // for positive values
-    fs << showpos;
+    fs << std::showpos;
     fs.precision(16);
     for (int i=0; i<nVectors; i++) {
         fs << UTCtime[i] << " " << position[3*i] << " " << position[3*i+1] << " " << position[3*i+2]
-            << " " << velocity[3*i] << " " << velocity[3*i+1] << " " << velocity[3*i+2] << endl;
+            << " " << velocity[3*i] << " " << velocity[3*i+1] << " " << velocity[3*i+2] << std::endl;
     }
     fs.close();
 }
+
+// end of file
