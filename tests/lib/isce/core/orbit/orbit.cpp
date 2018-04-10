@@ -14,6 +14,7 @@ using isce::core::HERMITE_METHOD;
 using isce::core::LEGENDRE_METHOD;
 using isce::core::SCH_METHOD;
 using isce::core::Orbit;
+using isce::core::cartesian_t;
 using std::cout;
 using std::endl;
 using std::vector;
@@ -38,8 +39,8 @@ struct OrbitTest : public ::testing::Test {
     EXPECT_NEAR(a[2], b[2], c);
 
 
-void makeLinearSV(double dt, vector<double> &opos, vector<double> &ovel, vector<double> &pos,
-                  vector<double> &vel) {
+void makeLinearSV(double dt, cartesian_t &opos, cartesian_t &ovel, cartesian_t &pos,
+                  cartesian_t &vel) {
     pos = {opos[0] + (dt * ovel[0]), opos[1] + (dt * ovel[1]), opos[2] + (dt * ovel[2])};
     vel = ovel;
 }
@@ -51,25 +52,26 @@ TEST_F(OrbitTest,LinearSCH){
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> opos = {0., 0., 0.};
-    vector<double> ovel = {4000., -1000., 4500.};
-    vector<double> pos(3), vel(3);
+    cartesian_t opos = {0., 0., 0.};
+    cartesian_t ovel = {4000., -1000., 4500.};
+    cartesian_t pos, vel;
+    cartesian_t hpos, hvel;
 
     // Create straight-line orbit with 11 state vectors, each 10 s apart
     for (int i=0; i<11; i++) {
-        makeLinearSV(i*10., opos, ovel, pos, vel);
+        makeLinearSV(i*10., opos, ovel, pos, vel); 
         orb.setStateVector(i, t+(i*10.), pos, vel);
     }
 
     // Interpolation test times
     double test_t[] = {23.3, 36.7, 54.5, 89.3};
-    vector<double> ref_pos(3), ref_vel(3);
-
+    cartesian_t ref_pos, ref_vel;
 
     // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
     for (int i=0; i<4; i++) {
         makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
         orb.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
+        orb.interpolate(t+test_t[i], hpos, hvel, HERMITE_METHOD);
         compareTriplet(pos, ref_pos, 1.0e-5);
         compareTriplet(vel, ref_vel, 1.0e-6);
     }
@@ -84,9 +86,9 @@ TEST_F(OrbitTest,LinearHermite){
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> opos = {0., 0., 0.};
-    vector<double> ovel = {4000., -1000., 4500.};
-    vector<double> pos(3), vel(3);
+    cartesian_t opos = {0., 0., 0.};
+    cartesian_t ovel = {4000., -1000., 4500.};
+    cartesian_t pos, vel;
 
     // Create straight-line orbit with 11 state vectors, each 10 s apart
     for (int i=0; i<11; i++) {
@@ -96,7 +98,7 @@ TEST_F(OrbitTest,LinearHermite){
 
     // Interpolation test times
     double test_t[] = {23.3, 36.7, 54.5, 89.3};
-    vector<double> ref_pos(3), ref_vel(3);
+    cartesian_t ref_pos, ref_vel;
 
     for (int i=0; i<4; i++) {
         makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
@@ -115,9 +117,9 @@ TEST_F(OrbitTest,LinearLegendre){
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> opos = {0., 0., 0.};
-    vector<double> ovel = {4000., -1000., 4500.};
-    vector<double> pos(3), vel(3);
+    cartesian_t opos = {0., 0., 0.};
+    cartesian_t ovel = {4000., -1000., 4500.};
+    cartesian_t pos, vel;
 
     // Create straight-line orbit with 11 state vectors, each 10 s apart
     for (int i=0; i<11; i++) {
@@ -127,7 +129,7 @@ TEST_F(OrbitTest,LinearLegendre){
 
     // Interpolation test times
     double test_t[] = {23.3, 36.7, 54.5, 89.3};
-    vector<double> ref_pos(3), ref_vel(3);
+    cartesian_t ref_pos, ref_vel;
 
     for (int i=0; i<4; i++) {
         makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
@@ -140,8 +142,8 @@ TEST_F(OrbitTest,LinearLegendre){
 }
 
 
-void makeCircularSV(double dt, vector<double> &opos, vector<double> &ovel, vector<double> &pos,
-                    vector<double> &vel) {
+void makeCircularSV(double dt, cartesian_t &opos, cartesian_t &ovel, cartesian_t &pos,
+                    cartesian_t &vel) {
     double omega1 = (2. * M_PI) / 7000.;
     double omega2 = (2. * M_PI) / 4000.;
     double theta1 = (2. * M_PI) / 8.;
@@ -164,8 +166,8 @@ TEST_F(OrbitTest,CircleSCH) {
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> opos = {7000000., -4500000., 7800000.};
-    vector<double> ovel(3,0.), pos(3,0.), vel(3,0.);
+    cartesian_t opos = {7000000., -4500000., 7800000.};
+    cartesian_t ovel, pos, vel;
 
     // Create circular orbit with 11 state vectors, each 5 s apart
     for (int i=0; i<11; i++) {
@@ -175,7 +177,7 @@ TEST_F(OrbitTest,CircleSCH) {
 
     // Interpolation test times
     double test_t[] = {11.65, 18.35, 27.25, 44.65};
-    vector<double> ref_pos(3), ref_vel(3);
+    cartesian_t ref_pos, ref_vel;
 
     // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
     for (int i=0; i<4; i++) {
@@ -195,8 +197,8 @@ TEST_F(OrbitTest,CircleHermite) {
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> opos = {7000000., -4500000., 7800000.};
-    vector<double> ovel(3,0.), pos(3,0.), vel(3,0.);
+    cartesian_t opos = {7000000., -4500000., 7800000.};
+    cartesian_t ovel, pos, vel;
 
     // Create circular orbit with 11 state vectors, each 5 s apart
     for (int i=0; i<11; i++) {
@@ -206,7 +208,7 @@ TEST_F(OrbitTest,CircleHermite) {
 
     // Interpolation test times
     double test_t[] = {11.65, 18.35, 27.25, 44.65};
-    vector<double> ref_pos(3), ref_vel(3);
+    cartesian_t ref_pos, ref_vel;
 
     // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
     for (int i=0; i<4; i++) {
@@ -227,8 +229,8 @@ TEST_F(OrbitTest,CircleLegendre) {
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> opos = {7000000., -4500000., 7800000.};
-    vector<double> ovel(3,0.), pos(3,0.), vel(3,0.);
+    cartesian_t opos = {7000000., -4500000., 7800000.};
+    cartesian_t ovel, pos, vel;
 
     // Create circular orbit with 11 state vectors, each 5 s apart
     for (int i=0; i<11; i++) {
@@ -238,7 +240,7 @@ TEST_F(OrbitTest,CircleLegendre) {
 
     // Interpolation test times
     double test_t[] = {11.65, 18.35, 27.25, 44.65};
-    vector<double> ref_pos(3), ref_vel(3);
+    cartesian_t ref_pos, ref_vel;
 
     // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
     for (int i=0; i<4; i++) {
@@ -253,8 +255,8 @@ TEST_F(OrbitTest,CircleLegendre) {
 
 
 void makePolynomialSV(double dt, vector<double> &xpoly, vector<double> &ypoly,
-                                 vector<double> &zpoly, vector<double> &pos,
-                                 vector<double> &vel) {
+                                 vector<double> &zpoly, cartesian_t &pos,
+                                 cartesian_t &vel) {
 
     pos[0] = 0.0;
     double fact = 1.0;
@@ -309,7 +311,7 @@ TEST_F(OrbitTest,PolynomialSCH) {
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> pos(3), vel(3);
+    cartesian_t pos, vel;
 
     vector<double> xpoly = {-7000000., 5435., -45.0, 7.3};
     vector<double> ypoly = {5400000., -4257., 23.0, 3.9, 0.01};
@@ -323,7 +325,7 @@ TEST_F(OrbitTest,PolynomialSCH) {
 
     // Interpolation test times
     double test_t[] = {23.3, 36.7, 54.5, 89.3};
-    vector<double> ref_pos(3), ref_vel(3);
+    cartesian_t ref_pos, ref_vel;
 
 
     // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
@@ -344,7 +346,7 @@ TEST_F(OrbitTest,PolynomialHermite) {
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> pos(3), vel(3);
+    cartesian_t pos, vel;
 
     vector<double> xpoly = {-7000000., 5435., -45.0, 7.3};
     vector<double> ypoly = {5400000., -4257., 23.0, 3.9, 0.01};
@@ -358,7 +360,7 @@ TEST_F(OrbitTest,PolynomialHermite) {
 
     // Interpolation test times
     double test_t[] = {23.3, 36.7, 54.5, 89.3};
-    vector<double> ref_pos(3), ref_vel(3);
+    cartesian_t ref_pos, ref_vel;
 
 
     // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
@@ -379,7 +381,7 @@ TEST_F(OrbitTest,PolynomialLegendre) {
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> pos(3), vel(3);
+    cartesian_t pos, vel;
 
     vector<double> xpoly = {-7000000., 5435., -45.0, 7.3};
     vector<double> ypoly = {5400000., -4257., 23.0, 3.9, 0.01};
@@ -393,7 +395,7 @@ TEST_F(OrbitTest,PolynomialLegendre) {
 
     // Interpolation test times
     double test_t[] = {23.3, 36.7, 54.5, 89.3};
-    vector<double> ref_pos(3), ref_vel(3);
+    cartesian_t ref_pos, ref_vel;
 
 
     // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods

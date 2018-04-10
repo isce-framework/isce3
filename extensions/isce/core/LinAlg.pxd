@@ -5,25 +5,26 @@
 #
 
 from libcpp.vector cimport vector
+from Cartesian cimport cartesian_t, cartmat_t
 
 cdef extern from "isce/core/LinAlg.h" namespace "isce::core":
     cdef cppclass LinAlg:
         LinAlg() except +
         @staticmethod
-        void cross(vector[double]&,vector[double]&,vector[double]&)
+        void cross(cartesian_t&,cartesian_t&,cartesian_t&)
         @staticmethod
-        double dot(vector[double]&,vector[double]&)
+        double dot(cartesian_t&,cartesian_t&)
         @staticmethod
-        void linComb(double,vector[double]&,double,vector[double]&,vector[double]&)
+        void linComb(double,cartesian_t&,double,cartesian_t&,cartesian_t&)
         @staticmethod
-        void matMat(vector[vector[double]]&,vector[vector[double]]&,vector[vector[double]]&)
+        void matMat(cartmat_t&,cartmat_t&,cartmat_t&)
         @staticmethod
-        void matVec(vector[vector[double]]&,vector[double]&,vector[double]&)
+        void matVec(cartmat_t&,cartesian_t&,cartesian_t&)
         @staticmethod
-        double norm(vector[double]&)
+        double norm(cartesian_t&)
         @staticmethod
-        void tranMat(vector[vector[double]]&,vector[vector[double]]&)
+        void tranMat(cartmat_t&,cartmat_t&)
         @staticmethod
-        void unitVec(vector[double]&,vector[double]&)
+        void unitVec(cartesian_t&,cartesian_t&)
         @staticmethod
-        void enuBasis(double,double,vector[vector[double]]&)
+        void enuBasis(double,double,cartmat_t&)

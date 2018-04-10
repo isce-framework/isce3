@@ -13,23 +13,21 @@
 
 namespace isce { namespace core {
     struct Pegtrans {
-        std::vector<std::vector<double>> mat;
-        std::vector<std::vector<double>> matinv;
-        std::vector<double> ov;
+        cartmat_t mat;
+        cartmat_t matinv;
+        cartesian_t ov;
         double radcur;
     
-        Pegtrans(double rd) : mat(3,std::vector<double>(3,0.)), matinv(3,std::vector<double>(3,0.)), 
-                              ov(3,0.), radcur(rd) {}
+        Pegtrans(double rd) {}
         Pegtrans() : Pegtrans(0.) {}
         Pegtrans(const Pegtrans &p) : mat(p.mat), matinv(p.matinv), ov(p.ov), radcur(p.radcur) {}
         inline Pegtrans& operator=(const Pegtrans&);
         
         void radarToXYZ(const Ellipsoid&,const Peg&);
-        void convertSCHtoXYZ(std::vector<double>&,std::vector<double>&,orbitConvMethod) const;
-        void convertSCHdotToXYZdot(const std::vector<double>&,const std::vector<double>&,
-                                   std::vector<double>&,std::vector<double>&,orbitConvMethod) const;
-        void SCHbasis(const std::vector<double>&,std::vector<std::vector<double>>&,
-                      std::vector<std::vector<double>>&) const;
+        void convertSCHtoXYZ(cartesian_t&,cartesian_t&,orbitConvMethod) const;
+        void convertSCHdotToXYZdot(const cartesian_t&,const cartesian_t&,
+                                   cartesian_t&,cartesian_t&,orbitConvMethod) const;
+        void SCHbasis(const cartesian_t &,cartmat_t&,cartmat_t&) const;
     };
 
     inline Pegtrans& Pegtrans::operator=(const Pegtrans &rhs) {

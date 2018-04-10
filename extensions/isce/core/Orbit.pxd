@@ -5,6 +5,7 @@
 #
 
 from libcpp.vector cimport vector
+from Cartesian cimport cartesian_t
 
 cdef extern from "isce/core/Constants.h" namespace "isce::core":
     cdef enum orbitInterpMethod:
@@ -23,15 +24,15 @@ cdef extern from "isce/core/Orbit.h" namespace "isce::core":
         Orbit() except +
         Orbit(int,int) except +
         Orbit(const Orbit&) except +
-        void getPositionVelocity(double,vector[double]&,vector[double]&)
-        void getStateVector(int,double&,vector[double]&,vector[double]&)
-        void setStateVector(int,double,vector[double]&,vector[double]&)
-        void addStateVector(double,vector[double]&,vector[double]&)
-        int interpolate(double,vector[double]&,vector[double]&,orbitInterpMethod)
-        int interpolateWGS84Orbit(double,vector[double]&,vector[double]&)
-        int interpolateLegendreOrbit(double,vector[double]&,vector[double]&)
-        int interpolateSCHOrbit(double,vector[double]&,vector[double]&)
-        int computeAcceleration(double,vector[double]&)
+        void getPositionVelocity(double, cartesian_t &, cartesian_t &)
+        void getStateVector(int,double&,cartesian_t&,cartesian_t&)
+        void setStateVector(int,double,cartesian_t&,cartesian_t&)
+        void addStateVector(double,cartesian_t&,cartesian_t&)
+        int interpolate(double,cartesian_t&,cartesian_t&,orbitInterpMethod)
+        int interpolateWGS84Orbit(double,cartesian_t&,cartesian_t&)
+        int interpolateLegendreOrbit(double,cartesian_t&,cartesian_t&)
+        int interpolateSCHOrbit(double,cartesian_t&,cartesian_t&)
+        int computeAcceleration(double,cartesian_t&)
         void printOrbit()
         void loadFromHDR(const char*,int)
         void dumpToHDR(const char*)

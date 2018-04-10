@@ -43,25 +43,20 @@ void Pegtrans::radarToXYZ(const Ellipsoid &elp, const Peg &peg) {
 
     radcur = elp.rDir(peg.hdg, peg.lat);
 
-    vector<double> llh = {peg.lat, peg.lon, 0.};
-    vector<double> p(3);
+    cartesian_t llh = {peg.lat, peg.lon, 0.};
+    cartesian_t p;
     elp.latLonToXyz(llh, p);
-    vector<double> up = {cos(peg.lat) * cos(peg.lon), cos(peg.lat) * sin(peg.lon), sin(peg.lat)};
+    cartesian_t up = {cos(peg.lat) * cos(peg.lon), cos(peg.lat) * sin(peg.lon), sin(peg.lat)};
     LinAlg::linComb(1., p, -radcur, up, ov);
 }
 
-void Pegtrans::convertSCHtoXYZ(vector<double> &schv, vector<double> &xyzv, orbitConvMethod ctype)
+void Pegtrans::convertSCHtoXYZ(cartesian_t &schv, cartesian_t &xyzv, orbitConvMethod ctype)
                                const {
     /*
      * Applies the affine matrix provided to convert from the radar sch coordinates to WGS-84 xyz
      * coordinates or vice-versa
     */
-
-    // Error checking
-    checkVecLen(schv,3);
-    checkVecLen(xyzv,3);
-
-    vector<double> schvt(3), llh(3);
+    cartesian_t schvt, llh;
     Ellipsoid sph(radcur,0.);
 
     if (ctype == SCH_2_XYZ) {
@@ -84,20 +79,14 @@ void Pegtrans::convertSCHtoXYZ(vector<double> &schv, vector<double> &xyzv, orbit
     }
 }
 
-void Pegtrans::convertSCHdotToXYZdot(const vector<double> &sch, const vector<double> &xyz,
-                                     vector<double> &schdot, vector<double> &xyzdot,
+void Pegtrans::convertSCHdotToXYZdot(const cartesian_t &sch, const cartesian_t &xyz,
+                                     cartesian_t &schdot, cartesian_t &xyzdot,
                                      orbitConvMethod ctype) const {
     /*
      * Applies the affine matrix provided to convert from the radar sch velociy to WGS-84 xyz
      * velocity or vice-versa
     */
-
-    checkVecLen(sch,3);
-    checkVecLen(xyz,3);
-    checkVecLen(schdot,3);
-    checkVecLen(xyzdot,3);
-
-    vector<vector<double>> schxyzmat(3, vector<double>(3)), xyzschmat(3, vector<double>(3));
+    cartmat_t schxyzmat, xyzschmat;
     SCHbasis(sch, xyzschmat, schxyzmat);
 
     if (ctype == SCH_2_XYZ) LinAlg::matVec(schxyzmat, schdot, xyzdot);
@@ -112,25 +101,20 @@ void Pegtrans::convertSCHdotToXYZdot(const vector<double> &sch, const vector<dou
     }
 }
 
-void Pegtrans::SCHbasis(const vector<double> &sch, vector<vector<double>> &xyzschmat,
-                        vector<vector<double>> &schxyzmat) const {
+void Pegtrans::SCHbasis(const cartesian_t &sch, cartmat_t & xyzschmat,
+                        cartmat_t & schxyzmat) const {
     /*
      * Computes the transformation matrix from xyz to a local sch frame
      */
-
-    checkVecLen(sch,3);
-    check2dVecLen(xyzschmat,3,3);
-    check2dVecLen(schxyzmat,3,3);
-
-    vector<vector<double>> matschxyzp = {{-sin(sch[0]/radcur),
-                                          -(sin(sch[1]/radcur) * cos(sch[0]/radcur)),
-                                          cos(sch[0]/radcur) * cos(sch[1]/radcur)},
-                                         {cos(sch[0]/radcur),
-                                          -(sin(sch[1]/radcur) * sin(sch[0]/radcur)),
-                                          sin(sch[0]/radcur) * cos(sch[1]/radcur)},
-                                         {0.,
-                                          cos(sch[1]/radcur),
-                                          sin(sch[1]/radcur)}};
+    cartmat_t matschxyzp = {{{-sin(sch[0]/radcur),
+                             -(sin(sch[1]/radcur) * cos(sch[0]/radcur)),
+                             cos(sch[0]/radcur) * cos(sch[1]/radcur)},
+                            {cos(sch[0]/radcur),
+                             -(sin(sch[1]/radcur) * sin(sch[0]/radcur)),
+                             sin(sch[0]/radcur) * cos(sch[1]/radcur)},
+                            {0.,
+                             cos(sch[1]/radcur),
+                             sin(sch[1]/radcur)}}};
     LinAlg::matMat(mat, matschxyzp, schxyzmat);
     LinAlg::tranMat(schxyzmat, xyzschmat);
 }

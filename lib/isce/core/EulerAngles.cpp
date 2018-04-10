@@ -29,25 +29,24 @@ EulerAngles(double yaw, double pitch, double roll, const std::string yaw_orienta
 }
 
 // Return vector of Euler angles
-std::vector<double>
+isce::core::cartesian_t
 isce::core::EulerAngles::ypr() {
-    std::vector<double> v = {_yaw, _pitch, _roll};
+    cartesian_t v = {_yaw, _pitch, _roll};
     return v;
 }
 
 // Rotation matrix for a given sequence
-std::vector<std::vector<double>>
+isce::core::cartmat_t
 isce::core::EulerAngles::rotmat(const std::string sequence) {
     
     // Construct map for Euler angles to elementary rotation matrices
-    std::map<const char, std::vector<std::vector<double>>> R_map;
+    std::map<const char, cartmat_t> R_map;
     R_map['y'] = T3(_yaw);
     R_map['p'] = T2(_pitch);
     R_map['r'] = T1(_roll);
 
     // Build composite matrix
-    std::vector<std::vector<double>> R(3, std::vector<double>(3, 0.0));
-    std::vector<std::vector<double>> R_tmp(3, std::vector<double>(3, 0.0));
+    cartmat_t R, R_tmp;
     LinAlg::matMat(R_map[sequence[1]], R_map[sequence[2]], R_tmp);
     LinAlg::matMat(R_map[sequence[0]], R_tmp, R);
 
@@ -56,11 +55,11 @@ isce::core::EulerAngles::rotmat(const std::string sequence) {
 }
 
 // Rotation around Z-axis
-std::vector<std::vector<double>>
+isce::core::cartmat_t
 isce::core::EulerAngles::T3(double angle) {
     const double cos = std::cos(angle);
     const double sin = std::sin(angle);
-    std::vector<std::vector<double>> T{{
+    cartmat_t T{{
         {cos, -sin, 0.0},
         {sin, cos, 0.0},
         {0.0, 0.0, 1.0}
@@ -69,11 +68,11 @@ isce::core::EulerAngles::T3(double angle) {
 }
 
 // Rotation around Y-axis
-std::vector<std::vector<double>>
+isce::core::cartmat_t
 isce::core::EulerAngles::T2(double angle) {
     const double cos = std::cos(angle);
     const double sin = std::sin(angle);
-    std::vector<std::vector<double>> T{{
+    cartmat_t T{{
         {cos, 0.0, sin},
         {0.0, 1.0, 0.0},
         {-sin, 0.0, cos}
@@ -82,11 +81,11 @@ isce::core::EulerAngles::T2(double angle) {
 }
 
 // Rotation around X-axis
-std::vector<std::vector<double>>
+isce::core::cartmat_t
 isce::core::EulerAngles::T1(double angle) {
     const double cos = std::cos(angle);
     const double sin = std::sin(angle);
-    std::vector<std::vector<double>> T{{
+    cartmat_t T{{
         {1.0, 0.0, 0.0},
         {0.0, cos, -sin},
         {0.0, sin, cos}
@@ -95,8 +94,8 @@ isce::core::EulerAngles::T1(double angle) {
 }
 
 // Extract YPR angles from a rotation matrix
-std::vector<double>
-isce::core::EulerAngles::rotmat2ypr(std::vector<std::vector<double>> & R) {
+isce::core::cartesian_t
+isce::core::EulerAngles::rotmat2ypr(const cartmat_t & R) {
 
     const double sy = std::sqrt(R[0][0]*R[0][0] + R[1][0]*R[1][0]);
     double yaw, pitch, roll;
@@ -111,7 +110,7 @@ isce::core::EulerAngles::rotmat2ypr(std::vector<std::vector<double>> & R) {
     }
 
     // Make vector and return
-    std::vector<double> angles{yaw, pitch, roll};
+    cartesian_t angles{yaw, pitch, roll};
     return angles;
 }
 

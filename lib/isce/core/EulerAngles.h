@@ -20,18 +20,18 @@ class isce::core::EulerAngles : public isce::core::Attitude {
             const std::string yaw_orientation="normal");
 
         // Representations
-        std::vector<double> ypr();
-        std::vector<std::vector<double>> rotmat(const std::string);
+        cartesian_t ypr();
+        cartmat_t rotmat(const std::string);
         std::vector<double> toQuaternionElements();
         Quaternion toQuaternion();
 
         // Elementary rotation matrices
-        std::vector<std::vector<double>> T3(double);
-        std::vector<std::vector<double>> T2(double);
-        std::vector<std::vector<double>> T1(double);
+        cartmat_t T3(double);
+        cartmat_t T2(double);
+        cartmat_t T1(double);
 
         // Utility method to convert rotation matrix to Euler angles
-        static std::vector<double> rotmat2ypr(std::vector<std::vector<double>> &);
+        static cartesian_t rotmat2ypr(const cartmat_t &);
 
         // Get the attitude angles
         inline double yaw() const;

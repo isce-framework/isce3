@@ -29,9 +29,9 @@ namespace isce { namespace core {
         // Print function for debugging
         virtual void print() const = 0;
         // Function for transforming from LLH. This is similar to fwd or fwd3d in PROJ.4
-        virtual int forward(const std::vector<double>&,std::vector<double>&) const = 0 ;
+        virtual int forward(const cartesian_t&,cartesian_t&) const = 0 ;
         // Function for transforming to LLH. This is similar to inv or inv3d in PROJ.4
-        virtual int inverse(const std::vector<double>&,std::vector<double>&) const = 0 ;
+        virtual int inverse(const cartesian_t&,cartesian_t&) const = 0 ;
     };
 
     // Standard WGS84 Lat/Lon Projection 
@@ -41,21 +41,21 @@ namespace isce { namespace core {
         
         inline void print() const;
         // This will be a pass through for Lat/Lon
-        inline int forward(const std::vector<double>&,std::vector<double>&) const;
+        inline int forward(const cartesian_t&,cartesian_t&) const;
         // This will also be a pass through for Lat/Lon
-        inline int inverse(const std::vector<double>&,std::vector<double>&) const;
+        inline int inverse(const cartesian_t&,cartesian_t&) const;
     };
 
     inline void LatLon::print() const {
         std::cout << "Projection: LatLon" << std::endl << "EPSG: " << _epsgcode << std::endl;
     }
 
-    inline int LatLon::forward(const std::vector<double> &in, std::vector<double> &out) const {
+    inline int LatLon::forward(const cartesian_t &in, cartesian_t &out) const {
         out = in;
         return 0;
     }
 
-    inline int LatLon::inverse(const std::vector<double> &in, std::vector<double> &out) const {
+    inline int LatLon::inverse(const cartesian_t &in, cartesian_t &out) const {
         out = in;
         return 0;
     }
@@ -67,9 +67,9 @@ namespace isce { namespace core {
         
         inline void print() const;
         // This is same as latLonToXyz
-        int forward(const std::vector<double>&,std::vector<double>&) const;
+        int forward(const cartesian_t&,cartesian_t&) const;
         // This is same as xyzToLatLon
-        int inverse(const std::vector<double>&,std::vector<double>&) const;
+        int inverse(const cartesian_t&,cartesian_t&) const;
     };
 
     inline void Geocent::print() const {
@@ -92,9 +92,9 @@ namespace isce { namespace core {
 
         inline void print() const;
         // Transform from LLH to UTM
-        int forward(const std::vector<double>&,std::vector<double>&) const;
+        int forward(const cartesian_t&,cartesian_t&) const;
         // Transform from UTM to LLH
-        int inverse(const std::vector<double>&,std::vector<double>&) const;
+        int inverse(const cartesian_t&,cartesian_t&) const;
     };
 
     inline void UTM::print() const {
@@ -114,9 +114,9 @@ namespace isce { namespace core {
 
         inline void print() const;
         // Transfrom from LLH to Polar Stereo
-        int forward(const std::vector<double>&,std::vector<double>&) const;
+        int forward(const cartesian_t&,cartesian_t&) const;
         // Transform from Polar Stereo to LLH
-        int inverse(const std::vector<double>&,std::vector<double>&) const;
+        int inverse(const cartesian_t&,cartesian_t&) const;
     };
     
     inline void PolarStereo::print() const {
@@ -136,9 +136,9 @@ namespace isce { namespace core {
 
         inline void print() const;
         // Transform from LLH to CEA
-        int forward(const std::vector<double>&,std::vector<double>&) const;
+        int forward(const cartesian_t&,cartesian_t&) const;
         // Transform from CEA to LLH
-        int inverse(const std::vector<double>&,std::vector<double>&) const;
+        int inverse(const cartesian_t&,cartesian_t&) const;
     };
 
     inline void CEA::print() const {
@@ -147,8 +147,8 @@ namespace isce { namespace core {
     }
 
     // This is to transform a point from one coordinate system to another
-    int projTransform(ProjectionBase* in, ProjectionBase *out, const std::vector<double> &inpts,
-                      std::vector<double> &outpts);
+    int projTransform(ProjectionBase* in, ProjectionBase *out, const cartesian_t &inpts,
+                      cartesian_t &outpts);
 }}
 
 #endif

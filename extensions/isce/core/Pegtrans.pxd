@@ -5,6 +5,7 @@
 #
 
 from libcpp.vector cimport vector
+from Cartesian cimport cartesian_t, cartmat_t
 from Ellipsoid cimport Ellipsoid
 from Peg cimport Peg
 
@@ -15,16 +16,16 @@ cdef extern from "isce/core/Constants.h" namespace "isce::core":
 
 cdef extern from "isce/core/Pegtrans.h" namespace "isce::core":
     cdef cppclass Pegtrans:
-        vector[vector[double]] mat
-        vector[vector[double]] matinv
-        vector[double] ov
+        cartmat_t mat
+        cartmat_t matinv
+        cartesian_t ov
         double radcur
 
         Pegtrans(double) except +
         Pegtrans() except +
         Pegtrans(const Pegtrans&) except +
         void radarToXYZ(Ellipsoid&,Peg&)
-        void convertSCHtoXYZ(vector[double]&,vector[double]&,orbitConvMethod)
-        void convertSCHdotToXYZdot(vector[double]&,vector[double]&,vector[double]&,vector[double]&,
+        void convertSCHtoXYZ(cartesian_t&,cartesian_t&,orbitConvMethod)
+        void convertSCHdotToXYZdot(cartesian_t&,cartesian_t&,cartesian_t&,cartesian_t&,
                                    orbitConvMethod)
-        void SCHbasis(vector[double]&,vector[vector[double]]&,vector[vector[double]]&)
+        void SCHbasis(cartesian_t&,cartmat_t&,cartmat_t&)
