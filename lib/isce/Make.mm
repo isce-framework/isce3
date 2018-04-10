@@ -15,6 +15,18 @@ RECURSE_DIRS = \
 # the ones that are always available
 PACKAGES = \
     core \
+    geometry \
+
+# the products
+PROJ_DLL = $(BLD_LIBDIR)/lib$(PROJECT).$(PROJECT_MAJOR).$(PROJECT_MINOR).$(EXT_SO)
+# the private build space
+PROJ_TMPDIR = $(BLD_TMPDIR)/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)/lib
+# what to clean
+PROJ_CLEAN += $(EXPORT_LIBS) $(EXPORT_INCDIR)
+
+# what to export
+# the library
+EXPORT_LIBS = $(PROJ_DLL)
 
 # project settings: do not remove core directory (core usually refers core dump file)
 # filter-out info at: https://www.gnu.org/software/make/manual/html_node/index.html
