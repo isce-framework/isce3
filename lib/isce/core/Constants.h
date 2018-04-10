@@ -9,6 +9,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <array>
 #include <vector>
 #include <unordered_map>
 #include <typeindex>
@@ -25,6 +26,12 @@
 #define IDX1D(i,j,w) (((i)*(w))+(j))
 
 namespace isce { namespace core {
+    
+    // Useful typedefs for 3-element vectors and 2D matrices
+    // Will be replaced by dedicated array library
+    typedef std::array<double, 3> cartesian_t;
+    typedef std::array<std::array<double, 3>, 3> cartmat_t;
+
     enum orbitConvMethod {
         SCH_2_XYZ,
         XYZ_2_SCH

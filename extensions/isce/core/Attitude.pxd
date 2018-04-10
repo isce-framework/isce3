@@ -6,12 +6,13 @@
 
 from libcpp.vector cimport vector
 from libcpp.string cimport string
+from Cartesian cimport cartesian_t, cartmat_t
 from Ellipsoid cimport Ellipsoid
 
 cdef extern from "isce/core/Attitude.h" namespace "isce::core":
     cdef cppclass Attitude:
-        vector[double] ypr()
-        vector[vector[double]] rotmat(string)
+        cartesian_t ypr()
+        cartmat_t rotmat(string)
    
 cdef extern from "isce/core/Quaternion.h" namespace "isce::core": 
     cdef cppclass Quaternion(Attitude):
@@ -23,7 +24,7 @@ cdef extern from "isce/core/Quaternion.h" namespace "isce::core":
         # Constructor
         Quaternion(vector[double]) except +
         # Convert quaternion to yaw, pitch, and roll angles
-        vector[double] factoredYPR(vector[double], vector[double], Ellipsoid *)
+        cartesian_t factoredYPR(cartesian_t, cartesian_t, Ellipsoid *)
 
 cdef extern from "isce/core/EulerAngles.h" namespace "isce::core":
     cdef cppclass EulerAngles(Attitude):

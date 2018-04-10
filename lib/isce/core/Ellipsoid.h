@@ -1,61 +1,84 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
 //
-// Author: Joshua Cohen
-// Copyright 2017
+// Author: Joshua Cohen, Bryan V. Riel
+// Copyright 2017-2018
 //
 
-#ifndef __ISCE_CORE_ELLIPSOID_H__
-#define __ISCE_CORE_ELLIPSOID_H__
+#ifndef ISCE_CORE_ELLIPSOID_H
+#define ISCE_CORE_ELLIPSOID_H
 
 #include <cmath>
-#include <vector>
+#include <array>
 #include "Constants.h"
 
-namespace isce { namespace core {
-    struct Ellipsoid {
-        // Major semi-axis
-        double a;
-        // Eccentricity squared
-        double e2;
+// Declaration
+namespace isce {
+    namespace core {
+        class Ellipsoid;
+    }
+}
 
-        Ellipsoid(double maj, double ecc) : a(maj), e2(ecc) {}
-        Ellipsoid() : Ellipsoid(0.,0.) {}
-        Ellipsoid(const Ellipsoid &e) : a(e.a), e2(e.e2) {}
+// Ellipsoid declaration
+class isce::core::Ellipsoid {
+
+    public:
+        // Constructors
+        Ellipsoid(double maj, double ecc) : _a(maj), _e2(ecc) {}
+        Ellipsoid() : Ellipsoid(0.0, 0.0) {}
+        Ellipsoid(const Ellipsoid & ellps) : _a(ellps.a()), _e2(ellps.e2()) {}
         inline Ellipsoid& operator=(const Ellipsoid&);
 
+        // Get ellipsoid properties
+        double a() const {return _a;}
+        double e2() const {return _e2;}
+        // Set ellipsoid properties
+        void a(double val) {_a = val;}
+        void e2(double val) {_e2 = val;}
+
+        // Get radii in different directions
         inline double rEast(double) const;
         inline double rNorth(double) const;
         inline double rDir(double,double) const;
-        void latLonToXyz(const std::vector<double>&,std::vector<double>&) const;
-        void xyzToLatLon(const std::vector<double>&,std::vector<double>&) const;
-        void getAngs(const std::vector<double>&,const std::vector<double>&,
-                     const std::vector<double>&,double&,double&) const;
-        void getTCN_TCvec(const std::vector<double>&,const std::vector<double>&,
-                          const std::vector<double>&,std::vector<double>&) const;
-        void TCNbasis(const std::vector<double>&,const std::vector<double>&,std::vector<double>&,
-                      std::vector<double>&,std::vector<double>&) const;
-    };
 
-    inline Ellipsoid& Ellipsoid::operator=(const Ellipsoid &rhs) {
-        a = rhs.a;
-        e2 = rhs.e2;
-        return *this;
-    }
+        // Transformation routines
+        void latLonToXyz(const cartesian_t &, cartesian_t &) const;
+        void xyzToLatLon(const cartesian_t &, cartesian_t &) const;
+        void getAngs(const cartesian_t &,const cartesian_t &,
+                     const cartesian_t &, double &, double &) const;
+        void getTCN_TCvec(const cartesian_t &, const cartesian_t &,
+                          const cartesian_t &, cartesian_t &) const;
+        void TCNbasis(const cartesian_t &, const cartesian_t &, cartesian_t &,
+                      cartesian_t &, cartesian_t &) const;
 
-    inline double Ellipsoid::rEast(double lat) const {
-        // Radius of Ellipsoid in East direction (assuming latitude-wise symmetry)
-        return a / sqrt(1. - (e2 * pow(sin(lat), 2)));
-    }
+    private:
+        double _a;
+        double _e2;
+};
 
-    inline double Ellipsoid::rNorth(double lat) const {
-        // Radius of Ellipsoid in North direction (assuming latitude-wise symmetry)
-        return (a * (1. - e2)) / pow((1. - (e2 * pow(lat, 2))), 1.5);
-    }
+isce::core::Ellipsoid& isce::core::Ellipsoid::operator=(const Ellipsoid &rhs) {
+    _a = rhs.a();
+    _e2 = rhs.e2();
+    return *this;
+}
 
-    inline double Ellipsoid::rDir(double hdg, double lat) const {
-        auto re = rEast(lat);
-        auto rn = rNorth(lat);
-        return (re * rn) / ((re * pow(cos(hdg), 2)) + (rn * pow(sin(hdg), 2)));
-    }
-}}
+double isce::core::Ellipsoid::rEast(double lat) const {
+    // Radius of Ellipsoid in East direction (assuming latitude-wise symmetry)
+    return _a / std::sqrt(1.0 - (_e2 * std::pow(std::sin(lat), 2)));
+}
+
+double isce::core::Ellipsoid::rNorth(double lat) const {
+    // Radius of Ellipsoid in North direction (assuming latitude-wise symmetry)
+    return (_a * (1.0 - _e2)) / std::pow((1.0 - (_e2 * std::pow(lat, 2))), 1.5);
+}
+
+double isce::core::Ellipsoid::rDir(double hdg, double lat) const {
+    auto re = rEast(lat);
+    auto rn = rNorth(lat);
+    return (re * rn) / ((re * std::pow(std::cos(hdg), 2)) 
+         + (rn * std::pow(std::sin(hdg), 2)));
+}
 
 #endif
+
+// end of file

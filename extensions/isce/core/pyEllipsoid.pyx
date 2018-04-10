@@ -28,16 +28,16 @@ cdef class pyEllipsoid:
 
     @property
     def a(self):
-        return self.c_ellipsoid.a
+        return self.c_ellipsoid.a()
     @a.setter
     def a(self, double a):
-        self.c_ellipsoid.a = a
+        self.c_ellipsoid.a(a)
     @property
     def e2(self):
-        return self.c_ellipsoid.e2
+        return self.c_ellipsoid.e2()
     @e2.setter
     def e2(self, double a):
-        self.c_ellipsoid.e2 = a
+        self.c_ellipsoid.e2(a)
     def copyFrom(self, elp):
         # Replaces copy-constructor functionality
         try:
@@ -56,29 +56,29 @@ cdef class pyEllipsoid:
     def rDir(self, double a, double b):
         return self.c_ellipsoid.rDir(a,b)
     def latLonToXyz(self, list a, list b):
-        cdef vector[double] _a
-        cdef vector[double] _b
+        cdef cartesian_t _a
+        cdef cartesian_t _b
         for i in range(3):
-            _a.push_back(a[i])
-            _b.push_back(b[i])
+            _a[i] = a[i]
+            _b[i] = b[i]
         self.c_ellipsoid.latLonToXyz(_a,_b)
         for i in range(3):
             a[i] = _a[i]
             b[i] = _b[i]
     def xyzToLatLon(self, list a, list b):
-        cdef vector[double] _a
-        cdef vector[double] _b
+        cdef cartesian_t _a
+        cdef cartesian_t _b
         for i in range(3):
-            _a.push_back(a[i])
-            _b.push_back(b[i])
+            _a[i] = a[i]
+            _b[i] = b[i]
         self.c_ellipsoid.xyzToLatLon(_a,_b)
         for i in range(3):
             a[i] = _a[i]
             b[i] = _b[i]
     def getAngs(self, list a, list b, list c, d, e=None):
-        cdef vector[double] _a
-        cdef vector[double] _b
-        cdef vector[double] _c
+        cdef cartesian_t _a
+        cdef cartesian_t _b
+        cdef cartesian_t _c
         cdef double _d
         cdef double _e
         if (e):
@@ -91,9 +91,9 @@ cdef class pyEllipsoid:
             _d = 0.
             _e = 0.
             for i in range(3):
-                _a.push_back(a[i])
-                _b.push_back(b[i])
-                _c.push_back(c[i])
+                _a[i] = a[i]
+                _b[i] = b[i]
+                _c[i] = c[i]
             self.c_ellipsoid.getAngs(_a,_b,_c,_d,_e)
             for i in range(3):
                 a[i] = _a[i]
@@ -102,15 +102,15 @@ cdef class pyEllipsoid:
             d[0] = _d
             d[1] = _e
     def getTCN_TCvec(self, list a, list b, list c, list d):
-        cdef vector[double] _a
-        cdef vector[double] _b
-        cdef vector[double] _c
-        cdef vector[double] _d
+        cdef cartesian_t _a
+        cdef cartesian_t _b
+        cdef cartesian_t _c
+        cdef cartesian_t _d
         for i in range(3):
-            _a.push_back(a[i])
-            _b.push_back(b[i])
-            _c.push_back(c[i])
-            _d.push_back(d[i])
+            _a[i] = a[i]
+            _b[i] = b[i]
+            _c[i] = c[i]
+            _d[i] = d[i]
         self.c_ellipsoid.getTCN_TCvec(_a,_b,_c,_d)
         for i in range(3):
             a[i] = _a[i]
@@ -118,17 +118,17 @@ cdef class pyEllipsoid:
             c[i] = _c[i]
             d[i] = _d[i]
     def TCNbasis(self, list a, list b, list c, list d, list e):
-        cdef vector[double] _a
-        cdef vector[double] _b
-        cdef vector[double] _c
-        cdef vector[double] _d
-        cdef vector[double] _e
+        cdef cartesian_t _a
+        cdef cartesian_t _b
+        cdef cartesian_t _c
+        cdef cartesian_t _d
+        cdef cartesian_t _e
         for i in range(3):
-            _a.push_back(a[i])
-            _b.push_back(b[i])
-            _c.push_back(c[i])
-            _d.push_back(d[i])
-            _e.push_back(e[i])
+            _a[i] = a[i]
+            _b[i] = b[i]
+            _c[i] = c[i]
+            _d[i] = d[i]
+            _e[i] = e[i]
         self.c_ellipsoid.TCNbasis(_a,_b,_c,_d,_e)
         for i in range(3):
             c[i] = _c[i]

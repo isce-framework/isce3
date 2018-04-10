@@ -90,12 +90,12 @@ cdef class pyPegtrans:
     def radarToXYZ(self, pyEllipsoid a, pyPeg b):
         self.c_pegtrans.radarToXYZ(deref(a.c_ellipsoid),deref(b.c_peg))
     def convertSCHtoXYZ(self, list a, list b, int c):
-        cdef vector[double] _a
-        cdef vector[double] _b
+        cdef cartesian_t _a
+        cdef cartesian_t _b
         cdef orbitConvMethod _c
         for i in range(3):
-            _a.push_back(a[i])
-            _b.push_back(b[i])
+            _a[i] = a[i]
+            _b[i] = b[i]
         if (c == orbitConvMethod.SCH_2_XYZ):
             _c = orbitConvMethod.SCH_2_XYZ
         elif (c == orbitConvMethod.XYZ_2_SCH):
@@ -108,16 +108,16 @@ cdef class pyPegtrans:
             a[i] = _a[i]
             b[i] = _b[i]
     def convertSCHdotToXYZdot(self, list a, list b, list c, list d, int e):
-        cdef vector[double] _a
-        cdef vector[double] _b
-        cdef vector[double] _c
-        cdef vector[double] _d
+        cdef cartesian_t _a
+        cdef cartesian_t _b
+        cdef cartesian_t _c
+        cdef cartesian_t _d
         cdef orbitConvMethod _e
         for i in range(3):
-            _a.push_back(a[i])
-            _b.push_back(b[i])
-            _c.push_back(c[i])
-            _d.push_back(d[i])
+            _a[i] = a[i]
+            _b[i] = b[i]
+            _c[i] = c[i]
+            _d[i] = d[i]
         if (e == orbitConvMethod.SCH_2_XYZ):
             _e = orbitConvMethod.SCH_2_XYZ
         elif (e == orbitConvMethod.XYZ_2_SCH):
@@ -132,21 +132,14 @@ cdef class pyPegtrans:
             c[i] = _c[i]
             d[i] = _d[i]
     def SCHbasis(self, list a, list b, list c):
-        cdef vector[double] _a
-        cdef vector[double] _temp_b
-        cdef vector[double] _temp_c
-        cdef vector[vector[double]] _b
-        cdef vector[vector[double]] _c
+        cdef cartesian_t _a
+        cdef cartmat_t _b
+        cdef cartmat_t _c
         for i in range(3):
-            _a.push_back(a[i])
-            _temp_b.push_back(0.)
-            _temp_c.push_back(0.)
-        for i in range(3):
+            _a[i] = a[i]
             for j in range(3):
-                _temp_b[j] = b[i][j]
-                _temp_c[j] = c[i][j]
-            _b.push_back(_temp_b)
-            _c.push_back(_temp_c)
+                _b[i][j] = b[i][j]
+                _c[i][j] = c[i][j]
         self.c_pegtrans.SCHbasis(_a,_b,_c)
         for i in range(3):
             a[i] = _a[i]

@@ -29,10 +29,19 @@ namespace isce { namespace core {
     }
 
     // Definition for Ellipsoid
-    template <class Archive>
-    void serialize(Archive & archive, Ellipsoid & ellps) {
-        archive(cereal::make_nvp("a", ellps.a),
-                cereal::make_nvp("e2", ellps.e2));
+    template<class Archive>
+    void save(Archive & archive, const Ellipsoid & ellps) {
+        archive(cereal::make_nvp("a", ellps.a()),
+                cereal::make_nvp("e2", ellps.e2()));
+    }
+
+    template<class Archive>
+    void load(Archive & archive, Ellipsoid & ellps) {
+        double a, e2;
+        archive(cereal::make_nvp("a", a),
+                cereal::make_nvp("e2", e2));
+        ellps.a(a);
+        ellps.e2(e2);
     }
 
     // Definition for Metadata

@@ -22,7 +22,7 @@ isce::core::Quaternion::
 Quaternion(std::vector<double> & q) : Attitude(QUATERNION_T), _qvec(q) {}
 
 // Return vector of Euler angles
-std::vector<double>
+isce::core::cartesian_t
 isce::core::Quaternion::ypr() {
 
     // Get quaternion elements
@@ -50,13 +50,13 @@ isce::core::Quaternion::ypr() {
     const double roll = std::atan2(r31, r32);
 
     // Make vector and return
-    std::vector<double> angles{yaw, pitch, roll};
+    cartesian_t angles{yaw, pitch, roll};
     return angles;
     
 }
 
 // Convert quaternion to rotation matrix
-std::vector<std::vector<double>>
+isce::core::cartmat_t
 isce::core::Quaternion::rotmat(const std::string dummy) {
 
     // Cache quaternion elements
@@ -69,7 +69,7 @@ isce::core::Quaternion::rotmat(const std::string dummy) {
     const double d = _qvec[3];
 
     // Construct rotation matrix
-    std::vector<std::vector<double>> R{{
+    cartmat_t R{{
         {a*a + b*b - c*c - d*d,
          2*b*c - 2*a*d,
          2*b*d + 2*a*c},
@@ -85,20 +85,22 @@ isce::core::Quaternion::rotmat(const std::string dummy) {
 }
 
 // Extract YPR after factoring out orbit matrix
-std::vector<double>
-isce::core::Quaternion::factoredYPR(std::vector<double> & satxyz,
-    std::vector<double> & satvel, Ellipsoid * ellipsoid) {
+isce::core::cartesian_t
+isce::core::Quaternion::
+factoredYPR(const cartesian_t & satxyz,
+            const cartesian_t & satvel,
+            Ellipsoid * ellipsoid) {
 
     // Compute ECI velocity assuming attitude angles are provided in inertial frame
-    std::vector<double> Va(3);
-    std::vector<double> w{0.0, 0.0, 0.00007292115833};
+    cartesian_t Va;
+    cartesian_t w{0.0, 0.0, 0.00007292115833};
     LinAlg::cross(w, satxyz, Va);
     for (size_t i = 0; i < 3; ++i)
         Va[i] += satvel[i];
 
     // Compute vectors for TCN-like basis
-    std::vector<double> q(3), c(3), b(3), a(3), temp(3);
-    temp = {satxyz[0], satxyz[1], satxyz[2] / (1 - ellipsoid->e2)};
+    cartesian_t q, c, b, a, temp;
+    temp = {satxyz[0], satxyz[1], satxyz[2] / (1 - ellipsoid->e2())};
     LinAlg::unitVec(temp, q);
     c = {-q[0], -q[1], -q[2]};
     LinAlg::cross(c, Va, temp);
@@ -106,7 +108,7 @@ isce::core::Quaternion::factoredYPR(std::vector<double> & satxyz,
     LinAlg::cross(b, c, a);
 
     // Stack basis vectors to get transposed orbit matrix
-    std::vector<std::vector<double>> L0(3, std::vector<double>(3, 0.0));
+    cartmat_t L0;
     for (size_t i = 0; i < 3; ++i) {
         L0[0][i] = a[i];
         L0[1][i] = b[i];
@@ -114,14 +116,14 @@ isce::core::Quaternion::factoredYPR(std::vector<double> & satxyz,
     }
 
     // Get total rotation matrix
-    std::vector<std::vector<double>> R = rotmat("");
+    cartmat_t R = rotmat("");
 
     // Multiply by transpose to get pure attitude matrix
-    std::vector<std::vector<double>> L(3, std::vector<double>(3, 0.0));
+    cartmat_t L;
     LinAlg::matMat(L0, R, L);
 
     // Extract Euler angles from rotation matrix
-    std::vector<double> angles = EulerAngles::rotmat2ypr(L);
+    cartesian_t angles = EulerAngles::rotmat2ypr(L);
     return angles;
 }
 

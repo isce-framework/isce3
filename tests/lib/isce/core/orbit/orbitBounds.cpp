@@ -15,6 +15,7 @@ using isce::core::HERMITE_METHOD;
 using isce::core::LEGENDRE_METHOD;
 using isce::core::SCH_METHOD;
 using isce::core::Orbit;
+using isce::core::cartesian_t;
 using std::cout;
 using std::endl;
 using std::vector;
@@ -40,8 +41,8 @@ struct OrbitTest : public ::testing::Test {
 
 
 
-void makeLinearSV(double dt, vector<double> &opos, vector<double> &ovel, vector<double> &pos,
-                  vector<double> &vel) {
+void makeLinearSV(double dt, cartesian_t &opos, cartesian_t &ovel, cartesian_t &pos,
+                  cartesian_t &vel) {
     pos = {opos[0] + (dt * ovel[0]), opos[1] + (dt * ovel[1]), opos[2] + (dt * ovel[2])};
     vel = ovel;
 }
@@ -53,9 +54,9 @@ TEST_F(OrbitTest, OutOfBoundsSCH) {
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> opos = {0., 0., 0.};
-    vector<double> ovel = {4000., -1000., 4500.};
-    vector<double> pos(3), vel(3);
+    cartesian_t opos = {0., 0., 0.};
+    cartesian_t ovel = {4000., -1000., 4500.};
+    cartesian_t pos, vel;
 
     // Create straight-line orbit with 11 state vectors, each 10 s apart
     for (int i=0; i<11; i++) {
@@ -65,8 +66,6 @@ TEST_F(OrbitTest, OutOfBoundsSCH) {
 
     // Interpolation test times
     double test_t[] = {-23.0, -1.0, 101.0, 112.0};
-    vector<double> ref_pos(3), ref_vel(3);
-
 
     for (int i=0; i<4; i++) {
         int stat = orb.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
@@ -83,9 +82,9 @@ TEST_F(OrbitTest, OutOfBoundsHermite) {
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> opos = {0., 0., 0.};
-    vector<double> ovel = {4000., -1000., 4500.};
-    vector<double> pos(3), vel(3);
+    cartesian_t opos = {0., 0., 0.};
+    cartesian_t ovel = {4000., -1000., 4500.};
+    cartesian_t pos, vel;
 
     // Create straight-line orbit with 11 state vectors, each 10 s apart
     for (int i=0; i<11; i++) {
@@ -95,8 +94,6 @@ TEST_F(OrbitTest, OutOfBoundsHermite) {
 
     // Interpolation test times
     double test_t[] = {-23.0, -1.0, 101.0, 112.0};
-    vector<double> ref_pos(3), ref_vel(3);
-
 
     for (int i=0; i<4; i++) {
         int stat = orb.interpolate(t+test_t[i], pos, vel, HERMITE_METHOD);
@@ -113,9 +110,9 @@ TEST_F(OrbitTest, OutOfBoundsLegendre) {
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> opos = {0., 0., 0.};
-    vector<double> ovel = {4000., -1000., 4500.};
-    vector<double> pos(3), vel(3);
+    cartesian_t opos = {0., 0., 0.};
+    cartesian_t ovel = {4000., -1000., 4500.};
+    cartesian_t pos, vel;
 
     // Create straight-line orbit with 11 state vectors, each 10 s apart
     for (int i=0; i<11; i++) {
@@ -125,8 +122,6 @@ TEST_F(OrbitTest, OutOfBoundsLegendre) {
 
     // Interpolation test times
     double test_t[] = {-23.0, -1.0, 101.0, 112.0};
-    vector<double> ref_pos(3), ref_vel(3);
-
 
     for (int i=0; i<4; i++) {
         int stat = orb.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD);
@@ -145,9 +140,9 @@ TEST_F(OrbitTest, EdgesSCH){
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> opos = {0., 0., 0.};
-    vector<double> ovel = {4000., -1000., 4500.};
-    vector<double> pos(3), vel(3);
+    cartesian_t opos = {0., 0., 0.};
+    cartesian_t ovel = {4000., -1000., 4500.};
+    cartesian_t pos, vel;
 
     // Create straight-line orbit with 11 state vectors, each 10 s apart
     for (int i=0; i<11; i++) {
@@ -157,7 +152,7 @@ TEST_F(OrbitTest, EdgesSCH){
 
     // Interpolation test times
     double test_t[] = {0.0, 100.0};
-    vector<double> ref_pos(3), ref_vel(3);
+    cartesian_t ref_pos, ref_vel;
 
     for (int i=0; i<2; i++) {
         makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
@@ -177,9 +172,9 @@ TEST_F(OrbitTest, EdgesHermite){
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> opos = {0., 0., 0.};
-    vector<double> ovel = {4000., -1000., 4500.};
-    vector<double> pos(3), vel(3);
+    cartesian_t opos = {0., 0., 0.};
+    cartesian_t ovel = {4000., -1000., 4500.};
+    cartesian_t pos, vel;
 
     // Create straight-line orbit with 11 state vectors, each 10 s apart
     for (int i=0; i<11; i++) {
@@ -189,7 +184,7 @@ TEST_F(OrbitTest, EdgesHermite){
 
     // Interpolation test times
     double test_t[] = {0.0, 100.0};
-    vector<double> ref_pos(3), ref_vel(3);
+    cartesian_t ref_pos, ref_vel;
 
     for (int i=0; i<2; i++) {
         makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
@@ -210,9 +205,9 @@ TEST_F(OrbitTest, EdgesLegendre){
 
     Orbit orb(1,11);
     double t = 1000.;
-    vector<double> opos = {0., 0., 0.};
-    vector<double> ovel = {4000., -1000., 4500.};
-    vector<double> pos(3), vel(3);
+    cartesian_t opos = {0., 0., 0.};
+    cartesian_t ovel = {4000., -1000., 4500.};
+    cartesian_t pos, vel;
 
     // Create straight-line orbit with 11 state vectors, each 10 s apart
     for (int i=0; i<11; i++) {
@@ -222,7 +217,7 @@ TEST_F(OrbitTest, EdgesLegendre){
 
     // Interpolation test times
     double test_t[] = {0.0, 100.0};
-    vector<double> ref_pos(3), ref_vel(3);
+    cartesian_t ref_pos, ref_vel;
 
     for (int i=0; i<2; i++) {
         makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);

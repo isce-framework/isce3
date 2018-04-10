@@ -5,18 +5,17 @@
 
 #include <cmath>
 #include <iostream>
-#include <vector>
 #include "isce/core/Projections.h"
 #include "gtest/gtest.h"
 
 using isce::core::Geocent;
+using isce::core::cartesian_t;
 using std::cout;
 using std::endl;
-using std::vector;
 
 Geocent proj;
-const double a = proj.ellipse.a;
-const double b = a * std::sqrt(1.0 - proj.ellipse.e2);
+const double a = proj.ellipse.a();
+const double b = a * std::sqrt(1.0 - proj.ellipse.e2());
 
 
 struct GeocentTest : public ::testing::Test {
@@ -36,9 +35,9 @@ struct GeocentTest : public ::testing::Test {
 
 #define geocentTest(name,p,q,r,x,y,z)       \
     TEST_F(GeocentTest, name) {       \
-        vector<double> ref_llh({p,q,r});    \
-        vector<double> ref_xyz({x,y,z});    \
-        vector<double> xyz(3), llh(3);  \
+        cartesian_t ref_llh = {p,q,r};    \
+        cartesian_t ref_xyz = {x,y,z};    \
+        cartesian_t xyz, llh;  \
         llh = ref_llh;                  \
         proj.forward(llh, xyz);    \
         EXPECT_NEAR(xyz[0], ref_xyz[0], 1.0e-6);\

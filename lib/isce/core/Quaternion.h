@@ -20,10 +20,9 @@ class isce::core::Quaternion : public isce::core::Attitude {
         Quaternion(std::vector<double> &);
 
         // Representations
-        std::vector<double> ypr();
-        std::vector<std::vector<double>> rotmat(const std::string);
-        std::vector<double> factoredYPR(std::vector<double> &,
-            std::vector<double> &, Ellipsoid *);
+        cartesian_t ypr();
+        cartmat_t rotmat(const std::string);
+        cartesian_t factoredYPR(const cartesian_t &, const cartesian_t &, Ellipsoid *);
 
         // Get a copy of the quaternion elements
         inline std::vector<double> qvec() const;

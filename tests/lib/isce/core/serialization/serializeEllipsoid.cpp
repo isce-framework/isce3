@@ -31,8 +31,8 @@ TEST(EllipsoidTest, CheckArchive) {
     }
 
     // Check values
-    ASSERT_NEAR(ellipsoid.a, 6378137.0, 1.0e-9);
-    ASSERT_NEAR(ellipsoid.e2, 0.0066943799, 1.0e-9);
+    ASSERT_NEAR(ellipsoid.a(), 6378137.0, 1.0e-9);
+    ASSERT_NEAR(ellipsoid.e2(), 0.0066943799, 1.0e-9);
     
 }
 

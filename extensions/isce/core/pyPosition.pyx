@@ -6,6 +6,7 @@
 
 from libcpp cimport bool
 from libcpp.vector cimport vector
+from Cartesian cimport cartesian_t
 from Position cimport Position
 
 cdef class pyPosition:
@@ -73,9 +74,9 @@ cdef class pyPosition:
         self.jddt = ps.jddt
 
     def lookVec(self, double a, double b, list c):
-        cdef vector[double] _c
+        cdef cartesian_t _c
         for i in range(3):
-            _c.push_back(c[i])
+            _c[i] = c[i]
         self.c_position.lookVec(a,b,_c)
         for i in range(3):
             c[i] = _c[i]
