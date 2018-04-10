@@ -13,10 +13,6 @@
 #include <complex>
 #include <valarray>
 
-// pyre
-#include <portinfo>
-#include <pyre/journal.h>
-
 // isce::core
 #include "Interpolator.h"
 #include "Poly2d.h"

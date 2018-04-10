@@ -7,8 +7,12 @@
 
 #include <algorithm>
 #include <iostream>
-#include <chrono>
 #include <cmath>
+
+// pyre
+#include <portinfo>
+#include <pyre/journal.h>
+#include <pyre/timers.h>
 
 // isce::core
 #include "Constants.h"
@@ -27,12 +31,14 @@ resamp(const std::string & inputFilename,          // filename of input SLC
        const std::string & azOffsetFilename,       // filename of azimuth offsets
        bool flatten, bool isComplex, int rowBuffer) {
 
-    // Initialize journal channels
+    // Initialize journal channel for info
     pyre::journal::info_t infoChannel("isce.core.ResampSlc");
-    pyre::journal::error_t errorChannel("isce.core.ResampSlc");
+    // Initialize timer
+    pyre::timer_t timer("isce.core.ResampSlc");
 
     // Check if data are not complex
     if (!isComplex) {
+        pyre::journal::error_t errorChannel("isce.core.ResampSlc");
         errorChannel
             << pyre::journal::at(__HERE__)
             << "Real data interpolation not implemented yet."
@@ -55,9 +61,6 @@ resamp(const std::string & inputFilename,          // filename of input SLC
     // Make output raster
     Raster outputSlc(outputFilename, outWidth, outLength, 1, GDT_CFloat32, "ISCE");
 
-    // Save starting processing time
-    auto procT0 = std::chrono::high_resolution_clock::now();
-
     // Announce myself to the world
     declare(inLength, inWidth, outLength, outWidth);
 
@@ -69,7 +72,10 @@ resamp(const std::string & inputFilename,          // filename of input SLC
     infoChannel << 
         "Resampling using " << nTiles << " tiles of " << _linesPerTile 
         << " lines per tile"
-        << pyre::journal::newline << pyre::journal::endl;
+        << pyre::journal::newline << pyre::journal::newline;
+
+    // Start timer
+    timer.start();
 
     // For each full tile of _linesPerTile lines...
     int outputLine = 0;
@@ -87,21 +93,21 @@ resamp(const std::string & inputFilename,          // filename of input SLC
         }
     
         // Get corresponding image indices
-        infoChannel << "Reading in image data for tile " << tileCount << pyre::journal::endl;
+        infoChannel << "Reading in image data for tile " << tileCount << pyre::journal::newline;
         _initializeTile(tile, inputSlc, azOffsetRaster, rowBuffer); 
         infoChannel << tile << pyre::journal::newline;
     
         // Perform interpolation
-        infoChannel << "Interpolating tile " << tileCount << pyre::journal::endl;
+        infoChannel << "Interpolating tile " << tileCount << pyre::journal::newline;
         _transformTile(tile, outputSlc, rgOffsetRaster, azOffsetRaster, inLength,
             flatten, outputLine);
     }
 
-    // Compute timing
-    auto procT1 = std::chrono::high_resolution_clock::now();
-    infoChannel
-        << "Elapsed time: " << std::chrono::duration<double>(procT1 - procT0).count()
-        << " seconds" << pyre::journal::endl;
+    // Print out timing information and reset
+    timer.stop();
+    infoChannel << "Elapsed processing time: " << timer.read() << " sec"
+                << pyre::journal::endl;
+    timer.reset();
 }
 
 // Initialize tile bounds
