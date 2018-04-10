@@ -37,7 +37,7 @@ linComb(double k1, const cartesian_t & u, double k2, const cartesian_t & v,
      *  Calculate the linear combination of two pairs of scalars and 1x3 vectors and store the
      *  resulting vector in w.
      */
-    for (int i = 0; i < 3; i++) w[i] = (k1 * u[i]) + (k2 * v[i]);
+    for (int i = 0; i < 3; ++i) w[i] = (k1 * u[i]) + (k2 * v[i]);
 }
 
 void isce::core::LinAlg::
@@ -46,7 +46,7 @@ matMat(const cartmat_t & a, const cartmat_t & b, cartmat_t & c) {
      *  Calculate the matrix product of two 3x3 matrices and store the resulting matrix in c.
      */
     for (int i=0; i<3; i++) {
-        for (int j=0; j<3; j++) {
+        for (int j=0; j<3; ++j) {
             c[i][j] = (a[i][0] * b[0][j]) + (a[i][1] * b[1][j]) + (a[i][2] * b[2][j]);
         }
     }
@@ -58,7 +58,7 @@ matVec(const cartmat_t & t, const cartesian_t & v, cartesian_t & w) {
      *  Calculate the matrix product of a 1x3 vector with a 3x3 matrix and store the resulting
      *  vector in w.
      */
-    for (int i=0; i<3; i++) w[i] = (t[i][0] * v[0]) + (t[i][1] * v[1]) + (t[i][2] * v[2]);
+    for (int i=0; i<3; ++i) w[i] = (t[i][0] * v[0]) + (t[i][1] * v[1]) + (t[i][2] * v[2]);
 }
 
 double isce::core::LinAlg::
@@ -74,8 +74,8 @@ tranMat(const cartmat_t & a, cartmat_t & b) {
     /*
      *  Transpose a 3x3 matrix and store the resulting matrix in b.
      */
-    for (int i=0; i<3; i++) {
-        for (int j=0; j<3; j++) {
+    for (int i=0; i<3; ++i) {
+        for (int j=0; j<3; ++j) {
             b[i][j] = a[j][i];
         }
     }
@@ -88,7 +88,7 @@ unitVec(const cartesian_t & u, cartesian_t & v) {
      */
     auto n = norm(u);
     if (n != 0.0) {
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3; ++i) {
             v[i] = u[i] / n;
         }
     }

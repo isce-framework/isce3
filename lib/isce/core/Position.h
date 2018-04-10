@@ -19,7 +19,7 @@ namespace isce { namespace core {
         Position(const Position &p) : j(p.j), jdot(p.jdot), jddt(p.jddt) {}
         inline Position& operator=(const Position&);
 
-        void lookVec(double,double,cartesian_t&) const;
+        void lookVec(double, double, cartesian_t&) const;
     };
 
     inline Position& Position::operator=(const Position &rhs) {

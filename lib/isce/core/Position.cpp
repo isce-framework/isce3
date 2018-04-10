@@ -4,16 +4,13 @@
 //
 
 #include <cmath>
-#include <vector>
 #include "Constants.h"
 #include "LinAlg.h"
 #include "Position.h"
 using isce::core::LinAlg;
 using isce::core::Position;
-using std::vector;
 
-
-void Position::lookVec(double look, double az, cartesian_t &v) const {
+void Position::lookVec(double look, double az, cartesian_t & v) const {
     /*
      * Computes the look vector given the look angle, azimuth angle, and position vector.
      */
@@ -36,3 +33,5 @@ void Position::lookVec(double look, double az, cartesian_t &v) const {
     LinAlg::linComb(cos(look), n, sin(look), temp, w);
     LinAlg::unitVec(w, v);
 }
+
+// end of file

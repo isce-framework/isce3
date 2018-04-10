@@ -46,7 +46,7 @@ class isce::core::Ellipsoid {
         void xyzToLatLon(const cartesian_t &, cartesian_t &) const;
         void getAngs(const cartesian_t &,const cartesian_t &,
                      const cartesian_t &, double &, double &) const;
-        void getTCN_TCvec(const cartesian_t &,const cartesian_t &,
+        void getTCN_TCvec(const cartesian_t &, const cartesian_t &,
                           const cartesian_t &, cartesian_t &) const;
         void TCNbasis(const cartesian_t &, const cartesian_t &, cartesian_t &,
                       cartesian_t &, cartesian_t &) const;

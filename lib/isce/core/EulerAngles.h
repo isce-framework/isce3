@@ -31,7 +31,7 @@ class isce::core::EulerAngles : public isce::core::Attitude {
         cartmat_t T1(double);
 
         // Utility method to convert rotation matrix to Euler angles
-        static cartesian_t rotmat2ypr(cartmat_t &);
+        static cartesian_t rotmat2ypr(const cartmat_t &);
 
         // Get the attitude angles
         inline double yaw() const;

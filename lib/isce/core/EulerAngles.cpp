@@ -95,7 +95,7 @@ isce::core::EulerAngles::T1(double angle) {
 
 // Extract YPR angles from a rotation matrix
 isce::core::cartesian_t
-isce::core::EulerAngles::rotmat2ypr(cartmat_t & R) {
+isce::core::EulerAngles::rotmat2ypr(const cartmat_t & R) {
 
     const double sy = std::sqrt(R[0][0]*R[0][0] + R[1][0]*R[1][0]);
     double yaw, pitch, roll;

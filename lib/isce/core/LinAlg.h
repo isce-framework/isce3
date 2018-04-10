@@ -35,7 +35,7 @@ struct isce::core::LinAlg {
     // Transpose matrix
     static void tranMat(const cartmat_t &, cartmat_t &);
     // Unit vector
-    static void unitVec(const cartesian_t &,cartesian_t &);
+    static void unitVec(const cartesian_t &, cartesian_t &);
     // Compute ENU basis
     static void enuBasis(double, double, cartmat_t &);
 };

@@ -87,8 +87,8 @@ isce::core::Quaternion::rotmat(const std::string dummy) {
 // Extract YPR after factoring out orbit matrix
 isce::core::cartesian_t
 isce::core::Quaternion::
-factoredYPR(cartesian_t & satxyz,
-            cartesian_t & satvel,
+factoredYPR(const cartesian_t & satxyz,
+            const cartesian_t & satvel,
             Ellipsoid * ellipsoid) {
 
     // Compute ECI velocity assuming attitude angles are provided in inertial frame

@@ -22,7 +22,7 @@ class isce::core::Quaternion : public isce::core::Attitude {
         // Representations
         cartesian_t ypr();
         cartmat_t rotmat(const std::string);
-        cartesian_t factoredYPR(cartesian_t &, cartesian_t &, Ellipsoid *);
+        cartesian_t factoredYPR(const cartesian_t &, const cartesian_t &, Ellipsoid *);
 
         // Get a copy of the quaternion elements
         inline std::vector<double> qvec() const;
