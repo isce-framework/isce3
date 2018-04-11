@@ -1,0 +1,114 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Author: Bryan Riel
+// Copyright 2018
+//
+
+#if !defined(ISCE_CORE_TILE_ICC)
+#error "Tile.icc is an implementation detail of class Tile"
+#endif
+
+#define IDX1D(i,j,w) (((i)*(w))+(j))
+
+// Default constructor
+template <typename T>
+isce::core::Tile<T>::Tile() {};
+
+// Copy constructor
+template <typename T>
+isce::core::Tile<T>::Tile(const Tile & refTile) : _width(refTile.width()),
+    _rowStart(refTile.rowStart()), _rowEnd(refTile.rowEnd()),
+    _firstImageRow(refTile.firstImageRow()), _lastImageRow(refTile.lastImageRow()) {}
+
+// Allocate dynamic memory
+template <typename T>
+void isce::core::Tile<T>::allocate() {
+    _data.resize(length() * _width);
+}
+
+// Get tile length (disallow setting of tile length)
+template <typename T>
+int isce::core::Tile<T>::length() const {
+    return _lastImageRow - _firstImageRow + 1;
+}
+
+// Get tile width
+template <typename T>
+int isce::core::Tile<T>::width() const {
+    return _width;
+}
+
+// Set tile width
+template <typename T>
+void isce::core::Tile<T>::width(int widthVal) {
+    _width = widthVal;
+}
+
+// Get row start index
+template <typename T>
+int isce::core::Tile<T>::rowStart() const {
+    return _rowStart;
+}
+
+// Set row start index
+template <typename T>
+void isce::core::Tile<T>::rowStart(int value) {
+    _rowStart = value;
+}
+
+// Get row end index
+template <typename T>
+int isce::core::Tile<T>::rowEnd() const {
+    return _rowEnd;
+}
+
+// Set row end index
+template <typename T>
+void isce::core::Tile<T>::rowEnd(int value) {
+    _rowEnd = value;
+}
+
+// Get index of first row of image
+template <typename T>
+int isce::core::Tile<T>::firstImageRow() const {
+    return _firstImageRow;
+}
+
+// Set index of first row of image
+template <typename T>
+void isce::core::Tile<T>::firstImageRow(int value) {
+    _firstImageRow = value;
+}
+
+// Get index of last row of image
+template <typename T>
+int isce::core::Tile<T>::lastImageRow() const {
+    return _lastImageRow;
+}
+
+// Set index of last row of image
+template <typename T>
+void isce::core::Tile<T>::lastImageRow(int value) {
+    _lastImageRow = value;
+}
+
+// Get reference to underlying data
+template <typename T>
+std::valarray<T> & isce::core::Tile<T>::data() {
+    return _data;
+}
+
+// Print out relevant attributes
+template <typename T>
+void isce::core::Tile<T>::
+declare(pyre::journal::info_t & info) const {
+    info << "Tile parameters:" << pyre::journal::newline
+         << "    - first image row   : " << firstImageRow() << pyre::journal::newline
+         << "    - last image row    : " << lastImageRow() << pyre::journal::newline
+         << "    - row start         : " << rowStart() << pyre::journal::newline
+         << "    - row end           : " << rowEnd() << pyre::journal::newline
+         << "    - width             : " << width() << pyre::journal::newline;
+}
+
+// end of file

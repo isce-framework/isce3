@@ -25,6 +25,7 @@ PROJ_SRCS = \
     Projections.cpp \
     Quaternion.cpp \
     Raster.cpp \
+    ResampSlc.cpp \
 
 # products
 # the library
@@ -55,8 +56,12 @@ EXPORT_PKG_HEADERS = \
     Quaternion.icc \
     Raster.h \
     Raster.icc \
+    ResampSlc.h \
+    ResampSlc.icc \
     Serialization.h \
     StateVector.h \
+    Tile.h \
+    Tile.icc \
 
 # standard targets
 all: $(PROJ_DLL) export

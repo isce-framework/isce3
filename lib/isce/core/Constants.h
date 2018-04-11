@@ -49,10 +49,12 @@ namespace isce { namespace core {
     };
 
     // Sinc interpolation constants
-    //static const int SINC_LEN = 8;
-    //static const int SINC_HALF = 4;
-    //static const int SINC_ONE = 9;
-    //static const int SINC_SUB = 8192;
+    enum sincInterpConst {
+        SINC_HALF = 4,
+        SINC_LEN = 8,
+        SINC_ONE = 9,
+        SINC_SUB = 8192
+    };
 
     enum dataInterpMethod {
         SINC_METHOD,

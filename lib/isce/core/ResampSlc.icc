@@ -1,0 +1,195 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+
+#if !defined(ISCE_CORE_RESAMPSLC_ICC)
+#error "ResampSlc.icc is an implementation detail of class ResampSlc"
+#endif
+
+// Since fmod(a,b) in C++ != MODULO(a,b) in Fortran for all a,b, define a C++ equivalent
+#define modulo_f(a,b) fmod(fmod(a,b)+(b),(b))
+
+// Default constructor
+isce::core::ResampSlc::
+ResampSlc() {}
+
+// Destructor
+isce::core::ResampSlc::
+~ResampSlc() {}
+
+// Get range carrier polynomial
+isce::core::Poly2d
+isce::core::ResampSlc::
+rgCarrier() const {
+    return _rgCarrier;
+}
+
+// Set range carrier polynomial
+void isce::core::ResampSlc::
+rgCarrier(Poly2d & poly) {
+    _rgCarrier = poly;
+}
+
+// Get azimuth carrier polynomial
+isce::core::Poly2d
+isce::core::ResampSlc::
+azCarrier() const {
+    return _azCarrier;
+}
+
+// Set azimuth carrier polynomial
+void isce::core::ResampSlc::
+azCarrier(Poly2d & poly) {
+    _azCarrier = poly;
+}
+
+// Get Doppler polynomial
+isce::core::Poly2d
+isce::core::ResampSlc::
+doppler() const {
+    return _dopplerPoly;
+}
+
+// Set Doppler polynomial
+void isce::core::ResampSlc::
+doppler(Poly2d & poly) {
+    _dopplerPoly = poly;
+}
+
+// Get metadata
+isce::core::Metadata
+isce::core::ResampSlc::
+metadata() const {
+    return _meta;
+}
+
+// Set metadata from copy
+void isce::core::ResampSlc::
+metadata(Metadata meta) {
+    _meta = meta;
+}
+
+// Get reference metadata
+isce::core::Metadata
+isce::core::ResampSlc::
+refMetadata() const {
+    return _refMeta;
+}
+
+// Set reference metadata from copy
+void isce::core::ResampSlc::
+refMetadata(Metadata meta) {
+    _refMeta = meta;
+}
+
+// Announce my properties to the world
+void isce::core::ResampSlc::
+declare(int inLength, int inWidth,
+    int outLength, int outWidth) const {
+    // Make info channel
+    pyre::journal::info_t channel("isce.core.ResampSlc");
+    // Basic info
+    channel << pyre::journal::newline
+            << "Resample one image to another image coordinates >>"
+            << pyre::journal::newline << pyre::journal::newline;
+    channel << "Input Image Dimensions:  " << inLength << " lines, "
+            << inWidth << " pixels" 
+            << pyre::journal::newline;
+    channel << "Output Image Dimensions: " << outLength << " lines, "
+            << outWidth << " pixels"
+            << pyre::journal::newline << pyre::journal::newline;
+    //channel << "Number of threads: " << omp_get_max_threads() << pyre::journal::newline;
+    channel << "Complex data interpolation" << pyre::journal::endl;
+    // Polynomial info
+    printf("Azimuth Carrier Poly\n");
+    _azCarrier.printPoly();
+    printf("Range Carrier Poly\n");
+    _rgCarrier.printPoly();
+    printf("Doppler Poly\n");
+    _dopplerPoly.printPoly(); 
+}
+
+// Get the number of lines per tile
+size_t isce::core::ResampSlc::
+linesPerTile() const {
+    return _linesPerTile;
+}
+
+// Set the number of lines per tile
+void isce::core::ResampSlc::
+linesPerTile(size_t value) {
+    _linesPerTile = value;
+}
+
+// Compute number of tiles given a specified nominal tile size
+int isce::core::ResampSlc::
+_computeNumberOfTiles(int outLength, int linesPerTile) {
+    // Compute floor(nTiles)
+    int nTiles = outLength / linesPerTile;
+    // See if there are any leftover lines to add an extra tile
+    int extraLines = outLength - nTiles * linesPerTile;
+    if (extraLines > 0) {
+        nTiles += 1;
+    }
+    return nTiles;
+}
+
+// Prepare sinc interpolation methods and internal data
+void isce::core::ResampSlc::
+_prepareInterpMethods(int method) {
+    // Compute filter coefficients    
+    if (method == SINC_METHOD) {
+
+        // Initialize sinc coefficients
+        std::valarray<double> filter(0.0, SINC_SUB * SINC_LEN + 1);
+        Interpolator::sinc_coef(1.0, SINC_LEN, SINC_SUB, 0.0, 1, filter);
+
+        // Normalize filter
+        for (int i = 0; i < SINC_SUB; ++i) {
+            // Compute filter sum
+            double ssum = 0.0;
+            for (int j = 0; j < SINC_LEN; ++j) {
+                ssum += filter[i + SINC_SUB*j];
+            }
+            // Normalize the filter
+            for (int j = 0; j < SINC_LEN; ++j) {
+                filter[i + SINC_SUB*j] /= ssum;
+            }
+        }
+
+        // Copy transpose of filter coefficients to member data
+        _fintp.resize(SINC_SUB, SINC_LEN);
+        for (int i = 0; i < SINC_LEN; ++i) {
+            for (int j = 0; j < SINC_SUB; ++j) {
+                _fintp(j,i) = filter[j + SINC_SUB*i];
+            }
+        }
+    } else {
+        std::cerr << "Error: other interpolation methods for ResampSlc not implemented yet."
+                  << std::endl;
+    }
+    // done
+}
+
+// Complex sinc interpolation
+std::complex<float> isce::core::ResampSlc::
+_interpolateComplex(Matrix<std::complex<float>> & ifg, int x, int y,
+                    double fx, double fy, int nx, int ny) {
+
+    // Check edge conditions
+    if ((x < SINC_HALF) || (x > (nx - SINC_HALF)))
+        return std::complex<float>(0.0, 0.0);
+    if ((y < SINC_HALF) || (y > (ny - SINC_HALF)))
+        return std::complex<float>(0.0, 0.0);
+
+    // Modify interpolation coordinates
+    const int xx = x + SINC_HALF - 1;
+    const int yy = y + SINC_HALF - 1;
+
+    // Call sinc interpolator
+    std::complex<float> interpVal = Interpolator::sinc_eval_2d(
+        ifg, _fintp, xx, yy, fx, fy, nx, nx
+    );
+    return interpVal;
+}
+
+// end of file

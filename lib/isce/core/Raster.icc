@@ -116,7 +116,7 @@ void isce::core::Raster::getValue(T &buffer, size_t xidx, size_t yidx, size_t ba
 // Get value from given x/y positions in band 1 
 template<typename T>
 void isce::core::Raster::getValue(T &buffer, size_t xidx, size_t yidx) {
-  getValue(buffer, xidx, yidx, 1, GF_Read);
+  getValue(buffer, xidx, yidx, 1);
 }
 
 

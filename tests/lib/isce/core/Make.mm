@@ -23,6 +23,7 @@ PACKAGES = \
     projections \
     raster \
     serialization \
+    resampslc \
 
 # the standard targets
 all:

@@ -8,7 +8,7 @@
 include "pyAttitude.pyx"
 include "pyDoppler.pyx"
 include "pyEllipsoid.pyx"
-include "pyInterpolator.pyx"
+#include "pyInterpolator.pyx"
 include "pyPeg.pyx"
 include "pyPegtrans.pyx"
 include "pyPosition.pyx"

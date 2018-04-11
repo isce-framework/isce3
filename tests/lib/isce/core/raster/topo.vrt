@@ -1,0 +1,47 @@
+<VRTDataset rasterXSize="100" rasterYSize="200">
+  <VRTRasterBand dataType="Float32" band="1">
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">lat.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="100" RasterYSize="200" DataType="Float32" BlockXSize="100" BlockYSize="20" />
+      <SrcRect xOff="0" yOff="0" xSize="100" ySize="200" />
+      <DstRect xOff="0" yOff="0" xSize="100" ySize="200" />
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Float64" band="2">
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">lon.rdr</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="100" RasterYSize="200" DataType="Float64" BlockXSize="100" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="100" ySize="200" />
+      <DstRect xOff="0" yOff="0" xSize="100" ySize="200" />
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Int16" band="3">
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">inc.bin</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="100" RasterYSize="200" DataType="Int16" BlockXSize="100" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="100" ySize="200" />
+      <DstRect xOff="0" yOff="0" xSize="100" ySize="200" />
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Int16" band="4">
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">inc.bin</SourceFilename>
+      <SourceBand>2</SourceBand>
+      <SourceProperties RasterXSize="100" RasterYSize="200" DataType="Int16" BlockXSize="100" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="100" ySize="200" />
+      <DstRect xOff="0" yOff="0" xSize="100" ySize="200" />
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Byte" band="5">
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">msk.bin</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="100" RasterYSize="200" DataType="Byte" BlockXSize="100" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="100" ySize="200" />
+      <DstRect xOff="0" yOff="0" xSize="100" ySize="200" />
+    </SimpleSource>
+  </VRTRasterBand>
+</VRTDataset>

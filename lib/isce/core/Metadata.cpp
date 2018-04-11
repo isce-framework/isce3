@@ -1,3 +1,5 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
 //
 // Source Author: Bryan Riel
 // Co-Author: Joshua Cohen
@@ -7,10 +9,8 @@
 #include <iostream>
 #include "Metadata.h"
 
-std::ostream& operator<<(std::ostream &os, const isce::core::RadarMetadata &radar) {
-    /*
-     * Define the << operator for a Radar object for debugging purposes.
-     */
+// Define std::cout interaction for debugging
+std::ostream& operator<<(std::ostream &os, const isce::core::Metadata &radar) {
     os << "Radar parameters:" << std::endl;
     os << "  - width: " << radar.width << std::endl;
     os << "  - length: " << radar.length << std::endl;
@@ -24,3 +24,5 @@ std::ostream& operator<<(std::ostream &os, const isce::core::RadarMetadata &rada
     //os << "  - sensingStart: " << radar.sensingStart.toIsoString() << std::endl;
     return os;
 }
+
+// end of file
