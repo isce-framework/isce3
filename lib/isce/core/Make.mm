@@ -56,6 +56,7 @@ EXPORT_PKG_HEADERS = \
     Raster.h \
     Raster.icc \
     Serialization.h \
+    StateVector.h \
 
 # standard targets
 all: $(PROJ_DLL) export

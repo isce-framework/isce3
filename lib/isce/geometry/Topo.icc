@@ -1,0 +1,126 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Author: Bryan V. Riel
+// Copyright 2017-2018
+
+#if !defined(ISCE_GEOMETRY_TOPO_ICC)
+#error "Topo.icc is an implementation detail of class Topo"
+#endif
+
+// Constructor
+isce::geometry::Topo::
+Topo(isce::core::Ellipsoid ellipsoid, isce::core::Orbit orbit, isce::core::Metadata meta) {
+    // Copy objects
+    _ellipsoid = ellipsoid;
+    _orbit = orbit;
+    _meta = meta;
+    // Set initialization flag to false
+    _initialized = false;
+}
+
+// Set initialization flag
+void isce::geometry::Topo::
+initialized(bool flag) {
+    _initialized = flag;
+}
+
+// Check initialization flag
+void isce::geometry::Topo::
+checkInitialization(pyre::journal::info_t & info) const {
+    if (!_initialized) {
+        pyre::journal::error_t error("isce.geometry.Topo"):
+        error 
+            << pyre::journal::at(__HERE__)
+            << pyre"Topo options have not been set." 
+            << pyre::journal::endl;
+    } else {
+        info
+            << "Primary iterations: " << _numiter << pyre::journal::newline
+            << "Secondary iterations: " << _extraiter << pyre::journal::newline
+            << "Distance threshold: " << _threshold << pyre::journal::newline;
+    }
+}
+
+// Set threshold
+void isce::geometry::Topo::
+threshold(double t) {
+    _threshold = t;
+}
+
+// Set number of iterations
+void isce::geometry::Topo::
+numiter(int n) {
+    _numiter = n;
+}
+
+// Set number of extra iterations
+void isce::geometry::Topo::
+extraiter(int n) {
+    _extraiter = n;
+}
+
+// Set the orbit interpolation method while checking its validity
+void isce::geometry::Topo::
+orbitMethod(isce::core::orbitInterpMethod method) {
+
+    // Check validity
+    if (method == isce::core::HERMITE_METHOD) {
+        if (orb.nVectors < 4) {
+            pyre::journal::error_t error("isce.geometry.Topo");
+            error
+                << pyre::journal::at(__HERE__)
+                << "Error in Topo::orbitMethod - Need at least 4 state vectors for using "
+                << "hermite polynomial interpolation."
+                << pyre::journal::endl;
+        }
+    } else if (method == isce::core::SCH_METHOD) {
+        if (orb.nVectors < 4) {
+            pyre::journal::error_t error("isce.geometry.Topo");
+            error
+                << pyre::journal::at(__HERE__)
+                << "Error in Topo::orbitMethod - Need at least 4 state vectors for using "
+                << "SCH interpolation."
+                << pyre::journal::endl;
+        }
+    } else if (method == isce::core::LEGENDRE_METHOD) {
+        if (orb.nVectors < 9) {
+            pyre::journal::error_t error("isce.geometry.Topo");
+            error
+                << pyre::journal::at(__HERE__)
+                << "Error in Topo::orbitMethod - Need at least 9 state vectors for using "
+                << "legendre polynomial interpolation."
+                << pyre::journal::endl;
+        }
+    } else {
+        pyre::journal::error_t error("isce.geometry.Topo");
+        error
+            << pyre::journal::at(__HERE__)
+            << "Error in Topo::orbitMethod - Undefined orbit interpolation method."
+            << pyre::journal::endl;
+    }
+
+    // Save
+    _orbitMethod = method;
+}
+
+// Set the DEM interpolation method while checking its validity
+void isce::geometry::Topo::
+demMethod(isce::core::dataInterpMethod method) {
+
+    // Check validity
+    if ((method != isce::core::SINC_METHOD) && (method != isce::core::BILINEAR_METHOD) &&
+        (method != isce::core::BICUBIC_METHOD) && (method != isce::core::NEAREST_METHOD) &&
+        (method != isce::core::AKIMA_METHOD) && (method != isce::core::BIQUINTIC_METHOD)) {
+        pyre::journal::error_t error("isce.geometry.Topo");
+        error
+            << pyre::journal::at(__HERE__)
+            << "Error in Topo::demMethod - Unsupported DEM interpolation method"
+            << pyre::journal::endl;
+    }
+
+    // Save
+    _demMethod = method;
+}
+
+// end of file

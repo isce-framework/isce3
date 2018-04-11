@@ -8,11 +8,12 @@
 #include "Geometry.h"
 #include "LinAlg.h"
 
-void isce::core::Geometry::
-rdr2geo(double slantRange, double dopfact, const cartesian_t & that,
-        const cartesian_t & chat, const cartesian_t & nhat,
+int isce::core::Geometry::
+rdr2geo(double slantRange, double dopfact,
+        const cartesian_t & satPos, const cartesian_t & satVel,
+        const cartesian_t & that, const cartesian_t & chat, const cartesian_t & nhat,
         Ellipsoid & ellipsoid, Pegtrans & ptm, DEMInterpolator & demInterp,
-        cartesian_t & targetLLH, 
+        cartesian_t & targetLLH, double threshold) {
     /*
     - Assume orbit has been interpolated to correct azimuth time. Consider putting in a
       check for this condition.
@@ -20,12 +21,13 @@ rdr2geo(double slantRange, double dopfact, const cartesian_t & that,
     - Start with position and velocity of spacecraft
     */
 
-    cartesian_t targetLLH_old, targetVec_old, targetSCH;
-
     // Initialization
+    cartesian_t targetSCH, targetVec, targetLLH_old, targetVec_old,
+                lookVec, delta, delta_temp;
     targetSCH[2] = targetLLH[2];
 
     // Iterate
+    int converged = 0;
     for (size_t i = 0; i < (maxIter + extraIter); ++i) {
 
         // Cache the previous solution
@@ -51,8 +53,7 @@ rdr2geo(double slantRange, double dopfact, const cartesian_t & that,
         ellipsoid.xyzToLatLon(targetVec, targetLLH);
 
         // Interpolate DEM at current lat/lon point
-        float height = demInterp.interpolate(targetLLH[0], targetLLH[1]);
-        targetLLH[2] = height;
+        targetLLH[2] = demInterp.interpolate(targetLLH[0], targetLLH[1]);
         // Convert back to XYZ with interpolated height
         ellipsoid.latLonToXyz(targetLLH, targetVec);
         // Compute updated SCH coordinates
@@ -62,7 +63,8 @@ rdr2geo(double slantRange, double dopfact, const cartesian_t & that,
         LinAlg::linComb(1.0, satPos, -1.0, targetVec, lookVec);
         const double rdiff = slantRange - LinAlg::norm(lookVec);
         if (std::abs(rdiff) < threshold) {
-            return;
+            converged = 1;
+            return converged;
         // May need to perform extra iterations
         } else if (i > maxIter) {
             // XYZ position of old solution
@@ -76,10 +78,13 @@ rdr2geo(double slantRange, double dopfact, const cartesian_t & that,
             LinAlg::linComb(1.0, satPos, -1.0, targetVec, loookVec);
             const double rdiff = slantRange - LinAlg::norm(lookVec);
             if (std::abs(rdiff) < threshold) {
-                return;
+                converged = 1;
+                return converged;
             }
         }
     }
+    // If we reach this point, no convergence for specified threshold
+    return converged;
 }
 
 

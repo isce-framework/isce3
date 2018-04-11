@@ -8,7 +8,7 @@
 #include "DEMInterpolator.h"
 
 // Load DEM subset into memory
-void isce::core::DEMInterpolator::
+void isce::geometry::DEMInterpolator::
 loadDEM(double minLon, double maxLon, double minLat, double maxLat) {
 
     // Initialize journal
@@ -74,7 +74,7 @@ loadDEM(double minLon, double maxLon, double minLat, double maxLat) {
 }
 
 // Load DEM subset into memory
-void isce::core::DEMInterpolator::
+void isce::geometry::DEMInterpolator::
 declare() const {
     pyre::journal::info_t info("isce.core.DEMInterpolator");
     info << pyre::journal::newline;
@@ -87,8 +87,10 @@ declare() const {
 }
 
 // Compute maximum DEM height
-float isce::core::DEMInterpolator::
-computeHeightStats(float & maxValue, float & meanValue) const {
+float isce::geometry::DEMInterpolator::
+computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & info) const {
+    // Announce myself
+    info << "Computing DEM statistics" << pyre::journal::newline << pyre::journal::newline;
     // If we don't have a DEM, just use reference height
     if (!_haveRaster) {
         maxValue = _refHeight;
@@ -106,10 +108,13 @@ computeHeightStats(float & maxValue, float & meanValue) const {
         }
         meanValue = sum / (_dem.width() * _dem.length());
     }
+    // Announce results
+    info << "Max DEM height: " << demmax << pyre::journal::newline
+         << "Average DEM height: " << dem_avg << pyre::journal::newline;
 }
 
 // Interpolate DEM
-float isce::core::DEMInterpolator::
+float isce::geometry::DEMInterpolator::
 interpolate(double lat, double lon) const {
     // If we don't have a DEM, just return reference height
     if (!_haveRaster) {
@@ -130,15 +135,14 @@ interpolate(double lat, double lon) const {
 
         // Choose correct interpolation routine
         float value;
-        if (_interpMethod == BILINEAR_METHOD) {
+        if (_interpMethod == isce::core::BILINEAR_METHOD) {
             value = Interpolator::bilinear(row, col, _dem, 0);
-        } else if (_interpMethod == BICUBIC_METHOD) {
+        } else if (_interpMethod == isce::core::BICUBIC_METHOD) {
             value = Interpolator::bicubic(row, col, _dem, 0);
-        } else if (_interpMethod == AKIMA_METHOD) {
+        } else if (_interpMethod == isce::core::AKIMA_METHOD) {
             value = Interpolator::akima(_dem.width(), _dem.length(), _dem,
                 row, col);
-        } else {
-            // Nearest neighbor fallback
+        } else if (_interpMethod == isce::core::NEAREST_METHOD) {
             return _dem(int(std::round(row)), int(std::round(col)));
         }
     }

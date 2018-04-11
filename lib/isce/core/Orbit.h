@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include "Constants.h"
+#include "StateVector.h"
 
 // Declaration
 namespace isce {
@@ -35,6 +36,8 @@ struct isce::core::Orbit {
     std::vector<double> position;
     // Linearized velocity values of contained State Vectors
     std::vector<double> velocity;
+    // Vector of StateVectors
+    std::vector<StateVector> stateVectors;
 
     Orbit(int bs, int nv) : basis(bs), nVectors(nv), UTCtime(nv,0.), position(3*nv,0.), 
                             velocity(3*nv,0.) {}

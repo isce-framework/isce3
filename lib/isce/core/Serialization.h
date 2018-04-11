@@ -2,7 +2,7 @@
 //-*- coding: utf-8 -*-
 //
 // Author: Bryan V. Riel
-// Copyright 2018
+// Copyright 2017-2018
 
 #ifndef ISCE_CORE_SERIALIZATION_H
 #define ISCE_CORE_SERIALIZATION_H

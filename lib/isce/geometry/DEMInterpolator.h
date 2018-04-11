@@ -14,26 +14,27 @@
 
 // Declaration
 namespace isce {
-    namespace core {
+    namespace geometry {
         class DEMInterpolator;
     }
 }
 
 // DEMInterpolator declaration
-class isce::core::DEMInterpolator {
+class isce::geometry::DEMInterpolator {
 
     public:
         // Constructors
         DEMInterpolator(): _haveRaster(false), _refHeight(0.0) {}
         DEMInterpolator(float height) : _haveRaster(false), _refHeight(height) {}
-        DEMInterpolator(const Raster & demRaster, dataInterpMethod method=BICUBIC_METHOD) :
-            _haveRaster(true), _demRaster(demRaster), _interpMethod(method) {}
+        DEMInterpolator(const isce::core::Raster & demRaster,
+                        dataInterpMethod method=BICUBIC_METHOD) :
+                        _haveRaster(true), _demRaster(demRaster), _interpMethod(method) {}
         // Read in subset of data
         void loadDEM(int, int, int, int);
         // Print stats
         void declare() const;
         // Compute max and mean DEM height
-        void computeHeightStats(float &, float &) const;
+        void computeHeightStats(float &, float &, pyre::journal::info_t &) const;
         // Interpolate at a given latitude and longitude
         float interpolate(double, double) const;
         // Get transform properties
@@ -41,6 +42,9 @@ class isce::core::DEMInterpolator {
         double latStart() const { return _latstart; }
         double deltaLon() const { return _deltalon; }
         double deltaLat() const { return _deltalat; }
+        // Middle latitude and longitude
+        double midLon() const { return _lonstart + 0.5*_dem.width()*_deltalon; }
+        double midLat() const { return _latstart + 0.5*_dem.length()*_deltalat; }
 
     private:
         // Flag indicating whether we have access to a DEM raster
@@ -48,9 +52,9 @@ class isce::core::DEMInterpolator {
         // Constant value if no raster is provided
         float _refHeight;
         // Raster for DEM
-        Raster & _demRaster;
+        isce::core::Raster & _demRaster;
         // 2D array for storing DEM subset
-        Matrix<float> _dem;
+        isce::core::Matrix<float> _dem;
         // Starting lat/lon for DEM subset and spacing
         double _lonstart, _latstart, _deltalon, _deltalat;
         // Interpolation method
