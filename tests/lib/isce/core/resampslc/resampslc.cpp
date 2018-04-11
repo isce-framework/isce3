@@ -12,10 +12,6 @@
 #include <gtest/gtest.h>
 #include <cpl_conv.h>
 
-// pyre
-#include <portinfo>
-#include <pyre/journal.h>
-
 // isce::core
 #include "isce/core/Constants.h"
 #include "isce/core/Raster.h"
