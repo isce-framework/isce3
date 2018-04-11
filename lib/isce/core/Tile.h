@@ -11,6 +11,9 @@
 #include <complex>
 #include <valarray>
 
+// pyre
+#include <pyre/journal.h>
+
 // Declarations
 namespace isce {
     namespace core {
@@ -45,6 +48,9 @@ class isce::core::Tile {
         // Allocate memory
         inline void allocate();
 
+        // Print out relevant attributes
+        inline void declare(pyre::journal::info_t &) const;
+
         // Overload subscript operator to access valarray data
         T & operator[](size_t index) {return _data[index];}
         // Read-only subscript operator
@@ -65,10 +71,6 @@ class isce::core::Tile {
         // Data
         std::valarray<T> _data;
 };
-
-// Print out relevant attributes
-template <typename T>
-std::ostream &operator<<(std::ostream &, const isce::core::Tile<T> &);
 
 // Get inline implementations of Tile
 #define ISCE_CORE_TILE_ICC

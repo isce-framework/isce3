@@ -101,14 +101,14 @@ std::valarray<T> & isce::core::Tile<T>::data() {
 
 // Print out relevant attributes
 template <typename T>
-std::ostream &operator<<(std::ostream & os, const isce::core::Tile<T> & tile) {
-    os << "Tile parameters:" << std::endl;
-    os << "    - first image row   : " << tile.firstImageRow() << std::endl;
-    os << "    - last image row    : " << tile.lastImageRow() << std::endl;
-    os << "    - row start         : " << tile.rowStart() << std::endl;
-    os << "    - row end           : " << tile.rowEnd() << std::endl;
-    os << "    - width             : " << tile.width();
-    return os;
+void isce::core::Tile<T>::
+declare(pyre::journal::info_t & info) const {
+    info << "Tile parameters:" << pyre::journal::newline
+         << "    - first image row   : " << firstImageRow() << pyre::journal::newline
+         << "    - last image row    : " << lastImageRow() << pyre::journal::newline
+         << "    - row start         : " << rowStart() << pyre::journal::newline
+         << "    - row end           : " << rowEnd() << pyre::journal::newline
+         << "    - width             : " << width() << pyre::journal::newline;
 }
 
 // end of file

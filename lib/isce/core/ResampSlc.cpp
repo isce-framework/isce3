@@ -95,7 +95,8 @@ resamp(const std::string & inputFilename,          // filename of input SLC
         // Get corresponding image indices
         infoChannel << "Reading in image data for tile " << tileCount << pyre::journal::newline;
         _initializeTile(tile, inputSlc, azOffsetRaster, rowBuffer); 
-        infoChannel << tile << pyre::journal::newline;
+        // Send some diagnostics to the journal
+        tile.declare(infoChannel);
     
         // Perform interpolation
         infoChannel << "Interpolating tile " << tileCount << pyre::journal::newline;
