@@ -24,7 +24,7 @@ MODULE_CYTHON_PYX = \
     pyDateTime.pyx \
     pyDoppler.pyx \
     pyEllipsoid.pyx \
-    pyInterpolator.pyx \
+    #pyInterpolator.pyx \
     pyLinAlg.pyx \
     pyOrbit.pyx \
     pyPeg.pyx \
@@ -39,7 +39,7 @@ MODULE_CYTHON_PXD = \
     DateTime.pxd \
     Doppler.pxd \
     Ellipsoid.pxd \
-    Interpolator.pxd \
+    #Interpolator.pxd \
     LinAlg.pxd \
     Orbit.pxd \
     Peg.pxd \

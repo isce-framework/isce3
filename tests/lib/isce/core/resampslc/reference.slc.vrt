@@ -1,0 +1,11 @@
+<VRTDataset rasterXSize="500" rasterYSize="500">
+    <SRS>EPSG:4326</SRS>
+    <GeoTransform>0, 1, 0.0, 0, 0.0, 1</GeoTransform>
+    <VRTRasterBand band="1" dataType="CFloat32" subClass="VRTRawRasterBand">
+        <SourceFilename relativeToVRT="1">reference.slc</SourceFilename>
+        <ByteOrder>LSB</ByteOrder>
+        <ImageOffset>0</ImageOffset>
+        <PixelOffset>8</PixelOffset>
+        <LineOffset>4000</LineOffset>
+    </VRTRasterBand>
+</VRTDataset>

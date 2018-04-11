@@ -14,6 +14,8 @@
 #include <cereal/archives/xml.hpp>
 
 #include <isce/core/Ellipsoid.h>
+#include <isce/core/Metadata.h>
+#include <isce/core/Poly2d.h>
 
 namespace isce { namespace core {
 
@@ -40,6 +42,38 @@ namespace isce { namespace core {
                 cereal::make_nvp("e2", e2));
         ellps.a(a);
         ellps.e2(e2);
+    }
+
+    // Definition for Metadata
+    template <class Archive>
+    void serialize(Archive & archive, Metadata & meta) {
+        archive(cereal::make_nvp("width", meta.width),
+                cereal::make_nvp("length", meta.length),
+                cereal::make_nvp("numberRangeLooks", meta.numberRangeLooks),
+                cereal::make_nvp("numberAzimuthLooks", meta.numberAzimuthLooks),
+                cereal::make_nvp("slantRangePixelSpacing", meta.slantRangePixelSpacing),
+                cereal::make_nvp("rangeFirstSample", meta.rangeFirstSample),
+                cereal::make_nvp("lookSide", meta.lookSide),
+                cereal::make_nvp("prf", meta.prf),
+                cereal::make_nvp("radarWavelength", meta.radarWavelength),
+                cereal::make_nvp("pegHeading", meta.pegHeading),
+                cereal::make_nvp("pegLatitude", meta.pegLatitude),
+                cereal::make_nvp("pegLongitude", meta.pegLongitude),
+                cereal::make_nvp("chirpSlope", meta.chirpSlope),
+                cereal::make_nvp("pulseDuration", meta.pulseDuration),
+                cereal::make_nvp("antennaLength", meta.antennaLength));
+    }
+
+    // Definition for Poly2d
+    template <class Archive>
+    void serialize(Archive & archive, Poly2d & poly) {
+        archive(cereal::make_nvp("rangeOrder", poly.rangeOrder),
+                cereal::make_nvp("azimuthOrder", poly.azimuthOrder),
+                cereal::make_nvp("rangeMean", poly.rangeMean),
+                cereal::make_nvp("azimuthMean", poly.azimuthMean),
+                cereal::make_nvp("rangeNorm", poly.rangeNorm),
+                cereal::make_nvp("azimuthNorm", poly.azimuthNorm),
+                cereal::make_nvp("coeffs", poly.coeffs));
     }
 
 }}

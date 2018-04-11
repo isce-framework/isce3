@@ -57,6 +57,7 @@ operator=(const Poly2d &rhs) {
     azimuthMean = rhs.azimuthMean;
     rangeNorm = rhs.rangeNorm;
     azimuthNorm = rhs.azimuthNorm;
+    coeffs = rhs.coeffs;
     return *this;
 }
 

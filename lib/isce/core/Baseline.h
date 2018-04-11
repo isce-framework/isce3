@@ -56,7 +56,7 @@ class isce::core::Baseline {
         Orbit orbit1() const { return _orbit1; }
         Orbit orbit2() const { return _orbit2; }
         // Metadata
-        RadarMetadata radar() const { return _radar; }
+        Metadata radar() const { return _radar; }
         // Ellipsoid
         Ellipsoid ellipsoid() const { return _elp; }    
         // Velocity magnitude
@@ -72,7 +72,7 @@ class isce::core::Baseline {
         // Orbits
         Orbit _orbit1, _orbit2;
         // Metadata
-        RadarMetadata _radar;
+        Metadata _radar;
         // Ellipsoid
         Ellipsoid _elp;
         // Orbit interpolatation method
