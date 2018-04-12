@@ -11,8 +11,8 @@
 //                These guards will be replaced with internal guards in the functions themselves
 //                that will have implementations for GCCs earlier than GCC 5.
 
-#ifndef __ISCE_CORE_DATETIME_H__
-#define __ISCE_CORE_DATETIME_H__
+#ifndef ISCE_CORE_DATETIME_H
+#define ISCE_CORE_DATETIME_H
 
 #include <chrono>
 #include <string>
@@ -23,18 +23,12 @@ namespace isce { namespace core {
 
         DateTime() : t() {}
         DateTime(const DateTime &dt) : t(dt.t) {}
-        //#if __cplusplus >= 201103L
-        #if 0
         DateTime(const std::string &dts) { *this = dts; }
-        #endif
         // Note that these constructors leverage the assignment operators given their relative
         // complexity
         DateTime(double dtd) { *this = dtd; }
         inline DateTime& operator=(const DateTime&);
-        //#if __cplusplus >= 201103L
-        #if 0
         DateTime& operator=(const std::string&);
-        #endif
         DateTime& operator=(double);
 
         // Wrapped boolean comparisons
@@ -59,10 +53,7 @@ namespace isce { namespace core {
             return static_cast<std::chrono::duration<double>>(t.time_since_epoch()).count();
         }
 
-        //#if __cplusplus >= 201103L
-        #if 0
         std::string toIsoString() const;
-        #endif
     };
 
     inline DateTime& DateTime::operator=(const DateTime &rhs) {

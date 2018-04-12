@@ -17,8 +17,6 @@ using std::chrono::duration_cast;
 using std::chrono::high_resolution_clock;
 using std::chrono::system_clock;
 using std::chrono::time_point;
-//#if __cplusplus >= 201103L
-#if 0
 using std::chrono::nanoseconds;
 using std::invalid_argument;
 using std::istringstream;
@@ -34,10 +32,7 @@ using std::stringstream;
 using std::time_t;
 using std::tm;
 using std::to_string;
-#endif
 
-//#if __cplusplus >= 201103L
-#if 0
 DateTime& DateTime::operator=(const string &dts) {
     /*
      *  Assignment operator for passing in a string. Note that this is usually a challenging
@@ -79,7 +74,7 @@ DateTime& DateTime::operator=(const string &dts) {
     t += duration_cast<system_clock::duration>(duration<double>(fractional));
     return *this;
 }
-#endif
+
 DateTime& DateTime::operator=(double dtd) {
     /*
      *  Simple assignment operator that takes a double, assumes it's expressed in seconds-since-
@@ -93,8 +88,6 @@ DateTime& DateTime::operator=(double dtd) {
     return *this;
 }
 
-//#if __cplusplus >= 201103L
-#if 0
 string DateTime::toIsoString() const {
     /*
      *  String formatting is always a tricky subject, so full description of the parsing and
@@ -142,5 +135,5 @@ string DateTime::toIsoString() const {
     }
     return datetime_str;
 }
-#endif
 
+// end of file
