@@ -20,9 +20,13 @@ PACKAGES = \
 # the products
 PROJ_DLL = $(BLD_LIBDIR)/lib$(PROJECT).$(PROJECT_MAJOR).$(PROJECT_MINOR).$(EXT_SO)
 # the private build space
-PROJ_TMPDIR = $(BLD_TMPDIR)/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)/lib
+PROJ_TMPDIR = $(BLD_TMPDIR)/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)/lib/$(PROJECT)
 # what to clean
 PROJ_CLEAN += $(EXPORT_LIBS) $(EXPORT_INCDIR)
+
+# the sources
+PROJ_SRCS = \
+    version.cc \
 
 # what to export
 # the library
@@ -33,9 +37,14 @@ EXPORT_LIBS = $(PROJ_DLL)
 PROJ_TIDY := ${filter-out core, $(PROJ_TIDY)}
 
 # the standard targets
+all: export
 
-all:
-	BLD_ACTION="all" $(MM) recurse
+export:: version.cc $(PROJ_DLL) export-headers export-package-headers export-libraries
+	BLD_ACTION="export" $(MM) recurse
+	@$(RM) version.cc
+
+revision: version.cc $(PROJ_DLL) export-libraries
+	@$(RM) version.cc
 
 tidy::
 	BLD_ACTION="tidy" $(MM) recurse
@@ -52,6 +61,13 @@ live:
 # archiving support
 zipit:
 	cd $(EXPORT_ROOT); zip -r $(PYRE_ZIP) ${addprefix packages/, $(PACKAGES) --include \*.py}
+
+# construct {version.cc}
+version.cc: version Make.mm
+	@sed \
+          -e "s:MAJOR:$(PROJECT_MAJOR):g" \
+          -e "s:MINOR:$(PROJECT_MINOR):g" \
+          version > version.cc
 
 # shortcuts for building specific subdirectories
 .PHONY: $(RECURSE_DIRS)

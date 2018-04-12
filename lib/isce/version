@@ -1,0 +1,14 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// Author: Bryan V. Riel
+// Copyright 2017-2018
+
+#include "version.h"
+
+isce::version_t
+isce::version() {
+    return version_t{MAJOR, MINOR};
+}
+
+// end of file
