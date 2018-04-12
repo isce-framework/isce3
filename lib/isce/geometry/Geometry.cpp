@@ -5,15 +5,22 @@
 // Copyright 2017-2018
 //
 
-#include "Geometry.h"
-#include "LinAlg.h"
+// isce::core
+#include <isce/core/LinAlg.h>
 
-int isce::core::Geometry::
-rdr2geo(double slantRange, double dopfact,
-        const cartesian_t & satPos, const cartesian_t & satVel,
-        const cartesian_t & that, const cartesian_t & chat, const cartesian_t & nhat,
-        Ellipsoid & ellipsoid, Pegtrans & ptm, DEMInterpolator & demInterp,
-        cartesian_t & targetLLH, double threshold) {
+// isce::geometry
+#include "Geometry.h"
+
+// pull in useful isce::core namespace
+using isce::core::LinAlg;
+using isce::core::Ellipsoid;
+using isce::core::Pegtrans;
+using isce::core::StateVector;
+
+int isce::geometry::Geometry::
+rdr2geo(const Pixel & pixel, const Basis & basis, const StateVector & state,
+        const Ellipsoid & ellipsoid, const Pegtrans & ptm, const DEMInterpolator & demInterp,
+        cartesian_t & targetLLH, int side, double threshold, int maxIter, int extraIter) {
     /*
     - Assume orbit has been interpolated to correct azimuth time. Consider putting in a
       check for this condition.
@@ -28,26 +35,30 @@ rdr2geo(double slantRange, double dopfact,
 
     // Iterate
     int converged = 0;
-    for (size_t i = 0; i < (maxIter + extraIter); ++i) {
+    for (int i = 0; i < (maxIter + extraIter); ++i) {
 
         // Cache the previous solution
         targetLLH_old = targetLLH;
 
         // Compute angles
-        const double a = targetLLH[2] + radius;
-        const double b = radius + targetSCH[2];
-        const double costheta = 0.5*(a/slantRange + slantRange/a - (b/a)*(b/slantRange));
+        const double a = targetLLH[2] + ptm.radcur;
+        const double b = ptm.radcur + targetSCH[2];
+        const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a 
+                              - (b/a) * (b/pixel.range()));
         const double sintheta = std::sqrt(1.0 - costheta*costheta);
 
         // Compute TCN scale factors
-        const double gamma = slantRange * costheta;
-        const double alpha = dopfact - gamma*LinAlg::dot(nhat,satVel) / LinAlg::dot(satVel,that);
-        const double beta = -side*std::sqrt(slantRange*slantRange*sintheta*sintheta - alpha*alpha);
+        const double gamma = pixel.range() * costheta;
+        const double alpha = pixel.dopfact() - gamma*LinAlg::dot(basis.nhat(), state.velocity()) 
+                           / LinAlg::dot(state.velocity(), basis.that());
+        const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
+                                            * std::pow(sintheta, 2) 
+                                            - std::pow(alpha, 2));
 
         // Compute vector from satellite to ground
-        LinAlg::linComb(alpha, that, beta, chat, delta_temp);
-        LinAlg::linComb(1.0, delta_temp, gamma, nhat, delta);
-        LinAlg::linComb(1.0, satPos, 1.0, delta, targetVec);
+        LinAlg::linComb(alpha, basis.that(), beta, basis.chat(), delta_temp);
+        LinAlg::linComb(1.0, delta_temp, gamma, basis.nhat(), delta);
+        LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
 
         // Compute LLH of ground point
         ellipsoid.xyzToLatLon(targetVec, targetLLH);
@@ -57,11 +68,11 @@ rdr2geo(double slantRange, double dopfact,
         // Convert back to XYZ with interpolated height
         ellipsoid.latLonToXyz(targetLLH, targetVec);
         // Compute updated SCH coordinates
-        ptm.convertSCHtoXYZ(targetSCH, targetVec, XYZ_2_SCH);
+        ptm.convertSCHtoXYZ(targetSCH, targetVec, isce::core::XYZ_2_SCH);
 
         // Check convergence
-        LinAlg::linComb(1.0, satPos, -1.0, targetVec, lookVec);
-        const double rdiff = slantRange - LinAlg::norm(lookVec);
+        LinAlg::linComb(1.0, state.position(), -1.0, targetVec, lookVec);
+        const double rdiff = pixel.range() - LinAlg::norm(lookVec);
         if (std::abs(rdiff) < threshold) {
             converged = 1;
             return converged;
@@ -75,8 +86,8 @@ rdr2geo(double slantRange, double dopfact,
             // Repopulate lat, lon, z
             ellipsoid.xyzToLatLon(targetVec, targetLLH);
             // Check convergence
-            LinAlg::linComb(1.0, satPos, -1.0, targetVec, loookVec);
-            const double rdiff = slantRange - LinAlg::norm(lookVec);
+            LinAlg::linComb(1.0, state.position(), -1.0, targetVec, lookVec);
+            const double rdiff = pixel.range() - LinAlg::norm(lookVec);
             if (std::abs(rdiff) < threshold) {
                 converged = 1;
                 return converged;
@@ -88,10 +99,7 @@ rdr2geo(double slantRange, double dopfact,
 }
 
 
-void isce::core::Geometry::
-geo2rdr() {
-
-
-}
+//void isce::core::Geometry::
+//geo2rdr() {}
 
 // end of file

@@ -14,16 +14,20 @@
 #include <algorithm>
 
 // pyre
-#include <pyre/timers.h>
+//#include <pyre/timers.h>
 
 // isce::core
-#include "Constants.h"
-#include "Geometry.h"
-#include "Peg.h"
-#include "Pegtrans.h"
-#include "LinAlg.h"
+#include <isce/core/Constants.h>
+#include <isce/core/LinAlg.h>
+
+// isce::geometry
 #include "Topo.h"
 
+// pull in some isce::core namespaces
+using isce::core::Raster;
+using isce::core::Poly2d;
+using isce::core::LinAlg;
+using isce::core::StateVector;
 
 // Main topo driver
 void isce::geometry::Topo::
@@ -31,11 +35,7 @@ topo(Raster & demRaster,
      Poly2d & dopPoly, 
      Poly2d & slrngPoly,
      const std::string outdir) {
-
-    // Some useful constants
-    const double degrees = 180.0 / M_PI;
-    const double radians = M_PI / 180.0;
-
+    
     // Create reusable pyre::journal channels
     pyre::journal::warning_t warning("isce.geometry.Topo");
     pyre::journal::info_t info("isce.geometry.Topo");
@@ -47,20 +47,20 @@ topo(Raster & demRaster,
     TopoLayers layers(_meta.width);
        
     // Output raster objects
-    vrt = _initOutputRasters(const std::string outdir)
+    Raster vrt = _initOutputRasters(outdir);
 
     // Create and start a timer
-    pyre::timer_t timer("isce.geometry.Topo");
-    timer.start();
+    //pyre::timer_t topoTimer("isce.geometry.Topo");
+    //topoTimer.start();
 
     // Create a DEM interpolator
-    DEMInterpolator demInterp(demRaster);
+    DEMInterpolator demInterp;
     // Load DEM subset for SLC image bounds
     _computeDEMBounds(demRaster, demInterp, slrngPoly, dopPoly);
 
     // Compute max and mean DEM height for the subset
     float demmax, dem_avg;
-    demInterp.computeHeightStats(demmax, dem_avg);
+    demInterp.computeHeightStats(demmax, dem_avg, info);
 
     // For each line
     size_t totalconv = 0;
@@ -69,7 +69,7 @@ topo(Raster & demRaster,
         // Periodic diagnostic printing
         if ((line % 1000) == 0) {
             info 
-                << "Processing line: " << line << " " << satVmag << pyre::journal::newline
+                << "Processing line: " << line << " " << pyre::journal::newline
                 << "Dopplers near mid far: "
                 << dopPoly.eval(0, 0) << " "
                 << dopPoly.eval(0, (_meta.width / 2) - 1) << " "
@@ -86,7 +86,7 @@ topo(Raster & demRaster,
         const double satVmag = LinAlg::norm(state.velocity());
         
         // For each slant range bin
-        #pragma omp parallel reduction(+:totalconv)
+        //#pragma omp parallel reduction(+:totalconv)
         for (int rbin = 0; rbin < _meta.width; ++rbin) {
 
             // Get current slant range
@@ -103,12 +103,14 @@ topo(Raster & demRaster,
             cartesian_t llh = {demInterp.midLat(), demInterp.midLon(), dem_avg};
 
             // Perform rdr->geo iterations
-            int geostat = Geometry::rdr2geo(pixel, basis, _ellipsoid, _ptm, demInterp,
-                                            llh, numiter, extraiter);
+            int geostat = Geometry::rdr2geo(
+                pixel, basis, state, _ellipsoid, _ptm, demInterp, llh, _meta.lookSide,
+                _threshold, _numiter, _extraiter
+            );
             totalconv += geostat;
 
             // Save data in output arrays
-            _setOutputTopoLayers(llh, layers, pixel, state, basis);
+            _setOutputTopoLayers(llh, layers, pixel, state, basis, demInterp);
 
         } //end OMP for loop
         
@@ -116,20 +118,21 @@ topo(Raster & demRaster,
         _writeVRTData(vrt, layers, line);
     }
 
-    // Print out timing information and reset
-    timer.stop();
-    infoChannel << "Elapsed processing time: " << timer.read() << " sec"
-                << pyre::journal::newline;
-    timer.reset();
+    //// Print out timing information and reset
+    //topoTimer.stop();
+    //info << "Elapsed processing time: " << topoTimer.read() << " sec"
+    //     << pyre::journal::newline;
+    //topoTimer.reset();
+
     // Print out convergence statistics
-    info << "Total convergence: " totalconv << " out of "
+    info << "Total convergence: " << totalconv << " out of "
          << (_meta.width * _meta.length) << pyre::journal::endl;
 
 }
 
 // Initialize output rasters and multiband topo raster
-isce::core::Raster isce::geometry::Topo::
-_initOutputRasters(const std::string outdir) {}
+Raster isce::geometry::Topo::
+_initOutputRasters(const std::string outdir) {
 
     // First create rasters for individual layers
     Raster latRaster = Raster(outdir + "/lat.rdr", _meta.width, _meta.length, 1,
@@ -150,7 +153,7 @@ _initOutputRasters(const std::string outdir) {}
         GDT_Float32, "ENVI");
 
     // Wrap the individual layers in a multilayer VRT
-    isce::core::Raster vrt = isce::core::Raster(outdir + "/topo.vrt",
+    Raster vrt = isce::core::Raster(outdir + "/topo.vrt",
         {latRaster, lonRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
          localPsiRaster, simRaster});
 
@@ -163,19 +166,19 @@ void isce::geometry::Topo::
 _initAzimuthLine(int line, StateVector & state, Basis & basis) {
 
     // Get satellite azimuth time
-    tline = _meta.sensingStart.secondsOfDay() + (_meta.numberAzimuthLooks * (line / _meta.prf));
+    const double tline = _meta.sensingStart + (_meta.numberAzimuthLooks * (line/_meta.prf));
     
     // Get state vector
     cartesian_t xyzsat, velsat;
-    int stat = _orbit.interpolate(tline, xyzsat, velsat, _orbit_method);
+    int stat = _orbit.interpolate(tline, xyzsat, velsat, _orbitMethod);
     if (stat != 0) {
         pyre::journal::error_t error("isce.core.Topo._initAzimuthLine");
         error
             << pyre::journal::at(__HERE__)
             << "Error in Topo::topo - Error getting state vector for bounds computation."
             << pyre::journal::newline
-            << " - requested time: " tline << pyre::journal::newline
-            << " - bounds: " << orb.UTCtime[0] << " -> " << orb.UTCtime[orb.nVectors-1]
+            << " - requested time: " << tline << pyre::journal::newline
+            << " - bounds: " << _orbit.UTCtime[0] << " -> " << _orbit.UTCtime[_orbit.nVectors-1]
             << pyre::journal::endl;
     }
     // Save state vector
@@ -203,11 +206,15 @@ _initAzimuthLine(int line, StateVector & state, Basis & basis) {
 
 // Get DEM bounds using first/last azimuth line and slant range bin
 void isce::geometry::Topo::
-_computeDEMBounds(Raster & demRaster, Poly2d & slrngPoly, Poly2d & dopPoly,
-                  int & ustarty, int & ustartx, int & udemwidth, int & udemlength) {
+_computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp,
+                  Poly2d & slrngPoly, Poly2d & dopPoly) {
 
     // Initialize journal
     pyre::journal::warning_t warning("isce.core.Topo");
+
+    cartesian_t llh, satLLH;
+    StateVector state;
+    Basis basis;
 
     // Initialize geographic bounds
     double min_lat = 10000.0;
@@ -222,7 +229,10 @@ _computeDEMBounds(Raster & demRaster, Poly2d & slrngPoly, Poly2d & dopPoly,
         // Initialize orbit data for this azimuth line
         int lineIndex = line * _meta.numberAzimuthLooks * (_meta.length - 1);
         _initAzimuthLine(lineIndex, state, basis);
+
+        // Compute satellite velocity and height
         const double satVmag = LinAlg::norm(state.velocity());
+        _ellipsoid.xyzToLatLon(state.position(), satLLH);
 
         // Loop over starting and ending slant range
         for (int ind = 0; ind < 2; ++ind) {
@@ -232,21 +242,24 @@ _computeDEMBounds(Raster & demRaster, Poly2d & slrngPoly, Poly2d & dopPoly,
             double rng = slrngPoly.eval(0, rbin);
             double dopfact = (0.5 * _meta.radarWavelength * (dopPoly.eval(0, rbin) 
                             / satVmag)) * rng;
+            // Store in Pixel object
+            Pixel pixel(rng, dopfact, rbin);
 
             // Run topo for one iteration for two different heights
             std::array<double, 2> testHeights = {MIN_H, MAX_H};
             for (int k = 0; k < 2; ++k) {
                 // If slant range vector doesn't hit ground, pick nadir point
-                if (rng <= (llhsat[2] - testHeights[k] + 1.0)) {
+                if (rng <= (satLLH[2] - testHeights[k] + 1.0)) {
                     for (int idx = 0; idx < 3; ++idx) {
-                        llh[idx] = llhsat[idx];
+                        llh[idx] = satLLH[idx];
                     }
                     warning << "Possible near nadir imaging" << pyre::journal::endl;
                 } else {
                     // Create dummy DEM interpolator with constant height
                     DEMInterpolator constDEM(testHeights[k]);
-                    // Run rdr2geo
-                    Geometry::rdr2geo(rng, dopfact, that, chat, nhat, _ellipsoid, _ptm, llh, 1);
+                    // Run radar->geo for 1 iteration
+                    Geometry::rdr2geo(pixel, basis, state, _ellipsoid, _ptm, constDEM,
+                                      llh, _meta.lookSide, _threshold, 1, 0);
                 }
                 // Update bounds
                 min_lat = std::min(min_lat, llh[0]*degrees);
@@ -263,17 +276,17 @@ _computeDEMBounds(Raster & demRaster, Poly2d & slrngPoly, Poly2d & dopPoly,
     min_lat -= MARGIN;
     max_lat += MARGIN;
 
-    // Subset DEM
-    demInterp.loadDEM(min_lon, max_lon, min_lat, max_lat);
+    // Extract DEM subset
+    demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat, _demMethod);
     demInterp.declare();
 }
 
 // Generate output topo layers
 void isce::geometry::Topo::
 _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel,
-                 StateVector & state, Basis & basis) {
+                     StateVector & state, Basis & basis, DEMInterpolator & demInterp) {
 
-    cartesian_t targetXYZ, targetSCH, satToGround, satLLH;
+    cartesian_t targetXYZ, targetSCH, satToGround, satLLH, enu;
     cartmat_t enumat, xyz2enu;
     const double degrees = 180.0 / M_PI;
     const double radians = M_PI / 180.0;
@@ -281,8 +294,10 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     // Unpack the lat/lon values
     const double lat = targetLLH[0];
     const double lon = targetLLH[1];
-    // Unpack the range bin
+    // Unpack the range pixel data
     const size_t bin = pixel.bin();
+    const double rng = pixel.range();
+    const double dopfact = pixel.dopfact();
 
     // Set outputs for LLH
     layers.lat(bin, lat*degrees);
@@ -292,14 +307,14 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     // Convert llh->xyz for ground point
     _ellipsoid.latLonToXyz(targetLLH, targetXYZ);
     // Convert xyz->SCH for ground point
-    _ptm.convertSCHtoXYZ(targetXYZ, targetSCH, XYZ_2_SCH);
+    _ptm.convertSCHtoXYZ(targetXYZ, targetSCH, isce::core::XYZ_2_SCH);
     const double zsch = targetSCH[2];
 
     // Compute vector from satellite to ground point
     LinAlg::linComb(1.0, targetXYZ, -1.0, state.position(), satToGround);
     
     // Computation in ENU coordinates around target
-    LinAlg::enuBasis(llh[0], llh[1], enumat);
+    LinAlg::enuBasis(targetLLH[0], targetLLH[1], enumat);
     LinAlg::tranMat(enumat, xyz2enu);
     LinAlg::matVec(xyz2enu, satToGround, enu);
     const double cosalpha = std::abs(enu[2]) / LinAlg::norm(enu);
@@ -309,15 +324,15 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     const double satHeight = satLLH[2];
 
     // Look angles
-    const double aa = satHeight + _ptm.radcur;
-    const double bb = _ptm.radcur + zsch;
-    const double costheta = 0.5 * ((aa / rng) + (rng / aa) - ((bb / aa) * (bb / rng)));
-    const double sintheta = sqrt(1.0 - (costheta * costheta));
-    const double gamma = rng * costheta;
-    const double alpha = dopfact - gamma*LinAlg::dot(nhat, satVel)
-                       / LinAlg::dot(satVel, that);
-    const double beta = -1 * _meta.lookSide * std::sqrt(
-                        rng * rng * sintheta * sintheta - alpha * alpha);
+    double aa = satHeight + _ptm.radcur;
+    double bb = _ptm.radcur + zsch;
+    double costheta = 0.5 * ((aa / rng) + (rng / aa) - ((bb / aa) * (bb / rng)));
+    double sintheta = std::sqrt(1.0 - (costheta * costheta));
+    double gamma = rng * costheta;
+    double alpha = dopfact - gamma*LinAlg::dot(basis.nhat(), state.velocity())
+                 / LinAlg::dot(state.velocity(), basis.that());
+    double beta = -1 * _meta.lookSide * std::sqrt(
+                   rng * rng * sintheta * sintheta - alpha * alpha);
     
     // LOS vectors
     layers.inc(bin, std::acos(cosalpha) * degrees);
@@ -326,32 +341,33 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     // East-west slope using central difference
     aa = demInterp.interpolate(lat, lon - demInterp.deltaLon());
     bb = demInterp.interpolate(lat, lon + demInterp.deltaLon());
-    const double gamm = lat * radians;
-    const double alpha = ((bb - aa) * degrees) 
-                       / (2.0 * _ellipsoid.rEast(gamm) * demInterp.deltaLon());
+    gamma = lat * radians;
+    alpha = ((bb - aa) * degrees) 
+          / (2.0 * _ellipsoid.rEast(gamma) * demInterp.deltaLon());
     
     // North-south slope using central difference
-    aa = demInterp.interpolate(lat[rbin] - demInterp.deltaLat(), lon[rbin]);
-    bb = demInterp.interpolate(lat[rbin] + demInterp.deltaLat(), lon[rbin]);
-    const double beta = ((bb - aa) * degrees) 
-                      / (2.0 * _ellipsoid.rNorth(gamm) * demInterp.daltaLat());
+    aa = demInterp.interpolate(lat - demInterp.deltaLat(), lon);
+    bb = demInterp.interpolate(lat + demInterp.deltaLat(), lon);
+    beta = ((bb - aa) * degrees) 
+         / (2.0 * _ellipsoid.rNorth(gamma) * demInterp.deltaLat());
 
     // Compute local incidence angle
     const double enunorm = LinAlg::norm(enu);
     for (int idx = 0; idx < 3; ++idx) {
         enu[idx] = enu[idx] / enunorm;
     }
-    const double incAngle = std::acos(((enu[0] * alpha) + (enu[1] * beta) - enu[2])
-                          / std::sqrt(1.0 + (alpha * alpha) + (beta * beta)));
-    layers.localInc(bin, incAngle * degrees);
+    costheta = ((enu[0] * alpha) + (enu[1] * beta) - enu[2])
+             / std::sqrt(1.0 + (alpha * alpha) + (beta * beta));
+    layers.localInc(bin, std::acos(costheta)*degrees);
 
     // Compute amplitude simulation
-    const double sinInc = std::sin(incAngle);
+    sintheta = std::sqrt(1.0 - (costheta * costheta));
     bb = sintheta + 0.1 * costheta;
-    layers.sim(bin, std::log10(std::abs(0.01 * std::cos(incAngle) / (bb * bb * bb))));
+    layers.sim(bin, std::log10(std::abs(0.01 * costheta / (bb * bb * bb))));
 
     // Calculate psi angle between image plane and local slope
-    LinAlg::cross(satToGround, satVel, n_img);
+    cartesian_t n_img, n_imghat, n_img_enu;
+    LinAlg::cross(satToGround, state.velocity(), n_img);
     LinAlg::unitVec(n_img, n_imghat);
     LinAlg::scale(n_imghat, -1*_meta.lookSide);
     LinAlg::matVec(xyz2enu, n_imghat, n_img_enu);

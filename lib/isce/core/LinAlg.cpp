@@ -12,6 +12,14 @@
 #include "LinAlg.h"
 
 void isce::core::LinAlg::
+scale(cartesian_t & v, double scaleFactor) {
+    /*
+     * Scale all elements by a scale factor.
+     */
+    for (int i = 0; i < 3; ++i) v[i] *= scaleFactor;
+}
+
+void isce::core::LinAlg::
 cross(const cartesian_t & u, const cartesian_t & v, cartesian_t & w) {
     /*
      *  Calculate the vector cross product of two 1x3 vectors (u, v) and store the resulting vector

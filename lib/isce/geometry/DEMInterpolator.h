@@ -8,9 +8,14 @@
 #ifndef ISCE_CORE_DEMInterpolator_H
 #define ISCE_CORE_DEMInterpolator_H
 
+// pyre
+#include <portinfo>
+#include <pyre/journal.h>
+
 // isce::core
-#include "Interpolator.h"
-#include "Raster.h"
+#include <isce/core/Constants.h>
+#include <isce/core/Interpolator.h>
+#include <isce/core/Raster.h>
 
 // Declaration
 namespace isce {
@@ -24,13 +29,11 @@ class isce::geometry::DEMInterpolator {
 
     public:
         // Constructors
-        DEMInterpolator(): _haveRaster(false), _refHeight(0.0) {}
+        DEMInterpolator() : _haveRaster(false), _refHeight(0.0) {}
         DEMInterpolator(float height) : _haveRaster(false), _refHeight(height) {}
-        DEMInterpolator(const isce::core::Raster & demRaster,
-                        dataInterpMethod method=BICUBIC_METHOD) :
-                        _haveRaster(true), _demRaster(demRaster), _interpMethod(method) {}
         // Read in subset of data
-        void loadDEM(int, int, int, int);
+        void loadDEM(isce::core::Raster &, double, double, double, double,
+                     isce::core::dataInterpMethod);
         // Print stats
         void declare() const;
         // Compute max and mean DEM height
@@ -51,14 +54,12 @@ class isce::geometry::DEMInterpolator {
         bool _haveRaster;
         // Constant value if no raster is provided
         float _refHeight;
-        // Raster for DEM
-        isce::core::Raster & _demRaster;
         // 2D array for storing DEM subset
         isce::core::Matrix<float> _dem;
         // Starting lat/lon for DEM subset and spacing
         double _lonstart, _latstart, _deltalon, _deltalat;
         // Interpolation method
-        dataInterpMethod _interpMethod;
+        isce::core::dataInterpMethod _interpMethod;
 };
 
 #endif

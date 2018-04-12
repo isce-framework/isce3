@@ -9,6 +9,10 @@
 
 #include <string>
 
+// isce::core
+#include "Constants.h"
+#include "DateTime.h"
+
 // Declaration
 namespace isce {
     namespace core {
@@ -33,8 +37,8 @@ class isce::core::StateVector {
         void date(DateTime & d) { _date = d; }
 
         // String formatted output for position and velocity
-        inline std::string position() const;
-        inline std::string velocity() const;
+        inline std::string positionToString() const;
+        inline std::string velocityToString() const;
 
         // Parse formatted string to save position and velocity
         inline void fromString(const std::string &, const std::string &);
@@ -48,7 +52,7 @@ class isce::core::StateVector {
 
 // String formatted output for position
 std::string isce::core::StateVector::
-position() const {
+positionToString() const {
     std::stringstream output;
     output << _position[0] << " "
            << _position[1] << " "
@@ -58,7 +62,7 @@ position() const {
 
 // String formatted output for velocity
 std::string isce::core::StateVector::
-velocity() const {
+velocityToString() const {
     std::stringstream output;
     output << _velocity[0] << " "
            << _velocity[1] << " "

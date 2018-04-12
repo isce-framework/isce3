@@ -29,10 +29,10 @@ initialized(bool flag) {
 void isce::geometry::Topo::
 checkInitialization(pyre::journal::info_t & info) const {
     if (!_initialized) {
-        pyre::journal::error_t error("isce.geometry.Topo"):
+        pyre::journal::error_t error("isce.geometry.Topo");
         error 
             << pyre::journal::at(__HERE__)
-            << pyre"Topo options have not been set." 
+            << "Topo options have not been set." 
             << pyre::journal::endl;
     } else {
         info
@@ -66,7 +66,7 @@ orbitMethod(isce::core::orbitInterpMethod method) {
 
     // Check validity
     if (method == isce::core::HERMITE_METHOD) {
-        if (orb.nVectors < 4) {
+        if (_orbit.nVectors < 4) {
             pyre::journal::error_t error("isce.geometry.Topo");
             error
                 << pyre::journal::at(__HERE__)
@@ -75,7 +75,7 @@ orbitMethod(isce::core::orbitInterpMethod method) {
                 << pyre::journal::endl;
         }
     } else if (method == isce::core::SCH_METHOD) {
-        if (orb.nVectors < 4) {
+        if (_orbit.nVectors < 4) {
             pyre::journal::error_t error("isce.geometry.Topo");
             error
                 << pyre::journal::at(__HERE__)
@@ -84,7 +84,7 @@ orbitMethod(isce::core::orbitInterpMethod method) {
                 << pyre::journal::endl;
         }
     } else if (method == isce::core::LEGENDRE_METHOD) {
-        if (orb.nVectors < 9) {
+        if (_orbit.nVectors < 9) {
             pyre::journal::error_t error("isce.geometry.Topo");
             error
                 << pyre::journal::at(__HERE__)

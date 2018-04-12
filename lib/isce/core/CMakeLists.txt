@@ -55,6 +55,7 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     ResampSlc.h
                                     ResampSlc.icc
                                     Serialization.h
+                                    StateVector.h
                                     Tile.h
                                     Tile.icc)
 

@@ -9,20 +9,23 @@
 #define ISCE_CORE_GEOMETRY_H
 
 // std
+#include <cmath>
 #include <valarray>
 
 // isce::core
-#include "isce/core/Constants.h"
-#include "isce/core/Orbit.h"
-#include "isce/core/Ellipsoid.h"
-#include "isce/core/Interpolator.h"
-#include "isce/core/Raster.h"
+#include <isce/core/Orbit.h>
+#include <isce/core/Ellipsoid.h>
+#include <isce/core/Pegtrans.h>
+#include <isce/core/StateVector.h>
+
+// isce::geometry
+#include "Basis.h"
+#include "DemInterpolator.h"
+#include "Pixel.h"
 
 // Declaration
 namespace isce {
     namespace geometry {
-        // Expose some useful isce::core typedefs
-        typedef isce::core::cartesian_t cartesian_t;
         class Geometry;
     }
 }
@@ -32,10 +35,17 @@ class isce::geometry::Geometry {
 
     // Public static methods
     public:
-        // radar->geo when 
-        static int rdr2geo(double, double, isce::core::Orbit &, isce::core::Ellipsoid &,
-                           std::valarray<double> &, int numIter=10);
-        static void geo2rdr(std::valarray<double> &, double, Poly2d &, double &, double &);
+        // radar->geo
+        static int rdr2geo(const Pixel &,
+                           const Basis &,
+                           const isce::core::StateVector &,
+                           const isce::core::Ellipsoid &,
+                           const isce::core::Pegtrans &,
+                           const DEMInterpolator &,
+                           cartesian_t &,
+                           int, double, int, int);
+
+        //static void geo2rdr(std::valarray<double> &, double, Poly2d &, double &, double &);
 };
 
 #endif

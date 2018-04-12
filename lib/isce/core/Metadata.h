@@ -29,7 +29,7 @@ struct isce::core::Metadata {
     double chirpSlope;
     double antennaLength;
     int lookSide;
-    //DateTime sensingStart;
+    DateTime sensingStart;
     double pegHeading, pegLatitude, pegLongitude;
 
     // Image formation related parametesr

@@ -19,6 +19,8 @@ namespace isce {
 // LinAlg declaration
 struct isce::core::LinAlg {
     LinAlg() = default;
+    // Multiply all elements by a scalar value
+    static void scale(cartesian_t &, double);
     // Cross product
     static void cross(const cartesian_t &, const cartesian_t &, cartesian_t &);
     // Dot product
