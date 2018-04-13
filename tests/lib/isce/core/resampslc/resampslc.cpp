@@ -31,7 +31,7 @@ struct ResampSlcTest : public ::testing::Test {
     protected:
         ResampSlcTest() {
             // Load metadata stream
-            metastream = streamFromVRT("original.slc.vrt");
+            metastream = streamFromVRT("../../data/envisat.slc.vrt");
         }
 };
 
@@ -60,25 +60,25 @@ TEST_F(ResampSlcTest, Resamp) {
 
     // Perform resampling with default lines per tile
     resamp.resamp(
-        "original.slc.vrt",
+        "../../data/envisat.slc.vrt",
         "warped.slc",
-        "offsets/range.off",
-        "offsets/azimuth.off");
+        "../../data/offsets/range.off",
+        "../../data/offsets/azimuth.off");
 
     // Set lines per tile to be a weird multiple of the number of output lines
     resamp.linesPerTile(249);
     // Re-run resamp
     resamp.resamp(
-        "original.slc.vrt",
+        "../../data/envisat.slc.vrt",
         "warped.slc",
-        "offsets/range.off",
-        "offsets/azimuth.off");
+        "../../data/offsets/range.off",
+        "../../data/offsets/azimuth.off");
 }
 
 // Compute sum of difference between reference image and warped image
 TEST_F(ResampSlcTest, Validate) {
     // Open SLC rasters 
-    isce::core::Raster refSlc("reference.slc.vrt");
+    isce::core::Raster refSlc("../../data/warped_envisat.slc.vrt");
     isce::core::Raster testSlc("warped.slc");
     // Compute total complex error
     std::complex<float> sum(0.0, 0.0);

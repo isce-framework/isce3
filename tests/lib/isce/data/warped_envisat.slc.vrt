@@ -2,7 +2,7 @@
     <SRS>EPSG:4326</SRS>
     <GeoTransform>0, 1, 0.0, 0, 0.0, 1</GeoTransform>
     <VRTRasterBand band="1" dataType="CFloat32" subClass="VRTRawRasterBand">
-        <SourceFilename relativeToVRT="1">reference.slc</SourceFilename>
+        <SourceFilename relativeToVRT="1">warped_envisat.slc</SourceFilename>
         <ByteOrder>LSB</ByteOrder>
         <ImageOffset>0</ImageOffset>
         <PixelOffset>8</PixelOffset>

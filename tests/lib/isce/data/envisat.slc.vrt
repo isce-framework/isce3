@@ -111,7 +111,7 @@
         </Radar>
       </cereal>
     </Metadata>
-    <SourceFilename relativeToVRT="0">original.slc</SourceFilename>
+    <SourceFilename relativeToVRT="1">envisat.slc</SourceFilename>
     <ImageOffset>0</ImageOffset>
     <PixelOffset>8</PixelOffset>
     <LineOffset>4000</LineOffset>
