@@ -21,7 +21,7 @@ test: $(TESTS)
             } done
 
 # build
-PROJ_CLEAN += $(TESTS)
+PROJ_CLEAN += $(TESTS) warped.slc warped.slc.xml
 PROJ_CXX_INCLUDES += $(EXPORT_ROOT)/include/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)
 PROJ_LIBRARIES = -lisce.$(PROJECT_MAJOR).$(PROJECT_MINOR) -lgtest -fopenmp
 LIBRARIES = $(PROJ_LIBRARIES) $(EXTERNAL_LIBS)
