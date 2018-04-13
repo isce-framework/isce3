@@ -34,7 +34,7 @@ class isce::core::StateVector {
         // Set state vector components
         void position(cartesian_t & p) { _position = p; }
         void velocity(cartesian_t & v) { _velocity = v; }
-        void date(DateTime & d) { _date = d; }
+        void date(const std::string & dstr) { _date = dstr; }
 
         // String formatted output for position and velocity
         inline std::string positionToString() const;

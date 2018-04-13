@@ -16,6 +16,7 @@
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Metadata.h>
 #include <isce/core/Poly2d.h>
+#include <isce/core/StateVector.h>
 
 namespace isce { namespace core {
 
@@ -28,7 +29,10 @@ namespace isce { namespace core {
         archive(cereal::make_nvp(objectTag, (*object)));
     }
 
-    // Definition for Ellipsoid
+    // ------------------------------------------------------------------------
+    // Serialization for Ellipsoid
+    // ------------------------------------------------------------------------
+
     template<class Archive>
     void save(Archive & archive, const Ellipsoid & ellps) {
         archive(cereal::make_nvp("a", ellps.a()),
@@ -44,9 +48,12 @@ namespace isce { namespace core {
         ellps.e2(e2);
     }
 
-    // Definition for Metadata
+    // ------------------------------------------------------------------------
+    // Serialization for Metadata
+    // ------------------------------------------------------------------------
+
     template <class Archive>
-    void serialize(Archive & archive, Metadata & meta) {
+    void save(Archive & archive, const Metadata & meta) {
         archive(cereal::make_nvp("width", meta.width),
                 cereal::make_nvp("length", meta.length),
                 cereal::make_nvp("numberRangeLooks", meta.numberRangeLooks),
@@ -61,8 +68,36 @@ namespace isce { namespace core {
                 cereal::make_nvp("pegLongitude", meta.pegLongitude),
                 cereal::make_nvp("chirpSlope", meta.chirpSlope),
                 cereal::make_nvp("pulseDuration", meta.pulseDuration),
-                cereal::make_nvp("antennaLength", meta.antennaLength));
+                cereal::make_nvp("antennaLength", meta.antennaLength),
+                cereal::make_nvp("sensingStart", meta.sensingStart.toIsoString()));
     }
+
+    template <class Archive>
+    void load(Archive & archive, Metadata & meta) {
+        std::string sensingStart;
+        archive(cereal::make_nvp("width", meta.width),
+                cereal::make_nvp("length", meta.length),
+                cereal::make_nvp("numberRangeLooks", meta.numberRangeLooks),
+                cereal::make_nvp("numberAzimuthLooks", meta.numberAzimuthLooks),
+                cereal::make_nvp("slantRangePixelSpacing", meta.slantRangePixelSpacing),
+                cereal::make_nvp("rangeFirstSample", meta.rangeFirstSample),
+                cereal::make_nvp("lookSide", meta.lookSide),
+                cereal::make_nvp("prf", meta.prf),
+                cereal::make_nvp("radarWavelength", meta.radarWavelength),
+                cereal::make_nvp("pegHeading", meta.pegHeading),
+                cereal::make_nvp("pegLatitude", meta.pegLatitude),
+                cereal::make_nvp("pegLongitude", meta.pegLongitude),
+                cereal::make_nvp("chirpSlope", meta.chirpSlope),
+                cereal::make_nvp("pulseDuration", meta.pulseDuration),
+                cereal::make_nvp("antennaLength", meta.antennaLength),
+                cereal::make_nvp("sensingStart", sensingStart));
+        const std::string constSensingStart = sensingStart;
+        meta.sensingStart = constSensingStart;
+    }
+
+    // ------------------------------------------------------------------------
+    // Serialization for Poly2d
+    // ------------------------------------------------------------------------
 
     // Definition for Poly2d
     template <class Archive>
@@ -74,6 +109,34 @@ namespace isce { namespace core {
                 cereal::make_nvp("rangeNorm", poly.rangeNorm),
                 cereal::make_nvp("azimuthNorm", poly.azimuthNorm),
                 cereal::make_nvp("coeffs", poly.coeffs));
+    }
+
+     // ------------------------------------------------------------------------
+    // Serialization for StateVector
+    // ------------------------------------------------------------------------
+
+    // Serialization save method
+    template<class Archive>
+    void save(Archive & archive, StateVector const & sv) {
+        // Archive
+        archive(cereal::make_nvp("Time", sv.date().toIsoString()),
+                cereal::make_nvp("Position", sv.positionToString()),
+                cereal::make_nvp("Velocity", sv.velocityToString()));
+    }
+
+    // Serialization load method
+    template<class Archive>
+    void load(Archive & archive, StateVector & sv) {
+        // Make strings for position, velocity, and datetime
+        std::string position_string, velocity_string, datetime_string;
+        // Load the archive
+        archive(cereal::make_nvp("Time", datetime_string),
+                cereal::make_nvp("Position", position_string),
+                cereal::make_nvp("Velocity", velocity_string));
+        // Send position/velocity strings to parser
+        sv.fromString(position_string, velocity_string);
+        // Send datetime string to datetime object parser
+        sv.date(datetime_string);
     }
 
 }}
