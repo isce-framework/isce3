@@ -14,15 +14,9 @@ RECURSE_DIRS = \
 
 # the ones that are always available
 PACKAGES = \
-    core \
     geometry \
 
-# project settings: do not remove core directory (core usually refers core dump file)
-# filter-out info at: https://www.gnu.org/software/make/manual/html_node/index.html
-PROJ_TIDY := ${filter-out core, $(PROJ_TIDY)}
-
 # the standard targets
-
 all:
 	BLD_ACTION="all" $(MM) recurse
 

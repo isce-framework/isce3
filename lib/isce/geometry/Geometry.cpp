@@ -5,6 +5,8 @@
 // Copyright 2017-2018
 //
 
+#include <cstdio>
+
 // isce::core
 #include <isce/core/LinAlg.h>
 
@@ -31,7 +33,14 @@ rdr2geo(const Pixel & pixel, const Basis & basis, const StateVector & state,
     // Initialization
     cartesian_t targetSCH, targetVec, targetLLH_old, targetVec_old,
                 lookVec, delta, delta_temp;
+
+    // Compute normalized velocity
+    cartesian_t vhat;
+    LinAlg::unitVec(state.velocity(), vhat);
     targetSCH[2] = targetLLH[2];
+
+    cartesian_t satLLH;
+    ellipsoid.xyzToLatLon(state.position(), satLLH);
 
     // Iterate
     int converged = 0;
@@ -41,7 +50,7 @@ rdr2geo(const Pixel & pixel, const Basis & basis, const StateVector & state,
         targetLLH_old = targetLLH;
 
         // Compute angles
-        const double a = targetLLH[2] + ptm.radcur;
+        const double a = satLLH[2] + ptm.radcur;
         const double b = ptm.radcur + targetSCH[2];
         const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a 
                               - (b/a) * (b/pixel.range()));
@@ -49,8 +58,8 @@ rdr2geo(const Pixel & pixel, const Basis & basis, const StateVector & state,
 
         // Compute TCN scale factors
         const double gamma = pixel.range() * costheta;
-        const double alpha = pixel.dopfact() - gamma*LinAlg::dot(basis.nhat(), state.velocity()) 
-                           / LinAlg::dot(state.velocity(), basis.that());
+        const double alpha = pixel.dopfact() - gamma*LinAlg::dot(basis.nhat(), vhat) 
+                           / LinAlg::dot(vhat, basis.that());
         const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
                                             * std::pow(sintheta, 2) 
                                             - std::pow(alpha, 2));
