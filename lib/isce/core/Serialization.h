@@ -15,6 +15,7 @@
 
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Metadata.h>
+#include <isce/core/Orbit.h>
 #include <isce/core/Poly2d.h>
 #include <isce/core/StateVector.h>
 
@@ -46,6 +47,23 @@ namespace isce { namespace core {
                 cereal::make_nvp("e2", e2));
         ellps.a(a);
         ellps.e2(e2);
+    }
+
+    // ------------------------------------------------------------------------
+    // Serialization for Orbit
+    // ------------------------------------------------------------------------
+
+    template <class Archive>
+    void save(Archive & archive, const Orbit & orbit) {
+        archive(cereal::make_nvp("StateVectors", orbit.stateVectors));
+    }
+
+    template <class Archive>
+    void load(Archive & archive, Orbit & orbit) {
+        // Load data
+        archive(cereal::make_nvp("StateVectors", orbit.stateVectors));
+        // Reformat state vectors to 1D arrays
+        orbit.reformatOrbit();
     }
 
     // ------------------------------------------------------------------------

@@ -38,6 +38,7 @@ struct isce::core::Orbit {
     std::vector<double> velocity;
     // Vector of StateVectors
     std::vector<StateVector> stateVectors;
+    void reformatOrbit();
 
     Orbit(int bs, int nv) : basis(bs), nVectors(nv), UTCtime(nv,0.), position(3*nv,0.), 
                             velocity(3*nv,0.) {}
