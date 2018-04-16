@@ -250,11 +250,19 @@ DateTime(const std::string & datestr) {
     strptime(datestr);
 }
 
-// Assignment
+// Assignment from another DateTime
 isce::core::DateTime &
 isce::core::DateTime::
 operator=(const DateTime & ts) {
     _init(ts.year, ts.months, ts.days, ts.hours, ts.minutes, ts.seconds, ts.frac);
+    return *this;
+}
+
+// Assignment from string
+isce::core::DateTime &
+isce::core::DateTime::
+operator=(const std::string & datestr) {
+    strptime(datestr);
     return *this;
 }
 

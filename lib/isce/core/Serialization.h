@@ -87,7 +87,7 @@ namespace isce { namespace core {
                 cereal::make_nvp("chirpSlope", meta.chirpSlope),
                 cereal::make_nvp("pulseDuration", meta.pulseDuration),
                 cereal::make_nvp("antennaLength", meta.antennaLength),
-                cereal::make_nvp("sensingStart", meta.sensingStart.toIsoString()));
+                cereal::make_nvp("sensingStart", meta.sensingStart.isoformat()));
     }
 
     template <class Archive>
@@ -109,8 +109,7 @@ namespace isce { namespace core {
                 cereal::make_nvp("pulseDuration", meta.pulseDuration),
                 cereal::make_nvp("antennaLength", meta.antennaLength),
                 cereal::make_nvp("sensingStart", sensingStart));
-        const std::string constSensingStart = sensingStart;
-        meta.sensingStart = constSensingStart;
+        meta.sensingStart = sensingStart;
     }
 
     // ------------------------------------------------------------------------
@@ -137,7 +136,7 @@ namespace isce { namespace core {
     template<class Archive>
     void save(Archive & archive, StateVector const & sv) {
         // Archive
-        archive(cereal::make_nvp("Time", sv.date().toIsoString()),
+        archive(cereal::make_nvp("Time", sv.date().isoformat()),
                 cereal::make_nvp("Position", sv.positionToString()),
                 cereal::make_nvp("Velocity", sv.velocityToString()));
     }

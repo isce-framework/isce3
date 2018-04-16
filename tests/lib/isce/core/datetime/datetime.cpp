@@ -55,6 +55,16 @@ TEST(DateTimeTest, FromString) {
     ASSERT_EQ(dtime.minutes, 12);
     ASSERT_EQ(dtime.seconds, 30);
     ASSERT_NEAR(dtime.frac, 0.141592, 1.0e-6);
+    // Test assignment
+    isce::core::DateTime dtime2;
+    dtime2 = "2017-05-12T01:12:30.141592";
+    ASSERT_EQ(dtime2.year, 2017);
+    ASSERT_EQ(dtime2.months, 5);
+    ASSERT_EQ(dtime2.days, 12);
+    ASSERT_EQ(dtime2.hours, 1);
+    ASSERT_EQ(dtime2.minutes, 12);
+    ASSERT_EQ(dtime2.seconds, 30);
+    ASSERT_NEAR(dtime2.frac, 0.141592, 1.0e-6);
 }
 
 TEST(DateTimeTest, ToString) {

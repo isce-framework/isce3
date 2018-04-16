@@ -32,7 +32,7 @@ struct isce::core::DateTime {
     double frac;
 
     // Constructors
-    DateTime() : DateTime(0.0) {};
+    DateTime() : DateTime(1970, 1, 1) {};
     DateTime(double ord);
     DateTime(int yy, int mm, int dd);
     DateTime(int yy, int mm, int dd, int hh, int mn, int ss);
@@ -57,6 +57,7 @@ struct isce::core::DateTime {
 
     // Math operators
     DateTime& operator=(const DateTime& ts);
+    DateTime& operator=(const std::string &);
     DateTime& operator+=(const TimeDelta& ts);
     DateTime& operator+=(const double& s);
     DateTime& operator-=(const TimeDelta& ts);

@@ -39,7 +39,7 @@ reformatOrbit() {
             velocity[(3*i) + j] = sv.velocity()[j];
         }
         // Get UTCtime (implicit conversion to double)
-        UTCtime[i] = sv.date();
+        UTCtime[i] = sv.date().secondsSinceEpoch();
     }
 }
 
