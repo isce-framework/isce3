@@ -13,6 +13,7 @@
 
 // isce::core
 #include "isce/core/Constants.h"
+#include "isce/core/DateTime.h"
 #include "isce/core/Ellipsoid.h"
 #include "isce/core/LinAlg.h"
 #include "isce/core/Orbit.h"
@@ -28,10 +29,6 @@
 // Declaration for utility function to read metadata stream from VRT
 std::stringstream streamFromVRT(const char * filename, int bandNum=1);
 
-void printVec(isce::core::cartesian_t & v) {
-    printf("%12.6f %12.6f %12.6f\n", v[0], v[1], v[2]);
-}
-
 struct GeometryTest : public ::testing::Test {
 
     // isce::core objects
@@ -39,7 +36,8 @@ struct GeometryTest : public ::testing::Test {
     isce::core::Ellipsoid ellipsoid;
     isce::core::Peg peg;
     isce::core::Pegtrans ptm;
-    isce::core::Poly2d doppler;
+    isce::core::Poly2d contentDoppler;
+    isce::core::Poly2d skewDoppler;
     isce::core::Metadata meta;
     isce::core::Orbit orbit;
     isce::core::StateVector state;
@@ -57,7 +55,8 @@ struct GeometryTest : public ::testing::Test {
             // Deserialization
             {
             cereal::XMLInputArchive archive(metastream);
-            archive(cereal::make_nvp("ContentDoppler", doppler),
+            archive(cereal::make_nvp("ContentDoppler", contentDoppler),
+                    cereal::make_nvp("SkewDoppler", skewDoppler),
                     cereal::make_nvp("Ellipsoid", ellipsoid),
                     cereal::make_nvp("Orbit", orbit),
                     cereal::make_nvp("Radar", meta));
@@ -95,7 +94,7 @@ struct GeometryTest : public ::testing::Test {
             const double slantRange = meta.rangeFirstSample 
                                     + rbin * meta.slantRangePixelSpacing;
             pixel.range(slantRange);
-            pixel.dopfact((0.5 * meta.radarWavelength * (doppler.eval(0, rbin) / satVmag))
+            pixel.dopfact((0.5 * meta.radarWavelength * (contentDoppler.eval(0, rbin) / satVmag))
                 * slantRange);
             pixel.bin(rbin);
         }
@@ -127,6 +126,33 @@ TEST_F(GeometryTest, RdrToGeo) {
     ASSERT_NEAR(degrees * targetLLH[0], 35.01267683520824, 1.0e-8);
     ASSERT_NEAR(degrees * targetLLH[1], -115.59009580548408, 1.0e-8);
     ASSERT_NEAR(targetLLH[2], 0.0, 1.0e-8);
+}
+
+TEST_F(GeometryTest, GeoToRdr) {
+    
+    // Make a test LLH
+    const double radians = M_PI / 180.0;
+    isce::core::cartesian_t llh = {35.10*radians, -115.6*radians, 55.0};
+
+    // Run geo2rdr
+    double aztime, slantRange;
+    int stat = isce::geometry::Geometry::geo2rdr(llh, ellipsoid, orbit, skewDoppler,
+        meta, aztime, slantRange, 1.0e-6, 50, 1.0e-8);
+    // Convert azimuth time to a date
+    isce::core::DateTime azdate(aztime);
+
+    ASSERT_EQ(stat, 1);
+    //ASSERT_EQ(azdate.toIsoString(), "2003-02-27T01:55:26.487008");
+    ASSERT_NEAR(slantRange, 831834.3551143121, 1.0e-6);
+
+    // Run geo2rdr again with zero doppler
+    isce::core::Poly2d zeroDoppler;
+    stat = isce::geometry::Geometry::geo2rdr(llh, ellipsoid, orbit, zeroDoppler,
+        meta, aztime, slantRange, 1.0e-6, 50, 1.0e-8);
+
+    ASSERT_EQ(stat, 1);
+    //ASSERT_EQ(azdate.toIsoString(), "2003-02-27T01:55:26.487008");
+    ASSERT_NEAR(slantRange, 831833.869159697, 1.0e-6);
 }
 
 

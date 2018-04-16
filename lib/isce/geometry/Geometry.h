@@ -15,7 +15,9 @@
 // isce::core
 #include <isce/core/Orbit.h>
 #include <isce/core/Ellipsoid.h>
+#include <isce/core/Metadata.h>
 #include <isce/core/Pegtrans.h>
+#include <isce/core/Poly2d.h>
 #include <isce/core/StateVector.h>
 
 // isce::geometry
@@ -45,7 +47,14 @@ class isce::geometry::Geometry {
                            cartesian_t &,
                            int, double, int, int);
 
-        //static void geo2rdr(std::valarray<double> &, double, Poly2d &, double &, double &);
+        // geo->radar
+        static int geo2rdr(const cartesian_t &,
+                           const isce::core::Ellipsoid &,
+                           const isce::core::Orbit &,
+                           const isce::core::Poly2d &,
+                           const isce::core::Metadata &,
+                           double &, double &,
+                           double, int, double);
 };
 
 #endif
