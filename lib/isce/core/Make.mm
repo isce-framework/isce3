@@ -26,6 +26,7 @@ PROJ_SRCS = \
     Quaternion.cpp \
     Raster.cpp \
     ResampSlc.cpp \
+    TimeDelta.cpp \
 
 # products
 # the library
@@ -66,6 +67,7 @@ EXPORT_PKG_HEADERS = \
     StateVector.h \
     Tile.h \
     Tile.icc \
+    TimeDelta.h \
 
 # build
 PROJ_CXX_INCLUDES += $(EXPORT_ROOT)/include/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)

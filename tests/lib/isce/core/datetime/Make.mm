@@ -1,6 +1,6 @@
 # -*- Makefile -*-
 #
-# eric m. gurrola
+# Bryan V. Riel
 # (c) 2017 all rights reserved
 #
 
@@ -9,7 +9,7 @@ include isce.def
 
 # the pile of tests
 TESTS = \
-    resampslc \
+    datetime \
 
 all: test clean
 
@@ -21,7 +21,7 @@ test: $(TESTS)
             } done
 
 # build
-PROJ_CLEAN += $(TESTS) warped.slc warped.slc.xml
+PROJ_CLEAN += $(TESTS)
 PROJ_CXX_INCLUDES += $(EXPORT_ROOT)/include/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)
 PROJ_LIBRARIES = -lisce.$(PROJECT_MAJOR).$(PROJECT_MINOR) -lgtest
 LIBRARIES = $(PROJ_LIBRARIES) $(EXTERNAL_LIBS)

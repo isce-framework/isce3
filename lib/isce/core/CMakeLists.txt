@@ -22,7 +22,8 @@ set(LOCAL_SRCS
               Projections.cpp
               Quaternion.cpp
 	          Raster.cpp
-              ResampSlc.cpp)
+              ResampSlc.cpp
+              TimeDelta.cpp)
 
 ####Append current path to every source file
 set(${PACKAGENAME}_SRCS "")
@@ -60,7 +61,8 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Serialization.h
                                     StateVector.h
                                     Tile.h
-                                    Tile.icc)
+                                    Tile.icc
+                                    TimeDelta.h)
 
 ###Install headers into build/include
 ###This is where regex can be used on the header files if needed
