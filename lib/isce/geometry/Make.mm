@@ -8,6 +8,7 @@ PACKAGE = isce/geometry
 # the list of sources
 PROJ_SRCS = \
     DEMInterpolator.cpp \
+    Geo2rdr.cpp \
     Geometry.cpp \
     Topo.cpp \
 
@@ -23,6 +24,8 @@ EXPORT_LIBS = $(PROJ_DLL)
 EXPORT_PKG_HEADERS = \
     Basis.h \
     DEMInterpolator.h \
+    Geo2rdr.h \
+    Geo2rdr.icc \
     Geometry.h \
     Pixel.h \
     Topo.h \

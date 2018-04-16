@@ -57,6 +57,8 @@ class isce::geometry::Topo {
                   isce::core::Poly2d &,
                   const std::string);
 
+    private:
+
         // Initialize output rasters and multiband topo raster
         isce::core::Raster _initOutputRasters(const std::string);
 
