@@ -1,4 +1,5 @@
 add_subdirectory(attitude)
+add_subdirectory(datetime)
 add_subdirectory(ellipsoid)
 add_subdirectory(doppler)
 add_subdirectory(projections)

@@ -26,6 +26,7 @@ PROJ_SRCS = \
     Quaternion.cpp \
     Raster.cpp \
     ResampSlc.cpp \
+    TimeDelta.cpp \
 
 # products
 # the library
@@ -61,6 +62,7 @@ EXPORT_PKG_HEADERS = \
     Serialization.h \
     Tile.h \
     Tile.icc \
+    TimeDelta.h \
 
 # standard targets
 all: $(PROJ_DLL) export

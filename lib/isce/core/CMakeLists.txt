@@ -25,7 +25,8 @@ set(${PACKAGENAME}_SRCS
               Projections.cpp
               Quaternion.cpp
 	          Raster.cpp
-              ResampSlc.cpp)
+              ResampSlc.cpp
+              TimeDelta.cpp)
 
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h 
@@ -56,7 +57,8 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     ResampSlc.icc
                                     Serialization.h
                                     Tile.h
-                                    Tile.icc)
+                                    Tile.icc
+                                    TimeDelta.h)
 
 ###Install headers into build/include
 ###This is where regex can be used on the header files if needed

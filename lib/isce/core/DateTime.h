@@ -1,101 +1,124 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
 //
-// Author: Joshua Cohen
-// Copyright 2017
-//
-// AUTHOR'S NOTE: Current implementations of string parsing (copy/= from string and toIsoString to
-//                string) use the put_time/get_time methods defined in <iomanip> from the C++11
-//                standard, however the function wasn't actually added until GCC 5. Therefore to
-//                allow for building at the moment, these functions are protected from being
-//                defined (both here and in the .cpp implementation) by version checking the
-//                preprocessor macros (similar to the issue with std::isnan between gcc and clang).
-//                These guards will be replaced with internal guards in the functions themselves
-//                that will have implementations for GCCs earlier than GCC 5.
+// Author: Piyush Agram
+// Copyright 2017-2018
 
-#ifndef __ISCE_CORE_DATETIME_H__
-#define __ISCE_CORE_DATETIME_H__
+#ifndef ISCE_CORE_DATETIME_H
+#define ISCE_CORE_DATETIME_H
 
-#include <chrono>
+#include <cassert>
+#include <cmath>
 #include <string>
+#include "TimeDelta.h"
 
-namespace isce { namespace core {
-    struct DateTime {
-        std::chrono::time_point<std::chrono::high_resolution_clock> t;
-
-        DateTime() : t() {}
-        DateTime(const DateTime &dt) : t(dt.t) {}
-        //#if __cplusplus >= 201103L
-        #if 0
-        DateTime(const std::string &dts) { *this = dts; }
-        #endif
-        // Note that these constructors leverage the assignment operators given their relative
-        // complexity
-        DateTime(double dtd) { *this = dtd; }
-        inline DateTime& operator=(const DateTime&);
-        //#if __cplusplus >= 201103L
-        #if 0
-        DateTime& operator=(const std::string&);
-        #endif
-        DateTime& operator=(double);
-
-        // Wrapped boolean comparisons
-        inline bool operator==(const DateTime &dt) const { return t == dt.t; }
-        inline bool operator!=(const DateTime &dt) const { return t != dt.t; }
-        inline bool operator<(const DateTime &dt) const { return t < dt.t; }
-        inline bool operator<=(const DateTime &dt) const { return t <= dt.t; }
-        inline bool operator>(const DateTime &dt) const { return t > dt.t; }
-        inline bool operator>=(const DateTime &dt) const { return t >= dt.t; }
-
-        // DateTime + duration arithmetic
-        inline DateTime& operator+=(double);
-        inline DateTime& operator-=(double);
-        inline DateTime operator+(double) const;
-        inline DateTime operator-(double) const;
-        
-        // DateTime - DateTime differential
-        inline double operator-(const DateTime&) const;
-
-        // Built-in conversion to time-as-double (assumes t_since_epoch)
-        operator double() {
-            return static_cast<std::chrono::duration<double>>(t.time_since_epoch()).count();
-        }
-
-        //#if __cplusplus >= 201103L
-        #if 0
-        std::string toIsoString() const;
-        #endif
-    };
-
-    inline DateTime& DateTime::operator=(const DateTime &rhs) {
-        t = rhs.t;
-        return *this;
+// Declaration
+namespace isce {
+    namespace core {
+        struct DateTime;
     }
+}
 
-    inline DateTime& DateTime::operator+=(double rhs) {
-        t += std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                std::chrono::duration<double>(rhs));
-        return *this;
-    }
+// DateTime declaration
+struct isce::core::DateTime {
 
-    inline DateTime& DateTime::operator-=(double rhs) {
-        t -= std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                std::chrono::duration<double>(rhs));
-        return *this;
-    }
+    int year;
+    int months;
+    int days;
+    int hours;
+    int minutes;
+    int seconds;
+    double frac;
 
-    inline DateTime DateTime::operator+(double rhs) const {
-        return DateTime(*this) += rhs;
-    }
+    // Constructors
+    DateTime() : DateTime(0.0) {};
+    DateTime(double ord);
+    DateTime(int yy, int mm, int dd);
+    DateTime(int yy, int mm, int dd, int hh, int mn, int ss);
+    DateTime(int yy, int mm, int dd, int hh, int mn, double ss);
+    DateTime(int yy, int mm, int dd, int hh, int mn, int ss, double ff);
+    DateTime(const DateTime& ts);
+    DateTime(const std::string &);
 
-    inline DateTime DateTime::operator-(double rhs) const {
-        return DateTime(*this) -= rhs;
-    }
+    // Init function to be used by constructors
+    void _init(int yy, int mm, int dd, int hh, int mn, int ss, double ff);
+    void _normalize_time();
+    void _normalize_date();
+    void _normalize();
 
-    inline double DateTime::operator-(const DateTime &rhs) const {
-        // Casting to duration preserves double-precision DateTime delta, count() gets the double()
-        // value of a duration. This operation has a different purpose in that we want to return
-        // a "duration" in seconds that is the difference between two DateTime points
-        return static_cast<std::chrono::duration<double>>(t - rhs.t).count();
+    // Comparison operators
+    bool operator<( const DateTime &ts) const;
+    bool operator>( const DateTime &ts) const;
+    bool operator<=( const DateTime &ts) const;
+    bool operator>=( const DateTime &ts) const;
+    bool operator==( const DateTime &ts) const;
+    bool operator!=( const DateTime &ts) const;
+
+    // Math operators
+    DateTime& operator=(const DateTime& ts);
+    DateTime& operator+=(const TimeDelta& ts);
+    DateTime& operator+=(const double& s);
+    DateTime& operator-=(const TimeDelta& ts);
+    DateTime& operator-=(const double& s);
+
+    DateTime operator+(const TimeDelta& ts) const;
+    DateTime operator+(const double& s) const;
+    DateTime operator-(const TimeDelta& ts) const;
+    DateTime operator-(const double& s) const;
+
+    TimeDelta operator-(const DateTime& ts) const;
+
+    // Get methods
+    int dayOfYear() const;
+    double secondsOfDay() const;
+    int dayOfWeek() const;
+    double ordinal() const;
+
+    // Get and set with respect to fixed epoch
+    double secondsSinceEpoch() const;
+    void secondsSinceEpoch(double);
+  
+    // Output methods
+    std::string isoformat() const;
+
+    // Parsing methods
+    void strptime(const std::string &);
+};
+
+// Some constants
+namespace isce {
+    namespace core {
+
+        // Constants for default constructors
+        const DateTime MIN_DATE_TIME = DateTime(1970, 1, 1);
+        const std::string UNINITIALIZED_STRING = "uninitialized";
+
+        static const int DaysInMonths[] = {31,28,31,
+                                       30,31,30,
+                                       31,31,30,
+                                       31,30,31};
+
+        static const int DaysBeforeMonths[] = {0,31,59,
+                                              90,120,151,
+                                              181,212,243,
+                                              273,304,334};
+        static const int DAY_TO_YEAR = 365;
+        static const int DAYSPER100  = 36524;
+        static const int DAYSPER400  = 146097;
+        static const int DAYSPER4    = 1461;
+        static const int MAXORDINAL  = 3652059;
+        static const double TOL_SECONDS = 1.0e-11;
+
+        // Handful of utility functions
+        bool _is_leap(int);
+        int _days_in_month(int, int);
+        int _days_before_year(int);
+        int _days_before_month(int, int);
+        int _ymd_to_ord(int, int, int);
+        void _ord_to_ymd(int, int &, int &, int &);
     }
-}}
+}
 
 #endif
+
+// end if
