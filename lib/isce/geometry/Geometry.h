@@ -22,7 +22,7 @@
 
 // isce::geometry
 #include "Basis.h"
-#include "DemInterpolator.h"
+#include "DEMInterpolator.h"
 #include "Pixel.h"
 
 // Declaration
