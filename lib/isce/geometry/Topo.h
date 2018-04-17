@@ -54,18 +54,13 @@ class isce::geometry::Topo {
         // Run topo - main entrypoint
         void topo(isce::core::Raster &,
                   isce::core::Poly2d &,
-                  isce::core::Poly2d &,
                   const std::string);
 
     private:
 
-        // Initialize output rasters and multiband topo raster
-        isce::core::Raster _initOutputRasters(const std::string);
-
         // Get DEM bounds using first/last azimuth line and slant range bin
         void _computeDEMBounds(isce::core::Raster &,
                                DEMInterpolator &,
-                               isce::core::Poly2d &,
                                isce::core::Poly2d &);
 
         // Perform data initialization for a given azimuth line
@@ -82,12 +77,6 @@ class isce::geometry::Topo {
                                   isce::core::StateVector &,
                                   Basis &,
                                   DEMInterpolator &);
-
-        // Write results to output rasters
-        void _writeVRTData(isce::core::Raster &,
-                           TopoLayers &,
-                           size_t);
-
 
     private:
         // isce::core objects

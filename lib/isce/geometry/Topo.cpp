@@ -33,7 +33,6 @@ using isce::core::StateVector;
 void isce::geometry::Topo::
 topo(Raster & demRaster,
      Poly2d & dopPoly, 
-     Poly2d & slrngPoly,
      const std::string outdir) {
     
     // Create reusable pyre::journal channels
@@ -45,10 +44,25 @@ topo(Raster & demRaster,
     
     // Output layers
     TopoLayers layers(_meta.width);
-       
-    // Output raster objects
-    Raster vrt = _initOutputRasters(outdir);
-
+    
+    // Create rasters for individual layers
+    Raster latRaster = Raster(outdir + "/lat.rdr", _meta.width, _meta.length, 1,
+        GDT_Float64, "ENVI");
+    Raster lonRaster = Raster(outdir + "/lon.rdr", _meta.width, _meta.length, 1,
+        GDT_Float64, "ENVI");
+    Raster heightRaster = Raster(outdir + "/z.rdr", _meta.width, _meta.length, 1,
+        GDT_Float64, "ENVI");
+    Raster incRaster = Raster(outdir + "/inc.rdr", _meta.width, _meta.length, 1,
+        GDT_Float32, "ENVI");
+    Raster hdgRaster = Raster(outdir + "/hdg.rdr", _meta.width, _meta.length, 1,
+        GDT_Float32, "ENVI");
+    Raster localIncRaster = Raster(outdir + "/localInc.rdr", _meta.width, _meta.length, 1,
+        GDT_Float32, "ENVI");
+    Raster localPsiRaster = Raster(outdir + "/localPsi.rdr", _meta.width, _meta.length, 1,
+        GDT_Float32, "ENVI");
+    Raster simRaster = Raster(outdir + "/simamp.rdr", _meta.width, _meta.length, 1,
+        GDT_Float32, "ENVI");
+    
     // Create and start a timer
     //pyre::timer_t topoTimer("isce.geometry.Topo");
     //topoTimer.start();
@@ -56,7 +70,7 @@ topo(Raster & demRaster,
     // Create a DEM interpolator
     DEMInterpolator demInterp;
     // Load DEM subset for SLC image bounds
-    _computeDEMBounds(demRaster, demInterp, slrngPoly, dopPoly);
+    _computeDEMBounds(demRaster, demInterp, dopPoly);
 
     // Compute max and mean DEM height for the subset
     float demmax, dem_avg;
@@ -90,7 +104,7 @@ topo(Raster & demRaster,
         for (int rbin = 0; rbin < _meta.width; ++rbin) {
 
             // Get current slant range
-            const double rng = slrngPoly.eval(0, rbin);
+            const double rng = _meta.rangeFirstSample + rbin*_meta.slantRangePixelSpacing;
 
             // Get current Doppler value
             const double dopfact = (0.5 * _meta.radarWavelength 
@@ -114,8 +128,15 @@ topo(Raster & demRaster,
 
         } //end OMP for loop
         
-        // Write out line of data
-        _writeVRTData(vrt, layers, line);
+        // Write out line of data for every product
+        latRaster.setLine(layers.lat(), line);
+        lonRaster.setLine(layers.lon(), line);
+        heightRaster.setLine(layers.z(), line);
+        incRaster.setLine(layers.inc(), line);
+        hdgRaster.setLine(layers.hdg(), line);
+        localIncRaster.setLine(layers.localInc(), line);
+        localPsiRaster.setLine(layers.localPsi(), line);
+        simRaster.setLine(layers.sim(), line);
     }
 
     //// Print out timing information and reset
@@ -129,37 +150,6 @@ topo(Raster & demRaster,
          << (_meta.width * _meta.length) << pyre::journal::endl;
 
 }
-
-// Initialize output rasters and multiband topo raster
-Raster isce::geometry::Topo::
-_initOutputRasters(const std::string outdir) {
-
-    // First create rasters for individual layers
-    Raster latRaster = Raster(outdir + "/lat.rdr", _meta.width, _meta.length, 1,
-        GDT_Float64, "ENVI");
-    Raster lonRaster = Raster(outdir + "/lon.rdr", _meta.width, _meta.length, 1,
-        GDT_Float64, "ENVI");
-    Raster heightRaster = Raster(outdir + "/z.rdr", _meta.width, _meta.length, 1,
-        GDT_Float64, "ENVI");
-    Raster incRaster = Raster(outdir + "/inc.rdr", _meta.width, _meta.length, 1,
-        GDT_Float32, "ENVI");
-    Raster hdgRaster = Raster(outdir + "/hdg.rdr", _meta.width, _meta.length, 1,
-        GDT_Float32, "ENVI");
-    Raster localIncRaster = Raster(outdir + "/localInc.rdr", _meta.width, _meta.length, 1,
-        GDT_Float32, "ENVI");
-    Raster localPsiRaster = Raster(outdir + "/localPsi.rdr", _meta.width, _meta.length, 1,
-        GDT_Float32, "ENVI");
-    Raster simRaster = Raster(outdir + "/simamp.rdr", _meta.width, _meta.length, 1,
-        GDT_Float32, "ENVI");
-
-    // Wrap the individual layers in a multilayer VRT
-    Raster vrt = isce::core::Raster(outdir + "/topo.vrt",
-        {latRaster, lonRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
-         localPsiRaster, simRaster});
-
-    return vrt;
-}
-
 
 // Perform data initialization for a given azimuth line
 void isce::geometry::Topo::
@@ -207,8 +197,7 @@ _initAzimuthLine(int line, StateVector & state, Basis & basis) {
 
 // Get DEM bounds using first/last azimuth line and slant range bin
 void isce::geometry::Topo::
-_computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp,
-                  Poly2d & slrngPoly, Poly2d & dopPoly) {
+_computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopPoly) {
 
     // Initialize journal
     pyre::journal::warning_t warning("isce.core.Topo");
@@ -216,6 +205,8 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp,
     cartesian_t llh, satLLH;
     StateVector state;
     Basis basis;
+
+    std::cout << "Computing bounds\n";
 
     // Initialize geographic bounds
     double min_lat = 10000.0;
@@ -240,7 +231,7 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp,
 
             // Get proper slant range bin and Doppler factor
             int rbin = ind * (_meta.width - 1);
-            double rng = slrngPoly.eval(0, rbin);
+            double rng = _meta.rangeFirstSample + rbin*_meta.slantRangePixelSpacing;
             double dopfact = (0.5 * _meta.radarWavelength * (dopPoly.eval(0, rbin) 
                             / satVmag)) * rng;
             // Store in Pixel object
@@ -377,18 +368,5 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
           / (LinAlg::norm(n_trg_enu) * LinAlg::norm(n_img_enu));
     layers.localPsi(bin, std::acos(cospsi) * degrees);
 }
-
-// Write output results to VRT file
-void isce::geometry::Topo::
-_writeVRTData(Raster & vrt, TopoLayers & layers, size_t line) {
-    vrt.setLine(layers.lat(), line, 1);
-    vrt.setLine(layers.lon(), line, 2);
-    vrt.setLine(layers.z(), line, 3);
-    vrt.setLine(layers.inc(), line, 4);
-    vrt.setLine(layers.hdg(), line, 5);
-    vrt.setLine(layers.localInc(), line, 6);
-    vrt.setLine(layers.localPsi(), line, 7);
-    vrt.setLine(layers.sim(), line, 8);
-} 
 
 // end of file
