@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<cereal>
+  <Topo>
+    <threshold>0.005</threshold>
+    <numIterations>25</numIterations>
+    <extraIterations>10</extraIterations>
+    <orbitMethod>0</orbitMethod>
+    <demMethod>5</demMethod>
+  </Topo>
+  <Geo2rdr>
+    <threshold>0.00001</threshold>
+    <numIterations>50</numIterations>
+    <orbitMethod>0</orbitMethod>
+  </Geo2rdr>
+</cereal>

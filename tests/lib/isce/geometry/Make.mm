@@ -15,6 +15,7 @@ RECURSE_DIRS = \
 # the ones that are always available
 PACKAGES = \
     geometry \
+    topo \
 
 # the standard targets
 all:

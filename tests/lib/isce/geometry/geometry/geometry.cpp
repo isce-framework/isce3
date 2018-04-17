@@ -86,7 +86,6 @@ struct GeometryTest : public ::testing::Test {
             ellipsoid.xyzToLatLon(xyzsat, llhsat);
             peg.lat = llhsat[0];
             peg.lon = llhsat[1];
-            //peg.hdg = meta.pegHeading;
             peg.hdg = -166.40653160564963 * M_PI / 180.0;
             ptm.radarToXYZ(ellipsoid, peg);
 
