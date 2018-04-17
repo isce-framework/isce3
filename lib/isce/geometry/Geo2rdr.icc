@@ -17,6 +17,18 @@ Geo2rdr(isce::core::Ellipsoid ellipsoid, isce::core::Orbit orbit, isce::core::Me
     _meta = meta;
 }
 
+// Set threshold
+void isce::geometry::Geo2rdr::
+threshold(double t) {
+    _threshold = t;
+}
+
+// Set number of iterations
+void isce::geometry::Geo2rdr::
+numiter(int n) {
+    _numiter = n;
+}
+
 // Set the orbit interpolation method while checking its validity
 void isce::geometry::Geo2rdr::
 orbitMethod(isce::core::orbitInterpMethod method) {

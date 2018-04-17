@@ -13,9 +13,14 @@
 #include <cereal/archives/xml.hpp>
 
 #include <isce/geometry/Topo.h>
+#include <isce/geometry/Geo2rdr.h>
 
 namespace isce {
     namespace geometry {
+
+        // ----------------------------------------------------------------------
+        // Serialization for Topo
+        // ----------------------------------------------------------------------
 
         // Topo save does nothing
         template <class Archive>
@@ -27,7 +32,9 @@ namespace isce {
 
             // Deserialize scalar values
             double threshold;
-            size_t numiter, extraiter, orbitMethod, demMethod;
+            size_t numiter, extraiter;
+            isce::core::orbitInterpMethod orbitMethod;
+            isce::core::dataInterpMethod demMethod;
             archive(cereal::make_nvp("threshold", threshold),
                     cereal::make_nvp("numIterations", numiter),
                     cereal::make_nvp("extraIterations", extraiter),
@@ -42,6 +49,33 @@ namespace isce {
             topo.demMethod(demMethod);
             topo.initialized(true);
         }
+
+        // ----------------------------------------------------------------------
+        // Serialization for Geo2rdr
+        // ----------------------------------------------------------------------
+
+        // Geo2rdr save does nothing
+        template <class Archive>
+        void save(Archive & archive, const Geo2rdr & geo) {}
+
+        // Geo2rdr load
+        template <class Archive>
+        void load(Archive & archive, Geo2rdr & geo) {
+
+            // Deserialize scalar values
+            double threshold;
+            size_t numiter;
+            isce::core::orbitInterpMethod orbitMethod;
+            archive(cereal::make_nvp("threshold", threshold),
+                    cereal::make_nvp("numIterations", numiter),
+                    cereal::make_nvp("orbitMethod", orbitMethod));
+
+            // Send to Geo2rdr setters
+            geo.threshold(threshold);
+            geo.numiter(numiter);
+            geo.orbitMethod(orbitMethod);
+        }
+
     }
 }
 
