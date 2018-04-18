@@ -278,7 +278,7 @@ void isce::geometry::Topo::
 _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel,
                      StateVector & state, Basis & basis, DEMInterpolator & demInterp) {
 
-    cartesian_t targetXYZ, targetSCH, satToGround, satLLH, enu;
+    cartesian_t targetXYZ, targetSCH, satToGround, satLLH, enu, vhat;
     cartmat_t enumat, xyz2enu;
     const double degrees = 180.0 / M_PI;
     const double radians = M_PI / 180.0;
@@ -304,6 +304,9 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
 
     // Compute vector from satellite to ground point
     LinAlg::linComb(1.0, targetXYZ, -1.0, state.position(), satToGround);
+
+    // Compute unit velocity vector
+    LinAlg::unitVec(state.velocity(), vhat);
     
     // Computation in ENU coordinates around target
     LinAlg::enuBasis(targetLLH[0], targetLLH[1], enumat);
@@ -319,10 +322,10 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     double aa = satHeight + _ptm.radcur;
     double bb = _ptm.radcur + zsch;
     double costheta = 0.5 * ((aa / rng) + (rng / aa) - ((bb / aa) * (bb / rng)));
-    double sintheta = std::sqrt(1.0 - (costheta * costheta));
+    double sintheta = std::sqrt(1.0 - costheta * costheta);
     double gamma = rng * costheta;
-    double alpha = dopfact - gamma*LinAlg::dot(basis.nhat(), state.velocity())
-                 / LinAlg::dot(state.velocity(), basis.that());
+    double alpha = dopfact - gamma*LinAlg::dot(basis.nhat(), vhat)
+                 / LinAlg::dot(vhat, basis.that());
     double beta = -1 * _meta.lookSide * std::sqrt(
                    rng * rng * sintheta * sintheta - alpha * alpha);
     
