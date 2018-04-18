@@ -107,7 +107,7 @@
           <chirpSlope>588741148672.000000</chirpSlope>
           <pulseDuration>0.000027</pulseDuration>
           <antennaLength>10.000000</antennaLength>
-          <sensingStart>2003-02-26T17:55:22.976222</sensingStart>
+          <sensingStart>2003-02-26T17:55:30.843492</sensingStart>
         </Radar>
       </cereal>
     </Metadata>
