@@ -3,6 +3,7 @@
 // Copyright 2017
 //
 
+#include <iostream>
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
@@ -17,7 +18,7 @@
 
 template <class U>
 U isce::core::Interpolator::
-bilinear(double x, double y, const Matrix<U> & z, int width) {
+bilinear(double x, double y, const Matrix<U> & z) {
 
     int x1 = std::floor(x);
     int x2 = std::ceil(x);
@@ -54,111 +55,123 @@ bilinear(double x, double y, const Matrix<U> & z, int width) {
 
 template std::complex<double>
 isce::core::Interpolator::
-bilinear(double, double, const Matrix<std::complex<double>> &, int);
+bilinear(double, double, const Matrix<std::complex<double>> &);
 
 template std::complex<float>
 isce::core::Interpolator::
-bilinear(double, double, const Matrix<std::complex<float>> &, int);
+bilinear(double, double, const Matrix<std::complex<float>> &);
 
 template double
 isce::core::Interpolator::
-bilinear(double, double, const Matrix<double> &, int);
+bilinear(double, double, const Matrix<double> &);
 
 template float
 isce::core::Interpolator::
-bilinear(double, double, const Matrix<float> &, int);
+bilinear(double, double, const Matrix<float> &);
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 template <class U>
 U isce::core::Interpolator::
-bicubic(double x, double y, const Matrix<U> & z, int width) {
+bicubic(double x, double y, const Matrix<U> & z) {
 
-    // Kernel weights
-    Matrix<float> wt(16, 16);
-    wt.data() = {
-        1.0, 0.0,-3.0, 2.0, 0.0, 0.0, 0.0, 0.0,-3.0, 0.0, 9.0,-6.0, 2.0, 0.0,-6.0, 4.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0,-9.0, 6.0,-2.0, 0.0, 6.0,-4.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 9.0,-6.0, 0.0, 0.0,-6.0, 4.0,
-        0.0, 0.0, 3.0,-2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0- 9.0, 6.0, 0.0, 0.0, 6.0,-4.0,
-        0.0, 0.0, 0.0, 0.0, 1.0, 0.0,-3.0, 2.0,-2.0, 0.0, 6.0,-4.0, 1.0, 0.0,-3.0, 2.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,-1.0, 0.0, 3.0,-2.0, 1.0, 0.0,-3.0, 2.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,-3.0, 2.0, 0.0, 0.0, 3.0,-2.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0,-2.0, 0.0, 0.0,-6.0, 4.0, 0.0, 0.0, 3.0,-2.0,
-        0.0, 1.0,-2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,-3.0, 6.0,-3.0, 0.0, 2.0,-4.0, 2.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0,-6.0, 3.0, 0.0,-2.0, 4.0,-2.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,-3.0, 3.0, 0.0, 0.0, 2.0,-2.0,
-        0.0, 0.0,-1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0,-3.0, 0.0, 0.0,-2.0, 2.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 1.0,-2.0, 1.0, 0.0,-2.0, 4.0,-2.0, 0.0, 1.0,-2.0, 1.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,-1.0, 2.0,-1.0, 0.0, 1.0,-2.0, 1.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,-1.0, 0.0, 0.0,-1.0, 1.0,
-        0.0, 0.0, 0.0, 0.0, 0.0, 0.0,-1.0, 1.0, 0.0, 0.0, 2.0,-2.0, 0.0, 0.0,-1.0, 1.0
+    // The bicubic interpolation weights
+    const std::valarray<double> weights = {
+        1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+       -3.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0,-2.0, 0.0, 0.0,-1.0, 0.0, 0.0, 0.0, 0.0,
+        2.0, 0.0, 0.0,-2.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0,-3.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0,-2.0, 0.0, 0.0,-1.0,
+        0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0,-2.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
+       -3.0, 3.0, 0.0, 0.0,-2.0,-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,-3.0, 3.0, 0.0, 0.0,-2.0,-1.0, 0.0, 0.0,
+        9.0,-9.0, 9.0,-9.0, 6.0, 3.0,-3.0,-6.0, 6.0,-6.0,-3.0, 3.0, 4.0, 2.0, 1.0, 2.0,
+       -6.0, 6.0,-6.0, 6.0,-4.0,-2.0, 2.0, 4.0,-3.0, 3.0, 3.0,-3.0,-2.0,-1.0,-1.0,-2.0,
+        2.0,-2.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0,-2.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0,
+       -6.0, 6.0,-6.0, 6.0,-3.0,-3.0, 3.0, 3.0,-4.0, 4.0, 2.0,-2.0,-2.0,-2.0,-1.0,-1.0,
+        4.0,-4.0, 4.0,-4.0, 2.0, 2.0,-2.0,-2.0, 2.0,-2.0,-2.0, 2.0, 1.0, 1.0, 1.0, 1.0
     };
 
-    int x1 = floor(x) - 1;
-    int x2 = ceil(x) - 1;
-    int y1 = floor(y) - 1;
-    int y2 = ceil(y) - 1;
+    const int x1 = std::floor(x);
+    const int x2 = std::ceil(x);
+    const int y1 = std::floor(y);
+    const int y2 = std::ceil(y);
+
+    const U denom = static_cast<U>(2.0);
+    const U scale = static_cast<U>(0.25);
 
     // Future work: See "Future work" note from Interpolator::bilinear.
-    std::valarray<U> zz = {z(y1,x1), z(y1,x2), z(y2,x2), z(y2,x1)};
-    std::valarray<U> dzdx = {(z(y1,x1+1) - z(y1,x1-1)) / static_cast<U>(2.0),
-                             (z(y1,x2+1) - z(y1,x2-1)) / static_cast<U>(2.0),
-                             (z(y2,x2+1) - z(y2,x2-1)) / static_cast<U>(2.0),
-                             (z(y2,x1+1) - z(y2,x1-1)) / static_cast<U>(2.0)};
-    std::valarray<U> dzdy = {(z(y1+1,x1) - z(y1-1,x1)) / static_cast<U>(2.0),
-                             (z(y1+1,x2+1) - z(y1-1,x2)) / static_cast<U>(2.0),
-                             (z(y2+1,x2+1) - z(y2-1,x2)) / static_cast<U>(2.0),
-                             (z(y2+1,x1+1) - z(y2-1,x1)) / static_cast<U>(2.0)};
-    std::valarray<U> dzdxy = {static_cast<U>(.25)*(z(y1+1,x1+1) - z(y1-1,x1+1) -
-                                                   z(y1+1,x1-1) + z(y1-1,x1-1)),
-                              static_cast<U>(.25)*(z(y1+1,x2+1) - z(y1-1,x2+1) -
-                                                   z(y1+1,x2-1) + z(y1-1,x2-1)),
-                              static_cast<U>(.25)*(z(y2+1,x2+1) - z(y2-1,x2+1) -
-                                                   z(y2+1,x2-1) + z(y2-1,x2-1)),
-                              static_cast<U>(.25)*(z(y2+1,x1+1) - z(y2-1,x1+1) -
-                                                   z(y2+1,x1-1) + z(y2-1,x1-1))};
-       
+    const std::valarray<U> zz = {z(y1,x1), z(y1,x2), z(y2,x2), z(y2,x1)};
+
+    // First order derivatives
+    const std::valarray<U> dzdx = {
+        (z(y1,x1+1) - z(y1,x1-1)) / denom,
+        (z(y1,x2+1) - z(y1,x2-1)) / denom,
+        (z(y2,x2+1) - z(y2,x2-1)) / denom,
+        (z(y2,x1+1) - z(y2,x1-1)) / denom
+    };
+    const std::valarray<U> dzdy = {
+        (z(y1+1,x1) - z(y1-1,x1)) / denom,
+        (z(y1+1,x2+1) - z(y1-1,x2)) / denom,
+        (z(y2+1,x2+1) - z(y2-1,x2)) / denom,
+        (z(y2+1,x1+1) - z(y2-1,x1)) / denom
+    };
+
+    // Cross derivatives
+    const std::valarray<U> dzdxy = {
+        scale*(z(y1+1,x1+1) - z(y1-1,x1+1) - z(y1+1,x1-1) + z(y1-1,x1-1)),
+        scale*(z(y1+1,x2+1) - z(y1-1,x2+1) - z(y1+1,x2-1) + z(y1-1,x2-1)),
+        scale*(z(y2+1,x2+1) - z(y2-1,x2+1) - z(y2+1,x2-1) + z(y2-1,x2-1)),
+        scale*(z(y2+1,x1+1) - z(y2-1,x1+1) - z(y2+1,x1-1) + z(y2-1,x1-1))
+    };
+      
+    // Compute polynomial coefficients 
     std::valarray<U> q(16);
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; ++i) {
         q[i] = zz[i];
         q[i+4] = dzdx[i];
         q[i+8] = dzdy[i];
         q[i+12] = dzdxy[i];
     }
 
+    // Matrix multiply by stored weights
     Matrix<U> c(4, 4);
-    for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 16; j++) {
-            U cpx_wt(wt(i,j));
-            c(i) += cpx_wt * q[j];
+    for (int i = 0; i < 16; ++i) {
+        U qq(0.0);
+        for (int j = 0; j < 16; ++j) {
+            const U cpx_wt = static_cast<U>(weights[i*16+j]);
+            qq += cpx_wt * q[j];
         }
+        c(i) = qq;
     }
 
-    U t = x - x1;
-    U u = y - y1;
-    U ret = 0.;
+    // Compute and normalize desired results
+    const U t = x - x1;
+    const U u = y - y1;
+    U ret = 0.0;
     for (int i = 3; i >= 0; i--)
-        ret = (t * ret) + c(i,0) + (((((c(i,3) * u) +
-              c(i,2)) * u) + c(i,1)) * u);
+        ret = t*ret + ((c(i,3)*u + c(i,2))*u + c(i,1))*u + c(i,0);
     return ret;
 }
 
 template std::complex<double>
 isce::core::Interpolator::
-bicubic(double, double, const Matrix<std::complex<double>> &, int);
+bicubic(double, double, const Matrix<std::complex<double>> &);
 
 template std::complex<float>
 isce::core::Interpolator::
-bicubic(double, double, const Matrix<std::complex<float>> &, int);
+bicubic(double, double, const Matrix<std::complex<float>> &);
 
 template double
 isce::core::Interpolator::
-bicubic(double, double, const Matrix<double> &, int);
+bicubic(double, double, const Matrix<double> &);
 
 template float
 isce::core::Interpolator::
-bicubic(double, double, const Matrix<float> &, int);
+bicubic(double, double, const Matrix<float> &);
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -299,7 +312,7 @@ sinc_eval_2d(const Matrix<float> &, const Matrix<float> &,
 
 template <class U>
 U isce::core::Interpolator::
-interp_2d_spline(int order, int nx, int ny, const Matrix<U> & z, double x, double y) {
+interp_2d_spline(int order, const Matrix<U> & z, double x, double y) {
 
     // Error checking
     if ((order < 3) || (order > 20)) {
@@ -309,10 +322,15 @@ interp_2d_spline(int order, int nx, int ny, const Matrix<U> & z, double x, doubl
         throw std::invalid_argument(errstr);
     }
 
+    // Get array size
+    const int nx = z.width();
+    const int ny = z.length();
+
+    // Get coordinates of start of spline window
     int i0, j0;
     if ((order % 2) != 0) {
-        i0 = y - .5;
-        j0 = x - .5;
+        i0 = y - 0.5;
+        j0 = x - 0.5;
     } else {
         i0 = y;
         j0 = x;
@@ -321,51 +339,56 @@ interp_2d_spline(int order, int nx, int ny, const Matrix<U> & z, double x, doubl
     j0 = j0 - (order / 2) + 1;
 
     std::valarray<double> A(order), R(order), Q(order), HC(order);
-    int indi, indj;
-    for (int i = 1; i <= order; i++) {
-        indi = std::min(std::max((i0+i), 1), ny);
-        for (int j = 1; j <= order; j++) {
-            indj = std::min(std::max((j0+j), 1), nx);
-            A[j-1] = z(indi-1,indj-1);
+    
+    for (int i = 0; i < order; ++i) {
+        const int indi = std::min(std::max(i0 + i, 0), ny - 2);
+        for (int j = 0; j < order; ++j) {
+            const int indj = std::min(std::max(j0 + j, 0), nx - 2);
+            A[j] = z(indi+1,indj+1);
         }
         initSpline(A, order, R, Q);
-        HC[i-1] = spline(x - j0, A, order, R);
+        HC[i] = spline(x - j0, A, order, R);
     }
 
     initSpline(HC, order, R, Q);
-    return static_cast<float>(spline((y-i0), HC, order, R));
+    return static_cast<U>(spline(y - i0, HC, order, R));
 }
 
 template float
 isce::core::Interpolator::
-interp_2d_spline(int order, int nx, int ny, const Matrix<float> &z, double x, double y);
+interp_2d_spline(int order, const Matrix<float> &z, double x, double y);
+
+template double
+isce::core::Interpolator::
+interp_2d_spline(int order, const Matrix<double> &z, double x, double y);
 
 void isce::core::
 initSpline(const std::valarray<double> & Y, int n, std::valarray<double> & R,
            std::valarray<double> & Q) {
     Q[0] = 0.0;
     R[0] = 0.0;
-    for (int i = 2; i < n; i++) {
-        Q[i-1] = -.5 / ((Q[i-2] / 2.) + 2.);
-        R[i-1] = ((3 * (Y[i] - (2 * Y[i-1]) + Y[i-2])) - (R[i-2] / 2)) / ((Q[i-2] / 2.) + 2.);
+    for (int i = 1; i < n - 1; ++i) {
+        const double p = 1.0 / (0.5 * Q[i-1] + 2.0);
+        Q[i] = -0.5 * p;
+        R[i] = (3 * (Y[i+1] - 2*Y[i] + Y[i-1]) - 0.5*R[i-1]) * p;
     }
-    R[n-1] = 0.;
-    for (int i=(n-1); i>=2; i--)
-        R[i-1] = (Q[i-1] * R[i]) + R[i-1];
+    R[n-1] = 0.0;
+    for (int i = (n - 2); i > 0; --i)
+        R[i] = Q[i] * R[i+1] + R[i];
 }
 
 double isce::core::
 spline(double x, const std::valarray<double> & Y, int n, const std::valarray<double> & R) {
 
-    if (x < 1.) {
-        return Y[0] + ((x - 1.) * (Y[1] - Y[0] - (R[1] / 6.)));
+    if (x < 1.0) {
+        return Y[0] + (x - 1.0) * (Y[1] - Y[0] - (R[1] / 6.0));
     } else if (x > n) {
         return Y[n-1] + ((x - n) * (Y[n-1] - Y[n-2] + (R[n-2] / 6.)));
     } else {
-        int j = std::floor(x);
+        int j = int(std::floor(x));
         auto xx = x - j;
-        auto t0 = Y[j] - Y[j-1] - (R[j-1] / 3.) - (R[j] / 6.);
-        auto t1 = xx * ((R[j-1] / 2.) + (xx * ((R[j] - R[j-1]) / 6)));
+        auto t0 = Y[j] - Y[j-1] - (R[j-1] / 3.0) - (R[j] / 6.0);
+        auto t1 = xx * ((R[j-1] / 2.0) + (xx * ((R[j] - R[j-1]) / 6)));
         return Y[j-1] + (xx * (t0 + t1));
     }
 }

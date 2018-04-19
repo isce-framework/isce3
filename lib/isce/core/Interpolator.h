@@ -59,10 +59,10 @@ class isce::core::Interpolator {
     public:
         // Bilinear interpolation
         template <class U>
-        static U bilinear(double, double, const Matrix<U> &, int);
+        static U bilinear(double, double, const Matrix<U> &);
         // Bicubic interpolation 
         template <class U>
-        static U bicubic(double, double, const Matrix<U> &, int);
+        static U bicubic(double, double, const Matrix<U> &);
         // Compute sinc coefficients 
         static void sinc_coef(double, double, int, double, int, std::valarray<double> &); 
         // Sinc evaluation in 1D 
@@ -75,7 +75,7 @@ class isce::core::Interpolator {
                               int, int, double, double, int, int);
         // Spline interpolation 
         template <class U>
-        static U interp_2d_spline(int, int, int, const Matrix<U> &, double, double);
+        static U interp_2d_spline(int, const Matrix<U> &, double, double);
         // Quadratic interpolation
         static double quadInterpolate(const std::valarray<double> &,
                                       const std::valarray<double> &, double);
