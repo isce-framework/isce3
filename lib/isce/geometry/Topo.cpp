@@ -68,7 +68,7 @@ topo(Raster & demRaster,
     //topoTimer.start();
 
     // Create a DEM interpolator
-    DEMInterpolator demInterp;
+    DEMInterpolator demInterp(-500.0);
     // Load DEM subset for SLC image bounds
     _computeDEMBounds(demRaster, demInterp, dopPoly);
 
@@ -101,6 +101,7 @@ topo(Raster & demRaster,
         
         // For each slant range bin
         //#pragma omp parallel reduction(+:totalconv)
+        const double radians = M_PI / 180.0;
         for (int rbin = 0; rbin < _meta.width; ++rbin) {
 
             // Get current slant range
@@ -114,7 +115,7 @@ topo(Raster & demRaster,
             Pixel pixel(rng, dopfact, rbin);
 
             // Initialize LLH to middle of input DEM and average height
-            cartesian_t llh = {demInterp.midLat(), demInterp.midLon(), dem_avg};
+            cartesian_t llh = {radians*demInterp.midLat(), radians*demInterp.midLon(), dem_avg};
 
             // Perform rdr->geo iterations
             int geostat = Geometry::rdr2geo(
@@ -206,8 +207,6 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
     StateVector state;
     Basis basis;
 
-    std::cout << "Computing bounds\n";
-
     // Initialize geographic bounds
     double min_lat = 10000.0;
     double max_lat = -10000.0;
@@ -283,23 +282,23 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     const double degrees = 180.0 / M_PI;
     const double radians = M_PI / 180.0;
 
-    // Unpack the lat/lon values
-    const double lat = targetLLH[0];
-    const double lon = targetLLH[1];
+    // Unpack the lat/lon values and convert to degrees
+    const double lat = degrees * targetLLH[0];
+    const double lon = degrees * targetLLH[1];
     // Unpack the range pixel data
     const size_t bin = pixel.bin();
     const double rng = pixel.range();
     const double dopfact = pixel.dopfact();
 
     // Set outputs for LLH
-    layers.lat(bin, lat*degrees);
-    layers.lon(bin, lon*degrees);
+    layers.lat(bin, lat);
+    layers.lon(bin, lon);
     layers.z(bin, targetLLH[2]);
 
     // Convert llh->xyz for ground point
     _ellipsoid.latLonToXyz(targetLLH, targetXYZ);
     // Convert xyz->SCH for ground point
-    _ptm.convertSCHtoXYZ(targetXYZ, targetSCH, isce::core::XYZ_2_SCH);
+    _ptm.convertSCHtoXYZ(targetSCH, targetXYZ, isce::core::XYZ_2_SCH);
     const double zsch = targetSCH[2];
 
     // Compute vector from satellite to ground point

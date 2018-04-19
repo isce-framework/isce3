@@ -1,8 +1,0 @@
-<VRTDataset rasterXSize="10802" rasterYSize="10802">
-    <SRS>EPSG:4326</SRS>
-    <GeoTransform>-118.0, 0.00027777, 0.0, 36.0, 0.0, -0.00027777</GeoTransform>
-    <VRTRasterBand dataType="Float32" band="1" subClass="VRTDerivedRasterBand">
-        <Description>DEMHeight</Description>
-        <PixelFunctionType>evaluateHeight</PixelFunctionType>
-    </VRTRasterBand>
-</VRTDataset>

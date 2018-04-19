@@ -68,7 +68,7 @@ loadDEM(isce::core::Raster & demRaster,
     // Read data from raster
     for (int i = 0; i < length; ++i) {
         for (int j = 0; j < width; ++j) {
-            float value;
+            double value;
             demRaster.getValue(value, j+xstart, i+ystart);
             _dem(i,j) = value;
         }
@@ -90,7 +90,7 @@ declare() const {
          << "Bottom Right: " << _lonstart + _deltalon * (_dem.width() - 1) << " "
          << _latstart + _deltalat * (_dem.length() - 1) << " " << pyre::journal::newline
          << "Spacing: " << _deltalon << " " << _deltalat << pyre::journal::newline
-         << "Dimensions: " << _dem.width() << " " << _dem.length() << pyre::journal::endl;
+         << "Dimensions: " << _dem.width() << " " << _dem.length() << pyre::journal::newline;
 }
 
 // Compute maximum DEM height
@@ -133,24 +133,26 @@ interpolate(double lat, double lon) const {
         const double col = (lon - _lonstart) / _deltalon;
 
         // Check validity of interpolation coordinates
-        const size_t irow = size_t(std::floor(row));
-        const size_t icol = size_t(std::floor(col));
+        const int irow = int(std::floor(row));
+        const int icol = int(std::floor(col));
         // If outside bounds, return reference height
-        if (irow < 2 || irow >= (_dem.length() - 1))
+        if (irow < 2 || irow >= int(_dem.length() - 1))
             return _refHeight;
-        if (icol < 2 || icol >= (_dem.width() - 1))
+        if (icol < 2 || icol >= int(_dem.width() - 1))
             return _refHeight;
-
+        
         // Choose correct interpolation routine
         if (_interpMethod == isce::core::BILINEAR_METHOD) {
-            value = isce::core::Interpolator::bilinear(row, col, _dem, 0);
+            value = isce::core::Interpolator::bilinear(col, row, _dem);
         } else if (_interpMethod == isce::core::BICUBIC_METHOD) {
-            value = isce::core::Interpolator::bicubic(row, col, _dem, 0);
+            value = isce::core::Interpolator::bicubic(col, row, _dem);
         } else if (_interpMethod == isce::core::AKIMA_METHOD) {
             value = isce::core::Interpolator::akima(_dem.width(), _dem.length(), _dem,
-                row, col);
+                col, row);
+        } else if (_interpMethod == isce::core::BIQUINTIC_METHOD) { 
+            value = isce::core::Interpolator::interp_2d_spline(6, _dem, col, row);
         } else if (_interpMethod == isce::core::NEAREST_METHOD) {
-            return _dem(int(std::round(row)), int(std::round(col)));
+            value = _dem(int(std::round(row)), int(std::round(col)));
         }
     }
     return value;

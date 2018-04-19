@@ -36,7 +36,6 @@ struct GeometryTest : public ::testing::Test {
     isce::core::Ellipsoid ellipsoid;
     isce::core::Peg peg;
     isce::core::Pegtrans ptm;
-    isce::core::Poly2d contentDoppler;
     isce::core::Poly2d skewDoppler;
     isce::core::Metadata meta;
     isce::core::Orbit orbit;
@@ -55,10 +54,9 @@ struct GeometryTest : public ::testing::Test {
             // Deserialization
             {
             cereal::XMLInputArchive archive(metastream);
-            archive(cereal::make_nvp("ContentDoppler", contentDoppler),
-                    cereal::make_nvp("SkewDoppler", skewDoppler),
-                    cereal::make_nvp("Ellipsoid", ellipsoid),
+            archive(cereal::make_nvp("Ellipsoid", ellipsoid),
                     cereal::make_nvp("Orbit", orbit),
+                    cereal::make_nvp("SkewDoppler", skewDoppler),
                     cereal::make_nvp("Radar", meta));
             }
 
@@ -94,7 +92,7 @@ struct GeometryTest : public ::testing::Test {
             const double slantRange = meta.rangeFirstSample 
                                     + rbin * meta.slantRangePixelSpacing;
             pixel.range(slantRange);
-            pixel.dopfact((0.5 * meta.radarWavelength * (contentDoppler.eval(0, rbin) / satVmag))
+            pixel.dopfact((0.5 * meta.radarWavelength * (skewDoppler.eval(0, rbin) / satVmag))
                 * slantRange);
             pixel.bin(rbin);
         }
@@ -109,7 +107,7 @@ TEST_F(GeometryTest, RdrToGeo) {
 
     // Run rdr2geo
     int stat = isce::geometry::Geometry::rdr2geo(pixel, basis, state, ellipsoid, ptm, demInterp,
-        targetLLH, meta.lookSide, 1.0e-6, 25, 10);
+        targetLLH, meta.lookSide, 0.001, 25, 15);
 
     // Check results
     const double degrees = 180.0 / M_PI;

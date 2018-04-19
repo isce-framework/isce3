@@ -24,10 +24,6 @@
 // Declaration for utility function to read metadata stream from VRT
 std::stringstream streamFromVRT(const char * filename, int bandNum=1);
 
-// Declare the pixel function for getting DEM height
-CPLErr evaluateHeight(void **papoSources, int nSources, void *pData, int nXSize, int nYSize,
-    GDALDataType eSrcType, GDALDataType eBufType, int nPixelSpace, int nLineSpace);
-
 TEST(TopoTest, RunTopo) {
 
     // Instantiate isce::core objects
@@ -56,17 +52,49 @@ TEST(TopoTest, RunTopo) {
     archive(cereal::make_nvp("Topo", topo));
     }
 
-    // Let GDAL know about pixel function for virtual DEM
-    GDALAddDerivedBandPixelFunc("evaluateHeight", evaluateHeight);
-    // Register drivers
-    GDALAllRegister();
-
     // Open DEM raster
-    isce::core::Raster demRaster("../../data/constantDEM.vrt");
+    isce::core::Raster demRaster("../../data/cropped.dem");
 
     // Run topo
     topo.topo(demRaster, doppler, "output");
 
+}
+
+TEST(TopoTest, CheckResults) {
+
+    // The list of files to check
+    std::vector<std::string> layers{"lat.rdr", "lon.rdr", "z.rdr", "inc.rdr",
+        "hdg.rdr", "localInc.rdr", "localPsi.rdr"};
+
+    // The associated tolerances
+    std::vector<double> tols{1.0e-5, 1.0e-5, 0.1, 1.0e-4, 1.0e-4, 0.02, 0.02};
+
+    // The directories where the data are
+    std::string test_dir = "output/";
+    std::string ref_dir = "../../data/topo/";
+
+    // Loop over files
+    for (size_t k = 0; k < layers.size(); ++k) {
+        // Open the test raster
+        isce::core::Raster testRaster(test_dir + layers[k]);
+        // Open the reference raster
+        isce::core::Raster refRaster(ref_dir + layers[k]);
+        // Compute sum of absolute error
+        const size_t N = testRaster.length() * testRaster.width();
+        double error = 0.0;
+        for (size_t i = 0; i < testRaster.length(); ++i) {
+            for (size_t j = 0; j < testRaster.width(); ++j) {
+                // Get the values
+                double testVal, refVal;
+                testRaster.getValue(testVal, j, i);
+                refRaster.getValue(refVal, j, i);
+                // Accumulate the error
+                error += std::abs(testVal - refVal);
+            }
+        }
+        // Normalize the error and check
+        ASSERT_TRUE((error / N) < tols[k]);
+    }
 }
 
 // Read metadata from a VRT file and return a stringstream object
@@ -90,21 +118,6 @@ std::stringstream streamFromVRT(const char * filename, int bandNum) {
     metastream << meta;
     // All done
     return metastream;
-}
-
-// Simply return a value of 0 for a virtual raster
-CPLErr evaluateHeight(void **papoSources, int nSources, void *pData, int nXSize, int nYSize,
-    GDALDataType eSrcType, GDALDataType eBufType, int nPixelSpace, int nLineSpace) {
-    // Fill with zeros
-    for (int i = 0; i < nYSize; ++i) {
-        for (int j = 0; j < nXSize; ++j) {
-            float pix_value = 0.0;
-            GDALCopyWords(&pix_value, GDT_Float32, 0, ((GByte *) pData) + nLineSpace * i
-                + j * nPixelSpace, eBufType, nPixelSpace, 1);
-        }
-    }
-    // Done
-    return CE_None;
 }
 
 int main(int argc, char * argv[]) {

@@ -1,10 +1,11 @@
 <?xml version="1.0" ?>
 <cereal>
   <Topo>
-    <threshold>0.005</threshold>
+    <threshold>0.05</threshold>
     <numIterations>25</numIterations>
     <extraIterations>10</extraIterations>
     <orbitMethod>0</orbitMethod>
+    <!-- 0: sinc, 1: bilinear, 2: bicubic, 3: nearest, 4: akima, 5: biquintic -->
     <demMethod>5</demMethod>
   </Topo>
   <Geo2rdr>

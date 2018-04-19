@@ -17,7 +17,8 @@ all: test clean
 test: $(TESTS)
 	@echo "testing:"
 	@for testcase in $(TESTS); do { \
-            echo "    $${testcase}" ; ./$${testcase} || exit 1 ; \
+            echo "    $${testcase}" ; rm -rf output; mkdir output; \
+            ./$${testcase} || exit 1 ; \
             } done
 
 # build

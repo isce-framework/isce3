@@ -31,6 +31,7 @@ class isce::geometry::DEMInterpolator {
         // Constructors
         DEMInterpolator() : _haveRaster(false), _refHeight(0.0) {}
         DEMInterpolator(float height) : _haveRaster(false), _refHeight(height) {}
+
         // Read in subset of data
         void loadDEM(isce::core::Raster &, double, double, double, double,
                      isce::core::dataInterpMethod);

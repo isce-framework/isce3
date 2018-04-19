@@ -35,14 +35,14 @@ rdr2geo(const Pixel & pixel, const Basis & basis, const StateVector & state,
 
     // Initialization
     cartesian_t targetSCH, targetVec, targetLLH_old, targetVec_old,
-                lookVec, delta, delta_temp;
+                lookVec, delta, delta_temp, vhat, satLLH;
+    const double degrees = 180.0 / M_PI;
 
     // Compute normalized velocity
-    cartesian_t vhat;
     LinAlg::unitVec(state.velocity(), vhat);
     targetSCH[2] = targetLLH[2];
 
-    cartesian_t satLLH;
+    // Compute satellite LLH to get height above ellipsoid
     ellipsoid.xyzToLatLon(state.position(), satLLH);
 
     // Iterate
@@ -76,7 +76,7 @@ rdr2geo(const Pixel & pixel, const Basis & basis, const StateVector & state,
         ellipsoid.xyzToLatLon(targetVec, targetLLH);
 
         // Interpolate DEM at current lat/lon point
-        targetLLH[2] = demInterp.interpolate(targetLLH[0], targetLLH[1]);
+        targetLLH[2] = demInterp.interpolate(degrees*targetLLH[0], degrees*targetLLH[1]);
         // Convert back to XYZ with interpolated height
         ellipsoid.latLonToXyz(targetLLH, targetVec);
         // Compute updated SCH coordinates
@@ -97,13 +97,8 @@ rdr2geo(const Pixel & pixel, const Basis & basis, const StateVector & state,
                 targetVec[idx] = 0.5 * (targetVec_old[idx] + targetVec[idx]);
             // Repopulate lat, lon, z
             ellipsoid.xyzToLatLon(targetVec, targetLLH);
-            // Check convergence
-            LinAlg::linComb(1.0, state.position(), -1.0, targetVec, lookVec);
-            const double rdiff = pixel.range() - LinAlg::norm(lookVec);
-            if (std::abs(rdiff) < threshold) {
-                converged = 1;
-                return converged;
-            }
+            // Recompute SCH coordinates
+            ptm.convertSCHtoXYZ(targetSCH, targetVec, isce::core::XYZ_2_SCH);
         }
     }
     // If we reach this point, no convergence for specified threshold
