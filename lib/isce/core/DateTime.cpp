@@ -399,13 +399,22 @@ operator-(const DateTime& ts) const
             seconds-ts.seconds, frac-ts.frac);
 }
 
-// Get seconds of day
+//// Get seconds of day
+//double isce::core::DateTime::
+//secondsOfDay() const {
+//    // Make a midnight datetime
+//    DateTime midnight(year, months, days, 0, 0, 0);
+//    // Timedelta
+//    TimeDelta dt = (*this) - midnight;
+//    // Return the total seconds
+//    return dt.getTotalSeconds();
+//}
+
+// Get seconds since epoch at provided datetime
 double isce::core::DateTime::
-secondsOfDay() const {
-    // Make a midnight datetime
-    DateTime midnight(year, months, days, 0, 0, 0);
+secondsSinceEpoch(const DateTime & epoch) const {
     // Timedelta
-    TimeDelta dt = (*this) - midnight;
+    TimeDelta dt = (*this) - epoch;
     // Return the total seconds
     return dt.getTotalSeconds();
 }
@@ -432,7 +441,7 @@ isoformat() const {
     // Convert seconds and fraction into decimal seconds
     double decimal_seconds = this->seconds + this->frac;
     // Fill the buffer
-    sprintf(buffer, "%04d-%02d-%02dT%02d:%02d:%8.6f", this->year,
+    sprintf(buffer, "%04d-%02d-%02dT%02d:%02d:%11.9f", this->year,
         this->months, this->days, this->hours, this->minutes, decimal_seconds);
     // Convert to string and output
     std::string outputStr{buffer};

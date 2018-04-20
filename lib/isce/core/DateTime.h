@@ -78,6 +78,7 @@ struct isce::core::DateTime {
 
     // Get and set with respect to fixed epoch
     double secondsSinceEpoch() const;
+    double secondsSinceEpoch(const DateTime &) const;
     void secondsSinceEpoch(double);
   
     // Output methods
