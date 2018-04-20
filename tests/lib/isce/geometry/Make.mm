@@ -16,6 +16,7 @@ RECURSE_DIRS = \
 PACKAGES = \
     geometry \
     topo \
+    geo2rdr \
 
 # the standard targets
 all:
