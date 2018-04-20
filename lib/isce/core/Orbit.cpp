@@ -20,11 +20,22 @@
 // Reformat state vectors to form flattened 1D arrays
 void isce::core::Orbit::
 reformatOrbit() {
+    // Use min date time as epoch
+    reformatOrbit(MIN_DATE_TIME);
+}
+
+// Reformat state vectors to form flattened 1D arrays
+void isce::core::Orbit::
+reformatOrbit(const DateTime & epoch) {
 
     // Get the number of state vectors
     nVectors = stateVectors.size();
-    
-    // Re-size arrays
+   
+    // Clear vectors
+    position.clear();
+    velocity.clear();
+    UTCtime.clear(); 
+    // Re-size
     position.resize(3*nVectors);
     velocity.resize(3*nVectors);
     UTCtime.resize(nVectors);
@@ -39,7 +50,7 @@ reformatOrbit() {
             velocity[(3*i) + j] = sv.velocity()[j];
         }
         // Get UTCtime (implicit conversion to double)
-        UTCtime[i] = sv.date().secondsSinceEpoch();
+        UTCtime[i] = sv.date().secondsSinceEpoch(epoch);
     }
 }
 

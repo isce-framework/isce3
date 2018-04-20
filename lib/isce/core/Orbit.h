@@ -38,13 +38,18 @@ struct isce::core::Orbit {
     std::vector<double> velocity;
     // Vector of StateVectors
     std::vector<StateVector> stateVectors;
+
+    // Reformat the orbit and convert datetime to seconds since epoch
+    void reformatOrbit(const DateTime &);
+    // If no epoch provided, use minimum datetime as epoch
     void reformatOrbit();
 
     Orbit(int bs, int nv) : basis(bs), nVectors(nv), UTCtime(nv,0.), position(3*nv,0.), 
                             velocity(3*nv,0.) {}
     Orbit() : Orbit(0,0) {}
     Orbit(const Orbit &o) : basis(o.basis), nVectors(o.nVectors), UTCtime(o.UTCtime), 
-                            position(o.position), velocity(o.velocity) {}
+                            position(o.position), velocity(o.velocity),
+                            stateVectors(o.stateVectors) {}
     inline Orbit& operator=(const Orbit&);
     inline Orbit& operator+=(const Orbit&);
     inline const Orbit operator+(const Orbit&) const;
@@ -71,6 +76,7 @@ operator=(const Orbit &rhs) {
     UTCtime = rhs.UTCtime;
     position = rhs.position;
     velocity = rhs.velocity;
+    stateVectors = rhs.stateVectors;
     return *this;
 }
 
