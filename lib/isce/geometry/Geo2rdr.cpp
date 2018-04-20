@@ -28,6 +28,16 @@ using isce::core::Raster;
 using isce::core::Poly2d;
 using isce::core::LinAlg;
 
+// Run geo2rdr with no offsets
+void isce::geometry::Geo2rdr::
+geo2rdr(isce::core::Raster & latRaster,
+        isce::core::Raster & lonRaster,
+        isce::core::Raster & hgtRaster,
+        isce::core::Poly2d & doppler,
+        const std::string & outdir) {
+    geo2rdr(latRaster, lonRaster, hgtRaster, doppler, outdir, 0.0, 0.0);
+}
+
 // Run geo2rdr - main entrypoint
 void isce::geometry::Geo2rdr::
 geo2rdr(isce::core::Raster & latRaster,
@@ -55,19 +65,19 @@ geo2rdr(isce::core::Raster & latRaster,
         GDT_Float32, "ENVI");
     Raster azoffRaster = Raster(outdir + "/azimuth.off", demWidth, demLength, 1,
         GDT_Float32, "ENVI");
-
+    
     // Cache sensing start
-    double t0 = _meta.sensingStart.secondsSinceEpoch();
+    double t0 = _meta.sensingStart.secondsSinceEpoch(_refEpoch);
     // Adjust for const azimuth shift
     t0 -= (azshift - 0.5 * (_meta.numberAzimuthLooks - 1)) / _meta.prf;
-    
+
     // Cache starting range
     double r0 = _meta.rangeFirstSample;
     // Adjust for constant range shift
     r0 -= (rgshift - 0.5 * (_meta.numberRangeLooks - 1)) * _meta.slantRangePixelSpacing;
 
     // Compute azimuth time extents
-    const double dtaz = _meta.numberAzimuthLooks / _meta.prf;
+    double dtaz = _meta.numberAzimuthLooks / _meta.prf;
     const double tend = t0 + ((_meta.length - 1) * dtaz);
     const double tmid = 0.5 * (t0 + tend);
 
@@ -105,7 +115,7 @@ geo2rdr(isce::core::Raster & latRaster,
                 isOutside = true;
             if ((slantRange < r0) || (slantRange > rngend))
                 isOutside = true;
-
+            
             // Save result if valid
             if (!isOutside) {
                 rgoff[pixel] = ((slantRange - r0) / dmrg) - float(pixel);

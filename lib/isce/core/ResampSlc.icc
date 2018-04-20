@@ -98,14 +98,20 @@ declare(int inLength, int inWidth,
             << outWidth << " pixels"
             << pyre::journal::newline << pyre::journal::newline;
     //channel << "Number of threads: " << omp_get_max_threads() << pyre::journal::newline;
-    channel << "Complex data interpolation" << pyre::journal::endl;
+    channel << "Complex data interpolation" << pyre::journal::newline;
     // Polynomial info
-    printf("Azimuth Carrier Poly\n");
-    _azCarrier.printPoly();
-    printf("Range Carrier Poly\n");
-    _rgCarrier.printPoly();
-    printf("Doppler Poly\n");
-    _dopplerPoly.printPoly(); 
+    channel << "Azimuth Carrier Poly" << pyre::journal::newline;
+    for (int j = 0; j <= _azCarrier.rangeOrder; ++j)
+        channel << _azCarrier.getCoeff(0, j) << " ";
+    channel << pyre::journal::newline;
+    channel << "Range Carrier Poly" << pyre::journal::newline;
+    for (int j = 0; j <= _rgCarrier.rangeOrder; ++j)
+        channel << _rgCarrier.getCoeff(0, j) << " ";
+    channel << pyre::journal::newline;
+    channel << "Doppler Poly" << pyre::journal::newline;
+    for (int j = 0; j <= _dopplerPoly.rangeOrder; ++j)
+        channel << _dopplerPoly.getCoeff(0, j) << " ";
+    channel << pyre::journal::endl;
 }
 
 // Get the number of lines per tile

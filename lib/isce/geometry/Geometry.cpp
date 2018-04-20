@@ -120,7 +120,7 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
 
     // Starting guess for azimuth time is middle of orbit
     aztime = orbit.UTCtime[orbit.nVectors / 2];
-
+    
     // Begin iterations
     int converged = 0;
     double slantRange_old = 0.0;
@@ -154,7 +154,7 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
         const double c1 = -1.0 * LinAlg::dot(satvel, satvel);
         const double c2 = (fdop / slantRange) + fdopder;
         const double fnprime = c1 + c2 * dopfact;
-
+       
         // Update guess for azimuth time
         aztime -= fn / fnprime;
     }

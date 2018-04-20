@@ -141,7 +141,7 @@ TEST_F(GeometryTest, GeoToRdr) {
     azdate.secondsSinceEpoch(aztime);
 
     ASSERT_EQ(stat, 1);
-    ASSERT_EQ(azdate.isoformat(), "2003-02-26T17:55:26.487008");
+    ASSERT_EQ(azdate.isoformat(), "2003-02-26T17:55:26.487007976");
     ASSERT_NEAR(slantRange, 831834.3551143121, 1.0e-6);
 
     // Run geo2rdr again with zero doppler
@@ -151,7 +151,7 @@ TEST_F(GeometryTest, GeoToRdr) {
     azdate.secondsSinceEpoch(aztime);
 
     ASSERT_EQ(stat, 1);
-    ASSERT_EQ(azdate.isoformat(), "2003-02-26T17:55:26.613450");
+    ASSERT_EQ(azdate.isoformat(), "2003-02-26T17:55:26.613449931");
     ASSERT_NEAR(slantRange, 831833.869159697, 1.0e-6);
 }
 

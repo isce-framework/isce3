@@ -99,7 +99,7 @@
           <slantRangePixelSpacing>7.803973670948287</slantRangePixelSpacing>
           <rangeFirstSample>826988.6900674499</rangeFirstSample>
           <lookSide>-1</lookSide>
-          <prf>1652.415692</prf>
+          <prf>1652.415691672402</prf>
           <radarWavelength>0.05623564240544047</radarWavelength>
           <pegHeading>-2.893724681119296</pegHeading>
           <pegLatitude>0.6022466822034415</pegLatitude>
@@ -107,7 +107,8 @@
           <chirpSlope>588741148672.000000</chirpSlope>
           <pulseDuration>0.000027</pulseDuration>
           <antennaLength>10.000000</antennaLength>
-          <sensingStart>2003-02-26T17:55:30.843492</sensingStart>
+          <!-- Sensing start should have nanosecond precision -->
+          <sensingStart>2003-02-26T17:55:30.843491759</sensingStart>
         </Radar>
       </cereal>
     </Metadata>

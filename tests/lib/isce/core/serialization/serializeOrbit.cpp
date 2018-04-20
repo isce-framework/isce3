@@ -46,7 +46,7 @@ TEST(OrbitTest, CheckArchive) {
     ASSERT_NEAR(sv.velocity()[2], -101.540993, 1.0e-6);
 
     // Check date of middle vector
-    ASSERT_EQ(sv.date().isoformat(), "2014-08-29T17:45:33.396381");
+    ASSERT_EQ(sv.date().isoformat(), "2014-08-29T17:45:33.396381000");
 
 }
 

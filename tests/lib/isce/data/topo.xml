@@ -9,7 +9,7 @@
     <demMethod>5</demMethod>
   </Topo>
   <Geo2rdr>
-    <threshold>0.00001</threshold>
+    <threshold>1.0e-9</threshold>
     <numIterations>50</numIterations>
     <orbitMethod>0</orbitMethod>
   </Geo2rdr>

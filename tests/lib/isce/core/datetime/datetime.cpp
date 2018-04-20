@@ -69,7 +69,7 @@ TEST(DateTimeTest, FromString) {
 
 TEST(DateTimeTest, ToString) {
     isce::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592);
-    ASSERT_EQ(dtime.isoformat(), "2017-05-12T01:12:30.141592");
+    ASSERT_EQ(dtime.isoformat(), "2017-05-12T01:12:30.141592000");
 }
 
 TEST(DateTimeTest, BasicTimeDelta) {
@@ -113,7 +113,7 @@ TEST(DateTimeTest, Epoch) {
     isce::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592);
     ASSERT_NEAR(dtime.secondsSinceEpoch(), 1494551550.141592, 1.0e-6);
     dtime.secondsSinceEpoch(1493626353.141592026);
-    ASSERT_EQ(dtime.isoformat(), "2017-05-01T08:12:33.141592");
+    ASSERT_EQ(dtime.isoformat(), "2017-05-01T08:12:33.141592026");
 }
 
 int main(int argc, char **argv) {

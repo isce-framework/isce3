@@ -11,7 +11,7 @@ include isce.def
 TESTS = \
     resampslc \
 
-all: test clean
+all: test
 
 # testing
 test: $(TESTS)

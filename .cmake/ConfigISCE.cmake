@@ -13,11 +13,11 @@ function(AssureOutOfSourceBuilds)
 endfunction()
 
 
-##Check that C++14 is available and CXX 5 or greated is installed
+##Check that C++17 is available and CXX 5 or greated is installed
 function(CheckCXX)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  add_compile_options(-std=c++14)
+  add_compile_options(-std=c++17)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
     message(FATAL_ERROR "Insufficient GCC version. Version 5.0 or greater is required.")
   endif()

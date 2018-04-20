@@ -5,6 +5,7 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 ####List the source files
 set(LOCAL_SRCS 
     DEMInterpolator.cpp
+    Geo2rdr.cpp
     Geometry.cpp
     Topo.cpp)
 
@@ -18,6 +19,8 @@ endforeach()
 set(${PACKAGENAME}_EXPORT_HEADERS
     Basis.h
     DEMInterpolator.h
+    Geo2rdr.h
+    Geo2rdr.icc
     Geometry.h
     Pixel.h
     Serialization.h

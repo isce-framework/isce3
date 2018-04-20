@@ -58,15 +58,15 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     isce::core::Raster hgtRaster("../../data/topo/z.rdr");
 
     // Run geo2rdr
-    geo.geo2rdr(latRaster, lonRaster, hgtRaster, doppler, "output");
+    geo.geo2rdr(latRaster, lonRaster, hgtRaster, doppler, ".");
 
 }
 
 // Results should be very close to zero
 TEST(Geo2rdrTest, CheckResults) {
     // Open rasters
-    isce::core::Raster rgoffRaster("output/range.off");
-    isce::core::Raster azoffRaster("output/azimuth.off");
+    isce::core::Raster rgoffRaster("range.off");
+    isce::core::Raster azoffRaster("azimuth.off");
     double rg_error = 0.0;
     double az_error = 0.0;
     for (size_t i = 0; i < rgoffRaster.length(); ++i) {

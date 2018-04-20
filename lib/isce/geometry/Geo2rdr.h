@@ -53,6 +53,13 @@ class isce::geometry::Geo2rdr {
                      const std::string &,
                      double, double);
 
+        // Alternative: run geo2rdr with no constant offsets
+        void geo2rdr(isce::core::Raster &,
+                     isce::core::Raster &,
+                     isce::core::Raster &,
+                     isce::core::Poly2d &,
+                     const std::string &);
+
         // Value for null pixels
         const double NULL_VALUE = -1000.0;
 
@@ -71,6 +78,7 @@ class isce::geometry::Geo2rdr {
         isce::core::Ellipsoid _ellipsoid;
         isce::core::Orbit _orbit;
         isce::core::Metadata _meta;
+        isce::core::DateTime _refEpoch;
 
         // Processing parameters
         int _numiter;

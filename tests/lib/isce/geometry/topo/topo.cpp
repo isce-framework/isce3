@@ -56,7 +56,7 @@ TEST(TopoTest, RunTopo) {
     isce::core::Raster demRaster("../../data/cropped.dem");
 
     // Run topo
-    topo.topo(demRaster, doppler, "output");
+    topo.topo(demRaster, doppler, ".");
 
 }
 
@@ -70,7 +70,7 @@ TEST(TopoTest, CheckResults) {
     std::vector<double> tols{1.0e-5, 1.0e-5, 0.1, 1.0e-4, 1.0e-4, 0.02, 0.02};
 
     // The directories where the data are
-    std::string test_dir = "output/";
+    std::string test_dir = "./";
     std::string ref_dir = "../../data/topo/";
 
     // Loop over files
