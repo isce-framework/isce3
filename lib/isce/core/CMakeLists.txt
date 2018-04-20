@@ -79,6 +79,8 @@ endforeach()
 
 #Pyre stuff is needed for logging
 #Gdal is needed for Raster IO 
+message("GDAL include in core: " ${GDAL_INCLUDE_DIR})
+message("PYRE include in core: " ${PYRE_INCLUDE_DIR})
 include_directories(${${PACKAGENAME}_DLL} PUBLIC ${PYRE_INCLUDE_DIR} ${ISCE_BUILDINCLUDEDIR} ${GDAL_INCLUDE_DIR}) 
 
 #Install headers as files

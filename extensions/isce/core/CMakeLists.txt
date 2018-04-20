@@ -35,7 +35,7 @@ set_source_files_properties(
     PROPERTIES CYTHON_IS_CXX TRUE)
 
 cython_add_module(iscecore iscecore.pyx)
-target_include_directories(iscecore PUBLIC ${ISCE_BUILDINCLUDEDIR} ${PYTHON_NUMPY_INCLUDE_DIR} .)
+target_include_directories(iscecore PUBLIC ${ISCE_BUILDINCLUDEDIR} ${PYTHON_NUMPY_INCLUDE_DIR} ${GDAL_INCLUDE_DIR} .)
 target_link_libraries(iscecore ${LISCE} m)
 install (TARGETS
         iscecore
