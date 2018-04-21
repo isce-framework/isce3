@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <future>
-#include <omp.h>
+//#include <omp.h>
 #include <valarray>
 #include <algorithm>
 
