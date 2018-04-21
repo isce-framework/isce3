@@ -4,6 +4,7 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 
 ####Set the source files
 set(LOCAL_SRCS
+              Attitude.cpp
               Baseline.cpp
               DateTime.cpp
               Doppler.cpp

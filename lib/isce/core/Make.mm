@@ -7,6 +7,7 @@ PACKAGE = isce/core
 
 # the list of sources
 PROJ_SRCS = \
+    Attitude.cpp \
     Baseline.cpp \
     DateTime.cpp \
     Doppler.cpp \
