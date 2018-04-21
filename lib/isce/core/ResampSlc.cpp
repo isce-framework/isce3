@@ -12,7 +12,7 @@
 // pyre
 #include <portinfo>
 #include <pyre/journal.h>
-#include <pyre/timers.h>
+//#include <pyre/timers.h>
 
 // isce::core
 #include "Constants.h"
@@ -34,7 +34,7 @@ resamp(const std::string & inputFilename,          // filename of input SLC
     // Initialize journal channel for info
     pyre::journal::info_t infoChannel("isce.core.ResampSlc");
     // Initialize timer
-    pyre::timer_t timer("isce.core.ResampSlc");
+    //pyre::timer_t timer("isce.core.ResampSlc");
 
     // Check if data are not complex
     if (!isComplex) {
@@ -75,7 +75,7 @@ resamp(const std::string & inputFilename,          // filename of input SLC
         << pyre::journal::newline << pyre::journal::newline;
 
     // Start timer
-    timer.start();
+    //timer.start();
 
     // For each full tile of _linesPerTile lines...
     int outputLine = 0;
@@ -105,10 +105,10 @@ resamp(const std::string & inputFilename,          // filename of input SLC
     }
 
     // Print out timing information and reset
-    timer.stop();
-    infoChannel << "Elapsed processing time: " << timer.read() << " sec"
-                << pyre::journal::endl;
-    timer.reset();
+    //timer.stop();
+    //infoChannel << "Elapsed processing time: " << timer.read() << " sec"
+    //            << pyre::journal::endl;
+    //timer.reset();
 }
 
 // Initialize tile bounds
