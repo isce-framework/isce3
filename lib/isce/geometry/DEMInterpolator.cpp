@@ -124,9 +124,9 @@ computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & 
 float isce::geometry::DEMInterpolator::
 interpolate(double lat, double lon) const {
     // If we don't have a DEM, just return reference height
-    float value;
+    float value = _refHeight;
     if (!_haveRaster) {
-        value = _refHeight;
+        return value;
     } else {
         // Compute the row and column for requested lat and lon
         const double row = (lat - _latstart) / _deltalat;
@@ -154,8 +154,9 @@ interpolate(double lat, double lon) const {
         } else if (_interpMethod == isce::core::NEAREST_METHOD) {
             value = _dem(int(std::round(row)), int(std::round(col)));
         }
+        // Done
+        return value;
     }
-    return value;
 }
 
 // end of file

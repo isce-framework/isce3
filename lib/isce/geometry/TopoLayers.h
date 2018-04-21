@@ -20,7 +20,7 @@ class isce::geometry::TopoLayers {
 
     public:
         // Constructors
-        TopoLayers(size_t width) : _width(width) {
+        TopoLayers(size_t width) {
             _lat.resize(width);
             _lon.resize(width);
             _z.resize(width);
@@ -61,8 +61,6 @@ class isce::geometry::TopoLayers {
         std::valarray<float> _localInc;
         std::valarray<float> _localPsi;
         std::valarray<float> _sim;
-        // Size information
-        size_t _width;
 };
     
 #endif
