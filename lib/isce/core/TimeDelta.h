@@ -55,6 +55,7 @@ struct isce::core::TimeDelta {
 
     // Math operators
     TimeDelta& operator=(const TimeDelta& ts);
+    TimeDelta& operator=(double ss);
     TimeDelta& operator+=(const TimeDelta& ts);
     TimeDelta& operator+=(const double& s);
     TimeDelta& operator-=(const TimeDelta& ts);

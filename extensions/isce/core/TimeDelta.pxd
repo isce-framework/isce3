@@ -41,6 +41,7 @@ cdef extern from "isce/core/TimeDelta.h" namespace "isce::core":
 
         # Math operators
         TimeDelta & operator=(const TimeDelta & ts)
+        TimeDelta & operator=(double ts)
         TimeDelta operator+(const TimeDelta & ts)
         TimeDelta operator+(const double & s)
         TimeDelta operator-(const TimeDelta & ts)

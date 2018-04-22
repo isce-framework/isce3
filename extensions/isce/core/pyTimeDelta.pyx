@@ -9,7 +9,7 @@ from TimeDelta cimport TimeDelta
 
 cdef class pyTimeDelta:
     cdef TimeDelta c_timedelta
-
+    
     def __cinit__(self):
         self.c_timedelta = TimeDelta()
 
