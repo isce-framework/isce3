@@ -4,7 +4,8 @@
 # Copyright 2017
 #
 
-#include "pyDateTime.pyx"
+include "pyTimeDelta.pyx"
+include "pyDateTime.pyx"
 include "pyAttitude.pyx"
 include "pyDoppler.pyx"
 include "pyEllipsoid.pyx"
@@ -12,7 +13,9 @@ include "pyEllipsoid.pyx"
 include "pyPeg.pyx"
 include "pyPegtrans.pyx"
 include "pyPosition.pyx"
+include "pyMetadata.pyx"
 include "pyLinAlg.pyx"
 include "pyOrbit.pyx"
 include "pyPoly1d.pyx"
 include "pyPoly2d.pyx"
+

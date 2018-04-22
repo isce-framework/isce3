@@ -24,14 +24,15 @@ MODULE_CYTHON_PYX = \
     pyDateTime.pyx \
     pyDoppler.pyx \
     pyEllipsoid.pyx \
-    #pyInterpolator.pyx \
     pyLinAlg.pyx \
+    pyMetadata.pyx \
     pyOrbit.pyx \
     pyPeg.pyx \
     pyPegtrans.pyx \
     pyPoly1d.pyx \
     pyPoly2d.pyx \
     pyPosition.pyx \
+    pyTimeDelta.pyx \
 
 # the headers
 MODULE_CYTHON_PXD = \
@@ -39,14 +40,16 @@ MODULE_CYTHON_PXD = \
     DateTime.pxd \
     Doppler.pxd \
     Ellipsoid.pxd \
-    #Interpolator.pxd \
     LinAlg.pxd \
+    Metadata.pxd \
     Orbit.pxd \
     Peg.pxd \
     Pegtrans.pxd \
     Poly1d.pxd \
     Poly2d.pxd \
     Position.pxd \
+    Serialization.pxd \
+    TimeDelta.pxd \
 
 # use cython to build a python extension
 include std-cython.def

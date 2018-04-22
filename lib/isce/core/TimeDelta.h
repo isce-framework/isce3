@@ -27,6 +27,7 @@ struct isce::core::TimeDelta {
     double frac;
 
     // Constructors
+    TimeDelta();
     TimeDelta(double ss);
     TimeDelta(int hh, int mm, int ss);
     TimeDelta(int hh, int mm, double ss);

@@ -51,6 +51,9 @@ _init(int dd, int hh, int mm, int ss, double ff)
 }
 
 isce::core::TimeDelta::
+TimeDelta() {}
+
+isce::core::TimeDelta::
 TimeDelta(double ss)
 {
     int ipart = ss;
