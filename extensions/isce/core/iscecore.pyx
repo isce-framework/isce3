@@ -7,6 +7,7 @@
 include "pyTimeDelta.pyx"
 include "pyDateTime.pyx"
 include "pyAttitude.pyx"
+include "pyBasis.pyx"
 include "pyDoppler.pyx"
 include "pyEllipsoid.pyx"
 #include "pyInterpolator.pyx"
@@ -18,4 +19,4 @@ include "pyLinAlg.pyx"
 include "pyOrbit.pyx"
 include "pyPoly1d.pyx"
 include "pyPoly2d.pyx"
-
+include "pyRaster.pyx"

@@ -137,6 +137,6 @@ cdef class pyMetadata:
         self.c_metadata.sensingStart = deref(dtime.c_datetime)
 
     def archive(self, string metadata):
-        Serialization.load_archive[Metadata](metadata, 'RadarMetadata', self.c_metadata)
+        Serialization.load_archive[Metadata](metadata, 'Radar', self.c_metadata)
 
 # end of file 
