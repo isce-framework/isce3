@@ -41,6 +41,7 @@ EXPORT_LIBS = $(PROJ_DLL)
 EXPORT_PKG_HEADERS = \
     Attitude.h \
     Baseline.h \
+    Basis.h \
     Constants.h \
     DateTime.h \
     Doppler.h \
@@ -54,6 +55,7 @@ EXPORT_PKG_HEADERS = \
     Orbit.h \
     Peg.h \
     Pegtrans.h \
+    Pixel.h \
     Poly1d.h \
     Poly2d.h \
     Position.h \

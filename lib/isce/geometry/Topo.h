@@ -12,12 +12,7 @@
 #include <pyre/journal.h>
 
 // isce::core
-#include <isce/core/Metadata.h>
-#include <isce/core/Orbit.h>
-#include <isce/core/Poly2d.h>
-#include <isce/core/Ellipsoid.h>
 #include <isce/core/Peg.h>
-#include <isce/core/Pegtrans.h>
 #include <isce/core/Raster.h>
 
 // isce::geometry
@@ -66,16 +61,16 @@ class isce::geometry::Topo {
         // Perform data initialization for a given azimuth line
         void _initAzimuthLine(int,
                               isce::core::StateVector &,
-                              Basis &);
+                              isce::core::Basis &);
 
 
 
         // Set output layers
         void _setOutputTopoLayers(cartesian_t &,
                                   TopoLayers &,
-                                  Pixel &,
+                                  isce::core::Pixel &,
                                   isce::core::StateVector &,
-                                  Basis &,
+                                  isce::core::Basis &,
                                   DEMInterpolator &);
 
     private:

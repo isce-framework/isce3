@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // -*- coding: utf-8 -*-
 //
-// Author: Bryan Riel
+// Author: Bryan V. Riel
 // Copyright 2017-2018
 //
 
@@ -9,28 +9,80 @@
 
 // isce::core
 #include <isce/core/LinAlg.h>
+#include <isce/core/Peg.h>
 
 // isce::geometry
 #include "Geometry.h"
 
 // pull in useful isce::core namespace
+using isce::core::Basis;
 using isce::core::LinAlg;
 using isce::core::Ellipsoid;
 using isce::core::Metadata;
 using isce::core::Orbit;
 using isce::core::Pegtrans;
+using isce::core::Pixel;
 using isce::core::Poly2d;
 using isce::core::StateVector;
 
 int isce::geometry::Geometry::
-rdr2geo(const Pixel & pixel, const Basis & basis, const StateVector & state,
+rdr2geo(double aztime, double slantRange, double dopfact, const Orbit & orbit,
+        const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp,
+        cartesian_t & targetLLH, int side, double threshold, int maxIter, int extraIter,
+        isce::core::orbitInterpMethod orbitMethod) {
+    /*
+    Interpolate Orbit to azimuth time, compute TCN basis, and estimate geographic
+    coordinates.
+    */
+
+    // Interpolate orbit to get state vector
+    StateVector state;
+    int stat = orbit.interpolate(aztime, state, orbitMethod);
+    if (stat != 0) {
+        pyre::journal::error_t error("isce.geometry.Geometry.rdr2geo");
+        error
+            << pyre::journal::at(__HERE__)
+            << "Error in getting state vector for bounds computation."
+            << pyre::journal::newline
+            << " - requested time: " << aztime << pyre::journal::newline
+            << " - bounds: " << orbit.UTCtime[0] << " -> " << orbit.UTCtime[orbit.nVectors-1]
+            << pyre::journal::endl;
+    }
+
+    // Get TCN basis
+    Basis TCNbasis;
+    ellipsoid.TCNbasis(state.position(), state.velocity(), TCNbasis);
+
+    // Convert satellite position to lat-lon
+    cartesian_t llhsat;
+    ellipsoid.xyzToLatLon(state.position(), llhsat);
+
+    // Estimate heading
+    const double heading = orbit.getENUHeading(aztime); 
+
+    // Set peg point right below satellite
+    isce::core::Peg peg(llhsat[0], llhsat[1], heading);
+   
+    // Initialize peg transformation
+    Pegtrans ptm;
+    ptm.radarToXYZ(ellipsoid, peg);
+
+    // Wrap range and Doppler factor in a Pixel object
+    Pixel pixel(slantRange, dopfact, 0);
+
+    // Finally, call rdr2geo
+    stat = rdr2geo(pixel, TCNbasis, state, ellipsoid, ptm, demInterp, targetLLH, side,
+                   threshold, maxIter, extraIter);
+    return stat;
+}
+
+int isce::geometry::Geometry::
+rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
         const Ellipsoid & ellipsoid, const Pegtrans & ptm, const DEMInterpolator & demInterp,
         cartesian_t & targetLLH, int side, double threshold, int maxIter, int extraIter) {
     /*
-    - Assume orbit has been interpolated to correct azimuth time. Consider putting in a
-      check for this condition.
-
-    - Start with position and velocity of spacecraft
+    Assume orbit has been interpolated to correct azimuth time, then estimate geographic
+    coordinates.
     */
 
     // Initialization
@@ -41,6 +93,11 @@ rdr2geo(const Pixel & pixel, const Basis & basis, const StateVector & state,
     // Compute normalized velocity
     LinAlg::unitVec(state.velocity(), vhat);
     targetSCH[2] = targetLLH[2];
+
+    // Unpack TCN basis vectors
+    const cartesian_t that = TCNbasis.x0();
+    const cartesian_t chat = TCNbasis.x1();
+    const cartesian_t nhat = TCNbasis.x2();
 
     // Compute satellite LLH to get height above ellipsoid
     ellipsoid.xyzToLatLon(state.position(), satLLH);
@@ -61,15 +118,15 @@ rdr2geo(const Pixel & pixel, const Basis & basis, const StateVector & state,
 
         // Compute TCN scale factors
         const double gamma = pixel.range() * costheta;
-        const double alpha = pixel.dopfact() - gamma*LinAlg::dot(basis.nhat(), vhat) 
-                           / LinAlg::dot(vhat, basis.that());
+        const double alpha = pixel.dopfact() - gamma*LinAlg::dot(nhat, vhat) 
+                           / LinAlg::dot(vhat, that);
         const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
                                             * std::pow(sintheta, 2) 
                                             - std::pow(alpha, 2));
 
         // Compute vector from satellite to ground
-        LinAlg::linComb(alpha, basis.that(), beta, basis.chat(), delta_temp);
-        LinAlg::linComb(1.0, delta_temp, gamma, basis.nhat(), delta);
+        LinAlg::linComb(alpha, that, beta, chat, delta_temp);
+        LinAlg::linComb(1.0, delta_temp, gamma, nhat, delta);
         LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
 
         // Compute LLH of ground point

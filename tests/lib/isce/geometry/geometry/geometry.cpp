@@ -40,10 +40,8 @@ struct GeometryTest : public ::testing::Test {
     isce::core::Metadata meta;
     isce::core::Orbit orbit;
     isce::core::StateVector state;
-
-    // isce::geometry objects
-    isce::geometry::Pixel pixel;
-    isce::geometry::Basis basis;
+    isce::core::Pixel pixel;
+    isce::core::Basis basis;
 
     // Constructor
     protected:
@@ -75,9 +73,9 @@ struct GeometryTest : public ::testing::Test {
             // Get TCN basis
             isce::core::cartesian_t that, chat, nhat;
             ellipsoid.TCNbasis(xyzsat, velsat, that, chat, nhat);
-            basis.that(that);   
-            basis.chat(chat);
-            basis.nhat(nhat);
+            basis.x0(that);   
+            basis.x1(chat);
+            basis.x2(nhat);
 
             // Set peg point right below satellite
             isce::core::cartesian_t llhsat;
@@ -97,6 +95,40 @@ struct GeometryTest : public ::testing::Test {
             pixel.bin(rbin);
         }
 };
+
+TEST_F(GeometryTest, RdrToGeoWithOrbit) {
+    // Make a constant DEM interpolator
+    isce::geometry::DEMInterpolator demInterp(0.0);
+
+    // Initialize guess 
+    isce::core::cartesian_t targetLLH = {0.0, 0.0, 0.0};
+
+    // Set azimuth time
+    const isce::core::DateTime azDate("2003-02-26T17:55:28.00");
+    const double azTime = azDate.secondsSinceEpoch();
+
+    // Run rdr2geo
+    int stat = isce::geometry::Geometry::rdr2geo(azTime, pixel.range(), pixel.dopfact(),
+        orbit, ellipsoid, demInterp, targetLLH, meta.lookSide, 0.001, 25, 15,
+        isce::core::HERMITE_METHOD);
+
+    // Check results
+    const double degrees = 180.0 / M_PI;
+    ASSERT_EQ(stat, 1);
+    ASSERT_NEAR(degrees * targetLLH[0], 35.005082934361745, 1.0e-8);
+    ASSERT_NEAR(degrees * targetLLH[1], -115.5921003238083, 1.0e-8);
+    ASSERT_NEAR(targetLLH[2], 2.835586858903558e-09, 1.0e-8);
+
+    // Run it again with zero doppler
+    pixel.dopfact(0.0);
+    stat = isce::geometry::Geometry::rdr2geo(azTime, pixel.range(), pixel.dopfact(),
+        orbit, ellipsoid, demInterp, targetLLH, meta.lookSide, 0.001, 25, 15,
+        isce::core::HERMITE_METHOD);
+    ASSERT_EQ(stat, 1);
+    ASSERT_NEAR(degrees * targetLLH[0], 35.01267683520824, 1.0e-8);
+    ASSERT_NEAR(degrees * targetLLH[1], -115.59009580548408, 1.0e-8);
+    ASSERT_NEAR(targetLLH[2], 0.0, 1.0e-8);
+}
 
 TEST_F(GeometryTest, RdrToGeo) {
     // Make a constant DEM interpolator
@@ -125,6 +157,7 @@ TEST_F(GeometryTest, RdrToGeo) {
     ASSERT_NEAR(degrees * targetLLH[1], -115.59009580548408, 1.0e-8);
     ASSERT_NEAR(targetLLH[2], 0.0, 1.0e-8);
 }
+
 
 TEST_F(GeometryTest, GeoToRdr) {
     

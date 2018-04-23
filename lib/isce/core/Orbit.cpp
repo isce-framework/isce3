@@ -76,6 +76,21 @@ getPositionVelocity(double tintp, cartesian_t & pos, cartesian_t & vel) const {
 }
 
 int isce::core::Orbit::
+interpolate(double tintp, StateVector & state, orbitInterpMethod intp_type) const {
+    /*
+    Convenience wrapper for interpolation to place results directly into a 
+    StateVector object.
+    */
+    // Call interpolation
+    cartesian_t position, velocity;
+    int orbitStat = interpolate(tintp, position, velocity, intp_type);
+    // Set results
+    state.position(position);
+    state.velocity(velocity);
+    return orbitStat;
+}
+
+int isce::core::Orbit::
 interpolate(double tintp, cartesian_t & opos, cartesian_t & ovel,
             orbitInterpMethod intp_type) const {
     /*
@@ -319,7 +334,7 @@ computeAcceleration(double tintp, cartesian_t &acc) const {
 }
 
 double isce::core::Orbit::
-getENUHeading(double aztime) {
+getENUHeading(double aztime) const {
     // Computes heading at a given azimuth time using a single state vector
 
     cartesian_t pos, vel, llh, enuvel;

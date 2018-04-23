@@ -17,12 +17,10 @@ endforeach()
 
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS
-    Basis.h
     DEMInterpolator.h
     Geo2rdr.h
     Geo2rdr.icc
     Geometry.h
-    Pixel.h
     Serialization.h
     Topo.h
     Topo.icc

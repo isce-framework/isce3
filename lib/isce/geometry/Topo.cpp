@@ -24,6 +24,8 @@
 #include "Topo.h"
 
 // pull in some isce::core namespaces
+using isce::core::Basis;
+using isce::core::Pixel;
 using isce::core::Raster;
 using isce::core::Poly2d;
 using isce::core::LinAlg;
@@ -92,9 +94,9 @@ topo(Raster & demRaster,
         }
 
         // Initialize orbital data for this azimuth line
-        Basis basis;
+        Basis TCNbasis;
         StateVector state;
-        _initAzimuthLine(line, state, basis);
+        _initAzimuthLine(line, state, TCNbasis);
 
         // Compute velocity magnitude
         const double satVmag = LinAlg::norm(state.velocity());
@@ -119,13 +121,13 @@ topo(Raster & demRaster,
 
             // Perform rdr->geo iterations
             int geostat = Geometry::rdr2geo(
-                pixel, basis, state, _ellipsoid, _ptm, demInterp, llh, _meta.lookSide,
+                pixel, TCNbasis, state, _ellipsoid, _ptm, demInterp, llh, _meta.lookSide,
                 _threshold, _numiter, _extraiter
             );
             totalconv += geostat;
 
             // Save data in output arrays
-            _setOutputTopoLayers(llh, layers, pixel, state, basis, demInterp);
+            _setOutputTopoLayers(llh, layers, pixel, state, TCNbasis, demInterp);
 
         } //end OMP for loop
         
@@ -154,7 +156,7 @@ topo(Raster & demRaster,
 
 // Perform data initialization for a given azimuth line
 void isce::geometry::Topo::
-_initAzimuthLine(int line, StateVector & state, Basis & basis) {
+_initAzimuthLine(int line, StateVector & state, Basis & TCNbasis) {
 
     // Get satellite azimuth time
     const double tline = _meta.sensingStart.secondsSinceEpoch() 
@@ -164,7 +166,7 @@ _initAzimuthLine(int line, StateVector & state, Basis & basis) {
     cartesian_t xyzsat, velsat;
     int stat = _orbit.interpolate(tline, xyzsat, velsat, _orbitMethod);
     if (stat != 0) {
-        pyre::journal::error_t error("isce.core.Topo._initAzimuthLine");
+        pyre::journal::error_t error("isce.geometry.Topo._initAzimuthLine");
         error
             << pyre::journal::at(__HERE__)
             << "Error in Topo::topo - Error getting state vector for bounds computation."
@@ -181,9 +183,9 @@ _initAzimuthLine(int line, StateVector & state, Basis & basis) {
     cartesian_t that, chat, nhat;
     _ellipsoid.TCNbasis(xyzsat, velsat, that, chat, nhat);
     // Save to basis
-    basis.that(that);
-    basis.chat(chat);
-    basis.nhat(nhat);
+    TCNbasis.x0(that);
+    TCNbasis.x1(chat);
+    TCNbasis.x2(nhat);
 
     // Convert satellite position to lat-lon
     cartesian_t llhsat;
@@ -205,7 +207,7 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
 
     cartesian_t llh, satLLH;
     StateVector state;
-    Basis basis;
+    Basis TCNbasis;
 
     // Initialize geographic bounds
     double min_lat = 10000.0;
@@ -219,7 +221,7 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
 
         // Initialize orbit data for this azimuth line
         int lineIndex = line * _meta.numberAzimuthLooks * (_meta.length - 1);
-        _initAzimuthLine(lineIndex, state, basis);
+        _initAzimuthLine(lineIndex, state, TCNbasis);
 
         // Compute satellite velocity and height
         const double satVmag = LinAlg::norm(state.velocity());
@@ -249,7 +251,7 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
                     // Create dummy DEM interpolator with constant height
                     DEMInterpolator constDEM(testHeights[k]);
                     // Run radar->geo for 1 iteration
-                    Geometry::rdr2geo(pixel, basis, state, _ellipsoid, _ptm, constDEM,
+                    Geometry::rdr2geo(pixel, TCNbasis, state, _ellipsoid, _ptm, constDEM,
                                       llh, _meta.lookSide, _threshold, 1, 0);
                 }
                 // Update bounds
@@ -275,12 +277,16 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
 // Generate output topo layers
 void isce::geometry::Topo::
 _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel,
-                     StateVector & state, Basis & basis, DEMInterpolator & demInterp) {
+                     StateVector & state, Basis & TCNbasis, DEMInterpolator & demInterp) {
 
     cartesian_t targetXYZ, targetSCH, satToGround, satLLH, enu, vhat;
     cartmat_t enumat, xyz2enu;
     const double degrees = 180.0 / M_PI;
     const double radians = M_PI / 180.0;
+
+    // Cache TCN basis vectors
+    const cartesian_t that = TCNbasis.x0();
+    const cartesian_t nhat = TCNbasis.x2();
 
     // Unpack the lat/lon values and convert to degrees
     const double lat = degrees * targetLLH[0];
@@ -323,8 +329,8 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     double costheta = 0.5 * ((aa / rng) + (rng / aa) - ((bb / aa) * (bb / rng)));
     double sintheta = std::sqrt(1.0 - costheta * costheta);
     double gamma = rng * costheta;
-    double alpha = dopfact - gamma*LinAlg::dot(basis.nhat(), vhat)
-                 / LinAlg::dot(vhat, basis.that());
+    double alpha = dopfact - gamma*LinAlg::dot(nhat, vhat)
+                 / LinAlg::dot(vhat, that);
     double beta = -1 * _meta.lookSide * std::sqrt(
                    rng * rng * sintheta * sintheta - alpha * alpha);
     

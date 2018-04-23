@@ -35,6 +35,7 @@ endforeach()
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h 
                                     Baseline.h
+                                    Basis.h
                                     Constants.h
                                     DateTime.h
                                     Doppler.h
@@ -48,6 +49,7 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Orbit.h
                                     Peg.h
                                     Pegtrans.h
+                                    Pixel.h
                                     Poly1d.h
                                     Poly2d.h
                                     Position.h

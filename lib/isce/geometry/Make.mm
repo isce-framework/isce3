@@ -22,12 +22,10 @@ PROJ_TMPDIR = $(BLD_TMPDIR)/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)/lib
 EXPORT_LIBS = $(PROJ_DLL)
 # the headers
 EXPORT_PKG_HEADERS = \
-    Basis.h \
     DEMInterpolator.h \
     Geo2rdr.h \
     Geo2rdr.icc \
     Geometry.h \
-    Pixel.h \
     Topo.h \
     Topo.icc \
     TopoLayers.h \

@@ -13,21 +13,26 @@
 #include <valarray>
 
 // isce::core
+#include <isce/core/Constants.h>
+#include <isce/core/Basis.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Metadata.h>
 #include <isce/core/Pegtrans.h>
+#include <isce/core/Pixel.h>
 #include <isce/core/Poly2d.h>
 #include <isce/core/StateVector.h>
 
 // isce::geometry
-#include "Basis.h"
 #include "DEMInterpolator.h"
-#include "Pixel.h"
 
 // Declaration
 namespace isce {
     namespace geometry {
+        // Some useful typedefs from isce::core
+        typedef isce::core::cartesian_t cartesian_t;
+        typedef isce::core::cartmat_t cartmat_t;
+        // Geometry class
         class Geometry;
     }
 }
@@ -37,9 +42,18 @@ class isce::geometry::Geometry {
 
     // Public static methods
     public:
-        // radar->geo
-        static int rdr2geo(const Pixel &,
-                           const Basis &,
+        // radar->geo using an Orbit and DEM
+        static int rdr2geo(double, double, double,
+                           const isce::core::Orbit &,
+                           const isce::core::Ellipsoid &,
+                           const DEMInterpolator &,
+                           cartesian_t &,
+                           int, double, int, int,
+                           isce::core::orbitInterpMethod); 
+
+        // radar->geo using pre-computed basis and state vectors, and DEM
+        static int rdr2geo(const isce::core::Pixel &,
+                           const isce::core::Basis &,
                            const isce::core::StateVector &,
                            const isce::core::Ellipsoid &,
                            const isce::core::Pegtrans &,

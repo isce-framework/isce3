@@ -11,7 +11,7 @@
 #include <cstdio>
 #include <cmath>
 #include <array>
-#include "Constants.h"
+#include "isce/core/Basis.h"
 
 // Declaration
 namespace isce {
@@ -51,6 +51,7 @@ class isce::core::Ellipsoid {
                           const cartesian_t &, cartesian_t &) const;
         void TCNbasis(const cartesian_t &, const cartesian_t &, cartesian_t &,
                       cartesian_t &, cartesian_t &) const;
+        void TCNbasis(const cartesian_t &, const cartesian_t &, Basis &) const;
 
     private:
         double _a;
