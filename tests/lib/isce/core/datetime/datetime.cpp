@@ -116,6 +116,14 @@ TEST(DateTimeTest, Epoch) {
     ASSERT_EQ(dtime.isoformat(), "2017-05-01T08:12:33.141592026");
 }
 
+TEST(DateTimeTest, TimeDeltaAssign) {
+    isce::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592026);
+    isce::core::TimeDelta dt;
+    dt = 3.5;
+    dtime += dt;
+    ASSERT_EQ(dtime.isoformat(), "2017-05-12T01:12:33.641592026");
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
