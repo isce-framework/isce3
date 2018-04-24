@@ -21,6 +21,7 @@ function(CheckCXX)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
     message(FATAL_ERROR "Insufficient GCC version. Version 5.0 or greater is required.")
   endif()
+
 endfunction()
 
 
@@ -80,6 +81,11 @@ function(CheckCUDA)
 endfunction()
 
 
+#Check for nosetests
+function(CheckNosetests)
+    FIND_PACKAGE(Nosetests)
+endfunction()
+
 
 function(InitInstallDirLayout)
     ###install/bin
@@ -96,6 +102,8 @@ function(InitInstallDirLayout)
     if (NOT ISCE_LIBDIR)
         set (ISCE_LIBDIR lib CACHE STRING "isce/lib") 
     endif(NOT ISCE_LIBDIR)
+
+    ###build/lib
 
     ###install/include
     if (NOT ISCE_INCLUDEDIR)
