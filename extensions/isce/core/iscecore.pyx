@@ -4,6 +4,15 @@
 # Copyright 2017
 #
 
+# Define a helper function to convert Python strings/bytes to bytes
+def pyStringToBytes(s):
+    if isinstance(s, str):
+        return s.encode('utf-8')
+    elif isinstance(s, bytes):
+        return s
+    else:
+        return s
+
 include "pyTimeDelta.pyx"
 include "pyDateTime.pyx"
 include "pyAttitude.pyx"

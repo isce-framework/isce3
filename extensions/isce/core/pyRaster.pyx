@@ -13,8 +13,11 @@ cdef class pyRaster:
     cdef Raster * c_raster
     cdef bool __owner
 
-    def __cinit__(self, string filename, int access=0, int dtype=0, int width=0,
+    def __cinit__(self, py_filename, int access=0, int dtype=0, int width=0,
                   int length=0, int numBands=0):
+
+        # Convert the filename to a C++ string representation
+        cdef string filename = pyStringToBytes(py_filename)
 
         # Convert datatypes
         cdef GDT gdtype

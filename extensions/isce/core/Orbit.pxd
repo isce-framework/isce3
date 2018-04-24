@@ -5,6 +5,7 @@
 #
 
 from libcpp.vector cimport vector
+from libcpp cimport bool
 from Cartesian cimport cartesian_t
 
 cdef extern from "isce/core/Constants.h" namespace "isce::core":
@@ -36,3 +37,4 @@ cdef extern from "isce/core/Orbit.h" namespace "isce::core":
         void printOrbit()
         void loadFromHDR(const char*,int)
         void dumpToHDR(const char*)
+

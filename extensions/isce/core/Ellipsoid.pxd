@@ -5,6 +5,7 @@
 #
 
 from libcpp.vector cimport vector
+from libcpp cimport bool
 from Cartesian cimport cartesian_t
 
 cdef extern from "isce/core/Ellipsoid.h" namespace "isce::core":
@@ -26,3 +27,4 @@ cdef extern from "isce/core/Ellipsoid.h" namespace "isce::core":
         void getTCN_TCvec(cartesian_t&,cartesian_t&,cartesian_t&,cartesian_t&)
         void TCNbasis(cartesian_t&,cartesian_t&,cartesian_t&,cartesian_t&,
                       cartesian_t&)
+

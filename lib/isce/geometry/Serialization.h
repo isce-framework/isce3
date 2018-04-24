@@ -18,6 +18,15 @@
 namespace isce {
     namespace geometry {
 
+        // Main template call for archiving any isce::geometry object
+        template <typename T>
+        void load_archive(std::string metadata, char * objectTag, T * object) {
+            std::stringstream metastream;
+            metastream << metadata;
+            cereal::XMLInputArchive archive(metastream);
+            archive(cereal::make_nvp(objectTag, (*object)));
+        }
+
         // ----------------------------------------------------------------------
         // Serialization for Topo
         // ----------------------------------------------------------------------

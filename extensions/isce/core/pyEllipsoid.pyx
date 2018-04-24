@@ -8,7 +8,7 @@ from libcpp cimport bool
 from libcpp.vector cimport vector
 from libcpp.string cimport string
 from Ellipsoid cimport Ellipsoid
-cimport Serialization
+from Serialization cimport load_archive
 
 cdef class pyEllipsoid:
     cdef Ellipsoid *c_ellipsoid
@@ -137,6 +137,8 @@ cdef class pyEllipsoid:
             d[i] = _d[i]
             e[i] = _e[i]
 
-    def archive(self, string metadata):
-        Serialization.load_archive[Ellipsoid](metadata, 'Ellipsoid', self.c_ellipsoid)
+    def archive(self, metadata):
+        load_archive[Ellipsoid](pyStringToBytes(metadata),
+                                'Ellipsoid',
+                                self.c_ellipsoid)
 

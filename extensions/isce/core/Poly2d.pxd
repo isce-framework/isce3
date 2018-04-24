@@ -4,6 +4,7 @@
 # Copyright 2017
 #
 
+from libcpp cimport bool
 from libcpp.vector cimport vector
 
 cdef extern from "isce/core/Poly2d.h" namespace "isce::core":
@@ -23,3 +24,5 @@ cdef extern from "isce/core/Poly2d.h" namespace "isce::core":
         double getCoeff(int,int)
         double eval(double,double)
         void printPoly()
+
+

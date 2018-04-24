@@ -57,7 +57,7 @@ cdef class pyBasis:
         """
         assert len(x) == 3, 'Input basis vector does not have three-elements'
         cdef int i
-        cdef double xsum
+        cdef double xsum = 0.0
         for i in range(3):
             xsum += x[i]**2
         assert abs(xsum - 1.0) < 1.0e-8, 'Input basis vector not a unit vector'

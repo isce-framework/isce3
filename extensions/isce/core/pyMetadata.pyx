@@ -7,7 +7,7 @@
 from libcpp cimport bool
 from cython.operator cimport dereference as deref
 from libcpp.string cimport string
-cimport Serialization
+from Serialization cimport load_archive
 from Metadata cimport Metadata
 
 cdef class pyMetadata:
@@ -131,12 +131,14 @@ cdef class pyMetadata:
         """
         Return string representation.
         """
-        return self.c_metadata.sensingStart.isoformat()
+        return self.c_metadata.sensingStart.isoformat().decode('utf-8')
     @sensingStart.setter
     def sensingStart(self, pyDateTime dtime):
         self.c_metadata.sensingStart = deref(dtime.c_datetime)
 
-    def archive(self, string metadata):
-        Serialization.load_archive[Metadata](metadata, 'Radar', self.c_metadata)
+    def archive(self, metadata):
+        load_archive[Metadata](pyStringToBytes(metadata),
+                               'Radar',
+                               self.c_metadata)
 
 # end of file 
