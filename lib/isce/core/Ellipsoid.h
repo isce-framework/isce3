@@ -11,7 +11,7 @@
 #include <cstdio>
 #include <cmath>
 #include <array>
-#include "isce/core/Basis.h"
+#include "Basis.h"
 
 // Declaration
 namespace isce {

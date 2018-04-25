@@ -8,8 +8,7 @@
 #define ISCE_CORE_BASIS_H
 
 // isce::core
-#include <isce/core/Constants.h>
-
+#include "Constants.h"
 
 // Declaration
 namespace isce {
