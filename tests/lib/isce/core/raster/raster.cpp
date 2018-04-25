@@ -30,7 +30,7 @@ struct RasterTest : public ::testing::Test {
   const uint nl = 200;    // number of lines
   const uint nb = 5;      // block side length
   const std::string latFilename = "lat.tif";
-  const std::string lonFilename = "lon.rdr";
+  const std::string lonFilename = "lon.vrt";
   const std::string incFilename = "inc.bin";
   const std::string mskFilename = "msk.bin";
   const std::string vrtFilename = "topo.vrt";
@@ -51,12 +51,12 @@ TEST_F(RasterTest, createGeoTiffFloat) {
 
 
 
-// Create ISCE one-band dataset (double)
-TEST_F(RasterTest, createISCEDouble_setGetValue) {
+// Create VRT one-band dataset (double)
+TEST_F(RasterTest, createVRTDouble_setGetValue) {
   std::remove(lonFilename.c_str());
-  isce::core::Raster lon = isce::core::Raster( lonFilename, nc, nl, 1, GDT_Float64, "ISCE" );
+  isce::core::Raster lon = isce::core::Raster( lonFilename, nc, nl, 1, GDT_Float64, "VRT" );
   float a;
-  
+
   ASSERT_EQ( exists(lonFilename), true );  // check if exists
   ASSERT_EQ( lon.dtype(), 7 );             // GDT_Float64 = 7
   for ( uint y=0; y<lon.length(); ++y) {   // for each line
@@ -104,10 +104,9 @@ TEST_F(RasterTest, updateGeoTiff_getLineValarray) {
 // Create a 2-band file with ENVI format
 TEST_F(RasterTest, createTwoBandsENVIRaster) {
   std::remove(incFilename.c_str());
-  isce::core::Raster inc = isce::core::Raster(incFilename, nc, nl, 2, GDT_Int16);
+  isce::core::Raster inc = isce::core::Raster(incFilename, nc, nl, 2, GDT_Int16, "ENVI");
 
   ASSERT_EQ( exists(incFilename), true );
-  ASSERT_STREQ( inc.dataset()->GetDriverName(), isce::core::defaultGDALDriver.c_str() );
 }
 
 
