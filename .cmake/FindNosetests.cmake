@@ -51,7 +51,7 @@ function(add_nosetests path)
         return()
     endif()
 
-    add_test(NAME ${path} COMMAND "${NOSETESTS_EXECUTABLE} ${path}")
+    add_test(${path} ${NOSETESTS_EXECUTABLE} ${path})
 endfunction()
 
 include( FindPackageHandleStandardArgs )
