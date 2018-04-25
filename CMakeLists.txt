@@ -45,6 +45,10 @@ CheckGDAL()
 ##Check for Armadillo
 CheckArmadillo()
 
+##Check for Nosetests
+checkNosetests()
+
+
 ###Layout same install directory structure as pyre
 InitInstallDirLayout()
 
