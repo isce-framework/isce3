@@ -80,6 +80,10 @@ function(CheckCUDA)
     endif()
 endfunction()
 
+#Check for OpenMP
+function(CheckOpenMP)
+    FIND_PACKAGE(OpenMP)
+endfunction()
 
 #Check for nosetests
 function(CheckNosetests)

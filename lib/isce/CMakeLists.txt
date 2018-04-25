@@ -16,6 +16,9 @@ add_library(${${PACKAGENAME}_DLL} SHARED
 target_link_libraries(${${PACKAGENAME}_DLL} ${GDAL_LIBRARY} ${PYRE_LIBRARY}
                       ${PYRE_JOURNAL_LIBRARY})
 
+# Add OpenMP if found
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+
 # Install shared library
 install(TARGETS ${${PACKAGENAME}_DLL}
         DESTINATION ${ISCE_LIBDIR}

@@ -39,6 +39,9 @@ include(useCython)
 ##Check for CUDA
 CheckCUDA()
 
+##Check for OpenMP
+CheckOpenMP()
+
 ##Check for GDAL
 CheckGDAL()
 
