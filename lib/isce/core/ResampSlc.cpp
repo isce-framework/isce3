@@ -7,12 +7,12 @@
 
 #include <algorithm>
 #include <iostream>
+#include <chrono>
 #include <cmath>
 
 // pyre
 #include <portinfo>
 #include <pyre/journal.h>
-#include <pyre/timers.h>
 
 // isce::core
 #include "Constants.h"
@@ -33,8 +33,6 @@ resamp(const std::string & inputFilename,          // filename of input SLC
 
     // Initialize journal channel for info
     pyre::journal::info_t infoChannel("isce.core.ResampSlc");
-    // Initialize timer
-    pyre::timer_t timer("isce.core.ResampSlc");
 
     // Check if data are not complex
     if (!isComplex) {
@@ -72,10 +70,10 @@ resamp(const std::string & inputFilename,          // filename of input SLC
     infoChannel << 
         "Resampling using " << nTiles << " tiles of " << _linesPerTile 
         << " lines per tile"
-        << pyre::journal::newline << pyre::journal::newline;
+        << pyre::journal::newline << pyre::journal::endl;
 
     // Start timer
-    timer.start();
+    auto timerStart = std::chrono::steady_clock::now();
 
     // For each full tile of _linesPerTile lines...
     int outputLine = 0;
@@ -99,16 +97,17 @@ resamp(const std::string & inputFilename,          // filename of input SLC
         tile.declare(infoChannel);
     
         // Perform interpolation
-        infoChannel << "Interpolating tile " << tileCount << pyre::journal::newline;
+        infoChannel << "Interpolating tile " << tileCount << pyre::journal::endl;
         _transformTile(tile, outputSlc, rgOffsetRaster, azOffsetRaster, inLength,
             flatten, outputLine);
     }
 
     // Print out timing information and reset
-    timer.stop();
-    infoChannel << "Elapsed processing time: " << timer.read() << " sec"
+    auto timerEnd = std::chrono::steady_clock::now();
+    const double elapsed = 1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
+        timerEnd - timerStart).count();
+    infoChannel << "Elapsed processing time: " << elapsed << " sec"
                 << pyre::journal::endl;
-    timer.reset();
 }
 
 // Initialize tile bounds
@@ -210,7 +209,7 @@ _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
         azOffsetRaster.getLine(residAz, i);
 
         // Loop over width
-        //#pragma omp parallel for firstPrivate(chip)
+        #pragma omp parallel for firstprivate(chip)
         for (int j = 0; j < outWidth; ++j) {
            
             // Unpack offsets

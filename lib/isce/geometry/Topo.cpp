@@ -7,14 +7,11 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <chrono>
 #include <fstream>
 #include <future>
-//#include <omp.h>
 #include <valarray>
 #include <algorithm>
-
-// pyre
-//#include <pyre/timers.h>
 
 // isce::core
 #include <isce/core/Constants.h>
@@ -66,8 +63,7 @@ topo(Raster & demRaster,
         GDT_Float32, "ENVI");
     
     // Create and start a timer
-    //pyre::timer_t topoTimer("isce.geometry.Topo");
-    //topoTimer.start();
+    auto timerStart = std::chrono::steady_clock::now();
 
     // Create a DEM interpolator
     DEMInterpolator demInterp(-500.0);
@@ -90,7 +86,7 @@ topo(Raster & demRaster,
                 << dopPoly.eval(0, 0) << " "
                 << dopPoly.eval(0, (_meta.width / 2) - 1) << " "
                 << dopPoly.eval(0, _meta.width - 1) << " "
-                << pyre::journal::newline;
+                << pyre::journal::endl;
         }
 
         // Initialize orbital data for this azimuth line
@@ -102,8 +98,8 @@ topo(Raster & demRaster,
         const double satVmag = LinAlg::norm(state.velocity());
         
         // For each slant range bin
-        //#pragma omp parallel reduction(+:totalconv)
         const double radians = M_PI / 180.0;
+        #pragma omp parallel for reduction(+:totalconv)
         for (int rbin = 0; rbin < _meta.width; ++rbin) {
 
             // Get current slant range
@@ -142,11 +138,12 @@ topo(Raster & demRaster,
         simRaster.setLine(layers.sim(), line);
     }
 
-    //// Print out timing information and reset
-    //topoTimer.stop();
-    //info << "Elapsed processing time: " << topoTimer.read() << " sec"
-    //     << pyre::journal::newline;
-    //topoTimer.reset();
+    // Print out timing information and reset
+    auto timerEnd = std::chrono::steady_clock::now();
+    const double elapsed = 1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
+        timerEnd - timerStart).count();
+    info << "Elapsed processing time: " << elapsed << " sec"
+         << pyre::journal::newline;
 
     // Print out convergence statistics
     info << "Total convergence: " << totalconv << " out of "

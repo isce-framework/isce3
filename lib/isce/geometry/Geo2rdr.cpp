@@ -9,12 +9,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <future>
-//#include <omp.h>
 #include <valarray>
 #include <algorithm>
-
-// pyre
-//#include <pyre/timers.h>
 
 // isce::core
 #include <isce/core/Constants.h>
@@ -101,6 +97,7 @@ geo2rdr(isce::core::Raster & latRaster,
         hgtRaster.getLine(hgt, line);
 
         // Loop over DEM pixels
+        #pragma omp parallel for reduction(+:converged)
         for (size_t pixel = 0; pixel < demWidth; ++pixel) {
 
             // Perform geo->rdr iterations
