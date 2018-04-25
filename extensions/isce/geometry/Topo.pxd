@@ -8,17 +8,11 @@ from libcpp cimport bool
 from libcpp.string cimport string
 
 # Cython declarations for isce::core objects
-#from Ellipsoid cimport Ellipsoid
-#from Orbit cimport Orbit
-#from Metadata cimport Metadata
-#from Raster cimport Raster
-#from Poly2d cimport Poly2d
-
-from Ellipsoid cimport *
-from Orbit cimport *
-from Metadata cimport *
-from Raster cimport *
-from Poly2d cimport *
+from Ellipsoid cimport Ellipsoid
+from Orbit cimport Orbit
+from Metadata cimport Metadata
+from Raster cimport Raster
+from Poly2d cimport Poly2d
 
 cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
     cdef cppclass Topo:

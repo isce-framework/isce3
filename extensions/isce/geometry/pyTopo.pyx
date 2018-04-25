@@ -12,12 +12,6 @@ from cython.operator cimport dereference as deref
 from SerializeGeometry cimport load_archive
 from Topo cimport *
 
-#from Ellipsoid cimport *
-#from Orbit cimport *
-#from Metadata cimport *
-#from Raster cimport *
-#from Poly2d cimport *
-
 cdef class pyTopo:
     cdef Topo * c_topo
     cdef bool __owner
