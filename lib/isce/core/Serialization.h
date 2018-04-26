@@ -23,13 +23,22 @@
 namespace isce {
     namespace core {
 
-        // Main template call for archiving any isce::core object
+        // Archiving any isce::core object by pointer
         template <typename T>
         void load_archive(std::string metadata, char * objectTag, T * object) {
             std::stringstream metastream;
             metastream << metadata;
             cereal::XMLInputArchive archive(metastream);
             archive(cereal::make_nvp(objectTag, (*object)));
+        }
+
+        // Archiving any isce::core object by reference
+        template <typename T>
+        void load_archive_reference(std::string metadata, char * objectTag, T & object) {
+            std::stringstream metastream;
+            metastream << metadata;
+            cereal::XMLInputArchive archive(metastream);
+            archive(cereal::make_nvp(objectTag, object));
         }
 
         // ------------------------------------------------------------------------

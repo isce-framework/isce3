@@ -1,6 +1,6 @@
 #cython: language_level=3
 #
-# Author: Bryan Riel
+# Author: Bryan V. Riel
 # Copyright 2017-2018
 #
 
@@ -20,7 +20,7 @@ cdef class pyTopo:
         self.c_topo = new Topo(
             deref(ellipsoid.c_ellipsoid),
             deref(orbit.c_orbit),
-            deref(meta.c_metadata)
+            meta.c_metadata
         )
         self.__owner = True
     def __dealloc__(self):

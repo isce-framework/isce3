@@ -7,19 +7,14 @@
 from libcpp cimport bool
 from cython.operator cimport dereference as deref
 from libcpp.string cimport string
-from Serialization cimport load_archive
+from Serialization cimport *
 from Metadata cimport Metadata
 
 cdef class pyMetadata:
-    cdef Metadata * c_metadata
-    cdef bool __owner
+    cdef Metadata c_metadata
 
     def __cinit__(self):
-        self.c_metadata = new Metadata()
-        self.__owner = True
-    def __dealloc__(self):
-        if self.__owner:
-            del self.c_metadata
+        self.c_metadata = Metadata()
 
     @property
     def radarWavelength(self):
@@ -137,8 +132,8 @@ cdef class pyMetadata:
         self.c_metadata.sensingStart = deref(dtime.c_datetime)
 
     def archive(self, metadata):
-        load_archive[Metadata](pyStringToBytes(metadata),
-                               'Radar',
-                               self.c_metadata)
+        load_archive_reference[Metadata](
+            pyStringToBytes(metadata), 'Radar', self.c_metadata
+        )
 
 # end of file 

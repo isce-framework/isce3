@@ -4,7 +4,6 @@
 # Copyright 2017-2018
 #
 
-from libcpp cimport bool
 from libcpp.string cimport string
 
 # Cython declarations for isce::core objects

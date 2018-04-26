@@ -11,7 +11,7 @@ def pyStringToBytes(s):
     elif isinstance(s, bytes):
         return s
     else:
-        return s
+        raise ValueError('Input Python string not str or bytes')
 
 # Include the core extensions
 include "core/pyTimeDelta.pyx"
@@ -30,6 +30,10 @@ include "core/pyOrbit.pyx"
 include "core/pyPoly1d.pyx"
 include "core/pyPoly2d.pyx"
 include "core/pyRaster.pyx"
+include "core/pyResampSlc.pyx"
 
 # Include the geometry extensions
 include "geometry/pyTopo.pyx"
+include "geometry/pyGeo2rdr.pyx"
+
+# end of file
