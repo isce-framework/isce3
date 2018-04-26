@@ -40,7 +40,7 @@ class isce::geometry::DEMInterpolator {
         // Compute max and mean DEM height
         void computeHeightStats(float &, float &, pyre::journal::info_t &) const;
         // Interpolate at a given latitude and longitude
-        float interpolate(double, double) const;
+        double interpolate(double, double) const;
         // Get transform properties
         double lonStart() const { return _lonstart; }
         double latStart() const { return _latstart; }

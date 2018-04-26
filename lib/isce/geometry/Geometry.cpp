@@ -99,6 +99,10 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
     const cartesian_t chat = TCNbasis.x1();
     const cartesian_t nhat = TCNbasis.x2();
 
+    // Pre-compute TCN vector products
+    const double ndotv = nhat[0]*vhat[0] + nhat[1]*vhat[1] + nhat[2]*vhat[2];
+    const double vdott = vhat[0]*that[0] + vhat[1]*that[1] + vhat[2]*that[2];
+
     // Compute satellite LLH to get height above ellipsoid
     ellipsoid.xyzToLatLon(state.position(), satLLH);
 
@@ -118,12 +122,11 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
 
         // Compute TCN scale factors
         const double gamma = pixel.range() * costheta;
-        const double alpha = pixel.dopfact() - gamma*LinAlg::dot(nhat, vhat) 
-                           / LinAlg::dot(vhat, that);
+        const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
         const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
                                             * std::pow(sintheta, 2) 
                                             - std::pow(alpha, 2));
-
+        
         // Compute vector from satellite to ground
         LinAlg::linComb(alpha, that, beta, chat, delta_temp);
         LinAlg::linComb(1.0, delta_temp, gamma, nhat, delta);
@@ -144,7 +147,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
         const double rdiff = pixel.range() - LinAlg::norm(lookVec);
         if (std::abs(rdiff) < threshold) {
             converged = 1;
-            return converged;
+            break;
         // May need to perform extra iterations
         } else if (i > maxIter) {
             // XYZ position of old solution
@@ -158,7 +161,32 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
             ptm.convertSCHtoXYZ(targetSCH, targetVec, isce::core::XYZ_2_SCH);
         }
     }
-    // If we reach this point, no convergence for specified threshold
+
+    // ----- Final computation: output points exactly at range pixel if converged
+
+    // Compute angles
+    const double a = satLLH[2] + ptm.radcur;
+    const double b = ptm.radcur + targetSCH[2];
+    const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a
+                          - (b/a) * (b/pixel.range()));
+    const double sintheta = std::sqrt(1.0 - costheta*costheta);
+
+    // Compute TCN scale factors
+    const double gamma = pixel.range() * costheta;
+    const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
+    const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
+                                        * std::pow(sintheta, 2)
+                                        - std::pow(alpha, 2));
+
+    // Compute vector from satellite to ground
+    LinAlg::linComb(alpha, that, beta, chat, delta_temp);
+    LinAlg::linComb(1.0, delta_temp, gamma, nhat, delta);
+    LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
+
+    // Compute LLH of ground point
+    ellipsoid.xyzToLatLon(targetVec, targetLLH);    
+
+    // Return convergence flag
     return converged;
 }
 
@@ -211,7 +239,7 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
         const double c1 = -1.0 * LinAlg::dot(satvel, satvel);
         const double c2 = (fdop / slantRange) + fdopder;
         const double fnprime = c1 + c2 * dopfact;
-       
+
         // Update guess for azimuth time
         aztime -= fn / fnprime;
     }

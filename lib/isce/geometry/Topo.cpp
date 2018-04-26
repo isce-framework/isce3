@@ -46,21 +46,21 @@ topo(Raster & demRaster,
     
     // Create rasters for individual layers
     Raster latRaster = Raster(outdir + "/lat.rdr", _meta.width, _meta.length, 1,
-        GDT_Float64, "ENVI");
+        GDT_Float64, "ISCE");
     Raster lonRaster = Raster(outdir + "/lon.rdr", _meta.width, _meta.length, 1,
-        GDT_Float64, "ENVI");
+        GDT_Float64, "ISCE");
     Raster heightRaster = Raster(outdir + "/z.rdr", _meta.width, _meta.length, 1,
-        GDT_Float64, "ENVI");
+        GDT_Float64, "ISCE");
     Raster incRaster = Raster(outdir + "/inc.rdr", _meta.width, _meta.length, 1,
-        GDT_Float32, "ENVI");
+        GDT_Float32, "ISCE");
     Raster hdgRaster = Raster(outdir + "/hdg.rdr", _meta.width, _meta.length, 1,
-        GDT_Float32, "ENVI");
+        GDT_Float32, "ISCE");
     Raster localIncRaster = Raster(outdir + "/localInc.rdr", _meta.width, _meta.length, 1,
-        GDT_Float32, "ENVI");
+        GDT_Float32, "ISCE");
     Raster localPsiRaster = Raster(outdir + "/localPsi.rdr", _meta.width, _meta.length, 1,
-        GDT_Float32, "ENVI");
+        GDT_Float32, "ISCE");
     Raster simRaster = Raster(outdir + "/simamp.rdr", _meta.width, _meta.length, 1,
-        GDT_Float32, "ENVI");
+        GDT_Float32, "ISCE");
     
     // Create and start a timer
     auto timerStart = std::chrono::steady_clock::now();
@@ -89,11 +89,14 @@ topo(Raster & demRaster,
                 << pyre::journal::endl;
         }
 
+        //if (line != 14936) continue;
+        //if (line != 2500) continue;
+
         // Initialize orbital data for this azimuth line
         Basis TCNbasis;
         StateVector state;
         _initAzimuthLine(line, state, TCNbasis);
-
+       
         // Compute velocity magnitude
         const double satVmag = LinAlg::norm(state.velocity());
         
@@ -101,6 +104,8 @@ topo(Raster & demRaster,
         const double radians = M_PI / 180.0;
         #pragma omp parallel for reduction(+:totalconv)
         for (int rbin = 0; rbin < _meta.width; ++rbin) {
+
+            //if (rbin != 1013) continue;
 
             // Get current slant range
             const double rng = _meta.rangeFirstSample + rbin*_meta.slantRangePixelSpacing;
@@ -187,7 +192,7 @@ _initAzimuthLine(int line, StateVector & state, Basis & TCNbasis) {
     // Convert satellite position to lat-lon
     cartesian_t llhsat;
     _ellipsoid.xyzToLatLon(xyzsat, llhsat);
-
+    
     // Set peg point right below satellite
     _peg.lat = llhsat[0];
     _peg.lon = llhsat[1];

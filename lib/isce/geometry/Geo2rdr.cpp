@@ -58,9 +58,9 @@ geo2rdr(isce::core::Raster & latRaster,
 
     // Create output rasters
     Raster rgoffRaster = Raster(outdir + "/range.off", demWidth, demLength, 1,
-        GDT_Float32, "ENVI");
+        GDT_Float32, "ISCE");
     Raster azoffRaster = Raster(outdir + "/azimuth.off", demWidth, demLength, 1,
-        GDT_Float32, "ENVI");
+        GDT_Float32, "ISCE");
     
     // Cache sensing start
     double t0 = _meta.sensingStart.secondsSinceEpoch(_refEpoch);
@@ -90,6 +90,17 @@ geo2rdr(isce::core::Raster & latRaster,
     // Loop over DEM lines
     int converged = 0;
     for (size_t line = 0; line < demLength; ++line) {
+
+        // Periodic diagnostic printing
+        if ((line % 1000) == 0) {
+            info 
+                << "Processing line: " << line << " " << pyre::journal::newline
+                << "Dopplers near mid far: "
+                << doppler.eval(0, 0) << " "
+                << doppler.eval(0, (_meta.width / 2) - 1) << " "
+                << doppler.eval(0, _meta.width - 1) << " "
+                << pyre::journal::endl;
+        }
 
         // Read line of data
         latRaster.getLine(lat, line);

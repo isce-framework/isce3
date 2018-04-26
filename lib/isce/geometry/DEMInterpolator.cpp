@@ -121,10 +121,10 @@ computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & 
 }
 
 // Interpolate DEM
-float isce::geometry::DEMInterpolator::
+double isce::geometry::DEMInterpolator::
 interpolate(double lat, double lon) const {
     // If we don't have a DEM, just return reference height
-    float value = _refHeight;
+    double value = _refHeight;
     if (!_haveRaster) {
         return value;
     } else {
