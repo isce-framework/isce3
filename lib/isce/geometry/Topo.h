@@ -16,7 +16,7 @@
 #include <isce/core/Raster.h>
 
 // isce::geometry
-#include "Geometry.h"
+#include "geometry.h"
 #include "TopoLayers.h"
 
 // Declaration

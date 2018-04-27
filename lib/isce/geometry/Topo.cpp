@@ -121,7 +121,7 @@ topo(Raster & demRaster,
             cartesian_t llh = {radians*demInterp.midLat(), radians*demInterp.midLon(), dem_avg};
 
             // Perform rdr->geo iterations
-            int geostat = Geometry::rdr2geo(
+            int geostat = rdr2geo(
                 pixel, TCNbasis, state, _ellipsoid, _ptm, demInterp, llh, _meta.lookSide,
                 _threshold, _numiter, _extraiter
             );
@@ -253,8 +253,8 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
                     // Create dummy DEM interpolator with constant height
                     DEMInterpolator constDEM(testHeights[k]);
                     // Run radar->geo for 1 iteration
-                    Geometry::rdr2geo(pixel, TCNbasis, state, _ellipsoid, _ptm, constDEM,
-                                      llh, _meta.lookSide, _threshold, 1, 0);
+                    rdr2geo(pixel, TCNbasis, state, _ellipsoid, _ptm, constDEM, llh,
+                            _meta.lookSide, _threshold, 1, 0);
                 }
                 // Update bounds
                 min_lat = std::min(min_lat, llh[0]*degrees);

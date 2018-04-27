@@ -24,7 +24,7 @@
 #include "isce/core/Serialization.h"
 
 // isce::geometry
-#include "isce/geometry/Geometry.h"
+#include "isce/geometry/geometry.h"
 
 // Declaration for utility function to read metadata stream from VRT
 std::stringstream streamFromVRT(const char * filename, int bandNum=1);
@@ -108,7 +108,7 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit) {
     const double azTime = azDate.secondsSinceEpoch();
 
     // Run rdr2geo
-    int stat = isce::geometry::Geometry::rdr2geo(azTime, pixel.range(), pixel.dopfact(),
+    int stat = isce::geometry::rdr2geo(azTime, pixel.range(), pixel.dopfact(),
         orbit, ellipsoid, demInterp, targetLLH, meta.lookSide, 0.001, 25, 15,
         isce::core::HERMITE_METHOD);
 
@@ -121,7 +121,7 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit) {
 
     // Run it again with zero doppler
     pixel.dopfact(0.0);
-    stat = isce::geometry::Geometry::rdr2geo(azTime, pixel.range(), pixel.dopfact(),
+    stat = isce::geometry::rdr2geo(azTime, pixel.range(), pixel.dopfact(),
         orbit, ellipsoid, demInterp, targetLLH, meta.lookSide, 0.001, 25, 15,
         isce::core::HERMITE_METHOD);
     ASSERT_EQ(stat, 1);
@@ -138,7 +138,7 @@ TEST_F(GeometryTest, RdrToGeo) {
     isce::core::cartesian_t targetLLH = {0.0, 0.0, 0.0};
 
     // Run rdr2geo
-    int stat = isce::geometry::Geometry::rdr2geo(pixel, basis, state, ellipsoid, ptm, demInterp,
+    int stat = isce::geometry::rdr2geo(pixel, basis, state, ellipsoid, ptm, demInterp,
         targetLLH, meta.lookSide, 0.001, 25, 15);
 
     // Check results
@@ -150,7 +150,7 @@ TEST_F(GeometryTest, RdrToGeo) {
 
     // Run it again with zero doppler
     pixel.dopfact(0.0);
-    stat = isce::geometry::Geometry::rdr2geo(pixel, basis, state, ellipsoid, ptm, demInterp,
+    stat = isce::geometry::rdr2geo(pixel, basis, state, ellipsoid, ptm, demInterp,
         targetLLH, meta.lookSide, 1.0e-6, 25, 10);
     ASSERT_EQ(stat, 1);
     ASSERT_NEAR(degrees * targetLLH[0], 35.01267683520824, 1.0e-8);
@@ -167,7 +167,7 @@ TEST_F(GeometryTest, GeoToRdr) {
 
     // Run geo2rdr
     double aztime, slantRange;
-    int stat = isce::geometry::Geometry::geo2rdr(llh, ellipsoid, orbit, skewDoppler,
+    int stat = isce::geometry::geo2rdr(llh, ellipsoid, orbit, skewDoppler,
         meta, aztime, slantRange, 1.0e-8, 50, 1.0e-8);
     // Convert azimuth time to a date
     isce::core::DateTime azdate;
@@ -179,7 +179,7 @@ TEST_F(GeometryTest, GeoToRdr) {
 
     // Run geo2rdr again with zero doppler
     isce::core::Poly2d zeroDoppler;
-    stat = isce::geometry::Geometry::geo2rdr(llh, ellipsoid, orbit, zeroDoppler,
+    stat = isce::geometry::geo2rdr(llh, ellipsoid, orbit, zeroDoppler,
         meta, aztime, slantRange, 1.0e-8, 50, 1.0e-8);
     azdate.secondsSinceEpoch(aztime);
 

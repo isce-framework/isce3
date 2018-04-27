@@ -12,7 +12,7 @@
 #include <isce/core/Peg.h>
 
 // isce::geometry
-#include "Geometry.h"
+#include "geometry.h"
 
 // pull in useful isce::core namespace
 using isce::core::Basis;
@@ -25,7 +25,7 @@ using isce::core::Pixel;
 using isce::core::Poly2d;
 using isce::core::StateVector;
 
-int isce::geometry::Geometry::
+int isce::geometry::
 rdr2geo(double aztime, double slantRange, double dopfact, const Orbit & orbit,
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp,
         cartesian_t & targetLLH, int side, double threshold, int maxIter, int extraIter,
@@ -76,7 +76,7 @@ rdr2geo(double aztime, double slantRange, double dopfact, const Orbit & orbit,
     return stat;
 }
 
-int isce::geometry::Geometry::
+int isce::geometry::
 rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
         const Ellipsoid & ellipsoid, const Pegtrans & ptm, const DEMInterpolator & demInterp,
         cartesian_t & targetLLH, int side, double threshold, int maxIter, int extraIter) {
@@ -190,7 +190,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
     return converged;
 }
 
-int isce::geometry::Geometry::
+int isce::geometry::
 geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const Poly2d & doppler, const Metadata & meta, double & aztime, double & slantRange,
         double threshold, int maxIter, double deltaRange) {

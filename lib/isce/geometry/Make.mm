@@ -9,7 +9,7 @@ PACKAGE = isce/geometry
 PROJ_SRCS = \
     DEMInterpolator.cpp \
     Geo2rdr.cpp \
-    Geometry.cpp \
+    geometry.cpp \
     Topo.cpp \
 
 # products
@@ -25,7 +25,7 @@ EXPORT_PKG_HEADERS = \
     DEMInterpolator.h \
     Geo2rdr.h \
     Geo2rdr.icc \
-    Geometry.h \
+    geometry.h \
     Topo.h \
     Topo.icc \
     TopoLayers.h \

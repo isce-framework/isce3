@@ -17,6 +17,7 @@
 #include <isce/core/LinAlg.h>
 
 // isce::geometry
+#include "geometry.h"
 #include "Geo2rdr.h"
 
 // pull in some isce::core namespaces
@@ -114,8 +115,10 @@ geo2rdr(isce::core::Raster & latRaster,
             // Perform geo->rdr iterations
             cartesian_t llh = {lat[pixel]*rad, lon[pixel]*rad, hgt[pixel]};
             double aztime, slantRange;
-            int geostat = Geometry::geo2rdr(llh, _ellipsoid, _orbit, doppler,
-                _meta, aztime, slantRange, _threshold, _numiter, 1.0e-8);
+            int geostat = isce::geometry::geo2rdr(
+                llh, _ellipsoid, _orbit, doppler, _meta, aztime, slantRange, _threshold, 
+                _numiter, 1.0e-8
+            );
 
             // Check of solution is out of bounds
             bool isOutside = false;

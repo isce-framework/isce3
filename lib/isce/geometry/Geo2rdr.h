@@ -20,10 +20,6 @@
 #include <isce/core/Pegtrans.h>
 #include <isce/core/Raster.h>
 
-// isce::geometry
-#include "Geometry.h"
-#include "TopoLayers.h"
-
 // Declaration
 namespace isce {
     namespace geometry {

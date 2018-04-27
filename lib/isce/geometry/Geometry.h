@@ -29,47 +29,40 @@
 // Declaration
 namespace isce {
     namespace geometry {
+
         // Some useful typedefs from isce::core
         typedef isce::core::cartesian_t cartesian_t;
         typedef isce::core::cartmat_t cartmat_t;
-        // Geometry class
-        class Geometry;
-    }
-}
 
-// Geometry declaration
-class isce::geometry::Geometry {
-
-    // Public static methods
-    public:
         // radar->geo using an Orbit and DEM
-        static int rdr2geo(double, double, double,
-                           const isce::core::Orbit &,
-                           const isce::core::Ellipsoid &,
-                           const DEMInterpolator &,
-                           cartesian_t &,
-                           int, double, int, int,
-                           isce::core::orbitInterpMethod); 
+        int rdr2geo(double, double, double,
+                    const isce::core::Orbit &,
+                    const isce::core::Ellipsoid &,
+                    const DEMInterpolator &,
+                    cartesian_t &,
+                    int, double, int, int,
+                    isce::core::orbitInterpMethod); 
 
         // radar->geo using pre-computed basis and state vectors, and DEM
-        static int rdr2geo(const isce::core::Pixel &,
-                           const isce::core::Basis &,
-                           const isce::core::StateVector &,
-                           const isce::core::Ellipsoid &,
-                           const isce::core::Pegtrans &,
-                           const DEMInterpolator &,
-                           cartesian_t &,
-                           int, double, int, int);
+        int rdr2geo(const isce::core::Pixel &,
+                    const isce::core::Basis &,
+                    const isce::core::StateVector &,
+                    const isce::core::Ellipsoid &,
+                    const isce::core::Pegtrans &,
+                    const DEMInterpolator &,
+                    cartesian_t &,
+                    int, double, int, int);
 
         // geo->radar
-        static int geo2rdr(const cartesian_t &,
-                           const isce::core::Ellipsoid &,
-                           const isce::core::Orbit &,
-                           const isce::core::Poly2d &,
-                           const isce::core::Metadata &,
-                           double &, double &,
-                           double, int, double);
-};
+        int geo2rdr(const cartesian_t &,
+                    const isce::core::Ellipsoid &,
+                    const isce::core::Orbit &,
+                    const isce::core::Poly2d &,
+                    const isce::core::Metadata &,
+                    double &, double &,
+                    double, int, double);
+    }
+}
 
 #endif
 
