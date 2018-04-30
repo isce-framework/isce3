@@ -59,9 +59,10 @@ namespace isce {
       inline void         dataset(GDALDataset* ds) { _dataset=ds; }
       inline GDALDataType dtype(const size_t band=1) const { return _dataset->GetRasterBand(band)->GetRasterDataType(); }
       inline bool         match(const Raster & rast) const { return width()==rast.width() && length()==rast.length(); }  
-      inline void         open(const std::string&, GDALAccess);
+      inline void         open(const std::string &, GDALAccess);
       inline void         addRasterToVRT(const isce::core::Raster&);
       inline void         addBandToVRT(GDALRasterBand *);
+      inline void         addRawBandToVRT(const std::string &, GDALDataType);
       //void close() { GDALClose( _dataset ); }  // todo: fix segfault conflict with destructor
       
         

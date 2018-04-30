@@ -11,7 +11,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "gdal_priv.h"
 #include "Raster.h"
     
 
@@ -42,7 +41,19 @@ isce::core::Raster::Raster(const std::string &fname,          // filename
 
   GDALAllRegister();
   GDALDriver * outputDriver = GetGDALDriverManager()->GetDriverByName(driverName.c_str());
-  dataset( outputDriver->Create (fname.c_str(), width, length, numBands, dtype, NULL) );
+  
+  if (driverName == "VRT") {   // if VRT, create empty dataset and add a band, then update.
+                               // Number of bands is forced to 1 for now (numBands is ignored).
+                               // Multi-band VRT can be created by adding band after creation 
+    dataset( outputDriver->Create (fname.c_str(), width, length, 0, dtype, NULL) );
+    addRawBandToVRT( fname, dtype );
+    GDALClose( dataset() );
+    dataset( static_cast<GDALDataset*>(GDALOpenShared( fname.c_str(), GA_Update )) ); ;
+  }
+
+  else                         // if non-VRT, create dataset using user-defined driver    
+    dataset( outputDriver->Create (fname.c_str(), width, length, numBands, dtype, NULL) );
+  
 }
 
 

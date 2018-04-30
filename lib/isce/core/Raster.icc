@@ -78,6 +78,23 @@ inline void isce::core::Raster::addBandToVRT(GDALRasterBand * inBand) {
 
 
 
+// Add a Raw Raster band to existing VRT dataset 
+inline void isce::core::Raster::addRawBandToVRT(const std::string &fname, GDALDataType dtype) {
+  if ( !strcmp(dataset()->GetDriverName(), "VRT") ) { 
+    char** papszOptions = NULL;
+    std::string srcName = fname.substr(0, fname.find_last_of("."));
+    papszOptions = CSLAddNameValue(papszOptions, "subclass", "VRTRawRasterBand");
+    papszOptions = CSLAddNameValue(papszOptions, "SourceFilename", srcName.c_str()); 
+    papszOptions = CSLAddNameValue(papszOptions, "RelativeToVRT", "true");
+    dataset()->AddBand(dtype, papszOptions);
+    CSLDestroy(papszOptions); 
+  }
+    else
+      throw std::length_error("In isce::core::Raster::AddBandToVRT() - GDAL driver must be VRT.");
+}
+
+
+
 
 /* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
  *                                          PIXEL OPERATIONS

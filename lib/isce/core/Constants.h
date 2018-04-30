@@ -100,7 +100,7 @@ namespace isce { namespace core {
     }
 
     // Constants for Raster class
-    const std::string defaultGDALDriver = "ENVI"; 
+    const std::string defaultGDALDriver = "VRT"; 
     const GDALDataType defaultGDALDataType = GDT_Float32;
     // Unordered_map to map typeids to GDALDataTypes
     const std::unordered_map<std::type_index, GDALDataType> GDT =
