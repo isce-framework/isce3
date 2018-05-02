@@ -56,16 +56,16 @@ cdef class pyResampSlc:
         self.c_resamp.linesPerTile(lines)
 
     # Run resamp
-    def resamp(self, infile, outfile, rgfile, azfile, bool flatten=True, bool isComplex=True,
-               int rowBuffer=40):
+    def resamp(self, infile, outfile, rgfile, azfile, int inputBand=1,
+               bool flatten=True, bool isComplex=True, int rowBuffer=40):
         """
         Run resamp.
         """
-        cdef string inputfile = pyStringToBytes(infile)
-        cdef string outputfile = pyStringToBytes(outfile)
-        cdef string rgofffile = pyStringToBytes(rgfile)
-        cdef string azofffile = pyStringToBytes(azfile)
-        self.c_resamp.resamp(inputfile, outputfile, rgofffile, azofffile,
-                             flatten, isComplex, rowBuffer)
+        cdef string inputFile = pyStringToBytes(infile)
+        cdef string outputFile = pyStringToBytes(outfile)
+        cdef string rgoffFile = pyStringToBytes(rgfile)
+        cdef string azoffFile = pyStringToBytes(azfile)
+        self.c_resamp.resamp(inputFile, outputFile, rgoffFile, azoffFile,
+                             inputBand, flatten, isComplex, rowBuffer)
     
 # end of file
