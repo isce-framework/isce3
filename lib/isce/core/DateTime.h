@@ -1,6 +1,7 @@
 //-*- C++ -*-
 //-*- coding: utf-8 -*-
 //
+//
 // Author: Piyush Agram
 // Copyright 2017-2018
 
@@ -31,7 +32,7 @@ struct isce::core::DateTime {
     double frac;
 
     // Constructors
-    DateTime() : DateTime(0.0) {};
+    DateTime() : DateTime(1970, 1, 1) {};
     DateTime(double ord);
     DateTime(int yy, int mm, int dd);
     DateTime(int yy, int mm, int dd, int hh, int mn, int ss);
@@ -56,6 +57,7 @@ struct isce::core::DateTime {
 
     // Math operators
     DateTime& operator=(const DateTime& ts);
+    DateTime& operator=(const std::string &);
     DateTime& operator+=(const TimeDelta& ts);
     DateTime& operator+=(const double& s);
     DateTime& operator-=(const TimeDelta& ts);
@@ -76,6 +78,7 @@ struct isce::core::DateTime {
 
     // Get and set with respect to fixed epoch
     double secondsSinceEpoch() const;
+    double secondsSinceEpoch(const DateTime &) const;
     void secondsSinceEpoch(double);
   
     // Output methods

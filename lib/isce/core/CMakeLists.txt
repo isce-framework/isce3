@@ -2,11 +2,9 @@
 set(PACKAGENAME core)
 string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 
-###Library to be built
-set(${PACKAGENAME}_DLL isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
-
-####Library sources
-set(${PACKAGENAME}_SRCS 
+####Set the source files
+set(LOCAL_SRCS
+              Attitude.cpp
               Baseline.cpp
               DateTime.cpp
               Doppler.cpp
@@ -28,9 +26,16 @@ set(${PACKAGENAME}_SRCS
               ResampSlc.cpp
               TimeDelta.cpp)
 
+####Append current path to every source file
+set(${PACKAGENAME}_SRCS "")
+foreach(CPPFILE ${LOCAL_SRCS})
+    list(APPEND ${PACKAGENAME}_SRCS ${CMAKE_CURRENT_LIST_DIR}/${CPPFILE})
+endforeach()
+
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h 
                                     Baseline.h
+                                    Basis.h
                                     Constants.h
                                     DateTime.h
                                     Doppler.h
@@ -44,6 +49,7 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Orbit.h
                                     Peg.h
                                     Pegtrans.h
+                                    Pixel.h
                                     Poly1d.h
                                     Poly2d.h
                                     Position.h
@@ -56,6 +62,7 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     ResampSlc.h
                                     ResampSlc.icc
                                     Serialization.h
+                                    StateVector.h
                                     Tile.h
                                     Tile.icc
                                     TimeDelta.h)
@@ -64,22 +71,18 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
 ###This is where regex can be used on the header files if needed
 set(${PACKAGENAME}_BUILD_HEADERS "")
 foreach(HFILE ${${PACKAGENAME}_EXPORT_HEADERS})
-    #    message(STATUS "${HFILE} : to : ${ISCE_BUILDINCLUDEDIR}/${PACKAGENAME}/${LOCALPROJ}/${HFILE}")
-    configure_file(${HFILE} ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/${HFILE} COPYONLY)
+    message(STATUS "${HFILE} : to : ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/${HFILE}")
+    configure_file(
+        ${CMAKE_CURRENT_LIST_DIR}/${HFILE}
+        ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/${HFILE}
+        COPYONLY
+    )
     list(APPEND ${PACKAGENAME}_BUILD_HEADERS ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/${HFILE})
 endforeach()
 
-###Link sources to library
-add_library(${${PACKAGENAME}_DLL} SHARED
-                               ${${PACKAGENAME}_SRCS})
-
 #Pyre stuff is needed for logging
 #Gdal is needed for Raster IO 
-target_include_directories(${${PACKAGENAME}_DLL} PUBLIC ${PYRE_INCLUDE_DIR} ${ISCE_BUILDINCLUDEDIR} ${GDAL_INCLUDE_DIR}) 
-
-# Add library dependencies 
-target_link_libraries(${${PACKAGENAME}_DLL} ${GDAL_LIBRARY} ${PYRE_LIBRARY}
-                      ${PYRE_JOURNAL_LIBRARY})
+include_directories(${${PACKAGENAME}_DLL} PUBLIC ${PYRE_INCLUDE_DIR} ${ISCE_BUILDINCLUDEDIR} ${GDAL_INCLUDE_DIR}) 
 
 #Install headers as files
 ###This may be changed in future to install from build/include
@@ -87,8 +90,4 @@ install(FILES ${${PACKAGENAME}_BUILD_HEADERS}
     DESTINATION ${ISCE_INCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}
     COMPONENT isce_headers)
 
-#Install shared library
-install(TARGETS ${${PACKAGENAME}_DLL}
-        DESTINATION ${ISCE_LIBDIR}
-        COMPONENT isce_libs)
-
+# end of file

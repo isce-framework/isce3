@@ -32,6 +32,8 @@ class isce::core::Attitude {
     public:
         // Basic constructor to set the attitude type string
         Attitude(AttitudeType atype) : _time(MIN_DATE_TIME), _attitude_type(atype) {};
+        // Virtual destructor
+        virtual ~Attitude() = 0;
 
         // Virtual functions
         virtual cartesian_t ypr() = 0;

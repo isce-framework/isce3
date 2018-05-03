@@ -6,6 +6,8 @@
 
 from libcpp cimport bool
 from libcpp.vector cimport vector
+from libcpp.string cimport string
+from Serialization cimport load_archive
 from Cartesian cimport cartesian_t
 from Orbit cimport Orbit, orbitInterpMethod
 
@@ -218,4 +220,9 @@ cdef class pyOrbit:
         cdef bytes _a = a.encode()
         cdef char *cstring = _a
         self.c_orbit.dumpToHDR(cstring)
+
+    def archive(self, metadata):
+        load_archive[Orbit](pyStringToBytes(metadata),
+                            'Orbit',
+                            self.c_orbit)
 

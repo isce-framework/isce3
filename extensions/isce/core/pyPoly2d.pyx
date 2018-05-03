@@ -6,6 +6,7 @@
 
 from libcpp cimport bool
 from Poly2d cimport Poly2d
+from Serialization cimport load_archive
 
 cdef class pyPoly2d:
     cdef Poly2d *c_poly2d
@@ -124,4 +125,8 @@ cdef class pyPoly2d:
     def printPoly(self):
         self.c_poly2d.printPoly()
 
+    def archive(self, metadata, tag):
+        load_archive[Poly2d](pyStringToBytes(metadata),
+                             pyStringToBytes(tag),
+                             self.c_poly2d)
 

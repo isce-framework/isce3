@@ -124,7 +124,7 @@ void isce::core::Ellipsoid::
 TCNbasis(const cartesian_t & pos, const cartesian_t & vel, cartesian_t & t,
          cartesian_t & c, cartesian_t & n) const {
     /*
-     *
+     Get TCN basis vectors. Return three separate basis vectors.
      */
     cartesian_t llh;
     xyzToLatLon(pos, llh);
@@ -138,6 +138,18 @@ TCNbasis(const cartesian_t & pos, const cartesian_t & vel, cartesian_t & t,
     LinAlg::unitVec(temp, c);
     LinAlg::cross(c, n, temp);
     LinAlg::unitVec(temp, t);
+}
+
+void isce::core::Ellipsoid::
+TCNbasis(const cartesian_t & pos, const cartesian_t & vel, Basis & basis) const {
+    /*
+     Get TCN basis vectors. Return vector in Basis object.
+     */
+    cartesian_t that, chat, nhat;
+    TCNbasis(pos, vel, that, chat, nhat);
+    basis.x0(that);
+    basis.x1(chat);
+    basis.x2(nhat);
 }
 
 // end of file

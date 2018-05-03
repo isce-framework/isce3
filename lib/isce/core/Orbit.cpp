@@ -17,6 +17,42 @@
 #include "LinAlg.h"
 #include "Ellipsoid.h"
 
+// Reformat state vectors to form flattened 1D arrays
+void isce::core::Orbit::
+reformatOrbit() {
+    // Use min date time as epoch
+    reformatOrbit(MIN_DATE_TIME);
+}
+
+// Reformat state vectors to form flattened 1D arrays
+void isce::core::Orbit::
+reformatOrbit(const DateTime & epoch) {
+
+    // Get the number of state vectors
+    nVectors = stateVectors.size();
+   
+    // Clear vectors
+    position.clear();
+    velocity.clear();
+    UTCtime.clear(); 
+    // Re-size
+    position.resize(3*nVectors);
+    velocity.resize(3*nVectors);
+    UTCtime.resize(nVectors);
+
+    // Loop over state vectors and fill in vectors
+    for (int i = 0; i < nVectors; ++i) {
+        // Get the statevector
+        StateVector sv = stateVectors[i];
+        // Place in correct spot in vectors
+        for (size_t j = 0; j < 3; ++j) {
+            position[(3*i) + j] = sv.position()[j];
+            velocity[(3*i) + j] = sv.velocity()[j];
+        }
+        // Get UTCtime (implicit conversion to double)
+        UTCtime[i] = sv.date().secondsSinceEpoch(epoch);
+    }
+}
 
 void isce::core::Orbit::
 getPositionVelocity(double tintp, cartesian_t & pos, cartesian_t & vel) const {
@@ -37,6 +73,21 @@ getPositionVelocity(double tintp, cartesian_t & pos, cartesian_t & vel) const {
         errstr += "Encountered stored Orbit basis "+std::to_string(basis);
         throw std::invalid_argument(errstr);
     }
+}
+
+int isce::core::Orbit::
+interpolate(double tintp, StateVector & state, orbitInterpMethod intp_type) const {
+    /*
+    Convenience wrapper for interpolation to place results directly into a 
+    StateVector object.
+    */
+    // Call interpolation
+    cartesian_t position, velocity;
+    int orbitStat = interpolate(tintp, position, velocity, intp_type);
+    // Set results
+    state.position(position);
+    state.velocity(velocity);
+    return orbitStat;
 }
 
 int isce::core::Orbit::
@@ -283,7 +334,7 @@ computeAcceleration(double tintp, cartesian_t &acc) const {
 }
 
 double isce::core::Orbit::
-getENUHeading(double aztime) {
+getENUHeading(double aztime) const {
     // Computes heading at a given azimuth time using a single state vector
 
     cartesian_t pos, vel, llh, enuvel;

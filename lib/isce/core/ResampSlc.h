@@ -66,12 +66,15 @@ class isce::core::ResampSlc {
 
         // Main resamp entry point
         void resamp(const std::string &, const std::string &, const std::string &,
-            const std::string &, bool flatten=false, bool isComplex=true, int rowBuffer=40);
+                    const std::string &, int inputBand=1, bool flatten=false,
+                    bool isComplex=true, int rowBuffer=40);
 
     // Data members
     private:
         // Number of lines per tile
         size_t _linesPerTile = 1000;
+        // Band number
+        int _inputBand;
 
         // Polynomials
         Poly2d _rgCarrier;            // range carrier polynomial

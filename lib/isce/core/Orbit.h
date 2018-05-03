@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include "Constants.h"
+#include "StateVector.h"
 
 // Declaration
 namespace isce {
@@ -35,28 +36,48 @@ struct isce::core::Orbit {
     std::vector<double> position;
     // Linearized velocity values of contained State Vectors
     std::vector<double> velocity;
+    // Vector of StateVectors
+    std::vector<StateVector> stateVectors;
 
+    // Reformat the orbit and convert datetime to seconds since epoch
+    void reformatOrbit(const DateTime &);
+    // If no epoch provided, use minimum datetime as epoch
+    void reformatOrbit();
+
+    // Constructors
     Orbit(int bs, int nv) : basis(bs), nVectors(nv), UTCtime(nv,0.), position(3*nv,0.), 
                             velocity(3*nv,0.) {}
     Orbit() : Orbit(0,0) {}
     Orbit(const Orbit &o) : basis(o.basis), nVectors(o.nVectors), UTCtime(o.UTCtime), 
-                            position(o.position), velocity(o.velocity) {}
+                            position(o.position), velocity(o.velocity),
+                            stateVectors(o.stateVectors) {}
+
+    // Math operators
     inline Orbit& operator=(const Orbit&);
     inline Orbit& operator+=(const Orbit&);
     inline const Orbit operator+(const Orbit&) const;
-    void getPositionVelocity(double,cartesian_t&,cartesian_t&) const;
-    inline void getStateVector(int,double&,cartesian_t&,cartesian_t&) const;
-    inline void setStateVector(int,double,const cartesian_t&,
-                               const cartesian_t&);
-    inline void addStateVector(double,const cartesian_t &,const cartesian_t &);
-    int interpolate(double,cartesian_t&,cartesian_t&,orbitInterpMethod) const;
-    int interpolateWGS84Orbit(double,cartesian_t&,cartesian_t&) const;
-    int interpolateLegendreOrbit(double,cartesian_t&,cartesian_t&) const;
-    int interpolateSCHOrbit(double,cartesian_t&,cartesian_t&) const;
-    int computeAcceleration(double,cartesian_t&) const;
-    double getENUHeading(double);
+
+    // Get state
+    void getPositionVelocity(double, cartesian_t &, cartesian_t &) const;
+    inline void getStateVector(int, double &, cartesian_t &, cartesian_t &) const;
+    // Set state
+    inline void setStateVector(int, double, const cartesian_t &, const cartesian_t &);
+    inline void addStateVector(double, const cartesian_t &, const cartesian_t &);
+
+    // Interpolation
+    int interpolate(double, StateVector &, orbitInterpMethod) const;
+    int interpolate(double, cartesian_t &, cartesian_t &, orbitInterpMethod) const;
+    int interpolateWGS84Orbit(double, cartesian_t &, cartesian_t &) const;
+    int interpolateLegendreOrbit(double, cartesian_t &,cartesian_t &) const;
+    int interpolateSCHOrbit(double, cartesian_t &, cartesian_t &) const;
+    
+    // Compute properties
+    int computeAcceleration(double, cartesian_t &) const;
+    double getENUHeading(double) const;
+
+    // I/O
     void printOrbit() const;
-    void loadFromHDR(const char*,int);
+    void loadFromHDR(const char*, int);
     void dumpToHDR(const char*) const;
 };
 
@@ -67,6 +88,7 @@ operator=(const Orbit &rhs) {
     UTCtime = rhs.UTCtime;
     position = rhs.position;
     velocity = rhs.velocity;
+    stateVectors = rhs.stateVectors;
     return *this;
 }
 

@@ -7,12 +7,12 @@
 
 #include <algorithm>
 #include <iostream>
+#include <chrono>
 #include <cmath>
 
 // pyre
 #include <portinfo>
 #include <pyre/journal.h>
-#include <pyre/timers.h>
 
 // isce::core
 #include "Constants.h"
@@ -29,12 +29,10 @@ resamp(const std::string & inputFilename,          // filename of input SLC
        const std::string & outputFilename,         // filename of output resampled SLC
        const std::string & rgOffsetFilename,       // filename of range offsets
        const std::string & azOffsetFilename,       // filename of azimuth offsets
-       bool flatten, bool isComplex, int rowBuffer) {
+       int inputBand, bool flatten, bool isComplex, int rowBuffer) {
 
     // Initialize journal channel for info
     pyre::journal::info_t infoChannel("isce.core.ResampSlc");
-    // Initialize timer
-    pyre::timer_t timer("isce.core.ResampSlc");
 
     // Check if data are not complex
     if (!isComplex) {
@@ -51,6 +49,8 @@ resamp(const std::string & inputFilename,          // filename of input SLC
     Raster inputSlc(inputFilename, GA_ReadOnly);
     Raster rgOffsetRaster(rgOffsetFilename, GA_ReadOnly);
     Raster azOffsetRaster(azOffsetFilename, GA_ReadOnly);
+    // Set the band number for input SLC
+    _inputBand = inputBand;
     // Cache width of SLC image
     const int inLength = inputSlc.length();
     const int inWidth = inputSlc.width();
@@ -72,10 +72,10 @@ resamp(const std::string & inputFilename,          // filename of input SLC
     infoChannel << 
         "Resampling using " << nTiles << " tiles of " << _linesPerTile 
         << " lines per tile"
-        << pyre::journal::newline << pyre::journal::newline;
+        << pyre::journal::newline << pyre::journal::endl;
 
     // Start timer
-    timer.start();
+    auto timerStart = std::chrono::steady_clock::now();
 
     // For each full tile of _linesPerTile lines...
     int outputLine = 0;
@@ -99,16 +99,17 @@ resamp(const std::string & inputFilename,          // filename of input SLC
         tile.declare(infoChannel);
     
         // Perform interpolation
-        infoChannel << "Interpolating tile " << tileCount << pyre::journal::newline;
+        infoChannel << "Interpolating tile " << tileCount << pyre::journal::endl;
         _transformTile(tile, outputSlc, rgOffsetRaster, azOffsetRaster, inLength,
             flatten, outputLine);
     }
 
     // Print out timing information and reset
-    timer.stop();
-    infoChannel << "Elapsed processing time: " << timer.read() << " sec"
+    auto timerEnd = std::chrono::steady_clock::now();
+    const double elapsed = 1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
+        timerEnd - timerStart).count();
+    infoChannel << "Elapsed processing time: " << elapsed << " sec"
                 << pyre::journal::endl;
-    timer.reset();
 }
 
 // Initialize tile bounds
@@ -170,7 +171,8 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, Raster & azOffsetRaster, int r
     // Read in tile.length() lines of data from the input image to the image block
     for (int i = 0; i < tile.length(); i++) {
         // Read line of data into tile
-        inputSlc.getLine(&tile[i*tile.width()], tile.firstImageRow() + i, tile.width());
+        inputSlc.getLine(&tile[i*tile.width()], tile.firstImageRow() + i,
+                         tile.width(), _inputBand);
         // Remove the carrier phases in parallel
         //#pragma omp parallel for
         for (int j = 0; j < inWidth; j++) {
@@ -210,7 +212,7 @@ _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
         azOffsetRaster.getLine(residAz, i);
 
         // Loop over width
-        //#pragma omp parallel for firstPrivate(chip)
+        #pragma omp parallel for firstprivate(chip)
         for (int j = 0; j < outWidth; ++j) {
            
             // Unpack offsets

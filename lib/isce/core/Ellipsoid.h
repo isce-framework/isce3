@@ -8,9 +8,10 @@
 #ifndef ISCE_CORE_ELLIPSOID_H
 #define ISCE_CORE_ELLIPSOID_H
 
+#include <cstdio>
 #include <cmath>
 #include <array>
-#include "Constants.h"
+#include "Basis.h"
 
 // Declaration
 namespace isce {
@@ -50,6 +51,7 @@ class isce::core::Ellipsoid {
                           const cartesian_t &, cartesian_t &) const;
         void TCNbasis(const cartesian_t &, const cartesian_t &, cartesian_t &,
                       cartesian_t &, cartesian_t &) const;
+        void TCNbasis(const cartesian_t &, const cartesian_t &, Basis &) const;
 
     private:
         double _a;
@@ -69,7 +71,7 @@ double isce::core::Ellipsoid::rEast(double lat) const {
 
 double isce::core::Ellipsoid::rNorth(double lat) const {
     // Radius of Ellipsoid in North direction (assuming latitude-wise symmetry)
-    return (_a * (1.0 - _e2)) / std::pow((1.0 - (_e2 * std::pow(lat, 2))), 1.5);
+    return (_a * (1.0 - _e2)) / std::pow((1.0 - (_e2 * std::pow(std::sin(lat), 2))), 1.5);
 }
 
 double isce::core::Ellipsoid::rDir(double hdg, double lat) const {

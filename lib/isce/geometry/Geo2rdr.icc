@@ -1,0 +1,80 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Author: Bryan V. Riel
+// Copyright 2017-2018
+
+#if !defined(ISCE_GEOMETRY_GEO2RDR_ICC)
+#error "Geo2rdr.icc is an implementation detail of class Geo2rdr"
+#endif
+
+// Constructor
+isce::geometry::Geo2rdr::
+Geo2rdr(isce::core::Ellipsoid ellipsoid, isce::core::Orbit orbit, isce::core::Metadata meta) {
+    // Copy objects
+    _ellipsoid = ellipsoid;
+    _orbit = orbit;
+    _meta = meta;
+    // For numerical precision purposes, set reference epoch 2 days prior
+    _refEpoch._init(_meta.sensingStart.year, _meta.sensingStart.months,
+                    _meta.sensingStart.days - 2, 0, 0, 0, 0.0);
+    // Reformat orbit using this epoch
+    _orbit.reformatOrbit(_refEpoch);
+}
+
+// Set threshold
+void isce::geometry::Geo2rdr::
+threshold(double t) {
+    _threshold = t;
+}
+
+// Set number of iterations
+void isce::geometry::Geo2rdr::
+numiter(int n) {
+    _numiter = n;
+}
+
+// Set the orbit interpolation method while checking its validity
+void isce::geometry::Geo2rdr::
+orbitMethod(isce::core::orbitInterpMethod method) {
+
+    // Check validity
+    if (method == isce::core::HERMITE_METHOD) {
+        if (_orbit.nVectors < 4) {
+            pyre::journal::error_t error("isce.geometry.Geo2rdr");
+            error
+                << pyre::journal::at(__HERE__)
+                << "Error in Geo2rdr::orbitMethod - Need at least 4 state vectors for using "
+                << "hermite polynomial interpolation."
+                << pyre::journal::endl;
+        }
+    } else if (method == isce::core::SCH_METHOD) {
+        if (_orbit.nVectors < 4) {
+            pyre::journal::error_t error("isce.geometry.Geo2rdr");
+            error
+                << pyre::journal::at(__HERE__)
+                << "Error in Geo2rdr::orbitMethod - Need at least 4 state vectors for using "
+                << "SCH interpolation."
+                << pyre::journal::endl;
+        }
+    } else if (method == isce::core::LEGENDRE_METHOD) {
+        if (_orbit.nVectors < 9) {
+            pyre::journal::error_t error("isce.geometry.Geo2rdr");
+            error
+                << pyre::journal::at(__HERE__)
+                << "Error in Geo2rdr::orbitMethod - Need at least 9 state vectors for using "
+                << "legendre polynomial interpolation."
+                << pyre::journal::endl;
+        }
+    } else {
+        pyre::journal::error_t error("isce.geometry.Geo2rdr");
+        error
+            << pyre::journal::at(__HERE__)
+            << "Error in Geo2rdr::orbitMethod - Undefined orbit interpolation method."
+            << pyre::journal::endl;
+    }
+
+    // Save
+    _orbitMethod = method;
+}
+

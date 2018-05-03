@@ -15,7 +15,7 @@
 #include <typeindex>
 #include <complex>
 #include <cstdint>
-#include "gdal_priv.h"
+#include <gdal_priv.h>
 
 
 // Macro wrapper to check vector lengths (adds calling function and variable name information to the

@@ -27,6 +27,7 @@ struct isce::core::TimeDelta {
     double frac;
 
     // Constructors
+    TimeDelta();
     TimeDelta(double ss);
     TimeDelta(int hh, int mm, int ss);
     TimeDelta(int hh, int mm, double ss);
@@ -54,6 +55,7 @@ struct isce::core::TimeDelta {
 
     // Math operators
     TimeDelta& operator=(const TimeDelta& ts);
+    TimeDelta& operator=(double ss);
     TimeDelta& operator+=(const TimeDelta& ts);
     TimeDelta& operator+=(const double& s);
     TimeDelta& operator-=(const TimeDelta& ts);

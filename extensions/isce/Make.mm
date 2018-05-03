@@ -8,44 +8,31 @@
 # project global settings
 include isce.def
 
-# my subdirectories
-RECURSE_DIRS = \
-    $(PACKAGES)
-
-# the ones that are always available
-PACKAGES = \
-    core \
+# the package
+PACKAGE = extensions
+# the module
+MODULE = isceextension
+# use a tmp directory that knows the name of the module
+PROJ_TMPDIR = $(BLD_TMPDIR)/extensions/$(PROJECT)/$(MODULE)
 
 # project settings: do not remove core directory (core usually refers core dump file)
 # filter-out info at: https://www.gnu.org/software/make/manual/html_node/index.html
 PROJ_TIDY := ${filter-out core, $(PROJ_TIDY)}
 
-# the standard targets
+# my includes
+PROJ_CXX_INCLUDES = $(EXPORT_INCDIR)
+# point to the location of my libraries
+PROJ_LCXX_LIBPATH = $(BLD_LIBDIR)
+# link against these
+PROJ_LIBRARIES = -lisce.$(PROJECT_MAJOR).$(PROJECT_MINOR) -ljournal
 
-all:
-	BLD_ACTION="all" $(MM) recurse
+# the sources
+MODULE_CYTHON_PYX = \
 
-tidy::
-	BLD_ACTION="tidy" $(MM) recurse
+# the headers
+MODULE_CYTHON_PXD = \
 
-clean::
-	BLD_ACTION="clean" $(MM) recurse
-
-distclean::
-	BLD_ACTION="distclean" $(MM) recurse
-
-live:
-	BLD_ACTION="live" $(MM) recurse
-
-# archiving support
-zipit:
-	cd $(EXPORT_ROOT); zip -r $(PYRE_ZIP) ${addprefix packages/, $(PACKAGES) --include \*.py}
-
-# shortcuts for building specific subdirectories
-.PHONY: $(RECURSE_DIRS)
-
-$(RECURSE_DIRS):
-	(cd $@; $(MM))
-
+# use cython to build a python extension
+include std-cython.def
 
 # end of file

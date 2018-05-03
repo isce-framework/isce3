@@ -51,6 +51,9 @@ _init(int dd, int hh, int mm, int ss, double ff)
 }
 
 isce::core::TimeDelta::
+TimeDelta() : TimeDelta(0.0) {}
+
+isce::core::TimeDelta::
 TimeDelta(double ss)
 {
     int ipart = ss;
@@ -192,6 +195,23 @@ operator!=(double ts) const
 
 
 //Math operators
+isce::core::TimeDelta &
+isce::core::TimeDelta::
+operator=(const TimeDelta &ts) {
+    _init(ts.days, ts.hours, ts.minutes, ts.seconds, ts.frac);
+    _normalize();
+    return *this;
+}
+
+isce::core::TimeDelta &
+isce::core::TimeDelta::
+operator=(double ss) {
+    int ipart = ss;
+    double fpart = ss - ipart;
+    _init(0, 0, 0, ipart, fpart);
+    return *this;
+}
+
 isce::core::TimeDelta
 isce::core::TimeDelta::
 operator+(const TimeDelta &ts) const

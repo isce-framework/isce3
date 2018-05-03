@@ -18,6 +18,7 @@ PACKAGES = \
     datetime \
     doppler \
     ellipsoid \
+    interpolator \
     lut2d \
     orbit \
     poly \
