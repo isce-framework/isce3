@@ -40,6 +40,6 @@ cdef extern from "isce/core/ResampSlc.h" namespace "isce::core":
 
         # Main resamp entry point
         void resamp(const string &, const string &, const string &,
-                    const string &, bool, bool, int)
+                    const string &, int, bool, bool, int)
 
 # end of file
