@@ -31,19 +31,19 @@ using isce::core::StateVector;
 // Main topo driver
 void isce::geometry::Topo::
 topo(Raster & demRaster,
-     Poly2d & dopPoly, 
+     Poly2d & dopPoly,
      const std::string outdir) {
-    
+
     // Create reusable pyre::journal channels
     pyre::journal::warning_t warning("isce.geometry.Topo");
     pyre::journal::info_t info("isce.geometry.Topo");
 
     // First check that variables have been initialized
     checkInitialization(info);
-    
+
     // Output layers
     TopoLayers layers(_meta.width);
-    
+
     // Create rasters for individual layers
     Raster latRaster = Raster(outdir + "/lat.rdr", _meta.width, _meta.length, 1,
         GDT_Float64, "ISCE");
@@ -61,7 +61,7 @@ topo(Raster & demRaster,
         GDT_Float32, "ISCE");
     Raster simRaster = Raster(outdir + "/simamp.rdr", _meta.width, _meta.length, 1,
         GDT_Float32, "ISCE");
-    
+
     // Create and start a timer
     auto timerStart = std::chrono::steady_clock::now();
 
@@ -80,7 +80,7 @@ topo(Raster & demRaster,
 
         // Periodic diagnostic printing
         if ((line % 1000) == 0) {
-            info 
+            info
                 << "Processing line: " << line << " " << pyre::journal::newline
                 << "Dopplers near mid far: "
                 << dopPoly.eval(0, 0) << " "
@@ -96,10 +96,10 @@ topo(Raster & demRaster,
         Basis TCNbasis;
         StateVector state;
         _initAzimuthLine(line, state, TCNbasis);
-       
+
         // Compute velocity magnitude
         const double satVmag = LinAlg::norm(state.velocity());
-        
+
         // For each slant range bin
         const double radians = M_PI / 180.0;
         #pragma omp parallel for reduction(+:totalconv)
@@ -111,7 +111,7 @@ topo(Raster & demRaster,
             const double rng = _meta.rangeFirstSample + rbin*_meta.slantRangePixelSpacing;
 
             // Get current Doppler value
-            const double dopfact = (0.5 * _meta.radarWavelength 
+            const double dopfact = (0.5 * _meta.radarWavelength
                                  * (dopPoly.eval(0, rbin) / satVmag)) * rng;
 
             // Store slant range bin data in Pixel
@@ -131,7 +131,7 @@ topo(Raster & demRaster,
             _setOutputTopoLayers(llh, layers, pixel, state, TCNbasis, demInterp);
 
         } //end OMP for loop
-        
+
         // Write out line of data for every product
         latRaster.setLine(layers.lat(), line);
         lonRaster.setLine(layers.lon(), line);
@@ -142,6 +142,18 @@ topo(Raster & demRaster,
         localPsiRaster.setLine(layers.localPsi(), line);
         simRaster.setLine(layers.sim(), line);
     }
+
+    // Write out multi-band topo VRT
+    const std::vector rasterTopoVec = {Raster(outdir + "/lat.rdr" ),
+                                       Raster(outdir + "/lon.rdr" ),
+                                       Raster(outdir + "/z.rdr" ),
+                                       Raster(outdir + "/inc.rdr" ),
+                                       Raster(outdir + "/hdg.rdr" ),
+                                       Raster(outdir + "/localInc.rdr" ),
+                                       Raster(outdir + "/localPsi.rdr" ),
+                                       Raster(outdir + "/simamp.rdr" )};
+    Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
+
 
     // Print out timing information and reset
     auto timerEnd = std::chrono::steady_clock::now();
@@ -161,9 +173,9 @@ void isce::geometry::Topo::
 _initAzimuthLine(int line, StateVector & state, Basis & TCNbasis) {
 
     // Get satellite azimuth time
-    const double tline = _meta.sensingStart.secondsSinceEpoch() 
+    const double tline = _meta.sensingStart.secondsSinceEpoch()
                       + (_meta.numberAzimuthLooks * (line/_meta.prf));
-    
+
     // Get state vector
     cartesian_t xyzsat, velsat;
     int stat = _orbit.interpolate(tline, xyzsat, velsat, _orbitMethod);
@@ -192,7 +204,7 @@ _initAzimuthLine(int line, StateVector & state, Basis & TCNbasis) {
     // Convert satellite position to lat-lon
     cartesian_t llhsat;
     _ellipsoid.xyzToLatLon(xyzsat, llhsat);
-    
+
     // Set peg point right below satellite
     _peg.lat = llhsat[0];
     _peg.lon = llhsat[1];
@@ -235,7 +247,7 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
             // Get proper slant range bin and Doppler factor
             int rbin = ind * (_meta.width - 1);
             double rng = _meta.rangeFirstSample + rbin*_meta.slantRangePixelSpacing;
-            double dopfact = (0.5 * _meta.radarWavelength * (dopPoly.eval(0, rbin) 
+            double dopfact = (0.5 * _meta.radarWavelength * (dopPoly.eval(0, rbin)
                             / satVmag)) * rng;
             // Store in Pixel object
             Pixel pixel(rng, dopfact, rbin);
@@ -314,7 +326,7 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
 
     // Compute unit velocity vector
     LinAlg::unitVec(state.velocity(), vhat);
-    
+
     // Computation in ENU coordinates around target
     LinAlg::enuBasis(targetLLH[0], targetLLH[1], enumat);
     LinAlg::tranMat(enumat, xyz2enu);
@@ -335,7 +347,7 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
                  / LinAlg::dot(vhat, that);
     double beta = -1 * _meta.lookSide * std::sqrt(
                    rng * rng * sintheta * sintheta - alpha * alpha);
-    
+
     // LOS vectors
     layers.inc(bin, std::acos(cosalpha) * degrees);
     layers.hdg(bin, (std::atan2(-enu[1], -enu[0]) - (0.5*M_PI)) * degrees);
@@ -344,13 +356,13 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     aa = demInterp.interpolate(lat, lon - demInterp.deltaLon());
     bb = demInterp.interpolate(lat, lon + demInterp.deltaLon());
     gamma = lat * radians;
-    alpha = ((bb - aa) * degrees) 
+    alpha = ((bb - aa) * degrees)
           / (2.0 * _ellipsoid.rEast(gamma) * demInterp.deltaLon());
-    
+
     // North-south slope using central difference
     aa = demInterp.interpolate(lat - demInterp.deltaLat(), lon);
     bb = demInterp.interpolate(lat + demInterp.deltaLat(), lon);
-    beta = ((bb - aa) * degrees) 
+    beta = ((bb - aa) * degrees)
          / (2.0 * _ellipsoid.rNorth(gamma) * demInterp.deltaLat());
 
     // Compute local incidence angle
