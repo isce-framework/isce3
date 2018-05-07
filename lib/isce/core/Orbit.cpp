@@ -161,7 +161,7 @@ orbitHermite(const std::vector<cartesian_t> &x, const std::vector<cartesian_t> &
     // No error checking needed, x/v/t were created (not passed) and xx/vv were size-checked before
     // passing through
 
-    std::vector<double> f0(4), f1(4);
+    std::array<double, 4> f0, f1, h, hdot, g0, g1;
     double sum;
     for (int i=0; i<4; i++) {
         f1[i] = time - t[i];
@@ -172,7 +172,6 @@ orbitHermite(const std::vector<cartesian_t> &x, const std::vector<cartesian_t> &
         f0[i] = 1. - (2. * (time - t[i]) * sum);
     }
 
-    std::vector<double> h(4), hdot(4);
     double product;
     for (int i=0; i<4; i++) {
         product = 1.;
@@ -191,7 +190,6 @@ orbitHermite(const std::vector<cartesian_t> &x, const std::vector<cartesian_t> &
         hdot[i] = sum;
     }
 
-    std::vector<double> g0(4), g1(4);
     for (int i=0; i<4; i++) {
         g1[i] = h[i] + (2. * (time - t[i]) * hdot[i]);
         sum = 0.;
