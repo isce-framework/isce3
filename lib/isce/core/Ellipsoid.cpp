@@ -29,23 +29,26 @@ xyzToLatLon(const cartesian_t & xyz, cartesian_t & llh) const {
      * Given a geocentric XYZ, produces a lat, lon, and height above the reference ellipsoid.
      *      VERMEILLE IMPLEMENTATION
      */
+    // Pre-compute some values
+    const double e4 = _e2 * _e2;
+    const double a2 = _a * _a;
     // Lateral distance normalized by the major axis
-    double p = (std::pow(xyz[0], 2) + std::pow(xyz[1], 2)) / std::pow(_a, 2);
+    double p = (std::pow(xyz[0], 2) + std::pow(xyz[1], 2)) / a2;
     // Polar distance normalized by the minor axis
-    double q = ((1. - _e2) * std::pow(xyz[2], 2)) / std::pow(_a, 2);
-    double r = (p + q - std::pow(_e2, 2)) / 6.;
-    double s = (std::pow(_e2, 2) * p * q) / (4. * std::pow(r, 3));
-    double t = std::pow(1. + s + sqrt(s * (2. + s)), (1./3.));
+    double q = ((1. - _e2) * std::pow(xyz[2], 2)) / a2;
+    double r = (p + q - e4) / 6.;
+    double s = (e4 * p * q) / (4. * std::pow(r, 3));
+    double t = std::pow(1. + s + std::sqrt(s * (2. + s)), (1./3.));
     double u = r * (1. + t + (1. / t));
-    double rv = sqrt(std::pow(u, 2) + (std::pow(_e2, 2) * q));
+    double rv = std::sqrt(std::pow(u, 2) + (e4 * q));
     double w = (_e2 * (u + rv - q)) / (2. * rv);
-    double k = sqrt(u + rv + std::pow(w, 2)) - w;
+    double k = std::sqrt(u + rv + std::pow(w, 2)) - w;
     // Radius adjusted for eccentricity
-    double d = (k * sqrt(std::pow(xyz[0], 2) + std::pow(xyz[1], 2))) / (k + _e2);
+    double d = (k * std::sqrt(std::pow(xyz[0], 2) + std::pow(xyz[1], 2))) / (k + _e2);
     // Latitude is a function of z and radius
-    llh[0] = atan2(xyz[2], d);
+    llh[0] = std::atan2(xyz[2], d);
     // Longitude is a function of x and y
-    llh[1] = atan2(xyz[1], xyz[0]);
+    llh[1] = std::atan2(xyz[1], xyz[0]);
     // Height is a function of location and radius
     llh[2] = ((k + _e2 - 1.) * sqrt(std::pow(d, 2) + std::pow(xyz[2], 2))) / k;
 }
