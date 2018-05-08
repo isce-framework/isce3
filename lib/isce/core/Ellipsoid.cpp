@@ -34,7 +34,7 @@ xyzToLatLon(const cartesian_t & xyz, cartesian_t & llh) const {
     // Polar distance normalized by the minor axis
     double q = ((1. - _e2) * std::pow(xyz[2], 2)) / std::pow(_a, 2);
     double r = (p + q - std::pow(_e2, 2)) / 6.;
-    double s = (std::pow(_e2, 2) * p * q) / (4. * std::pow(r, 3.));
+    double s = (std::pow(_e2, 2) * p * q) / (4. * std::pow(r, 3));
     double t = std::pow(1. + s + sqrt(s * (2. + s)), (1./3.));
     double u = r * (1. + t + (1. / t));
     double rv = sqrt(std::pow(u, 2) + (std::pow(_e2, 2) * q));
