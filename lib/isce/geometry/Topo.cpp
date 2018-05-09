@@ -89,9 +89,6 @@ topo(Raster & demRaster,
                 << pyre::journal::endl;
         }
 
-        //if (line != 14936) continue;
-        //if (line != 2500) continue;
-
         // Initialize orbital data for this azimuth line
         Basis TCNbasis;
         StateVector state;
@@ -104,8 +101,6 @@ topo(Raster & demRaster,
         const double radians = M_PI / 180.0;
         #pragma omp parallel for reduction(+:totalconv)
         for (int rbin = 0; rbin < _meta.width; ++rbin) {
-
-            //if (rbin != 1013) continue;
 
             // Get current slant range
             const double rng = _meta.rangeFirstSample + rbin*_meta.slantRangePixelSpacing;
@@ -144,16 +139,17 @@ topo(Raster & demRaster,
     }
 
     // Write out multi-band topo VRT
-    const std::vector rasterTopoVec = {Raster(outdir + "/lat.rdr" ),
-                                       Raster(outdir + "/lon.rdr" ),
-                                       Raster(outdir + "/z.rdr" ),
-                                       Raster(outdir + "/inc.rdr" ),
-                                       Raster(outdir + "/hdg.rdr" ),
-                                       Raster(outdir + "/localInc.rdr" ),
-                                       Raster(outdir + "/localPsi.rdr" ),
-                                       Raster(outdir + "/simamp.rdr" )};
+    const std::vector<Raster> rasterTopoVec = {
+        Raster(outdir + "/lat.rdr" ),
+        Raster(outdir + "/lon.rdr" ),
+        Raster(outdir + "/z.rdr" ),
+        Raster(outdir + "/inc.rdr" ),
+        Raster(outdir + "/hdg.rdr" ),
+        Raster(outdir + "/localInc.rdr" ),
+        Raster(outdir + "/localPsi.rdr" ),
+        Raster(outdir + "/simamp.rdr" )
+    };
     Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
-
 
     // Print out timing information and reset
     auto timerEnd = std::chrono::steady_clock::now();
