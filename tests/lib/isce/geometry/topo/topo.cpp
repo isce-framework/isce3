@@ -53,7 +53,7 @@ TEST(TopoTest, RunTopo) {
     }
 
     // Open DEM raster
-    isce::core::Raster demRaster("../../data/cropped.dem");
+    isce::core::Raster demRaster("../../data/cropped.dem.grd");
 
     // Run topo
     topo.topo(demRaster, doppler, ".");
