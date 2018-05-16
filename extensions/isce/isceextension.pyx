@@ -33,6 +33,7 @@ include "core/pyRaster.pyx"
 include "core/pyResampSlc.pyx"
 
 # Include the geometry extensions
+include "geometry/pygeometry.pyx"
 include "geometry/pyTopo.pyx"
 include "geometry/pyGeo2rdr.pyx"
 

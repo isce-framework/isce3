@@ -12,3 +12,4 @@ set (MISCELOCATION ${CMAKE_BINARY_DIR}/extensions/isce)
 set(NOSE_PYTHONPATH "${MISCELOCATION}:$ENV{PYTHONPATH}" CACHE INTERNAL "python paths for nosetests")
 
 add_subdirectory(poly)
+add_subdirectory(geometry)
