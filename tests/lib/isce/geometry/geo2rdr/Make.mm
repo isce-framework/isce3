@@ -22,7 +22,7 @@ test: $(TESTS)
             } done
 
 # build
-PROJ_CLEAN += $(TESTS) range.off range.hdr azimuth.off azimuth.hdr
+PROJ_CLEAN += $(TESTS) range.off range.off.xml azimuth.off azimuth.off.xml
 PROJ_CXX_INCLUDES += $(EXPORT_ROOT)/include/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)
 PROJ_LIBRARIES = -lisce.$(PROJECT_MAJOR).$(PROJECT_MINOR) -lgtest
 LIBRARIES = $(PROJ_LIBRARIES) $(EXTERNAL_LIBS)
