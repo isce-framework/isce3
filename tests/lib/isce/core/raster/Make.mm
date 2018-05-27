@@ -10,6 +10,7 @@ include isce.def
 # the pile of tests
 TESTS = \
     raster \
+    rasterepsg \
     #lineiter \
 
 all: test clean
@@ -22,7 +23,7 @@ test: $(TESTS)
             } done
 
 # build
-PROJ_CLEAN += $(TESTS) inc.bin inc.hdr lat.tif lon lon.vrt msk msk.bin topo.vrt
+PROJ_CLEAN += $(TESTS) inc.bin inc.hdr lat.tif lon lon.vrt msk msk.bin topo.vrt test.vrt
 PROJ_CXX_INCLUDES += $(EXPORT_ROOT)/include/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)
 PROJ_LIBRARIES = -lisce.$(PROJECT_MAJOR).$(PROJECT_MINOR) -lgtest
 LIBRARIES = $(PROJ_LIBRARIES) $(EXTERNAL_LIBS)

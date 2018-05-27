@@ -113,6 +113,22 @@ namespace isce {
       template<typename T> void setBlock(std::vector<T>&, size_t, size_t, size_t, size_t);
       template<typename T> void setBlock(std::valarray<T>&, size_t, size_t, size_t, size_t, size_t);
       template<typename T> void setBlock(std::valarray<T>&, size_t, size_t, size_t, size_t);
+     
+
+      //Functions to deal with projections and geotransform information
+      int getEPSG();
+      int setEPSG(int);
+      inline void setGeoTransform(double *);
+      inline void setGeoTransform(std::vector<double>&);
+      inline void setGeoTransform(std::valarray<double>&);
+      inline void getGeoTransform(double *) const;
+      inline void getGeoTransform(std::vector<double>&) const;
+      inline void getGeoTransform(std::valarray<double>&) const;
+      //Read only functions for specific elements
+      inline double x0() const;
+      inline double y0() const;
+      inline double dx() const;
+      inline double dy() const;
       
     private:
       
