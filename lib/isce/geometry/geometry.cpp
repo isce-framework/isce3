@@ -203,9 +203,47 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
     // Pre-compute scale factor for doppler
     const double dopscale = 0.5 * meta.radarWavelength;
 
-    // Starting guess for azimuth time is middle of orbit
-    aztime = orbit.UTCtime[orbit.nVectors / 2];
-    
+    // Compute minimum and maximum valid range
+    const double rangeMin = meta.rangeFirstSample;
+    const double rangeMax = rangeMin + meta.slantRangePixelSpacing * (meta.width - 1);
+
+    // Compute azimuth time spacing for coarse grid search 
+    const int NUM_AZTIME_TEST = 15;
+    const double tstart = orbit.UTCtime[0];
+    const double tend = orbit.UTCtime[orbit.nVectors - 1];
+    const double delta_t = (tend - tstart) / (1.0 * (NUM_AZTIME_TEST - 1));
+  
+    // Find azimuth time with minimum valid range distance to target 
+    double slantRange_closest = 1.0e16; 
+    double aztime_closest = -1000.0;
+    for (int k = 0; k < NUM_AZTIME_TEST; ++k) {
+        // Interpolate orbit
+        aztime = tstart + k * delta_t;
+        int status = orbit.interpolateWGS84Orbit(aztime, satpos, satvel);
+        if (status != 0)
+            continue;
+        // Compute slant range
+        LinAlg::linComb(1.0, inputXYZ, -1.0, satpos, dr);
+        slantRange = LinAlg::norm(dr);
+        // Check validity
+        if (slantRange < rangeMin)
+            continue;
+        if (slantRange > rangeMax)
+            continue;
+        // Update best guess
+        if (slantRange < slantRange_closest) {
+            slantRange_closest = slantRange;
+            aztime_closest = aztime;
+        }
+    }
+
+    // If we did not find a good guess, use tmid as intial guess
+    if (aztime_closest < 0.0) {
+        aztime = orbit.UTCtime[orbit.nVectors / 2];
+    } else {
+        aztime = aztime_closest;
+    }
+
     // Begin iterations
     int converged = 0;
     double slantRange_old = 0.0;
