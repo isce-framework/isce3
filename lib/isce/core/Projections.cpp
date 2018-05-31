@@ -366,6 +366,41 @@ int CEA::inverse(const cartesian_t &enu, cartesian_t &llh) const {
 }
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+/* * * * * * * * * * * * * * * * * * * Projection Factory * * * * * * * * * * * * * * * * * * */
+ProjectionBase* createProj(int epsgcode)
+{
+    //Check for Lat/Lon
+    if (epsgcode == 4326)
+    {
+        return new isce::core::LonLat;
+    }
+    //Check for Geocentric
+    else if (epsgcode == 4978)
+    {
+        return new Geocent;
+    }
+    //Check if UTM
+    else if (epsgcode > 32600 && epsgcode < 32800)
+    {
+        return new UTM{epsgcode};
+    }
+    //Check if Polar Stereo
+    else if (epsgcode == 3031  || epsgcode == 3413)
+    {
+        return new PolarStereo{epsgcode};
+    }
+    //EASE2 grid
+    else if (epsgcode == 6933)
+    {
+        return new CEA;
+    }
+    else
+    {
+        throw "Unknown EPSG code in factory";
+    }
+}
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 /* * * * * * * * * * * * * * * * * * * Projection Transformer * * * * * * * * * * * * * * * * * * */
 int projTransform(ProjectionBase &in, ProjectionBase &out, const cartesian_t &inpts,
                   cartesian_t &outpts) {
