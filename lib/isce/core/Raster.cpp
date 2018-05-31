@@ -113,7 +113,152 @@ isce::core::Raster::Raster(const std::string& fname, const std::vector<Raster>& 
 }
 
 
+//Auto-identify EPSG code for input raster file
+//We will delegation auto-discovery to GDAL
+int isce::core::Raster::getEPSG()
+{
+    int epsgcode = -9999;
 
+    //Extract WKT string corresponding to the dataset
+    const char* pszProjection = GDALGetProjectionRef(_dataset);
+
+    //If WKT string is not empty
+    if ((pszProjection != nullptr) && strlen(pszProjection)>0)
+    {
+        //Create a spatial reference object
+        OGRSpatialReference hSRS(nullptr);
+
+        //Try to import WKT discovered from dataset
+        if ( hSRS.importFromWkt(pszProjection) == 0 )
+        {
+
+            //This part of the code is for features below GDAL 2.3
+            //We are forced to use AutoIdentifyEPSG which is not complete
+            
+#if GDAL_VERSION_MINOR < 3
+            if (hSRS.AutoIdentifyEPSG() == 0) 
+            {
+                std::string authorityName, authorityCode;
+
+                //For geographic system, authority is provided by GEOGCS
+                if (hSRS.IsGeographic())
+                {
+                    std::cout << "Geographic \n";
+                    authorityName.assign("GEOGCS");
+                }
+                //For projected system, authority is provided by PROJCS
+                else if (hSRS.IsProjected())
+                {
+                    std::cout << "Projected \n";
+                    authorityName.assign("PROJCS");
+                }
+                else if (hSRS.IsLocal())
+                {
+                    throw "EPSG codes associated with local systems are not supported";
+                }
+                else
+                {
+                    throw "Unsupported coordinate system encountered";
+                }
+
+                //Use authority name to extract authority code
+                const char* ptr = authorityName.c_str();
+                authorityCode.assign( hSRS.GetAuthorityCode(ptr));
+                epsgcode = std::atoi(authorityCode.c_str());
+            }
+            else
+            {
+                epsgcode = -9997;
+                //Should be captured by journal in future
+                std::cout << "Could not auto-identify EPSG for wkt representation: \n";
+                std::cout << pszProjection << "\n";
+            }
+#else
+            //GDAL 2.3 provides OSRFindMatches which is more robust and thorough.
+            //Auto-discovery is only bound to get better. 
+            //GDAL 2.3 (May 2018) is still relatively new. 
+            //In about a year's time we will be able
+            //to deprecate the above part.
+            int nEntries = 0;
+            int* panConfidence = nullptr;
+            OGRSpatialReferenceH* pahSRS = nullptr;
+
+            //This is GDAL 2.3+ way of auto-discovering projection system
+            pahSRS = OSRFindMatches( reinterpret_cast<OGRSpatialReferenceH>(
+                                        const_cast<OGRSpatialReference*>(&hSRS)),
+                                    nullptr, &nEntries, &panConfidence);
+
+            //If number of matching entries is greater than 0
+            if (nEntries > 0)
+            {
+                //If the best match has 100% confidence level
+                if (panConfidence[0] == 100)
+                {
+                    OGRSpatialReference oSRS = *reinterpret_cast<OGRSpatialReference*>(pahSRS[0]);
+                    const char* pszAuthorityCode = oSRS.GetAuthorityCode(nullptr);
+                    if (pszAuthorityCode)
+                        epsgcode = std::atoi(pszAuthorityCode);
+                }
+                else
+                {
+                    epsgcode = -9996;
+                    std::cout << "Could not find a 100% match in EPSG data base for wkt: \n";
+                    std::cout << pszProjection << "\n";
+                }
+            }
+            else
+            {
+                epsgcode = -9997;
+                std::cout << "Could not find a match in EPSG data base for wkt: \n";
+                std::cout << pszProjection << "\n";
+            }
+
+            OSRFreeSRSArray(pahSRS);
+            CPLFree(panConfidence);
+#endif
+        }
+        else
+        {
+            epsgcode = -9998;
+            std::cout << "Could not interpret following string as a valid wkt projection \n";
+            std::cout << pszProjection << "\n";
+        }
+    }
+
+    return epsgcode; 
+}
+
+//Set projection system for raster based on EPSG code
+int isce::core::Raster::setEPSG(int epsgcode)
+{
+    int status = 1;
+
+    //Create a spatial reference object
+    OGRSpatialReference hSRS(nullptr);
+
+    //Try importing from EPSGcode 
+    if (hSRS.importFromEPSG(epsgcode) == 0)
+    {
+        char *pszOutput = nullptr;
+
+        //Export to WKT
+        hSRS.exportToWkt( &pszOutput);
+
+        //Set projection for dataset
+        _dataset->SetProjection(pszOutput);
+
+        CPLFree(pszOutput);
+
+        status = 0;
+    }
+    else
+    {
+        //Should use journal logging in future
+        std::cout << "Could not interpret EPSG code: " << epsgcode << "\n";
+    }
+
+    return status;
+}
 // Destructor. When GDALOpenShared() is used the dataset is dereferenced
 // and closed only if the referenced count is less than 1.
 isce::core::Raster::~Raster() {

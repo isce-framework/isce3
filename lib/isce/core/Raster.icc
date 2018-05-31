@@ -444,3 +444,92 @@ void isce::core::Raster::setBlock(std::valarray<T> &buffer, size_t xidx, size_t 
 				  size_t iowidth, size_t iolength) {
   setBlock(buffer, xidx, yidx, iolength, iowidth, 1);
 }
+
+
+//Section for projection related functions
+inline void isce::core::Raster::setGeoTransform(double* arr)
+{
+    int status = _dataset->SetGeoTransform(arr);
+    if (status != 0)
+    {
+        throw "Could not set GDAL GeoTransform";
+    }
+}
+
+inline void isce::core::Raster::setGeoTransform(std::vector<double>& arr)
+{
+    if (arr.size() != 6)
+    {
+        throw std::length_error("In isce::core::setGeoTransform() - vector is not of size 6");
+    }
+
+    setGeoTransform(arr.data());
+}
+
+inline void isce::core::Raster::setGeoTransform(std::valarray<double>& arr)
+{
+    if (arr.size() != 6)
+    {
+        throw std::length_error("In isce::core::setGeoTransform() - valarray is not of size 6");
+    }
+
+    setGeoTransform(&arr[0]);
+}
+
+inline void isce::core::Raster::getGeoTransform(double *arr) const
+{
+    int status = _dataset->GetGeoTransform(arr);
+    if (status != 0 )
+    {
+        throw "Could not fetch GDAL GeoTransform";
+    }
+}
+
+inline void isce::core::Raster::getGeoTransform(std::vector<double>& arr) const
+{
+    if (arr.size() != 6)
+    {
+        throw std::length_error("In isce::core::Raster::getGeoTransform() - vector is not of size 6");
+    }
+
+    getGeoTransform(arr.data());
+}
+
+inline void isce::core::Raster::getGeoTransform(std::valarray<double>& arr) const
+{
+    if (arr.size() != 6)
+    {
+        throw std::length_error("In isce::core::Raster::getGeoTransform() - valarray is not of size 6");
+    }
+
+    getGeoTransform(&arr[0]);
+}
+
+inline double isce::core::Raster::x0() const
+{
+    double trans[6];
+    getGeoTransform(trans);
+    return trans[0];
+}
+
+inline double isce::core::Raster::y0() const
+{
+    double trans[6];
+    getGeoTransform(trans);
+    return trans[3];
+}
+
+inline double isce::core::Raster::dx() const
+{
+    double trans[6];
+    getGeoTransform(trans);
+    return trans[1];
+}
+
+inline double isce::core::Raster::dy() const
+{
+    double trans[6];
+    getGeoTransform(trans);
+    return trans[5];
+}
+
