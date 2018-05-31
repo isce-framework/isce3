@@ -34,10 +34,10 @@ namespace isce { namespace core {
         virtual int inverse(const cartesian_t&,cartesian_t&) const = 0 ;
     };
 
-    // Standard WGS84 Lat/Lon Projection 
-    struct LatLon : public ProjectionBase {
+    // Standard WGS84 Lon/Lat Projection 
+    struct LonLat : public ProjectionBase {
         // Value constructor
-        LatLon() : ProjectionBase(4326) {}
+        LonLat() : ProjectionBase(4326) {}
         
         inline void print() const;
         // This will be a pass through for Lat/Lon
@@ -46,16 +46,16 @@ namespace isce { namespace core {
         inline int inverse(const cartesian_t&,cartesian_t&) const;
     };
 
-    inline void LatLon::print() const {
+    inline void LonLat::print() const {
         std::cout << "Projection: LatLon" << std::endl << "EPSG: " << _epsgcode << std::endl;
     }
 
-    inline int LatLon::forward(const cartesian_t &in, cartesian_t &out) const {
+    inline int LonLat::forward(const cartesian_t &in, cartesian_t &out) const {
         out = in;
         return 0;
     }
 
-    inline int LatLon::inverse(const cartesian_t &in, cartesian_t &out) const {
+    inline int LonLat::inverse(const cartesian_t &in, cartesian_t &out) const {
         out = in;
         return 0;
     }
@@ -87,7 +87,6 @@ namespace isce { namespace core {
         double Qn, Zb;
 
         // Value constructor
-        //UTM(Ellipsoid &elp, int code) : ProjectionBase(elp,code) { _setup(); }
         UTM(int);
 
         inline void print() const;
@@ -109,7 +108,6 @@ namespace isce { namespace core {
         bool isnorth;
 
         // Value constructor
-        //PolarStereo(Ellipsoid &elp, int code) : ProjectionBase(elp,code) { _setup(); }
         PolarStereo(int);
 
         inline void print() const;
@@ -131,7 +129,6 @@ namespace isce { namespace core {
         double lat_ts, k0, e, one_es, qp;
 
         // Value constructor
-        //CEA(Ellipsoid &elp, int code) : ProjectionBase(elp, code) { _setup(); }
         CEA();
 
         inline void print() const;
@@ -145,6 +142,9 @@ namespace isce { namespace core {
         std::cout << "Projection: Cylindrical Equal Area" << std::endl << "EPSG: " << _epsgcode <<
                      std::endl;
     }
+
+    //This is to create a projection system from the EPSG code
+    ProjectionBase* createProj(int epsg);
 
     // This is to transform a point from one coordinate system to another
     int projTransform(ProjectionBase* in, ProjectionBase *out, const cartesian_t &inpts,
