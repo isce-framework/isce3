@@ -69,7 +69,7 @@ add_subdirectory(tests)
 ###Setup doc
 FIND_PACKAGE(DOXYGEN)
 if (DOXYGEN_FOUND)
-    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)
+    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen/Doxyfile.in)
     set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
     CONFIGURE_FILE(${DOXYGEN_IN} ${DOXYGEN_OUT})
