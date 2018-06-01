@@ -121,15 +121,21 @@ int isce::core::Raster::getEPSG()
 
     //Extract WKT string corresponding to the dataset
     const char* pszProjection = GDALGetProjectionRef(_dataset);
-
+    
+    
     //If WKT string is not empty
     if ((pszProjection != nullptr) && strlen(pszProjection)>0)
     {
         //Create a spatial reference object
         OGRSpatialReference hSRS(nullptr);
 
+	//These two lines can be deleted if we enforce GDAL >= 2.3 
+	char* pszProjectionTmp = new char[strlen(pszProjection)];
+	strncpy(pszProjectionTmp, pszProjection, strlen(pszProjection));
+	
         //Try to import WKT discovered from dataset
-        if ( hSRS.importFromWkt(pszProjection) == 0 )
+	//if ( hSRS.importFromWkt(&pszProjection) == 0 )  // use char* if we enforce GDAL >= 2.3
+        if ( hSRS.importFromWkt( & pszProjectionTmp ) == 0 )
         {
 
             //This part of the code is for features below GDAL 2.3
