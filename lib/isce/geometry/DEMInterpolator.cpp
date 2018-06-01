@@ -10,7 +10,7 @@
 // Load DEM subset into memory
 void isce::geometry::DEMInterpolator::
 loadDEM(isce::core::Raster & demRaster,
-        double minLon, double maxLon, double minLat, double maxLat,
+        double minX, double maxX, double minY, double maxY,
         isce::core::dataInterpMethod interpMethod) {
 
     // Initialize journal
@@ -18,47 +18,47 @@ loadDEM(isce::core::Raster & demRaster,
 
     // Get original GeoTransform using raster
     double geoTransform[6];
-    demRaster.dataset()->GetGeoTransform(geoTransform);
-    const double firstlat = geoTransform[3];
-    const double firstlon = geoTransform[0];
-    const double deltalat = geoTransform[5];
-    const double deltalon = geoTransform[1];
-    const double lastlat = firstlat + (demRaster.length() - 2) * deltalat;
-    const double lastlon = firstlon + (demRaster.width() - 2) * deltalon;
+    demRaster.getGeoTransform(geoTransform);
+    const double firstY = geoTransform[3];
+    const double firstX = geoTransform[0];
+    const double deltaY = geoTransform[5];
+    const double deltaX = geoTransform[1];
+    const double lastY = firstY + (demRaster.length() - 2) * deltaY;
+    const double lastX = firstX + (demRaster.width() - 2) * deltaX;
 
     // Validate requested geographic bounds with input DEM raster
-    if (minLon < firstlon) {
+    if (minX < firstX) {
         warning << "West limit may be insufficient for global height range"
                 << pyre::journal::endl;
-        minLon = firstlon;
+        minX = firstX;
     }
-    if (maxLon > lastlon) {
+    if (maxX > lastX) {
         warning << "East limit may be insufficient for global height range"
                 << pyre::journal::endl;
-        maxLon = lastlon;
+        maxX = lastX;
     }
-    if (minLat < lastlat) {
+    if (minY < lastY) {
         warning << "South limit may be insufficient for global height range"
                 << pyre::journal::endl;
-        minLat = lastlat;
+        minY = lastY;
     }
-    if (maxLat > firstlat) {
+    if (maxY > firstY) {
         warning << "North limit may be insufficient for global height range"
                 << pyre::journal::endl;
-        maxLat = firstlat;
+        maxY = firstY;
     }
 
     // Compute pixel coordinates for geographic bounds
-    int xstart = int((minLon - firstlon) / deltalon);
-    int xend = int((maxLon - firstlon) / deltalon + 0.5);
-    int ystart = int((maxLat - firstlat) / deltalat);
-    int yend = int((minLat - firstlat) / deltalat - 0.5);
+    int xstart = int((minX - firstX) / deltaX);
+    int xend = int((maxX - firstX) / deltaX + 0.5);
+    int ystart = int((maxY - firstY) / deltaY);
+    int yend = int((minY - firstY) / deltaY - 0.5);
     
     // Store actual starting lat/lon for raster subset
-    _lonstart = firstlon + xstart * deltalon;
-    _latstart = firstlat + ystart * deltalat;
-    _deltalat = deltalat;
-    _deltalon = deltalon;
+    _xstart = firstX + xstart * deltaX;
+    _ystart = firstY + ystart * deltaY;
+    _deltax = deltaX;
+    _deltay = deltaY;
 
     // Resize memory
     const int width = xend - xstart;
@@ -86,10 +86,10 @@ declare() const {
     pyre::journal::info_t info("isce.core.DEMInterpolator");
     info << pyre::journal::newline
          << "Actual DEM bounds used:" << pyre::journal::newline
-         << "Top Left: " << _lonstart << " " << _latstart << pyre::journal::newline
-         << "Bottom Right: " << _lonstart + _deltalon * (_dem.width() - 1) << " "
-         << _latstart + _deltalat * (_dem.length() - 1) << " " << pyre::journal::newline
-         << "Spacing: " << _deltalon << " " << _deltalat << pyre::journal::newline
+         << "Top Left: " << _xstart << " " << _ystart << pyre::journal::newline
+         << "Bottom Right: " << _xstart + _deltax * (_dem.width() - 1) << " "
+         << _ystart + _deltay * (_dem.length() - 1) << " " << pyre::journal::newline
+         << "Spacing: " << _deltax << " " << _deltay << pyre::journal::newline
          << "Dimensions: " << _dem.width() << " " << _dem.length() << pyre::journal::newline;
 }
 
@@ -122,15 +122,15 @@ computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & 
 
 // Interpolate DEM
 double isce::geometry::DEMInterpolator::
-interpolate(double lat, double lon) const {
+interpolate(double x, double y) const {
     // If we don't have a DEM, just return reference height
     double value = _refHeight;
     if (!_haveRaster) {
         return value;
     } else {
         // Compute the row and column for requested lat and lon
-        const double row = (lat - _latstart) / _deltalat;
-        const double col = (lon - _lonstart) / _deltalon;
+        const double row = (y - _ystart) / _deltay;
+        const double col = (x - _xstart) / _deltax;
 
         // Check validity of interpolation coordinates
         const int irow = int(std::floor(row));

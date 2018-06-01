@@ -136,7 +136,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
         ellipsoid.xyzToLatLon(targetVec, targetLLH);
 
         // Interpolate DEM at current lat/lon point
-        targetLLH[2] = demInterp.interpolate(degrees*targetLLH[0], degrees*targetLLH[1]);
+        targetLLH[2] = demInterp.interpolate(degrees*targetLLH[1], degrees*targetLLH[0]);
         // Convert back to XYZ with interpolated height
         ellipsoid.latLonToXyz(targetLLH, targetVec);
         // Compute updated SCH coordinates
