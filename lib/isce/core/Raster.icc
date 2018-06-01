@@ -311,7 +311,7 @@ void isce::core::Raster::getSetBlock(T *buffer,            // i/o buffer of size
 template<typename T>
 void isce::core::Raster::getBlock(T *buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength, size_t band) {
-  getSetBlock(buffer, xidx, yidx, iolength, iowidth, band, GF_Read);
+  getSetBlock(buffer, xidx, yidx, iowidth, iolength, band, GF_Read);
 }
 
 
@@ -320,7 +320,7 @@ void isce::core::Raster::getBlock(T *buffer, size_t xidx, size_t yidx,
 template<typename T>
 void isce::core::Raster::getBlock(T *buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength) {
-  getSetBlock(buffer, xidx, yidx, iolength, iowidth, 1, GF_Read);
+  getSetBlock(buffer, xidx, yidx, iowidth, iolength, 1, GF_Read);
 }
 
 
@@ -331,7 +331,7 @@ void isce::core::Raster::getBlock(std::vector<T> &buffer, size_t xidx, size_t yi
 				  size_t iowidth, size_t iolength, size_t band) {
   
   if ((iolength * iowidth) <= buffer.size()) { // buffer is larger or equal than requested block
-    getBlock(buffer.data(), xidx, yidx, iolength, iowidth, band);
+    getBlock(buffer.data(), xidx, yidx, iowidth, iolength, band);
     
     if ((iolength * iowidth) < buffer.size())  // buffer is larger than requested block
       std::cout << "WARNING: In isce::core::Raster::getBlock() - Requested fewer elements than buffer size. " << std::endl;
@@ -346,7 +346,7 @@ void isce::core::Raster::getBlock(std::vector<T> &buffer, size_t xidx, size_t yi
 template<typename T>
 void isce::core::Raster::getBlock(std::vector<T> &buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength) {
-  getBlock(buffer, xidx, yidx, iolength, iowidth, 1);
+  getBlock(buffer, xidx, yidx, iowidth, iolength, 1);
 }
 
 
@@ -357,7 +357,7 @@ void isce::core::Raster::getBlock(std::valarray<T> &buffer, size_t xidx, size_t 
 				  size_t iowidth, size_t iolength, size_t band) {
   
   if ((iolength * iowidth) <= buffer.size()) { // buffer is larger or equal than requested block
-    getBlock(&buffer[0], xidx, yidx, iolength, iowidth, band);
+    getBlock(&buffer[0], xidx, yidx, iowidth, iolength, band);
     
     if ((iolength * iowidth) < buffer.size())  // buffer is larger than requested block
       std::cout << "WARNING: In isce::core::Raster::getBlock() - Requested fewer elements than buffer size. " << std::endl;
@@ -372,7 +372,7 @@ void isce::core::Raster::getBlock(std::valarray<T> &buffer, size_t xidx, size_t 
 template<typename T>
 void isce::core::Raster::getBlock(std::valarray<T> &buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength) {
-  getBlock(buffer, xidx, yidx, iolength, iowidth, 1);
+  getBlock(buffer, xidx, yidx, iowidth, iolength, 1);
 }
 
 
@@ -381,7 +381,7 @@ void isce::core::Raster::getBlock(std::valarray<T> &buffer, size_t xidx, size_t 
 template<typename T>
 void isce::core::Raster::setBlock(T *buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength, size_t band) {
-  getSetBlock(buffer, xidx, yidx, iolength, iowidth, band, GF_Write);
+  getSetBlock(buffer, xidx, yidx, iowidth, iolength, band, GF_Write);
 }
 
 
@@ -390,7 +390,7 @@ void isce::core::Raster::setBlock(T *buffer, size_t xidx, size_t yidx,
 template<typename T>
 void isce::core::Raster::setBlock(T *buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength) {
-  getSetBlock(buffer, xidx, yidx, iolength, iowidth, 1, GF_Write);
+  getSetBlock(buffer, xidx, yidx, iowidth, iolength, 1, GF_Write);
 }
 
 
@@ -401,7 +401,7 @@ void isce::core::Raster::setBlock(std::vector<T> &buffer, size_t xidx, size_t yi
 				  size_t iowidth, size_t iolength, size_t band) {
   
   if ((iolength * iowidth) <= buffer.size()) { // buffer is larger or equal than requested block
-    setBlock(buffer.data(), xidx, yidx, iolength, iowidth, band);
+    setBlock(buffer.data(), xidx, yidx, iowidth, iolength, band);
     
     if ((iolength * iowidth) < buffer.size())  // buffer is larger than requested block
       std::cout << "WARNING: In isce::core::Raster::getBlock() - Requested fewer elements than buffer size. " << std::endl;
@@ -416,7 +416,7 @@ void isce::core::Raster::setBlock(std::vector<T> &buffer, size_t xidx, size_t yi
 template<typename T>
 void isce::core::Raster::setBlock(std::vector<T> &buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength) {
-  setBlock(buffer, xidx, yidx, iolength, iowidth, 1);
+  setBlock(buffer, xidx, yidx, iowidth, iolength, 1);
 }
 
 
@@ -427,7 +427,7 @@ void isce::core::Raster::setBlock(std::valarray<T> &buffer, size_t xidx, size_t 
 				  size_t iowidth, size_t iolength, size_t band) {
   
   if ((iolength * iowidth) <= buffer.size()) { // buffer is larger or equal than requested block
-    setBlock(&buffer[0], xidx, yidx, iolength, iowidth, band);
+    setBlock(&buffer[0], xidx, yidx, iowidth, iolength, band);
     
     if ((iolength * iowidth) < buffer.size())  // buffer is larger than requested block
       std::cout << "WARNING: In isce::core::Raster::getBlock() - Requested fewer elements than buffer size. " << std::endl;
@@ -442,7 +442,7 @@ void isce::core::Raster::setBlock(std::valarray<T> &buffer, size_t xidx, size_t 
 template<typename T>
 void isce::core::Raster::setBlock(std::valarray<T> &buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength) {
-  setBlock(buffer, xidx, yidx, iolength, iowidth, 1);
+  setBlock(buffer, xidx, yidx, iowidth, iolength, 1);
 }
 
 
