@@ -65,14 +65,8 @@ loadDEM(isce::core::Raster & demRaster,
     const int length = yend - ystart;
     _dem.resize(length, width);
 
-    // Read data from raster
-    for (int i = 0; i < length; ++i) {
-        for (int j = 0; j < width; ++j) {
-            double value;
-            demRaster.getValue(value, j+xstart, i+ystart);
-            _dem(i,j) = value;
-        }
-    }
+    //Read in the DEM
+    demRaster.getBlock(_dem.data(), xstart, ystart, width, length);
     
     // Indicate we have loaded a valid raster
     _haveRaster = true;
