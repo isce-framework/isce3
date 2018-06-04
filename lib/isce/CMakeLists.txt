@@ -2,6 +2,7 @@
 # Pull in the source files
 include(core/CMakeLists.txt)
 include(geometry/CMakeLists.txt)
+include(io/CMakeLists.txt)
 
 # Set the output library
 set(PACKAGENAME isce)
