@@ -29,8 +29,10 @@ include "core/pyLinAlg.pyx"
 include "core/pyOrbit.pyx"
 include "core/pyPoly1d.pyx"
 include "core/pyPoly2d.pyx"
-include "core/pyRaster.pyx"
 include "core/pyResampSlc.pyx"
+
+# Include the io extensions
+include "io/pyRaster.pyx"
 
 # Include the geometry extensions
 include "geometry/pygeometry.pyx"

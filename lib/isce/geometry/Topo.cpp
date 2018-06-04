@@ -23,10 +23,10 @@
 // pull in some isce::core namespaces
 using isce::core::Basis;
 using isce::core::Pixel;
-using isce::core::Raster;
 using isce::core::Poly2d;
 using isce::core::LinAlg;
 using isce::core::StateVector;
+using isce::io::Raster;
 
 // Main topo driver
 void isce::geometry::Topo::

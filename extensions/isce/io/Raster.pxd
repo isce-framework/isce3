@@ -31,7 +31,7 @@ cdef extern from "gdal.h":
         GDT_CFloat64 = 11
         GDT_TypeCount = 12
 
-cdef extern from "isce/core/Raster.h" namespace "isce::core":
+cdef extern from "isce/io/Raster.h" namespace "isce::io":
    
     # Raster class
     cdef cppclass Raster:

@@ -21,15 +21,15 @@
 #include "Geo2rdr.h"
 
 // pull in some isce::core namespaces
-using isce::core::Raster;
+using isce::io::Raster;
 using isce::core::Poly2d;
 using isce::core::LinAlg;
 
 // Run geo2rdr with no offsets
 void isce::geometry::Geo2rdr::
-geo2rdr(isce::core::Raster & latRaster,
-        isce::core::Raster & lonRaster,
-        isce::core::Raster & hgtRaster,
+geo2rdr(isce::io::Raster & latRaster,
+        isce::io::Raster & lonRaster,
+        isce::io::Raster & hgtRaster,
         isce::core::Poly2d & doppler,
         const std::string & outdir) {
     geo2rdr(latRaster, lonRaster, hgtRaster, doppler, outdir, 0.0, 0.0);
@@ -37,9 +37,9 @@ geo2rdr(isce::core::Raster & latRaster,
 
 // Run geo2rdr - main entrypoint
 void isce::geometry::Geo2rdr::
-geo2rdr(isce::core::Raster & latRaster,
-        isce::core::Raster & lonRaster,
-        isce::core::Raster & hgtRaster,
+geo2rdr(isce::io::Raster & latRaster,
+        isce::io::Raster & lonRaster,
+        isce::io::Raster & hgtRaster,
         isce::core::Poly2d & doppler,
         const std::string & outdir,
         double azshift, double rgshift) {

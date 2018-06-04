@@ -4,7 +4,7 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 
 ####List the source files
 set(LOCAL_SRCS 
-
+    Raster.cpp
     )
 
 ####Append current path to every source file
@@ -15,8 +15,9 @@ endforeach()
 
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS
-
-
+    Constants.h
+    Raster.h
+    Raster.icc
 )
 
 ###Install headers into build/include

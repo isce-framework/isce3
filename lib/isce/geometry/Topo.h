@@ -13,7 +13,9 @@
 
 // isce::core
 #include <isce/core/Peg.h>
-#include <isce/core/Raster.h>
+
+// isce::io
+#include <isce/io/Raster.h>
 
 // isce::geometry
 #include "geometry.h"
@@ -47,14 +49,14 @@ class isce::geometry::Topo {
         inline void checkInitialization(pyre::journal::info_t &) const;
 
         // Run topo - main entrypoint
-        void topo(isce::core::Raster &,
+        void topo(isce::io::Raster &,
                   isce::core::Poly2d &,
                   const std::string);
 
     private:
 
         // Get DEM bounds using first/last azimuth line and slant range bin
-        void _computeDEMBounds(isce::core::Raster &,
+        void _computeDEMBounds(isce::io::Raster &,
                                DEMInterpolator &,
                                isce::core::Poly2d &);
 

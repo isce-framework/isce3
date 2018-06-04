@@ -14,8 +14,10 @@
 
 // isce::core
 #include "isce/core/Constants.h"
-#include "isce/core/Raster.h"
 #include "isce/core/Serialization.h"
+
+// isce::io
+#include "isce/io/Raster.h"
 
 // isce::geometry
 #include "isce/geometry/Serialization.h"
@@ -53,7 +55,7 @@ TEST(TopoTest, RunTopo) {
     }
 
     // Open DEM raster
-    isce::core::Raster demRaster("../../data/cropped.dem.grd");
+    isce::io::Raster demRaster("../../data/cropped.dem.grd");
 
     // Run topo
     topo.topo(demRaster, doppler, ".");
@@ -76,9 +78,9 @@ TEST(TopoTest, CheckResults) {
     // Loop over files
     for (size_t k = 0; k < layers.size(); ++k) {
         // Open the test raster
-        isce::core::Raster testRaster(test_dir + layers[k]);
+        isce::io::Raster testRaster(test_dir + layers[k]);
         // Open the reference raster
-        isce::core::Raster refRaster(ref_dir + layers[k]);
+        isce::io::Raster refRaster(ref_dir + layers[k]);
         // Compute sum of absolute error
         const size_t N = testRaster.length() * testRaster.width();
         double error = 0.0;

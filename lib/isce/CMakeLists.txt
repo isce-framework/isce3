@@ -11,7 +11,8 @@ set(${PACKAGENAME}_DLL isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 # Link sources to library
 add_library(${${PACKAGENAME}_DLL} SHARED
             ${core_SRCS}
-            ${geometry_SRCS})
+            ${geometry_SRCS}
+            ${io_SRCS})
 
 # Add library dependencies 
 target_link_libraries(${${PACKAGENAME}_DLL} ${GDAL_LIBRARY} ${PYRE_LIBRARY}

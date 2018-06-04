@@ -15,8 +15,10 @@
 // isce::core
 #include <isce/core/Constants.h>
 #include <isce/core/Interpolator.h>
-#include <isce/core/Raster.h>
 #include <isce/core/Projections.h>
+
+// isce::io
+#include <isce/io/Raster.h>
 
 // Declaration
 namespace isce {
@@ -34,7 +36,7 @@ class isce::geometry::DEMInterpolator {
         DEMInterpolator(float height) : _haveRaster(false), _refHeight(height) {}
 
         // Read in subset of data
-        void loadDEM(isce::core::Raster &demRaster,
+        void loadDEM(isce::io::Raster &demRaster,
                         double minX, double maxX,
                         double minY, double maxY,
                      isce::core::dataInterpMethod);

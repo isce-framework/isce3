@@ -14,8 +14,10 @@
 
 // isce::core
 #include "isce/core/Constants.h"
-#include "isce/core/Raster.h"
 #include "isce/core/Serialization.h"
+
+// isce::io
+#include "isce/io/Raster.h"
 
 // isce::geometry
 #include "isce/geometry/Serialization.h"
@@ -53,9 +55,9 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     }
 
     // Open lat raster
-    isce::core::Raster latRaster("../../data/topo/lat.rdr");
-    isce::core::Raster lonRaster("../../data/topo/lon.rdr");
-    isce::core::Raster hgtRaster("../../data/topo/z.rdr");
+    isce::io::Raster latRaster("../../data/topo/lat.rdr");
+    isce::io::Raster lonRaster("../../data/topo/lon.rdr");
+    isce::io::Raster hgtRaster("../../data/topo/z.rdr");
 
     // Run geo2rdr
     geo.geo2rdr(latRaster, lonRaster, hgtRaster, doppler, ".");
@@ -65,8 +67,8 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
 // Results should be very close to zero
 TEST(Geo2rdrTest, CheckResults) {
     // Open rasters
-    isce::core::Raster rgoffRaster("range.off");
-    isce::core::Raster azoffRaster("azimuth.off");
+    isce::io::Raster rgoffRaster("range.off");
+    isce::io::Raster azoffRaster("azimuth.off");
     double rg_error = 0.0;
     double az_error = 0.0;
     for (size_t i = 0; i < rgoffRaster.length(); ++i) {

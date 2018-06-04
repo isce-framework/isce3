@@ -23,7 +23,6 @@ PACKAGES = \
     orbit \
     poly \
     projections \
-    raster \
     serialization \
     resampslc \
 
