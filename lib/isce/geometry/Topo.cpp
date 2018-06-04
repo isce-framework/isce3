@@ -113,7 +113,7 @@ topo(Raster & demRaster,
             Pixel pixel(rng, dopfact, rbin);
 
             // Initialize LLH to middle of input DEM and average height
-            cartesian_t llh = {radians*demInterp.midLat(), radians*demInterp.midLon(), dem_avg};
+            cartesian_t llh = {radians*demInterp.midY(), radians*demInterp.midX(), dem_avg};
 
             // Perform rdr->geo iterations
             int geostat = rdr2geo(

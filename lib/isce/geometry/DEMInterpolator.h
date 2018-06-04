@@ -50,9 +50,9 @@ class isce::geometry::DEMInterpolator {
         double yStart() const { return _ystart; }
         double deltaX() const { return _deltax; }
         double deltaY() const { return _deltay; }
-        // Middle latitude and longitude
-        double midLon() const { return _xstart + 0.5*_dem.width()*_deltax; }
-        double midLat() const { return _ystart + 0.5*_dem.length()*_deltay; }
+        // Middle X and Y coordinates
+        double midX() const { return _xstart + 0.5*_dem.width()*_deltax; }
+        double midY() const { return _ystart + 0.5*_dem.length()*_deltay; }
 
     private:
         // Flag indicating whether we have access to a DEM raster
