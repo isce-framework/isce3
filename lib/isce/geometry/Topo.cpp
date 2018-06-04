@@ -113,7 +113,7 @@ topo(Raster & demRaster,
             Pixel pixel(rng, dopfact, rbin);
 
             // Initialize LLH to middle of input DEM and average height
-            cartesian_t llh = {radians*demInterp.midLat(), radians*demInterp.midLon(), dem_avg};
+            cartesian_t llh = {radians*demInterp.midY(), radians*demInterp.midX(), dem_avg};
 
             // Perform rdr->geo iterations
             int geostat = rdr2geo(
@@ -349,17 +349,17 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     layers.hdg(bin, (std::atan2(-enu[1], -enu[0]) - (0.5*M_PI)) * degrees);
 
     // East-west slope using central difference
-    aa = demInterp.interpolate(lat, lon - demInterp.deltaLon());
-    bb = demInterp.interpolate(lat, lon + demInterp.deltaLon());
+    aa = demInterp.interpolate(lon - demInterp.deltaX(), lat);
+    bb = demInterp.interpolate(lon + demInterp.deltaX(), lat);
     gamma = lat * radians;
     alpha = ((bb - aa) * degrees)
-          / (2.0 * _ellipsoid.rEast(gamma) * demInterp.deltaLon());
+          / (2.0 * _ellipsoid.rEast(gamma) * demInterp.deltaX());
 
     // North-south slope using central difference
-    aa = demInterp.interpolate(lat - demInterp.deltaLat(), lon);
-    bb = demInterp.interpolate(lat + demInterp.deltaLat(), lon);
+    aa = demInterp.interpolate(lon, lat - demInterp.deltaY());
+    bb = demInterp.interpolate(lon, lat + demInterp.deltaY());
     beta = ((bb - aa) * degrees)
-         / (2.0 * _ellipsoid.rNorth(gamma) * demInterp.deltaLat());
+         / (2.0 * _ellipsoid.rNorth(gamma) * demInterp.deltaY());
 
     // Compute local incidence angle
     const double enunorm = LinAlg::norm(enu);
