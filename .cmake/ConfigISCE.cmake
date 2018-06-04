@@ -90,7 +90,6 @@ function(CheckNosetests)
     FIND_PACKAGE(Nosetests)
 endfunction()
 
-
 function(InitInstallDirLayout)
     ###install/bin
     if (NOT ISCE_BINDIR)
@@ -139,5 +138,9 @@ function(InitInstallDirLayout)
         set (ISCE_TEMPLATESDIR templates CACHE STRING "isce/templates")
     endif(NOT ISCE_TEMPLATESDIR)
 
+    ###install/doc
+    if (NOT ISCE_DOCDIR)
+        set (ISCE_DOCDIR "doc" CACHE STRING "isce/doc")
+    endif(NOT ISCE_DOCDIR)
 endfunction()
 

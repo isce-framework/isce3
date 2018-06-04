@@ -1,0 +1,50 @@
+/*! \mainpage ISCE - InSAR Scientific Computing Environment
+
+
+<table border="0" cellspacing="4" cellpadding="4">
+
+<tr><td>
+ISCE is a Synthetic Aperture Radar (SAR) processing library on which data processing workflows for the <a href="http://nisar.jpl.nasa.gov">NISAR</a> mission is built. ISCE is released under the XXX license.
+As a library, it provides a variety of data structures (C++/ Python) that are used frequently in SAR/ InSAR data processing. ISCE also comes with a variety of useful data processing pipelines for SAR data processing.</td> 
+</tr>
+
+
+Repository: <a href="https://github-fn.jpl.nasa.gov/ericmg/isce">JPL github-fn</a><br>
+Download: TBD
+
+\section index_userdocs User Oriented Documentation
+
+<ul>
+<li> Stripmap mode processing
+<li> TOPS mode processing
+<li> ScanSAR mode processing
+<li> Working with ISCE-generated products in GIS
+</ul>
+
+
+\section index_devdocs Developer Oriented Documentation
+
+<ul>
+<li> <a href="datamodel.html">Data model</a>
+<li> <a href="corecpp.html">Core data structures in C++</a>
+<li> Core data structure in Python
+<li> <a href="geometry.html">Radar imaging geometry</a>
+<li> <a href="raster.html">Raster manipulation</a>
+</ul>
+
+
+\section index_userforum User Forum
+
+TBD
+
+
+\section index_bugs Bug Reporting
+
+TBD
+
+
+\section index_citing Citing ISCE in publications
+
+Please refer to the <a href="https://github-fn.jpl.nasa.gov/ericmg/isce/CITATION">CITATION</a> file.
+
+*/
