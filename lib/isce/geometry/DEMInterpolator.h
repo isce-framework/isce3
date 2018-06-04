@@ -16,6 +16,7 @@
 #include <isce/core/Constants.h>
 #include <isce/core/Interpolator.h>
 #include <isce/core/Raster.h>
+#include <isce/core/Projections.h>
 
 // Declaration
 namespace isce {
@@ -33,22 +34,25 @@ class isce::geometry::DEMInterpolator {
         DEMInterpolator(float height) : _haveRaster(false), _refHeight(height) {}
 
         // Read in subset of data
-        void loadDEM(isce::core::Raster &, double, double, double, double,
+        void loadDEM(isce::core::Raster &demRaster,
+                        double minX, double maxX,
+                        double minY, double maxY,
                      isce::core::dataInterpMethod);
         // Print stats
         void declare() const;
         // Compute max and mean DEM height
-        void computeHeightStats(float &, float &, pyre::journal::info_t &) const;
+        void computeHeightStats(float &maxValue, float &meanValue,
+                    pyre::journal::info_t &info) const;
         // Interpolate at a given latitude and longitude
-        double interpolate(double, double) const;
+        double interpolate(double x, double y) const;
         // Get transform properties
-        double lonStart() const { return _lonstart; }
-        double latStart() const { return _latstart; }
-        double deltaLon() const { return _deltalon; }
-        double deltaLat() const { return _deltalat; }
-        // Middle latitude and longitude
-        double midLon() const { return _lonstart + 0.5*_dem.width()*_deltalon; }
-        double midLat() const { return _latstart + 0.5*_dem.length()*_deltalat; }
+        double xStart() const { return _xstart; }
+        double yStart() const { return _ystart; }
+        double deltaX() const { return _deltax; }
+        double deltaY() const { return _deltay; }
+        // Middle X and Y coordinates
+        double midX() const { return _xstart + 0.5*_dem.width()*_deltax; }
+        double midY() const { return _ystart + 0.5*_dem.length()*_deltay; }
 
     private:
         // Flag indicating whether we have access to a DEM raster
@@ -57,8 +61,8 @@ class isce::geometry::DEMInterpolator {
         float _refHeight;
         // 2D array for storing DEM subset
         isce::core::Matrix<float> _dem;
-        // Starting lat/lon for DEM subset and spacing
-        double _lonstart, _latstart, _deltalon, _deltalat;
+        // Starting x/y for DEM subset and spacing
+        double _xstart, _ystart, _deltax, _deltay;
         // Interpolation method
         isce::core::dataInterpMethod _interpMethod;
 };

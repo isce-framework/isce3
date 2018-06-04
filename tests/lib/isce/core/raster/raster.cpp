@@ -28,7 +28,8 @@ inline bool exists(const std::string& name) {
 struct RasterTest : public ::testing::Test {
   const uint nc = 100;    // number of columns
   const uint nl = 200;    // number of lines
-  const uint nb = 5;      // block side length
+  const uint nbx = 5;      // block side length in x 
+  const uint nby = 7;      //block size length in y 
   const std::string latFilename = "lat.tif";
   const std::string lonFilename = "lon.vrt";
   const std::string incFilename = "inc.bin";
@@ -113,16 +114,16 @@ TEST_F(RasterTest, createTwoBandsENVIRaster) {
 // Populate first band of ENVI Raster with setBlock (blocks can't overflow image)
 TEST_F(RasterTest, setBlockBandOneENVIRaster) {
   isce::core::Raster inc = isce::core::Raster( incFilename, GA_Update );
-  std::valarray<int> block( nb*nb );                           // 1d valarray for 2d blocks
+  std::valarray<int> block( nbx*nby );                           // 1d valarray for 2d blocks
   float a;
-  uint nXBlocks = floor( (float) inc.width()  / (float) nb );  // number of blocks along X
-  uint nYBlocks = floor( (float) inc.length() / (float) nb );  // number of blocks along Y
+  uint nXBlocks = floor( (float) inc.width()  / (float) nbx );  // number of blocks along X
+  uint nYBlocks = floor( (float) inc.length() / (float) nby );  // number of blocks along Y
 
   for ( uint y=0; y<nYBlocks; ++y ) {
     for ( uint x=0; x<nXBlocks; ++x ) {
       block = x*y;                                             // pick a value
-      inc.setBlock( block, x*nb, y*nb, nb, nb, 1 );            // block must be within band
-      inc.getValue( a, x*nb+ceil(nb/2.), y*nb+ceil(nb/2.), 1); // get block center value
+      inc.setBlock( block, x*nbx, y*nby, nbx, nby, 1 );            // block must be within band
+      inc.getValue( a, x*nbx+ceil(nbx/2.), y*nby+ceil(nby/2.), 1); // get block center value
       ASSERT_EQ( a, x*y );                                     // values must be equal
     }
   }
@@ -133,15 +134,15 @@ TEST_F(RasterTest, setBlockBandOneENVIRaster) {
 TEST_F(RasterTest, setGetBlockBandTwoENVIRaster) {
   isce::core::Raster inc = isce::core::Raster(incFilename, GA_Update);
   std::valarray<int> fullimg( 1, nc*nl );       // ones
-  std::valarray<int> block  ( 0, nb*nb );       // zeros
-  std::valarray<int> chunk  ( 9, std::pow(nb+1, 2) );   // nines
+  std::valarray<int> block  ( 0, nbx*nby );       // zeros
+  std::valarray<int> chunk  ( 9, (nbx+1) * (nby+1));   // nines
 
   ASSERT_EQ( inc.numBands(), 2 );               // inc must have two bands
   inc.setBlock( fullimg, 0, 0, nc, nl, 2 );     // write full image
-  inc.getBlock( block, 0, 0, nb, nb, 2);        // read upper-left sub-block
-  inc.getBlock( chunk, 0, 0, nb+1, nb+1, 1 );   // read chunk from band 1
-  ASSERT_EQ( block.sum(), nb*nb );              // block sum must be equal to nb^2
-  ASSERT_EQ( chunk.sum(), 1 );                  // chunk sum must be equal to 1
+  inc.getBlock( block, 0, 0, nbx, nby, 2);        // read upper-left sub-block
+  inc.getBlock( chunk, 0, 0, nbx+1, nby+1, 1 );   // read chunk from band 1
+  ASSERT_EQ( block.sum(), nbx*nby );              // block sum must be equal to nb^2
+  ASSERT_EQ( chunk.sum(),  1);                  // chunk sum must be equal to 1
 }
 
 

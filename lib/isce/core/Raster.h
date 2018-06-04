@@ -19,6 +19,7 @@
 #include <valarray>
 #include "gdal_priv.h"
 #include "gdal_vrt.h"
+#include "ogr_spatialref.h"
 #include "Constants.h"
 
 //#include <pyre/journal.h>
