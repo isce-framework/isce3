@@ -34,8 +34,6 @@ struct GeometryTest : public ::testing::Test {
     // isce::core objects
     isce::core::DateTime azDate;
     isce::core::Ellipsoid ellipsoid;
-    isce::core::Peg peg;
-    isce::core::Pegtrans ptm;
     isce::core::Poly2d skewDoppler;
     isce::core::Metadata meta;
     isce::core::Orbit orbit;
@@ -70,21 +68,9 @@ struct GeometryTest : public ::testing::Test {
             state.velocity(velsat);
             const double satVmag = isce::core::LinAlg::norm(velsat);
 
-            // Get TCN basis
-            isce::core::cartesian_t that, chat, nhat;
-            ellipsoid.TCNbasis(xyzsat, velsat, that, chat, nhat);
-            basis.x0(that);   
-            basis.x1(chat);
-            basis.x2(nhat);
-
-            // Set peg point right below satellite
-            isce::core::cartesian_t llhsat;
-            ellipsoid.xyzToLatLon(xyzsat, llhsat);
-            peg.lat = llhsat[0];
-            peg.lon = llhsat[1];
-            peg.hdg = -166.40653160564963 * M_PI / 180.0;
-            ptm.radarToXYZ(ellipsoid, peg);
-
+            // Get geocentric TCN basis
+            isce::geometry::geocentricTCN(state, basis);
+            
             // Set pixel properties
             const size_t rbin = 500;
             const double slantRange = meta.rangeFirstSample 
@@ -138,7 +124,7 @@ TEST_F(GeometryTest, RdrToGeo) {
     isce::core::cartesian_t targetLLH = {0.0, 0.0, 0.0};
 
     // Run rdr2geo
-    int stat = isce::geometry::rdr2geo(pixel, basis, state, ellipsoid, ptm, demInterp,
+    int stat = isce::geometry::rdr2geo(pixel, basis, state, ellipsoid, demInterp,
         targetLLH, meta.lookSide, 0.001, 25, 15);
 
     // Check results
@@ -150,7 +136,7 @@ TEST_F(GeometryTest, RdrToGeo) {
 
     // Run it again with zero doppler
     pixel.dopfact(0.0);
-    stat = isce::geometry::rdr2geo(pixel, basis, state, ellipsoid, ptm, demInterp,
+    stat = isce::geometry::rdr2geo(pixel, basis, state, ellipsoid, demInterp,
         targetLLH, meta.lookSide, 1.0e-6, 25, 10);
     ASSERT_EQ(stat, 1);
     ASSERT_NEAR(degrees * targetLLH[0], 35.01267683520824, 1.0e-8);

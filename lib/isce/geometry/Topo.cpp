@@ -117,7 +117,7 @@ topo(Raster & demRaster,
 
             // Perform rdr->geo iterations
             int geostat = rdr2geo(
-                pixel, TCNbasis, state, _ellipsoid, _ptm, demInterp, llh, _meta.lookSide,
+                pixel, TCNbasis, state, _ellipsoid, demInterp, llh, _meta.lookSide,
                 _threshold, _numiter, _extraiter
             );
             totalconv += geostat;
@@ -189,23 +189,9 @@ _initAzimuthLine(int line, StateVector & state, Basis & TCNbasis) {
     state.position(xyzsat);
     state.velocity(velsat);
 
-    // Get TCN basis using satellite basis
-    cartesian_t that, chat, nhat;
-    _ellipsoid.TCNbasis(xyzsat, velsat, that, chat, nhat);
-    // Save to basis
-    TCNbasis.x0(that);
-    TCNbasis.x1(chat);
-    TCNbasis.x2(nhat);
-
-    // Convert satellite position to lat-lon
-    cartesian_t llhsat;
-    _ellipsoid.xyzToLatLon(xyzsat, llhsat);
-
-    // Set peg point right below satellite
-    _peg.lat = llhsat[0];
-    _peg.lon = llhsat[1];
-    _peg.hdg = _meta.pegHeading;
-    _ptm.radarToXYZ(_ellipsoid, _peg);
+    // Get geocentric TCN basis using satellite basis
+    geocentricTCN(state, TCNbasis);
+    
 }
 
 // Get DEM bounds using first/last azimuth line and slant range bin
@@ -261,7 +247,7 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
                     // Create dummy DEM interpolator with constant height
                     DEMInterpolator constDEM(testHeights[k]);
                     // Run radar->geo for 1 iteration
-                    rdr2geo(pixel, TCNbasis, state, _ellipsoid, _ptm, constDEM, llh,
+                    rdr2geo(pixel, TCNbasis, state, _ellipsoid, constDEM, llh,
                             _meta.lookSide, _threshold, 1, 0);
                 }
                 // Update bounds
@@ -289,7 +275,7 @@ void isce::geometry::Topo::
 _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel,
                      StateVector & state, Basis & TCNbasis, DEMInterpolator & demInterp) {
 
-    cartesian_t targetXYZ, targetSCH, satToGround, satLLH, enu, vhat;
+    cartesian_t targetXYZ, satToGround, satLLH, enu, vhat;
     cartmat_t enumat, xyz2enu;
     const double degrees = 180.0 / M_PI;
     const double radians = M_PI / 180.0;
@@ -313,9 +299,6 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
 
     // Convert llh->xyz for ground point
     _ellipsoid.latLonToXyz(targetLLH, targetXYZ);
-    // Convert xyz->SCH for ground point
-    _ptm.convertSCHtoXYZ(targetSCH, targetXYZ, isce::core::XYZ_2_SCH);
-    const double zsch = targetSCH[2];
 
     // Compute vector from satellite to ground point
     LinAlg::linComb(1.0, targetXYZ, -1.0, state.position(), satToGround);
@@ -329,13 +312,9 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     LinAlg::matVec(xyz2enu, satToGround, enu);
     const double cosalpha = std::abs(enu[2]) / LinAlg::norm(enu);
 
-    // Compute satellite height above ellipsoid
-    _ellipsoid.xyzToLatLon(state.position(), satLLH);
-    const double satHeight = satLLH[2];
-
     // Look angles
-    double aa = satHeight + _ptm.radcur;
-    double bb = _ptm.radcur + zsch;
+    double aa = LinAlg::norm(state.position());
+    double bb = LinAlg::norm(targetXYZ);
     double costheta = 0.5 * ((aa / rng) + (rng / aa) - ((bb / aa) * (bb / rng)));
     double sintheta = std::sqrt(1.0 - costheta * costheta);
     double gamma = rng * costheta;
