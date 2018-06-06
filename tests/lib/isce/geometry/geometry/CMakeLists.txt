@@ -10,6 +10,9 @@ foreach (TESTNAME geometry)
         ${PYRE_INCLUDE_DIR}
         ${ISCE_SOURCE_DIR}/contrib/cereal/include)
     add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
+    file(COPY input_data.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    file(COPY output_data.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+    file(COPY output_data_zerodop.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endforeach ()
 
 include(CTest)

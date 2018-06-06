@@ -27,9 +27,9 @@ using isce::core::Poly2d;
 using isce::core::StateVector;
 
 int isce::geometry::
-rdr2geo(double aztime, double slantRange, double dopfact, const Orbit & orbit,
-        const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp,
-        cartesian_t & targetLLH, int side, double threshold, int maxIter, int extraIter,
+rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
+        const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp, cartesian_t & targetLLH,
+        double wvl, int side, double threshold, int maxIter, int extraIter,
         isce::core::orbitInterpMethod orbitMethod) {
     /*
     Interpolate Orbit to azimuth time, compute TCN basis, and estimate geographic
@@ -53,6 +53,11 @@ rdr2geo(double aztime, double slantRange, double dopfact, const Orbit & orbit,
     // Setup geocentric TCN basis
     Basis TCNbasis;
     geocentricTCN(state, TCNbasis);
+
+    // Compute satellite velocity magnitude
+    const double vmag = LinAlg::norm(state.velocity());
+    // Compute Doppler factor
+    const double dopfact = 0.5 * wvl * doppler * slantRange / vmag;
 
     // Wrap range and Doppler factor in a Pixel object
     Pixel pixel(slantRange, dopfact, 0);
@@ -139,6 +144,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
 
         // Interpolate DEM at current lat/lon point
         targetLLH[2] = demInterp.interpolate(degrees*targetLLH[1], degrees*targetLLH[0]);
+
         // Convert back to XYZ with interpolated height
         ellipsoid.latLonToXyz(targetLLH, targetVec);
         // Compute updated target height

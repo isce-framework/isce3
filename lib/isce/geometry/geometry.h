@@ -40,7 +40,7 @@ namespace isce {
                     const isce::core::Ellipsoid &,
                     const DEMInterpolator &,
                     cartesian_t &,
-                    int, double, int, int,
+                    double, int, double, int, int,
                     isce::core::orbitInterpMethod); 
 
         // radar->geo using pre-computed basis and state vectors, and DEM
