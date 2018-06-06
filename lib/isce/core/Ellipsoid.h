@@ -24,7 +24,10 @@ namespace isce {
 class isce::core::Ellipsoid {
 
     public:
-        /** Constructor using semi-major axis and eccentricity^2 */
+        /** \brief Constructor using semi-major axis and eccentricity^2 
+         *
+         * @param[in] maj Semi-major of axis in meters
+         * @param[in] ecc Square of ellipsoid eccentricity (unitless)*/
         Ellipsoid(double maj, double ecc) : _a(maj), _e2(ecc) {}
 
         /** Empty constructor - not recommended */ 
@@ -42,10 +45,14 @@ class isce::core::Ellipsoid {
         /** Return eccentricity^2 */
         double e2() const {return _e2;}
 
-        /** Set semi-major axis */
+        /** \brief Set semi-major axis 
+         *
+         * @param[in] val Semi-major axis of ellipsoid in meters*/
         void a(double val) {_a = val;}
 
-        /** Set eccentricity^2 */
+        /** \brief Set eccentricity^2 
+         *
+         * @param[in] ecc Eccentricity-squared of ellipsoid*/
         void e2(double val) {_e2 = val;}
 
         /** Return local radius in EW direction */
@@ -89,16 +96,28 @@ isce::core::Ellipsoid& isce::core::Ellipsoid::operator=(const Ellipsoid &rhs) {
     return *this;
 }
 
+/** @param[in] lat Latitude in radians
+ *
+ * See <a href="https://en.wikipedia.org/wiki/Earth_radius#Prime_vertical">Prime vertical radius</a>*/
 double isce::core::Ellipsoid::rEast(double lat) const {
     // Radius of Ellipsoid in East direction (assuming latitude-wise symmetry)
     return _a / std::sqrt(1.0 - (_e2 * std::pow(std::sin(lat), 2)));
 }
 
+
+/** @param[in] lat Latitude in radians
+ *
+ * See <a href="https://en.wikipedia.org/wiki/Earth_radius#Meridional">Meridional radius</a> */
 double isce::core::Ellipsoid::rNorth(double lat) const {
     // Radius of Ellipsoid in North direction (assuming latitude-wise symmetry)
     return (_a * (1.0 - _e2)) / std::pow((1.0 - (_e2 * std::pow(std::sin(lat), 2))), 1.5);
 }
 
+/** @param[in] hdg Heading in radians
+ *  @param[in] lat Latitude in radians
+ *
+ *  Heading is measured in clockwise direction from the North direction.
+ *  See <a href="https://en.wikipedia.org/wiki/Earth_radius#Directional">Directional Radius</a> */
 double isce::core::Ellipsoid::rDir(double hdg, double lat) const {
     auto re = rEast(lat);
     auto rn = rNorth(lat);
