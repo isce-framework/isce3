@@ -24,34 +24,59 @@ namespace isce {
 class isce::core::Ellipsoid {
 
     public:
-        // Constructors
+        /** Constructor using semi-major axis and eccentricity^2 */
         Ellipsoid(double maj, double ecc) : _a(maj), _e2(ecc) {}
+
+        /** Empty constructor - not recommended */ 
         Ellipsoid() : Ellipsoid(0.0, 0.0) {}
+
+        /** Copy constructor*/
         Ellipsoid(const Ellipsoid & ellps) : _a(ellps.a()), _e2(ellps.e2()) {}
+
+        /** Overloaded assignment operator */
         inline Ellipsoid& operator=(const Ellipsoid&);
 
-        // Get ellipsoid properties
+        /** Return semi-major axis */
         double a() const {return _a;}
+
+        /** Return eccentricity^2 */
         double e2() const {return _e2;}
-        // Set ellipsoid properties
+
+        /** Set semi-major axis */
         void a(double val) {_a = val;}
+
+        /** Set eccentricity^2 */
         void e2(double val) {_e2 = val;}
 
-        // Get radii in different directions
-        inline double rEast(double) const;
-        inline double rNorth(double) const;
-        inline double rDir(double,double) const;
+        /** Return local radius in EW direction */
+        inline double rEast(double lat) const;
 
-        // Transformation routines
-        void latLonToXyz(const cartesian_t &, cartesian_t &) const;
-        void xyzToLatLon(const cartesian_t &, cartesian_t &) const;
-        void getAngs(const cartesian_t &,const cartesian_t &,
-                     const cartesian_t &, double &, double &) const;
-        void getTCN_TCvec(const cartesian_t &, const cartesian_t &,
-                          const cartesian_t &, cartesian_t &) const;
-        void TCNbasis(const cartesian_t &, const cartesian_t &, cartesian_t &,
-                      cartesian_t &, cartesian_t &) const;
-        void TCNbasis(const cartesian_t &, const cartesian_t &, Basis &) const;
+        /** Return local radius in NS direction */
+        inline double rNorth(double lat) const;
+
+        /** Return directional local radius */
+        inline double rDir(double lat, double hdg) const;
+
+        /** Transform WGS84 Lat/Lon/Hgt to ECEF xyz */
+        void latLonToXyz(const cartesian_t &llh, cartesian_t &xyz) const;
+
+        /** Transform ECEC xyz to Lat/Lon/Hgt */
+        void xyzToLatLon(const cartesian_t &xyz, cartesian_t &llh) const;
+
+        /** Estimate look vector for given state vector, azimuth angle and look angle */
+        void getAngs(const cartesian_t &pos,const cartesian_t &vel,
+                     const cartesian_t &vec, double &az, double &lk) const;
+
+        /** Projection of a vector on TC plane */
+        void getTCN_TCvec(const cartesian_t &pos, const cartesian_t &vel,
+                          const cartesian_t &vec, cartesian_t &TCvec) const;
+
+        /** Estimate local TCN basis */
+        void TCNbasis(const cartesian_t &pos, const cartesian_t &vel, cartesian_t &t,
+                      cartesian_t &c, cartesian_t &n) const;
+
+        /**Estimate local TCN basis */
+        void TCNbasis(const cartesian_t &pos, const cartesian_t &vel, Basis &tcn) const;
 
     private:
         double _a;
