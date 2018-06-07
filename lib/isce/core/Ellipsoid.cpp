@@ -8,6 +8,8 @@
 #include "Ellipsoid.h"
 #include "LinAlg.h"
 
+/** @param[in] llh Latitude (ras), Longitude (rad), Height (m).
+ *  @param[out] xyz ECEF Cartesian coordinates in meters.*/
 void isce::core::Ellipsoid::
 latLonToXyz(const cartesian_t & llh, cartesian_t & xyz) const {
     /*
@@ -23,6 +25,10 @@ latLonToXyz(const cartesian_t & llh, cartesian_t & xyz) const {
     xyz[2] = ((re * (1.0 - _e2)) + llh[2]) * std::sin(llh[0]);
 }
 
+/** @param[in] xyz ECEF Cartesian coordinates in meters. 
+ *  @param[out] llh Latitude (rad), Longitude(rad), Height (m).
+ *
+ *  Using the approach laid out in Vermeille, 2002 \cite vermeille2002direct */
 void isce::core::Ellipsoid::
 xyzToLatLon(const cartesian_t & xyz, cartesian_t & llh) const {
     /*
@@ -76,6 +82,15 @@ void Ellipsoid::xyzToLatLon(cartesian_t &xyz, cartesian_t &llh) {
 }
 */
 
+/** @param[in] pos ECEF coordinates of imaging platform in meters 
+ *  @param[in] vel ECEF velocity of imaging platform in meters / sec
+ *  @param[in] vec Line-of-sight (LOS) vector in ECEF coordinates (meters)
+ *  @param[out] az Azimuth angle in radians
+ *  @param[out] lk Look angle in radians
+ *
+ *  Azimuth angle is defined as angle of the LOS vector from the North Direction in the anti-clockwise direction.
+ *  Look angle is defined as angle of the LOS vector and the downward normal at the imaging platform .
+ */
 void isce::core::Ellipsoid::
 getAngs(const cartesian_t & pos, const cartesian_t & vel,
         const cartesian_t & vec, double & az, double & lk) const {
@@ -100,6 +115,15 @@ getAngs(const cartesian_t & pos, const cartesian_t & vel,
     az = std::atan2(LinAlg::dot(c, vec), LinAlg::dot(t, vec));
 }
 
+/** @param[in] pos ECEF coordinates of imaging platform in meters.
+    @param[in] vel ECEF velocity of imaging platform in meters / sec.
+    @param[in] vec vector in ECEF coordinates (meters)
+    @param[out] TCVec Projection of vec in TC plane
+
+    \f[
+        TCVec = (\hat{vec} \cdot \hat{t}) \hat{t} + (\hat{vec} \cdot \hat{n}) \hat{n}
+    \f]
+*/
 void isce::core::Ellipsoid::
 getTCN_TCvec(const cartesian_t & pos, const cartesian_t & vel,
              const cartesian_t & vec, cartesian_t & TCVec) const {
@@ -123,6 +147,11 @@ getTCN_TCvec(const cartesian_t & pos, const cartesian_t & vel,
     LinAlg::linComb(LinAlg::dot(t, vec), t, LinAlg::dot(c, vec), c, TCVec);
 }
 
+/**@param[in] pos ECEF coordinates of imaging platform in meters
+ * @param[in] vel ECEF velocity of imaging platform in meters/ sec
+ * @param[out]  t  Tangent unit vector orthogonal to ellipsoid normal and cross track direction
+ * @param[out]  c  Cross track unit vector orthogonal to ellipsoid normal and velocity
+ * @param[out]  n  Unit vector along normal to ellipsoid pointing downward */
 void isce::core::Ellipsoid::
 TCNbasis(const cartesian_t & pos, const cartesian_t & vel, cartesian_t & t,
          cartesian_t & c, cartesian_t & n) const {
@@ -143,6 +172,12 @@ TCNbasis(const cartesian_t & pos, const cartesian_t & vel, cartesian_t & t,
     LinAlg::unitVec(temp, t);
 }
 
+/**@param[in] pos ECEF coordinates of imaging platform in meters
+ * @param[in] vel ECEF velocity of imaging platform in meters/sec
+ * @param[out] basis t,c,n unit vectors in a basis object
+ *
+ * See also isce::core::Ellipsoid::TCNbasis(const cartesian_t&, const cartesian_t& vel,
+ *                              cartestian_t&, cartesian_t&, cartesian_t&)*/
 void isce::core::Ellipsoid::
 TCNbasis(const cartesian_t & pos, const cartesian_t & vel, Basis & basis) const {
     /*
