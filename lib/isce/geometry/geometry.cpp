@@ -129,7 +129,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
 
         // Compute TCN scale factors
         const double gamma = pixel.range() * costheta;
-        const double alpha = pixel.dopfact() - gamma * ndotv / vdott;
+        const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
         const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
                                             * std::pow(sintheta, 2) 
                                             - std::pow(alpha, 2));
@@ -181,7 +181,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
 
     // Compute TCN scale factors
     const double gamma = pixel.range() * costheta;
-    const double alpha = pixel.dopfact() - gamma * ndotv / vdott;
+    const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
     const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
                                         * std::pow(sintheta, 2)
                                         - std::pow(alpha, 2));
@@ -193,9 +193,6 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
 
     // Compute LLH of ground point
     ellipsoid.xyzToLatLon(targetVec, targetLLH);    
-
-    // Interpolate DEM at current lat/lon point
-    targetLLH[2] = demInterp.interpolate(degrees*targetLLH[1], degrees*targetLLH[0]);
 
     // Return convergence flag
     return converged;
