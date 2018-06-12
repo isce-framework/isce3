@@ -30,8 +30,10 @@ class isce::core::Ellipsoid {
          * @param[in] ecc Square of ellipsoid eccentricity (unitless)*/
         Ellipsoid(double maj, double ecc) : _a(maj), _e2(ecc) {}
 
-        /** Empty constructor - not recommended */ 
+        /// @cond
+        /* Empty constructor - not recommended */ 
         Ellipsoid() : Ellipsoid(0.0, 0.0) {}
+        /// @endcond
 
         /** Copy constructor*/
         Ellipsoid(const Ellipsoid & ellps) : _a(ellps.a()), _e2(ellps.e2()) {}
@@ -41,6 +43,9 @@ class isce::core::Ellipsoid {
 
         /** Return semi-major axis */
         double a() const {return _a;}
+
+        /** Return semi-minor axis */
+        double b() const {return _a * std::sqrt(1.0 - _e2);}
 
         /** Return eccentricity^2 */
         double e2() const {return _e2;}
@@ -64,11 +69,11 @@ class isce::core::Ellipsoid {
         /** Return directional local radius */
         inline double rDir(double lat, double hdg) const;
 
-        /** Transform WGS84 Lat/Lon/Hgt to ECEF xyz */
-        void latLonToXyz(const cartesian_t &llh, cartesian_t &xyz) const;
+        /** Transform WGS84 Lon/Lat/Hgt to ECEF xyz */
+        void lonLatToXyz(const cartesian_t &llh, cartesian_t &xyz) const;
 
-        /** Transform ECEC xyz to Lat/Lon/Hgt */
-        void xyzToLatLon(const cartesian_t &xyz, cartesian_t &llh) const;
+        /** Transform ECEC xyz to Lon/Lat/Hgt */
+        void xyzToLonLat(const cartesian_t &xyz, cartesian_t &llh) const;
 
         /** Estimate look vector for given state vector, azimuth angle and look angle */
         void getAngs(const cartesian_t &pos,const cartesian_t &vel,
