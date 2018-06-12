@@ -26,28 +26,20 @@ using std::vector;
 /* * * * * * * * * * * * * * * * * * * * Geocent Projection * * * * * * * * * * * * * * * * * * * */
 int Geocent::forward(const cartesian_t &llh, cartesian_t& xyz) const {
     /*
-     * This is to transform LLH to Geocent, which is just a pass-through to latLonToXyz.
+     * This is to transform LLH to Geocent, which is just a pass-through to lonLatToXyz.
      *
-     * There's a discrepancy between ISCE's and proj4's ordering of LLH in that ISCE treats it as
-     * Lat-Lon-Height, and proj4 as Lon-Lat-Height. To resolve this without altering the isce::core
-     * objects, we pass a temporary input vector to latLonToXyz that contains the first two elements
-     * swapped (resolving the discrepancy and preserving the inputs).
      */
 
-    cartesian_t llh_swapped = {llh[1], llh[0], llh[2]};
-    ellipse.latLonToXyz(llh_swapped, xyz);
+    ellipse.lonLatToXyz(llh, xyz);
     return 0;
 }
 
 int Geocent::inverse(const cartesian_t &xyz, cartesian_t& llh) const {
     /*
-     * This is to transform Geocent to LLH, which is just a pass-through to xyzToLatLon. As with
-     * ::forward, there's an issue with internal LLH ordering (lat/lon vs lon/lat), so we swap the
-     * first two elements of the output llh vector before returning.
+     * This is to transform Geocent to LonLatHeight, which is just a pass-through to xyzToLonLat.
      */
 
-    ellipse.xyzToLatLon(xyz, llh);
-    llh = {llh[1], llh[0], llh[2]};
+    ellipse.xyzToLonLat(xyz, llh);
     return 0;
 }
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

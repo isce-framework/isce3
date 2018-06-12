@@ -37,12 +37,12 @@ Doppler(Orbit & orbit, Attitude * attitude, Ellipsoid & ellipsoid, double epoch)
         throw std::out_of_range("Orbit out of range");
     }
     // Compute llh
-    ellipsoid.xyzToLatLon(satxyz, satllh);
+    ellipsoid.xyzToLonLat(satxyz, satllh);
     // Compute heading
     double heading = orbit.getENUHeading(epoch);
 
     // Create a temporary peg object
-    Peg peg(satllh[0], satllh[1], heading);
+    Peg peg(satllh[1], satllh[0], heading);
 
     // Set SCH information
     ptm.radarToXYZ(ellipsoid, peg);
@@ -87,9 +87,9 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
         // Compute vectors for TCN-like basis
         cartesian_t q, c, b, a;
         if (attitude->yawOrientation().compare("normal") == 0) {
-            temp = {std::cos(satllh[0]) * std::cos(satllh[1]),
-                    std::cos(satllh[0]) * std::sin(satllh[1]),
-                    std::sin(satllh[0])};
+            temp = {std::cos(satllh[1]) * std::cos(satllh[0]),
+                    std::cos(satllh[1]) * std::sin(satllh[0]),
+                    std::sin(satllh[1])};
         } else if (attitude->yawOrientation().compare("center") == 0) {
             temp = {satxyz[0], satxyz[1], satxyz[2]};
         }
@@ -149,11 +149,11 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
         LinAlg::linComb(1.0, satxyz, 1.0, delta, targetVec);
 
         // Compute LLH of ground point
-        ellipsoid.xyzToLatLon(targetVec, targetLLH);
+        ellipsoid.xyzToLonLat(targetVec, targetLLH);
         // Set the expected target height
         targetLLH[2] = height;
         // Compute updated sch height
-        ellipsoid.latLonToXyz(targetLLH, targetVec);
+        ellipsoid.lonLatToXyz(targetLLH, targetVec);
         ptm.convertSCHtoXYZ(targetSCH, targetVec, XYZ_2_SCH);
         zsch = targetSCH[2];
 
@@ -166,7 +166,7 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
 
     // Compute unitary look vector
     cartesian_t R, Rhat;
-    ellipsoid.latLonToXyz(targetLLH, targetVec);
+    ellipsoid.lonLatToXyz(targetLLH, targetVec);
     LinAlg::linComb(1.0, satxyz, -1.0, targetVec, R);
     LinAlg::unitVec(R, Rhat);
     

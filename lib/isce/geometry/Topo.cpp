@@ -221,7 +221,7 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
 
         // Compute satellite velocity and height
         const double satVmag = LinAlg::norm(state.velocity());
-        _ellipsoid.xyzToLatLon(state.position(), satLLH);
+        _ellipsoid.xyzToLonLat(state.position(), satLLH);
 
         // Loop over starting and ending slant range
         for (int ind = 0; ind < 2; ++ind) {
@@ -251,10 +251,10 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
                             _meta.lookSide, _threshold, 1, 0);
                 }
                 // Update bounds
-                min_lat = std::min(min_lat, llh[0]*degrees);
-                max_lat = std::max(max_lat, llh[0]*degrees);
-                min_lon = std::min(min_lon, llh[1]*degrees);
-                max_lon = std::max(max_lon, llh[1]*degrees);
+                min_lat = std::min(min_lat, llh[1]*degrees);
+                max_lat = std::max(max_lat, llh[1]*degrees);
+                min_lon = std::min(min_lon, llh[0]*degrees);
+                max_lon = std::max(max_lon, llh[0]*degrees);
             }
         }
     }
@@ -285,8 +285,8 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     const cartesian_t nhat = TCNbasis.x2();
 
     // Unpack the lat/lon values and convert to degrees
-    const double lat = degrees * targetLLH[0];
-    const double lon = degrees * targetLLH[1];
+    const double lat = degrees * targetLLH[1];
+    const double lon = degrees * targetLLH[0];
     // Unpack the range pixel data
     const size_t bin = pixel.bin();
     const double rng = pixel.range();
@@ -298,7 +298,7 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     layers.z(bin, targetLLH[2]);
 
     // Convert llh->xyz for ground point
-    _ellipsoid.latLonToXyz(targetLLH, targetXYZ);
+    _ellipsoid.lonLatToXyz(targetLLH, targetXYZ);
 
     // Compute vector from satellite to ground point
     LinAlg::linComb(1.0, targetXYZ, -1.0, state.position(), satToGround);
@@ -307,7 +307,7 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     LinAlg::unitVec(state.velocity(), vhat);
 
     // Computation in ENU coordinates around target
-    LinAlg::enuBasis(targetLLH[0], targetLLH[1], enumat);
+    LinAlg::enuBasis(targetLLH[1], targetLLH[0], enumat);
     LinAlg::tranMat(enumat, xyz2enu);
     LinAlg::matVec(xyz2enu, satToGround, enu);
     const double cosalpha = std::abs(enu[2]) / LinAlg::norm(enu);

@@ -140,13 +140,13 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
         LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
 
         // Compute LLH of ground point
-        ellipsoid.xyzToLatLon(targetVec, targetLLH);
+        ellipsoid.xyzToLonLat(targetVec, targetLLH);
 
         // Interpolate DEM at current lat/lon point
-        targetLLH[2] = demInterp.interpolate(degrees*targetLLH[1], degrees*targetLLH[0]);
+        targetLLH[2] = demInterp.interpolate(degrees*targetLLH[0], degrees*targetLLH[1]);
 
         // Convert back to XYZ with interpolated height
-        ellipsoid.latLonToXyz(targetLLH, targetVec);
+        ellipsoid.lonLatToXyz(targetLLH, targetVec);
         // Compute updated target height
         zrdr = LinAlg::norm(targetVec) - radius;
 
@@ -159,12 +159,12 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
         // May need to perform extra iterations
         } else if (i > maxIter) {
             // XYZ position of old solution
-            ellipsoid.latLonToXyz(targetLLH_old, targetVec_old);
+            ellipsoid.lonLatToXyz(targetLLH_old, targetVec_old);
             // XYZ position of updated solution
             for (int idx = 0; idx < 3; ++idx)
                 targetVec[idx] = 0.5 * (targetVec_old[idx] + targetVec[idx]);
             // Repopulate lat, lon, z
-            ellipsoid.xyzToLatLon(targetVec, targetLLH);
+            ellipsoid.xyzToLonLat(targetVec, targetLLH);
             // Compute updated target height
             zrdr = LinAlg::norm(targetVec) - radius;
         }
@@ -192,10 +192,10 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
     LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
 
     // Compute LLH of ground point
-    ellipsoid.xyzToLatLon(targetVec, targetLLH);    
+    ellipsoid.xyzToLonLat(targetVec, targetLLH);    
 
     // Interpolate DEM at current lat/lon point
-    targetLLH[2] = demInterp.interpolate(degrees*targetLLH[1], degrees*targetLLH[0]);
+    targetLLH[2] = demInterp.interpolate(degrees*targetLLH[0], degrees*targetLLH[1]);
 
     // Return convergence flag
     return converged;
@@ -229,7 +229,7 @@ rdr2geo_old(const Pixel & pixel, const Basis & TCNbasis, const StateVector & sta
     const double vdott = vhat[0]*that[0] + vhat[1]*that[1] + vhat[2]*that[2];
 
     // Compute satellite LLH to get height above ellipsoid
-    ellipsoid.xyzToLatLon(state.position(), satLLH);
+    ellipsoid.xyzToLonLat(state.position(), satLLH);
 
     // Iterate
     int converged = 0;
@@ -258,12 +258,12 @@ rdr2geo_old(const Pixel & pixel, const Basis & TCNbasis, const StateVector & sta
         LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
 
         // Compute LLH of ground point
-        ellipsoid.xyzToLatLon(targetVec, targetLLH);
+        ellipsoid.xyzToLonLat(targetVec, targetLLH);
 
         // Interpolate DEM at current lat/lon point
-        targetLLH[2] = demInterp.interpolate(degrees*targetLLH[1], degrees*targetLLH[0]);
+        targetLLH[2] = demInterp.interpolate(degrees*targetLLH[0], degrees*targetLLH[1]);
         // Convert back to XYZ with interpolated height
-        ellipsoid.latLonToXyz(targetLLH, targetVec);
+        ellipsoid.lonLatToXyz(targetLLH, targetVec);
         // Compute updated SCH coordinates
         ptm.convertSCHtoXYZ(targetSCH, targetVec, isce::core::XYZ_2_SCH);
 
@@ -276,12 +276,12 @@ rdr2geo_old(const Pixel & pixel, const Basis & TCNbasis, const StateVector & sta
         // May need to perform extra iterations
         } else if (i > maxIter) {
             // XYZ position of old solution
-            ellipsoid.latLonToXyz(targetLLH_old, targetVec_old);
+            ellipsoid.lonLatToXyz(targetLLH_old, targetVec_old);
             // XYZ position of updated solution
             for (int idx = 0; idx < 3; ++idx)
                 targetVec[idx] = 0.5 * (targetVec_old[idx] + targetVec[idx]);
             // Repopulate lat, lon, z
-            ellipsoid.xyzToLatLon(targetVec, targetLLH);
+            ellipsoid.xyzToLonLat(targetVec, targetLLH);
             // Recompute SCH coordinates
             ptm.convertSCHtoXYZ(targetSCH, targetVec, isce::core::XYZ_2_SCH);
         }
@@ -309,7 +309,7 @@ rdr2geo_old(const Pixel & pixel, const Basis & TCNbasis, const StateVector & sta
     LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
 
     // Compute LLH of ground point
-    ellipsoid.xyzToLatLon(targetVec, targetLLH);    
+    ellipsoid.xyzToLonLat(targetVec, targetLLH);    
 
     // Return convergence flag
     return converged;
@@ -323,7 +323,7 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
     cartesian_t satpos, satvel, inputXYZ, dr;
 
     // Convert LLH to XYZ
-    ellipsoid.latLonToXyz(inputLLH, inputXYZ);
+    ellipsoid.lonLatToXyz(inputLLH, inputXYZ);
 
     // Pre-compute scale factor for doppler
     const double dopscale = 0.5 * meta.radarWavelength;

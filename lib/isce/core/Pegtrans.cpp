@@ -43,9 +43,9 @@ void Pegtrans::radarToXYZ(const Ellipsoid &elp, const Peg &peg) {
 
     radcur = elp.rDir(peg.hdg, peg.lat);
 
-    cartesian_t llh = {peg.lat, peg.lon, 0.};
+    cartesian_t llh = {peg.lon, peg.lat, 0.};
     cartesian_t p;
-    elp.latLonToXyz(llh, p);
+    elp.lonLatToXyz(llh, p);
     cartesian_t up = {cos(peg.lat) * cos(peg.lon), cos(peg.lat) * sin(peg.lon), sin(peg.lat)};
     LinAlg::linComb(1., p, -radcur, up, ov);
 }
@@ -60,15 +60,15 @@ void Pegtrans::convertSCHtoXYZ(cartesian_t &schv, cartesian_t &xyzv, orbitConvMe
     Ellipsoid sph(radcur,0.);
 
     if (ctype == SCH_2_XYZ) {
-        llh = {schv[1]/radcur, schv[0]/radcur, schv[2]};
-        sph.latLonToXyz(llh, schvt);
+        llh = {schv[0]/radcur, schv[1]/radcur, schv[2]};
+        sph.lonLatToXyz(llh, schvt);
         LinAlg::matVec(mat, schvt, xyzv);
         LinAlg::linComb(1., xyzv, 1., ov, xyzv);
     } else if (ctype == XYZ_2_SCH) {
         LinAlg::linComb(1., xyzv, -1., ov, schvt);
         LinAlg::matVec(matinv, schvt, schv);
-        sph.xyzToLatLon(schv, llh);
-        schv = {radcur*llh[1], radcur*llh[0], llh[2]};
+        sph.xyzToLonLat(schv, llh);
+        schv = {radcur*llh[0], radcur*llh[1], llh[2]};
     } else {
         string errstr = "Unrecognized conversion type in Pegtrans::convertSCHtoXYZ.\n";
         errstr += "Expected one of:\n";

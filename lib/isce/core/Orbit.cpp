@@ -342,9 +342,9 @@ getENUHeading(double aztime) const {
     // Interpolate orbit to azimuth time
     interpolateWGS84Orbit(aztime, pos, vel);
     // Convert platform position to LLH
-    refElp.xyzToLatLon(pos, llh);
+    refElp.xyzToLonLat(pos, llh);
     // Get ENU transformation matrix
-    LinAlg::enuBasis(llh[0], llh[1], enumat);
+    LinAlg::enuBasis(llh[1], llh[0], enumat);
     // Compute velocity in ENU
     LinAlg::tranMat(enumat, xyz2enu);
     LinAlg::matVec(xyz2enu, vel, enuvel);

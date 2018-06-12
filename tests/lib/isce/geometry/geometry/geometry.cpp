@@ -113,8 +113,8 @@ TEST_F(GeometryTest, GeoToRdr) {
     
     // Make a test LLH
     const double radians = M_PI / 180.0;
-    isce::core::cartesian_t llh = {35.10*radians, -115.6*radians, 55.0};
-
+    //isce::core::cartesian_t llh = {35.10*radians, -115.6*radians, 55.0};
+    isce::core::cartesian_t llh = {-115.6*radians, 35.10*radians, 55.0};
     // Reformat orbit
     orbit.reformatOrbit();
 
@@ -197,8 +197,8 @@ void loadTestData(std::vector<std::string> & aztimes, std::vector<double> & rang
         double lat, lon, h;
         stream << line;
         stream >> lat >> lon >> h;
-        ref_data.push_back(lat);
         ref_data.push_back(lon);
+        ref_data.push_back(lat);
         ref_data.push_back(h);
     }
     ifid.close();
@@ -210,8 +210,8 @@ void loadTestData(std::vector<std::string> & aztimes, std::vector<double> & rang
         double lat, lon, h;
         stream << line;
         stream >> lat >> lon >> h;
-        ref_zerodop.push_back(lat);
         ref_zerodop.push_back(lon);
+        ref_zerodop.push_back(lat);
         ref_zerodop.push_back(h);
     }
     ifid.close();
