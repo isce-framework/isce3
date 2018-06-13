@@ -26,8 +26,8 @@ Download: TBD
 
 <ul>
 <li> <a href="datamodel.html">Data model</a>
-<li> <a href="corecpp.html">Core data structures in C++</a>
-<li> Core data structure in Python
+<li> <a href="annotated.html">Core data structures in C++</a>
+<li> <a href="sphinx/html/index.html">Core data structure in Python</a>
 <li> <a href="geometry.html">Radar imaging geometry</a>
 <li> <a href="raster.html">Raster manipulation</a>
 </ul>
