@@ -19,10 +19,12 @@ loadDEM(isce::core::Raster & demRaster,
     // Get original GeoTransform using raster
     double geoTransform[6];
     demRaster.getGeoTransform(geoTransform);
-    const double firstY = geoTransform[3];
-    const double firstX = geoTransform[0];
     const double deltaY = geoTransform[5];
     const double deltaX = geoTransform[1];
+    // Use center of pixel as starting coordinate
+    const double firstY = geoTransform[3] + 0.5 * deltaY;
+    const double firstX = geoTransform[0] + 0.5 * deltaX;
+    // Compute ending coordinate 
     const double lastY = firstY + (demRaster.length() - 2) * deltaY;
     const double lastX = firstX + (demRaster.width() - 2) * deltaX;
 
