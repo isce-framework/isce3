@@ -102,6 +102,10 @@ unitVec(const cartesian_t & u, cartesian_t & v) {
     }
 }
 
+
+/** @param[in] lat Latitude in radians
+ *  @param[in] lon Longitude in radians
+ *  @param[out] enumat Matrix with rotation matrix*/
 void isce::core::LinAlg::
 enuBasis(double lat, double lon, cartmat_t & enumat) {
     /*

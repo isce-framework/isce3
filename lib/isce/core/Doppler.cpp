@@ -12,7 +12,10 @@
 #include "Peg.h"
 #include "Doppler.h"
 
-// Doppler constructor
+/** @param[in] orbit Orbit data structure
+ *  @param[in] attitude Attitude data structure
+ *  @param[in] ellipsoid Ellipsoid data structure used for orbit and attitude representation
+ *  @param[in] epoch Epoch time of interest*/
 isce::core::Doppler::
 Doppler(Orbit & orbit, Attitude * attitude, Ellipsoid & ellipsoid, double epoch) {
 
@@ -56,7 +59,12 @@ Doppler(Orbit & orbit, Attitude * attitude, Ellipsoid & ellipsoid, double epoch)
 
 }
 
-// Evaluate Doppler centroid at a specific slant range
+/**@param[in] slantRange slant range to pixel of interest in meters
+ * @param[in] wvl Wavelength of imaging platform in meters
+ * @param[in] frame Can be "inertial" or "fixed"
+ * @param[in] max_iter Number of iterations. Default is 10.
+ * @param[in] side -1 for Right and +1 for left. Default is -1.
+ * @param[in] precession To apply precession correction or not*/
 double isce::core::Doppler::
 centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
     int side, bool precession) {

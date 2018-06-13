@@ -400,12 +400,6 @@ int projTransform(ProjectionBase &in, ProjectionBase &out, const cartesian_t &in
         // If input/output projections are the same don't even bother processing
         outpts = inpts;
         return 0;
-    } else if (in._epsgcode == 4326) {
-        // Consider case where input is Lat/Lon
-        return out.forward(inpts, outpts);
-    } else if (out._epsgcode == 4326) {
-        // Consider case where output is Lat/Lon
-        return -out.inverse(inpts, outpts);
     } else {
         cartesian_t temp;
         if (in.inverse(inpts, temp) != 0) return -2;

@@ -40,6 +40,13 @@ cdef class pyEllipsoid:
         '''
         return self.c_ellipsoid.a()
 
+    @property
+    def b(self):
+        '''
+        Return the semi-minor axis of ellipsoid in meters.
+        '''
+        return self.c_ellipsoid.b()
+
     @a.setter
     def a(self, double a):
         '''
@@ -125,7 +132,7 @@ cdef class pyEllipsoid:
             b[i] = _b[i]
 
 
-    def getAngs(self, list a, list b, list c, d, e=None):
+    def getImagingAnglesAtPlatform(self, list a, list b, list c, d, e=None):
         cdef cartesian_t _a
         cdef cartesian_t _b
         cdef cartesian_t _c
@@ -144,30 +151,13 @@ cdef class pyEllipsoid:
                 _a[i] = a[i]
                 _b[i] = b[i]
                 _c[i] = c[i]
-            self.c_ellipsoid.getAngs(_a,_b,_c,_d,_e)
+            self.c_ellipsoid.getImagingAnglesAtPlatform(_a,_b,_c,_d,_e)
             for i in range(3):
                 a[i] = _a[i]
                 b[i] = _b[i]
                 c[i] = _c[i]
             d[0] = _d
             d[1] = _e
-
-    def getTCN_TCvec(self, list a, list b, list c, list d):
-        cdef cartesian_t _a
-        cdef cartesian_t _b
-        cdef cartesian_t _c
-        cdef cartesian_t _d
-        for i in range(3):
-            _a[i] = a[i]
-            _b[i] = b[i]
-            _c[i] = c[i]
-            _d[i] = d[i]
-        self.c_ellipsoid.getTCN_TCvec(_a,_b,_c,_d)
-        for i in range(3):
-            a[i] = _a[i]
-            b[i] = _b[i]
-            c[i] = _c[i]
-            d[i] = _d[i]
 
     def TCNbasis(self, list a, list b, list c, list d, list e):
         cdef cartesian_t _a

@@ -20,7 +20,9 @@ namespace isce {
     }
 }
 
-// Ellipsoid declaration
+/** Data structure to store Ellipsoid information. 
+ *
+ * Only the semi-major axis and the eccentricity^2 parameters are stored. All other quantities are derived on the fly*/
 class isce::core::Ellipsoid {
 
     public:
@@ -44,7 +46,7 @@ class isce::core::Ellipsoid {
         /** Return semi-major axis */
         double a() const {return _a;}
 
-        /** Return semi-minor axis */
+        /** Return semi-minor axis. Computed from a and e2. */
         double b() const {return _a * std::sqrt(1.0 - _e2);}
 
         /** Return eccentricity^2 */
@@ -75,13 +77,15 @@ class isce::core::Ellipsoid {
         /** Transform ECEC xyz to Lon/Lat/Hgt */
         void xyzToLonLat(const cartesian_t &xyz, cartesian_t &llh) const;
 
-        /** Estimate look vector for given state vector, azimuth angle and look angle */
-        void getAngs(const cartesian_t &pos,const cartesian_t &vel,
-                     const cartesian_t &vec, double &az, double &lk) const;
+        /** Return normal to the ellipsoid at given lon, lat */
+        inline void nVector(double lon, double lat, cartesian_t &vec) const;
 
-        /** Projection of a vector on TC plane */
-        void getTCN_TCvec(const cartesian_t &pos, const cartesian_t &vel,
-                          const cartesian_t &vec, cartesian_t &TCvec) const;
+        /** Return ECEF coordinates of point on ellipse */
+        inline void xyzOnEllipse(double lon, double lat, cartesian_t &xyz) const;
+
+        /** Estimate azimuth angle and look angle for a given LOS vector*/
+        void getImagingAnglesAtPlatform(const cartesian_t &pos,const cartesian_t &vel,
+                     const cartesian_t &los, double &azi, double &look) const;
 
         /** Estimate local TCN basis */
         void TCNbasis(const cartesian_t &pos, const cartesian_t &vel, cartesian_t &t,
@@ -128,6 +132,34 @@ double isce::core::Ellipsoid::rDir(double hdg, double lat) const {
     auto rn = rNorth(lat);
     return (re * rn) / ((re * std::pow(std::cos(hdg), 2)) 
          + (rn * std::pow(std::sin(hdg), 2)));
+}
+
+
+/** @param[in] lon Longitude in radians
+ *  @param[in] lat Latitude in radians
+ *  @param[out] vec Unit vector of normal pointing outwards in ECEF cartesian coordinates
+ *
+ *  See <a href="https://en.wikipedia.org/wiki/N-vector">N-vector</a> */
+void isce::core::Ellipsoid::nVector(double lon, double lat, cartesian_t &vec) const
+{
+    double clat = std::cos(lat);
+    vec[0] = clat * std::cos(lon);
+    vec[1] = clat * std::sin(lon);
+    vec[2] = std::sin(lat);
+}
+
+
+/** @param[in] lon Longitude in radians
+ *  @param[in] lat Latitude in radians
+ *  @param[out] xyz ECEF coordinates of point on ellipse
+ *
+ *  See <a href="https://en.wikipedia.org/wiki/Ellipsoid#Parametric_representation">parametric representation of ellipsoid</a>*/
+void isce::core::Ellipsoid::xyzOnEllipse(double lon, double lat, cartesian_t &vec) const
+{
+    nVector(lon, lat, vec);
+    vec[0] *= _a;
+    vec[1] *= _a;
+    vec[2] *= b();
 }
 
 #endif

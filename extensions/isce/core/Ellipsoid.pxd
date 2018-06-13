@@ -15,6 +15,7 @@ cdef extern from "isce/core/Ellipsoid.h" namespace "isce::core":
         Ellipsoid(const Ellipsoid&) except +
         double a()
         double e2()
+        double b()
         void a(double)
         void e2(double) 
         double rEast(double)
@@ -22,8 +23,7 @@ cdef extern from "isce/core/Ellipsoid.h" namespace "isce::core":
         double rDir(double,double)
         void lonLatToXyz(cartesian_t&,cartesian_t&)
         void xyzToLonLat(cartesian_t&,cartesian_t&)
-        void getAngs(cartesian_t&,cartesian_t&,cartesian_t&,double&,double&)
-        void getTCN_TCvec(cartesian_t&,cartesian_t&,cartesian_t&,cartesian_t&)
+        void getImagingAnglesAtPlatform(cartesian_t&,cartesian_t&,cartesian_t&,double&,double&)
         void TCNbasis(cartesian_t&,cartesian_t&,cartesian_t&,cartesian_t&,
                       cartesian_t&)
 

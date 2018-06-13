@@ -84,67 +84,40 @@ void Ellipsoid::xyzToLonLat(cartesian_t &xyz, cartesian_t &llh) {
 
 /** @param[in] pos ECEF coordinates of imaging platform in meters 
  *  @param[in] vel ECEF velocity of imaging platform in meters / sec
- *  @param[in] vec Line-of-sight (LOS) vector in ECEF coordinates (meters)
- *  @param[out] az Azimuth angle in radians
- *  @param[out] lk Look angle in radians
+ *  @param[in] los Line-of-sight (LOS) vector in ECEF coordinates (meters), pointing from platform to target
+ *  @param[out] azi Azimuth angle in radians
+ *  @param[out] look Look angle in radians
  *
  *  Azimuth angle is defined as angle of the LOS vector from the North Direction in the anti-clockwise direction.
  *  Look angle is defined as angle of the LOS vector and the downward normal at the imaging platform .
  */
 void isce::core::Ellipsoid::
-getAngs(const cartesian_t & pos, const cartesian_t & vel,
-        const cartesian_t & vec, double & az, double & lk) const {
+getImagingAnglesAtPlatform(const cartesian_t & pos, const cartesian_t & vel,
+        const cartesian_t & los, double & azi, double & look) const {
     /*
      * Computes the look vector given the look angle, azimuth angle, and position vector
      */
+    //Estimate lat,lon for platform position
     cartesian_t temp;
     xyzToLonLat(pos, temp);
 
-    cartesian_t n = {-std::cos(temp[1]) * std::cos(temp[0]),
-                        -std::cos(temp[1]) * std::sin(temp[0]),
-                        -std::sin(temp[1])};
-    lk = std::acos(LinAlg::dot(n, vec) / LinAlg::norm(vec));
+    //Estimate normal to ellipsoid at platform position
+    cartesian_t n;
+    nVector(temp[0], temp[1], n);
+    LinAlg::scale(n, -1.0);
+
+    //Angle subtended with n-vector pointing downwards
+    look = std::acos(LinAlg::dot(n, los) / LinAlg::norm(los));
     LinAlg::cross(n, vel, temp);
 
+    //Get Cross 
     cartesian_t c;
     LinAlg::unitVec(temp, c);
     LinAlg::cross(c, n, temp);
 
     cartesian_t t;
     LinAlg::unitVec(temp, t);
-    az = std::atan2(LinAlg::dot(c, vec), LinAlg::dot(t, vec));
-}
-
-/** @param[in] pos ECEF coordinates of imaging platform in meters.
-    @param[in] vel ECEF velocity of imaging platform in meters / sec.
-    @param[in] vec vector in ECEF coordinates (meters)
-    @param[out] TCVec Projection of vec in TC plane
-
-    \f[
-        TCVec = (\hat{vec} \cdot \hat{t}) \hat{t} + (\hat{vec} \cdot \hat{n}) \hat{n}
-    \f]
-*/
-void isce::core::Ellipsoid::
-getTCN_TCvec(const cartesian_t & pos, const cartesian_t & vel,
-             const cartesian_t & vec, cartesian_t & TCVec) const {
-    /*
-     * Computes the projection of an xyz vector on the TC plane in xyz
-     */
-    cartesian_t temp;
-    xyzToLonLat(pos, temp);
-
-    cartesian_t n = {-std::cos(temp[1]) * std::cos(temp[0]),
-                        -std::cos(temp[1]) * std::sin(temp[0]),
-                        -std::sin(temp[1])};
-    LinAlg::cross(n, vel, temp);
-
-    cartesian_t c;
-    LinAlg::unitVec(temp, c);
-    LinAlg::cross(c, n, temp);
-
-    cartesian_t t;
-    LinAlg::unitVec(temp, t);
-    LinAlg::linComb(LinAlg::dot(t, vec), t, LinAlg::dot(c, vec), c, TCVec);
+    azi = std::atan2(LinAlg::dot(c, los), LinAlg::dot(t, los));
 }
 
 /**@param[in] pos ECEF coordinates of imaging platform in meters

@@ -13,7 +13,10 @@
 #include "LinAlg.h"
 #include "EulerAngles.h"
 
-// EulerAngle constructor
+/** @param[in] yaw Yaw angle in radians 
+ *  @param[in] pitch Pitch angle in radians
+ *  @param[in] roll Roll angle in radians
+ *  @param[in] yaw_orientation Can be "normal" or "center" */
 isce::core::EulerAngles::
 EulerAngles(double yaw, double pitch, double roll, const std::string yaw_orientation) 
     : Attitude(EULERANGLES_T) {
