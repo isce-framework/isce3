@@ -78,6 +78,7 @@ class isce::geometry::Topo {
         isce::core::Orbit _orbit;
         isce::core::Ellipsoid _ellipsoid;
         isce::core::Metadata _meta;
+        isce::core::DateTime _refEpoch;
     
         // Optimization options
         double _threshold;

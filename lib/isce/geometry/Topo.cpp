@@ -169,7 +169,7 @@ void isce::geometry::Topo::
 _initAzimuthLine(int line, StateVector & state, Basis & TCNbasis) {
 
     // Get satellite azimuth time
-    const double tline = _meta.sensingStart.secondsSinceEpoch()
+    const double tline = _meta.sensingStart.secondsSinceEpoch(_refEpoch)
                       + (_meta.numberAzimuthLooks * (line/_meta.prf));
 
     // Get state vector
