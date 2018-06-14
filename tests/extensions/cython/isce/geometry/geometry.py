@@ -31,7 +31,7 @@ def test_geo2rdr():
     doppler.archive(xml, 'SkewDoppler')
 
     # Call geo2rdr
-    llh = [np.radians(35.10), np.radians(-115.6), 55.0]
+    llh = [np.radians(-115.6), np.radians(35.1), 55.0]
     aztime, slantrange = isceextension.py_geo2rdr(llh, ellps, orbit, doppler, meta,
                                                   threshold=1.0e-8)
 

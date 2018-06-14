@@ -98,9 +98,9 @@ void Baseline::calculateLookVector(double t) {
     cartesian_t xyz, vel, llh;
     // Interpolate orbit to azimuth time
     _orbit1.interpolate(t, xyz, vel, _orbitMethod);
-    _elp.xyzToLatLon(xyz, llh);
+    _elp.xyzToLonLat(xyz, llh);
     // Make a Peg
-    Peg peg(llh[0], llh[1], _radar.pegHeading);
+    Peg peg(llh[1], llh[0], _radar.pegHeading);
     // And a Peg Transformation
     Pegtrans ptm;
     ptm.radarToXYZ(_elp, peg);

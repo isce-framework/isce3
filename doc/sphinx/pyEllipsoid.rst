@@ -1,0 +1,2 @@
+.. autoclass:: isceextension.pyEllipsoid
+   :members:

@@ -11,18 +11,18 @@
 /** @param[in] llh Latitude (ras), Longitude (rad), Height (m).
  *  @param[out] xyz ECEF Cartesian coordinates in meters.*/
 void isce::core::Ellipsoid::
-latLonToXyz(const cartesian_t & llh, cartesian_t & xyz) const {
+lonLatToXyz(const cartesian_t & llh, cartesian_t & xyz) const {
     /*
      * Given a lat, lon, and height, produces a geocentric vector.
      */
 
     // Radius of Earth in East direction
-    auto re = rEast(llh[0]);
+    auto re = rEast(llh[1]);
     // Parametric representation of a circle as a function of longitude
-    xyz[0] = (re + llh[2]) * std::cos(llh[0]) * std::cos(llh[1]);
-    xyz[1] = (re + llh[2]) * std::cos(llh[0]) * std::sin(llh[1]);
+    xyz[0] = (re + llh[2]) * std::cos(llh[1]) * std::cos(llh[0]);
+    xyz[1] = (re + llh[2]) * std::cos(llh[1]) * std::sin(llh[0]);
     // Parametric representation with the radius adjusted for eccentricity
-    xyz[2] = ((re * (1.0 - _e2)) + llh[2]) * std::sin(llh[0]);
+    xyz[2] = ((re * (1.0 - _e2)) + llh[2]) * std::sin(llh[1]);
 }
 
 /** @param[in] xyz ECEF Cartesian coordinates in meters. 
@@ -30,7 +30,7 @@ latLonToXyz(const cartesian_t & llh, cartesian_t & xyz) const {
  *
  *  Using the approach laid out in Vermeille, 2002 \cite vermeille2002direct */
 void isce::core::Ellipsoid::
-xyzToLatLon(const cartesian_t & xyz, cartesian_t & llh) const {
+xyzToLonLat(const cartesian_t & xyz, cartesian_t & llh) const {
     /*
      * Given a geocentric XYZ, produces a lat, lon, and height above the reference ellipsoid.
      *      VERMEILLE IMPLEMENTATION
@@ -52,15 +52,15 @@ xyzToLatLon(const cartesian_t & xyz, cartesian_t & llh) const {
     // Radius adjusted for eccentricity
     double d = (k * std::sqrt(std::pow(xyz[0], 2) + std::pow(xyz[1], 2))) / (k + _e2);
     // Latitude is a function of z and radius
-    llh[0] = std::atan2(xyz[2], d);
+    llh[1] = std::atan2(xyz[2], d);
     // Longitude is a function of x and y
-    llh[1] = std::atan2(xyz[1], xyz[0]);
+    llh[0] = std::atan2(xyz[1], xyz[0]);
     // Height is a function of location and radius
     llh[2] = ((k + _e2 - 1.) * sqrt(std::pow(d, 2) + std::pow(xyz[2], 2))) / k;
 }
 
 /*
-void Ellipsoid::xyzToLatLon(cartesian_t &xyz, cartesian_t &llh) {
+void Ellipsoid::xyzToLonLat(cartesian_t &xyz, cartesian_t &llh) {
     //
     // Given a geocentric XYZ, produces a lat, lon, and height above the reference ellipsoid.
     //      SCOTT HENSLEY IMPLEMENTATION
@@ -76,75 +76,48 @@ void Ellipsoid::xyzToLatLon(cartesian_t &xyz, cartesian_t &llh) {
     double theta = atan(tant);
     tant = (v[2] + (((1. / (1. - _e2)) - 1.) * b * std::pow(std::sin(theta), 3))) /
            (p - (_e2 * a * std::pow(std::cos(theta), 3)));
-    llh[0] = atan(tant);
-    llh[1] = atan2(v[1], v[0]);
-    llh[2] = (p / std::cos(llh[0])) - rEast(llh[0]);
+    llh[1] = atan(tant);
+    llh[0] = atan2(v[1], v[0]);
+    llh[2] = (p / std::cos(llh[1])) - rEast(llh[1]);
 }
 */
 
 /** @param[in] pos ECEF coordinates of imaging platform in meters 
  *  @param[in] vel ECEF velocity of imaging platform in meters / sec
- *  @param[in] vec Line-of-sight (LOS) vector in ECEF coordinates (meters)
- *  @param[out] az Azimuth angle in radians
- *  @param[out] lk Look angle in radians
+ *  @param[in] los Line-of-sight (LOS) vector in ECEF coordinates (meters), pointing from platform to target
+ *  @param[out] azi Azimuth angle in radians
+ *  @param[out] look Look angle in radians
  *
  *  Azimuth angle is defined as angle of the LOS vector from the North Direction in the anti-clockwise direction.
  *  Look angle is defined as angle of the LOS vector and the downward normal at the imaging platform .
  */
 void isce::core::Ellipsoid::
-getAngs(const cartesian_t & pos, const cartesian_t & vel,
-        const cartesian_t & vec, double & az, double & lk) const {
+getImagingAnglesAtPlatform(const cartesian_t & pos, const cartesian_t & vel,
+        const cartesian_t & los, double & azi, double & look) const {
     /*
      * Computes the look vector given the look angle, azimuth angle, and position vector
      */
+    //Estimate lat,lon for platform position
     cartesian_t temp;
-    xyzToLatLon(pos, temp);
+    xyzToLonLat(pos, temp);
 
-    cartesian_t n = {-std::cos(temp[0]) * std::cos(temp[1]),
-                        -std::cos(temp[0]) * std::sin(temp[1]),
-                        -std::sin(temp[0])};
-    lk = std::acos(LinAlg::dot(n, vec) / LinAlg::norm(vec));
+    //Estimate normal to ellipsoid at platform position
+    cartesian_t n;
+    nVector(temp[0], temp[1], n);
+    LinAlg::scale(n, -1.0);
+
+    //Angle subtended with n-vector pointing downwards
+    look = std::acos(LinAlg::dot(n, los) / LinAlg::norm(los));
     LinAlg::cross(n, vel, temp);
 
+    //Get Cross 
     cartesian_t c;
     LinAlg::unitVec(temp, c);
     LinAlg::cross(c, n, temp);
 
     cartesian_t t;
     LinAlg::unitVec(temp, t);
-    az = std::atan2(LinAlg::dot(c, vec), LinAlg::dot(t, vec));
-}
-
-/** @param[in] pos ECEF coordinates of imaging platform in meters.
-    @param[in] vel ECEF velocity of imaging platform in meters / sec.
-    @param[in] vec vector in ECEF coordinates (meters)
-    @param[out] TCVec Projection of vec in TC plane
-
-    \f[
-        TCVec = (\hat{vec} \cdot \hat{t}) \hat{t} + (\hat{vec} \cdot \hat{n}) \hat{n}
-    \f]
-*/
-void isce::core::Ellipsoid::
-getTCN_TCvec(const cartesian_t & pos, const cartesian_t & vel,
-             const cartesian_t & vec, cartesian_t & TCVec) const {
-    /*
-     * Computes the projection of an xyz vector on the TC plane in xyz
-     */
-    cartesian_t temp;
-    xyzToLatLon(pos, temp);
-
-    cartesian_t n = {-std::cos(temp[0]) * std::cos(temp[1]),
-                        -std::cos(temp[0]) * std::sin(temp[1]),
-                        -std::sin(temp[0])};
-    LinAlg::cross(n, vel, temp);
-
-    cartesian_t c;
-    LinAlg::unitVec(temp, c);
-    LinAlg::cross(c, n, temp);
-
-    cartesian_t t;
-    LinAlg::unitVec(temp, t);
-    LinAlg::linComb(LinAlg::dot(t, vec), t, LinAlg::dot(c, vec), c, TCVec);
+    azi = std::atan2(LinAlg::dot(c, los), LinAlg::dot(t, los));
 }
 
 /**@param[in] pos ECEF coordinates of imaging platform in meters
@@ -159,11 +132,11 @@ TCNbasis(const cartesian_t & pos, const cartesian_t & vel, cartesian_t & t,
      Get TCN basis vectors. Return three separate basis vectors.
      */
     cartesian_t llh;
-    xyzToLatLon(pos, llh);
+    xyzToLonLat(pos, llh);
 
-    n = {-std::cos(llh[0]) * std::cos(llh[1]),
-         -std::cos(llh[0]) * std::sin(llh[1]),
-         -std::sin(llh[0])};
+    n = {-std::cos(llh[1]) * std::cos(llh[0]),
+         -std::cos(llh[1]) * std::sin(llh[0]),
+         -std::sin(llh[1])};
 
     cartesian_t temp;
     LinAlg::cross(n, vel, temp);
