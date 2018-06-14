@@ -311,46 +311,33 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     LinAlg::tranMat(enumat, xyz2enu);
     LinAlg::matVec(xyz2enu, satToGround, enu);
     const double cosalpha = std::abs(enu[2]) / LinAlg::norm(enu);
-
-    // Look angles
-    double aa = LinAlg::norm(state.position());
-    double bb = LinAlg::norm(targetXYZ);
-    double costheta = 0.5 * ((aa / rng) + (rng / aa) - ((bb / aa) * (bb / rng)));
-    double sintheta = std::sqrt(1.0 - costheta * costheta);
-    double gamma = rng * costheta;
-    double alpha = dopfact - gamma*LinAlg::dot(nhat, vhat)
-                 / LinAlg::dot(vhat, that);
-    double beta = -1 * _meta.lookSide * std::sqrt(
-                   rng * rng * sintheta * sintheta - alpha * alpha);
-
+    
     // LOS vectors
     layers.inc(bin, std::acos(cosalpha) * degrees);
     layers.hdg(bin, (std::atan2(-enu[1], -enu[0]) - (0.5*M_PI)) * degrees);
 
     // East-west slope using central difference
-    aa = demInterp.interpolate(lon - demInterp.deltaX(), lat);
-    bb = demInterp.interpolate(lon + demInterp.deltaX(), lat);
-    gamma = lat * radians;
-    alpha = ((bb - aa) * degrees)
-          / (2.0 * _ellipsoid.rEast(gamma) * demInterp.deltaX());
+    double aa = demInterp.interpolate(lon - demInterp.deltaX(), lat);
+    double bb = demInterp.interpolate(lon + demInterp.deltaX(), lat);
+    double gamma = lat * radians;
+    double alpha = ((bb - aa) * degrees) / (2.0 * _ellipsoid.rEast(gamma) * demInterp.deltaX());
 
     // North-south slope using central difference
     aa = demInterp.interpolate(lon, lat - demInterp.deltaY());
     bb = demInterp.interpolate(lon, lat + demInterp.deltaY());
-    beta = ((bb - aa) * degrees)
-         / (2.0 * _ellipsoid.rNorth(gamma) * demInterp.deltaY());
+    double beta = ((bb - aa) * degrees) / (2.0 * _ellipsoid.rNorth(gamma) * demInterp.deltaY());
 
     // Compute local incidence angle
     const double enunorm = LinAlg::norm(enu);
     for (int idx = 0; idx < 3; ++idx) {
         enu[idx] = enu[idx] / enunorm;
     }
-    costheta = ((enu[0] * alpha) + (enu[1] * beta) - enu[2])
-             / std::sqrt(1.0 + (alpha * alpha) + (beta * beta));
+    double costheta = ((enu[0] * alpha) + (enu[1] * beta) - enu[2])
+                     / std::sqrt(1.0 + (alpha * alpha) + (beta * beta));
     layers.localInc(bin, std::acos(costheta)*degrees);
 
     // Compute amplitude simulation
-    sintheta = std::sqrt(1.0 - (costheta * costheta));
+    double sintheta = std::sqrt(1.0 - (costheta * costheta));
     bb = sintheta + 0.1 * costheta;
     layers.sim(bin, std::log10(std::abs(0.01 * costheta / (bb * bb * bb))));
 
