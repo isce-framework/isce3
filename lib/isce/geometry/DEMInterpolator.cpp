@@ -143,8 +143,7 @@ interpolate(double x, double y) const {
         } else if (_interpMethod == isce::core::BICUBIC_METHOD) {
             value = isce::core::Interpolator::bicubic(col, row, _dem);
         } else if (_interpMethod == isce::core::AKIMA_METHOD) {
-            value = isce::core::Interpolator::akima(_dem.width(), _dem.length(), _dem,
-                col, row);
+            value = isce::core::Interpolator::akima(col, row, _dem);
         } else if (_interpMethod == isce::core::BIQUINTIC_METHOD) { 
             value = isce::core::Interpolator::interp_2d_spline(6, _dem, col, row);
         } else if (_interpMethod == isce::core::NEAREST_METHOD) {
