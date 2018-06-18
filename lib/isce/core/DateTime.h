@@ -20,7 +20,7 @@ namespace isce {
     }
 }
 
-// DateTime declaration
+/** Data structure to store date time to nano-sec precision*/
 struct isce::core::DateTime {
 
     int year;
@@ -31,21 +31,38 @@ struct isce::core::DateTime {
     int seconds;
     double frac;
 
-    // Constructors
+    /**Default constructor
+     *
+     * Initialize to origin of GPS time 1970-01-01T00:00:00.0*/
     DateTime() : DateTime(1970, 1, 1) {};
+
+    /**Constructor using ordinal*/
     DateTime(double ord);
+
+    /**Constructor using year, month, day of month*/
     DateTime(int yy, int mm, int dd);
+
+    /**Constructor using date, hours, mins and integer seconds*/
     DateTime(int yy, int mm, int dd, int hh, int mn, int ss);
+
+    /**Constructor using date, hours, mins, and floating point seconds */
     DateTime(int yy, int mm, int dd, int hh, int mn, double ss);
+
+    /**Constructor using date, hours, mins, integer secs and fractional secs */
     DateTime(int yy, int mm, int dd, int hh, int mn, int ss, double ff);
+
+    /**Copy constructor*/
     DateTime(const DateTime& ts);
+
+    /**Construct from a string representation in ISO-8601 format*/
     DateTime(const std::string &);
 
-    // Init function to be used by constructors
+    ///@cond
     void _init(int yy, int mm, int dd, int hh, int mn, int ss, double ff);
     void _normalize_time();
     void _normalize_date();
     void _normalize();
+    ///@endcond
 
     // Comparison operators
     bool operator<( const DateTime &ts) const;
@@ -70,21 +87,31 @@ struct isce::core::DateTime {
 
     TimeDelta operator-(const DateTime& ts) const;
 
-    // Get methods
+    /** Return day of year*/
     int dayOfYear() const;
+
+    /**Return seconds of day*/
     double secondsOfDay() const;
+
+    /**Return day of week*/
     int dayOfWeek() const;
+
+    /**Return ordinal - time since GPS time origin*/
     double ordinal() const;
 
-    // Get and set with respect to fixed epoch
+    /**Return ordinal - time since GPS time origin*/
     double secondsSinceEpoch() const;
+
+    /**Return time elapsed since given DateTime epoch*/
     double secondsSinceEpoch(const DateTime &) const;
+
+    /**Return time elapsed since given ordinal epoch*/
     void secondsSinceEpoch(double);
   
-    // Output methods
+    /**Return date formatted as ISO-8601 string*/
     std::string isoformat() const;
 
-    // Parsing methods
+    /**Parse a given string in ISO-8601 format*/
     void strptime(const std::string &);
 };
 

@@ -80,9 +80,7 @@ class isce::geometry::Topo {
         isce::core::Orbit _orbit;
         isce::core::Ellipsoid _ellipsoid;
         isce::core::Metadata _meta;
-        // Local isce::core peg objects
-        isce::core::Peg _peg;
-        isce::core::Pegtrans _ptm;
+        isce::core::DateTime _refEpoch;
     
         // Optimization options
         double _threshold;

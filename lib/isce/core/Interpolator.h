@@ -80,7 +80,7 @@ class isce::core::Interpolator {
         static double quadInterpolate(const std::valarray<double> &,
                                       const std::valarray<double> &, double);
         // Akima interpolation
-        static double akima(int, int, const Matrix<float> &, double, double);
+        static double akima(double, double, const Matrix<float> &);
 };
 
 // Spline utilities

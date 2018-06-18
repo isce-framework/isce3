@@ -87,7 +87,7 @@ TEST(Geo2rdrTest, CheckResults) {
     }
     // Check errors; azimuth errors tend to be a little larger
     ASSERT_TRUE(rg_error < 1.0e-10);
-    ASSERT_TRUE(az_error < 1.0e-6);
+    ASSERT_TRUE(az_error < 1.0e-10);
 }
 
 // Read metadata from a VRT file and return a stringstream object

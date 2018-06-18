@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <gtest/gtest.h>
 
 // isce::core
@@ -29,19 +30,18 @@
 // Declaration for utility function to read metadata stream from VRT
 std::stringstream streamFromVRT(const char * filename, int bandNum=1);
 
+// Declaration for utility function to read test data
+void loadTestData(std::vector<std::string> & aztimes, std::vector<double> & ranges,
+                  std::vector<double> & heights,
+                  std::vector<double> & ref_data, std::vector<double> & ref_zerodop);
+
 struct GeometryTest : public ::testing::Test {
 
     // isce::core objects
-    isce::core::DateTime azDate;
     isce::core::Ellipsoid ellipsoid;
-    isce::core::Peg peg;
-    isce::core::Pegtrans ptm;
     isce::core::Poly2d skewDoppler;
     isce::core::Metadata meta;
     isce::core::Orbit orbit;
-    isce::core::StateVector state;
-    isce::core::Pixel pixel;
-    isce::core::Basis basis;
 
     // Constructor
     protected:
@@ -57,113 +57,66 @@ struct GeometryTest : public ::testing::Test {
                     cereal::make_nvp("SkewDoppler", skewDoppler),
                     cereal::make_nvp("Radar", meta));
             }
-
-            // Interpolate orbit
-            const isce::core::DateTime azDate("2003-02-26T17:55:28.00");
-            const double azTime = azDate.secondsSinceEpoch();
-            isce::core::cartesian_t xyzsat, velsat;
-            int stat = orbit.interpolate(azTime, xyzsat, velsat, isce::core::HERMITE_METHOD);
-            if (stat != 0) {
-                std::cerr << "Unable to interpolate orbit." << std::endl;
-            }
-            state.position(xyzsat);
-            state.velocity(velsat);
-            const double satVmag = isce::core::LinAlg::norm(velsat);
-
-            // Get TCN basis
-            isce::core::cartesian_t that, chat, nhat;
-            ellipsoid.TCNbasis(xyzsat, velsat, that, chat, nhat);
-            basis.x0(that);   
-            basis.x1(chat);
-            basis.x2(nhat);
-
-            // Set peg point right below satellite
-            isce::core::cartesian_t llhsat;
-            ellipsoid.xyzToLatLon(xyzsat, llhsat);
-            peg.lat = llhsat[0];
-            peg.lon = llhsat[1];
-            peg.hdg = -166.40653160564963 * M_PI / 180.0;
-            ptm.radarToXYZ(ellipsoid, peg);
-
-            // Set pixel properties
-            const size_t rbin = 500;
-            const double slantRange = meta.rangeFirstSample 
-                                    + rbin * meta.slantRangePixelSpacing;
-            pixel.range(slantRange);
-            pixel.dopfact((0.5 * meta.radarWavelength * (skewDoppler.eval(0, rbin) / satVmag))
-                * slantRange);
-            pixel.bin(rbin);
         }
 };
 
 TEST_F(GeometryTest, RdrToGeoWithOrbit) {
-    // Make a constant DEM interpolator
-    isce::geometry::DEMInterpolator demInterp(0.0);
+    
+    // Load test data
+    std::vector<std::string> aztimes;
+    std::vector<double> ranges, heights, ref_data, ref_zerodop;
+    loadTestData(aztimes, ranges, heights, ref_data, ref_zerodop);
 
-    // Initialize guess 
-    isce::core::cartesian_t targetLLH = {0.0, 0.0, 0.0};
-
-    // Set azimuth time
-    const isce::core::DateTime azDate("2003-02-26T17:55:28.00");
-    const double azTime = azDate.secondsSinceEpoch();
-
-    // Run rdr2geo
-    int stat = isce::geometry::rdr2geo(azTime, pixel.range(), pixel.dopfact(),
-        orbit, ellipsoid, demInterp, targetLLH, meta.lookSide, 0.001, 25, 15,
-        isce::core::HERMITE_METHOD);
-
-    // Check results
+    // Loop over test data
     const double degrees = 180.0 / M_PI;
-    ASSERT_EQ(stat, 1);
-    ASSERT_NEAR(degrees * targetLLH[0], 35.005082934361745, 1.0e-8);
-    ASSERT_NEAR(degrees * targetLLH[1], -115.5921003238083, 1.0e-8);
-    ASSERT_NEAR(targetLLH[2], 2.835586858903558e-09, 1.0e-8);
+    for (size_t i = 0; i < aztimes.size(); ++i) {
 
-    // Run it again with zero doppler
-    pixel.dopfact(0.0);
-    stat = isce::geometry::rdr2geo(azTime, pixel.range(), pixel.dopfact(),
-        orbit, ellipsoid, demInterp, targetLLH, meta.lookSide, 0.001, 25, 15,
-        isce::core::HERMITE_METHOD);
-    ASSERT_EQ(stat, 1);
-    ASSERT_NEAR(degrees * targetLLH[0], 35.01267683520824, 1.0e-8);
-    ASSERT_NEAR(degrees * targetLLH[1], -115.59009580548408, 1.0e-8);
-    ASSERT_NEAR(targetLLH[2], 0.0, 1.0e-8);
+        // Make azimuth date
+        const isce::core::DateTime azDate(aztimes[i]); 
+        const double azTime = azDate.secondsSinceEpoch();
+
+        // Evaluate Doppler
+        const double rbin = (ranges[i] - meta.rangeFirstSample) / meta.slantRangePixelSpacing;
+        const double doppler = skewDoppler.eval(0, rbin);
+
+        // Make constant DEM interpolator set to input height
+        isce::geometry::DEMInterpolator dem(heights[i]);
+
+        // Initialize guess
+        isce::core::cartesian_t targetLLH = {0.0, 0.0, dem.interpolate(0.0, 0.0)};
+
+        // Run rdr2geo
+        int stat = isce::geometry::rdr2geo(azTime, ranges[i], doppler,
+            orbit, ellipsoid, dem, targetLLH, meta.radarWavelength, meta.lookSide,
+            1.0e-8, 25, 15, isce::core::HERMITE_METHOD);
+        // Check
+        ASSERT_EQ(stat, 1);
+        ASSERT_NEAR(degrees * targetLLH[0], ref_data[3*i], 1.0e-8);
+        ASSERT_NEAR(degrees * targetLLH[1], ref_data[3*i+1], 1.0e-8);
+        ASSERT_NEAR(targetLLH[2], ref_data[3*i+2], 1.0e-8);
+
+        // Run again with zero doppler
+        stat = isce::geometry::rdr2geo(azTime, ranges[i], 0.0,
+            orbit, ellipsoid, dem, targetLLH, meta.radarWavelength, meta.lookSide,
+            1.0e-8, 25, 15, isce::core::HERMITE_METHOD);
+        // Check
+        ASSERT_EQ(stat, 1);
+        ASSERT_NEAR(degrees * targetLLH[0], ref_zerodop[3*i], 1.0e-8);
+        ASSERT_NEAR(degrees * targetLLH[1], ref_zerodop[3*i+1], 1.0e-8);
+        ASSERT_NEAR(targetLLH[2], ref_zerodop[3*i+2], 1.0e-8);
+
+    }
+   
 }
-
-TEST_F(GeometryTest, RdrToGeo) {
-    // Make a constant DEM interpolator
-    isce::geometry::DEMInterpolator demInterp(0.0);
-
-    // Initialize guess 
-    isce::core::cartesian_t targetLLH = {0.0, 0.0, 0.0};
-
-    // Run rdr2geo
-    int stat = isce::geometry::rdr2geo(pixel, basis, state, ellipsoid, ptm, demInterp,
-        targetLLH, meta.lookSide, 0.001, 25, 15);
-
-    // Check results
-    const double degrees = 180.0 / M_PI;
-    ASSERT_EQ(stat, 1);
-    ASSERT_NEAR(degrees * targetLLH[0], 35.005082934361745, 1.0e-8);
-    ASSERT_NEAR(degrees * targetLLH[1], -115.5921003238083, 1.0e-8);
-    ASSERT_NEAR(targetLLH[2], 2.835586858903558e-09, 1.0e-8);
-
-    // Run it again with zero doppler
-    pixel.dopfact(0.0);
-    stat = isce::geometry::rdr2geo(pixel, basis, state, ellipsoid, ptm, demInterp,
-        targetLLH, meta.lookSide, 1.0e-6, 25, 10);
-    ASSERT_EQ(stat, 1);
-    ASSERT_NEAR(degrees * targetLLH[0], 35.01267683520824, 1.0e-8);
-    ASSERT_NEAR(degrees * targetLLH[1], -115.59009580548408, 1.0e-8);
-    ASSERT_NEAR(targetLLH[2], 0.0, 1.0e-8);
-}
-
 
 TEST_F(GeometryTest, GeoToRdr) {
     
     // Make a test LLH
     const double radians = M_PI / 180.0;
-    isce::core::cartesian_t llh = {35.10*radians, -115.6*radians, 55.0};
+    //isce::core::cartesian_t llh = {35.10*radians, -115.6*radians, 55.0};
+    isce::core::cartesian_t llh = {-115.6*radians, 35.10*radians, 55.0};
+    // Reformat orbit
+    orbit.reformatOrbit();
 
     // Run geo2rdr
     double aztime, slantRange;
@@ -215,6 +168,64 @@ std::stringstream streamFromVRT(const char * filename, int bandNum) {
     metastream << meta;
     // All done
     return metastream;
+}
+
+// Load test data
+void loadTestData(std::vector<std::string> & aztimes, std::vector<double> & ranges,
+                  std::vector<double> & heights,
+                  std::vector<double> & ref_data, std::vector<double> & ref_zerodop) {
+
+    // Load azimuth times and slant ranges
+    std::ifstream ifid("input_data.txt");
+    std::string line;
+    while (std::getline(ifid, line)) {
+        std::stringstream stream;
+        std::string aztime;
+        double range, h;
+        stream << line;
+        stream >> aztime >> range >> h;
+        aztimes.push_back(aztime);
+        ranges.push_back(range);
+        heights.push_back(h);
+    }
+    ifid.close();
+
+    // Load test data for non-zero doppler
+    ifid = std::ifstream("output_data.txt");
+    while (std::getline(ifid, line)) {
+        std::stringstream stream;
+        double lat, lon, h;
+        stream << line;
+        stream >> lat >> lon >> h;
+        ref_data.push_back(lon);
+        ref_data.push_back(lat);
+        ref_data.push_back(h);
+    }
+    ifid.close();
+
+    // Load test data for zero doppler
+    ifid = std::ifstream("output_data_zerodop.txt");
+    while (std::getline(ifid, line)) {
+        std::stringstream stream;
+        double lat, lon, h;
+        stream << line;
+        stream >> lat >> lon >> h;
+        ref_zerodop.push_back(lon);
+        ref_zerodop.push_back(lat);
+        ref_zerodop.push_back(h);
+    }
+    ifid.close();
+
+    // Check sizes
+    if (aztimes.size() != (ref_data.size() / 3)) {
+        std::cerr << "Incompatible data sizes" << std::endl;
+        exit(1);
+    }
+    if (aztimes.size() != (ref_zerodop.size() / 3)) {
+        std::cerr << "Incompatible data sizes" << std::endl;
+        exit(1);
+    }
+
 }
 
 // end of file

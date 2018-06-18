@@ -12,7 +12,10 @@
 #include "Peg.h"
 #include "Doppler.h"
 
-// Doppler constructor
+/** @param[in] orbit Orbit data structure
+ *  @param[in] attitude Attitude data structure
+ *  @param[in] ellipsoid Ellipsoid data structure used for orbit and attitude representation
+ *  @param[in] epoch Epoch time of interest*/
 isce::core::Doppler::
 Doppler(Orbit & orbit, Attitude * attitude, Ellipsoid & ellipsoid, double epoch) {
 
@@ -37,12 +40,12 @@ Doppler(Orbit & orbit, Attitude * attitude, Ellipsoid & ellipsoid, double epoch)
         throw std::out_of_range("Orbit out of range");
     }
     // Compute llh
-    ellipsoid.xyzToLatLon(satxyz, satllh);
+    ellipsoid.xyzToLonLat(satxyz, satllh);
     // Compute heading
     double heading = orbit.getENUHeading(epoch);
 
     // Create a temporary peg object
-    Peg peg(satllh[0], satllh[1], heading);
+    Peg peg(satllh[1], satllh[0], heading);
 
     // Set SCH information
     ptm.radarToXYZ(ellipsoid, peg);
@@ -56,7 +59,12 @@ Doppler(Orbit & orbit, Attitude * attitude, Ellipsoid & ellipsoid, double epoch)
 
 }
 
-// Evaluate Doppler centroid at a specific slant range
+/**@param[in] slantRange slant range to pixel of interest in meters
+ * @param[in] wvl Wavelength of imaging platform in meters
+ * @param[in] frame Can be "inertial" or "fixed"
+ * @param[in] max_iter Number of iterations. Default is 10.
+ * @param[in] side -1 for Right and +1 for left. Default is -1.
+ * @param[in] precession To apply precession correction or not*/
 double isce::core::Doppler::
 centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
     int side, bool precession) {
@@ -87,9 +95,9 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
         // Compute vectors for TCN-like basis
         cartesian_t q, c, b, a;
         if (attitude->yawOrientation().compare("normal") == 0) {
-            temp = {std::cos(satllh[0]) * std::cos(satllh[1]),
-                    std::cos(satllh[0]) * std::sin(satllh[1]),
-                    std::sin(satllh[0])};
+            temp = {std::cos(satllh[1]) * std::cos(satllh[0]),
+                    std::cos(satllh[1]) * std::sin(satllh[0]),
+                    std::sin(satllh[1])};
         } else if (attitude->yawOrientation().compare("center") == 0) {
             temp = {satxyz[0], satxyz[1], satxyz[2]};
         }
@@ -149,11 +157,11 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
         LinAlg::linComb(1.0, satxyz, 1.0, delta, targetVec);
 
         // Compute LLH of ground point
-        ellipsoid.xyzToLatLon(targetVec, targetLLH);
+        ellipsoid.xyzToLonLat(targetVec, targetLLH);
         // Set the expected target height
         targetLLH[2] = height;
         // Compute updated sch height
-        ellipsoid.latLonToXyz(targetLLH, targetVec);
+        ellipsoid.lonLatToXyz(targetLLH, targetVec);
         ptm.convertSCHtoXYZ(targetSCH, targetVec, XYZ_2_SCH);
         zsch = targetSCH[2];
 
@@ -166,7 +174,7 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
 
     // Compute unitary look vector
     cartesian_t R, Rhat;
-    ellipsoid.latLonToXyz(targetLLH, targetVec);
+    ellipsoid.lonLatToXyz(targetLLH, targetVec);
     LinAlg::linComb(1.0, satxyz, -1.0, targetVec, R);
     LinAlg::unitVec(R, Rhat);
     

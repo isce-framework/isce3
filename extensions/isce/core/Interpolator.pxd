@@ -1,27 +1,31 @@
 #cython: language_level=3
 #
-# Author: Joshua Cohen
-# Copyright 2017
+# Author: Joshua Cohen, Bryan V. Riel
+# Copyright 2017-2018
 #
 
 from libcpp.vector cimport vector
+from Matrix cimport valarray, Matrix
 
 cdef extern from "isce/core/Interpolator.h" namespace "isce::core":
     cdef cppclass Interpolator:
         Interpolator() except +
         @staticmethod
-        U bilinear[U](double,double,vector[vector[U]]&)
+        U bilinear[U](double, double, const Matrix[U] &)
         @staticmethod
-        U bicubic[U](double,double,vector[vector[U]]&)
+        U bicubic[U](double, double, const Matrix[U] &)
         @staticmethod
-        void sinc_coef(double,double,int,double,int,int&,int&,vector[double]&)
+        void sinc_coef(double, double, int, double, int, valarray[double] &)
         @staticmethod
-        U sinc_eval[U,V](vector[U]&,vector[V]&,int,int,int,double,int)
+        U sinc_eval[U,V](const Matrix[U] &, const Matrix[V] &, int, int, double, int)
         @staticmethod
-        U sinc_eval_2d[U,V](vector[vector[U]]&,vector[V]&,int,int,int,int,double,double,int,int)
+        U sinc_eval_2d[U,V](const Matrix[U] &, const Matrix[V] &,
+                            int, int, double, double, int, int)
         @staticmethod
-        float interp_2d_spline(int,int,int,vector[vector[float]]&,double,double)
+        float interp_2d_spline[U](int, const Matrix[U] &, double, double)
         @staticmethod
-        double quadInterpolate(vector[double]&,vector[double]&,double)
+        double quadInterpolate(valarray[double] &, valarray[double] &, double)
         @staticmethod
-        double akima(int,int,vector[vector[float]]&,double,double)
+        double akima(double, double, const Matrix[float] &)
+
+# end of file

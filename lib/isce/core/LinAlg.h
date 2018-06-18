@@ -16,29 +16,38 @@ namespace isce {
     }
 }
 
-// LinAlg declaration
+/** Simple linear algebra operations for triplets of double precision numbers*/
 struct isce::core::LinAlg {
     LinAlg() = default;
-    // Multiply all elements by a scalar value
+    /**Multiply all elements by a scalar value*/
     static void scale(cartesian_t &, double);
-    // Cross product
+
+    /** Cross product*/
     static void cross(const cartesian_t &, const cartesian_t &, cartesian_t &);
-    // Dot product
+
+    /** Dot product*/
     static double dot(const cartesian_t &,const cartesian_t &);
-    // Linear combination of vectors
+
+    /** Linear combination of vectors*/
     static void linComb(double, const cartesian_t &, double, const cartesian_t &,
                         cartesian_t &);
-    // Matrix-matrix multiplication
+
+    /** Matrix-matrix multiplication */
     static void matMat(const cartmat_t &, const cartmat_t &, cartmat_t &);
-    // Matrix-vector multiplication
+
+    /** Matrix-vector multiplication */
     static void matVec(const cartmat_t &, const cartesian_t &, cartesian_t &);
-    // Norm of vector
+
+    /** Norm of vector */
     static double norm(const cartesian_t &);
-    // Transpose matrix
+
+    /** Transpose matrix */
     static void tranMat(const cartmat_t &, cartmat_t &);
-    // Unit vector
+
+    /** Unit vector */
     static void unitVec(const cartesian_t &, cartesian_t &);
-    // Compute ENU basis
+
+    /** Compute ENU basis*/
     static void enuBasis(double, double, cartmat_t &);
 };
 

@@ -413,11 +413,13 @@ quadInterpolate(const std::valarray<double> & x, const std::valarray<double> & y
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 double isce::core::Interpolator::
-akima(int nx, int ny, const Matrix<float> & z, double x, double y) {
+akima(double x, double y, const Matrix<float> & z) {
 
     Matrix<double> e(2, 2), sx(2, 2), sy(2, 2), sxy(2, 2);
     std::valarray<double> m(4);
     double wx2, wx3, wy2, wy3;
+    int nx = z.width();
+    int ny = z.length();
     int ix = x;
     int iy = y;
 

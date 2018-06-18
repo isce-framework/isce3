@@ -11,6 +11,10 @@ from Ellipsoid cimport Ellipsoid
 from Serialization cimport load_archive
 
 cdef class pyEllipsoid:
+    '''
+    Python wrapper for isce::core::Ellipsoid
+    '''
+
     cdef Ellipsoid *c_ellipsoid
     cdef bool __owner
 
@@ -28,19 +32,48 @@ cdef class pyEllipsoid:
         new_elp.__owner = False
         return new_elp
 
+
     @property
     def a(self):
+        '''
+        Return the semi-major axis of ellipsoid in meters.
+        '''
         return self.c_ellipsoid.a()
+
+    @property
+    def b(self):
+        '''
+        Return the semi-minor axis of ellipsoid in meters.
+        '''
+        return self.c_ellipsoid.b()
+
     @a.setter
     def a(self, double a):
+        '''
+        Set the semi-major axis of ellipsoid in meters.
+        '''
         self.c_ellipsoid.a(a)
+
+
     @property
     def e2(self):
+        '''
+        Return eccentricity-squared of ellipsoid.
+        '''
         return self.c_ellipsoid.e2()
+
+
     @e2.setter
     def e2(self, double a):
+        '''
+        Set the eccentricity-squared of ellipsoid.
+        '''
         self.c_ellipsoid.e2(a)
+
     def copyFrom(self, elp):
+        '''
+        Copy ellipsoid parameters with any class that has semi-major axis and eccentricity parameters.
+        '''
         # Replaces copy-constructor functionality
         try:
             self.a = elp.a
@@ -52,32 +85,54 @@ cdef class pyEllipsoid:
                   "pyEllipsoid.")
 
     def rEast(self, double a):
+        '''
+        Return the Prime Vertical radius as a function of latitude in radians.
+        '''
         return self.c_ellipsoid.rEast(a)
+
     def rNorth(self, double a):
+        '''
+        Return the Meridional radius as a function of latitude in radians.
+        '''
         return self.c_ellipsoid.rNorth(a)
+
     def rDir(self, double a, double b):
+        '''
+        Return the Directional radius as a function of heading and latitude in radians.
+        '''
         return self.c_ellipsoid.rDir(a,b)
-    def latLonToXyz(self, list a, list b):
+
+
+    def lonLatToXyz(self, list a, list b):
+        '''
+        Transform a list of llh positions to xyz.
+        '''
         cdef cartesian_t _a
         cdef cartesian_t _b
         for i in range(3):
             _a[i] = a[i]
             _b[i] = b[i]
-        self.c_ellipsoid.latLonToXyz(_a,_b)
+        self.c_ellipsoid.lonLatToXyz(_a,_b)
         for i in range(3):
             a[i] = _a[i]
             b[i] = _b[i]
-    def xyzToLatLon(self, list a, list b):
+
+    def xyzToLonLat(self, list a, list b):
+        '''
+        Transform a list of xyz positions to llh.
+        '''
         cdef cartesian_t _a
         cdef cartesian_t _b
         for i in range(3):
             _a[i] = a[i]
             _b[i] = b[i]
-        self.c_ellipsoid.xyzToLatLon(_a,_b)
+        self.c_ellipsoid.xyzToLonLat(_a,_b)
         for i in range(3):
             a[i] = _a[i]
             b[i] = _b[i]
-    def getAngs(self, list a, list b, list c, d, e=None):
+
+
+    def getImagingAnglesAtPlatform(self, list a, list b, list c, d, e=None):
         cdef cartesian_t _a
         cdef cartesian_t _b
         cdef cartesian_t _c
@@ -96,29 +151,14 @@ cdef class pyEllipsoid:
                 _a[i] = a[i]
                 _b[i] = b[i]
                 _c[i] = c[i]
-            self.c_ellipsoid.getAngs(_a,_b,_c,_d,_e)
+            self.c_ellipsoid.getImagingAnglesAtPlatform(_a,_b,_c,_d,_e)
             for i in range(3):
                 a[i] = _a[i]
                 b[i] = _b[i]
                 c[i] = _c[i]
             d[0] = _d
             d[1] = _e
-    def getTCN_TCvec(self, list a, list b, list c, list d):
-        cdef cartesian_t _a
-        cdef cartesian_t _b
-        cdef cartesian_t _c
-        cdef cartesian_t _d
-        for i in range(3):
-            _a[i] = a[i]
-            _b[i] = b[i]
-            _c[i] = c[i]
-            _d[i] = d[i]
-        self.c_ellipsoid.getTCN_TCvec(_a,_b,_c,_d)
-        for i in range(3):
-            a[i] = _a[i]
-            b[i] = _b[i]
-            c[i] = _c[i]
-            d[i] = _d[i]
+
     def TCNbasis(self, list a, list b, list c, list d, list e):
         cdef cartesian_t _a
         cdef cartesian_t _b

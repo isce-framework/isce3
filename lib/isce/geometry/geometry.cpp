@@ -5,6 +5,7 @@
 // Copyright 2017-2018
 //
 
+#include <cmath>
 #include <cstdio>
 
 // isce::core
@@ -26,9 +27,9 @@ using isce::core::Poly2d;
 using isce::core::StateVector;
 
 int isce::geometry::
-rdr2geo(double aztime, double slantRange, double dopfact, const Orbit & orbit,
-        const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp,
-        cartesian_t & targetLLH, int side, double threshold, int maxIter, int extraIter,
+rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
+        const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp, cartesian_t & targetLLH,
+        double wvl, int side, double threshold, int maxIter, int extraIter,
         isce::core::orbitInterpMethod orbitMethod) {
     /*
     Interpolate Orbit to azimuth time, compute TCN basis, and estimate geographic
@@ -49,35 +50,156 @@ rdr2geo(double aztime, double slantRange, double dopfact, const Orbit & orbit,
             << pyre::journal::endl;
     }
 
-    // Get TCN basis
+    // Setup geocentric TCN basis
     Basis TCNbasis;
-    ellipsoid.TCNbasis(state.position(), state.velocity(), TCNbasis);
+    geocentricTCN(state, TCNbasis);
 
-    // Convert satellite position to lat-lon
-    cartesian_t llhsat;
-    ellipsoid.xyzToLatLon(state.position(), llhsat);
-
-    // Estimate heading
-    const double heading = orbit.getENUHeading(aztime); 
-
-    // Set peg point right below satellite
-    isce::core::Peg peg(llhsat[0], llhsat[1], heading);
-   
-    // Initialize peg transformation
-    Pegtrans ptm;
-    ptm.radarToXYZ(ellipsoid, peg);
+    // Compute satellite velocity magnitude
+    const double vmag = LinAlg::norm(state.velocity());
+    // Compute Doppler factor
+    const double dopfact = 0.5 * wvl * doppler * slantRange / vmag;
 
     // Wrap range and Doppler factor in a Pixel object
     Pixel pixel(slantRange, dopfact, 0);
 
     // Finally, call rdr2geo
-    stat = rdr2geo(pixel, TCNbasis, state, ellipsoid, ptm, demInterp, targetLLH, side,
+    stat = rdr2geo(pixel, TCNbasis, state, ellipsoid, demInterp, targetLLH, side,
                    threshold, maxIter, extraIter);
     return stat;
 }
 
 int isce::geometry::
 rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
+        const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp,
+        cartesian_t & targetLLH, int side, double threshold, int maxIter, int extraIter) {
+    /*
+    Assume orbit has been interpolated to correct azimuth time, then estimate geographic
+    coordinates.
+    */
+
+    // Initialization
+    cartesian_t targetVec, targetLLH_old, targetVec_old,
+                lookVec, delta, delta_temp, vhat;
+    const double degrees = 180.0 / M_PI;
+
+    // Compute normalized velocity
+    LinAlg::unitVec(state.velocity(), vhat);
+
+    // Unpack TCN basis vectors
+    const cartesian_t that = TCNbasis.x0();
+    const cartesian_t chat = TCNbasis.x1();
+    const cartesian_t nhat = TCNbasis.x2();
+
+    // Pre-compute TCN vector products
+    const double ndotv = nhat[0]*vhat[0] + nhat[1]*vhat[1] + nhat[2]*vhat[2];
+    const double vdott = vhat[0]*that[0] + vhat[1]*that[1] + vhat[2]*that[2];
+
+    // Compute major and minor axes of ellipsoid
+    const double major = ellipsoid.a();
+    const double minor = major * std::sqrt(1.0 - ellipsoid.e2());
+
+    // Set up orthonormal system right below satellite
+    const double satDist = LinAlg::norm(state.position());
+    const double eta = 1.0 / std::sqrt(
+        std::pow(state.position()[0] / major, 2) +
+        std::pow(state.position()[1] / major, 2) +
+        std::pow(state.position()[2] / minor, 2)
+    );
+    const double radius = eta * satDist;
+    const double hgt = (1.0 - eta) * satDist;
+
+    // Iterate
+    int converged = 0;
+    double zrdr = targetLLH[2];
+    for (int i = 0; i < (maxIter + extraIter); ++i) {
+
+        // Near nadir test
+        if ((hgt - zrdr) >= pixel.range())
+            break;
+
+        // Cache the previous solution
+        targetLLH_old = targetLLH;
+
+        // Compute angles
+        const double a = satDist;
+        const double b = radius + zrdr;
+        const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a 
+                              - (b/a) * (b/pixel.range()));
+        const double sintheta = std::sqrt(1.0 - costheta*costheta);
+
+        // Compute TCN scale factors
+        const double gamma = pixel.range() * costheta;
+        const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
+        const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
+                                            * std::pow(sintheta, 2) 
+                                            - std::pow(alpha, 2));
+
+        // Compute vector from satellite to ground
+        LinAlg::linComb(alpha, that, beta, chat, delta_temp);
+        LinAlg::linComb(1.0, delta_temp, gamma, nhat, delta);
+        LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
+
+        // Compute LLH of ground point
+        ellipsoid.xyzToLonLat(targetVec, targetLLH);
+
+        // Interpolate DEM at current lat/lon point
+        targetLLH[2] = demInterp.interpolate(degrees*targetLLH[0], degrees*targetLLH[1]);
+
+        // Convert back to XYZ with interpolated height
+        ellipsoid.lonLatToXyz(targetLLH, targetVec);
+        // Compute updated target height
+        zrdr = LinAlg::norm(targetVec) - radius;
+
+        // Check convergence
+        LinAlg::linComb(1.0, state.position(), -1.0, targetVec, lookVec);
+        const double rdiff = pixel.range() - LinAlg::norm(lookVec);
+        if (std::abs(rdiff) < threshold) {
+            converged = 1;
+            break;
+        // May need to perform extra iterations
+        } else if (i > maxIter) {
+            // XYZ position of old solution
+            ellipsoid.lonLatToXyz(targetLLH_old, targetVec_old);
+            // XYZ position of updated solution
+            for (int idx = 0; idx < 3; ++idx)
+                targetVec[idx] = 0.5 * (targetVec_old[idx] + targetVec[idx]);
+            // Repopulate lat, lon, z
+            ellipsoid.xyzToLonLat(targetVec, targetLLH);
+            // Compute updated target height
+            zrdr = LinAlg::norm(targetVec) - radius;
+        }
+    }
+
+    // ----- Final computation: output points exactly at range pixel if converged
+
+    // Compute angles
+    const double a = satDist;
+    const double b = radius + zrdr; 
+    const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a
+                          - (b/a) * (b/pixel.range()));
+    const double sintheta = std::sqrt(1.0 - costheta*costheta);
+
+    // Compute TCN scale factors
+    const double gamma = pixel.range() * costheta;
+    const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
+    const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
+                                        * std::pow(sintheta, 2)
+                                        - std::pow(alpha, 2));
+
+    // Compute vector from satellite to ground
+    LinAlg::linComb(alpha, that, beta, chat, delta_temp);
+    LinAlg::linComb(1.0, delta_temp, gamma, nhat, delta);
+    LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
+
+    // Compute LLH of ground point
+    ellipsoid.xyzToLonLat(targetVec, targetLLH);    
+
+    // Return convergence flag
+    return converged;
+}
+
+int isce::geometry::
+rdr2geo_old(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
         const Ellipsoid & ellipsoid, const Pegtrans & ptm, const DEMInterpolator & demInterp,
         cartesian_t & targetLLH, int side, double threshold, int maxIter, int extraIter) {
     /*
@@ -104,7 +226,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
     const double vdott = vhat[0]*that[0] + vhat[1]*that[1] + vhat[2]*that[2];
 
     // Compute satellite LLH to get height above ellipsoid
-    ellipsoid.xyzToLatLon(state.position(), satLLH);
+    ellipsoid.xyzToLonLat(state.position(), satLLH);
 
     // Iterate
     int converged = 0;
@@ -133,12 +255,12 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
         LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
 
         // Compute LLH of ground point
-        ellipsoid.xyzToLatLon(targetVec, targetLLH);
+        ellipsoid.xyzToLonLat(targetVec, targetLLH);
 
         // Interpolate DEM at current lat/lon point
-        targetLLH[2] = demInterp.interpolate(degrees*targetLLH[1], degrees*targetLLH[0]);
+        targetLLH[2] = demInterp.interpolate(degrees*targetLLH[0], degrees*targetLLH[1]);
         // Convert back to XYZ with interpolated height
-        ellipsoid.latLonToXyz(targetLLH, targetVec);
+        ellipsoid.lonLatToXyz(targetLLH, targetVec);
         // Compute updated SCH coordinates
         ptm.convertSCHtoXYZ(targetSCH, targetVec, isce::core::XYZ_2_SCH);
 
@@ -151,12 +273,12 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
         // May need to perform extra iterations
         } else if (i > maxIter) {
             // XYZ position of old solution
-            ellipsoid.latLonToXyz(targetLLH_old, targetVec_old);
+            ellipsoid.lonLatToXyz(targetLLH_old, targetVec_old);
             // XYZ position of updated solution
             for (int idx = 0; idx < 3; ++idx)
                 targetVec[idx] = 0.5 * (targetVec_old[idx] + targetVec[idx]);
             // Repopulate lat, lon, z
-            ellipsoid.xyzToLatLon(targetVec, targetLLH);
+            ellipsoid.xyzToLonLat(targetVec, targetLLH);
             // Recompute SCH coordinates
             ptm.convertSCHtoXYZ(targetSCH, targetVec, isce::core::XYZ_2_SCH);
         }
@@ -184,7 +306,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
     LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
 
     // Compute LLH of ground point
-    ellipsoid.xyzToLatLon(targetVec, targetLLH);    
+    ellipsoid.xyzToLonLat(targetVec, targetLLH);    
 
     // Return convergence flag
     return converged;
@@ -198,7 +320,7 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
     cartesian_t satpos, satvel, inputXYZ, dr;
 
     // Convert LLH to XYZ
-    ellipsoid.latLonToXyz(inputLLH, inputXYZ);
+    ellipsoid.lonLatToXyz(inputLLH, inputXYZ);
 
     // Pre-compute scale factor for doppler
     const double dopscale = 0.5 * meta.radarWavelength;
@@ -284,5 +406,23 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
     // If we reach this point, no convergence for specified threshold
     return converged;
 }
+
+// Utility function to compute geocentric TCN basis from state vector
+void isce::geometry::
+geocentricTCN(isce::core::StateVector & state, isce::core::Basis & basis) {
+    // Compute basis vectors
+    cartesian_t that, chat, nhat, temp;
+    LinAlg::unitVec(state.position(), nhat);
+    LinAlg::scale(nhat, -1.0);
+    LinAlg::cross(nhat, state.velocity(), temp);
+    LinAlg::unitVec(temp, chat);
+    LinAlg::cross(chat, nhat, temp);
+    LinAlg::unitVec(temp, that);
+    // Store in basis object
+    basis.x0(that);
+    basis.x1(chat);
+    basis.x2(nhat);
+}
+
 
 // end of file
