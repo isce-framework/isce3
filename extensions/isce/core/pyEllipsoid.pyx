@@ -13,19 +13,40 @@ from Serialization cimport load_archive
 cdef class pyEllipsoid:
     '''
     Python wrapper for isce::core::Ellipsoid
+
+    Args:
+        a (Optional[float]): Semi-major axis of Ellipsoid in m.
+        e2 (Optional[float]): Eccentricity-squared.
     '''
 
     cdef Ellipsoid *c_ellipsoid
     cdef bool __owner
 
-    def __cinit__(self, a=0., e2=0.):
-        self.c_ellipsoid = new Ellipsoid(a, e2)
+    def __cinit__(self):
+        '''
+        Pre-constructor that creates a C++ isce::core::Ellipsoid objects and binds it to python instance.
+        '''
+
+        self.c_ellipsoid = new Ellipsoid()
         self.__owner = True
+
+    def __init__(self, a=0., e2=0.):
+        self.a = a
+        self.e2 = e2
+
     def __dealloc__(self):
         if self.__owner:
             del self.c_ellipsoid
+
+
     @staticmethod
     def bind(pyEllipsoid elp):
+        '''
+        Binds the current pyEllipsoid instance to another C++ Ellipsoid pointer.
+        
+        Args:
+            elp (pyEllipsoid): Source of C++ Ellipsoid pointer. 
+        '''
         new_elp = pyEllipsoid()
         del new_elp.c_ellipsoid
         new_elp.c_ellipsoid = elp.c_ellipsoid
@@ -36,14 +57,14 @@ cdef class pyEllipsoid:
     @property
     def a(self):
         '''
-        Return the semi-major axis of ellipsoid in meters.
+        float: Semi-major axis of ellipsoid in meters.
         '''
         return self.c_ellipsoid.a()
 
     @property
     def b(self):
         '''
-        Return the semi-minor axis of ellipsoid in meters.
+        float: Semi-minor axis of ellipsoid in meters.
         '''
         return self.c_ellipsoid.b()
 
@@ -51,6 +72,9 @@ cdef class pyEllipsoid:
     def a(self, double a):
         '''
         Set the semi-major axis of ellipsoid in meters.
+
+        Args:
+            a (double) : Value of semi-major axis
         '''
         self.c_ellipsoid.a(a)
 
@@ -58,7 +82,7 @@ cdef class pyEllipsoid:
     @property
     def e2(self):
         '''
-        Return eccentricity-squared of ellipsoid.
+        float: Eccentricity-squared of ellipsoid.
         '''
         return self.c_ellipsoid.e2()
 
@@ -73,6 +97,12 @@ cdef class pyEllipsoid:
     def copyFrom(self, elp):
         '''
         Copy ellipsoid parameters with any class that has semi-major axis and eccentricity parameters.
+        
+        Args:
+            elp (obj): Any object that has attributes a and e2.
+
+        Returns:
+            None
         '''
         # Replaces copy-constructor functionality
         try:
@@ -84,100 +114,160 @@ cdef class pyEllipsoid:
             print("Error: Object passed in to copy is incompatible with object of type " +
                   "pyEllipsoid.")
 
-    def rEast(self, double a):
+    def rEast(self, double lat):
         '''
-        Return the Prime Vertical radius as a function of latitude in radians.
-        '''
-        return self.c_ellipsoid.rEast(a)
+        Prime Vertical Radius as a function of latitude. 
 
-    def rNorth(self, double a):
-        '''
-        Return the Meridional radius as a function of latitude in radians.
-        '''
-        return self.c_ellipsoid.rNorth(a)
+        Args:
+            lat (float): Latitude in radians
 
-    def rDir(self, double a, double b):
+        Returns:
+            float: Prime Vertical radius in meters
+            
         '''
-        Return the Directional radius as a function of heading and latitude in radians.
-        '''
-        return self.c_ellipsoid.rDir(a,b)
+        return self.c_ellipsoid.rEast(lat)
 
+    def rNorth(self, double lat):
+        '''
+        Meridional radius as a function of latitude.
 
-    def lonLatToXyz(self, list a, list b):
-        '''
-        Transform a list of llh positions to xyz.
-        '''
-        cdef cartesian_t _a
-        cdef cartesian_t _b
-        for i in range(3):
-            _a[i] = a[i]
-            _b[i] = b[i]
-        self.c_ellipsoid.lonLatToXyz(_a,_b)
-        for i in range(3):
-            a[i] = _a[i]
-            b[i] = _b[i]
+        Args:
+            lat (float): Latitude in radians
 
-    def xyzToLonLat(self, list a, list b):
+        Returns:
+            float: Meridional radius in meters
         '''
-        Transform a list of xyz positions to llh.
+        return self.c_ellipsoid.rNorth(lat)
+
+    def rDir(self, double lat, double hdg):
         '''
-        cdef cartesian_t _a
-        cdef cartesian_t _b
-        for i in range(3):
-            _a[i] = a[i]
-            _b[i] = b[i]
-        self.c_ellipsoid.xyzToLonLat(_a,_b)
-        for i in range(3):
-            a[i] = _a[i]
-            b[i] = _b[i]
+        Directional radius as a function of heading and latitude.
+
+        Args:
+            lat (float): Latitude in radians
+            hdg (float): Heading in radians. Measured clockwise from North.
+
+        Returns:
+            float: Directional radius in meters.
+        '''
+        return self.c_ellipsoid.rDir(lat, hdg)
 
 
-    def getImagingAnglesAtPlatform(self, list a, list b, list c, d, e=None):
-        cdef cartesian_t _a
-        cdef cartesian_t _b
+    def lonLatToXyz(self, list llh):
+        '''
+        Transform Lon/Lat/Hgt position to ECEF xyz coordinates.
+
+        Args:
+            llh (list): triplet of floats representing Lon (rad), Lat (rad) and hgt (m)
+
+        Returns:
+            list: triplet of floats representing ECEF coordinates in meters
+
+        '''
+        cdef cartesian_t inp
+        cdef cartesian_t xyz
+
+        for ii in range(3):
+            inp[ii] = llh[ii]
+        
+        self.c_ellipsoid.lonLatToXyz(inp, xyz)
+        out = [xyz[ii] for ii in range(3)]
+
+        return out
+
+    def xyzToLonLat(self, list xyz):
+        '''
+        Transform Lon/Lat/Hgt position to ECEF xyz coordinates.
+
+        Args:
+            xyz (list): triplet of floats representing ECEF coordinates in meters
+
+        Returns:
+            list : triplet of floats representing Lon (rad), Lat (rad) and hgt (m)
+
+        '''
+        cdef cartesian_t llh
+        cdef cartesian_t inp
+
+        for ii in range(3):
+            inp[ii] = xyz[ii]
+        
+        self.c_ellipsoid.xyzToLonLat(inp,llh)
+        out = [llh[ii] for ii in range(3)]
+        
+        return out
+
+    def getImagingAnglesAtPlatform(self, list pos, list vel, list los):
+        '''
+        Compute azimuth angle and look angle at imaging platform.
+
+        Args:
+            pos (list): triplet of floats representing platform position in ECEF coordinates (m)
+            vel (list): triplet of floats representing platform veloctity in ECEF coodinates (m/s)
+            los (list): triplet of floats representing line-of-sight vector in ECEF coordiantes (m)
+
+        Returns:
+            (tuple): tuple containing: 
+                * azi (float): Azimuth angle in radians. Measured anti-clockwise from North.
+                * look (float): Look angle in radians. Measured w.r.t ellipsoid normal at platform.
+        '''
+        cdef cartesian_t _pos
+        cdef cartesian_t _vel
+        cdef cartesian_t _los
+
+        for ii in range(3):
+            _pos[ii] = pos[ii]
+            _vel[ii] = vel[ii]
+            _los[ii] = los[ii]
+
+        cdef double _azi = 0.
+        cdef double _look = 0.
+
+        self.c_ellipsoid.getImagingAnglesAtPlatform(_pos,_vel,_los,_azi,_look)
+        return (_azi, _look)
+
+    def TCNbasis(self, list pos, list vel):
+        '''
+        Compute TCN basis from platform position and velocity.
+
+        Args:
+            pos (list): triplet of floats representing ECEF position in meters
+            vel (list): triplet of floats representing ECEF velocity in meters / sec
+
+        Returns:
+            (tuple): tuple containing:
+                * that (list) - Tangential unit vector
+                * chat (list) - Cross track unit vector
+                * nhat (list) - Normal unit vector pointing downwards
+        '''
+        cdef cartesian_t _pos
+        cdef cartesian_t _vel
+        cdef cartesian_t _t
         cdef cartesian_t _c
-        cdef double _d
-        cdef double _e
-        if (e):
-            print("Error: Python cannot pass primitives by reference.")
-            print("To call this function, please pass the function an empty tuple as the fourth")
-            print("argument (no fifth argument). The first element of the list will be the azimuth")
-            print("angle, the second element will be the look angle.")
-            return
-        else:
-            _d = 0.
-            _e = 0.
-            for i in range(3):
-                _a[i] = a[i]
-                _b[i] = b[i]
-                _c[i] = c[i]
-            self.c_ellipsoid.getImagingAnglesAtPlatform(_a,_b,_c,_d,_e)
-            for i in range(3):
-                a[i] = _a[i]
-                b[i] = _b[i]
-                c[i] = _c[i]
-            d[0] = _d
-            d[1] = _e
+        cdef cartesian_t _n
 
-    def TCNbasis(self, list a, list b, list c, list d, list e):
-        cdef cartesian_t _a
-        cdef cartesian_t _b
-        cdef cartesian_t _c
-        cdef cartesian_t _d
-        cdef cartesian_t _e
         for i in range(3):
-            _a[i] = a[i]
-            _b[i] = b[i]
-            _c[i] = c[i]
-            _d[i] = d[i]
-            _e[i] = e[i]
-        self.c_ellipsoid.TCNbasis(_a,_b,_c,_d,_e)
-        for i in range(3):
-            c[i] = _c[i]
-            d[i] = _d[i]
-            e[i] = _e[i]
+            _pos[i] = pos[i]
+            _vel[i] = vel[i]
+        
+        self.c_ellipsoid.TCNbasis(_pos,_vel,_t,_c,_n)
+        
+        that = [_t[ii] for ii in range(3)]
+        chat = [_c[ii] for ii in range(3)]
+        nhat = [_n[ii] for ii in range(3)]
+
+        return (that, chat, nhat)
 
     def archive(self, metadata):
+        '''
+        Load a string into ellipsoid object from a cereal archive.
+
+        Args:
+            metadata (str): Serialized XML corresponding to Ellipsoid.
+
+        Returns:
+            None
+        '''
         load_archive[Ellipsoid](pyStringToBytes(metadata),
                                 'Ellipsoid',
                                 self.c_ellipsoid)

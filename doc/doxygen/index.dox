@@ -1,5 +1,7 @@
-/*! \mainpage ISCE - InSAR Scientific Computing Environment
+/*!
+\mainpage ISCE - InSAR Scientific Computing Environment
 
+\tableofcontents
 
 <table border="0" cellspacing="4" cellpadding="4">
 
@@ -25,6 +27,7 @@ Download: TBD
 \section index_devdocs Developer Oriented Documentation
 
 <ul>
+<li> \ref howtodoc "Coding and documentation style"
 <li> <a href="datamodel.html">Data model</a>
 <li> <a href="annotated.html">Core data structures in C++</a>
 <li> <a href="sphinx/html/index.html">Core data structure in Python</a>
