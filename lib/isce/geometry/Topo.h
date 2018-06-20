@@ -102,7 +102,7 @@ class isce::geometry::Topo {
 
 const double MIN_H = -500.0;
 const double MAX_H = -1000.0;
-const double MARGIN = 0.15;
+const double MARGIN = 0.15 * M_PI / 180.0;
 
 #endif
 
