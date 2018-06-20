@@ -27,19 +27,16 @@ using isce::core::LinAlg;
 
 // Run geo2rdr with no offsets
 void isce::geometry::Geo2rdr::
-geo2rdr(isce::core::Raster & latRaster,
-        isce::core::Raster & lonRaster,
-        isce::core::Raster & hgtRaster,
+geo2rdr(isce::core::Raster & topoRaster,
         isce::core::Poly2d & doppler,
         const std::string & outdir) {
-    geo2rdr(latRaster, lonRaster, hgtRaster, doppler, outdir, 0.0, 0.0);
+    // Call main geo2rdr with offsets set to zero
+    geo2rdr(topoRaster, doppler, outdir, 0.0, 0.0);
 }
 
 // Run geo2rdr - main entrypoint
 void isce::geometry::Geo2rdr::
-geo2rdr(isce::core::Raster & latRaster,
-        isce::core::Raster & lonRaster,
-        isce::core::Raster & hgtRaster,
+geo2rdr(isce::core::Raster & topoRaster,
         isce::core::Poly2d & doppler,
         const std::string & outdir,
         double azshift, double rgshift) {
@@ -49,12 +46,16 @@ geo2rdr(isce::core::Raster & latRaster,
     pyre::journal::info_t info("isce.geometry.Geo2rdr");
 
     // Cache the size of the DEM images
-    const size_t demWidth = hgtRaster.width();
-    const size_t demLength = hgtRaster.length();
+    const size_t demWidth = topoRaster.width();
+    const size_t demLength = topoRaster.length();
     const double rad = M_PI / 180.0;
 
-    // Valarrays to hold line of results
-    std::valarray<double> lat(demWidth), lon(demWidth), hgt(demWidth);
+    // Initialize projection for topo results
+    _projTopo = isce::core::createProj(topoRaster.getEPSG());
+
+    // Valarrays to hold input lines from topo rasters
+    std::valarray<double> x(demWidth), y(demWidth), hgt(demWidth);
+    // Valarrays to hold lines of geo2rdr results
     std::valarray<float> rgoff(demWidth), azoff(demWidth);
 
     // Create output rasters
@@ -104,16 +105,20 @@ geo2rdr(isce::core::Raster & latRaster,
         }
 
         // Read line of data
-        latRaster.getLine(lat, line);
-        lonRaster.getLine(lon, line);
-        hgtRaster.getLine(hgt, line);
+        topoRaster.getLine(x, line, 1);
+        topoRaster.getLine(y, line, 2);
+        topoRaster.getLine(hgt, line, 3);
 
         // Loop over DEM pixels
         #pragma omp parallel for reduction(+:converged)
         for (size_t pixel = 0; pixel < demWidth; ++pixel) {
 
+            // Convert topo XYZ to LLH
+            isce::core::cartesian_t xyz{x[pixel], y[pixel], hgt[pixel]};
+            isce::core::cartesian_t llh;
+            _projTopo->inverse(xyz, llh);
+
             // Perform geo->rdr iterations
-            cartesian_t llh = {lon[pixel]*rad, lat[pixel]*rad, hgt[pixel]};
             double aztime, slantRange;
             int geostat = isce::geometry::geo2rdr(
                 llh, _ellipsoid, _orbit, doppler, _meta, aztime, slantRange, _threshold, 
