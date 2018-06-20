@@ -33,18 +33,21 @@ class isce::geometry::DEMInterpolator {
         DEMInterpolator() : _haveRaster(false), _refHeight(0.0) {}
         DEMInterpolator(float height) : _haveRaster(false), _refHeight(height) {}
 
-        // Read in subset of data
+        // Read in subset of data from a DEM with a supported projection
         void loadDEM(isce::core::Raster &demRaster,
-                        double minX, double maxX,
-                        double minY, double maxY,
-                     isce::core::dataInterpMethod);
+                     double minLon, double maxLon,
+                     double minLat, double maxLat,
+                     isce::core::dataInterpMethod,
+                     int epsgcode=4326);
         // Print stats
         void declare() const;
         // Compute max and mean DEM height
         void computeHeightStats(float &maxValue, float &meanValue,
                     pyre::journal::info_t &info) const;
-        // Interpolate at a given latitude and longitude
-        double interpolate(double x, double y) const;
+        // Interpolate at a given longitude and latitude
+        double interpolateLonLat(double lon, double lat) const;
+        // Interpolate at native XY coordinates of DEM
+        double interpolateXY(double x, double y) const;
         // Get transform properties
         double xStart() const { return _xstart; }
         double yStart() const { return _ystart; }
@@ -53,12 +56,17 @@ class isce::geometry::DEMInterpolator {
         // Middle X and Y coordinates
         double midX() const { return _xstart + 0.5*_dem.width()*_deltax; }
         double midY() const { return _ystart + 0.5*_dem.length()*_deltay; }
+        // Middle lat/lon/h
+        isce::core::cartesian_t midLonLat(double height) const;
 
     private:
         // Flag indicating whether we have access to a DEM raster
         bool _haveRaster;
         // Constant value if no raster is provided
         float _refHeight;
+        // Pointer to a ProjectionBase
+        int _epsgcode;
+        isce::core::ProjectionBase * _proj;
         // 2D array for storing DEM subset
         isce::core::Matrix<float> _dem;
         // Starting x/y for DEM subset and spacing

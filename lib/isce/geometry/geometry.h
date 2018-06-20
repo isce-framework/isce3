@@ -42,17 +42,7 @@ namespace isce {
                     cartesian_t &,
                     double, int, double, int, int,
                     isce::core::orbitInterpMethod); 
-
-        // radar->geo using pre-computed basis and state vectors, and DEM
-        int rdr2geo_old(const isce::core::Pixel &,
-                    const isce::core::Basis &,
-                    const isce::core::StateVector &,
-                    const isce::core::Ellipsoid &,
-                    const isce::core::Pegtrans &,
-                    const DEMInterpolator &,
-                    cartesian_t &,
-                    int, double, int, int);
-
+        
         int rdr2geo(const isce::core::Pixel &,
                     const isce::core::Basis &,
                     const isce::core::StateVector &,

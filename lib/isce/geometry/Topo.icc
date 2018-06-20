@@ -128,4 +128,13 @@ demMethod(isce::core::dataInterpMethod method) {
     _demMethod = method;
 }
 
+// Set the EPSG code of the output layers and configure projection
+void isce::geometry::Topo::
+epsgOut(int epsgcode) {
+    // Save the code
+    _epsgOut = epsgcode;
+    // Initialize the projection
+    _proj = isce::core::createProj(epsgcode);
+}
+
 // end of file

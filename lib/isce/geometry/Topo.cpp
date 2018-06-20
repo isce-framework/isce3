@@ -45,9 +45,9 @@ topo(Raster & demRaster,
     TopoLayers layers(_meta.width);
 
     // Create rasters for individual layers
-    Raster latRaster = Raster(outdir + "/lat.rdr", _meta.width, _meta.length, 1,
+    Raster xRaster = Raster(outdir + "/x.rdr", _meta.width, _meta.length, 1,
         GDT_Float64, "ISCE");
-    Raster lonRaster = Raster(outdir + "/lon.rdr", _meta.width, _meta.length, 1,
+    Raster yRaster = Raster(outdir + "/y.rdr", _meta.width, _meta.length, 1,
         GDT_Float64, "ISCE");
     Raster heightRaster = Raster(outdir + "/z.rdr", _meta.width, _meta.length, 1,
         GDT_Float64, "ISCE");
@@ -73,6 +73,9 @@ topo(Raster & demRaster,
     // Compute max and mean DEM height for the subset
     float demmax, dem_avg;
     demInterp.computeHeightStats(demmax, dem_avg, info);
+
+    // Initialize LLH to middle of input DEM and average height
+    cartesian_t mid = demInterp.midLonLat(dem_avg);
 
     // For each line
     size_t totalconv = 0;
@@ -113,7 +116,7 @@ topo(Raster & demRaster,
             Pixel pixel(rng, dopfact, rbin);
 
             // Initialize LLH to middle of input DEM and average height
-            cartesian_t llh = {radians*demInterp.midY(), radians*demInterp.midX(), dem_avg};
+            cartesian_t llh = demInterp.midLonLat(dem_avg);
 
             // Perform rdr->geo iterations
             int geostat = rdr2geo(
@@ -128,8 +131,8 @@ topo(Raster & demRaster,
         } //end OMP for loop
 
         // Write out line of data for every product
-        latRaster.setLine(layers.lat(), line);
-        lonRaster.setLine(layers.lon(), line);
+        xRaster.setLine(layers.x(), line);
+        yRaster.setLine(layers.y(), line);
         heightRaster.setLine(layers.z(), line);
         incRaster.setLine(layers.inc(), line);
         hdgRaster.setLine(layers.hdg(), line);
@@ -140,8 +143,8 @@ topo(Raster & demRaster,
 
     // Write out multi-band topo VRT
     const std::vector<Raster> rasterTopoVec = {
-        Raster(outdir + "/lat.rdr" ),
-        Raster(outdir + "/lon.rdr" ),
+        Raster(outdir + "/x.rdr" ),
+        Raster(outdir + "/y.rdr" ),
         Raster(outdir + "/z.rdr" ),
         Raster(outdir + "/inc.rdr" ),
         Raster(outdir + "/hdg.rdr" ),
@@ -150,6 +153,8 @@ topo(Raster & demRaster,
         Raster(outdir + "/simamp.rdr" )
     };
     Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
+    // Set its EPSG code
+    vrt.setEPSG(_epsgOut);
 
     // Print out timing information and reset
     auto timerEnd = std::chrono::steady_clock::now();
@@ -210,7 +215,6 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
     double max_lat = -10000.0;
     double min_lon = 10000.0;
     double max_lon = -10000.0;
-    const double degrees = 180.0 / M_PI;
 
     // Loop over first and last azimuth line
     for (int line = 0; line < 2; line++) {
@@ -251,10 +255,10 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
                             _meta.lookSide, _threshold, 1, 0);
                 }
                 // Update bounds
-                min_lat = std::min(min_lat, llh[1]*degrees);
-                max_lat = std::max(max_lat, llh[1]*degrees);
-                min_lon = std::min(min_lon, llh[0]*degrees);
-                max_lon = std::max(max_lon, llh[0]*degrees);
+                min_lat = std::min(min_lat, llh[1]);
+                max_lat = std::max(max_lat, llh[1]);
+                min_lon = std::min(min_lon, llh[0]);
+                max_lon = std::max(max_lon, llh[0]);
             }
         }
     }
@@ -284,17 +288,20 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     const cartesian_t that = TCNbasis.x0();
     const cartesian_t nhat = TCNbasis.x2();
 
-    // Unpack the lat/lon values and convert to degrees
-    const double lat = degrees * targetLLH[1];
-    const double lon = degrees * targetLLH[0];
     // Unpack the range pixel data
     const size_t bin = pixel.bin();
     const double rng = pixel.range();
     const double dopfact = pixel.dopfact();
 
-    // Set outputs for LLH
-    layers.lat(bin, lat);
-    layers.lon(bin, lon);
+    // Convert lat/lon values to output coordinate system
+    cartesian_t xyzOut;
+    _proj->forward(targetLLH, xyzOut);
+    const double x = xyzOut[0];
+    const double y = xyzOut[1];
+
+    // Set outputs
+    layers.x(bin, x);
+    layers.y(bin, y);
     layers.z(bin, targetLLH[2]);
 
     // Convert llh->xyz for ground point
@@ -317,14 +324,14 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     layers.hdg(bin, (std::atan2(-enu[1], -enu[0]) - (0.5*M_PI)) * degrees);
 
     // East-west slope using central difference
-    double aa = demInterp.interpolate(lon - demInterp.deltaX(), lat);
-    double bb = demInterp.interpolate(lon + demInterp.deltaX(), lat);
-    double gamma = lat * radians;
+    double aa = demInterp.interpolateXY(x - demInterp.deltaX(), y);
+    double bb = demInterp.interpolateXY(x + demInterp.deltaX(), y);
+    double gamma = targetLLH[1];
     double alpha = ((bb - aa) * degrees) / (2.0 * _ellipsoid.rEast(gamma) * demInterp.deltaX());
 
     // North-south slope using central difference
-    aa = demInterp.interpolate(lon, lat - demInterp.deltaY());
-    bb = demInterp.interpolate(lon, lat + demInterp.deltaY());
+    aa = demInterp.interpolateXY(x, y - demInterp.deltaY());
+    bb = demInterp.interpolateXY(x, y + demInterp.deltaY());
     double beta = ((bb - aa) * degrees) / (2.0 * _ellipsoid.rNorth(gamma) * demInterp.deltaY());
 
     // Compute local incidence angle
