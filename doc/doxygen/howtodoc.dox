@@ -1,0 +1,206 @@
+/*! \page howtodoc How to document code in ISCE as a developer?
+
+\tableofcontents
+
+\section doccpp C++ Documentation
+
+Developers are expected to document their functions using <a href="https://www.stack.nl/~dimitri/doxygen/manual/docblocks.html">Doxygen syntax</a>. Specific auto-documentation styles for various types of functions are shown below. We will base our examples on the code from Ellipsoid.h and Ellipsoid.cpp files in the source tree. 
+
+
+\subsection docinlinecpp Inline functions
+
+\subsubsection docinlinecppzero Part of data structure declaration with no input arguments
+
+These types of functions are typically defined in the struct/class definition itself and serve a simple purpose of returning a computed value. In this case, we will use a simple one line description. For example, isce::core::Ellipsoid::a()
+
+\verbatim
+
+/** Return semi-major axis */
+double a() const {return _a;}
+
+\endverbatim
+
+\subsubsection docinlinecppone Part of data structure declaration with one input argument
+
+These types of functions are typically defined in the struct/class definition itself and serve a simple purpose of setting a value with input or perform a simple computation with input. In this case, we will user the "brief" keyword from doxygen to provide a one line description and "param" keyword to describe the parameter in detail. For example, isce::core::Ellipsoid::a(double)
+
+\verbatim
+
+/** \brief Set semi-major axis 
+*
+* @param[in] val Semi-major axis of ellipsoid in meters*/
+void a(double val) {_a = val;}
+
+\endverbatim
+
+
+\subsubsection docinlinecppmulti With multiple inputs
+
+These types of functions should typically not be defined in the struct/class definition. These are included either in the .h header file or the .icc include file. In this case, a brief one liner is provided as part of the function declaration in the header file followed by a detail description of the parameters just before the function specification in the header file or the .icc file. For example, documentation of function isce::core::Ellipsoid::rDir can be found in two places - first in the class declaration as 
+
+\verbatim
+
+/** Return local radius in NS direction */
+inline double rDir(double lat, double hdg) const;
+
+\endverbatim
+
+and later in the header file, just before the function declaration as 
+
+\verbatim
+
+/** @param[in] hdg Heading in radians
+ *  @param[in] lat Latitude in radians
+ *
+ *  Heading is measured in clockwise direction from the North direction.
+ *  See <a href="https://en.wikipedia.org/wiki/Earth_radius#Directional">Directional Radius</a> */
+double isce::core::Ellipsoid::rDir(double hdg, double lat) const {
+    auto re = rEast(lat);
+    auto rn = rNorth(lat);
+    return (re * rn) / ((re * std::pow(std::cos(hdg), 2)) 
+         + (rn * std::pow(std::sin(hdg), 2)));
+}
+
+\endverbatim
+
+
+\subsection doccppregular Regular functions
+
+\subsubsection doccppregheader Brief description in header file
+
+For all regular C++ functions that are not inlined, a brief one line description must be provided in the header file irrespective the number of input arguments. For example, class isce::core::Ellipsoid::xyzToLonLat
+
+\verbatim
+
+/** Transform ECEC xyz to Lon/Lat/Hgt */
+void xyzToLonLat(const cartesian_t &xyz, cartesian_t &llh) const;
+
+\endverbatim
+
+\subsubsection doccppregbody Detailed description in function specfication
+
+The detailed description of individual parameters must be provided just before the function specification. The detailed description can also include math equations and references to publications or reports. For example, isce::core::Ellipsoid::xyzToLonLat
+
+\verbatim
+
+/** @param[in] xyz ECEF Cartesian coordinates in meters. 
+ *  @param[out] llh Latitude (rad), Longitude(rad), Height (m).
+ *
+ *  Using the approach laid out in Vermeille, 2002 \cite vermeille2002direct */
+void isce::core::Ellipsoid::
+xyzToLonLat(const cartesian_t & xyz, cartesian_t & llh) const {
+
+\endverbatim
+
+
+\subsection CUDA
+
+Doxygen interprets CUDA code in the same manner as C/C++. Use the same style guidelines as regular C++ code for documenting the CUDA code.
+
+\section docpy Cython/Python Documentation
+
+Developers are expected to document their functions using <a href="http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html">Google Style docstrings</a>. ISCE uses sphinx with the autodoc, autosummary and napoleon extensions. We will base our examples on the code from pyEllipsoid.pyx file in the extensions folder of the source tree. 
+
+
+\subsection docpyfunc Functions
+
+Cython/Python docstrings must clearly include sections for Args and Returns. Each of the Args entries must include a python type expected by the function. Note that in case of Cython, the type could also be optionally included as a part of the function signature in the input arguments. However, the python type should always be included in the docstrings.
+
+\subsubsection docpyfunczero No return values
+
+For example, pyEllipsoid.copyFrom
+
+\verbatim
+
+    def copyFrom(self, elp):
+        '''
+        Copy ellipsoid parameters with any class that has semi-major axis and eccentricity parameters.
+        
+        Args:
+            elp (obj): Any python object that has attributes a and e2.
+
+        Returns:
+            None
+        '''
+\endverbatim
+
+
+\subsubsection docpyfuncone One return value
+
+For example, pyEllipsoid.rDir
+
+\verbatim
+
+    def rDir(self, double lat, double hdg):
+        '''
+        Directional radius as a function of heading and latitude.
+
+        Args:
+            lat (float): Latitude in radians
+            hdg (float): Heading in radians. Measured clockwise from North.
+
+        Returns:
+            float: Directional radius in meters.
+        '''
+        return self.c_ellipsoid.rDir(lat, hdg)
+\endverbatim
+
+
+\subsubsection docpyfuncmay Many return values
+
+If a function returns multiple values, the return type must be clearly indicated as tuple. The order of the returned results in the tuple must then be included in a list. For example, pyEllipsoid.getTCNbasis
+
+\verbatim
+
+    def TCNbasis(self, list pos, list vel):
+        '''
+        Compute TCN basis from platform position and velocity.
+
+        Args:
+            pos (list): triplet of floats representing ECEF position in meters
+            vel (list): triplet of floats representing ECEF velocity in meters / sec
+
+        Returns:
+            (tuple): tuple containing:
+                * that (list) - Tangential unit vector, almost aligned with velocity
+                * chat (list) - Cross track unit vector
+                * nhat (list) - Normal unit vector pointing downwards
+        '''
+        ...
+\endverbatim
+
+\subsection docpykwargs Keyword arguments
+
+Keyword arguments are also listed under the Args section of the docstring but are clearly labelled as optional. For example
+
+\verbatim 
+
+    def exampleFunction(angle, degrees=False):
+        '''
+        This is a dummy function to demonstrate keyword argument documentation.
+
+        Args:
+            angle (float): Angle to compute the function for
+            degrees (Optional[float]): Flag to indicate if input angle is in degrees
+
+        Returns:
+            float: Function evaluated at the input angle
+        '''
+\endverbatim
+
+\subsection docpyclass Classes
+
+Python class documentation will be extracted from the docstring immediately following the class declaration. Note that class constructors are special and should not be documented in the function. Instead the docstring following the class declaration should describe the arguments expected by the class constructor. For example,for class pyEllipsoid
+
+\verbatim
+cdef class pyEllipsoid:
+    '''
+    Python wrapper for isce::core::Ellipsoid
+
+    Args:
+        a (Optional[float]): Semi-major axis of Ellipsoid in m.
+        e2 (Optional[float]): Eccentricity-squared.
+    '''
+
+\endverbatim
+*/
