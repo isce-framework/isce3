@@ -27,15 +27,14 @@ cdef class pyGeo2rdr:
         if self.__owner:
             del self.c_geo2rdr
 
-    def geo2rdr(self, pyRaster latRaster, pyRaster lonRaster, pyRaster hgtRaster,
-                pyPoly2d doppler, outputDir, double azshift=0.0, double rgshift=0.0):
+    def geo2rdr(self, pyRaster topoRaster, pyPoly2d doppler, outputDir,
+                double azshift=0.0, double rgshift=0.0):
         """
         Run geo2rdr.
         """
         cdef string outdir = pyStringToBytes(outputDir)
         self.c_geo2rdr.geo2rdr(
-            deref(latRaster.c_raster), deref(lonRaster.c_raster), deref(hgtRaster.c_raster),
-            deref(doppler.c_poly2d), outdir, azshift, rgshift
+            deref(topoRaster.c_raster), deref(doppler.c_poly2d), outdir, azshift, rgshift
         )
 
     def archive(self, metadata):
