@@ -7,6 +7,7 @@
     <orbitMethod>0</orbitMethod>
     <!-- 0: sinc, 1: bilinear, 2: bicubic, 3: nearest, 4: akima, 5: biquintic -->
     <demMethod>5</demMethod>
+    <epsgOut>4326</epsgOut>
   </Topo>
   <Geo2rdr>
     <threshold>1.0e-9</threshold>
