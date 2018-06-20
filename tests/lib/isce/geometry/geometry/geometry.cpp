@@ -83,7 +83,7 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit) {
         isce::geometry::DEMInterpolator dem(heights[i]);
 
         // Initialize guess
-        isce::core::cartesian_t targetLLH = {0.0, 0.0, dem.interpolate(0.0, 0.0)};
+        isce::core::cartesian_t targetLLH = {0.0, 0.0, dem.interpolateLonLat(0.0, 0.0)};
 
         // Run rdr2geo
         int stat = isce::geometry::rdr2geo(azTime, ranges[i], doppler,
