@@ -270,7 +270,8 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
     max_lat += MARGIN;
 
     // Extract DEM subset
-    demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat, _demMethod);
+    demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat, _demMethod,
+                      demRaster.getEPSG());
     demInterp.declare();
 }
 

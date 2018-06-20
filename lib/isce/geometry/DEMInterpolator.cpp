@@ -28,6 +28,10 @@ loadDEM(isce::core::Raster & demRaster,
     const double lastY = firstY + (demRaster.length() - 2) * deltaY;
     const double lastX = firstX + (demRaster.width() - 2) * deltaX;
 
+    // Check EPSG code; if -9999, assume 4326
+    if (epsgcode == -9999) {
+        epsgcode = 4326;
+    }
     // Initialize projection
     _epsgcode = epsgcode;
     _proj = isce::core::createProj(epsgcode);
