@@ -11,27 +11,35 @@
 #include "Attitude.h"
 #include "Ellipsoid.h"
 
-// Quaternion representation of attitude
+/** Quaternion representation of attitude information*/
 class isce::core::Quaternion : public isce::core::Attitude {
 
     public:
-        // Constructors
+        /**Default constructor*/
         Quaternion();
+
+        /**Constructor using a vector*/
         Quaternion(std::vector<double> &);
 
-        // Representations
+        /** Return yaw, pitch, roll*/
         cartesian_t ypr();
+
+        /** Return rotation matrix */
         cartmat_t rotmat(const std::string);
+
+        /** Return factored Yaw, Pitch, Roll */
         cartesian_t factoredYPR(const cartesian_t &, const cartesian_t &, Ellipsoid *);
 
-        // Get a copy of the quaternion elements
+        /** Get a copy of the quaternion elements*/
         inline std::vector<double> qvec() const;
-        // Set all quaternion elements from a vector
+
+        /** Set all quaternion elements from a vector*/
         inline void qvec(const std::vector<double> &);
 
-        // Get an individual quaternion element
+        /** Get an individual quaternion element*/
         inline double qvecElement(const int) const;
-        // Set individual quaternion element
+
+        /** Set individual quaternion element*/
         inline void qvecElement(const double, const int);
         
     // Private data members

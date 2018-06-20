@@ -19,10 +19,12 @@ loadDEM(isce::io::Raster & demRaster,
     // Get original GeoTransform using raster
     double geoTransform[6];
     demRaster.getGeoTransform(geoTransform);
-    const double firstY = geoTransform[3];
-    const double firstX = geoTransform[0];
     const double deltaY = geoTransform[5];
     const double deltaX = geoTransform[1];
+    // Use center of pixel as starting coordinate
+    const double firstY = geoTransform[3] + 0.5 * deltaY;
+    const double firstX = geoTransform[0] + 0.5 * deltaX;
+    // Compute ending coordinate 
     const double lastY = firstY + (demRaster.length() - 2) * deltaY;
     const double lastX = firstX + (demRaster.width() - 2) * deltaX;
 
@@ -141,8 +143,7 @@ interpolate(double x, double y) const {
         } else if (_interpMethod == isce::core::BICUBIC_METHOD) {
             value = isce::core::Interpolator::bicubic(col, row, _dem);
         } else if (_interpMethod == isce::core::AKIMA_METHOD) {
-            value = isce::core::Interpolator::akima(_dem.width(), _dem.length(), _dem,
-                col, row);
+            value = isce::core::Interpolator::akima(col, row, _dem);
         } else if (_interpMethod == isce::core::BIQUINTIC_METHOD) { 
             value = isce::core::Interpolator::interp_2d_spline(6, _dem, col, row);
         } else if (_interpMethod == isce::core::NEAREST_METHOD) {

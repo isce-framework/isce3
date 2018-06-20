@@ -19,47 +19,71 @@ namespace isce {
     }
 }
 
-// Baseline declaration
+/** Data structure for computing interferometric baselines */
 class isce::core::Baseline {
 
     public:
-        // Constructors
+        /** Empty constructor */
         Baseline() {}
+
+        /** Copy constructor */
         Baseline(const Baseline &b) : 
             _orbit1(b.orbit1()), _orbit2(b.orbit2()), _radar(b.radar()), _elp(b.ellipsoid()),
             _orbitMethod(b.orbitMethod()), _refxyz(b.refXyz()), _look(b.look()),
             _rhat(b.rhat()), _chat(b.chat()), _vhat(b.vhat()), _bh(b.horizontalBaseline()),
             _bv(b.verticalBaseline()), _sinlook(b.sinLook()),
             _coslook(b.cosLook()), _velocityMagnitude(b.velocityMagnitude()) {}
+
+        /** Equality comparison operator */
         inline Baseline& operator=(const Baseline&);
 
-        // Get baselines
+        /** Get horizontal baseline */
         double horizontalBaseline() const { return _bh; }
+
+        /** Get vertical baseline */
         double verticalBaseline() const { return _bv; }
+
+        /** Get perpendicular baseline */
         double perpendicularBaseline() const { return (-1. * _bh * _coslook) + 
                                               (_bv * _sinlook); }
 
-        // Look angles
+        /** Get sin of look angle */
         double sinLook() const { return _sinlook;}
+
+        /** Get cos of look angle */
         double cosLook() const { return _coslook;}
 
-        // Basis vectors
+        /** Reference ECEF position for baseline */
         cartesian_t refXyz() const { return _refxyz; }
+
+        /** Unit vector in look direction */
         cartesian_t look() const { return _look; }
+
+        /** Unit vector in radial direction */
         cartesian_t rhat() const { return _rhat; }
+
+        /** Unit vector in cross track direction */
         cartesian_t chat() const { return _chat; }
+
+        /** Unit vector in direction of velocity */
         cartesian_t vhat() const { return _vhat; }
 
-        // Orbit method
+        /** Return orbit interpolation method used */
         orbitInterpMethod orbitMethod() const { return _orbitMethod; }
-        // Orbits
+
+        /** Return reference orbit */
         Orbit orbit1() const { return _orbit1; }
+
+        /** Return secondary orbit */
         Orbit orbit2() const { return _orbit2; }
-        // Metadata
+
+        /** Return metadata object */
         Metadata radar() const { return _radar; }
-        // Ellipsoid
+
+        /** Return ellipsoid*/
         Ellipsoid ellipsoid() const { return _elp; }    
-        // Velocity magnitude
+
+        /** Return magnitude of velocity */
         double velocityMagnitude() const { return _velocityMagnitude; }
         
         void init();

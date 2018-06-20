@@ -27,33 +27,41 @@ namespace isce { namespace core {
     
     // Useful typedefs for 3-element vectors and 2D matrices
     // Will be replaced by dedicated array library
+    /**Common datatype for a triplet of doubles*/
     typedef std::array<double, 3> cartesian_t;
+
+    /**Common datatype for collection of 3 triplets of doubles*/
     typedef std::array<std::array<double, 3>, 3> cartmat_t;
 
+    /**Enumeration type to indicate coordinate conversion direction*/
     enum orbitConvMethod {
         SCH_2_XYZ,
         XYZ_2_SCH
     };
 
+    /**Enumeration type to indicate coordinate system of orbits*/
     enum orbitType {
         WGS84_ORBIT,
         SCH_ORBIT
     };
 
+    /**Enumeration type to indicate method to use for orbit interpolation*/
     enum orbitInterpMethod {
         HERMITE_METHOD,
         SCH_METHOD,
         LEGENDRE_METHOD
     };
 
-    // Sinc interpolation constants
+    ///@cond
     enum sincInterpConst {
         SINC_HALF = 4,
         SINC_LEN = 8,
         SINC_ONE = 9,
         SINC_SUB = 8192
     };
+    ///@endcond
 
+    /**Enumeration type to indicate interpolation method*/
     enum dataInterpMethod {
         SINC_METHOD,
         BILINEAR_METHOD,
@@ -63,14 +71,16 @@ namespace isce { namespace core {
         BIQUINTIC_METHOD
     };
 
-    // Ellipsoid parameters for Earth
+    /** Semi-major axis for WGS84 */
     const double EarthSemiMajorAxis = 6378137.0;
+
+    /** Eccentricity^2 for WGS84 */
     const double EarthEccentricitySquared = 0.0066943799901;
 
-    // Inline function for input checking on vector lengths (primarily to check to see if 3D vector 
-    // has the correct number of inputs, but is generalized to any length). 'vec_name' is passed in
-    // by the wrapper macro (stringified vector name), and 'parent_func' is passed in the same way 
-    // through __PRETTY_FUNCTION__
+     /* Inline function for input checking on vector lengths (primarily to check to see if 3D vector 
+     * has the correct number of inputs, but is generalized to any length). 'vec_name' is passed in
+     * by the wrapper macro (stringified vector name), and 'parent_func' is passed in the same way 
+     * through __PRETTY_FUNCTION__*/
     template<typename T>
     inline void checkVecLenDebug(const std::vector<T> &vec, size_t len, const char *vec_name, 
                                  const char *parent_func) {

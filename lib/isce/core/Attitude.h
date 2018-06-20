@@ -26,24 +26,29 @@ namespace isce {
     }
 }
 
-// Parent Attitude class to be inherited
+/** Base class for attitude data representation */
 class isce::core::Attitude {
 
     public:
-        // Basic constructor to set the attitude type string
+        /** Constructor using time attitude representation type*/
         Attitude(AttitudeType atype) : _time(MIN_DATE_TIME), _attitude_type(atype) {};
-        // Virtual destructor
+
+        /** Virtual destructor*/
         virtual ~Attitude() = 0;
 
-        // Virtual functions
+        /** Virtual function to return yaw, pitch, roll */
         virtual cartesian_t ypr() = 0;
+
+        /** Virtual function return rotation matrix*/
         virtual cartmat_t rotmat(const std::string) = 0;
 
-        // Getter functions
+        /** Return type of attitude representation - quaternion or euler angle*/
         inline AttitudeType attitudeType() const {return _attitude_type;}
+
+        /** Return yaw orientation - central or normal */
         inline std::string yawOrientation() const {return _yaw_orientation;}
 
-        // Setter functions
+        /** Set yaw orientation - central or normal */
         inline void yawOrientation(const std::string);
 
     // Private data members

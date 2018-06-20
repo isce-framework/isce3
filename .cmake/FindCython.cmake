@@ -28,12 +28,12 @@ find_package( PythonInterp )
 if( PYTHONINTERP_FOUND )
   get_filename_component( _python_path ${PYTHON_EXECUTABLE} PATH )
   find_program( CYTHON_EXECUTABLE
-    NAMES cython cython.bat cython3
+      NAMES cython${PYTHON_VERSION_MAJOR} cython-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR} cython cython.bat 
     HINTS ${_python_path}
     )
 else()
   find_program( CYTHON_EXECUTABLE
-    NAMES cython cython.bat cython3
+    NAMES cython3 cython cython.bat
     )
 endif()
 

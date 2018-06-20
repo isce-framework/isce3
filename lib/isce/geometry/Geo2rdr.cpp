@@ -113,7 +113,7 @@ geo2rdr(isce::io::Raster & latRaster,
         for (size_t pixel = 0; pixel < demWidth; ++pixel) {
 
             // Perform geo->rdr iterations
-            cartesian_t llh = {lat[pixel]*rad, lon[pixel]*rad, hgt[pixel]};
+            cartesian_t llh = {lon[pixel]*rad, lat[pixel]*rad, hgt[pixel]};
             double aztime, slantRange;
             int geostat = isce::geometry::geo2rdr(
                 llh, _ellipsoid, _orbit, doppler, _meta, aztime, slantRange, _threshold, 
