@@ -81,7 +81,6 @@ TEST(TopoTest, CheckResults) {
     // Loop over topo bands
     for (size_t k = 0; k < refRaster.numBands(); ++k) {
         // Compute sum of absolute error
-        const size_t N = testRaster.length() * testRaster.width();
         double error = 0.0;
         size_t count = 0;
         for (size_t i = 0; i < testRaster.length(); ++i) {
