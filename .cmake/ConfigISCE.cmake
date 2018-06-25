@@ -54,6 +54,18 @@ function(CheckGDAL)
     endif()
 endfunction()
 
+##Check for HDF5 installation
+function(CheckHDF5)
+    FIND_PACKAGE(HDF5 REQUIRED COMPONENTS CXX)
+    message(STATUS "Found HDF5: ${HDF5_VERSION} ${HDF5_CXX_LIBRARIES}")
+    # Use more standard names to propagate variables
+    set(HDF5_INCLUDE_DIR ${HDF5_INCLUDE_DIRS} CACHE PATH "HDF5 include directory")
+    #list(GET ${HDF5_CXX_LIBRARIES} 2 TEMP_ITEM)
+    #string(REPLACE " " ";" TEMP_ITEM ${HDF5_CXX_LIBRARIES})
+    #message("temp: " ${TEMP_ITEM})
+    set(HDF5_LIBRARY ${HDF5_CXX_LIBRARIES} CACHE STRING "HDF5 libraries")
+endfunction()
+
 ##Check for Armadillo installation
 function(CheckArmadillo)
     FIND_PACKAGE(Armadillo REQUIRED)

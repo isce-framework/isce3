@@ -49,6 +49,9 @@ CheckOpenMP()
 ##Check for GDAL
 CheckGDAL()
 
+##Check for HDF5
+CheckHDF5()
+
 ##Check for Armadillo
 CheckArmadillo()
 

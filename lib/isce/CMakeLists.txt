@@ -15,7 +15,7 @@ add_library(${${PACKAGENAME}_DLL} SHARED
             ${io_SRCS})
 
 # Add library dependencies 
-target_link_libraries(${${PACKAGENAME}_DLL} ${GDAL_LIBRARY} ${PYRE_LIBRARY}
+target_link_libraries(${${PACKAGENAME}_DLL} ${GDAL_LIBRARY} ${HDF5_LIBRARY} ${PYRE_LIBRARY}
                       ${PYRE_JOURNAL_LIBRARY})
 
 # Add OpenMP if found
