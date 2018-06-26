@@ -12,6 +12,7 @@
 #include "Projections.h"
 using isce::core::CEA;
 using isce::core::Geocent;
+using isce::core::LonLat;
 using isce::core::PolarStereo;
 using isce::core::ProjectionBase;
 using isce::core::UTM;
@@ -359,12 +360,12 @@ int CEA::inverse(const cartesian_t &enu, cartesian_t &llh) const {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* * * * * * * * * * * * * * * * * * * Projection Factory * * * * * * * * * * * * * * * * * * */
-ProjectionBase* createProj(int epsgcode)
+ProjectionBase* isce::core::createProj(int epsgcode)
 {
     //Check for Lat/Lon
     if (epsgcode == 4326)
     {
-        return new isce::core::LonLat;
+        return new LonLat;
     }
     //Check for Geocentric
     else if (epsgcode == 4978)

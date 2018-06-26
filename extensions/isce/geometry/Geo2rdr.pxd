@@ -27,7 +27,6 @@ cdef extern from "isce/geometry/Geo2rdr.h" namespace "isce::geometry":
         void orbitMethod(orbitInterpMethod)
 
         # Run geo2rdr - main entrypoint
-        void geo2rdr(Raster &, Raster &, Raster &, Poly2d &, const string &,
-                     double, double)
+        void geo2rdr(Raster &, Poly2d &, const string &, double, double)
         
 # end of file

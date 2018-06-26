@@ -10,8 +10,8 @@
 // Load DEM subset into memory
 void isce::geometry::DEMInterpolator::
 loadDEM(isce::core::Raster & demRaster,
-        double minX, double maxX, double minY, double maxY,
-        isce::core::dataInterpMethod interpMethod) {
+        double minLon, double maxLon, double minLat, double maxLat,
+        isce::core::dataInterpMethod interpMethod, int epsgcode) {
 
     // Initialize journal
     pyre::journal::warning_t warning("isce.core.Geometry");
@@ -27,6 +27,27 @@ loadDEM(isce::core::Raster & demRaster,
     // Compute ending coordinate 
     const double lastY = firstY + (demRaster.length() - 2) * deltaY;
     const double lastX = firstX + (demRaster.width() - 2) * deltaX;
+
+    // Check EPSG code; if -9999, assume 4326
+    if (epsgcode == -9999) {
+        epsgcode = 4326;
+    }
+    // Initialize projection
+    _epsgcode = epsgcode;
+    _proj = isce::core::createProj(epsgcode);
+
+    // Convert min longitude and latitude to XY coordinates of DEM
+    isce::core::cartesian_t llh{minLon, minLat, 0.0};
+    isce::core::cartesian_t xyz;
+    _proj->forward(llh, xyz);
+    double minX = xyz[0];
+    double minY = xyz[1];
+
+    // Convert max longitude and latitude to XY coordinates of DEM
+    llh = {maxLon, maxLat, 0.0};
+    _proj->forward(llh, xyz);
+    double maxX = xyz[0];
+    double maxY = xyz[1];
 
     // Validate requested geographic bounds with input DEM raster
     if (minX < firstX) {
@@ -67,7 +88,7 @@ loadDEM(isce::core::Raster & demRaster,
     const int length = yend - ystart;
     _dem.resize(length, width);
 
-    //Read in the DEM
+    // Read in the DEM
     demRaster.getBlock(_dem.data(), xstart, ystart, width, length);
     
     // Indicate we have loaded a valid raster
@@ -116,42 +137,80 @@ computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & 
          << "Average DEM height: " << meanValue << pyre::journal::newline;
 }
 
-// Interpolate DEM
+// Compute middle latitude and longitude
+isce::core::cartesian_t
+isce::geometry::DEMInterpolator::
+midLonLat(double height) const {
+
+    // Create coordinates for middle X/Y
+    isce::core::cartesian_t xyz{midX(), midY(), height};
+
+    // Call projection inverse
+    isce::core::cartesian_t llh;
+    _proj->inverse(xyz, llh);
+
+    // Done
+    return llh;
+}
+
+// Interpolate DEM at a given longitude and latitude (in radians)
 double isce::geometry::DEMInterpolator::
-interpolate(double x, double y) const {
+interpolateLonLat(double lon, double lat) const {
+
     // If we don't have a DEM, just return reference height
     double value = _refHeight;
     if (!_haveRaster) {
         return value;
-    } else {
-        // Compute the row and column for requested lat and lon
-        const double row = (y - _ystart) / _deltay;
-        const double col = (x - _xstart) / _deltax;
+    }
 
-        // Check validity of interpolation coordinates
-        const int irow = int(std::floor(row));
-        const int icol = int(std::floor(col));
-        // If outside bounds, return reference height
-        if (irow < 2 || irow >= int(_dem.length() - 1))
-            return _refHeight;
-        if (icol < 2 || icol >= int(_dem.width() - 1))
-            return _refHeight;
-        
-        // Choose correct interpolation routine
-        if (_interpMethod == isce::core::BILINEAR_METHOD) {
-            value = isce::core::Interpolator::bilinear(col, row, _dem);
-        } else if (_interpMethod == isce::core::BICUBIC_METHOD) {
-            value = isce::core::Interpolator::bicubic(col, row, _dem);
-        } else if (_interpMethod == isce::core::AKIMA_METHOD) {
-            value = isce::core::Interpolator::akima(col, row, _dem);
-        } else if (_interpMethod == isce::core::BIQUINTIC_METHOD) { 
-            value = isce::core::Interpolator::interp_2d_spline(6, _dem, col, row);
-        } else if (_interpMethod == isce::core::NEAREST_METHOD) {
-            value = _dem(int(std::round(row)), int(std::round(col)));
-        }
-        // Done
+    // Pass latitude and longitude through projection
+    isce::core::cartesian_t xyz;
+    const isce::core::cartesian_t llh{lon, lat, 0.0};
+    _proj->forward(llh, xyz);
+
+    // Interpolate DEM at its native coordinates
+    value = interpolateXY(xyz[0], xyz[1]);
+    // Done
+    return value;
+}
+
+// Interpolate DEM at native coordinates
+double isce::geometry::DEMInterpolator::
+interpolateXY(double x, double y) const {
+
+    // If we don't have a DEM, just return reference height
+    double value = _refHeight;
+    if (!_haveRaster) {
         return value;
     }
+
+    // Compute the row and column for requested lat and lon
+    const double row = (y - _ystart) / _deltay;
+    const double col = (x - _xstart) / _deltax;
+
+    // Check validity of interpolation coordinates
+    const int irow = int(std::floor(row));
+    const int icol = int(std::floor(col));
+    // If outside bounds, return reference height
+    if (irow < 2 || irow >= int(_dem.length() - 1))
+        return _refHeight;
+    if (icol < 2 || icol >= int(_dem.width() - 1))
+        return _refHeight;
+    
+    // Choose correct interpolation routine
+    if (_interpMethod == isce::core::BILINEAR_METHOD) {
+        value = isce::core::Interpolator::bilinear(col, row, _dem);
+    } else if (_interpMethod == isce::core::BICUBIC_METHOD) {
+        value = isce::core::Interpolator::bicubic(col, row, _dem);
+    } else if (_interpMethod == isce::core::AKIMA_METHOD) {
+        value = isce::core::Interpolator::akima(col, row, _dem);
+    } else if (_interpMethod == isce::core::BIQUINTIC_METHOD) { 
+        value = isce::core::Interpolator::interp_2d_spline(6, _dem, col, row);
+    } else if (_interpMethod == isce::core::NEAREST_METHOD) {
+        value = _dem(int(std::round(row)), int(std::round(col)));
+    }
+    // Done
+    return value;
 }
 
 // end of file

@@ -41,6 +41,7 @@ namespace isce {
 
             // Deserialize scalar values
             double threshold;
+            int epsgOut;
             size_t numiter, extraiter;
             isce::core::orbitInterpMethod orbitMethod;
             isce::core::dataInterpMethod demMethod;
@@ -48,7 +49,8 @@ namespace isce {
                     cereal::make_nvp("numIterations", numiter),
                     cereal::make_nvp("extraIterations", extraiter),
                     cereal::make_nvp("orbitMethod", orbitMethod),
-                    cereal::make_nvp("demMethod", demMethod));
+                    cereal::make_nvp("demMethod", demMethod),
+                    cereal::make_nvp("epsgOut", epsgOut));
 
             // Send to Topo setters
             topo.threshold(threshold);
@@ -56,6 +58,7 @@ namespace isce {
             topo.extraiter(extraiter);
             topo.orbitMethod(orbitMethod);
             topo.demMethod(demMethod);
+            topo.epsgOut(epsgOut);
             topo.initialized(true);
         }
 
