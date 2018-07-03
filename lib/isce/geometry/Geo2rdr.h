@@ -44,13 +44,13 @@ class isce::geometry::Geo2rdr {
         inline void orbitMethod(isce::core::orbitInterpMethod);
 
         // Run geo2rdr - main entrypoint
-        void geo2rdr(isce::core::Raster &,
+        void geo2rdr(isce::io::Raster &,
                      isce::core::Poly2d &,
                      const std::string &,
                      double, double);
 
         // Alternative: run geo2rdr with no constant offsets
-        void geo2rdr(isce::core::Raster &,
+        void geo2rdr(isce::io::Raster &,
                      isce::core::Poly2d &,
                      const std::string &);
 

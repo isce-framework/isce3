@@ -409,8 +409,8 @@ void isce::io::IDataSet::read(T &v, const std::string &att) {
 
     // Check that the parameter that will receive the data read from the file 
     // is a numeric variable
-    if (typeid(T) != typeid(isce::core::FixedString))
-        static_assert(std::is_arithmetic<T>::value, "Expected a numeric scalar"); 
+    //if (typeid(T) != typeid(isce::core::FixedString))
+    //    static_assert(std::is_arithmetic<T>::value, "Expected a numeric scalar"); 
 
     // Check that the dataset/attribute contains a scalar, i.e., rank=0
     if (getRank(att) != 0) {

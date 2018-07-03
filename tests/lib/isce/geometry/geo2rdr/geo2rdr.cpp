@@ -55,7 +55,7 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     }
 
     // Open topo raster from topo unit test
-    isce::core::Raster topoRaster("../topo/topo.vrt");
+    isce::io::Raster topoRaster("../topo/topo.vrt");
 
     // Run geo2rdr
     geo.geo2rdr(topoRaster, doppler, ".");

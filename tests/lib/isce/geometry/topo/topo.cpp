@@ -56,7 +56,7 @@ TEST(TopoTest, RunTopo) {
     }
 
     // Open DEM raster
-    isce::io::Raster demRaster("../../data/cropped.dem.grd");
+    isce::io::Raster demRaster("../../data/srtm_cropped.tif");
 
     // Run topo
     topo.topo(demRaster, doppler, ".");
@@ -66,10 +66,10 @@ TEST(TopoTest, RunTopo) {
 TEST(TopoTest, CheckResults) {
     
     // Open generated topo raster
-    isce::core::Raster testRaster("topo.vrt");
+    isce::io::Raster testRaster("topo.vrt");
     
     // Open reference topo raster
-    isce::core::Raster refRaster("../../data/topo/topo.vrt");
+    isce::io::Raster refRaster("../../data/topo/topo.vrt");
 
     // The associated tolerances
     std::vector<double> tols{1.0e-5, 1.0e-5, 0.15, 1.0e-4, 1.0e-4, 0.02, 0.02};

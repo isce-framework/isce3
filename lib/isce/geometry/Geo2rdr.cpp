@@ -27,7 +27,7 @@ using isce::core::LinAlg;
 
 // Run geo2rdr with no offsets
 void isce::geometry::Geo2rdr::
-geo2rdr(isce::core::Raster & topoRaster,
+geo2rdr(isce::io::Raster & topoRaster,
         isce::core::Poly2d & doppler,
         const std::string & outdir) {
     // Call main geo2rdr with offsets set to zero
@@ -36,7 +36,7 @@ geo2rdr(isce::core::Raster & topoRaster,
 
 // Run geo2rdr - main entrypoint
 void isce::geometry::Geo2rdr::
-geo2rdr(isce::core::Raster & topoRaster,
+geo2rdr(isce::io::Raster & topoRaster,
         isce::core::Poly2d & doppler,
         const std::string & outdir,
         double azshift, double rgshift) {
