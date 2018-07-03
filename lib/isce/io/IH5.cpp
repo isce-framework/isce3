@@ -1,12 +1,12 @@
 
-#include "IH5.h"
+#include "isce/core/Constants.h"
 
+#include "IH5.h"
 
 
 template<class T>
 H5::DataType memType2 (const std::type_info &ti, T &d) {
 
-        
 //    H5T_class_t type = d.getTypeClass();
 
 	if (ti == typeid(char))
@@ -41,9 +41,13 @@ H5::DataType memType2 (const std::type_info &ti, T &d) {
 		return d.getCompType();
 	else if (ti == typeid(std::complex<double>))
 		return d.getCompType();
-	else if (ti == typeid(std::string))
+	else if (ti == typeid(std::string)) {
 		return d.getStrType();
-	else 
+    }
+    else if (ti == typeid(isce::core::FixedString)) {
+        H5::StrType strdatatype(H5::PredType::C_S1, 50);
+        return strdatatype;
+    } else 
 	    return H5::PredType::NATIVE_FLOAT;//TODO error instead
 }
 
@@ -290,7 +294,7 @@ std::vector<std::string> isce::io::IDataSet::getAttrs() {
     std::vector<std::string> outList;
 
     // If none, job done, return
-    if (H5::H5Location::getNumAttrs() == 0)
+    if (H5::H5Object::getNumAttrs() == 0)
         return outList;
 
     // Iterate over all the attributes and get their names
@@ -402,19 +406,20 @@ int isce::io::IDataSet::getNumBits(const std::string &v) {
 // be passed - see other signature of this function below.
 template<typename T>
 void isce::io::IDataSet::read(T &v, const std::string &att) {
-         
+
     // Check that the parameter that will receive the data read from the file 
     // is a numeric variable
-    static_assert(std::is_arithmetic<T>::value, "Expected a numeric scalar");
+    if (typeid(T) != typeid(isce::core::FixedString))
+        static_assert(std::is_arithmetic<T>::value, "Expected a numeric scalar"); 
 
     // Check that the dataset/attribute contains a scalar, i.e., rank=0
-    if (getRank(att) != 0)
+    if (getRank(att) != 0) {
         return;   // TODO Should add a message or something here
-    
+    }
+
     if (att.empty()) {
        H5::DataSet::read(&v, memType(v,*this));
-    }
-    else if (attrExists(att)) {
+    } else if (attrExists(att)) {
        // Open the attribute
        H5::Attribute a = openAttribute(att);
 
@@ -429,6 +434,21 @@ void isce::io::IDataSet::read(T &v, const std::string &att) {
     return;
 }
 
+template void
+isce::io::IDataSet::
+read(double & v, const std::string & att);
+
+template void
+isce::io::IDataSet::
+read(float & v, const std::string & att);
+
+template void
+isce::io::IDataSet::
+read(int & v, const std::string & att);
+
+template void
+isce::io::IDataSet::
+read(isce::core::FixedString & v, const std::string & att);
 
 // Same as above but for std::string. 
 // TODO: Should be templated with above function. Will probably need some
@@ -441,7 +461,7 @@ void isce::io::IDataSet::read(std::string &v, const std::string &att) {
         return;   // TODO Should add a message or something here
 
     if (att.empty()) {
-       H5::DataSet::read(&v, getStrType());
+       H5::DataSet::read(&v, memType(v,*this), getDataSpace());
     }
     else if (attrExists(att)) {
        // Open the attribute
@@ -467,7 +487,7 @@ template<typename T>
 void isce::io::IDataSet::read(T * buffer, const int * startIn, 
                                 const int * countIn, 
                                 const int * strideIn) { 
- 
+
     // Format a dataspace according to the input parameters       
     H5::DataSpace dspace = getReadDataSpace(startIn, countIn, strideIn);	 
 
@@ -498,6 +518,27 @@ template<typename T>
 void isce::io::IDataSet::read(std::vector<T> &buffer) {
    read(buffer, nullptr, nullptr, nullptr);
 } 
+
+template void
+isce::io::IDataSet::
+read(std::vector<int> & buffer);
+
+template void
+isce::io::IDataSet::
+read(std::vector<float> & buffer);
+
+template void
+isce::io::IDataSet::
+read(std::vector<double> & buffer);
+
+template void
+isce::io::IDataSet::
+read(std::vector<std::string> & buffer);
+
+template void
+isce::io::IDataSet::
+read(std::vector<isce::core::FixedString> & buffer);
+
 
 template<typename T>
 void isce::io::IDataSet::read(std::vector<T> &buffer, const std::vector<int> * startIn, 
