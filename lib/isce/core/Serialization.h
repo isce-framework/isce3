@@ -131,6 +131,10 @@ namespace isce {
             orbit.position.clear(); 
             orbit.velocity.clear(); 
             orbit.UTCtime.clear();
+            orbit.epochs.clear();
+
+            // Save the reference epoch
+            orbit.refEpoch = refEpoch;
 
             // Load position
             loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/position",
@@ -146,13 +150,15 @@ namespace isce {
                          timestamps);
             orbit.nVectors = timestamps.size();
             orbit.UTCtime.resize(orbit.nVectors);
+            orbit.epochs.resize(orbit.nVectors);
 
             // Finally, convert timestamps seconds
             for (size_t i = 0; i < orbit.nVectors; ++i) {
                 // Make a string
                 std::string timestampStr(timestamps[i].str);
-                // Make a DateTime
+                // Make a DateTime and save it
                 DateTime date(timestampStr);
+                orbit.epochs[i] = date;
                 // Convert to seconds since epoch
                 orbit.UTCtime[i] = date.secondsSinceEpoch(refEpoch);
             }

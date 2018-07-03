@@ -30,6 +30,8 @@ struct isce::core::Orbit {
     int basis;
     // Number of State Vectors
     int nVectors;
+    // Lineared DateTime of containted StateVectors
+    std::vector<DateTime> epochs;
     // Linearized UTC time values of contained State Vectors
     std::vector<double> UTCtime;
     // Linearized position values of contained State Vectors
@@ -41,15 +43,17 @@ struct isce::core::Orbit {
 
     // Reformat the orbit and convert datetime to seconds since epoch
     void reformatOrbit(const DateTime &);
+    // Only convert datetime to seconds since epoch
+    void updateUTCTimes(const DateTime &);
     // If no epoch provided, use minimum datetime as epoch
     void reformatOrbit();
 
     // Constructors
     Orbit(int bs, int nv) : basis(bs), nVectors(nv), UTCtime(nv,0.), position(3*nv,0.), 
-                            velocity(3*nv,0.) {}
+                            velocity(3*nv,0.), epochs(nv,MIN_DATE_TIME) {}
     Orbit() : Orbit(0,0) {}
     Orbit(const Orbit &o) : basis(o.basis), nVectors(o.nVectors), UTCtime(o.UTCtime), 
-                            position(o.position), velocity(o.velocity),
+                            epochs(o.epochs), position(o.position), velocity(o.velocity),
                             stateVectors(o.stateVectors) {}
 
     // Math operators
@@ -79,6 +83,9 @@ struct isce::core::Orbit {
     void printOrbit() const;
     void loadFromHDR(const char*, int);
     void dumpToHDR(const char*) const;
+
+    // Data members
+    DateTime refEpoch;
 };
 
 isce::core::Orbit & isce::core::Orbit::
@@ -86,6 +93,7 @@ operator=(const Orbit &rhs) {
     basis = rhs.basis;
     nVectors = rhs.nVectors;
     UTCtime = rhs.UTCtime;
+    epochs = rhs.epochs;
     position = rhs.position;
     velocity = rhs.velocity;
     stateVectors = rhs.stateVectors;
@@ -134,6 +142,7 @@ setStateVector(int idx, double t, const cartesian_t & pos, const cartesian_t & v
         throw std::out_of_range(errstr);
     }
     UTCtime[idx] = t;
+    epochs[idx] = refEpoch + t;
     for (int i=0; i<3; i++) {
         position[3*idx+i] = pos[i];
         velocity[3*idx+i] = vel[i];
@@ -145,6 +154,7 @@ addStateVector(double t, const cartesian_t & pos, const cartesian_t & vel) {
     int vec_idx = 0;
     while ((vec_idx < nVectors) && (t > UTCtime[vec_idx])) vec_idx++;
     UTCtime.insert(UTCtime.begin()+vec_idx, t);
+    epochs.insert(epochs.begin()+vec_idx, refEpoch + t);
     position.insert(position.begin()+(3*vec_idx), pos.begin(), pos.end());
     velocity.insert(velocity.begin()+(3*vec_idx), vel.begin(), vel.end());
     nVectors++;

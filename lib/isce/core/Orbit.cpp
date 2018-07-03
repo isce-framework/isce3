@@ -39,11 +39,14 @@ reformatOrbit(const DateTime & epoch) {
     position.resize(3*nVectors);
     velocity.resize(3*nVectors);
     UTCtime.resize(nVectors);
+    epochs.resize(nVectors);
 
     // Loop over state vectors and fill in vectors
     for (int i = 0; i < nVectors; ++i) {
         // Get the statevector
         StateVector sv = stateVectors[i];
+        // Save epoch
+        epochs[i] = sv.date();
         // Place in correct spot in vectors
         for (size_t j = 0; j < 3; ++j) {
             position[(3*i) + j] = sv.position()[j];
@@ -52,6 +55,20 @@ reformatOrbit(const DateTime & epoch) {
         // Get UTCtime (implicit conversion to double)
         UTCtime[i] = sv.date().secondsSinceEpoch(epoch);
     }
+
+    // Store the reference epoch
+    refEpoch = epoch;
+}
+
+// Update UTC time of state vectors relative to a new reference epoch
+void isce::core::Orbit::
+updateUTCTimes(const DateTime & epoch) {
+    // Loop over time epochs
+    for (int i = 0; i < nVectors; ++i) {
+        UTCtime[i] = epochs[i].secondsSinceEpoch(epoch);
+    }
+    // Store the new epoch
+    refEpoch = epoch;
 }
 
 void isce::core::Orbit::
