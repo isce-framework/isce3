@@ -9,6 +9,9 @@ from libcpp.vector cimport vector
 from libcpp.string cimport string
 from Ellipsoid cimport Ellipsoid
 from Serialization cimport load_archive
+from numpy cimport ndarray
+import numpy as np
+cimport numpy as np
 
 cdef class pyEllipsoid:
     '''
@@ -30,9 +33,10 @@ cdef class pyEllipsoid:
         self.c_ellipsoid = new Ellipsoid()
         self.__owner = True
 
-    def __init__(self, a=0., e2=0.):
+    def __init__(self, a=6378137., e2=.0066943799901):
         self.a = a
         self.e2 = e2
+
 
     def __dealloc__(self):
         if self.__owner:
@@ -113,79 +117,141 @@ cdef class pyEllipsoid:
         except: 
             print("Error: Object passed in to copy is incompatible with object of type " +
                   "pyEllipsoid.")
-
-    def rEast(self, double lat):
+ 
+    def rEast(self, lat):
         '''
         Prime Vertical Radius as a function of latitude. 
 
         Args:
-            lat (float): Latitude in radians
+            lat (float or np.array 1D): Latitude in radians
 
         Returns:
-            float: Prime Vertical radius in meters
+            float or np.array 1D: Prime Vertical radius in meters
             
         '''
-        return self.c_ellipsoid.rEast(lat)
+        #Single value
+        if np.isscalar(lat):
+            return self.c_ellipsoid.rEast(lat)
 
-    def rNorth(self, double lat):
+        #For loop over array
+        lat = np.atleast_1d(lat)
+        cdef unsigned long nPts = lat.shape[0]
+        cdef unsigned long ii
+        res = np.empty(nPts, dtype=np.double)
+        cdef double[:] resview = res
+
+        for ii in range(nPts):
+            resview[ii] =  self.c_ellipsoid.rEast(lat[ii])
+
+        return res
+
+
+    def rNorth(self, lat):
         '''
         Meridional radius as a function of latitude.
 
         Args:
-            lat (float): Latitude in radians
+            lat (float or np.array 1D): Latitude in radians
 
         Returns:
-            float: Meridional radius in meters
+            float or np.array 1D: Meridional radius in meters
         '''
-        return self.c_ellipsoid.rNorth(lat)
+        #Single value
+        if np.isscalar(lat):
+            return self.c_ellipsoid.rNorth(lat)
 
-    def rDir(self, double lat, double hdg):
+        #For loop over array
+        lat = np.atleast_1d(lat)
+        cdef unsigned long nPts = lat.shape[0]
+        cdef unsigned long ii
+        res = np.empty(nPts, dtype=np.double)
+        cdef double[:] resview = res
+        
+        for ii in range(nPts):
+            resview[ii] = self.c_ellipsoid.rNorth(lat[ii])
+
+        return res
+
+    def rDir(self, lat, hdg):
         '''
         Directional radius as a function of heading and latitude.
 
+        Note:
+            lat and hdg should be of same size.
+
         Args:
-            lat (float): Latitude in radians
-            hdg (float): Heading in radians. Measured clockwise from North.
+            lat (float or np.array 1D): Latitude in radians
+            hdg (float or np.array 1D): Heading in radians. Measured clockwise from North.
 
         Returns:
-            float: Directional radius in meters.
+            float or np.array 1D: Directional radius in meters.
         '''
-        return self.c_ellipsoid.rDir(lat, hdg)
 
+        if np.isscalar(lat) and np.isscalar(hdg):
+            return self.c_ellipsoid.rDir(lat, hdg)
 
-    def lonLatToXyz(self, list llh):
+        lat = np.atleast_1d(lat)
+        hdg = np.atleast_1d(hdg)
+        assert(lat.shape[0] == hdg.shape[0])
+
+        cdef unsigned long nPts = lat.shape[0]
+        cdef unsigned long ii
+        res = np.empty(nPts, dtype=np.double)
+        cdef double[:] resview = res
+        for ii in range(nPts):
+            resview[ii] = self.c_ellipsoid.rDir(lat[ii], hdg[ii])
+
+        return res
+
+    
+    def lonLatToXyz(self, llh):
         '''
         Transform Lon/Lat/Hgt position to ECEF xyz coordinates.
 
         Args:
-            llh (list): triplet of floats representing Lon (rad), Lat (rad) and hgt (m)
+            llh (np.array[3 or nx3]): triplet of floats representing Lon (rad), Lat (rad) and hgt (m)
 
         Returns:
-            list: triplet of floats representing ECEF coordinates in meters
+            np.array[3 or nx3]: triplet of floats representing ECEF coordinates in meters
 
         '''
+        llh = np.atleast_2d(llh)
+        res = np.empty(llh.shape, dtype=np.double)
+        cdef double[:,:] resview = res
+
+        cdef unsigned long nPts = llh.shape[0]
+        cdef unsigned long ii
+        cdef int jj
         cdef cartesian_t inp
         cdef cartesian_t xyz
-
-        for ii in range(3):
-            inp[ii] = llh[ii]
+        for ii in range(nPts):
+            for jj in range(3):
+                inp[jj] = llh[ii,jj]
+            self.c_ellipsoid.lonLatToXyz(inp,xyz)
+            for jj in range(3):
+                resview[ii,jj] = xyz[jj]
         
-        self.c_ellipsoid.lonLatToXyz(inp, xyz)
-        out = [xyz[ii] for ii in range(3)]
+        return np.squeeze(res)
 
-        return out
-
-    def xyzToLonLat(self, list xyz):
+    def xyzToLonLat(self, xyz):
         '''
         Transform Lon/Lat/Hgt position to ECEF xyz coordinates.
 
         Args:
-            xyz (list): triplet of floats representing ECEF coordinates in meters
+            xyz (np.array[3 or nx3]): triplet of floats representing ECEF coordinates in meters
 
         Returns:
-            list : triplet of floats representing Lon (rad), Lat (rad) and hgt (m)
+            np.array[3 or nx3]: triplet of floats representing Lon (rad), Lat (rad) and hgt (m)
 
         '''
+        xyz = np.atleast_2d(xyz)
+        res = np.empty(xyz.shape, dtype=np.double)
+        cdef double[:,:] resview = res
+
+        cdef unsigned long nPts = xyz.shape[0]
+        cdef unsigned long ii
+        cdef int jj
+
         cdef cartesian_t llh
         cdef cartesian_t inp
 
@@ -197,14 +263,14 @@ cdef class pyEllipsoid:
         
         return out
 
-    def getImagingAnglesAtPlatform(self, list pos, list vel, list los):
+    def getImagingAnglesAtPlatform(self, pos, vel, los):
         '''
         Compute azimuth angle and look angle at imaging platform.
 
         Args:
-            pos (list): triplet of floats representing platform position in ECEF coordinates (m)
-            vel (list): triplet of floats representing platform veloctity in ECEF coodinates (m/s)
-            los (list): triplet of floats representing line-of-sight vector in ECEF coordiantes (m)
+            pos (list or np.array[3]): triplet of floats representing platform position in ECEF coordinates (m)
+            vel (list or np.array[3]): triplet of floats representing platform veloctity in ECEF coodinates (m/s)
+            los (list or np.array[3]): triplet of floats representing line-of-sight vector in ECEF coordiantes (m)
 
         Returns:
             (tuple): tuple containing: 
@@ -214,6 +280,7 @@ cdef class pyEllipsoid:
         cdef cartesian_t _pos
         cdef cartesian_t _vel
         cdef cartesian_t _los
+        cdef int ii
 
         for ii in range(3):
             _pos[ii] = pos[ii]
@@ -226,35 +293,46 @@ cdef class pyEllipsoid:
         self.c_ellipsoid.getImagingAnglesAtPlatform(_pos,_vel,_los,_azi,_look)
         return (_azi, _look)
 
-    def TCNbasis(self, list pos, list vel):
+    def TCNbasis(self, pos, vel):
         '''
         Compute TCN basis from platform position and velocity.
 
         Args:
-            pos (list): triplet of floats representing ECEF position in meters
-            vel (list): triplet of floats representing ECEF velocity in meters / sec
+            pos (list or np.array[3]): triplet of floats representing ECEF position in meters
+            vel (list or np.array[3]): triplet of floats representing ECEF velocity in meters / sec
 
         Returns:
             (tuple): tuple containing:
-                * that (list) - Tangential unit vector
-                * chat (list) - Cross track unit vector
-                * nhat (list) - Normal unit vector pointing downwards
+                * that (np.array[3]) - Tangential unit vector
+                * chat (np.array[3]) - Cross track unit vector
+                * nhat (np.array[3]) - Normal unit vector pointing downwards
         '''
         cdef cartesian_t _pos
         cdef cartesian_t _vel
         cdef cartesian_t _t
         cdef cartesian_t _c
         cdef cartesian_t _n
+        cdef int ii
 
-        for i in range(3):
-            _pos[i] = pos[i]
-            _vel[i] = vel[i]
+        for ii in range(3):
+            _pos[ii] = pos[ii]
+            _vel[ii] = vel[ii]
         
         self.c_ellipsoid.TCNbasis(_pos,_vel,_t,_c,_n)
-        
-        that = [_t[ii] for ii in range(3)]
-        chat = [_c[ii] for ii in range(3)]
-        nhat = [_n[ii] for ii in range(3)]
+
+        that = np.empty(3, dtype=np.double)
+        cdef double[:] thatview = that
+
+        chat = np.empty(3, dtype=np.double)
+        cdef double[:] chatview = chat
+
+        nhat = np.empty(3, dtype=np.double)
+        cdef double[:] nhatview = nhat
+
+        for ii in range(3):
+            thatview[ii] = _t[ii]
+            chatview[ii] = _c[ii]
+            nhatview[ii] = _n[ii]
 
         return (that, chat, nhat)
 
