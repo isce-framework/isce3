@@ -21,8 +21,8 @@ class isce::geometry::TopoLayers {
     public:
         // Constructors
         TopoLayers(size_t width) {
-            _lat.resize(width);
-            _lon.resize(width);
+            _x.resize(width);
+            _y.resize(width);
             _z.resize(width);
             _inc.resize(width);
             _hdg.resize(width);
@@ -32,8 +32,8 @@ class isce::geometry::TopoLayers {
         }   
         
         // Get array references
-        std::valarray<double> & lat() { return _lat; }
-        std::valarray<double> & lon() { return _lon; }
+        std::valarray<double> & x() { return _x; }
+        std::valarray<double> & y() { return _y; }
         std::valarray<double> & z() { return _z; }
         std::valarray<float> & inc() { return _inc; }
         std::valarray<float> & hdg() { return _hdg; }
@@ -42,8 +42,8 @@ class isce::geometry::TopoLayers {
         std::valarray<float> & sim() { return _sim; }
         
         // Set values for a single index
-        void lat(size_t index, double value) { _lat[index] = value; }
-        void lon(size_t index, double value) { _lon[index] = value; }
+        void x(size_t index, double value) { _x[index] = value; }
+        void y(size_t index, double value) { _y[index] = value; }
         void z(size_t index, double value) { _z[index] = value; }
         void inc(size_t index, float value) { _inc[index] = value; }
         void hdg(size_t index, float value) { _hdg[index] = value; }
@@ -53,8 +53,8 @@ class isce::geometry::TopoLayers {
         
     private:
         // The valarrays for the actual data
-        std::valarray<double> _lat;
-        std::valarray<double> _lon;
+        std::valarray<double> _x;
+        std::valarray<double> _y;
         std::valarray<double> _z;
         std::valarray<float> _inc;
         std::valarray<float> _hdg;

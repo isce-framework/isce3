@@ -1,0 +1,66 @@
+<VRTDataset rasterXSize="500" rasterYSize="500">
+  <SRS>GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]]</SRS>
+  <VRTRasterBand dataType="Float64" band="1">
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">./x.rdr</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="500" RasterYSize="500" DataType="Float64" BlockXSize="500" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="500" ySize="500" />
+      <DstRect xOff="0" yOff="0" xSize="500" ySize="500" />
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Float64" band="2">
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">./y.rdr</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="500" RasterYSize="500" DataType="Float64" BlockXSize="500" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="500" ySize="500" />
+      <DstRect xOff="0" yOff="0" xSize="500" ySize="500" />
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Float64" band="3">
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">./z.rdr</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="500" RasterYSize="500" DataType="Float64" BlockXSize="500" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="500" ySize="500" />
+      <DstRect xOff="0" yOff="0" xSize="500" ySize="500" />
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Float32" band="4">
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">./inc.rdr</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="500" RasterYSize="500" DataType="Float32" BlockXSize="500" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="500" ySize="500" />
+      <DstRect xOff="0" yOff="0" xSize="500" ySize="500" />
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Float32" band="5">
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">./hdg.rdr</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="500" RasterYSize="500" DataType="Float32" BlockXSize="500" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="500" ySize="500" />
+      <DstRect xOff="0" yOff="0" xSize="500" ySize="500" />
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Float32" band="6">
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">./localInc.rdr</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="500" RasterYSize="500" DataType="Float32" BlockXSize="500" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="500" ySize="500" />
+      <DstRect xOff="0" yOff="0" xSize="500" ySize="500" />
+    </SimpleSource>
+  </VRTRasterBand>
+  <VRTRasterBand dataType="Float32" band="7">
+    <SimpleSource>
+      <SourceFilename relativeToVRT="1">./localPsi.rdr</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="500" RasterYSize="500" DataType="Float32" BlockXSize="500" BlockYSize="1" />
+      <SrcRect xOff="0" yOff="0" xSize="500" ySize="500" />
+      <DstRect xOff="0" yOff="0" xSize="500" ySize="500" />
+    </SimpleSource>
+  </VRTRasterBand>
+</VRTDataset>

@@ -54,13 +54,11 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     archive(cereal::make_nvp("Geo2rdr", geo));
     }
 
-    // Open lat raster
-    isce::io::Raster latRaster("../../data/topo/lat.rdr");
-    isce::io::Raster lonRaster("../../data/topo/lon.rdr");
-    isce::io::Raster hgtRaster("../../data/topo/z.rdr");
+    // Open topo raster from topo unit test
+    isce::core::Raster topoRaster("../topo/topo.vrt");
 
     // Run geo2rdr
-    geo.geo2rdr(latRaster, lonRaster, hgtRaster, doppler, ".");
+    geo.geo2rdr(topoRaster, doppler, ".");
 
 }
 

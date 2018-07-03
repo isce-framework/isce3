@@ -44,6 +44,7 @@ class isce::geometry::Topo {
         inline void extraiter(int);
         inline void orbitMethod(isce::core::orbitInterpMethod);
         inline void demMethod(isce::core::dataInterpMethod);
+        inline void epsgOut(int);
 
         // Check initialization
         inline void checkInitialization(pyre::journal::info_t &) const;
@@ -87,6 +88,11 @@ class isce::geometry::Topo {
         int _numiter, _extraiter;
         isce::core::orbitInterpMethod _orbitMethod;
         isce::core::dataInterpMethod _demMethod;
+
+        // Output options and objects
+        int _epsgIn, _epsgOut;
+        isce::core::ProjectionBase * _proj;
+
         // Flag to make sure options have been initialized
         bool _initialized;
 };
@@ -98,7 +104,7 @@ class isce::geometry::Topo {
 
 const double MIN_H = -500.0;
 const double MAX_H = -1000.0;
-const double MARGIN = 0.15;
+const double MARGIN = 0.15 * M_PI / 180.0;
 
 #endif
 

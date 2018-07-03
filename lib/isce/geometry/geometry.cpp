@@ -143,7 +143,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
         ellipsoid.xyzToLonLat(targetVec, targetLLH);
 
         // Interpolate DEM at current lat/lon point
-        targetLLH[2] = demInterp.interpolate(degrees*targetLLH[0], degrees*targetLLH[1]);
+        targetLLH[2] = demInterp.interpolateLonLat(targetLLH[0], targetLLH[1]);
 
         // Convert back to XYZ with interpolated height
         ellipsoid.lonLatToXyz(targetLLH, targetVec);
@@ -175,120 +175,6 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
     // Compute angles
     const double a = satDist;
     const double b = radius + zrdr; 
-    const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a
-                          - (b/a) * (b/pixel.range()));
-    const double sintheta = std::sqrt(1.0 - costheta*costheta);
-
-    // Compute TCN scale factors
-    const double gamma = pixel.range() * costheta;
-    const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
-    const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
-                                        * std::pow(sintheta, 2)
-                                        - std::pow(alpha, 2));
-
-    // Compute vector from satellite to ground
-    LinAlg::linComb(alpha, that, beta, chat, delta_temp);
-    LinAlg::linComb(1.0, delta_temp, gamma, nhat, delta);
-    LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
-
-    // Compute LLH of ground point
-    ellipsoid.xyzToLonLat(targetVec, targetLLH);    
-
-    // Return convergence flag
-    return converged;
-}
-
-int isce::geometry::
-rdr2geo_old(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
-        const Ellipsoid & ellipsoid, const Pegtrans & ptm, const DEMInterpolator & demInterp,
-        cartesian_t & targetLLH, int side, double threshold, int maxIter, int extraIter) {
-    /*
-    Assume orbit has been interpolated to correct azimuth time, then estimate geographic
-    coordinates.
-    */
-
-    // Initialization
-    cartesian_t targetSCH, targetVec, targetLLH_old, targetVec_old,
-                lookVec, delta, delta_temp, vhat, satLLH;
-    const double degrees = 180.0 / M_PI;
-
-    // Compute normalized velocity
-    LinAlg::unitVec(state.velocity(), vhat);
-    targetSCH[2] = targetLLH[2];
-
-    // Unpack TCN basis vectors
-    const cartesian_t that = TCNbasis.x0();
-    const cartesian_t chat = TCNbasis.x1();
-    const cartesian_t nhat = TCNbasis.x2();
-
-    // Pre-compute TCN vector products
-    const double ndotv = nhat[0]*vhat[0] + nhat[1]*vhat[1] + nhat[2]*vhat[2];
-    const double vdott = vhat[0]*that[0] + vhat[1]*that[1] + vhat[2]*that[2];
-
-    // Compute satellite LLH to get height above ellipsoid
-    ellipsoid.xyzToLonLat(state.position(), satLLH);
-
-    // Iterate
-    int converged = 0;
-    for (int i = 0; i < (maxIter + extraIter); ++i) {
-
-        // Cache the previous solution
-        targetLLH_old = targetLLH;
-
-        // Compute angles
-        const double a = satLLH[2] + ptm.radcur;
-        const double b = ptm.radcur + targetSCH[2];
-        const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a 
-                              - (b/a) * (b/pixel.range()));
-        const double sintheta = std::sqrt(1.0 - costheta*costheta);
-
-        // Compute TCN scale factors
-        const double gamma = pixel.range() * costheta;
-        const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
-        const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
-                                            * std::pow(sintheta, 2) 
-                                            - std::pow(alpha, 2));
-        
-        // Compute vector from satellite to ground
-        LinAlg::linComb(alpha, that, beta, chat, delta_temp);
-        LinAlg::linComb(1.0, delta_temp, gamma, nhat, delta);
-        LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
-
-        // Compute LLH of ground point
-        ellipsoid.xyzToLonLat(targetVec, targetLLH);
-
-        // Interpolate DEM at current lat/lon point
-        targetLLH[2] = demInterp.interpolate(degrees*targetLLH[0], degrees*targetLLH[1]);
-        // Convert back to XYZ with interpolated height
-        ellipsoid.lonLatToXyz(targetLLH, targetVec);
-        // Compute updated SCH coordinates
-        ptm.convertSCHtoXYZ(targetSCH, targetVec, isce::core::XYZ_2_SCH);
-
-        // Check convergence
-        LinAlg::linComb(1.0, state.position(), -1.0, targetVec, lookVec);
-        const double rdiff = pixel.range() - LinAlg::norm(lookVec);
-        if (std::abs(rdiff) < threshold) {
-            converged = 1;
-            break;
-        // May need to perform extra iterations
-        } else if (i > maxIter) {
-            // XYZ position of old solution
-            ellipsoid.lonLatToXyz(targetLLH_old, targetVec_old);
-            // XYZ position of updated solution
-            for (int idx = 0; idx < 3; ++idx)
-                targetVec[idx] = 0.5 * (targetVec_old[idx] + targetVec[idx]);
-            // Repopulate lat, lon, z
-            ellipsoid.xyzToLonLat(targetVec, targetLLH);
-            // Recompute SCH coordinates
-            ptm.convertSCHtoXYZ(targetSCH, targetVec, isce::core::XYZ_2_SCH);
-        }
-    }
-
-    // ----- Final computation: output points exactly at range pixel if converged
-
-    // Compute angles
-    const double a = satLLH[2] + ptm.radcur;
-    const double b = ptm.radcur + targetSCH[2];
     const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a
                           - (b/a) * (b/pixel.range()));
     const double sintheta = std::sqrt(1.0 - costheta*costheta);

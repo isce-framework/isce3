@@ -44,17 +44,13 @@ class isce::geometry::Geo2rdr {
         inline void orbitMethod(isce::core::orbitInterpMethod);
 
         // Run geo2rdr - main entrypoint
-        void geo2rdr(isce::io::Raster &,
-                     isce::io::Raster &,
-                     isce::io::Raster &,
+        void geo2rdr(isce::core::Raster &,
                      isce::core::Poly2d &,
                      const std::string &,
                      double, double);
 
         // Alternative: run geo2rdr with no constant offsets
-        void geo2rdr(isce::io::Raster &,
-                     isce::io::Raster &,
-                     isce::io::Raster &,
+        void geo2rdr(isce::core::Raster &,
                      isce::core::Poly2d &,
                      const std::string &);
 
@@ -77,6 +73,9 @@ class isce::geometry::Geo2rdr {
         isce::core::Orbit _orbit;
         isce::core::Metadata _meta;
         isce::core::DateTime _refEpoch;
+
+        // Projection related data
+        isce::core::ProjectionBase * _projTopo;
 
         // Processing parameters
         int _numiter;
