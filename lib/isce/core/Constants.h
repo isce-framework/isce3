@@ -77,6 +77,14 @@ namespace isce { namespace core {
     /** Eccentricity^2 for WGS84 */
     const double EarthEccentricitySquared = 0.0066943799901;
 
+    /** Speed of light */
+    const double SPEED_OF_LIGHT = 299792458.0;
+
+    /** Struct with fixed-length string for serialization */
+    struct FixedString {
+        char str[50];
+    };
+
      /* Inline function for input checking on vector lengths (primarily to check to see if 3D vector 
      * has the correct number of inputs, but is generalized to any length). 'vec_name' is passed in
      * by the wrapper macro (stringified vector name), and 'parent_func' is passed in the same way 
