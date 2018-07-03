@@ -13,11 +13,14 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/archives/xml.hpp>
 
+#include <isce/core/DateTime.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/Poly2d.h>
 #include <isce/core/StateVector.h>
+
+#include <isce/io/IH5.h>
 
 
 namespace isce {
@@ -41,6 +44,34 @@ namespace isce {
             archive(cereal::make_nvp(objectTag, object));
         }
 
+        /** Load scalar dataset from HDF5.*/
+        template <typename T>
+        void loadFromH5(isce::io::IH5File & file, const std::string & datasetPath, T & v) {
+            // Open dataset
+            isce::io::IDataSet dataset = file.openDataSet(datasetPath);
+            // Read the scalar dataset
+            dataset.read(v);
+        }
+
+        /** Load vector dataset from HDF5.*/
+        template <typename T>
+        void loadFromH5(isce::io::IH5File & file, const std::string & datasetPath,
+                        std::vector<T> & v) {
+            // Open dataset
+            isce::io::IDataSet dataset = file.openDataSet(datasetPath);
+            // Read the vector dataset
+            dataset.read(v);
+        }
+
+        /** Get dimensions of complex imagery from HDF5. */
+        std::vector<int> getImageDims(isce::io::IH5File & file,
+                                      const std::string & datasetPath) {
+            // Open dataset
+            isce::io::IDataSet dataset = file.openDataSet(datasetPath);
+            // Get dimensions
+            return dataset.getDimensions();
+        }
+
         // ------------------------------------------------------------------------
         // Serialization for Ellipsoid
         // ------------------------------------------------------------------------
@@ -60,6 +91,17 @@ namespace isce {
             ellps.e2(e2);
         }
 
+        void load(isce::io::IH5File & file, Ellipsoid & ellps) {
+            // Find the ellipsoid dataset
+            std::vector<std::string> ellpsList = file.find("ellipsoid");
+            // Read data
+            std::vector<double> ellpsData;
+            loadFromH5(file, ellpsList[0], ellpsData);
+            // Set ellipsoid properties
+            ellps.a(ellpsData[0]);
+            ellps.e2(ellpsData[1]);
+        }
+        
         // ------------------------------------------------------------------------
         // Serialization for Orbit
         // ------------------------------------------------------------------------
@@ -76,6 +118,46 @@ namespace isce {
             // Reformat state vectors to 1D arrays
             orbit.reformatOrbit();
         }
+
+        /** \brief Load orbit data from HDF5 product.
+         *
+         * @param[in] file          HDF5 file object.
+         * @param[in] orbit         Orbit object to be configured.
+         * @param[in] orbit_type    orbit type (NOE, MOE, POE).
+         * @param[in] refEpoch      DateTime reference epoch. */
+        void load(isce::io::IH5File & file, Orbit & orbit, std::string orbit_type="POE",
+                  DateTime refEpoch=MIN_DATE_TIME) {
+            // Reset orbit data
+            orbit.position.clear(); 
+            orbit.velocity.clear(); 
+            orbit.UTCtime.clear();
+
+            // Load position
+            loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/position",
+                         orbit.position);
+
+            // Load velocity
+            loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/velocity",
+                         orbit.velocity);
+
+            // Load timestamp
+            std::vector<FixedString> timestamps;
+            loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/timestamp",
+                         timestamps);
+            orbit.nVectors = timestamps.size();
+            orbit.UTCtime.resize(orbit.nVectors);
+
+            // Finally, convert timestamps seconds
+            for (size_t i = 0; i < orbit.nVectors; ++i) {
+                // Make a string
+                std::string timestampStr(timestamps[i].str);
+                // Make a DateTime
+                DateTime date(timestampStr);
+                // Convert to seconds since epoch
+                orbit.UTCtime[i] = date.secondsSinceEpoch(refEpoch);
+            }
+        }
+
 
         // ------------------------------------------------------------------------
         // Serialization for Metadata
@@ -123,6 +205,51 @@ namespace isce {
             meta.sensingStart = sensingStart;
         }
 
+        /** \brief Load radar metadata from HDF5 product.
+         *
+         * @param[in] file          HDF5 file object.
+         * @param[in] meta          Metadata to be configured.
+         * @param[in] mode          Imagery mode (aux, primary). */
+        void load(isce::io::IH5File & file, Metadata & meta, std::string mode="primary") {
+
+            double pri, bandwidth, centerFrequency;
+            FixedString sensingStart, lookDir;
+
+            // Make full mode string
+            std::string path = "/science/complex_imagery/" + mode + "_mode";
+
+            // Get dimension of imagery
+            std::vector<int> dims = getImageDims(file, path + "/hh");
+            meta.length = dims[0];
+            meta.width = dims[1];
+
+            // Load values
+            loadFromH5(file, path + "/slant_range_start", meta.rangeFirstSample);
+            loadFromH5(file, path + "/slant_range_spacing", meta.slantRangePixelSpacing);
+            loadFromH5(file, path + "/az_time_interval", pri);
+            loadFromH5(file, path + "/bandwidth", bandwidth);
+            loadFromH5(file, path + "/pulse_duration", meta.pulseDuration);
+            loadFromH5(file, path + "/freq_center", centerFrequency);
+            loadFromH5(file, path + "/zero_doppler_start_az_time", sensingStart);
+            loadFromH5(file, "/science/metadata/identification/look_direction", lookDir);
+
+            // Fields not currently defined in HDF5 product
+            meta.numberRangeLooks = 1;
+            meta.numberAzimuthLooks = 1;
+
+            // Finalize rest of metadata items
+            meta.prf = 1.0 / pri;
+            meta.chirpSlope = bandwidth / meta.pulseDuration;
+            meta.radarWavelength = SPEED_OF_LIGHT / centerFrequency;
+            meta.sensingStart = std::string(sensingStart.str);
+            std::string look(lookDir.str);
+            if (look.compare("right") == 0) {
+                meta.lookSide = -1;
+            } else if (look.compare("left") == 0) {
+                meta.lookSide = 1;
+            }
+        }
+
         // ------------------------------------------------------------------------
         // Serialization for Poly2d
         // ------------------------------------------------------------------------
@@ -139,7 +266,30 @@ namespace isce {
                     cereal::make_nvp("coeffs", poly.coeffs));
         }
 
-         // ------------------------------------------------------------------------
+        /** \brief Load polynomial coefficients from HDF5 product.
+         *
+         * @param[in] file          HDF5 file object.
+         * @param[in] poly          Poly2d to be configured.
+         * @param[in] type          Doppler type (data, geometry, skew). */
+        void load(isce::io::IH5File & file, Poly2d & poly, std::string type="data") {
+
+            // Find the right Doppler dataset
+            std::string dsetName = type + "_dcpolynomial";
+            std::vector<std::string> dopplers = file.find(dsetName);
+
+            // Configure the polynomial coefficients
+            loadFromH5(file, dopplers[0], poly.coeffs);
+            
+            // Set other polynomial properties
+            poly.rangeOrder = poly.coeffs.size() - 1;
+            poly.azimuthOrder = 1;
+            poly.rangeMean = 0.0;
+            poly.azimuthMean = 0.0;
+            poly.rangeNorm = 1.0;
+            poly.azimuthNorm = 1.0;
+        }
+
+        // ------------------------------------------------------------------------
         // Serialization for StateVector
         // ------------------------------------------------------------------------
 
