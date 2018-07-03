@@ -7,6 +7,7 @@ PACKAGE = isce/io
 
 # the list of sources
 PROJ_SRCS = \
+    IH5.cpp \
     Raster.cpp \
 
 # products
@@ -20,6 +21,7 @@ EXPORT_LIBS = $(PROJ_DLL)
 # the headers
 EXPORT_PKG_HEADERS = \
     Constants.h \
+    IH5.h \
     Raster.h \
     Raster.icc \
 
