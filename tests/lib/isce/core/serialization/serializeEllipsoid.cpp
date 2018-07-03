@@ -12,28 +12,26 @@
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Serialization.h>
 
+#include <isce/io/IH5.h>
+
 
 TEST(EllipsoidTest, CheckArchive) {
     // Make an ellipsoid
     isce::core::Ellipsoid ellipsoid;
 
-    // Open XML file
-    std::ifstream xmlfid("archive.xml", std::ios::in);
-    // Check if file was open successfully
-    if (xmlfid.fail()) {
-        std::cout << "Error: failed to open archive.xml file." << std::endl;
-    }
+    // Check validity of product file
+    std::string h5file("../../data/envisat.h5");
+    ASSERT_TRUE(isce::io::IH5File::isHdf5(h5file));
 
-    // Create cereal archive and load
-    {
-    cereal::XMLInputArchive archive(xmlfid);
-    archive(cereal::make_nvp("Ellipsoid", ellipsoid));
-    }
+    // Open the file
+    isce::io::IH5File file(h5file);
 
+    // Deserialize the ellipsoid
+    isce::core::load(file, ellipsoid);
+    
     // Check values
     ASSERT_NEAR(ellipsoid.a(), 6378137.0, 1.0e-9);
     ASSERT_NEAR(ellipsoid.e2(), 0.0066943799, 1.0e-9);
-    
 }
 
 int main(int argc, char * argv[]) {
