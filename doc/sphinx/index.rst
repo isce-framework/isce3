@@ -11,3 +11,6 @@ Python bindings for ISCE are available via the module named "isceextension". The
 
 :class:`isceextension.pyEllipsoid`
 
+:class:`isceextension.pyPoly1d`
+
+:class:`isceextension.pyPoly2d`
