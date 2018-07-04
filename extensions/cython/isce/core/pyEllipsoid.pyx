@@ -216,10 +216,10 @@ cdef class pyEllipsoid:
 
         '''
         llh = np.atleast_2d(llh)
-        res = np.empty(llh.shape, dtype=np.double)
+        cdef unsigned long nPts = llh.shape[0]
+        res = np.empty((nPts,3), dtype=np.double)
         cdef double[:,:] resview = res
 
-        cdef unsigned long nPts = llh.shape[0]
         cdef unsigned long ii
         cdef int jj
         cdef cartesian_t inp
@@ -245,23 +245,24 @@ cdef class pyEllipsoid:
 
         '''
         xyz = np.atleast_2d(xyz)
-        res = np.empty(xyz.shape, dtype=np.double)
+        cdef unsigned long nPts = xyz.shape[0]
+        res = np.empty((nPts,3), dtype=np.double)
         cdef double[:,:] resview = res
 
-        cdef unsigned long nPts = xyz.shape[0]
         cdef unsigned long ii
         cdef int jj
 
         cdef cartesian_t llh
         cdef cartesian_t inp
 
-        for ii in range(3):
-            inp[ii] = xyz[ii]
+        for ii in range(nPts):
+            for jj in range(3):
+                inp[ii] = xyz[ii,jj]
+            self.c_ellipsoid.xyzToLonLat(inp, llh)
+            for jj in range(3):
+                resview[ii,jj] = llh[jj]
         
-        self.c_ellipsoid.xyzToLonLat(inp,llh)
-        out = [llh[ii] for ii in range(3)]
-        
-        return out
+        return np.squeeze(res)
 
     def getImagingAnglesAtPlatform(self, pos, vel, los):
         '''
