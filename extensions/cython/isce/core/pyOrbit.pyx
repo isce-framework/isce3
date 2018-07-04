@@ -18,6 +18,9 @@ cdef class pyOrbit:
     '''
     Python wrapper for isce::core::Orbit
 
+    Note:
+        Always set the number of state vectors or use addStateVector method before calling interpolation methods.
+
     Args:
         basis (Optional[int]: 0 for SCH, 1 for WGS84
         nVectors (Optional [int]: Number of state vectors
@@ -88,14 +91,17 @@ cdef class pyOrbit:
     @property
     def UTCtime(self):
         '''
-        list: UTC times corresponding to state vectors
-        '''
-        times = []
-        cdef int ii
-        for ii in range(self.nVectors):
-            times.append(self.c_orbit.UTCtime[ii])
+        Returns double precision time tags w.r.t reference epoch.
 
-        return times
+        Note:
+            Returns actual reference to underlying C++ vector.
+
+        Returns:
+            numpy.array: double precision times corresponding to state vectors
+        '''
+        cdef int N = self.nVectors
+        res = np.asarray(<double[:N]>(self.c_orbit.UTCtime.data()))
+        return res
 
     @UTCtime.setter
     def UTCtime(self, times):
@@ -114,14 +120,14 @@ cdef class pyOrbit:
     @property
     def position(self):
         '''
-        np.array[nx3]: Array of positions corresponding to state vectors.
+        Note:
+            Returns actual reference to underlying C++ vector.
+
+        Returns:
+            np.array[nx3]: Array of positions corresponding to state vectors.
         '''
-        pos = np.empty((self.nVectors,3), dtype=np.double)
-        cdef double[:,:] posview = pos
-        cdef int ii, jj
-        for ii in range(self.nVectors):
-            for jj in range(3):
-                posview[ii,jj] = self.c_orbit.position[ii*3+jj]
+        cdef int N = self.nVectors
+        pos = np.asarray(<double[:N,:3]>(self.c_orbit.position.data()))
         return pos
 
     @position.setter
@@ -135,10 +141,16 @@ cdef class pyOrbit:
     
     @property
     def velocity(self):
-        a = []
-        for i in range(3*self.nVectors):
-            a.append(self.c_orbit.velocity[i])
-        return a
+        '''
+        Note:
+            Returns actual reference to underlying C++ vector.
+
+        Returns:
+            np.array[nx3]: Array of velocities corresponding to state vectors.
+        '''
+        cdef int N = self.nVectors
+        vel = np.asarray(<double[:N,:3]>(self.c_orbit.velocity.data()))
+        return vel
     
     
     @velocity.setter

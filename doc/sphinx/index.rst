@@ -9,8 +9,10 @@ Welcome to ISCE's python documentation!
 Python bindings for ISCE are available via the module named "isceextension". The following classes are available at the Python level:
 
 
-:class:`isceextension.pyEllipsoid`
+Core Datastructures
+--------------------
 
-:class:`isceextension.pyPoly1d`
-
-:class:`isceextension.pyPoly2d`
+* :doc:`pyEllipsoid <./pyEllipsoid>`
+* :doc:`pyPoly1d <./pyPoly1d>`
+* :doc:`pyPoly2d <./pyPoly2d>`
+* :doc:`pyOrbit <./pyOrbit>`
