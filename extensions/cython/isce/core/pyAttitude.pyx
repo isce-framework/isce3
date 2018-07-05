@@ -30,7 +30,7 @@ cdef class pyEulerAngles:
 
     def __cinit__(self, double yaw, double pitch, double roll, yaw_orientation='normal'):
         self.c_eulerangles = new EulerAngles(yaw, pitch, roll,
-            yaw_orientation.encode('utf-8'))
+            pyStringToBytes(yaw_orientation))
         self.__owner = True
         
     def __dealloc__(self):
@@ -61,7 +61,7 @@ cdef class pyEulerAngles:
         '''
 
         cdef cartmat_t Rvec
-        cdef string sequence_str = sequence
+        cdef string sequence_str = pyStringToBytes(sequence)
         Rvec = self.c_eulerangles.rotmat(sequence_str)
         R = np.empty((3,3), dtype=np.double)
         cdef double[:,:] Rview = R
@@ -197,13 +197,13 @@ cdef class pyQuaternion:
     def rotmat(self):
         '''
         Return the rotation matrix corresponding to the quaternions.
-        
+
         Returns:
             numpy.array((3,3))
         '''
     
         cdef cartmat_t Rvec
-        cdef string sequence_str = "".encode('utf-8')
+        cdef string sequence_str = pyStringToBytes("")
         Rvec = self.c_quaternion.rotmat(sequence_str)
         R = np.empty((3,3), dtype=np.double)
         cdef double[:,:] Rview = R
