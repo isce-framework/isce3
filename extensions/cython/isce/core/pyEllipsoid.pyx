@@ -253,14 +253,17 @@ cdef class pyEllipsoid:
         cdef int jj
 
         cdef cartesian_t llh
+        cdef double[::1] llhview = <double[:3]>(&llh[0])
+
         cdef cartesian_t inp
+        cdef double[::1] inpview = <double[:3]>(&inp[0])
 
         for ii in range(nPts):
             for jj in range(3):
-                inp[ii] = xyz[ii,jj]
+                inpview[jj] = xyz[ii,jj]
             self.c_ellipsoid.xyzToLonLat(inp, llh)
             for jj in range(3):
-                resview[ii,jj] = llh[jj]
+                resview[ii,jj] = llhview[jj]
         
         return np.squeeze(res)
 
@@ -279,14 +282,17 @@ cdef class pyEllipsoid:
                 * look (float): Look angle in radians. Measured w.r.t ellipsoid normal at platform.
         '''
         cdef cartesian_t _pos
-        cdef cartesian_t _vel
-        cdef cartesian_t _los
-        cdef int ii
+        cdef double[::1] _posview = <double[:3]>(&_pos[0])
 
-        for ii in range(3):
-            _pos[ii] = pos[ii]
-            _vel[ii] = vel[ii]
-            _los[ii] = los[ii]
+        cdef cartesian_t _vel
+        cdef double[::1] _velview = <double[:3]>(&_vel[0])
+
+        cdef cartesian_t _los
+        cdef double[::1] _losview = <double[:3]>(&_los[0])
+
+        _posview[:] = pos[:]
+        _velview[:] = vel[:]
+        _losview[:] = los[:]
 
         cdef double _azi = 0.
         cdef double _look = 0.

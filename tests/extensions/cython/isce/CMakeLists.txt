@@ -11,5 +11,5 @@ set (NOSE_LD_LIBRARY_PATH "${LISCELOCATION}:$ENV{LD_LIBRARY_PATH}" CACHE INTERNA
 set (MISCELOCATION ${CMAKE_BINARY_DIR}/extensions/isce)
 set(NOSE_PYTHONPATH "${MISCELOCATION}:$ENV{PYTHONPATH}" CACHE INTERNAL "python paths for nosetests")
 
-add_subdirectory(poly)
+add_subdirectory(core)
 add_subdirectory(geometry)
