@@ -28,6 +28,12 @@ cdef class pyOrbit:
     cdef Orbit *c_orbit
     cdef bool __owner
 
+
+    methods = { 'hermite': orbitInterpMethod.HERMITE_METHOD,
+                'sch' :  orbitInterpMethod.SCH_METHOD,
+                'legendre': orbitInterpMethod.LEGENDRE_METHOD}
+
+
     def __cinit__(self, basis=1, nVectors=0):
         '''
         Pre-constructor that creates a C++ isce::core::Orbit object and binds it to python instance.
@@ -114,8 +120,10 @@ cdef class pyOrbit:
         if (self.nVectors != len(times)):
             raise ValueError("Invalid input size (expected list of length "+str(self.nVectors)+")")
         cdef int ii
-        for ii in range(self.nVectors):
-            self.c_orbit.UTCtime[ii] = times[ii]
+        cdef int N = self.nVectors
+        cdef double[::1] timearr = <double[:3*N]>(self.c_orbit.UTCtime.data())
+        for ii in range(N):
+            timearr[ii] = times[ii]
 
     @property
     def position(self):
@@ -131,12 +139,23 @@ cdef class pyOrbit:
         return pos
 
     @position.setter
-    def position(self, a):
-        if (3*self.nVectors != len(a)):
-            print("Error: Invalid input size (expected list of length "+str(3*self.nVectors)+")")
-            return
-        for i in range(3*self.nVectors):
-            self.c_orbit.position[i] = a[i]
+    def position(self, pos):
+        '''
+        Set the positions using a list or array.
+
+        Args:
+            pos (np.array[nx3]): Array of positions.
+        '''
+        if (self.nVectors != len(pos)):
+            raise ValueError("Invalid input size (expected list of length/array "+str(self.nVectors))
+        
+        cdef int N = self.nVectors
+        cdef int ii, jj
+
+        for ii in range(N):
+            row = pos[ii]
+            for jj in range(3): 
+                self.c_orbit.position[ii*3+jj] = row[jj]
     
     
     @property
@@ -154,14 +173,35 @@ cdef class pyOrbit:
     
     
     @velocity.setter
-    def velocity(self, a):
-        if (3*self.nVectors != len(a)):
-            print("Error: Invalid input size (expected list of length "+str(3*self.nVectors)+")")
-            return
-        for i in range(3*self.nVectors):
-            self.c_orbit.velocity[i] = a[i]
+    def velocity(self, vel):
+        '''
+        Set the velocities using a list or array.
+
+        Args:
+            vel (np.array[nx3]): Array of velocities)
+        '''
+
+        if (self.nVectors != len(vel)):
+            raise ValueError("Invalid input size (expected list/array of length "+str(self.nVectors)+")")
+       
+        cdef int N = self.nVectors
+        cdef int ii, jj
+
+        for ii in range(N):
+            row = vel[ii]
+            for jj in range(3):
+                self.c_orbit.velocity[ii*3+jj] = row[jj]
     
     def copy(self, orb):
+        '''
+        Copy from a python object compatible with orbit.
+
+        Args:
+            orb (object): Any object with same attributes as pyOrbit
+
+        Returns:
+            None
+        '''
         try:
             self.basis = orb.basis
             self.nVectors = orb.nVectors
@@ -169,144 +209,375 @@ cdef class pyOrbit:
             self.position = orb.position
             self.velocity = orb.velocity
         except:
-            print("Error: Object passed in to copy is incompatible with object of type pyOrbit.")
+            raise ValueError("Object passed in to copy is incompatible with object of type pyOrbit.")
     
     def dPrint(self):
+        '''
+        Debug print of underlying C++ structure.
+
+        Returns:
+            None
+        '''
         self.printOrbit()
 
-    def getPositionVelocity(self, double a, list b, list c):
-        cdef cartesian_t _b
-        cdef cartesian_t _c
-        for i in range(3):
-            _b[i] = b[i]
-            _c[i] = c[i]
-        self.c_orbit.getPositionVelocity(a,_b,_c)
-        for i in range(3):
-            b[i] = _b[i]
-            c[i] = _c[i]
+    def getPositionVelocity(self, double epoch):
+        '''
+        Interpolate the orbit at given epoch.
+
+        Args:
+            epoch (float): Floating point number representing UTC time
+
+        Returns:
+            tuple:
+                * np.array[3] - Interpolated position at epoch
+                * np.array[3] - Interpolated velocity at epoch
+        '''
+        cdef cartesian_t _pos
+        cdef double[:] _posview = <double[:3]>(&_pos[0])
+
+        cdef cartesian_t _vel
+        cdef double[:] _velview = <double[:3]>(&_vel[0])
+
+        self.c_orbit.getPositionVelocity(epoch,_pos,_vel)
+
+        return (np.asarray(_posview.copy()), np.asarray(_velview.copy()))
     
-    def getStateVector(self, int a, b, list c, list d):
-        cdef cartesian_t _c
-        cdef cartesian_t _d
-        cdef double _b
-        if (type(b) != type([])):
-            print("Error: Python cannot pass primitives by reference.")
-            print("To call this function, please pass the function an empty 1-tuple in the")
-            print("second argument slot. The function will store the resulting time value")
-            print("as the first (and only) element in the 1-tuple.")
-        else:
-            _b = 0.
-            for i in range(3):
-                _c[i] = c[i]
-                _d[i] = d[i]
-            self.c_orbit.getStateVector(a,_b,_c,_d)
-            for i in range(3):
-                c[i] = _c[i]
-                d[i] = _d[i]
-            b[0] = _b
+    def getStateVector(self, int index):
+        '''Return state vector based on index.
+
+        Args:
+            index (int): Integer between 0 and self.nVectors-1
+
+        Returns:
+            tuple:
+                float - UTCtime of state vector
+                np.array[3] - position
+                np.array[3] - velocity
+        '''
+       
+        cdef cartesian_t pos
+        cdef double[:] posview = <double[:3]>(&pos[0])
+
+        cdef cartesian_t vel
+        cdef double[:] velview = <double[:3]>(&vel[0])
+
+        cdef double epoch
+
+        self.c_orbit.getStateVector(index, epoch, pos, vel)
+
+        return (epoch, np.asarray(posview.copy()), np.asarray(velview.copy()))
+
+    def setStateVector(self, int index, double epoch, pos, vel):
+        '''
+        Set state vector with given epoch, position and velocity.
+
+        Args:
+           index (int) : Index to set
+           epoch (float) : Epoch in UTC time
+           pos (np.array[3]) : Position
+           vel (np.array[3]) : Velocity
+
+        Returns:
+            None
+        '''
+
+        cdef cartesian_t _pos
+        cdef cartesian_t _vel
+        cdef int ii
+        for ii in range(3):
+            _pos[ii] = pos[ii]
+
+        for ii in range(3):
+            _vel[ii] = vel[ii]
+
+        self.c_orbit.setStateVector(index,epoch,_pos,_vel)
     
-    def setStateVector(self, int a, double b, list c, list d):
-        cdef cartesian_t _c
-        cdef cartesian_t _d
-        for i in range(3):
-            _c[i] = c[i]
-            _d[i] = d[i]
-        self.c_orbit.setStateVector(a,b,_c,_d)
-        for i in range(3):
-            c[i] = _c[i]
-            d[i] = _d[i]
+    def addStateVector(self, double epoch, pos, vel):
+        '''
+        Add a state vector. The index for insertion into C++ data structure is automatically determined using the epoch information.
+
+        Args:
+            epoch (float): Epoch in UTC time
+            pos (np.array[3]): Position
+            vel (np.array[3]): Velocity
+
+        Returns:
+            None
+        '''
+        cdef cartesian_t _pos
+        cdef cartesian_t _vel
+        cdef int ii
+        for ii in range(3):
+            _pos[ii] = pos[ii]
+
+        for ii in range(3):
+            _vel[ii] = vel[ii]
+        
+        self.c_orbit.addStateVector(epoch, _pos, _vel)
     
-    def addStateVector(self, double a, list b, list c):
-        cdef cartesian_t _b
-        cdef cartesian_t _c
-        for i in range(3):
-            _b[i] = b[i]
-            _c[i] = c[i]
-        self.c_orbit.addStateVector(a,_b,_c)
-    
-    def interpolate(self, double a, list b, list c, int d):
-        cdef cartesian_t _b
-        cdef cartesian_t _c
-        cdef orbitInterpMethod _d
+    def interpolate(self, epoch, method='hermite'):
+        '''
+        Interpolate orbit at a given epoch.
+
+        Args:
+            epoch (float or np.array[N]): Epoch in UTC time
+            method (Optional[str]): hermite, sch or legendre 
+
+        Returns:
+            tuple:
+                * float or np.array[N]: Status flag. 0 for success.
+                * np.array[3] or np.array[Nx3]: Interpolated position
+                * np.array[3] or np.array[Nx3]: Interpolated velocity
+        '''
+
+        cdef orbitInterpMethod alg = self.methods[method]
+
+        cdef cartesian_t _pos
+        cdef cartesian_t _vel
         cdef int ret
-        for i in range(3):
-            _b[i] = b[i]
-            _c[i] = c[i]
-        if (d == orbitInterpMethod.HERMITE_METHOD):
-            _d = orbitInterpMethod.HERMITE_METHOD
-        elif (d == orbitInterpMethod.SCH_METHOD):
-            _d = orbitInterpMethod.SCH_METHOD
-        elif (d == orbitInterpMethod.LEGENDRE_METHOD):
-            _d = orbitInterpMethod.LEGENDRE_METHOD
-        else:
-            print("Error: Unknown orbit interpolation method")
-            return
-        ret = self.c_orbit.interpolate(a,_b,_c,_d)
-        for i in range(3):
-            b[i] = _b[i]
-            c[i] = _c[i]
-        return ret
+        
+        if np.isscalar(epoch): 
+            ret = self.c_orbit.interpolate(epoch,_pos,_vel,alg)
+            return (ret, np.asarray((<double[:3]>(&(_pos[0]))).copy()), np.asarray((<double[:3]>(&(_vel[0]))).copy()))
+
+        epoch = np.atleast_1d(epoch)
+        cdef int Npts = epoch.shape[0]
+        cdef int ii, jj
+        flag = np.empty((Npts), dtype=np.int)
+        cdef long[:] flagview = flag
+
+        pos = np.empty((Npts,3), dtype=np.double)
+        cdef double[:,:] posview = pos
+
+        vel = np.empty((Npts,3), dtype=np.double)
+        cdef double[:,:] velview = vel
+        
+        for ii in range(Npts):
+            ret = self.c_orbit.interpolate(epoch[ii], _pos, _vel, alg)
+            flagview[ii] = ret
+
+            for jj in range(3):
+                posview[ii,jj] = _pos[jj]
+                
+            for jj in range(3):
+                velview[ii,jj] = _vel[jj]
+
+        return (flag, pos, vel)
+
     
-    def interpolateWGS84Orbit(self, double a, list b, list c):
-        cdef cartesian_t _b
-        cdef cartesian_t _c
+    def interpolateWGS84Orbit(self, epoch):
+        '''
+        Interpolate orbit at given epoch using WGS84 interpolation method.
+
+        Args:
+            epoch (float or np.array[N]): Epoch in UTC time
+            method (Optional[str]): hermite, sch or legendre 
+
+        Returns:
+            tuple:
+                * float or np.array[N]: Status flag. 0 for success.
+                * np.array[3] or np.array[Nx3]: Interpolated position
+                * np.array[3] or np.array[Nx3]: Interpolated velocity
+        '''
+        cdef cartesian_t _pos
+        cdef cartesian_t _vel
         cdef int ret
-        for i in range(3):
-            _b[i] = b[i]
-            _c[i] = c[i]
-        ret = self.c_orbit.interpolateWGS84Orbit(a,_b,_c)
-        for i in range(3):
-            b[i] = _b[i]
-            c[i] = _c[i]
-        return ret
+        
+        if np.isscalar(epoch): 
+            ret = self.c_orbit.interpolateWGS84Orbit(epoch,_pos,_vel)
+            return (ret, np.asarray((<double[:3]>(&(_pos[0]))).copy()), np.asarray((<double[:3]>(&(_vel[0]))).copy()))
+
+        epoch = np.atleast_1d(epoch)
+        cdef int Npts = epoch.shape[0]
+        cdef int ii, jj
+        flag = np.empty((Npts), dtype=np.int)
+        cdef long[:] flagview = flag
+
+        pos = np.empty((Npts,3), dtype=np.double)
+        cdef double[:,:] posview = pos
+
+        vel = np.empty((Npts,3), dtype=np.double)
+        cdef double[:,:] velview = vel
+        
+        for ii in range(Npts):
+            ret = self.c_orbit.interpolateWGS84Orbit(epoch[ii], _pos, _vel)
+            flagview[ii] = ret
+
+            for jj in range(3):
+                posview[ii,jj] = _pos[jj]
+                
+            for jj in range(3):
+                velview[ii,jj] = _vel[jj]
+
+        return (flag, pos, vel)
+
+    def interpolateSCHOrbit(self, epoch):
+        '''
+        Interpolate orbit at given epoch using SCH interpolation method.
+
+        Args:
+            epoch (float or np.array[N]): Epoch in UTC time
+            method (Optional[str]): hermite, sch or legendre 
+
+        Returns:
+            tuple:
+                * float or np.array[N]: Status flag. 0 for success.
+                * np.array[3] or np.array[Nx3]: Interpolated position
+                * np.array[3] or np.array[Nx3]: Interpolated velocity
+        '''
+        cdef cartesian_t _pos
+        cdef cartesian_t _vel
+        cdef int ret
+        
+        if np.isscalar(epoch): 
+            ret = self.c_orbit.interpolateSCHOrbit(epoch,_pos,_vel)
+            return (ret, np.asarray((<double[:3]>(&(_pos[0]))).copy()), np.asarray((<double[:3]>(&(_vel[0]))).copy()))
+
+        epoch = np.atleast_1d(epoch)
+        cdef int Npts = epoch.shape[0]
+        cdef int ii, jj
+        flag = np.empty((Npts), dtype=np.int)
+        cdef long[:] flagview = flag
+
+        pos = np.empty((Npts,3), dtype=np.double)
+        cdef double[:,:] posview = pos
+
+        vel = np.empty((Npts,3), dtype=np.double)
+        cdef double[:,:] velview = vel
+        
+        for ii in range(Npts):
+            ret = self.c_orbit.interpolateSCHOrbit(epoch[ii], _pos, _vel)
+            flagview[ii] = ret
+
+            for jj in range(3):
+                posview[ii,jj] = _pos[jj]
+                
+            for jj in range(3):
+                velview[ii,jj] = _vel[jj]
+
+        return (flag, pos, vel)    
+
+    def interpolateLegendreOrbit(self, epoch):
+        '''
+        Interpolate orbit at given epoch using Legendre interpolation method.
+
+        Args:
+            epoch (float or np.array[N]): Epoch in UTC time
+            method (Optional[str]): hermite, sch or legendre 
+
+        Returns:
+            tuple:
+                * int or np.array[N]: Status flag. 0 for success.
+                * np.array[3] or np.array[Nx3]: Interpolated position
+                * np.array[3] or np.array[Nx3]: Interpolated velocity
+        '''
+        cdef cartesian_t _pos
+        cdef cartesian_t _vel
+        cdef int ret
+        
+        if np.isscalar(epoch): 
+            ret = self.c_orbit.interpolateLegendreOrbit(epoch,_pos,_vel)
+            return (ret, np.asarray((<double[:3]>(&(_pos[0]))).copy()), np.asarray((<double[:3]>(&(_vel[0]))).copy()))
+
+        epoch = np.atleast_1d(epoch)
+        cdef int Npts = epoch.shape[0]
+        cdef int ii, jj
+        flag = np.empty((Npts), dtype=np.int)
+        cdef long[:] flagview = flag
+
+        pos = np.empty((Npts,3), dtype=np.double)
+        cdef double[:,:] posview = pos
+
+        vel = np.empty((Npts,3), dtype=np.double)
+        cdef double[:,:] velview = vel
+        
+        for ii in range(Npts):
+            ret = self.c_orbit.interpolateLegendreOrbit(epoch[ii], _pos, _vel)
+            flagview[ii] = ret
+
+            for jj in range(3):
+                posview[ii,jj] = _pos[jj]
+                
+            for jj in range(3):
+                velview[ii,jj] = _vel[jj]
+
+        return (flag, pos, vel)
+
     
-    def interpolateLegendreOrbit(self, double a, list b, list c):
-        cdef cartesian_t _b
-        cdef cartesian_t _c
+    def computeAcceleration(self, epoch):
+        '''
+        Compute accelerations at given epoch.
+
+        Args:
+            epoch (float or np.array[N]): Epoch in UTC time
+
+        Returns:
+            tuple:
+                * int or np.array[N]: Status flag. 0 for success.
+                * np.array[3] or np.array[Nx3]: 3D acceleration
+        '''
+        cdef cartesian_t _acc
         cdef int ret
-        for i in range(3):
-            _b[i] = b[i]
-            _c[i] = c[i]
-        ret = self.c_orbit.interpolateLegendreOrbit(a,_b,_c)
-        for i in range(3):
-            b[i] = _b[i]
-            c[i] = _c[i]
-        return ret
-    
-    def interpolateSCHOrbit(self, double a, list b, list c):
-        cdef cartesian_t _b
-        cdef cartesian_t _c
-        cdef int ret
-        for i in range(3):
-            _b[i] = b[i]
-            _c[i] = c[i]
-        ret = self.c_orbit.interpolateSCHOrbit(a,_b,_c)
-        for i in range(3):
-            b[i] = _b[i]
-            c[i] = _c[i]
-        return ret
-    
-    def computeAcceleration(self, double a, list b):
-        cdef cartesian_t _b
-        cdef int ret
-        for i in range(3):
-            _b[i] = b[i]
-        ret = self.c_orbit.computeAcceleration(a,_b)
-        for i in range(3):
-            b[i] = _b[i]
-        return ret
+
+        if np.isscalar(epoch):
+            ret = self.c_orbit.computeAcceleration(epoch,_acc)
+            return (ret, np.asarray((<double[:3]>(&(_acc[0]))).copy()))
+
+        epoch = np.atleast_1d(epoch)
+        cdef int Npts = epoch.shape[0]
+        cdef int ii, jj
+        
+        flag = np.empty((Npts), dtype=np.int)
+        cdef long[:] flagview = flag
+
+        acc = np.empty((Npts,3), dtype=np.double)
+        cdef double[:,:] accview = acc
+
+        for ii in range(Npts):
+            ret = self.c_orbit.computeAcceleration(epoch[ii], _acc) 
+            flagview[ii] = ret
+
+            for jj in range(3):
+                accview[ii,jj] = _acc[jj]
+
+        return (flag, acc)
     
     def printOrbit(self):
+        '''
+        Debug printing of underlying C++ structure.
+
+        Returns:
+            None
+        '''
         self.c_orbit.printOrbit()
     
-    def loadFromHDR(self, a, int b=1):
-        cdef bytes _a = a.encode()
-        cdef char *cstring = _a
-        self.c_orbit.loadFromHDR(cstring,b)
+    def loadFromHDR(self, filename, int basis=1):
+        '''
+        Load Orbit from a text file.
+
+        Args:
+            filename (str): Filename with state vectors
+            basis (Optional[int]): Basis for state vectors
+
+        Returns:
+            None
+        '''
+        cdef bytes fname = pyStringToBytes(filename)
+        cdef char *cstring = fname
+        self.c_orbit.loadFromHDR(cstring, basis)
     
-    def dumpToHDR(self, a):
-        cdef bytes _a = a.encode()
-        cdef char *cstring = _a
+    def dumpToHDR(self, filename):
+        '''
+        Write orbit to a text file.
+
+        Args:
+            filename (str): Output file name
+
+        Returns:
+            None
+        '''
+        cdef bytes fname = pyStringToBytes(filename)
+        cdef char *cstring = fname
         self.c_orbit.dumpToHDR(cstring)
 
     def archive(self, metadata):
