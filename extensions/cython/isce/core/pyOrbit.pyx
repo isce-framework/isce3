@@ -261,7 +261,7 @@ cdef class pyOrbit:
         cdef cartesian_t vel
         cdef double[:] velview = <double[:3]>(&vel[0])
 
-        cdef double epoch
+        cdef double epoch = 0.
 
         self.c_orbit.getStateVector(index, epoch, pos, vel)
 
