@@ -56,7 +56,11 @@ cdef class pyDateTime:
     def isoformat(self):
         return str(self.c_datetime.isoformat())
 
-    def strptime(self, string datestr):
-        self.c_datetime.strptime(datestr)
+    def strptime(self, pydatestr):
+        self.c_datetime.strptime(pyStringToBytes(pydatestr))
+
+# Instantiate a DateTime set at MIN_DATE_TIME
+MIN_DATE_TIME = pyDateTime()
+MIN_DATE_TIME.strptime('1970-01-01T00:00:00.000000000')
 
 # end of file

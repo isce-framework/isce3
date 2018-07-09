@@ -258,17 +258,16 @@ cdef class pyEllipsoid:
 
         return (that, chat, nhat)
 
-    def archive(self, metadata):
+    def archive(self, pyIH5File h5file):
         '''
-        Load a string into ellipsoid object from a cereal archive.
+        Load ellipsoid properties from H5 product.
 
         Args:
-            metadata (str): Serialized XML corresponding to Ellipsoid.
+            h5file (pyIH5File): IH5File for H5 product.
 
-        Returns:
+        Return:
             None
         '''
-        load_archive[Ellipsoid](pyStringToBytes(metadata),
-                                'Ellipsoid',
-                                self.c_ellipsoid)
+        load(deref(h5file.c_ih5file), deref(self.c_ellipsoid))
 
+# end of file
