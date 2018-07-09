@@ -13,6 +13,11 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/archives/xml.hpp>
 
+// pyre
+#include <portinfo>
+#include <pyre/journal.h>
+
+// isce::core
 #include <isce/core/DateTime.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Metadata.h>
@@ -20,6 +25,7 @@
 #include <isce/core/Poly2d.h>
 #include <isce/core/StateVector.h>
 
+// isce::io
 #include <isce/io/IH5.h>
 
 
@@ -44,7 +50,11 @@ namespace isce {
             archive(cereal::make_nvp(objectTag, object));
         }
 
-        /** Load scalar dataset from HDF5.*/
+        /** Load scalar dataset from HDF5.
+
+         * @param[in] file          HDF5 file object.
+         * @param[in] datasetPath   H5 path of dataset.
+         * @param[in] v             Scalar return value. */
         template <typename T>
         void loadFromH5(isce::io::IH5File & file, const std::string & datasetPath, T & v) {
             // Open dataset
@@ -53,7 +63,11 @@ namespace isce {
             dataset.read(v);
         }
 
-        /** Load vector dataset from HDF5.*/
+        /** Load vector dataset from HDF5.
+         *
+         * @param[in] file          HDF5 file object.
+         * @param[in] datasetPath   H5 path of dataset.
+         * @param[in] v             Vector to store dataset. */
         template <typename T>
         void loadFromH5(isce::io::IH5File & file, const std::string & datasetPath,
                         std::vector<T> & v) {
@@ -63,7 +77,10 @@ namespace isce {
             dataset.read(v);
         }
 
-        /** Get dimensions of complex imagery from HDF5. */
+        /** Get dimensions of complex imagery from HDF5.
+         *
+         * @param[in] file          HDF5 file object.
+         * @param[in] datasetPath   H5 path of image dataset. */
         std::vector<int> getImageDims(isce::io::IH5File & file,
                                       const std::string & datasetPath) {
             // Open dataset
@@ -91,6 +108,10 @@ namespace isce {
             ellps.e2(e2);
         }
 
+        /** Load Ellipsoid parameters from HDF5.
+         *
+         * @param[in] file          HDF5 file object.
+         * @param[in] ellps         Ellipsoid object to be configured. */
         void load(isce::io::IH5File & file, Ellipsoid & ellps) {
             // Find the ellipsoid dataset
             std::vector<std::string> ellpsList = file.find("ellipsoid");
@@ -138,11 +159,11 @@ namespace isce {
 
             // Load position
             loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/position",
-                         orbit.position);
+                       orbit.position);
 
             // Load velocity
             loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/velocity",
-                         orbit.velocity);
+                       orbit.velocity);
 
             // Load timestamp
             std::vector<FixedString> timestamps;
@@ -276,15 +297,21 @@ namespace isce {
          *
          * @param[in] file          HDF5 file object.
          * @param[in] poly          Poly2d to be configured.
-         * @param[in] type          Doppler type (data, geometry, skew). */
-        void load(isce::io::IH5File & file, Poly2d & poly, std::string type="data") {
+         * @param[in] name          Dataset name. */
+        void load(isce::io::IH5File & file, Poly2d & poly, std::string name) {
 
-            // Find the right Doppler dataset
-            std::string dsetName = type + "_dcpolynomial";
-            std::vector<std::string> dopplers = file.find(dsetName);
+            // Find the right Poly2d dataset
+            std::vector<std::string> polys = file.find(name);
+            if (polys.size() == 0) {
+                pyre::journal::error_t errorChannel("isce.core.Serialization");
+                errorChannel
+                    << pyre::journal::at(__HERE__)
+                    << "Could not find Poly2d dataset."
+                    << pyre::journal::endl;
+            }
 
             // Configure the polynomial coefficients
-            loadFromH5(file, dopplers[0], poly.coeffs);
+            loadFromH5(file, polys[0], poly.coeffs);
             
             // Set other polynomial properties
             poly.rangeOrder = poly.coeffs.size() - 1;
