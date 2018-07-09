@@ -63,6 +63,22 @@ double isce::core::Ellipsoid::rDir(double hdg, double lat) const {
 
 \endverbatim
 
+\subsubsection docinlinenamespace Within namespaces
+
+For functions that are defined within a namespace and are not a member of a class/struct (e.g., isce/core/Serialization.h), you must first indicate that comments within the file contain documentation for a header file using the "\file" command. Also, the namespace declarations must be commented. For example,
+
+\verbatim
+
+/** \file isce/core/Serialization.h
+ *
+ * Serialization functions for isce::core objects. */
+
+//! The isce namespace
+namespace isce {
+    //! The isce::core namespace
+    namespace core {
+
+\endverbatim
 
 \subsection doccppregular Regular functions
 
