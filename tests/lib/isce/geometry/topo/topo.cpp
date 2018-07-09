@@ -42,7 +42,7 @@ TEST(TopoTest, RunTopo) {
     // Deserialization
     isce::core::load(file, ellipsoid);
     isce::core::load(file, orbit, "POE");
-    isce::core::load(file, doppler, "skew");
+    isce::core::load(file, doppler, "skew_dcpolynomial");
     isce::core::load(file, meta, "primary");
 
     // Create topo instance

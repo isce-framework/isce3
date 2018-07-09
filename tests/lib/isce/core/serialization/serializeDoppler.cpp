@@ -23,7 +23,7 @@ TEST(DopplerTest, CheckArchive) {
     isce::io::IH5File file(h5file);
 
     // Deserialize the Doppler
-    isce::core::load(file, doppler);
+    isce::core::load(file, doppler, "data_dcpolynomial");
     
     // Check values
     ASSERT_NEAR(doppler.coeffs[0], 301.353069063192, 1.0e-10);

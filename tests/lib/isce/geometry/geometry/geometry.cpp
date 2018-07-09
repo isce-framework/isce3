@@ -53,7 +53,7 @@ struct GeometryTest : public ::testing::Test {
             // Deserialization
             isce::core::load(file, ellipsoid);
             isce::core::load(file, orbit, "POE");
-            isce::core::load(file, skewDoppler, "skew");
+            isce::core::load(file, skewDoppler, "skew_dcpolynomial");
             isce::core::load(file, meta, "primary");
         }
 };
