@@ -4,6 +4,10 @@
 // Author: Bryan V. Riel
 // Copyright 2017-2018
 
+/** \file Serialization.h
+ *
+ * Serialization functions for isce::core objects. */
+
 #ifndef ISCE_CORE_SERIALIZATION_H
 #define ISCE_CORE_SERIALIZATION_H
 
@@ -28,8 +32,9 @@
 // isce::io
 #include <isce/io/IH5.h>
 
-
+//! The isce namespace
 namespace isce {
+    //! The isce::core namespace
     namespace core {
 
         // Archiving any isce::core object by pointer
