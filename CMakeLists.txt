@@ -1,7 +1,7 @@
 ###CMake builder for ISCE 3.0
 
 ###Minimum version of cmake and boiler plate
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
@@ -9,7 +9,8 @@ endif (POLICY CMP0048)
 
 ###Project
 project(ISCE
-        VERSION 3.0)
+        VERSION 3.0
+	LANGUAGES C CXX CUDA)
 
 ###Options for documentation
 option(WITH_DOC
@@ -41,7 +42,7 @@ CheckPyre()
 include(useCython)
 
 ##Check for CUDA
-CheckCUDA()
+#CheckCUDA()
 
 ##Check for OpenMP
 CheckOpenMP()

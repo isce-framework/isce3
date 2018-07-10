@@ -60,26 +60,6 @@ function(CheckArmadillo)
     message (STATUS "Found Armadillo:  ${ARMADILLO_VERSION_STRING}")
 endfunction()
 
-
-##Check for CUDA installation
-set(USE_CUDA TRUE CACHE BOOL "Build CUDA")
-function(CheckCUDA)
-    if (USE_CUDA)
-        FIND_PACKAGE(CUDA)
-        if (CUDA_FOUND)
-            if ((CUDA_VERSION VERSION_GREATER 8.0) OR (CUDA_VERSION VERSION_EQUAL 8.0))
-                message (STATUS "Found CUDA: ${CUDA_VERSION}")
-                #set (CUDA_PROPAGATE_HOST_FLAGS ON)
-            else()
-                message (STATUS "Did not find a suitable CUDA version >= 8.0")
-                set(CUDA_FOUND FALSE)
-            endif()
-        else()
-            message (STATUS "CUDA not found. Continuing ... ")
-        endif()
-    endif()
-endfunction()
-
 #Check for OpenMP
 function(CheckOpenMP)
     FIND_PACKAGE(OpenMP)
