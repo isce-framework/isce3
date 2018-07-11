@@ -1,4 +1,4 @@
-foreach (TESTNAME poly1d.py)
+foreach (TESTNAME ellipsoid.py poly1d.py attitude.py orbit.py raster.py)
     configure_file(${TESTNAME} ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME})
     add_nosetests(${TESTNAME})
     set_property(TEST ${TESTNAME} PROPERTY ENVIRONMENT

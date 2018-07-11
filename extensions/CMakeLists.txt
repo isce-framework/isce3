@@ -1,1 +1,1 @@
-add_subdirectory(isce)
+add_subdirectory(cython)
