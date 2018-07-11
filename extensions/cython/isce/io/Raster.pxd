@@ -6,6 +6,7 @@
 
 from libcpp cimport bool
 from libcpp.string cimport string
+from libcpp.vector cimport vector
 
 # Get some values from GDAL
 cdef extern from "gdal.h":
@@ -46,6 +47,7 @@ cdef extern from "isce/io/Raster.h" namespace "isce::io":
         Raster(const string &, size_t, size_t) except +
         Raster(const string &, const Raster &) except +
         Raster(const Raster &) except +
+        Raster(const string &, const vector[Raster] &);
 
         # Getters
         Raster & operator=(const Raster &)
@@ -56,6 +58,11 @@ cdef extern from "isce/io/Raster.h" namespace "isce::io":
         GDALDataType dtype(const size_t)
         bool match(const Raster &)
         void open(string &, GDALAccess)
+        int getEPSG()
+
+        #Setters
         void addRasterToVRT(const Raster &)
+        void setEPSG(int)
+
 
 # end of file 
