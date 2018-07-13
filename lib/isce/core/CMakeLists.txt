@@ -78,7 +78,12 @@ foreach(HFILE ${${PACKAGENAME}_EXPORT_HEADERS})
 endforeach()
 
 #Pyre stuff is needed for logging
-include_directories(${${PACKAGENAME}_DLL} PUBLIC ${PYRE_INCLUDE_DIR} ${ISCE_BUILDINCLUDEDIR}) 
+include_directories(${${PACKAGENAME}_DLL}
+    PUBLIC
+        ${PYRE_INCLUDE_DIR}
+        ${GDAL_INCLUDE_DIR}
+        ${ISCE_BUILDINCLUDEDIR}
+) 
 
 #Install headers as files
 ###This may be changed in future to install from build/include
