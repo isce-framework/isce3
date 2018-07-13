@@ -44,6 +44,8 @@ topo(Raster & demRaster,
     // Output layers
     TopoLayers layers(_meta.width);
 
+    { // Topo scope for creating output rasters
+
     // Create rasters for individual layers
     Raster xRaster = Raster(outdir + "/x.rdr", _meta.width, _meta.length, 1,
         GDT_Float64, "ISCE");
@@ -141,6 +143,19 @@ topo(Raster & demRaster,
         simRaster.setLine(layers.sim(), line);
     }
 
+    // Print out convergence statistics
+    info << "Total convergence: " << totalconv << " out of "
+         << (_meta.width * _meta.length) << pyre::journal::endl;
+
+    // Print out timing information and reset
+    auto timerEnd = std::chrono::steady_clock::now();
+    const double elapsed = 1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
+        timerEnd - timerStart).count();
+    info << "Elapsed processing time: " << elapsed << " sec"
+         << pyre::journal::newline;
+
+    } // end Topo scope to release raster resources
+
     // Write out multi-band topo VRT
     const std::vector<Raster> rasterTopoVec = {
         Raster(outdir + "/x.rdr" ),
@@ -155,17 +170,6 @@ topo(Raster & demRaster,
     Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
     // Set its EPSG code
     vrt.setEPSG(_epsgOut);
-
-    // Print out timing information and reset
-    auto timerEnd = std::chrono::steady_clock::now();
-    const double elapsed = 1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
-        timerEnd - timerStart).count();
-    info << "Elapsed processing time: " << elapsed << " sec"
-         << pyre::journal::newline;
-
-    // Print out convergence statistics
-    info << "Total convergence: " << totalconv << " out of "
-         << (_meta.width * _meta.length) << pyre::journal::endl;
 
 }
 
