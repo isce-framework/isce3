@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <gdal_priv.h>
+#include <Python.h>
 
 //! The isce namespace
 namespace isce {
@@ -28,6 +29,16 @@ namespace isce {
            {typeid(std::complex<int32_t>), GDT_CInt32},
            {typeid(std::complex<float>),   GDT_CFloat32},
            {typeid(std::complex<double>),  GDT_CFloat64}};
+
+        // Expose SwigPyObject struct in order to link GDAL swig objects to Cython objects
+        typedef struct {
+            PyObject_HEAD
+            void * ptr;
+            void * type;
+            int own;
+            PyObject * next;
+        } SwigPyObject;
+
     }
 }
 
