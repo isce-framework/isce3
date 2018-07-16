@@ -14,6 +14,7 @@ def pyStringToBytes(s):
         raise ValueError('Input Python string not str or bytes')
 
 # Include the io extensions
+include "io/pyGDAL.pyx"
 include "io/pyRaster.pyx"
 include "io/pyIH5.pyx"
 
