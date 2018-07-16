@@ -28,7 +28,7 @@ endfunction()
 ##Make sure that a reasonable version of Python is installed
 function(CheckISCEPython)
     FIND_PACKAGE(PythonInterp 3.6)
-    FIND_PACKAGE(PythonInterp 3.6)
+    FIND_PACKAGE(PythonLibs 3.6)
 endfunction()
 
 
