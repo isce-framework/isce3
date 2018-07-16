@@ -8,6 +8,7 @@ foreach (TESTNAME geometry)
     target_include_directories(${TESTNAME} PUBLIC 
         ${GDAL_INCLUDE_DIR}
         ${PYRE_INCLUDE_DIR}
+        ${PYTHON_INCLUDE_DIR}
         ${ISCE_SOURCE_DIR}/contrib/cereal/include)
     add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
     file(COPY input_data.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
