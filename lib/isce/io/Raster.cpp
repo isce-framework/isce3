@@ -30,6 +30,12 @@ isce::io::Raster::Raster(const std::string &fname) :
   isce::io::Raster(fname, GA_ReadOnly) {}
 
 
+// Construct a Raster object given an open GDAL Dataset
+isce::io::Raster::Raster(GDALDataset * inputDataset) {
+  GDALAllRegister();
+  dataset(inputDataset);
+} 
+
 
 // Construct a Raster object referring to new file
 isce::io::Raster::Raster(const std::string &fname,          // filename 

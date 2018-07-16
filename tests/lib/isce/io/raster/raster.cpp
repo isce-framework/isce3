@@ -72,7 +72,7 @@ TEST_F(RasterTest, createVRTDouble_setGetValue) {
 
 
 // GetValue from VRT double dataset
-TEST_F(RasterTest, opeeVRTRasterReadOnlyMode_getValue) {
+TEST_F(RasterTest, openVRTRasterReadOnlyMode_getValue) {
   isce::io::Raster lon = isce::io::Raster( lonFilename );
   uint a;
 
@@ -83,6 +83,22 @@ TEST_F(RasterTest, opeeVRTRasterReadOnlyMode_getValue) {
   }
 }
 
+
+// GetValue from VRT double dataset opened as a GDAL dataset
+TEST_F(RasterTest, openVRTGDALReadOnly_getValue) {
+    // Open GDAL dataset
+    GDALDataset * dset = static_cast<GDALDataset *>(
+        GDALOpenShared(lonFilename.c_str(), GA_ReadOnly)
+    );
+    // Make an ISCE raster from the dataset
+    isce::io::Raster lon = isce::io::Raster(dset);
+    uint a;
+    // Check values
+    for (uint i = 0; i < std::min(nl, nc); ++i) {
+        lon.getValue(a, i, i, 1);
+        ASSERT_EQ(a, i);
+    }
+}
 
 
 // Update GeoTiff line-wise and check valarray

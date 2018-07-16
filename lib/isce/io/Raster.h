@@ -20,7 +20,7 @@
 #include "gdal_priv.h"
 #include "gdal_vrt.h"
 #include "ogr_spatialref.h"
-#include "Constants.h"
+#include "isce/io/Constants.h"
 
 //#include <pyre/journal.h>
 
@@ -48,6 +48,7 @@ namespace isce {
       template<typename T> Raster(const std::string&, const std::valarray<T>&, size_t);
       Raster(const std::string&, const std::vector<Raster>&);
       Raster(const Raster&);
+      Raster(GDALDataset *);
       ~Raster();
 
       // Operators, getters and setters
