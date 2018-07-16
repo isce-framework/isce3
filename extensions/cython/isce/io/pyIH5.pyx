@@ -57,4 +57,30 @@ cdef class pyIH5File:
         if self.__owner:
             del self.c_ih5file
 
+    def find(self, name, start, dtype='BOTH'):
+        """
+        Get a list of datasets with a given name relative to a starting path in HDF5 file.
+
+        Args:
+            name (str):             Dataset name to search for.
+            start (str):            Starting path.
+            dtype (Optional[str]):  Specify to return 'DATASET', 'GROUP', or 'BOTH'.
+
+        Returns:
+            datasets (list):        List of datasets found.
+        """
+        # Get vector of datasets
+        cdef vector[string] dsetvec = self.c_ih5file.find(
+            pyStringToBytes(name),
+            pyStringToBytes(start),
+            pyStringToBytes(dtype)
+        )
+        # Reformat as lists
+        datasets = []
+        cdef int i
+        for i in range(dsetvec.size()):
+            datasets.append(dsetvec[i])
+        return datasets
+        
+
 # end of file

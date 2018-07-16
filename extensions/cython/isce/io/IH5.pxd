@@ -37,9 +37,12 @@ cdef extern from "isce/io/IH5.h" namespace "isce::io":
     cdef cppclass IH5File:
 
         # Constructors
-        IH5File(const string &) except +
+        IH5File(const string & filename) except +
 
         # Open a given dataset
-        IDataSet openDataSet(const string &)
+        IDataSet openDataSet(const string & name)
+
+        # Find datasets with a given name
+        vector[string] find(const string name, const string start, const string dtype)
 
 # end of file
