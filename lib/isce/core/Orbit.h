@@ -49,11 +49,11 @@ struct isce::core::Orbit {
     void reformatOrbit();
 
     // Constructors
-    Orbit(int bs, int nv) : basis(bs), nVectors(nv), UTCtime(nv,0.), position(3*nv,0.), 
-                            velocity(3*nv,0.), epochs(nv,MIN_DATE_TIME) {}
+    Orbit(int bs, int nv) : basis(bs), nVectors(nv), epochs(nv,MIN_DATE_TIME),
+                            UTCtime(nv,0.), position(3*nv,0.), velocity(3*nv,0.) {}
     Orbit() : Orbit(0,0) {}
-    Orbit(const Orbit &o) : basis(o.basis), nVectors(o.nVectors), UTCtime(o.UTCtime), 
-                            epochs(o.epochs), position(o.position), velocity(o.velocity),
+    Orbit(const Orbit &o) : basis(o.basis), nVectors(o.nVectors), epochs(o.epochs),
+                            UTCtime(o.UTCtime), position(o.position), velocity(o.velocity),
                             stateVectors(o.stateVectors) {}
 
     // Math operators

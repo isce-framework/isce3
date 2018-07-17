@@ -76,9 +76,6 @@ topo(Raster & demRaster,
     float demmax, dem_avg;
     demInterp.computeHeightStats(demmax, dem_avg, info);
 
-    // Initialize LLH to middle of input DEM and average height
-    cartesian_t mid = demInterp.midLonLat(dem_avg);
-
     // For each line
     size_t totalconv = 0;
     for (int line = 0; line < _meta.length; line++) {
@@ -103,7 +100,6 @@ topo(Raster & demRaster,
         const double satVmag = LinAlg::norm(state.velocity());
 
         // For each slant range bin
-        const double radians = M_PI / 180.0;
         #pragma omp parallel for reduction(+:totalconv)
         for (int rbin = 0; rbin < _meta.width; ++rbin) {
 
@@ -284,19 +280,12 @@ void isce::geometry::Topo::
 _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel,
                      StateVector & state, Basis & TCNbasis, DEMInterpolator & demInterp) {
 
-    cartesian_t targetXYZ, satToGround, satLLH, enu, vhat;
+    cartesian_t targetXYZ, satToGround, enu, vhat;
     cartmat_t enumat, xyz2enu;
     const double degrees = 180.0 / M_PI;
-    const double radians = M_PI / 180.0;
-
-    // Cache TCN basis vectors
-    const cartesian_t that = TCNbasis.x0();
-    const cartesian_t nhat = TCNbasis.x2();
 
     // Unpack the range pixel data
     const size_t bin = pixel.bin();
-    const double rng = pixel.range();
-    const double dopfact = pixel.dopfact();
 
     // Convert lat/lon values to output coordinate system
     cartesian_t xyzOut;

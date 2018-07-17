@@ -48,7 +48,6 @@ geo2rdr(isce::io::Raster & topoRaster,
     // Cache the size of the DEM images
     const size_t demWidth = topoRaster.width();
     const size_t demLength = topoRaster.length();
-    const double rad = M_PI / 180.0;
 
     // Initialize projection for topo results
     _projTopo = isce::core::createProj(topoRaster.getEPSG());

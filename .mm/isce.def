@@ -14,6 +14,12 @@ include pyre/default.def
 # pull in gdal support
 include gdal/default.def
 
+# pull in python support
+include Python/default.def
+
+# pull in hdf5 support
+include HDF5/default.def
+
 # global options for spisce
 PROJECT = isce
 

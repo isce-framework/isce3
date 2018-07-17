@@ -90,7 +90,7 @@ class isce::geometry::Topo {
         isce::core::dataInterpMethod _demMethod;
 
         // Output options and objects
-        int _epsgIn, _epsgOut;
+        int _epsgOut;
         isce::core::ProjectionBase * _proj;
 
         // Flag to make sure options have been initialized
