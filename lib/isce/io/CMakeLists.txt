@@ -42,7 +42,6 @@ include_directories(${${PACKAGENAME}_DLL} PUBLIC
     ${ISCE_BUILDINCLUDEDIR}
     ${GDAL_INCLUDE_DIR}
     ${HDF5_INCLUDE_DIR}
-    ${PYTHON_INCLUDE_DIR}
 ) 
 
 #Install headers as files

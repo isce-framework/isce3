@@ -8,10 +8,10 @@ import gdal
 from libcpp cimport bool
 from libcpp.string cimport string
 from libcpp.vector cimport vector
+from libc.stdint cimport uint64_t
 from Raster cimport Raster
 from GDAL cimport GDALDataset
 from GDAL cimport GDALDataType as GDT
-from SwigPyObject cimport SwigPyObject
 
 cdef class pyRaster:
     '''
@@ -37,15 +37,15 @@ cdef class pyRaster:
 
         # If a gdal.Dataset is passed in as a keyword argument, intercept that here
         # and create a Raster
-        cdef SwigPyObject * swig_dset
         cdef GDALDataset * gdal_dset
+        cdef uint64_t swig_pointer
         if dataset is not None:
             assert isinstance(dataset, gdal.Dataset), \
                 'dataset must be a gdal.Dataset instance.'
-            # Get swig pointer
-            swig_dset = <SwigPyObject *> dataset.this
+            # Get swig address to underlying GDAL dataset
+            swig_pointer = <uint64_t> dataset.this
             # Convert to cython GDALDataset
-            gdal_dset = <GDALDataset *> swig_dset.ptr 
+            gdal_dset = <GDALDataset *> swig_pointer
             # Make raster
             self.c_raster = new Raster(gdal_dset)
             self.__owner = False
