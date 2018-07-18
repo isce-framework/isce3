@@ -55,7 +55,7 @@ class isce::geometry::Geo2rdr {
                      const std::string &);
 
         // Value for null pixels
-        const double NULL_VALUE = -1000.0;
+        const double NULL_VALUE = -1.0e6;
 
     private:
         // Print extents and image info
