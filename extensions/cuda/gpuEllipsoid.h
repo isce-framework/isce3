@@ -19,7 +19,7 @@ namespace isce { namespace core { namespace cuda {
         __host__ __device__ gpuEllipsoid() : gpuEllipsoid(0.,0.) {}
         __host__ __device__ gpuEllipsoid(const gpuEllipsoid &e) : a(e.a), e2(e.e2) {}
         // Alternate "copy" constructor from Ellipsoid object
-        __host__ gpuEllipsoid(const Ellipsoid &e) : a(e.a), e2(e.e2) {}
+        __host__ gpuEllipsoid(const Ellipsoid &e) : a(e.a()), e2(e.e2()) {}
         __host__ __device__ inline gpuEllipsoid& operator=(const gpuEllipsoid&);
 
         __device__ inline double rEast(double);
