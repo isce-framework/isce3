@@ -22,6 +22,7 @@ using isce::core::SINC_HALF;
 using isce::core::SINC_LEN;
 using isce::core::SINC_ONE;
 using isce::core::SINC_SUB;
+using isce::io::Raster;
 
 // Main resamp entry point
 void isce::core::ResampSlc::

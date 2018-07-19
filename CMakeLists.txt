@@ -7,6 +7,8 @@ if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
 endif (POLICY CMP0048)
 
+cmake_policy(SET CMP0060 NEW)
+
 ###Project
 project(ISCE
         VERSION 3.0
@@ -49,6 +51,9 @@ CheckOpenMP()
 
 ##Check for GDAL
 CheckGDAL()
+
+##Check for HDF5
+CheckHDF5()
 
 ##Check for Armadillo
 CheckArmadillo()

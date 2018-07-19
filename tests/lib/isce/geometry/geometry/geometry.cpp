@@ -12,6 +12,9 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
+// isce::io
+#include "isce/io/IH5.h"
+
 // isce::core
 #include "isce/core/Constants.h"
 #include "isce/core/DateTime.h"
@@ -26,9 +29,6 @@
 
 // isce::geometry
 #include "isce/geometry/geometry.h"
-
-// Declaration for utility function to read metadata stream from VRT
-std::stringstream streamFromVRT(const char * filename, int bandNum=1);
 
 // Declaration for utility function to read test data
 void loadTestData(std::vector<std::string> & aztimes, std::vector<double> & ranges,
@@ -46,17 +46,15 @@ struct GeometryTest : public ::testing::Test {
     // Constructor
     protected:
         GeometryTest() {
-            // Load metadata stream
-            std::stringstream metastream = streamFromVRT("../../data/envisat.slc.vrt");
+            // Open the HDF5 product
+            std::string h5file("../../data/envisat.h5");
+            isce::io::IH5File file(h5file);
 
             // Deserialization
-            {
-            cereal::XMLInputArchive archive(metastream);
-            archive(cereal::make_nvp("Ellipsoid", ellipsoid),
-                    cereal::make_nvp("Orbit", orbit),
-                    cereal::make_nvp("SkewDoppler", skewDoppler),
-                    cereal::make_nvp("Radar", meta));
-            }
+            isce::core::load(file, ellipsoid);
+            isce::core::load(file, orbit, "POE");
+            isce::core::load(file, skewDoppler, "skew_dcpolynomial");
+            isce::core::load(file, meta, "primary");
         }
 };
 
@@ -113,10 +111,7 @@ TEST_F(GeometryTest, GeoToRdr) {
     
     // Make a test LLH
     const double radians = M_PI / 180.0;
-    //isce::core::cartesian_t llh = {35.10*radians, -115.6*radians, 55.0};
     isce::core::cartesian_t llh = {-115.6*radians, 35.10*radians, 55.0};
-    // Reformat orbit
-    orbit.reformatOrbit();
 
     // Run geo2rdr
     double aztime, slantRange;
@@ -145,29 +140,6 @@ TEST_F(GeometryTest, GeoToRdr) {
 int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
-}
-
-// Read metadata from a VRT file and return a stringstream object
-std::stringstream streamFromVRT(const char * filename, int bandNum) {
-    // Register GDAL drivers
-    GDALAllRegister();
-    // Open the VRT dataset
-    GDALDataset * dataset = (GDALDataset *) GDALOpen(filename, GA_ReadOnly);
-    if (dataset == NULL) {
-        std::cout << "Cannot open dataset " << filename << std::endl;
-        exit(1);
-    }
-    // Read the metadata
-    char **metadata_str = dataset->GetRasterBand(bandNum)->GetMetadata("xml:isce");
-    // The cereal-relevant XML is the first element in the list
-    std::string meta{metadata_str[0]};
-    // Close the VRT dataset
-    GDALClose(dataset);
-    // Convert to stream
-    std::stringstream metastream;
-    metastream << meta;
-    // All done
-    return metastream;
 }
 
 // Load test data
