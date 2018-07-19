@@ -14,8 +14,11 @@
 
 // isce::core
 #include "isce/core/Constants.h"
-#include "isce/core/Raster.h"
 #include "isce/core/Serialization.h"
+
+// isce::io
+#include "isce/io/IH5.h"
+#include "isce/io/Raster.h"
 
 // isce::geometry
 #include "isce/geometry/Serialization.h"
@@ -32,15 +35,15 @@ TEST(TopoTest, RunTopo) {
     isce::core::Ellipsoid ellipsoid;
     isce::core::Metadata meta;
 
-    // Load metadata
-    std::stringstream metastream = streamFromVRT("../../data/envisat.slc.vrt");
-    {
-    cereal::XMLInputArchive archive(metastream);
-    archive(cereal::make_nvp("Orbit", orbit),
-            cereal::make_nvp("SkewDoppler", doppler),
-            cereal::make_nvp("Ellipsoid", ellipsoid),
-            cereal::make_nvp("Radar", meta));
-    }
+    // Open the HDF5 product
+    std::string h5file("../../data/envisat.h5");
+    isce::io::IH5File file(h5file);
+
+    // Deserialization
+    isce::core::load(file, ellipsoid);
+    isce::core::load(file, orbit, "POE");
+    isce::core::load(file, doppler, "skew_dcpolynomial");
+    isce::core::load(file, meta, "primary");
 
     // Create topo instance
     isce::geometry::Topo topo(ellipsoid, orbit, meta);
@@ -53,7 +56,7 @@ TEST(TopoTest, RunTopo) {
     }
 
     // Open DEM raster
-    isce::core::Raster demRaster("../../data/srtm_cropped.tif");
+    isce::io::Raster demRaster("../../data/srtm_cropped.tif");
 
     // Run topo
     topo.topo(demRaster, doppler, ".");
@@ -63,10 +66,10 @@ TEST(TopoTest, RunTopo) {
 TEST(TopoTest, CheckResults) {
     
     // Open generated topo raster
-    isce::core::Raster testRaster("topo.vrt");
+    isce::io::Raster testRaster("topo.vrt");
     
     // Open reference topo raster
-    isce::core::Raster refRaster("../../data/topo/topo.vrt");
+    isce::io::Raster refRaster("../../data/topo/topo.vrt");
 
     // The associated tolerances
     std::vector<double> tols{1.0e-5, 1.0e-5, 0.15, 1.0e-4, 1.0e-4, 0.02, 0.02};
@@ -101,29 +104,6 @@ TEST(TopoTest, CheckResults) {
         // Normalize the error and check
         ASSERT_TRUE((error / count) < tols[k]);
     }
-}
-
-// Read metadata from a VRT file and return a stringstream object
-std::stringstream streamFromVRT(const char * filename, int bandNum) {
-    // Register GDAL drivers
-    GDALAllRegister();
-    // Open the VRT dataset
-    GDALDataset * dataset = (GDALDataset *) GDALOpen(filename, GA_ReadOnly);
-    if (dataset == NULL) {
-        std::cout << "Cannot open dataset " << filename << std::endl;
-        exit(1);
-    }
-    // Read the metadata
-    char **metadata_str = dataset->GetRasterBand(bandNum)->GetMetadata("xml:isce");
-    // The cereal-relevant XML is the first element in the list
-    std::string meta{metadata_str[0]};
-    // Close the VRT dataset
-    GDALClose(dataset);
-    // Convert to stream
-    std::stringstream metastream;
-    metastream << meta;
-    // All done
-    return metastream;
 }
 
 int main(int argc, char * argv[]) {

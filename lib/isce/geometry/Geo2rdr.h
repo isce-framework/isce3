@@ -18,7 +18,9 @@
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Peg.h>
 #include <isce/core/Pegtrans.h>
-#include <isce/core/Raster.h>
+
+// isce::io
+#include <isce/io/Raster.h>
 
 // Declaration
 namespace isce {
@@ -42,18 +44,18 @@ class isce::geometry::Geo2rdr {
         inline void orbitMethod(isce::core::orbitInterpMethod);
 
         // Run geo2rdr - main entrypoint
-        void geo2rdr(isce::core::Raster &,
+        void geo2rdr(isce::io::Raster &,
                      isce::core::Poly2d &,
                      const std::string &,
                      double, double);
 
         // Alternative: run geo2rdr with no constant offsets
-        void geo2rdr(isce::core::Raster &,
+        void geo2rdr(isce::io::Raster &,
                      isce::core::Poly2d &,
                      const std::string &);
 
         // Value for null pixels
-        const double NULL_VALUE = -1000.0;
+        const double NULL_VALUE = -1.0e6;
 
     private:
         // Print extents and image info

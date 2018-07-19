@@ -22,7 +22,6 @@ set(LOCAL_SRCS
               Position.cpp
               Projections.cpp
               Quaternion.cpp
-	          Raster.cpp
               ResampSlc.cpp
               TimeDelta.cpp)
 
@@ -57,8 +56,6 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Quaternion.h
                                     Quaternion.icc
                                     Serialization.h
-                                    Raster.h
-				                    Raster.icc
                                     ResampSlc.h
                                     ResampSlc.icc
                                     Serialization.h
@@ -81,8 +78,12 @@ foreach(HFILE ${${PACKAGENAME}_EXPORT_HEADERS})
 endforeach()
 
 #Pyre stuff is needed for logging
-#Gdal is needed for Raster IO 
-include_directories(${${PACKAGENAME}_DLL} PUBLIC ${PYRE_INCLUDE_DIR} ${ISCE_BUILDINCLUDEDIR} ${GDAL_INCLUDE_DIR}) 
+include_directories(${${PACKAGENAME}_DLL}
+    PUBLIC
+        ${PYRE_INCLUDE_DIR}
+        ${GDAL_INCLUDE_DIR}
+        ${ISCE_BUILDINCLUDEDIR}
+) 
 
 #Install headers as files
 ###This may be changed in future to install from build/include

@@ -13,40 +13,37 @@
 #include <isce/core/Orbit.h>
 #include <isce/core/Serialization.h>
 
+#include <isce/io/IH5.h>
+
 
 TEST(OrbitTest, CheckArchive) {
-    // Make an ellipsoid
+    // Make an orbit
     isce::core::Orbit orbit;
 
-    // Open XML file
-    std::ifstream xmlfid("archive.xml", std::ios::in);
-    // Check if file was open successfully
-    if (xmlfid.fail()) {
-        std::cout << "Error: failed to open archive.xml file." << std::endl;
-    }
+    // Open the HDF5 product
+    std::string h5file("../../data/envisat.h5");
+    isce::io::IH5File file(h5file);
 
-    // Create cereal archive and load
-    {
-    cereal::XMLInputArchive archive(xmlfid);
-    archive(cereal::make_nvp("Orbit", orbit));
-    }
+    // Deserialize the orbit
+    isce::core::DateTime epoch;
+    isce::core::load(file, orbit, "POE", epoch);
 
     // Check we have the right number of state vectors
-    ASSERT_EQ(orbit.nVectors, 20);
+    ASSERT_EQ(orbit.nVectors, 11);
 
     // Check the position of middle vector
-    isce::core::StateVector sv = orbit.stateVectors[10];
-    ASSERT_NEAR(sv.position()[0], -2666480.591465, 1.0e-6);
-    ASSERT_NEAR(sv.position()[1], -4237357.505607, 1.0e-6);
-    ASSERT_NEAR(sv.position()[2], 3958466.181821, 1.0e-6);
+    ASSERT_NEAR(orbit.position[5*3+0], -2305250.945, 1.0e-6);
+    ASSERT_NEAR(orbit.position[5*3+1], -5443208.984, 1.0e-6);
+    ASSERT_NEAR(orbit.position[5*3+2], 4039406.416, 1.0e-6);
 
     // Check the velocity of middle vector
-    ASSERT_NEAR(sv.velocity()[0], -198.329022, 1.0e-6);
-    ASSERT_NEAR(sv.velocity()[1], 29.308432, 1.0e-6);
-    ASSERT_NEAR(sv.velocity()[2], -101.540993, 1.0e-6);
+    ASSERT_NEAR(orbit.velocity[5*3+0], -3252.930393, 1.0e-6);
+    ASSERT_NEAR(orbit.velocity[5*3+1], -3129.103767, 1.0e-6);
+    ASSERT_NEAR(orbit.velocity[5*3+2], -6055.488170, 1.0e-6);
 
     // Check date of middle vector
-    ASSERT_EQ(sv.date().isoformat(), "2014-08-29T17:45:33.396381000");
+    isce::core::DateTime dtime = epoch + orbit.UTCtime[5];
+    ASSERT_EQ(dtime.isoformat(), "2003-02-26T17:55:28.000000000");
 
 }
 

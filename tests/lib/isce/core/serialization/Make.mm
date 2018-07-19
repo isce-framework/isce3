@@ -11,6 +11,8 @@ include isce.def
 TESTS = \
     serializeEllipsoid \
     serializeOrbit \
+    serializeMetadata \
+    serializeDoppler \
 
 all: test clean
 

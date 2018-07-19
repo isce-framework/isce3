@@ -6,7 +6,7 @@
 // Copyright 2018
 //
 
-#if !defined(ISCE_CORE_RASTER_ICC)
+#if !defined(ISCE_IO_RASTER_ICC)
 #error "Raster.icc is an implementation detail of class Raster"
 #endif
 
@@ -14,24 +14,24 @@
 
 // Construct a Raster object referring to new file assuming default GDAL driver, type and band.
 template<typename T>
-isce::core::Raster::Raster(const std::string & fname,       // filename of new file to be created
+isce::io::Raster::Raster(const std::string & fname,       // filename of new file to be created
 			   const std::vector<T> & buffer,   // buffer used to infer width and type
 			   size_t length) :                 // length of raster
-  isce::core::Raster(fname, buffer.size(), length, 1, GDT.at(typeid(T))) {}
+  isce::io::Raster(fname, buffer.size(), length, 1, GDT.at(typeid(T))) {}
 
 
 
 // Construct a Raster object referring to new file assuming default GDAL driver, type and band.
 template<typename T>
-isce::core::Raster::Raster(const std::string & fname,       // filename of new file to be created
+isce::io::Raster::Raster(const std::string & fname,       // filename of new file to be created
 			   const std::valarray<T> & buffer, // buffer used to infer width and type
 			   size_t length) :                 // length of raster
-  isce::core::Raster(fname, buffer.size(), length, 1, GDT.at(typeid(T))) {}
+  isce::io::Raster(fname, buffer.size(), length, 1, GDT.at(typeid(T))) {}
 
 
 
 // Copy constructor
-inline isce::core::Raster& isce::core::Raster::operator=(const Raster &rhs) {
+inline isce::io::Raster& isce::io::Raster::operator=(const Raster &rhs) {
   dataset( rhs._dataset );      // weak-copy pointer
   dataset()->Reference();       // increment GDALDataset reference counter
   return *this;
@@ -40,7 +40,7 @@ inline isce::core::Raster& isce::core::Raster::operator=(const Raster &rhs) {
 
 
 // Open an dataset on existing Raster object after releasing the old dataset
-inline void isce::core::Raster::open(const std::string &fname,
+inline void isce::io::Raster::open(const std::string &fname,
 			      GDALAccess access=GA_ReadOnly) {
   GDALClose( _dataset );
   dataset( static_cast<GDALDataset*>(GDALOpenShared( fname.c_str(), access )) );
@@ -49,18 +49,18 @@ inline void isce::core::Raster::open(const std::string &fname,
 
 
 // Add a Raster object to existing VRT dataset 
-inline void isce::core::Raster::addRasterToVRT(const isce::core::Raster& rast) {
+inline void isce::io::Raster::addRasterToVRT(const isce::io::Raster& rast) {
   if ( match(rast) )                                      // if rasters have the same size
     for ( size_t b=1; b<=rast.numBands(); ++b )           // for each band in input Raster
       addBandToVRT( rast.dataset()->GetRasterBand(b) );   // add GDALRasterBand to VRT
   else
-    throw std::length_error("In isce::core::Raster::Raster() - Rasters have different sizes.");
+    throw std::length_error("In isce::io::Raster::Raster() - Rasters have different sizes.");
 }
 
 
 
 // Add a GDALRasterBand object to existing VRT dataset 
-inline void isce::core::Raster::addBandToVRT(GDALRasterBand * inBand) {
+inline void isce::io::Raster::addBandToVRT(GDALRasterBand * inBand) {
   if ( !strcmp(dataset()->GetDriverName(), "VRT") ) {                   // dataset is VRT
     dataset()->AddBand( inBand->GetRasterDataType(), NULL );            // add band to VRT dataset
     GDALRasterBand *rastBand = dataset()->GetRasterBand( numBands() );  // get last band
@@ -73,13 +73,13 @@ inline void isce::core::Raster::addBandToVRT(GDALRasterBand * inBand) {
 		       NULL, VRT_NODATA_UNSET);
   }
     else
-      throw std::length_error("In isce::core::Raster::AddBandToVRT() - GDAL driver must be VRT.");
+      throw std::length_error("In isce::io::Raster::AddBandToVRT() - GDAL driver must be VRT.");
 }
 
 
 
 // Add a Raw Raster band to existing VRT dataset 
-inline void isce::core::Raster::addRawBandToVRT(const std::string &fname, GDALDataType dtype) {
+inline void isce::io::Raster::addRawBandToVRT(const std::string &fname, GDALDataType dtype) {
   if ( !strcmp(dataset()->GetDriverName(), "VRT") ) { 
     char** papszOptions = NULL;
     std::string srcName = fname.substr(0, fname.find_last_of("."));
@@ -90,7 +90,7 @@ inline void isce::core::Raster::addRawBandToVRT(const std::string &fname, GDALDa
     CSLDestroy(papszOptions); 
   }
     else
-      throw std::length_error("In isce::core::Raster::AddBandToVRT() - GDAL driver must be VRT.");
+      throw std::length_error("In isce::io::Raster::AddBandToVRT() - GDAL driver must be VRT.");
 }
 
 
@@ -102,7 +102,7 @@ inline void isce::core::Raster::addRawBandToVRT(const std::string &fname, GDALDa
  */
 // Get or set the value from/to buffer given x/y pixel location in band.
 template<typename T>
-void isce::core::Raster::getSetValue(T & buffer,           // i/o buffer of type T
+void isce::io::Raster::getSetValue(T & buffer,           // i/o buffer of type T
 				     size_t xidx,          // 0-indexed line within band
 				     size_t yidx,          // 0-indexed column within band
 				     size_t band,          // 1-indexed band number
@@ -113,10 +113,10 @@ void isce::core::Raster::getSetValue(T & buffer,           // i/o buffer of type
 							  1, 1, GDT.at(typeid(T)), 0, 0);
 
     if ( iostat != CPLE_None ) // RasterIO returned error
-      std::cout << "In isce::core::Raster::getSetValue() - error in RasterIO." << std::endl;
+      std::cout << "In isce::io::Raster::getSetValue() - error in RasterIO." << std::endl;
   }
   else
-    std::cout << "In isce::core::Raster::get/setValue() - Buffer datatype " << typeid(T).name() <<
+    std::cout << "In isce::io::Raster::get/setValue() - Buffer datatype " << typeid(T).name() <<
       " is not mappable to a GDALDataType." << std::endl;
 }
 
@@ -124,7 +124,7 @@ void isce::core::Raster::getSetValue(T & buffer,           // i/o buffer of type
 
 // Get value from given x/y positions in given band 
 template<typename T>
-void isce::core::Raster::getValue(T &buffer, size_t xidx, size_t yidx, size_t band) {
+void isce::io::Raster::getValue(T &buffer, size_t xidx, size_t yidx, size_t band) {
   getSetValue(buffer, xidx, yidx, band, GF_Read);
 }
 
@@ -132,7 +132,7 @@ void isce::core::Raster::getValue(T &buffer, size_t xidx, size_t yidx, size_t ba
 
 // Get value from given x/y positions in band 1 
 template<typename T>
-void isce::core::Raster::getValue(T &buffer, size_t xidx, size_t yidx) {
+void isce::io::Raster::getValue(T &buffer, size_t xidx, size_t yidx) {
   getValue(buffer, xidx, yidx, 1);
 }
 
@@ -140,7 +140,7 @@ void isce::core::Raster::getValue(T &buffer, size_t xidx, size_t yidx) {
 
 // Set value at given x/y positions in given band
 template<typename T>
-void isce::core::Raster::setValue(T &buffer, size_t xidx, size_t yidx, size_t band) {
+void isce::io::Raster::setValue(T &buffer, size_t xidx, size_t yidx, size_t band) {
   getSetValue(buffer, xidx, yidx, band, GF_Write);
 }
 
@@ -148,7 +148,7 @@ void isce::core::Raster::setValue(T &buffer, size_t xidx, size_t yidx, size_t ba
 
 // Set value at given x/y positions in band 1
 template<typename T>
-void isce::core::Raster::setValue(T &buffer, size_t xidx, size_t yidx) {
+void isce::io::Raster::setValue(T &buffer, size_t xidx, size_t yidx) {
   setValue(buffer, xidx, yidx, 1, GF_Write);
 }
 
@@ -159,7 +159,7 @@ void isce::core::Raster::setValue(T &buffer, size_t xidx, size_t yidx) {
  */
 // Get or set a line of data for given line position in band. 
 template<typename T>
-void isce::core::Raster::getSetLine(T *buffer,          // i/o buffer of type T
+void isce::io::Raster::getSetLine(T *buffer,          // i/o buffer of type T
 				    size_t xidx,        // line location within band (1-indexed)
 				    size_t iowidth,     // width of i/o buffer 
 				    size_t band,        // band number (1-indexed)
@@ -171,10 +171,10 @@ void isce::core::Raster::getSetLine(T *buffer,          // i/o buffer of type T
 							  rdwidth, 1, GDT.at(typeid(T)), 0, 0);
     
     if (iostat != CPLE_None) // RasterIO returned errors
-      std::cout << "In isce::core::Raster::get/setLine() - error in RasterIO." << std::endl;
+      std::cout << "In isce::io::Raster::get/setLine() - error in RasterIO." << std::endl;
   }
   else 
-    std::cout << "In isce::core::Raster::get/setLine() - Buffer datatype " << typeid(T).name() <<
+    std::cout << "In isce::io::Raster::get/setLine() - Buffer datatype " << typeid(T).name() <<
       " is not mappable to a GDALDataType." << std::endl;
 
 }
@@ -183,7 +183,7 @@ void isce::core::Raster::getSetLine(T *buffer,          // i/o buffer of type T
 
 // Get a line of data for given line position and band to a buffer of width iowidth. 
 template<typename T>
-void isce::core::Raster::getLine(T *buffer, size_t xidx, size_t iowidth, size_t band) {
+void isce::io::Raster::getLine(T *buffer, size_t xidx, size_t iowidth, size_t band) {
   getSetLine(buffer, xidx, iowidth, band, GF_Read);
 }
 
@@ -191,14 +191,14 @@ void isce::core::Raster::getLine(T *buffer, size_t xidx, size_t iowidth, size_t 
 
 // Get a line of data for given line position in band 1 to a buffer of width iowidth. 
 template<typename T>
-void isce::core::Raster::getLine(T *buffer, size_t xidx, size_t iowidth) {
+void isce::io::Raster::getLine(T *buffer, size_t xidx, size_t iowidth) {
   getLine(buffer, xidx, iowidth, 1);
 }
 
 
 // Get a line of data for given line position and band to std::vector. 
 template<typename T>
-void isce::core::Raster::getLine(std::vector<T> &buffer, size_t xidx, size_t band) {
+void isce::io::Raster::getLine(std::vector<T> &buffer, size_t xidx, size_t band) {
   getLine(buffer.data(), xidx, buffer.size(), band);
 }
 
@@ -206,7 +206,7 @@ void isce::core::Raster::getLine(std::vector<T> &buffer, size_t xidx, size_t ban
 
 // Get a line of data for given line position in band 1 to std::vector. 
 template<typename T>
-void isce::core::Raster::getLine(std::vector<T> &buffer, size_t xidx) {
+void isce::io::Raster::getLine(std::vector<T> &buffer, size_t xidx) {
   getLine(buffer.data(), xidx, buffer.size(), 1);
 }
 
@@ -214,7 +214,7 @@ void isce::core::Raster::getLine(std::vector<T> &buffer, size_t xidx) {
 
 // Set a line of data for given line position and band from a std::valarray. 
 template<typename T>
-void isce::core::Raster::getLine(std::valarray<T> &buffer, size_t xidx, size_t band) {
+void isce::io::Raster::getLine(std::valarray<T> &buffer, size_t xidx, size_t band) {
   getLine(&buffer[0], xidx, buffer.size(), band);
 }
 
@@ -222,7 +222,7 @@ void isce::core::Raster::getLine(std::valarray<T> &buffer, size_t xidx, size_t b
 
 // Set a line of data for given line position in band 1 from a std::valarray. 
 template<typename T>
-void isce::core::Raster::getLine(std::valarray<T> &buffer, size_t xidx) {
+void isce::io::Raster::getLine(std::valarray<T> &buffer, size_t xidx) {
   getLine(&buffer[0], xidx, buffer.size(), 1);
 }
 
@@ -230,7 +230,7 @@ void isce::core::Raster::getLine(std::valarray<T> &buffer, size_t xidx) {
 
 // Set a line of data for given line position and band from a buffer of width iowidth. 
 template<typename T>
-void isce::core::Raster::setLine(T* buffer, size_t xidx, size_t iowidth, size_t band) {
+void isce::io::Raster::setLine(T* buffer, size_t xidx, size_t iowidth, size_t band) {
   getSetLine(buffer, xidx, iowidth, band, GF_Write);
 }
 
@@ -238,7 +238,7 @@ void isce::core::Raster::setLine(T* buffer, size_t xidx, size_t iowidth, size_t 
 
 // Set a line of data for given line position in band 1 from a buffer of width iowidth. 
 template<typename T>
-void isce::core::Raster::setLine(T* buffer, size_t xidx, size_t iowidth) {
+void isce::io::Raster::setLine(T* buffer, size_t xidx, size_t iowidth) {
   setLine(buffer, xidx, iowidth, 1);
 }
 
@@ -246,7 +246,7 @@ void isce::core::Raster::setLine(T* buffer, size_t xidx, size_t iowidth) {
 
 // Set a line of data for given line position and band from a std::vector. 
 template<typename T>
-void isce::core::Raster::setLine(std::vector<T> &buffer, size_t xidx, size_t band) {
+void isce::io::Raster::setLine(std::vector<T> &buffer, size_t xidx, size_t band) {
   setLine(buffer.data(), xidx, buffer.size(), band);
 }
 
@@ -254,7 +254,7 @@ void isce::core::Raster::setLine(std::vector<T> &buffer, size_t xidx, size_t ban
 
 // Set a line of data for given line position in band 1 from a std::vector. 
 template<typename T>
-void isce::core::Raster::setLine(std::vector<T> &buffer, size_t xidx) {
+void isce::io::Raster::setLine(std::vector<T> &buffer, size_t xidx) {
   setLine(buffer.data(), xidx, buffer.size(), 1);
 }
 
@@ -262,7 +262,7 @@ void isce::core::Raster::setLine(std::vector<T> &buffer, size_t xidx) {
 
 // Set a line of data for given line position and band from a std::valarray. 
 template<typename T>
-void isce::core::Raster::setLine(std::valarray<T> &buffer, size_t xidx, size_t band) {
+void isce::io::Raster::setLine(std::valarray<T> &buffer, size_t xidx, size_t band) {
   setLine(&buffer[0], xidx, buffer.size(), band);
 }
 
@@ -270,7 +270,7 @@ void isce::core::Raster::setLine(std::valarray<T> &buffer, size_t xidx, size_t b
 
 // Set a line of data for given line position in band 1 from a std::valarray. 
 template<typename T>
-void isce::core::Raster::setLine(std::valarray<T> &buffer, size_t xidx) {
+void isce::io::Raster::setLine(std::valarray<T> &buffer, size_t xidx) {
   setLine(&buffer[0], xidx, buffer.size(), 1);
 }
 
@@ -283,7 +283,7 @@ void isce::core::Raster::setLine(std::valarray<T> &buffer, size_t xidx) {
 // Get or set a 2D data block of width iowidth and length iolength given xidx/yidx positions in band
 // and to/from 1D contigous buffer of width iowidth*iolength. 
 template<typename T>
-void isce::core::Raster::getSetBlock(T *buffer,            // i/o buffer of size iowidth*iolength
+void isce::io::Raster::getSetBlock(T *buffer,            // i/o buffer of size iowidth*iolength
 				     size_t xidx,          // line location within band (1-indexed)
 				     size_t yidx,          // column location within band (1-indexed)
 				     size_t iowidth,       // requested width of block of data
@@ -298,10 +298,10 @@ void isce::core::Raster::getSetBlock(T *buffer,            // i/o buffer of size
 							  0, 0);
     
     if (iostat != CPLE_None) // RasterIO returned errors
-      std::cout << "In isce::core::Raster::get/setValue() - error in RasterIO." << std::endl;
+      std::cout << "In isce::io::Raster::get/setValue() - error in RasterIO." << std::endl;
   }
   else
-    std::cout << "In isce::core::Raster::get/setBlock() - Buffer datatype " << typeid(T).name() <<
+    std::cout << "In isce::io::Raster::get/setBlock() - Buffer datatype " << typeid(T).name() <<
       " is not mappable to a GDALDataType." << std::endl;
 }
 
@@ -309,7 +309,7 @@ void isce::core::Raster::getSetBlock(T *buffer,            // i/o buffer of size
 
 // Get a block of data for given x/y position and size in band to a buffer. 
 template<typename T>
-void isce::core::Raster::getBlock(T *buffer, size_t xidx, size_t yidx,
+void isce::io::Raster::getBlock(T *buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength, size_t band) {
   getSetBlock(buffer, xidx, yidx, iowidth, iolength, band, GF_Read);
 }
@@ -318,7 +318,7 @@ void isce::core::Raster::getBlock(T *buffer, size_t xidx, size_t yidx,
 
 // Get a block of data starting from given x/y position and size in band 1 to a buffer. 
 template<typename T>
-void isce::core::Raster::getBlock(T *buffer, size_t xidx, size_t yidx,
+void isce::io::Raster::getBlock(T *buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength) {
   getSetBlock(buffer, xidx, yidx, iowidth, iolength, 1, GF_Read);
 }
@@ -327,24 +327,24 @@ void isce::core::Raster::getBlock(T *buffer, size_t xidx, size_t yidx,
 
 // Get a block of data starting from given x/y position and size in band to std::vector. 
 template<typename T>
-void isce::core::Raster::getBlock(std::vector<T> &buffer, size_t xidx, size_t yidx,
+void isce::io::Raster::getBlock(std::vector<T> &buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength, size_t band) {
   
   if ((iolength * iowidth) <= buffer.size()) { // buffer is larger or equal than requested block
     getBlock(buffer.data(), xidx, yidx, iowidth, iolength, band);
     
     if ((iolength * iowidth) < buffer.size())  // buffer is larger than requested block
-      std::cout << "WARNING: In isce::core::Raster::getBlock() - Requested fewer elements than buffer size. " << std::endl;
+      std::cout << "WARNING: In isce::io::Raster::getBlock() - Requested fewer elements than buffer size. " << std::endl;
     
   } else  // buffer is smaller than requested block
-    throw std::length_error("In isce::core::Raster::getBlock() - Requested more elements than buffer size.");
+    throw std::length_error("In isce::io::Raster::getBlock() - Requested more elements than buffer size.");
 }
 
 
 
 // Get a block of data starting from given x/y position and size in band 1 to std::vector. 
 template<typename T>
-void isce::core::Raster::getBlock(std::vector<T> &buffer, size_t xidx, size_t yidx,
+void isce::io::Raster::getBlock(std::vector<T> &buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength) {
   getBlock(buffer, xidx, yidx, iowidth, iolength, 1);
 }
@@ -353,24 +353,24 @@ void isce::core::Raster::getBlock(std::vector<T> &buffer, size_t xidx, size_t yi
 
 // Get a block of data starting from given x/y position and size in band to std::valarray. 
 template<typename T>
-void isce::core::Raster::getBlock(std::valarray<T> &buffer, size_t xidx, size_t yidx,
+void isce::io::Raster::getBlock(std::valarray<T> &buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength, size_t band) {
   
   if ((iolength * iowidth) <= buffer.size()) { // buffer is larger or equal than requested block
     getBlock(&buffer[0], xidx, yidx, iowidth, iolength, band);
     
     if ((iolength * iowidth) < buffer.size())  // buffer is larger than requested block
-      std::cout << "WARNING: In isce::core::Raster::getBlock() - Requested fewer elements than buffer size. " << std::endl;
+      std::cout << "WARNING: In isce::io::Raster::getBlock() - Requested fewer elements than buffer size. " << std::endl;
     
   } else  // buffer is smaller than requested block
-    throw std::length_error("In isce::core::Raster::getBlock() - Requested more elements than buffer size.");
+    throw std::length_error("In isce::io::Raster::getBlock() - Requested more elements than buffer size.");
 }
 
 
 
 // Get a block of data starting from given x/y position and size in band 1 to std::valarray. 
 template<typename T>
-void isce::core::Raster::getBlock(std::valarray<T> &buffer, size_t xidx, size_t yidx,
+void isce::io::Raster::getBlock(std::valarray<T> &buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength) {
   getBlock(buffer, xidx, yidx, iowidth, iolength, 1);
 }
@@ -379,7 +379,7 @@ void isce::core::Raster::getBlock(std::valarray<T> &buffer, size_t xidx, size_t 
 
 // Set a block of data for given x/y position and size in band from a buffer. 
 template<typename T>
-void isce::core::Raster::setBlock(T *buffer, size_t xidx, size_t yidx,
+void isce::io::Raster::setBlock(T *buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength, size_t band) {
   getSetBlock(buffer, xidx, yidx, iowidth, iolength, band, GF_Write);
 }
@@ -388,7 +388,7 @@ void isce::core::Raster::setBlock(T *buffer, size_t xidx, size_t yidx,
 
 // Set a block of data for given x/y position and size in band 1 from a buffer. 
 template<typename T>
-void isce::core::Raster::setBlock(T *buffer, size_t xidx, size_t yidx,
+void isce::io::Raster::setBlock(T *buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength) {
   getSetBlock(buffer, xidx, yidx, iowidth, iolength, 1, GF_Write);
 }
@@ -397,24 +397,24 @@ void isce::core::Raster::setBlock(T *buffer, size_t xidx, size_t yidx,
 
 // Set a block of data for given x/y position and size in band from a std::vector. 
 template<typename T>
-void isce::core::Raster::setBlock(std::vector<T> &buffer, size_t xidx, size_t yidx,
+void isce::io::Raster::setBlock(std::vector<T> &buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength, size_t band) {
   
   if ((iolength * iowidth) <= buffer.size()) { // buffer is larger or equal than requested block
     setBlock(buffer.data(), xidx, yidx, iowidth, iolength, band);
     
     if ((iolength * iowidth) < buffer.size())  // buffer is larger than requested block
-      std::cout << "WARNING: In isce::core::Raster::getBlock() - Requested fewer elements than buffer size. " << std::endl;
+      std::cout << "WARNING: In isce::io::Raster::getBlock() - Requested fewer elements than buffer size. " << std::endl;
     
   } else  // buffer is smaller than requested block
-    throw std::length_error("In isce::core::Raster::getBlock() - Requested more elements than buffer size.");
+    throw std::length_error("In isce::io::Raster::getBlock() - Requested more elements than buffer size.");
 }
 
 
 
 // Set a block of data for given x/y position and size in band 1 from a std::vector. 
 template<typename T>
-void isce::core::Raster::setBlock(std::vector<T> &buffer, size_t xidx, size_t yidx,
+void isce::io::Raster::setBlock(std::vector<T> &buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength) {
   setBlock(buffer, xidx, yidx, iowidth, iolength, 1);
 }
@@ -423,31 +423,31 @@ void isce::core::Raster::setBlock(std::vector<T> &buffer, size_t xidx, size_t yi
 
 // Set a block of data for given x/y position and size in band from a std::vector. 
 template<typename T>
-void isce::core::Raster::setBlock(std::valarray<T> &buffer, size_t xidx, size_t yidx,
+void isce::io::Raster::setBlock(std::valarray<T> &buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength, size_t band) {
   
   if ((iolength * iowidth) <= buffer.size()) { // buffer is larger or equal than requested block
     setBlock(&buffer[0], xidx, yidx, iowidth, iolength, band);
     
     if ((iolength * iowidth) < buffer.size())  // buffer is larger than requested block
-      std::cout << "WARNING: In isce::core::Raster::getBlock() - Requested fewer elements than buffer size. " << std::endl;
+      std::cout << "WARNING: In isce::io::Raster::getBlock() - Requested fewer elements than buffer size. " << std::endl;
     
   } else  // buffer is smaller than requested block
-    throw std::length_error("In isce::core::Raster::getBlock() - Requested more elements than buffer size.");
+    throw std::length_error("In isce::io::Raster::getBlock() - Requested more elements than buffer size.");
 }
 
 
 
 // Set a block of data for given x/y position and size in band 1 from a std::vector. 
 template<typename T>
-void isce::core::Raster::setBlock(std::valarray<T> &buffer, size_t xidx, size_t yidx,
+void isce::io::Raster::setBlock(std::valarray<T> &buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength) {
   setBlock(buffer, xidx, yidx, iowidth, iolength, 1);
 }
 
 
 //Section for projection related functions
-inline void isce::core::Raster::setGeoTransform(double* arr)
+inline void isce::io::Raster::setGeoTransform(double* arr)
 {
     int status = _dataset->SetGeoTransform(arr);
     if (status != 0)
@@ -456,27 +456,27 @@ inline void isce::core::Raster::setGeoTransform(double* arr)
     }
 }
 
-inline void isce::core::Raster::setGeoTransform(std::vector<double>& arr)
+inline void isce::io::Raster::setGeoTransform(std::vector<double>& arr)
 {
     if (arr.size() != 6)
     {
-        throw std::length_error("In isce::core::setGeoTransform() - vector is not of size 6");
+        throw std::length_error("In isce::io::setGeoTransform() - vector is not of size 6");
     }
 
     setGeoTransform(arr.data());
 }
 
-inline void isce::core::Raster::setGeoTransform(std::valarray<double>& arr)
+inline void isce::io::Raster::setGeoTransform(std::valarray<double>& arr)
 {
     if (arr.size() != 6)
     {
-        throw std::length_error("In isce::core::setGeoTransform() - valarray is not of size 6");
+        throw std::length_error("In isce::io::setGeoTransform() - valarray is not of size 6");
     }
 
     setGeoTransform(&arr[0]);
 }
 
-inline void isce::core::Raster::getGeoTransform(double *arr) const
+inline void isce::io::Raster::getGeoTransform(double *arr) const
 {
     int status = _dataset->GetGeoTransform(arr);
     if (status != 0 )
@@ -485,48 +485,48 @@ inline void isce::core::Raster::getGeoTransform(double *arr) const
     }
 }
 
-inline void isce::core::Raster::getGeoTransform(std::vector<double>& arr) const
+inline void isce::io::Raster::getGeoTransform(std::vector<double>& arr) const
 {
     if (arr.size() != 6)
     {
-        throw std::length_error("In isce::core::Raster::getGeoTransform() - vector is not of size 6");
+        throw std::length_error("In isce::io::Raster::getGeoTransform() - vector is not of size 6");
     }
 
     getGeoTransform(arr.data());
 }
 
-inline void isce::core::Raster::getGeoTransform(std::valarray<double>& arr) const
+inline void isce::io::Raster::getGeoTransform(std::valarray<double>& arr) const
 {
     if (arr.size() != 6)
     {
-        throw std::length_error("In isce::core::Raster::getGeoTransform() - valarray is not of size 6");
+        throw std::length_error("In isce::io::Raster::getGeoTransform() - valarray is not of size 6");
     }
 
     getGeoTransform(&arr[0]);
 }
 
-inline double isce::core::Raster::x0() const
+inline double isce::io::Raster::x0() const
 {
     double trans[6];
     getGeoTransform(trans);
     return trans[0];
 }
 
-inline double isce::core::Raster::y0() const
+inline double isce::io::Raster::y0() const
 {
     double trans[6];
     getGeoTransform(trans);
     return trans[3];
 }
 
-inline double isce::core::Raster::dx() const
+inline double isce::io::Raster::dx() const
 {
     double trans[6];
     getGeoTransform(trans);
     return trans[1];
 }
 
-inline double isce::core::Raster::dy() const
+inline double isce::io::Raster::dy() const
 {
     double trans[6];
     getGeoTransform(trans);

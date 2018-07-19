@@ -10,14 +10,9 @@ def test_geo2rdr():
     import datetime
     import gdal
 
-    # Open the SLC product for the master scene
-    dset = gdal.Open('../../../../lib/isce/data/envisat.slc.vrt', gdal.GA_ReadOnly)
+    # Open the HDF5 SLC product for the master scene
+    h5 = isceextension.pyIH5File('../../../../lib/isce/data/envisat.h5')
 
-    # Get the metadata string
-    band = dset.GetRasterBand(1)
-    xml = band.GetMetadata('xml:isce')[0]
-    dset = None
-    
     # Make ISCE objects
     ellps = isceextension.pyEllipsoid()
     orbit = isceextension.pyOrbit()
@@ -25,10 +20,10 @@ def test_geo2rdr():
     meta = isceextension.pyMetadata()
     
     # Configure objects using metadata 
-    ellps.archive(xml)
-    orbit.archive(xml)
-    meta.archive(xml)
-    doppler.archive(xml, 'SkewDoppler')
+    ellps.archive(h5)
+    orbit.archive(h5)
+    meta.archive(h5)
+    doppler.archive(h5, 'skew_dcpolynomial')
 
     # Call geo2rdr
     llh = [np.radians(-115.6), np.radians(35.1), 55.0]

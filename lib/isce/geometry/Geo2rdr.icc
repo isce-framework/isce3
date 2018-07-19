@@ -18,8 +18,8 @@ Geo2rdr(isce::core::Ellipsoid ellipsoid, isce::core::Orbit orbit, isce::core::Me
     // For numerical precision purposes, set reference epoch 2 days prior
     _refEpoch._init(_meta.sensingStart.year, _meta.sensingStart.months,
                     _meta.sensingStart.days - 2, 0, 0, 0, 0.0);
-    // Reformat orbit using this epoch
-    _orbit.reformatOrbit(_refEpoch);
+    // Update orbit epochs with new epoch
+    _orbit.updateUTCTimes(_refEpoch);
 }
 
 // Set threshold

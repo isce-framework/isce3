@@ -130,10 +130,19 @@ cdef class pyMetadata:
     @sensingStart.setter
     def sensingStart(self, pyDateTime dtime):
         self.c_metadata.sensingStart = deref(dtime.c_datetime)
+    
+    def archive(self, pyIH5File h5file, mode='primary'):
+        '''
+        Load metadata properties from H5 product.
 
-    def archive(self, metadata):
-        load_archive_reference[Metadata](
-            pyStringToBytes(metadata), 'Radar', self.c_metadata
-        )
+        Args:
+            h5file (pyIH5File): IH5File for H5 product.
+
+        Return:
+            None
+        '''
+        load(deref(h5file.c_ih5file),
+             self.c_metadata,
+             <string> pyStringToBytes(mode))
 
 # end of file 

@@ -80,7 +80,6 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
     // Initialization
     cartesian_t targetVec, targetLLH_old, targetVec_old,
                 lookVec, delta, delta_temp, vhat;
-    const double degrees = 180.0 / M_PI;
 
     // Compute normalized velocity
     LinAlg::unitVec(state.velocity(), vhat);

@@ -23,10 +23,10 @@
 // pull in some isce::core namespaces
 using isce::core::Basis;
 using isce::core::Pixel;
-using isce::core::Raster;
 using isce::core::Poly2d;
 using isce::core::LinAlg;
 using isce::core::StateVector;
+using isce::io::Raster;
 
 // Main topo driver
 void isce::geometry::Topo::
@@ -43,6 +43,8 @@ topo(Raster & demRaster,
 
     // Output layers
     TopoLayers layers(_meta.width);
+
+    { // Topo scope for creating output rasters
 
     // Create rasters for individual layers
     Raster xRaster = Raster(outdir + "/x.rdr", _meta.width, _meta.length, 1,
@@ -74,9 +76,6 @@ topo(Raster & demRaster,
     float demmax, dem_avg;
     demInterp.computeHeightStats(demmax, dem_avg, info);
 
-    // Initialize LLH to middle of input DEM and average height
-    cartesian_t mid = demInterp.midLonLat(dem_avg);
-
     // For each line
     size_t totalconv = 0;
     for (int line = 0; line < _meta.length; line++) {
@@ -101,7 +100,6 @@ topo(Raster & demRaster,
         const double satVmag = LinAlg::norm(state.velocity());
 
         // For each slant range bin
-        const double radians = M_PI / 180.0;
         #pragma omp parallel for reduction(+:totalconv)
         for (int rbin = 0; rbin < _meta.width; ++rbin) {
 
@@ -141,6 +139,19 @@ topo(Raster & demRaster,
         simRaster.setLine(layers.sim(), line);
     }
 
+    // Print out convergence statistics
+    info << "Total convergence: " << totalconv << " out of "
+         << (_meta.width * _meta.length) << pyre::journal::endl;
+
+    // Print out timing information and reset
+    auto timerEnd = std::chrono::steady_clock::now();
+    const double elapsed = 1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
+        timerEnd - timerStart).count();
+    info << "Elapsed processing time: " << elapsed << " sec"
+         << pyre::journal::newline;
+
+    } // end Topo scope to release raster resources
+
     // Write out multi-band topo VRT
     const std::vector<Raster> rasterTopoVec = {
         Raster(outdir + "/x.rdr" ),
@@ -155,17 +166,6 @@ topo(Raster & demRaster,
     Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
     // Set its EPSG code
     vrt.setEPSG(_epsgOut);
-
-    // Print out timing information and reset
-    auto timerEnd = std::chrono::steady_clock::now();
-    const double elapsed = 1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
-        timerEnd - timerStart).count();
-    info << "Elapsed processing time: " << elapsed << " sec"
-         << pyre::journal::newline;
-
-    // Print out convergence statistics
-    info << "Total convergence: " << totalconv << " out of "
-         << (_meta.width * _meta.length) << pyre::journal::endl;
 
 }
 
@@ -280,19 +280,12 @@ void isce::geometry::Topo::
 _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel,
                      StateVector & state, Basis & TCNbasis, DEMInterpolator & demInterp) {
 
-    cartesian_t targetXYZ, satToGround, satLLH, enu, vhat;
+    cartesian_t targetXYZ, satToGround, enu, vhat;
     cartmat_t enumat, xyz2enu;
     const double degrees = 180.0 / M_PI;
-    const double radians = M_PI / 180.0;
-
-    // Cache TCN basis vectors
-    const cartesian_t that = TCNbasis.x0();
-    const cartesian_t nhat = TCNbasis.x2();
 
     // Unpack the range pixel data
     const size_t bin = pixel.bin();
-    const double rng = pixel.range();
-    const double dopfact = pixel.dopfact();
 
     // Convert lat/lon values to output coordinate system
     cartesian_t xyzOut;

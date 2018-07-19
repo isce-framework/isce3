@@ -15,6 +15,7 @@ RECURSE_DIRS = \
 # the ones that are always available
 PACKAGES = \
     core \
+    io \
     geometry \
 
 # project settings: do not remove core directory (core usually refers core dump file)
