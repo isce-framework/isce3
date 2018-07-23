@@ -4,9 +4,12 @@
 # Copyright 2017
 #
 
+import numpy as np
+cimport numpy as np
 from cython.operator cimport dereference as deref
 from libcpp cimport bool
-from Pegtrans cimport Pegtrans, orbitConvMethod
+from Pegtrans cimport Pegtrans
+
 
 cdef class pyPegtrans:
     cdef Pegtrans *c_pegtrans
@@ -56,6 +59,7 @@ cdef class pyPegtrans:
         for i in range(3):
             for j in range(3):
                 self.c_pegtrans.matinv[i][j] = a[i][j]
+
     @property
     def ov(self):
         a = [0.,0.,0.]
@@ -69,15 +73,18 @@ cdef class pyPegtrans:
             return
         for i in range(3):
             self.c_pegtrans.ov[i] = a[i]
+
     @property
     def radcur(self):
         return self.c_pegtrans.radcur
     @radcur.setter
     def radcur(self, double a):
         self.c_pegtrans.radcur = a
+
     def dPrint(self):
         print("Mat = "+str(self.mat)+", matinv = "+str(self.matinv)+", ov = "+str(self.ov)+
               ", radcur = "+str(self.radcur))
+
     def copy(self, pt):
         try:
             self.mat = pt.mat
@@ -89,61 +96,181 @@ cdef class pyPegtrans:
 
     def radarToXYZ(self, pyEllipsoid a, pyPeg b):
         self.c_pegtrans.radarToXYZ(deref(a.c_ellipsoid),deref(b.c_peg))
-    def convertSCHtoXYZ(self, list a, list b, int c):
-        cdef cartesian_t _a
-        cdef cartesian_t _b
-        cdef orbitConvMethod _c
-        for i in range(3):
-            _a[i] = a[i]
-            _b[i] = b[i]
-        if (c == orbitConvMethod.SCH_2_XYZ):
-            _c = orbitConvMethod.SCH_2_XYZ
-        elif (c == orbitConvMethod.XYZ_2_SCH):
-            _c = orbitConvMethod.XYZ_2_SCH
-        else:
-            print("Error: Unknown orbit conversion method.")
-            return
-        self.c_pegtrans.convertSCHtoXYZ(_a,_b,_c)
-        for i in range(3):
-            a[i] = _a[i]
-            b[i] = _b[i]
-    def convertSCHdotToXYZdot(self, list a, list b, list c, list d, int e):
-        cdef cartesian_t _a
-        cdef cartesian_t _b
-        cdef cartesian_t _c
-        cdef cartesian_t _d
-        cdef orbitConvMethod _e
-        for i in range(3):
-            _a[i] = a[i]
-            _b[i] = b[i]
-            _c[i] = c[i]
-            _d[i] = d[i]
-        if (e == orbitConvMethod.SCH_2_XYZ):
-            _e = orbitConvMethod.SCH_2_XYZ
-        elif (e == orbitConvMethod.XYZ_2_SCH):
-            _e = orbitConvMethod.XYZ_2_SCH
-        else:
-            print("Error: Unknown orbit conversion method.")
-            return
-        self.c_pegtrans.convertSCHdotToXYZdot(_a,_b,_c,_d,_e)
-        for i in range(3):
-            a[i] = _a[i]
-            b[i] = _b[i]
-            c[i] = _c[i]
-            d[i] = _d[i]
-    def SCHbasis(self, list a, list b, list c):
-        cdef cartesian_t _a
-        cdef cartmat_t _b
-        cdef cartmat_t _c
-        for i in range(3):
-            _a[i] = a[i]
-            for j in range(3):
-                _b[i][j] = b[i][j]
-                _c[i][j] = c[i][j]
-        self.c_pegtrans.SCHbasis(_a,_b,_c)
-        for i in range(3):
-            a[i] = _a[i]
-            for j in range(3):
-                b[i][j] = _b[i][j]
-                c[i][j] = _c[i][j]
 
+    def convertXYZtoSCH(self, xyz):
+        """
+        Transform ECEF xyz coordinates to SCH.
+
+        Args:
+            xyz (np.array[3 or nx3]): triplet of floats representing XYZ.
+
+        Returns:
+            np.array[3 or nx3]: triplet of floats representing SCH.
+        """
+        # Standardize input coordinates
+        xyz = np.atleast_2d(xyz)
+        cdef unsigned long npts = xyz.shape[0]
+
+        # Create output array and memory view
+        sch = np.empty((npts, 3), dtype=np.double)
+        cdef double[:,:] schview = sch
+
+        # Loop over points
+        cdef unsigned long i, j
+        cdef cartesian_t xyz_in, sch_out
+        for i in range(npts):
+            # Copy current coordinate to cartesian_t
+            for j in range(3):
+                xyz_in[j] = xyz[i,j]
+            # Perform conversion
+            self.c_pegtrans.convertXYZtoSCH(xyz_in, sch_out)
+            # Save result
+            for j in range(3):
+                schview[i,j] = sch_out[j]
+
+        return np.squeeze(sch)
+
+    def convertSCHtoXYZ(self, sch):
+        """
+        Transform SCH to ECEF xyz coordinates.
+
+        Args:
+            sch (np.array[3 or nx3]): triplet of floats representing SCH.
+
+        Returns:
+            np.array[3 or nx3]: triplet of floats representing ECEF XYZ.
+        """
+        # Standardize input coordinates
+        sch = np.atleast_2d(sch)
+        cdef unsigned long npts = sch.shape[0]
+
+        # Create output array and memory view
+        xyz = np.empty((npts, 3), dtype=np.double)
+        cdef double[:,:] xyzview = xyz
+
+        # Loop over points
+        cdef unsigned long i, j
+        cdef cartesian_t sch_in, xyz_out
+        for i in range(npts):
+            # Copy current coordinate to cartesian_t
+            for j in range(3):
+                sch_in[j] = sch[i,j]
+            # Perform conversion
+            self.c_pegtrans.convertSCHtoXYZ(sch_in, xyz_out)
+            # Save result
+            for j in range(3):
+                xyzview[i,j] = xyz_out[j]
+
+        return np.squeeze(xyz)
+
+    def convertXYZdottoSCHdot(self, sch, xyzdot):
+        """
+        Transform ECEF xyz velocities to SCH velocities.
+
+        Args:
+            sch (np.array[3 or nx3]): triplet of floats representing SCH.
+            xyzdot (np.array[3 or nx3]): triplet of floats representing XYZ velocities.
+
+        Returns:
+            np.array[3 or nx3]: triplet of floats representing SCH velocities.
+        """
+        # Standardize input coordinates
+        sch = np.atleast_2d(sch)
+        xyzdot = np.atleast_2d(xyzdot)
+        cdef unsigned long npts = sch.shape[0]
+        assert sch.shape == xyzdot.shape
+
+        # Create output array and memory view
+        schdot = np.empty((npts, 3), dtype=np.double)
+        cdef double[:,:] schdotview = schdot
+
+        # Loop over points
+        cdef unsigned long i, j
+        cdef cartesian_t sch_in, xyzdot_in, schdot_out
+        for i in range(npts):
+            # Copy current coordinates to cartesian_t
+            for j in range(3):
+                sch_in[j] = sch[i,j]
+                xyzdot_in[j] = xyzdot[i,j]
+            # Perform conversion
+            self.c_pegtrans.convertXYZdotToSCHdot(sch_in, xyzdot_in, schdot_out)
+            # Save result
+            for j in range(3):
+                schdotview[i,j] = schdot_out[j]
+
+        return np.squeeze(schdot)
+
+    def convertSCHdottoXYZdot(self, sch, schdot):
+        """
+        Transform SCH velocities to ECEF xyz velocities.
+
+        Args:
+            sch (np.array[3 or nx3]): triplet of floats representing SCH.
+            schdot (np.array[3 or nx3]): triplet of floats representing SCH velocities.
+
+        Returns:
+            np.array[3 or nx3]: triplet of floats representing ECEF xyz velocities.
+        """
+        # Standardize input coordinates
+        sch = np.atleast_2d(sch)
+        schdot = np.atleast_2d(schdot)
+        cdef unsigned long npts = sch.shape[0]
+        assert sch.shape == schdot.shape
+
+        # Create output array and memory view
+        xyzdot = np.empty((npts, 3), dtype=np.double)
+        cdef double[:,:] xyzdotview = xyzdot
+
+        # Loop over points
+        cdef unsigned long i, j
+        cdef cartesian_t sch_in, schdot_in, xyzdot_out
+        for i in range(npts):
+            # Copy current coordinates to cartesian_t
+            for j in range(3):
+                sch_in[j] = sch[i,j]
+                schdot_in[j] = schdot[i,j]
+            # Perform conversion
+            self.c_pegtrans.convertSCHdotToXYZdot(sch_in, schdot_in, xyzdot_out)
+            # Save result
+            for j in range(3):
+                xyzdotview[i,j] = xyzdot_out[j]
+
+        return np.squeeze(xyzdot)
+
+    def SCHbasis(self, sch):
+        """
+        Computes transformation matrix to-and-from SCH and XYZ frames.
+
+        Args:
+            sch(np.array[3]): triplet of floats representing current SCH position.
+        
+        Returns:
+            R_xyz2sch(np.array[3,3]): transformation array XYZ->SCH
+            R_sch2xyz(np.array[3,3]): transformation array SCH->XYZ
+        """
+        sch = np.array(sch)
+
+        # Allocate arrays for transformation arrays
+        R_sch2xyz = np.zeros((3,3))
+        R_xyz2sch = np.zeros((3,3))
+
+        # Initialize cartesian objects
+        cdef cartesian_t sch_in
+        cdef cartmat_t M_sch2xyz
+        cdef cartmat_t M_xyz2sch
+        cdef i, j
+        for j in range(3):
+            sch_in[j] = sch[j]
+
+        # Compute matrices
+        self.c_pegtrans.SCHbasis(sch_in, M_xyz2sch, M_sch2xyz)
+
+        # Copy data to outputs
+        for i in range(3):
+            for j in range(3):
+                R_sch2xyz[i,j] = M_sch2xyz[i][j]
+                R_xyz2sch[i,j] = M_xyz2sch[i][j]
+
+        return R_xyz2sch, R_sch2xyz
+
+# end of file

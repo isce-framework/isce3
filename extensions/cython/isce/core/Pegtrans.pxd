@@ -9,11 +9,6 @@ from Cartesian cimport cartesian_t, cartmat_t
 from Ellipsoid cimport Ellipsoid
 from Peg cimport Peg
 
-cdef extern from "isce/core/Constants.h" namespace "isce::core":
-    cdef enum orbitConvMethod:
-        SCH_2_XYZ = 0
-        XYZ_2_SCH = 1
-
 cdef extern from "isce/core/Pegtrans.h" namespace "isce::core":
     cdef cppclass Pegtrans:
         cartmat_t mat
@@ -23,9 +18,14 @@ cdef extern from "isce/core/Pegtrans.h" namespace "isce::core":
 
         Pegtrans(double) except +
         Pegtrans() except +
-        Pegtrans(const Pegtrans&) except +
-        void radarToXYZ(Ellipsoid&,Peg&)
-        void convertSCHtoXYZ(cartesian_t&,cartesian_t&,orbitConvMethod)
-        void convertSCHdotToXYZdot(cartesian_t&,cartesian_t&,cartesian_t&,cartesian_t&,
-                                   orbitConvMethod)
+        Pegtrans(const Pegtrans &) except +
+        void radarToXYZ(Ellipsoid &, Peg &)
+
+        void convertXYZtoSCH(const cartesian_t & xyzv, cartesian_t & schv)
+        void convertSCHtoXYZ(const cartesian_t & schv, cartesian_t & xyzv)
+        void convertXYZdotToSCHdot(const cartesian_t & sch, const cartesian_t & xyzdot,
+                                   cartesian_t & schdot)
+        void convertSCHdotToXYZdot(const cartesian_t & sch, const cartesian_t & schdot,
+                                   cartesian_t & xyzdot)
+
         void SCHbasis(cartesian_t&,cartmat_t&,cartmat_t&)
