@@ -14,7 +14,6 @@
 #include "Pegtrans.h"
 using isce::core::Ellipsoid;
 using isce::core::LinAlg;
-using isce::core::orbitConvMethod;
 using isce::core::Peg;
 using isce::core::Pegtrans;
 using std::invalid_argument;
@@ -50,55 +49,56 @@ void Pegtrans::radarToXYZ(const Ellipsoid &elp, const Peg &peg) {
     LinAlg::linComb(1., p, -radcur, up, ov);
 }
 
-void Pegtrans::convertSCHtoXYZ(cartesian_t &schv, cartesian_t &xyzv, orbitConvMethod ctype)
-                               const {
+void Pegtrans::convertXYZtoSCH(const cartesian_t & xyzv, cartesian_t & schv) const {
     /*
-     * Applies the affine matrix provided to convert from the radar sch coordinates to WGS-84 xyz
-     * coordinates or vice-versa
+     * Applies the affine matrix provided to convert from WGS-84 xyz to radar sch
+     * coordinates.
     */
     cartesian_t schvt, llh;
+    // Create reference sphere
     Ellipsoid sph(radcur,0.);
-
-    if (ctype == SCH_2_XYZ) {
-        llh = {schv[0]/radcur, schv[1]/radcur, schv[2]};
-        sph.lonLatToXyz(llh, schvt);
-        LinAlg::matVec(mat, schvt, xyzv);
-        LinAlg::linComb(1., xyzv, 1., ov, xyzv);
-    } else if (ctype == XYZ_2_SCH) {
-        LinAlg::linComb(1., xyzv, -1., ov, schvt);
-        LinAlg::matVec(matinv, schvt, schv);
-        sph.xyzToLonLat(schv, llh);
-        schv = {radcur*llh[0], radcur*llh[1], llh[2]};
-    } else {
-        string errstr = "Unrecognized conversion type in Pegtrans::convertSCHtoXYZ.\n";
-        errstr += "Expected one of:\n";
-        errstr += "  SCH_2_XYZ (== "+to_string(SCH_2_XYZ)+")\n";
-        errstr += "  XYZ_2_SCH (== "+to_string(XYZ_2_SCH)+")\n";
-        errstr += "Encountered conversion type "+to_string(ctype);
-        throw invalid_argument(errstr);
-    }
+    // Perform conversion
+    LinAlg::linComb(1., xyzv, -1., ov, schvt);
+    LinAlg::matVec(matinv, schvt, schv);
+    sph.xyzToLonLat(schv, llh);
+    schv = {radcur*llh[0], radcur*llh[1], llh[2]};
 }
 
-void Pegtrans::convertSCHdotToXYZdot(const cartesian_t &sch, const cartesian_t &xyz,
-                                     cartesian_t &schdot, cartesian_t &xyzdot,
-                                     orbitConvMethod ctype) const {
+void Pegtrans::convertSCHtoXYZ(const cartesian_t & schv, cartesian_t & xyzv) const {
+    /*
+     * Applies the affine matrix provided to convert from the radar sch coordinates to WGS-84 xyz
+     * coordinates.
+    */
+    cartesian_t schvt, llh;
+    // Create reference sphere
+    Ellipsoid sph(radcur,0.);
+    // Perform conversion
+    llh = {schv[0]/radcur, schv[1]/radcur, schv[2]};
+    sph.lonLatToXyz(llh, schvt);
+    LinAlg::matVec(mat, schvt, xyzv);
+    LinAlg::linComb(1., xyzv, 1., ov, xyzv);
+}
+
+void Pegtrans::convertXYZdotToSCHdot(const cartesian_t & sch, const cartesian_t & xyzdot,
+                                     cartesian_t & schdot) const {
+    /*
+     * Applies the affine matrix provided to convert from the WGS-84 xyz
+     * velocity to radar sch velocity.
+    */
+    cartmat_t schxyzmat, xyzschmat;
+    SCHbasis(sch, xyzschmat, schxyzmat);
+    LinAlg::matVec(xyzschmat, xyzdot, schdot);
+}
+
+void Pegtrans::convertSCHdotToXYZdot(const cartesian_t & sch, const cartesian_t & schdot,
+                                     cartesian_t & xyzdot) const {
     /*
      * Applies the affine matrix provided to convert from the radar sch velociy to WGS-84 xyz
      * velocity or vice-versa
     */
     cartmat_t schxyzmat, xyzschmat;
     SCHbasis(sch, xyzschmat, schxyzmat);
-
-    if (ctype == SCH_2_XYZ) LinAlg::matVec(schxyzmat, schdot, xyzdot);
-    else if (ctype == XYZ_2_SCH) LinAlg::matVec(xyzschmat, xyzdot, schdot);
-    else {
-        string errstr = "Unrecognized conversion type in Pegtrans::convertSCHdotToXYZdot.\n";
-        errstr += "Expected one of:\n";
-        errstr += "  SCH_2_XYZ (== "+to_string(SCH_2_XYZ)+")\n";
-        errstr += "  XYZ_2_SCH (== "+to_string(XYZ_2_SCH)+")\n";
-        errstr += "Encountered conversion type "+to_string(ctype);
-        throw invalid_argument(errstr);
-    }
+    LinAlg::matVec(schxyzmat, schdot, xyzdot);
 }
 
 void Pegtrans::SCHbasis(const cartesian_t &sch, cartmat_t & xyzschmat,

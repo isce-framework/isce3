@@ -33,12 +33,6 @@ namespace isce { namespace core {
     /**Common datatype for collection of 3 triplets of doubles*/
     typedef std::array<std::array<double, 3>, 3> cartmat_t;
 
-    /**Enumeration type to indicate coordinate conversion direction*/
-    enum orbitConvMethod {
-        SCH_2_XYZ,
-        XYZ_2_SCH
-    };
-
     /**Enumeration type to indicate coordinate system of orbits*/
     enum orbitType {
         WGS84_ORBIT,
