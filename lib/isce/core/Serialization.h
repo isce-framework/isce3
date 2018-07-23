@@ -320,7 +320,7 @@ namespace isce {
             
             // Set other polynomial properties
             poly.rangeOrder = poly.coeffs.size() - 1;
-            poly.azimuthOrder = 1;
+            poly.azimuthOrder = 0;
             poly.rangeMean = 0.0;
             poly.azimuthMean = 0.0;
             poly.rangeNorm = 1.0;
