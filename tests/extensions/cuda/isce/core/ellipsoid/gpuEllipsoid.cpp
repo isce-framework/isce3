@@ -32,7 +32,7 @@ struct GpuEllipsoidTest : public ::testing::Test {
     }
     virtual void TearDown() {
         if (fails > 0) {
-            std::cerr << "Ellipsoid::TearDown sees failures" << std::endl;
+            std::cerr << "gpuEllipsoid::TearDown sees failures" << std::endl;
         }
     }
     unsigned fails;
