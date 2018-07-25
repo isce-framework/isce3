@@ -1,0 +1,48 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+
+#if !defined(ISCE_PRODUCT_IDENTIFICATION_ICC)
+#error "Identification.icc is an implementation detail of class Identification."
+#endif
+
+/** @param[in]      isce::product::Identification. */
+isce::product::Identification(const isce::product::Identification & id) :
+    _lookDirection(id.lookDirection()), _ellipsoid(id.ellipsoid()) {};
+
+/** @param[in]      isce::product::Identification. */
+isce::product::Identification &
+isce::product::Identification::
+operator=(const isce::product::Identification & id) {
+    _lookDirection = id.lookDirection();
+    _ellipsoid = id.ellipsoid();
+}
+
+/** @param[out]     std::string for look direction. */
+std::string
+isce::product::Identification::
+lookDirection() const {
+    return _lookDirection;
+}
+
+/** @param[in]      std::string for look direction. */
+void
+isce::product::Identification::
+lookDirection(std::string & look) {
+    _lookDirection = look;
+}
+
+/** @param[out]     isce::core::Ellipsoid. */
+isce::core::Ellipsoid
+isce::product::Identification::
+ellipsoid() const {
+    return _ellipsoid;
+}
+
+/** @param[in]      isce::core::Ellipsoid. */
+void
+isce::product::Identification::
+ellipsoid(isce::core::Ellipsoid & ellps) {
+    _ellipsoid = ellps;
+}
+
+// end of file
