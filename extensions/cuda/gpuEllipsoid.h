@@ -17,7 +17,6 @@
 #endif
 
 #include <cmath>
-#include <vector>
 #include "Constants.h"
 #include "Ellipsoid.h"
 
