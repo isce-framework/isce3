@@ -1,6 +1,6 @@
 //
-// Author: Joshua Cohen
-// Copyright 2017
+// Author: Joshua Cohen, Liang Yu
+// Copyright 2017-2018
 //
 
 #ifndef __ISCE_CORE_CUDA_GPUELLIPSOID_H__
@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <vector>
+#include "Constants.h"
 #include "Ellipsoid.h"
 
 namespace isce { namespace core { namespace cuda {
@@ -41,8 +42,8 @@ namespace isce { namespace core { namespace cuda {
         CUDA_DEV void TCNbasis(double*,double*,double*,double*,double*);
 
         // Host functions to test underlying device functions in a single-threaded context
-        CUDA_HOST void latLonToXyz_h(std::vector<double>&,std::vector<double>&);
-        CUDA_HOST void xyzToLatLon_h(std::vector<double>&,std::vector<double>&);
+        CUDA_HOST void latLonToXyz_h(cartesian_t&,cartesian_t&);
+        CUDA_HOST void xyzToLatLon_h(cartesian_t&,cartesian_t&);
     };
 
     CUDA_HOSTDEV inline gpuEllipsoid& gpuEllipsoid::operator=(const gpuEllipsoid &rhs) {

@@ -1,6 +1,6 @@
 //
-// Author: Joshua Cohen
-// Copyright 2017
+// Author: Joshua Cohen, Liang Yu
+// Copyright 2017-2018
 //
 
 #include <cmath>
@@ -56,15 +56,15 @@ __global__ void latLonToXyz_d(gpuEllipsoid elp, double *llh, double *xyz) {
     elp.latLonToXyz(llh, xyz);
 }
 
-__host__ void gpuEllipsoid::latLonToXyz_h(vector<double> &llh, vector<double> &xyz) {
+__host__ void gpuEllipsoid::latLonToXyz_h(cartesian_t &llh, cartesian_t &xyz) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread. This function
      *  is primarily meant to be used as a consistency check in the test suite, but may be used in
      *  other contexts.
      */
     // Check inputs for valid length
-    checkVecLen(llh,3);
-    checkVecLen(xyz,3);
+    //checkVecLen(llh,3);
+    //checkVecLen(xyz,3);
     // Malloc memory on the GPU and copy the llh inputs over
     double *llh_d, *xyz_d;
     cudaSetDevice(0);
@@ -88,15 +88,16 @@ __global__ void xyzToLatLon_d(gpuEllipsoid elp, double *xyz, double *llh) {
     elp.xyzToLatLon(xyz, llh);
 }
 
-__host__ void gpuEllipsoid::xyzToLatLon_h(vector<double> &xyz, vector<double> &llh) {
+
+__host__ void gpuEllipsoid::xyzToLatLon_h(cartesian_t &xyz, cartesian_t &llh) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread. This function
      *  is primarily meant to be used as a consistency check in the test suite, but may be used in
      *  other contexts.
      */
      // Check inputs for valid length
-     checkVecLen(xyz,3);
-     checkVecLen(llh,3);
+     //checkVecLen(xyz,3);
+     //checkVecLen(llh,3);
      // Malloc memory on the GPU and copy the xyz inputs over
      double *xyz_d, *llh_d;
      cudaSetDevice(0);
