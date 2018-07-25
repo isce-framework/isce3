@@ -47,7 +47,7 @@ TEST_F(Poly1DTest, MeanShift)
     isce::core::Poly1d refpoly(2, 0.0, 1.0);
     refpoly.setCoeff(0, 0.0);
     refpoly.setCoeff(1, 1.0);
-    refpoly.setCoeff(0, 0.0);
+    refpoly.setCoeff(2, 0.0);
 
     for(size_t i=0; i<5; i++)
     {
@@ -87,9 +87,6 @@ TEST_F(Poly1DTest, NormShift)
 
 TEST_F(Poly1DTest, Derivative)
 {
-    //Use square polynomial for testing
-    isce::core::Poly1d refpoly(5,0.0,1.0);
-
     for(size_t i=1; i<6; i++)
     {
         isce::core::Poly1d refpoly(i, 0.0, 1.0);
