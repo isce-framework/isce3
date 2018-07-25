@@ -14,10 +14,10 @@ using isce::core::cuda::gpuEllipsoid;
 using isce::core::cuda::gpuLinAlg;
 
 __device__ void gpuEllipsoid::latLonToXyz(double *llh, double *xyz) {
-    double re = rEast(llh[0]);
-    xyz[0] = (re + llh[2]) * cos(llh[0]) * cos(llh[1]);
-    xyz[1] = (re + llh[2]) * cos(llh[0]) * sin(llh[1]);
-    xyz[2] = ((re * (1. - e2)) + llh[2]) * sin(llh[0]);
+    double re = rEast(llh[1]);
+    xyz[0] = (re + llh[2]) * cos(llh[1]) * cos(llh[0]);
+    xyz[1] = (re + llh[2]) * cos(llh[1]) * sin(llh[0]);
+    xyz[2] = ((re * (1. - e2)) + llh[2]) * sin(llh[1]);
 }
 
 __device__ void gpuEllipsoid::xyzToLatLon(double *xyz, double *llh) {
@@ -31,8 +31,8 @@ __device__ void gpuEllipsoid::xyzToLatLon(double *xyz, double *llh) {
     double w = (e2 * (u + rv - q)) / (2. * rv);
     double k = sqrt(u + rv + pow(w,2)) - w;
     double d = (k * sqrt(pow(xyz[0],2) + pow(xyz[1],2))) / (k + e2);
-    llh[0] = atan2(xyz[2],d);
-    llh[1] = atan2(xyz[1],xyz[0]);
+    llh[1] = atan2(xyz[2],d);
+    llh[0] = atan2(xyz[1],xyz[0]);
     llh[2] = ((k + e2 - 1.) * sqrt(pow(d,2) + pow(xyz[2],2))) / k;
 }
 

@@ -55,7 +55,6 @@ struct GpuEllipsoidTest : public ::testing::Test {
         EXPECT_NEAR(gpu_xyz[2], cpu_xyz[2], 1.0e-6);\
         xyz = ref_xyz;                  \
         wgs84_gpu.xyzToLatLon_h(xyz, gpu_llh);    \
-        CUDA_HOST void xyzToLLonLat_h(std::vector<double>&,std::vector<double>&); \
         wgs84_cpu.xyzToLonLat(xyz, cpu_llh);    \
         EXPECT_NEAR(gpu_llh[0], ref_llh[0], 1.0e-9);\
         EXPECT_NEAR(gpu_llh[1], ref_llh[1], 1.0e-9);\
