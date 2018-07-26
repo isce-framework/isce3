@@ -336,15 +336,15 @@ __global__ void interpolateSCHOrbit_d(gpuOrbit orb, double tintp, double *opos, 
     *retcode = orb.interpolateSCHOrbit(tintp, opos, ovel);
 }
 
-__host__ int gpuOrbit::interpolateSCHOrbit_h(double tintp, vector<double> &opos,
-                                               vector<double> &ovel) {
+__host__ int gpuOrbit::interpolateSCHOrbit_h(double tintp, cartesian_t &opos,
+                                               cartesian_t &ovel) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread for consistency
      *  checking.
      */
     // Check inputs for valid length
-    checkVecLen(opos, 3);
-    checkVecLen(ovel, 3);
+    // checkVecLen(opos, 3);
+    // checkVecLen(ovel, 3);
     // Malloc memory on the GPU and copy inputs over
     double *opos_d, *ovel_d;
     int *retcode_d;

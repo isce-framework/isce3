@@ -52,7 +52,7 @@ namespace isce { namespace core { namespace cuda {
         // Host functions to test underlying device functions in a single-threaded context
         CUDA_HOST int interpolateWGS84Orbit_h(double,std::vector<double>&,std::vector<double>&);
         CUDA_HOST int interpolateLegendreOrbit_h(double,std::vector<double>&,std::vector<double>&);
-        CUDA_HOST int interpolateSCHOrbit_h(double,std::vector<double>&,std::vector<double>&);
+        CUDA_HOST int interpolateSCHOrbit_h(double,cartesian_t&,cartesian_t&);
     };
 
     CUDA_DEV inline void gpuOrbit::getStateVector(int idx, double &t, double *pos, double *vel) {
