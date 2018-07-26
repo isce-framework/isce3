@@ -6,7 +6,8 @@
 #endif
 
 /** @param[in]              isce::radar::Radar. */
-isce::radar::Radar(const isce::radar::Radar & radar) :
+isce::radar::Radar::
+Radar(const isce::radar::Radar & radar) :
     _contentDoppler(radar.contentDoppler()),
     _skewDoppler(radar.skewDoppler()) {}
 
@@ -16,6 +17,7 @@ isce::radar::Radar::
 operator=(const isce::radar::Radar & radar) {
     _contentDoppler = radar.contentDoppler();
     _skewDoppler = radar.skewDoppler();
+    return *this;
 }
 
 /** @param[out]             isce::core::Poly2d. */

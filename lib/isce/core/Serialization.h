@@ -31,6 +31,7 @@
 
 // isce::io
 #include <isce/io/IH5.h>
+#include <isce/io/Serialization.h>
 
 //! The isce namespace
 namespace isce {
@@ -53,45 +54,6 @@ namespace isce {
             metastream << metadata;
             cereal::XMLInputArchive archive(metastream);
             archive(cereal::make_nvp(objectTag, object));
-        }
-
-        /** Load scalar dataset from HDF5.
-
-         * @param[in] file          HDF5 file object.
-         * @param[in] datasetPath   H5 path of dataset.
-         * @param[in] v             Scalar return value. */
-        template <typename T>
-        void loadFromH5(isce::io::IH5File & file, const std::string & datasetPath, T & v) {
-            // Open dataset
-            isce::io::IDataSet dataset = file.openDataSet(datasetPath);
-            // Read the scalar dataset
-            dataset.read(v);
-        }
-
-        /** Load vector dataset from HDF5.
-         *
-         * @param[in] file          HDF5 file object.
-         * @param[in] datasetPath   H5 path of dataset.
-         * @param[in] v             Vector to store dataset. */
-        template <typename T>
-        void loadFromH5(isce::io::IH5File & file, const std::string & datasetPath,
-                        std::vector<T> & v) {
-            // Open dataset
-            isce::io::IDataSet dataset = file.openDataSet(datasetPath);
-            // Read the vector dataset
-            dataset.read(v);
-        }
-
-        /** Get dimensions of complex imagery from HDF5.
-         *
-         * @param[in] file          HDF5 file object.
-         * @param[in] datasetPath   H5 path of image dataset. */
-        std::vector<int> getImageDims(isce::io::IH5File & file,
-                                      const std::string & datasetPath) {
-            // Open dataset
-            isce::io::IDataSet dataset = file.openDataSet(datasetPath);
-            // Get dimensions
-            return dataset.getDimensions();
         }
 
         // ------------------------------------------------------------------------
@@ -122,7 +84,7 @@ namespace isce {
             std::vector<std::string> ellpsList = file.find("ellipsoid");
             // Read data
             std::vector<double> ellpsData;
-            loadFromH5(file, ellpsList[0], ellpsData);
+            isce::io::loadFromH5(file, ellpsList[0], ellpsData);
             // Set ellipsoid properties
             ellps.a(ellpsData[0]);
             ellps.e2(ellpsData[1]);
@@ -163,17 +125,17 @@ namespace isce {
             orbit.refEpoch = refEpoch;
 
             // Load position
-            loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/position",
-                       orbit.position);
+            isce::io::loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/position",
+                                 orbit.position);
 
             // Load velocity
-            loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/velocity",
-                       orbit.velocity);
+            isce::io::loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/velocity",
+                                 orbit.velocity);
 
             // Load timestamp
             std::vector<FixedString> timestamps;
-            loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/timestamp",
-                         timestamps);
+            isce::io::loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/timestamp",
+                                 timestamps);
             orbit.nVectors = timestamps.size();
             orbit.UTCtime.resize(orbit.nVectors);
             orbit.epochs.resize(orbit.nVectors);
@@ -251,19 +213,19 @@ namespace isce {
             std::string path = "/science/complex_imagery/" + mode + "_mode";
 
             // Get dimension of imagery
-            std::vector<int> dims = getImageDims(file, path + "/hh");
+            std::vector<int> dims = isce::io::getImageDims(file, path + "/hh");
             meta.length = dims[0];
             meta.width = dims[1];
 
             // Load values
-            loadFromH5(file, path + "/slant_range_start", meta.rangeFirstSample);
-            loadFromH5(file, path + "/slant_range_spacing", meta.slantRangePixelSpacing);
-            loadFromH5(file, path + "/az_time_interval", pri);
-            loadFromH5(file, path + "/bandwidth", bandwidth);
-            loadFromH5(file, path + "/pulse_duration", meta.pulseDuration);
-            loadFromH5(file, path + "/freq_center", centerFrequency);
-            loadFromH5(file, path + "/zero_doppler_start_az_time", sensingStart);
-            loadFromH5(file, "/science/metadata/identification/look_direction", lookDir);
+            isce::io::loadFromH5(file, path + "/slant_range_start", meta.rangeFirstSample);
+            isce::io::loadFromH5(file, path + "/slant_range_spacing", meta.slantRangePixelSpacing);
+            isce::io::loadFromH5(file, path + "/az_time_interval", pri);
+            isce::io::loadFromH5(file, path + "/bandwidth", bandwidth);
+            isce::io::loadFromH5(file, path + "/pulse_duration", meta.pulseDuration);
+            isce::io::loadFromH5(file, path + "/freq_center", centerFrequency);
+            isce::io::loadFromH5(file, path + "/zero_doppler_start_az_time", sensingStart);
+            isce::io::loadFromH5(file, "/science/metadata/identification/look_direction", lookDir);
 
             // Fields not currently defined in HDF5 product
             meta.numberRangeLooks = 1;
@@ -316,7 +278,7 @@ namespace isce {
             }
 
             // Configure the polynomial coefficients
-            loadFromH5(file, polys[0], poly.coeffs);
+            isce::io::loadFromH5(file, polys[0], poly.coeffs);
             
             // Set other polynomial properties
             poly.rangeOrder = poly.coeffs.size() - 1;

@@ -11,9 +11,11 @@
 #ifndef ISCE_RADAR_SERIALIZATION_H
 #define ISCE_RADAR_SERIALIZATION_H
 
+// isce::core
+#include <isce/core/Serialization.h>
+
 // isce::io
 #include <isce/io/IH5.h>
-#include <isce/io/Serialization.h>
 
 // isce::radar
 #include <isce/radar/Radar.h>

@@ -15,6 +15,7 @@ isce::product::Identification::
 operator=(const isce::product::Identification & id) {
     _lookDirection = id.lookDirection();
     _ellipsoid = id.ellipsoid();
+    return *this;
 }
 
 /** @param[out]     std::string for look direction. */

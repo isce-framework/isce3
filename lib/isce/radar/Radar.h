@@ -26,10 +26,10 @@ class isce::radar::Radar {
         Radar() {}
 
         /** Copy constructor. */
-        inline Radar(const & Radar);
+        inline Radar(const Radar &);
 
         /** Assignment operator. */
-        inline Radar & operator=(const & Radar);
+        inline Radar & operator=(const Radar &);
 
         /** Get copy of content Doppler polynomial */
         inline isce::core::Poly2d contentDoppler() const;

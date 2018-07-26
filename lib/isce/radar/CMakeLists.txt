@@ -1,6 +1,6 @@
 
 #Mimicking mm behaviour
-set(PACKAGENAME product)
+set(PACKAGENAME radar)
 string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 
 #####Library headers

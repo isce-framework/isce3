@@ -26,6 +26,7 @@ operator=(const isce::product::ImageMode & mode) {
     _rangePixelSpacing = mode.rangePixelSpacing();
     _startAzTime = mode.startAzTime():
     _endAzTime = mode.endAzTime();
+    return *this;
 }
 
 /** @param[out]             Mode type. */
