@@ -1,0 +1,23 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+
+#if !defined(ISCE_PRODUCT_PRODUCT_ICC)
+#error "Product.icc is an implementation detail of class Product."
+#endif
+
+/** @param[in]              Path for HDF5 product. */
+isce::product::Product::
+Product(isce::io::IH5File & file) {
+    // Configure complex imagery
+    load(file, _complexImagery);
+    // Configure metadata
+    load(file, _metadata);
+}
+
+/** @param[in]              ComplexImagery object.
+ *  @param[in]              Metadata object. */
+isce::product::Product::
+Product(const ComplexImagery & imagery, const Metadata & meta) :
+    _complexImagery(imagery), _metadata(meta) {}
+
+// end of file
