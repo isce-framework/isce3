@@ -7,9 +7,13 @@
 #ifndef ISCE_PRODUCT_PRODUCT_H
 #define ISCE_PRODUCT_PRODUCT_H
 
+// std
+#include <string>
+
 // isce::product
 #include <isce/product/ComplexImagery.h>
 #include <isce/product/Metadata.h>
+#include <isce/product/Serialization.h>
 
 // Declarations
 namespace isce {
@@ -22,19 +26,27 @@ namespace isce {
 class isce::product::Product {
 
     public:
-        /** Default constructor. */
-        Product() {};
+        /** Constructor from IH5File object. */
+        inline Product(isce::io::IH5File &);
 
-        /** Get a reference to the complex imagery. */
-        ComplexImagery & complexImagery() { return _complexImagery; }
+        /** Constructor with ComplexImagery and Metadata objects. */
+        inline Product(const ComplexImagery &, const Metadata &);
 
-        /** Get a reference to the metadata. */
-        Metadata & metadata() { return _metadata; }
+        /** Get a const reference to the complex imagery. */
+        inline const ComplexImagery & complexImagery() const { return _complexImagery; }
+
+        /** Get a const reference to the metadata. */
+        inline const Metadata & metadata() const { return _metadata; }
 
     private:
         ComplexImagery _complexImagery;
         Metadata _metadata;
 };
+
+// Get inline implementations for ImageMode
+#define ISCE_PRODUCT_PRODUCT_ICC
+#include "Product.icc"
+#undef ISCE_PRODUCT_PRODUCT_ICC
 
 #endif
 

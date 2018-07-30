@@ -40,7 +40,7 @@ namespace isce {
 
         // Archiving any isce::core object by pointer
         template <typename T>
-        void load_archive(std::string metadata, char * objectTag, T * object) {
+        inline void load_archive(std::string metadata, char * objectTag, T * object) {
             std::stringstream metastream;
             metastream << metadata;
             cereal::XMLInputArchive archive(metastream);
@@ -49,7 +49,7 @@ namespace isce {
 
         // Archiving any isce::core object by reference
         template <typename T>
-        void load_archive_reference(std::string metadata, char * objectTag, T & object) {
+        inline void load_archive_reference(std::string metadata, char * objectTag, T & object) {
             std::stringstream metastream;
             metastream << metadata;
             cereal::XMLInputArchive archive(metastream);
@@ -61,13 +61,13 @@ namespace isce {
         // ------------------------------------------------------------------------
 
         template<class Archive>
-        void save(Archive & archive, const Ellipsoid & ellps) {
+        inline void save(Archive & archive, const Ellipsoid & ellps) {
             archive(cereal::make_nvp("a", ellps.a()),
                     cereal::make_nvp("e2", ellps.e2()));
         }
 
         template<class Archive>
-        void load(Archive & archive, Ellipsoid & ellps) {
+        inline void load(Archive & archive, Ellipsoid & ellps) {
             double a, e2;
             archive(cereal::make_nvp("a", a),
                     cereal::make_nvp("e2", e2));
@@ -79,7 +79,7 @@ namespace isce {
          *
          * @param[in] file          HDF5 file object.
          * @param[in] ellps         Ellipsoid object to be configured. */
-        void load(isce::io::IH5File & file, Ellipsoid & ellps) {
+        inline void load(isce::io::IH5File & file, Ellipsoid & ellps) {
             // Find the ellipsoid dataset
             std::vector<std::string> ellpsList = file.find("ellipsoid");
             // Read data
@@ -95,12 +95,12 @@ namespace isce {
         // ------------------------------------------------------------------------
 
         template <class Archive>
-        void save(Archive & archive, const Orbit & orbit) {
+        inline void save(Archive & archive, const Orbit & orbit) {
             archive(cereal::make_nvp("StateVectors", orbit.stateVectors));
         }
 
         template <class Archive>
-        void load(Archive & archive, Orbit & orbit) {
+        inline void load(Archive & archive, Orbit & orbit) {
             // Load data
             archive(cereal::make_nvp("StateVectors", orbit.stateVectors));
             // Reformat state vectors to 1D arrays
@@ -113,7 +113,7 @@ namespace isce {
          * @param[in] orbit         Orbit object to be configured.
          * @param[in] orbit_type    orbit type (NOE, MOE, POE).
          * @param[in] refEpoch      DateTime reference epoch. */
-        void load(isce::io::IH5File & file, Orbit & orbit, std::string orbit_type="POE",
+        inline void load(isce::io::IH5File & file, Orbit & orbit, std::string orbit_type="POE",
                   DateTime refEpoch=MIN_DATE_TIME) {
             // Reset orbit data
             orbit.position.clear(); 
@@ -158,7 +158,7 @@ namespace isce {
         // ------------------------------------------------------------------------
 
         template <class Archive>
-        void save(Archive & archive, const Metadata & meta) {
+        inline void save(Archive & archive, const Metadata & meta) {
             archive(cereal::make_nvp("width", meta.width),
                     cereal::make_nvp("length", meta.length),
                     cereal::make_nvp("numberRangeLooks", meta.numberRangeLooks),
@@ -178,7 +178,7 @@ namespace isce {
         }
 
         template <class Archive>
-        void load(Archive & archive, Metadata & meta) {
+        inline void load(Archive & archive, Metadata & meta) {
             std::string sensingStart;
             archive(cereal::make_nvp("width", meta.width),
                     cereal::make_nvp("length", meta.length),
@@ -204,7 +204,7 @@ namespace isce {
          * @param[in] file          HDF5 file object.
          * @param[in] meta          Metadata to be configured.
          * @param[in] mode          Imagery mode (aux, primary). */
-        void load(isce::io::IH5File & file, Metadata & meta, std::string mode="primary") {
+        inline void load(isce::io::IH5File & file, Metadata & meta, std::string mode="primary") {
 
             double pri, bandwidth, centerFrequency;
             FixedString sensingStart, lookDir;
@@ -250,7 +250,7 @@ namespace isce {
 
         // Definition for Poly2d
         template <class Archive>
-        void serialize(Archive & archive, Poly2d & poly) {
+        inline void serialize(Archive & archive, Poly2d & poly) {
             archive(cereal::make_nvp("rangeOrder", poly.rangeOrder),
                     cereal::make_nvp("azimuthOrder", poly.azimuthOrder),
                     cereal::make_nvp("rangeMean", poly.rangeMean),
@@ -265,7 +265,7 @@ namespace isce {
          * @param[in] file          HDF5 file object.
          * @param[in] poly          Poly2d to be configured.
          * @param[in] name          Dataset name. */
-        void load(isce::io::IH5File & file, Poly2d & poly, std::string name) {
+        inline void load(isce::io::IH5File & file, Poly2d & poly, std::string name) {
 
             // Find the right Poly2d dataset
             std::vector<std::string> polys = file.find(name);
@@ -295,7 +295,7 @@ namespace isce {
 
         // Serialization save method
         template<class Archive>
-        void save(Archive & archive, StateVector const & sv) {
+        inline void save(Archive & archive, StateVector const & sv) {
             // Archive
             archive(cereal::make_nvp("Time", sv.date().isoformat()),
                     cereal::make_nvp("Position", sv.positionToString()),
@@ -304,7 +304,7 @@ namespace isce {
 
         // Serialization load method
         template<class Archive>
-        void load(Archive & archive, StateVector & sv) {
+        inline void load(Archive & archive, StateVector & sv) {
             // Make strings for position, velocity, and datetime
             std::string position_string, velocity_string, datetime_string;
             // Load the archive

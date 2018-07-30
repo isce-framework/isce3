@@ -18,43 +18,37 @@
 #include "isce/core/Serialization.h"
 
 // isce::io
+#include "isce/io/IH5.h"
 #include "isce/io/Raster.h"
 
-// Declaration for utility function to read metadata stream from VRT
-std::stringstream streamFromVRT(const char * filename, int bandNum=1);
+// isce::product
+#include "isce/product/ImageMode.h"
+#include "isce/product/Serialization.h"
 
-struct ResampSlcTest : public ::testing::Test {
-    // Typedefs
-    typedef isce::core::ResampSlc ResampSlc;
-    // Data
-    std::stringstream metastream;
-    ResampSlc resamp;
-    // Constructor
-    protected:
-        ResampSlcTest() {
-            // Load metadata stream
-            metastream = streamFromVRT("../../data/envisat.slc.vrt");
-        }
-};
 
 // Test that we can set radar metadata and Doppler polynomial from XML
-TEST_F(ResampSlcTest, Resamp) {
-    // Deserialize local metadata 
-    isce::core::Metadata meta, refMeta;
+TEST(ResampSlcTest, Resamp) {
+
+    // Open the HDF5 product
+    std::string h5file("../../data/envisat.h5");
+    isce::io::IH5File file(h5file);
+
+    // Create image mode (make reference mode same as current)
+    isce::product::ImageMode mode, refMode;
+    load(file, mode, "primary");
+    load(file, refMode, "primary");
+
+    // Get Doppler
     isce::core::Poly2d doppler;
-    {
-    cereal::XMLInputArchive archive(metastream);
-    archive(cereal::make_nvp("ContentDoppler", doppler),
-            cereal::make_nvp("Radar", meta),
-            cereal::make_nvp("Radar", refMeta));
-    }
+    load(file, doppler, "data_dcpolynomial");
+
     // Set resamp metadata and Doppler
-    resamp.metadata(meta);
-    resamp.refMetadata(refMeta);
+    isce::core::ResampSlc resamp;
+    resamp.imageMode(mode);
+    resamp.refImageMode(refMode);
     resamp.doppler(doppler);
     // Check values
-    ASSERT_NEAR(resamp.metadata().rangeFirstSample, 826988.6900674499, 1.0e-10);
-    ASSERT_NEAR(resamp.refMetadata().chirpSlope, 588741148672.0, 1.0e-8);
+    ASSERT_NEAR(resamp.imageMode().startingRange(), 826988.6900674499, 1.0e-10);
     ASSERT_NEAR(resamp.doppler().coeffs[0], 301.35306906319204, 1.0e-8);
 
     // Allow GDAL to run Python pixel functions
@@ -78,7 +72,7 @@ TEST_F(ResampSlcTest, Resamp) {
 }
 
 // Compute sum of difference between reference image and warped image
-TEST_F(ResampSlcTest, Validate) {
+TEST(ResampSlcTest, Validate) {
     // Open SLC rasters 
     isce::io::Raster refSlc("../../data/warped_envisat.slc.vrt");
     isce::io::Raster testSlc("warped.slc");
@@ -103,29 +97,6 @@ TEST_F(ResampSlcTest, Validate) {
 int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
-}
-
-// Read metadata from a VRT file and return a stringstream object
-std::stringstream streamFromVRT(const char * filename, int bandNum) {
-    // Register GDAL drivers
-    GDALAllRegister();
-    // Open the VRT dataset
-    GDALDataset * dataset = (GDALDataset *) GDALOpen(filename, GA_ReadOnly);
-    if (dataset == NULL) {
-        std::cout << "Cannot open dataset " << filename << std::endl;
-        exit(1);
-    }
-    // Read the metadata
-    char **metadata_str = dataset->GetRasterBand(bandNum)->GetMetadata("xml:isce");
-    // The cereal-relevant XML is the first element in the list
-    std::string meta{metadata_str[0]};
-    // Close the VRT dataset
-    GDALClose(dataset);
-    // Convert to stream
-    std::stringstream metastream;
-    metastream << meta;
-    // All done
-    return metastream;
 }
 
 // end of file

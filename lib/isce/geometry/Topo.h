@@ -17,6 +17,9 @@
 // isce::io
 #include <isce/io/Raster.h>
 
+// isce::product
+#include <isce/product/Product.h>
+
 // isce::geometry
 #include "geometry.h"
 #include "TopoLayers.h"
@@ -32,11 +35,9 @@ namespace isce {
 class isce::geometry::Topo {
 
     public:
-        // Constructor: must have Ellipsoid, Orbit, and Metadata
-        inline Topo(isce::core::Ellipsoid,
-                    isce::core::Orbit,
-                    isce::core::Metadata);
-
+        // Constructor from Product
+        inline Topo(isce::product::Product &);
+        
         // Set options
         inline void initialized(bool);
         inline void threshold(double);
@@ -50,19 +51,16 @@ class isce::geometry::Topo {
         inline void checkInitialization(pyre::journal::info_t &) const;
 
         // Run topo - main entrypoint
-        void topo(isce::io::Raster &,
-                  isce::core::Poly2d &,
-                  const std::string);
+        void topo(isce::io::Raster &, const std::string);
 
     private:
 
         // Get DEM bounds using first/last azimuth line and slant range bin
         void _computeDEMBounds(isce::io::Raster &,
-                               DEMInterpolator &,
-                               isce::core::Poly2d &);
+                               DEMInterpolator &);
 
         // Perform data initialization for a given azimuth line
-        void _initAzimuthLine(int,
+        void _initAzimuthLine(size_t,
                               isce::core::StateVector &,
                               isce::core::Basis &);
 
@@ -80,12 +78,16 @@ class isce::geometry::Topo {
         // isce::core objects
         isce::core::Orbit _orbit;
         isce::core::Ellipsoid _ellipsoid;
-        isce::core::Metadata _meta;
-        isce::core::DateTime _refEpoch;
+        isce::core::Poly2d _doppler;
+        isce::core::DateTime _sensingStart, _refEpoch;
+
+        // isce::product objects
+        isce::product::ImageMode _mode;
     
         // Optimization options
         double _threshold;
         int _numiter, _extraiter;
+        int _lookSide;
         isce::core::orbitInterpMethod _orbitMethod;
         isce::core::dataInterpMethod _demMethod;
 

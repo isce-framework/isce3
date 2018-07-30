@@ -31,7 +31,6 @@ using isce::io::Raster;
 // Main topo driver
 void isce::geometry::Topo::
 topo(Raster & demRaster,
-     Poly2d & dopPoly,
      const std::string outdir) {
 
     // Create reusable pyre::journal channels
@@ -42,26 +41,26 @@ topo(Raster & demRaster,
     checkInitialization(info);
 
     // Output layers
-    TopoLayers layers(_meta.width);
+    TopoLayers layers(_mode.width());
 
     { // Topo scope for creating output rasters
 
     // Create rasters for individual layers
-    Raster xRaster = Raster(outdir + "/x.rdr", _meta.width, _meta.length, 1,
+    Raster xRaster = Raster(outdir + "/x.rdr", _mode.width(), _mode.length(), 1,
         GDT_Float64, "ISCE");
-    Raster yRaster = Raster(outdir + "/y.rdr", _meta.width, _meta.length, 1,
+    Raster yRaster = Raster(outdir + "/y.rdr", _mode.width(), _mode.length(), 1,
         GDT_Float64, "ISCE");
-    Raster heightRaster = Raster(outdir + "/z.rdr", _meta.width, _meta.length, 1,
+    Raster heightRaster = Raster(outdir + "/z.rdr", _mode.width(), _mode.length(), 1,
         GDT_Float64, "ISCE");
-    Raster incRaster = Raster(outdir + "/inc.rdr", _meta.width, _meta.length, 1,
+    Raster incRaster = Raster(outdir + "/inc.rdr", _mode.width(), _mode.length(), 1,
         GDT_Float32, "ISCE");
-    Raster hdgRaster = Raster(outdir + "/hdg.rdr", _meta.width, _meta.length, 1,
+    Raster hdgRaster = Raster(outdir + "/hdg.rdr", _mode.width(), _mode.length(), 1,
         GDT_Float32, "ISCE");
-    Raster localIncRaster = Raster(outdir + "/localInc.rdr", _meta.width, _meta.length, 1,
+    Raster localIncRaster = Raster(outdir + "/localInc.rdr", _mode.width(), _mode.length(), 1,
         GDT_Float32, "ISCE");
-    Raster localPsiRaster = Raster(outdir + "/localPsi.rdr", _meta.width, _meta.length, 1,
+    Raster localPsiRaster = Raster(outdir + "/localPsi.rdr", _mode.width(), _mode.length(), 1,
         GDT_Float32, "ISCE");
-    Raster simRaster = Raster(outdir + "/simamp.rdr", _meta.width, _meta.length, 1,
+    Raster simRaster = Raster(outdir + "/simamp.rdr", _mode.width(), _mode.length(), 1,
         GDT_Float32, "ISCE");
 
     // Create and start a timer
@@ -70,24 +69,25 @@ topo(Raster & demRaster,
     // Create a DEM interpolator
     DEMInterpolator demInterp(-500.0);
     // Load DEM subset for SLC image bounds
-    _computeDEMBounds(demRaster, demInterp, dopPoly);
+    _computeDEMBounds(demRaster, demInterp);
 
     // Compute max and mean DEM height for the subset
     float demmax, dem_avg;
+    std::cout << "computing height stats\n";
     demInterp.computeHeightStats(demmax, dem_avg, info);
 
     // For each line
     size_t totalconv = 0;
-    for (int line = 0; line < _meta.length; line++) {
+    for (size_t line = 0; line < _mode.length(); line++) {
 
         // Periodic diagnostic printing
         if ((line % 1000) == 0) {
             info
                 << "Processing line: " << line << " " << pyre::journal::newline
                 << "Dopplers near mid far: "
-                << dopPoly.eval(0, 0) << " "
-                << dopPoly.eval(0, (_meta.width / 2) - 1) << " "
-                << dopPoly.eval(0, _meta.width - 1) << " "
+                << _doppler.eval(0, 0) << " "
+                << _doppler.eval(0, (_mode.width() / 2) - 1) << " "
+                << _doppler.eval(0, _mode.width() - 1) << " "
                 << pyre::journal::endl;
         }
 
@@ -101,14 +101,14 @@ topo(Raster & demRaster,
 
         // For each slant range bin
         #pragma omp parallel for reduction(+:totalconv)
-        for (int rbin = 0; rbin < _meta.width; ++rbin) {
+        for (size_t rbin = 0; rbin < _mode.width(); ++rbin) {
 
             // Get current slant range
-            const double rng = _meta.rangeFirstSample + rbin*_meta.slantRangePixelSpacing;
+            const double rng = _mode.startingRange() + rbin * _mode.rangePixelSpacing();
 
             // Get current Doppler value
-            const double dopfact = (0.5 * _meta.radarWavelength
-                                 * (dopPoly.eval(0, rbin) / satVmag)) * rng;
+            const double dopfact = (0.5 * _mode.wavelength()
+                                 * (_doppler.eval(0, rbin) / satVmag)) * rng;
 
             // Store slant range bin data in Pixel
             Pixel pixel(rng, dopfact, rbin);
@@ -118,7 +118,7 @@ topo(Raster & demRaster,
 
             // Perform rdr->geo iterations
             int geostat = rdr2geo(
-                pixel, TCNbasis, state, _ellipsoid, demInterp, llh, _meta.lookSide,
+                pixel, TCNbasis, state, _ellipsoid, demInterp, llh, _lookSide,
                 _threshold, _numiter, _extraiter
             );
             totalconv += geostat;
@@ -141,7 +141,7 @@ topo(Raster & demRaster,
 
     // Print out convergence statistics
     info << "Total convergence: " << totalconv << " out of "
-         << (_meta.width * _meta.length) << pyre::journal::endl;
+         << (_mode.width() * _mode.length()) << pyre::journal::endl;
 
     // Print out timing information and reset
     auto timerEnd = std::chrono::steady_clock::now();
@@ -171,11 +171,11 @@ topo(Raster & demRaster,
 
 // Perform data initialization for a given azimuth line
 void isce::geometry::Topo::
-_initAzimuthLine(int line, StateVector & state, Basis & TCNbasis) {
+_initAzimuthLine(size_t line, StateVector & state, Basis & TCNbasis) {
 
     // Get satellite azimuth time
-    const double tline = _meta.sensingStart.secondsSinceEpoch(_refEpoch)
-                      + (_meta.numberAzimuthLooks * (line/_meta.prf));
+    const double tline = _mode.startAzTime().secondsSinceEpoch(_refEpoch)
+                      + (_mode.numberAzimuthLooks() * (line / _mode.prf()));
 
     // Get state vector
     cartesian_t xyzsat, velsat;
@@ -201,7 +201,7 @@ _initAzimuthLine(int line, StateVector & state, Basis & TCNbasis) {
 
 // Get DEM bounds using first/last azimuth line and slant range bin
 void isce::geometry::Topo::
-_computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopPoly) {
+_computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp) {
 
     // Initialize journal
     pyre::journal::warning_t warning("isce.core.Topo");
@@ -220,7 +220,7 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
     for (int line = 0; line < 2; line++) {
 
         // Initialize orbit data for this azimuth line
-        int lineIndex = line * _meta.numberAzimuthLooks * (_meta.length - 1);
+        int lineIndex = line * _mode.numberAzimuthLooks() * (_mode.length() - 1);
         _initAzimuthLine(lineIndex, state, TCNbasis);
 
         // Compute satellite velocity and height
@@ -231,9 +231,9 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
         for (int ind = 0; ind < 2; ++ind) {
 
             // Get proper slant range bin and Doppler factor
-            int rbin = ind * (_meta.width - 1);
-            double rng = _meta.rangeFirstSample + rbin*_meta.slantRangePixelSpacing;
-            double dopfact = (0.5 * _meta.radarWavelength * (dopPoly.eval(0, rbin)
+            int rbin = ind * (_mode.width() - 1);
+            double rng = _mode.startingRange() + rbin * _mode.rangePixelSpacing();
+            double dopfact = (0.5 * _mode.wavelength() * (_doppler.eval(0, rbin)
                             / satVmag)) * rng;
             // Store in Pixel object
             Pixel pixel(rng, dopfact, rbin);
@@ -252,7 +252,7 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, Poly2d & dopP
                     DEMInterpolator constDEM(testHeights[k]);
                     // Run radar->geo for 1 iteration
                     rdr2geo(pixel, TCNbasis, state, _ellipsoid, constDEM, llh,
-                            _meta.lookSide, _threshold, 1, 0);
+                            _lookSide, _threshold, 1, 0);
                 }
                 // Update bounds
                 min_lat = std::min(min_lat, llh[1]);
@@ -346,7 +346,7 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, Pixel & pixel
     cartesian_t n_img, n_imghat, n_img_enu;
     LinAlg::cross(satToGround, state.velocity(), n_img);
     LinAlg::unitVec(n_img, n_imghat);
-    LinAlg::scale(n_imghat, -1*_meta.lookSide);
+    LinAlg::scale(n_imghat, -1*_lookSide);
     LinAlg::matVec(xyz2enu, n_imghat, n_img_enu);
     cartesian_t n_trg_enu = {-alpha, -beta, 1.0};
     const double cospsi = LinAlg::dot(n_trg_enu, n_img_enu)

@@ -23,7 +23,10 @@ class isce::radar::Radar {
 
     public:
         /** Default constructor. */
-        Radar() {}
+        inline Radar() {};
+
+        /** Constructor with skew and content Dopplers. */
+        inline Radar(const isce::core::Poly2d & skew, const isce::core::Poly2d & content);
 
         /** Copy constructor. */
         inline Radar(const Radar &);

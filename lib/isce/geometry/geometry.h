@@ -23,6 +23,9 @@
 #include <isce/core/Poly2d.h>
 #include <isce/core/StateVector.h>
 
+// isce::product
+#include <isce/product/ImageMode.h>
+
 // isce::geometry
 #include "DEMInterpolator.h"
 
@@ -56,7 +59,7 @@ namespace isce {
                     const isce::core::Ellipsoid &,
                     const isce::core::Orbit &,
                     const isce::core::Poly2d &,
-                    const isce::core::Metadata &,
+                    const isce::product::ImageMode &,
                     double &, double &,
                     double, int, double);
 

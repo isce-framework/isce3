@@ -12,6 +12,21 @@ ImageMode(const std::string & inputModeType) {
     modeType(inputModeType);
 }
 
+/** @param[in]              isce::product::ImageMOde */
+isce::product::ImageMode::
+ImageMode(const isce::product::ImageMode & mode) :
+    _modeType(mode.modeType()),
+    _prf(mode.prf()),
+    _imageDims(mode.dataDimensions()),
+    _rangeBandwidth(mode.rangeBandwidth()),
+    _wavelength(mode.wavelength()),
+    _startingRange(mode.startingRange()),
+    _rangePixelSpacing(mode.rangePixelSpacing()),
+    _numberAzimuthLooks(mode.numberAzimuthLooks()),
+    _numberRangeLooks(mode.numberRangeLooks()),
+    _startAzTime(mode.startAzTime()),
+    _endAzTime(mode.endAzTime()) {}
+
 /** @param[in]              isce::product::ImageMode */
 isce::product::ImageMode &
 isce::product::ImageMode::
@@ -19,12 +34,14 @@ operator=(const isce::product::ImageMode & mode) {
     // Simply assign data members to self
     _modeType = mode.modeType();
     _prf = mode.prf();
+    _imageDims = mode.dataDimensions();
     _rangeBandwidth = mode.rangeBandwidth();
     _wavelength = mode.wavelength();
-    _pulseDuration = mode.pulseDuration();
     _startingRange = mode.startingRange();
     _rangePixelSpacing = mode.rangePixelSpacing();
-    _startAzTime = mode.startAzTime():
+    _numberAzimuthLooks = mode.numberAzimuthLooks();
+    _numberRangeLooks = mode.numberRangeLooks();
+    _startAzTime = mode.startAzTime();
     _endAzTime = mode.endAzTime();
     return *this;
 }
@@ -52,16 +69,30 @@ modeType(const std::string & mtype) {
     _modeType = mtype;
 } 
 
-/** @param[in]              polarization */
+/** @param[in]              Polarization. */
 std::string
 isce::product::ImageMode::
 dataPath(const std::string & pol) {
     // Construct HDF5 path using the stored mode type
     std::string path = "/science/complex_imagery/" + _modeType + "_mode/" + pol;
-    // Make sure everything is lowercase (does not work for unicode!)
-    std::transform(path.begin(), path.end(), path.begin(), std::tolower);
     // Done
     return path;
 }
+
+/** @param[out]             Array of image dimensions. */
+std::array<size_t, 2>
+isce::product::ImageMode::
+dataDimensions() const {
+    return _imageDims;
+}
+
+/** @param[in]              Array of image dimensions. */
+void
+isce::product::ImageMode::
+dataDimensions(const std::array<size_t, 2> & dims) {
+    _imageDims[0] = dims[0];
+    _imageDims[1] = dims[1];
+}
+
             
 // end of file

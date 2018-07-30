@@ -29,16 +29,29 @@ include "core/pyInterpolator.pyx"
 include "core/pyPeg.pyx"
 include "core/pyPegtrans.pyx"
 include "core/pyPosition.pyx"
-include "core/pyMetadata.pyx"
 include "core/pyLinAlg.pyx"
 include "core/pyOrbit.pyx"
 include "core/pyPoly1d.pyx"
 include "core/pyPoly2d.pyx"
+
+# Include the radar extensions
+include "radar/pyRadar.pyx"
+
+# Include the product extensions
+include "product/pyImageMode.pyx"
+include "product/pyIdentification.pyx"
+include "product/pyMetadata.pyx"
+include "product/pyComplexImagery.pyx"
+include "product/pyProduct.pyx"
+
 include "core/pyResampSlc.pyx"
 
 # Include the geometry extensions
 include "geometry/pygeometry.pyx"
 include "geometry/pyTopo.pyx"
 include "geometry/pyGeo2rdr.pyx"
+
+# The separate serialization routines
+include "serialization/serialize.pyx"
 
 # end of file

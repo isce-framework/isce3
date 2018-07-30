@@ -5,6 +5,12 @@
 #error "Radar.icc is an implementation detail of class Radar."
 #endif
 
+/** @param[in]              Poly2d for skew Doppler.
+ *  @param[in]              Poly2d for content Doppler. */
+isce::radar::Radar::
+Radar(const isce::core::Poly2d & skew, const isce::core::Poly2d & content) :
+    _skewDoppler(skew), _contentDoppler(content) {}
+
 /** @param[in]              isce::radar::Radar. */
 isce::radar::Radar::
 Radar(const isce::radar::Radar & radar) :

@@ -14,8 +14,8 @@ cdef class pyResampSlc:
     
     # Cython classes
     cdef pyPoly2d pyDop
-    cdef pyMetadata pyMeta
-    cdef pyMetadata pyRefMeta
+    cdef pyImageMode pyImageMode
+    cdef pyImageMode pyRefImageMode
 
     def __cinit__(self):
         self.c_resamp = ResampSlc()
@@ -29,23 +29,23 @@ cdef class pyResampSlc:
         self.pyDop = dop
         self.c_resamp.doppler(deref(dop.c_poly2d))
 
-    # Metadata
+    # ImageMode
     @property
-    def metadata(self):
-        return self.pyMeta
-    @metadata.setter 
-    def metadata(self, pyMetadata meta):
-        self.pyMeta = meta
-        self.c_resamp.metadata(meta.c_metadata)
+    def imageMode(self):
+        return self.pyImageMode
+    @imageMode.setter 
+    def imageMode(self, pyImageMode mode):
+        self.pyImageMode = mode
+        self.c_resamp.imageMode(deref(mode.c_imagemode))
 
     # Reference metadata
     @property
-    def refMetadata(self):
-        return self.pyRefMeta
-    @refMetadata.setter 
-    def refMetadata(self, pyMetadata meta):
-        self.pyRefMeta = meta
-        self.c_resamp.refMetadata(meta.c_metadata)
+    def refImageMode(self):
+        return self.pyRefImageMode
+    @refImageMode.setter 
+    def refImageMode(self, pyImageMode mode):
+        self.pyRefImageMode = mode
+        self.c_resamp.refImageMode(deref(mode.c_imagemode))
 
     # Get/set number of lines per processing tile
     @property

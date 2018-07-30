@@ -55,30 +55,30 @@ doppler(Poly2d & poly) {
     _dopplerPoly = poly;
 }
 
-// Get metadata
-isce::core::Metadata
+// Get image mode
+isce::product::ImageMode
 isce::core::ResampSlc::
-metadata() const {
-    return _meta;
+imageMode() const {
+    return _mode;
 }
 
-// Set metadata from copy
+// Set imageMode from copy
 void isce::core::ResampSlc::
-metadata(Metadata meta) {
-    _meta = meta;
+imageMode(const isce::product::ImageMode & mode) {
+    _mode = mode;
 }
 
-// Get reference metadata
-isce::core::Metadata
+// Get reference imageMode
+isce::product::ImageMode
 isce::core::ResampSlc::
-refMetadata() const {
-    return _refMeta;
+refImageMode() const {
+    return _refMode;
 }
 
-// Set reference metadata from copy
+// Set reference imageMode from copy
 void isce::core::ResampSlc::
-refMetadata(Metadata meta) {
-    _refMeta = meta;
+refImageMode(const isce::product::ImageMode & mode) {
+    _refMode = mode;
 }
 
 // Announce my properties to the world

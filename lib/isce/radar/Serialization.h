@@ -29,18 +29,19 @@ namespace isce {
          *
          * @param[in] file          HDF5 file object.
          * @param[in] radar         Radar object to be configured. */
-        void load(isce::io::IH5File & file, Radar & radar) {
+        inline void load(isce::io::IH5File & file, Radar & radar) {
 
             // Configure a temporary Poly2d object with data polynomial
-            isce::core::Poly2d poly;
-            isce::core::load(file, poly, "data_dcpolynomial");
+            isce::core::Poly2d cpoly;
+            isce::core::load(file, cpoly, "data_dcpolynomial");
             // Save to radar
-            radar.contentDoppler(poly);
+            radar.contentDoppler(cpoly);
 
             // Configure Poly2d object with skew polynomial
-            isce::core::load(file, poly, "skew_dcpolynomial");
+            isce::core::Poly2d spoly;
+            isce::core::load(file, spoly, "skew_dcpolynomial");
             // Save to radar
-            radar.skewDoppler(poly);
+            radar.skewDoppler(spoly);
         }
 
     }

@@ -17,17 +17,17 @@ def test_geo2rdr():
     ellps = isceextension.pyEllipsoid()
     orbit = isceextension.pyOrbit()
     doppler = isceextension.pyPoly2d()
-    meta = isceextension.pyMetadata()
+    mode = isceextension.pyImageMode()
     
     # Configure objects using metadata 
-    ellps.archive(h5)
-    orbit.archive(h5)
-    meta.archive(h5)
-    doppler.archive(h5, 'skew_dcpolynomial')
-
+    isceextension.deserialize(h5, ellps)
+    isceextension.deserialize(h5, orbit)
+    isceextension.deserialize(h5, doppler)
+    isceextension.deserialize(h5, mode)
+    
     # Call geo2rdr
     llh = [np.radians(-115.6), np.radians(35.1), 55.0]
-    aztime, slantrange = isceextension.py_geo2rdr(llh, ellps, orbit, doppler, meta,
+    aztime, slantrange = isceextension.py_geo2rdr(llh, ellps, orbit, doppler, mode,
                                                   threshold=1.0e-8)
 
     # Test it
@@ -36,7 +36,7 @@ def test_geo2rdr():
 
     # Repeat with zero doppler
     zero_doppler = isceextension.pyPoly2d()
-    aztime, slantrange = isceextension.py_geo2rdr(llh, ellps, orbit, zero_doppler, meta,
+    aztime, slantrange = isceextension.py_geo2rdr(llh, ellps, orbit, zero_doppler, mode,
                                                   threshold=1.0e-8)
 
     # Test it

@@ -10,7 +10,7 @@
 // std
 #include <array>
 #include <string>
-#include <algorithm>
+#include <vector>
 
 // pyre
 #include <portinfo>
@@ -34,19 +34,30 @@ class isce::product::ImageMode {
 
     public:
         /** Default constructor. */
-        ImageMode() : _modeType("primary") {};
+        inline ImageMode() : _modeType("primary") {};
+
+        /** Copy constructor. */
+        inline ImageMode(const ImageMode &);
 
         /** Constructor with a specified mode type. */
         inline ImageMode(const std::string &);
 
         /** Assignment operator. */
-        ImageMode & operator=(const ImageMode &);
+        inline ImageMode & operator=(const ImageMode &);
 
         /** Get the path to the image data for a given polarization. */
         inline std::string dataPath(const std::string & pol);
 
-        /** Get dimensions for image data for a given polarization. */
-        inline std::array<size_t, 2> dataDimensions(const std::string & pol);
+        /** Get dimensions for image data. */
+        inline std::array<size_t, 2> dataDimensions() const;
+        /** Set dimensions for image data. */
+        inline void dataDimensions(const std::array<size_t, 2> &);
+
+        /** Get length of image data. */
+        inline size_t length() const { return _imageDims[0]; }
+        
+        /** Get width of image data. */
+        inline size_t width() const { return _imageDims[1]; }
 
         /** Get mode type ('aux' or 'primary'). */
         inline std::string modeType() const;
@@ -54,56 +65,67 @@ class isce::product::ImageMode {
         inline void modeType(const std::string &);
 
         /** Get pulse repetition frequency. */
-        double prf() const { return _prf; }
+        inline double prf() const { return _prf; }
         /** Set pulse repetition frequency. */
-        void prf(double value) { _prf = value; }
+        inline void prf(double value) { _prf = value; }
 
         /** Get range bandwidth. */
-        double rangeBandwidth() const { return _rangeBandwidth; }
+        inline double rangeBandwidth() const { return _rangeBandwidth; }
         /** Set range bandwidth. */
-        void rangeBandwidth(double value) { _rangeBandwidth = value; }
+        inline void rangeBandwidth(double value) { _rangeBandwidth = value; }
 
         /** Get radar wavelength. */
-        double wavelength() const { return _radarWavelength; }
+        inline double wavelength() const { return _wavelength; }
         /** Set radar wavelength. */
-        void wavelength(double value) { _radarWavelength = value; }
-
-        /** Get pulse duration. */
-        double pulseDuration() const { return _pulseDuration; }
-        /** Set pulse duration. */
-        void pulseDuration(double value) { _pulseDuration = value; }
+        inline void wavelength(double value) { _wavelength = value; }
 
         /** Get starting range. */
-        double startingRange() const { return _startingRange; }
+        inline double startingRange() const { return _startingRange; }
         /** Set starting range. */
-        void startingRange(double value) { _startingRange = value; }
+        inline void startingRange(double value) { _startingRange = value; }
 
         /** Get range pixel spacing. */
-        double rangePixelSpacing() const { return _rangePixelSpacing; }
+        inline double rangePixelSpacing() const { return _rangePixelSpacing; }
         /** Set range pixel spacing. */
-        void rangePixelSpacing(double value) { _rangePixelSpacing = value; }
+        inline void rangePixelSpacing(double value) { _rangePixelSpacing = value; }
+
+        /** Get number of azimuth looks. */
+        inline size_t numberAzimuthLooks() const { return _numberAzimuthLooks; }
+        /** Set number of azimuth looks. */
+        inline void numberAzimuthLooks(size_t value) { _numberAzimuthLooks = value; }
+
+        /** Get number of range looks. */
+        inline size_t numberRangeLooks() const { return _numberRangeLooks; }
+        /** Set number of range looks. */
+        inline void numberRangeLooks(size_t value) { _numberRangeLooks = value; }
 
         /** Get zero-doppler starting azimuth time. */
-        isce::core::DateTime startAzTime() const { return _startAzTime; }
+        inline isce::core::DateTime startAzTime() const { return _startAzTime; }
         /** Set zero-doppler starting azimuth time. */
-        void startAzTime(const isce::core::DateTime & dtime) { _startAzTime = dtime; }
+        inline void startAzTime(const isce::core::DateTime & dtime) { _startAzTime = dtime; }
 
         /** Get zero-doppler ending azimuth time. */
-        isce::core::DateTime endAzTime() const { return _endAzTime; }
+        inline isce::core::DateTime endAzTime() const { return _endAzTime; }
         /** Set zero-doppler starting azimuth time. */
-        void endAzTime(const isce::core::DateTime & dtime) { _endAzTime = dtime; }
+        inline void endAzTime(const isce::core::DateTime & dtime) { _endAzTime = dtime; }
 
     private:
         // Mode designation
         std::string _modeType;
 
+        // Image related data
+        std::array<size_t, 2> _imageDims;
+
         // Instrument related data
         double _prf;
         double _rangeBandwidth;
         double _wavelength;
-        double _pulseDuration;
         double _startingRange;
         double _rangePixelSpacing;
+
+        // Looks
+        size_t _numberAzimuthLooks;
+        size_t _numberRangeLooks;
 
         // Azimuth timing data
         isce::core::DateTime _startAzTime;

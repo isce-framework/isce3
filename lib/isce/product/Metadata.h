@@ -8,6 +8,7 @@
 #define ISCE_PRODUCT_METADATA_H
 
 // isce::core
+#include "isce/core/Attitude.h"
 #include "isce/core/Orbit.h"
 
 // isce::radar
@@ -28,7 +29,7 @@ class isce::product::Metadata {
 
     public:
         /** Default constructor */
-        Metadata() {}
+        inline Metadata() {}
 
         /** Get NOE orbit */
         inline isce::core::Orbit orbitNOE() const;
@@ -40,29 +41,21 @@ class isce::product::Metadata {
         /** Set POE orbit */
         inline void orbitPOE(const isce::core::Orbit &);
 
-        /** Get attitude */
-        inline isce::core::Attitude attitude() const;
-        /** Set attitude */
-        inline void attitude(const isce::core::Attitude &);
-
         /** Get radar instrument */
-        inline isce::core::Radar instrument() const;
+        inline isce::radar::Radar instrument() const;
         /** Set instrument */
         inline void instrument(const isce::radar::Radar &);
 
         /** Get identification */
         inline Identification identification() const;
         /** Set identification */
-        inline void identification(Identification &);
+        inline void identification(const Identification &);
 
     private:
         // Orbits
         isce::core::Orbit _orbitMOE;
         isce::core::Orbit _orbitNOE;
         isce::core::Orbit _orbitPOE;
-
-        // Attitudes
-        isce::core::Attitude _attitude;
 
         // Radar instrument
         isce::radar::Radar _instrument;

@@ -13,6 +13,7 @@ set(${PACKAGENAME}_EXPORT_HEADERS
     Metadata.h
     Metadata.icc
     Product.h
+    Product.icc
     Serialization.h
 )
 

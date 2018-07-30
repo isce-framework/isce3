@@ -16,101 +16,53 @@
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Serialization.h>
 
+// isce::io
+#include <isce/io/IH5.h>
+#include <isce/io/Serialization.h>
+
+// isce::radar
+#include <isce/radar/Serialization.h>
+
 // isce::product
 #include <isce/product/ComplexImagery.h>
 #include <isce/product/ImageMode.h>
 #include <isce/product/Identification.h>
 #include <isce/product/Metadata.h>
 
-// isce::io
-#include <isce/io/IH5.h>
-#include <isce/io/Serialization.h>
 
 //! The isce namespace
 namespace isce {
     //! The isce::product namespace
     namespace product {
 
-        /** Load top level Product from HDF5.
+        /** Load Identification parameters from HDF5.
          *
-         * @param[in] file          HDF5 file object.
-         * @param[in] product       Product object to be configured. */
-        void load(isce::io::IH5File & file, Product & product) {
-            // Configure complex imagery
-            load(file, product.complexImagery());
-            // Configure metadata
-            load(file, product.metadata());
-        }
+         * @param[in] file      HDF5 file object.
+         * @param[in] id        Identification object to be configured. */
+        inline void load(isce::io::IH5File & file, Identification & id) {
 
-        /** Load ComplexImagery data from HDF5.
-         *
-         * @param[in] file          HDF5 file object.
-         * @param[in] cpxImg        ComplexImagery object to be configured. */
-        void load(isce::io::IH5File & file, ComplexImagery & cpxImg) {
+            // Configure a temporary ellipsoid
+            isce::core::Ellipsoid ellps;
+            isce::core::load(file, ellps);
+            // Save to identification
+            id.ellipsoid(ellps);
 
-            // Configure a temporary auxiliary ImageMode
-            ImageMode aux;
-            load(file, aux, "aux");
-            // Save to cpxImg
-            cpxImg.auxMode(aux);
-
-            // Configure a temporary primary ImageMode
-            ImageMode primary;
-            load(file, primary, "primary");
-            // Save to cpxImg
-            cpxImg.primaryMode(primary);
-        }
-
-        /** Load ImageMode data from HDF5.
-         *
-         * @param[in] file          HDF5 file object.
-         * @param[in] mode          ImageMode object to be configured. 
-         * @param[in] modeType      String representing mode type. */
-        void load(isce::io::IH5File & file, ImageMode & mode, std::string & modeType) {
-
-            // Make path for mode
-            std::string path = "/science/complex_imagery/" + modeType + "_mode";
-            // Set mode type
-            mode.modeType(modeType);
-
-            // Set PRF
-            double value;
-            isce::io::loadFromH5(file, path + "/az_time_interval", value);
-            mode.prf(1.0 / value);
-
-            // Set bandwidth
-            isce::io::loadFromH5(file, path + "/bandwidth", value);
-            mode.rangeBandwidth(value);
-
-            // Set pulse duration
-            isce::io::loadFromH5(file, path + "/pulse_duration", value);
-            mode.pulseDuration(value);
-
-            // Set wavelength
-            isce::io::loadFromH5(file, path + "/freq_center", value);
-            mode.wavelength(isce::core::SPEED_OF_LIGHT / value);
-
-            // Load zero doppler starting azimuth time
-            isce::core::FixedString datestr;
-            isce::io::loadFromH5(file, path + "/zero_doppler_start_az_time", datestr);
-            // Convert to datetime
-            isce::core::DateTime date(std::string(datestr.str));
-            // Set
-            mode.startAzTime(date);
-
-            // Load zero doppler ending azimuth time
-            isce::io::loadFromH5(file, path + "/zero_doppler_end_az_time", datestr);
-            // Convert to datetime
-            date = std::string(datestr.str);
-            // Set
-            mode.endAzTime(date);
+            // Load the look direction
+            isce::core::FixedString lookDir;
+            isce::io::loadFromH5(
+                file,
+                "/science/metadata/identification/look_direction",
+                lookDir
+            );
+            // Save to identification
+            id.lookDirection(std::string(lookDir.str));
         }
 
         /** Load Metadata parameters from HDF5.
          *
          * @param[in] file          HDF5 file object.
          * @param[in] meta          Metadata object to be configured. */
-        void load(isce::io::IH5File & file, Metadata & meta) {
+        inline void load(isce::io::IH5File & file, Metadata & meta) {
 
             // Configure a temporary orbit with NOE data
             isce::core::Orbit orbit;
@@ -136,27 +88,83 @@ namespace isce {
             meta.identification(id);
         }
 
-        /** Load Identification parameters from HDF5.
+        /** Load ImageMode data from HDF5.
          *
-         * @param[in] file      HDF5 file object.
-         * @param[in] id        Identification object to be configured. */
-        void load(isce::io::IH5File & file, Identification & id) {
+         * @param[in] file          HDF5 file object.
+         * @param[in] mode          ImageMode object to be configured. 
+         * @param[in] modeType      String representing mode type. */
+        inline void load(isce::io::IH5File & file, ImageMode & mode,
+                         const std::string & modeType) {
 
-            // Configure a temporary ellipsoid
-            isce::core::Ellipsoid ellps;
-            isce::core::load(file, ellps);
-            // Save to identification
-            id.ellipsoid(ellps);
+            // Make path for mode
+            std::string path = "/science/complex_imagery/" + modeType + "_mode";
+            // Set mode type
+            mode.modeType(modeType);
 
-            // Load the look direction
-            std::string lookDir;
-            isce::io::loadFromH5(
-                file,
-                "/science/metadata/identification/look_direction",
-                lookDir
-            );
-            // Save to identification
-            id.lookDirection(lookDir);
+            // Set the image dimensions
+            std::vector<int> dims = isce::io::getImageDims(file, path + "/hh");
+            std::array<size_t, 2> arrayDims{static_cast<size_t>(dims[0]),
+                                            static_cast<size_t>(dims[1])};
+            mode.dataDimensions(arrayDims);
+
+            // For now, hardcode azimuth and range looks until they exist in the product
+            mode.numberAzimuthLooks(1);
+            mode.numberRangeLooks(1);
+
+            // Set PRF
+            double value;
+            isce::io::loadFromH5(file, path + "/az_time_interval", value);
+            mode.prf(1.0 / value);
+
+            // Set bandwidth
+            isce::io::loadFromH5(file, path + "/bandwidth", value);
+            mode.rangeBandwidth(value);
+
+            // Set starting slant range
+            isce::io::loadFromH5(file, path + "/slant_range_start", value);
+            mode.startingRange(value);
+
+            // Set slant range pixel spacing
+            isce::io::loadFromH5(file, path + "/slant_range_spacing", value);
+            mode.rangePixelSpacing(value);
+
+            // Set wavelength
+            isce::io::loadFromH5(file, path + "/freq_center", value);
+            mode.wavelength(isce::core::SPEED_OF_LIGHT / value);
+
+            // Load zero doppler starting azimuth time
+            isce::core::FixedString datestr;
+            isce::io::loadFromH5(file, path + "/zero_doppler_start_az_time", datestr);
+            // Convert to datetime
+            isce::core::DateTime date(std::string(datestr.str));
+            // Set
+            mode.startAzTime(date);
+
+            // Load zero doppler ending azimuth time
+            isce::io::loadFromH5(file, path + "/zero_doppler_end_az_time", datestr);
+            // Convert to datetime
+            date = std::string(datestr.str);
+            // Set
+            mode.endAzTime(date);
+        }
+
+        /** Load ComplexImagery data from HDF5.
+         *
+         * @param[in] file          HDF5 file object.
+         * @param[in] cpxImg        ComplexImagery object to be configured. */
+        inline void load(isce::io::IH5File & file, ComplexImagery & cpxImg) {
+
+            // Configure a temporary auxiliary ImageMode
+            ImageMode aux;
+            load(file, aux, "aux");
+            // Save to cpxImg
+            cpxImg.auxMode(aux);
+
+            // Configure a temporary primary ImageMode
+            ImageMode primary;
+            load(file, primary, "primary");
+            // Save to cpxImg
+            cpxImg.primaryMode(primary);
         }
         
     }

@@ -27,7 +27,7 @@ namespace isce {
          * @param[in] datasetPath   H5 path of dataset.
          * @param[in] v             Scalar return value. */
         template <typename T>
-        void loadFromH5(isce::io::IH5File & file, const std::string & datasetPath, T & v) {
+        inline void loadFromH5(isce::io::IH5File & file, const std::string & datasetPath, T & v) {
             // Open dataset
             isce::io::IDataSet dataset = file.openDataSet(datasetPath);
             // Read the scalar dataset
@@ -40,7 +40,7 @@ namespace isce {
          * @param[in] datasetPath   H5 path of dataset.
          * @param[in] v             Vector to store dataset. */
         template <typename T>
-        void loadFromH5(isce::io::IH5File & file, const std::string & datasetPath,
+        inline void loadFromH5(isce::io::IH5File & file, const std::string & datasetPath,
                         std::vector<T> & v) {
             // Open dataset
             isce::io::IDataSet dataset = file.openDataSet(datasetPath);
@@ -52,7 +52,7 @@ namespace isce {
          *
          * @param[in] file          HDF5 file object.
          * @param[in] datasetPath   H5 path of image dataset. */
-        std::vector<int> getImageDims(isce::io::IH5File & file,
+        inline std::vector<int> getImageDims(isce::io::IH5File & file,
                                       const std::string & datasetPath) {
             // Open dataset
             isce::io::IDataSet dataset = file.openDataSet(datasetPath);

@@ -22,6 +22,9 @@
 // isce::io
 #include <isce/io/Raster.h>
 
+// isce::product
+#include <isce/product/Product.h>
+
 // Declaration
 namespace isce {
     namespace geometry {
@@ -33,10 +36,8 @@ namespace isce {
 class isce::geometry::Geo2rdr {
 
     public:
-        // Constructor: must have Ellipsoid, Orbit, and Metadata
-        Geo2rdr(isce::core::Ellipsoid,
-                isce::core::Orbit,
-                isce::core::Metadata);
+        // Constructor from product
+        Geo2rdr(isce::product::Product &);
 
         // Set options
         inline void threshold(double);
@@ -45,13 +46,11 @@ class isce::geometry::Geo2rdr {
 
         // Run geo2rdr - main entrypoint
         void geo2rdr(isce::io::Raster &,
-                     isce::core::Poly2d &,
                      const std::string &,
                      double, double);
 
         // Alternative: run geo2rdr with no constant offsets
         void geo2rdr(isce::io::Raster &,
-                     isce::core::Poly2d &,
                      const std::string &);
 
         // Value for null pixels
@@ -71,8 +70,12 @@ class isce::geometry::Geo2rdr {
         // isce::core objects
         isce::core::Ellipsoid _ellipsoid;
         isce::core::Orbit _orbit;
-        isce::core::Metadata _meta;
+        isce::core::Poly2d _doppler;
         isce::core::DateTime _refEpoch;
+        isce::core::DateTime _sensingStart;
+
+        // isce::product objects
+        isce::product::ImageMode _mode;
 
         // Projection related data
         isce::core::ProjectionBase * _projTopo;

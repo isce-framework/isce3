@@ -16,11 +16,13 @@
 // isce::core
 #include "Interpolator.h"
 #include "Poly2d.h"
-#include "Metadata.h"
 #include "Tile.h"
 
 // isce::io
 #include "isce/io/Raster.h"
+
+// isce::product
+#include "isce/product/ImageMode.h"
 
 // Declarations
 namespace isce {
@@ -52,12 +54,12 @@ class isce::core::ResampSlc {
         inline void azCarrier(Poly2d &);
         inline void doppler(Poly2d &);
 
-        // Get metadata
-        inline Metadata metadata() const;
-        inline Metadata refMetadata() const;
-        // Set metadata
-        inline void metadata(Metadata);
-        inline void refMetadata(Metadata);
+        // Get image mode
+        inline isce::product::ImageMode imageMode() const;
+        inline isce::product::ImageMode refImageMode() const;
+        // Set image mode
+        inline void imageMode(const isce::product::ImageMode &);
+        inline void refImageMode(const isce::product::ImageMode &);
 
         // Get/set number of lines per processing tile
         inline size_t linesPerTile() const;
@@ -83,9 +85,9 @@ class isce::core::ResampSlc {
         Poly2d _azCarrier;            // azimuth carrier polynomial
         Poly2d _dopplerPoly;          // Doppler polynomial
 
-        // Metadata
-        Metadata _meta;               // radar metadata for image to be resampled
-        Metadata _refMeta;            // radar metadata for reference master image
+        // ImageMode
+        isce::product::ImageMode _mode;       // image mode for image to be resampled
+        isce::product::ImageMode _refMode;    // image mode for reference master image
 
         // Array of sinc coefficient
         Matrix<float> _fintp;

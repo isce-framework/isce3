@@ -233,7 +233,7 @@ _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
                 continue;
 
             // Evaluate Doppler polynomial
-            const double dop = _dopplerPoly.eval(0, j) * 2*M_PI / _meta.prf;
+            const double dop = _dopplerPoly.eval(0, j) * 2*M_PI / _mode.prf();
 
             // Doppler to be added back. Simultaneously evaluate carrier that needs to
             // be added back after interpolation
@@ -243,12 +243,12 @@ _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
 
             // Flatten the carrier phase if requested
             if (flatten) {
-                phase += ((4. * (M_PI / _meta.radarWavelength)) * 
-                    ((_meta.rangeFirstSample - _refMeta.rangeFirstSample) 
-                    + (j * (_meta.slantRangePixelSpacing - _refMeta.slantRangePixelSpacing)) 
-                    + (rgOff * _meta.slantRangePixelSpacing))) + ((4.0 * M_PI 
-                    * (_refMeta.rangeFirstSample + (j * _refMeta.slantRangePixelSpacing))) 
-                    * ((1.0 / _refMeta.radarWavelength) - (1.0 / _meta.radarWavelength)));
+                phase += ((4. * (M_PI / _mode.wavelength())) * 
+                    ((_mode.startingRange() - _refMode.startingRange()) 
+                    + (j * (_mode.rangePixelSpacing() - _refMode.rangePixelSpacing())) 
+                    + (rgOff * _mode.rangePixelSpacing()))) + ((4.0 * M_PI 
+                    * (_refMode.startingRange() + (j * _refMode.rangePixelSpacing()))) 
+                    * ((1.0 / _refMode.wavelength()) - (1.0 / _mode.wavelength())));
             }
             // Modulate by 2*PI
             phase = modulo_f(phase, 2.0*M_PI);

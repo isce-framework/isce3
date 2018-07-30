@@ -15,7 +15,7 @@ orbitNOE() const {
 /** @param[in]      isce::core::Orbit. */
 void
 isce::product::Metadata::
-orbitNOE(isce::core::Orbit & orbit) {
+orbitNOE(const isce::core::Orbit & orbit) {
     _orbitNOE = orbit;
 }
 
@@ -29,7 +29,7 @@ orbitPOE() const {
 /** @param[in]      isce::core::Orbit. */
 void
 isce::product::Metadata::
-orbitPOE(isce::core::Orbit & orbit) {
+orbitPOE(const isce::core::Orbit & orbit) {
     _orbitPOE = orbit;
 }
 
@@ -40,10 +40,10 @@ instrument() const {
     return _instrument;
 }
 
-/** @param[in]      isce::core::Radar. */
+/** @param[in]      isce::radar::Radar. */
 void
 isce::product::Metadata::
-instrument(isce::core::Radar & radar) {
+instrument(const isce::radar::Radar & radar) {
     _instrument = radar;
 }
 
@@ -57,7 +57,7 @@ identification() const {
 /** @param[in]      isce::product::Identification. */
 void
 isce::product::Metadata::
-identification(isce::product::Identification & id) {
+identification(const isce::product::Identification & id) {
     _id = id;
 }
 

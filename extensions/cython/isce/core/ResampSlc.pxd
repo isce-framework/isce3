@@ -8,7 +8,7 @@ from libcpp cimport bool
 from libcpp.string cimport string
 
 from Poly2d cimport Poly2d
-from Metadata cimport Metadata
+from ImageMode cimport ImageMode
 
 cdef extern from "isce/core/ResampSlc.h" namespace "isce::core":
 
@@ -28,11 +28,11 @@ cdef extern from "isce/core/ResampSlc.h" namespace "isce::core":
         void doppler(Poly2d &)
 
         # Get metadata
-        Metadata metadata()
-        Metadata refMetadata()
+        ImageMode imageMode()
+        ImageMode refImageMode()
         # Set metadata
-        void metadata(Metadata)
-        void refMetadata(Metadata)
+        void imageMode(const ImageMode &)
+        void refImageMode(const ImageMode &)
 
         # Get/set number of lines per processing tile
         size_t linesPerTile()

@@ -28,16 +28,14 @@ using isce::core::LinAlg;
 // Run geo2rdr with no offsets
 void isce::geometry::Geo2rdr::
 geo2rdr(isce::io::Raster & topoRaster,
-        isce::core::Poly2d & doppler,
         const std::string & outdir) {
     // Call main geo2rdr with offsets set to zero
-    geo2rdr(topoRaster, doppler, outdir, 0.0, 0.0);
+    geo2rdr(topoRaster, outdir, 0.0, 0.0);
 }
 
 // Run geo2rdr - main entrypoint
 void isce::geometry::Geo2rdr::
 geo2rdr(isce::io::Raster & topoRaster,
-        isce::core::Poly2d & doppler,
         const std::string & outdir,
         double azshift, double rgshift) {
 
@@ -64,23 +62,23 @@ geo2rdr(isce::io::Raster & topoRaster,
         GDT_Float32, "ISCE");
     
     // Cache sensing start
-    double t0 = _meta.sensingStart.secondsSinceEpoch(_refEpoch);
+    double t0 = _sensingStart.secondsSinceEpoch(_refEpoch);
     // Adjust for const azimuth shift
-    t0 -= (azshift - 0.5 * (_meta.numberAzimuthLooks - 1)) / _meta.prf;
+    t0 -= (azshift - 0.5 * (_mode.numberAzimuthLooks() - 1)) / _mode.prf();
 
     // Cache starting range
-    double r0 = _meta.rangeFirstSample;
+    double r0 = _mode.startingRange();
     // Adjust for constant range shift
-    r0 -= (rgshift - 0.5 * (_meta.numberRangeLooks - 1)) * _meta.slantRangePixelSpacing;
+    r0 -= (rgshift - 0.5 * (_mode.numberRangeLooks() - 1)) * _mode.rangePixelSpacing();
 
     // Compute azimuth time extents
-    double dtaz = _meta.numberAzimuthLooks / _meta.prf;
-    const double tend = t0 + ((_meta.length - 1) * dtaz);
+    double dtaz = _mode.numberAzimuthLooks() / _mode.prf();
+    const double tend = t0 + ((_mode.length() - 1) * dtaz);
     const double tmid = 0.5 * (t0 + tend);
 
     // Compute range extents
-    const double dmrg = _meta.numberRangeLooks * _meta.slantRangePixelSpacing;
-    const double rngend = r0 + ((_meta.width - 1) * dmrg);
+    const double dmrg = _mode.numberRangeLooks() * _mode.rangePixelSpacing();
+    const double rngend = r0 + ((_mode.width() - 1) * dmrg);
 
     // Print out extents
     _printExtents(info, t0, tend, dtaz, r0, rngend, dmrg, demWidth, demLength);
@@ -97,9 +95,9 @@ geo2rdr(isce::io::Raster & topoRaster,
             info 
                 << "Processing line: " << line << " " << pyre::journal::newline
                 << "Dopplers near mid far: "
-                << doppler.eval(0, 0) << " "
-                << doppler.eval(0, (_meta.width / 2) - 1) << " "
-                << doppler.eval(0, _meta.width - 1) << " "
+                << _doppler.eval(0, 0) << " "
+                << _doppler.eval(0, (_mode.width() / 2) - 1) << " "
+                << _doppler.eval(0, _mode.width() - 1) << " "
                 << pyre::journal::endl;
         }
 
@@ -120,7 +118,7 @@ geo2rdr(isce::io::Raster & topoRaster,
             // Perform geo->rdr iterations
             double aztime, slantRange;
             int geostat = isce::geometry::geo2rdr(
-                llh, _ellipsoid, _orbit, doppler, _meta, aztime, slantRange, _threshold, 
+                llh, _ellipsoid, _orbit, _doppler, _mode, aztime, slantRange, _threshold, 
                 _numiter, 1.0e-8
             );
 
@@ -163,8 +161,8 @@ _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
          << "Azimuth line spacing in seconds: " << dtaz << pyre::journal::newline
          << "Near range (m): " << r0 << pyre::journal::newline
          << "Far range (m): " << rngend << pyre::journal::newline
-         << "Radar image length: " << _meta.length << pyre::journal::newline
-         << "Radar image width: " << _meta.width << pyre::journal::newline
+         << "Radar image length: " << _mode.length() << pyre::journal::newline
+         << "Radar image width: " << _mode.width() << pyre::journal::newline
          << "Geocoded lines: " << demLength << pyre::journal::newline
          << "Geocoded samples: " << demWidth << pyre::journal::newline;
 }

@@ -6,7 +6,8 @@
 #endif
 
 /** @param[in]      isce::product::Identification. */
-isce::product::Identification(const isce::product::Identification & id) :
+isce::product::Identification::
+Identification(const isce::product::Identification & id) :
     _lookDirection(id.lookDirection()), _ellipsoid(id.ellipsoid()) {};
 
 /** @param[in]      isce::product::Identification. */
@@ -18,18 +19,45 @@ operator=(const isce::product::Identification & id) {
     return *this;
 }
 
-/** @param[out]     std::string for look direction. */
-std::string
+/** @param[out]     Integer for look direction. */
+int
 isce::product::Identification::
 lookDirection() const {
     return _lookDirection;
 }
 
+/** @param[in]      Integer for look direction. */
+void
+isce::product::Identification::
+lookDirection(int look) {
+    // Validate integer
+    if (std::abs(look) != 1) {
+        pyre::journal::error_t error("isce.product.Identification.lookDirection");
+        error
+            << pyre::journal::at(__HERE__)
+            << "Could not successfully set look direction. Not +/- 1."
+            << pyre::journal::endl;
+    }
+    // Set it
+    _lookDirection = look;
+}
+
 /** @param[in]      std::string for look direction. */
 void
 isce::product::Identification::
-lookDirection(std::string & look) {
-    _lookDirection = look;
+lookDirection(const std::string & look) {
+    // Validate look string before setting
+    if (look.compare("right") == 0) {
+        _lookDirection = -1;
+    } else if (look.compare("left") == 0) {
+        _lookDirection = 1;
+    } else {
+        pyre::journal::error_t error("isce.product.Identification.lookDirection");
+        error
+            << pyre::journal::at(__HERE__)
+            << "Could not successfully set look direction. Not 'right' or 'left'."
+            << pyre::journal::endl;
+    }
 }
 
 /** @param[out]     isce::core::Ellipsoid. */
@@ -42,7 +70,7 @@ ellipsoid() const {
 /** @param[in]      isce::core::Ellipsoid. */
 void
 isce::product::Identification::
-ellipsoid(isce::core::Ellipsoid & ellps) {
+ellipsoid(const isce::core::Ellipsoid & ellps) {
     _ellipsoid = ellps;
 }
 

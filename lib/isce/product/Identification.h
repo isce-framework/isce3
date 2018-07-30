@@ -10,8 +10,12 @@
 // std
 #include <string>
 
+// pyre
+#include <portinfo>
+#include <pyre/journal.h>
+
 // isce::core
-#include <isce/io/Ellipsoid.h>
+#include <isce/core/Ellipsoid.h>
 
 // Declarations
 namespace isce {
@@ -25,7 +29,7 @@ class isce::product::Identification {
 
     public:
         /** Default constructor. */
-        Identification() {};
+        inline Identification() {};
 
         /** Copy constructor. */
         inline Identification(const Identification &);
@@ -34,21 +38,23 @@ class isce::product::Identification {
         inline Identification & operator=(const Identification &);
 
         /** Get look direction */
-        inline std::string lookDirection() const;
-        /** Set look direction */
-        inline void lookDirection(std::string &);
+        inline int lookDirection() const;
+        /** Set look direction from integer. */
+        inline void lookDirection(int);
+        /** Set look direction from string. */
+        inline void lookDirection(const std::string &);
 
         /** Get copy of ellipsoid */
         inline isce::core::Ellipsoid ellipsoid() const;
         /** Set ellipsoid */
-        inline void ellipsoid(isce::core::Ellipsoid &);
+        inline void ellipsoid(const isce::core::Ellipsoid &);
         
     private:
         // Ellipsoid
         isce::core::Ellipsoid _ellipsoid;
 
-        // Look direction
-        std::string _lookDirection;
+        // Look direction (-1 = right, +1 = left)
+        int _lookDirection;
 
 };
 

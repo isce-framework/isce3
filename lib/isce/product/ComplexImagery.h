@@ -22,20 +22,17 @@ class isce::product::ComplexImagery {
 
     public:
         /** Default constructor. */
-        ComplexImagery() {}
-
-        /** Assignment operator. */
-        ComplexImagery & operator=(const ComplexImagery &);
+        inline ComplexImagery() {}
 
         /** Get a copy of the auxiliary mode. */
-        ImageMode auxMode() const { return _auxMode; }
+        inline ImageMode auxMode() const { return _auxMode; }
         /** Set auxiliary mode. */
-        void auxMode(ImageMode & mode) { _auxMode = mode; }
+        inline void auxMode(const ImageMode & mode) { _auxMode = mode; }
 
         /** Get a copy of the primary mode. */
-        ImageMode primaryMode() const { return _primaryMode; }
+        inline ImageMode primaryMode() const { return _primaryMode; }
         /** Set primary mode. */
-        void primaryMode(ImageMode & mode) { _primaryMode = mode; }
+        inline void primaryMode(const ImageMode & mode) { _primaryMode = mode; }
 
     private:
         // ImageMode data
