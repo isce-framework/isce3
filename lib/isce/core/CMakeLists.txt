@@ -83,6 +83,7 @@ include_directories(${${PACKAGENAME}_DLL}
         ${PYRE_INCLUDE_DIR}
         ${GDAL_INCLUDE_DIR}
         ${ISCE_BUILDINCLUDEDIR}
+        ${CEREAL_SRC_INCLUDEDIR}
 ) 
 
 #Install headers as files
