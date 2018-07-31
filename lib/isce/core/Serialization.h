@@ -141,7 +141,7 @@ namespace isce {
             orbit.epochs.resize(orbit.nVectors);
 
             // Finally, convert timestamps seconds
-            for (size_t i = 0; i < orbit.nVectors; ++i) {
+            for (int i = 0; i < orbit.nVectors; ++i) {
                 // Make a string
                 std::string timestampStr(timestamps[i].str);
                 // Make a DateTime and save it

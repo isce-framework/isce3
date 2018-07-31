@@ -14,15 +14,15 @@ Radar(const isce::core::Poly2d & skew, const isce::core::Poly2d & content) :
 /** @param[in]              isce::radar::Radar. */
 isce::radar::Radar::
 Radar(const isce::radar::Radar & radar) :
-    _contentDoppler(radar.contentDoppler()),
-    _skewDoppler(radar.skewDoppler()) {}
+    _skewDoppler(radar.skewDoppler()),
+    _contentDoppler(radar.contentDoppler()) {}
 
 /** @param[in]              isce::radar::Radar. */
 isce::radar::Radar &
 isce::radar::Radar::
 operator=(const isce::radar::Radar & radar) {
-    _contentDoppler = radar.contentDoppler();
     _skewDoppler = radar.skewDoppler();
+    _contentDoppler = radar.contentDoppler();
     return *this;
 }
 

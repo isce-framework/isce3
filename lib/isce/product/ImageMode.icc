@@ -16,8 +16,8 @@ ImageMode(const std::string & inputModeType) {
 isce::product::ImageMode::
 ImageMode(const isce::product::ImageMode & mode) :
     _modeType(mode.modeType()),
-    _prf(mode.prf()),
     _imageDims(mode.dataDimensions()),
+    _prf(mode.prf()),
     _rangeBandwidth(mode.rangeBandwidth()),
     _wavelength(mode.wavelength()),
     _startingRange(mode.startingRange()),
@@ -33,8 +33,8 @@ isce::product::ImageMode::
 operator=(const isce::product::ImageMode & mode) {
     // Simply assign data members to self
     _modeType = mode.modeType();
-    _prf = mode.prf();
     _imageDims = mode.dataDimensions();
+    _prf = mode.prf();
     _rangeBandwidth = mode.rangeBandwidth();
     _wavelength = mode.wavelength();
     _startingRange = mode.startingRange();

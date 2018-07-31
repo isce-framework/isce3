@@ -50,11 +50,10 @@ class isce::product::Identification {
         inline void ellipsoid(const isce::core::Ellipsoid &);
         
     private:
-        // Ellipsoid
-        isce::core::Ellipsoid _ellipsoid;
-
         // Look direction (-1 = right, +1 = left)
         int _lookDirection;
+        // Ellipsoid
+        isce::core::Ellipsoid _ellipsoid;
 
 };
 
