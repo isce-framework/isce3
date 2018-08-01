@@ -23,7 +23,7 @@ using std::endl;
 using std::vector;
 using isce::core::cartesian_t;
 
-struct OrbitTest : public ::testing::Test {
+struct gpuOrbitTest : public ::testing::Test {
     virtual void SetUp() {
         fails = 0;
     }
@@ -46,14 +46,13 @@ void makeLinearSV(double dt, cartesian_t &opos, cartesian_t &ovel, cartesian_t &
     vel = ovel;
 }
 
-TEST_F(OrbitTest, LinearSCH) {
+TEST_F(gpuOrbitTest, LinearSCH) {
     /*
      * Test linear orbit.
      */
 
     // create mirror orbit objects
     Orbit orb_cpu(1,11);
-
     double t = 1000.;
     cartesian_t opos = {0., 0., 0.};
     cartesian_t ovel = {4000., -1000., 4500.};
@@ -73,11 +72,88 @@ TEST_F(OrbitTest, LinearSCH) {
     double test_t[] = {23.3, 36.7, 54.5, 89.3};
     cartesian_t ref_pos, ref_vel;
 
-    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
     for (int i=0; i<4; i++) {
         makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
         orb_cpu.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
         orb_gpu.interpolateSCHOrbit_h(t+test_t[i], hpos, hvel);
+        compareTriplet(pos, hpos, 1.0e-5);
+        compareTriplet(vel, hvel, 1.0e-6);
+        compareTriplet(ref_pos, hpos, 1.0e-5);
+        compareTriplet(ref_vel, hvel, 1.0e-6);
+    }
+
+    fails += ::testing::Test::HasFailure();
+}
+
+TEST_F(gpuOrbitTest,LinearHermite){
+    /*
+     * Test linear orbit.
+     */
+
+    // create mirror orbit objects
+    Orbit orb_cpu(1,11);
+    double t = 1000.;
+    cartesian_t opos = {0., 0., 0.};
+    cartesian_t ovel = {4000., -1000., 4500.};
+    cartesian_t pos, vel;
+    cartesian_t hpos, hvel;
+
+    // Create straight-line orbit with 11 state vectors, each 10 s apart
+    for (int i=0; i<11; i++) {
+        makeLinearSV(i*10., opos, ovel, pos, vel);
+        orb_cpu.setStateVector(i, t+(i*10.), pos, vel);
+    }
+
+    // deep copy create same orbit on GPU
+    gpuOrbit orb_gpu(orb_cpu);
+
+    // Interpolation test times
+    double test_t[] = {23.3, 36.7, 54.5, 89.3};
+    cartesian_t ref_pos, ref_vel;
+
+    for (int i=0; i<4; i++) {
+        makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
+        orb_cpu.interpolate(t+test_t[i], pos, vel, HERMITE_METHOD);
+        orb_gpu.interpolateWGS84Orbit_h(t+test_t[i], hpos, hvel);
+        compareTriplet(pos, hpos, 1.0e-5);
+        compareTriplet(vel, hvel, 1.0e-6);
+        compareTriplet(ref_pos, hpos, 1.0e-5);
+        compareTriplet(ref_vel, hvel, 1.0e-6);
+    }
+
+    fails += ::testing::Test::HasFailure();
+}
+
+TEST_F(gpuOrbitTest,LinearLegendre){
+    /*
+     * Test linear orbit.
+     */
+
+    // create mirror orbit objects
+    Orbit orb_cpu(1,11);
+    double t = 1000.;
+    cartesian_t opos = {0., 0., 0.};
+    cartesian_t ovel = {4000., -1000., 4500.};
+    cartesian_t pos, vel;
+    cartesian_t hpos, hvel;
+
+    // Create straight-line orbit with 11 state vectors, each 10 s apart
+    for (int i=0; i<11; i++) {
+        makeLinearSV(i*10., opos, ovel, pos, vel);
+        orb_cpu.setStateVector(i, t+(i*10.), pos, vel);
+    }
+
+    // deep copy create same orbit on GPU
+    gpuOrbit orb_gpu(orb_cpu);
+
+    // Interpolation test times
+    double test_t[] = {23.3, 36.7, 54.5, 89.3};
+    cartesian_t ref_pos, ref_vel;
+
+    for (int i=0; i<4; i++) {
+        makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
+        orb_cpu.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD);
+        orb_gpu.interpolateWGS84Orbit_h(t+test_t[i], hpos, hvel);
         compareTriplet(pos, hpos, 1.0e-5);
         compareTriplet(vel, hvel, 1.0e-6);
         compareTriplet(ref_pos, hpos, 1.0e-5);
