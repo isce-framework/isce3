@@ -55,7 +55,6 @@ TEST_F(OrbitTest,LinearSCH){
     cartesian_t opos = {0., 0., 0.};
     cartesian_t ovel = {4000., -1000., 4500.};
     cartesian_t pos, vel;
-    cartesian_t hpos, hvel;
 
     // Create straight-line orbit with 11 state vectors, each 10 s apart
     for (int i=0; i<11; i++) {
@@ -71,7 +70,6 @@ TEST_F(OrbitTest,LinearSCH){
     for (int i=0; i<4; i++) {
         makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
         orb.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
-        orb.interpolate(t+test_t[i], hpos, hvel, HERMITE_METHOD);
         compareTriplet(pos, ref_pos, 1.0e-5);
         compareTriplet(vel, ref_vel, 1.0e-6);
     }
