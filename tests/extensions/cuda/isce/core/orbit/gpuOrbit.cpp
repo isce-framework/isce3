@@ -163,6 +163,134 @@ TEST_F(gpuOrbitTest,LinearLegendre){
     fails += ::testing::Test::HasFailure();
 }
 
+void makeCircularSV(double dt, cartesian_t &opos, cartesian_t &ovel, cartesian_t &pos,
+                    cartesian_t &vel) {
+    double omega1 = (2. * M_PI) / 7000.;
+    double omega2 = (2. * M_PI) / 4000.;
+    double theta1 = (2. * M_PI) / 8.;
+    double theta2 = (2. * M_PI) / 12.;
+    double radius = 8000000.;
+    double ang1 = theta1 + (dt * omega1);
+    double ang2 = theta2 + (dt * omega2);
+    pos = {opos[0] + (radius * cos(ang1)),
+           opos[1] + (radius * (sin(ang1) + cos(ang2))),
+           opos[2] + (radius * sin(ang2))};
+    vel = {radius * -omega1 * sin(ang1),
+           radius * ((omega1 * cos(ang1)) - (omega2 * sin(ang2))),
+           radius * omega2 * cos(ang2)};
+}
+
+TEST_F(gpuOrbitTest,CircleSCH) {
+    /*
+     * Test circular orbit.
+     */
+
+    Orbit orb_cpu(1,11);
+    double t = 1000.;
+    cartesian_t opos = {7000000., -4500000., 7800000.};
+    cartesian_t ovel, pos, vel, hpos, hvel;
+
+    // Create circular orbit with 11 state vectors, each 5 s apart
+    for (int i=0; i<11; i++) {
+        makeCircularSV(i*5., opos, ovel, pos, vel);
+        orb_cpu.setStateVector(i, t+(i*5.), pos, vel);
+    }
+
+    // deep copy create same orbit on GPU
+    gpuOrbit orb_gpu(orb_cpu);
+
+    // Interpolation test times
+    double test_t[] = {11.65, 18.35, 27.25, 44.65};
+    cartesian_t ref_pos, ref_vel;
+
+    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
+    for (int i=0; i<4; i++) {
+        makeCircularSV(test_t[i], opos, ovel, ref_pos, ref_vel);
+        orb_cpu.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
+        orb_gpu.interpolateSCHOrbit_h(t+test_t[i], hpos, hvel);
+        compareTriplet(pos, hpos, 1.0e-5);
+        compareTriplet(vel, hvel, 1.0e-6);
+        compareTriplet(ref_pos, hpos, 1.0e-5);
+        compareTriplet(ref_vel, hvel, 1.0e-6);
+    }
+
+    fails += ::testing::Test::HasFailure();
+}
+
+TEST_F(gpuOrbitTest,CircleHermite) {
+    /*
+     * Test circular orbit.
+     */
+
+    Orbit orb_cpu(1,11);
+    double t = 1000.;
+    cartesian_t opos = {7000000., -4500000., 7800000.};
+    cartesian_t ovel, pos, vel, hpos, hvel;
+
+    // Create circular orbit with 11 state vectors, each 5 s apart
+    for (int i=0; i<11; i++) {
+        makeCircularSV(i*5., opos, ovel, pos, vel);
+        orb_cpu.setStateVector(i, t+(i*5.), pos, vel);
+    }
+
+    // deep copy create same orbit on GPU
+    gpuOrbit orb_gpu(orb_cpu);
+
+    // Interpolation test times
+    double test_t[] = {11.65, 18.35, 27.25, 44.65};
+    cartesian_t ref_pos, ref_vel;
+
+    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
+    for (int i=0; i<4; i++) {
+        makeCircularSV(test_t[i], opos, ovel, ref_pos, ref_vel);
+        orb_cpu.interpolate(t+test_t[i], pos, vel, HERMITE_METHOD);
+        orb_gpu.interpolateWGS84Orbit_h(t+test_t[i], hpos, hvel);
+        compareTriplet(pos, hpos, 1.0e-5);
+        compareTriplet(vel, hvel, 1.0e-6);
+        compareTriplet(ref_pos, hpos, 1.0e-5);
+        compareTriplet(ref_vel, hvel, 1.0e-6);
+    }
+
+    fails += ::testing::Test::HasFailure();
+}
+
+TEST_F(gpuOrbitTest,CircleLegendre) {
+    /*
+     * Test circular orbit.
+     */
+
+    Orbit orb_cpu(1,11);
+    double t = 1000.;
+    cartesian_t opos = {7000000., -4500000., 7800000.};
+    cartesian_t ovel, pos, vel, hpos, hvel;
+
+    // Create circular orbit with 11 state vectors, each 5 s apart
+    for (int i=0; i<11; i++) {
+        makeCircularSV(i*5., opos, ovel, pos, vel);
+        orb_cpu.setStateVector(i, t+(i*5.), pos, vel);
+    }
+
+    // deep copy create same orbit on GPU
+    gpuOrbit orb_gpu(orb_cpu);
+
+    // Interpolation test times
+    double test_t[] = {11.65, 18.35, 27.25, 44.65};
+    cartesian_t ref_pos, ref_vel;
+
+    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
+    for (int i=0; i<4; i++) {
+        makeCircularSV(test_t[i], opos, ovel, ref_pos, ref_vel);
+        orb_cpu.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD);
+        orb_gpu.interpolateLegendreOrbit_h(t+test_t[i], hpos, hvel);
+        compareTriplet(pos, hpos, 1.0e-5);
+        compareTriplet(vel, hvel, 1.0e-6);
+        compareTriplet(ref_pos, hpos, 1.0e-5);
+        compareTriplet(ref_vel, hvel, 1.0e-6);
+    }
+
+    fails += ::testing::Test::HasFailure();
+}
+
 int main(int argc, char **argv) {
 
     ::testing::InitGoogleTest(&argc, argv);
