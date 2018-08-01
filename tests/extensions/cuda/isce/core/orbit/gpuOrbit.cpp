@@ -153,7 +153,7 @@ TEST_F(gpuOrbitTest,LinearLegendre){
     for (int i=0; i<4; i++) {
         makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
         orb_cpu.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD);
-        orb_gpu.interpolateWGS84Orbit_h(t+test_t[i], hpos, hvel);
+        orb_gpu.interpolateLegendreOrbit_h(t+test_t[i], hpos, hvel);
         compareTriplet(pos, hpos, 1.0e-5);
         compareTriplet(vel, hvel, 1.0e-6);
         compareTriplet(ref_pos, hpos, 1.0e-5);
@@ -284,6 +284,175 @@ TEST_F(gpuOrbitTest,CircleLegendre) {
         orb_gpu.interpolateLegendreOrbit_h(t+test_t[i], hpos, hvel);
         compareTriplet(pos, hpos, 1.0e-5);
         compareTriplet(vel, hvel, 1.0e-6);
+        compareTriplet(ref_pos, hpos, 1.0e-5);
+        compareTriplet(ref_vel, hvel, 1.0e-6);
+    }
+
+    fails += ::testing::Test::HasFailure();
+}
+
+void makePolynomialSV(double dt, vector<double> &xpoly, vector<double> &ypoly,
+                                 vector<double> &zpoly, cartesian_t &pos,
+                                 cartesian_t &vel) {
+
+    pos[0] = 0.0;
+    double fact = 1.0;
+    for (int i=0; i < static_cast<int>(xpoly.size()); i++, fact*=dt)
+    {
+        pos[0] += fact * xpoly[i];
+    }
+
+    vel[0] = 0.0;
+    fact = 1.0;
+    for(int i=1; i < static_cast<int>(xpoly.size()); i++, fact*=dt)
+    {
+        vel[0] += i * xpoly[i] * fact;
+    }
+
+
+    pos[1] = 0.0;
+    fact = 1.0;
+    for (int i=0; i < static_cast<int>(ypoly.size()); i++, fact*=dt)
+    {
+        pos[1] += fact * ypoly[i];
+    }
+
+    vel[1] = 0.0;
+    fact = 1.0;
+    for(int i=1; i < static_cast<int>(ypoly.size()); i++, fact*=dt)
+    {
+        vel[1] += i * ypoly[i] * fact;
+    }
+
+
+    pos[2] = 0.0;
+    fact = 1.0;
+    for (int i=0; i < static_cast<int>(zpoly.size()); i++, fact*=dt)
+    {
+        pos[2] += fact * zpoly[i];
+    }
+
+    vel[2] = 0.0;
+    fact = 1.0;
+    for(int i=1; i < static_cast<int>(zpoly.size()); i++, fact*=dt)
+    {
+        vel[2] += i * zpoly[i] * fact;
+    }
+}
+
+TEST_F(gpuOrbitTest,PolynomialSCH) {
+    /*
+     * Test polynomial orbit.
+     */
+
+    Orbit orb_cpu(1,11);
+    double t = 1000.;
+    cartesian_t pos, vel, hpos, hvel;
+
+    vector<double> xpoly = {-7000000., 5435., -45.0, 7.3};
+    vector<double> ypoly = {5400000., -4257., 23.0, 3.9, 0.01};
+    vector<double> zpoly = {0.0, 7000., 11.0};
+
+    // Create straight-line orbit with 11 state vectors, each 10 s apart
+    for (int i=0; i<11; i++) {
+        makePolynomialSV(i*10., xpoly, ypoly, zpoly, pos, vel);
+        orb_cpu.setStateVector(i, t+(i*10.), pos, vel);
+    }
+
+    // deep copy create same orbit on GPU
+    gpuOrbit orb_gpu(orb_cpu);
+
+    // Interpolation test times
+    double test_t[] = {23.3, 36.7, 54.5, 89.3};
+    cartesian_t ref_pos, ref_vel;
+
+    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
+    for (int i=0; i<4; i++) {
+        makePolynomialSV(test_t[i], xpoly, ypoly, zpoly, ref_pos, ref_vel);
+        orb_cpu.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
+        orb_gpu.interpolateSCHOrbit_h(t+test_t[i], hpos, hvel);
+        compareTriplet(ref_pos, pos, 1.0e-5);
+        compareTriplet(ref_vel, vel, 1.0e-6);
+        compareTriplet(ref_pos, hpos, 1.0e-5);
+        compareTriplet(ref_vel, hvel, 1.0e-6);
+    }
+
+    fails += ::testing::Test::HasFailure();
+}
+
+TEST_F(gpuOrbitTest,PolynomialHermite) {
+    /*
+     * Test polynomial orbit.
+     */
+
+    Orbit orb_cpu(1,11);
+    double t = 1000.;
+    cartesian_t pos, vel, hpos, hvel;
+
+    vector<double> xpoly = {-7000000., 5435., -45.0, 7.3};
+    vector<double> ypoly = {5400000., -4257., 23.0, 3.9, 0.01};
+    vector<double> zpoly = {0.0, 7000., 11.0};
+
+    // Create straight-line orbit with 11 state vectors, each 10 s apart
+    for (int i=0; i<11; i++) {
+        makePolynomialSV(i*10., xpoly, ypoly, zpoly, pos, vel);
+        orb_cpu.setStateVector(i, t+(i*10.), pos, vel);
+    }
+
+    // deep copy create same orbit on GPU
+    gpuOrbit orb_gpu(orb_cpu);
+
+    // Interpolation test times
+    double test_t[] = {23.3, 36.7, 54.5, 89.3};
+    cartesian_t ref_pos, ref_vel;
+
+    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
+    for (int i=0; i<4; i++) {
+        makePolynomialSV(test_t[i], xpoly, ypoly, zpoly, ref_pos, ref_vel);
+        orb_cpu.interpolate(t+test_t[i], pos, vel, HERMITE_METHOD);
+        orb_gpu.interpolateWGS84Orbit_h(t+test_t[i], hpos, hvel);
+        compareTriplet(ref_pos, pos, 1.0e-5);
+        compareTriplet(ref_vel, vel, 1.0e-6);
+        compareTriplet(ref_pos, hpos, 1.0e-5);
+        compareTriplet(ref_vel, hvel, 1.0e-6);
+    }
+
+    fails += ::testing::Test::HasFailure();
+}
+
+TEST_F(gpuOrbitTest,LegendreSCH) {
+    /*
+     * Test polynomial orbit.
+     */
+
+    Orbit orb_cpu(1,11);
+    double t = 1000.;
+    cartesian_t pos, vel, hpos, hvel;
+
+    vector<double> xpoly = {-7000000., 5435., -45.0, 7.3};
+    vector<double> ypoly = {5400000., -4257., 23.0, 3.9, 0.01};
+    vector<double> zpoly = {0.0, 7000., 11.0};
+
+    // Create straight-line orbit with 11 state vectors, each 10 s apart
+    for (int i=0; i<11; i++) {
+        makePolynomialSV(i*10., xpoly, ypoly, zpoly, pos, vel);
+        orb_cpu.setStateVector(i, t+(i*10.), pos, vel);
+    }
+
+    // deep copy create same orbit on GPU
+    gpuOrbit orb_gpu(orb_cpu);
+
+    // Interpolation test times
+    double test_t[] = {23.3, 36.7, 54.5, 89.3};
+    cartesian_t ref_pos, ref_vel;
+
+    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
+    for (int i=0; i<4; i++) {
+        makePolynomialSV(test_t[i], xpoly, ypoly, zpoly, ref_pos, ref_vel);
+        orb_cpu.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD);
+        orb_gpu.interpolateLegendreOrbit_h(t+test_t[i], hpos, hvel);
+        compareTriplet(ref_pos, pos, 1.0e-5);
+        compareTriplet(ref_vel, vel, 1.0e-6);
         compareTriplet(ref_pos, hpos, 1.0e-5);
         compareTriplet(ref_vel, hvel, 1.0e-6);
     }
