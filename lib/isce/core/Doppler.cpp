@@ -162,7 +162,7 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
         targetLLH[2] = height;
         // Compute updated sch height
         ellipsoid.lonLatToXyz(targetLLH, targetVec);
-        ptm.convertSCHtoXYZ(targetSCH, targetVec, XYZ_2_SCH);
+        ptm.convertXYZtoSCH(targetVec, targetSCH);
         zsch = targetSCH[2];
 
         // Check convergence

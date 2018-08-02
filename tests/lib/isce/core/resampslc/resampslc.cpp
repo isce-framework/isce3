@@ -14,9 +14,11 @@
 
 // isce::core
 #include "isce/core/Constants.h"
-#include "isce/core/Raster.h"
 #include "isce/core/ResampSlc.h"
 #include "isce/core/Serialization.h"
+
+// isce::io
+#include "isce/io/Raster.h"
 
 // Declaration for utility function to read metadata stream from VRT
 std::stringstream streamFromVRT(const char * filename, int bandNum=1);
@@ -78,8 +80,8 @@ TEST_F(ResampSlcTest, Resamp) {
 // Compute sum of difference between reference image and warped image
 TEST_F(ResampSlcTest, Validate) {
     // Open SLC rasters 
-    isce::core::Raster refSlc("../../data/warped_envisat.slc.vrt");
-    isce::core::Raster testSlc("warped.slc");
+    isce::io::Raster refSlc("../../data/warped_envisat.slc.vrt");
+    isce::io::Raster testSlc("warped.slc");
     // Compute total complex error
     std::complex<float> sum(0.0, 0.0);
     size_t count = 0;

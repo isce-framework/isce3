@@ -25,7 +25,6 @@ namespace isce { namespace core { namespace cuda {
         double a;
         double e2;
 
-        //__host__ __device__ gpuEllipsoid(double maj, double ecc) : a(maj), e2(ecc) {}
         CUDA_HOSTDEV gpuEllipsoid(double maj, double ecc) : a(maj), e2(ecc) {}
         CUDA_HOSTDEV gpuEllipsoid() : gpuEllipsoid(0.,0.) {}
         CUDA_HOSTDEV gpuEllipsoid(const gpuEllipsoid &e) : a(e.a), e2(e.e2) {}

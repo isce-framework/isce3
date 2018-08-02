@@ -11,7 +11,7 @@ include isce.def
 
 # the list of directories to visit
 RECURSE_DIRS = \
-    isce \
+    cython \
 
 #--------------------------------------------------------------------------
 # the recursive targets

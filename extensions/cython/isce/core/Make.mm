@@ -33,7 +33,6 @@ MODULE_CYTHON_PYX = \
     pyPoly1d.pyx \
     pyPoly2d.pyx \
     pyPosition.pyx \
-    pyRaster.pyx \
     pyTimeDelta.pyx \
 
 # the headers
@@ -51,7 +50,6 @@ MODULE_CYTHON_PXD = \
     Poly1d.pxd \
     Poly2d.pxd \
     Position.pxd \
-    Raster.pxd \
     Serialization.pxd \
     TimeDelta.pxd \
 

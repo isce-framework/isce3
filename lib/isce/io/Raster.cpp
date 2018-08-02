@@ -16,7 +16,7 @@
 
 
 // Construct a Raster object referring to existing file
-isce::core::Raster::Raster(const std::string &fname,   // filename
+isce::io::Raster::Raster(const std::string &fname,   // filename
 			   GDALAccess access) {        // GA_ReadOnly or GA_Update
 
   GDALAllRegister();  // GDAL checks internally if drivers are already loaded
@@ -26,13 +26,19 @@ isce::core::Raster::Raster(const std::string &fname,   // filename
 
 
 // Construct a Raster object referring to existing file
-isce::core::Raster::Raster(const std::string &fname) :
-  isce::core::Raster(fname, GA_ReadOnly) {}
+isce::io::Raster::Raster(const std::string &fname) :
+  isce::io::Raster(fname, GA_ReadOnly) {}
 
+
+// Construct a Raster object given an open GDAL Dataset
+isce::io::Raster::Raster(GDALDataset * inputDataset) {
+  GDALAllRegister();
+  dataset(inputDataset);
+} 
 
 
 // Construct a Raster object referring to new file
-isce::core::Raster::Raster(const std::string &fname,          // filename 
+isce::io::Raster::Raster(const std::string &fname,          // filename 
 			   size_t width,                      // number of columns
 			   size_t length,                     // number of lines
 			   size_t numBands,                   // number of bands
@@ -59,37 +65,37 @@ isce::core::Raster::Raster(const std::string &fname,          // filename
 
 
 // Construct a Raster object referring to new file assuming default GDAL driver.
-isce::core::Raster::Raster(const std::string &fname, size_t width, size_t length, size_t numBands, GDALDataType dtype) :
-  isce::core::Raster(fname, width, length, numBands, dtype, isce::core::defaultGDALDriver) {}
+isce::io::Raster::Raster(const std::string &fname, size_t width, size_t length, size_t numBands, GDALDataType dtype) :
+  isce::io::Raster(fname, width, length, numBands, dtype, isce::io::defaultGDALDriver) {}
 
 
 
 // Construct a Raster object referring to new file assuming default GDAL driver and dataype.
-isce::core::Raster::Raster(const std::string &fname, size_t width, size_t length, size_t numBands) :
-  isce::core::Raster(fname, width, length, numBands, isce::core::defaultGDALDataType) {}
+isce::io::Raster::Raster(const std::string &fname, size_t width, size_t length, size_t numBands) :
+  isce::io::Raster(fname, width, length, numBands, isce::io::defaultGDALDataType) {}
 
 
 
 // Construct a Raster object referring to new file assuming default GDAL driver and band.
-isce::core::Raster::Raster(const std::string &fname, size_t width, size_t length, GDALDataType dtype) :
-  isce::core::Raster(fname, width, length, 1, dtype, isce::core::defaultGDALDriver) {}
+isce::io::Raster::Raster(const std::string &fname, size_t width, size_t length, GDALDataType dtype) :
+  isce::io::Raster(fname, width, length, 1, dtype, isce::io::defaultGDALDriver) {}
 
 
 
 // Construct a Raster object referring to new file assuming default GDAL driver, dataype and band.
-isce::core::Raster::Raster(const std::string &fname, size_t width, size_t length) :
-  isce::core::Raster(fname, width, length, 1) {}
+isce::io::Raster::Raster(const std::string &fname, size_t width, size_t length) :
+  isce::io::Raster(fname, width, length, 1) {}
 
 
 
 // Construct a Raster object referring to new file assuming default GDAL driver, dataype and band.
-isce::core::Raster::Raster(const std::string &fname, const Raster &rast) :
-  isce::core::Raster(fname, rast.width(), rast.length(), rast.numBands(), rast.dtype()) {}
+isce::io::Raster::Raster(const std::string &fname, const Raster &rast) :
+  isce::io::Raster(fname, rast.width(), rast.length(), rast.numBands(), rast.dtype()) {}
 
 
 
 // Copy constructor. It increments GDAL's reference counter after weak-copying the pointer
-isce::core::Raster::Raster(const Raster &rast) {
+isce::io::Raster::Raster(const Raster &rast) {
   dataset( rast._dataset );
   dataset()->Reference();
 }
@@ -98,7 +104,7 @@ isce::core::Raster::Raster(const Raster &rast) {
 
 // Construct a Raster object referring to a VRT dataset with multiple bands from a vector
 // of Raster objects. Input rasters with multiple bands are unfolded within the output raster
-isce::core::Raster::Raster(const std::string& fname, const std::vector<Raster>& rastVec) {  
+isce::io::Raster::Raster(const std::string& fname, const std::vector<Raster>& rastVec) {  
   GDALAllRegister();
   GDALDriver * outputDriver = GetGDALDriverManager()->GetDriverByName("VRT");
   dataset( outputDriver->Create (fname.c_str(),
@@ -115,7 +121,7 @@ isce::core::Raster::Raster(const std::string& fname, const std::vector<Raster>& 
 
 //Auto-identify EPSG code for input raster file
 //We will delegation auto-discovery to GDAL
-int isce::core::Raster::getEPSG()
+int isce::io::Raster::getEPSG()
 {
     int epsgcode = -9999;
 
@@ -235,7 +241,7 @@ int isce::core::Raster::getEPSG()
 }
 
 //Set projection system for raster based on EPSG code
-int isce::core::Raster::setEPSG(int epsgcode)
+int isce::io::Raster::setEPSG(int epsgcode)
 {
     int status = 1;
 
@@ -267,7 +273,7 @@ int isce::core::Raster::setEPSG(int epsgcode)
 }
 // Destructor. When GDALOpenShared() is used the dataset is dereferenced
 // and closed only if the referenced count is less than 1.
-isce::core::Raster::~Raster() {
+isce::io::Raster::~Raster() {
   GDALClose( _dataset );
 }
 

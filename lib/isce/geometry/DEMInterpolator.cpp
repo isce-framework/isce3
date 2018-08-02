@@ -9,7 +9,7 @@
 
 // Load DEM subset into memory
 void isce::geometry::DEMInterpolator::
-loadDEM(isce::core::Raster & demRaster,
+loadDEM(isce::io::Raster & demRaster,
         double minLon, double maxLon, double minLat, double maxLat,
         isce::core::dataInterpMethod interpMethod, int epsgcode) {
 

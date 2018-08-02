@@ -4,11 +4,14 @@
 # Copyright 2017-2018
 #
 
+import gdal
 from libcpp cimport bool
 from libcpp.string cimport string
 from libcpp.vector cimport vector
+from libc.stdint cimport uint64_t
 from Raster cimport Raster
-from Raster cimport GDALDataType as GDT
+from GDAL cimport GDALDataset
+from GDAL cimport GDALDataType as GDT
 
 cdef class pyRaster:
     '''
@@ -30,7 +33,23 @@ cdef class pyRaster:
     cdef bool __owner
 
     def __cinit__(self, py_filename, int access=0, int dtype=0, int width=0,
-                  int length=0, int numBands=0, driver='', collection=[]):
+                  int length=0, int numBands=0, driver='', collection=[], dataset=None):
+
+        # If a gdal.Dataset is passed in as a keyword argument, intercept that here
+        # and create a Raster
+        cdef GDALDataset * gdal_dset
+        cdef uint64_t swig_pointer
+        if dataset is not None:
+            assert isinstance(dataset, gdal.Dataset), \
+                'dataset must be a gdal.Dataset instance.'
+            # Get swig address to underlying GDAL dataset
+            swig_pointer = <uint64_t> dataset.this
+            # Convert to cython GDALDataset
+            gdal_dset = <GDALDataset *> swig_pointer
+            # Make raster
+            self.c_raster = new Raster(gdal_dset)
+            self.__owner = False
+            return
 
         # Convert the filename to a C++ string representation
         cdef string filename = pyStringToBytes(py_filename)
@@ -71,8 +90,6 @@ cdef class pyRaster:
             self.c_raster = new Raster(filename, rasterlist)
             return
         
-
-
         # Read-only
         if access == 0:
             self.c_raster = new Raster(filename)

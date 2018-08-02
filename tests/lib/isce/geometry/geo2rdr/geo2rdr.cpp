@@ -14,15 +14,14 @@
 
 // isce::core
 #include "isce/core/Constants.h"
-#include "isce/core/Raster.h"
 #include "isce/core/Serialization.h"
+
+// isce::io
+#include "isce/io/Raster.h"
 
 // isce::geometry
 #include "isce/geometry/Serialization.h"
 #include "isce/geometry/Geo2rdr.h"
-
-// Declaration for utility function to read metadata stream from VRT
-std::stringstream streamFromVRT(const char * filename, int bandNum=1);
 
 TEST(Geo2rdrTest, RunGeo2rdr) {
 
@@ -32,15 +31,15 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     isce::core::Ellipsoid ellipsoid;
     isce::core::Metadata meta;
 
-    // Load metadata
-    std::stringstream metastream = streamFromVRT("../../data/envisat.slc.vrt");
-    {
-    cereal::XMLInputArchive archive(metastream);
-    archive(cereal::make_nvp("Orbit", orbit),
-            cereal::make_nvp("SkewDoppler", doppler),
-            cereal::make_nvp("Ellipsoid", ellipsoid),
-            cereal::make_nvp("Radar", meta));
-    }
+    // Open the HDF5 product
+    std::string h5file("../../data/envisat.h5");
+    isce::io::IH5File file(h5file);
+
+    // Deserialization
+    isce::core::load(file, ellipsoid);
+    isce::core::load(file, orbit, "POE");
+    isce::core::load(file, doppler, "skew_dcpolynomial");
+    isce::core::load(file, meta, "primary");
 
     // Create geo2rdr isntance
     isce::geometry::Geo2rdr geo(ellipsoid, orbit, meta);
@@ -53,7 +52,7 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     }
 
     // Open topo raster from topo unit test
-    isce::core::Raster topoRaster("../topo/topo.vrt");
+    isce::io::Raster topoRaster("../topo/topo.vrt");
 
     // Run geo2rdr
     geo.geo2rdr(topoRaster, doppler, ".");
@@ -63,8 +62,8 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
 // Results should be very close to zero
 TEST(Geo2rdrTest, CheckResults) {
     // Open rasters
-    isce::core::Raster rgoffRaster("range.off");
-    isce::core::Raster azoffRaster("azimuth.off");
+    isce::io::Raster rgoffRaster("range.off");
+    isce::io::Raster azoffRaster("azimuth.off");
     double rg_error = 0.0;
     double az_error = 0.0;
     for (size_t i = 0; i < rgoffRaster.length(); ++i) {
@@ -84,29 +83,6 @@ TEST(Geo2rdrTest, CheckResults) {
     // Check errors; azimuth errors tend to be a little larger
     ASSERT_TRUE(rg_error < 1.0e-10);
     ASSERT_TRUE(az_error < 1.0e-10);
-}
-
-// Read metadata from a VRT file and return a stringstream object
-std::stringstream streamFromVRT(const char * filename, int bandNum) {
-    // Register GDAL drivers
-    GDALAllRegister();
-    // Open the VRT dataset
-    GDALDataset * dataset = (GDALDataset *) GDALOpen(filename, GA_ReadOnly);
-    if (dataset == NULL) {
-        std::cout << "Cannot open dataset " << filename << std::endl;
-        exit(1);
-    }
-    // Read the metadata
-    char **metadata_str = dataset->GetRasterBand(bandNum)->GetMetadata("xml:isce");
-    // The cereal-relevant XML is the first element in the list
-    std::string meta{metadata_str[0]};
-    // Close the VRT dataset
-    GDALClose(dataset);
-    // Convert to stream
-    std::stringstream metastream;
-    metastream << meta;
-    // All done
-    return metastream;
 }
 
 int main(int argc, char * argv[]) {

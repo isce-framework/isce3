@@ -13,6 +13,11 @@ def pyStringToBytes(s):
     else:
         raise ValueError('Input Python string not str or bytes')
 
+# Include the io extensions
+include "io/pyGDAL.pyx"
+include "io/pyRaster.pyx"
+include "io/pyIH5.pyx"
+
 # Include the core extensions
 include "core/pyTimeDelta.pyx"
 include "core/pyDateTime.pyx"
@@ -29,7 +34,6 @@ include "core/pyLinAlg.pyx"
 include "core/pyOrbit.pyx"
 include "core/pyPoly1d.pyx"
 include "core/pyPoly2d.pyx"
-include "core/pyRaster.pyx"
 include "core/pyResampSlc.pyx"
 
 # Include the geometry extensions

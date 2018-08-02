@@ -17,8 +17,10 @@
 #include "Interpolator.h"
 #include "Poly2d.h"
 #include "Metadata.h"
-#include "Raster.h"
 #include "Tile.h"
+
+// isce::io
+#include "isce/io/Raster.h"
 
 // Declarations
 namespace isce {
@@ -89,10 +91,11 @@ class isce::core::ResampSlc {
         Matrix<float> _fintp;
 
         // Tile initialization
-        void _initializeTile(Tile_t &, Raster &, Raster &, int);
+        void _initializeTile(Tile_t &, isce::io::Raster &, isce::io::Raster &, int);
 
         // Tile transformation
-        void _transformTile(Tile_t &, Raster &, Raster &, Raster &, int, bool, int &);
+        void _transformTile(Tile_t &, isce::io::Raster &, isce::io::Raster &,
+                            isce::io::Raster &, int, bool, int &);
 
         // Convenience functions
         inline int _computeNumberOfTiles(int, int);

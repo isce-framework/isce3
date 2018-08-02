@@ -580,8 +580,7 @@ cdef class pyOrbit:
         cdef char *cstring = fname
         self.c_orbit.dumpToHDR(cstring)
 
-    def archive(self, metadata):
-        load_archive[Orbit](pyStringToBytes(metadata),
-                            'Orbit',
-                            self.c_orbit)
+    def archive(self, pyIH5File h5file, orbit_type='POE', pyDateTime refEpoch=MIN_DATE_TIME):
+        load(deref(h5file.c_ih5file), deref(self.c_orbit),
+             pyStringToBytes(orbit_type), deref(refEpoch.c_datetime))
 

@@ -131,4 +131,24 @@ def test_createMultiBandVRT():
 
     vrt = None
 
+def test_createNumpyDataset():
+    import numpy as np
+    from isceextension import pyRaster
+    from osgeo import gdal, gdal_array
+    import os
+    gdal.UseExceptions()
+
+    ny, nx = 200, 100
+    data = np.random.randn(ny, nx).astype(np.float32)
+    
+    dset = gdal_array.OpenArray(data)
+    raster = pyRaster('', dataset=dset)
+
+    assert(raster.width == nx)
+    assert(raster.length == ny)
+    assert(raster.getDatatype() == 6)
+
+    dset = None
+    del raster
+
 

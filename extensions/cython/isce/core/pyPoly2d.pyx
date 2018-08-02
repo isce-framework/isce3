@@ -6,7 +6,7 @@
 
 from libcpp cimport bool
 from Poly2d cimport Poly2d
-from Serialization cimport load_archive
+from Serialization cimport *
 
 cdef class pyPoly2d:
     '''
@@ -304,8 +304,18 @@ cdef class pyPoly2d:
         '''
         self.c_poly2d.printPoly()
 
-    def archive(self, metadata, tag):
-        load_archive[Poly2d](pyStringToBytes(metadata),
-                             pyStringToBytes(tag),
-                             self.c_poly2d)
+    def archive(self, pyIH5File h5file, polyName):
+        '''
+        Load Poly2d properties from H5 product.
+
+        Args:
+            h5file (pyIH5File): IH5File for H5 product.
+            polyName (str): H5 dataset name for polynomial.
+
+        Return:
+            None
+        '''
+        load(deref(h5file.c_ih5file),
+             deref(self.c_poly2d),
+             <string> pyStringToBytes(polyName))
 

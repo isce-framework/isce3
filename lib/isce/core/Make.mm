@@ -25,7 +25,6 @@ PROJ_SRCS = \
     Position.cpp \
     Projections.cpp \
     Quaternion.cpp \
-    Raster.cpp \
     ResampSlc.cpp \
     TimeDelta.cpp \
 
@@ -62,8 +61,6 @@ EXPORT_PKG_HEADERS = \
     Projections.h \
     Quaternion.h \
     Quaternion.icc \
-    Raster.h \
-    Raster.icc \
     ResampSlc.h \
     ResampSlc.icc \
     Serialization.h \
