@@ -28,7 +28,7 @@ __device__ void gpuPegtrans::radar2xyz(gpuEllipsoid &elp, gpuPeg &peg) {
 
     double llh[3] = {peg.lat, peg.lon, 0.};
     double temp[3];
-    elp.latLonToXyz(temp,llh);
+    elp.lonLatToXyz(temp,llh);
 
     ov[0] = temp[0] - (radcur * cos(peg.lat) * cos(peg.lon));
     ov[1] = temp[1] - (radcur * cos(peg.lat) * sin(peg.lon));

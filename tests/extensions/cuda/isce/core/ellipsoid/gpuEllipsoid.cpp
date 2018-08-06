@@ -45,7 +45,7 @@ struct GpuEllipsoidTest : public ::testing::Test {
         isce::core::cartesian_t xyz, gpu_xyz, cpu_xyz; \
         isce::core::cartesian_t llh, gpu_llh, cpu_llh; \
         llh = ref_llh;                  \
-        wgs84_gpu.latLonToXyz_h(llh, gpu_xyz);    \
+        wgs84_gpu.lonLatToXyz_h(llh, gpu_xyz);    \
         wgs84_cpu.lonLatToXyz(llh, cpu_xyz);    \
         EXPECT_NEAR(gpu_xyz[0], ref_xyz[0], 1.0e-6);\
         EXPECT_NEAR(gpu_xyz[1], ref_xyz[1], 1.0e-6);\

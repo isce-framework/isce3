@@ -13,7 +13,7 @@ using std::vector;
 using isce::core::cuda::gpuEllipsoid;
 using isce::core::cuda::gpuLinAlg;
 
-__device__ void gpuEllipsoid::latLonToXyz(double *llh, double *xyz) {
+__device__ void gpuEllipsoid::lonLatToXyz(double *llh, double *xyz) {
     double re = rEast(llh[1]);
     xyz[0] = (re + llh[2]) * cos(llh[1]) * cos(llh[0]);
     xyz[1] = (re + llh[2]) * cos(llh[1]) * sin(llh[0]);
@@ -48,15 +48,15 @@ __device__ void gpuEllipsoid::TCNbasis(double *pos, double *vel, double *t, doub
     gpuLinAlg::unitVec(temp,t);
 }
 
-__global__ void latLonToXyz_d(gpuEllipsoid elp, double *llh, double *xyz) {
+__global__ void lonLatToXyz_d(gpuEllipsoid elp, double *llh, double *xyz) {
     /*
-     *  GPU-side helper kernel for latLonToXyz_h to use as a consistency check. Note that elp, llh,
+     *  GPU-side helper kernel for lonLatToXyz_h to use as a consistency check. Note that elp, llh,
      *  and xyz are GPU-side memory constructs.
      */
-    elp.latLonToXyz(llh, xyz);
+    elp.lonLatToXyz(llh, xyz);
 }
 
-__host__ void gpuEllipsoid::latLonToXyz_h(cartesian_t &llh, cartesian_t &xyz) {
+__host__ void gpuEllipsoid::lonLatToXyz_h(cartesian_t &llh, cartesian_t &xyz) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread. This function
      *  is primarily meant to be used as a consistency check in the test suite, but may be used in
@@ -71,9 +71,9 @@ __host__ void gpuEllipsoid::latLonToXyz_h(cartesian_t &llh, cartesian_t &xyz) {
     cudaMalloc((double**)&llh_d, 3*sizeof(double));
     cudaMalloc((double**)&xyz_d, 3*sizeof(double));
     cudaMemcpy(llh_d, llh.data(), 3*sizeof(double), cudaMemcpyHostToDevice);
-    // Run the latLonToXyz function on the gpuEllipsoid object on the GPU
+    // Run the lonLatToXyz function on the gpuEllipsoid object on the GPU
     dim3 grid(1), block(1);
-    latLonToXyz_d <<<grid,block>>>(*this, llh_d, xyz_d);
+    lonLatToXyz_d <<<grid,block>>>(*this, llh_d, xyz_d);
     // Copy the resulting xyz back to the CPU-side vector
     cudaMemcpy(xyz.data(), xyz_d, 3*sizeof(double), cudaMemcpyDeviceToHost);
     cudaFree(llh_d);
