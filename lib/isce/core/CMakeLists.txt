@@ -22,7 +22,6 @@ set(LOCAL_SRCS
               Position.cpp
               Projections.cpp
               Quaternion.cpp
-              ResampSlc.cpp
               TimeDelta.cpp)
 
 ####Append current path to every source file
@@ -56,8 +55,6 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Quaternion.h
                                     Quaternion.icc
                                     Serialization.h
-                                    ResampSlc.h
-                                    ResampSlc.icc
                                     Serialization.h
                                     StateVector.h
                                     TimeDelta.h)
