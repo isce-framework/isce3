@@ -259,15 +259,15 @@ __global__ void interpolateWGS84Orbit_d(gpuOrbit orb, double tintp, double *opos
     *retcode = orb.interpolateWGS84Orbit(tintp, opos, ovel);
 }
 
-__host__ int gpuOrbit::interpolateWGS84Orbit_h(double tintp, vector<double> &opos, 
-                                               vector<double> &ovel) {
+__host__ int gpuOrbit::interpolateWGS84Orbit_h(double tintp, cartesian_t &opos, 
+                                               cartesian_t &ovel) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread for consistency
      *  checking.
      */
     // Check inputs for valid length
-    checkVecLen(opos, 3);
-    checkVecLen(ovel, 3);
+    //checkVecLen(opos, 3);
+    //checkVecLen(ovel, 3);
     // Malloc memory on the GPU and copy inputs over
     double *opos_d, *ovel_d;
     int *retcode_d;
@@ -298,15 +298,15 @@ __global__ void interpolateLegendreOrbit_d(gpuOrbit orb, double tintp, double *o
     *retcode = orb.interpolateLegendreOrbit(tintp, opos, ovel);
 }
 
-__host__ int gpuOrbit::interpolateLegendreOrbit_h(double tintp, vector<double> &opos,
-                                               vector<double> &ovel) {
+__host__ int gpuOrbit::interpolateLegendreOrbit_h(double tintp, cartesian_t &opos,
+                                               cartesian_t &ovel) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread for consistency
      *  checking.
      */
     // Check inputs for valid length
-    checkVecLen(opos, 3);
-    checkVecLen(ovel, 3);
+    //checkVecLen(opos, 3);
+    //checkVecLen(ovel, 3);
     // Malloc memory on the GPU and copy inputs over
     double *opos_d, *ovel_d;
     int *retcode_d;
@@ -336,15 +336,15 @@ __global__ void interpolateSCHOrbit_d(gpuOrbit orb, double tintp, double *opos, 
     *retcode = orb.interpolateSCHOrbit(tintp, opos, ovel);
 }
 
-__host__ int gpuOrbit::interpolateSCHOrbit_h(double tintp, vector<double> &opos,
-                                               vector<double> &ovel) {
+__host__ int gpuOrbit::interpolateSCHOrbit_h(double tintp, cartesian_t &opos,
+                                               cartesian_t &ovel) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread for consistency
      *  checking.
      */
     // Check inputs for valid length
-    checkVecLen(opos, 3);
-    checkVecLen(ovel, 3);
+    // checkVecLen(opos, 3);
+    // checkVecLen(ovel, 3);
     // Malloc memory on the GPU and copy inputs over
     double *opos_d, *ovel_d;
     int *retcode_d;
