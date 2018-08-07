@@ -10,7 +10,7 @@ from libcpp.string cimport string
 from Poly2d cimport Poly2d
 from ImageMode cimport ImageMode
 
-cdef extern from "isce/core/ResampSlc.h" namespace "isce::core":
+cdef extern from "isce/image/ResampSlc.h" namespace "isce::image":
 
     # ResampSlc class
     cdef cppclass ResampSlc:

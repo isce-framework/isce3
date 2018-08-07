@@ -14,7 +14,6 @@
 
 // isce::core
 #include "isce/core/Constants.h"
-#include "isce/core/ResampSlc.h"
 #include "isce/core/Serialization.h"
 
 // isce::io
@@ -24,6 +23,9 @@
 // isce::product
 #include "isce/product/ImageMode.h"
 #include "isce/product/Serialization.h"
+
+// isce::image
+#include "isce/image/ResampSlc.h"
 
 
 // Test that we can set radar metadata and Doppler polynomial from XML
@@ -43,7 +45,7 @@ TEST(ResampSlcTest, Resamp) {
     load(file, doppler, "data_dcpolynomial");
 
     // Set resamp metadata and Doppler
-    isce::core::ResampSlc resamp;
+    isce::image::ResampSlc resamp;
     resamp.imageMode(mode);
     resamp.refImageMode(refMode);
     resamp.doppler(doppler);

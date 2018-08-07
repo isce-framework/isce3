@@ -172,7 +172,6 @@ namespace isce {
                     cereal::make_nvp("pegLatitude", meta.pegLatitude),
                     cereal::make_nvp("pegLongitude", meta.pegLongitude),
                     cereal::make_nvp("chirpSlope", meta.chirpSlope),
-                    cereal::make_nvp("pulseDuration", meta.pulseDuration),
                     cereal::make_nvp("antennaLength", meta.antennaLength),
                     cereal::make_nvp("sensingStart", meta.sensingStart.isoformat()));
         }
@@ -193,7 +192,6 @@ namespace isce {
                     cereal::make_nvp("pegLatitude", meta.pegLatitude),
                     cereal::make_nvp("pegLongitude", meta.pegLongitude),
                     cereal::make_nvp("chirpSlope", meta.chirpSlope),
-                    cereal::make_nvp("pulseDuration", meta.pulseDuration),
                     cereal::make_nvp("antennaLength", meta.antennaLength),
                     cereal::make_nvp("sensingStart", sensingStart));
             meta.sensingStart = sensingStart;
@@ -222,7 +220,6 @@ namespace isce {
             isce::io::loadFromH5(file, path + "/slant_range_spacing", meta.slantRangePixelSpacing);
             isce::io::loadFromH5(file, path + "/az_time_interval", pri);
             isce::io::loadFromH5(file, path + "/bandwidth", bandwidth);
-            isce::io::loadFromH5(file, path + "/pulse_duration", meta.pulseDuration);
             isce::io::loadFromH5(file, path + "/freq_center", centerFrequency);
             isce::io::loadFromH5(file, path + "/zero_doppler_start_az_time", sensingStart);
             isce::io::loadFromH5(file, "/science/metadata/identification/look_direction", lookDir);
@@ -233,7 +230,6 @@ namespace isce {
 
             // Finalize rest of metadata items
             meta.prf = 1.0 / pri;
-            meta.chirpSlope = bandwidth / meta.pulseDuration;
             meta.radarWavelength = SPEED_OF_LIGHT / centerFrequency;
             meta.sensingStart = std::string(sensingStart.str);
             std::string look(lookDir.str);

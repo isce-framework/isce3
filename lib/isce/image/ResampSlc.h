@@ -5,8 +5,8 @@
 // Copyright 2017-2018
 //
 
-#ifndef ISCE_CORE_RESAMPSLC_H
-#define ISCE_CORE_RESAMPSLC_H
+#ifndef ISCE_IMAGE_RESAMPSLC_H
+#define ISCE_IMAGE_RESAMPSLC_H
 
 #include <cstdint>
 #include <cstdio>
@@ -14,9 +14,8 @@
 #include <valarray>
 
 // isce::core
-#include "Interpolator.h"
-#include "Poly2d.h"
-#include "Tile.h"
+#include "isce/core/Interpolator.h"
+#include "isce/core/Poly2d.h"
 
 // isce::io
 #include "isce/io/Raster.h"
@@ -24,19 +23,23 @@
 // isce::product
 #include "isce/product/ImageMode.h"
 
+// isce::image
+#include "Constants.h"
+#include "Tile.h"
+
 // Declarations
 namespace isce {
-    namespace core {
+    namespace image {
         class ResampSlc;
     }
 }
 
 // Definition
-class isce::core::ResampSlc {
+class isce::image::ResampSlc {
 
     // Public data members
     public:
-        typedef isce::core::Tile<std::complex<float>> Tile_t;
+        typedef Tile<std::complex<float>> Tile_t;
 
     // Meta-methods
     public:
@@ -46,13 +49,13 @@ class isce::core::ResampSlc {
         inline ~ResampSlc();
 
         // Polynomial getters
-        inline Poly2d rgCarrier() const;
-        inline Poly2d azCarrier() const;
-        inline Poly2d doppler() const;
+        inline isce::core::Poly2d rgCarrier() const;
+        inline isce::core::Poly2d azCarrier() const;
+        inline isce::core::Poly2d doppler() const;
         // Polynomial setters
-        inline void rgCarrier(Poly2d &);
-        inline void azCarrier(Poly2d &);
-        inline void doppler(Poly2d &);
+        inline void rgCarrier(isce::core::Poly2d &);
+        inline void azCarrier(isce::core::Poly2d &);
+        inline void doppler(isce::core::Poly2d &);
 
         // Get image mode
         inline isce::product::ImageMode imageMode() const;
@@ -81,16 +84,16 @@ class isce::core::ResampSlc {
         int _inputBand;
 
         // Polynomials
-        Poly2d _rgCarrier;            // range carrier polynomial
-        Poly2d _azCarrier;            // azimuth carrier polynomial
-        Poly2d _dopplerPoly;          // Doppler polynomial
+        isce::core::Poly2d _rgCarrier;            // range carrier polynomial
+        isce::core::Poly2d _azCarrier;            // azimuth carrier polynomial
+        isce::core::Poly2d _dopplerPoly;          // Doppler polynomial
 
         // ImageMode
         isce::product::ImageMode _mode;       // image mode for image to be resampled
         isce::product::ImageMode _refMode;    // image mode for reference master image
 
         // Array of sinc coefficient
-        Matrix<float> _fintp;
+        isce::core::Matrix<float> _fintp;
 
         // Tile initialization
         void _initializeTile(Tile_t &, isce::io::Raster &, isce::io::Raster &, int);
@@ -104,14 +107,16 @@ class isce::core::ResampSlc {
 
         // Resampling interpolation methods
         void _prepareInterpMethods(int);
-        inline std::complex<float> _interpolateComplex(Matrix<std::complex<float>> &,
-            int, int, double, double, int, int);
+        inline std::complex<float> _interpolateComplex(
+            isce::core::Matrix<std::complex<float>> &,
+            int, int, double, double, int, int
+        );
 };
 
 // Get inline implementations for ResampSlc
-#define ISCE_CORE_RESAMPSLC_ICC
+#define ISCE_IMAGE_RESAMPSLC_ICC
 #include "ResampSlc.icc"
-#undef ISCE_CORE_RESAMPSLC_ICC
+#undef ISCE_IMAGE_RESAMPSLC_ICC
 
 #endif
 

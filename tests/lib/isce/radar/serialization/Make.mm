@@ -9,10 +9,7 @@ include isce.def
 
 # the pile of tests
 TESTS = \
-    serializeEllipsoid \
-    serializeOrbit \
-    serializeMetadata \
-    serializeDoppler \
+    serializeRadar \
 
 all: test clean
 

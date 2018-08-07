@@ -33,7 +33,6 @@ TEST(MetadataTest, CheckArchive) {
     ASSERT_EQ(meta.sensingStart.isoformat(), "2003-02-26T17:55:30.843491759");
     ASSERT_NEAR(meta.prf, 1652.415691672402, 1.0e-10);
     ASSERT_NEAR(meta.radarWavelength, 0.05623564240544047, 1.0e-10);
-    ASSERT_NEAR(meta.chirpSlope, 588741148672.000000, 1.0e-4);
     ASSERT_EQ(meta.lookSide, -1);
 
 }

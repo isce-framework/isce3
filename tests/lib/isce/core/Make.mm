@@ -24,7 +24,6 @@ PACKAGES = \
     poly \
     projections \
     serialization \
-    resampslc \
 
 # the standard targets
 all:

@@ -1,6 +1,6 @@
 #cython: language_level=3
 #
-# Author: Joshua Cohen
+# Author: Bryan V. Riel, Joshua Cohen
 # Copyright 2017
 #
 
@@ -44,7 +44,8 @@ include "product/pyMetadata.pyx"
 include "product/pyComplexImagery.pyx"
 include "product/pyProduct.pyx"
 
-include "core/pyResampSlc.pyx"
+# Include the image extensions
+include "image/pyResampSlc.pyx"
 
 # Include the geometry extensions
 include "geometry/pygeometry.pyx"

@@ -15,17 +15,15 @@
 #include <pyre/journal.h>
 
 // isce::core
-#include "Constants.h"
-#include "Interpolator.h"
+#include "isce/core/Constants.h"
+
+// isce::image
 #include "ResampSlc.h"
-using isce::core::SINC_HALF;
-using isce::core::SINC_LEN;
-using isce::core::SINC_ONE;
-using isce::core::SINC_SUB;
+
 using isce::io::Raster;
 
 // Main resamp entry point
-void isce::core::ResampSlc::
+void isce::image::ResampSlc::
 resamp(const std::string & inputFilename,          // filename of input SLC
        const std::string & outputFilename,         // filename of output resampled SLC
        const std::string & rgOffsetFilename,       // filename of range offsets
@@ -66,7 +64,7 @@ resamp(const std::string & inputFilename,          // filename of input SLC
     declare(inLength, inWidth, outLength, outWidth);
 
     // Initialize resampling methods
-    _prepareInterpMethods(SINC_METHOD);
+    _prepareInterpMethods(isce::core::SINC_METHOD);
    
     // Determine number of tiles needed to process image
     const int nTiles = _computeNumberOfTiles(outLength, _linesPerTile);
@@ -114,7 +112,7 @@ resamp(const std::string & inputFilename,          // filename of input SLC
 }
 
 // Initialize tile bounds
-void isce::core::ResampSlc::
+void isce::image::ResampSlc::
 _initializeTile(Tile_t & tile, Raster & inputSlc, Raster & azOffsetRaster, int rowBuffer) {
 
     // Cache geometry values
@@ -189,7 +187,7 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, Raster & azOffsetRaster, int r
 }
 
 // Interpolate tile to perform transformation
-void isce::core::ResampSlc::
+void isce::image::ResampSlc::
 _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
                Raster & azOffsetRaster, int inLength, bool flatten, int & outputLine) {
 
@@ -200,7 +198,7 @@ _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
     // Allocate valarrays for work
     std::valarray<float> residAz(outWidth), residRg(outWidth);
     std::valarray<std::complex<float>> imgOut(outWidth);
-    Matrix<std::complex<float>> chip(SINC_ONE, SINC_ONE);
+    isce::core::Matrix<std::complex<float>> chip(SINC_ONE, SINC_ONE);
     
     // Loop over lines to perform interpolation
     for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {

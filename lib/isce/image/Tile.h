@@ -5,8 +5,8 @@
 // Copyright 2018
 //
 
-#ifndef ISCE_CORE_TILE_H
-#define ISCE_CORE_TILE_H
+#ifndef ISCE_IMAGE_TILE_H
+#define ISCE_IMAGE_TILE_H
 
 #include <complex>
 #include <valarray>
@@ -16,14 +16,14 @@
 
 // Declarations
 namespace isce {
-    namespace core {
+    namespace image {
         template <typename T> class Tile;
     }
 }
 
 // Definition
 template <typename T>
-class isce::core::Tile {
+class isce::image::Tile {
     
     public:
         // Constructors
@@ -52,14 +52,14 @@ class isce::core::Tile {
         inline void declare(pyre::journal::info_t &) const;
 
         // Overload subscript operator to access valarray data
-        T & operator[](size_t index) {return _data[index];}
+        inline T & operator[](size_t index) {return _data[index];}
         // Read-only subscript operator
-        const T & operator[](size_t index) const {return _data[index];}
+        inline const T & operator[](size_t index) const {return _data[index];}
 
         // Overload () operator for 2D access
-        T & operator()(size_t row, size_t col) {return _data[row*_width+col];}
+        inline T & operator()(size_t row, size_t col) {return _data[row*_width+col];}
         // Read-only () operator for 2D access
-        const T & operator()(size_t row, size_t col) const {return _data[row*_width+col];}
+        inline const T & operator()(size_t row, size_t col) const {return _data[row*_width+col];}
 
         // Get reference to underlying data
         inline std::valarray<T> & data();
@@ -73,9 +73,9 @@ class isce::core::Tile {
 };
 
 // Get inline implementations of Tile
-#define ISCE_CORE_TILE_ICC
+#define ISCE_IMAGE_TILE_ICC
 #include "Tile.icc"
-#undef ISCE_CORE_TILE_ICC
+#undef ISCE_IMAGE_TILE_ICC
 
 #endif
 

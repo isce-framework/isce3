@@ -28,7 +28,7 @@ TEST(ImageModeTest, FromHDF5) {
     isce::product::ImageMode mode;
     
     // Deserialize the primary_mode
-    isce::product::load(file, mode, "primary");
+    isce::product::load(file, mode, "aux");
 
     // Check values
     ASSERT_NEAR(mode.rangePixelSpacing(), 7.803973670948287, 1.0e-10);

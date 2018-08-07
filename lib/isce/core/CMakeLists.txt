@@ -60,8 +60,6 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     ResampSlc.icc
                                     Serialization.h
                                     StateVector.h
-                                    Tile.h
-                                    Tile.icc
                                     TimeDelta.h)
 
 ###Install headers into build/include
