@@ -38,6 +38,11 @@ namespace isce { namespace core { namespace cuda {
         CUDA_DEV void lonLatToXyz(double*,double*);
         CUDA_DEV void xyzToLatLon(double*,double*);
         CUDA_DEV void TCNbasis(double*,double*,double*,double*,double*);
+        
+        /** Return eccentricity^2 */
+        CUDA_HOSTDEV double gete2() const {return e2;}
+        /** Return semi-major axis */
+        CUDA_HOSTDEV double geta() const {return a;}
 
         // Host functions to test underlying device functions in a single-threaded context
         CUDA_HOST void lonLatToXyz_h(cartesian_t&,cartesian_t&);
