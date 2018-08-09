@@ -1,2 +1,4 @@
 add_subdirectory(cython)
-add_subdirectory(cuda)
+if (WITH_CUDA)
+    add_subdirectory(cuda)
+endif(WITH_CUDA)
