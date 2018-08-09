@@ -38,9 +38,13 @@ class isce::product::Product {
         /** Get a const reference to the metadata. */
         inline const Metadata & metadata() const { return _metadata; }
 
+        /** Get the filename of the HDF5 file. */
+        inline std::string filename() const { return _filename; }
+
     private:
         ComplexImagery _complexImagery;
         Metadata _metadata;
+        std::string _filename;
 };
 
 // Get inline implementations for ImageMode

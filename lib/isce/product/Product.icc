@@ -12,6 +12,8 @@ Product(isce::io::IH5File & file) {
     load(file, _complexImagery);
     // Configure metadata
     load(file, _metadata);
+    // Save the filename
+    _filename = file.filename();
 }
 
 /** @param[in]              ComplexImagery object.
