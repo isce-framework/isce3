@@ -10,7 +10,16 @@
 
 // Default constructor
 isce::image::ResampSlc::
-ResampSlc() {}
+ResampSlc(const isce::product::Product & product) : _haveRefMode(false) {
+    // Cache the instrument
+    isce::radar::Radar instrument = product.metadata().instrument();
+    // Set the doppler
+    _dopplerPoly = instrument.contentDoppler();
+    // Set the image mode
+    _mode = product.complexImagery().primaryMode();
+    // Save the filename
+    _filename = product.filename();
+}
 
 // Destructor
 isce::image::ResampSlc::
@@ -53,6 +62,15 @@ doppler() const {
 void isce::image::ResampSlc::
 doppler(isce::core::Poly2d & poly) {
     _dopplerPoly = poly;
+}
+
+// Set reference product
+void isce::image::ResampSlc::
+referenceProduct(const isce::product::Product & refProduct) {
+    // Extract the reference image mode
+    _refMode = refProduct.complexImagery().primaryMode();
+    // Indicate we have a reference mode
+    _haveRefMode = true;
 }
 
 // Get image mode

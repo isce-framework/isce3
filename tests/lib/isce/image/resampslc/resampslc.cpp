@@ -21,8 +21,7 @@
 #include "isce/io/Raster.h"
 
 // isce::product
-#include "isce/product/ImageMode.h"
-#include "isce/product/Serialization.h"
+#include "isce/product/Product.h"
 
 // isce::image
 #include "isce/image/ResampSlc.h"
@@ -32,45 +31,32 @@
 TEST(ResampSlcTest, Resamp) {
 
     // Open the HDF5 product
-    std::string h5file("../../data/envisat.h5");
+    //std::string h5file("../../data/envisat.h5");
+    std::string h5file("/Users/briel/src/isce3/tests/lib/isce/data/envisat.h5");
     isce::io::IH5File file(h5file);
 
-    // Create image mode (make reference mode same as current)
-    isce::product::ImageMode mode, refMode;
-    load(file, mode, "primary");
-    load(file, refMode, "primary");
+    // Create product
+    isce::product::Product product(file);
 
-    // Get Doppler
-    isce::core::Poly2d doppler;
-    load(file, doppler, "data_dcpolynomial");
+    // Instantiate a ResampSLC object
+    isce::image::ResampSlc resamp(product);
 
-    // Set resamp metadata and Doppler
-    isce::image::ResampSlc resamp;
-    resamp.imageMode(mode);
-    resamp.refImageMode(refMode);
-    resamp.doppler(doppler);
+    // Use same product as a reference
+    resamp.referenceProduct(product);
+    
     // Check values
     ASSERT_NEAR(resamp.imageMode().startingRange(), 826988.6900674499, 1.0e-10);
     ASSERT_NEAR(resamp.doppler().coeffs[0], 301.35306906319204, 1.0e-8);
 
-    // Allow GDAL to run Python pixel functions
-    CPLSetConfigOption("GDAL_VRT_ENABLE_PYTHON", "YES");
-
     // Perform resampling with default lines per tile
-    resamp.resamp(
-        "../../data/envisat.slc.vrt",
-        "warped.slc",
-        "../../data/offsets/range.off",
-        "../../data/offsets/azimuth.off");
-
+    resamp.resamp("warped.slc", "hh",
+                  "../../data/offsets/range.off", "../../data/offsets/azimuth.off");
+    
     // Set lines per tile to be a weird multiple of the number of output lines
     resamp.linesPerTile(249);
     // Re-run resamp
-    resamp.resamp(
-        "../../data/envisat.slc.vrt",
-        "warped.slc",
-        "../../data/offsets/range.off",
-        "../../data/offsets/azimuth.off");
+    resamp.resamp("warped.slc", "hh",
+                  "../../data/offsets/range.off", "../../data/offsets/azimuth.off");
 }
 
 // Compute sum of difference between reference image and warped image

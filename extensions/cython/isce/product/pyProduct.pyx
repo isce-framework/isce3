@@ -50,4 +50,11 @@ cdef class pyProduct:
         meta.c_metadata = self.c_product.metadata()
         return meta
 
+    @property
+    def filename(self):
+        """
+        Get the filename of the HDF5 product file.
+        """
+        return str(self.c_product.filename())
+
 # end of file

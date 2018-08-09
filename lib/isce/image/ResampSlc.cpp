@@ -22,7 +22,24 @@
 
 using isce::io::Raster;
 
-// Main resamp entry point
+// Main product-based resamp entry point
+void isce::image::ResampSlc::
+resamp(const std::string & outputFilename,
+       const std::string & polarization,
+       const std::string & rgOffsetFilename,
+       const std::string & azOffsetFilename,
+       bool flatten, bool isComplex, int rowBuffer) {
+
+    // Form the GDAL-compatible path for the HDF5 dataset
+    const std::string dataPath = _mode.dataPath(polarization);
+    const std::string h5path = "HDF5:\"" + _filename + "\":/" + dataPath;
+
+    // Call alternative resmap entry point
+    resamp(h5path, outputFilename, rgOffsetFilename, azOffsetFilename, 1,
+           flatten, isComplex, rowBuffer);
+}
+
+// Alternative generic resamp entry point
 void isce::image::ResampSlc::
 resamp(const std::string & inputFilename,          // filename of input SLC
        const std::string & outputFilename,         // filename of output resampled SLC
@@ -240,7 +257,7 @@ _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
                 + _azCarrier.eval(i + azOff, j + rgOff);
 
             // Flatten the carrier phase if requested
-            if (flatten) {
+            if (flatten && _haveRefMode) {
                 phase += ((4. * (M_PI / _mode.wavelength())) * 
                     ((_mode.startingRange() - _refMode.startingRange()) 
                     + (j * (_mode.rangePixelSpacing() - _refMode.rangePixelSpacing())) 

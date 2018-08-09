@@ -4,6 +4,7 @@
 # Copyright 2017-2018
 #
 
+from libcpp.string cimport string
 from IH5 cimport IH5File
 
 from ComplexImagery cimport ComplexImagery
@@ -22,5 +23,8 @@ cdef extern from "isce/product/Product.h" namespace "isce::product":
     
         # Metadata
         Metadata & metadata()
+
+        # The filename of the HDF5 file
+        string filename()
 
 # end of file

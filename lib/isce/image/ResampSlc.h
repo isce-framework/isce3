@@ -21,7 +21,7 @@
 #include "isce/io/Raster.h"
 
 // isce::product
-#include "isce/product/ImageMode.h"
+#include "isce/product/Product.h"
 
 // isce::image
 #include "Constants.h"
@@ -44,7 +44,7 @@ class isce::image::ResampSlc {
     // Meta-methods
     public:
         // Default constructor
-        inline ResampSlc();
+        inline ResampSlc(const isce::product::Product &);
         // Destructor
         inline ~ResampSlc();
 
@@ -56,6 +56,9 @@ class isce::image::ResampSlc {
         inline void rgCarrier(isce::core::Poly2d &);
         inline void azCarrier(isce::core::Poly2d &);
         inline void doppler(isce::core::Poly2d &);
+
+        // Set reference product for flattening
+        inline void referenceProduct(const isce::product::Product &);
 
         // Get image mode
         inline isce::product::ImageMode imageMode() const;
@@ -71,10 +74,15 @@ class isce::image::ResampSlc {
         // Convenience functions
         inline void declare(int, int, int, int) const;
 
-        // Main resamp entry point
-        void resamp(const std::string &, const std::string &, const std::string &,
-                    const std::string &, int inputBand=1, bool flatten=false,
-                    bool isComplex=true, int rowBuffer=40);
+        // Alternative generic resamp entry point
+        void resamp(const std::string & inputFilename, const std::string & outputFilename,
+                    const std::string & rgOffsetFilename, const std::string & azOffsetFilename,
+                    int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40);
+
+        // Main product-based resamp entry point
+        void resamp(const std::string & outputFilename, const std::string & polarization,
+                    const std::string & rgOffsetFilename, const std::string & azOffsetFilename,
+                    bool flatten=false, bool isComplex=true, int rowBuffer=40);
 
     // Data members
     private:
@@ -82,6 +90,10 @@ class isce::image::ResampSlc {
         size_t _linesPerTile = 1000;
         // Band number
         int _inputBand;
+        // Filename of the input product
+        std::string _filename;
+        // Flag indicating if we have a reference mode
+        bool _haveRefMode;
 
         // Polynomials
         isce::core::Poly2d _rgCarrier;            // range carrier polynomial
