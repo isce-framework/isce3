@@ -1,6 +1,6 @@
 add_subdirectory(cython)
 
-if (CMAKE_CUDA_COMPILER)
+if (WITH_CUDA)
     message(STATUS "We will be building CUDA lib")
     add_subdirectory(cuda)
-endif(CMAKE_CUDA_COMPILER)
+endif(WITH_CUDA)
