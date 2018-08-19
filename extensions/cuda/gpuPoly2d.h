@@ -28,29 +28,45 @@ namespace isce { namespace core { namespace cuda {
         double rangeNorm;
         double azimuthNorm;
         double *coeffs;
+        bool owner;
     
         CUDA_HOSTDEV gpuPoly2d(int ro, int ao, double rm, double am, double rn, double an) : rangeOrder(ro), 
                                                                                              azimuthOrder(ao), 
                                                                                              rangeMean(rm), 
                                                                                              azimuthMean(am),
                                                                                              rangeNorm(rn), 
-                                                                                             azimuthNorm(an)
-                                                                                             //coeffs(0.)
+                                                                                             azimuthNorm(an), 
+                                                                                             owner(false)
                                                                                              {}
         CUDA_HOSTDEV gpuPoly2d() : gpuPoly2d(-1,-1,0.,0.,1.,1.) {}
-
         CUDA_DEV gpuPoly2d(const gpuPoly2d &p) : rangeOrder(p.rangeOrder), azimuthOrder(p.azimuthOrder), 
                                                 rangeMean(p.rangeMean), azimuthMean(p.azimuthMean), 
                                                 rangeNorm(p.rangeNorm), azimuthNorm(p.azimuthNorm), 
                                                 coeffs(p.coeffs) {}
         CUDA_HOST gpuPoly2d(const Poly2d&);
-        CUDA_HOSTDEV gpuPoly2d& operator=(const gpuPoly2d&) = delete;
         ~gpuPoly2d();
+
+        CUDA_HOSTDEV inline gpuPoly2d& operator=(const gpuPoly2d&);
+
+        CUDA_DEV double eval(double,double);
+        CUDA_HOST double eval_h(double, double); 
     };
+
+
+    CUDA_HOSTDEV inline gpuPoly2d& gpuPoly2d::operator=(const gpuPoly2d &rhs)
+    {
+        rangeOrder = rhs.rangeOrder;
+        azimuthOrder = rhs.azimuthOrder;
+        rangeMean = rhs.rangeMean;
+        azimuthMean = rhs.azimuthMean;
+        rangeNorm = rhs.rangeNorm;
+        azimuthNorm = rhs.azimuthNorm;
+        coeffs = rhs.coeffs;
+        return *this;
+    }
 
     //CUDA_HOST setCoeff();
 
-    //CUDA_HOST eval_h(double, double);
 }}}
 
 #endif
