@@ -37,6 +37,15 @@ gpuPoly2d::~gpuPoly2d() {
     }
 }
 
+__host__ void gpuPoly2d::setCoeff(int row, int col, double val) {
+    bool rowValid = (0 <= row) && (row <= azimuthOrder);
+    bool colValid = (0 <= col) && (col <= rangeOrder);
+    if (rowValid && colValid)
+    {
+        cudaMemcpy(&coeffs[IDX1D(row, col, rangeOrder+1)], &val, sizeof(double), cudaMemcpyHostToDevice);
+    }
+}
+
 __device__ double gpuPoly2d::eval(double azi, double rng) {
 
     double xval = (rng - rangeMean) / rangeNorm;

@@ -48,6 +48,8 @@ namespace isce { namespace core { namespace cuda {
 
         CUDA_HOSTDEV inline gpuPoly2d& operator=(const gpuPoly2d&);
 
+        CUDA_HOST void setCoeff(int, int, double);
+
         CUDA_DEV double eval(double,double);
         CUDA_HOST double eval_h(double, double); 
     };
@@ -65,7 +67,6 @@ namespace isce { namespace core { namespace cuda {
         return *this;
     }
 
-    //CUDA_HOST setCoeff();
 
 }}}
 
