@@ -31,8 +31,7 @@
 TEST(ResampSlcTest, Resamp) {
 
     // Open the HDF5 product
-    //std::string h5file("../../data/envisat.h5");
-    std::string h5file("/Users/briel/src/isce3/tests/lib/isce/data/envisat.h5");
+    std::string h5file("../../data/envisat.h5");
     isce::io::IH5File file(h5file);
 
     // Create product

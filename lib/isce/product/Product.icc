@@ -5,7 +5,7 @@
 #error "Product.icc is an implementation detail of class Product."
 #endif
 
-/** @param[in]              Path for HDF5 product. */
+/** @param[in]              IH5File object for product. */
 isce::product::Product::
 Product(isce::io::IH5File & file) {
     // Configure complex imagery
