@@ -28,9 +28,13 @@ namespace isce { namespace core { namespace cuda {
         double rangeNorm;
         double azimuthNorm;
         double *coeffs;
+        // True if copy-constructed from Orbit (on host), 
+        // False if copy-constructed from gpuOrbit (on device)
         bool owner;
     
-        CUDA_HOSTDEV gpuPoly2d(int ro, int ao, double rm, double am, double rn, double an) : rangeOrder(ro), 
+        // Shallow-copy copy constructor only allowed on device, not host, but not allowed to free 
+        // own memory (host copy of gpuPoly2d is only one allowed)
+        CUDA_DEV gpuPoly2d(int ro, int ao, double rm, double am, double rn, double an) : rangeOrder(ro), 
                                                                                              azimuthOrder(ao), 
                                                                                              rangeMean(rm), 
                                                                                              azimuthMean(am),
@@ -39,6 +43,7 @@ namespace isce { namespace core { namespace cuda {
                                                                                              owner(false)
                                                                                              {}
         CUDA_HOSTDEV gpuPoly2d() : gpuPoly2d(-1,-1,0.,0.,1.,1.) {}
+        // Advanced "copy constructor only allowed on host (manages deep copies from host to device)
         CUDA_DEV gpuPoly2d(const gpuPoly2d &p) : rangeOrder(p.rangeOrder), azimuthOrder(p.azimuthOrder), 
                                                 rangeMean(p.rangeMean), azimuthMean(p.azimuthMean), 
                                                 rangeNorm(p.rangeNorm), azimuthNorm(p.azimuthNorm), 
@@ -48,9 +53,9 @@ namespace isce { namespace core { namespace cuda {
 
         CUDA_HOSTDEV inline gpuPoly2d& operator=(const gpuPoly2d&);
 
-        CUDA_HOST void setCoeff(int, int, double);
+        CUDA_DEV void eval(double, double, double*);
 
-        CUDA_DEV double eval(double,double);
+        // Host function to test underlying device function in a single-threaded context
         CUDA_HOST double eval_h(double, double); 
     };
 
