@@ -9,9 +9,10 @@
 #include "Constants.h"
 #include "gpuEllipsoid.h"
 #include "gpuLinAlg.h"
+
 using std::vector;
-using isce::core::cuda::gpuEllipsoid;
-using isce::core::cuda::gpuLinAlg;
+using isce::cuda::core::gpuEllipsoid;
+using isce::cuda::core::gpuLinAlg;
 
 __device__ void gpuEllipsoid::lonLatToXyz(double *llh, double *xyz) {
     double re = rEast(llh[1]);
