@@ -3,13 +3,13 @@
 // Copyright 2017
 //
 
-#ifndef __ISCE_CORE_CUDA_GPUPEGTRANS_H__
-#define __ISCE_CORE_CUDA_GPUPEGTRANS_H__
+#ifndef __ISCE_CUDA_CORE_GPUPEGTRANS_H__
+#define __ISCE_CUDA_CORE_GPUPEGTRANS_H__
 
 #include "gpuEllipsoid.h"
 #include "gpuPeg.h"
 
-namespace isce { namespace core { namespace cuda {
+namespace isce { namespace cuda { namespace core {
     struct gpuPegtrans {
         double mat[3][3];
         double matinv[3][3];

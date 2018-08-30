@@ -3,8 +3,8 @@
 // Copyright 2018
 //
 
-#ifndef __ISCE_CORE_CUDA_GPUPOLY2D_H__
-#define __ISCE_CORE_CUDA_GPUPOLY2D_H__
+#ifndef __ISCE_CUDA_CORE_GPUPOLY2D_H__
+#define __ISCE_CUDA_CORE_GPUPOLY2D_H__
 
 #ifdef __CUDACC__
 #define CUDA_HOSTDEV __host__ __device__
@@ -19,7 +19,9 @@
 #include <cmath>
 #include "Poly2d.h"
 
-namespace isce { namespace core { namespace cuda {
+using isce::core::Poly2d;
+
+namespace isce { namespace cuda { namespace core {
     struct gpuPoly2d{
         int rangeOrder;
         int azimuthOrder;

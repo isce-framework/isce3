@@ -14,7 +14,7 @@
 #include "gtest/gtest.h"
 
 using isce::core::Ellipsoid;
-using isce::core::cuda::gpuEllipsoid;
+using isce::cuda::core::gpuEllipsoid;
 using std::endl;
 using std::vector;
 
