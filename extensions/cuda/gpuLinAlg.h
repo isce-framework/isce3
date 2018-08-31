@@ -3,12 +3,12 @@
 // Copyright 2017
 //
 
-#ifndef __ISCE_CORE_CUDA_GPULINALG_H__
-#define __ISCE_CORE_CUDA_GPULINALG_H__
+#ifndef __ISCE_CUDA_CORE_GPULINALG_H__
+#define __ISCE_CUDA_CORE_GPULINALG_H__
 
 #include <cmath>
 
-namespace isce { namespace core { namespace cuda {
+namespace isce { namespace cuda { namespace core {
     struct gpuLinAlg {
         __host__ __device__ gpuLinAlg() = delete;
 

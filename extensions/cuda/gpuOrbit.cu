@@ -12,7 +12,9 @@
 #include "Constants.h"
 #include "gpuOrbit.h"
 #include "Orbit.h"
-using isce::core::cuda::gpuOrbit;
+
+using isce::cuda::core::gpuOrbit;
+using isce::core::cartesian_t;
 using isce::core::Orbit;
 using std::vector;
 

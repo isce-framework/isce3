@@ -18,7 +18,7 @@ using isce::core::HERMITE_METHOD;
 using isce::core::LEGENDRE_METHOD;
 using isce::core::SCH_METHOD;
 using isce::core::Orbit;
-using isce::core::cuda::gpuOrbit;
+using isce::cuda::core::gpuOrbit;
 using std::endl;
 using std::vector;
 using isce::core::cartesian_t;
