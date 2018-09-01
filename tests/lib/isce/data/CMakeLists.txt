@@ -1,7 +1,5 @@
 
 # Copy files used for various tests
-file(COPY envisat.slc DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY envisat.slc.vrt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY envisat.h5 DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY warped_envisat.slc DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY warped_envisat.slc.vrt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
