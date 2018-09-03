@@ -18,6 +18,7 @@
 
 // isce::core
 #include <isce/core/DateTime.h>
+#include <isce/core/Metadata.h>
 
 // isce::io
 #include <isce/io/IH5.h>
@@ -41,6 +42,9 @@ class isce::product::ImageMode {
 
         /** Constructor with a specified mode type. */
         inline ImageMode(const std::string &);
+
+        /** Constructor from isce::core::Metadata. */
+        inline ImageMode(const isce::core::Metadata &);
 
         /** Assignment operator. */
         inline ImageMode & operator=(const ImageMode &);

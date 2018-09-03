@@ -8,7 +8,7 @@
 #error "Geo2rdr.icc is an implementation detail of class Geo2rdr"
 #endif
 
-// Constructor from product
+// Default constructor from product
 isce::geometry::Geo2rdr::
 Geo2rdr(isce::product::Product & product) {
 
@@ -17,6 +17,20 @@ Geo2rdr(isce::product::Product & product) {
     _orbit = product.metadata().orbitPOE();
     _ellipsoid = product.metadata().identification().ellipsoid();
     _doppler = product.metadata().instrument().skewDoppler();
+
+    // For numerical precision purposes, set reference epoch 2 days prior
+    _sensingStart = _mode.startAzTime();
+    _refEpoch._init(_sensingStart.year, _sensingStart.months,
+                    _sensingStart.days - 2, 0, 0, 0, 0.0);
+    // Update orbit epochs with new epoch
+    _orbit.updateUTCTimes(_refEpoch);
+}
+
+// Alternative constructor from isce::core objects
+isce::geometry::Geo2rdr::
+Geo2rdr(isce::core::Ellipsoid ellipsoid, isce::core::Orbit orbit,
+        isce::core::Poly2d doppler, isce::core::Metadata meta) :
+        _ellipsoid(ellipsoid), _orbit(orbit), _doppler(doppler), _mode(meta) {
 
     // For numerical precision purposes, set reference epoch 2 days prior
     _sensingStart = _mode.startAzTime();

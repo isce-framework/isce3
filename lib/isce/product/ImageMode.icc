@@ -12,7 +12,7 @@ ImageMode(const std::string & inputModeType) {
     modeType(inputModeType);
 }
 
-/** @param[in]              isce::product::ImageMOde */
+/** @param[in]              isce::product::ImageMode */
 isce::product::ImageMode::
 ImageMode(const isce::product::ImageMode & mode) :
     _modeType(mode.modeType()),
@@ -26,6 +26,26 @@ ImageMode(const isce::product::ImageMode & mode) :
     _numberRangeLooks(mode.numberRangeLooks()),
     _startAzTime(mode.startAzTime()),
     _endAzTime(mode.endAzTime()) {}
+
+/** @param[in]              isce::core::Metadata */
+isce::product::ImageMode::
+ImageMode(const isce::core::Metadata & meta) {
+
+    // Transfer necessary metadata from Metadata object
+    const std::array<size_t, 2> dims{(size_t) meta.length, (size_t) meta.width};
+    dataDimensions(dims);
+    wavelength(meta.radarWavelength);
+    startingRange(meta.rangeFirstSample);
+    rangePixelSpacing(meta.slantRangePixelSpacing);
+    startAzTime(meta.sensingStart);
+    numberAzimuthLooks(meta.numberAzimuthLooks);
+    numberRangeLooks(meta.numberRangeLooks);
+    prf(meta.prf);
+
+    // Also compute ending azimuth time
+    _endAzTime = _startAzTime + (meta.length - 1.0) / meta.prf;
+}
+
 
 /** @param[in]              isce::product::ImageMode */
 isce::product::ImageMode &

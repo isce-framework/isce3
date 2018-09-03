@@ -12,6 +12,7 @@
 #include <pyre/journal.h>
 
 // isce::core
+#include <isce/core/Metadata.h>
 #include <isce/core/Peg.h>
 
 // isce::io
@@ -37,6 +38,11 @@ class isce::geometry::Topo {
     public:
         // Constructor from Product
         inline Topo(isce::product::Product &);
+        // Constructor from isce::core objects
+        inline Topo(isce::core::Ellipsoid,
+                    isce::core::Orbit,
+                    isce::core::Poly2d,
+                    isce::core::Metadata);
         
         // Set options
         inline void initialized(bool);

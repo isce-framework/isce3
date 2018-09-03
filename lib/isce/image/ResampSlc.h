@@ -45,6 +45,8 @@ class isce::image::ResampSlc {
     public:
         // Default constructor
         inline ResampSlc(const isce::product::Product &);
+        // Constructor from isce::core objects
+        inline ResampSlc(const isce::core::Poly2d, const isce::core::Metadata);
         // Destructor
         inline ~ResampSlc();
 

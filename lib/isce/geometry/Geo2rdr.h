@@ -37,7 +37,12 @@ class isce::geometry::Geo2rdr {
 
     public:
         // Constructor from product
-        Geo2rdr(isce::product::Product &);
+        inline Geo2rdr(isce::product::Product &);
+        // Constructor from isce::core objects
+        inline Geo2rdr(isce::core::Ellipsoid,
+                       isce::core::Orbit,
+                       isce::core::Poly2d,
+                       isce::core::Metadata);
 
         // Set options
         inline void threshold(double);

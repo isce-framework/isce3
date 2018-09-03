@@ -21,6 +21,15 @@ ResampSlc(const isce::product::Product & product) : _haveRefMode(false) {
     _filename = product.filename();
 }
 
+// Constructor from isce::core objects
+isce::image::ResampSlc::
+ResampSlc(const isce::core::Poly2d doppler, const isce::core::Metadata meta) :
+    _dopplerPoly(doppler), _mode(meta) {
+    // _filename variable set to empty string since it shouldn't be used with
+    // a non-HDF5 constructor
+    _filename = " ";
+}
+
 // Destructor
 isce::image::ResampSlc::
 ~ResampSlc() {}
