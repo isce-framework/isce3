@@ -63,7 +63,8 @@ class isce::geometry::Topo {
 
         // Get DEM bounds using first/last azimuth line and slant range bin
         void _computeDEMBounds(isce::io::Raster &,
-                               DEMInterpolator &);
+                               DEMInterpolator &,
+                               size_t, size_t);
 
         // Perform data initialization for a given azimuth line
         void _initAzimuthLine(size_t,
@@ -75,6 +76,7 @@ class isce::geometry::Topo {
         // Set output layers
         void _setOutputTopoLayers(cartesian_t &,
                                   TopoLayers &,
+                                  size_t,
                                   isce::core::Pixel &,
                                   isce::core::StateVector &,
                                   isce::core::Basis &,
@@ -94,6 +96,7 @@ class isce::geometry::Topo {
         double _threshold;
         int _numiter, _extraiter;
         int _lookSide;
+        size_t _linesPerBlock = 1000;
         isce::core::orbitInterpMethod _orbitMethod;
         isce::core::dataInterpMethod _demMethod;
 

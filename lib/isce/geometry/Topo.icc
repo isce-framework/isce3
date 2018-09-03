@@ -23,6 +23,9 @@ Topo(isce::product::Product & product) : _initialized(false) {
     _doppler = instrument.skewDoppler();
     _lookSide = id.lookDirection();
 
+    // Adjust block length based in input SLC length
+    _linesPerBlock = std::min(_mode.length(), _linesPerBlock);
+
     // For numerical precision purposes, set reference epoch 2 days prior
     _refEpoch = _mode.startAzTime() - 86400*2;
     // Update orbit epochs with new epoch
@@ -35,10 +38,14 @@ Topo(isce::product::Product & product) : _initialized(false) {
 isce::geometry::Topo::
 Topo(isce::core::Ellipsoid ellipsoid, isce::core::Orbit orbit,
      isce::core::Poly2d doppler, isce::core::Metadata meta) :
-    _orbit(orbit), _ellipsoid(ellipsoid), _doppler(doppler), _mode(meta) {
+    _orbit(orbit), _ellipsoid(ellipsoid), _doppler(doppler), _mode(meta),
+    _initialized(false) {
 
     // Other data
     _lookSide = meta.lookSide;
+
+    // Adjust block length based in input SLC length
+    _linesPerBlock = std::min(_mode.length(), _linesPerBlock);
 
     // For numerical precision purposes, set reference epoch 2 days prior
     _refEpoch = _mode.startAzTime() - 86400*2;
