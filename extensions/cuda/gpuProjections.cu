@@ -10,8 +10,8 @@
 #include <iostream>
 #include "Projections.h"
 #include "gpuProjections.h"
-using isce::core::cuda::PolarStereo;
-using isce::core::cuda::ProjectionBase;
+using isce::cuda::core::PolarStereo;
+using isce::cuda::core::ProjectionBase;
 using isce::core::cartesian_t;
 using std::cout;
 using std::endl;
@@ -24,7 +24,7 @@ using std::vector;
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* * * * * * * * * * * * * * * * * * * PolarStereo Projection * * * * * * * * * * * * * * * * * * */
-namespace isce { namespace core { namespace cuda {
+namespace isce { namespace cuda { namespace core {
 __host__ __device__ double pj_tsfn(double phi, double sinphi, double e) {
     /*
      * Local function - Determine small t from PROJ.4.
@@ -99,7 +99,7 @@ __host__ __device__ double pj_tsfn(double phi, double sinphi, double e) {
 //       out[1] = -temp * cos(lam) * (isnorth ? 1. : -1.);
 //       //Height is just pass through
 //       out[2] = llh[2];
-//       return 0;
+       	return 0;
    	
    }
    
@@ -287,7 +287,7 @@ int PolarStereo::inverse_h_single(const cartesian_t &out, cartesian_t &llh) cons
 //
 //}
 
-int PolarStereo::roundtriptest(int np) {
+int PolarStereo::roundtriptest(int np) const {
 
 //TODO: Replace with proper sizing using deviceQuery() and memory
 //footprint estimates
