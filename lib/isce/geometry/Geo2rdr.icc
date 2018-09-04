@@ -17,7 +17,7 @@ Geo2rdr(isce::product::Product & product) {
     _orbit = product.metadata().orbitPOE();
     _ellipsoid = product.metadata().identification().ellipsoid();
     _doppler = product.metadata().instrument().skewDoppler();
-
+       
     // For numerical precision purposes, set reference epoch 2 days prior
     _sensingStart = _mode.startAzTime();
     _refEpoch._init(_sensingStart.year, _sensingStart.months,

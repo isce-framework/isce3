@@ -88,6 +88,7 @@ class isce::geometry::Geo2rdr {
         // Processing parameters
         int _numiter;
         double _threshold;
+        size_t _linesPerBlock = 1000;
         isce::core::orbitInterpMethod _orbitMethod;
 };
 
