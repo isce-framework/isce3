@@ -3,8 +3,8 @@
 // Copyright 2017-2018
 //
 
-#ifndef __ISCE_CORE_CUDA_GPUELLIPSOID_H__
-#define __ISCE_CORE_CUDA_GPUELLIPSOID_H__
+#ifndef __ISCE_CUDA_CORE_GPUELLIPSOID_H__
+#define __ISCE_CUDA_CORE_GPUELLIPSOID_H__
 
 #ifdef __CUDACC__
 #define CUDA_HOSTDEV __host__ __device__
@@ -20,7 +20,10 @@
 #include "Constants.h"
 #include "Ellipsoid.h"
 
-namespace isce { namespace core { namespace cuda {
+using isce::core::Ellipsoid;
+using isce::core::cartesian_t;
+
+namespace isce { namespace cuda { namespace core {
     struct gpuEllipsoid {
         double a;
         double e2;

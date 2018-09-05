@@ -23,7 +23,7 @@ NVFLAGS = -ccbin $(HOME)/opt/gcc-5.4.0/bin -x cu -Xcompiler -fPIC -dc
 # CPU code that calls it)
 FLAGS =	-std=c++11 -Wno-deprecated-gpu-targets -O3
 
-OBJS = gpuEllipsoid.o gpuLinAlg.o gpuOrbit.o gpuPeg.o gpuPegtrans.o
+OBJS = gpuEllipsoid.o gpuLinAlg.o gpuOrbit.o gpuPeg.o gpuPegtrans.o gpuPoly2d.o
 
 .PHONY : clean recurse obj-build
 

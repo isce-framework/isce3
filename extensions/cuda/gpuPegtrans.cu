@@ -8,10 +8,11 @@
 #include "gpuLinAlg.h"
 #include "gpuPeg.h"
 #include "gpuPegtrans.h"
-using isce::core::cuda::gpuEllipsoid;
-using isce::core::cuda::gpuLinAlg;
-using isce::core::cuda::gpuPeg;
-using isce::core::cuda::gpuPegtrans;
+
+using isce::cuda::core::gpuEllipsoid;
+using isce::cuda::core::gpuLinAlg;
+using isce::cuda::core::gpuPeg;
+using isce::cuda::core::gpuPegtrans;
 
 __device__ void gpuPegtrans::radar2xyz(gpuEllipsoid &elp, gpuPeg &peg) {
     mat[0][0] = cos(peg.lat) * cos(peg.lon);

@@ -6,8 +6,8 @@
 //       to carefully manage the deep-copying in the constructors (so we don't have to worry about 
 //       adding it to every code that uses this class)
 
-#ifndef __ISCE_CORE_CUDA_GPUORBIT_H__
-#define __ISCE_CORE_CUDA_GPUORBIT_H__
+#ifndef __ISCE_CUDA_CORE_GPUORBIT_H__
+#define __ISCE_CUDA_CORE_GPUORBIT_H__
 
 #ifdef __CUDACC__
 #define CUDA_HOSTDEV __host__ __device__
@@ -22,7 +22,10 @@
 #include <vector>
 #include "Orbit.h"
 
-namespace isce { namespace core { namespace cuda {
+using isce::core::Orbit;
+using isce::core::cartesian_t;
+
+namespace isce { namespace cuda { namespace core {
     struct gpuOrbit {
         int nVectors;
         double *UTCtime;
