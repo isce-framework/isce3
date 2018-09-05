@@ -10,7 +10,8 @@ set(ISCE_CUDA_HEADERS
         gpuOrbit.h
         gpuPeg.h
         gpuPegtrans.h 
-        gpuPoly2d.h )
+        gpuPoly2d.h 
+        gpuProjections.h )
 
 set (ISCE_CUDA_SRCS 
         gpuEllipsoid.cu
@@ -18,7 +19,8 @@ set (ISCE_CUDA_SRCS
         gpuOrbit.cu
         gpuPeg.cu
         gpuPegtrans.cu 
-        gpuPoly2d.cu )
+        gpuPoly2d.cu 
+        gpuProjections.cu )
 
 ##Install headers into build/include
 set(${PACKAGENAME}_BUILD_HEADERS "")
