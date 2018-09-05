@@ -19,13 +19,12 @@
 #include "isce/core/Constants.h"
 #include "isce/core/DateTime.h"
 #include "isce/core/Ellipsoid.h"
-#include "isce/core/LinAlg.h"
 #include "isce/core/Orbit.h"
-#include "isce/core/Peg.h"
-#include "isce/core/Pegtrans.h"
 #include "isce/core/Poly2d.h"
-#include "isce/core/Metadata.h"
 #include "isce/core/Serialization.h"
+
+// isce::product
+#include "isce/product/Product.h"
 
 // isce::geometry
 #include "isce/geometry/geometry.h"
@@ -40,8 +39,11 @@ struct GeometryTest : public ::testing::Test {
     // isce::core objects
     isce::core::Ellipsoid ellipsoid;
     isce::core::Poly2d skewDoppler;
-    isce::core::Metadata meta;
     isce::core::Orbit orbit;
+    // isce::product objects
+    isce::product::ImageMode mode;
+
+    int lookSide;
 
     // Constructor
     protected:
@@ -50,11 +52,15 @@ struct GeometryTest : public ::testing::Test {
             std::string h5file("../../data/envisat.h5");
             isce::io::IH5File file(h5file);
 
-            // Deserialization
-            isce::core::load(file, ellipsoid);
-            isce::core::load(file, orbit, "POE");
-            isce::core::load(file, skewDoppler, "skew_dcpolynomial");
-            isce::core::load(file, meta, "primary");
+            // Instantiate a Product
+            isce::product::Product product(file);
+
+            // Extract core and product objects
+            ellipsoid = product.metadata().identification().ellipsoid();
+            orbit = product.metadata().orbitPOE();
+            skewDoppler = product.metadata().instrument().skewDoppler();
+            mode = product.complexImagery().primaryMode();
+            lookSide = product.metadata().identification().lookDirection();
         }
 };
 
@@ -74,7 +80,7 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit) {
         const double azTime = azDate.secondsSinceEpoch();
 
         // Evaluate Doppler
-        const double rbin = (ranges[i] - meta.rangeFirstSample) / meta.slantRangePixelSpacing;
+        const double rbin = (ranges[i] - mode.startingRange()) / mode.rangePixelSpacing();
         const double doppler = skewDoppler.eval(0, rbin);
 
         // Make constant DEM interpolator set to input height
@@ -85,7 +91,7 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit) {
 
         // Run rdr2geo
         int stat = isce::geometry::rdr2geo(azTime, ranges[i], doppler,
-            orbit, ellipsoid, dem, targetLLH, meta.radarWavelength, meta.lookSide,
+            orbit, ellipsoid, dem, targetLLH, mode.wavelength(), lookSide,
             1.0e-8, 25, 15, isce::core::HERMITE_METHOD);
         // Check
         ASSERT_EQ(stat, 1);
@@ -95,7 +101,7 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit) {
 
         // Run again with zero doppler
         stat = isce::geometry::rdr2geo(azTime, ranges[i], 0.0,
-            orbit, ellipsoid, dem, targetLLH, meta.radarWavelength, meta.lookSide,
+            orbit, ellipsoid, dem, targetLLH, mode.wavelength(), lookSide,
             1.0e-8, 25, 15, isce::core::HERMITE_METHOD);
         // Check
         ASSERT_EQ(stat, 1);
@@ -116,7 +122,7 @@ TEST_F(GeometryTest, GeoToRdr) {
     // Run geo2rdr
     double aztime, slantRange;
     int stat = isce::geometry::geo2rdr(llh, ellipsoid, orbit, skewDoppler,
-        meta, aztime, slantRange, 1.0e-8, 50, 1.0e-8);
+        mode, aztime, slantRange, 1.0e-8, 50, 1.0e-8);
     // Convert azimuth time to a date
     isce::core::DateTime azdate;
     azdate.secondsSinceEpoch(aztime);
@@ -128,7 +134,7 @@ TEST_F(GeometryTest, GeoToRdr) {
     // Run geo2rdr again with zero doppler
     isce::core::Poly2d zeroDoppler;
     stat = isce::geometry::geo2rdr(llh, ellipsoid, orbit, zeroDoppler,
-        meta, aztime, slantRange, 1.0e-8, 50, 1.0e-8);
+        mode, aztime, slantRange, 1.0e-8, 50, 1.0e-8);
     azdate.secondsSinceEpoch(aztime);
 
     ASSERT_EQ(stat, 1);

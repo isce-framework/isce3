@@ -25,7 +25,6 @@ PROJ_SRCS = \
     Position.cpp \
     Projections.cpp \
     Quaternion.cpp \
-    ResampSlc.cpp \
     TimeDelta.cpp \
 
 # products
@@ -61,12 +60,8 @@ EXPORT_PKG_HEADERS = \
     Projections.h \
     Quaternion.h \
     Quaternion.icc \
-    ResampSlc.h \
-    ResampSlc.icc \
     Serialization.h \
     StateVector.h \
-    Tile.h \
-    Tile.icc \
     TimeDelta.h \
 
 # build

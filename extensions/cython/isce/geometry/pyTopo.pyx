@@ -13,29 +13,42 @@ from SerializeGeometry cimport load_archive
 from Topo cimport *
 
 cdef class pyTopo:
+    """
+    Cython wrapper for isce::geometry::Topo.
+
+    Args:
+        product (pyProduct):                 Configured Product.
+
+    Return:
+        None
+    """
+    # C++ class instances
     cdef Topo * c_topo
     cdef bool __owner
 
-    def __cinit__(self, pyEllipsoid ellipsoid, pyOrbit orbit, pyMetadata meta):
-        self.c_topo = new Topo(
-            deref(ellipsoid.c_ellipsoid),
-            deref(orbit.c_orbit),
-            meta.c_metadata
-        )
+    def __cinit__(self, pyProduct product):
+        """
+        Constructor takes in a product in order to retrieve relevant radar parameters.
+        """
+        self.c_topo = new Topo(deref(product.c_product))
         self.__owner = True
+
     def __dealloc__(self):
         if self.__owner:
             del self.c_topo
 
-    def topo(self, pyRaster demRaster, pyPoly2d doppler, outputDir):
-        cdef string outdir = pyStringToBytes(outputDir)
-        self.c_topo.topo(
-            deref(demRaster.c_raster),
-            deref(doppler.c_poly2d),
-            outdir
-        )
+    def topo(self, pyRaster demRaster, outputDir):
+        """
+        Run topo.
+        
+        Args:
+            demRaster (pyRaster):               Raster for input DEM.
+            outputDir (str):                    String for output directory.
 
-    def archive(self, metadata):
-        load_archive[Topo](pyStringToBytes(metadata), 'Topo', self.c_topo)
+        Return:
+            None
+        """
+        cdef string outdir = pyStringToBytes(outputDir)
+        self.c_topo.topo(deref(demRaster.c_raster), outdir)
 
 # end of file

@@ -6,7 +6,6 @@
 
 from libcpp cimport bool
 from Poly2d cimport Poly2d
-from Serialization cimport *
 
 cdef class pyPoly2d:
     '''
@@ -41,10 +40,25 @@ cdef class pyPoly2d:
 
     @staticmethod
     def bind(pyPoly2d poly):
+        '''
+        Creates a pyPoly2d object that acts as a reference to an existing
+        pyPoly2d instance.
+        '''
         new_poly = pyPoly2d()
         del new_poly.c_poly2d
         new_poly.c_poly2d = poly.c_poly2d
         new_poly.__owner = False
+        return new_poly
+
+    @staticmethod
+    cdef cbind(Poly2d c_poly2d):
+        '''
+        Creates a pyPoly2d object that creates a copy of a C++ Poly2d object.
+        '''
+        new_poly = pyPoly2d()
+        del new_poly.c_poly2d
+        new_poly.c_poly2d = new Poly2d(c_poly2d)
+        new_poly.__owner = True
         return new_poly
 
     @property
@@ -304,18 +318,4 @@ cdef class pyPoly2d:
         '''
         self.c_poly2d.printPoly()
 
-    def archive(self, pyIH5File h5file, polyName):
-        '''
-        Load Poly2d properties from H5 product.
-
-        Args:
-            h5file (pyIH5File): IH5File for H5 product.
-            polyName (str): H5 dataset name for polynomial.
-
-        Return:
-            None
-        '''
-        load(deref(h5file.c_ih5file),
-             deref(self.c_poly2d),
-             <string> pyStringToBytes(polyName))
-
+# end of file 

@@ -20,6 +20,9 @@
 #include "isce/io/IH5.h"
 #include "isce/io/Raster.h"
 
+// isce::product
+#include "isce/product/Product.h"
+
 // isce::geometry
 #include "isce/geometry/Serialization.h"
 #include "isce/geometry/Topo.h"
@@ -29,24 +32,15 @@ std::stringstream streamFromVRT(const char * filename, int bandNum=1);
 
 TEST(TopoTest, RunTopo) {
 
-    // Instantiate isce::core objects
-    isce::core::Poly2d doppler;
-    isce::core::Orbit orbit;
-    isce::core::Ellipsoid ellipsoid;
-    isce::core::Metadata meta;
-
     // Open the HDF5 product
     std::string h5file("../../data/envisat.h5");
     isce::io::IH5File file(h5file);
 
-    // Deserialization
-    isce::core::load(file, ellipsoid);
-    isce::core::load(file, orbit, "POE");
-    isce::core::load(file, doppler, "skew_dcpolynomial");
-    isce::core::load(file, meta, "primary");
+    // Load the product
+    isce::product::Product product(file);
 
     // Create topo instance
-    isce::geometry::Topo topo(ellipsoid, orbit, meta);
+    isce::geometry::Topo topo(product);
 
     // Load topo processing parameters to finish configuration
     std::ifstream xmlfid("../../data/topo.xml", std::ios::in);
@@ -59,7 +53,7 @@ TEST(TopoTest, RunTopo) {
     isce::io::Raster demRaster("../../data/srtm_cropped.tif");
 
     // Run topo
-    topo.topo(demRaster, doppler, ".");
+    topo.topo(demRaster, ".");
 
 }
 

@@ -7,8 +7,8 @@
 from Orbit cimport Orbit
 from Ellipsoid cimport Ellipsoid
 from Cartesian cimport cartesian_t
-from Metadata cimport Metadata
 from Poly2d cimport Poly2d
+from ImageMode cimport ImageMode
 
 cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
 
@@ -16,7 +16,7 @@ cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
                 Ellipsoid &,
                 Orbit &,
                 Poly2d &,
-                Metadata &,
+                ImageMode &,
                 double &, double &,
                 double, int, double)
         

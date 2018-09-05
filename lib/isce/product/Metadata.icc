@@ -1,0 +1,64 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+
+#if !defined(ISCE_PRODUCT_METADATA_ICC)
+#error "Metadata.icc is an implementation detail of class Metadata."
+#endif
+
+/** @param[out]     isce::core::Orbit. */
+isce::core::Orbit
+isce::product::Metadata::
+orbitNOE() const {
+    return _orbitNOE;
+}
+
+/** @param[in]      isce::core::Orbit. */
+void
+isce::product::Metadata::
+orbitNOE(const isce::core::Orbit & orbit) {
+    _orbitNOE = orbit;
+}
+
+/** @param[out]     isce::core::Orbit. */
+isce::core::Orbit
+isce::product::Metadata::
+orbitPOE() const {
+    return _orbitPOE;
+}
+
+/** @param[in]      isce::core::Orbit. */
+void
+isce::product::Metadata::
+orbitPOE(const isce::core::Orbit & orbit) {
+    _orbitPOE = orbit;
+}
+
+/** @param[out]     isce::radar::Radar. */
+isce::radar::Radar
+isce::product::Metadata::
+instrument() const {
+    return _instrument;
+}
+
+/** @param[in]      isce::radar::Radar. */
+void
+isce::product::Metadata::
+instrument(const isce::radar::Radar & radar) {
+    _instrument = radar;
+}
+
+/** @param[out]     isce::product::Identification. */
+isce::product::Identification
+isce::product::Metadata::
+identification() const {
+    return _id;
+}
+
+/** @param[in]      isce::product::Identification. */
+void
+isce::product::Metadata::
+identification(const isce::product::Identification & id) {
+    _id = id;
+}
+
+// end of file

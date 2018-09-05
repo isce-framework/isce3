@@ -1,0 +1,118 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+
+#if !defined(ISCE_PRODUCT_IMAGEMODE_ICC)
+#error "ImageMode.icc is an implementation detail of class ImageMode."
+#endif
+
+/** @param[in]              Mode type. */
+isce::product::ImageMode::
+ImageMode(const std::string & inputModeType) {
+    // Verify and set mode type
+    modeType(inputModeType);
+}
+
+/** @param[in]              isce::product::ImageMode */
+isce::product::ImageMode::
+ImageMode(const isce::product::ImageMode & mode) :
+    _modeType(mode.modeType()),
+    _imageDims(mode.dataDimensions()),
+    _prf(mode.prf()),
+    _rangeBandwidth(mode.rangeBandwidth()),
+    _wavelength(mode.wavelength()),
+    _startingRange(mode.startingRange()),
+    _rangePixelSpacing(mode.rangePixelSpacing()),
+    _numberAzimuthLooks(mode.numberAzimuthLooks()),
+    _numberRangeLooks(mode.numberRangeLooks()),
+    _startAzTime(mode.startAzTime()),
+    _endAzTime(mode.endAzTime()) {}
+
+/** @param[in]              isce::core::Metadata */
+isce::product::ImageMode::
+ImageMode(const isce::core::Metadata & meta) {
+
+    // Transfer necessary metadata from Metadata object
+    const std::array<size_t, 2> dims{(size_t) meta.length, (size_t) meta.width};
+    dataDimensions(dims);
+    wavelength(meta.radarWavelength);
+    startingRange(meta.rangeFirstSample);
+    rangePixelSpacing(meta.slantRangePixelSpacing);
+    startAzTime(meta.sensingStart);
+    numberAzimuthLooks(meta.numberAzimuthLooks);
+    numberRangeLooks(meta.numberRangeLooks);
+    prf(meta.prf);
+
+    // Also compute ending azimuth time
+    _endAzTime = _startAzTime + (meta.length - 1.0) / meta.prf;
+}
+
+
+/** @param[in]              isce::product::ImageMode */
+isce::product::ImageMode &
+isce::product::ImageMode::
+operator=(const isce::product::ImageMode & mode) {
+    // Simply assign data members to self
+    _modeType = mode.modeType();
+    _imageDims = mode.dataDimensions();
+    _prf = mode.prf();
+    _rangeBandwidth = mode.rangeBandwidth();
+    _wavelength = mode.wavelength();
+    _startingRange = mode.startingRange();
+    _rangePixelSpacing = mode.rangePixelSpacing();
+    _numberAzimuthLooks = mode.numberAzimuthLooks();
+    _numberRangeLooks = mode.numberRangeLooks();
+    _startAzTime = mode.startAzTime();
+    _endAzTime = mode.endAzTime();
+    return *this;
+}
+
+/** @param[out]             Mode type. */
+std::string
+isce::product::ImageMode::
+modeType() const {
+    return _modeType;
+}
+
+/** @param[in]              Mode type. */
+void
+isce::product::ImageMode::
+modeType(const std::string & mtype) {
+    // Verify
+    if (mtype.compare("aux") != 0 && mtype.compare("primary") != 0) {
+        pyre::journal::error_t error("isce.product.ImageMode.modeType");
+        error
+            << pyre::journal::at(__HERE__)
+            << "Trying to set an unsupported mode type " << mtype
+            << pyre::journal::endl;
+    }
+    // Now set
+    _modeType = mtype;
+} 
+
+/** @param[in]              Polarization. */
+std::string
+isce::product::ImageMode::
+dataPath(const std::string & pol) {
+    // Construct HDF5 path using the stored mode type
+    std::string path = "/science/complex_imagery/" + _modeType + "_mode/" + pol;
+    // Done
+    return path;
+}
+
+/** @param[out]             Array of image dimensions. */
+std::array<size_t, 2>
+isce::product::ImageMode::
+dataDimensions() const {
+    return _imageDims;
+}
+
+/** @param[in]              Array of image dimensions. */
+void
+isce::product::ImageMode::
+dataDimensions(const std::array<size_t, 2> & dims) {
+    _imageDims[0] = dims[0];
+    _imageDims[1] = dims[1];
+}
+
+            
+// end of file

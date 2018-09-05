@@ -8,7 +8,7 @@ from cython.operator cimport dereference as deref
 from geometry cimport *
 
 def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyPoly2d doppler,
-               pyMetadata meta, double threshold=0.05, int maxiter=50, double dR=1.0e-8):
+               pyImageMode mode, double threshold=0.05, int maxiter=50, double dR=1.0e-8):
 
     # Transfer llh to a cartesian_t
     cdef int i
@@ -20,7 +20,7 @@ def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyPoly2d doppler,
     cdef double azimuthTime = 0.0
     cdef double slantRange = 0.0
     geo2rdr(cart_llh, deref(ellps.c_ellipsoid), deref(orbit.c_orbit),
-            deref(doppler.c_poly2d), meta.c_metadata, azimuthTime, slantRange,
+            deref(doppler.c_poly2d), deref(mode.c_imagemode), azimuthTime, slantRange,
             threshold, maxiter, dR)
 
     # All done 

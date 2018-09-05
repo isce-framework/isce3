@@ -1,0 +1,58 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+
+#if !defined(ISCE_RADAR_RADAR_ICC)
+#error "Radar.icc is an implementation detail of class Radar."
+#endif
+
+/** @param[in]              Poly2d for skew Doppler.
+ *  @param[in]              Poly2d for content Doppler. */
+isce::radar::Radar::
+Radar(const isce::core::Poly2d & skew, const isce::core::Poly2d & content) :
+    _skewDoppler(skew), _contentDoppler(content) {}
+
+/** @param[in]              isce::radar::Radar. */
+isce::radar::Radar::
+Radar(const isce::radar::Radar & radar) :
+    _skewDoppler(radar.skewDoppler()),
+    _contentDoppler(radar.contentDoppler()) {}
+
+/** @param[in]              isce::radar::Radar. */
+isce::radar::Radar &
+isce::radar::Radar::
+operator=(const isce::radar::Radar & radar) {
+    _skewDoppler = radar.skewDoppler();
+    _contentDoppler = radar.contentDoppler();
+    return *this;
+}
+
+/** @param[out]             isce::core::Poly2d. */
+isce::core::Poly2d
+isce::radar::Radar::
+contentDoppler() const {
+    return _contentDoppler;
+}
+
+/** @param[in]              isce::core::Poly2d. */
+void
+isce::radar::Radar::
+contentDoppler(const isce::core::Poly2d & poly) {
+    _contentDoppler = poly;
+}
+
+/** @param[out]             isce::core::Poly2d. */
+isce::core::Poly2d
+isce::radar::Radar::
+skewDoppler() const {
+    return _skewDoppler;
+}
+
+/** @param[in]              isce::core::Poly2d. */
+void
+isce::radar::Radar::
+skewDoppler(const isce::core::Poly2d & poly) {
+    _skewDoppler = poly;
+}
+
+
+// end of file

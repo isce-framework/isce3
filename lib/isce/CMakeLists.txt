@@ -1,8 +1,11 @@
 
 # Pull in the source files
-include(core/CMakeLists.txt)
-include(geometry/CMakeLists.txt)
 include(io/CMakeLists.txt)
+include(radar/CMakeLists.txt)
+include(product/CMakeLists.txt)
+include(core/CMakeLists.txt)
+include(image/CMakeLists.txt)
+include(geometry/CMakeLists.txt)
 
 # Set the output library
 set(PACKAGENAME isce)
@@ -10,9 +13,12 @@ set(${PACKAGENAME}_DLL isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 # Link sources to library
 add_library(${${PACKAGENAME}_DLL} SHARED
+            ${io_SRCS}
+            ${radar_SRCS}
+            ${product_SRCS}
             ${core_SRCS}
-            ${geometry_SRCS}
-            ${io_SRCS})
+            ${image_SRCS} 
+            ${geometry_SRCS})
 
 # Add library dependencies 
 target_link_libraries(${${PACKAGENAME}_DLL} ${GDAL_LIBRARY} ${HDF5_LIBRARY} ${PYRE_LIBRARY}

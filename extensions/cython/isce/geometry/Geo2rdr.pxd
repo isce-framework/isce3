@@ -7,11 +7,10 @@
 from libcpp.string cimport string
 
 # Cython declarations for isce::core objects
-from Ellipsoid cimport Ellipsoid
-from Orbit cimport Orbit, orbitInterpMethod
-from Metadata cimport Metadata
 from Raster cimport Raster
-from Poly2d cimport Poly2d
+
+# Cython declarations for isce::product objects
+from Product cimport Product
 
 cdef extern from "isce/geometry/Geo2rdr.h" namespace "isce::geometry":
 
@@ -19,7 +18,7 @@ cdef extern from "isce/geometry/Geo2rdr.h" namespace "isce::geometry":
     cdef cppclass Geo2rdr:
 
         # Constructor
-        Geo2rdr(Ellipsoid, Orbit, Metadata) except +
+        Geo2rdr(Product) except +
 
         # Set options
         void threshold(double)
@@ -27,6 +26,6 @@ cdef extern from "isce/geometry/Geo2rdr.h" namespace "isce::geometry":
         void orbitMethod(orbitInterpMethod)
 
         # Run geo2rdr - main entrypoint
-        void geo2rdr(Raster &, Poly2d &, const string &, double, double)
+        void geo2rdr(Raster &, const string &, double, double)
         
 # end of file

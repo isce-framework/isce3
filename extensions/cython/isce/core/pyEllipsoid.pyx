@@ -8,7 +8,6 @@ from libcpp cimport bool
 from libcpp.vector cimport vector
 from libcpp.string cimport string
 from Ellipsoid cimport Ellipsoid
-from Serialization cimport load_archive
 from numpy cimport ndarray
 import numpy as np
 cimport numpy as np
@@ -57,6 +56,19 @@ cdef class pyEllipsoid:
         new_elp.__owner = False
         return new_elp
 
+    @staticmethod
+    cdef cbind(Ellipsoid elp):
+        '''
+        Creates a new pyEllipsoid instance from a C++ Ellipsoid instance.
+        
+        Args:
+            elp (Ellipsoid): C++ Ellipsoid instance.
+        '''
+        new_elp = pyEllipsoid()
+        del new_elp.c_ellipsoid
+        new_elp.c_ellipsoid = new Ellipsoid(elp)
+        new_elp.__owner = True
+        return new_elp
 
     @property
     def a(self):
@@ -343,15 +355,4 @@ cdef class pyEllipsoid:
 
         return (that, chat, nhat)
 
-    def archive(self, pyIH5File h5file):
-        '''
-        Load ellipsoid properties from H5 product.
-
-        Args:
-            h5file (pyIH5File): IH5File for H5 product.
-
-        Return:
-            None
-        '''
-        load(deref(h5file.c_ih5file), deref(self.c_ellipsoid))
-
+# end of file

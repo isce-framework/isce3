@@ -20,15 +20,15 @@ class isce::geometry::TopoLayers {
 
     public:
         // Constructors
-        TopoLayers(size_t width) {
-            _x.resize(width);
-            _y.resize(width);
-            _z.resize(width);
-            _inc.resize(width);
-            _hdg.resize(width);
-            _localInc.resize(width);
-            _localPsi.resize(width);
-            _sim.resize(width);
+        TopoLayers(size_t length, size_t width) : _length(length), _width(width) {
+            _x.resize(length*width);
+            _y.resize(length*width);
+            _z.resize(length*width);
+            _inc.resize(length*width);
+            _hdg.resize(length*width);
+            _localInc.resize(length*width);
+            _localPsi.resize(length*width);
+            _sim.resize(length*width);
         }   
         
         // Get array references
@@ -42,14 +42,37 @@ class isce::geometry::TopoLayers {
         std::valarray<float> & sim() { return _sim; }
         
         // Set values for a single index
-        void x(size_t index, double value) { _x[index] = value; }
-        void y(size_t index, double value) { _y[index] = value; }
-        void z(size_t index, double value) { _z[index] = value; }
-        void inc(size_t index, float value) { _inc[index] = value; }
-        void hdg(size_t index, float value) { _hdg[index] = value; }
-        void localInc(size_t index, float value) { _localInc[index] = value; }
-        void localPsi(size_t index, float value) { _localPsi[index] = value; }
-        void sim(size_t index, float value) { _sim[index] = value; }
+        void x(size_t row, size_t col, double value) {
+            _x[row*_width+col] = value;
+        }
+        
+        void y(size_t row, size_t col, double value) {
+            _y[row*_width + col] = value;
+        }
+        
+        void z(size_t row, size_t col, double value) {
+            _z[row*_width + col] = value;
+        }
+        
+        void inc(size_t row, size_t col, float value) {
+            _inc[row*_width + col] = value;
+        }
+        
+        void hdg(size_t row, size_t col, float value) {
+            _hdg[row*_width + col] = value;
+        }
+        
+        void localInc(size_t row, size_t col, float value) {
+            _localInc[row*_width + col] = value;
+        }
+        
+        void localPsi(size_t row, size_t col, float value) {
+            _localPsi[row*_width + col] = value;
+        }
+    
+        void sim(size_t row, size_t col, float value) {
+            _sim[row*_width + col] = value;
+        }
         
     private:
         // The valarrays for the actual data
@@ -61,6 +84,9 @@ class isce::geometry::TopoLayers {
         std::valarray<float> _localInc;
         std::valarray<float> _localPsi;
         std::valarray<float> _sim;
+
+        // Dimensions
+        size_t _length, _width;
 };
     
 #endif

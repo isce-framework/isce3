@@ -1,7 +1,7 @@
 //-*- C++ -*-
 //-*- coding: utf-8 -*-
 
-#if !defined(ISCE_CORE_RESAMPSLC_ICC)
+#if !defined(ISCE_IMAGE_RESAMPSLC_ICC)
 #error "ResampSlc.icc is an implementation detail of class ResampSlc"
 #endif
 
@@ -9,80 +9,107 @@
 #define modulo_f(a,b) fmod(fmod(a,b)+(b),(b))
 
 // Default constructor
-isce::core::ResampSlc::
-ResampSlc() {}
+isce::image::ResampSlc::
+ResampSlc(const isce::product::Product & product) : _haveRefMode(false) {
+    // Cache the instrument
+    isce::radar::Radar instrument = product.metadata().instrument();
+    // Set the doppler
+    _dopplerPoly = instrument.contentDoppler();
+    // Set the image mode
+    _mode = product.complexImagery().primaryMode();
+    // Save the filename
+    _filename = product.filename();
+}
+
+// Constructor from isce::core objects
+isce::image::ResampSlc::
+ResampSlc(const isce::core::Poly2d doppler, const isce::core::Metadata meta) :
+    _dopplerPoly(doppler), _mode(meta) {
+    // _filename variable set to empty string since it shouldn't be used with
+    // a non-HDF5 constructor
+    _filename = " ";
+}
 
 // Destructor
-isce::core::ResampSlc::
+isce::image::ResampSlc::
 ~ResampSlc() {}
 
 // Get range carrier polynomial
 isce::core::Poly2d
-isce::core::ResampSlc::
+isce::image::ResampSlc::
 rgCarrier() const {
     return _rgCarrier;
 }
 
 // Set range carrier polynomial
-void isce::core::ResampSlc::
-rgCarrier(Poly2d & poly) {
+void isce::image::ResampSlc::
+rgCarrier(isce::core::Poly2d & poly) {
     _rgCarrier = poly;
 }
 
 // Get azimuth carrier polynomial
 isce::core::Poly2d
-isce::core::ResampSlc::
+isce::image::ResampSlc::
 azCarrier() const {
     return _azCarrier;
 }
 
 // Set azimuth carrier polynomial
-void isce::core::ResampSlc::
-azCarrier(Poly2d & poly) {
+void isce::image::ResampSlc::
+azCarrier(isce::core::Poly2d & poly) {
     _azCarrier = poly;
 }
 
 // Get Doppler polynomial
 isce::core::Poly2d
-isce::core::ResampSlc::
+isce::image::ResampSlc::
 doppler() const {
     return _dopplerPoly;
 }
 
 // Set Doppler polynomial
-void isce::core::ResampSlc::
-doppler(Poly2d & poly) {
+void isce::image::ResampSlc::
+doppler(isce::core::Poly2d & poly) {
     _dopplerPoly = poly;
 }
 
-// Get metadata
-isce::core::Metadata
-isce::core::ResampSlc::
-metadata() const {
-    return _meta;
+// Set reference product
+void isce::image::ResampSlc::
+referenceProduct(const isce::product::Product & refProduct) {
+    // Extract the reference image mode
+    _refMode = refProduct.complexImagery().primaryMode();
+    // Indicate we have a reference mode
+    _haveRefMode = true;
 }
 
-// Set metadata from copy
-void isce::core::ResampSlc::
-metadata(Metadata meta) {
-    _meta = meta;
+// Get image mode
+isce::product::ImageMode
+isce::image::ResampSlc::
+imageMode() const {
+    return _mode;
 }
 
-// Get reference metadata
-isce::core::Metadata
-isce::core::ResampSlc::
-refMetadata() const {
-    return _refMeta;
+// Set imageMode from copy
+void isce::image::ResampSlc::
+imageMode(const isce::product::ImageMode & mode) {
+    _mode = mode;
 }
 
-// Set reference metadata from copy
-void isce::core::ResampSlc::
-refMetadata(Metadata meta) {
-    _refMeta = meta;
+// Get reference imageMode
+isce::product::ImageMode
+isce::image::ResampSlc::
+refImageMode() const {
+    return _refMode;
+}
+
+// Set reference imageMode from copy
+void isce::image::ResampSlc::
+refImageMode(const isce::product::ImageMode & mode) {
+    _refMode = mode;
 }
 
 // Announce my properties to the world
-void isce::core::ResampSlc::
+void isce::image::ResampSlc::
 declare(int inLength, int inWidth,
     int outLength, int outWidth) const {
     // Make info channel
@@ -115,19 +142,19 @@ declare(int inLength, int inWidth,
 }
 
 // Get the number of lines per tile
-size_t isce::core::ResampSlc::
+size_t isce::image::ResampSlc::
 linesPerTile() const {
     return _linesPerTile;
 }
 
 // Set the number of lines per tile
-void isce::core::ResampSlc::
+void isce::image::ResampSlc::
 linesPerTile(size_t value) {
     _linesPerTile = value;
 }
 
 // Compute number of tiles given a specified nominal tile size
-int isce::core::ResampSlc::
+int isce::image::ResampSlc::
 _computeNumberOfTiles(int outLength, int linesPerTile) {
     // Compute floor(nTiles)
     int nTiles = outLength / linesPerTile;
@@ -140,14 +167,14 @@ _computeNumberOfTiles(int outLength, int linesPerTile) {
 }
 
 // Prepare sinc interpolation methods and internal data
-void isce::core::ResampSlc::
+void isce::image::ResampSlc::
 _prepareInterpMethods(int method) {
     // Compute filter coefficients    
-    if (method == SINC_METHOD) {
+    if (method == isce::core::SINC_METHOD) {
 
         // Initialize sinc coefficients
         std::valarray<double> filter(0.0, SINC_SUB * SINC_LEN + 1);
-        Interpolator::sinc_coef(1.0, SINC_LEN, SINC_SUB, 0.0, 1, filter);
+        isce::core::Interpolator::sinc_coef(1.0, SINC_LEN, SINC_SUB, 0.0, 1, filter);
 
         // Normalize filter
         for (int i = 0; i < SINC_SUB; ++i) {
@@ -177,8 +204,8 @@ _prepareInterpMethods(int method) {
 }
 
 // Complex sinc interpolation
-std::complex<float> isce::core::ResampSlc::
-_interpolateComplex(Matrix<std::complex<float>> & ifg, int x, int y,
+std::complex<float> isce::image::ResampSlc::
+_interpolateComplex(isce::core::Matrix<std::complex<float>> & ifg, int x, int y,
                     double fx, double fy, int nx, int ny) {
 
     // Check edge conditions
@@ -192,7 +219,7 @@ _interpolateComplex(Matrix<std::complex<float>> & ifg, int x, int y,
     const int yy = y + SINC_HALF - 1;
 
     // Call sinc interpolator
-    std::complex<float> interpVal = Interpolator::sinc_eval_2d(
+    std::complex<float> interpVal = isce::core::Interpolator::sinc_eval_2d(
         ifg, _fintp, xx, yy, fx, fy, nx, nx
     );
     return interpVal;

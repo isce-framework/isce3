@@ -20,6 +20,7 @@ set(${PACKAGENAME}_EXPORT_HEADERS
     IH5.h
     Raster.h
     Raster.icc
+    Serialization.h
 )
 
 ###Install headers into build/include
