@@ -9,9 +9,8 @@
 // Needed to call the cudaMalloc/cudaFree APIs
 #include <cuda_runtime.h>
 #include <vector>
-#include "Constants.h"
+#include "isce/core/Constants.h"
 #include "gpuOrbit.h"
-#include "Orbit.h"
 
 using isce::cuda::core::gpuOrbit;
 using isce::core::cartesian_t;

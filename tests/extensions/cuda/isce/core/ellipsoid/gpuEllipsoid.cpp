@@ -10,7 +10,7 @@
 #include <vector>
 #include "isce/core/Constants.h"
 #include "isce/core/Ellipsoid.h"
-#include "isce/core/cuda/gpuEllipsoid.h"
+#include "isce/cuda/core/gpuEllipsoid.h"
 #include "gtest/gtest.h"
 
 using isce::core::Ellipsoid;

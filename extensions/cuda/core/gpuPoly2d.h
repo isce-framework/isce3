@@ -17,7 +17,7 @@
 #endif
 
 #include <cmath>
-#include "Poly2d.h"
+#include "isce/core/Poly2d.h"
 
 using isce::core::Poly2d;
 

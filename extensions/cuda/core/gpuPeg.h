@@ -6,7 +6,7 @@
 #ifndef __ISCE_CUDA_CORE_GPUPEG_H__
 #define __ISCE_CUDA_CORE_GPUPEG_H__
 
-#include "Peg.h"
+#include "isce/core/Peg.h"
 
 using isce::core::Peg;
 

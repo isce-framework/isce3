@@ -17,8 +17,8 @@
 #endif
 
 #include <cmath>
-#include "Constants.h"
-#include "Ellipsoid.h"
+#include "isce/core/Constants.h"
+#include "isce/core/Ellipsoid.h"
 
 using isce::core::Ellipsoid;
 using isce::core::cartesian_t;

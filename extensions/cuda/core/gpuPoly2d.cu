@@ -6,9 +6,8 @@
 
 #include <cuda_runtime.h>
 #include <vector>
-#include "Constants.h"
+#include "isce/core/Constants.h"
 #include "gpuPoly2d.h"
-#include "Poly2d.h"
 #include <stdio.h>
 
 using isce::cuda::core::gpuPoly2d;

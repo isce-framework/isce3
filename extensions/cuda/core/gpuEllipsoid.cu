@@ -6,7 +6,6 @@
 #include <cmath>
 #include <cuda_runtime.h>
 #include <vector>
-#include "Constants.h"
 #include "gpuEllipsoid.h"
 #include "gpuLinAlg.h"
 
