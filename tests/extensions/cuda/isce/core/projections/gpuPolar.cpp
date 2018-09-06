@@ -1,11 +1,19 @@
-//
-// Source Author: Paulo Penteado, based on polar.cpp by Joshua Cohen
-// Copyright 2018
-//
+/**
+ * 
+ * Unit tests for gpu polar projection forward/inverse functions
+ * These are intended only to test for correctness of transformations done on the device.
+ * They use a single gpu thread, so they are not efficient.
+ * See gpuPolarBenchmark.cpp for benchmark tests, where many millions of points are transformed
+ * in parallel in gpu, and the wall times are compared between cpu and gpu code.
+ *
+ *
+ * Source Author: Paulo Penteado, based on polar.cpp by Joshua Cohen
+ * Copyright 2018
+ */
 
 #include <cmath>
 #include <iostream>
-#include "isce/extensions/gpuProjections.h"
+#include "isce/core/cuda/gpuProjections.h"
 #include "isce/core/Projections.h"
 #include <chrono>
 
@@ -16,8 +24,8 @@ using std::endl;
 
 
 
-gpuisce::core::PolarStereo gNorth(3413);
-gpuisce::core::PolarStereo gSouth(3031);
+isce::cuda::core::PolarStereo gNorth(3413);
+isce::cuda::core::PolarStereo gSouth(3031);
 
 
 struct PolarTest : public ::testing::Test {
@@ -56,7 +64,6 @@ struct PolarTest : public ::testing::Test {
 polarTest(gNorth, NorthPole3413, {0,0.5*M_PI, 0.}, {0.,0.,0.});
 
 polarTest(gSouth, SouthPole3031, {0,-0.5*M_PI,0.}, {0.,0.,0.});
-
 
 //South pole tests
 polarTest(gSouth, South1, {3.083894546782417e-02,  -1.344622005845314e+00, 1.912700155961942e+03},
@@ -153,88 +160,11 @@ polarTest(gNorth, North15, { 1.896312874775227e+00,   1.411713711367596e+00, 1.6
 
 
 
-int roundtriptest(int np, isce::core::PolarStereo hemi) {
-int N=np;
-cout<<"N="<<N<<endl;
-//Allocate device arrays
-double *x,*y;
-int *r;
-
-x=new double [3*N];
-y=new double [3*N];
-r=new int [3*N];
-
-cout.precision(17);
-cout<<y[0]<< " " << y[1] << " " << y[2] << endl;
-cout<<x[0]<< " " << x[1] << " " << x[2] << endl;
-
-//Call the driver with many threads
-cartesian_t xyz,llh;
-for (int tid=0; tid<N; tid++) {
-x[tid*3]=3.083894546782417e-02;
-x[tid*3+1]=-1.344622005845314e+00;
-x[tid*3+2]=1.912700155961942e+03;
-r[tid]=0;
-llh={x[tid*3],x[tid*3+1],x[tid*3+2]};
-hemi.forward(llh, xyz);    
-hemi.inverse(xyz, llh);
-}
-
-cout.precision(17);
-cout<<y[0]<< " " << y[1] << " " << y[2] << endl;
-cout<<x[0]<< " " << x[1] << " " << x[2] << endl;
-cout<<endl;
-
-//Clean up
-delete[] x;
-delete[] y;
-delete[] r;
-
-return 0;
-}
 
 
 int main(int argc, char **argv) {
 
-	using clock = std::chrono::steady_clock;
-	clock::time_point start,end;
-	std::chrono::duration<double> elapsedg,elapsedc;
-	
-	gpuisce::core::PolarStereo gSouth(3031);
-	isce::core::PolarStereo South(3031);
-	int np;
-	np=1024*1024*128;
-	struct count{
-		int np;
-		double gputime;
-		double cputime;
-	};
-	count counts[10];
-	np=1024*1024;
-	for (int sz=0; sz<10; sz++){
-		start=clock::now();	
-		//for (int i=0; i<2; i++) {
-		  gSouth.roundtriptest(np);
-		//}
-		end=clock::now();
-		elapsedg=end-start;
-		//cout<<elapsedg.count()<<endl;
-		
-		//cout<<"rt tests done\n";
-		start=clock::now();
-		//for (int i=0; i<2; i++) {
-		  roundtriptest(np,South);
-		//}
-		end=clock::now();
-		elapsedc=end-start;
-		//cout<<"rt tests done\n"; 
-		//cout<<elapsedc.count()<<endl;
-		counts[sz]={np,elapsedg.count(),elapsedc.count()};
-		np*=2;
-		cout<<counts[sz].np<<","<<counts[sz].gputime<<","<<counts[sz].cputime<<endl;
-	}
-
-    //::testing::InitGoogleTest(&argc, argv);
+    ::testing::InitGoogleTest(&argc, argv);
     
-    //return RUN_ALL_TESTS();
+    return RUN_ALL_TESTS();
 }
