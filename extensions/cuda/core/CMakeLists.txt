@@ -4,12 +4,15 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 set(ISCE_CUDA_${PACKAGENAME}_HEADERS
+        gpuBasis.h
         gpuEllipsoid.h
         gpuLinAlg.h
         gpuOrbit.h
         gpuPeg.h
         gpuPegtrans.h 
-        gpuPoly2d.h )
+        gpuPixel.h
+        gpuPoly2d.h
+        gpuStateVector.h )
 
 set(LOCAL_SRCS 
         gpuEllipsoid.cu
