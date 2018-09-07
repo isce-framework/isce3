@@ -49,25 +49,27 @@ gpuPoly2d::~gpuPoly2d() {
     }
 }
 
-__device__ void gpuPoly2d::eval(double azi, double rng, double *val) {
+__device__ double gpuPoly2d::eval(double azi, double rng) const {
 
     double xval = (rng - rangeMean) / rangeNorm;
     double yval = (azi - azimuthMean) / azimuthNorm;
 
     double scalex;
     double scaley = 1.;
-    *val = 0.;
+    double val = 0.;
     for (int i=0; i<=azimuthOrder; i++,scaley*=yval) {
         scalex = 1.;
         for (int j=0; j<=rangeOrder; j++,scalex*=xval) {
-            *val += scalex * scaley * coeffs[IDX1D(i,j,rangeOrder+1)];
+            val += scalex * scaley * coeffs[IDX1D(i,j,rangeOrder+1)];
         }
     }
+
+    return val;
 }
 
 __global__ void eval_d(gpuPoly2d p, double azi, double rng, double *val)
 {
-    p.eval(azi, rng, val);
+    *val = p.eval(azi, rng);
 }
 
 __host__ double gpuPoly2d::eval_h(double azi, double rng)

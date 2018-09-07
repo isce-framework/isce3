@@ -16,6 +16,7 @@ namespace isce { namespace cuda { namespace core {
         __device__ static inline double dot(double*,double*);
         __device__ static inline void linComb(double,double*,double,double*,double*);
         __device__ static inline void unitVec(double*,double*);
+        __device__ static inline double norm(double*);
     };
 
     __device__ inline void gpuLinAlg::cross(double *u, double *v, double *w) {
@@ -35,10 +36,14 @@ namespace isce { namespace cuda { namespace core {
     }
 
     __device__ inline void gpuLinAlg::unitVec(double *v, double *vhat) {
-        double mag = norm(3,v);
+        double mag = norm(v);
         vhat[0] = v[0] / mag;
         vhat[1] = v[1] / mag;
         vhat[2] = v[2] / mag;
+    }
+
+    __device__ inline double gpuLinAlg::norm(double *v) {
+        return std::sqrt(std::pow(v[0], 2) + std::pow(v[1], 2) + std::pow(v[2], 2));
     }
 }}}
 

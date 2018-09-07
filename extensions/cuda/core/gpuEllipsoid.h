@@ -35,11 +35,11 @@ namespace isce { namespace cuda { namespace core {
         CUDA_HOST gpuEllipsoid(const Ellipsoid &e) : a(e.a()), e2(e.e2()) {}
         CUDA_HOSTDEV inline gpuEllipsoid& operator=(const gpuEllipsoid&);
 
-        CUDA_DEV inline double rEast(double);
-        CUDA_DEV inline double rNorth(double);
-        CUDA_DEV inline double rDir(double,double);
-        CUDA_DEV void lonLatToXyz(double*,double*);
-        CUDA_DEV void xyzToLatLon(double*,double*);
+        CUDA_DEV inline double rEast(double) const;
+        CUDA_DEV inline double rNorth(double) const;
+        CUDA_DEV inline double rDir(double,double) const;
+        CUDA_DEV void lonLatToXyz(double*,double*) const;
+        CUDA_DEV void xyzToLatLon(double*,double*) const;
         CUDA_DEV void TCNbasis(double*,double*,double*,double*,double*);
 
         // Host functions to test underlying device functions in a single-threaded context
@@ -53,15 +53,15 @@ namespace isce { namespace cuda { namespace core {
         return *this;
     }
 
-    CUDA_DEV inline double gpuEllipsoid::rEast(double lat) { 
+    CUDA_DEV inline double gpuEllipsoid::rEast(double lat) const {
         return a / sqrt(1. - (e2 * pow(sin(lat), 2))); 
     }
 
-    CUDA_DEV inline double gpuEllipsoid::rNorth(double lat) { 
+    CUDA_DEV inline double gpuEllipsoid::rNorth(double lat) const {
         return (a * (1. - e2)) / pow((1. - (e2 * pow(lat, 2))), 1.5); 
     }
 
-    CUDA_DEV inline double gpuEllipsoid::rDir(double hdg, double lat) {
+    CUDA_DEV inline double gpuEllipsoid::rDir(double hdg, double lat) const {
         double re = rEast(lat);
         double rn = rNorth(lat);
         return (re * rn) / ((re * pow(cos(hdg), 2)) + (rn * pow(sin(hdg), 2)));

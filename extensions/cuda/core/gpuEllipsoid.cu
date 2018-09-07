@@ -13,14 +13,14 @@ using std::vector;
 using isce::cuda::core::gpuEllipsoid;
 using isce::cuda::core::gpuLinAlg;
 
-__device__ void gpuEllipsoid::lonLatToXyz(double *llh, double *xyz) {
+__device__ void gpuEllipsoid::lonLatToXyz(double *llh, double *xyz) const {
     double re = rEast(llh[1]);
     xyz[0] = (re + llh[2]) * cos(llh[1]) * cos(llh[0]);
     xyz[1] = (re + llh[2]) * cos(llh[1]) * sin(llh[0]);
     xyz[2] = ((re * (1. - e2)) + llh[2]) * sin(llh[1]);
 }
 
-__device__ void gpuEllipsoid::xyzToLatLon(double *xyz, double *llh) {
+__device__ void gpuEllipsoid::xyzToLatLon(double *xyz, double *llh) const {
     double p = (pow(xyz[0],2) + pow(xyz[1],2)) / pow(a,2);
     double q = ((1. - e2) * pow(xyz[2],2)) / pow(a,2);
     double r = (p + q - pow(e2,2)) / 6.;

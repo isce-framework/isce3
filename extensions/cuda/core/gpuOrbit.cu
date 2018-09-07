@@ -46,7 +46,7 @@ gpuOrbit::~gpuOrbit() {
     }
 }
 
-__device__ int gpuOrbit::interpolateWGS84Orbit(double tintp, double *opos, double *ovel) {
+__device__ int gpuOrbit::interpolateWGS84Orbit(double tintp, double *opos, double *ovel) const {
     if (nVectors < 4) return 1;
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) return 1;
     int idx = -1;
@@ -179,7 +179,7 @@ __device__ int gpuOrbit::interpolateWGS84Orbit(double tintp, double *opos, doubl
     return 0;
 }
 
-__device__ int gpuOrbit::interpolateLegendreOrbit(double tintp, double *opos, double *ovel) {
+__device__ int gpuOrbit::interpolateLegendreOrbit(double tintp, double *opos, double *ovel) const {
     if (nVectors < 9) return 1;
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) return 1;
     int idx = -1;
@@ -218,7 +218,7 @@ __device__ int gpuOrbit::interpolateLegendreOrbit(double tintp, double *opos, do
     return 0;
 }
 
-__device__ int gpuOrbit::interpolateSCHOrbit(double tintp, double *opos, double *ovel) {
+__device__ int gpuOrbit::interpolateSCHOrbit(double tintp, double *opos, double *ovel) const {
     if (nVectors < 2) return 1;
     if ((tintp < UTCtime[0]) || (tintp > UTCtime[nVectors-1])) return 1;
     opos[0] = opos[1] = opos[2] = 0.;
@@ -241,7 +241,7 @@ __device__ int gpuOrbit::interpolateSCHOrbit(double tintp, double *opos, double 
     return 0;
 }
 
-__device__ int gpuOrbit::computeAcceleration(double tintp, double *acc) {
+__device__ int gpuOrbit::computeAcceleration(double tintp, double *acc) const {
     double dummy[3], vbef[3], vaft[3];
     if (interpolateWGS84Orbit(tintp-.01, dummy, vbef) == 1) return 1;
     if (interpolateWGS84Orbit(tintp+.01, dummy, vaft) == 1) return 1;

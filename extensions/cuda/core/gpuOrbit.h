@@ -46,11 +46,11 @@ namespace isce { namespace cuda { namespace core {
         CUDA_HOSTDEV gpuOrbit& operator=(const gpuOrbit&) = delete;
         ~gpuOrbit();
 
-        CUDA_DEV inline void getStateVector(int,double&,double*,double*);
-        CUDA_DEV int interpolateWGS84Orbit(double,double*,double*);
-        CUDA_DEV int interpolateLegendreOrbit(double,double*,double*);
-        CUDA_DEV int interpolateSCHOrbit(double,double*,double*);
-        CUDA_DEV int computeAcceleration(double,double*);
+        CUDA_DEV inline void getStateVector(int,double&,double*,double*) const;
+        CUDA_DEV int interpolateWGS84Orbit(double,double*,double*) const;
+        CUDA_DEV int interpolateLegendreOrbit(double,double*,double*) const;
+        CUDA_DEV int interpolateSCHOrbit(double,double*,double*) const;
+        CUDA_DEV int computeAcceleration(double,double*) const;
 
         // Host functions to test underlying device functions in a single-threaded context
         CUDA_HOST int interpolateWGS84Orbit_h(double,cartesian_t&,cartesian_t&);
@@ -58,7 +58,9 @@ namespace isce { namespace cuda { namespace core {
         CUDA_HOST int interpolateSCHOrbit_h(double,cartesian_t&,cartesian_t&);
     };
 
-    CUDA_DEV inline void gpuOrbit::getStateVector(int idx, double &t, double *pos, double *vel) {
+    CUDA_DEV inline void gpuOrbit::getStateVector(
+        int idx, double &t, double *pos, double *vel
+        ) const {
         // Note we can't really do much in the way of bounds-checking since we can't use the 
         // <stdexcept> library, this is best we have
         bool valid = !((idx < 0) || (idx >= nVectors));
