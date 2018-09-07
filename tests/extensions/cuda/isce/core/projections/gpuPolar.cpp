@@ -5,19 +5,14 @@
 
 #include <cmath>
 #include <iostream>
-#include "isce/extensions/gpuProjections.h"
-#include "isce/core/Projections.h"
+#include "isce/core/cuda/gpuProjections.h"
 #include <chrono>
 
 #include "gtest/gtest.h"
 using isce::core::cartesian_t;
-using std::cout;
-using std::endl;
 
-
-
-gpuisce::core::PolarStereo gNorth(3413);
-gpuisce::core::PolarStereo gSouth(3031);
+isce::cuda::core::PolarStereo gNorth(3413);
+isce::cuda::core::PolarStereo gSouth(3031);
 
 
 struct PolarTest : public ::testing::Test {
@@ -39,12 +34,12 @@ struct PolarTest : public ::testing::Test {
         cartesian_t ref_xyz = {x,y,z};    \
         cartesian_t xyz, llh;  \
         llh = ref_llh;                  \
-        hemi.forward(llh, xyz);    \
+        hemi.forward_h(llh, xyz);    \
         EXPECT_NEAR(xyz[0], ref_xyz[0], 1.0e-6);\
         EXPECT_NEAR(xyz[1], ref_xyz[1], 1.0e-6);\
         EXPECT_NEAR(xyz[2], ref_xyz[2], 1.0e-6);\
         xyz = ref_xyz;                  \
-        hemi.inverse(xyz, llh);    \
+        hemi.inverse_h(xyz, llh);    \
         EXPECT_NEAR(llh[0], ref_llh[0], 1.0e-9);\
         EXPECT_NEAR(llh[1], ref_llh[1], 1.0e-9);\
         EXPECT_NEAR(llh[2], ref_llh[2], 1.0e-6);\
@@ -153,7 +148,7 @@ polarTest(gNorth, North15, { 1.896312874775227e+00,   1.411713711367596e+00, 1.6
 
 
 
-int roundtriptest(int np, isce::core::PolarStereo hemi) {
+/*int roundtriptest(int np, isce::core::PolarStereo hemi) {
 int N=np;
 cout<<"N="<<N<<endl;
 //Allocate device arrays
@@ -191,12 +186,12 @@ delete[] y;
 delete[] r;
 
 return 0;
-}
+}*/
 
 
 int main(int argc, char **argv) {
 
-	using clock = std::chrono::steady_clock;
+	/*using clock = std::chrono::steady_clock;
 	clock::time_point start,end;
 	std::chrono::duration<double> elapsedg,elapsedc;
 	
@@ -232,9 +227,9 @@ int main(int argc, char **argv) {
 		counts[sz]={np,elapsedg.count(),elapsedc.count()};
 		np*=2;
 		cout<<counts[sz].np<<","<<counts[sz].gputime<<","<<counts[sz].cputime<<endl;
-	}
+	}*/
 
-    //::testing::InitGoogleTest(&argc, argv);
+    ::testing::InitGoogleTest(&argc, argv);
     
-    //return RUN_ALL_TESTS();
+    return RUN_ALL_TESTS();
 }

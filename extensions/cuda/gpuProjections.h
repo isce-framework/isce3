@@ -5,6 +5,18 @@
 #ifndef __ISCE_CORE_CUDA_PROJECTIONS_H__
 #define __ISCE_CORE_CUDA_PROJECTIONS_H__
 
+#ifdef __CUDACC__
+#define CUDA_HOSTDEV __host__ __device__
+#define CUDA_DEV __device__
+#define CUDA_HOST __host__
+#define CUDA_GLOBAL __global__
+#else
+#define CUDA_HOSTDEV
+#define CUDA_DEV
+#define CUDA_HOST
+#define CUDA_GLOBAL
+#endif
+
 #include <cmath>
 #include <iostream>
 #include <vector>
@@ -17,18 +29,10 @@ using isce::core::Ellipsoid;
 using isce::cuda::core::gpuEllipsoid;
 
 
-namespace isce { namespace cuda { namespace core {
+namespace isce { 
+    namespace cuda { 
+        namespace core {
 
-
-
-    // Abstract base class for individual projections
-//    struct ProjectionBase : isce::core::ProjectionBase {
-//        // Value constructor with EPSG code as input. Ellipsoid is always initialized to standard
-//        // WGS84 ellipse.
-//        //ProjectionBase(int code) : ellipse(6378137.,.0066943799901), _epsgcode(code) {}
-//        ProjectionBase(int code) : isce::core::ProjectionBase(code) {}    	
-//    };
-    
     /** Abstract base class for individual projections
      *
      *Internally, every derived class is expected to provide two functions.
@@ -47,7 +51,7 @@ namespace isce { namespace cuda { namespace core {
         int _epsgcode;
 
         /** Value constructor with EPSG code as input. Ellipsoid is always initialized to standard WGS84 ellipse.*/
-        __host__ __device__ ProjectionBase(int code) : ellipse(6378137.,.0066943799901), _epsgcode(code) {}
+        CUDA_HOSTDEV ProjectionBase(int code) : ellipse(6378137.,.0066943799901), _epsgcode(code) {}
 
         /** Print function for debugging */
         virtual void print() const = 0;
@@ -56,16 +60,16 @@ namespace isce { namespace cuda { namespace core {
          * 
          * @param[in] llh Lon/Lat/Height - Lon and Lat are in radians
          * @param[out] xyz Coordinates in specified projection system */
-        __host__ virtual int forward(const cartesian_t& llh, cartesian_t& xyz) const = 0 ;
-        __device__ virtual int forward(const double llh[], double xyz[]) const = 0 ;
+        CUDA_HOST int forward_h(const cartesian_t& llh, cartesian_t& xyz) const;
+        CUDA_DEV virtual int forward(const double *llh, double *xyz) const = 0 ;
 
         /** Function for transforming to LLH. This is similar to inv or inv3d in PROJ.4
          *
          * @param[in] xyz Coordinates in specified projection system 
          * @param[out] llh Lat/Lon/Height - Lon and Lat are in radians */
-        __host__ virtual int inverse(const cartesian_t& xyz, cartesian_t& llh) const = 0 ;
-        __device__ virtual int inverse(double xyz[], double llh[]) const = 0 ;
-	    virtual int roundtriptest(int) const = 0;
+        CUDA_HOST int inverse_h(const cartesian_t& xyz, cartesian_t& llh) const;
+        CUDA_DEV virtual int inverse(const double *xyz, double *llh) const = 0 ;
+	    
     };
 
 
@@ -76,21 +80,13 @@ namespace isce { namespace cuda { namespace core {
         bool isnorth;
 
         // Value constructor
-        __host__ __device__ PolarStereo(int);
+        CUDA_HOSTDEV PolarStereo(int);
 
         inline void print() const;
         // Transfrom from LLH to Polar Stereo
-        __host__ int forward(const cartesian_t&,cartesian_t&) const;
-        __device__ int forward(double[], double[]) const;
-        //__global__ void forward_g( cartesian_t,cartesian_t) ;
-        int forward_h_single(const cartesian_t&,cartesian_t&) const;
+        CUDA_DEV int forward(const double*, double*) const;
         // Transform from Polar Stereo to LLH
-        __host__ int inverse(const cartesian_t&,cartesian_t&) const;
-        __device__ int inverse(double[], double[]) const;
-        //__global__ void inverse_g(const cartesian_t&,cartesian_t&) const;
-        int inverse_h_single(const cartesian_t&,cartesian_t&) const;
-        //Test round trip conversions on large arrays of points
-        int roundtriptest(int) const;
+        CUDA_DEV int inverse(const double*, double*) const;
     };
  
     inline void PolarStereo::print() const {
@@ -101,8 +97,10 @@ namespace isce { namespace cuda { namespace core {
 
 
     // This is to transform a point from one coordinate system to another
-    __host__ __device__ int projTransform(ProjectionBase* in, ProjectionBase *out, const cartesian_t &inpts,
+    CUDA_HOST int projTransform_h(const ProjectionBase* in, const ProjectionBase *out, const cartesian_t &inpts,
                       cartesian_t &outpts);
-}}}
+        }
+    }
+}
 
 #endif
