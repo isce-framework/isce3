@@ -35,13 +35,9 @@ __global__ void forward_g(int code,
 {
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
-        printf("Flag init: %d \n", flags[0]);
         (*base) = new PolarStereo(code);
-        printf("Finps: %lf %lf %lf \n", inpts[0], inpts[1], inpts[2]);
         flags[0] = (*base)->forward(inpts, outpts);
-        printf("Fout: %lf %lf %lf \n", outpts[0], outpts[1], outpts[2]);
         delete *base;
-        printf("After forward: %d \n", flags[0]);
     }
 }
 
@@ -57,9 +53,6 @@ __global__ void inverse_g(int code,
         (*base) = new PolarStereo(code);
         flags[0] = (*base)->inverse(inpts, outpts);
         delete *base;
-        printf("After inverse \n");
-        printf("Inputs: %lf %lf %lf \n", inpts[0], inpts[1], inpts[2]);
-        printf("Out: %lf %lf %lf \n", outpts[0], outpts[1], outpts[2]);
     }
 }
 
