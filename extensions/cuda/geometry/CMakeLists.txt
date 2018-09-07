@@ -4,9 +4,11 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 set(ISCE_CUDA_${PACKAGENAME}_HEADERS
+        gpuDEMInterpolator.h
         gpuGeometry.h )
 
-set(LOCAL_SRCS 
+set(LOCAL_SRCS
+        gpuDEMInterpolator.cu
         gpuGeometry.cu )
 
 # Append current path to every source file

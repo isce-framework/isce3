@@ -14,6 +14,10 @@ target_include_directories(gpuGeometry PUBLIC
                            ${GDAL_INCLUDE_DIR}
                            ${PYRE_INCLUDE_DIR})
 
+file(COPY input_data.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY output_data.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY output_data_zerodop.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 message(STATUS ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME})
 add_test(NAME gpuGeometry COMMAND gpuGeometry)
 

@@ -16,18 +16,26 @@
 #include "isce/io/IH5.h"
 
 // isce::core
+#include "isce/core/Basis.h"
 #include "isce/core/Constants.h"
 #include "isce/core/DateTime.h"
 #include "isce/core/Ellipsoid.h"
 #include "isce/core/Orbit.h"
+#include "isce/core/Pixel.h"
 #include "isce/core/Poly2d.h"
 #include "isce/core/Serialization.h"
+#include "isce/core/StateVector.h"
 
 // isce::product
 #include "isce/product/Product.h"
 
+// isce::geometry
+#include "isce/geometry/geometry.h"
+
 // isce::cuda::geometry
 #include "isce/cuda/geometry/gpuGeometry.h"
+
+using isce::core::LinAlg;
 
 // Declaration for utility function to read test data
 void loadTestData(std::vector<std::string> & aztimes, std::vector<double> & ranges,
@@ -43,6 +51,7 @@ struct GpuGeometryTest : public ::testing::Test {
     // isce::product objects
     isce::product::ImageMode mode;
 
+    double wvl;
     int lookSide;
 
     // Constructor
@@ -61,8 +70,73 @@ struct GpuGeometryTest : public ::testing::Test {
             skewDoppler = product.metadata().instrument().skewDoppler();
             mode = product.complexImagery().primaryMode();
             lookSide = product.metadata().identification().lookDirection();
+            wvl = mode.wavelength();
         }
 };
+
+TEST_F(GpuGeometryTest, RdrToGeo) {
+
+    // Load test data
+    std::vector<std::string> aztimes;
+    std::vector<double> ranges, heights, ref_data, ref_zerodop;
+    loadTestData(aztimes, ranges, heights, ref_data, ref_zerodop);
+
+    // Loop over test data
+    const double degrees = 180.0 / M_PI;
+    for (size_t i = 0; i < aztimes.size(); ++i) {
+
+        // Make azimuth date
+        const isce::core::DateTime azDate(aztimes[i]);
+        const double azTime = azDate.secondsSinceEpoch();
+
+        // Evaluate Doppler
+        const double rbin = (ranges[i] - mode.startingRange()) / mode.rangePixelSpacing();
+        const double doppler = skewDoppler.eval(0, rbin);
+
+        // Make constant DEM interpolator set to input height
+        isce::geometry::DEMInterpolator dem(heights[i]);
+
+        // Initialize guess
+        isce::core::cartesian_t targetLLH = {0.0, 0.0, dem.interpolateLonLat(0.0, 0.0)};
+
+        // Interpolate orbit to get state vector
+        isce::core::StateVector state;
+        int stat = orbit.interpolate(azTime, state, isce::core::HERMITE_METHOD);
+
+        // Setup geocentric TCN basis
+        isce::core::Basis TCNbasis;
+        isce::geometry::geocentricTCN(state, TCNbasis);
+
+        // Compute satellite velocity magnitude
+        const double vmag = LinAlg::norm(state.velocity());
+        // Compute Doppler factor
+        const double dopfact = 0.5 * wvl * doppler * ranges[i] / vmag;
+
+        // Wrap range and Doppler factor in a Pixel object
+        isce::core::Pixel pixel(ranges[i], dopfact, 0);
+
+        // Run rdr2geo on GPU
+        stat = isce::cuda::geometry::rdr2geo_h(pixel, TCNbasis, state,
+            ellipsoid, dem, targetLLH, lookSide, 1.0e-8, 25, 15);
+        
+        // Check
+        ASSERT_EQ(stat, 1);
+        ASSERT_NEAR(degrees * targetLLH[0], ref_data[3*i], 1.0e-8);
+        ASSERT_NEAR(degrees * targetLLH[1], ref_data[3*i+1], 1.0e-8);
+        ASSERT_NEAR(targetLLH[2], ref_data[3*i+2], 1.0e-8);
+
+        // Run again with zero doppler
+        pixel.dopfact(0.0);
+        stat = isce::cuda::geometry::rdr2geo_h(pixel, TCNbasis, state,
+            ellipsoid, dem, targetLLH, lookSide, 1.0e-8, 25, 15);
+
+        // Check
+        ASSERT_EQ(stat, 1);
+        ASSERT_NEAR(degrees * targetLLH[0], ref_zerodop[3*i], 1.0e-8);
+        ASSERT_NEAR(degrees * targetLLH[1], ref_zerodop[3*i+1], 1.0e-8);
+        ASSERT_NEAR(targetLLH[2], ref_zerodop[3*i+2], 1.0e-8);
+    }
+}
 
 TEST_F(GpuGeometryTest, GeoToRdr) {
     
