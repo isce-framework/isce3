@@ -39,12 +39,12 @@ namespace isce { namespace cuda { namespace core {
         CUDA_DEV inline double rNorth(double) const;
         CUDA_DEV inline double rDir(double,double) const;
         CUDA_DEV void lonLatToXyz(double*,double*) const;
-        CUDA_DEV void xyzToLatLon(double*,double*) const;
+        CUDA_DEV void xyzToLonLat(double*,double*) const;
         CUDA_DEV void TCNbasis(double*,double*,double*,double*,double*);
 
         // Host functions to test underlying device functions in a single-threaded context
         CUDA_HOST void lonLatToXyz_h(cartesian_t&,cartesian_t&);
-        CUDA_HOST void xyzToLatLon_h(cartesian_t&,cartesian_t&);
+        CUDA_HOST void xyzToLonLat_h(cartesian_t&,cartesian_t&);
     };
 
     CUDA_HOSTDEV inline gpuEllipsoid& gpuEllipsoid::operator=(const gpuEllipsoid &rhs) {
