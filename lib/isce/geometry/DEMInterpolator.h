@@ -60,6 +60,10 @@ class isce::geometry::DEMInterpolator {
         double midY() const { return _ystart + 0.5*_dem.length()*_deltay; }
         // Middle lat/lon/h
         isce::core::cartesian_t midLonLat(double height) const;
+        // Flag indicating whether we have a raster
+        bool haveRaster() const { return _haveRaster; }
+        // Constant height
+        double refHeight() const { return _refHeight; }
 
     private:
         // Flag indicating whether we have access to a DEM raster
