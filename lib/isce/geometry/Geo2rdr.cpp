@@ -28,16 +28,14 @@ using isce::core::LinAlg;
 // Run geo2rdr with no offsets
 void isce::geometry::Geo2rdr::
 geo2rdr(isce::io::Raster & topoRaster,
-        isce::core::Poly2d & doppler,
         const std::string & outdir) {
     // Call main geo2rdr with offsets set to zero
-    geo2rdr(topoRaster, doppler, outdir, 0.0, 0.0);
+    geo2rdr(topoRaster, outdir, 0.0, 0.0);
 }
 
 // Run geo2rdr - main entrypoint
 void isce::geometry::Geo2rdr::
 geo2rdr(isce::io::Raster & topoRaster,
-        isce::core::Poly2d & doppler,
         const std::string & outdir,
         double azshift, double rgshift) {
 
@@ -51,12 +49,7 @@ geo2rdr(isce::io::Raster & topoRaster,
 
     // Initialize projection for topo results
     _projTopo = isce::core::createProj(topoRaster.getEPSG());
-
-    // Valarrays to hold input lines from topo rasters
-    std::valarray<double> x(demWidth), y(demWidth), hgt(demWidth);
-    // Valarrays to hold lines of geo2rdr results
-    std::valarray<float> rgoff(demWidth), azoff(demWidth);
-
+ 
     // Create output rasters
     Raster rgoffRaster = Raster(outdir + "/range.off", demWidth, demLength, 1,
         GDT_Float32, "ISCE");
@@ -64,23 +57,23 @@ geo2rdr(isce::io::Raster & topoRaster,
         GDT_Float32, "ISCE");
     
     // Cache sensing start
-    double t0 = _meta.sensingStart.secondsSinceEpoch(_refEpoch);
+    double t0 = _sensingStart.secondsSinceEpoch(_refEpoch);
     // Adjust for const azimuth shift
-    t0 -= (azshift - 0.5 * (_meta.numberAzimuthLooks - 1)) / _meta.prf;
+    t0 -= (azshift - 0.5 * (_mode.numberAzimuthLooks() - 1)) / _mode.prf();
 
     // Cache starting range
-    double r0 = _meta.rangeFirstSample;
+    double r0 = _mode.startingRange();
     // Adjust for constant range shift
-    r0 -= (rgshift - 0.5 * (_meta.numberRangeLooks - 1)) * _meta.slantRangePixelSpacing;
+    r0 -= (rgshift - 0.5 * (_mode.numberRangeLooks() - 1)) * _mode.rangePixelSpacing();
 
     // Compute azimuth time extents
-    double dtaz = _meta.numberAzimuthLooks / _meta.prf;
-    const double tend = t0 + ((_meta.length - 1) * dtaz);
+    double dtaz = _mode.numberAzimuthLooks() / _mode.prf();
+    const double tend = t0 + ((_mode.length() - 1) * dtaz);
     const double tmid = 0.5 * (t0 + tend);
 
     // Compute range extents
-    const double dmrg = _meta.numberRangeLooks * _meta.slantRangePixelSpacing;
-    const double rngend = r0 + ((_meta.width - 1) * dmrg);
+    const double dmrg = _mode.numberRangeLooks() * _mode.rangePixelSpacing();
+    const double rngend = r0 + ((_mode.width() - 1) * dmrg);
 
     // Print out extents
     _printExtents(info, t0, tend, dtaz, r0, rngend, dmrg, demWidth, demLength);
@@ -88,64 +81,95 @@ geo2rdr(isce::io::Raster & topoRaster,
     // Interpolate orbit to middle of the scene as a test
     _checkOrbitInterpolation(tmid);
 
-    // Loop over DEM lines
-    int converged = 0;
-    for (size_t line = 0; line < demLength; ++line) {
+    // Adjust block size if DEM has too few lines
+    _linesPerBlock = std::min(demLength, _linesPerBlock);    
 
-        // Periodic diagnostic printing
-        if ((line % 1000) == 0) {
-            info 
-                << "Processing line: " << line << " " << pyre::journal::newline
-                << "Dopplers near mid far: "
-                << doppler.eval(0, 0) << " "
-                << doppler.eval(0, (_meta.width / 2) - 1) << " "
-                << doppler.eval(0, _meta.width - 1) << " "
-                << pyre::journal::endl;
+    // Compute number of DEM blocks needed to process image
+    size_t nBlocks = demLength / _linesPerBlock;
+    if ((demLength % _linesPerBlock) != 0)
+        nBlocks += 1;
+
+    // Loop over blocks
+    size_t converged = 0;
+    for (size_t block = 0; block < nBlocks; ++block) {
+
+        // Get block extents
+        size_t lineStart, blockLength;
+        lineStart = block * _linesPerBlock;
+        if (block == (nBlocks - 1)) {
+            blockLength = demLength - lineStart;
+        } else {
+            blockLength = _linesPerBlock;
         }
+        size_t blockSize = blockLength * demWidth;
 
-        // Read line of data
-        topoRaster.getLine(x, line, 1);
-        topoRaster.getLine(y, line, 2);
-        topoRaster.getLine(hgt, line, 3);
+        // Diagnostics
+        info << "Processing block: " << block << " " << pyre::journal::newline
+             << "  - line start: " << lineStart << pyre::journal::newline
+             << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
+             << "  - dopplers near mid far: "
+             << _doppler.eval(0, 0) << " "
+             << _doppler.eval(0, (_mode.width() / 2) - 1) << " "
+             << _doppler.eval(0, _mode.width() - 1) << " "
+             << pyre::journal::endl;
 
-        // Loop over DEM pixels
-        #pragma omp parallel for reduction(+:converged)
-        for (size_t pixel = 0; pixel < demWidth; ++pixel) {
+        // Valarrays to hold input block from topo rasters
+        std::valarray<double> x(blockSize), y(blockSize), hgt(blockSize);
+        // Valarrays to hold block of geo2rdr results
+        std::valarray<float> rgoff(blockSize), azoff(blockSize);
 
-            // Convert topo XYZ to LLH
-            isce::core::cartesian_t xyz{x[pixel], y[pixel], hgt[pixel]};
-            isce::core::cartesian_t llh;
-            _projTopo->inverse(xyz, llh);
+        // Read block of topo data
+        topoRaster.getBlock(x, 0, lineStart, demWidth, blockLength, 1);
+        topoRaster.getBlock(y, 0, lineStart, demWidth, blockLength, 2);
+        topoRaster.getBlock(hgt, 0, lineStart, demWidth, blockLength,3);
 
-            // Perform geo->rdr iterations
-            double aztime, slantRange;
-            int geostat = isce::geometry::geo2rdr(
-                llh, _ellipsoid, _orbit, doppler, _meta, aztime, slantRange, _threshold, 
-                _numiter, 1.0e-8
-            );
+        // Loop over DEM lines in block
+        for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
 
-            // Check of solution is out of bounds
-            bool isOutside = false;
-            if ((aztime < t0) || (aztime > tend))
-                isOutside = true;
-            if ((slantRange < r0) || (slantRange > rngend))
-                isOutside = true;
-            
-            // Save result if valid
-            if (!isOutside) {
-                rgoff[pixel] = ((slantRange - r0) / dmrg) - float(pixel);
-                azoff[pixel] = ((aztime - t0) / dtaz) - float(line);
-                converged += geostat;
-            } else {
-                rgoff[pixel] = NULL_VALUE;
-                azoff[pixel] = NULL_VALUE;
-            }
-        }
+            // Global line index
+            const size_t line = lineStart + blockLine;
 
-        // Write data
-        rgoffRaster.setLine(rgoff, line);
-        azoffRaster.setLine(azoff, line);
-    }
+            // Loop over DEM pixels
+            #pragma omp parallel for reduction(+:converged)
+            for (size_t pixel = 0; pixel < demWidth; ++pixel) {
+
+                // Convert topo XYZ to LLH
+                const size_t index = blockLine * demWidth + pixel;
+                isce::core::cartesian_t xyz{x[index], y[index], hgt[index]};
+                isce::core::cartesian_t llh;
+                _projTopo->inverse(xyz, llh);
+
+                // Perform geo->rdr iterations
+                double aztime, slantRange;
+                int geostat = isce::geometry::geo2rdr(
+                    llh, _ellipsoid, _orbit, _doppler, _mode, aztime, slantRange, _threshold, 
+                    _numiter, 1.0e-8
+                );
+
+                // Check of solution is out of bounds
+                bool isOutside = false;
+                if ((aztime < t0) || (aztime > tend))
+                    isOutside = true;
+                if ((slantRange < r0) || (slantRange > rngend))
+                    isOutside = true;
+                
+                // Save result if valid
+                if (!isOutside) {
+                    rgoff[index] = ((slantRange - r0) / dmrg) - float(pixel);
+                    azoff[index] = ((aztime - t0) / dtaz) - float(line);
+                    converged += geostat;
+                } else {
+                    rgoff[index] = NULL_VALUE;
+                    azoff[index] = NULL_VALUE;
+                }
+            } // end OMP for loop pixels in block
+        } // end for loop lines in block
+
+        // Write block of data
+        rgoffRaster.setBlock(rgoff, 0, lineStart, demWidth, blockLength);
+        azoffRaster.setBlock(azoff, 0, lineStart, demWidth, blockLength);
+
+    } // end for loop blocks in DEM image
             
     // Print out convergence statistics
     info << "Total convergence: " << converged << " out of "
@@ -163,8 +187,8 @@ _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
          << "Azimuth line spacing in seconds: " << dtaz << pyre::journal::newline
          << "Near range (m): " << r0 << pyre::journal::newline
          << "Far range (m): " << rngend << pyre::journal::newline
-         << "Radar image length: " << _meta.length << pyre::journal::newline
-         << "Radar image width: " << _meta.width << pyre::journal::newline
+         << "Radar image length: " << _mode.length() << pyre::journal::newline
+         << "Radar image width: " << _mode.width() << pyre::journal::newline
          << "Geocoded lines: " << demLength << pyre::journal::newline
          << "Geocoded samples: " << demWidth << pyre::journal::newline;
 }

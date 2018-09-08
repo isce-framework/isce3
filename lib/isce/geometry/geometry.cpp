@@ -25,6 +25,7 @@ using isce::core::Pegtrans;
 using isce::core::Pixel;
 using isce::core::Poly2d;
 using isce::core::StateVector;
+using isce::product::ImageMode;
 
 int isce::geometry::
 rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
@@ -199,7 +200,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
 
 int isce::geometry::
 geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
-        const Poly2d & doppler, const Metadata & meta, double & aztime, double & slantRange,
+        const Poly2d & doppler, const ImageMode & mode, double & aztime, double & slantRange,
         double threshold, int maxIter, double deltaRange) {
 
     cartesian_t satpos, satvel, inputXYZ, dr;
@@ -208,11 +209,11 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
     ellipsoid.lonLatToXyz(inputLLH, inputXYZ);
 
     // Pre-compute scale factor for doppler
-    const double dopscale = 0.5 * meta.radarWavelength;
+    const double dopscale = 0.5 * mode.wavelength();
 
     // Compute minimum and maximum valid range
-    const double rangeMin = meta.rangeFirstSample;
-    const double rangeMax = rangeMin + meta.slantRangePixelSpacing * (meta.width - 1);
+    const double rangeMin = mode.startingRange();
+    const double rangeMax = rangeMin + mode.rangePixelSpacing() * (mode.width() - 1);
 
     // Compute azimuth time spacing for coarse grid search 
     const int NUM_AZTIME_TEST = 15;
@@ -271,7 +272,7 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
         }
 
         // Compute slant range bin
-        const double rbin = (slantRange - meta.rangeFirstSample) / meta.slantRangePixelSpacing;
+        const double rbin = (slantRange - mode.startingRange()) / mode.rangePixelSpacing();
         // Compute doppler
         const double dopfact = LinAlg::dot(dr, satvel);
         const double fdop = doppler.eval(0, rbin) * dopscale;

@@ -15,17 +15,32 @@
 #include <pyre/journal.h>
 
 // isce::core
-#include "Constants.h"
-#include "Interpolator.h"
+#include "isce/core/Constants.h"
+
+// isce::image
 #include "ResampSlc.h"
-using isce::core::SINC_HALF;
-using isce::core::SINC_LEN;
-using isce::core::SINC_ONE;
-using isce::core::SINC_SUB;
+
 using isce::io::Raster;
 
-// Main resamp entry point
-void isce::core::ResampSlc::
+// Main product-based resamp entry point
+void isce::image::ResampSlc::
+resamp(const std::string & outputFilename,
+       const std::string & polarization,
+       const std::string & rgOffsetFilename,
+       const std::string & azOffsetFilename,
+       bool flatten, bool isComplex, int rowBuffer) {
+
+    // Form the GDAL-compatible path for the HDF5 dataset
+    const std::string dataPath = _mode.dataPath(polarization);
+    const std::string h5path = "HDF5:\"" + _filename + "\":/" + dataPath;
+
+    // Call alternative resmap entry point
+    resamp(h5path, outputFilename, rgOffsetFilename, azOffsetFilename, 1,
+           flatten, isComplex, rowBuffer);
+}
+
+// Alternative generic resamp entry point
+void isce::image::ResampSlc::
 resamp(const std::string & inputFilename,          // filename of input SLC
        const std::string & outputFilename,         // filename of output resampled SLC
        const std::string & rgOffsetFilename,       // filename of range offsets
@@ -66,7 +81,7 @@ resamp(const std::string & inputFilename,          // filename of input SLC
     declare(inLength, inWidth, outLength, outWidth);
 
     // Initialize resampling methods
-    _prepareInterpMethods(SINC_METHOD);
+    _prepareInterpMethods(isce::core::SINC_METHOD);
    
     // Determine number of tiles needed to process image
     const int nTiles = _computeNumberOfTiles(outLength, _linesPerTile);
@@ -114,7 +129,7 @@ resamp(const std::string & inputFilename,          // filename of input SLC
 }
 
 // Initialize tile bounds
-void isce::core::ResampSlc::
+void isce::image::ResampSlc::
 _initializeTile(Tile_t & tile, Raster & inputSlc, Raster & azOffsetRaster, int rowBuffer) {
 
     // Cache geometry values
@@ -189,7 +204,7 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, Raster & azOffsetRaster, int r
 }
 
 // Interpolate tile to perform transformation
-void isce::core::ResampSlc::
+void isce::image::ResampSlc::
 _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
                Raster & azOffsetRaster, int inLength, bool flatten, int & outputLine) {
 
@@ -200,7 +215,7 @@ _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
     // Allocate valarrays for work
     std::valarray<float> residAz(outWidth), residRg(outWidth);
     std::valarray<std::complex<float>> imgOut(outWidth);
-    Matrix<std::complex<float>> chip(SINC_ONE, SINC_ONE);
+    isce::core::Matrix<std::complex<float>> chip(SINC_ONE, SINC_ONE);
     
     // Loop over lines to perform interpolation
     for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
@@ -233,7 +248,7 @@ _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
                 continue;
 
             // Evaluate Doppler polynomial
-            const double dop = _dopplerPoly.eval(0, j) * 2*M_PI / _meta.prf;
+            const double dop = _dopplerPoly.eval(0, j) * 2*M_PI / _mode.prf();
 
             // Doppler to be added back. Simultaneously evaluate carrier that needs to
             // be added back after interpolation
@@ -242,13 +257,13 @@ _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
                 + _azCarrier.eval(i + azOff, j + rgOff);
 
             // Flatten the carrier phase if requested
-            if (flatten) {
-                phase += ((4. * (M_PI / _meta.radarWavelength)) * 
-                    ((_meta.rangeFirstSample - _refMeta.rangeFirstSample) 
-                    + (j * (_meta.slantRangePixelSpacing - _refMeta.slantRangePixelSpacing)) 
-                    + (rgOff * _meta.slantRangePixelSpacing))) + ((4.0 * M_PI 
-                    * (_refMeta.rangeFirstSample + (j * _refMeta.slantRangePixelSpacing))) 
-                    * ((1.0 / _refMeta.radarWavelength) - (1.0 / _meta.radarWavelength)));
+            if (flatten && _haveRefMode) {
+                phase += ((4. * (M_PI / _mode.wavelength())) * 
+                    ((_mode.startingRange() - _refMode.startingRange()) 
+                    + (j * (_mode.rangePixelSpacing() - _refMode.rangePixelSpacing())) 
+                    + (rgOff * _mode.rangePixelSpacing()))) + ((4.0 * M_PI 
+                    * (_refMode.startingRange() + (j * _refMode.rangePixelSpacing()))) 
+                    * ((1.0 / _refMode.wavelength()) - (1.0 / _mode.wavelength())));
             }
             // Modulate by 2*PI
             phase = modulo_f(phase, 2.0*M_PI);

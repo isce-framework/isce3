@@ -31,6 +31,7 @@
 
 // isce::io
 #include <isce/io/IH5.h>
+#include <isce/io/Serialization.h>
 
 //! The isce namespace
 namespace isce {
@@ -39,7 +40,7 @@ namespace isce {
 
         // Archiving any isce::core object by pointer
         template <typename T>
-        void load_archive(std::string metadata, char * objectTag, T * object) {
+        inline void load_archive(std::string metadata, char * objectTag, T * object) {
             std::stringstream metastream;
             metastream << metadata;
             cereal::XMLInputArchive archive(metastream);
@@ -48,50 +49,11 @@ namespace isce {
 
         // Archiving any isce::core object by reference
         template <typename T>
-        void load_archive_reference(std::string metadata, char * objectTag, T & object) {
+        inline void load_archive_reference(std::string metadata, char * objectTag, T & object) {
             std::stringstream metastream;
             metastream << metadata;
             cereal::XMLInputArchive archive(metastream);
             archive(cereal::make_nvp(objectTag, object));
-        }
-
-        /** Load scalar dataset from HDF5.
-
-         * @param[in] file          HDF5 file object.
-         * @param[in] datasetPath   H5 path of dataset.
-         * @param[in] v             Scalar return value. */
-        template <typename T>
-        void loadFromH5(isce::io::IH5File & file, const std::string & datasetPath, T & v) {
-            // Open dataset
-            isce::io::IDataSet dataset = file.openDataSet(datasetPath);
-            // Read the scalar dataset
-            dataset.read(v);
-        }
-
-        /** Load vector dataset from HDF5.
-         *
-         * @param[in] file          HDF5 file object.
-         * @param[in] datasetPath   H5 path of dataset.
-         * @param[in] v             Vector to store dataset. */
-        template <typename T>
-        void loadFromH5(isce::io::IH5File & file, const std::string & datasetPath,
-                        std::vector<T> & v) {
-            // Open dataset
-            isce::io::IDataSet dataset = file.openDataSet(datasetPath);
-            // Read the vector dataset
-            dataset.read(v);
-        }
-
-        /** Get dimensions of complex imagery from HDF5.
-         *
-         * @param[in] file          HDF5 file object.
-         * @param[in] datasetPath   H5 path of image dataset. */
-        std::vector<int> getImageDims(isce::io::IH5File & file,
-                                      const std::string & datasetPath) {
-            // Open dataset
-            isce::io::IDataSet dataset = file.openDataSet(datasetPath);
-            // Get dimensions
-            return dataset.getDimensions();
         }
 
         // ------------------------------------------------------------------------
@@ -99,13 +61,13 @@ namespace isce {
         // ------------------------------------------------------------------------
 
         template<class Archive>
-        void save(Archive & archive, const Ellipsoid & ellps) {
+        inline void save(Archive & archive, const Ellipsoid & ellps) {
             archive(cereal::make_nvp("a", ellps.a()),
                     cereal::make_nvp("e2", ellps.e2()));
         }
 
         template<class Archive>
-        void load(Archive & archive, Ellipsoid & ellps) {
+        inline void load(Archive & archive, Ellipsoid & ellps) {
             double a, e2;
             archive(cereal::make_nvp("a", a),
                     cereal::make_nvp("e2", e2));
@@ -117,12 +79,12 @@ namespace isce {
          *
          * @param[in] file          HDF5 file object.
          * @param[in] ellps         Ellipsoid object to be configured. */
-        void load(isce::io::IH5File & file, Ellipsoid & ellps) {
+        inline void load(isce::io::IH5File & file, Ellipsoid & ellps) {
             // Find the ellipsoid dataset
             std::vector<std::string> ellpsList = file.find("ellipsoid");
             // Read data
             std::vector<double> ellpsData;
-            loadFromH5(file, ellpsList[0], ellpsData);
+            isce::io::loadFromH5(file, ellpsList[0], ellpsData);
             // Set ellipsoid properties
             ellps.a(ellpsData[0]);
             ellps.e2(ellpsData[1]);
@@ -133,12 +95,12 @@ namespace isce {
         // ------------------------------------------------------------------------
 
         template <class Archive>
-        void save(Archive & archive, const Orbit & orbit) {
+        inline void save(Archive & archive, const Orbit & orbit) {
             archive(cereal::make_nvp("StateVectors", orbit.stateVectors));
         }
 
         template <class Archive>
-        void load(Archive & archive, Orbit & orbit) {
+        inline void load(Archive & archive, Orbit & orbit) {
             // Load data
             archive(cereal::make_nvp("StateVectors", orbit.stateVectors));
             // Reformat state vectors to 1D arrays
@@ -151,7 +113,7 @@ namespace isce {
          * @param[in] orbit         Orbit object to be configured.
          * @param[in] orbit_type    orbit type (NOE, MOE, POE).
          * @param[in] refEpoch      DateTime reference epoch. */
-        void load(isce::io::IH5File & file, Orbit & orbit, std::string orbit_type="POE",
+        inline void load(isce::io::IH5File & file, Orbit & orbit, std::string orbit_type="POE",
                   DateTime refEpoch=MIN_DATE_TIME) {
             // Reset orbit data
             orbit.position.clear(); 
@@ -163,23 +125,23 @@ namespace isce {
             orbit.refEpoch = refEpoch;
 
             // Load position
-            loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/position",
-                       orbit.position);
+            isce::io::loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/position",
+                                 orbit.position);
 
             // Load velocity
-            loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/velocity",
-                       orbit.velocity);
+            isce::io::loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/velocity",
+                                 orbit.velocity);
 
             // Load timestamp
             std::vector<FixedString> timestamps;
-            loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/timestamp",
-                         timestamps);
+            isce::io::loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/timestamp",
+                                 timestamps);
             orbit.nVectors = timestamps.size();
             orbit.UTCtime.resize(orbit.nVectors);
             orbit.epochs.resize(orbit.nVectors);
 
             // Finally, convert timestamps seconds
-            for (size_t i = 0; i < orbit.nVectors; ++i) {
+            for (int i = 0; i < orbit.nVectors; ++i) {
                 // Make a string
                 std::string timestampStr(timestamps[i].str);
                 // Make a DateTime and save it
@@ -196,7 +158,7 @@ namespace isce {
         // ------------------------------------------------------------------------
 
         template <class Archive>
-        void save(Archive & archive, const Metadata & meta) {
+        inline void save(Archive & archive, const Metadata & meta) {
             archive(cereal::make_nvp("width", meta.width),
                     cereal::make_nvp("length", meta.length),
                     cereal::make_nvp("numberRangeLooks", meta.numberRangeLooks),
@@ -210,13 +172,12 @@ namespace isce {
                     cereal::make_nvp("pegLatitude", meta.pegLatitude),
                     cereal::make_nvp("pegLongitude", meta.pegLongitude),
                     cereal::make_nvp("chirpSlope", meta.chirpSlope),
-                    cereal::make_nvp("pulseDuration", meta.pulseDuration),
                     cereal::make_nvp("antennaLength", meta.antennaLength),
                     cereal::make_nvp("sensingStart", meta.sensingStart.isoformat()));
         }
 
         template <class Archive>
-        void load(Archive & archive, Metadata & meta) {
+        inline void load(Archive & archive, Metadata & meta) {
             std::string sensingStart;
             archive(cereal::make_nvp("width", meta.width),
                     cereal::make_nvp("length", meta.length),
@@ -231,7 +192,6 @@ namespace isce {
                     cereal::make_nvp("pegLatitude", meta.pegLatitude),
                     cereal::make_nvp("pegLongitude", meta.pegLongitude),
                     cereal::make_nvp("chirpSlope", meta.chirpSlope),
-                    cereal::make_nvp("pulseDuration", meta.pulseDuration),
                     cereal::make_nvp("antennaLength", meta.antennaLength),
                     cereal::make_nvp("sensingStart", sensingStart));
             meta.sensingStart = sensingStart;
@@ -242,7 +202,7 @@ namespace isce {
          * @param[in] file          HDF5 file object.
          * @param[in] meta          Metadata to be configured.
          * @param[in] mode          Imagery mode (aux, primary). */
-        void load(isce::io::IH5File & file, Metadata & meta, std::string mode="primary") {
+        inline void load(isce::io::IH5File & file, Metadata & meta, std::string mode="primary") {
 
             double pri, bandwidth, centerFrequency;
             FixedString sensingStart, lookDir;
@@ -251,19 +211,18 @@ namespace isce {
             std::string path = "/science/complex_imagery/" + mode + "_mode";
 
             // Get dimension of imagery
-            std::vector<int> dims = getImageDims(file, path + "/hh");
+            std::vector<int> dims = isce::io::getImageDims(file, path + "/hh");
             meta.length = dims[0];
             meta.width = dims[1];
 
             // Load values
-            loadFromH5(file, path + "/slant_range_start", meta.rangeFirstSample);
-            loadFromH5(file, path + "/slant_range_spacing", meta.slantRangePixelSpacing);
-            loadFromH5(file, path + "/az_time_interval", pri);
-            loadFromH5(file, path + "/bandwidth", bandwidth);
-            loadFromH5(file, path + "/pulse_duration", meta.pulseDuration);
-            loadFromH5(file, path + "/freq_center", centerFrequency);
-            loadFromH5(file, path + "/zero_doppler_start_az_time", sensingStart);
-            loadFromH5(file, "/science/metadata/identification/look_direction", lookDir);
+            isce::io::loadFromH5(file, path + "/slant_range_start", meta.rangeFirstSample);
+            isce::io::loadFromH5(file, path + "/slant_range_spacing", meta.slantRangePixelSpacing);
+            isce::io::loadFromH5(file, path + "/az_time_interval", pri);
+            isce::io::loadFromH5(file, path + "/bandwidth", bandwidth);
+            isce::io::loadFromH5(file, path + "/freq_center", centerFrequency);
+            isce::io::loadFromH5(file, path + "/zero_doppler_start_az_time", sensingStart);
+            isce::io::loadFromH5(file, "/science/metadata/identification/look_direction", lookDir);
 
             // Fields not currently defined in HDF5 product
             meta.numberRangeLooks = 1;
@@ -271,7 +230,6 @@ namespace isce {
 
             // Finalize rest of metadata items
             meta.prf = 1.0 / pri;
-            meta.chirpSlope = bandwidth / meta.pulseDuration;
             meta.radarWavelength = SPEED_OF_LIGHT / centerFrequency;
             meta.sensingStart = std::string(sensingStart.str);
             std::string look(lookDir.str);
@@ -288,7 +246,7 @@ namespace isce {
 
         // Definition for Poly2d
         template <class Archive>
-        void serialize(Archive & archive, Poly2d & poly) {
+        inline void serialize(Archive & archive, Poly2d & poly) {
             archive(cereal::make_nvp("rangeOrder", poly.rangeOrder),
                     cereal::make_nvp("azimuthOrder", poly.azimuthOrder),
                     cereal::make_nvp("rangeMean", poly.rangeMean),
@@ -303,7 +261,7 @@ namespace isce {
          * @param[in] file          HDF5 file object.
          * @param[in] poly          Poly2d to be configured.
          * @param[in] name          Dataset name. */
-        void load(isce::io::IH5File & file, Poly2d & poly, std::string name) {
+        inline void load(isce::io::IH5File & file, Poly2d & poly, std::string name) {
 
             // Find the right Poly2d dataset
             std::vector<std::string> polys = file.find(name);
@@ -316,7 +274,7 @@ namespace isce {
             }
 
             // Configure the polynomial coefficients
-            loadFromH5(file, polys[0], poly.coeffs);
+            isce::io::loadFromH5(file, polys[0], poly.coeffs);
             
             // Set other polynomial properties
             poly.rangeOrder = poly.coeffs.size() - 1;
@@ -333,7 +291,7 @@ namespace isce {
 
         // Serialization save method
         template<class Archive>
-        void save(Archive & archive, StateVector const & sv) {
+        inline void save(Archive & archive, StateVector const & sv) {
             // Archive
             archive(cereal::make_nvp("Time", sv.date().isoformat()),
                     cereal::make_nvp("Position", sv.positionToString()),
@@ -342,7 +300,7 @@ namespace isce {
 
         // Serialization load method
         template<class Archive>
-        void load(Archive & archive, StateVector & sv) {
+        inline void load(Archive & archive, StateVector & sv) {
             // Make strings for position, velocity, and datetime
             std::string position_string, velocity_string, datetime_string;
             // Load the archive

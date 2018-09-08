@@ -152,7 +152,9 @@ namespace isce {
          public:
 
            // Constructors
-           IH5File(const H5std_string &name): H5::H5File(name, H5F_ACC_RDONLY){};
+           IH5File(const H5std_string &name) : 
+               H5::H5File(name, H5F_ACC_RDONLY),
+               _name(name) {};
    
            void openFile(const H5std_string &name);
 
@@ -162,8 +164,14 @@ namespace isce {
            /** Searching for given name in file */
            std::vector<std::string> find(const std::string name, 
                                          const std::string start = "/", 
-                                         const std::string type = "BOTH"); 
+                                         const std::string type = "BOTH");
 
+           /** Get filename of HDF5 file */
+           inline std::string filename() const { return _name; }
+
+         private:
+           // The filename of the HDF5 file
+           std::string _name;
      };
 
 

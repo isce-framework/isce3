@@ -45,16 +45,7 @@ namespace isce { namespace core {
         SCH_METHOD,
         LEGENDRE_METHOD
     };
-
-    ///@cond
-    enum sincInterpConst {
-        SINC_HALF = 4,
-        SINC_LEN = 8,
-        SINC_ONE = 9,
-        SINC_SUB = 8192
-    };
-    ///@endcond
-
+    
     /**Enumeration type to indicate interpolation method*/
     enum dataInterpMethod {
         SINC_METHOD,

@@ -24,6 +24,7 @@ EXPORT_PKG_HEADERS = \
     IH5.h \
     Raster.h \
     Raster.icc \
+    Serialization.h \
 
 # build
 PROJ_CXX_INCLUDES += $(EXPORT_ROOT)/include/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)

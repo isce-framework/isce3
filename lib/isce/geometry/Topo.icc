@@ -8,19 +8,50 @@
 #error "Topo.icc is an implementation detail of class Topo"
 #endif
 
-// Constructor
+// Primary constructor from product
 isce::geometry::Topo::
-Topo(isce::core::Ellipsoid ellipsoid, isce::core::Orbit orbit, isce::core::Metadata meta) {
-    // Copy objects
-    _ellipsoid = ellipsoid;
-    _orbit = orbit;
-    _meta = meta;
+Topo(isce::product::Product & product) : _initialized(false) {
+
+    // Cache objects from product
+    isce::product::Identification id = product.metadata().identification();
+    isce::radar::Radar instrument = product.metadata().instrument();
+   
+    // Copy mode, orbit, ellipsoid, and doppler
+    _mode = product.complexImagery().primaryMode();
+    _orbit = product.metadata().orbitPOE();
+    _ellipsoid = id.ellipsoid();
+    _doppler = instrument.skewDoppler();
+    _lookSide = id.lookDirection();
+
+    // Adjust block length based in input SLC length
+    _linesPerBlock = std::min(_mode.length(), _linesPerBlock);
+
     // For numerical precision purposes, set reference epoch 2 days prior
-    _refEpoch = _meta.sensingStart - 86400*2;
+    _refEpoch = _mode.startAzTime() - 86400*2;
     // Update orbit epochs with new epoch
     _orbit.updateUTCTimes(_refEpoch);
-    // Set initialization flag to false
-    _initialized = false;
+
+}
+
+// Alternative constructor from ellipsoid, orbit, and metadata
+// Used for supporting VRT-formatted products
+isce::geometry::Topo::
+Topo(isce::core::Ellipsoid ellipsoid, isce::core::Orbit orbit,
+     isce::core::Poly2d doppler, isce::core::Metadata meta) :
+    _orbit(orbit), _ellipsoid(ellipsoid), _doppler(doppler), _mode(meta),
+    _initialized(false) {
+
+    // Other data
+    _lookSide = meta.lookSide;
+
+    // Adjust block length based in input SLC length
+    _linesPerBlock = std::min(_mode.length(), _linesPerBlock);
+
+    // For numerical precision purposes, set reference epoch 2 days prior
+    _refEpoch = _mode.startAzTime() - 86400*2;
+    // Update orbit epochs with new epoch
+    _orbit.updateUTCTimes(_refEpoch);
+
 }
 
 // Set initialization flag

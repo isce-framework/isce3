@@ -19,30 +19,24 @@
 // isce::io
 #include "isce/io/Raster.h"
 
+// isce::product
+#include "isce/product/Product.h"
+
 // isce::geometry
 #include "isce/geometry/Serialization.h"
 #include "isce/geometry/Geo2rdr.h"
 
 TEST(Geo2rdrTest, RunGeo2rdr) {
 
-    // Instantiate isce::core objects
-    isce::core::Poly2d doppler;
-    isce::core::Orbit orbit;
-    isce::core::Ellipsoid ellipsoid;
-    isce::core::Metadata meta;
-
     // Open the HDF5 product
     std::string h5file("../../data/envisat.h5");
     isce::io::IH5File file(h5file);
 
-    // Deserialization
-    isce::core::load(file, ellipsoid);
-    isce::core::load(file, orbit, "POE");
-    isce::core::load(file, doppler, "skew_dcpolynomial");
-    isce::core::load(file, meta, "primary");
+    // Load the product
+    isce::product::Product product(file);
 
-    // Create geo2rdr isntance
-    isce::geometry::Geo2rdr geo(ellipsoid, orbit, meta);
+    // Create geo2rdr instance
+    isce::geometry::Geo2rdr geo(product);
 
     // Load topo processing parameters to finish configuration
     std::ifstream xmlfid("../../data/topo.xml", std::ios::in);
@@ -55,7 +49,7 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     isce::io::Raster topoRaster("../topo/topo.vrt");
 
     // Run geo2rdr
-    geo.geo2rdr(topoRaster, doppler, ".");
+    geo.geo2rdr(topoRaster, ".");
 
 }
 

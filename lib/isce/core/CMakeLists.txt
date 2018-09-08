@@ -22,7 +22,6 @@ set(LOCAL_SRCS
               Position.cpp
               Projections.cpp
               Quaternion.cpp
-              ResampSlc.cpp
               TimeDelta.cpp)
 
 ####Append current path to every source file
@@ -56,12 +55,8 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Quaternion.h
                                     Quaternion.icc
                                     Serialization.h
-                                    ResampSlc.h
-                                    ResampSlc.icc
                                     Serialization.h
                                     StateVector.h
-                                    Tile.h
-                                    Tile.icc
                                     TimeDelta.h)
 
 ###Install headers into build/include
@@ -83,6 +78,7 @@ include_directories(${${PACKAGENAME}_DLL}
         ${PYRE_INCLUDE_DIR}
         ${GDAL_INCLUDE_DIR}
         ${ISCE_BUILDINCLUDEDIR}
+        ${CEREAL_SRC_INCLUDEDIR}
 ) 
 
 #Install headers as files

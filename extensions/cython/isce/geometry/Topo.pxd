@@ -6,20 +6,19 @@
 
 from libcpp.string cimport string
 
-# Cython declarations for isce::core objects
-from Ellipsoid cimport Ellipsoid
-from Orbit cimport Orbit
-from Metadata cimport Metadata
+# Cython declaration for isce::io objects
 from Raster cimport Raster
-from Poly2d cimport Poly2d
+
+# Cython declarations for isce::product objects
+from Product cimport Product
 
 cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
     cdef cppclass Topo:
 
         # Constructor
-        Topo(Ellipsoid, Orbit, Metadata) except +
+        Topo(Product &) except +
         
         # Main topo entrypoint
-        void topo(Raster &, Poly2d &, string)
+        void topo(Raster &, string)
         
 # end of file

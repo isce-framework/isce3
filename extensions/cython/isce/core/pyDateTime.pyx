@@ -20,12 +20,21 @@ cdef class pyDateTime:
     def __dealloc__(self):
         if self.__owner:
             del self.c_datetime
+
     @staticmethod
     def bind(pyDateTime dt):
         new_dt = pyDateTime()
         del new_dt.c_datetime
         new_dt.c_datetime = dt.c_datetime
         new_dt.__owner = False
+        return new_dt
+
+    @staticmethod
+    cdef cbind(DateTime dt):
+        new_dt = pyDateTime()
+        del new_dt.c_datetime
+        new_dt.c_datetime = new DateTime(dt)
+        new_dt.__owner = True
         return new_dt
 
     def __richcmp__(self, pyDateTime dt, int comp):

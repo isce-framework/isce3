@@ -7,7 +7,6 @@
 from libcpp cimport bool
 from libcpp.vector cimport vector
 from libcpp.string cimport string
-from Serialization cimport load_archive
 from Cartesian cimport cartesian_t
 from Orbit cimport Orbit, orbitInterpMethod
 import numpy as np
@@ -51,6 +50,14 @@ cdef class pyOrbit:
         del new_orb.c_orbit
         new_orb.c_orbit = orb.c_orbit
         new_orb.__owner = False
+        return new_orb
+
+    @staticmethod
+    cdef cbind(Orbit orb):
+        new_orb = pyOrbit()
+        del new_orb.c_orbit
+        new_orb.c_orbit = new Orbit(orb)
+        new_orb.__owner = True
         return new_orb
 
     @property
@@ -580,7 +587,4 @@ cdef class pyOrbit:
         cdef char *cstring = fname
         self.c_orbit.dumpToHDR(cstring)
 
-    def archive(self, pyIH5File h5file, orbit_type='POE', pyDateTime refEpoch=MIN_DATE_TIME):
-        load(deref(h5file.c_ih5file), deref(self.c_orbit),
-             pyStringToBytes(orbit_type), deref(refEpoch.c_datetime))
-
+# end of file

@@ -49,7 +49,7 @@ namespace isce { namespace cuda { namespace core {
         CUDA_DEV gpuPoly2d(const gpuPoly2d &p) : rangeOrder(p.rangeOrder), azimuthOrder(p.azimuthOrder), 
                                                 rangeMean(p.rangeMean), azimuthMean(p.azimuthMean), 
                                                 rangeNorm(p.rangeNorm), azimuthNorm(p.azimuthNorm), 
-                                                coeffs(p.coeffs) {}
+                                                coeffs(p.coeffs), owner(false) {}
         CUDA_HOST gpuPoly2d(const Poly2d&);
         ~gpuPoly2d();
 

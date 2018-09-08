@@ -25,7 +25,6 @@ struct isce::core::Metadata {
     double prf;
     double rangeFirstSample;
     double slantRangePixelSpacing;
-    double pulseDuration;
     double chirpSlope;
     double antennaLength;
     int lookSide;
