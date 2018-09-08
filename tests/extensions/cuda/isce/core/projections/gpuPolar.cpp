@@ -1,7 +1,15 @@
-//
-// Source Author: Paulo Penteado, based on polar.cpp by Joshua Cohen
-// Copyright 2018
-//
+/**
+ * 
+ * Unit tests for gpu polar projection forward/inverse functions
+ * These are intended only to test for correctness of transformations done on the device.
+ * They use a single gpu thread, so they are not efficient.
+ * See gpuPolarBenchmark.cpp for benchmark tests, where many millions of points are transformed
+ * in parallel in gpu, and the wall times are compared between cpu and gpu code.
+ *
+ *
+ * Source Author: Paulo Penteado, based on polar.cpp by Joshua Cohen
+ * Copyright 2018
+ */
 
 #include <cmath>
 #include <iostream>
@@ -51,7 +59,6 @@ struct PolarTest : public ::testing::Test {
 polarTest(gNorth, NorthPole3413, {0,0.5*M_PI, 0.}, {0.,0.,0.});
 
 polarTest(gSouth, SouthPole3031, {0,-0.5*M_PI,0.}, {0.,0.,0.});
-
 
 //South pole tests
 polarTest(gSouth, South1, {3.083894546782417e-02,  -1.344622005845314e+00, 1.912700155961942e+03},
