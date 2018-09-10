@@ -22,11 +22,9 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
    }
 }
 
-namespace isce {
-    namespace cuda {
-        namespace core {
+namespace isce { namespace cuda { namespace core {
 
-//Helper for the host side function
+//Helper for the host side function - used only for testing
 __global__ void forward_g(int code,
                           ProjectionBase** base,
                           const double *inpts,
@@ -41,7 +39,7 @@ __global__ void forward_g(int code,
     }
 }
 
-//Helper for the host side function
+//Helper for the host side function - used only for testing
 __global__ void inverse_g(int code,
                           ProjectionBase **base,
                           const double *inpts,
@@ -58,6 +56,10 @@ __global__ void inverse_g(int code,
 
 __host__ int ProjectionBase::forward_h(const cartesian_t &llh, cartesian_t &xyz) const
 {
+    /*
+     * This is to transfrom from LLH to requested projection system on the host.
+     */
+
     double *llh_d, *xyz_d;
     int *flag_d;
     ProjectionBase **base_d;
@@ -75,6 +77,7 @@ __host__ int ProjectionBase::forward_h(const cartesian_t &llh, cartesian_t &xyz)
     gpuErrChk( cudaMemcpy(xyz.data(), xyz_d, 3*sizeof(double), cudaMemcpyDeviceToHost));
     int status;
     gpuErrChk( cudaMemcpy(&status, flag_d, sizeof(int), cudaMemcpyDeviceToHost));
+
     //Clean up
     gpuErrChk( cudaFree(llh_d));
     gpuErrChk( cudaFree(xyz_d));
@@ -85,6 +88,9 @@ __host__ int ProjectionBase::forward_h(const cartesian_t &llh, cartesian_t &xyz)
 
 __host__ int ProjectionBase::inverse_h(const cartesian_t &xyz, cartesian_t &llh) const
 {
+    /*
+     * This is to transfrom from requested projection system to LLH on the host.
+     */
     double *llh_d, *xyz_d;
     int *flag_d;
     ProjectionBase **base_d;
@@ -110,11 +116,11 @@ __host__ int ProjectionBase::inverse_h(const cartesian_t &xyz, cartesian_t &llh)
     return status;
 }
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-/* * * * * * * * * * * * * * * * * * * Lon/Lat Projection * * * * * * * * * * * * * * * * * * * * */
 CUDA_DEV int LonLat::forward(const double *in, double *out) const
 {
+    /*
+     * Transforms Lon/Lat from radians to degrees.
+     */
     out[0] = in[0] * 180.0/M_PI;
     out[1] = in[1] * 180.0/M_PI;
     out[2] = in[2];
@@ -123,26 +129,33 @@ CUDA_DEV int LonLat::forward(const double *in, double *out) const
 
 CUDA_DEV int LonLat::inverse(const double *in, double *out) const
 {
+    /*
+     * Transforms Lon/Lat from degrees to radians.
+     */
     out[0] = in[0] * M_PI/180.0;
     out[1] = in[1] * M_PI/180.0;
     out[2] = in[2];
     return 0;
 }
 
-/* * * * * * * * * * * * * * * * * * * Geocent Projection * * * * * * * * * * * * * * * * * * * * */
 CUDA_DEV int Geocent::forward(const double* in, double* out) const
 {
-   ellipse.lonLatToXyz(in, out);
-   return 0;
+    /*
+     * Same as gpuEllipsoid::lonLatToXyz.
+     */
+    ellipse.lonLatToXyz(in, out);
+    return 0;
 }
         
 CUDA_DEV int Geocent::inverse(const double* in, double* out) const
 {
+    /*
+     * Same as gpuEllipsoid::xyzToLonLat
+     */
     ellipse.xyzToLonLat(in, out);
     return 0;
 }
 
-/* * * * * * * * * * * * * * * * * * * UTM Projection * * * * * * * * * * * * * * * * * * * * */
 CUDA_HOSTDEV double clens(const double *a, int size, double real) {
     /*
      * Local function - Compute the real clenshaw summation. Also computes Gaussian latitude for
@@ -327,7 +340,6 @@ CUDA_DEV int UTM::inverse(const double *utm, double *llh) const {
     }
 } 
 
-/* * * * * * * * * * * * * * * * * * * PolarStereo Projection * * * * * * * * * * * * * * * * * * */
 CUDA_HOSTDEV double pj_tsfn(double phi, double sinphi, double e) {
     /*
      * Local function - Determine small t from PROJ.4.
@@ -401,7 +413,8 @@ CUDA_DEV int PolarStereo::inverse(const double *ups, double *llh) const {
     return 1;
 
 }
-/* * * * * * * * * * * * * * * * * * * CEA Projection * * * * * * * * * * * * * * * * * * * */
+
+
 CUDA_HOSTDEV double pj_qsfn(double sinphi, double e, double one_es) {
     /*
      * Local function - ???
@@ -445,7 +458,6 @@ CUDA_DEV int CEA::inverse(const double *enu, double *llh) const {
     return 0;
 }
 
-/* * * * * * * * * * * * * * * * * * * Projection Transformer * * * * * * * * * * * * * * * * * * */
 CUDA_HOSTDEV ProjectionBase* createProj(int epsgcode)
 {
     //Check for Lat/Lon

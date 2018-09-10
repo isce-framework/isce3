@@ -26,9 +26,7 @@
 #include "Projections.h"
 using isce::core::cartesian_t;
 
-namespace isce { 
-    namespace cuda { 
-        namespace core {
+namespace isce { namespace cuda { namespace core {
 
     /** Abstract base class for individual projections
      *
@@ -37,8 +35,6 @@ namespace isce {
      * inverse - To convert expected projection system to llh (radians)
      */
     struct ProjectionBase {
-    	
-    	
         /** Ellipsoid object for projections - currently only WGS84 */
         gpuEllipsoid ellipse;
         /** Type of projection system. This can be used to check if projection systems are equal
@@ -48,42 +44,53 @@ namespace isce {
         /** Value constructor with EPSG code as input. Ellipsoid is always initialized to standard WGS84 ellipse.*/
         CUDA_HOSTDEV ProjectionBase(int code) : ellipse(6378137.,.0066943799901), _epsgcode(code) {}
 
-        /** \brief Function for transforming from LLH. This is similar to fwd or fwd3d in PROJ.4 
+        /** \brief Host function for transforming from LLH. This is similar to fwd or fwd3d in PROJ.4 
          * 
          * @param[in] llh Lon/Lat/Height - Lon and Lat are in radians
          * @param[out] xyz Coordinates in specified projection system */
         CUDA_HOST int forward_h(const cartesian_t& llh, cartesian_t& xyz) const;
+
+        /** \brief Device function for transform from LLH.
+         *
+         * @param[in] llh Lon/Lat/Height - Lon and Lat are in radians
+         * @param[out] xyz Coordinates in specified coordinate system*/
         CUDA_DEV virtual int forward(const double *llh, double *xyz) const = 0 ;
 
-        /** Function for transforming to LLH. This is similar to inv or inv3d in PROJ.4
+        /** Host function for transforming to LLH. This is similar to inv or inv3d in PROJ.4
          *
          * @param[in] xyz Coordinates in specified projection system 
-         * @param[out] llh Lat/Lon/Height - Lon and Lat are in radians */
+         * @param[out] llh Lon/Lat/Height - Lon and Lat are in radians */
         CUDA_HOST int inverse_h(const cartesian_t& xyz, cartesian_t& llh) const;
+
+        /** Device function for tranforming to LLH.
+         *
+         * @param[in] xyz Coordinates in specified projection system
+         * @param[out] llh Lon/Lat/Height - Lon and Lat are in radians */
         CUDA_DEV virtual int inverse(const double *xyz, double *llh) const = 0 ;
     };
 
-    //Geodetic Lon/Lat projection system
+    /** Geodetic Lon/Lat projection - EPSG:4326 */
     struct LonLat: public ProjectionBase {
-        //Constructor
+        // Value Constructor
         CUDA_HOSTDEV LonLat():ProjectionBase(4326){};
-        //Radians to Degrees pass through
+        // Radians to Degrees pass through
         CUDA_DEV int forward(const double*, double*) const;
-        //Degrees to Radians pass through
+        // Degrees to Radians pass through
         CUDA_DEV int inverse(const double*, double*) const;
     };
 
-    //Geodetic Lon/Lat projection system
+    /** Standard WGS84 ECEF coordinates - EPSG:4978 */
     struct Geocent: public ProjectionBase {
-        //Constructor
+        // Value Constructor
         CUDA_HOSTDEV Geocent():ProjectionBase(4978){};
-        //Radians to ECEF pass through
-        CUDA_DEV int forward(const double* in, double* out) const;
-        //ECEF to Radians pass through
-        CUDA_DEV int inverse(const double* in, double* out) const;
+        /** Same as gpuEllipsoid::lonLatToXyz */
+        CUDA_DEV int forward(const double*, double*) const;
+
+        /** Same as gpuEllipsoid::xyzTolonLat */
+        CUDA_DEV int inverse(const double*, double*) const;
     };
 
-    /** UTM coordinate extension of ProjBase
+    /** UTM coordinate extension of ProjectionBase
      *
      * EPSG 32601-32660 for Northern Hemisphere
      * EPSG 32701-32760 for Southern Hemisphere*/
@@ -106,7 +113,10 @@ namespace isce {
         CUDA_DEV int inverse(const double*, double*) const;
     };
     
-    // Polar stereographic coordinate system
+    /** Polar stereographic coordinate system
+     *
+     * EPSG:3413 - Greenland
+     * EPSG:3031 - Antarctica */
     struct PolarStereo: public ProjectionBase {
     	
         // Constants related to projection system
@@ -115,9 +125,9 @@ namespace isce {
 
         // Value constructor
         CUDA_HOSTDEV PolarStereo(int);
-        // Transfrom from LLH to Polar Stereo
+        /** Transfrom from LLH to Polar Stereo */
         CUDA_DEV int forward(const double*, double*) const;
-        // Transform from Polar Stereo to LLH
+        /** Transform from Polar Stereo to LLH */
         CUDA_DEV int inverse(const double*, double*) const;
     };
 
@@ -133,10 +143,10 @@ namespace isce {
         CUDA_HOSTDEV CEA();
 
         /** Transform from llh (rad) to CEA (m)*/
-        CUDA_DEV int forward(const double* llh, double* xyz) const;
+        CUDA_DEV int forward(const double*, double*) const;
 
         /** Transform from CEA (m) to LLH (rad)*/
-        CUDA_DEV int inverse(const double* llh, double* xyz) const;
+        CUDA_DEV int inverse(const double*, double*) const;
     };
  
     // This is to transform a point from one coordinate system to another
@@ -147,8 +157,6 @@ namespace isce {
 
     //Projection Factory using EPSG code
     CUDA_HOSTDEV ProjectionBase* createProj(int epsg);
-        }
-    }
-}
+}}}
 
 #endif
