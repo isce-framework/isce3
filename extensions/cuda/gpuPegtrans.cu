@@ -45,7 +45,7 @@ __device__ void gpuPegtrans::xyz2sch(double *schv, double *xyzv) {
  
     double llh[3];
     gpuEllipsoid sph(radcur,0.);
-    sph.xyzToLatLon(schv, llh);
+    sph.xyzToLonLat(schv, llh);
     schv[0] = radcur * llh[1];
     schv[1] = radcur * llh[0];
     schv[2] = llh[2];

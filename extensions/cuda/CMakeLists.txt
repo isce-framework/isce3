@@ -9,16 +9,18 @@ set(ISCE_CUDA_HEADERS
         gpuLinAlg.h
         gpuOrbit.h
         gpuPeg.h
-        gpuPegtrans.h 
-        gpuPoly2d.h )
+        gpuPegtrans.h
+	gpuPoly2d.h
+	gpuProjections.h )
 
 set (ISCE_CUDA_SRCS 
         gpuEllipsoid.cu
         gpuLinAlg.cu
         gpuOrbit.cu
         gpuPeg.cu
-        gpuPegtrans.cu 
-        gpuPoly2d.cu )
+        gpuPegtrans.cu
+	gpuPoly2d.cu
+        gpuProjections.cu )
 
 ##Install headers into build/include
 set(${PACKAGENAME}_BUILD_HEADERS "")
@@ -37,6 +39,7 @@ get_target_property(MYPROPS  ${LCUDAISCE} COMPILE_OPTIONS)
 string(REPLACE "c++17" "c++11" MYPROPS ${MYPROPS})
 #message(STATUS "CUDA post: ${MYPROPS}")
 set_target_properties(${LCUDAISCE} PROPERTIES COMPILE_OPTIONS ${MYPROPS})
+set_target_properties(${LCUDAISCE} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 target_link_libraries(${LCUDAISCE} ${LISCE})
 #target_compile_features(${LCUDAISCE} PUBLIC cxx_std_11)
