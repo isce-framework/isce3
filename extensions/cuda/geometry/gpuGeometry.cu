@@ -24,12 +24,12 @@ rdr2geo(const isce::cuda::core::gpuPixel & pixel,
            lookVec[3], delta[3], delta_temp[3], vhat[3];
 
     // Compute normalized velocity
-    gpuLinAlg::unitVec(state.velocity(), vhat);
+    gpuLinAlg::unitVec(state.velocity, vhat);
 
-    // Unpack TCN basis vectors
-    double * that = TCNbasis.x0();
-    double * chat = TCNbasis.x1();
-    double * nhat = TCNbasis.x2();
+    // Unpack TCN basis vectors to pointers
+    const double * that = TCNbasis.x0;
+    const double * chat = TCNbasis.x1;
+    const double * nhat = TCNbasis.x2;
 
     // Pre-compute TCN vector products
     const double ndotv = nhat[0]*vhat[0] + nhat[1]*vhat[1] + nhat[2]*vhat[2];
@@ -40,11 +40,11 @@ rdr2geo(const isce::cuda::core::gpuPixel & pixel,
     const double minor = major * std::sqrt(1.0 - ellipsoid.e2);
 
     // Set up orthonormal system right below satellite
-    const double satDist = gpuLinAlg::norm(state.position());
+    const double satDist = gpuLinAlg::norm(state.position);
     const double eta = 1.0 / std::sqrt(
-        std::pow(state.position()[0] / major, 2) +
-        std::pow(state.position()[1] / major, 2) +
-        std::pow(state.position()[2] / minor, 2)
+        std::pow(state.position[0] / major, 2) +
+        std::pow(state.position[1] / major, 2) +
+        std::pow(state.position[2] / minor, 2)
     );
     const double radius = eta * satDist;
     const double hgt = (1.0 - eta) * satDist;
@@ -76,11 +76,11 @@ rdr2geo(const isce::cuda::core::gpuPixel & pixel,
         const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
                                             * std::pow(sintheta, 2)
                                             - std::pow(alpha, 2));
-
+    
         // Compute vector from satellite to ground
         gpuLinAlg::linComb(alpha, that, beta, chat, delta_temp);
         gpuLinAlg::linComb(1.0, delta_temp, gamma, nhat, delta);
-        gpuLinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
+        gpuLinAlg::linComb(1.0, state.position, 1.0, delta, targetVec);
 
         // Compute LLH of ground point
         ellipsoid.xyzToLonLat(targetVec, targetLLH);
@@ -94,7 +94,7 @@ rdr2geo(const isce::cuda::core::gpuPixel & pixel,
         zrdr = gpuLinAlg::norm(targetVec) - radius;
 
         // Check convergence
-        gpuLinAlg::linComb(1.0, state.position(), -1.0, targetVec, lookVec);
+        gpuLinAlg::linComb(1.0, state.position, -1.0, targetVec, lookVec);
         const double rdiff = pixel.range() - gpuLinAlg::norm(lookVec);
         if (std::abs(rdiff) < threshold) {
             converged = 1;
@@ -132,7 +132,7 @@ rdr2geo(const isce::cuda::core::gpuPixel & pixel,
     // Compute vector from satellite to ground
     gpuLinAlg::linComb(alpha, that, beta, chat, delta_temp);
     gpuLinAlg::linComb(1.0, delta_temp, gamma, nhat, delta);
-    gpuLinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
+    gpuLinAlg::linComb(1.0, state.position, 1.0, delta, targetVec);
 
     // Compute LLH of ground point
     ellipsoid.xyzToLonLat(targetVec, targetLLH);
@@ -276,7 +276,7 @@ rdr2geo_h(const isce::core::Pixel & pixel,
           const isce::core::Basis & basis,
           const isce::core::StateVector & state,
           const isce::core::Ellipsoid & ellipsoid,
-          const isce::geometry::DEMInterpolator & demInterp,
+          isce::geometry::DEMInterpolator & demInterp,
           cartesian_t & llh,
           int side, double threshold, int maxIter, int extraIter) {
 
@@ -295,6 +295,9 @@ rdr2geo_h(const isce::core::Pixel & pixel,
     int * resultcode_d;
     cudaMalloc((double **) &llh_d, 3*sizeof(double));
     cudaMalloc((int **) &resultcode_d, sizeof(int));
+
+    // Copy initial values
+    cudaMemcpy(llh_d, llh.data(), 3*sizeof(double), cudaMemcpyHostToDevice);
 
     // Run the rdr2geo on the GPU
     dim3 grid(1), block(1);

@@ -6,19 +6,103 @@
 //
 
 #include "gpuDEMInterpolator.h"
+#include <helper_cuda.h>
+
+__device__
+double
+bilinear(double x, double y, float * z, size_t nx) {
+
+    int x1 = std::floor(x);
+    int x2 = std::ceil(x);
+    int y1 = std::floor(y);
+    int y2 = std::ceil(y);
+    double q11 = z[y1*nx + x1];
+    double q12 = z[y2*nx + x1];
+    double q21 = z[y1*nx + x2];
+    double q22 = z[y2*nx + x2];
+
+    if ((y1 == y2) && (x1 == x2)) {
+        return q11;
+    } else if (y1 == y2) {
+        return ((x2 - x) / (x2 - x1)) * q11 +
+               ((x - x1) / (x2 - x1)) * q21;
+    } else if (x1 == x2) {
+        return ((y2 - y) / (y2 - y1)) * q11 +
+               ((y - y1) / (y2 - y1)) * q12;
+    } else {
+        return  ((q11 * (x2 - x) * (y2 - y)) /
+                 (x2 - x1) * (y2 - y1)) +
+                ((q21 * (x - x1) * (y2 - y)) /
+                 (x2 - x1) * (y2 - y1)) +
+                ((q12 * (x2 - x) * (y - y1)) /
+                 (x2 - x1) * (y2 - y1)) +
+                ((q22 * (x - x1) * (y - y1)) /
+                 (x2 - x1) * (y2 - y1));
+    }
+}
 
 /** @param[in] demInterp DEMInterpolator object.
   *
   * Copy DEM interpolator data to GPU device. */
 __host__
 isce::cuda::geometry::gpuDEMInterpolator::
-gpuDEMInterpolator(const isce::geometry::DEMInterpolator & demInterp) :
-    _haveRaster(demInterp.haveRaster()), _refHeight(demInterp.refHeight()) {
+gpuDEMInterpolator(isce::geometry::DEMInterpolator & demInterp) :
+    _haveRaster(demInterp.haveRaster()), _refHeight(demInterp.refHeight()),
+    _length(demInterp.length()), _width(demInterp.width()),
+    _xstart(demInterp.xStart()), _ystart(demInterp.yStart()),
+    _deltax(demInterp.deltaX()), _deltay(demInterp.deltaY()),
+    _owner(true) {
 
     // Set the device
     cudaSetDevice(0);
 
+    // Allocate memory on device for DEM data
+    size_t npix = _length * _width;
+    checkCudaErrors(cudaMalloc((float **) &_dem, npix*sizeof(float)));
+
+    // Copy DEM data
+    checkCudaErrors(cudaMemcpy(_dem, &demInterp.data()[0], npix*sizeof(float),
+                               cudaMemcpyHostToDevice));
 }
+
+/** @param[in] demInterp gpuDEMInterpolator object.
+  *
+  * Copy DEM interpolator data within GPU device. */
+__host__ __device__
+isce::cuda::geometry::gpuDEMInterpolator::
+gpuDEMInterpolator(isce::cuda::geometry::gpuDEMInterpolator & demInterp) :
+    _haveRaster(demInterp.haveRaster()), _refHeight(demInterp.refHeight()),
+    _length(demInterp.length()), _width(demInterp.width()),
+    _xstart(demInterp.xStart()), _ystart(demInterp.yStart()),
+    _deltax(demInterp.deltaX()), _deltay(demInterp.deltaY()),
+    _dem(demInterp._dem), _owner(false) {}
+
+/** Destructor. */
+isce::cuda::geometry::gpuDEMInterpolator::
+~gpuDEMInterpolator() {
+    if (_owner) {
+        checkCudaErrors(cudaFree(_dem));
+    }
+}
+
+/** @param[out] double* Array of lon-lat-h at middle of DEM. */
+__device__
+void
+isce::cuda::geometry::gpuDEMInterpolator::
+midLonLat(double * llh) const {
+
+    // Create coordinates for middle X/Y
+    double xyz[3] = {midX(), midY(), _refHeight};
+
+    // Call projection inverse
+    //static double llh[3];
+    //_proj->inverse(xyz, llh);
+
+    llh[0] = xyz[0]*M_PI/180.0;
+    llh[1] = xyz[1]*M_PI/180.0;
+    llh[2] = xyz[2];
+
+} 
 
 /** @param[in] lon longitude of interpolation point.
   * @param[in] lat latitude of interpolation point.
@@ -34,13 +118,15 @@ interpolateLonLat(double lon, double lat) const {
         return value;
     }
 
-    // Pass latitude and longitude through projection
+    //// Pass latitude and longitude through projection
     //isce::core::cartesian_t xyz;
     //const isce::core::cartesian_t llh{lon, lat, 0.0};
     //_proj->forward(llh, xyz);
 
-    // Interpolate DEM at its native coordinates
-    value = interpolateXY(lon, lat);
+    //// Interpolate DEM at its native coordinates
+    //value = interpolateXY(xyz[0], xyz[1]);
+
+    value = interpolateXY(lon*180.0/M_PI, lat*180.0/M_PI);
 
     // Done
     return value;
@@ -67,11 +153,11 @@ interpolateXY(double x, double y) const {
     // Check validity of interpolation coordinates
     const int irow = int(std::floor(row));
     const int icol = int(std::floor(col));
-    //// If outside bounds, return reference height
-    //if (irow < 2 || irow >= int(_dem.length() - 1))
-    //    return _refHeight;
-    //if (icol < 2 || icol >= int(_dem.width() - 1))
-    //    return _refHeight;
+    // If outside bounds, return reference height
+    if (irow < 2 || irow >= int(_length - 1))
+        return _refHeight;
+    if (icol < 2 || icol >= int(_width - 1))
+        return _refHeight;
 
     //// Choose correct interpolation routine
     //if (_interpMethod == isce::core::BILINEAR_METHOD) {
@@ -86,8 +172,13 @@ interpolateXY(double x, double y) const {
     //    value = _dem(int(std::round(row)), int(std::round(col)));
     //}
 
-    // TEMP STATEMENT
-    value = row + col;
+    // TEMP: nearest neighbor only
+    //int i = (int) std::round(row);
+    //int j = (int) std::round(col);
+    //value = _dem[int(std::round(row)) * _width + int(std::round(col))];
+    //value = _dem[j];
+
+    value = bilinear(col, row, _dem, _width); 
 
     // Done
     return value;

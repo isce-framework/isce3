@@ -5,11 +5,15 @@ set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 set(ISCE_CUDA_${PACKAGENAME}_HEADERS
         gpuDEMInterpolator.h
-        gpuGeometry.h )
+        gpuGeometry.h 
+        gpuTopoLayers.h
+        Topo.h)
 
 set(LOCAL_SRCS
         gpuDEMInterpolator.cu
-        gpuGeometry.cu )
+        gpuGeometry.cu 
+        gpuTopo.cu
+        Topo.cpp)
 
 # Append current path to every source file
 set(ISCE_CUDA_${PACKAGENAME}_SRCS "")

@@ -30,7 +30,11 @@ class isce::geometry::TopoLayers {
             _localPsi.resize(length*width);
             _sim.resize(length*width);
         }   
-        
+
+        // Get sizes
+        inline size_t length() const { return _length; }
+        inline size_t width() const { return _width; }
+
         // Get array references
         std::valarray<double> & x() { return _x; }
         std::valarray<double> & y() { return _y; }

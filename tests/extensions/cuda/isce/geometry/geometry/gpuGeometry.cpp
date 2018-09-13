@@ -13,6 +13,7 @@
 #include <gtest/gtest.h>
 
 // isce::io
+#include "isce/io/Raster.h"
 #include "isce/io/IH5.h"
 
 // isce::core
@@ -31,16 +32,16 @@
 
 // isce::geometry
 #include "isce/geometry/geometry.h"
+#include "isce/geometry/DEMInterpolator.h"
 
 // isce::cuda::geometry
 #include "isce/cuda/geometry/gpuGeometry.h"
 
 using isce::core::LinAlg;
+using isce::geometry::DEMInterpolator;
 
-// Declaration for utility function to read test data
-void loadTestData(std::vector<std::string> & aztimes, std::vector<double> & ranges,
-                  std::vector<double> & heights,
-                  std::vector<double> & ref_data, std::vector<double> & ref_zerodop);
+// Declaration for function to load DEM
+void loadDEM(DEMInterpolator & demInterp);
 
 struct GpuGeometryTest : public ::testing::Test {
 
@@ -74,67 +75,64 @@ struct GpuGeometryTest : public ::testing::Test {
         }
 };
 
-TEST_F(GpuGeometryTest, RdrToGeo) {
+TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
 
-    // Load test data
-    std::vector<std::string> aztimes;
-    std::vector<double> ranges, heights, ref_data, ref_zerodop;
-    loadTestData(aztimes, ranges, heights, ref_data, ref_zerodop);
+    // Load DEM subset covering test points
+    DEMInterpolator dem(-500.0);
+    loadDEM(dem);
 
-    // Loop over test data
+    // Loop over uniform grid of test points
     const double degrees = 180.0 / M_PI;
-    for (size_t i = 0; i < aztimes.size(); ++i) {
+    const int maxiter = 25;
+    const int extraiter = 10;
+    for (size_t i = 10; i < 500; i += 40) {
+        for (size_t j = 10; j < 500; j += 40) {
 
-        // Make azimuth date
-        const isce::core::DateTime azDate(aztimes[i]);
-        const double azTime = azDate.secondsSinceEpoch();
+            // Get azimutha and range info
+            const double azTime = mode.startAzTime().secondsSinceEpoch() + i / mode.prf();
+            const double rbin = j;
+            const double range = mode.startingRange() + j * mode.rangePixelSpacing();
+            const double doppler = skewDoppler.eval(0, rbin);
 
-        // Evaluate Doppler
-        const double rbin = (ranges[i] - mode.startingRange()) / mode.rangePixelSpacing();
-        const double doppler = skewDoppler.eval(0, rbin);
+            // Initialize guess
+            isce::core::cartesian_t targetLLH = {0.0, 0.0, 1000.0};
 
-        // Make constant DEM interpolator set to input height
-        isce::geometry::DEMInterpolator dem(heights[i]);
+            // Interpolate orbit to get state vector
+            isce::core::StateVector state;
+            int stat = orbit.interpolate(azTime, state, isce::core::HERMITE_METHOD);
 
-        // Initialize guess
-        isce::core::cartesian_t targetLLH = {0.0, 0.0, dem.interpolateLonLat(0.0, 0.0)};
+            // Setup geocentric TCN basis
+            isce::core::Basis TCNbasis;
+            isce::geometry::geocentricTCN(state, TCNbasis);
 
-        // Interpolate orbit to get state vector
-        isce::core::StateVector state;
-        int stat = orbit.interpolate(azTime, state, isce::core::HERMITE_METHOD);
+            // Compute satellite velocity magnitude
+            const double vmag = LinAlg::norm(state.velocity());
+            // Compute Doppler factor
+            const double dopfact = 0.5 * wvl * doppler * range / vmag;
 
-        // Setup geocentric TCN basis
-        isce::core::Basis TCNbasis;
-        isce::geometry::geocentricTCN(state, TCNbasis);
+            // Wrap range and Doppler factor in a Pixel object
+            isce::core::Pixel pixel(range, dopfact, 0);
+                    
+            // Run rdr2geo on CPU
+            int stat_cpu = isce::geometry::rdr2geo(pixel, TCNbasis, state,
+                ellipsoid, dem, targetLLH, lookSide, 1.0e-4, maxiter, extraiter);
+            // Cache results
+            const double reflon = degrees * targetLLH[0];
+            const double reflat = degrees * targetLLH[1];
+            const double refhgt = targetLLH[2];
 
-        // Compute satellite velocity magnitude
-        const double vmag = LinAlg::norm(state.velocity());
-        // Compute Doppler factor
-        const double dopfact = 0.5 * wvl * doppler * ranges[i] / vmag;
+            // Reset result
+            targetLLH = {0.0, 0.0, 1000.0};
 
-        // Wrap range and Doppler factor in a Pixel object
-        isce::core::Pixel pixel(ranges[i], dopfact, 0);
+            // Run rdr2geo on GPU
+            int stat_gpu = isce::cuda::geometry::rdr2geo_h(pixel, TCNbasis, state,
+                ellipsoid, dem, targetLLH, lookSide, 1.0e-4, maxiter, extraiter);
 
-        // Run rdr2geo on GPU
-        stat = isce::cuda::geometry::rdr2geo_h(pixel, TCNbasis, state,
-            ellipsoid, dem, targetLLH, lookSide, 1.0e-8, 25, 15);
-        
-        // Check
-        ASSERT_EQ(stat, 1);
-        ASSERT_NEAR(degrees * targetLLH[0], ref_data[3*i], 1.0e-8);
-        ASSERT_NEAR(degrees * targetLLH[1], ref_data[3*i+1], 1.0e-8);
-        ASSERT_NEAR(targetLLH[2], ref_data[3*i+2], 1.0e-8);
-
-        // Run again with zero doppler
-        pixel.dopfact(0.0);
-        stat = isce::cuda::geometry::rdr2geo_h(pixel, TCNbasis, state,
-            ellipsoid, dem, targetLLH, lookSide, 1.0e-8, 25, 15);
-
-        // Check
-        ASSERT_EQ(stat, 1);
-        ASSERT_NEAR(degrees * targetLLH[0], ref_zerodop[3*i], 1.0e-8);
-        ASSERT_NEAR(degrees * targetLLH[1], ref_zerodop[3*i+1], 1.0e-8);
-        ASSERT_NEAR(targetLLH[2], ref_zerodop[3*i+2], 1.0e-8);
+            // Check
+            ASSERT_NEAR(degrees*targetLLH[0], reflon, 1.0e-8);
+            ASSERT_NEAR(degrees*targetLLH[1], reflat, 1.0e-8);
+            ASSERT_NEAR(targetLLH[2], refhgt, 1.0e-2);
+        }
     }
 }
 
@@ -173,62 +171,26 @@ int main(int argc, char * argv[]) {
     return RUN_ALL_TESTS();
 }
 
-// Load test data
-void loadTestData(std::vector<std::string> & aztimes, std::vector<double> & ranges,
-                  std::vector<double> & heights,
-                  std::vector<double> & ref_data, std::vector<double> & ref_zerodop) {
+void loadDEM(DEMInterpolator & demInterp) {
 
-    // Load azimuth times and slant ranges
-    std::ifstream ifid("input_data.txt");
-    std::string line;
-    while (std::getline(ifid, line)) {
-        std::stringstream stream;
-        std::string aztime;
-        double range, h;
-        stream << line;
-        stream >> aztime >> range >> h;
-        aztimes.push_back(aztime);
-        ranges.push_back(range);
-        heights.push_back(h);
-    }
-    ifid.close();
+    // Bounds for DEM
+    double min_lon = -115.8;
+    double min_lat = 34.62;
+    double max_lon = -115.32;
+    double max_lat = 35.0;
 
-    // Load test data for non-zero doppler
-    ifid = std::ifstream("output_data.txt");
-    while (std::getline(ifid, line)) {
-        std::stringstream stream;
-        double lat, lon, h;
-        stream << line;
-        stream >> lat >> lon >> h;
-        ref_data.push_back(lon);
-        ref_data.push_back(lat);
-        ref_data.push_back(h);
-    }
-    ifid.close();
+    // Convert to radians
+    min_lon *= M_PI / 180.0;
+    min_lat *= M_PI / 180.0;
+    max_lon *= M_PI / 180.0;
+    max_lat *= M_PI / 180.0;
 
-    // Load test data for zero doppler
-    ifid = std::ifstream("output_data_zerodop.txt");
-    while (std::getline(ifid, line)) {
-        std::stringstream stream;
-        double lat, lon, h;
-        stream << line;
-        stream >> lat >> lon >> h;
-        ref_zerodop.push_back(lon);
-        ref_zerodop.push_back(lat);
-        ref_zerodop.push_back(h);
-    }
-    ifid.close();
+    // Open DEM raster
+    isce::io::Raster demRaster("../../../../../lib/isce/data/srtm_cropped.tif"); 
 
-    // Check sizes
-    if (aztimes.size() != (ref_data.size() / 3)) {
-        std::cerr << "Incompatible data sizes" << std::endl;
-        exit(1);
-    }
-    if (aztimes.size() != (ref_zerodop.size() / 3)) {
-        std::cerr << "Incompatible data sizes" << std::endl;
-        exit(1);
-    }
-
+    // Extract DEM subset
+    demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat,
+                      isce::core::BILINEAR_METHOD, demRaster.getEPSG());
 }
 
 // end of file

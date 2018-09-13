@@ -90,7 +90,7 @@ loadDEM(isce::io::Raster & demRaster,
 
     // Read in the DEM
     demRaster.getBlock(_dem.data(), xstart, ystart, width, length);
-    
+
     // Indicate we have loaded a valid raster
     _haveRaster = true;
     // Store interpolation method
@@ -137,13 +137,13 @@ computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & 
          << "Average DEM height: " << meanValue << pyre::journal::newline;
 }
 
-// Compute middle latitude and longitude
+// Compute middle latitude and longitude using reference height
 isce::core::cartesian_t
 isce::geometry::DEMInterpolator::
-midLonLat(double height) const {
+midLonLat() const {
 
     // Create coordinates for middle X/Y
-    isce::core::cartesian_t xyz{midX(), midY(), height};
+    isce::core::cartesian_t xyz{midX(), midY(), _refHeight};
 
     // Call projection inverse
     isce::core::cartesian_t llh;

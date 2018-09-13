@@ -81,7 +81,7 @@ namespace geometry {
                             const isce::core::Basis &,
                             const isce::core::StateVector &,
                             const isce::core::Ellipsoid &,
-                            const isce::geometry::DEMInterpolator &,
+                            isce::geometry::DEMInterpolator &,
                             cartesian_t &,
                             int, double, int, int);
 

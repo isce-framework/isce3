@@ -19,12 +19,14 @@ set_target_properties(${LCUDAISCE} PROPERTIES COMPILE_OPTIONS ${MYPROPS})
 
 # Allow for separable compilation and device code linking (-dc flag to nvcc)
 set_target_properties(${LCUDAISCE} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-
 set_target_properties(${LCUDAISCE} PROPERTIES CUDA_HOST_COMPILATION_CPP ON)
-
 
 # Add library dependencies
 target_link_libraries(${LCUDAISCE} ${LISCE})
+
+# Add any extra CUDA dependencies (helper functions)
+set(CUDA_COMMON ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}/../../../samples/common/inc)
+include_directories(${LCUDAISCE} PUBLIC ${CUDA_COMMON})
 
 # Install shared library
 install(TARGETS ${LCUDAISCE}

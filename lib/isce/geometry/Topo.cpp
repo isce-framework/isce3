@@ -95,11 +95,13 @@ topo(Raster & demRaster,
              << pyre::journal::endl;
 
         // Load DEM subset for SLC image block
-        _computeDEMBounds(demRaster, demInterp, lineStart, blockLength);
+        computeDEMBounds(demRaster, demInterp, lineStart, blockLength);
 
         // Compute max and mean DEM height for the subset
         float demmax, dem_avg;
         demInterp.computeHeightStats(demmax, dem_avg, info);
+        // Reset reference height for DEMInterpolator
+        demInterp.refHeight(dem_avg);
 
         // Output layers for block
         TopoLayers layers(blockLength, _mode.width());
@@ -133,7 +135,7 @@ topo(Raster & demRaster,
                 Pixel pixel(rng, dopfact, rbin);
 
                 // Initialize LLH to middle of input DEM and average height
-                cartesian_t llh = demInterp.midLonLat(dem_avg);
+                cartesian_t llh = demInterp.midLonLat();
 
                 // Perform rdr->geo iterations
                 int geostat = rdr2geo(
@@ -222,8 +224,8 @@ _initAzimuthLine(size_t line, StateVector & state, Basis & TCNbasis) {
 
 // Get DEM bounds using first/last azimuth line and slant range bin
 void isce::geometry::Topo::
-_computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOffset,
-                  size_t blockLength) {
+computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOffset,
+                 size_t blockLength) {
 
     // Initialize journal
     pyre::journal::warning_t warning("isce.core.Topo");

@@ -41,65 +41,28 @@ class isce::cuda::core::gpuStateVector {
             time_h(state.date().secondsOfDay());
         }
 
-        // Get position
-        CUDA_DEV inline double * position() const {
-            static double output[3];
-            for (int i = 0; i < 3; ++i) {
-                output[i] = _position[i];
-            }
-            return output;
-        }
-
-        // Set position on device
-        CUDA_DEV inline void position(double * p) {
-            for (int i = 0; i < 3; ++i) {
-                _position[i] = p[i];
-            }
-        }
+        // Make data public to simplify access and to reduce use of temp variables
+        // in device code
+        double position[3];
+        double velocity[3];
+        double time;
 
         // Set position on host
         CUDA_HOST inline void position_h(const cartesian_t & p) {
             for (int i = 0; i < 3; ++i) {
-                _position[i] = p[i];
-            }
-        }
-
-        // Get velocity
-        CUDA_DEV inline double * velocity() const {
-            static double output[3];
-            for (int i = 0; i < 3; ++i) {
-                output[i] = _velocity[i];
-            }
-            return output;
-        }
-
-        // Set velocity on device
-        CUDA_DEV inline void velocity(double * v) {
-            for (int i = 0; i < 3; ++i) {
-                _velocity[i] = v[i];
+                position[i] = p[i];
             }
         }
 
         // Set velocity on host
         CUDA_HOST inline void velocity_h(const cartesian_t & v) {
             for (int i = 0; i < 3; ++i) {
-                _velocity[i] = v[i];
+                velocity[i] = v[i];
             }
         }
 
-        // Get epoch UTC time
-        CUDA_DEV inline double time() const { return _t; }
-
-        // Set epoch UTC time on device
-        CUDA_DEV inline void time(double t) { _t = t; } 
-
         // Set epoch UTC time on host
-        CUDA_HOST inline void time_h(double t) { _t = t; }
-
-    private:
-        double _position[3];
-        double _velocity[3];
-        double _t;
+        CUDA_HOST inline void time_h(double t) { time = t; }
 };
 
 #endif

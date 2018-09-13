@@ -38,8 +38,8 @@ namespace isce { namespace cuda { namespace core {
         CUDA_DEV inline double rEast(double) const;
         CUDA_DEV inline double rNorth(double) const;
         CUDA_DEV inline double rDir(double,double) const;
-        CUDA_DEV void lonLatToXyz(double*,double*) const;
-        CUDA_DEV void xyzToLonLat(double*,double*) const;
+        CUDA_DEV void lonLatToXyz(const double*,double*) const;
+        CUDA_DEV void xyzToLonLat(const double*,double*) const;
         CUDA_DEV void TCNbasis(double*,double*,double*,double*,double*);
 
         // Host functions to test underlying device functions in a single-threaded context

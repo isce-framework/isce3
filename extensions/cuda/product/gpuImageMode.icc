@@ -16,7 +16,8 @@ gpuImageMode(const isce::cuda::product::gpuImageMode & mode) :
     _startingRange(mode.startingRange()),
     _rangePixelSpacing(mode.rangePixelSpacing()),
     _numberAzimuthLooks(mode.numberAzimuthLooks()),
-    _numberRangeLooks(mode.numberRangeLooks()) {}
+    _numberRangeLooks(mode.numberRangeLooks()),
+    _startAzUTCTime(mode.startAzUTCTime()) {}
 
 /** @param[in]              isce::cuda::product::gpuImageMode */
 CUDA_DEV
@@ -33,6 +34,7 @@ operator=(const isce::cuda::product::gpuImageMode & mode) {
     _rangePixelSpacing = mode.rangePixelSpacing();
     _numberAzimuthLooks = mode.numberAzimuthLooks();
     _numberRangeLooks = mode.numberRangeLooks();
+    _startAzUTCTime = mode.startAzUTCTime();
     return *this;
 }
 
@@ -48,6 +50,13 @@ gpuImageMode(const isce::product::ImageMode & mode) :
     _startingRange(mode.startingRange()),
     _rangePixelSpacing(mode.rangePixelSpacing()),
     _numberAzimuthLooks(mode.numberAzimuthLooks()),
-    _numberRangeLooks(mode.numberRangeLooks()) {}
+    _numberRangeLooks(mode.numberRangeLooks()) {
+
+    // As with orbits, set reference epoch 2 days prior
+    isce::core::DateTime refEpoch = mode.startAzTime() - 86400*2;
+    // Set starting UTC time relative to reference epoch
+    _startAzUTCTime = (mode.startAzTime() - refEpoch).getTotalSeconds();
+
+}
 
 // end of file

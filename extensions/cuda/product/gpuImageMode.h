@@ -35,14 +35,14 @@ class isce::cuda::product::gpuImageMode {
         /** Default constructor. */
         CUDA_HOSTDEV inline gpuImageMode() {};
 
-        /** Copy constructor. */
-        CUDA_HOSTDEV inline gpuImageMode(const gpuImageMode &);
-
-        /** Assignment operator. */
-        CUDA_HOSTDEV inline gpuImageMode & operator=(const gpuImageMode &);
+        /** Copy constructor on device. */
+        CUDA_DEV inline gpuImageMode(const gpuImageMode &);
 
         /** Host-only copy constructor from ImageMode. */
         CUDA_HOST inline gpuImageMode(const isce::product::ImageMode &);
+
+        /** Assignment operator. */
+        CUDA_HOSTDEV inline gpuImageMode & operator=(const gpuImageMode &);
 
         /** Get length of image data. */
         CUDA_HOSTDEV inline size_t length() const { return _length; }
@@ -75,6 +75,9 @@ class isce::cuda::product::gpuImageMode {
         /** Set range pixel spacing. */
         CUDA_HOSTDEV inline void rangePixelSpacing(double value) { _rangePixelSpacing = value; }
 
+        /** Get starting azimuth time in UTC seconds. */
+        CUDA_HOSTDEV inline double startAzUTCTime() const { return _startAzUTCTime; }
+
         /** Get number of azimuth looks. */
         CUDA_HOSTDEV inline size_t numberAzimuthLooks() const { return _numberAzimuthLooks; }
         /** Set number of azimuth looks. */
@@ -96,6 +99,7 @@ class isce::cuda::product::gpuImageMode {
         double _wavelength;
         double _startingRange;
         double _rangePixelSpacing;
+        double _startAzUTCTime;
 
         // Looks
         size_t _numberAzimuthLooks;

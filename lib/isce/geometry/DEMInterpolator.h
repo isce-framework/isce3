@@ -59,11 +59,18 @@ class isce::geometry::DEMInterpolator {
         double midX() const { return _xstart + 0.5*_dem.width()*_deltax; }
         double midY() const { return _ystart + 0.5*_dem.length()*_deltay; }
         // Middle lat/lon/h
-        isce::core::cartesian_t midLonLat(double height) const;
+        isce::core::cartesian_t midLonLat() const;
         // Flag indicating whether we have a raster
         bool haveRaster() const { return _haveRaster; }
         // Constant height
         double refHeight() const { return _refHeight; }
+        void refHeight(double h) { _refHeight = h; }
+        // Valarray pointing to underlying DEM data
+        std::valarray<float> & data() { return _dem.data(); }
+
+        // DEM dimensions
+        inline size_t width() const { return _dem.width(); }
+        inline size_t length() const { return _dem.length(); }
 
     private:
         // Flag indicating whether we have access to a DEM raster
