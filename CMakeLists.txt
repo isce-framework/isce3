@@ -62,7 +62,7 @@ CheckGDAL()
 CheckHDF5()
 
 ##Check for Armadillo
-CheckArmadillo()
+##CheckArmadillo()
 
 ##Check for Nosetests
 CheckNosetests()

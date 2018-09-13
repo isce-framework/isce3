@@ -12,6 +12,7 @@ set(ISCE_CUDA_${PACKAGENAME}_HEADERS
         gpuPegtrans.h 
         gpuPixel.h
         gpuPoly2d.h
+        gpuProjections.h
         gpuStateVector.h )
 
 set(LOCAL_SRCS 
@@ -20,7 +21,8 @@ set(LOCAL_SRCS
         gpuOrbit.cu
         gpuPeg.cu
         gpuPegtrans.cu 
-        gpuPoly2d.cu )
+        gpuPoly2d.cu 
+        gpuProjections.cu )
 
 # Append current path to every source file
 set(ISCE_CUDA_${PACKAGENAME}_SRCS "")

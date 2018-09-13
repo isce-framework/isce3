@@ -13,14 +13,14 @@ using std::vector;
 using isce::cuda::core::gpuEllipsoid;
 using isce::cuda::core::gpuLinAlg;
 
-__device__ void gpuEllipsoid::lonLatToXyz(const double *llh, double *xyz) const {
+CUDA_DEV void gpuEllipsoid::lonLatToXyz(const double *llh, double *xyz) const{
     double re = rEast(llh[1]);
     xyz[0] = (re + llh[2]) * cos(llh[1]) * cos(llh[0]);
     xyz[1] = (re + llh[2]) * cos(llh[1]) * sin(llh[0]);
     xyz[2] = ((re * (1. - e2)) + llh[2]) * sin(llh[1]);
 }
 
-__device__ void gpuEllipsoid::xyzToLonLat(const double *xyz, double *llh) const {
+CUDA_DEV void gpuEllipsoid::xyzToLonLat(const double *xyz, double *llh) const{
     double p = (pow(xyz[0],2) + pow(xyz[1],2)) / pow(a,2);
     double q = ((1. - e2) * pow(xyz[2],2)) / pow(a,2);
     double r = (p + q - pow(e2,2)) / 6.;
@@ -36,7 +36,7 @@ __device__ void gpuEllipsoid::xyzToLonLat(const double *xyz, double *llh) const 
     llh[2] = ((k + e2 - 1.) * sqrt(pow(d,2) + pow(xyz[2],2))) / k;
 }
 
-__device__ void gpuEllipsoid::TCNbasis(double *pos, double *vel, double *t, double *c, double *n) {
+CUDA_DEV void gpuEllipsoid::TCNbasis(double *pos, double *vel, double *t, double *c, double *n) const{
     double temp[3];
     xyzToLonLat(pos,temp);
     n[0] = -cos(temp[0]) * cos(temp[1]);
@@ -48,7 +48,7 @@ __device__ void gpuEllipsoid::TCNbasis(double *pos, double *vel, double *t, doub
     gpuLinAlg::unitVec(temp,t);
 }
 
-__global__ void lonLatToXyz_d(gpuEllipsoid elp, double *llh, double *xyz) {
+CUDA_GLOBAL void lonLatToXyz_d(gpuEllipsoid elp, const double *llh, double *xyz) {
     /*
      *  GPU-side helper kernel for lonLatToXyz_h to use as a consistency check. Note that elp, llh,
      *  and xyz are GPU-side memory constructs.
@@ -56,7 +56,7 @@ __global__ void lonLatToXyz_d(gpuEllipsoid elp, double *llh, double *xyz) {
     elp.lonLatToXyz(llh, xyz);
 }
 
-__host__ void gpuEllipsoid::lonLatToXyz_h(cartesian_t &llh, cartesian_t &xyz) {
+CUDA_HOST void gpuEllipsoid::lonLatToXyz_h(cartesian_t &llh, cartesian_t &xyz) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread. This function
      *  is primarily meant to be used as a consistency check in the test suite, but may be used in
@@ -80,16 +80,16 @@ __host__ void gpuEllipsoid::lonLatToXyz_h(cartesian_t &llh, cartesian_t &xyz) {
     cudaFree(xyz_d);
 }
 
-__global__ void xyzToLonLat_d(gpuEllipsoid elp, double *xyz, double *llh) {
+CUDA_GLOBAL void xyzToLonLat_d(gpuEllipsoid elp, const double *xyz, double *llh) {
     /*
-     * GPU-side helper kernel for xyzToLatLon_h to use as a consistency check. Note that elp, xyz,
+     * GPU-side helper kernel for xyzToLonLat_h to use as a consistency check. Note that elp, xyz,
      * and llh are GPU-side memory constructs.
      */
     elp.xyzToLonLat(xyz, llh);
 }
 
 
-__host__ void gpuEllipsoid::xyzToLonLat_h(cartesian_t &xyz, cartesian_t &llh) {
+CUDA_HOST void gpuEllipsoid::xyzToLonLat_h(cartesian_t &xyz, cartesian_t &llh) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread. This function
      *  is primarily meant to be used as a consistency check in the test suite, but may be used in
@@ -104,7 +104,7 @@ __host__ void gpuEllipsoid::xyzToLonLat_h(cartesian_t &xyz, cartesian_t &llh) {
      cudaMalloc((double**)&xyz_d, 3*sizeof(double));
      cudaMalloc((double**)&llh_d, 3*sizeof(double));
      cudaMemcpy(xyz_d, xyz.data(), 3*sizeof(double), cudaMemcpyHostToDevice);
-     // Run the xyzToLatLon function on the gpuEllipsoid object on the GPU
+     // Run the xyzToLonLat function on the gpuEllipsoid object on the GPU
      dim3 grid(1), block(1);
      xyzToLonLat_d <<<grid,block>>>(*this, xyz_d, llh_d);
      // Copy the resulting xyz back to the CPU-side vector
