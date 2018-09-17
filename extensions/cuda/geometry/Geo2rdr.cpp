@@ -17,16 +17,8 @@ using isce::product::ImageMode;
 using isce::io::Raster;
 
 
-// Run geo2rdr with no offsets
-void isce::geometry::Geo2rdr::
-geo2rdr(isce::io::Raster & topoRaster,
-        const std::string & outdir) {
-    // Call main geo2rdr with offsets set to zero
-    geo2rdr(topoRaster, outdir, 0.0, 0.0);
-}
-
 // Run geo2rdr - main entrypoint
-void isce::geometry::Geo2rdr::
+void isce::cuda::geometry::Geo2rdr::
 geo2rdr(isce::io::Raster & topoRaster,
         const std::string & outdir,
         double azshift, double rgshift) {
@@ -141,7 +133,7 @@ geo2rdr(isce::io::Raster & topoRaster,
 }
 
 // Print extents and image sizes
-void isce::geometry::Geo2rdr::
+void isce::cuda::geometry::Geo2rdr::
 _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
               double r0, double rngend, double dmrg, size_t demWidth, size_t demLength) {
     info << pyre::journal::newline
@@ -157,7 +149,7 @@ _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
 }
 
 // Check we can interpolate orbit to middle of DEM
-void isce::geometry::Geo2rdr::
+void isce::cuda::geometry::Geo2rdr::
 _checkOrbitInterpolation(double aztime) {
     isce::core::cartesian_t satxyz, satvel;
     Orbit orbit = this->orbit();

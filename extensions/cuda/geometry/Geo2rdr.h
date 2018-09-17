@@ -33,6 +33,9 @@ class isce::cuda::geometry::Geo2rdr : public isce::geometry::Geo2rdr {
                        const isce::core::Metadata & meta) :
             isce::geometry::Geo2rdr(ellps, orbit, doppler, meta) {}
 
+        // Main entrypoint for geo2rdr
+        void geo2rdr(isce::io::Raster &, const std::string &, double, double);
+
     private:
         // Processing parameters
         size_t _linesPerBlock = 1000;

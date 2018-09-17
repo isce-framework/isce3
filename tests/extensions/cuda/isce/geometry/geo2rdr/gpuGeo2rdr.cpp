@@ -51,7 +51,7 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     isce::io::Raster topoRaster("../topo/topo.vrt");
 
     // Run geo2rdr
-    geo.geo2rdr(topoRaster, ".");
+    geo.geo2rdr(topoRaster, ".", 0.0, 0.0);
 
 }
 
