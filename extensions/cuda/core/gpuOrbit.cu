@@ -23,7 +23,7 @@ using std::vector;
 __host__ gpuOrbit::gpuOrbit(const Orbit &orb) : 
     nVectors(orb.nVectors),
     owner(true) {
-    cudaSetDevice(0);
+    //cudaSetDevice(0);
     // Malloc device-side memory (this API is host-side only)
     cudaMalloc((double**)&UTCtime, nVectors*sizeof(double));
     cudaMalloc((double**)&position, 3*nVectors*sizeof(double));
@@ -273,7 +273,7 @@ __host__ int gpuOrbit::interpolateWGS84Orbit_h(double tintp, cartesian_t &opos,
     double *opos_d, *ovel_d;
     int *retcode_d;
     int retcode_h;
-    cudaSetDevice(0);
+    //cudaSetDevice(0);
     cudaMalloc((double**)&opos_d, 3*sizeof(double));
     cudaMalloc((double**)&ovel_d, 3*sizeof(double));
     cudaMalloc((int**)&retcode_d, sizeof(int));
@@ -312,7 +312,7 @@ __host__ int gpuOrbit::interpolateLegendreOrbit_h(double tintp, cartesian_t &opo
     double *opos_d, *ovel_d;
     int *retcode_d;
     int retcode_h;
-    cudaSetDevice(0);
+    //cudaSetDevice(0);
     cudaMalloc((double**)&opos_d, 3*sizeof(double));
     cudaMalloc((double**)&ovel_d, 3*sizeof(double));
     cudaMalloc((int**)&retcode_d, sizeof(int));
@@ -350,7 +350,7 @@ __host__ int gpuOrbit::interpolateSCHOrbit_h(double tintp, cartesian_t &opos,
     double *opos_d, *ovel_d;
     int *retcode_d;
     int retcode_h;
-    cudaSetDevice(0);
+    //cudaSetDevice(0);
     cudaMalloc((double**)&opos_d, 3*sizeof(double));
     cudaMalloc((double**)&ovel_d, 3*sizeof(double));
     cudaMalloc((int**)&retcode_d, sizeof(int));
