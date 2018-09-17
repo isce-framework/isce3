@@ -58,6 +58,7 @@ class isce::geometry::Topo {
         inline double threshold() const { return _threshold; }
         inline int numiter() const { return _numiter; }
         inline int extraiter() const { return _extraiter; }
+        inline int epsgOut() const { return _epsgOut; }
 
         // Check initialization
         inline void checkInitialization(pyre::journal::info_t &) const;
