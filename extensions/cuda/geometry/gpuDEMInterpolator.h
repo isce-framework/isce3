@@ -19,6 +19,9 @@
 // isce::geometry
 #include "isce/geometry/DEMInterpolator.h"
 
+// isce::cuda::core
+#include "isce/cuda/core/gpuProjections.h"
+
 // Declaration
 namespace isce {
     namespace cuda {
@@ -87,17 +90,25 @@ class isce::cuda::geometry::gpuDEMInterpolator {
         /** DEM width. */
         CUDA_HOSTDEV inline size_t width() const { return _width; }
 
+        /** EPSG code. */
+        CUDA_HOSTDEV inline int epsgCode() const { return _epsgcode; }
+
         // Make DEM pointer data public for now
         float * _dem;
+
+        /** Set pointer to ProjectionBase pointer. */
+        CUDA_HOSTDEV inline void proj(isce::cuda::core::ProjectionBase ** inputProj) {
+            _proj = inputProj;
+        }
 
     private:
         // Flag indicating whether we have access to a DEM raster
         bool _haveRaster;
         // Constant value if no raster is provided
         float _refHeight;
-        //// Pointer to a ProjectionBase
-        //int _epsgcode;
-        //isce::core::ProjectionBase * _proj;
+        // Pointer to a ProjectionBase
+        int _epsgcode;
+        isce::cuda::core::ProjectionBase ** _proj;
         //// 2D array for storing DEM subset
         //isce::core::Matrix<float> _dem;
         //float * _dem;

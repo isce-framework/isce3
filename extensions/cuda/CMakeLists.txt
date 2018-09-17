@@ -24,10 +24,6 @@ set_target_properties(${LCUDAISCE} PROPERTIES CUDA_HOST_COMPILATION_CPP ON)
 # Add library dependencies
 target_link_libraries(${LCUDAISCE} ${LISCE})
 
-# Add any extra CUDA dependencies (helper functions)
-#set(CUDA_COMMON ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}/../../../samples/common/inc)
-#include_directories(${LCUDAISCE} PUBLIC ${CUDA_COMMON})
-
 # Install CUDA helper header files
 set(HELPER_HEADERS "")
 foreach(HFILE helper_cuda.h helper_string.h)

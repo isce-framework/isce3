@@ -17,7 +17,7 @@
 #endif
 
 #include <iostream>
-#include <helper_cuda.h>
+#include "isce/cuda/helper_cuda.h"
 
 // isce::geometry
 #include "isce/geometry/TopoLayers.h"

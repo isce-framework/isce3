@@ -6,8 +6,11 @@
 //
 
 #include "gpuDEMInterpolator.h"
-#include <helper_cuda.h>
+#include "../helper_cuda.h"
 
+using isce::cuda::core::ProjectionBase;
+
+// Temporary bilinear interpolation definition until Interpolator class implemented
 __device__
 double
 bilinear(double x, double y, float * z, size_t nx) {
@@ -51,10 +54,10 @@ gpuDEMInterpolator(isce::geometry::DEMInterpolator & demInterp) :
     _length(demInterp.length()), _width(demInterp.width()),
     _xstart(demInterp.xStart()), _ystart(demInterp.yStart()),
     _deltax(demInterp.deltaX()), _deltay(demInterp.deltaY()),
-    _owner(true) {
+    _epsgcode(demInterp.epsgCode()), _owner(true) {
 
     // Set the device
-    cudaSetDevice(0);
+    //cudaSetDevice(0);
 
     // Allocate memory on device for DEM data
     size_t npix = _length * _width;
@@ -75,12 +78,14 @@ gpuDEMInterpolator(isce::cuda::geometry::gpuDEMInterpolator & demInterp) :
     _length(demInterp.length()), _width(demInterp.width()),
     _xstart(demInterp.xStart()), _ystart(demInterp.yStart()),
     _deltax(demInterp.deltaX()), _deltay(demInterp.deltaY()),
-    _dem(demInterp._dem), _owner(false) {}
+    _dem(demInterp._dem), _epsgcode(demInterp.epsgCode()), 
+    _owner(false) {}
 
 /** Destructor. */
 isce::cuda::geometry::gpuDEMInterpolator::
 ~gpuDEMInterpolator() {
-    if (_owner) {
+    // Only owner of DEM memory clears it
+    if (_owner && _dem) {
         checkCudaErrors(cudaFree(_dem));
     }
 }
@@ -90,18 +95,10 @@ __device__
 void
 isce::cuda::geometry::gpuDEMInterpolator::
 midLonLat(double * llh) const {
-
     // Create coordinates for middle X/Y
     double xyz[3] = {midX(), midY(), _refHeight};
-
     // Call projection inverse
-    //static double llh[3];
-    //_proj->inverse(xyz, llh);
-
-    llh[0] = xyz[0]*M_PI/180.0;
-    llh[1] = xyz[1]*M_PI/180.0;
-    llh[2] = xyz[2];
-
+    (*_proj)->inverse(xyz, llh);
 } 
 
 /** @param[in] lon longitude of interpolation point.
@@ -118,15 +115,13 @@ interpolateLonLat(double lon, double lat) const {
         return value;
     }
 
-    //// Pass latitude and longitude through projection
-    //isce::core::cartesian_t xyz;
-    //const isce::core::cartesian_t llh{lon, lat, 0.0};
-    //_proj->forward(llh, xyz);
+    // Pass latitude and longitude through projection
+    double xyz[3];
+    double llh[3] = {lon, lat, 0.0};
+    (*_proj)->forward(llh, xyz);
 
-    //// Interpolate DEM at its native coordinates
-    //value = interpolateXY(xyz[0], xyz[1]);
-
-    value = interpolateXY(lon*180.0/M_PI, lat*180.0/M_PI);
+    // Interpolate DEM at its native coordinates
+    value = interpolateXY(xyz[0], xyz[1]);
 
     // Done
     return value;
@@ -172,12 +167,7 @@ interpolateXY(double x, double y) const {
     //    value = _dem(int(std::round(row)), int(std::round(col)));
     //}
 
-    // TEMP: nearest neighbor only
-    //int i = (int) std::round(row);
-    //int j = (int) std::round(col);
-    //value = _dem[int(std::round(row)) * _width + int(std::round(col))];
-    //value = _dem[j];
-
+    // TEMP: bilinear only
     value = bilinear(col, row, _dem, _width); 
 
     // Done

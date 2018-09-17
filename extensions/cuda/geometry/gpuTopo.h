@@ -26,8 +26,8 @@ namespace isce {
                             const isce::product::ImageMode & mode,
                             isce::geometry::DEMInterpolator & demInterp,
                             isce::geometry::TopoLayers & layers,
-                            size_t lineStart, int lookSide, double threshold, int numiter,
-                            int extraiter);
+                            size_t lineStart, int lookSide, int epsgOut,
+                            double threshold, int numiter, int extraiter);
         }
     }
 }

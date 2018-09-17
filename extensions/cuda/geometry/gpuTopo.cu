@@ -59,6 +59,7 @@ void setOutputTopoLayers(const double * targetLLH,
                          const isce::cuda::core::gpuPixel & pixel,
                          const isce::cuda::core::gpuStateVector & state,
                          const isce::cuda::core::gpuBasis & TCNbasis,
+                         isce::cuda::core::ProjectionBase ** projOutput,
                          const isce::cuda::core::gpuEllipsoid & ellipsoid,
                          const isce::cuda::geometry::gpuDEMInterpolator & demInterp) {
 
@@ -67,13 +68,10 @@ void setOutputTopoLayers(const double * targetLLH,
     const double degrees = 180.0 / M_PI;
 
     // Convert lat/lon values to output coordinate system
-    //double xyzOut[3];
-    //_proj->forward(targetLLH, xyzOut);
-    //const double x = xyzOut[0];
-    //const double y = xyzOut[1];
-
-    const double x = targetLLH[0]*degrees;
-    const double y = targetLLH[1]*degrees;
+    double xyzOut[3];
+    (*projOutput)->forward(targetLLH, xyzOut);
+    const double x = xyzOut[0];
+    const double y = xyzOut[1];
 
     // Set outputs
     layers.x(index, x);
@@ -142,15 +140,20 @@ void runTopoBlock(isce::cuda::core::gpuEllipsoid ellipsoid,
                   isce::cuda::core::gpuPoly2d doppler,
                   isce::cuda::product::gpuImageMode mode,
                   isce::cuda::geometry::gpuDEMInterpolator demInterp,
+                  isce::cuda::core::ProjectionBase ** projInput,
+                  isce::cuda::core::ProjectionBase ** projOutput,
                   isce::cuda::geometry::gpuTopoLayers layers,
                   size_t lineStart, int lookSide, double threshold,
                   int numiter, int extraiter) {
 
     // Get the flattened index
     size_t index_flat = (blockDim.x * blockIdx.x) + threadIdx.x;
+    const size_t NPIXELS = layers.length() * layers.width();
+
+    // Give gpuDEMInterpolator object a pointer to input projection on the device
+    demInterp.proj(projInput);
 
     // Only process if a valid pixel (while trying to avoid thread divergence)
-    const size_t NPIXELS = layers.length() * layers.width();
     if (index_flat < NPIXELS) {
 
         // Unravel the flattened pixel index
@@ -187,9 +190,28 @@ void runTopoBlock(isce::cuda::core::gpuEllipsoid ellipsoid,
 
         // Save data in output arrays
         setOutputTopoLayers(llh, layers, index_flat, lookSide, pixel, state, TCNbasis,
-                            ellipsoid, demInterp);
+                            projOutput, ellipsoid, demInterp);
     }
-        
+}
+
+// Create ProjectionBase pointer on the device (meant to be run by a single thread)
+__global__
+void
+createProjection(isce::cuda::core::ProjectionBase ** projInput, int inputEpsgCode,
+                 isce::cuda::core::ProjectionBase ** projOutput, int outputEpsgCode) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        (*projInput) = isce::cuda::core::createProj(inputEpsgCode);
+        (*projOutput) = isce::cuda::core::createProj(outputEpsgCode);
+    }
+}
+
+// Delete ProjectionBase pointer on the device (meant to be run by a single thread)
+__global__
+void
+deleteProjection(isce::cuda::core::ProjectionBase ** projInput,
+                 isce::cuda::core::ProjectionBase ** projOutput) {
+    delete *projInput;
+    delete *projOutput;
 }
 
 // C++ Host code for launching kernel to run topo on current block
@@ -200,11 +222,11 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
            const isce::product::ImageMode & mode,
            isce::geometry::DEMInterpolator & demInterp,
            isce::geometry::TopoLayers & layers,
-           size_t lineStart, int lookSide, double threshold, int numiter,
-           int extraiter) {
+           size_t lineStart, int lookSide, int epsgOut,
+           double threshold, int numiter, int extraiter) {
 
     // Set the device
-    cudaSetDevice(0);
+    //cudaSetDevice(0);
 
     // Create gpu ISCE objects
     isce::cuda::core::gpuEllipsoid gpu_ellipsoid(ellipsoid);
@@ -213,6 +235,12 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
     isce::cuda::product::gpuImageMode gpu_mode(mode); 
     isce::cuda::geometry::gpuDEMInterpolator gpu_demInterp(demInterp); 
     isce::cuda::geometry::gpuTopoLayers gpu_layers(layers);
+    
+    // Allocate projection pointers on device
+    isce::cuda::core::ProjectionBase **projInput_d, **projOutput_d;
+    checkCudaErrors(cudaMalloc(&projInput_d, sizeof(isce::cuda::core::ProjectionBase **)));
+    checkCudaErrors(cudaMalloc(&projOutput_d, sizeof(isce::cuda::core::ProjectionBase **)));
+    createProjection<<<1, 1>>>(projInput_d, demInterp.epsgCode(), projOutput_d, epsgOut);
 
     // Determine grid layout
     dim3 block(THRD_PER_BLOCK);
@@ -222,14 +250,21 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
 
     // Launch kernel
     runTopoBlock<<<grid, block>>>(gpu_ellipsoid, gpu_orbit, gpu_doppler, gpu_mode,
-                                  gpu_demInterp, gpu_layers, lineStart,
-                                  lookSide, threshold, numiter, extraiter);
+                                  gpu_demInterp, projInput_d, projOutput_d, gpu_layers,
+                                  lineStart, lookSide, threshold, numiter, extraiter);
 
     // Check for any kernel errors
     checkCudaErrors(cudaPeekAtLastError());
 
     // Copy results back to host
     gpu_layers.copyToHost(layers);
+
+    // Delete projection pointer on device
+    deleteProjection<<<1, 1>>>(projInput_d, projOutput_d);
+
+    // Free projection pointer
+    checkCudaErrors(cudaFree(projInput_d));
+    checkCudaErrors(cudaFree(projOutput_d));
 }
 
 // end of file

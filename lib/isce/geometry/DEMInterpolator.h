@@ -72,6 +72,9 @@ class isce::geometry::DEMInterpolator {
         inline size_t width() const { return _dem.width(); }
         inline size_t length() const { return _dem.length(); }
 
+        // EPSG code
+        inline int epsgCode() const { return _epsgcode; }
+
     private:
         // Flag indicating whether we have access to a DEM raster
         bool _haveRaster;

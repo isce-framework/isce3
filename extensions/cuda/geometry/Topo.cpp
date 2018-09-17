@@ -97,10 +97,10 @@ topo(Raster & demRaster,
         TopoLayers layers(blockLength, mode.width());
 
         // Run Topo on the GPU for this block
-        isce::cuda::geometry::runGPUTopo(ellipsoid, orbit, doppler, mode,
-                                         demInterp, layers, lineStart, this->lookSide(),
-                                         this->threshold(), this->numiter(),
-                                         this->extraiter());
+        isce::cuda::geometry::runGPUTopo(
+            ellipsoid, orbit, doppler, mode, demInterp, layers, lineStart, this->lookSide(),
+            _epsgOut, this->threshold(), this->numiter(), this->extraiter()
+        );
         
         // Write out block of data for every product
         xRaster.setBlock(layers.x(), 0, lineStart, mode.width(), blockLength);
