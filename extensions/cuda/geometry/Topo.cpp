@@ -8,12 +8,17 @@
 #include "Topo.h"
 #include "gpuTopo.h"
 
-// pull in some isce::core namespaces
+// pull in some isce namespaces
+using isce::core::Ellipsoid;
+using isce::core::Orbit;
 using isce::core::Poly2d;
+using isce::product::ImageMode;
 using isce::io::Raster;
+using isce::geometry::DEMInterpolator;
+using isce::geometry::TopoLayers;
 
 // Main topo driver
-void isce::geometry::Topo::
+void isce::cuda::geometry::Topo::
 topo(Raster & demRaster,
      const std::string outdir) {
 
@@ -24,11 +29,11 @@ topo(Raster & demRaster,
     // First check that variables have been initialized
     checkInitialization(info); 
 
-    // Cache ISCE objects
-    isce::product::ImageMode mode = this->mode();
-    isce::core::Ellipsoid ellipsoid = this->ellipsoid();
-    isce::core::Orbit orbit = this->orbit();
-    isce::core::Poly2d doppler = this->doppler();
+    // Cache ISCE objects (use public interface of parent isce::geometry::Topo class)
+    ImageMode mode = this->mode();
+    Ellipsoid ellipsoid = this->ellipsoid();
+    Orbit orbit = this->orbit();
+    Poly2d doppler = this->doppler();
 
     { // Topo scope for creating output rasters
 
@@ -79,9 +84,9 @@ topo(Raster & demRaster,
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
-             << _doppler.eval(0, 0) << " "
-             << _doppler.eval(0, (mode.width() / 2) - 1) << " "
-             << _doppler.eval(0, mode.width() - 1) << " "
+             << doppler.eval(0, 0) << " "
+             << doppler.eval(0, (mode.width() / 2) - 1) << " "
+             << doppler.eval(0, mode.width() - 1) << " "
              << pyre::journal::endl;
 
         // Load DEM subset for SLC image block
@@ -99,7 +104,7 @@ topo(Raster & demRaster,
         // Run Topo on the GPU for this block
         isce::cuda::geometry::runGPUTopo(
             ellipsoid, orbit, doppler, mode, demInterp, layers, lineStart, this->lookSide(),
-            _epsgOut, this->threshold(), this->numiter(), this->extraiter()
+            this->epsgOut(), this->threshold(), this->numiter(), this->extraiter()
         );
         
         // Write out block of data for every product
@@ -140,7 +145,7 @@ topo(Raster & demRaster,
     };
     Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
     // Set its EPSG code
-    vrt.setEPSG(_epsgOut);
+    vrt.setEPSG(this->epsgOut());
 
 }
 

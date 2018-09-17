@@ -33,6 +33,12 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
                     const isce::core::Metadata & meta) :
             isce::geometry::Topo(ellps, orbit, doppler, meta) {}
 
+        // Main topo driver
+        void topo(isce::io::Raster &, const std::string);
+
+    private:
+        // Optimization options
+        size_t _linesPerBlock = 1000;
 };
 
 #endif
