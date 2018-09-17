@@ -194,26 +194,6 @@ void runTopoBlock(isce::cuda::core::gpuEllipsoid ellipsoid,
     }
 }
 
-// Create ProjectionBase pointer on the device (meant to be run by a single thread)
-__global__
-void
-createProjection(isce::cuda::core::ProjectionBase ** projInput, int inputEpsgCode,
-                 isce::cuda::core::ProjectionBase ** projOutput, int outputEpsgCode) {
-    if (threadIdx.x == 0 && blockIdx.x == 0) {
-        (*projInput) = isce::cuda::core::createProj(inputEpsgCode);
-        (*projOutput) = isce::cuda::core::createProj(outputEpsgCode);
-    }
-}
-
-// Delete ProjectionBase pointer on the device (meant to be run by a single thread)
-__global__
-void
-deleteProjection(isce::cuda::core::ProjectionBase ** projInput,
-                 isce::cuda::core::ProjectionBase ** projOutput) {
-    delete *projInput;
-    delete *projOutput;
-}
-
 // C++ Host code for launching kernel to run topo on current block
 void isce::cuda::geometry::
 runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
@@ -240,7 +220,8 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
     isce::cuda::core::ProjectionBase **projInput_d, **projOutput_d;
     checkCudaErrors(cudaMalloc(&projInput_d, sizeof(isce::cuda::core::ProjectionBase **)));
     checkCudaErrors(cudaMalloc(&projOutput_d, sizeof(isce::cuda::core::ProjectionBase **)));
-    createProjection<<<1, 1>>>(projInput_d, demInterp.epsgCode(), projOutput_d, epsgOut);
+    createProjection<<<1, 1>>>(projInput_d, demInterp.epsgCode());
+    createProjection<<<1, 1>>>(projOutput_d, epsgOut);
 
     // Determine grid layout
     dim3 block(THRD_PER_BLOCK);
@@ -260,7 +241,8 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
     gpu_layers.copyToHost(layers);
 
     // Delete projection pointer on device
-    deleteProjection<<<1, 1>>>(projInput_d, projOutput_d);
+    deleteProjection<<<1, 1>>>(projInput_d);
+    deleteProjection<<<1, 1>>>(projOutput_d);
 
     // Free projection pointer
     checkCudaErrors(cudaFree(projInput_d));

@@ -10,10 +10,12 @@
 #define CUDA_HOSTDEV __host__ __device__
 #define CUDA_DEV __device__
 #define CUDA_HOST __host__
+#define CUDA_GLOBAL __global__
 #else
 #define CUDA_HOSTDEV
 #define CUDA_DEV
 #define CUDA_HOST
+#define CUDA_GLOBAL
 #endif
 
 #include <cmath>
@@ -98,6 +100,12 @@ namespace geometry {
 } // namespace geometry
 } // namespace cuda
 } // namespace isce
+
+// Create ProjectionBase pointer on the device (meant to be run by a single thread)
+CUDA_GLOBAL void createProjection(isce::cuda::core::ProjectionBase **, int); 
+
+// Delete ProjectionBase pointer on the device (meant to be run by a single thread)
+CUDA_GLOBAL void deleteProjection(isce::cuda::core::ProjectionBase **);
 
 #endif
 

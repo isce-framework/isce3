@@ -18,6 +18,7 @@
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Peg.h>
 #include <isce/core/Pegtrans.h>
+#include <isce/core/Projections.h>
 
 // isce::io
 #include <isce/io/Raster.h>
@@ -60,6 +61,19 @@ class isce::geometry::Geo2rdr {
 
         // Value for null pixels
         const double NULL_VALUE = -1.0e6;
+
+        // Getters for isce objects
+        inline const isce::core::Orbit & orbit() const { return _orbit; }
+        inline const isce::core::Ellipsoid & ellipsoid() const { return _ellipsoid; }
+        inline const isce::core::Poly2d & doppler() const { return _doppler; }
+        inline const isce::core::DateTime & sensingStart() const { return _sensingStart; }
+        inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
+        inline const isce::product::ImageMode & mode() const { return _mode; }
+
+        // Get geo2rdr processing options
+        inline double threshold() const { return _threshold; }
+        inline int numiter() const { return _numiter; }
+        inline isce::core::orbitInterpMethod orbitMethod() const { return _orbitMethod; }
 
     private:
         // Print extents and image info

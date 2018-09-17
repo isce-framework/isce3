@@ -1,29 +1,21 @@
 // -*- C++ -*-
 // -*- coding: utf-8 -*-
 //
-// Author: Bryan V. Riel, Joshua Cohen
+// Author: Bryan V. Riel
 // Copyright 2017-2018
 
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-#include <fstream>
-#include <future>
-#include <valarray>
-#include <algorithm>
-
-// isce::core
-#include <isce/core/Constants.h>
-#include <isce/core/LinAlg.h>
-
-// isce::geometry
-#include "geometry.h"
+#include <chrono>
 #include "Geo2rdr.h"
+#include "gpuGeo2rdr.h"
 
-// pull in some isce::core namespaces
-using isce::io::Raster;
+// pull in some isce namespaces
+using isce::core::Ellipsoid;
+using isce::core::Orbit;
 using isce::core::Poly2d;
-using isce::core::LinAlg;
+using isce::core::DateTime;
+using isce::product::ImageMode;
+using isce::io::Raster;
+
 
 // Run geo2rdr with no offsets
 void isce::geometry::Geo2rdr::
@@ -40,15 +32,22 @@ geo2rdr(isce::io::Raster & topoRaster,
         double azshift, double rgshift) {
 
     // Create reusable pyre::journal channels
-    pyre::journal::warning_t warning("isce.geometry.Geo2rdr");
-    pyre::journal::info_t info("isce.geometry.Geo2rdr");
+    pyre::journal::warning_t warning("isce.cuda.geometry.Geo2rdr");
+    pyre::journal::info_t info("isce.cuda.geometry.Geo2rdr");
 
     // Cache the size of the DEM images
     const size_t demWidth = topoRaster.width();
     const size_t demLength = topoRaster.length();
 
-    // Initialize projection for topo results
-    _projTopo = isce::core::createProj(topoRaster.getEPSG());
+    // Cache EPSG code for topo results
+    const int topoEPSG = topoRaster.getEPSG();
+
+    // Cache ISCE objects (use public interface of parent isce::geometry::Geo2rdr class)
+    ImageMode mode = this->mode();
+    Ellipsoid ellipsoid = this->ellipsoid();
+    Orbit orbit = this->orbit();
+    Poly2d doppler = this->doppler();
+    DateTime sensingStart = this->sensingStart();
  
     // Create output rasters
     Raster rgoffRaster = Raster(outdir + "/range.off", demWidth, demLength, 1,
@@ -56,24 +55,24 @@ geo2rdr(isce::io::Raster & topoRaster,
     Raster azoffRaster = Raster(outdir + "/azimuth.off", demWidth, demLength, 1,
         GDT_Float32, "ISCE");
     
-    // Cache sensing start
-    double t0 = _sensingStart.secondsSinceEpoch(_refEpoch);
+    // Cache sensing start in seconds since reference epoch
+    double t0 = sensingStart.secondsSinceEpoch(this->refEpoch());
     // Adjust for const azimuth shift
-    t0 -= (azshift - 0.5 * (_mode.numberAzimuthLooks() - 1)) / _mode.prf();
+    t0 -= (azshift - 0.5 * (mode.numberAzimuthLooks() - 1)) / mode.prf();
 
     // Cache starting range
-    double r0 = _mode.startingRange();
+    double r0 = mode.startingRange();
     // Adjust for constant range shift
-    r0 -= (rgshift - 0.5 * (_mode.numberRangeLooks() - 1)) * _mode.rangePixelSpacing();
+    r0 -= (rgshift - 0.5 * (mode.numberRangeLooks() - 1)) * mode.rangePixelSpacing();
 
     // Compute azimuth time extents
-    double dtaz = _mode.numberAzimuthLooks() / _mode.prf();
-    const double tend = t0 + ((_mode.length() - 1) * dtaz);
+    double dtaz = mode.numberAzimuthLooks() / mode.prf();
+    const double tend = t0 + ((mode.length() - 1) * dtaz);
     const double tmid = 0.5 * (t0 + tend);
 
     // Compute range extents
-    const double dmrg = _mode.numberRangeLooks() * _mode.rangePixelSpacing();
-    const double rngend = r0 + ((_mode.width() - 1) * dmrg);
+    const double dmrg = mode.numberRangeLooks() * mode.rangePixelSpacing();
+    const double rngend = r0 + ((mode.width() - 1) * dmrg);
 
     // Print out extents
     _printExtents(info, t0, tend, dtaz, r0, rngend, dmrg, demWidth, demLength);
@@ -108,9 +107,9 @@ geo2rdr(isce::io::Raster & topoRaster,
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
-             << _doppler.eval(0, 0) << " "
-             << _doppler.eval(0, (_mode.width() / 2) - 1) << " "
-             << _doppler.eval(0, _mode.width() - 1) << " "
+             << doppler.eval(0, 0) << " "
+             << doppler.eval(0, (mode.width() / 2) - 1) << " "
+             << doppler.eval(0, mode.width() - 1) << " "
              << pyre::journal::endl;
 
         // Valarrays to hold input block from topo rasters
@@ -123,47 +122,11 @@ geo2rdr(isce::io::Raster & topoRaster,
         topoRaster.getBlock(y, 0, lineStart, demWidth, blockLength, 2);
         topoRaster.getBlock(hgt, 0, lineStart, demWidth, blockLength,3);
 
-        // Loop over DEM lines in block
-        for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
-
-            // Global line index
-            const size_t line = lineStart + blockLine;
-
-            // Loop over DEM pixels
-            #pragma omp parallel for reduction(+:converged)
-            for (size_t pixel = 0; pixel < demWidth; ++pixel) {
-
-                // Convert topo XYZ to LLH
-                const size_t index = blockLine * demWidth + pixel;
-                isce::core::cartesian_t xyz{x[index], y[index], hgt[index]};
-                isce::core::cartesian_t llh;
-                _projTopo->inverse(xyz, llh);
-
-                // Perform geo->rdr iterations
-                double aztime, slantRange;
-                int geostat = isce::geometry::geo2rdr(
-                    llh, _ellipsoid, _orbit, _doppler, _mode, aztime, slantRange, _threshold, 
-                    _numiter, 1.0e-8
-                );
-
-                // Check if solution is out of bounds
-                bool isOutside = false;
-                if ((aztime < t0) || (aztime > tend))
-                    isOutside = true;
-                if ((slantRange < r0) || (slantRange > rngend))
-                    isOutside = true;
-                
-                // Save result if valid
-                if (!isOutside) {
-                    rgoff[index] = ((slantRange - r0) / dmrg) - float(pixel);
-                    azoff[index] = ((aztime - t0) / dtaz) - float(line);
-                    converged += geostat;
-                } else {
-                    rgoff[index] = NULL_VALUE;
-                    azoff[index] = NULL_VALUE;
-                }
-            } // end OMP for loop pixels in block
-        } // end for loop lines in block
+        // Process block on GPU
+        isce::cuda::geometry::runGPUGeo2rdr(
+            ellipsoid, orbit, doppler, mode, x, y, hgt, azoff, rgoff, topoEPSG,
+            lineStart, demWidth, t0, r0, this->threshold(), this->numiter()
+        );
 
         // Write block of data
         rgoffRaster.setBlock(rgoff, 0, lineStart, demWidth, blockLength);
@@ -187,8 +150,8 @@ _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
          << "Azimuth line spacing in seconds: " << dtaz << pyre::journal::newline
          << "Near range (m): " << r0 << pyre::journal::newline
          << "Far range (m): " << rngend << pyre::journal::newline
-         << "Radar image length: " << _mode.length() << pyre::journal::newline
-         << "Radar image width: " << _mode.width() << pyre::journal::newline
+         << "Radar image length: " << this->mode().length() << pyre::journal::newline
+         << "Radar image width: " << this->mode().width() << pyre::journal::newline
          << "Geocoded lines: " << demLength << pyre::journal::newline
          << "Geocoded samples: " << demWidth << pyre::journal::newline;
 }
@@ -196,16 +159,17 @@ _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
 // Check we can interpolate orbit to middle of DEM
 void isce::geometry::Geo2rdr::
 _checkOrbitInterpolation(double aztime) {
-    cartesian_t satxyz, satvel;
-    int stat = _orbit.interpolate(aztime, satxyz, satvel, _orbitMethod);
+    isce::core::cartesian_t satxyz, satvel;
+    Orbit orbit = this->orbit();
+    int stat = orbit.interpolate(aztime, satxyz, satvel, this->orbitMethod());
     if (stat != 0) {
-        pyre::journal::error_t error("isce.core.Geo2rdr");
+        pyre::journal::error_t error("isce.cuda.core.Geo2rdr");
         error
             << pyre::journal::at(__HERE__)
             << "Error in Topo::topo - Error getting state vector for bounds computation."
             << pyre::journal::newline
             << " - requested time: " << aztime << pyre::journal::newline
-            << " - bounds: " << _orbit.UTCtime[0] << " -> " << _orbit.UTCtime[_orbit.nVectors-1]
+            << " - bounds: " << orbit.UTCtime[0] << " -> " << orbit.UTCtime[orbit.nVectors-1]
             << pyre::journal::endl;
     }
 }
