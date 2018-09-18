@@ -6,6 +6,7 @@ set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 set(ISCE_CUDA_${PACKAGENAME}_HEADERS
         gpuBasis.h
         gpuEllipsoid.h
+        gpuInterpolator.h
         gpuLinAlg.h
         gpuOrbit.h
         gpuPeg.h
@@ -17,6 +18,7 @@ set(ISCE_CUDA_${PACKAGENAME}_HEADERS
 
 set(LOCAL_SRCS 
         gpuEllipsoid.cu
+        gpuInterpolator.cu
         gpuLinAlg.cu
         gpuOrbit.cu
         gpuPeg.cu
