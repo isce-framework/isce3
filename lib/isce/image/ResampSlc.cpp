@@ -201,10 +201,17 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, const isce::image::Tile<float>
 
     // Compute maximum row index needed from input image
     tile.lastImageRow(0);
+    haveOffsets = false;
     for (int i = std::max(azOffTile.length() - rowBuffer, 0); i < azOffTile.length(); ++i) {
         for (int j = 0; j < outWidth; ++j) {
             // Get azimuth offset for pixel
             const double azOff = azOffTile(i,j);
+            // Skip null values 
+            if (azOff < -5.0e5) {
+                continue;
+            } else {
+                haveOffsets = true;
+            }
             // Calculate corresponding minimum line index of input image
             const int imageLine = static_cast<int>(i + azOff + azOffTile.rowStart() + SINC_HALF);
             // Update maximum row index
@@ -212,7 +219,11 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, const isce::image::Tile<float>
         }
     }
     // Final udpate
-    tile.lastImageRow(std::min(tile.lastImageRow() + 1, inLength));
+    if (haveOffsets) {
+        tile.lastImageRow(std::min(tile.lastImageRow() + 1, inLength));
+    } else {
+        tile.lastImageRow(inLength);
+    }
     
     // Tile will allocate memory for itself
     tile.allocate();
