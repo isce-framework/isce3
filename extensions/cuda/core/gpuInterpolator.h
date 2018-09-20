@@ -61,4 +61,10 @@ class isce::cuda::core::Akima {
 
 */
 
+// Get inline implementation for gpuImageMode
+#define ISCE_CUDA_PRODUCT_GPUIMAGEMODE_ICC
+#ifndef __ISCE_CUDA_CORE_GPUINTERPOLATOR_ICC__
+#include "gpuInterpolator.icc"
+#undef __ISCE_CUDA_CORE_GPUINTERPOLATOR_ICC__
+
 #endif
