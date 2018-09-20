@@ -6,6 +6,7 @@
 //
 
 #include "gpuDEMInterpolator.h"
+//#include "gpuInterpolator.h"
 #include "../helper_cuda.h"
 
 using isce::cuda::core::ProjectionBase;

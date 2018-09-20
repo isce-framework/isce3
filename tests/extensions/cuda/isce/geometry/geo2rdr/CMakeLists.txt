@@ -10,6 +10,7 @@ target_link_libraries(gpuGeo2rdr PUBLIC ${LISCE} ${LCUDAISCE} gtest)
 
 target_include_directories(gpuGeo2rdr PUBLIC
                            ${ISCE_BUILDINCLUDEDIR}
+                           ${CEREAL_SRC_INCLUDEDIR}
                            ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
                            ${GDAL_INCLUDE_DIR}
                            ${PYRE_INCLUDE_DIR})

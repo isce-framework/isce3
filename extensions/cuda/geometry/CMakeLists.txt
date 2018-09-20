@@ -37,6 +37,7 @@ endforeach()
 
 # Add headers of dependencies
 include_directories(${LCUDAISCE} PUBLIC
+                    ${CEREAL_SRC_INCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
                     ${GDAL_INCLUDE_DIR})
