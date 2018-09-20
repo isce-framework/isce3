@@ -20,33 +20,58 @@ namespace isce {
     }
 }
 
-// StateVector definition
+/** Building block data structure for serializing Orbit
+ *
+ * This datastructure is used at the interface of Orbit to XML / HDF5. 
+ * For computation, the information is copied into a linearized vector
+ * of time, position and velocity inside the Orbit Object*/
 class isce::core::StateVector {
 
     public:
-        // Constructors
+        /** Empty constructor*/
         StateVector() {}
       
-        // Get state vector components 
+        /** Return position in m*/
         cartesian_t position() const { return _position; }
+
+        /** Return velocity in m/s*/
         cartesian_t velocity() const { return _velocity; }
+
+        /** Return DateTime */
         DateTime date() const { return _date; }
-        // Set state vector components
+
+        /** Set position
+         *
+         * @param[in] pos ECEF position in m*/
         void position(cartesian_t & p) { _position = p; }
+
+        /** Set velocity
+         *
+         * @param[in] vel ECEF velocity in m/s*/
         void velocity(cartesian_t & v) { _velocity = v; }
+
+        /** Set time tag
+         *
+         * @param[in] dstr Datetime string in ISO-8601*/
         void date(const std::string & dstr) { _date = dstr; }
 
-        // String formatted output for position and velocity
+        /** Serialize position to string*/
         inline std::string positionToString() const;
+
+        /** Serialize velocity to string*/
         inline std::string velocityToString() const;
 
-        // Parse formatted string to save position and velocity
+        /** Parse formatted string to save position and velocity*/
         inline void fromString(const std::string &, const std::string &);
 
     private:
-        // Cartesian types for position and velocity
+        /** ECEF position in m*/
         cartesian_t _position;
+
+        /** ECEF velocity in m/s*/
         cartesian_t _velocity;
+
+        /** Time tag */
         DateTime _date;
 };
 
