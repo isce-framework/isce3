@@ -67,7 +67,7 @@ topo(Raster & demRaster,
         nBlocks += 1;
 
     // Loop over blocks
-    size_t totalconv = 0;
+    unsigned int totalconv = 0;
     for (size_t block = 0; block < nBlocks; ++block) {
 
         // Get block extents
@@ -104,7 +104,8 @@ topo(Raster & demRaster,
         // Run Topo on the GPU for this block
         isce::cuda::geometry::runGPUTopo(
             ellipsoid, orbit, doppler, mode, demInterp, layers, lineStart, this->lookSide(),
-            this->epsgOut(), this->threshold(), this->numiter(), this->extraiter()
+            this->epsgOut(), this->threshold(), this->numiter(), this->extraiter(),
+            totalconv
         );
         
         // Write out block of data for every product

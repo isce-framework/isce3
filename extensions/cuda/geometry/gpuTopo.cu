@@ -144,7 +144,7 @@ void runTopoBlock(isce::cuda::core::gpuEllipsoid ellipsoid,
                   isce::cuda::core::ProjectionBase ** projOutput,
                   isce::cuda::geometry::gpuTopoLayers layers,
                   size_t lineStart, int lookSide, double threshold,
-                  int numiter, int extraiter) {
+                  int numiter, int extraiter, unsigned int * totalconv) {
 
     // Get the flattened index
     size_t index_flat = (blockDim.x * blockIdx.x) + threadIdx.x;
@@ -191,6 +191,9 @@ void runTopoBlock(isce::cuda::core::gpuEllipsoid ellipsoid,
         // Save data in output arrays
         setOutputTopoLayers(llh, layers, index_flat, lookSide, pixel, state, TCNbasis,
                             projOutput, ellipsoid, demInterp);
+
+        // Update convergence count
+        atomicAdd(totalconv, (unsigned int) geostat);
     }
 }
 
@@ -203,7 +206,8 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
            isce::geometry::DEMInterpolator & demInterp,
            isce::geometry::TopoLayers & layers,
            size_t lineStart, int lookSide, int epsgOut,
-           double threshold, int numiter, int extraiter) {
+           double threshold, int numiter, int extraiter,
+           unsigned int & totalconv) {
 
     // Set the device
     //cudaSetDevice(0);
@@ -223,6 +227,12 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
     createProjection<<<1, 1>>>(projInput_d, demInterp.epsgCode());
     createProjection<<<1, 1>>>(projOutput_d, epsgOut);
 
+    // Allocate integer for storing convergence results
+    unsigned int * totalconv_d;
+    checkCudaErrors(cudaMalloc(&totalconv_d, sizeof(unsigned int)));
+    checkCudaErrors(cudaMemcpy(totalconv_d, &totalconv, sizeof(unsigned int),
+                               cudaMemcpyHostToDevice));
+
     // Determine grid layout
     dim3 block(THRD_PER_BLOCK);
     const size_t npixel = layers.length() * layers.width();
@@ -232,19 +242,23 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
     // Launch kernel
     runTopoBlock<<<grid, block>>>(gpu_ellipsoid, gpu_orbit, gpu_doppler, gpu_mode,
                                   gpu_demInterp, projInput_d, projOutput_d, gpu_layers,
-                                  lineStart, lookSide, threshold, numiter, extraiter);
+                                  lineStart, lookSide, threshold, numiter, extraiter,
+                                  totalconv_d);
 
     // Check for any kernel errors
     checkCudaErrors(cudaPeekAtLastError());
 
     // Copy results back to host
     gpu_layers.copyToHost(layers);
+    checkCudaErrors(cudaMemcpy(&totalconv, totalconv_d, sizeof(unsigned int),
+                               cudaMemcpyDeviceToHost));
 
     // Delete projection pointer on device
     deleteProjection<<<1, 1>>>(projInput_d);
     deleteProjection<<<1, 1>>>(projOutput_d);
 
-    // Free projection pointer
+    // Free projection pointer and convergence count
+    checkCudaErrors(cudaFree(totalconv_d));
     checkCudaErrors(cudaFree(projInput_d));
     checkCudaErrors(cudaFree(projOutput_d));
 }

@@ -28,7 +28,8 @@ namespace isce {
                                std::valarray<float> & rgoff,
                                int topoEPSG, size_t lineStart, size_t blockWidth,
                                double t0, double r0,
-                               double threshold, double numiter); 
+                               double threshold, double numiter,
+                               unsigned int & totalconv); 
         }
     }
 }
