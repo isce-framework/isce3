@@ -71,27 +71,6 @@ updateUTCTimes(const DateTime & epoch) {
     refEpoch = epoch;
 }
 
-void isce::core::Orbit::
-getPositionVelocity(double tintp, cartesian_t & pos, cartesian_t & vel) const {
-    /*
-     * Separately-named wrapper for interpolate based on stored basis. Does not check for
-     * interpolate success/fail.
-     * NOTE: May be deprecated soon considering 'basis' member variable is rarely used.
-     */
-
-    // Each contained function has its own error checking for size, so no need to do it here
-    if (basis == WGS84_ORBIT) interpolateWGS84Orbit(tintp, pos, vel);
-    else if (basis == SCH_ORBIT) interpolateSCHOrbit(tintp, pos, vel);
-    else {
-        std::string errstr = "Unrecognized stored Orbit basis in Orbit::getPositionVelocity.\n";
-        errstr += "Expected one of:\n";
-        errstr += "  WGS84_ORBIT (== "+std::to_string(WGS84_ORBIT)+")\n";
-        errstr += "  SCH_ORBIT (== "+std::to_string(SCH_ORBIT)+")\n";
-        errstr += "Encountered stored Orbit basis "+std::to_string(basis);
-        throw std::invalid_argument(errstr);
-    }
-}
-
 int isce::core::Orbit::
 interpolate(double tintp, StateVector & state, orbitInterpMethod intp_type) const {
     /*
@@ -376,7 +355,7 @@ printOrbit() const {
      * Debug print the stored orbit.
      */
 
-    std::cout << "Orbit - Basis: " << basis << ", nVectors: " << nVectors << std::endl;
+    std::cout << "Orbit - nVectors: " << nVectors << std::endl;
     for (int i=0; i<nVectors; i++) {
         std::cout << "  UTC = " << UTCtime[i] << std::endl;
         std::cout << "  Position = [ " << position[3*i] << " , " << position[3*i+1] << " , " <<
@@ -387,7 +366,7 @@ printOrbit() const {
 }
 
 void isce::core::Orbit::
-loadFromHDR(const char *filename, int bs) {
+loadFromHDR(const char *filename) {
     /*
      *  Load Orbit from a saved HDR file using fstreams. This assumes that the Orbit was dumped to
      *  an HDR file using this interface (or a compatible one given the reading scheme below), and
@@ -401,7 +380,6 @@ loadFromHDR(const char *filename, int bs) {
         throw std::runtime_error(errstr);
     }
 
-    basis = bs;
     nVectors = 0;
     std::string line;
     while (std::getline(fs, line)) nVectors++;
