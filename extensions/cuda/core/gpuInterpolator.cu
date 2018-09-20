@@ -20,25 +20,25 @@ __global__ void gpuInterpolator_g(gpuInterpolator<U> interp, double x, double y,
 
 
 template <class U>
-__host__ void isce::cuda::core::gpuInterpolator<U>::interpolate_h(const Matrix<double>& truth, const Matrix<U>& m, double start, double delta, U* z) {
+__host__ void isce::cuda::core::gpuInterpolator<U>::interpolate_h(const Matrix<double>& truth, Matrix<U>& m, double start, double delta, U* z) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread for consistency checking
      */
     double x, y;
-    U *m_unified, *z_d;
+    U *m_d, *z_d;
     size_t nx = m.width();
 
     // allocate  memory
-    cudaMalloc((U**)&m_unified, m.length()*m.width()*sizeof(U));
+    cudaMalloc((U**)&m_d, m.length()*m.width()*sizeof(U));
 
     // initialize memory
-    cudaMemcpy(m_unified, &m.data()[0], m.length()*m.width()*sizeof(U), cudaMemcpyHostToDevice); 
+    cudaMemcpy(m_d, &m.data()[0], m.length()*m.width()*sizeof(U), cudaMemcpyHostToDevice); 
 
     for (size_t i = 0; i < truth.length(); ++i) {
         x = (truth(i,0) - start) / delta;
         y = (truth(i,1) - start) / delta;
-        gpuInterpolator_g<U><<<1, 1>>>(*this, x, y, m_unified, nx, z_d);
-        z[i] = z_d;
+        gpuInterpolator_g<U><<<1, 1>>>(*this, x, y, m_d, nx, z_d);
+        z[i] = *z_d;
     }
     
     // wait for GPU to finish before host access
@@ -48,7 +48,7 @@ __host__ void isce::cuda::core::gpuInterpolator<U>::interpolate_h(const Matrix<d
 
     // free memory
     cudaFree(z_d);
-    cudaFree(m_unified);
+    cudaFree(m_d);
 }
 
 
@@ -83,3 +83,7 @@ __device__ U isce::cuda::core::gpuBilinearInterpolator<U>::interpolate(double x,
     }
 }
 
+template gpuInterpolator<double>::gpuInterpolator();
+template __global__ void gpuInterpolator_g<double>(gpuInterpolator<double> interp, double x, double y, const double *z, size_t nx, double *value);
+template __host__ void gpuInterpolator<double>::interpolate_h(const Matrix<double>& truth, Matrix<double>& m, double start, double delta, double* z);
+template gpuBilinearInterpolator<double>::gpuBilinearInterpolator();
