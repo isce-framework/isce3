@@ -46,12 +46,20 @@ struct isce::core::Orbit {
     std::vector<double> velocity;
     /** Vector of isce::core::StateVector*/
     std::vector<StateVector> stateVectors;
+    /** \brief Reference epoch for the orbit object.
+     *
+     * Defaults to MIN_DATE_TIME. This value is used to reference DateTime tags
+     * to double precision seconds. Ideally should be within a day of time tags*/
+    DateTime refEpoch;
 
     /** Reformat the orbit and convert datetime to seconds since epoch*/
-    void reformatOrbit(const DateTime &);
+    void reformatOrbit(const DateTime &epoch);
+
+
     /** Only convert datetime to seconds since epoch*/
-    void updateUTCTimes(const DateTime &);
-    /** If no epoch provided, use minimum datetime as epoch*/
+    void updateUTCTimes(const DateTime &epoch);
+
+    /** If no epoch provided, use MIN_DATE_TIME as epoch*/
     void reformatOrbit();
 
     /** \brief Constructor number of state vectors
@@ -79,92 +87,35 @@ struct isce::core::Orbit {
     /** Addition operator*/
     inline const Orbit operator+(const Orbit &o) const;
 
-    /** Get state vector by index
-     *
-     * @param[in] ind Index of the state vector to return
-     * @param[out] t Time since the reference epoch in seconds
-     * @param[out] pos Position (m) of the state vector
-     * @param[out] vel Velocity (m/s) of the state vector
-     *
-     * Returns values from linearized vectors and not stateVectors*/
+    /** Get state vector by index*/
     inline void getStateVector(int ind, double &t, cartesian_t &pos, cartesian_t &vel) const;
 
-    /** Set state vector by index
-     *
-     * @param[in] ind Index of the state vector to set
-     * @param[in] t Time since reference epoch in seconds for state vector
-     * @param[in] pos Position (m) of the state vector
-     * @param[in] vel Velocity (m/s) of the state vector
-     *
-     * Sets values in linearized vectors and not stateVectors*/
+    /** Set state vector by index*/
     inline void setStateVector(int ind, double t, const cartesian_t &pos, const cartesian_t &vel);
 
-    /** Adds a state vector to orbit
-     *
-     * @param[in] t Time since reference epoch in seconds for state vector
-     * @param[in] pos Position (m) of the state vector
-     * @param[in] vel Velocity (m/s) of the state vector
-     *
-     * Sets values in linearized vectors and not stateVectors. Index to insert is determined 
-     * using the "t" value. Internally, linearized vectors are sorted by time. */
+    /** Adds a state vector to orbit*/
     inline void addStateVector(double t, const cartesian_t &pos, const cartesian_t &vel);
 
-    /** Interpolate orbit using specified method.
-     *
-     * @param[in] t Time since reference epoch in seconds
-     * @param[out] sv StateVector object
-     * @param[in] method Method to use for interpolation*/
-    int interpolate(double t, StateVector &sv, orbitInterpMethod method) const;
+    /** Interpolate orbit using specified method.*/
+    int interpolate(double tintp, StateVector &sv, orbitInterpMethod method) const;
 
-    /** Interpolate orbit using specified method.
-     *
-     * @param[in] t Time since reference epoch in seconds
-     * @param[out] pos Interpolated position (m)
-     * @param[out] vel Interpolated velocity (m/s)
-     * @param[in] method Method to use for interpolation
-     *
-     * Returns non-zero status on error*/
-    int interpolate(double t, cartesian_t &pos, cartesian_t &vel, orbitInterpMethod method) const;
+    /** Interpolate orbit using specified method. */
+    int interpolate(double tintp, cartesian_t &opos, cartesian_t &ovel, orbitInterpMethod intp_type) const;
 
-    /** Interpolate orbit using Hermite polynomial.
-     *
-     * @param[in] t Time since reference epoch in seconds
-     * @param[out] pos Interpolated position (m)
-     * @param[out] vel Interpolated position (m/s)
-     *
-     * Returns non-zero status on error*/
-    int interpolateWGS84Orbit(double t, cartesian_t &pos, cartesian_t &vel) const;
+    /** Interpolate orbit using Hermite polynomial.*/
+    int interpolateWGS84Orbit(double tintp, cartesian_t &opos, cartesian_t &ovel) const;
 
-    /** Interpolated orbit using Legendre polynomial.
-     *
-     * @param[in] t Time since reference epoch in seconds
-     * @param[out] pos Interpolated position (m)
-     * @param[out] vel Interpolated position (m/s)
-     *
-     * Returns non-zero status on error*/
-    int interpolateLegendreOrbit(double, cartesian_t &,cartesian_t &) const;
+    /** Interpolated orbit using Legendre polynomial.*/
+    int interpolateLegendreOrbit(double tintp, cartesian_t &opos,cartesian_t &ovel) const;
 
-    /** Interpolate orbit using Linear weights.
-     *
-     * @param[in] t Time since reference epoch in seconds
-     * @param[out] pos Interpolated position (m)
-     * @param[out] vel Interpolated velocity (m/s)
-     *
-     * Returns non-zero status on error*/
-    int interpolateSCHOrbit(double t, cartesian_t &pos, cartesian_t &vel) const;
+    /** Interpolate orbit using Linear weights.*/
+    int interpolateSCHOrbit(double tintp, cartesian_t &opos, cartesian_t &ovel) const;
     
-    /** Compute acceleration numerically at given epoch.
-     *
-     * @param[in] t Time since reference epoch in seconds
-     * @param[out] acc Acceleration in m/s^2
-     *
-     * An interval of +/- 0.01 seconds is used for numerical computations*/ 
-    int computeAcceleration(double t, cartesian_t &acc) const;
+    /** Compute acceleration numerically at given epoch.*/
+    int computeAcceleration(double tintp, cartesian_t &acc) const;
 
-    /** Compute Heading (clockwise w.r.t North) in degrees at given epoch
-     *
-     * @param[in] t Time since reference epoch in seconds*/
-    double getENUHeading(double t) const;
+    /** Compute Heading (clockwise w.r.t North) in degrees at given epoch*/
+    double getENUHeading(double aztime) const;
 
     /** Debug print function */
     void printOrbit() const;
@@ -175,11 +126,6 @@ struct isce::core::Orbit {
     /** Utility function to dump orbit to HDR file */
     void dumpToHDR(const char*) const;
 
-    /** \brief Reference epoch for the orbit object.
-     *
-     * Defaults to min DateTime. This value is used to reference DateTime tags
-     * to double precision seconds. Ideally should be within a day of time tags*/
-    DateTime refEpoch;
 };
 
 isce::core::Orbit & isce::core::Orbit::
@@ -211,6 +157,15 @@ operator+(const Orbit &rhs) const {
     return (Orbit(*this) += rhs);
 }
 
+
+
+     
+/** @param[in] ind Index of the state vector to return
+ * @param[out] t Time since the reference epoch in seconds
+ * @param[out] pos Position (m) of the state vector
+ * @param[out] vel Velocity (m/s) of the state vector
+ *
+ * Returns values from linearized vectors and not stateVectors*/
 void isce::core::Orbit::
 getStateVector(int idx, double &t, cartesian_t &pos, cartesian_t &vel) const {
     if ((idx < 0) || (idx >= nVectors)) {
@@ -226,6 +181,12 @@ getStateVector(int idx, double &t, cartesian_t &pos, cartesian_t &vel) const {
     }
 }
 
+/** @param[in] ind Index of the state vector to set
+ * @param[in] t Time since reference epoch in seconds for state vector
+ * @param[in] pos Position (m) of the state vector
+ * @param[in] vel Velocity (m/s) of the state vector
+ *
+ * Sets values in linearized vectors and not stateVectors*/
 void isce::core::Orbit::
 setStateVector(int idx, double t, const cartesian_t & pos, const cartesian_t & vel) {
     if ((idx < 0) || (idx >= nVectors)) {
@@ -242,6 +203,13 @@ setStateVector(int idx, double t, const cartesian_t & pos, const cartesian_t & v
     }
 }
 
+
+/** @param[in] t Time since reference epoch in seconds for state vector
+ * @param[in] pos Position (m) of the state vector
+ * @param[in] vel Velocity (m/s) of the state vector
+ *
+ * Sets values in linearized vectors and not stateVectors. Index to insert is determined 
+ * using the "t" value. Internally, linearized vectors are sorted by time. */
 void isce::core::Orbit::
 addStateVector(double t, const cartesian_t & pos, const cartesian_t & vel) {
     int vec_idx = 0;
