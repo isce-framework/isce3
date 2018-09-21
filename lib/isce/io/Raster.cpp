@@ -15,7 +15,11 @@
     
 
 
-// Construct a Raster object referring to existing file
+/** 
+ * @param[in] fname Existing filename
+ * @param[in] access GDAL access mode
+ *
+ * Files are opened with GDALOpenShared*/
 isce::io::Raster::Raster(const std::string &fname,   // filename
 			   GDALAccess access) {        // GA_ReadOnly or GA_Update
 
@@ -25,19 +29,31 @@ isce::io::Raster::Raster(const std::string &fname,   // filename
 
 
 
-// Construct a Raster object referring to existing file
+/**
+ * @param[in] fname Existing filename to be opened in ReadOnly mode*/
 isce::io::Raster::Raster(const std::string &fname) :
   isce::io::Raster(fname, GA_ReadOnly) {}
 
 
-// Construct a Raster object given an open GDAL Dataset
+/**
+ * @param[in] inputDataset Pointer to an existing dataset*/
 isce::io::Raster::Raster(GDALDataset * inputDataset) {
   GDALAllRegister();
   dataset(inputDataset);
 } 
 
 
-// Construct a Raster object referring to new file
+/**
+ * @param[in] fname Filename to create
+ * @param[in] width Width of raster image
+ * @param[in] length Length of raster image
+ * @param[in] numBands Number of bands in raster image
+ * @param[in] dtype GDALDataType associated with dataset
+ * @param[in] driverName GDAL Driver to use
+ *
+ * In general, GDAL is used to create dataset. When VRT driver is used, the 
+ * dataset is interpreted in a special manner - it is assumed that the user 
+ * expects a flat binary file with a VRT pointing to the data using VRTRawRasterBand*/
 isce::io::Raster::Raster(const std::string &fname,          // filename 
 			   size_t width,                      // number of columns
 			   size_t length,                     // number of lines
@@ -64,37 +80,57 @@ isce::io::Raster::Raster(const std::string &fname,          // filename
 
 
 
-// Construct a Raster object referring to new file assuming default GDAL driver.
+/** 
+ * @param[in] fname File name to create
+ * @param[in] width Width of raster image
+ * @param[in] length Length of raster image
+ * @param[in] numBands Number of bands in raster image
+ * @param[in] dtype GDAL Datatype associated with dataset*/
 isce::io::Raster::Raster(const std::string &fname, size_t width, size_t length, size_t numBands, GDALDataType dtype) :
   isce::io::Raster(fname, width, length, numBands, dtype, isce::io::defaultGDALDriver) {}
 
 
 
-// Construct a Raster object referring to new file assuming default GDAL driver and dataype.
+/**
+ * @param[in] fname File name to create
+ * @param[in] width Width of raster image
+ * @param[in] length Length of raster image
+ * @param[in] numBands Number of bands in raster image*/
 isce::io::Raster::Raster(const std::string &fname, size_t width, size_t length, size_t numBands) :
   isce::io::Raster(fname, width, length, numBands, isce::io::defaultGDALDataType) {}
 
 
 
-// Construct a Raster object referring to new file assuming default GDAL driver and band.
+/**
+ * @param[in] fname File name to create
+ * @param[in] width Width of raster image
+ * @param[in] length Length of raster image
+ * @param[in] dtype GDALDataType associated with dataset*/
 isce::io::Raster::Raster(const std::string &fname, size_t width, size_t length, GDALDataType dtype) :
   isce::io::Raster(fname, width, length, 1, dtype, isce::io::defaultGDALDriver) {}
 
 
-
-// Construct a Raster object referring to new file assuming default GDAL driver, dataype and band.
+/** 
+ * @param[in] fname File name to create
+ * @param[in] width Width of raster image
+ * @param[in] length Length of raster image*/
 isce::io::Raster::Raster(const std::string &fname, size_t width, size_t length) :
   isce::io::Raster(fname, width, length, 1) {}
 
 
 
-// Construct a Raster object referring to new file assuming default GDAL driver, dataype and band.
+/**
+ * @param[in] fname File name to create
+ * @param[in] rast Reference raster object*/
 isce::io::Raster::Raster(const std::string &fname, const Raster &rast) :
   isce::io::Raster(fname, rast.width(), rast.length(), rast.numBands(), rast.dtype()) {}
 
 
 
-// Copy constructor. It increments GDAL's reference counter after weak-copying the pointer
+/** 
+ * @param[in] rast Source raster.
+ *
+ * It increments GDAL's reference counter after weak-copying the pointer */
 isce::io::Raster::Raster(const Raster &rast) {
   dataset( rast._dataset );
   dataset()->Reference();
@@ -102,8 +138,9 @@ isce::io::Raster::Raster(const Raster &rast) {
 
 
 
-// Construct a Raster object referring to a VRT dataset with multiple bands from a vector
-// of Raster objects. Input rasters with multiple bands are unfolded within the output raster
+/** 
+ * @param[in] fname Output VRT filename to create
+ * @param[in] rastVec std::vector of Raster objects*/
 isce::io::Raster::Raster(const std::string& fname, const std::vector<Raster>& rastVec) {  
   GDALAllRegister();
   GDALDriver * outputDriver = GetGDALDriverManager()->GetDriverByName("VRT");
@@ -118,9 +155,9 @@ isce::io::Raster::Raster(const std::string& fname, const std::vector<Raster>& ra
     addRasterToVRT( r );
 }
 
-
-//Auto-identify EPSG code for input raster file
-//We will delegation auto-discovery to GDAL
+/** Uses GDAL's inbuilt OSRFindMatches to determine the EPSG code
+ * from the WKT representation of the projection system. This is 
+ * designed to work with GDAL 2.3+*/
 int isce::io::Raster::getEPSG()
 {
     int epsgcode = -9999;
@@ -240,7 +277,11 @@ int isce::io::Raster::getEPSG()
     return epsgcode; 
 }
 
-//Set projection system for raster based on EPSG code
+/** 
+ * @param[in] epsgcode EPSG code corresponding to projection system
+ *
+ * GDAL relies on GDAL_DATA environment variable to interpret these codes.
+ * Make sure that these are set. */
 int isce::io::Raster::setEPSG(int epsgcode)
 {
     int status = 1;
