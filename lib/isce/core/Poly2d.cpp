@@ -7,6 +7,9 @@
 #include "Constants.h"
 #include "Poly2d.h"
 
+/** 
+ * @param[in] azi azimuth or y value
+ * @param[in] rng range or x value*/
 double isce::core::Poly2d::
 eval(double azi, double rng) const {
 

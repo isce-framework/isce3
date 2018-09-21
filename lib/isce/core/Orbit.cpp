@@ -126,7 +126,7 @@ interpolate(double tintp, cartesian_t & opos, cartesian_t & ovel,
  * @param[out] opos Interpolated position (m)
  * @param[out] ovel Interpolated position (m/s)
  *
- * Returns non-zero status on error*/
+ * Returns non-zero status on error. This method is similar to \cite sandwell2008accuracy*/
 int isce::core::Orbit::
 interpolateWGS84Orbit(double tintp, cartesian_t & opos, cartesian_t & ovel) const {
     /*
@@ -234,7 +234,7 @@ orbitHermite(const std::vector<cartesian_t> &x, const std::vector<cartesian_t> &
  * @param[out] opos Interpolated position (m)
  * @param[out] ovel Interpolated position (m/s)
  *
- * Returns non-zero status on error*/
+ * Returns non-zero status on error. This method is very similar to \cite getorbdelft*/
 int isce::core::Orbit::
 interpolateLegendreOrbit(double tintp, cartesian_t & opos, cartesian_t & ovel) const {
     /*
