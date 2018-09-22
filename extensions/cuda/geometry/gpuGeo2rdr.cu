@@ -26,7 +26,8 @@ void runGeo2rdrBlock(isce::cuda::core::gpuEllipsoid ellps,
                      float * azoff, float * rgoff,
                      isce::cuda::core::ProjectionBase ** projTopo,
                      size_t lineStart, size_t blockLength, size_t blockWidth,
-                     double t0, double r0, double threshold, int numiter) {
+                     double t0, double r0, double threshold, int numiter,
+                     unsigned int * totalconv) {
 
     // Get the flattened index
     size_t index_flat = blockDim.x * blockIdx.x + threadIdx.x;
@@ -75,6 +76,9 @@ void runGeo2rdrBlock(isce::cuda::core::gpuEllipsoid ellps,
             rgoff[index_flat] = NULL_VALUE;
             azoff[index_flat] = NULL_VALUE;
         }
+
+        // Update convergence count
+        atomicAdd(totalconv, (unsigned int) geostat);
     }
 }
 
@@ -90,7 +94,8 @@ runGPUGeo2rdr(const isce::core::Ellipsoid & ellipsoid,
               std::valarray<float> & azoff,
               std::valarray<float> & rgoff,
               int topoEPSG, size_t lineStart, size_t blockWidth,
-              double t0, double r0, double threshold, double numiter) {
+              double t0, double r0, double threshold, double numiter,
+              unsigned int & totalconv) {
 
     // Create gpu ISCE objects
     isce::cuda::core::gpuEllipsoid gpu_ellipsoid(ellipsoid);
@@ -119,6 +124,12 @@ runGPUGeo2rdr(const isce::core::Ellipsoid & ellipsoid,
     checkCudaErrors(cudaMalloc(&proj_d, sizeof(isce::cuda::core::ProjectionBase **)));
     createProjection<<<1, 1>>>(proj_d, topoEPSG);
 
+    // Allocate integer for storing convergence results
+    unsigned int * totalconv_d;
+    checkCudaErrors(cudaMalloc(&totalconv_d, sizeof(unsigned int)));
+    checkCudaErrors(cudaMemcpy(totalconv_d, &totalconv, sizeof(unsigned int),
+                               cudaMemcpyHostToDevice));
+
     // Determine grid layout
     dim3 block(THRD_PER_BLOCK);
     const size_t npixel = x.size();
@@ -129,7 +140,8 @@ runGPUGeo2rdr(const isce::core::Ellipsoid & ellipsoid,
     const size_t blockLength = x.size() / blockWidth;
     runGeo2rdrBlock<<<grid, block>>>(gpu_ellipsoid, gpu_orbit, gpu_doppler, gpu_mode,
                                      x_d, y_d, hgt_d, azoff_d, rgoff_d, proj_d, lineStart,
-                                     blockLength, blockWidth, t0, r0, threshold, numiter);
+                                     blockLength, blockWidth, t0, r0, threshold, numiter,
+                                     totalconv_d);
 
     // Check for any kernel errors
     checkCudaErrors(cudaPeekAtLastError());
@@ -137,6 +149,8 @@ runGPUGeo2rdr(const isce::core::Ellipsoid & ellipsoid,
     // Copy geo2rdr results from device to host
     checkCudaErrors(cudaMemcpy(&azoff[0], azoff_d, nbytes_float, cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaMemcpy(&rgoff[0], rgoff_d, nbytes_float, cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(&totalconv, totalconv_d, sizeof(unsigned int),
+                               cudaMemcpyDeviceToHost));
 
     // Delete projection pointer on device
     deleteProjection<<<1, 1>>>(proj_d);
@@ -148,6 +162,7 @@ runGPUGeo2rdr(const isce::core::Ellipsoid & ellipsoid,
     checkCudaErrors(cudaFree(azoff_d));
     checkCudaErrors(cudaFree(rgoff_d));
     checkCudaErrors(cudaFree(proj_d));
+    checkCudaErrors(cudaFree(totalconv_d));
 }
 
 // end of file

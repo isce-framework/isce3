@@ -27,7 +27,8 @@ namespace isce {
                             isce::geometry::DEMInterpolator & demInterp,
                             isce::geometry::TopoLayers & layers,
                             size_t lineStart, int lookSide, int epsgOut,
-                            double threshold, int numiter, int extraiter);
+                            double threshold, int numiter, int extraiter,
+                            unsigned int & totalconv);
         }
     }
 }

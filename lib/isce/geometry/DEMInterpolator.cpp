@@ -101,13 +101,12 @@ loadDEM(isce::io::Raster & demRaster,
 void isce::geometry::DEMInterpolator::
 declare() const {
     pyre::journal::info_t info("isce.core.DEMInterpolator");
-    info << pyre::journal::newline
-         << "Actual DEM bounds used:" << pyre::journal::newline
+    info << "Actual DEM bounds used:" << pyre::journal::newline
          << "Top Left: " << _xstart << " " << _ystart << pyre::journal::newline
          << "Bottom Right: " << _xstart + _deltax * (_dem.width() - 1) << " "
          << _ystart + _deltay * (_dem.length() - 1) << " " << pyre::journal::newline
          << "Spacing: " << _deltax << " " << _deltay << pyre::journal::newline
-         << "Dimensions: " << _dem.width() << " " << _dem.length() << pyre::journal::newline;
+         << "Dimensions: " << _dem.width() << " " << _dem.length() << pyre::journal::endl;
 }
 
 // Compute maximum DEM height

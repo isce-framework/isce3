@@ -81,7 +81,7 @@ geo2rdr(isce::io::Raster & topoRaster,
         nBlocks += 1;
 
     // Loop over blocks
-    size_t converged = 0;
+    unsigned int totalconv = 0;
     for (size_t block = 0; block < nBlocks; ++block) {
 
         // Get block extents
@@ -117,7 +117,7 @@ geo2rdr(isce::io::Raster & topoRaster,
         // Process block on GPU
         isce::cuda::geometry::runGPUGeo2rdr(
             ellipsoid, orbit, doppler, mode, x, y, hgt, azoff, rgoff, topoEPSG,
-            lineStart, demWidth, t0, r0, this->threshold(), this->numiter()
+            lineStart, demWidth, t0, r0, this->threshold(), this->numiter(), totalconv
         );
 
         // Write block of data
@@ -127,7 +127,7 @@ geo2rdr(isce::io::Raster & topoRaster,
     } // end for loop blocks in DEM image
             
     // Print out convergence statistics
-    info << "Total convergence: " << converged << " out of "
+    info << "Total convergence: " << totalconv << " out of "
          << (demWidth * demLength) << pyre::journal::endl;
 
 }
