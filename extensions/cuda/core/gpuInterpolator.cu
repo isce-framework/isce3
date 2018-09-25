@@ -3,52 +3,82 @@
 // Copyright 2018
 //
 
+#include <iostream>
+#include <stdio.h>
 #include <cuda_runtime.h>
 #include "gpuInterpolator.h"
+#include "../helper_cuda.h"
 
 using isce::cuda::core::gpuInterpolator;
 using isce::cuda::core::gpuBilinearInterpolator;
 
 
 template <class U>
-__global__ void gpuInterpolator_g(gpuInterpolator<U> interp, double x, double y, const U *z, size_t nx, U *value) {
+__device__ void wrapper_d(gpuBilinearInterpolator<U> interp, double x, double y, const U *z, size_t nx, U *value) {
     /*
-     *  GPU kernel to test interpolate() on the device for consistency.
+     *  device side wrapper used to get map interfaces of actual device function to global test function
      */
     *value = interp.interpolate(x, y, z, nx); 
 }
 
 
 template <class U>
-__host__ void isce::cuda::core::gpuInterpolator<U>::interpolate_h(const Matrix<double>& truth, Matrix<U>& m, double start, double delta, U* z) {
+__global__ void gpuInterpolator_g(gpuBilinearInterpolator<U> interp, double *x, double *y, const U *z, size_t nx, U *value) {
+    /*
+     *  GPU kernel to test interpolate() on the device for consistency.
+     */
+    int i = threadIdx.x;
+    wrapper_d(interp, x[i], y[i], z, nx, &value[i]);
+}
+
+
+template <class U>
+__host__ void isce::cuda::core::gpuBilinearInterpolator<U>::interpolate_h(const Matrix<double>& truth, Matrix<U>& m, double start, double delta, U* h_z) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread for consistency checking
      */
-    double x, y;
-    U *m_d, *z_d;
+
+    // allocate host side memory
+    size_t size_input_pts = truth.length() * sizeof(double);
+    size_t size_output_pts = truth.length() * sizeof(U);
+    double *h_x = (double *)malloc(size_input_pts);
+    double *h_y = (double *)malloc(size_input_pts);
+
+    // assign host side inputs
+    for (size_t i = 0; i < truth.length(); ++i) {
+        h_x[i] = (truth(i,0) - start) / delta;
+        h_y[i] = (truth(i,1) - start) / delta;
+    }
+
     size_t nx = m.width();
 
-    // allocate  memory
-    cudaMalloc((U**)&m_d, m.length()*m.width()*sizeof(U));
+    // allocate devie side memory
+    double *d_x;
+    checkCudaErrors(cudaMalloc((void**)&d_x, size_input_pts));
+    double *d_y;
+    checkCudaErrors(cudaMalloc((void**)&d_y, size_input_pts));
+    U *d_z;
+    checkCudaErrors(cudaMalloc((void**)&d_z, size_output_pts));
+    U *d_m;
+    checkCudaErrors(cudaMalloc((U**)&d_m, m.length()*m.width()*sizeof(U)));
 
-    // initialize memory
-    cudaMemcpy(m_d, &m.data()[0], m.length()*m.width()*sizeof(U), cudaMemcpyHostToDevice); 
+    // copy input data
+    checkCudaErrors(cudaMemcpy(d_x, h_x, size_input_pts, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_y, h_y, size_input_pts, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_m, &m.data()[0], m.length()*m.width()*sizeof(U), cudaMemcpyHostToDevice)); 
 
-    for (size_t i = 0; i < truth.length(); ++i) {
-        x = (truth(i,0) - start) / delta;
-        y = (truth(i,1) - start) / delta;
-        gpuInterpolator_g<U><<<1, 1>>>(*this, x, y, m_d, nx, z_d);
-        z[i] = *z_d;
-    }
+    // launch!
+    int n_threads = truth.length();
+    gpuInterpolator_g<U><<<1, n_threads>>>(*this, d_x, d_y, d_m, nx, d_z);
     
-    // wait for GPU to finish before host access
-    cudaDeviceSynchronize();
-
-    cudaMemcpy(z, z_d, truth.length()*sizeof(U), cudaMemcpyDeviceToHost); 
+    // copy device results to host
+    checkCudaErrors(cudaMemcpy(h_z, d_z, size_output_pts, cudaMemcpyDeviceToHost));
 
     // free memory
-    cudaFree(z_d);
-    cudaFree(m_d);
+    checkCudaErrors(cudaFree(d_x));
+    checkCudaErrors(cudaFree(d_y));
+    checkCudaErrors(cudaFree(d_z));
+    checkCudaErrors(cudaFree(d_m));
 }
 
 
@@ -62,7 +92,6 @@ __device__ U isce::cuda::core::gpuBilinearInterpolator<U>::interpolate(double x,
     U q12 = z[y2*nx + x1];
     U q21 = z[y1*nx + x2];
     U q22 = z[y2*nx + x2];
-
     if ((y1 == y2) && (x1 == x2)) {
         return q11;
     } else if (y1 == y2) {
@@ -84,6 +113,7 @@ __device__ U isce::cuda::core::gpuBilinearInterpolator<U>::interpolate(double x,
 }
 
 template gpuInterpolator<double>::gpuInterpolator();
-template __global__ void gpuInterpolator_g<double>(gpuInterpolator<double> interp, double x, double y, const double *z, size_t nx, double *value);
-template __host__ void gpuInterpolator<double>::interpolate_h(const Matrix<double>& truth, Matrix<double>& m, double start, double delta, double* z);
-template gpuBilinearInterpolator<double>::gpuBilinearInterpolator();
+//template __global__ void gpuInterpolator_g<double>(gpuBilinearInterpolator<double> interp, double x, double y, const double *z, size_t nx, double *value);
+template __global__ void gpuInterpolator_g<double>(gpuBilinearInterpolator<double> interp, double *x, double *y, const double *z, size_t nx, double *value);
+template __host__ void gpuBilinearInterpolator<double>::interpolate_h(const Matrix<double>& truth, Matrix<double>& m, double start, double delta, double* z);
+//template gpuBilinearInterpolator<double>::gpuBilinearInterpolator();

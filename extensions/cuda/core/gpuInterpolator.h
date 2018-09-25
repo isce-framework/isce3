@@ -19,6 +19,7 @@
 #endif
 
 #include "isce/core/Interpolator.h"
+#include <stdio.h>
 
 using isce::core::Matrix;
 
@@ -28,9 +29,7 @@ template <class U>
     class gpuInterpolator {
         public:
             gpuInterpolator(){};
-            //CUDA_DEV virtual U interpolate(double, double, const U*, size_t) = 0;
-            CUDA_DEV virtual U interpolate(double, double, const U*, size_t) {return 0;};
-            CUDA_HOST void interpolate_h(const Matrix<double>&, Matrix<U>&, double, double, U*);
+            CUDA_DEV virtual U interpolate(double, double, const U*, size_t) = 0;
     };
 }}}
 
@@ -42,6 +41,7 @@ class gpuBilinearInterpolator : public isce::cuda::core::gpuInterpolator<U> {
     public:
         gpuBilinearInterpolator(){};
         CUDA_DEV U interpolate(double, double, const U*, size_t);
+        CUDA_HOST void interpolate_h(const Matrix<double>&, Matrix<U>&, double, double, U*);
     };
 }}}
 
