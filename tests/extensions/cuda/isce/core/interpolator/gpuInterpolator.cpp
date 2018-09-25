@@ -79,24 +79,27 @@ struct gpuInterpolatorTest : public ::testing::Test {
 };
 
 // Test bilinear interpolation
-TEST_F(gpuInterpolatorTest, gpuBilinearDouble) {
+TEST_F(gpuInterpolatorTest, BilinearDouble) {
     size_t N_pts = true_values.length();
     double error = 0.0;
-    double *z;
+    std::vector<double> v_z(true_values.length());
+    double *z = v_z.data();
+    
+    // instantiate parent and derived class
     gpuBilinearInterpolator<double> gpu_bilinear;
-    gpuInterpolator<double> * gpu_interpolator = &gpu_bilinear;
-    gpu_interpolator->interpolate_h(true_values, M, start, delta, z);
+
+    // Perform interpolation
+    gpu_bilinear.interpolate_h(true_values, M, start, delta, z);
+
     for (size_t i = 0; i < N_pts; ++i) {
-        // Unpack location to interpolate
+        // Unpack reference value
         const double zref = true_values(i,2);
-        // Perform interpolation
         // Check
         ASSERT_NEAR(z[i], zref, 1.0e-8);
         // Accumulate error
         error += std::pow(z[i] - true_values(i,5), 2);
     }
     ASSERT_TRUE((error / N_pts) < 0.07);
-    free(z);
 }
 
 /*
