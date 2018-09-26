@@ -52,7 +52,7 @@ TEST_F(OrbitTest, OutOfBoundsSCH) {
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t opos = {0., 0., 0.};
     cartesian_t ovel = {4000., -1000., 4500.};
@@ -80,7 +80,7 @@ TEST_F(OrbitTest, OutOfBoundsHermite) {
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t opos = {0., 0., 0.};
     cartesian_t ovel = {4000., -1000., 4500.};
@@ -108,7 +108,7 @@ TEST_F(OrbitTest, OutOfBoundsLegendre) {
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t opos = {0., 0., 0.};
     cartesian_t ovel = {4000., -1000., 4500.};
@@ -138,7 +138,7 @@ TEST_F(OrbitTest, EdgesSCH){
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t opos = {0., 0., 0.};
     cartesian_t ovel = {4000., -1000., 4500.};
@@ -170,7 +170,7 @@ TEST_F(OrbitTest, EdgesHermite){
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t opos = {0., 0., 0.};
     cartesian_t ovel = {4000., -1000., 4500.};
@@ -203,7 +203,7 @@ TEST_F(OrbitTest, EdgesLegendre){
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t opos = {0., 0., 0.};
     cartesian_t ovel = {4000., -1000., 4500.};

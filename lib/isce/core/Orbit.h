@@ -23,74 +23,113 @@ namespace isce {
     }
 }
 
-// Orbit declaration
+/** Data structure to represent ECEF state vectors of imaging platform
+ *
+ *  There are two representations of the orbit information that are currently
+ *  carried by this data structure. A vector of isce::core::StateVector for a 
+ *  serializable representation and vectors of time-stamps, positions and 
+ *  velocities to speed up computations. 
+ *  All Time stamps are assumed to be UTC.
+ *  All positions are in meters and in ECEF coordinates w.r.t WGS84 ellipsoid
+ *  All velocities are in meters/sec and in ECEF coordinates w.r.t WGS84 Ellipsoid */
 struct isce::core::Orbit {
 
-    // Should be deprecated (unused)
-    int basis;
-    // Number of State Vectors
+    /** Number of state vectors */
     int nVectors;
-    // Lineared DateTime of containted StateVectors
+    /** Linearized vector of isce::core::DateTime from contained State Vectors*/
     std::vector<DateTime> epochs;
-    // Linearized UTC time values of contained State Vectors
+    /** Linearized vecor of UTC times corresponding to State Vectors*/
     std::vector<double> UTCtime;
-    // Linearized position values of contained State Vectors
+    /** Linearized position values of contained State Vectors*/
     std::vector<double> position;
-    // Linearized velocity values of contained State Vectors
+    /** Linearized velocity values of contained State Vectors*/
     std::vector<double> velocity;
-    // Vector of StateVectors
+    /** Vector of isce::core::StateVector*/
     std::vector<StateVector> stateVectors;
+    /** \brief Reference epoch for the orbit object.
+     *
+     * Defaults to MIN_DATE_TIME. This value is used to reference DateTime tags
+     * to double precision seconds. Ideally should be within a day of time tags*/
+    DateTime refEpoch;
 
-    // Reformat the orbit and convert datetime to seconds since epoch
-    void reformatOrbit(const DateTime &);
-    // Only convert datetime to seconds since epoch
-    void updateUTCTimes(const DateTime &);
-    // If no epoch provided, use minimum datetime as epoch
+    /** Reformat the orbit and convert datetime to seconds since epoch*/
+    void reformatOrbit(const DateTime &epoch);
+
+
+    /** Only convert datetime to seconds since epoch*/
+    void updateUTCTimes(const DateTime &epoch);
+
+    /** If no epoch provided, use MIN_DATE_TIME as epoch*/
     void reformatOrbit();
 
-    // Constructors
-    Orbit(int bs, int nv) : basis(bs), nVectors(nv), epochs(nv,MIN_DATE_TIME),
-                            UTCtime(nv,0.), position(3*nv,0.), velocity(3*nv,0.) {}
-    Orbit() : Orbit(0,0) {}
-    Orbit(const Orbit &o) : basis(o.basis), nVectors(o.nVectors), epochs(o.epochs),
+    /** \brief Constructor number of state vectors
+     *
+     * @param[in] nv Number of state vectors*/
+    Orbit(int nv) : nVectors(nv), epochs(nv,MIN_DATE_TIME),
+                    UTCtime(nv,0.), position(3*nv,0.), velocity(3*nv,0.) {}
+
+    /** Empty constructor*/
+    Orbit() : Orbit(0) {}
+
+    /** Copy constructor
+     *
+     * @param[in] o isce::core::Orbit object to copy*/
+    Orbit(const Orbit &o) : nVectors(o.nVectors), epochs(o.epochs),
                             UTCtime(o.UTCtime), position(o.position), velocity(o.velocity),
                             stateVectors(o.stateVectors) {}
 
-    // Math operators
-    inline Orbit& operator=(const Orbit&);
-    inline Orbit& operator+=(const Orbit&);
-    inline const Orbit operator+(const Orbit&) const;
+    /** Assignment operator*/
+    inline Orbit& operator=(const Orbit &o);
 
-    // Get state
-    void getPositionVelocity(double, cartesian_t &, cartesian_t &) const;
-    inline void getStateVector(int, double &, cartesian_t &, cartesian_t &) const;
-    // Set state
-    inline void setStateVector(int, double, const cartesian_t &, const cartesian_t &);
-    inline void addStateVector(double, const cartesian_t &, const cartesian_t &);
+    /** Increment operator*/
+    inline Orbit& operator+=(const Orbit &o);
 
-    // Interpolation
-    int interpolate(double, StateVector &, orbitInterpMethod) const;
-    int interpolate(double, cartesian_t &, cartesian_t &, orbitInterpMethod) const;
-    int interpolateWGS84Orbit(double, cartesian_t &, cartesian_t &) const;
-    int interpolateLegendreOrbit(double, cartesian_t &,cartesian_t &) const;
-    int interpolateSCHOrbit(double, cartesian_t &, cartesian_t &) const;
+    /** Addition operator*/
+    inline const Orbit operator+(const Orbit &o) const;
+
+    /** Get state vector by index*/
+    inline void getStateVector(int ind, double &t, cartesian_t &pos, cartesian_t &vel) const;
+
+    /** Set state vector by index*/
+    inline void setStateVector(int ind, double t, const cartesian_t &pos, const cartesian_t &vel);
+
+    /** Adds a state vector to orbit*/
+    inline void addStateVector(double t, const cartesian_t &pos, const cartesian_t &vel);
+
+    /** Interpolate orbit using specified method.*/
+    int interpolate(double tintp, StateVector &sv, orbitInterpMethod method) const;
+
+    /** Interpolate orbit using specified method. */
+    int interpolate(double tintp, cartesian_t &opos, cartesian_t &ovel, orbitInterpMethod intp_type) const;
+
+    /** Interpolate orbit using Hermite polynomial.*/
+    int interpolateWGS84Orbit(double tintp, cartesian_t &opos, cartesian_t &ovel) const;
+
+    /** Interpolated orbit using Legendre polynomial.*/
+    int interpolateLegendreOrbit(double tintp, cartesian_t &opos,cartesian_t &ovel) const;
+
+    /** Interpolate orbit using Linear weights.*/
+    int interpolateSCHOrbit(double tintp, cartesian_t &opos, cartesian_t &ovel) const;
     
-    // Compute properties
-    int computeAcceleration(double, cartesian_t &) const;
-    double getENUHeading(double) const;
+    /** Compute acceleration numerically at given epoch.*/
+    int computeAcceleration(double tintp, cartesian_t &acc) const;
 
-    // I/O
+    /** Compute Heading (clockwise w.r.t North) in degrees at given epoch*/
+    double getENUHeading(double aztime) const;
+
+    /** Debug print function */
     void printOrbit() const;
-    void loadFromHDR(const char*, int);
+
+    /** Utility function to load orbit from HDR file */
+    void loadFromHDR(const char*);
+
+    /** Utility function to dump orbit to HDR file */
     void dumpToHDR(const char*) const;
 
-    // Data members
-    DateTime refEpoch;
 };
 
 isce::core::Orbit & isce::core::Orbit::
 operator=(const Orbit &rhs) {
-    basis = rhs.basis;
     nVectors = rhs.nVectors;
     UTCtime = rhs.UTCtime;
     epochs = rhs.epochs;
@@ -118,6 +157,15 @@ operator+(const Orbit &rhs) const {
     return (Orbit(*this) += rhs);
 }
 
+
+
+     
+/** @param[in] ind Index of the state vector to return
+ * @param[out] t Time since the reference epoch in seconds
+ * @param[out] pos Position (m) of the state vector
+ * @param[out] vel Velocity (m/s) of the state vector
+ *
+ * Returns values from linearized vectors and not stateVectors*/
 void isce::core::Orbit::
 getStateVector(int idx, double &t, cartesian_t &pos, cartesian_t &vel) const {
     if ((idx < 0) || (idx >= nVectors)) {
@@ -133,6 +181,12 @@ getStateVector(int idx, double &t, cartesian_t &pos, cartesian_t &vel) const {
     }
 }
 
+/** @param[in] ind Index of the state vector to set
+ * @param[in] t Time since reference epoch in seconds for state vector
+ * @param[in] pos Position (m) of the state vector
+ * @param[in] vel Velocity (m/s) of the state vector
+ *
+ * Sets values in linearized vectors and not stateVectors*/
 void isce::core::Orbit::
 setStateVector(int idx, double t, const cartesian_t & pos, const cartesian_t & vel) {
     if ((idx < 0) || (idx >= nVectors)) {
@@ -149,6 +203,13 @@ setStateVector(int idx, double t, const cartesian_t & pos, const cartesian_t & v
     }
 }
 
+
+/** @param[in] t Time since reference epoch in seconds for state vector
+ * @param[in] pos Position (m) of the state vector
+ * @param[in] vel Velocity (m/s) of the state vector
+ *
+ * Sets values in linearized vectors and not stateVectors. Index to insert is determined 
+ * using the "t" value. Internally, linearized vectors are sorted by time. */
 void isce::core::Orbit::
 addStateVector(double t, const cartesian_t & pos, const cartesian_t & vel) {
     int vec_idx = 0;

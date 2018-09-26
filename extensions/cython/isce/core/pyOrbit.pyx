@@ -21,7 +21,6 @@ cdef class pyOrbit:
         Always set the number of state vectors or use addStateVector method before calling interpolation methods.
 
     Args:
-        basis (Optional[int]: 0 for SCH, 1 for WGS84
         nVectors (Optional [int]: Number of state vectors
     '''
     cdef Orbit *c_orbit
@@ -33,11 +32,11 @@ cdef class pyOrbit:
                 'legendre': orbitInterpMethod.LEGENDRE_METHOD}
 
 
-    def __cinit__(self, basis=1, nVectors=0):
+    def __cinit__(self, int nVectors=0):
         '''
         Pre-constructor that creates a C++ isce::core::Orbit object and binds it to python instance.
         '''
-        self.c_orbit = new Orbit(basis,nVectors)
+        self.c_orbit = new Orbit(nVectors)
         self.__owner = True
 
     def __dealloc__(self):
@@ -59,23 +58,6 @@ cdef class pyOrbit:
         new_orb.c_orbit = new Orbit(orb)
         new_orb.__owner = True
         return new_orb
-
-    @property
-    def basis(self):
-        '''
-        int: Basis code
-        '''
-        return self.c_orbit.basis
-
-    @basis.setter
-    def basis(self, int code):
-        '''
-        Set the basis code
-
-        Args:
-            a (int) : Value of basis code
-        '''
-        self.c_orbit.basis = code
 
     @property
     def nVectors(self):
@@ -210,7 +192,6 @@ cdef class pyOrbit:
             None
         '''
         try:
-            self.basis = orb.basis
             self.nVectors = orb.nVectors
             self.UTCtime = orb.UTCtime
             self.position = orb.position
@@ -227,28 +208,6 @@ cdef class pyOrbit:
         '''
         self.printOrbit()
 
-    def getPositionVelocity(self, double epoch):
-        '''
-        Interpolate the orbit at given epoch.
-
-        Args:
-            epoch (float): Floating point number representing UTC time
-
-        Returns:
-            tuple:
-                * np.array[3] - Interpolated position at epoch
-                * np.array[3] - Interpolated velocity at epoch
-        '''
-        cdef cartesian_t _pos
-        cdef double[:] _posview = <double[:3]>(&_pos[0])
-
-        cdef cartesian_t _vel
-        cdef double[:] _velview = <double[:3]>(&_vel[0])
-
-        self.c_orbit.getPositionVelocity(epoch,_pos,_vel)
-
-        return (np.asarray(_posview.copy()), np.asarray(_velview.copy()))
-    
     def getStateVector(self, int index):
         '''Return state vector based on index.
 
@@ -558,20 +517,19 @@ cdef class pyOrbit:
         '''
         self.c_orbit.printOrbit()
     
-    def loadFromHDR(self, filename, int basis=1):
+    def loadFromHDR(self, filename):
         '''
         Load Orbit from a text file.
 
         Args:
             filename (str): Filename with state vectors
-            basis (Optional[int]): Basis for state vectors
 
         Returns:
             None
         '''
         cdef bytes fname = pyStringToBytes(filename)
         cdef char *cstring = fname
-        self.c_orbit.loadFromHDR(cstring, basis)
+        self.c_orbit.loadFromHDR(cstring)
     
     def dumpToHDR(self, filename):
         '''

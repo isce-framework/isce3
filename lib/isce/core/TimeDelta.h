@@ -16,27 +16,48 @@ namespace isce {
     }
 }
 
-// TimeDelta declaration
+/** Data structure to store TimeDelta to double precision seconds
+ *
+ * The intent of the class is to assist in translating DateTime tags
+ * to double precision floats w.r.t Reference epoch for numerical
+ * computation and vice-versa*/
 struct isce::core::TimeDelta {
 
-    // Data members
+    /** Integer days */
     int days;
+    /** Integer hours */
     int hours;
+    /** Integer minutes */
     int minutes;
+    /** Integer seconds */
     int seconds;
+    /** Double precision fractional seconds */
     double frac;
 
-    // Constructors
+    /** Empty constructor*/
     TimeDelta();
+
+    /** Constructor with seconds */
     TimeDelta(double ss);
+
+    /** Constructor with hours, minutes and seconds */
     TimeDelta(int hh, int mm, int ss);
+
+    /** Constructor with hours, minutes and seconds */
     TimeDelta(int hh, int mm, double ss);
+
+    /** Constructor with hours, minutes, seconds and fractional seconds */
     TimeDelta(int hh, int mm, int ss, double ff);
+
+    /** Constructor with days, hours, minutes, seconds and fractional seconds*/
     TimeDelta(int days, int hours, int minutes, int seconds, double frac);
+
+    /** Copy constructor*/
     TimeDelta(const TimeDelta& ts);
 
-    // Init function to be used by constructors
+    /** Internal function for use with constructors */
     void _init(int days, int hours, int minutes, int seconds, double frac);
+    /** Internal function*/
     void _normalize();
 
     // Comparison operators
@@ -72,10 +93,13 @@ struct isce::core::TimeDelta {
     TimeDelta operator/(const double& s) const;
     TimeDelta& operator/=(const double& s);
 
-    // Get methods
+    /** Return equivalent double precision days */
     double getTotalDays() const;
+    /** Return equivalent double precision hours */
     double getTotalHours() const;
+    /** Return equivalent double precision minutes */
     double getTotalMinutes() const;
+    /** Return equivalent double precision seconds */
     double getTotalSeconds() const;
 };
 
