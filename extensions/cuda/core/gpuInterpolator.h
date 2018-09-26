@@ -45,6 +45,18 @@ class gpuBilinearInterpolator : public isce::cuda::core::gpuInterpolator<U> {
     };
 }}}
 
+
+// gpuBicubicInterpolator class derived from abstract gpuInterpolator class
+namespace isce{ namespace cuda{ namespace core{
+template <class U>
+class gpuBicubicInterpolator : public isce::cuda::core::gpuInterpolator<U> {
+    public:
+        gpuBicubicInterpolator(){};
+        CUDA_DEV U interpolate(double, double, const U*, size_t);
+        CUDA_HOST void interpolate_h(const Matrix<double>&, Matrix<U>&, double, double, U*);
+    };
+}}}
+
 /*
 // Bicubic class derived from abstract gpuInterpolator class
 template <class U>

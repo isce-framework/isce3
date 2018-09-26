@@ -18,7 +18,8 @@ set(ISCE_CUDA_${PACKAGENAME}_HEADERS
 
 set(LOCAL_SRCS 
         gpuEllipsoid.cu
-        gpuInterpolator.cu
+        gpuBilinearInterpolator.cu
+        gpuBicubicInterpolator.cu
         gpuLinAlg.cu
         gpuOrbit.cu
         gpuPeg.cu

@@ -13,6 +13,9 @@ using isce::cuda::core::gpuInterpolator;
 using isce::cuda::core::gpuBilinearInterpolator;
 
 
+/*
+   each derived class needs it's own wrapper_d, gpuInterpolator_g...
+*/
 template <class U>
 __device__ void wrapper_d(gpuBilinearInterpolator<U> interp, double x, double y, const U *z, size_t nx, U *value) {
     /*
@@ -112,8 +115,10 @@ __device__ U isce::cuda::core::gpuBilinearInterpolator<U>::interpolate(double x,
     }
 }
 
+
+/*
+ each template parameter needs it's own declaration here
+ */
 template gpuInterpolator<double>::gpuInterpolator();
-//template __global__ void gpuInterpolator_g<double>(gpuBilinearInterpolator<double> interp, double x, double y, const double *z, size_t nx, double *value);
 template __global__ void gpuInterpolator_g<double>(gpuBilinearInterpolator<double> interp, double *x, double *y, const double *z, size_t nx, double *value);
 template __host__ void gpuBilinearInterpolator<double>::interpolate_h(const Matrix<double>& truth, Matrix<double>& m, double start, double delta, double* z);
-//template gpuBilinearInterpolator<double>::gpuBilinearInterpolator();
