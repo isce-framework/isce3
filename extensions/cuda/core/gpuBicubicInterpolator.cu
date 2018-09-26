@@ -129,18 +129,18 @@ __device__ U isce::cuda::core::gpuBicubicInterpolator<U>::interpolate(double x, 
         (z[y2*nx + x1+1] - z[y2*nx + x1-1]) / denom
     };
     const U dzdy[4] = {
-        (z[y1+1*nx + x1] - z[y1-1*nx + x1]) / denom,
-        (z[y1+1*nx + x2+1] - z[y1-1*nx + x2]) / denom,
-        (z[y2+1*nx + x2+1] - z[y2-1*nx + x2]) / denom,
-        (z[y2+1*nx + x1+1] - z[y2-1*nx + x1]) / denom
+        (z[(y1+1)*nx + x1] - z[(y1-1)*nx + x1]) / denom,
+        (z[(y1+1)*nx + x2+1] - z[(y1-1)*nx + x2]) / denom,
+        (z[(y2+1)*nx + x2+1] - z[(y2-1)*nx + x2]) / denom,
+        (z[(y2+1)*nx + x1+1] - z[(y2-1)*nx + x1]) / denom
     };
 
     // Cross derivatives
     const U dzdxy[4] = {
-        scale*(z[y1+1*nx + x1+1] - z[y1-1*nx + x1+1] - z[y1+1*nx + x1-1] + z[y1-1*nx + x1-1]),
-        scale*(z[y1+1*nx + x2+1] - z[y1-1*nx + x2+1] - z[y1+1*nx + x2-1] + z[y1-1*nx + x2-1]),
-        scale*(z[y2+1*nx + x2+1] - z[y2-1*nx + x2+1] - z[y2+1*nx + x2-1] + z[y2-1*nx + x2-1]),
-        scale*(z[y2+1*nx + x1+1] - z[y2-1*nx + x1+1] - z[y2+1*nx + x1-1] + z[y2-1*nx + x1-1])
+        scale*(z[(y1+1)*nx + x1+1] - z[(y1-1)*nx + x1+1] - z[(y1+1)*nx + x1-1] + z[(y1-1)*nx + x1-1]),
+        scale*(z[(y1+1)*nx + x2+1] - z[(y1-1)*nx + x2+1] - z[(y1+1)*nx + x2-1] + z[(y1-1)*nx + x2-1]),
+        scale*(z[(y2+1)*nx + x2+1] - z[(y2-1)*nx + x2+1] - z[(y2+1)*nx + x2-1] + z[(y2-1)*nx + x2-1]),
+        scale*(z[(y2+1)*nx + x1+1] - z[(y2-1)*nx + x1+1] - z[(y2+1)*nx + x1-1] + z[(y2-1)*nx + x1-1])
     };
       
     // Compute polynomial coefficients 
@@ -167,8 +167,9 @@ __device__ U isce::cuda::core::gpuBicubicInterpolator<U>::interpolate(double x, 
     const U t = x - x1;
     const U u = y - y1;
     U ret = 0.0;
-    for (int i = 3; i >= 0; i--)
-        ret = t*ret + ((c[i*4 + 3]*u + c[i*4 + 2])*u + c[i*4 + 1])*u + c[i*4 + 0];
+    for (int i = 3; i >= 0; i--) {
+        ret = t*ret + ((c[i*4 + 3]*u + c[i*4 + 2])*u + c[i*4 + 1])*u + c[i*4];
+    }
     return ret;
 }
 

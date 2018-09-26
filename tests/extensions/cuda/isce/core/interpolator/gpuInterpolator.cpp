@@ -15,10 +15,14 @@
 #include "gtest/gtest.h"
 
 #include "isce/core/Constants.h"
+#include "isce/core/Interpolator.h"
 #include "isce/cuda/core/gpuInterpolator.h"
+
+using isce::core::Matrix;
 using isce::core::Matrix;
 using isce::cuda::core::gpuInterpolator;
 using isce::cuda::core::gpuBilinearInterpolator;
+using isce::cuda::core::gpuBicubicInterpolator;
 
 void loadInterpData(Matrix<double> &);
 
@@ -100,6 +104,28 @@ TEST_F(gpuInterpolatorTest, BilinearDouble) {
         error += std::pow(z[i] - true_values(i,5), 2);
     }
     ASSERT_TRUE((error / N_pts) < 0.07);
+}
+
+// Test bicubic interpolation
+TEST_F(gpuInterpolatorTest, BicubicDouble) {
+    size_t N_pts = true_values.length();
+    double error = 0.0;
+    std::vector<double> v_z(true_values.length());
+    double *z = v_z.data();
+    
+    // instantiate parent and derived class
+    gpuBicubicInterpolator<double> gpu_bicubic;
+
+    // Perform interpolation
+    gpu_bicubic.interpolate_h(true_values, M, start, delta, z);
+
+    for (size_t i = 0; i < N_pts; ++i) {
+        // Unpack reference value
+        const double zref = true_values(i,5);
+        // Accumulate error
+        error += std::pow(z[i] - zref, 2);
+    }
+    ASSERT_TRUE((error / N_pts) < 0.058);
 }
 
 /*
