@@ -15,6 +15,7 @@ RECURSE_DIRS = \
 # the ones that are always available
 PACKAGES = \
     raster \
+    IH5 \
 
 # the standard targets
 all:

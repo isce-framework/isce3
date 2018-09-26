@@ -9,6 +9,7 @@
 #include <complex>
 #include <regex>
 #include <type_traits>
+#include <typeindex>
 
 #include "H5Cpp.h"
 
@@ -16,14 +17,27 @@
 
 namespace isce {
   namespace io {
-        
+
+    
+     struct findMeta {
+         std::vector<std::string>  outList;
+         std::string searchStr;
+         std::string searchType;
+         std::string basePath;
+     };
+
+
+
      class IDataSet: public H5::DataSet {
             
         public:
                 
            // Constructors
 
+           /** Empty constructor */
            IDataSet(): H5::DataSet(){};
+
+           /** Constructor */
            IDataSet(H5::DataSet &dset): H5::DataSet(dset){};
 
 
@@ -32,7 +46,7 @@ namespace isce {
            /** Get a list of attributes attached to dataset */
            std::vector<std::string> getAttrs(); 
 
-           /** Get a H5 DataSpace object corresponding to dataset or given attribute */
+           /** Get a HDF5 DataSpace object corresponding to dataset or given attribute */
            H5::DataSpace getDataSpace(const std::string &v="");
 
            /** Get the number of dimension of dataset or given attribute */
@@ -63,7 +77,6 @@ namespace isce {
 
            /** Reading scalar string dataset or attributes */
            void read(std::string &v, const std::string &att=""); 
-
 
 
            /** Reading multi-dimensional attribute in raw pointer */
@@ -110,9 +123,20 @@ namespace isce {
            void read(T *buf, const int * startIn = nullptr, 
 		                     const int * countIn = nullptr, 
                              const int * strideIn = nullptr);
-     
+
+           /** Reading multi-dimensional dataset in raw pointer with std:slice subsetting */
+           template<typename T>
+           void read(T *buf, const std::vector<std::slice> * slicesIn);
+
+           /** Reading multi-dimensional dataset in raw pointer with std:gslice subsetting */
+           template<typename T>
+           void read(T *buf, const std::gslice * gsliceIn);
            
-           /** Reading multi-dimensional dataset in vector */
+
+
+
+
+           /** Reading multi-dimensional dataset in std::vector */
            template<typename T>
            void read(std::vector<T> &buf);
 
@@ -121,6 +145,17 @@ namespace isce {
            void read(std::vector<T> &buf, const std::vector<int>  * startIn, 
 		                                  const std::vector<int>  * countIn, 
                                           const std::vector<int>  * strideIn);
+
+           /** Reading multi-dimensional dataset in vector with std:slice subsetting */
+           template<typename T>
+           void read(std::vector<T> &buf, const std::vector<std::slice> * slicesIn); 
+
+           /** Reading multi-dimensional dataset in vector with std:gslice subsetting */
+           template<typename T>
+           void read(std::vector<T> &buf, const std::gslice * gsliceIn); 
+
+
+
 
 
            /** Reading multi-dimensional dataset in valarray */
@@ -133,12 +168,23 @@ namespace isce {
                                             const std::valarray<int> * countIn, 
                                             const std::valarray<int> * strideIn);
 
+           /** Reading multi-dimensional dataset in valarray with std:slice subsetting */
+           template<typename T>
+           void read(std::valarray<T> &buf, const std::vector<std::slice> * slicesIn); 
+
+           /** Reading multi-dimensional dataset in valarray with std:slice subsetting */
+           template<typename T>
+           void read(std::valarray<T> &buf, const std::gslice * gsliceIn); 
+
 
         private:
 
            H5::DataSpace getReadDataSpace(const int * startIn, 
                                           const int * countIn,
                                           const int * strideIn);
+
+           H5::DataSpace getReadDataSpace(const std::vector<std::slice> * sliceIn);
+           H5::DataSpace getReadDataSpace(const std::gslice * gsliceIn);
 
            H5::DataSpace getReadMemorySpace(hsize_t nbElements);
      };
@@ -147,31 +193,66 @@ namespace isce {
 
 
 
+     class IGroup: public H5::Group {
+
+        public:
+   
+           IGroup(): H5::Group(){};
+	       IGroup(H5::Group &group): H5::Group(group){};
+
+	       std::vector<std::string> getAttrs();
+
+           /** Search function for given name in the group */
+           std::vector<std::string> find(const std::string name, 
+                                         const std::string start = ".", 
+                                         const std::string type = "BOTH", 
+                                         const std::string returnedPath = "FULL"); 
+
+           /** Reading scalar attribute given by name */
+	       template<typename T>
+	       void read(T &v, const std::string &att);
+
+//           /** Reading multi-dimensional attribute given by name */
+//           template<typename T>
+//           void read(std::vector<T> &v, std::string att); 
+
+           /** Reading string attribute given by name  */
+           void read(std::string &v, const std::string &att);
+
+           /** Return the path of the group from the file root */
+           std::string getPathname();
+
+           /** Open a given dataset */ 
+           IDataSet openDataSet(const H5std_string &name);
+
+           /** Open a given group */
+           IGroup openGroup(const H5std_string &name);
+     };
+
+
+
+
      class IH5File: public H5::H5File {
    
          public:
 
-           // Constructors
-           IH5File(const H5std_string &name) : 
-               H5::H5File(name, H5F_ACC_RDONLY),
-               _name(name) {};
+           /** Constructor */
+           IH5File(const H5std_string &name): H5::H5File(name, H5F_ACC_RDONLY){};
    
            void openFile(const H5std_string &name);
 
            /** Open a given dataset */ 
            IDataSet openDataSet(const H5std_string &name);
 
+           /** Open a given group */ 
+           IGroup openGroup(const H5std_string &name);
+
            /** Searching for given name in file */
            std::vector<std::string> find(const std::string name, 
                                          const std::string start = "/", 
-                                         const std::string type = "BOTH");
+                                         const std::string type = "BOTH", 
+                                         const std::string returnedPath = "FULL"); 
 
-           /** Get filename of HDF5 file */
-           inline std::string filename() const { return _name; }
-
-         private:
-           // The filename of the HDF5 file
-           std::string _name;
      };
 
 
