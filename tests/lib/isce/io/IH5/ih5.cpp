@@ -28,7 +28,7 @@ struct IH5Test : public ::testing::Test {
 
    // Constructor
     protected:
-        IH5Test() : file("../../envisat.h5"){
+        IH5Test() : file("../../data/envisat.h5"){
         }
 
 };
