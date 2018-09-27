@@ -22,6 +22,7 @@ EXPORT_LIBS = $(PROJ_DLL)
 EXPORT_PKG_HEADERS = \
     Constants.h \
     IH5.h \
+    IH5.icc \
     Raster.h \
     Raster.icc \
     Serialization.h \

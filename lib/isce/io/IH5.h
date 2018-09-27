@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <typeindex>
 
+#include "../core/Constants.h"
 #include "H5Cpp.h"
 
 //#include <pyre/journal.h>
@@ -73,7 +74,7 @@ namespace isce {
 
            /** Reading scalar (non string) dataset or attributes */
            template<typename T>
-           void read(T &v, const std::string &att=""); 
+           inline void read(T &v, const std::string &att=""); 
 
            /** Reading scalar string dataset or attributes */
            void read(std::string &v, const std::string &att=""); 
@@ -81,15 +82,15 @@ namespace isce {
 
            /** Reading multi-dimensional attribute in raw pointer */
            template<typename T>
-           void read(T *buf, const std::string &att); 
+           inline void read(T *buf, const std::string &att); 
 
            /** Reading multi-dimensional attribute in vector */
            template<typename T>
-           void read(std::vector<T> &buf, const std::string &att); 
+           inline void read(std::vector<T> &buf, const std::string &att); 
 
            /** Reading multi-dimensional attribute in valarray */
            template<typename T>
-           void read(std::valarray<T> &buf, const std::string &att); 
+           inline void read(std::valarray<T> &buf, const std::string &att); 
       
 
 
@@ -120,17 +121,17 @@ namespace isce {
 
            /** Reading multi-dimensional dataset in raw pointer */
            template<typename T>
-           void read(T *buf, const int * startIn = nullptr, 
+           inline void read(T *buf, const int * startIn = nullptr, 
 		                     const int * countIn = nullptr, 
                              const int * strideIn = nullptr);
 
            /** Reading multi-dimensional dataset in raw pointer with std:slice subsetting */
            template<typename T>
-           void read(T *buf, const std::vector<std::slice> * slicesIn);
+           inline void read(T *buf, const std::vector<std::slice> * slicesIn);
 
            /** Reading multi-dimensional dataset in raw pointer with std:gslice subsetting */
            template<typename T>
-           void read(T *buf, const std::gslice * gsliceIn);
+           inline void read(T *buf, const std::gslice * gsliceIn);
            
 
 
@@ -138,21 +139,21 @@ namespace isce {
 
            /** Reading multi-dimensional dataset in std::vector */
            template<typename T>
-           void read(std::vector<T> &buf);
+           inline void read(std::vector<T> &buf);
 
            /** Reading multi-dimensional dataset in vector */
            template<typename T>
-           void read(std::vector<T> &buf, const std::vector<int>  * startIn, 
+           inline void read(std::vector<T> &buf, const std::vector<int>  * startIn, 
 		                                  const std::vector<int>  * countIn, 
                                           const std::vector<int>  * strideIn);
 
            /** Reading multi-dimensional dataset in vector with std:slice subsetting */
            template<typename T>
-           void read(std::vector<T> &buf, const std::vector<std::slice> * slicesIn); 
+           inline void read(std::vector<T> &buf, const std::vector<std::slice> * slicesIn); 
 
            /** Reading multi-dimensional dataset in vector with std:gslice subsetting */
            template<typename T>
-           void read(std::vector<T> &buf, const std::gslice * gsliceIn); 
+           inline void read(std::vector<T> &buf, const std::gslice * gsliceIn); 
 
 
 
@@ -160,21 +161,21 @@ namespace isce {
 
            /** Reading multi-dimensional dataset in valarray */
            template<typename T>
-           void read(std::valarray<T> &buf);
+           inline void read(std::valarray<T> &buf);
 
            /** Reading multi-dimensional dataset in valarray */
            template<typename T>
-           void read(std::valarray<T> &buf, const std::valarray<int> * startIn, 
+           inline void read(std::valarray<T> &buf, const std::valarray<int> * startIn, 
                                             const std::valarray<int> * countIn, 
                                             const std::valarray<int> * strideIn);
 
            /** Reading multi-dimensional dataset in valarray with std:slice subsetting */
            template<typename T>
-           void read(std::valarray<T> &buf, const std::vector<std::slice> * slicesIn); 
+           inline void read(std::valarray<T> &buf, const std::vector<std::slice> * slicesIn); 
 
            /** Reading multi-dimensional dataset in valarray with std:slice subsetting */
            template<typename T>
-           void read(std::valarray<T> &buf, const std::gslice * gsliceIn); 
+           inline void read(std::valarray<T> &buf, const std::gslice * gsliceIn); 
 
 
         private:
@@ -210,7 +211,7 @@ namespace isce {
 
            /** Reading scalar attribute given by name */
 	       template<typename T>
-	       void read(T &v, const std::string &att);
+	       inline void read(T &v, const std::string &att);
 
 //           /** Reading multi-dimensional attribute given by name */
 //           template<typename T>
@@ -237,7 +238,7 @@ namespace isce {
          public:
 
            /** Constructor */
-           IH5File(const H5std_string &name): H5::H5File(name, H5F_ACC_RDONLY){};
+           IH5File(const H5std_string &name) : H5::H5File(name, H5F_ACC_RDONLY) {}
    
            void openFile(const H5std_string &name);
 
@@ -253,10 +254,18 @@ namespace isce {
                                          const std::string type = "BOTH", 
                                          const std::string returnedPath = "FULL"); 
 
+           /** Get filename of HDF5 file. */
+           inline std::string filename() const { return this->getFileName(); }
+
      };
 
 
   }
 }
+
+// Get inline implementations for IH5
+#define ISCE_IO_IH5_ICC
+#include "IH5.icc"
+#undef ISCE_IO_IH5_ICC
 
 #endif
