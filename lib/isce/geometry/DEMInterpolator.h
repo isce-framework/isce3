@@ -32,14 +32,17 @@ class isce::geometry::DEMInterpolator {
 
     public:
         // Constructors
-        DEMInterpolator() : _haveRaster(false), _refHeight(0.0) {}
-        DEMInterpolator(float height) : _haveRaster(false), _refHeight(height) {}
+        DEMInterpolator() : 
+            _haveRaster(false), _refHeight(0.0), _interpMethod(isce::core::BILINEAR_METHOD) {}
+        DEMInterpolator(float height) : 
+            _haveRaster(false), _refHeight(height), _interpMethod(isce::core::BILINEAR_METHOD) {}
+        DEMInterpolator(float height, isce::core::dataInterpMethod method) : 
+            _haveRaster(false), _refHeight(height), _interpMethod(method) {}
 
         // Read in subset of data from a DEM with a supported projection
         void loadDEM(isce::io::Raster &demRaster,
                      double minLon, double maxLon,
                      double minLat, double maxLat,
-                     isce::core::dataInterpMethod,
                      int epsgcode=4326);
         // Print stats
         void declare() const;

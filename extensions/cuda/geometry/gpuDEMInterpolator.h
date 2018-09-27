@@ -10,16 +10,19 @@
 #define CUDA_HOSTDEV __host__ __device__
 #define CUDA_DEV __device__
 #define CUDA_HOST __host__
+#define CUDA_GLOBAL __global__
 #else
 #define CUDA_HOSTDEV
 #define CUDA_DEV
 #define CUDA_HOST
+#define CUDA_GLOBAL
 #endif
 
 // isce::geometry
 #include "isce/geometry/DEMInterpolator.h"
 
 // isce::cuda::core
+#include "isce/cuda/core/gpuInterpolator.h"
 #include "isce/cuda/core/gpuProjections.h"
 
 // Declaration
@@ -36,12 +39,13 @@ class isce::cuda::geometry::gpuDEMInterpolator {
 
     public:
         /** Default constructor .*/
-        CUDA_HOSTDEV inline gpuDEMInterpolator() : _haveRaster(false), _refHeight(0.0),
+        CUDA_HOSTDEV inline gpuDEMInterpolator() : 
+            _haveRaster(false), _refHeight(0.0), _interpMethod(isce::core::BILINEAR_METHOD),
             _xstart(0.0), _ystart(0.0), _deltax(1.0), _deltay(1.0), _owner(false) {}
 
         /** Constructor with a constant height .*/
         CUDA_HOSTDEV inline gpuDEMInterpolator(float height) : 
-            _haveRaster(false), _refHeight(height),
+            _haveRaster(false), _refHeight(height), _interpMethod(isce::core::BILINEAR_METHOD),
             _xstart(0.0), _ystart(0.0), _deltax(1.0), _deltay(1.0), _owner(false) {}
 
         /** Destructor. */
@@ -54,10 +58,10 @@ class isce::cuda::geometry::gpuDEMInterpolator {
         CUDA_HOSTDEV gpuDEMInterpolator(gpuDEMInterpolator &);
 
         /** Interpolate at a given longitude and latitude. */
-        CUDA_DEV double interpolateLonLat(double lon, double lat) const;
+        CUDA_DEV float interpolateLonLat(double lon, double lat) const;
 
         /** Interpolate at native XY coordinates of DEM. */
-        CUDA_DEV double interpolateXY(double x, double y) const;
+        CUDA_DEV float interpolateXY(double x, double y) const;
 
         /** Middle X and Y coordinates. */
         CUDA_DEV inline double midX() const { return _xstart + 0.5*_width*_deltax; }
@@ -93,31 +97,47 @@ class isce::cuda::geometry::gpuDEMInterpolator {
         /** EPSG code. */
         CUDA_HOSTDEV inline int epsgCode() const { return _epsgcode; }
 
+        /** Interpolator method. */
+        CUDA_HOSTDEV inline isce::core::dataInterpMethod interpMethod() const {
+            return _interpMethod;
+        }
+
+        /** Pointer to ProjectionBase pointer. */
+        CUDA_HOSTDEV inline isce::cuda::core::ProjectionBase ** proj() const {
+            return _proj;
+        }
+
+        /** Pointer to gpuInterpolator pointer. */
+        CUDA_HOSTDEV inline isce::cuda::core::gpuInterpolator<float> ** interp() const {
+            return _interp;
+        }
+
+        /** Initialize projection and interpolation objects on device. */
+        CUDA_HOST void initProjInterp();
+
+        /** Finalize/delete projection and interpolation objects on device. */
+        CUDA_HOST void finalizeProjInterp();
+
         // Make DEM pointer data public for now
         float * _dem;
-
-        /** Set pointer to ProjectionBase pointer. */
-        CUDA_HOSTDEV inline void proj(isce::cuda::core::ProjectionBase ** inputProj) {
-            _proj = inputProj;
-        }
 
     private:
         // Flag indicating whether we have access to a DEM raster
         bool _haveRaster;
         // Constant value if no raster is provided
         float _refHeight;
-        // Pointer to a ProjectionBase
+        // Pointers to ProjectionBase
         int _epsgcode;
         isce::cuda::core::ProjectionBase ** _proj;
+        // Pointer to an Interpolator
+        isce::core::dataInterpMethod _interpMethod;
+        isce::cuda::core::gpuInterpolator<float> ** _interp;
         //// 2D array for storing DEM subset
         //isce::core::Matrix<float> _dem;
-        //float * _dem;
         // DEM dimensions
         size_t _length, _width;
         // Starting x/y for DEM subset and spacing
         double _xstart, _ystart, _deltax, _deltay;
-        // Interpolation method
-        //isce::core::dataInterpMethod _interpMethod;
         // Boolean for owning memory
         bool _owner;
 };

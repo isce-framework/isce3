@@ -64,7 +64,7 @@ topo(Raster & demRaster,
     auto timerStart = std::chrono::steady_clock::now();
 
     // Create a DEM interpolator
-    DEMInterpolator demInterp(-500.0);
+    DEMInterpolator demInterp(-500.0, _demMethod);
 
     // Compute number of blocks needed to process image
     size_t nBlocks = _mode.length() / _linesPerBlock;
@@ -325,7 +325,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
     max_lat += MARGIN;
 
     // Extract DEM subset
-    demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat, _demMethod,
+    demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat,
                       demRaster.getEPSG());
     demInterp.declare();
 }

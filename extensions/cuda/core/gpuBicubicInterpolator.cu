@@ -177,6 +177,9 @@ __device__ U isce::cuda::core::gpuBicubicInterpolator<U>::interpolate(double x, 
 /*
  each template parameter needs it's own declaration here
  */
-template gpuInterpolator<double>::gpuInterpolator();
-template __global__ void gpuInterpolator_g<double>(gpuBicubicInterpolator<double> interp, double *x, double *y, const double *z, size_t nx, double *value);
-template __host__ void gpuBicubicInterpolator<double>::interpolate_h(const Matrix<double>& truth, Matrix<double>& m, double start, double delta, double* z);
+template class gpuBicubicInterpolator<double>;
+template class gpuBicubicInterpolator<float>;
+
+template __global__ void
+gpuInterpolator_g<double>(gpuBicubicInterpolator<double> interp, double *x, double *y,
+                          const double *z, size_t nx, double *value);

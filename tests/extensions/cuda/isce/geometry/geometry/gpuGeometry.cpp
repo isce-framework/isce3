@@ -78,7 +78,7 @@ struct GpuGeometryTest : public ::testing::Test {
 TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
 
     // Load DEM subset covering test points
-    DEMInterpolator dem(-500.0);
+    DEMInterpolator dem(-500.0, isce::core::BILINEAR_METHOD);
     loadDEM(dem);
 
     // Loop over uniform grid of test points
@@ -189,8 +189,7 @@ void loadDEM(DEMInterpolator & demInterp) {
     isce::io::Raster demRaster("../../../../../lib/isce/data/srtm_cropped.tif"); 
 
     // Extract DEM subset
-    demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat,
-                      isce::core::BILINEAR_METHOD, demRaster.getEPSG());
+    demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat, demRaster.getEPSG());
 }
 
 // end of file

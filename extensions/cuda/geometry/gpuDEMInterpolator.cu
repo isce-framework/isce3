@@ -11,40 +11,6 @@
 
 using isce::cuda::core::ProjectionBase;
 
-// Temporary bilinear interpolation definition until Interpolator class implemented
-__device__
-double
-bilinear(double x, double y, float * z, size_t nx) {
-
-    int x1 = std::floor(x);
-    int x2 = std::ceil(x);
-    int y1 = std::floor(y);
-    int y2 = std::ceil(y);
-    double q11 = z[y1*nx + x1];
-    double q12 = z[y2*nx + x1];
-    double q21 = z[y1*nx + x2];
-    double q22 = z[y2*nx + x2];
-
-    if ((y1 == y2) && (x1 == x2)) {
-        return q11;
-    } else if (y1 == y2) {
-        return ((x2 - x) / (x2 - x1)) * q11 +
-               ((x - x1) / (x2 - x1)) * q21;
-    } else if (x1 == x2) {
-        return ((y2 - y) / (y2 - y1)) * q11 +
-               ((y - y1) / (y2 - y1)) * q12;
-    } else {
-        return  ((q11 * (x2 - x) * (y2 - y)) /
-                 (x2 - x1) * (y2 - y1)) +
-                ((q21 * (x - x1) * (y2 - y)) /
-                 (x2 - x1) * (y2 - y1)) +
-                ((q12 * (x2 - x) * (y - y1)) /
-                 (x2 - x1) * (y2 - y1)) +
-                ((q22 * (x - x1) * (y - y1)) /
-                 (x2 - x1) * (y2 - y1));
-    }
-}
-
 /** @param[in] demInterp DEMInterpolator object.
   *
   * Copy DEM interpolator data to GPU device. */
@@ -63,7 +29,7 @@ gpuDEMInterpolator(isce::geometry::DEMInterpolator & demInterp) :
     // Allocate memory on device for DEM data
     size_t npix = _length * _width;
     checkCudaErrors(cudaMalloc((float **) &_dem, npix*sizeof(float)));
-
+ 
     // Copy DEM data
     checkCudaErrors(cudaMemcpy(_dem, &demInterp.data()[0], npix*sizeof(float),
                                cudaMemcpyHostToDevice));
@@ -80,15 +46,80 @@ gpuDEMInterpolator(isce::cuda::geometry::gpuDEMInterpolator & demInterp) :
     _xstart(demInterp.xStart()), _ystart(demInterp.yStart()),
     _deltax(demInterp.deltaX()), _deltay(demInterp.deltaY()),
     _dem(demInterp._dem), _epsgcode(demInterp.epsgCode()), 
-    _owner(false) {}
+    _interpMethod(demInterp.interpMethod()), _proj(demInterp.proj()),
+    _interp(demInterp.interp()), _owner(false) {}
 
 /** Destructor. */
 isce::cuda::geometry::gpuDEMInterpolator::
 ~gpuDEMInterpolator() {
-    // Only owner of DEM memory clears it
-    if (_owner && _dem) {
-        checkCudaErrors(cudaFree(_dem));
+    // Only owner of memory clears it
+    if (_owner) {
+        checkCudaErrors(cudaFree(_dem)); 
     }
+}
+
+/** Kernel for initializing projection and interpolation objects. */
+__global__
+void initProjInterpKernel(isce::cuda::core::ProjectionBase ** proj,
+                          isce::cuda::core::gpuInterpolator<float> ** interp,
+                          int epsgCode,
+                          isce::core::dataInterpMethod interpMethod) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        // Create projection
+        (*proj) = isce::cuda::core::createProj(epsgCode);
+
+        // Choose interpolator
+        if (interpMethod == isce::core::BILINEAR_METHOD) {
+            (*interp) = new isce::cuda::core::gpuBilinearInterpolator<float>();
+        } else if (interpMethod == isce::core::BICUBIC_METHOD) {
+            (*interp) = new isce::cuda::core::gpuBicubicInterpolator<float>();
+        } else {
+            (*interp) = new isce::cuda::core::gpuBilinearInterpolator<float>();
+        }
+    }
+}
+
+/** Initialize projection and interpolation objects on device. */
+__host__
+void isce::cuda::geometry::gpuDEMInterpolator::
+initProjInterp() {
+
+    // Allocate projection pointer on device
+    checkCudaErrors(cudaMalloc(&_proj, sizeof(isce::cuda::core::ProjectionBase **)));
+
+    // Allocate interpolator pointer on device
+    checkCudaErrors(cudaMalloc(&_interp, sizeof(isce::cuda::core::gpuInterpolator<float> **)));
+
+    // Call initialization kernel
+    initProjInterpKernel<<<1, 1>>>(_proj, _interp, _epsgcode, _interpMethod);
+
+    // Check for any kernel errors
+    checkCudaErrors(cudaPeekAtLastError());
+}
+
+/** Kernel for deleting projection and interpolation objects on device. */
+__global__
+void finalizeProjInterpKernel(isce::cuda::core::ProjectionBase ** proj,
+                              isce::cuda::core::gpuInterpolator<float> ** interp) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        delete *proj;
+        delete *interp;
+    }
+}
+
+/** Finalize/delete projection and interpolation objects on device. */
+__host__
+void isce::cuda::geometry::gpuDEMInterpolator::
+finalizeProjInterp() {
+    // Call finalization kernel
+    finalizeProjInterpKernel<<<1, 1>>>(_proj, _interp);
+
+    // Check for any kernel errors
+    checkCudaErrors(cudaPeekAtLastError());
+
+    // Free memory for pointers
+    checkCudaErrors(cudaFree(_proj));
+    checkCudaErrors(cudaFree(_interp));
 }
 
 /** @param[out] double* Array of lon-lat-h at middle of DEM. */
@@ -106,12 +137,12 @@ midLonLat(double * llh) const {
   * @param[in] lat latitude of interpolation point.
   * @param[out] value Interpolated DEM height. */
 __device__
-double
+float
 isce::cuda::geometry::gpuDEMInterpolator::
 interpolateLonLat(double lon, double lat) const {
 
     // If we don't have a DEM, just return reference height
-    double value = _refHeight;
+    float value = _refHeight;
     if (!_haveRaster) {
         return value;
     }
@@ -132,12 +163,12 @@ interpolateLonLat(double lon, double lat) const {
   * @param[in] y Y-coordinate of interpolation point.
   * @param[out] value Interpolated DEM height. */
 __device__
-double
+float
 isce::cuda::geometry::gpuDEMInterpolator::
 interpolateXY(double x, double y) const {
 
     // If we don't have a DEM, just return reference height
-    double value = _refHeight;
+    float value = _refHeight;
     if (!_haveRaster) {
         return value;
     }
@@ -155,22 +186,9 @@ interpolateXY(double x, double y) const {
     if (icol < 2 || icol >= int(_width - 1))
         return _refHeight;
 
-    //// Choose correct interpolation routine
-    //if (_interpMethod == isce::core::BILINEAR_METHOD) {
-    //    value = isce::core::Interpolator::bilinear(col, row, _dem);
-    //} else if (_interpMethod == isce::core::BICUBIC_METHOD) {
-    //    value = isce::core::Interpolator::bicubic(col, row, _dem);
-    //} else if (_interpMethod == isce::core::AKIMA_METHOD) {
-    //    value = isce::core::Interpolator::akima(col, row, _dem);
-    //} else if (_interpMethod == isce::core::BIQUINTIC_METHOD) {
-    //    value = isce::core::Interpolator::interp_2d_spline(6, _dem, col, row);
-    //} else if (_interpMethod == isce::core::NEAREST_METHOD) {
-    //    value = _dem(int(std::round(row)), int(std::round(col)));
-    //}
-
-    // TEMP: bilinear only
-    value = bilinear(col, row, _dem, _width); 
-
+    // Delegate DEM interpolation to gpuInterpolator pointer
+    value = (*_interp)->interpolate(col, row, _dem, _width);
+    
     // Done
     return value;
 }

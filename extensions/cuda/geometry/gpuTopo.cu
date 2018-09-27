@@ -140,7 +140,6 @@ void runTopoBlock(isce::cuda::core::gpuEllipsoid ellipsoid,
                   isce::cuda::core::gpuPoly2d doppler,
                   isce::cuda::product::gpuImageMode mode,
                   isce::cuda::geometry::gpuDEMInterpolator demInterp,
-                  isce::cuda::core::ProjectionBase ** projInput,
                   isce::cuda::core::ProjectionBase ** projOutput,
                   isce::cuda::geometry::gpuTopoLayers layers,
                   size_t lineStart, int lookSide, double threshold,
@@ -149,9 +148,6 @@ void runTopoBlock(isce::cuda::core::gpuEllipsoid ellipsoid,
     // Get the flattened index
     size_t index_flat = (blockDim.x * blockIdx.x) + threadIdx.x;
     const size_t NPIXELS = layers.length() * layers.width();
-
-    // Give gpuDEMInterpolator object a pointer to input projection on the device
-    demInterp.proj(projInput);
 
     // Only process if a valid pixel (while trying to avoid thread divergence)
     if (index_flat < NPIXELS) {
@@ -221,11 +217,12 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
     isce::cuda::geometry::gpuTopoLayers gpu_layers(layers);
     
     // Allocate projection pointers on device
-    isce::cuda::core::ProjectionBase **projInput_d, **projOutput_d;
-    checkCudaErrors(cudaMalloc(&projInput_d, sizeof(isce::cuda::core::ProjectionBase **)));
+    isce::cuda::core::ProjectionBase **projOutput_d;
     checkCudaErrors(cudaMalloc(&projOutput_d, sizeof(isce::cuda::core::ProjectionBase **)));
-    createProjection<<<1, 1>>>(projInput_d, demInterp.epsgCode());
     createProjection<<<1, 1>>>(projOutput_d, epsgOut);
+
+    // DEM interpolator initializes its projection and interpolator
+    gpu_demInterp.initProjInterp();
 
     // Allocate integer for storing convergence results
     unsigned int * totalconv_d;
@@ -241,7 +238,7 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
 
     // Launch kernel
     runTopoBlock<<<grid, block>>>(gpu_ellipsoid, gpu_orbit, gpu_doppler, gpu_mode,
-                                  gpu_demInterp, projInput_d, projOutput_d, gpu_layers,
+                                  gpu_demInterp, projOutput_d, gpu_layers,
                                   lineStart, lookSide, threshold, numiter, extraiter,
                                   totalconv_d);
 
@@ -254,12 +251,11 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
                                cudaMemcpyDeviceToHost));
 
     // Delete projection pointer on device
-    deleteProjection<<<1, 1>>>(projInput_d);
+    gpu_demInterp.finalizeProjInterp();
     deleteProjection<<<1, 1>>>(projOutput_d);
 
     // Free projection pointer and convergence count
     checkCudaErrors(cudaFree(totalconv_d));
-    checkCudaErrors(cudaFree(projInput_d));
     checkCudaErrors(cudaFree(projOutput_d));
 }
 

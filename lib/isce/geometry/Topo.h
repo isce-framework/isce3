@@ -59,6 +59,7 @@ class isce::geometry::Topo {
         inline int numiter() const { return _numiter; }
         inline int extraiter() const { return _extraiter; }
         inline int epsgOut() const { return _epsgOut; }
+        inline isce::core::dataInterpMethod demMethod() const { return _demMethod; }
 
         // Check initialization
         inline void checkInitialization(pyre::journal::info_t &) const;

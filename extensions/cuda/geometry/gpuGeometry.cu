@@ -273,13 +273,9 @@ void rdr2geo_d(const isce::cuda::core::gpuPixel pixel,
                const isce::cuda::core::gpuStateVector state,
                const isce::cuda::core::gpuEllipsoid ellipsoid,
                isce::cuda::geometry::gpuDEMInterpolator demInterp,
-               isce::cuda::core::ProjectionBase ** proj,
                double * targetLLH,
                int side, double threshold, int maxIter, int extraIter,
                int *resultcode) {
-
-    // Set projection info for DEM interpolator
-    demInterp.proj(proj);
 
     // Call device function
     *resultcode = isce::cuda::geometry::rdr2geo(
@@ -319,32 +315,29 @@ rdr2geo_h(const isce::core::Pixel & pixel,
     // Copy initial values
     cudaMemcpy(llh_d, llh.data(), 3*sizeof(double), cudaMemcpyHostToDevice);
 
-    // Allocate projection pointer on device
-    isce::cuda::core::ProjectionBase **proj_d;
-    checkCudaErrors(cudaMalloc(&proj_d, sizeof(isce::cuda::core::ProjectionBase **)));
-    createProjection<<<1, 1>>>(proj_d, demInterp.epsgCode());
-
+    // DEM interpolator initializes its projection and interpolator
+    gpu_demInterp.initProjInterp();
+    
     // Run the rdr2geo on the GPU
     dim3 grid(1), block(1);
     rdr2geo_d<<<grid, block>>>(gpu_pixel, gpu_basis, gpu_state, gpu_ellps,
-                               gpu_demInterp, proj_d, llh_d, side, threshold, maxIter,
+                               gpu_demInterp, llh_d, side, threshold, maxIter,
                                extraIter, resultcode_d);
 
     // Check for any kernel errors
     checkCudaErrors(cudaPeekAtLastError());
+
+    // Delete projection pointer on device
+    gpu_demInterp.finalizeProjInterp();
 
     // Copy the resulting llh back to the CPU
     int resultcode;
     checkCudaErrors(cudaMemcpy(llh.data(), llh_d, 3*sizeof(double), cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaMemcpy(&resultcode, resultcode_d, sizeof(int), cudaMemcpyDeviceToHost));
 
-    // Delete projection pointer on device
-    deleteProjection<<<1, 1>>>(proj_d);
-
     // Free memory
     checkCudaErrors(cudaFree(llh_d));
     checkCudaErrors(cudaFree(resultcode_d));
-    checkCudaErrors(cudaFree(proj_d));
 
     // Return result code
     return resultcode;

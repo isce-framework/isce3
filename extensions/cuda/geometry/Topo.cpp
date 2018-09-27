@@ -59,7 +59,7 @@ topo(Raster & demRaster,
     auto timerStart = std::chrono::steady_clock::now();
 
     // Create a DEM interpolator
-    DEMInterpolator demInterp(-500.0);
+    DEMInterpolator demInterp(-500.0, this->demMethod());
 
     // Compute number of blocks needed to process image
     size_t nBlocks = mode.length() / _linesPerBlock;

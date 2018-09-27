@@ -9,9 +9,8 @@
 
 // Load DEM subset into memory
 void isce::geometry::DEMInterpolator::
-loadDEM(isce::io::Raster & demRaster,
-        double minLon, double maxLon, double minLat, double maxLat,
-        isce::core::dataInterpMethod interpMethod, int epsgcode) {
+loadDEM(isce::io::Raster & demRaster, double minLon, double maxLon,
+        double minLat, double maxLat, int epsgcode) {
 
     // Initialize journal
     pyre::journal::warning_t warning("isce.core.Geometry");
@@ -93,8 +92,6 @@ loadDEM(isce::io::Raster & demRaster,
 
     // Indicate we have loaded a valid raster
     _haveRaster = true;
-    // Store interpolation method
-    _interpMethod = interpMethod;
 }
 
 // Load DEM subset into memory
