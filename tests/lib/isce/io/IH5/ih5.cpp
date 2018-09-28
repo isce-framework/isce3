@@ -578,7 +578,6 @@ TEST_F(IH5Test, datasetReadComplexWithValarray) {
 
 
 
-
 //Testing reading 8-bit unsigned integer dataset with raw pointer
 //TODO: Empty fields in dataset at time of writing. Assertion uncertain
 TEST_F(IH5Test, datasetReadU8WithRawPointer) {
@@ -586,12 +585,12 @@ TEST_F(IH5Test, datasetReadU8WithRawPointer) {
     std::string datasetName("/science/image_quality_flags/missinglines");
     isce::io::IDataSet dset = file.openDataSet(datasetName);
 
-    unsigned char * dval = new (std::nothrow) unsigned char[11];
+    std::vector<unsigned char> dval;
     dset.read(dval);
     ASSERT_EQ(dval[0], 0);
 
-    delete [] dval;
     dset.close();
+
 }
 
 
