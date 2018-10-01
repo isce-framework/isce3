@@ -1,0 +1,61 @@
+/*! \page geometry Radar Geometry Handling in ISCE
+
+\tableofcontents
+
+\section geomdefn Imaging Geometry and Definitions
+
+SAR focusing techniques combine information from numerous transmitted pulses to produce a high-resolution two-dimensional backscatter image of the area illuminated by the antenna footprint (see Figure below). Consequently, the observed amplitude and phase measurement at any single pixel in a SAR image cannot be attributed to any individual pulse in azimuth time or range bin in slant range. To better geolocate targets in focused SAR images, most processing approaches use various conventions based on the Range-Doppler equation to set up reference functions for compressing energy in slant range and azimuth time domains.
+
+\image html "Zerodop_geometry.png"
+
+The Range-Doppler equation establishes the relationship between the Target T located at position (\f$\mathbf{T}\f$) and the satellite imaging location:
+
+\f[
+\frac{2 \cdot \mathbf{V_{sat}}\left( \eta_{f,T} \right) \cdot \left( \mathbf{T} - \mathbf{R_{sat}}\left(\eta_{f,T}\right) \right)}{\lambda \cdot R_{f,T}} = f\left(\eta_{f,T}, R_{f,T}\right)
+\f]
+
+\f[ 
+R_{f,T} = \left|\mathbf{T} - \mathbf{R_{sat}}\left(\eta_{f,T} \right)\right|
+\f]
+where
+
+<ul>
+<li> \f$\eta\f$ represents slow time domain. Also referred to as azimuth time.
+<li> \f$R\f$ represents slant range domain. Directly related to the fast time domain.
+<li> \f$f\left(\eta,R\right)\f$ represents the nominal imaging Doppler model  in Hz and is a function of azimuth time and slant range. Note that this may be different from the Doppler centroid of the acquired data.
+<li> \f$\eta_{f,T}\f$ is the Doppler azimuth time position of Target T, under the assumed imaging Doppler model.
+<li> \f$R_{f,T}\f$ is the slant range position of Target T, under the assumed imaging Doppler model.
+<li> \f$\eta_{0,T}\f$ is the zero Doppler azimuth time position of Target T.
+<li> \f$R_{0,T}\f$ is the zero Doppler slant range position of Target T.
+<li> \f$\eta_{dc,T}\f$ is the beam center azimuth time position of Target T.
+<li> \f$R_{dc,T}\f$ is the beam center slant range position of Target T.
+</ul>
+
+For a given Doppler frequency model \f$f\left(\eta_{f,T},R_{f,T}\right)\f$, the Target T would show up at azimuth line location \f$ \eta_{f,T}\f$ and slant range location \f$R_{f,T}\f$ in the focused image. Note that the choice of Doppler frequency model to describe the geometry of the SAR image can be arbitrary. However, there are two standard conventions widely used for easy interpretation of the imaging geometry: Native Doppler (or Beam Center) geometry and the Zero Doppler (or Tangential) geometry. ISCE supports both these conventions.
+
+\subsection geomnative Native Doppler Geometry
+
+The Native Doppler geometry system is the most natural system for representing SAR data. In this case, the Doppler frequency model is chosen to match the estimated Doppler Centroid of the data, i.e.:
+
+\f[
+\frac{2 \cdot \mathbf{V_{sat}}\left( \eta_{dc,T} \right) \cdot \left( \mathbf{T} - \mathbf{R_{sat}}\left(\eta_{dc,T}\right) \right)}{\lambda \cdot R_{dc,T}} = f\left(\eta_{dc,T}, R_{dc,T}\right)
+\f]
+
+The Doppler Centroid at a given azimuth time and slant range determines the imaging geometry as well as the azimuth carrier on the data. The azimuth time and slant range correspond to the target’s passage through the center of the antenna along track footprint. The Native Doppler convention is ideal for applying antenna pattern and gain corrections. However, the Doppler Centroid of the acquired data can vary in both azimuth time and slant range. Consequently, patch processing of the SAR pulses that accounts for updated processing parameter along-track introduces complications. The dependence on Doppler Centroid also makes it a little more complicated to mosaic acquisitions on the same track that were processed with slightly different processing parameters.
+
+The Native Doppler convention is primarily used by NASA JPL for generating SAR imagery for its airborne missions like UAVSAR. The ALOS PALSAR L1.1 product was also produced in Native Doppler geometry system by JAXA.
+
+\subsection geomzero Zero Doppler Geometry
+
+The Zero Doppler geometry system is the most widely used convention for representing SAR data. In this case, Doppler frequency model is set to zero, i.e.:
+
+\f[
+\mathbf{V_{sat}}\left( \eta_{0,T} \right) \cdot \left( \mathbf{T} - \mathbf{R_{sat}}\left(\eta_{0,T}\right) \right) = 0
+\f]
+
+
+The imaging geometry can be determined independent of the Doppler Centroid and central frequency of the acquisition. The vector from the satellite to target is perpendicular to the instantaneous satellite velocity. Note that in case of the zero Doppler geometry, the azimuth time corresponding to a target can lie outside the interval defined by the imaging aperture. The SAR data still has an azimuth carrier defined by the Doppler Centroid but this piece of information does not affect the geolocation or interpretation of the imaging geometry. This independence between Doppler Centroid and imaging geometry, allows one to mosaic images on the same track processed with different parameters easily.
+
+The Zero Doppler convention is used by ESA and European sensors like ERS, ENVISAT (\cite envisat2007product, \cite small2008guide),  Sentinel-1 \cite piantanida2016sentinel as well as TerraSAR-X and COSMO-SkyMed. The ALOS-2 PALSAR L1.1 product is also produced in Zero Doppler geometry system by JAXA.
+
+*/
