@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include "Geo2rdr.h"
+#include "utilities.h"
 #include "gpuGeo2rdr.h"
 
 // pull in some isce namespaces
@@ -72,8 +73,8 @@ geo2rdr(isce::io::Raster & topoRaster,
     // Interpolate orbit to middle of the scene as a test
     _checkOrbitInterpolation(tmid);
 
-    // Adjust block size if DEM has too few lines
-    _linesPerBlock = std::min(demLength, _linesPerBlock);    
+    // Compute number of lines per block
+    computeLinesPerBlock();
 
     // Compute number of DEM blocks needed to process image
     size_t nBlocks = demLength / _linesPerBlock;
@@ -164,6 +165,34 @@ _checkOrbitInterpolation(double aztime) {
             << " - bounds: " << orbit.UTCtime[0] << " -> " << orbit.UTCtime[orbit.nVectors-1]
             << pyre::journal::endl;
     }
+}
+
+// Compute number of lines per block dynamically from GPU memory
+void isce::cuda::geometry::Geo2rdr::
+computeLinesPerBlock() {
+
+    // Compute GPU memory
+    const size_t nGPUBytes = getDeviceMem();
+
+    // 2 GB buffer for safeguard for large enough devices (> 6 GB)
+    size_t gpuBuffer;
+    if (nGPUBytes > 6e9) {
+        gpuBuffer = 2e9;
+    } else {
+        // Else use 500 MB buffer
+        gpuBuffer = 500e6;
+    }
+
+    // Compute pixels per Block (3 double input layers and 2 float output layers)
+    size_t pixelsPerBlock = (nGPUBytes - gpuBuffer) /
+                            (3 * sizeof(double) + 2 * sizeof(float));
+    // Round down to nearest 10 million pixels
+    pixelsPerBlock = (pixelsPerBlock / 10000000) * 10000000;
+
+    // Compute number of lines per block
+    _linesPerBlock = pixelsPerBlock / this->mode().width();
+    // Round down to nearest 500 lines
+    _linesPerBlock = (_linesPerBlock / 500) * 500;
 }
 
 // end of file

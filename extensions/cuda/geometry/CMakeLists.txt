@@ -16,6 +16,7 @@ set(LOCAL_SRCS
         gpuGeometry.cu 
         gpuTopo.cu
         gpuGeo2rdr.cu
+        utilities.cu
         Topo.cpp
         Geo2rdr.cpp)
 

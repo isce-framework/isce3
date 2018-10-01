@@ -37,8 +37,11 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
         void topo(isce::io::Raster &, const std::string);
 
     private:
-        // Optimization options
+        // Default number of lines per block
         size_t _linesPerBlock = 1000;
+
+        // Compute number of lines per block dynamically from GPU memmory
+        void computeLinesPerBlock(isce::io::Raster &);
 };
 
 #endif
