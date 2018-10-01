@@ -49,7 +49,7 @@ TEST_F(OrbitTest,Reverse) {
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     double t1;
     cartesian_t opos = {0., 0., 0.};
@@ -63,7 +63,7 @@ TEST_F(OrbitTest,Reverse) {
     }
 
 
-    Orbit newOrb(1,0);
+    Orbit newOrb(0);
 
     for(int i=10; i>=0; i--)
     {
@@ -90,7 +90,7 @@ TEST_F(OrbitTest,OutOfOrder) {
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     double t1;
     cartesian_t opos = {0., 0., 0.};
@@ -104,7 +104,7 @@ TEST_F(OrbitTest,OutOfOrder) {
     }
 
 
-    Orbit newOrb(1,0);
+    Orbit newOrb(0);
 
     for(int i=10; i>=0; i-=2)
     {

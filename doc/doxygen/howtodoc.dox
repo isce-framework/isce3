@@ -13,43 +13,43 @@ Developers are expected to document their functions using <a href="https://www.s
 
 These types of functions are typically defined in the struct/class definition itself and serve a simple purpose of returning a computed value. In this case, we will use a simple one line description. For example, isce::core::Ellipsoid::a()
 
-\verbatim
+\code{.cpp}
 
-/** Return semi-major axis */
+/*/** */* Return semi-major axis */
 double a() const {return _a;}
 
-\endverbatim
+\endcode
 
 \subsubsection docinlinecppone Part of data structure declaration with one input argument
 
 These types of functions are typically defined in the struct/class definition itself and serve a simple purpose of setting a value with input or perform a simple computation with input. In this case, we will user the "brief" keyword from doxygen to provide a one line description and "param" keyword to describe the parameter in detail. For example, isce::core::Ellipsoid::a(double)
 
-\verbatim
+\code{.cpp}
 
-/** \brief Set semi-major axis 
+/*/** */* \brief Set semi-major axis 
 *
 * @param[in] val Semi-major axis of ellipsoid in meters*/
 void a(double val) {_a = val;}
 
-\endverbatim
+\endcode
 
 
 \subsubsection docinlinecppmulti With multiple inputs
 
 These types of functions should typically not be defined in the struct/class definition. These are included either in the .h header file or the .icc include file. In this case, a brief one liner is provided as part of the function declaration in the header file followed by a detail description of the parameters just before the function specification in the header file or the .icc file. For example, documentation of function isce::core::Ellipsoid::rDir can be found in two places - first in the class declaration as 
 
-\verbatim
+\code{.cpp}
 
-/** Return local radius in NS direction */
+/*/** */*  Return local radius in NS direction */
 inline double rDir(double lat, double hdg) const;
 
-\endverbatim
+\endcode
 
 and later in the header file, just before the function declaration as 
 
-\verbatim
+\code{.cpp}
 
-/** @param[in] hdg Heading in radians
+/*/** */*  @param[in] hdg Heading in radians
  *  @param[in] lat Latitude in radians
  *
  *  Heading is measured in clockwise direction from the North direction.
@@ -61,15 +61,15 @@ double isce::core::Ellipsoid::rDir(double hdg, double lat) const {
          + (rn * std::pow(std::sin(hdg), 2)));
 }
 
-\endverbatim
+\endcode
 
 \subsubsection docinlinenamespace Within namespaces
 
 For functions that are defined within a namespace and are not a member of a class/struct (e.g., isce/core/Serialization.h), you must first indicate that comments within the file contain documentation for a header file using the "\file" command. Also, the namespace declarations must be commented. For example,
 
-\verbatim
+\code{.cpp}
 
-/** \file isce/core/Serialization.h
+/*/** */*  \file isce/core/Serialization.h
  *
  * Serialization functions for isce::core objects. */
 
@@ -78,7 +78,7 @@ namespace isce {
     //! The isce::core namespace
     namespace core {
 
-\endverbatim
+\endcode
 
 \subsection doccppregular Regular functions
 
@@ -86,27 +86,27 @@ namespace isce {
 
 For all regular C++ functions that are not inlined, a brief one line description must be provided in the header file irrespective the number of input arguments. For example, class isce::core::Ellipsoid::xyzToLonLat
 
-\verbatim
+\code{.cpp}
 
-/** Transform ECEC xyz to Lon/Lat/Hgt */
+/*/** */*  Transform ECEC xyz to Lon/Lat/Hgt */
 void xyzToLonLat(const cartesian_t &xyz, cartesian_t &llh) const;
 
-\endverbatim
+\endcode
 
 \subsubsection doccppregbody Detailed description in function specfication
 
 The detailed description of individual parameters must be provided just before the function specification. The detailed description can also include math equations and references to publications or reports. For example, isce::core::Ellipsoid::xyzToLonLat
 
-\verbatim
+\code{.cpp}
 
-/** @param[in] xyz ECEF Cartesian coordinates in meters. 
+/*/** */*  @param[in] xyz ECEF Cartesian coordinates in meters. 
  *  @param[out] llh Latitude (rad), Longitude(rad), Height (m).
  *
  *  Using the approach laid out in Vermeille, 2002 \cite vermeille2002direct */
 void isce::core::Ellipsoid::
 xyzToLonLat(const cartesian_t & xyz, cartesian_t & llh) const {
 
-\endverbatim
+\endcode
 
 
 \subsection CUDA
@@ -126,7 +126,7 @@ Cython/Python docstrings must clearly include sections for Args and Returns. Eac
 
 For example, pyEllipsoid.copyFrom
 
-\verbatim
+\code{.py}
 
     def copyFrom(self, elp):
         '''
@@ -138,14 +138,16 @@ For example, pyEllipsoid.copyFrom
         Returns:
             None
         '''
-\endverbatim
+        ...
+
+\endcode
 
 
 \subsubsection docpyfuncone One return value
 
 For example, pyEllipsoid.rDir
 
-\verbatim
+\code{.py}
 
     def rDir(self, double lat, double hdg):
         '''
@@ -159,14 +161,14 @@ For example, pyEllipsoid.rDir
             float: Directional radius in meters.
         '''
         return self.c_ellipsoid.rDir(lat, hdg)
-\endverbatim
+\endcode
 
 
 \subsubsection docpyfuncmay Many return values
 
 If a function returns multiple values, the return type must be clearly indicated as tuple. The order of the returned results in the tuple must then be included in a list. For example, pyEllipsoid.getTCNbasis
 
-\verbatim
+\code{.py}
 
     def TCNbasis(self, list pos, list vel):
         '''
@@ -183,13 +185,13 @@ If a function returns multiple values, the return type must be clearly indicated
                 * nhat (list) - Normal unit vector pointing downwards
         '''
         ...
-\endverbatim
+\endcode
 
 \subsection docpykwargs Keyword arguments
 
 Keyword arguments are also listed under the Args section of the docstring but are clearly labelled as optional. For example
 
-\verbatim 
+\code{.py} 
 
     def exampleFunction(angle, degrees=False):
         '''
@@ -202,13 +204,14 @@ Keyword arguments are also listed under the Args section of the docstring but ar
         Returns:
             float: Function evaluated at the input angle
         '''
-\endverbatim
+        ...
+\endcode
 
 \subsection docpyclass Classes
 
 Python class documentation will be extracted from the docstring immediately following the class declaration. Note that class constructors are special and should not be documented in the function. Instead the docstring following the class declaration should describe the arguments expected by the class constructor. For example,for class pyEllipsoid
 
-\verbatim
+\code{.py}
 cdef class pyEllipsoid:
     '''
     Python wrapper for isce::core::Ellipsoid
@@ -217,6 +220,6 @@ cdef class pyEllipsoid:
         a (Optional[float]): Semi-major axis of Ellipsoid in m.
         e2 (Optional[float]): Eccentricity-squared.
     '''
-
-\endverbatim
+    ...
+\endcode
 */

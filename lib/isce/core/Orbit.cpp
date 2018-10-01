@@ -17,14 +17,17 @@
 #include "LinAlg.h"
 #include "Ellipsoid.h"
 
-// Reformat state vectors to form flattened 1D arrays
+//Reformat using MIN_DATE_TIME
 void isce::core::Orbit::
 reformatOrbit() {
     // Use min date time as epoch
     reformatOrbit(MIN_DATE_TIME);
 }
 
-// Reformat state vectors to form flattened 1D arrays
+/** @param[in] epoch DateTime corresponding to reference epocj
+ *
+ * Reference epoch is used to translate DateTime tags to double
+ * precision seconds for all numerical computation*/
 void isce::core::Orbit::
 reformatOrbit(const DateTime & epoch) {
 
@@ -60,7 +63,7 @@ reformatOrbit(const DateTime & epoch) {
     refEpoch = epoch;
 }
 
-// Update UTC time of state vectors relative to a new reference epoch
+// Update UTC times
 void isce::core::Orbit::
 updateUTCTimes(const DateTime & epoch) {
     // Loop over time epochs
@@ -71,27 +74,10 @@ updateUTCTimes(const DateTime & epoch) {
     refEpoch = epoch;
 }
 
-void isce::core::Orbit::
-getPositionVelocity(double tintp, cartesian_t & pos, cartesian_t & vel) const {
-    /*
-     * Separately-named wrapper for interpolate based on stored basis. Does not check for
-     * interpolate success/fail.
-     * NOTE: May be deprecated soon considering 'basis' member variable is rarely used.
-     */
-
-    // Each contained function has its own error checking for size, so no need to do it here
-    if (basis == WGS84_ORBIT) interpolateWGS84Orbit(tintp, pos, vel);
-    else if (basis == SCH_ORBIT) interpolateSCHOrbit(tintp, pos, vel);
-    else {
-        std::string errstr = "Unrecognized stored Orbit basis in Orbit::getPositionVelocity.\n";
-        errstr += "Expected one of:\n";
-        errstr += "  WGS84_ORBIT (== "+std::to_string(WGS84_ORBIT)+")\n";
-        errstr += "  SCH_ORBIT (== "+std::to_string(SCH_ORBIT)+")\n";
-        errstr += "Encountered stored Orbit basis "+std::to_string(basis);
-        throw std::invalid_argument(errstr);
-    }
-}
-
+/**
+ * @param[in] tintp Time since reference epoch in seconds
+ * @param[out] state StateVector object
+ * @param[in] intp_type Method to use for interpolation*/
 int isce::core::Orbit::
 interpolate(double tintp, StateVector & state, orbitInterpMethod intp_type) const {
     /*
@@ -107,6 +93,13 @@ interpolate(double tintp, StateVector & state, orbitInterpMethod intp_type) cons
     return orbitStat;
 }
 
+/**
+ * @param[in] tintp Time since reference epoch in seconds
+ * @param[out] opos Interpolated position (m)
+ * @param[out] ovel Interpolated velocity (m/s)
+ * @param[in] intp_type Method to use for interpolation
+ *
+ * Returns non-zero status on error*/
 int isce::core::Orbit::
 interpolate(double tintp, cartesian_t & opos, cartesian_t & ovel,
             orbitInterpMethod intp_type) const {
@@ -128,7 +121,12 @@ interpolate(double tintp, cartesian_t & opos, cartesian_t & ovel,
         throw std::invalid_argument(errstr);
     }
 }
-
+/**
+ * @param[in] tintp Time since reference epoch in seconds
+ * @param[out] opos Interpolated position (m)
+ * @param[out] ovel Interpolated position (m/s)
+ *
+ * Returns non-zero status on error. This method is similar to \cite sandwell2008accuracy*/
 int isce::core::Orbit::
 interpolateWGS84Orbit(double tintp, cartesian_t & opos, cartesian_t & ovel) const {
     /*
@@ -230,6 +228,13 @@ orbitHermite(const std::vector<cartesian_t> &x, const std::vector<cartesian_t> &
     }
 }
 
+
+/**
+ * @param[in] tintp Time since reference epoch in seconds
+ * @param[out] opos Interpolated position (m)
+ * @param[out] ovel Interpolated position (m/s)
+ *
+ * Returns non-zero status on error. This method is very similar to \cite getorbdelft*/
 int isce::core::Orbit::
 interpolateLegendreOrbit(double tintp, cartesian_t & opos, cartesian_t & ovel) const {
     /*
@@ -289,6 +294,12 @@ interpolateLegendreOrbit(double tintp, cartesian_t & opos, cartesian_t & ovel) c
     return 0;
 }
 
+/**
+ * @param[in] tintp Time since reference epoch in seconds
+ * @param[out] opos Interpolated position (m)
+ * @param[out] ovel Interpolated position (m/s)
+ *
+ * Returns non-zero status on error*/
 int isce::core::Orbit::
 interpolateSCHOrbit(double tintp, cartesian_t & opos, cartesian_t & ovel) const {
     /*
@@ -329,6 +340,11 @@ interpolateSCHOrbit(double tintp, cartesian_t & opos, cartesian_t & ovel) const 
     return 0;
 }
 
+/**
+ * @param[in] tintp Time since reference epoch in seconds
+ * @param[out] acc Acceleration in m/s^2
+ *
+ * An interval of +/- 0.01 seconds is used for numerical computations*/ 
 int isce::core::Orbit::
 computeAcceleration(double tintp, cartesian_t &acc) const {
     /*
@@ -348,6 +364,8 @@ computeAcceleration(double tintp, cartesian_t &acc) const {
     return 0;
 }
 
+/**
+ * @param[in] aztime Time since reference epoch in seconds*/
 double isce::core::Orbit::
 getENUHeading(double aztime) const {
     // Computes heading at a given azimuth time using a single state vector
@@ -376,7 +394,7 @@ printOrbit() const {
      * Debug print the stored orbit.
      */
 
-    std::cout << "Orbit - Basis: " << basis << ", nVectors: " << nVectors << std::endl;
+    std::cout << "Orbit - nVectors: " << nVectors << std::endl;
     for (int i=0; i<nVectors; i++) {
         std::cout << "  UTC = " << UTCtime[i] << std::endl;
         std::cout << "  Position = [ " << position[3*i] << " , " << position[3*i+1] << " , " <<
@@ -387,7 +405,7 @@ printOrbit() const {
 }
 
 void isce::core::Orbit::
-loadFromHDR(const char *filename, int bs) {
+loadFromHDR(const char *filename) {
     /*
      *  Load Orbit from a saved HDR file using fstreams. This assumes that the Orbit was dumped to
      *  an HDR file using this interface (or a compatible one given the reading scheme below), and
@@ -401,7 +419,6 @@ loadFromHDR(const char *filename, int bs) {
         throw std::runtime_error(errstr);
     }
 
-    basis = bs;
     nVectors = 0;
     std::string line;
     while (std::getline(fs, line)) nVectors++;
