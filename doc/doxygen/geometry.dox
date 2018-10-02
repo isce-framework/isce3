@@ -192,7 +192,7 @@ An eighth-order Legendre polynomial can also be used to interpolate the orbit in
 
 For most modern SAR sensors, the precise position and velocity vectors in the annotation metadata are consistent with each other and can be reliably interpolated with Hermite polynomials. However, when focusing the L0B data for emergency response, the precise state vectors may not be available. Legendre polynomials are recommended for interpolation of the rapid orbits as it reduces geolocation errors.
 
-At the start of the algorithm, we pick and initial azimuth time (\f$\eta_g\f$) as the first guess. Typically, this is set to the center of the azimuth data block / scene that is being processed. After interpolation, we end up with the initial estimate for satellite position \f$\left( \mathbf{R_{sat}\left( \eta_g \right) \right)}\f$ and satellite velocity \f$\left( \mathbf{V_{sat}\left( \eta_g \right)} \right)\f$.
+At the start of the algorithm, we pick and initial azimuth time (\f$\eta_g\f$) as the first guess. Typically, this is set to the center of the azimuth data block / scene that is being processed. After interpolation, we end up with the initial estimate for satellite position \f$\left( \mathbf{R_{sat}\left( \eta_g \right)} \right)\f$ and satellite velocity \f$\left( \mathbf{V_{sat}\left( \eta_g \right)} \right)\f$.
 
 \subsection inversenewton Step 2: Newton-Raphson iteration
 
