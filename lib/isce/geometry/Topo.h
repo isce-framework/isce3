@@ -33,47 +33,54 @@ namespace isce {
 }
 
 // Declare Topo class
+/** Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude
+ *
+ * See <a href="geometry.html#forwardgeom">here</a> for a description of the algorithm*/
 class isce::geometry::Topo {
 
     public:
-        // Constructor from Product
+        /** Constructor using a product*/
         inline Topo(isce::product::Product &);
-        // Constructor from isce::core objects
+        /** Constructor using core objects*/
         inline Topo(isce::core::Ellipsoid,
                     isce::core::Orbit,
                     isce::core::Poly2d,
                     isce::core::Metadata);
         
-        // Set options
+        /** Set initialization flag*/
         inline void initialized(bool);
+        /** Set convergence threshold */
         inline void threshold(double);
+        /** Set number of primary iterations */
         inline void numiter(int);
+        /** Set number of secondary iterations */
         inline void extraiter(int);
+        /** Set orbit interpolation method */
         inline void orbitMethod(isce::core::orbitInterpMethod);
+        /** Set DEM interpolation method */
         inline void demMethod(isce::core::dataInterpMethod);
+        /** Set output coordinate system */
         inline void epsgOut(int);
 
-        // Check initialization
+        /** Check initialization of processing module */
         inline void checkInitialization(pyre::journal::info_t &) const;
 
-        // Run topo - main entrypoint
+        /** Main entry point for the module */
         void topo(isce::io::Raster &, const std::string);
 
     private:
 
-        // Get DEM bounds using first/last azimuth line and slant range bin
+        /** Compute the DEM bounds for given product */ 
         void _computeDEMBounds(isce::io::Raster &,
                                DEMInterpolator &,
                                size_t, size_t);
 
-        // Perform data initialization for a given azimuth line
+        /** Initialize TCN basis for given azimuth line */
         void _initAzimuthLine(size_t,
                               isce::core::StateVector &,
                               isce::core::Basis &);
 
-
-
-        // Set output layers
+        /** Write to output layers */
         void _setOutputTopoLayers(cartesian_t &,
                                   TopoLayers &,
                                   size_t,

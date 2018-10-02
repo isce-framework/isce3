@@ -28,7 +28,19 @@ using isce::core::LinAlg;
 using isce::core::StateVector;
 using isce::io::Raster;
 
-// Main topo driver
+/** @param[in] demRaster input DEM raster
+ * @param[in] outdir  directory to write outputs to
+ *
+ * This is the main topo driver. The pixel-by-pixel output file names are fixed for now
+ * <ul>
+ * <li> x.rdr - X coordinate in requested projection system (meters or degrees)
+ * <li> y.rdr - Y cooordinate in requested projection system (meters or degrees)
+ * <li> z.rdr - Height above ellipsoid (meters)
+ * <li> inc.rdr - Incidence angle (degrees) computed from vertical at target
+ * <li> hdg.rdr - Azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
+ * <li> localInc.rdr - Local incidence angle (degrees) at target
+ * <li> locaPsi.rdr - Local projection angle (degrees) at target
+ * </ul>*/
 void isce::geometry::Topo::
 topo(Raster & demRaster,
      const std::string outdir) {
@@ -190,7 +202,11 @@ topo(Raster & demRaster,
 
 }
 
-// Perform data initialization for a given azimuth line
+/** @param[in] line line number of input radar geometry product
+ * @param[out] state store state variables needed for processing the line
+ * @param[out] TCNbasis TCN basis corresponding to the state
+ *
+ * The module is optimized to work with range doppler coordinates. This section would need to be changed to work with data in PFA coordinates (not currently supported). */
 void isce::geometry::Topo::
 _initAzimuthLine(size_t line, StateVector & state, Basis & TCNbasis) {
 
@@ -299,7 +315,15 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOf
     demInterp.declare();
 }
 
-// Generate output topo layers
+/** @param[in] llh Lon/Lat/Hae for target 
+ * @param[in] layers Object containing output layers
+ * @param[in] line line number to write to output
+ * @param[in] pixel pixel number to write to output
+ * @param[in] state state for the line under consideration
+ * @param[in] TCNbasis basis for the line under consideration
+ * @param[in] demInterp DEM interpolator object used to compute local slope
+ *
+ * Currently, local slopes are computed by simple numerical differencing. In the future, we should accommodate possibility of reading in this as an external layer*/
 void isce::geometry::Topo::
 _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
                      Pixel & pixel, StateVector & state, Basis & TCNbasis,
