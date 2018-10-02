@@ -27,8 +27,8 @@ Download: TBD
 \section index_conventions Overview on conventions
 
 <ul>
-<li> <a href="raster.html">Raster data model</a>
-<li> <a href="geometry.html">Radar imaging geometry</a>
+<li> <a href="overview_raster.html">Raster data model</a>
+<li> <a href="overview_geometry.html">Radar imaging geometry</a>
 </ul>
 
 \section index_devdocs Developer Oriented Documentation
@@ -36,7 +36,7 @@ Download: TBD
 <ul>
 <li> \ref howtodoc "Coding and documentation style"
 <li> Core data structures <a href="annotated.html">[C++]</a><a href="sphinx/html/index.html">[Python]</a>
-<li> Raster tutorial
+<li> Raster tutorial <a href="tutorial_raster.html">[C++]</a>
 </ul>
 
 

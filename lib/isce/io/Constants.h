@@ -13,7 +13,9 @@ namespace isce {
     namespace io {
 
         // Constants for Raster class
+        /// Default GDAL driver used by Raster for creation
         const std::string defaultGDALDriver = "VRT";
+        /// Default GDAL data type used by Raster for creation
         const GDALDataType defaultGDALDataType = GDT_Float32;
         // Unordered_map to map typeids to GDALDataTypes
         const std::unordered_map<std::type_index, GDALDataType> GDT =
