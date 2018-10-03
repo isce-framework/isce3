@@ -27,7 +27,6 @@ __host__ gpuPoly2d::gpuPoly2d(const Poly2d &poly) :
     azimuthNorm(poly.azimuthNorm),
     owner(true)
 {
-    //cudaSetDevice(0);
     
     const int n_coeffs = poly.coeffs.size();
 
@@ -74,7 +73,6 @@ __global__ void eval_d(gpuPoly2d p, double azi, double rng, double *val)
 
 __host__ double gpuPoly2d::eval_h(double azi, double rng)
 {
-    //cudaSetDevice(0);
     double *val_d;
     double val_h;
     // use unified memory?

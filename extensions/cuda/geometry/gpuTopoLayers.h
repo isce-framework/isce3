@@ -39,9 +39,6 @@ class isce::cuda::geometry::gpuTopoLayers {
         CUDA_HOST inline gpuTopoLayers(const isce::geometry::TopoLayers & layers) : 
             _length(layers.length()), _width(layers.width()), _owner(true) {
 
-            // Specify the device
-            cudaSetDevice(0);
-
             // Allocate memory
             _nbytes_double = _length * _width * sizeof(double);
             _nbytes_float = _length * _width * sizeof(float);

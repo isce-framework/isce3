@@ -67,7 +67,6 @@ CUDA_HOST void gpuEllipsoid::lonLatToXyz_h(cartesian_t &llh, cartesian_t &xyz) {
     //checkVecLen(xyz,3);
     // Malloc memory on the GPU and copy the llh inputs over
     double *llh_d, *xyz_d;
-    //cudaSetDevice(0);
     cudaMalloc((double**)&llh_d, 3*sizeof(double));
     cudaMalloc((double**)&xyz_d, 3*sizeof(double));
     cudaMemcpy(llh_d, llh.data(), 3*sizeof(double), cudaMemcpyHostToDevice);
@@ -100,7 +99,6 @@ CUDA_HOST void gpuEllipsoid::xyzToLonLat_h(cartesian_t &xyz, cartesian_t &llh) {
      //checkVecLen(llh,3);
      // Malloc memory on the GPU and copy the xyz inputs over
      double *xyz_d, *llh_d;
-     //cudaSetDevice(0);
      cudaMalloc((double**)&xyz_d, 3*sizeof(double));
      cudaMalloc((double**)&llh_d, 3*sizeof(double));
      cudaMemcpy(xyz_d, xyz.data(), 3*sizeof(double), cudaMemcpyHostToDevice);

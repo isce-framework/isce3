@@ -64,7 +64,6 @@ __host__ int ProjectionBase::forward_h(const cartesian_t &llh, cartesian_t &xyz)
     int *flag_d;
     ProjectionBase **base_d;
 
-    gpuErrChk( cudaSetDevice(0));
     gpuErrChk( cudaMalloc((int**)&flag_d, 1*sizeof(int)));
     gpuErrChk( cudaMalloc((double**)&llh_d,3*sizeof(double)));
     gpuErrChk( cudaMalloc((double**)&xyz_d,3*sizeof(double)));
@@ -94,7 +93,6 @@ __host__ int ProjectionBase::inverse_h(const cartesian_t &xyz, cartesian_t &llh)
     double *llh_d, *xyz_d;
     int *flag_d;
     ProjectionBase **base_d;
-    gpuErrChk( cudaSetDevice(0));
     gpuErrChk( cudaMalloc((int**)&flag_d, sizeof(int)));
     gpuErrChk( cudaMalloc((double**)&llh_d,3*sizeof(double)));
     gpuErrChk( cudaMalloc((double**)&xyz_d,3*sizeof(double)));
