@@ -391,9 +391,10 @@ INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/lib \
 
 FILE_PATTERNS          = *.h \
                          *.cpp \
+                         *.icc \
                          *.dox 
 
-EXTENSION_MAPPING = pyx=PYTHON
+EXTENSION_MAPPING = .icc=C++ 
 
 # The RECURSIVE tag can be used to turn specify whether or not subdirectories
 # should be searched for input files as well. Possible values are YES and NO.
@@ -445,7 +446,7 @@ EXAMPLE_RECURSIVE      = NO
 # directories that contain image that are included in the documentation (see
 # the \image command).
 
-IMAGE_PATH             =
+IMAGE_PATH             = @CMAKE_CURRENT_SOURCE_DIR@/doc/doxygen/Figures
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program

@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include "Topo.h"
+#include "utilities.h"
 #include "gpuTopo.h"
 
 // pull in some isce namespaces
@@ -60,6 +61,9 @@ topo(Raster & demRaster,
 
     // Create a DEM interpolator
     DEMInterpolator demInterp(-500.0, this->demMethod());
+
+    // Compute number of lines per block
+    computeLinesPerBlock(demRaster);
 
     // Compute number of blocks needed to process image
     size_t nBlocks = mode.length() / _linesPerBlock;
@@ -148,6 +152,37 @@ topo(Raster & demRaster,
     // Set its EPSG code
     vrt.setEPSG(this->epsgOut());
 
+}
+
+// Compute number of lines per block dynamically from GPU memory
+void isce::cuda::geometry::Topo::
+computeLinesPerBlock(isce::io::Raster & demRaster) {
+
+    // Compute GPU memory
+    const size_t nGPUBytes = getDeviceMem();
+
+    // Assume entire DEM passed to GPU
+    const size_t nDEMBytes = demRaster.width() * demRaster.length() * sizeof(float);
+
+    // 2 GB buffer for safeguard for large enough devices (> 6 GB)
+    size_t gpuBuffer;
+    if (nGPUBytes > 6e9) {
+        gpuBuffer = 2e9;
+    } else {
+        // Else use 500 MB buffer
+        gpuBuffer = 500e6;
+    }
+
+    // Compute pixels per Block (3 double and 5 float output topo layers)
+    size_t pixelsPerBlock = (nGPUBytes - nDEMBytes - gpuBuffer) /
+                            (3 * sizeof(double) + 5 * sizeof(float));
+    // Round down to nearest 10 million pixels
+    pixelsPerBlock = (pixelsPerBlock / 10000000) * 10000000;
+
+    // Compute number of lines per block
+    _linesPerBlock = pixelsPerBlock / this->mode().width();
+    // Round down to nearest 500 lines
+    _linesPerBlock = (_linesPerBlock / 500) * 500;
 }
 
 // end of file

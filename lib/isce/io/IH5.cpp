@@ -1,74 +1,10 @@
 
 #include "../core/Constants.h"
-
 #include "IH5.h"
 
 
-template<class T>
-H5::DataType memType2 (const std::type_info &ti, T &d) {
 
-//    H5T_class_t type = d.getTypeClass();
-
-	if (ti == typeid(char))
-		return H5::PredType::NATIVE_CHAR;
-	else if (ti == typeid(unsigned char))
-        return H5::PredType::NATIVE_UCHAR;
-	else if (ti == typeid(signed char))
-		return H5::PredType::NATIVE_SCHAR;
-	else if (ti == typeid(short))
-		return H5::PredType::NATIVE_SHORT;
-	else if (ti == typeid(unsigned short))
-		return H5::PredType::NATIVE_USHORT;
-	else if (ti == typeid(int))
-		return H5::PredType::NATIVE_INT;
-	else if (ti == typeid(unsigned int))
-		return H5::PredType::NATIVE_UINT;
-	else if (ti == typeid(long))
-		return H5::PredType::NATIVE_LONG;
-	else if (ti == typeid(unsigned long))
-		return H5::PredType::NATIVE_ULONG;
-	else if (ti == typeid(long long))
-		return H5::PredType::NATIVE_LLONG;
-	else if (ti == typeid(unsigned long long))
-		return H5::PredType::NATIVE_ULLONG;
-	else if (ti == typeid(float))
-		return H5::PredType::NATIVE_FLOAT;
-	else if (ti == typeid(double))
-		return H5::PredType::NATIVE_DOUBLE;
-	else if (ti == typeid(long double))
-		return H5::PredType::NATIVE_LDOUBLE;
-	else if (ti == typeid(std::complex<float>))
-		return d.getCompType();
-	else if (ti == typeid(std::complex<double>))
-		return d.getCompType();
-	else if (ti == typeid(std::string)) {
-		return d.getStrType();
-    }
-    else if (ti == typeid(isce::core::FixedString)) {
-        H5::StrType strdatatype(H5::PredType::C_S1, 50);
-        return strdatatype;
-    } else 
-	    return H5::PredType::NATIVE_FLOAT;//TODO error instead
-}
-
-
-template <class T1, class T2>
-H5::DataType memType (std::valarray<T1> &v, T2 &d) {
-     const std::type_info &ti = typeid(T1);
-     return memType2(ti, d);
-}
-
-template <class T1, class T2>
-H5::DataType memType (std::vector<T1> &v, T2 &d) {
-     const std::type_info &ti = typeid(T1);
-     return memType2(ti, d);
-}
-
-template <class T1, class T2>
-H5::DataType memType (T1 &v, T2 &d) {
-     const std::type_info &ti = typeid(T1);
-     return memType2(ti, d);
-}
+///////////////////////// UTILITIES ///////////////////////////////////
 
 
 
@@ -92,21 +28,29 @@ void attrsNames(H5::H5Object &loc, H5std_string nameAttr, void *opdata){
 herr_t matchName(hid_t loc_id, const char *name, const H5O_info_t *info, 
                      void *opdata) {
    
-   auto outList = reinterpret_cast<std::vector<std::string> *>(opdata);
+   //auto outList = reinterpret_cast<std::vector<std::string> *>(opdata);
+   //auto outList = static_cast<std::vector<std::string> *>(opdata);
+   auto meta = static_cast<isce::io::findMeta *>(opdata);
 
    // Check if the current object has a name containing the searched string.
    // If it does, check that its type (group/dataset) matches the user need.
    // Keep name of object (i.e., path+name) if success
    
-   std::regex pattern((*outList)[0]);
-
+   //std::regex pattern((*outList)[0]);
+   std::regex pattern(meta->searchStr);
    if (std::regex_search(name, pattern)) {
-      if(info->type == H5O_TYPE_GROUP && (*outList)[1].compare("GROUP") == 0)
-      outList->push_back((*outList)[2]+name);
-      else if (info->type == H5O_TYPE_DATASET && (*outList)[1].compare("DATASET") == 0)
-      outList->push_back((*outList)[2]+name);
-      else if ((*outList)[1].compare("BOTH") == 0)
-           outList->push_back((*outList)[2]+name);
+      //if(info->type == H5O_TYPE_GROUP && (*outList)[1].compare("GROUP") == 0)
+      if(info->type == H5O_TYPE_GROUP && (meta->searchType).compare("GROUP") == 0)
+         //outList->push_back((*outList)[2]+name);
+         meta->outList.push_back((meta->basePath)+name);
+      //else if (info->type == H5O_TYPE_DATASET && (*outList)[1].compare("DATASET") == 0)
+      else if (info->type == H5O_TYPE_DATASET && (meta->searchType).compare("DATASET") == 0)
+         //outList->push_back((*outList)[2]+name);
+         meta->outList.push_back((meta->basePath)+name);
+      //else if ((*outList)[1].compare("BOTH") == 0)
+      else if (meta->searchType.compare("BOTH") == 0)
+           //outList->push_back((*outList)[2]+name);
+         meta->outList.push_back((meta->basePath)+name);
       else {}
    }
 
@@ -118,6 +62,73 @@ herr_t matchName(hid_t loc_id, const char *name, const H5O_info_t *info,
 
 
 
+// This function is a search function allowing the user to list (in a 
+// vector<string> container) all the group and dataset whose name 
+// (i.e. path/name) contains a given string.
+// IN: nameIn: String to be searched in the file tree
+// IN start (default: "/"): Location at which the search is to be started. That is
+// the function will search that location and all subdirectories.
+// IN type (default: "BOTH"): Whether to return only DATASET, GROUP or BOTH
+// Note that whether or not the user pass in a start path for the search, the 
+// returned paths of the objects founds are always the full absolute path.
+
+std::vector<std::string> findByName(hid_t loc_id,
+                                    std::string nameIn, 
+                                    std::string start,
+                                    std::string type,
+                                    std::string returnedPath) {
+
+    isce::io::findMeta findMetaInfo;
+    htri_t status;
+    hid_t lapl_id;
+    H5O_info_t info; 
+
+    if (nameIn.empty())
+        return findMetaInfo.outList;
+
+/*
+    if (start != "/" && start != ".") {
+        // Check that the provided start path exists in the file
+        status = H5Lexists(loc_id, start.c_str(), lapl_id);
+        if (status <= 0)
+            return findMetaInfo.outList;
+        // Check that the provided start path points to a group
+        herr_t status = H5Oget_info_by_name(loc_id, start.c_str(), 
+                                             &info, H5P_DEFAULT);
+        if (status < 0 || info.type != H5O_TYPE_GROUP)
+           return findMetaInfo.outList;
+    }
+*/    
+    if (type != "GROUP" && type != "DATASET" && type != "BOTH")
+        return findMetaInfo.outList;
+
+ 
+    findMetaInfo.searchStr = nameIn;
+    findMetaInfo.searchType = type;
+    if (returnedPath == "FULL"){
+       findMetaInfo.basePath.append(start);
+       if (start == ".")
+           findMetaInfo.basePath.erase(0,1);
+       if (start.length() > 1 && strncmp(&start.back(),"/",1))
+          findMetaInfo.basePath.append("/");
+    }
+
+
+    H5Ovisit_by_name(loc_id, start.c_str(), H5_INDEX_NAME, H5_ITER_INC, 
+                     matchName, &findMetaInfo, H5P_DEFAULT);
+
+
+    return findMetaInfo.outList; 
+
+}
+
+
+
+
+///////////////////////// DATASET ///////////////////////////////////
+
+
+
 
 H5::DataSpace isce::io::IDataSet::getDataSpace(const std::string &v) {
 
@@ -125,10 +136,13 @@ H5::DataSpace isce::io::IDataSet::getDataSpace(const std::string &v) {
 
     // Looking for the dataset itself
     if (v.empty()) 
+
         // Open the dataspace of the current dataset
         dspace = H5::DataSet::getSpace();
+
     // Looking for the attribute of name v contained in the dataset itself
     else if (attrExists(v)){    
+
        // Open the attribute of the given name
        H5::Attribute attr = openAttribute(v);
 
@@ -144,9 +158,13 @@ H5::DataSpace isce::io::IDataSet::getDataSpace(const std::string &v) {
 }
 
 
-
-// Get the number of dimension of the current dataset
-// scalar:0, 1D array:1, 2D array:2, ...
+/** @param[in] v Name of the attribute (optional).
+ *  Returns the number of dimension of the dataset or attribute.
+ *
+ *  If input is not empty, returns the number of dimension of the given 
+ *  attribute name. If input is empty, returns the number of dimension of 
+ *  current dataset.
+ *  Scalar:0; 1D array:1, 2D array:2, etc. */
 int isce::io::IDataSet::getRank(const std::string &v) {
 
     // Get the dataspace of dataset or attribute
@@ -162,9 +180,12 @@ int isce::io::IDataSet::getRank(const std::string &v) {
 };
 
 
-
-// Get the total number of elements in the current
-// dataset
+/** @param[in] v Name of the attribute (optional).
+ *  Returns the number of elements in the dataset or attribute.
+ *
+ *  If input is not empty, returns the number of elements in the given 
+ *  attribute. If input is empty, returns the number of elements in the current
+ *  dataset. */
 int isce::io::IDataSet::getNumElements(const std::string &v) {
 
     // Get the dataspace of dataset or attribute
@@ -181,9 +202,14 @@ int isce::io::IDataSet::getNumElements(const std::string &v) {
 
 
 
-// Get the dimension of the current dataset. Dimension
-// are returned as a vector. A scalar dataset will 
-// return an empty vector. 
+/** @param[in] v Name of the attribute (optional).
+ *  Returns a std::vector containing the number of elements in each dimension of
+ *  the dataset or attribute.
+ *
+ *  If input is not empty, returns the number of elements in each dimension of
+ *  the given attribute. If input is empty, returns the number of elements in 
+ *  each dimension of the current dataset. 
+ *  A scalar dataset/attribute will return an empty std::vector. */
 std::vector<int> isce::io::IDataSet::getDimensions(const std::string &v) {
 
     // Get the dataspace of dataset or attribute
@@ -215,10 +241,15 @@ std::vector<int> isce::io::IDataSet::getDimensions(const std::string &v) {
 };
 
 
-// Get the HDF5 type of the data contained in the current dataset. This 
-// information is useful to provide the read function with a variable/vector of
-// the proper type. The HFD5 library will do type conversion when possible, but 
-// will throw an error if types are incompatible.
+/** @param[in] v Name of the attribute (optional).
+ *  Returns the  HDF5 class type of the data contained in the dataset or 
+ *  attribute.
+ *
+ *  If input is not empty, returns the class type of the given attribute. If 
+ *  input is empty, returns the class type.
+ *  This information is useful to provide the HDF% Read function with a container 
+ *  of the proper type. The HFD5 library will do type conversion when possible, 
+ *  but will throw an error if types are incompatible. */
 std::string isce::io::IDataSet::getTypeClassStr(const std::string &v) {
 
     H5T_class_t type;
@@ -287,7 +318,7 @@ std::string isce::io::IDataSet::getTypeClassStr(const std::string &v) {
 
 
 
-// Get the names of all the attributes contained in the current dataset
+/** Return the names of all the attributes attached to the current dataset. */
 std::vector<std::string> isce::io::IDataSet::getAttrs() {
 
     // Initialize container that will contain the attribute names (if any)
@@ -306,10 +337,14 @@ std::vector<std::string> isce::io::IDataSet::getAttrs() {
 
 
 
-// Get the dataset storage chunk size.
-// The returned vector is the same size as the rank of the dataset and contains
-// the size of the chunk in each dimensions. A size of 0 means no chunking in 
-// that dimension (TODO To be confirmed)
+/** Return the chunk size of the dataset storage layout.
+ * 
+ * The size of the returned vector is the same as the rank of the dataset and 
+ * contains the size of the chunk in each dimensions. A size of 0 means no 
+ * chunking in that dimension. */ 
+
+//(TODO To be confirmed)
+
 std::vector<int> isce::io::IDataSet::getChunkSize() {
 
     // First, get the rank of the dataset
@@ -350,11 +385,9 @@ std::vector<int> isce::io::IDataSet::getChunkSize() {
 }
 
 
-// Get the number of "used" bits of the current dataset or given attributes as
-// stored in the file.
-// Although the smallest size unit is the byte, the data might be encoded with 
-// less (<8bits). This function return the precision (in bits) of the 
-// dataset/attribute. 
+/** @param[in] v Name of the attribute (optional).
+ *  Returns the actual number of bit used to store the current dataset or given 
+ *  attribute data in the file. */
 int isce::io::IDataSet::getNumBits(const std::string &v) {
 
     H5::DataType dtype;
@@ -392,65 +425,14 @@ int isce::io::IDataSet::getNumBits(const std::string &v) {
     return (int) precision;
 };
 
+/** @param[in] att  Name of the attribute (optional).
+ *  @param[out] v Dataset or attribute string value.
+ *
+ *  If input is not empty, reads the attributes string value, otherwise, 
+ *  reads the dataset scalar string value.
+ *  For dataset/attributes containing more than one elements, see other
+ *  function signature. */
 
-
-
-
-// TODO: All "read" functions below need some templating to tighten the code
-
-
-// Function to read an scalar dataset or attribute from file to a variable. 
-// Input variable that will receive the data can only be substituted to a 
-// numeric type. 
-// For dataset/attribute containing more than one element, a vector<T> should
-// be passed - see other signature of this function below.
-template<typename T>
-void isce::io::IDataSet::read(T &v, const std::string &att) {
-
-    // Check that the parameter that will receive the data read from the file 
-    // is a numeric variable
-    //if (typeid(T) != typeid(isce::core::FixedString))
-    //    static_assert(std::is_arithmetic<T>::value, "Expected a numeric scalar"); 
-
-    // Check that the dataset/attribute contains a scalar, i.e., rank=0
-    if (getRank(att) != 0) {
-        return;   // TODO Should add a message or something here
-    }
-
-    if (att.empty()) {
-       H5::DataSet::read(&v, memType(v,*this));
-    } else if (attrExists(att)) {
-       // Open the attribute
-       H5::Attribute a = openAttribute(att);
-
-       // Read the attribute from file
-       a.read(memType(v,a), &v);  // Note: order of parameter is reversed 
-                                   //       compared to dataset read
-       // Close the attribute
-       a.close();
-    }
-    else {}   // TODO Should warn or throw here
-
-    return;
-}
-
-template void
-isce::io::IDataSet::
-read(double & v, const std::string & att);
-
-template void
-isce::io::IDataSet::
-read(float & v, const std::string & att);
-
-template void
-isce::io::IDataSet::
-read(int & v, const std::string & att);
-
-template void
-isce::io::IDataSet::
-read(isce::core::FixedString & v, const std::string & att);
-
-// Same as above but for std::string. 
 // TODO: Should be templated with above function. Will probably need some
 // sort of function specialization as the "read" function called inside is 
 // overloaded with parameters being a std::string or void *buffer.
@@ -461,7 +443,7 @@ void isce::io::IDataSet::read(std::string &v, const std::string &att) {
         return;   // TODO Should add a message or something here
 
     if (att.empty()) {
-       H5::DataSet::read(&v, memType(v,*this), getDataSpace());
+       H5::DataSet::read(v, getStrType());
     }
     else if (attrExists(att)) {
        // Open the attribute
@@ -478,150 +460,6 @@ void isce::io::IDataSet::read(std::string &v, const std::string &att) {
     return;
 }
 
-
-
-
-
-
-template<typename T>
-void isce::io::IDataSet::read(T * buffer, const int * startIn, 
-                                const int * countIn, 
-                                const int * strideIn) { 
-
-    // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getReadDataSpace(startIn, countIn, strideIn);	 
-
-    // Check that the selection is valid (no out of bound)
-    // TODO - to be adjusted with preferred error/message handling
-    if (!dspace.selectValid()){
-       std::cout << "Sub-selection of dataset is invalid" << std::endl;
-       dspace.close();
-       return;
-    }
-
-    // Get total number of elements to read
-    hssize_t nbElements = dspace.getSelectNpoints();
-    
-    // Format the dataspace of the memory to receive the data read from file
-    H5::DataSpace memspace = getReadMemorySpace((hsize_t)nbElements);
-
-    // Read the dataset to memory
-    H5::DataSet::read(buffer, memType(buffer,*this) , memspace, dspace);
-    
-    // Close dataset and memory dataspaces
-    dspace.close();
-    memspace.close();
-
-}
-
-template<typename T>
-void isce::io::IDataSet::read(std::vector<T> &buffer) {
-   read(buffer, nullptr, nullptr, nullptr);
-} 
-
-template void
-isce::io::IDataSet::
-read(std::vector<int> & buffer);
-
-template void
-isce::io::IDataSet::
-read(std::vector<float> & buffer);
-
-template void
-isce::io::IDataSet::
-read(std::vector<double> & buffer);
-
-template void
-isce::io::IDataSet::
-read(std::vector<std::string> & buffer);
-
-template void
-isce::io::IDataSet::
-read(std::vector<isce::core::FixedString> & buffer);
-
-
-template<typename T>
-void isce::io::IDataSet::read(std::vector<T> &buffer, const std::vector<int> * startIn, 
-                                            const std::vector<int> * countIn, 
-                                            const std::vector<int> * strideIn) { 
- 
-    // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getReadDataSpace((startIn)  ? startIn->data() : nullptr,
-                                            (countIn)  ? countIn->data() : nullptr,
-                                            (strideIn) ? strideIn->data() : nullptr);
-
-    // Check that the selection is valid (no out of bound)
-    // TODO - to be adjusted with preferred error/message handling
-    if (!dspace.selectValid()){
-       std::cout << "Sub-selection of dataset is invalid" << std::endl;
-       dspace.close();
-       return;
-    }
-
-    // Get total number of elements to read
-    hssize_t nbElements = dspace.getSelectNpoints();
-    
-    // Format the dataspace of the memory to receive the data read from file
-    H5::DataSpace memspace = getReadMemorySpace((hsize_t)nbElements);
-
-    // Size the output container accordingly to the number of elements to be read
-    if(buffer.size() < nbElements)
-        buffer.resize(nbElements);
-
-    // Read the dataset to memory
-    H5::DataSet::read(buffer.data(), memType(buffer,*this) , memspace, dspace);
-    
-    // Close dataset and memory dataspaces
-    dspace.close();
-    memspace.close();
-
-}
-
-
-template<typename T>
-void isce::io::IDataSet::read(std::valarray<T> &buffer) {
-   read(buffer, nullptr, nullptr, nullptr);
-} 
-
-template<typename T>
-void isce::io::IDataSet::read(std::valarray<T> &buffer, const std::valarray<int> *startIn, 
-                                              const std::valarray<int> *countIn, 
-                                              const std::valarray<int> *strideIn) { 
- 
-    // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getReadDataSpace((startIn)  ? &(*startIn)[0] : nullptr,
-                                            (countIn)  ? &(*countIn)[0] : nullptr,
-                                            (strideIn) ? &(*strideIn)[0] : nullptr);
-
-    // Check that the selection is valid (no out of bound)
-    // TODO - to be adjusted with preferred error/message handling
-    if (!dspace.selectValid()){
-       std::cout << "Sub-selection of dataset is invalid" << std::endl;
-       dspace.close();
-       return;
-    }
-
-    // Get total number of elements to read
-    hssize_t nbElements = dspace.getSelectNpoints();
-    
-    // Format the dataspace of the memory to receive the data read from file
-    H5::DataSpace memspace = getReadMemorySpace((hsize_t)nbElements);
-
-    // Size the output container accordingly to the number of elements to be read
-    if(buffer.size() < nbElements)
-        buffer.resize(nbElements);
-
-    // Read the dataset to memory
-    H5::DataSet::read(&buffer[0], memType(buffer,*this) , memspace, dspace);
-    
-    // Close dataset and memory dataspaces
-    dspace.close();
-    memspace.close();
-
-}
-
-
-
 H5::DataSpace isce::io::IDataSet::getReadMemorySpace(hsize_t nbElements) {
 
     // Create a memory dataSpace describing the dataspace of the memory buffer
@@ -631,7 +469,6 @@ H5::DataSpace isce::io::IDataSet::getReadMemorySpace(hsize_t nbElements) {
     return memspace;
 
 }
-
 
 H5::DataSpace isce::io::IDataSet::getReadDataSpace(const int * startIn, 
                                                    const int * countIn, 
@@ -648,19 +485,17 @@ H5::DataSpace isce::io::IDataSet::getReadDataSpace(const int * startIn,
 
     // HDF5 library expect startIn/countIn/strideIn to be in unsigned long long.
     // Convert input (int) and set default values
+    // WARNING: It is assumed that startIn, countIn, strideIn length are equal
+    // to rank of the dataset
     
-    // Get information on the start location
-    hsize_t *start = new hsize_t[rank];
+    // Get the start locations for each dimension of the dataset
+    hsize_t *start = new hsize_t[rank]();
     if (startIn) {
         for(int i=0; i<rank; i++)
              start[i] = (hsize_t)startIn[i];
     }
-    else {
-        for (int i=0; i<rank; i++)
-            start[i] = 0;
-    }
 
-    // Get information on the number of elements to read
+    // Get the number of elements to read in each dimension
     hsize_t *count = new hsize_t[rank];
     if (countIn) {
         for (auto i=0; i<rank; i++)
@@ -670,15 +505,64 @@ H5::DataSpace isce::io::IDataSet::getReadDataSpace(const int * startIn,
         dspace.getSimpleExtentDims(count, NULL);
 
 
-    // Get information on the stride
+    // Get the stride of the reading in each dimension
     hsize_t *stride = new hsize_t[rank];
+    std::fill_n(stride, rank, 1);
     if (strideIn) {
         for (int i=0; i<rank; i++)
              stride[i] = (hsize_t)strideIn[i];
     }
-    else {
-        for (int i=0; i<rank; i++)
-            stride[i] = 1;
+
+    // Select the subset of the dataset to read
+    // Note: H5 throws an error if this function is applied on a scalar dataset
+    dspace.selectHyperslab(H5S_SELECT_SET, count, start, stride);
+
+    delete [] start;
+    delete [] count;
+    delete [] stride;
+
+    return dspace;
+}
+
+
+
+
+H5::DataSpace isce::io::IDataSet::getReadDataSpace(const std::vector<std::slice> * slicesIn) { 
+ 
+    // Get information of the file dataspace       
+    H5::DataSpace dspace = H5::DataSet::getSpace();	 
+    int rank = dspace.getSimpleExtentNdims();
+
+    // Specific case if dataset contains a scalar
+    if (rank == 0)
+        return dspace;
+
+
+    // Get the start locations for each dimension of the dataset
+    // and initialize them to origin (i.e., 0)
+    hsize_t *start = new hsize_t[rank]();
+
+    // Get the number of elements to read in each dimension
+    // and initialize them to full dimension
+    hsize_t *count = new hsize_t[rank];
+    dspace.getSimpleExtentDims(count, NULL);
+
+    // Get the stride of the reading in each dimension
+    // and initialize them to a stride of 1
+    hsize_t *stride = new hsize_t[rank];
+    std::fill_n(stride, rank, 1);
+
+    
+    // Now modify the start/count/stride with values from the std::slice
+    // Note: If sliceIn contains more slices than the rank of the dataset, only
+    // the N=rank first slices will be used. If sliceIn contains less slices 
+    // than the rank of the dataset, the slices will be applied to the first
+    // dimensions and the rest of the dimensions will be set to full extent 
+    // (cf. initialization above).  
+    for (int i=0; i<slicesIn->size() && i<rank; i++) {
+        start[i] = (hsize_t)(*slicesIn)[i].start();
+        count[i] = (hsize_t)(*slicesIn)[i].size();
+        stride[i] = (hsize_t)(*slicesIn)[i].stride();
     }
 
     // Select the subset of the dataset to read
@@ -696,102 +580,212 @@ H5::DataSpace isce::io::IDataSet::getReadDataSpace(const int * startIn,
 
 
 
+H5::DataSpace isce::io::IDataSet::getReadDataSpace(const std::gslice * gsliceIn) { 
+ 
+    // Get information of the file dataspace       
+    H5::DataSpace dspace = H5::DataSet::getSpace();	 
+    int rank = dspace.getSimpleExtentNdims();
 
+    // Specific case if dataset contains a scalar
+    if (rank == 0)
+        return dspace;
 
-// Function to read a non-scalar (i.e., multi dimensional) attribute from file 
-// to raw pointer. The input parameters are the raw pointer that will hold the
-// attribute values and the attribute name. 
-// Note: this function is similar to the dataset read method except that 
-// subselection is not possible and it needs an attribute name.
-template<typename T>
-void isce::io::IDataSet::read(T *buffer, const std::string &att) { 
+    
+    // Get the start locations for each dimension of the dataset
+    // and initialize them to origin (i.e., 0)
+    hsize_t *start = new hsize_t[rank]();
 
-    // Check that attribute name is not null or empty
-    // TODO Should add a message or something here
-    if (!attrExists(att))
-        return;
+    // Get the number of elements to read in each dimension
+    // and initialize them to full dimension
+    hsize_t *count = new hsize_t[rank];
+    dspace.getSimpleExtentDims(count, NULL);
 
-    // Open the attribute
-    H5::Attribute a = openAttribute(att);
+    // Get the stride of the reading in each dimension
+    // and initialize them to a stride of 1
+    hsize_t *stride = new hsize_t[rank];
+    std::fill_n(stride, rank, 1);
 
-    // Read the dataset to memory
-    a.read(memType(buffer,a), buffer);
+    
+    // Modify the start/count/stride arrays with values from the std::gslice
+    // Note: If gslice contains more *dimensions* than the rank of the dataset, 
+    // only the N=rank first inner dimensions will be used. If gsliceIn contains
+    // less *dimensions* than the rank of the dataset, the slices will be 
+    // applied to the first outer dimensions and the rest of the dimensions will
+    // be set to full extent 
 
-    // Close the attribute
-    a.close();
+    // First, convert gslice.start() which is a scalar indicating the location
+    // of the first pixel to read in the entire dataset into an array of
+    // locations indicating the location in each dimension
+    long dims = dspace.getSimpleExtentNpoints();
+    long tot = gsliceIn->start();
+    for (int i=0; i<rank; i++) {
+       dims = dims / count[rank-1-i];
+       //start[rank-1-i] = tot / dims;
+       start[i] = tot / dims;
+       tot = tot % dims;
+    }
+
+    // Loading the size and stride of each dimension
+    // TODO: Should check/warn if gslice size and stride number of elements are
+    // are not identical to rank of dataset; or if number of elements between 
+    // size and stride are different
+    // Converting gslice stride to HDF5 strides. gslice stride are absolute, 
+    // whereas HDF5 strides are expressed for a given dimension
+    long strideStep = 1;
+    hsize_t gsliceDims = ((*gsliceIn).stride()).size();
+    for (int i=0; i<gsliceDims && i<rank; i++) {
+        stride[i] = (hsize_t)((*gsliceIn).stride())[gsliceDims-1-i] / strideStep;
+        strideStep *= count[i];
+    }
+
+    // Converting gslice size to HDF5 count. It's essentially the same thing
+    for (int i=0; i<gsliceDims && i<rank; i++) {
+        count[i] = (hsize_t)((*gsliceIn).size())[i];
+    }
+
+    // Select the subset of the dataset to read
+    // Note: H5 throws an error if this function is applied on a scalar dataset
+    dspace.selectHyperslab(H5S_SELECT_SET, count, start, stride);
+
+    delete [] start;
+    delete [] count;
+    delete [] stride;
+
+    return dspace;
 }
 
 
 
+///////////////////////// GROUP ///////////////////////////////////
 
 
+std::vector<std::string> isce::io::IGroup::getAttrs() {
 
-// Function to read a non-scalar (i.e., multi dimensional) attribute from file 
-// to memory vector<T>. The input parameters are the vector that will hold the
-// attribute values and the attribute name. 
-// Note: this function is similar to the dataset read method except that 
-// subselection is not possible and it needs an attribute name.
-template<typename T>
-void isce::io::IDataSet::read(std::vector<T> &buffer, const std::string &att) { 
+    // Initialize container that will contain the attribute names (if any) and 
+    // returned to the caller
+    std::vector<std::string> outList;
 
-    // Check that attribute name is not null or empty
-    // TODO Should add a message or something here
-    if (!attrExists(att))
-        return;
+    // If none, job done, return
+    if (H5::H5Object::getNumAttrs() == 0)
+        return outList;
 
-    // Get number of elements in that attribute       
-    int nbElements = getNumElements(att);
+    // Iterate over all the attributes and get their names
+    int idx = H5::H5Object::iterateAttrs(attrsNames , NULL, &outList);
 
-    // Open the attribute
-    H5::Attribute a = openAttribute(att);
+    return outList;
+}
 
-    // Size the output container accordingly to the number of elements read
-    if(buffer.size() < nbElements)
-        buffer.resize(nbElements);
 
-    // Read the dataset to memory
-    a.read(memType(buffer,a), buffer.data());
+/** @param[in] name Regular Expression to search for.
+ *  @param[in] start Relative path from current group to start the search from. 
+ *  @param[in] type Type of object to search for. Default: BOTH
+ *  @param[in] returnedPath Absolute or Relative path of found object. Default: FULL
+ *
+ *  The function returns paths of all objects in the file whose names satisfy name. 
+ *
+ *  param name: can be a regular expression.
+ *  param type: three types of objects to search for are available:
+ *     GROUP: only returns groups whose names satisfy the inpout name.
+ *     DATASET: only return datasets whose names satisfy the input name. 
+ *     BOTH: return groups and datsets whose names satisfy the input name.
+ *  param returnedPath: the returned path of the found objects can be expressed 
+ *  from the current group (returnedPath = FULL - this is default) or relative 
+ *  to the start (returnedPath = RELATIVE).
+ */
+std::vector<std::string> isce::io::IGroup::find(const std::string name, 
+                                                const std::string start, 
+                                                const std::string type, 
+                                                const std::string returnedPath){
 
-    // Close the attribute
-    a.close();
+   if (start.empty())
+      return findByName(this->getId(), name, ".", type, returnedPath); 
+   else
+      return findByName(this->getId(), name, start, type, returnedPath); 
+
+} 
+
+/** Return the path of the current group from the root location in the file */
+std::string isce::io::IGroup::getPathname()
+{
+    // Need first to get the length of the name
+    size_t len = H5Iget_name(this->getId(), NULL, 0);
+
+    // Set up a buffer correctly sized to receive the path of the group
+    char buffer[len];
+
+    // Get the path
+    H5Iget_name(this->getId(),buffer,len+1);
+
+    // Return as std::string
+    std::string path = buffer;
+
+    return path;
+}
+
+
+/** Open the dataset of the input name that belongs to the current group */
+isce::io::IDataSet isce::io::IGroup::openDataSet(const H5std_string &name) {
+
+    H5::DataSet dset = H5::Group::openDataSet(name);
+    return IDataSet(dset);
+
+};
+
+
+/** @param[in] name Name of the group to open.
+ *
+ * name must contain the full path from root location and name of the group
+ * to open. */
+isce::io::IGroup isce::io::IGroup::openGroup(const H5std_string &name) {
+            
+    H5::Group group = H5::Group::openGroup(name);
+    return IGroup(group);
+
+};
+
+
+/** @param[in] att  Name of the attribute 
+ *  @param[out] v   Attribute scalar value (std::string type).
+ *
+ *  Reads the value of a string attribute contained in the current group.
+ *  For attribute containing more than one elements, see other function 
+ *  signature. */
+void isce::io::IGroup::read(std::string &v, const std::string &att) {
+
+    if (attrExists(att)) {
+       // Open the attribute
+       H5::Attribute a = openAttribute(att);
+
+       // Get the dataSpace of the attribute
+       H5::DataSpace dspace = a.getSpace();
+
+       // If attribute contains a scalar, as it should, read the attribute's 
+       // value
+       if (dspace.getSimpleExtentNdims() == 0)
+          a.read(memType(v), v);
+       
+       else {} // TODO warning/trow? 
+                                   
+                                            
+       // Close the attribute and dataspace
+       a.close();
+       dspace.close();
+    }
+    else {}   // TODO Should warn or throw here
+
+    return;
 }
 
 
 
-// Function to read a non-scalar (i.e., multi dimensional) attribute from file 
-// to memory vector<T>. The input parameters are the vector that will hold the
-// attribute values and the attribute name. 
-// Note: this function is similar to the previous one except that subselection
-// is not possible and it needs an attribute name.
-template<typename T>
-void isce::io::IDataSet::read(std::valarray<T> &buffer, const std::string &att) { 
-
-    // Check that attribute name is not null or empty
-    // TODO Should add a message or something here
-    if (!attrExists(att))
-        return;
-
-    // Get number of elements in that attribute       
-    int nbElements = getNumElements(att);
-
-    // Open the attribute
-    H5::Attribute a = openAttribute(att);
-
-    // Size the output container accordingly to the number of elements read
-    if(buffer.size() < nbElements)
-        buffer.resize(nbElements);
-
-    // Read the dataset to memory
-    a.read(memType(buffer,a), &buffer[0]);
-
-    // Close the attribute
-    a.close();
-}
+///////////////////////// FILE ///////////////////////////////////
 
 
 
-
-// Open an IDataset object
+/** @param[in] name Name of the dataset to open.
+ *
+ * name must contain the full path from root location and name of the dataset
+ * to open. */
 isce::io::IDataSet isce::io::IH5File::openDataSet(const H5std_string &name) {
             
     H5::DataSet dset = H5::H5File::openDataSet(name);
@@ -801,63 +795,44 @@ isce::io::IDataSet isce::io::IH5File::openDataSet(const H5std_string &name) {
 
 
 
-// This function is a search function allowing the user to list (in a 
-// vector<string> container) all the group and dataset whose name 
-// (i.e. path/name) contains a given string.
-// IN: nameIn: String to be searched in the file tree
-// IN start (default: "/"): Location at which the search is to be started. That is
-// the function will search that location and all subdirectories.
-// IN type (default: "BOTH"): Whether to return only DATASET, GROUP or BOTH
-// Note that whether or not the user pass in a start path for the search, the 
-// returned paths of the objects founds are always the full absolute path.
+/** @param[in] name Name of the group to open.
+ *
+ * name must contain the full path from root location and name of the group
+ * to open. */
+isce::io::IGroup isce::io::IH5File::openGroup(const H5std_string &name) {
+            
+    H5::Group group = H5::H5File::openGroup(name);
+    return IGroup(group);
 
-std::vector<std::string> isce::io::IH5File::find(std::string nameIn, std::string start,
-                                       std::string type) {
-
-    std::vector<std::string> outList;
-
-    if (nameIn.empty())
-        return outList;
-
-    if (start != "/") {
-        // Check that the provided start path exists in the file
-        if (!this->exists(start))
-            return outList;
-
-        // Check that the provided start path points to a group
-        H5O_info_t *info = nullptr;
-        herr_t status = H5Oget_info_by_name(this->getId(), start.c_str(), 
-                                                    info, H5P_DEFAULT);
-        if (status < 0 || info->type != H5O_TYPE_GROUP)
-           return outList;
-    }
-
-    if (type != "GROUP" && type != "DATASET" && type != "BOTH")
-        return outList;
-
-
-    //Hack. Store search name and type in outList as one user parameter is allowed
-    outList.push_back(nameIn);
-    outList.push_back(type);
-    // Some pre-process of "start" to allow full path return
-    if (start.length() > 1 && strncmp(&start.back(),"/",1))
-        outList.push_back(start.append("/"));
-    else 
-        outList.push_back(start);
-  
-
-    H5Ovisit_by_name(this->getId(), start.c_str(), H5_INDEX_NAME, H5_ITER_INC, 
-                     matchName, &outList, H5P_DEFAULT);
-
-
-    //Hack. Removing the search name and type from outList.
-    outList.erase(outList.begin(), outList.begin()+3);
-
-    return outList; 
-
-}
+};
 
 
 
 
+/** @param[in] name Regular Expression to search for.
+ *  @param[in] start Relative path from root to start the search from. Default:file root
+ *  @param[in] type Type of object to search for. Default: BOTH
+ *  @param[in] returnedPath Absolute or Relative path of found object. Default: FULL
+ *
+ *  The function returns paths of all objects in the file whose names satisfy the 
+ *
+ *  param name: can be a regular expression.
+ *  param type: three types of objects to search for are available:
+ *     GROUP: only returns groups whose names satisfy the inpout name.
+ *     DATASET: only return datasets whose names satisfy the input name. 
+ *     BOTH: return groups and datsets whose names satisfy the input name.
+ *  param returnedPath: the returned path of the found objects can be expressed 
+ *  from the root (returnedPath = FULL - this is default) or relative to the 
+ *  start (returnedPath = RELATIVE).
+ */
+std::vector<std::string> isce::io::IH5File::find(const std::string name, 
+                                                 const std::string start, 
+                                                 const std::string type, 
+                                                 const std::string returnedPath){
 
+   if (start.empty())
+      return findByName(this->getId(), name, "/", type, returnedPath); 
+   else
+      return findByName(this->getId(), name, start, type, returnedPath); 
+
+} 

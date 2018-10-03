@@ -133,7 +133,7 @@ namespace isce {
                                  orbit.velocity);
 
             // Load timestamp
-            std::vector<FixedString> timestamps;
+            std::vector<isce::core::FixedString> timestamps;
             isce::io::loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/timestamp",
                                  timestamps);
             orbit.nVectors = timestamps.size();
@@ -142,10 +142,8 @@ namespace isce {
 
             // Finally, convert timestamps seconds
             for (int i = 0; i < orbit.nVectors; ++i) {
-                // Make a string
-                std::string timestampStr(timestamps[i].str);
                 // Make a DateTime and save it
-                DateTime date(timestampStr);
+                DateTime date(std::string(timestamps[i].str));
                 orbit.epochs[i] = date;
                 // Convert to seconds since epoch
                 orbit.UTCtime[i] = date.secondsSinceEpoch(refEpoch);
@@ -205,7 +203,7 @@ namespace isce {
         inline void load(isce::io::IH5File & file, Metadata & meta, std::string mode="primary") {
 
             double pri, bandwidth, centerFrequency;
-            FixedString sensingStart, lookDir;
+            std::string sensingStart, lookDir;
 
             // Make full mode string
             std::string path = "/science/complex_imagery/" + mode + "_mode";
@@ -231,11 +229,10 @@ namespace isce {
             // Finalize rest of metadata items
             meta.prf = 1.0 / pri;
             meta.radarWavelength = SPEED_OF_LIGHT / centerFrequency;
-            meta.sensingStart = std::string(sensingStart.str);
-            std::string look(lookDir.str);
-            if (look.compare("right") == 0) {
+            meta.sensingStart = sensingStart;
+            if (lookDir.compare("right") == 0) {
                 meta.lookSide = -1;
-            } else if (look.compare("left") == 0) {
+            } else if (lookDir.compare("left") == 0) {
                 meta.lookSide = 1;
             }
         }

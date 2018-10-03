@@ -143,7 +143,7 @@ namespace isce {
             // Load zero doppler ending azimuth time
             isce::io::loadFromH5(file, path + "/zero_doppler_end_az_time", datestr);
             // Convert to datetime
-            date = std::string(datestr.str);
+            date = std::string(std::string(datestr.str));
             // Set
             mode.endAzTime(date);
         }

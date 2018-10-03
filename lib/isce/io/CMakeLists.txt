@@ -18,6 +18,7 @@ endforeach()
 set(${PACKAGENAME}_EXPORT_HEADERS
     Constants.h
     IH5.h
+    IH5.icc
     Raster.h
     Raster.icc
     Serialization.h

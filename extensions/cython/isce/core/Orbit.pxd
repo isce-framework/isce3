@@ -16,16 +16,14 @@ cdef extern from "isce/core/Constants.h" namespace "isce::core":
 
 cdef extern from "isce/core/Orbit.h" namespace "isce::core":
     cdef cppclass Orbit:
-        int basis
         int nVectors
         vector[double] position
         vector[double] velocity
         vector[double] UTCtime
 
         Orbit() except +
-        Orbit(int,int) except +
+        Orbit(int) except +
         Orbit(const Orbit&) except +
-        void getPositionVelocity(double, cartesian_t &, cartesian_t &)
         void getStateVector(int,double&,cartesian_t&,cartesian_t&)
         void setStateVector(int,double,cartesian_t&,cartesian_t&)
         void addStateVector(double,cartesian_t&,cartesian_t&)
@@ -35,6 +33,6 @@ cdef extern from "isce/core/Orbit.h" namespace "isce::core":
         int interpolateSCHOrbit(double,cartesian_t&,cartesian_t&)
         int computeAcceleration(double,cartesian_t&)
         void printOrbit()
-        void loadFromHDR(const char*,int)
+        void loadFromHDR(const char*)
         void dumpToHDR(const char*)
 

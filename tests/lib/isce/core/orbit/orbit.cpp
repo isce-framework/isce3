@@ -50,7 +50,7 @@ TEST_F(OrbitTest,LinearSCH){
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t opos = {0., 0., 0.};
     cartesian_t ovel = {4000., -1000., 4500.};
@@ -82,7 +82,7 @@ TEST_F(OrbitTest,LinearHermite){
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t opos = {0., 0., 0.};
     cartesian_t ovel = {4000., -1000., 4500.};
@@ -113,7 +113,7 @@ TEST_F(OrbitTest,LinearLegendre){
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t opos = {0., 0., 0.};
     cartesian_t ovel = {4000., -1000., 4500.};
@@ -162,7 +162,7 @@ TEST_F(OrbitTest,CircleSCH) {
      * Test circular orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t opos = {7000000., -4500000., 7800000.};
     cartesian_t ovel, pos, vel;
@@ -193,7 +193,7 @@ TEST_F(OrbitTest,CircleHermite) {
      * Test circular orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t opos = {7000000., -4500000., 7800000.};
     cartesian_t ovel, pos, vel;
@@ -225,7 +225,7 @@ TEST_F(OrbitTest,CircleLegendre) {
      * Test circular orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t opos = {7000000., -4500000., 7800000.};
     cartesian_t ovel, pos, vel;
@@ -307,7 +307,7 @@ TEST_F(OrbitTest,PolynomialSCH) {
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t pos, vel;
 
@@ -342,7 +342,7 @@ TEST_F(OrbitTest,PolynomialHermite) {
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t pos, vel;
 
@@ -377,7 +377,7 @@ TEST_F(OrbitTest,PolynomialLegendre) {
      * Test linear orbit.
      */
 
-    Orbit orb(1,11);
+    Orbit orb(11);
     double t = 1000.;
     cartesian_t pos, vel;
 

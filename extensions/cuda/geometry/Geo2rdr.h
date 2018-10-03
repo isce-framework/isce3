@@ -37,7 +37,7 @@ class isce::cuda::geometry::Geo2rdr : public isce::geometry::Geo2rdr {
         void geo2rdr(isce::io::Raster &, const std::string &, double, double);
 
     private:
-        // Processing parameters
+        // Default number of lines per block
         size_t _linesPerBlock = 1000;
 
     private:
@@ -49,7 +49,9 @@ class isce::cuda::geometry::Geo2rdr : public isce::geometry::Geo2rdr {
 
         // Check we can interpolate orbit to middle of DEM
         void _checkOrbitInterpolation(double);
-         
+
+        // Compute number of lines per block dynamically from GPU memmory
+        void computeLinesPerBlock();
 };
 
 #endif

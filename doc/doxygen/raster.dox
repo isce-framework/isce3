@@ -1,0 +1,147 @@
+/*! \page raster Raster Data Model in ISCE
+
+\tableofcontents
+
+\section gdal Raster Data Model
+
+ISCE delegates raster data handling to the Geospatial Data Abstraction Library (<a href="https://www.gdal.org">GDAL</a>). Hence, it uses all the conventions defined by the <a href="http://www.gdal.org/gdal_datamodel.html">GDAL data model</a> to simplify the interface. You will find detailed documentation of all the methods available here: isce::io::Raster.
+
+
+\subsection rastercreate Raster creation
+
+ISCE exposes access to GDAL's raster generation capabilities via it's most general constructor interface
+
+isce::io::Raster(const std::string& fname, size_t width, size_t length, size_t numBands, GDALDataType dtype, const std::string& driverName)
+
+This method provides direct access to 
+GDALGetDriverManager()->GetDriverByName()->Create() methods in C++. This provides users with the capability to generate raster imagery in any format with write-support in GDAL. See this <a href="https://www.gdal.org/formats_list.html">table</a> for list of formats supported by GDAL.
+
+
+\subsection rasterread Reading Rasters
+
+Since, ISCE delegates Raster data access to GDAL, (in theory) users should be able to read in any raster format that GDAL supports. A Raster can be easily opened for ReadOnly Access by just passing the filename to the constructor
+
+isce::io::Raster(std::string& fname)
+
+The same applies to <a href="https://www.gdal.org/gdal_virtual_file_systems.html">virtual file systems</a> supported by GDAL as well. 
+
+
+\subsection drivers Special drivers
+
+\subsubsection rastervrt Virtual Raster Table (VRT) driver
+The <a href="https://www.gdal.org/gdal_vrttut.html">VRT</a> driver is considered a special driver by ISCE and is handled differently during Raster creation. When a user asks a Raster to be created with the VRT driver, it is assumed that the user is requesting a raw binary file on disk with the metadata captured in a VRT file with VRTRawRasterBands. 
+
+This behavior is meant to replicate the imagery file with an auxilary metadata file model used by ROI_PAC (.rsc) and ISCE v2 (.xml). VRT format allows for other metadata to be stored under custom metadata domains and includes support for special handling of xml strings. 
+
+Note that VRT format files are only handled differently during creation. VRTs created by other workflows behave like other normal GDAL datasets for reading / updating.
+
+\subsubsection rasterhdf5 HDF5 driver
+The HDF5 driver is considered a special driver by ISCE and is handle differently during Raster creation and reading. GDAL's HDF5 driver does not provide write or update capability, and ISCE relies on its own custom implmentation to support working with NISAR products that are in HDF5 format. More details to follow soon.
+
+\section areapoint Pixel is Area
+
+ISCE uses the same convention as GDAL, i.e coordinates of a raster image are interpreted using the "PixelIsArea" convention. 
+
+\image html "Raster_layout.png"
+
+The key features of "PixelIsArea" convention are 
+<ol>
+<li>(0,0) represents the Top-Left corner of the first pixel in the first line of the raster</li>
+<li>(nPixels, 0) represents the Top-Right corner of the the last pixel in the first line of the raster
+</li>
+<li>(0, nLines) represents the Bottom-Left corner of the first pixel in the last line of the raster </li>
+<li>(nPixels, nLines) represents the Bottom-Right corner of the last pixel in the last line of the raster </li>
+<li>A pixel in the raster is indexed using its Top-Left corner position.
+</ol>
+
+For more details on the "PixelIsArea" and "PixelIsPoint" conventions - see the <a href="http://geotiff.maptools.org/spec/geotiff2.5.html">Geotiff</a> spec.
+
+\subsection GeoTransform
+
+ISCE delegates the association of map coordinates (East, North) to image coordinates (Column, Row) to GDAL and uses the <a href="https://www.gdal.org/gdal_datamodel.html">Affine GeoTransform </a> mechanism to represent this mapping. GeoTransform of a raster image refers to collection of six double precisiion numbers such that 
+
+\f[
+\left[ \begin{array}{c}
+X_{left} \\
+Y_{top}
+\end{array} \right] = \left[ \begin{array}{c}
+G_0 \\
+G_3 \end{array}\right] + \left[ \begin{array}{cc}
+G_1 & G_2 \\
+G_4 & G_5 
+\end{array} \right] \cdot \left[ \begin{array}{c}
+P \\
+L 
+\end{array} \right]
+
+\f]
+
+where P and L refer to integer pixel (column) and line (row) indices of pixel of interest, and \f$X_{left}\f$ and \f$Y_{top}\f$ corresponds to the geographical coordinates of the Top-Left corner.
+
+\subsection pixelexample Example: SRTM vs NED
+
+SRTM uses "pixelIsPoint" convention whereas NED uses "pixelIsArea" convention. See <a href="https://topochange.cr.usgs.gov/vertical.php">this link</a> for detailed explanation.
+
+Consequently, map coordinates of SRTM data has to be labelled correctly for use with ISCE.  This example is to emphasize that when users bring in their own datasets to work with ISCE - they should be annotated correctly with  "pixelIsArea"  Affine Geotransform information.
+
+Fortunately, GDAL takes care of this adjustment already for SRTM format datasets. You can verify this by running "gdalinfo" on an SRTM tile. Note that the geographic coordinates corresponding to the Top-Left corner has been adjusted by half a pixel to conform to the "pixelIsArea" convention.
+
+\verbatim
+> gdalinfo N34W120.hgt
+Driver: SRTMHGT/SRTMHGT File Format
+Files: N34W120.hgt
+Size is 1201, 1201
+Coordinate System is:
+GEOGCS["WGS 84",
+    DATUM["WGS_1984",
+        SPHEROID["WGS 84",6378137,298.257223563,
+            AUTHORITY["EPSG","7030"]],
+        AUTHORITY["EPSG","6326"]],
+    PRIMEM["Greenwich",0,
+        AUTHORITY["EPSG","8901"]],
+    UNIT["degree",0.0174532925199433,
+        AUTHORITY["EPSG","9122"]],
+    AUTHORITY["EPSG","4326"]]
+Origin = (-120.000416666666666,35.000416666666666)
+Pixel Size = (0.000833333333333,-0.000833333333333)
+Metadata:
+  AREA_OR_POINT=Point
+Corner Coordinates:
+Upper Left  (-120.0004167,  35.0004167) (120d 0' 1.50"W, 35d 0' 1.50"N)
+Lower Left  (-120.0004167,  33.9995833) (120d 0' 1.50"W, 33d59'58.50"N)
+Upper Right (-118.9995833,  35.0004167) (118d59'58.50"W, 35d 0' 1.50"N)
+Lower Right (-118.9995833,  33.9995833) (118d59'58.50"W, 33d59'58.50"N)
+Center      (-119.5000000,  34.5000000) (119d30' 0.00"W, 34d30' 0.00"N)
+Band 1 Block=1201x1 Type=Int16, ColorInterp=Undefined
+  NoData Value=-32768
+  Unit Type: m
+
+\endverbatim
+
+\section rasterproj Projections
+
+While GDAL is used to handle rasters within ISCE, ISCE only handles a small subset of projection systems that are supported by GDAL. ISCE exclusively uses <a href="http://www.epsg.org/">EPSG</a> codes for coordinate projection. A CUDA implementation of projection transformations has also been implemented for GPU-based processing. Note that all ISCE supported projections are defined on a WGS84 ellipsoid.
+
+<table>
+    <caption id="multi_row">Table of supported projections in ISCE</caption>
+    <tr><th>EPSG code<th>PROJ.4 string<th>Common name
+    <tr><td><a href="https://epsg.io/4326">4326</a><td>+proj=longlat +datum=WGS84 +no_defs<td>WGS84 Lon/Lat
+    <tr><td><a href="https://epsg.io/3031">3031</a><td>+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1<td>Antarctic Polar Stereographic
+    <tr><td><a href="https://epsg.io/3413">3413</a><td>+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs<td>NSIDC Polar Stereographic North
+    <tr><td><a href="https://epsg.io/32600">32600+X</a><td>+proj=utm +zone=X +datum=WGS84 +units=m +no_defs<td>Standard UTM zone North
+    <tr><td><a href="https://epsg.io/32700">32700+X</a><td>+proj=utm +zone=X +south +datum=WGS84 +units=m +no_defs<td>Standard UTM zone South
+    <tr><td><a href="https://epsg.io/6933">6933</a><td>+proj=cea +lon_0=0 +lat_ts=30 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs<td>EASE 2.0 global grid
+</table>  
+
+
+\subsection rastervert Vertical Datum
+
+Internally, ISCE needs all DEM heights to be referenced w.r.t WGS84 ellipsoid. However, it can delegate vertical datum transformation for a small subset of geoids to GDAL (gdalwarp with vertical datum). The set of supported geoids are 
+
+<table>
+    <caption id="multi_row">Table of supported geoids in ISCE</caption>
+    <tr><th>EPSG code<th>Name of Geoid<th>URL
+    <tr><td>5773<td>EGM 96<td><a href="https://en.wikipedia.org/wiki/EGM96">https://en.wikipedia.org/wiki/EGM96</a>
+    <tr><td>3885<td>EGM 08<td><a href="http://earth-info.nga.mil/GandG/wgs84/gravitymod/egm2008/egm08_wgs84.html">http://earth-info.nga.mil/GandG/wgs84/gravitymod/egm2008/egm08_wgs84.html</a> 
+</table>
+*/
