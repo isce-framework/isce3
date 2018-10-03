@@ -29,43 +29,43 @@ template <class U>
     class gpuInterpolator {
         public:
             CUDA_HOSTDEV gpuInterpolator(){};
-            CUDA_DEV virtual U interpolate(double, double, const U*, size_t) = 0;
+            CUDA_DEV virtual U interpolate(double, double, const U*, size_t, size_t) = 0;
     };
-}}}
 
 
 // gpuBilinearInterpolator class derived from abstract gpuInterpolator class
-namespace isce{ namespace cuda{ namespace core{
 template <class U>
 class gpuBilinearInterpolator : public isce::cuda::core::gpuInterpolator<U> {
     public:
         CUDA_HOSTDEV gpuBilinearInterpolator(){};
-        CUDA_DEV U interpolate(double, double, const U*, size_t);
+        CUDA_DEV U interpolate(double, double, const U*, size_t, size_t);
         CUDA_HOST void interpolate_h(const Matrix<double>&, Matrix<U>&, double, double, U*);
-    };
-}}}
+};
 
 
 // gpuBicubicInterpolator class derived from abstract gpuInterpolator class
-namespace isce{ namespace cuda{ namespace core{
 template <class U>
 class gpuBicubicInterpolator : public isce::cuda::core::gpuInterpolator<U> {
     public:
         CUDA_HOSTDEV gpuBicubicInterpolator(){};
-        CUDA_DEV U interpolate(double, double, const U*, size_t);
+        CUDA_DEV U interpolate(double, double, const U*, size_t, size_t);
         CUDA_HOST void interpolate_h(const Matrix<double>&, Matrix<U>&, double, double, U*);
-    };
-}}}
-
-/*
-// Bicubic class derived from abstract gpuInterpolator class
-template <class U>
-class isce::cuda::core::Bicubic {
-    public:
-        U interpolate(double, double, const Matrix<U> &);
 };
 
 
+// gpuSpline2dInterpolator class derived from abstract gpuInterpolator class
+template <class U>
+class gpuSpline2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
+    protected:
+        size_t _order;
+    public:
+        CUDA_HOSTDEV gpuSpline2dInterpolator(size_t order):_order(order){};
+        CUDA_DEV U interpolate(double, double, const U*, size_t, size_t);
+        CUDA_HOST void interpolate_h(const Matrix<double>&, Matrix<U>&, double, double, U*);
+};
+}}}
+
+/*
 // Akima class derived from abstract gpuInterpolator class
 template <class U>
 class isce::cuda::core::Akima {

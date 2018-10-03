@@ -187,7 +187,7 @@ interpolateXY(double x, double y) const {
         return _refHeight;
 
     // Delegate DEM interpolation to gpuInterpolator pointer
-    value = (*_interp)->interpolate(col, row, _dem, _width);
+    value = (*_interp)->interpolate(col, row, _dem, _width, _length);
     
     // Done
     return value;

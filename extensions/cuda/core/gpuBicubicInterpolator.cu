@@ -16,10 +16,8 @@ using isce::cuda::core::gpuBicubicInterpolator;
 /*
    each derived class needs it's own wrapper_d, gpuInterpolator_g...
 */
-
-
 template <class U>
-__device__ void wrapper_d(gpuBicubicInterpolator<U> interp, double x, double y, const U *z, size_t nx, U *value) {
+__device__ void wrapper_d(gpuBicubicInterpolator<U> interp, double x, double y, const U *z, U *value, size_t nx, size_t ny=0) {
     /*
      *  device side wrapper used to get map interfaces of actual device function to global test function
      */
@@ -28,12 +26,12 @@ __device__ void wrapper_d(gpuBicubicInterpolator<U> interp, double x, double y, 
 
 
 template <class U>
-__global__ void gpuInterpolator_g(gpuBicubicInterpolator<U> interp, double *x, double *y, const U *z, size_t nx, U *value) {
+__global__ void gpuInterpolator_g(gpuBicubicInterpolator<U> interp, double *x, double *y, const U *z, U *value, size_t nx, size_t ny=0) {
     /*
      *  GPU kernel to test interpolate() on the device for consistency.
      */
     int i = threadIdx.x;
-    wrapper_d(interp, x[i], y[i], z, nx, &value[i]);
+    wrapper_d(interp, x[i], y[i], z, &value[i], nx);
 }
 
 
@@ -46,6 +44,8 @@ __host__ void isce::cuda::core::gpuBicubicInterpolator<U>::interpolate_h(const M
     // allocate host side memory
     size_t size_input_pts = truth.length() * sizeof(double);
     size_t size_output_pts = truth.length() * sizeof(U);
+    size_t nx = m.width();
+
     double *h_x = (double *)malloc(size_input_pts);
     double *h_y = (double *)malloc(size_input_pts);
 
@@ -54,8 +54,6 @@ __host__ void isce::cuda::core::gpuBicubicInterpolator<U>::interpolate_h(const M
         h_x[i] = (truth(i,0) - start) / delta;
         h_y[i] = (truth(i,1) - start) / delta;
     }
-
-    size_t nx = m.width();
 
     // allocate devie side memory
     double *d_x;
@@ -74,7 +72,7 @@ __host__ void isce::cuda::core::gpuBicubicInterpolator<U>::interpolate_h(const M
 
     // launch!
     int n_threads = truth.length();
-    gpuInterpolator_g<U><<<1, n_threads>>>(*this, d_x, d_y, d_m, nx, d_z);
+    gpuInterpolator_g<U><<<1, n_threads>>>(*this, d_x, d_y, d_m, d_z, nx);
     
     // copy device results to host
     checkCudaErrors(cudaMemcpy(h_z, d_z, size_output_pts, cudaMemcpyDeviceToHost));
@@ -88,7 +86,7 @@ __host__ void isce::cuda::core::gpuBicubicInterpolator<U>::interpolate_h(const M
 
 
 template <class U>
-__device__ U isce::cuda::core::gpuBicubicInterpolator<U>::interpolate(double x, double y, const U* z, size_t nx) {
+__device__ U isce::cuda::core::gpuBicubicInterpolator<U>::interpolate(double x, double y, const U* z, size_t nx, size_t ny=0) {
 
     // The bicubic interpolation weights
     const double weights[] = {
@@ -182,4 +180,5 @@ template class gpuBicubicInterpolator<float>;
 
 template __global__ void
 gpuInterpolator_g<double>(gpuBicubicInterpolator<double> interp, double *x, double *y,
-                          const double *z, size_t nx, double *value);
+                          const double *z, double *value, size_t nx, size_t ny);
+

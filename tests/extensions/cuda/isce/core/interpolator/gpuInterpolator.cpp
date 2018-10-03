@@ -23,6 +23,7 @@ using isce::core::Matrix;
 using isce::cuda::core::gpuInterpolator;
 using isce::cuda::core::gpuBilinearInterpolator;
 using isce::cuda::core::gpuBicubicInterpolator;
+using isce::cuda::core::gpuSpline2dInterpolator;
 
 void loadInterpData(Matrix<double> &);
 
@@ -128,24 +129,31 @@ TEST_F(gpuInterpolatorTest, BicubicDouble) {
     ASSERT_TRUE((error / N_pts) < 0.058);
 }
 
-/*
 // Test bicubic interpolation
-// Simply test final sum of square errors
-TEST_F(gpuInterpolatorTest, Bicubic) {
+TEST_F(gpuInterpolatorTest, Spline2dDouble) {
     size_t N_pts = true_values.length();
     double error = 0.0;
+    std::vector<double> v_z(true_values.length());
+    double *z = v_z.data();
+    
+    // instantiate parent and derived class
+    gpuSpline2dInterpolator<double> gpu_spline2d(6);
+
+    // Perform interpolation
+    gpu_spline2d.interpolate_h(true_values, M, start, delta, z);
+
     for (size_t i = 0; i < N_pts; ++i) {
-        // Unpack location to interpolate
-        const double x = (true_values(i,0) - start) / delta;
-        const double y = (true_values(i,1) - start) / delta;
+        // Unpack reference value
         const double zref = true_values(i,5);
-        // Perform interpolation
-        double z = isce::core::Interpolator::bicubic(x, y, M);
         // Accumulate error
-        error += std::pow(z - zref, 2);
+        error += std::pow(z[i] - zref, 2);
     }
     ASSERT_TRUE((error / N_pts) < 0.058);
 }
+
+/*
+// Test bicubic interpolation
+// Simply test final sum of square errors
 
 // Test biquintic spline interpolation
 TEST_F(gpuInterpolatorTest, Biquintic) {

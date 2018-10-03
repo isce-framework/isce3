@@ -25,7 +25,8 @@ set(LOCAL_SRCS
         gpuPeg.cu
         gpuPegtrans.cu 
         gpuPoly2d.cu 
-        gpuProjections.cu )
+        gpuProjections.cu 
+        gpuSpline2dInterpolator.cu )
 
 # Append current path to every source file
 set(ISCE_CUDA_${PACKAGENAME}_SRCS "")

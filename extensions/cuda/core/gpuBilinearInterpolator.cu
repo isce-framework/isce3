@@ -17,7 +17,7 @@ using isce::cuda::core::gpuBilinearInterpolator;
    each derived class needs it's own wrapper_d, gpuInterpolator_g...
 */
 template <class U>
-__device__ void wrapper_d(gpuBilinearInterpolator<U> interp, double x, double y, const U *z, size_t nx, U *value) {
+__device__ void wrapper_d(gpuBilinearInterpolator<U> interp, double x, double y, const U *z, U *value, size_t nx, size_t ny=0) {
     /*
      *  device side wrapper used to get map interfaces of actual device function to global test function
      */
@@ -26,12 +26,12 @@ __device__ void wrapper_d(gpuBilinearInterpolator<U> interp, double x, double y,
 
 
 template <class U>
-__global__ void gpuInterpolator_g(gpuBilinearInterpolator<U> interp, double *x, double *y, const U *z, size_t nx, U *value) {
+__global__ void gpuInterpolator_g(gpuBilinearInterpolator<U> interp, double *x, double *y, const U *z, U *value, size_t nx, size_t ny=0) {
     /*
      *  GPU kernel to test interpolate() on the device for consistency.
      */
     int i = threadIdx.x;
-    wrapper_d(interp, x[i], y[i], z, nx, &value[i]);
+    wrapper_d(interp, x[i], y[i], z, &value[i], nx);
 }
 
 
@@ -44,6 +44,8 @@ __host__ void isce::cuda::core::gpuBilinearInterpolator<U>::interpolate_h(const 
     // allocate host side memory
     size_t size_input_pts = truth.length() * sizeof(double);
     size_t size_output_pts = truth.length() * sizeof(U);
+    size_t nx = m.width();
+
     double *h_x = (double *)malloc(size_input_pts);
     double *h_y = (double *)malloc(size_input_pts);
 
@@ -52,8 +54,6 @@ __host__ void isce::cuda::core::gpuBilinearInterpolator<U>::interpolate_h(const 
         h_x[i] = (truth(i,0) - start) / delta;
         h_y[i] = (truth(i,1) - start) / delta;
     }
-
-    size_t nx = m.width();
 
     // allocate devie side memory
     double *d_x;
@@ -72,7 +72,7 @@ __host__ void isce::cuda::core::gpuBilinearInterpolator<U>::interpolate_h(const 
 
     // launch!
     int n_threads = truth.length();
-    gpuInterpolator_g<U><<<1, n_threads>>>(*this, d_x, d_y, d_m, nx, d_z);
+    gpuInterpolator_g<U><<<1, n_threads>>>(*this, d_x, d_y, d_m, d_z, nx);
     
     // copy device results to host
     checkCudaErrors(cudaMemcpy(h_z, d_z, size_output_pts, cudaMemcpyDeviceToHost));
@@ -86,11 +86,12 @@ __host__ void isce::cuda::core::gpuBilinearInterpolator<U>::interpolate_h(const 
 
 
 template <class U>
-__device__ U isce::cuda::core::gpuBilinearInterpolator<U>::interpolate(double x, double y, const U* z, size_t nx) {
+__device__ U isce::cuda::core::gpuBilinearInterpolator<U>::interpolate(double x, double y, const U* z, size_t nx, size_t ny=0) {
     size_t x1 = floor(x);
     size_t x2 = ceil(x);
     size_t y1 = floor(y);
     size_t y2 = ceil(y);
+    
     U q11 = z[y1*nx + x1];
     U q12 = z[y2*nx + x1];
     U q21 = z[y1*nx + x2];
@@ -124,6 +125,5 @@ template class gpuBilinearInterpolator<float>;
 
 template __global__ void
 gpuInterpolator_g<double>(gpuBilinearInterpolator<double> interp, double *x, double *y,
-                          const double *z, size_t nx, double *value);
-
+                          const double *z, double *value, size_t nx, size_t ny);
 
