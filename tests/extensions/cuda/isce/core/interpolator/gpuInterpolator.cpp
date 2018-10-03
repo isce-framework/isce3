@@ -129,7 +129,7 @@ TEST_F(gpuInterpolatorTest, BicubicDouble) {
     ASSERT_TRUE((error / N_pts) < 0.058);
 }
 
-// Test bicubic interpolation
+// Test spline interpolation
 TEST_F(gpuInterpolatorTest, Spline2dDouble) {
     size_t N_pts = true_values.length();
     double error = 0.0;
