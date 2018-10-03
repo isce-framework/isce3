@@ -296,9 +296,6 @@ rdr2geo_h(const isce::core::Pixel & pixel,
           cartesian_t & llh,
           int side, double threshold, int maxIter, int extraIter) {
 
-    // Set the CUDA device
-    //cudaSetDevice(0);
-
     // Make GPU objects
     isce::cuda::core::gpuPixel gpu_pixel(pixel);
     isce::cuda::core::gpuBasis gpu_basis(basis);
@@ -372,9 +369,6 @@ geo2rdr_h(const cartesian_t & llh,
           const isce::product::ImageMode & mode,
           double & aztime, double & slantRange,
           double threshold, int maxIter, double deltaRange) {
-
-    // Set the CUDA device
-    //cudaSetDevice(0);
 
     // Make GPU objects
     isce::cuda::core::gpuEllipsoid gpu_ellps(ellps);

@@ -205,9 +205,6 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
            double threshold, int numiter, int extraiter,
            unsigned int & totalconv) {
 
-    // Set the device
-    //cudaSetDevice(0);
-
     // Create gpu ISCE objects
     isce::cuda::core::gpuEllipsoid gpu_ellipsoid(ellipsoid);
     isce::cuda::core::gpuOrbit gpu_orbit(orbit);

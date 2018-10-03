@@ -21,10 +21,8 @@ gpuDEMInterpolator(isce::geometry::DEMInterpolator & demInterp) :
     _length(demInterp.length()), _width(demInterp.width()),
     _xstart(demInterp.xStart()), _ystart(demInterp.yStart()),
     _deltax(demInterp.deltaX()), _deltay(demInterp.deltaY()),
-    _epsgcode(demInterp.epsgCode()), _owner(true) {
-
-    // Set the device
-    //cudaSetDevice(0);
+    _epsgcode(demInterp.epsgCode()), _interpMethod(demInterp.interpMethod()),
+    _owner(true) {
 
     // Allocate memory on device for DEM data
     size_t npix = _length * _width;
@@ -73,6 +71,8 @@ void initProjInterpKernel(isce::cuda::core::ProjectionBase ** proj,
             (*interp) = new isce::cuda::core::gpuBilinearInterpolator<float>();
         } else if (interpMethod == isce::core::BICUBIC_METHOD) {
             (*interp) = new isce::cuda::core::gpuBicubicInterpolator<float>();
+        } else if (interpMethod == isce::core::BIQUINTIC_METHOD) {
+            (*interp) = new isce::cuda::core::gpuSpline2dInterpolator<float>(6); 
         } else {
             (*interp) = new isce::cuda::core::gpuBilinearInterpolator<float>();
         }

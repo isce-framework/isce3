@@ -78,6 +78,11 @@ class isce::geometry::DEMInterpolator {
         // EPSG code
         inline int epsgCode() const { return _epsgcode; }
 
+        // Interpolator method
+        inline isce::core::dataInterpMethod interpMethod() const {
+            return _interpMethod;
+        }
+
     private:
         // Flag indicating whether we have access to a DEM raster
         bool _haveRaster;
