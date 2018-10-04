@@ -126,7 +126,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
         const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a 
                               - (b/a) * (b/pixel.range()));
         const double sintheta = std::sqrt(1.0 - costheta*costheta);
-
+ 
         // Compute TCN scale factors
         const double gamma = pixel.range() * costheta;
         const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
@@ -192,7 +192,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
     LinAlg::linComb(1.0, state.position(), 1.0, delta, targetVec);
 
     // Compute LLH of ground point
-    ellipsoid.xyzToLonLat(targetVec, targetLLH);    
+    ellipsoid.xyzToLonLat(targetVec, targetLLH);
 
     // Return convergence flag
     return converged;

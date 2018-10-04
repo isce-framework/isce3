@@ -109,12 +109,22 @@ class isce::image::ResampSlc {
         // Array of sinc coefficient
         isce::core::Matrix<float> _fintp;
 
-        // Tile initialization
-        void _initializeTile(Tile_t &, isce::io::Raster &, isce::io::Raster &, int);
+        // Tile initialization for input offsets
+        void _initializeOffsetTiles(Tile_t &, isce::io::Raster &, isce::io::Raster &,
+                                    isce::image::Tile<float> &,
+                                    isce::image::Tile<float> &, int);
+
+        // Tile initialization for input SLC data
+        void _initializeTile(Tile_t &, isce::io::Raster &,
+                             const isce::image::Tile<float> &,
+                             int, int);
 
         // Tile transformation
-        void _transformTile(Tile_t &, isce::io::Raster &, isce::io::Raster &,
-                            isce::io::Raster &, int, bool, int &);
+        void _transformTile(Tile_t & tile,
+                            isce::io::Raster & outputSlc,
+                            const isce::image::Tile<float> & rgOffTile,
+                            const isce::image::Tile<float> & azOffTile,
+                            int inLength, bool flatten);
 
         // Convenience functions
         inline int _computeNumberOfTiles(int, int);

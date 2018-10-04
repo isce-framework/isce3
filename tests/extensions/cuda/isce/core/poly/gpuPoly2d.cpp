@@ -11,7 +11,7 @@
 #include <vector>
 #include "isce/core/Constants.h"
 #include "isce/core/Poly2d.h"
-#include "isce/core/cuda/gpuPoly2d.h"
+#include "isce/cuda/core/gpuPoly2d.h"
 #include "gtest/gtest.h"
 #include <stdio.h>
 

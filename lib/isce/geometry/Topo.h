@@ -4,8 +4,8 @@
 // Author: Bryan Riel, Joshua Cohen
 // Copyright 2017-2018
 
-#ifndef ISCE_CORE_TOPO_H
-#define ISCE_CORE_TOPO_H
+#ifndef ISCE_GEOMETRY_TOPO_H
+#define ISCE_GEOMETRY_TOPO_H
 
 // pyre
 #include <portinfo>
@@ -44,7 +44,7 @@ class isce::geometry::Topo {
                     isce::core::Poly2d,
                     isce::core::Metadata);
         
-        // Set options
+        // Set topo processing options
         inline void initialized(bool);
         inline void threshold(double);
         inline void numiter(int);
@@ -53,25 +53,38 @@ class isce::geometry::Topo {
         inline void demMethod(isce::core::dataInterpMethod);
         inline void epsgOut(int);
 
+        // Get topo processing options
+        inline int lookSide() const { return _lookSide; }
+        inline double threshold() const { return _threshold; }
+        inline int numiter() const { return _numiter; }
+        inline int extraiter() const { return _extraiter; }
+        inline int epsgOut() const { return _epsgOut; }
+        inline isce::core::dataInterpMethod demMethod() const { return _demMethod; }
+
         // Check initialization
         inline void checkInitialization(pyre::journal::info_t &) const;
+
+        // Get DEM bounds using first/last azimuth line and slant range bin
+        void computeDEMBounds(isce::io::Raster &,
+                              DEMInterpolator &,
+                              size_t, size_t);
 
         // Run topo - main entrypoint
         void topo(isce::io::Raster &, const std::string);
 
-    private:
+        // Getters for isce objects
+        inline const isce::core::Orbit & orbit() const { return _orbit; }
+        inline const isce::core::Ellipsoid & ellipsoid() const { return _ellipsoid; }
+        inline const isce::core::Poly2d & doppler() const { return _doppler; }
+        inline const isce::core::DateTime & sensingStart() const { return _sensingStart; }
+        inline const isce::product::ImageMode & mode() const { return _mode; }
 
-        // Get DEM bounds using first/last azimuth line and slant range bin
-        void _computeDEMBounds(isce::io::Raster &,
-                               DEMInterpolator &,
-                               size_t, size_t);
+    private:
 
         // Perform data initialization for a given azimuth line
         void _initAzimuthLine(size_t,
                               isce::core::StateVector &,
                               isce::core::Basis &);
-
-
 
         // Set output layers
         void _setOutputTopoLayers(cartesian_t &,

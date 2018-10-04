@@ -5,7 +5,7 @@
 
 #include <cmath>
 #include <iostream>
-#include "isce/core/cuda/gpuProjections.h"
+#include "isce/cuda/core/gpuProjections.h"
 #include "gtest/gtest.h"
 using isce::core::cartesian_t;
 using isce::cuda::core::UTM;

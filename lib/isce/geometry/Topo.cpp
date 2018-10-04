@@ -64,7 +64,7 @@ topo(Raster & demRaster,
     auto timerStart = std::chrono::steady_clock::now();
 
     // Create a DEM interpolator
-    DEMInterpolator demInterp(-500.0);
+    DEMInterpolator demInterp(-500.0, _demMethod);
 
     // Compute number of blocks needed to process image
     size_t nBlocks = _mode.length() / _linesPerBlock;
@@ -95,11 +95,13 @@ topo(Raster & demRaster,
              << pyre::journal::endl;
 
         // Load DEM subset for SLC image block
-        _computeDEMBounds(demRaster, demInterp, lineStart, blockLength);
+        computeDEMBounds(demRaster, demInterp, lineStart, blockLength);
 
         // Compute max and mean DEM height for the subset
         float demmax, dem_avg;
         demInterp.computeHeightStats(demmax, dem_avg, info);
+        // Reset reference height for DEMInterpolator
+        demInterp.refHeight(dem_avg);
 
         // Output layers for block
         TopoLayers layers(blockLength, _mode.width());
@@ -133,7 +135,7 @@ topo(Raster & demRaster,
                 Pixel pixel(rng, dopfact, rbin);
 
                 // Initialize LLH to middle of input DEM and average height
-                cartesian_t llh = demInterp.midLonLat(dem_avg);
+                cartesian_t llh = demInterp.midLonLat();
 
                 // Perform rdr->geo iterations
                 int geostat = rdr2geo(
@@ -222,15 +224,11 @@ _initAzimuthLine(size_t line, StateVector & state, Basis & TCNbasis) {
 
 // Get DEM bounds using first/last azimuth line and slant range bin
 void isce::geometry::Topo::
-_computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOffset,
-                  size_t blockLength) {
+computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOffset,
+                 size_t blockLength) {
 
     // Initialize journal
     pyre::journal::warning_t warning("isce.core.Topo");
-
-    cartesian_t llh, satLLH;
-    StateVector state;
-    Basis TCNbasis;
 
     // Initialize geographic bounds
     double min_lat = 10000.0;
@@ -238,52 +236,85 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOf
     double min_lon = 10000.0;
     double max_lon = -10000.0;
 
-    // Loop over first and last azimuth line rel
-    for (int line = 0; line < 2; line++) {
+    // Skip factors along azimuth and range
+    const int askip = std::max((int) blockLength / 10, 1);
+    const int rskip = _mode.width() / 10;
 
-        // Get global azimuth line index
-        int lineIndex = lineOffset + line * _mode.numberAzimuthLooks() * (blockLength - 1);
+    // Construct vectors of range/azimuth indices traversing the perimeter of the radar frame
 
-        // Initialize orbit data for this azimuth line
+    // Top edge
+    std::vector<int> azInd, rgInd;
+    for (int j = 0; j < _mode.width(); j += rskip) {
+        azInd.push_back(0);
+        rgInd.push_back(j);
+    }
+
+    // Right edge
+    for (int i = 0; i < blockLength; i += askip) {
+        azInd.push_back(i);
+        rgInd.push_back(_mode.width());
+    }
+
+    // Bottom edge
+    for (int j = _mode.width(); j > 0; j -= rskip) {
+        azInd.push_back(blockLength - 1);
+        rgInd.push_back(j);
+    }
+
+    // Left edge
+    for (int i = blockLength; i > 0; i -= askip) {
+        azInd.push_back(i);
+        rgInd.push_back(0);
+    }
+
+    // Loop over the indices
+    for (size_t i = 0; i < rgInd.size(); ++i) {
+
+        // Convert az index to absolute line index
+        size_t lineIndex = lineOffset + azInd[i] * _mode.numberAzimuthLooks();
+
+         // Initialize orbit data for this azimuth line
+        StateVector state;
+        Basis TCNbasis;
         _initAzimuthLine(lineIndex, state, TCNbasis);
 
         // Compute satellite velocity and height
+        cartesian_t satLLH;
         const double satVmag = LinAlg::norm(state.velocity());
         _ellipsoid.xyzToLonLat(state.position(), satLLH);
 
-        // Loop over starting and ending slant range
-        for (int ind = 0; ind < 2; ++ind) {
+        // Get proper slant range and Doppler factor
+        const size_t rbin = rgInd[i];
+        double rng = _mode.startingRange() + rbin * _mode.rangePixelSpacing();
+        double dopfact = (0.5 * _mode.wavelength() * (_doppler.eval(0, rbin)
+                        / satVmag)) * rng;
+        // Store in Pixel object
+        Pixel pixel(rng, dopfact, rbin);
 
-            // Get proper slant range bin and Doppler factor
-            int rbin = ind * (_mode.width() - 1);
-            double rng = _mode.startingRange() + rbin * _mode.rangePixelSpacing();
-            double dopfact = (0.5 * _mode.wavelength() * (_doppler.eval(0, rbin)
-                            / satVmag)) * rng;
-            // Store in Pixel object
-            Pixel pixel(rng, dopfact, rbin);
+        // Run topo for one iteration for two different heights
+        cartesian_t llh;
+        std::array<double, 2> testHeights = {MIN_H, MAX_H};
+        for (int k = 0; k < 2; ++k) {
 
-            // Run topo for one iteration for two different heights
-            std::array<double, 2> testHeights = {MIN_H, MAX_H};
-            for (int k = 0; k < 2; ++k) {
-                // If slant range vector doesn't hit ground, pick nadir point
-                if (rng <= (satLLH[2] - testHeights[k] + 1.0)) {
-                    for (int idx = 0; idx < 3; ++idx) {
-                        llh[idx] = satLLH[idx];
-                    }
-                    warning << "Possible near nadir imaging" << pyre::journal::endl;
-                } else {
-                    // Create dummy DEM interpolator with constant height
-                    DEMInterpolator constDEM(testHeights[k]);
-                    // Run radar->geo for 1 iteration
-                    rdr2geo(pixel, TCNbasis, state, _ellipsoid, constDEM, llh,
-                            _lookSide, _threshold, 1, 0);
+            // If slant range vector doesn't hit ground, pick nadir point
+            if (rng <= (satLLH[2] - testHeights[k] + 1.0)) {
+                for (int idx = 0; idx < 3; ++idx) {
+                    llh[idx] = satLLH[idx];
                 }
-                // Update bounds
-                min_lat = std::min(min_lat, llh[1]);
-                max_lat = std::max(max_lat, llh[1]);
-                min_lon = std::min(min_lon, llh[0]);
-                max_lon = std::max(max_lon, llh[0]);
+                warning << "Possible near nadir imaging" << pyre::journal::endl;
+            } else {
+                // Create dummy DEM interpolator with constant height
+                DEMInterpolator constDEM(testHeights[k]);
+                // Run radar->geo for 1 iteration
+                rdr2geo(pixel, TCNbasis, state, _ellipsoid, constDEM, llh,
+                        _lookSide, _threshold, 1, 0);
             }
+
+            // Update bounds
+            min_lat = std::min(min_lat, llh[1]);
+            max_lat = std::max(max_lat, llh[1]);
+            min_lon = std::min(min_lon, llh[0]);
+            max_lon = std::max(max_lon, llh[0]);
         }
     }
 
@@ -294,7 +325,7 @@ _computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOf
     max_lat += MARGIN;
 
     // Extract DEM subset
-    demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat, _demMethod,
+    demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat,
                       demRaster.getEPSG());
     demInterp.declare();
 }

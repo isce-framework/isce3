@@ -17,7 +17,8 @@ isce::image::Tile<T>::Tile() {};
 
 // Copy constructor
 template <typename T>
-isce::image::Tile<T>::Tile(const Tile & refTile) : _width(refTile.width()),
+isce::image::Tile<T>::Tile(const Tile & refTile) : 
+    _width(refTile.width()),
     _rowStart(refTile.rowStart()), _rowEnd(refTile.rowEnd()),
     _firstImageRow(refTile.firstImageRow()), _lastImageRow(refTile.lastImageRow()) {}
 
@@ -30,7 +31,7 @@ void isce::image::Tile<T>::allocate() {
 // Get tile length (disallow setting of tile length)
 template <typename T>
 int isce::image::Tile<T>::length() const {
-    return _lastImageRow - _firstImageRow + 1;
+    return _lastImageRow - _firstImageRow;
 }
 
 // Get tile width
