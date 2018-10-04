@@ -9,7 +9,7 @@ endif (POLICY CMP0048)
 
 cmake_policy(SET CMP0060 NEW)
 
-option(WITH_CUDA "Set ON|OFF (default=ON) to build CUDA library" ON)
+option(WITH_CUDA "Set ON|OFF (default=ON) to build CUDA library" OFF)
 if (WITH_CUDA)
     project(ISCE
             VERSION 3.0
