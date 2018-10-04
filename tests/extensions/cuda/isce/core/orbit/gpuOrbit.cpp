@@ -10,7 +10,7 @@
 #include <vector>
 #include "isce/core/Constants.h"
 #include "isce/core/Orbit.h"
-#include "isce/core/cuda/gpuOrbit.h"
+#include "isce/cuda/core/gpuOrbit.h"
 #include "gtest/gtest.h"
 
 using isce::core::orbitInterpMethod;

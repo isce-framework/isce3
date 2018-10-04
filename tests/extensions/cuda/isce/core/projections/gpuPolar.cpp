@@ -13,7 +13,7 @@
 
 #include <cmath>
 #include <iostream>
-#include "isce/core/cuda/gpuProjections.h"
+#include "isce/cuda/core/gpuProjections.h"
 #include <chrono>
 
 #include "gtest/gtest.h"

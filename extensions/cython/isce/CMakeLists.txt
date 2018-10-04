@@ -37,4 +37,9 @@ install(
     COMPONENT extensions
 )
 
+# Install cuda cython extensions if cuda available
+if (WITH_CUDA)
+    add_subdirectory(cuda)
+endif(WITH_CUDA)
+
 # end of file

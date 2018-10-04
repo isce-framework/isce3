@@ -155,7 +155,7 @@ geo2rdr(isce::io::Raster & topoRaster,
                     _numiter, 1.0e-8
                 );
 
-                // Check of solution is out of bounds
+                // Check if solution is out of bounds
                 bool isOutside = false;
                 if ((aztime < t0) || (aztime > tend))
                     isOutside = true;

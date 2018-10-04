@@ -399,16 +399,16 @@ operator-(const DateTime& ts) const
             seconds-ts.seconds, frac-ts.frac);
 }
 
-//// Get seconds of day
-//double isce::core::DateTime::
-//secondsOfDay() const {
-//    // Make a midnight datetime
-//    DateTime midnight(year, months, days, 0, 0, 0);
-//    // Timedelta
-//    TimeDelta dt = (*this) - midnight;
-//    // Return the total seconds
-//    return dt.getTotalSeconds();
-//}
+// Get seconds of day
+double isce::core::DateTime::
+secondsOfDay() const {
+    // Make a midnight datetime
+    DateTime midnight(year, months, days, 0, 0, 0);
+    // Timedelta
+    TimeDelta dt = (*this) - midnight;
+    // Return the total seconds
+    return dt.getTotalSeconds();
+}
 
 // Get seconds since epoch at provided datetime
 double isce::core::DateTime::

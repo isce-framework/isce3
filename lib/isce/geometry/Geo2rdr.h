@@ -18,6 +18,7 @@
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Peg.h>
 #include <isce/core/Pegtrans.h>
+#include <isce/core/Projections.h>
 
 // isce::io
 #include <isce/io/Raster.h>
@@ -42,10 +43,10 @@ class isce::geometry::Geo2rdr {
         /** Constructor from product */
         inline Geo2rdr(isce::product::Product &);
         /** Constructor from core objects*/
-        inline Geo2rdr(isce::core::Ellipsoid,
-                       isce::core::Orbit,
-                       isce::core::Poly2d,
-                       isce::core::Metadata);
+        inline Geo2rdr(const isce::core::Ellipsoid &,
+                       const isce::core::Orbit &,
+                       const isce::core::Poly2d &,
+                       const isce::core::Metadata &);
 
         /** Set convergence threshold*/
         inline void threshold(double);
@@ -65,6 +66,28 @@ class isce::geometry::Geo2rdr {
 
         /** NoData Value*/
         const double NULL_VALUE = -1.0e6;
+
+        // Getters for isce objects
+        /** Get Orbit object used for processing */
+        inline const isce::core::Orbit & orbit() const { return _orbit; }
+        /** Get Ellipsoid object used for processing */
+        inline const isce::core::Ellipsoid & ellipsoid() const { return _ellipsoid; }
+        /** Get Doppler model used for processing */
+        inline const isce::core::Poly2d & doppler() const { return _doppler; }
+        /** Get sensingStart used for processing */
+        inline const isce::core::DateTime & sensingStart() const { return _sensingStart; }
+        /** Get reference epoch of the orbit used for processing */
+        inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
+        /** Get imageMode object used for processing */
+        inline const isce::product::ImageMode & mode() const { return _mode; }
+
+        // Get geo2rdr processing options
+        /** Return the azimuth time convergence threshold used for processing */
+        inline double threshold() const { return _threshold; }
+        /** Return number of Newton-Raphson iterations used for processing */
+        inline int numiter() const { return _numiter; }
+        /** Return the orbit interpolation method used for processing */
+        inline isce::core::orbitInterpMethod orbitMethod() const { return _orbitMethod; }
 
     private:
         /** Print information for debugging */

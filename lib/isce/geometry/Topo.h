@@ -4,8 +4,8 @@
 // Author: Bryan Riel, Joshua Cohen
 // Copyright 2017-2018
 
-#ifndef ISCE_CORE_TOPO_H
-#define ISCE_CORE_TOPO_H
+#ifndef ISCE_GEOMETRY_TOPO_H
+#define ISCE_GEOMETRY_TOPO_H
 
 // pyre
 #include <portinfo>
@@ -62,18 +62,44 @@ class isce::geometry::Topo {
         /** Set output coordinate system */
         inline void epsgOut(int);
 
-        /** Check initialization of processing module */
+        //Get topo processing options
+        /** Get lookSide used for processing */
+        inline int lookSide() const { return _lookSide; }
+        /** Get distance convergence threshold used for processing */
+        inline double threshold() const { return _threshold; }
+        /** Get number of primary iterations used for processing */
+        inline int numiter() const { return _numiter; }
+        /** Get number of secondary iterations used for processing*/
+        inline int extraiter() const { return _extraiter; }
+        /** Get the output coordinate system used for processing */
+        inline int epsgOut() const { return _epsgOut; }
+        /** Get the DEM interpolation method used for processing */
+        inline isce::core::dataInterpMethod demMethod() const { return _demMethod; }
+
+        /** Check initialization of processing module*/
         inline void checkInitialization(pyre::journal::info_t &) const;
 
-        /** Main entry point for the module */
+        // Get DEM bounds using first/last azimuth line and slant range bin
+        void computeDEMBounds(isce::io::Raster &,
+                              DEMInterpolator &,
+                              size_t, size_t);
+
+        /** Main entry point for the module*/
         void topo(isce::io::Raster &, const std::string);
 
-    private:
+        // Getters for isce objects
+        /** Get the orbits used for processing */
+        inline const isce::core::Orbit & orbit() const { return _orbit; }
+        /** Get the ellipsoid used for processing */
+        inline const isce::core::Ellipsoid & ellipsoid() const { return _ellipsoid; }
+        /** Get the doppler module used for processing */
+        inline const isce::core::Poly2d & doppler() const { return _doppler; }
+        /** Get the sensingStart used for processing */
+        inline const isce::core::DateTime & sensingStart() const { return _sensingStart; }
+        /** Get the imageMode object used for processing */
+        inline const isce::product::ImageMode & mode() const { return _mode; }
 
-        /** Compute the DEM bounds for given product */ 
-        void _computeDEMBounds(isce::io::Raster &,
-                               DEMInterpolator &,
-                               size_t, size_t);
+    private:
 
         /** Initialize TCN basis for given azimuth line */
         void _initAzimuthLine(size_t,

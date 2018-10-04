@@ -14,6 +14,35 @@ As a library, it provides a variety of data structures (C++/ Python) that are us
 Repository: <a href="https://github-fn.jpl.nasa.gov/ericmg/isce">JPL github-fn</a><br>
 Download: TBD
 
+\section index_install Installation
+
+\subsection index_install_binaries From binaries for users
+
+<ul>
+<li> \ref install_docker_bin "Runtime docker image (coming soon)" 
+</ul>
+
+\subsection index_instrall_src From source for developers
+
+ISCE has the following dependencies
+<ol>
+<li> <a href="http://pyre.orthologue.com">pyre</a>
+<li> C++ compiler - gcc-6 or above
+<li> Python 3.6 or above
+<li> Numpy and Cython
+<li> GDAL 2.3 or above with Python bindings
+<li> HDF5 1.10.2 or above with h5py
+<li> cmake 3.11 or above
+<li> CUDA 9.0 or above (for GPU-based processing)
+</ol>
+
+We have compiled instructions for installing ISCE for the following sets of platforms from source.
+<ul>
+<li> \ref install_linux "Ubuntu 18.04 / Centos7.5 (Anaconda + pyre binaries)"
+<li> \ref install_osx   "OS X (Macports)"
+<li> \ref install_docker_dev "Developer docker image (coming soon)"
+</ul>
+
 \section index_userdocs User Oriented Documentation
 
 <ul>
@@ -27,27 +56,18 @@ Download: TBD
 \section index_conventions Overview on conventions
 
 <ul>
-<li> <a href="overview_raster.html">Raster data model</a>
-<li> <a href="overview_geometry.html">Radar imaging geometry</a>
+<li> \ref overview_raster "Raster data model"
+<li> \ref overview_geometry "Radar imaging geometry"
 </ul>
 
 \section index_devdocs Developer Oriented Documentation
 
 <ul>
 <li> \ref howtodoc "Coding and documentation style"
-<li> Core data structures <a href="annotated.html">[C++]</a><a href="sphinx/html/index.html">[Python]</a>
-<li> Raster tutorial <a href="tutorial_raster.html">[C++]</a>
+<li> Core data structures <a href="annotated.html">[<STRONG>C++</STRONG>]</a><a href="sphinx/html/index.html">[<STRONG>Python</STRONG>]</a>
+<li> Raster tutorial [\ref tutorial_raster "C++"]
+<li> Geometry tutorial [\ref tutorial_geometry "C++"]
 </ul>
-
-
-\section index_userforum User Forum
-
-TBD
-
-
-\section index_bugs Bug Reporting
-
-TBD
 
 
 \section index_citing Citing ISCE in publications

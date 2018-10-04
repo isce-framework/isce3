@@ -1,0 +1,62 @@
+//-*- coding: utf-8 -*-
+
+#if !defined(ISCE_CUDA_PRODUCT_GPUIMAGEMODE_ICC)
+#error "gpuImageMode.icc is an implementation detail of class gpuImageMode."
+#endif
+
+/** @param[in]              isce::cuda::product::gpuImageMode */
+CUDA_DEV
+isce::cuda::product::gpuImageMode::
+gpuImageMode(const isce::cuda::product::gpuImageMode & mode) :
+    _length(mode.length()),
+    _width(mode.width()),
+    _prf(mode.prf()),
+    _rangeBandwidth(mode.rangeBandwidth()),
+    _wavelength(mode.wavelength()),
+    _startingRange(mode.startingRange()),
+    _rangePixelSpacing(mode.rangePixelSpacing()),
+    _numberAzimuthLooks(mode.numberAzimuthLooks()),
+    _numberRangeLooks(mode.numberRangeLooks()),
+    _startAzUTCTime(mode.startAzUTCTime()) {}
+
+/** @param[in]              isce::cuda::product::gpuImageMode */
+CUDA_DEV
+isce::cuda::product::gpuImageMode &
+isce::cuda::product::gpuImageMode::
+operator=(const isce::cuda::product::gpuImageMode & mode) {
+    // Simply assign data members to self
+    _length = mode.length();
+    _width = mode.width();
+    _prf = mode.prf();
+    _rangeBandwidth = mode.rangeBandwidth();
+    _wavelength = mode.wavelength();
+    _startingRange = mode.startingRange();
+    _rangePixelSpacing = mode.rangePixelSpacing();
+    _numberAzimuthLooks = mode.numberAzimuthLooks();
+    _numberRangeLooks = mode.numberRangeLooks();
+    _startAzUTCTime = mode.startAzUTCTime();
+    return *this;
+}
+
+/** @param[in]              isce::product::ImageMode */
+CUDA_HOST
+isce::cuda::product::gpuImageMode::
+gpuImageMode(const isce::product::ImageMode & mode) :
+    _length(mode.length()),
+    _width(mode.width()),
+    _prf(mode.prf()),
+    _rangeBandwidth(mode.rangeBandwidth()),
+    _wavelength(mode.wavelength()),
+    _startingRange(mode.startingRange()),
+    _rangePixelSpacing(mode.rangePixelSpacing()),
+    _numberAzimuthLooks(mode.numberAzimuthLooks()),
+    _numberRangeLooks(mode.numberRangeLooks()) {
+
+    // As with orbits, set reference epoch 2 days prior
+    isce::core::DateTime refEpoch = mode.startAzTime() - 86400*2;
+    // Set starting UTC time relative to reference epoch
+    _startAzUTCTime = (mode.startAzTime() - refEpoch).getTotalSeconds();
+
+}
+
+// end of file

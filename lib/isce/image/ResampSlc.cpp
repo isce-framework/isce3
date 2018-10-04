@@ -89,12 +89,11 @@ resamp(const std::string & inputFilename,          // filename of input SLC
         "Resampling using " << nTiles << " tiles of " << _linesPerTile 
         << " lines per tile"
         << pyre::journal::newline << pyre::journal::endl;
-
+    
     // Start timer
     auto timerStart = std::chrono::steady_clock::now();
 
     // For each full tile of _linesPerTile lines...
-    int outputLine = 0;
     for (int tileCount = 0; tileCount < nTiles; tileCount++) {
 
         // Make a tile for representing input SLC data
@@ -107,17 +106,21 @@ resamp(const std::string & inputFilename,          // filename of input SLC
         } else {
             tile.rowEnd(tile.rowStart() + _linesPerTile);
         }
-    
+
+        // Initialize offsets tiles
+        isce::image::Tile<float> azOffTile, rgOffTile;
+        _initializeOffsetTiles(tile, azOffsetRaster, rgOffsetRaster,
+                               azOffTile, rgOffTile, outWidth);
+
         // Get corresponding image indices
         infoChannel << "Reading in image data for tile " << tileCount << pyre::journal::newline;
-        _initializeTile(tile, inputSlc, azOffsetRaster, rowBuffer); 
+        _initializeTile(tile, inputSlc, azOffTile, outLength, rowBuffer); 
         // Send some diagnostics to the journal
         tile.declare(infoChannel);
     
         // Perform interpolation
         infoChannel << "Interpolating tile " << tileCount << pyre::journal::endl;
-        _transformTile(tile, outputSlc, rgOffsetRaster, azOffsetRaster, inLength,
-            flatten, outputLine);
+        _transformTile(tile, outputSlc, rgOffTile, azOffTile, inLength, flatten);
     }
 
     // Print out timing information and reset
@@ -128,69 +131,109 @@ resamp(const std::string & inputFilename,          // filename of input SLC
                 << pyre::journal::endl;
 }
 
+// Initialize and read azimuth and range offsets
+void isce::image::ResampSlc::
+_initializeOffsetTiles(Tile_t & tile,
+                       Raster & azOffsetRaster,
+                       Raster & rgOffsetRaster,
+                       isce::image::Tile<float> & azOffTile,
+                       isce::image::Tile<float> & rgOffTile,
+                       int outWidth) {
+
+    // Copy size properties and initialize azimuth offset tiles
+    azOffTile.width(outWidth);
+    azOffTile.rowStart(tile.rowStart());
+    azOffTile.rowEnd(tile.rowEnd());
+    azOffTile.firstImageRow(tile.rowStart());
+    azOffTile.lastImageRow(tile.rowEnd());
+    azOffTile.allocate();
+
+    // Do the same for range offset tiles
+    rgOffTile.width(outWidth);
+    rgOffTile.rowStart(tile.rowStart());
+    rgOffTile.rowEnd(tile.rowEnd());
+    rgOffTile.firstImageRow(tile.rowStart());
+    rgOffTile.lastImageRow(tile.rowEnd());
+    rgOffTile.allocate();
+
+    // Read in block of range and azimuth offsets 
+    azOffsetRaster.getBlock(&azOffTile[0], 0, azOffTile.rowStart(),
+                            azOffTile.width(), azOffTile.length());
+    rgOffsetRaster.getBlock(&rgOffTile[0], 0, rgOffTile.rowStart(),
+                            rgOffTile.width(), rgOffTile.length());
+}
+
 // Initialize tile bounds
 void isce::image::ResampSlc::
-_initializeTile(Tile_t & tile, Raster & inputSlc, Raster & azOffsetRaster, int rowBuffer) {
+_initializeTile(Tile_t & tile, Raster & inputSlc, const isce::image::Tile<float> & azOffTile,
+                int outLength, int rowBuffer) {
 
     // Cache geometry values
     const int inLength = inputSlc.length();
     const int inWidth = inputSlc.width();
-    const int outLength = azOffsetRaster.length();
-    const int outWidth = azOffsetRaster.width();
-    
-    // Allocate array for storing residual azimuth
-    std::valarray<double> residAz(outWidth);
+    const int outWidth = azOffTile.width();
 
     // Compute minimum row index needed from input image
     tile.firstImageRow(outLength - 1);
-    // Iterate over first rowBuffer lines of tile
-    for (int i = tile.rowStart();
-        i < std::min(tile.rowEnd(), tile.rowStart() + rowBuffer); ++i) {
-        // Read in azimuth residual
-        azOffsetRaster.getLine(residAz, i);
-        // Now iterate over width of the tile
+    bool haveOffsets = false;
+    for (int i = 0; i < std::min(rowBuffer, azOffTile.length()); ++i) {
         for (int j = 0; j < outWidth; ++j) {
-            // Compute total azimuth offset of current pixel
-            const double azOff = residAz[j];
+            // Get azimuth offset for pixel
+            const double azOff = azOffTile(i,j);
+            // Skip null values
+            if (azOff < -5.0e5) {
+                continue;
+            } else {
+                haveOffsets = true;
+            }
             // Calculate corresponding minimum line index of input image
-            const int imageLine = static_cast<int>(i + azOff) - SINC_HALF;
+            const int imageLine = static_cast<int>(i + azOff + azOffTile.rowStart() - SINC_HALF);
             // Update minimum row index
             tile.firstImageRow(std::min(tile.firstImageRow(), imageLine));
         }
     }
     // Final update
-    tile.firstImageRow(std::max(tile.firstImageRow(), 0));
-    
+    if (haveOffsets) {
+        tile.firstImageRow(std::max(tile.firstImageRow(), 0));
+    } else {
+        tile.firstImageRow(0);
+    }
+
     // Compute maximum row index needed from input image
     tile.lastImageRow(0);
-    // Iterate over last rowBuffer lines of tile
-    for (int i = std::max(tile.rowStart() - rowBuffer, 0);
-        i < std::min(outLength, tile.rowEnd()); ++i) {
-        // Read in azimuth residual
-        azOffsetRaster.getLine(residAz, i);
-        // Now iterate over width of the tile
-        for (int j = 0; j < outWidth; j++) {
-            // Compute total azimuth offset of current pixel
-            const double azOff = residAz[j];
+    haveOffsets = false;
+    for (int i = std::max(azOffTile.length() - rowBuffer, 0); i < azOffTile.length(); ++i) {
+        for (int j = 0; j < outWidth; ++j) {
+            // Get azimuth offset for pixel
+            const double azOff = azOffTile(i,j);
+            // Skip null values 
+            if (azOff < -5.0e5) {
+                continue;
+            } else {
+                haveOffsets = true;
+            }
             // Calculate corresponding minimum line index of input image
-            const int imageLine = static_cast<int>(i + azOff) + SINC_HALF;
+            const int imageLine = static_cast<int>(i + azOff + azOffTile.rowStart() + SINC_HALF);
             // Update maximum row index
             tile.lastImageRow(std::max(tile.lastImageRow(), imageLine));
         }
     }
     // Final udpate
-    tile.lastImageRow(std::min(tile.lastImageRow(), inLength - 1));
-
+    if (haveOffsets) {
+        tile.lastImageRow(std::min(tile.lastImageRow() + 1, inLength));
+    } else {
+        tile.lastImageRow(inLength);
+    }
+    
     // Tile will allocate memory for itself
     tile.allocate();
 
     // Read in tile.length() lines of data from the input image to the image block
+    inputSlc.getBlock(&tile[0], 0, tile.firstImageRow(), tile.width(),
+                      tile.length(), _inputBand);
+
+    // Remove carrier from input data
     for (int i = 0; i < tile.length(); i++) {
-        // Read line of data into tile
-        inputSlc.getLine(&tile[i*tile.width()], tile.firstImageRow() + i,
-                         tile.width(), _inputBand);
-        // Remove the carrier phases in parallel
-        //#pragma omp parallel for
         for (int j = 0; j < inWidth; j++) {
             // Evaluate the pixel's carrier phase
             const double phase = modulo_f(
@@ -205,35 +248,36 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, Raster & azOffsetRaster, int r
 
 // Interpolate tile to perform transformation
 void isce::image::ResampSlc::
-_transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
-               Raster & azOffsetRaster, int inLength, bool flatten, int & outputLine) {
+_transformTile(Tile_t & tile,
+               Raster & outputSlc,
+               const isce::image::Tile<float> & rgOffTile,
+               const isce::image::Tile<float> & azOffTile,
+               int inLength, bool flatten) {
 
     // Cache geometry values
     const int inWidth = tile.width();
-    const int outWidth = azOffsetRaster.width();
+    const int outWidth = azOffTile.width();
+    const int outLength = azOffTile.length();
 
-    // Allocate valarrays for work
-    std::valarray<float> residAz(outWidth), residRg(outWidth);
-    std::valarray<std::complex<float>> imgOut(outWidth);
+    // Allocate valarray for working sinc chip
     isce::core::Matrix<std::complex<float>> chip(SINC_ONE, SINC_ONE);
+
+    // Allocate valarray for output image block
+    std::valarray<std::complex<float>> imgOut(outLength * outWidth);
+    // Initialize to zeros
+    imgOut = std::complex<float>(0.0, 0.0);
     
     // Loop over lines to perform interpolation
+    int tileLine = 0;
     for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
-
-        // Initialize output line to zeros
-        imgOut = std::complex<float>(0.0, 0.0);
-
-        // Get lines for residual offsets
-        rgOffsetRaster.getLine(residRg, i);
-        azOffsetRaster.getLine(residAz, i);
 
         // Loop over width
         #pragma omp parallel for firstprivate(chip)
         for (int j = 0; j < outWidth; ++j) {
-           
+
             // Unpack offsets
-            const float azOff = residAz[j];
-            const float rgOff = residRg[j];
+            const float azOff = azOffTile(tileLine, j);
+            const float rgOff = rgOffTile(tileLine, j);
 
             // Break into fractional and integer parts
             const int intAz = static_cast<int>(i + azOff);
@@ -289,15 +333,19 @@ _transformTile(Tile_t & tile, Raster & outputSlc, Raster & rgOffsetRaster,
             );
 
             // Add doppler to interpolated value and save
-            imgOut[j] = cval * std::complex<float>(std::cos(phase), std::sin(phase));
+            imgOut[tileLine*outWidth + j] = cval * std::complex<float>(
+                std::cos(phase), std::sin(phase)
+            );
 
         } // end for over width
 
-        // Write out line of SLC data and increment output line index
-        outputSlc.setLine(imgOut, outputLine);
-        outputLine += 1;
+        // Update input line counter
+        ++tileLine;
 
     } // end for over length
+
+    // Write block of data
+    outputSlc.setBlock(imgOut, 0, tile.rowStart(), outWidth, outLength);
 }
 
 // end of file

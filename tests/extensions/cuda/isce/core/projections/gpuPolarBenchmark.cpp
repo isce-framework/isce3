@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream> 
-#include "isce/core/cuda/gpuProjections.h"
+#include "isce/cuda/core/gpuProjections.h"
 #include "isce/core/Projections.h"
 #include <chrono>
 

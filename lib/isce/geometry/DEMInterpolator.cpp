@@ -9,9 +9,8 @@
 
 // Load DEM subset into memory
 void isce::geometry::DEMInterpolator::
-loadDEM(isce::io::Raster & demRaster,
-        double minLon, double maxLon, double minLat, double maxLat,
-        isce::core::dataInterpMethod interpMethod, int epsgcode) {
+loadDEM(isce::io::Raster & demRaster, double minLon, double maxLon,
+        double minLat, double maxLat, int epsgcode) {
 
     // Initialize journal
     pyre::journal::warning_t warning("isce.core.Geometry");
@@ -90,24 +89,21 @@ loadDEM(isce::io::Raster & demRaster,
 
     // Read in the DEM
     demRaster.getBlock(_dem.data(), xstart, ystart, width, length);
-    
+
     // Indicate we have loaded a valid raster
     _haveRaster = true;
-    // Store interpolation method
-    _interpMethod = interpMethod;
 }
 
 // Load DEM subset into memory
 void isce::geometry::DEMInterpolator::
 declare() const {
     pyre::journal::info_t info("isce.core.DEMInterpolator");
-    info << pyre::journal::newline
-         << "Actual DEM bounds used:" << pyre::journal::newline
+    info << "Actual DEM bounds used:" << pyre::journal::newline
          << "Top Left: " << _xstart << " " << _ystart << pyre::journal::newline
          << "Bottom Right: " << _xstart + _deltax * (_dem.width() - 1) << " "
          << _ystart + _deltay * (_dem.length() - 1) << " " << pyre::journal::newline
          << "Spacing: " << _deltax << " " << _deltay << pyre::journal::newline
-         << "Dimensions: " << _dem.width() << " " << _dem.length() << pyre::journal::newline;
+         << "Dimensions: " << _dem.width() << " " << _dem.length() << pyre::journal::endl;
 }
 
 // Compute maximum DEM height
@@ -137,13 +133,13 @@ computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & 
          << "Average DEM height: " << meanValue << pyre::journal::newline;
 }
 
-// Compute middle latitude and longitude
+// Compute middle latitude and longitude using reference height
 isce::core::cartesian_t
 isce::geometry::DEMInterpolator::
-midLonLat(double height) const {
+midLonLat() const {
 
     // Create coordinates for middle X/Y
-    isce::core::cartesian_t xyz{midX(), midY(), height};
+    isce::core::cartesian_t xyz{midX(), midY(), _refHeight};
 
     // Call projection inverse
     isce::core::cartesian_t llh;
