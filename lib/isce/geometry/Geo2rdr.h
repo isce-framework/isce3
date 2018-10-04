@@ -33,42 +33,47 @@ namespace isce {
 }
 
 // Geo2rdr declaration
+/** Transformer from map coordinates to radar geometry coordinates.
+ *
+ * See <a href="overview_geometry.html#inversegeom">geometry overview</a> for description of the algorithm. */
 class isce::geometry::Geo2rdr {
 
     public:
-        // Constructor from product
+        /** Constructor from product */
         inline Geo2rdr(isce::product::Product &);
-        // Constructor from isce::core objects
+        /** Constructor from core objects*/
         inline Geo2rdr(isce::core::Ellipsoid,
                        isce::core::Orbit,
                        isce::core::Poly2d,
                        isce::core::Metadata);
 
-        // Set options
+        /** Set convergence threshold*/
         inline void threshold(double);
+        /** Set number of Newton-Raphson iterations*/
         inline void numiter(int);
+        /** Set orbit interpolation method */
         inline void orbitMethod(isce::core::orbitInterpMethod);
 
-        // Run geo2rdr - main entrypoint
+        /** Main entry point for the module */
         void geo2rdr(isce::io::Raster &,
                      const std::string &,
                      double, double);
 
-        // Alternative: run geo2rdr with no constant offsets
+        /** Alternate entry point with no offsets*/
         void geo2rdr(isce::io::Raster &,
                      const std::string &);
 
-        // Value for null pixels
+        /** NoData Value*/
         const double NULL_VALUE = -1.0e6;
 
     private:
-        // Print extents and image info
+        /** Print information for debugging */
         void _printExtents(pyre::journal::info_t &,
                            double, double, double,
                            double, double, double,
                            size_t, size_t);
 
-        // Check we can interpolate orbit to middle of DEM
+        /** Quick check to ensure we can interpolate orbit to middle of DEM*/
         void _checkOrbitInterpolation(double);
 
     private:

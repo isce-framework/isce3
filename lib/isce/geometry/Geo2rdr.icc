@@ -8,7 +8,9 @@
 #error "Geo2rdr.icc is an implementation detail of class Geo2rdr"
 #endif
 
-// Default constructor from product
+/** @param[in] product Input Product
+ *
+ * Primary constructor of Geo2rdr object*/
 isce::geometry::Geo2rdr::
 Geo2rdr(isce::product::Product & product) {
 
@@ -26,7 +28,12 @@ Geo2rdr(isce::product::Product & product) {
     _orbit.updateUTCTimes(_refEpoch);
 }
 
-// Alternative constructor from isce::core objects
+/** @param[in] ellipsoid Ellipsoid object
+ * @param[in] orbit Orbit object
+ * @param[in] doppler Poly2D doppler model
+ * @param[in] meta Metadata object
+ *
+ * Alternative constructor from ellipsoid, orbit and metadata.*/
 isce::geometry::Geo2rdr::
 Geo2rdr(isce::core::Ellipsoid ellipsoid, isce::core::Orbit orbit,
         isce::core::Poly2d doppler, isce::core::Metadata meta) :
@@ -40,19 +47,21 @@ Geo2rdr(isce::core::Ellipsoid ellipsoid, isce::core::Orbit orbit,
     _orbit.updateUTCTimes(_refEpoch);
 }
 
-// Set threshold
+/**@param[in] t Azimuth time convergence threshold in seconds*/
 void isce::geometry::Geo2rdr::
 threshold(double t) {
     _threshold = t;
 }
 
-// Set number of iterations
+/** @param[in] n Max number of Newton-Raphson iterations*/
 void isce::geometry::Geo2rdr::
 numiter(int n) {
     _numiter = n;
 }
 
-// Set the orbit interpolation method while checking its validity
+/** @param[in] method orbit interpolation method to use
+ *
+ * Set the orbit interpolation method while checking its validity*/
 void isce::geometry::Geo2rdr::
 orbitMethod(isce::core::orbitInterpMethod method) {
 
