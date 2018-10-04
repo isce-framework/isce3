@@ -35,7 +35,7 @@ namespace isce {
 // Declare Topo class
 /** Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude
  *
- * See <a href="geometry.html#forwardgeom">here</a> for a description of the algorithm*/
+ * See <a href="overview_geometry.html#forwardgeom">geometry overview</a> for a description of the algorithm*/
 class isce::geometry::Topo {
 
     public:

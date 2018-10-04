@@ -27,6 +27,21 @@ using isce::core::Poly2d;
 using isce::core::StateVector;
 using isce::product::ImageMode;
 
+/** @param[in] aztime azimuth time corresponding to line of interest
+ * @param[in] slantRange slant range corresponding to pixel of interest
+ * @param[in] doppler doppler model value corresponding to line,pixel
+ * @param[in] orbit Orbit object
+ * @param[in] ellipsoid Ellipsoid object
+ * @param[in] demInterp DEMInterpolator object
+ * @param[out] targetLLH output Lon/Lat/Hae corresponding to aztime and slantRange
+ * @param[in] wvl imaging wavelength
+ * @param[in] side +1 for left and -1 for right
+ * @param[in] threshold Distance threshold for convergence
+ * @param[in] maxIter Number of primary iterations
+ * @param[in] extraIter Number of secondary iterations
+ * @param[in] orbitMethod Orbit interpolation method
+ *
+ * This is meant to be the light version of isce::geometry::Topo and not meant to be used for processing large number of targets of interest. Note that doppler and wavelength are meant for completeness and this method can be used with both Native and Zero Doppler geometries. For details of the algorithm, see the \ref overview_geometry "geometry overview".*/ 
 int isce::geometry::
 rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp, cartesian_t & targetLLH,
@@ -69,6 +84,19 @@ rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
     return stat;
 }
 
+
+/** @param[in] pixel Pixel object
+ * @param[in] TCNbasis Geocentric TCN basis corresponding to pixel
+ * @param[in] state StateVector object
+ * @param[in] ellipsoid Ellipsoid object
+ * @param[in] demInterp DEMInterpolator object
+ * @param[out] targetLLH output Lon/Lat/Hae corresponding to pixel
+ * @param[in] side +1 for left and -1 for right
+ * @param[in] threshold Distance threshold for convergence
+ * @param[in] maxIter Number of primary iterations
+ * @param[in] extraIter Number of secondary iterations
+ *
+ * This is meant to be the light version of isce::geometry::Topo and not meant to be used for processing large number of targets of interest. Since, the TCNbasis has already been computed - this method can be used to evaluate radar coordinates for number of targets on the same line. Since, wavelength and doppler are not exposed, this method cannot be used for Native Doppler geometries. For algorithmic details, see \ref overview_geometry "geometry overview".*/ 
 int isce::geometry::
 rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp,
@@ -198,6 +226,19 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
     return converged;
 }
 
+
+/** @param[in] inputLLH Lon/Lat/Hae of target of interest
+ * @param[in] ellipsoid Ellipsoid object
+ * @param[in] orbit Orbit object
+ * @param[in] doppler   Poly2D Doppler model
+ * @param[in] mode  ImageMode object
+ * @param[out] aztime azimuth time of inputLLH w.r.t reference epoch of the orbit
+ * @param[out] slantRange slant range to inputLLH
+ * @param[in] threshold azimuth time convergence threshold in seconds
+ * @param[in] maxIter Maximum number of Newton-Raphson iterations
+ * @param[in] deltaRange slant range offset if needed
+ *
+ * This is the light weight version of isce::geometry::Geo2rdr. This is not meant to be used with large number of targets of interest. For algorithmic details, see \ref overview_geometry "geometry overview".*/
 int isce::geometry::
 geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const Poly2d & doppler, const ImageMode & mode, double & aztime, double & slantRange,
