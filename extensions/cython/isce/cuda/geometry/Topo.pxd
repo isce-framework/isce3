@@ -5,6 +5,7 @@
 #
 
 from libcpp.string cimport string
+from libcpp cimport bool
 
 # Cython declaration for isce::io objects
 from Raster cimport Raster
@@ -26,6 +27,7 @@ cdef extern from "isce/cuda/geometry/Topo.h" namespace "isce::cuda::geometry":
         void topo(Raster &, string)
 
         # Setting processing options
+        void initialized(bool)
         void threshold(double)
         void numiter(int)
         void extraiter(int)

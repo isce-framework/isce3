@@ -84,6 +84,7 @@ cdef class pyTopo:
         self.c_topo.orbitMethod(self.orbitInterpMethods[orbitMethod])
         self.c_topo.demMethod(self.demInterpMethods[demMethod])
         self.c_topo.epsgOut(epsgOut)
+        self.c_topo.initialized(True)
 
         # Convert output directory to C++ string
         cdef string outdir = pyStringToBytes(outputDir)

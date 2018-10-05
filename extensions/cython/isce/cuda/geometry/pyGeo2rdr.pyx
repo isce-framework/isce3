@@ -60,9 +60,9 @@ cdef class pyGeo2rdr:
             None
         """
         # Set processing options
-        self.c_topo.threshold(threshold)
-        self.c_topo.numiter(numIterations)
-        self.c_topo.orbitMethod(self.orbitInterpMethods[orbitMethod])
+        self.c_geo2rdr.threshold(threshold)
+        self.c_geo2rdr.numiter(numIterations)
+        self.c_geo2rdr.orbitMethod(self.orbitInterpMethods[orbitMethod])
 
         # Convert output directory to C++ string
         cdef string outdir = pyStringToBytes(outputDir)
