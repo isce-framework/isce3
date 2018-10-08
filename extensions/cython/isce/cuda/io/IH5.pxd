@@ -33,6 +33,22 @@ cdef extern from "isce/io/IH5.h" namespace "isce::io":
         # Get the number of bit used to store each dataset element
         int getNumBits(const string &)
 
+    # IGroup class
+    cdef cppclass IGroup:
+
+        # Constructors
+        IGroup() except +
+    
+        # Open a given dataset
+        IDataSet openDataSet(const string & name)
+
+        # Open a given group
+        IGroup openGroup(const string & name)
+
+        # Find datasets with a given name
+        vector[string] find(const string name, const string start, const string dtype,
+                            const string returnedPath)
+
     # IH5File class
     cdef cppclass IH5File:
 
@@ -41,6 +57,9 @@ cdef extern from "isce/io/IH5.h" namespace "isce::io":
 
         # Open a given dataset
         IDataSet openDataSet(const string & name)
+
+        # Open a given group
+        IGroup openGroup(const string & name)
 
         # Find datasets with a given name
         vector[string] find(const string name, const string start, const string dtype)
