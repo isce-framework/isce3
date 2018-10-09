@@ -20,6 +20,15 @@ cdef class pyTopo:
 
     Args:
         product (pyProduct):                 Configured Product.
+        threshold (Optional[float]):         Threshold for iteration stop for slant range.
+        numIterations (Optional[int]):       Max number of normal iterations.
+        extraIterations (Optional[int]):     Number of extra refinement iterations.
+        orbitMethod (Optional[str]):         Orbit interpolation method
+                                                 ('hermite', 'sch', 'legendre')
+        demMethod (Optional[int]):           DEM interpolation method
+                                                 ('sinc', 'bilinear', 'bicubic', 'nearest',
+                                                  'akima', 'biquintic')
+        epsgOut (Optional[int]):             EPSG code for output topo layers.
 
     Return:
         None
@@ -45,38 +54,16 @@ cdef class pyTopo:
         'biquintic': dataInterpMethod.BIQUINTIC_METHOD
     }
 
-    def __cinit__(self, pyProduct product):
+    def __cinit__(self, pyProduct product, threshold=0.05, numIterations=25,
+                  extraIterations=10, orbitMethod='hermite', demMethod='biquintic',
+                  epsgOut=4326):
         """
         Constructor takes in a product in order to retrieve relevant radar parameters.
         """
+        # Create C++ topo pointer
         self.c_topo = new Topo(deref(product.c_product))
         self.__owner = True
 
-    def __dealloc__(self):
-        if self.__owner:
-            del self.c_topo
-
-    def topo(self, pyRaster demRaster, outputDir, threshold=0.05, numIterations=25,
-             extraIterations=10, orbitMethod='hermite', demMethod='biquintic', epsgOut=4326):
-        """
-        Run topo.
-        
-        Args:
-            demRaster (pyRaster):               Raster for input DEM.
-            outputDir (str):                    String for output directory.
-            threshold (Optional[float]):        Threshold for iteration stop for slant range.
-            numIterations (Optional[int]):      Max number of normal iterations.
-            extraIterations (Optional[int]):    Number of extra refinement iterations.
-            orbitMethod (Optional[str]):        Orbit interpolation method
-                                                    ('hermite', 'sch', 'legendre')
-            demMethod (Optional[int]):          DEM interpolation method
-                                                    ('sinc', 'bilinear', 'bicubic', 'nearest',
-                                                     'akima', 'biquintic')
-            epsgOut (Optional[int]):            EPSG code for output topo layers.
-
-        Return:
-            None
-        """
         # Set processing options
         self.c_topo.threshold(threshold)
         self.c_topo.numiter(numIterations)
@@ -86,6 +73,21 @@ cdef class pyTopo:
         self.c_topo.epsgOut(epsgOut)
         self.c_topo.initialized(True)
 
+    def __dealloc__(self):
+        if self.__owner:
+            del self.c_topo
+
+    def topo(self, pyRaster demRaster, outputDir):
+        """
+        Run topo.
+        
+        Args:
+            demRaster (pyRaster):               Raster for input DEM.
+            outputDir (str):                    String for output directory.
+
+        Return:
+            None
+        """
         # Convert output directory to C++ string
         cdef string outdir = pyStringToBytes(outputDir)
             
