@@ -13,6 +13,12 @@ def test_geo2rdr():
     # Open the HDF5 SLC product for the master scene
     h5 = isceextension.pyIH5File('../../../../lib/isce/data/envisat.h5')
 
+    # Open groups necessary for ISCE objects
+    idGroup = h5.openGroup('/science/metadata/identification')
+    orbGroup = h5.openGroup('/science/metadata/orbit')
+    dopGroup = h5.openGroup('/science/metadata/instrument_data/doppler_centroid')
+    modeGroup = h5.openGroup('/science/complex_imagery')
+
     # Make ISCE objects
     ellps = isceextension.pyEllipsoid()
     orbit = isceextension.pyOrbit()
@@ -20,10 +26,10 @@ def test_geo2rdr():
     mode = isceextension.pyImageMode()
     
     # Configure objects using metadata 
-    isceextension.deserialize(h5, ellps)
-    isceextension.deserialize(h5, orbit)
-    isceextension.deserialize(h5, doppler)
-    isceextension.deserialize(h5, mode)
+    isceextension.deserialize(idGroup, ellps)
+    isceextension.deserialize(orbGroup, orbit)
+    isceextension.deserialize(dopGroup, doppler)
+    isceextension.deserialize(modeGroup, mode)
     
     # Call geo2rdr
     llh = [np.radians(-115.6), np.radians(35.1), 55.0]

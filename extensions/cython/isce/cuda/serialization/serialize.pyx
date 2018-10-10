@@ -7,13 +7,13 @@
 from libcpp.string cimport string
 from Serialization cimport *
 
-def deserialize(pyIH5File h5file, isceobj, **kwargs):
+def deserialize(pyIGroup group, isceobj, **kwargs):
     """
     High-level interface for deserializing generic ISCE objects from an HDF5
     Level-1 product.
 
     Args:
-        h5file (pyIH5File):                     IH5File for product.
+        group (pyIGroup):                       IH5File for product.
         isceobj:                                Any supported ISCE extension class.
         
     Return:
@@ -21,28 +21,28 @@ def deserialize(pyIH5File h5file, isceobj, **kwargs):
     """
 
     if isinstance(isceobj, pyEllipsoid):
-        loadEllipsoid(h5file, isceobj)
+        loadEllipsoid(group, isceobj)
 
     elif isinstance(isceobj, pyOrbit):
-        loadOrbit(h5file, isceobj, **kwargs)
+        loadOrbit(group, isceobj, **kwargs)
 
     elif isinstance(isceobj, pyPoly2d):
-        loadPoly2d(h5file, isceobj, **kwargs)
+        loadPoly2d(group, isceobj, **kwargs)
 
     elif isinstance(isceobj, pyRadar):
-        loadRadar(h5file, isceobj)
+        loadRadar(group, isceobj)
 
     elif isinstance(isceobj, pyImageMode):
-        loadImageMode(h5file, isceobj, **kwargs)
+        loadImageMode(group, isceobj, **kwargs)
 
     elif isinstance(isceobj, pyMetadata):
-        loadMetadata(h5file, isceobj)
+        loadMetadata(group, isceobj)
 
     elif isinstance(isceobj, pyIdentification):
-        loadIdentification(h5file, isceobj)
+        loadIdentification(group, isceobj)
 
     elif isinstance(isceobj, pyComplexImagery):
-        loadComplexImagery(h5file, isceobj)
+        loadComplexImagery(group, isceobj)
 
     else:
         raise NotImplementedError('No suitable deserialization method found.')
@@ -51,26 +51,26 @@ def deserialize(pyIH5File h5file, isceobj, **kwargs):
 # Serialization functions for isce::core objects
 # --------------------------------------------------------------------------------
 
-def loadEllipsoid(pyIH5File h5file, pyEllipsoid ellps):
+def loadEllipsoid(pyIGroup group, pyEllipsoid ellps):
     """
     Load Ellipsoid parameters from HDF5 file.
 
     Args:
-        h5file (pyIH5File):                     IH5File for product.
+        group (pyIGroup):                       IH5File for product.
         ellps (pyEllipsoid):                    pyEllipsoid instance.
 
     Return:
         None
     """
-    load(deref(h5file.c_ih5file), deref(ellps.c_ellipsoid))
+    loadFromH5(group.c_igroup, deref(ellps.c_ellipsoid))
 
-def loadOrbit(pyIH5File h5file, pyOrbit orbit, orbit_type='POE',
+def loadOrbit(pyIGroup group, pyOrbit orbit, orbit_type='POE',
               pyDateTime refEpoch=MIN_DATE_TIME):
     """
     Load Orbit parameters from HDF5 file.
 
     Args:
-        h5file (pyIH5File):                     IH5File for product.
+        group (pyIGroup):                       IH5File for product.
         orbit (pyOrbit):                        pyOrbit instance.
         orbit_type (Optional[str]):             Orbit type ('MOE', 'NOE', 'POE').
         refEpoch (Optional[pyDateTime]):        Reference epoch for computing UTC time.
@@ -78,98 +78,96 @@ def loadOrbit(pyIH5File h5file, pyOrbit orbit, orbit_type='POE',
     Return:
         None
     """
-    load(deref(h5file.c_ih5file), deref(orbit.c_orbit), 
-         <string> pyStringToBytes(orbit_type), deref(refEpoch.c_datetime))
+    loadFromH5(group.c_igroup, deref(orbit.c_orbit), <string> pyStringToBytes(orbit_type),
+               deref(refEpoch.c_datetime))
 
-def loadPoly2d(pyIH5File h5file, pyPoly2d poly, poly_name='skew_dcpolynomial'):
+def loadPoly2d(pyIGroup group, pyPoly2d poly, poly_name='skew_dcpolynomial'):
     """
     Load Poly2d parameters from HDF5 file.
 
     Args:
-        h5file (pyIH5File):                     IH5File for product.
+        group (pyIGroup):                       IH5File for product.
         poly (pyPoly2d):                        pyPoly2d instance.
         poly_name (str):                        H5 dataset name for polynomial.
 
     Return:
         None
     """
-    load(deref(h5file.c_ih5file), deref(poly.c_poly2d),
-         <string> pyStringToBytes(poly_name))
+    loadFromH5(group.c_igroup, deref(poly.c_poly2d), <string> pyStringToBytes(poly_name))
 
 # --------------------------------------------------------------------------------
 # Serialization functions for isce::radar objects
 # --------------------------------------------------------------------------------
 
-def loadRadar(pyIH5File h5file, pyRadar radar):
+def loadRadar(pyIGroup group, pyRadar radar):
     """
     Load Radar parameters from HDF5 file.
 
     Args:
-        h5file (pyIH5File):                     IH5File for product.
+        group (pyIGroup):                       IH5File for product.
         radar (pyRadar):                        pyRadar instance.
 
     Return:
         None
     """
-    load(deref(h5file.c_ih5file), deref(radar.c_radar))
+    loadFromH5(group.c_igroup, deref(radar.c_radar))
 
 # --------------------------------------------------------------------------------
 # Serialization functions for isce::product objects
 # --------------------------------------------------------------------------------
 
-def loadImageMode(pyIH5File h5file, pyImageMode imageMode, mode='primary'):
+def loadImageMode(pyIGroup group, pyImageMode imageMode, mode='primary'):
     """
     Load ImageMode parameters from HDF5 file.
 
     Args:
-        h5file (pyIH5File):                     IH5File for product.
+        group (pyIGroup):                       IH5File for product.
         imageMode (pyImageMode):                pyImageMode instance.
         mode (Optional[str]):                   Mode from ('aux', 'primary')
 
     Return:
         None
     """
-    load(deref(h5file.c_ih5file), deref(imageMode.c_imagemode),
-         <string> pyStringToBytes(mode))
+    loadFromH5(group.c_igroup, deref(imageMode.c_imagemode), <string> pyStringToBytes(mode))
 
-def loadMetadata(pyIH5File h5file, pyMetadata meta):
+def loadMetadata(pyIGroup group, pyMetadata meta):
     """
     Load Metadata parameters from HDF5 file.
     
     Args:
-        h5file (pyIH5File):                     IH5File for product.
+        group (pyIGroup):                       IH5File for product.
         meta (pyMetadata):                      pyMetadata instance.
 
     Return:
         None
     """
-    load(deref(h5file.c_ih5file), meta.c_metadata)
+    loadFromH5(group.c_igroup, meta.c_metadata)
 
-def loadIdentification(pyIH5File h5file, pyIdentification ID):
+def loadIdentification(pyIGroup group, pyIdentification ID):
     """
     Load Identification data from HDF5 file.
 
     Args:
-        h5file (pyIH5File):                     IH5File for product.
+        group (pyIGroup):                       IH5File for product.
         ID (pyIdentification):                  pyIdentification instance.
 
     Return:
         None
     """
-    load(deref(h5file.c_ih5file), ID.c_identification)
+    loadFromH5(group.c_igroup, ID.c_identification)
 
-def loadComplexImagery(pyIH5File h5file, pyComplexImagery cpxImg):
+def loadComplexImagery(pyIGroup group, pyComplexImagery cpxImg):
     """
     Load ComplexImagery data from HDF5 file.
 
     Args:
-        h5file (pyIH5File):                     IH5File for product.
+        group (pyIGroup):                       IH5File for product.
         cpxImg (pyComplexImagery):              pyComplexImagery instance.
 
     Return:
         None
     """
-    load(deref(h5file.c_ih5file), cpxImg.c_compleximagery)
+    loadFromH5(group.c_igroup, cpxImg.c_compleximagery)
 
 # --------------------------------------------------------------------------------
 # Serialization functions for isce::geometry objects
