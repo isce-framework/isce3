@@ -14,6 +14,23 @@ As a library, it provides a variety of data structures (C++/ Python) that are us
 Repository: <a href="https://github-fn.jpl.nasa.gov/ericmg/isce">JPL github-fn</a><br>
 Download: TBD
 
+\section index_install Installation
+
+\subsection index_install_binaries From binaries for users
+
+<ul>
+<li> Runtime docker image (coming soon)
+</ul>
+
+\subsection index_install_src From source for developers
+
+We have compiled instructions for installing ISCE for the following sets of platforms from source.
+<ul>
+<li> \ref install_linux "Ubuntu 18.04 / Centos7.5 (Anaconda + pyre binaries)"
+<li> \ref install_osx   "OS X (Macports)"
+<li> Developer docker image (coming soon)
+</ul>
+
 \section index_userdocs User Oriented Documentation
 
 <ul>
@@ -24,25 +41,20 @@ Download: TBD
 </ul>
 
 
+\section index_conventions Overview on conventions
+
+<ul>
+<li> \ref overview_raster "Raster data model"
+<li> \ref overview_geometry "Radar imaging geometry"
+</ul>
+
 \section index_devdocs Developer Oriented Documentation
 
 <ul>
 <li> \ref howtodoc "Coding and documentation style"
-<li> <a href="raster.html">Raster data model</a>
-<li> <a href="annotated.html">Core data structures in C++</a>
-<li> <a href="sphinx/html/index.html">Core data structure in Python</a>
-<li> <a href="geometry.html">Radar imaging geometry</a>
+<li> Core data structures <a href="annotated.html">[<STRONG>C++</STRONG>]</a><a href="sphinx/html/index.html">[<STRONG>Python</STRONG>]</a>
+<li> \ref tutorial_tutorial "Tutorials with detailed code examples"
 </ul>
-
-
-\section index_userforum User Forum
-
-TBD
-
-
-\section index_bugs Bug Reporting
-
-TBD
 
 
 \section index_citing Citing ISCE in publications

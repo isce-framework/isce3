@@ -1,0 +1,246 @@
+/*! \page install_linux Installing ISCE on Centos 7.5 / Ubuntu 18.04
+
+\tableofcontents
+
+ISCE has the following dependencies
+<ol>
+<li> <a href="http://pyre.orthologue.com">pyre</a>
+<li> C++ compiler - gcc-6 or above
+<li> Python 3.6 or above
+<li> Numpy and Cython
+<li> GDAL 2.3 or above with Python bindings
+<li> HDF5 1.10.2 or above with h5py
+<li> cmake 3.11 or above
+<li> CUDA 9.0 or above (for GPU-based processing)
+</ol>
+
+Centos 7.5 is the operational OS for the NISAR processing system and this is probably the most tested set of instructions. In this set of instructions, we directly use the x86_64 binaries provided on the pyre website and do not compile the package from source. 
+
+The instructions for Centos 7.5 / Ubuntu 18.04 are more or less the same except for the parts specific to using the standard package managers to install compilers and some basic packages.
+
+
+\section linuxpack Installing packages using builtin package manager
+
+\subsection centosyum yum on Centos 7.5
+
+This section only applies to installation on Centos 7.5. The following packages and their dependencies should be installed using "yum".
+<ol>
+<li>curl
+<li>sudo
+<li>bzip2
+<li>zip
+<li>centos-release-scl-rh
+<li>yum-utils
+<li>devtoolset-6-make
+<li>devtoolset-6-binutils
+<li>devtoolset-6-gcc
+<li>devtoolset-6-gcc-gfortran
+<li>devtoolset-6-gcc-c++
+</ol>
+
+If CUDA support is desired, install the following set of packages with yum as well:
+<ol>
+<li>cuda-libraries-dev-9.1 
+<li>cuda-nvml-dev-9.1
+<li>cuda-minimal-build-9.1
+<li>cuda-command-line-tools-9.1
+</ol>
+
+Don't forget to activate the devtoolset by running the following command.
+\code{.sh}
+> scl enable devtoolset-6 bash
+\endcode
+
+\subsection ubuntuapt apt-get on Ubuntu 18.04
+
+This section only applies to installation on Ubuntu 18.04. The following packages and their dependencies should be installed using "apt-get".
+<ol>
+<li>gnupg2
+<li>curl
+<li>ca-certificates
+<li>bzip2
+<li>zip
+<li>gcc-6
+<li>g++-6
+</ol>
+
+If CUDA support is desired, install the following set of packages with apt-get as well:
+<ol>
+<li>nvidia-cuda-toolkit
+</ol>
+
+\section conda Installing Anaconda and Python packages
+
+In this set of instructions, we rely on <a href="https://anaconda.org/">Anaconda</a> for installing Python dependencies. We will install Python3 to the location /home/username/python/anaconda3. 
+
+<ol>
+<li> We will list all the required packages in a text file called "requirements.txt" located under /home/tools/python. The contents of the requirements.txt file is shown below:
+
+\verbatim
+cmake
+cython
+gdal
+git
+h5py
+libgdal
+nose
+numpy
+\endverbatim
+
+<li> We can then install Anaconda and these requirements as shown below:
+\code{.sh}
+> cd /home/username/python
+> curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o miniconda.sh
+> bash miniconda.sh -b -p /home/username/python/anaconda3
+> touch /home/username/python/anaconda3/conda-meta/pinned
+> export PATH=/home/username/python/anaconda3/bin:$PATH
+> conda config --set show_channel_urls True
+> conda config --add channels conda-forge 
+> conda update --all --yes
+> conda install --yes --file /home/username/python/requirements.txt
+#> conda install --yes -c conda-forge/label/broken gdal=2.3.1
+\endcode
+
+<li> Activate the conda root environment
+\verbatim
+> . /home/username/python/anaconda3/bin/activate root
+\endverbatim
+</ol>
+
+
+\section pyrebin Installing pyre binaries
+
+We will install pyre binaries in /home/username/tools/pyre.
+
+<ol>
+
+<li>Download the pyre binaries.
+\code{.sh}
+> cd /home/username/tools
+> curl -sSL http://pyre.orthologue.com/pyre-1.0.cpython-36m-x86_64-linux-gnu.zip -o pyre.zip
+\endcode
+
+<li>Unzip the zip file.
+\code{.sh}
+> cd /home/username/tools
+> mkdir pyre
+> cd pyre
+> unzip ../pyre.zip
+\endcode
+
+<li>Setup relevant environment variables
+\code{.sh}
+export PYREDIR=/home/username/tools/pyre
+export PATH=$PYREDIR/bin:$PATH
+export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH
+export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
+\endcode
+
+</ol>
+
+
+\section isce3linux Install ISCE3 from source
+
+In this section we will walk through the directory setup and build system instructions for installing ISCE. ISCE can be built with 2 different build systems - <a href="https://github.com/aivazis/config">mm</a> and <a href="https://cmake.org/">cmake</a>. In this set of instructions, we focus on cmake as it is already available via standard package managers. We assume the following directory structure in this tutorial
+
+<table>
+    <caption id="multi_row">Assumed directory structure for installing ISCE</caption>
+    <tr><th>Location<th>Description
+    <tr><td>/home/username/tools/pyre <td> Pyre install location
+    <tr><td>/home/username/tools/isce/src <td> git checkout location/ unpacked tarball location of ISCE source
+    <tr><td>/home/username/tools/isce/build <td> cmake build location
+    <tr><td>/home/username/tools/isce/install <td>cmake install location
+</table>
+
+
+\subsection isce3targit Step 1: Get latest version of ISCE source
+
+\subsubsection isce3git  Option 1: Checkout latest version from git
+
+<ol>
+<li> Ensure that you are in the source folder
+\code{.sh}
+> cd /home/username/tools/isce/src
+\endcode
+<li> Check out the latest version of the source code from git
+\code{.sh}
+> git clone https://github-fn.jpl.nasa.gov/ericmg/isce
+\endcode
+</ol>
+
+
+\subsubsection isce3tar Option 2: Get the latest tarball 
+
+<ol>
+<li> Ensure that you are in the source folder
+\code{.sh}
+> cd /home/username/tools/isce/src
+\endcode
+<li> Unpack the tarball.
+\code{.sh}
+> tar xjbf isce.tar.bz2
+\endcode
+</ol>
+
+
+\subsection isce3build Step 2: Build the software
+
+<ol>
+<li> Ensure that you are in the build folder
+\code{.sh}
+> cd /home/username/tools/isce/build
+\endcode
+
+<li> Ensure that you have activated the scl environment (Centos), conda and set environment variables needed by pyre following instructions provided above.
+
+<li> Run cmake with the correct inputs
+\code{.sh}
+
+> CC=gcc CXX=g++ cmake -DCMAKE_INSTALL_PREFIX=/home/username/tools/isce/install /home/username/tools/isce/src/isce
+
+\endcode
+
+Other optional arguments can be added to the cmake line
+<table>
+    <caption id="multi_row">Additional cmake options</caption>
+    <tr><th>Option<th>Description
+    <tr><td>-DWITH_CUDA=ON <td>Build with CUDA support - will need CUDA libraries installed
+    <tr><td>-DWITH_DOC=ON <td>Build documentation from code using doxygen and sphinx. These need to be installed
+</table>
+
+<li> Build the software
+\code{.sh}
+> make VERBOSE=ON
+\endcode
+
+<li> Run the unittests to ensure that software was built correctly
+\code{.sh}
+> ctest
+\endcode
+</ol>
+
+\subsection isce3install Step 3: Install and set environment variables
+
+<ol>
+<li> Ensure that you are in the build folder
+\code{.sh}
+> cd /home/username/tools/isce/build
+\endcode 
+
+<li> Install the software
+\code{.sh}
+> make install
+\endcode
+
+<li> Setup the environment variables. Note that these need to be done in addition to the settings needed for scl (Centos), conda and pyre.
+
+<table>
+    <caption id="multi_row">Environment variables to set after installing ISCE</caption>
+    <tr><th>Variable<th>Setting<th>Description
+    <tr><td>PATH<td>$PATH:/home/username/tools/isce/install/bin<td>For executables installed by ISCE
+    <tr><td>PYTHONPATH<td>$PYTHONPATH:/home/username/tools/isce/install/packages<td>ISCE python package
+    <tr><td>LD_LIBRARY_PATH<td>$LD_LIBRARY_PATH:/home/username/tools/isce/install/lib<td>Shared libraries built by ISCE
+</table>
+
+</ol>
+*/

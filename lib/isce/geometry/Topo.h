@@ -33,35 +33,50 @@ namespace isce {
 }
 
 // Declare Topo class
+/** Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude
+ *
+ * See <a href="overview_geometry.html#forwardgeom">geometry overview</a> for a description of the algorithm*/
 class isce::geometry::Topo {
 
     public:
-        // Constructor from Product
+        /** Constructor using a product*/
         inline Topo(isce::product::Product &);
-        // Constructor from isce::core objects
+        /** Constructor using core objects*/
         inline Topo(isce::core::Ellipsoid,
                     isce::core::Orbit,
                     isce::core::Poly2d,
                     isce::core::Metadata);
         
-        // Set topo processing options
+        /** Set initialization flag*/
         inline void initialized(bool);
+        /** Set convergence threshold */
         inline void threshold(double);
+        /** Set number of primary iterations */
         inline void numiter(int);
+        /** Set number of secondary iterations */
         inline void extraiter(int);
+        /** Set orbit interpolation method */
         inline void orbitMethod(isce::core::orbitInterpMethod);
+        /** Set DEM interpolation method */
         inline void demMethod(isce::core::dataInterpMethod);
+        /** Set output coordinate system */
         inline void epsgOut(int);
 
-        // Get topo processing options
+        //Get topo processing options
+        /** Get lookSide used for processing */
         inline int lookSide() const { return _lookSide; }
+        /** Get distance convergence threshold used for processing */
         inline double threshold() const { return _threshold; }
+        /** Get number of primary iterations used for processing */
         inline int numiter() const { return _numiter; }
+        /** Get number of secondary iterations used for processing*/
         inline int extraiter() const { return _extraiter; }
+        /** Get the output coordinate system used for processing */
         inline int epsgOut() const { return _epsgOut; }
+        /** Get the DEM interpolation method used for processing */
         inline isce::core::dataInterpMethod demMethod() const { return _demMethod; }
 
-        // Check initialization
+        /** Check initialization of processing module*/
         inline void checkInitialization(pyre::journal::info_t &) const;
 
         // Get DEM bounds using first/last azimuth line and slant range bin
@@ -69,24 +84,29 @@ class isce::geometry::Topo {
                               DEMInterpolator &,
                               size_t, size_t);
 
-        // Run topo - main entrypoint
+        /** Main entry point for the module*/
         void topo(isce::io::Raster &, const std::string);
 
         // Getters for isce objects
+        /** Get the orbits used for processing */
         inline const isce::core::Orbit & orbit() const { return _orbit; }
+        /** Get the ellipsoid used for processing */
         inline const isce::core::Ellipsoid & ellipsoid() const { return _ellipsoid; }
+        /** Get the doppler module used for processing */
         inline const isce::core::Poly2d & doppler() const { return _doppler; }
+        /** Get the sensingStart used for processing */
         inline const isce::core::DateTime & sensingStart() const { return _sensingStart; }
+        /** Get the imageMode object used for processing */
         inline const isce::product::ImageMode & mode() const { return _mode; }
 
     private:
 
-        // Perform data initialization for a given azimuth line
+        /** Initialize TCN basis for given azimuth line */
         void _initAzimuthLine(size_t,
                               isce::core::StateVector &,
                               isce::core::Basis &);
 
-        // Set output layers
+        /** Write to output layers */
         void _setOutputTopoLayers(cartesian_t &,
                                   TopoLayers &,
                                   size_t,
