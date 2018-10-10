@@ -28,8 +28,11 @@ TEST(RadarTest, CheckArchive) {
     std::string h5file("../../data/envisat.h5");
     isce::io::IH5File file(h5file);
 
+    // Open group containing instrument data
+    isce::io::IGroup group = file.openGroup("/science/metadata/instrument_data");
+
     // Deserialize the radar instrument
-    isce::radar::load(file, instrument);
+    isce::radar::loadFromH5(group, instrument);
 
     // Check values for content Doppler
     isce::core::Poly2d content = instrument.contentDoppler();

@@ -30,8 +30,11 @@ TEST(MetadataTest, FromHDF5) {
     // Instantiate a Metadata object
     isce::product::Metadata meta;
 
+    // Open metadata group
+    isce::io::IGroup metaGroup = file.openGroup("/science/metadata");
+
     // Deserialize the Metadata
-    isce::product::load(file, meta);
+    isce::product::loadFromH5(metaGroup, meta);
 
     // Get the radar instrument
     isce::radar::Radar instrument = meta.instrument();

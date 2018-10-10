@@ -37,72 +37,77 @@ namespace isce {
 
         /** Load Identification parameters from HDF5.
          *
-         * @param[in] file      HDF5 file object.
+         * @param[in] group     HDF5 group object.
          * @param[in] id        Identification object to be configured. */
-        inline void load(isce::io::IH5File & file, Identification & id) {
+        inline void loadFromH5(isce::io::IGroup & group, Identification & id) {
 
             // Configure a temporary ellipsoid
             isce::core::Ellipsoid ellps;
-            isce::core::load(file, ellps);
+            isce::core::loadFromH5(group, ellps);
             // Save to identification
             id.ellipsoid(ellps);
 
             // Load the look direction
             isce::core::FixedString lookDir;
-            isce::io::loadFromH5(
-                file,
-                "/science/metadata/identification/look_direction",
-                lookDir
-            );
+            isce::io::loadFromH5(group, "look_direction", lookDir);
             // Save to identification
             id.lookDirection(std::string(lookDir.str));
         }
 
         /** Load Metadata parameters from HDF5.
          *
-         * @param[in] file          HDF5 file object.
+         * @param[in] group         HDF5 group object.
          * @param[in] meta          Metadata object to be configured. */
-        inline void load(isce::io::IH5File & file, Metadata & meta) {
+        inline void loadFromH5(isce::io::IGroup & group, Metadata & meta) {
+
+            // Get orbit subgroup
+            isce::io::IGroup orbGroup = group.openGroup("orbit");
 
             // Configure a temporary orbit with NOE data
             isce::core::Orbit orbit;
-            isce::core::load(file, orbit, "NOE");
+            isce::core::loadFromH5(orbGroup, orbit, "NOE");
             // Save to metadata
             meta.orbitNOE(orbit);
 
             // Configure a temporary orbit with POE data
-            isce::core::load(file, orbit, "POE");
+            isce::core::loadFromH5(orbGroup, orbit, "POE");
             // Save to metadata
             meta.orbitPOE(orbit);
 
+            // Open instrument subgroup
+            isce::io::IGroup instGroup = group.openGroup("instrument_data");
+
             // Configure a temporary instrument
             isce::radar::Radar instrument;
-            isce::radar::load(file, instrument);
+            isce::radar::loadFromH5(instGroup, instrument);
             // Save to metadata
             meta.instrument(instrument);
 
+            // Open identification subgroup
+            isce::io::IGroup idGroup = group.openGroup("identification");
+
             // Configure a temporary identification
             Identification id;
-            load(file, id);
+            loadFromH5(idGroup, id);
             // Save to metadata
             meta.identification(id);
         }
 
         /** Load ImageMode data from HDF5.
          *
-         * @param[in] file          HDF5 file object.
+         * @param[in] group         HDF5 group object.
          * @param[in] mode          ImageMode object to be configured. 
          * @param[in] modeType      String representing mode type. */
-        inline void load(isce::io::IH5File & file, ImageMode & mode,
+        inline void loadFromH5(isce::io::IGroup & group, ImageMode & mode,
                          const std::string & modeType) {
 
-            // Make path for mode
-            std::string path = "/science/complex_imagery/" + modeType + "_mode";
+            // Get subgroup for specific image mode
+            isce::io::IGroup modeGroup = group.openGroup(modeType + "_mode");
             // Set mode type
             mode.modeType(modeType);
 
             // Set the image dimensions
-            std::vector<int> dims = isce::io::getImageDims(file, path + "/hh");
+            std::vector<int> dims = isce::io::getImageDims(modeGroup, "hh");
             std::array<size_t, 2> arrayDims{static_cast<size_t>(dims[0]),
                                             static_cast<size_t>(dims[1])};
             mode.dataDimensions(arrayDims);
@@ -113,35 +118,35 @@ namespace isce {
 
             // Set PRF
             double value;
-            isce::io::loadFromH5(file, path + "/az_time_interval", value);
+            isce::io::loadFromH5(modeGroup, "az_time_interval", value);
             mode.prf(1.0 / value);
 
             // Set bandwidth
-            isce::io::loadFromH5(file, path + "/bandwidth", value);
+            isce::io::loadFromH5(modeGroup, "bandwidth", value);
             mode.rangeBandwidth(value);
 
             // Set starting slant range
-            isce::io::loadFromH5(file, path + "/slant_range_start", value);
+            isce::io::loadFromH5(modeGroup, "slant_range_start", value);
             mode.startingRange(value);
 
             // Set slant range pixel spacing
-            isce::io::loadFromH5(file, path + "/slant_range_spacing", value);
+            isce::io::loadFromH5(modeGroup, "slant_range_spacing", value);
             mode.rangePixelSpacing(value);
 
             // Set wavelength
-            isce::io::loadFromH5(file, path + "/freq_center", value);
+            isce::io::loadFromH5(modeGroup, "freq_center", value);
             mode.wavelength(isce::core::SPEED_OF_LIGHT / value);
 
             // Load zero doppler starting azimuth time
             isce::core::FixedString datestr;
-            isce::io::loadFromH5(file, path + "/zero_doppler_start_az_time", datestr);
+            isce::io::loadFromH5(modeGroup, "zero_doppler_start_az_time", datestr);
             // Convert to datetime
             isce::core::DateTime date(std::string(datestr.str));
             // Set
             mode.startAzTime(date);
 
             // Load zero doppler ending azimuth time
-            isce::io::loadFromH5(file, path + "/zero_doppler_end_az_time", datestr);
+            isce::io::loadFromH5(modeGroup, "zero_doppler_end_az_time", datestr);
             // Convert to datetime
             date = std::string(std::string(datestr.str));
             // Set
@@ -150,19 +155,19 @@ namespace isce {
 
         /** Load ComplexImagery data from HDF5.
          *
-         * @param[in] file          HDF5 file object.
+         * @param[in] group         HDF5 group object.
          * @param[in] cpxImg        ComplexImagery object to be configured. */
-        inline void load(isce::io::IH5File & file, ComplexImagery & cpxImg) {
+        inline void loadFromH5(isce::io::IGroup & group, ComplexImagery & cpxImg) {
 
             // Configure a temporary auxiliary ImageMode
             ImageMode aux;
-            load(file, aux, "aux");
+            loadFromH5(group, aux, "aux");
             // Save to cpxImg
             cpxImg.auxMode(aux);
 
             // Configure a temporary primary ImageMode
             ImageMode primary;
-            load(file, primary, "primary");
+            loadFromH5(group, primary, "primary");
             // Save to cpxImg
             cpxImg.primaryMode(primary);
         }
