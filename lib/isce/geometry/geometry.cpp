@@ -236,7 +236,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
  * @param[out] slantRange slant range to inputLLH
  * @param[in] threshold azimuth time convergence threshold in seconds
  * @param[in] maxIter Maximum number of Newton-Raphson iterations
- * @param[in] deltaRange slant range offset if needed
+ * @param[in] deltaRange step size used for computing derivative of doppler
  *
  * This is the light weight version of isce::geometry::Geo2rdr. This is not meant to be used with large number of targets of interest. For algorithmic details, see \ref overview_geometry "geometry overview".*/
 int isce::geometry::

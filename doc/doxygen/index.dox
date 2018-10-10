@@ -19,28 +19,16 @@ Download: TBD
 \subsection index_install_binaries From binaries for users
 
 <ul>
-<li> \ref install_docker_bin "Runtime docker image (coming soon)" 
+<li> Runtime docker image (coming soon)
 </ul>
 
-\subsection index_instrall_src From source for developers
-
-ISCE has the following dependencies
-<ol>
-<li> <a href="http://pyre.orthologue.com">pyre</a>
-<li> C++ compiler - gcc-6 or above
-<li> Python 3.6 or above
-<li> Numpy and Cython
-<li> GDAL 2.3 or above with Python bindings
-<li> HDF5 1.10.2 or above with h5py
-<li> cmake 3.11 or above
-<li> CUDA 9.0 or above (for GPU-based processing)
-</ol>
+\subsection index_install_src From source for developers
 
 We have compiled instructions for installing ISCE for the following sets of platforms from source.
 <ul>
 <li> \ref install_linux "Ubuntu 18.04 / Centos7.5 (Anaconda + pyre binaries)"
 <li> \ref install_osx   "OS X (Macports)"
-<li> \ref install_docker_dev "Developer docker image (coming soon)"
+<li> Developer docker image (coming soon)
 </ul>
 
 \section index_userdocs User Oriented Documentation
@@ -65,8 +53,7 @@ We have compiled instructions for installing ISCE for the following sets of plat
 <ul>
 <li> \ref howtodoc "Coding and documentation style"
 <li> Core data structures <a href="annotated.html">[<STRONG>C++</STRONG>]</a><a href="sphinx/html/index.html">[<STRONG>Python</STRONG>]</a>
-<li> Raster tutorial [\ref tutorial_raster "C++"]
-<li> Geometry tutorial [\ref tutorial_geometry "C++"]
+<li> \ref tutorial_tutorial "Tutorials with detailed code examples"
 </ul>
 
 
