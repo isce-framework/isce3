@@ -1,0 +1,236 @@
+/*! \page install_osx Installing ISCE on OS X with Macports
+
+\tableofcontents
+
+ISCE has the following dependencies
+<ol>
+<li> <a href="http://pyre.orthologue.com">pyre</a>
+<li> C++ compiler - gcc-6 or above
+<li> Python 3.6 or above
+<li> Numpy and Cython
+<li> GDAL 2.3 or above with Python bindings
+<li> HDF5 1.10.2 or above with h5py
+<li> cmake 3.11 or above
+<li> CUDA 9.0 or above (for GPU-based processing)
+</ol>
+
+One can use any of the three package managers - Macports, Homebrew or Conda to install ISCE on OS X. We will only walk through the installation steps using Macports. It is highly recommend to not mix packages installed by different package managers as this typically leads to library incompatibility issues.
+
+\section osxpack Installing packages using Macports
+
+We write the instructions assuming that we are using gcc7 and python36. Changes these to appropriate version numbers for your installation.
+
+<ol>
+<li>sudo port install gcc7
+<ul>
+<li>sudo port select gcc mp-gcc7
+<li>Restart terminal after this
+</ul>
+<li>sudo port install python36
+<ul>
+<li>sudo port select python3 python36
+<li>sudo ln -s /opt/local/Library/Frameworks/Python.framework/Versions/3.6/include/python3.6m /opt/local/include/python3.6m
+<li>The link command is to keep the paths simpler for use with installing software from source.
+</ul>
+<li>sudo port install cmake gawk coreutils gsed
+<li>sudo port install wget +ssl
+<li>sudo port install fftw-3 +gcc7
+<li>sudo port install fftw-3-single +gcc7
+<li>sudo port install gsl +gcc7
+<li>sudo port install hdf5 +gcc7
+<li>sudo port install py36-numpy +gcc7
+<li>sudo port install py36-scipy +gcc7
+<li>sudo port install py36-cython
+<ul>
+<li>sudo ln -s /opt/local/bin/cython-3.6 /opt/local/bin/cython3
+<li>The link reproduces the environment that we usually get on linux machines
+</ul>
+<li>sudo port install py36-h5py
+<li>sudo port install proj
+<li>sudo port install gdal +curl +expat +geos +hdf5 +openjpeg
+<ul>
+<li>export GDAL_DATA=/opt/local/share/gdal
+<li>You may want to build a more complete version of GDAL with support for more formats. The recommended options list is : +hdf4 +hdf5 +netcdf +openjpeg +postgresql95 . Use gcc7 whenever the option is available to build those ports.
+</ul>
+<li>sudo port install py36-gdal
+</ol>
+
+
+\section pyre Installing pyre from source
+
+In this set of instructions, we will install pyre from source using its custom build system - "mm".
+The directory structure that we assume for installing pyre is as follows:
+<table>
+    <caption id="multi_row">Directory structure for installing pyre</caption>
+    <tr><th>Folder<th>Description
+    <tr><td>/Users/username/tools/pyre/config<td>Directory containing mm
+    <tr><td>/Users/username/tools/pyre/src<td>Directory which will contain source for pyre
+    <tr><td>/Users/username/tools/pyre/build<td>Build directory for pyre
+    <tr><td>/Users/username/tools/pyre/install<td>Install directory for pyre
+</table>
+
+\subsection mm Step 1: Fetch mm from github
+<ol>
+<li> Ensure you are in the correct folder. Create the pyre folder if it doesn't exist.
+\code{.sh}
+> cd /Users/agram/tools/pyre
+\endcode
+
+<li>Clone the git repository for config
+\code{.sh}
+> git clone https://github.com/aivazis/config.git
+\endcode
+
+<li> Set up environment variables and aliases to use config
+\code{.sh}
+export BLD_CONFIG=/Users/username/tools/pyre/config
+export EXPORT_ROOT=/Users/username/tools/pyre/install
+alias mm="python3 /Users/username/tools/pyre/config/make/mm.py"
+alias "mm.paths"="python3 /Users/username/tools/pyre/config/make/mm.py --quiet --paths=sh $*"
+alias "mm.env"="mm --env=sh"
+alias "mm.show"="mm --show --dry"
+alias "mm.bldroot"="mm --dry --quiet --show=$BLD_ROOT"
+export PATH=$PATH:/Users/username/tools/pyre/install/bin
+export PYTHONPATH=$PYTHONPATH:/Users/username/tools/pyre/install/packages
+export LD_LIBRARY_PATH=$LD_LIBRARYPATH:/Users/username/tools/pyre/install/lib
+export MM_INCLUDES=/Users/username/tools/pyre/install/include
+export MM_LIBPATH=/Users/username/tools/pyre/install/lib
+\endcode
+
+</ol>
+
+\subsection pyregit Step 2: Fetch pyre from github and install it
+
+<ol>
+
+<li>Ensure you are in the correct folder.
+\code{.sh}
+> cd /Users/agram/tools/pyre/src
+\endcode
+
+<li>Clone the git repository for pyre.
+\code{.sh}
+> git clone https://github.com/pyre/pyre
+\endcode
+
+<li>Install pyre
+\code{.sh}
+> cd /Users/username/tools/pyre/src/pyre
+> mm
+\endcode
+
+<li> Since we will use cmake for the next step, you can unset the variables and aliases used by mm at this stage if needed.
+
+</ol>
+
+
+\section isce3osx Install ISCE3 from source
+
+In this section we will walk through the directory setup and build system instructions for installing ISCE. ISCE can be built with 2 different build systems - <a href="https://github.com/aivazis/config">mm</a> and <a href="https://cmake.org/">cmake</a>. In this set of instructions, we focus on cmake as it is already available via standard package managers. We assume the following directory structure in this tutorial
+
+<table>
+    <caption id="multi_row">Assumed directory structure for installing ISCE</caption>
+    <tr><th>Location<th>Description
+    <tr><td>/Users/username/tools/pyre/install <td> Pyre install location
+    <tr><td>/Users/username/tools/isce/src <td> git checkout location/ unpacked tarball location of ISCE source
+    <tr><td>/Users/username/tools/isce/build <td> cmake build location
+    <tr><td>/Users/username/tools/isce/install <td>cmake install location
+</table>
+
+
+\subsection osxtargit Step 1: Get latest version of ISCE source
+
+\subsubsection osxgit  Option 1: Checkout latest version from git
+
+<ol>
+<li> Ensure that you are in the source folder
+\code{.sh}
+> cd /home/username/tools/isce/src
+\endcode
+<li> Check out the latest version of the source code from git
+\code{.sh}
+> git clone https://github-fn.jpl.nasa.gov/ericmg/isce
+\endcode
+</ol>
+
+
+\subsubsection osxtar Option 2: Get the latest tarball 
+
+<ol>
+<li> Ensure that you are in the source folder
+\code{.sh}
+> cd /home/username/tools/isce/src
+\endcode
+<li> Unpack the tarball.
+\code{.sh}
+> tar xjbf isce.tar.bz2
+\endcode
+</ol>
+
+
+\subsection osxbuild Step 2: Build the software
+
+<ol>
+<li> Ensure that you are in the build folder
+\code{.sh}
+> cd /Users/username/tools/isce/build
+\endcode
+
+<li> Ensure that you have pyre related paths set in your environment variables. If not, do the following:
+\code{.sh}
+export PYREDIR=/Users/username/tools/pyre/install
+export PATH=$PYREDIR/bin:$PATH
+export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH
+export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
+\endcode
+
+<li> Run cmake with the correct inputs
+\code{.sh}
+
+> CC=gcc CXX=g++ cmake -DCMAKE_INSTALL_PREFIX=/Users/username/tools/isce/install /Users/username/tools/isce/src/isce
+
+\endcode
+
+Other optional arguments can be added to the cmake line
+<table>
+    <caption id="multi_row">Additional cmake options</caption>
+    <tr><th>Option<th>Description
+    <tr><td>-DWITH_DOC=ON <td>Build documentation from code using doxygen and sphinx. These need to be installed
+</table>
+
+<li> Build the software
+\code{.sh}
+> make VERBOSE=ON
+\endcode
+
+<li> Run the unittests to ensure that software was built correctly
+\code{.sh}
+> ctest
+\endcode
+</ol>
+
+\subsection osxinstall Step 3: Install and set environment variables
+
+<ol>
+<li> Ensure that you are in the build folder
+\code{.sh}
+> cd /Users/username/tools/isce/build
+\endcode 
+
+<li> Install the software
+\code{.sh}
+> make install
+\endcode
+
+<li> Setup the environment variables. Note that these need to be done in addition to the settings needed for pyre.
+
+<table>
+    <caption id="multi_row">Environment variables to set after installing ISCE</caption>
+    <tr><th>Variable<th>Setting<th>Description
+    <tr><td>PATH<td>$PATH:/Users/username/tools/isce/install/bin<td>For executables installed by ISCE
+    <tr><td>PYTHONPATH<td>$PYTHONPATH:/Users/username/tools/isce/install/packages<td>ISCE python package
+    <tr><td>LD_LIBRARY_PATH<td>$LD_LIBRARY_PATH:/Users/username/tools/isce/install/lib<td>Shared libraries built by ISCE
+</table>
+
+</ol>
+*/

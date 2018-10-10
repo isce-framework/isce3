@@ -1,0 +1,149 @@
+/*! \page tutorial_raster Raster Tutorial
+
+\tableofcontents
+
+ISCE delegates raster data handling to the Geospatial Data Abstraction Library (<a href="https://www.gdal.org">GDAL</a>). Hence, it uses all the conventions defined by the <a href="http://www.gdal.org/gdal_datamodel.html">GDAL data model</a> to simplify the interface. You will find detailed documentation of all the methods available here: isce::io::Raster.
+
+\section rasterinclude Include headers
+
+In general, one only needs to include the isce::io::Raster headerfile. 
+\code{.cpp}
+#include "isce/io/Raster.h"
+\endcode
+
+If one is looking to create Rasters as part of your workflow, include appropriate the main GDAL header file. This will provide access to pre-defined data types and enum variables.
+\code {.cpp}
+#include "gdal.h"
+\endcode
+
+If one is looking to use advanecd features from GDAL, you might need additional appropriate header files.
+
+\section rasterconstruct Constructors
+
+\subsection rasterreadonly Read-Only Mode
+
+Raster imagery that already exists can be opened in Read-Only mode in a simple manner with just a string with the filename to be used.
+
+\code{.cpp}
+isce::io::Raster raster(inputFilename);
+\endcode
+
+All the GDAL environment variables and driver settings are respected. One should also be able to access remotely located resources using vsicurl / vsis3 etc. One can also use standard GDAL interfaces to access raster imagery within NETCDF and HDF5 by treating them as subdatasets (see here for details on <a href="https://www.gdal.org/frmt_netcdf.html">NETCDF</a> and <a href="https://www.gdal.org/frmt_hdf5.html">HDF5</a>). For a complete list of supported formats in your GDAL build, refer to output of  
+
+\code{.sh}
+> gdalinfo --formats
+\endcode
+
+\subsection rasterupdate Update Mode
+
+An existing GDAL-compatible raster can be opened in Update mode in ISCE as follows
+\code{.cpp}
+//Will need to include gdal.h for definition of GA_Update
+isce::io::Raster raster(inputFilename, GA_Update)
+\endcode
+
+
+\subsection rastercreate Create new rasters
+
+The most general interface to creation of rasters is exposed via isce::io::Raster(const std::string& fname, size_t width, size_t length, size_t numBands, GDALDataType dtype, const std::string& driverName).
+
+<ol>
+<li> If numBands is not provided, it is assumed that user wants to create a single band raster.
+<li> If no dtype is provided, it is assumed that user wants to work with isce::io::defaultGDALDataType.
+<li> If no driverName is provided, it is assumed that user wants to work with isce::io::defaultGDALDriver.
+</ol>
+
+See the full range of isce::io::Raster constructors available for options. Note that you will need to include gdal.h to use GDAL type definitions.
+
+\subsection rastercreatedefault Default raster driver
+
+When the user does not provide a driver name, ISCE currently assumes that user is requesting a flat binary file on disk with an associated VRT file (see <a href="overview_raster.html">Special drivers</a>).
+
+
+\todo Handle creation of HDF5 files when the interface software is ready. One can create HDF5 dataset and then let Raster class take over handling of I/O. Updates to HDF5 via GDAL is still being explored.
+
+\todo Add ability to pass creation options to Raster object. This could possibly be done by accepting a vector of strings as an additional input, that is then passed directly to the GDAL driver during creation.
+
+\section rasterpixel Reading/Writing Single Pixel
+
+Note that all pixels are indexed by the Top-Left corner (see <a href="overview_raster.html">Raster Overview</a>). One can read the data into a buffer of a type different from the storage format, as GDAL will handle the type translation. 
+
+We use isce::io::Raster::getValue to read a pixel value from Band 2 of the raster image in this example. If band number is not provided, it is assumed to be 1.
+
+\code{.cpp}
+//Open existing tiff file
+isce::io::Raster raster("test.tif");
+double val;
+
+//Get value from Band 2
+raster.getValue(val, 5, 10, 2);
+
+std::cout << "Image dimensions: " << raster.width() << " x " << raster.length() << "\n";
+std::cout << "Value at 5P, 10L = " << val << "\n"
+
+\endcode
+
+Similarly, isce::io::Raster::setValue can be used to set a pixel value.
+
+\code{.cpp}
+//Create a Float32 raster of 100 pixels by 200 lines
+isce::io::Raster raster("test.tif", 100, 200,1, GDT_Float32, "GTiff"); 
+
+//Set value in Band 1
+int val = 25;
+raster.setValue(val, 5,10);
+
+\endcode
+
+\section rasterline Reading/Writing Single line
+
+ISCE Raster object can currently interact with 3 types of containers - a raw buffer (no size checks), std::vector and std::valarray. One can use any of the 3 interfaces with the isce::io::Raster::getLine and isce::io::Raster::setLine methods.
+
+\code{.cpp}
+//Create a Float32 raster of 100 pixels by 200 lines
+isce::io::Raster raster("test.vrt", 100, 200);
+
+//Create a vector and valarray for reading
+std::vector<float> input(100);
+std::valarray<double> output(200);
+
+for(int ii=0; ii<100; ii++)
+    input[ii] = ii * 2.0;
+
+//Set line number 10
+raster.setLine(input, 10);
+
+//Read line number 10
+raster.getLine(output, 10);
+
+\endcode
+
+\section rasterblock Reading/Writing Single block
+
+Like single line I/O, one can use any of the 3 interfaces (pointer, vector, valarray) with the isce::io::Raster::getBlock and isce::io::Raster::setBlock methods. Note that all data is read in from or to a contiguous bufferin row major order. Currently, there is no interface to read/write from a blocked interface. If one wishes to do this see the section on advanced usage below to work with the GDAL Dataset pointer directly.
+
+\code{.cpp}
+//Create a Float32 raster of 100 pixels by 200 lines
+isce::io::Raster raster("test.vrt", 100, 200);
+
+//Create a vector and valarray for reading
+//Assuming a block of 5 x 5
+std::vector<float> input(25);
+std::valarray<double> output(25);
+
+for(int ii=0; ii<25; ii++)
+    input[ii] = ii * 2.0;
+
+//Set block of 5x5 with top left at (2,3)
+raster.setBlock(input, 2, 3, 5, 5);
+
+//Read the block we just wrote
+raster.getBlock(output, 2, 3, 5, 5);
+
+\endcode
+
+\section rasteradvanced Advanced usage - direct access to GDAL dataset
+
+ISCE Raster class is a thin wrapper over GDAL's <a href="https://www.gdal.org/classGDALDataset.html">GDALDataset</a> class. One can access the underlying pointer using the isce::io::Raster::dataset method.
+
+*/
