@@ -22,21 +22,21 @@ namespace isce {
 class isce::cuda::geometry::Topo : public isce::geometry::Topo {
 
     public:
-        // Constructor from Product
+        /** Constructor from Product */
         inline Topo(isce::product::Product & product) :
             isce::geometry::Topo(product) {}
 
-        // Constructor from isce::core objects
+        /** Constructor from isce::core objects */
         inline Topo(const isce::core::Ellipsoid & ellps,
                     const isce::core::Orbit & orbit,
                     const isce::core::Poly2d & doppler,
                     const isce::core::Metadata & meta) :
             isce::geometry::Topo(ellps, orbit, doppler, meta) {}
 
-        // Run topo - main entrypoint; internal creation of topo rasters
+        /** Run topo - main entrypoint; internal creation of topo rasters */
         void topo(isce::io::Raster &, const std::string);
 
-        // Run topo with externally created topo rasters
+        /** Run topo with externally created topo rasters */
         void topo(isce::io::Raster & demRaster, isce::io::Raster & xRaster,
                   isce::io::Raster & yRaster, isce::io::Raster & heightRaster,
                   isce::io::Raster & incRaster, isce::io::Raster & hdgRaster,

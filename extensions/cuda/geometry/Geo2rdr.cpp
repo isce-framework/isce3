@@ -18,6 +18,16 @@ using isce::product::ImageMode;
 using isce::io::Raster;
 
 // Run geo2rdr with no offsets; internal creation of offset rasters
+/** @param[in] topoRaster outputs of topo -i.e, pixel-by-pixel x,y,h as bands
+  * @param[in] outdir directory to write outputs to
+  * @param[in] azshift Number of lines to shift by in azimuth
+  * @param[in] rgshift Number of pixels to shift by in range 
+  *
+  * This is the main geo2rdr driver. The pixel-by-pixel output filenames are fixed for now
+  * <ul>
+  * <li>azimuth.off - Azimuth offset to be applied to product to align with topoRaster
+  * <li>range.off - Range offset to be applied to product to align with topoRaster
+*/
 void isce::cuda::geometry::Geo2rdr::
 geo2rdr(isce::io::Raster & topoRaster,
         const std::string & outdir,
@@ -37,7 +47,13 @@ geo2rdr(isce::io::Raster & topoRaster,
     geo2rdr(topoRaster, rgoffRaster, azoffRaster, azshift, rgshift);
 }
 
-// Run geo2rdr with pre-created offset rasters
+// Run geo2rdr with externally created offset rasters
+/** @param[in] topoRaster outputs of topo - i.e, pixel-by-pixel x,y,h as bands
+  * @param[in] outdir directory to write outputs to
+  * @param[in] rgoffRaster range offset output
+  * @param[in] azoffRaster azimuth offset output 
+  * @param[in] azshift Number of lines to shift by in azimuth
+  * @param[in] rgshift Number of pixels to shift by in range */
 void isce::cuda::geometry::Geo2rdr::
 geo2rdr(isce::io::Raster & topoRaster,
         isce::io::Raster & rgoffRaster,

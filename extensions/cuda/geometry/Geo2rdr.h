@@ -33,13 +33,13 @@ class isce::cuda::geometry::Geo2rdr : public isce::geometry::Geo2rdr {
                        const isce::core::Metadata & meta) :
             isce::geometry::Geo2rdr(ellps, orbit, doppler, meta) {}
 
-        // Run geo2rdr with offsets and externally created offset rasters
+        /** Run geo2rdr with offsets and externally created offset rasters */
         void geo2rdr(isce::io::Raster & topoRaster,
                      isce::io::Raster & rgoffRaster,
                      isce::io::Raster & azoffRaster,
                      double azshift=0.0, double rgshift=0.0);
 
-        // Run geo2rdr with constant offsets and internally created offset rasters
+        /** Run geo2rdr with constant offsets and internally created offset rasters */
         void geo2rdr(isce::io::Raster & topoRaster,
                      const std::string & outdir,
                      double azshift=0.0, double rgshift=0.0);
