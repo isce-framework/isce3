@@ -24,9 +24,12 @@ TEST(OrbitTest, CheckArchive) {
     std::string h5file("../../data/envisat.h5");
     isce::io::IH5File file(h5file);
 
+    // Open group containing orbit
+    isce::io::IGroup group = file.openGroup("/science/metadata/orbit");
+
     // Deserialize the orbit
     isce::core::DateTime epoch;
-    isce::core::load(file, orbit, "POE", epoch);
+    isce::core::loadFromH5(group, orbit, "POE", epoch);
 
     // Check we have the right number of state vectors
     ASSERT_EQ(orbit.nVectors, 11);

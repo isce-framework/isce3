@@ -8,10 +8,14 @@
 /** @param[in]              IH5File object for product. */
 isce::product::Product::
 Product(isce::io::IH5File & file) {
+    // Get complex imagery group
+    isce::io::IGroup imGroup = file.openGroup("/science/complex_imagery");
     // Configure complex imagery
-    load(file, _complexImagery);
+    loadFromH5(imGroup, _complexImagery);
+    // Get metadata group
+    isce::io::IGroup metaGroup = file.openGroup("/science/metadata"); 
     // Configure metadata
-    load(file, _metadata);
+    loadFromH5(metaGroup, _metadata);
     // Save the filename
     _filename = file.filename();
 }

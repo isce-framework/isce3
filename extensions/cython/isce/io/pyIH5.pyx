@@ -5,7 +5,7 @@
 #
 
 from libcpp.string cimport string
-from IH5 cimport IH5File, IDataSet
+from IH5 cimport IH5File, IDataSet, IGroup
 
 cdef class pyIDataSet:
     """
@@ -28,6 +28,23 @@ cdef class pyIDataSet:
     def __dealloc__(self):
         if self.__owner:
             del self.c_idataset
+
+
+cdef class pyIGroup:
+    """
+    Cython wrapper for isce::io::IGroup.
+
+    Args:
+        None
+    """
+    cdef IGroup c_igroup
+
+    def __cinit__(self):
+        """
+        Pre-constructor that creates a C++ isce::io::IGroup object and binds it to
+        python instance.
+        """
+        self.c_igroup = IGroup()
 
 
 cdef class pyIH5File:
@@ -81,6 +98,24 @@ cdef class pyIH5File:
         for i in range(dsetvec.size()):
             datasets.append(dsetvec[i])
         return datasets
-        
+
+    def openGroup(self, name):
+        """
+        Open an HDF5 group.
+
+        Args:
+            name (str):             Group name to search for.
+            
+        Returns:
+            group (pyIGroup):       pyIGroup.
+        """
+        # Convert the name to a C++ string representation
+        cdef string path = pyStringToBytes(name)
+
+        # Open group
+        new_group = pyIGroup()
+        new_group.c_igroup = self.c_ih5file.openGroup(path)
+
+        return new_group
 
 # end of file
