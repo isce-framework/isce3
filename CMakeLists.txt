@@ -61,6 +61,8 @@ CheckGDAL()
 ##Check for HDF5
 CheckHDF5()
 
+#Check FFTW3
+CheckFFTW3()
 ##Check for Armadillo
 ##CheckArmadillo()
 

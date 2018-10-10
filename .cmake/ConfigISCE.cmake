@@ -37,6 +37,10 @@ function(CheckPyre)
     FIND_PACKAGE(Pyre REQUIRED)
 endfunction()
 
+function(CheckFFTW3)
+    FIND_PACKAGE(FFTW3 REQUIRED)
+    message (${FFTW_INCLUDES} ${FFTW_LIBRARIES} ${FFTW_LIB} ${FFTWF_LIB} ${FFTWL_LIB} ${FFTW_THREADS_LIB} ${FFTWF_THREADS_LIB} ${FFTWL_THREADS_LIB})
+endfunction()
 
 ##Check for GDAL installation
 function(CheckGDAL)
