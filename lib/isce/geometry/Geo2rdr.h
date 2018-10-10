@@ -49,15 +49,18 @@ class isce::geometry::Geo2rdr {
         inline void threshold(double);
         inline void numiter(int);
         inline void orbitMethod(isce::core::orbitInterpMethod);
+        
+        // Run geo2rdr with offsets and externally created offset rasters
+        // Input multi-band topo raster
+        void geo2rdr(isce::io::Raster & topoRaster,
+                     isce::io::Raster & rgoffRaster,
+                     isce::io::Raster & azoffRaster,
+                     double azshift=0.0, double rgshift=0.0);
 
-        // Run geo2rdr - main entrypoint
-        void geo2rdr(isce::io::Raster &,
-                     const std::string &,
-                     double, double);
-
-        // Alternative: run geo2rdr with no constant offsets
-        void geo2rdr(isce::io::Raster &,
-                     const std::string &);
+        // Run geo2rdr with constant offsets and internally created offset rasters
+        void geo2rdr(isce::io::Raster & topoRaster,
+                     const std::string & outdir,
+                     double azshift=0.0, double rgshift=0.0);
 
         // Value for null pixels
         const double NULL_VALUE = -1.0e6;

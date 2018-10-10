@@ -20,7 +20,10 @@ cdef extern from "isce/cuda/geometry/Geo2rdr.h" namespace "isce::cuda::geometry"
         # Constructor
         Geo2rdr(Product) except +
 
-        # Run geo2rdr - main entrypoint
+        # Run geo2rdr with no constant offsets and internally created offset rasters
         void geo2rdr(Raster &, const string &, double, double)
-        
+
+        # Run geo2rdr with offsets and externally created offset rasters
+        void geo2rdr(Raster &, Raster &, Raster &, double, double)
+
 # end of file

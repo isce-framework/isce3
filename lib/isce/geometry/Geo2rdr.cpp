@@ -25,18 +25,31 @@ using isce::io::Raster;
 using isce::core::Poly2d;
 using isce::core::LinAlg;
 
-// Run geo2rdr with no offsets
-void isce::geometry::Geo2rdr::
-geo2rdr(isce::io::Raster & topoRaster,
-        const std::string & outdir) {
-    // Call main geo2rdr with offsets set to zero
-    geo2rdr(topoRaster, outdir, 0.0, 0.0);
-}
-
-// Run geo2rdr - main entrypoint
+// Run geo2rdr with no offsets; internal creation of offset rasters
 void isce::geometry::Geo2rdr::
 geo2rdr(isce::io::Raster & topoRaster,
         const std::string & outdir,
+        double azshift, double rgshift) {
+
+    // Cache the size of the DEM images
+    const size_t demWidth = topoRaster.width();
+    const size_t demLength = topoRaster.length();
+
+    // Create output rasters
+    Raster rgoffRaster = Raster(outdir + "/range.off", demWidth, demLength, 1,
+        GDT_Float32, "ISCE");
+    Raster azoffRaster = Raster(outdir + "/azimuth.off", demWidth, demLength, 1,
+        GDT_Float32, "ISCE");
+
+    // Call main geo2rdr with offsets set to zero
+    geo2rdr(topoRaster, rgoffRaster, azoffRaster, azshift, rgshift);
+}
+
+// Run geo2rdr with pre-created offset rasters
+void isce::geometry::Geo2rdr::
+geo2rdr(isce::io::Raster & topoRaster,
+        isce::io::Raster & rgoffRaster,
+        isce::io::Raster & azoffRaster,
         double azshift, double rgshift) {
 
     // Create reusable pyre::journal channels
@@ -49,12 +62,6 @@ geo2rdr(isce::io::Raster & topoRaster,
 
     // Initialize projection for topo results
     _projTopo = isce::core::createProj(topoRaster.getEPSG());
- 
-    // Create output rasters
-    Raster rgoffRaster = Raster(outdir + "/range.off", demWidth, demLength, 1,
-        GDT_Float32, "ISCE");
-    Raster azoffRaster = Raster(outdir + "/azimuth.off", demWidth, demLength, 1,
-        GDT_Float32, "ISCE");
     
     // Cache sensing start
     double t0 = _sensingStart.secondsSinceEpoch(_refEpoch);

@@ -69,8 +69,15 @@ class isce::geometry::Topo {
                               DEMInterpolator &,
                               size_t, size_t);
 
-        // Run topo - main entrypoint
+        // Run topo - main entrypoint; internal creation of topo rasters
         void topo(isce::io::Raster &, const std::string);
+
+        // Run topo with externally created topo rasters
+        void topo(isce::io::Raster & demRaster, isce::io::Raster & xRaster,
+                  isce::io::Raster & yRaster, isce::io::Raster & heightRaster,
+                  isce::io::Raster & incRaster, isce::io::Raster & hdgRaster,
+                  isce::io::Raster & localIncRaster, isce::io::Raster & localPsiRaster,
+                  isce::io::Raster & simRaster);
 
         // Getters for isce objects
         inline const isce::core::Orbit & orbit() const { return _orbit; }

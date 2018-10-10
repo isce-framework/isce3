@@ -33,8 +33,15 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
                     const isce::core::Metadata & meta) :
             isce::geometry::Topo(ellps, orbit, doppler, meta) {}
 
-        // Main topo driver
+        // Run topo - main entrypoint; internal creation of topo rasters
         void topo(isce::io::Raster &, const std::string);
+
+        // Run topo with externally created topo rasters
+        void topo(isce::io::Raster & demRaster, isce::io::Raster & xRaster,
+                  isce::io::Raster & yRaster, isce::io::Raster & heightRaster,
+                  isce::io::Raster & incRaster, isce::io::Raster & hdgRaster,
+                  isce::io::Raster & localIncRaster, isce::io::Raster & localPsiRaster,
+                  isce::io::Raster & simRaster);
 
     private:
         // Default number of lines per block

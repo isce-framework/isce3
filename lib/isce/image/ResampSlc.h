@@ -76,7 +76,12 @@ class isce::image::ResampSlc {
         // Convenience functions
         inline void declare(int, int, int, int) const;
 
-        // Alternative generic resamp entry point
+        // Generic resamp entry point from externally created rasters
+        void resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
+                    isce::io::Raster & rgOffsetRaster, isce::io::Raster & azOffsetRaster,
+                    int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40);
+
+        // Generic resamp entry point: use filenames to create rasters
         void resamp(const std::string & inputFilename, const std::string & outputFilename,
                     const std::string & rgOffsetFilename, const std::string & azOffsetFilename,
                     int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40);

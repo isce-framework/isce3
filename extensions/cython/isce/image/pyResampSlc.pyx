@@ -109,9 +109,9 @@ cdef class pyResampSlc:
         as an external file.
 
         Args:
-            outfile (str):                          Output resampled image.
-            rgfile (str):                           Range offset raster.
-            azfile (str):                           Azimuth offset raster.
+            outfile (str):                          Filename for output resampled image.
+            rgfile (str):                           Filename for range offset raster.
+            azfile (str):                           Filename for azimuth offset raster.
             pol (Optional[str]):                    Polarization. Default: hh.
             inputBand (Optional[int]):              Band number for external file.
             flatten (Optional[bool]):               Flatten the resampled image.
@@ -138,5 +138,15 @@ cdef class pyResampSlc:
                                  inputBand, flatten, isComplex, rowBuffer)
 
         return
+
+
+    def resamp_temp(self, pyRaster inSlc, pyRaster outSlc, pyRaster rgoffRaster,
+                    pyRaster azoffRaster, int inputBand=1, bool flatten=True,
+                    bool isComplex=True, int rowBuffer=40):
+
+
+        self.c_resamp.resamp(deref(inSlc.c_raster), deref(outSlc.c_raster),
+                             deref(rgoffRaster.c_raster), deref(azoffRaster.c_raster),
+                             inputBand, flatten, isComplex, rowBuffer)
     
 # end of file

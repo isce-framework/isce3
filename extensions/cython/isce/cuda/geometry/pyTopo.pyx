@@ -51,4 +51,14 @@ cdef class pyTopo:
         cdef string outdir = pyStringToBytes(outputDir)
         self.c_topo.topo(deref(demRaster.c_raster), outdir)
 
+    def topo_temp(self, pyRaster demRaster, pyRaster xRaster, pyRaster yRaster,
+                  pyRaster heightRaster, pyRaster incRaster, pyRaster hdgRaster,
+                  pyRaster localIncRaster, pyRaster localPsiRaster, pyRaster simRaster):
+
+        self.c_topo.topo(deref(demRaster.c_raster), deref(xRaster.c_raster),
+                         deref(yRaster.c_raster), deref(heightRaster.c_raster),
+                         deref(incRaster.c_raster), deref(hdgRaster.c_raster),
+                         deref(localIncRaster.c_raster), deref(localPsiRaster.c_raster),
+                         deref(simRaster.c_raster))
+
 # end of file

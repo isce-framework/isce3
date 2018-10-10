@@ -28,17 +28,10 @@ using isce::core::LinAlg;
 using isce::core::StateVector;
 using isce::io::Raster;
 
-// Main topo driver
+// Main topo driver; internally create topo rasters
 void isce::geometry::Topo::
 topo(Raster & demRaster,
      const std::string outdir) {
-
-    // Create reusable pyre::journal channels
-    pyre::journal::warning_t warning("isce.geometry.Topo");
-    pyre::journal::info_t info("isce.geometry.Topo");
-
-    // First check that variables have been initialized
-    checkInitialization(info); 
 
     { // Topo scope for creating output rasters
 
@@ -59,6 +52,41 @@ topo(Raster & demRaster,
         GDT_Float32, "ISCE");
     Raster simRaster = Raster(outdir + "/simamp.rdr", _mode.width(), _mode.length(), 1,
         GDT_Float32, "ISCE");
+
+    // Call topo with rasters
+    topo(demRaster, xRaster, yRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
+         localPsiRaster, simRaster);
+
+    } // end Topo scope to release raster resources
+
+    // Write out multi-band topo VRT
+    const std::vector<Raster> rasterTopoVec = {
+        Raster(outdir + "/x.rdr" ),
+        Raster(outdir + "/y.rdr" ),
+        Raster(outdir + "/z.rdr" ),
+        Raster(outdir + "/inc.rdr" ),
+        Raster(outdir + "/hdg.rdr" ),
+        Raster(outdir + "/localInc.rdr" ),
+        Raster(outdir + "/localPsi.rdr" ),
+        Raster(outdir + "/simamp.rdr" )
+    };
+    Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
+    // Set its EPSG code
+    vrt.setEPSG(_epsgOut);
+}
+
+// Run topo with externally created topo rasters
+void isce::geometry::Topo::
+topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
+     Raster & incRaster, Raster & hdgRaster, Raster & localIncRaster, Raster & localPsiRaster,
+     Raster & simRaster) {
+
+    // Create reusable pyre::journal channels
+    pyre::journal::warning_t warning("isce.geometry.Topo");
+    pyre::journal::info_t info("isce.geometry.Topo");
+
+    // First check that variables have been initialized
+    checkInitialization(info); 
 
     // Create and start a timer
     auto timerStart = std::chrono::steady_clock::now();
@@ -172,24 +200,6 @@ topo(Raster & demRaster,
         timerEnd - timerStart).count();
     info << "Elapsed processing time: " << elapsed << " sec"
          << pyre::journal::newline;
-
-    } // end Topo scope to release raster resources
-
-    // Write out multi-band topo VRT
-    const std::vector<Raster> rasterTopoVec = {
-        Raster(outdir + "/x.rdr" ),
-        Raster(outdir + "/y.rdr" ),
-        Raster(outdir + "/z.rdr" ),
-        Raster(outdir + "/inc.rdr" ),
-        Raster(outdir + "/hdg.rdr" ),
-        Raster(outdir + "/localInc.rdr" ),
-        Raster(outdir + "/localPsi.rdr" ),
-        Raster(outdir + "/simamp.rdr" )
-    };
-    Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
-    // Set its EPSG code
-    vrt.setEPSG(_epsgOut);
-
 }
 
 // Perform data initialization for a given azimuth line

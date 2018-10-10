@@ -50,5 +50,10 @@ cdef class pyGeo2rdr:
         cdef string outdir = pyStringToBytes(outputDir)
         self.c_geo2rdr.geo2rdr(deref(topoRaster.c_raster), outdir, azshift, rgshift)
 
+    def geo2rdr_temp(self, pyRaster topoRaster, pyRaster rgoffRaster, pyRaster azoffRaster,
+                     double azshift=0.0, double rgshift=0.0):
+
+        self.c_geo2rdr.geo2rdr(deref(topoRaster.c_raster), deref(rgoffRaster.c_raster),
+                               deref(azoffRaster.c_raster), azshift, rgshift)
 
 # end of file
