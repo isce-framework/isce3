@@ -12,6 +12,9 @@ from Raster cimport Raster
 # Cython declarations for isce::product objects
 from Product cimport Product
 
+# Interpolation methods
+from Orbit cimport orbitInterpMethod
+
 cdef extern from "isce/cuda/geometry/Geo2rdr.h" namespace "isce::cuda::geometry":
 
     # Geo2rdr class
@@ -20,7 +23,12 @@ cdef extern from "isce/cuda/geometry/Geo2rdr.h" namespace "isce::cuda::geometry"
         # Constructor
         Geo2rdr(Product) except +
 
-        # Run geo2rdr with no constant offsets and internally created offset rasters
+        # Set options
+        void threshold(double)
+        void numiter(int);
+        void orbitMethod(orbitInterpMethod)
+
+        # Run geo2rdr with offsets and internally created offset rasters
         void geo2rdr(Raster &, const string &, double, double)
 
         # Run geo2rdr with offsets and externally created offset rasters

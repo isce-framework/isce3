@@ -100,18 +100,23 @@ cdef class pyResampSlc:
         """
         self.c_resamp.linesPerTile(lines)
 
-    # Run resamp
-    def resamp(self, outfile, rgfile, azfile, pol='hh', int inputBand=1,
-               bool flatten=True, bool isComplex=True, int rowBuffer=40,
-               infile=None):
+
+    def resamp(self, pyRaster inSlc=None, pyRaster outSlc=None,
+               pyRaster rgoffRaster=None, pyRaster azoffRaster=None,
+               outfile=None, rgfile=None, azfile=None, pol='hh', int inputBand=1,
+               bool flatten=True, bool isComplex=True, int rowBuffer=40, infile=None):
         """
         Run resamp on complex image data stored in HDF5 product or specified
         as an external file.
 
         Args:
-            outfile (str):                          Filename for output resampled image.
-            rgfile (str):                           Filename for range offset raster.
-            azfile (str):                           Filename for azimuth offset raster.
+            inSlc (Optional[pyRaster]):             Input SLC raster.
+            outSlc (Optional[pyRaster]):            Output SLC raster.
+            rgoffRaster (Optional[pyRaster]):       Input range offset raster.
+            azoffRaster (Optional[pyRaster]):       Input azimuth offset raster.
+            outfile (Optional[str]):                Filename for output resampled image.
+            rgfile (Optional[str]):                 Filename for range offset raster.
+            azfile (Optional[str]):                 Filename for azimuth offset raster.
             pol (Optional[str]):                    Polarization. Default: hh.
             inputBand (Optional[int]):              Band number for external file.
             flatten (Optional[bool]):               Flatten the resampled image.
@@ -121,32 +126,35 @@ cdef class pyResampSlc:
         Returns:
             None
         """
-        cdef string outputFile = pyStringToBytes(outfile)
-        cdef string rgoffFile = pyStringToBytes(rgfile)
-        cdef string azoffFile = pyStringToBytes(azfile)
-        
-        # Call correct resamp routine
-        cdef string polarization
-        cdef string inputFile
-        if infile is None:
-            polarization = pyStringToBytes(pol.lower())
-            self.c_resamp.resamp(outputFile, polarization, rgoffFile, azoffFile,
-                                 flatten, isComplex, rowBuffer)
-        else:
-            inputFile = pyStringToBytes(infile)
-            self.c_resamp.resamp(inputFile, outputFile, rgoffFile, azoffFile,
+        cdef string outputFile, rgoffFile, azoffFile, polarization, inputFile
+    
+        if (inSlc is not None and outSlc is not None and
+                rgoffRaster is not None and azoffRaster is not None):
+
+            # Call resamp directly with rasters
+            self.c_resamp.resamp(deref(inSlc.c_raster), deref(outSlc.c_raster),
+                                 deref(rgoffRaster.c_raster), deref(azoffRaster.c_raster),
                                  inputBand, flatten, isComplex, rowBuffer)
 
-        return
+        elif outfile is not None and rgfile is not None and azfile is not None:
 
+            # Convert Python strings to C++ compatible strings
+            outputFile = pyStringToBytes(outfile)
+            rgoffFile = pyStringToBytes(rgfile)
+            azoffFile = pyStringToBytes(azfile)
+        
+            # Call correct resamp signature
+            if infile is None:
+                polarization = pyStringToBytes(pol.lower())
+                self.c_resamp.resamp(outputFile, polarization, rgoffFile, azoffFile,
+                                     flatten, isComplex, rowBuffer)
+            else:
+                inputFile = pyStringToBytes(infile)
+                self.c_resamp.resamp(inputFile, outputFile, rgoffFile, azoffFile,
+                                     inputBand, flatten, isComplex, rowBuffer)
 
-    def resamp_temp(self, pyRaster inSlc, pyRaster outSlc, pyRaster rgoffRaster,
-                    pyRaster azoffRaster, int inputBand=1, bool flatten=True,
-                    bool isComplex=True, int rowBuffer=40):
+        else:
+            assert False, 'No input rasters or filenames provided'
 
-
-        self.c_resamp.resamp(deref(inSlc.c_raster), deref(outSlc.c_raster),
-                             deref(rgoffRaster.c_raster), deref(azoffRaster.c_raster),
-                             inputBand, flatten, isComplex, rowBuffer)
     
 # end of file
