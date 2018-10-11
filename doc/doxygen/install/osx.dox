@@ -36,7 +36,6 @@ We write the instructions assuming that we are using gcc7 and python36. Changes 
 <li>sudo port install wget +ssl
 <li>sudo port install fftw-3 +gcc7
 <li>sudo port install fftw-3-single +gcc7
-<li>sudo port install gsl +gcc7
 <li>sudo port install hdf5 +gcc7
 <li>sudo port install py36-numpy +gcc7
 <li>sudo port install py36-scipy +gcc7
@@ -73,7 +72,7 @@ The directory structure that we assume for installing pyre is as follows:
 <ol>
 <li> Ensure you are in the correct folder. Create the pyre folder if it doesn't exist.
 \code{.sh}
-> cd /Users/agram/tools/pyre
+> cd /Users/username/tools/pyre
 \endcode
 
 <li>Clone the git repository for config
@@ -105,12 +104,24 @@ export MM_LIBPATH=/Users/username/tools/pyre/install/lib
 
 <li>Ensure you are in the correct folder.
 \code{.sh}
-> cd /Users/agram/tools/pyre/src
+> cd /Users/username/tools/pyre/src
 \endcode
 
 <li>Clone the git repository for pyre.
 \code{.sh}
 > git clone https://github.com/pyre/pyre
+\endcode
+
+<li> Set up config parameters for pyre. This is done by adding a file named "config.def" in the /Users/username/tools/pyre/src/pyre/.mm/
+\code{.sh}
+> cd /Users/username/tools/pyre/src/pyre/.mm
+> cat config.def
+ PYTHON = python3.6m
+ PYTHON_DIR = /opt/local/Library/Frameworks/Python.framework/Versions/3.6
+ PYTHON_INCDIR = /opt/local/Library/Frameworks/Python.framework/Versions/3.6/include/python3.6m
+ PYTHON_LIB = python3.6m
+ PYTHON_LIBDIR = /opt/local/Library/Frameworks/Python.framework/Versions/3.6/lib
+ PYTHON_PYCFLAGS = -b
 \endcode
 
 <li>Install pyre
