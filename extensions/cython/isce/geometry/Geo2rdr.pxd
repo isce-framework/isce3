@@ -12,6 +12,9 @@ from Raster cimport Raster
 # Cython declarations for isce::product objects
 from Product cimport Product
 
+# Interpolation methods
+from Orbit cimport orbitInterpMethod
+
 cdef extern from "isce/geometry/Geo2rdr.h" namespace "isce::geometry":
 
     # Geo2rdr class
