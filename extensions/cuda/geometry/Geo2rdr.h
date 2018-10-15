@@ -19,14 +19,17 @@ namespace isce {
 }
 
 // CUDA Topo class definition
+/** Transformer from map coordinates to radar geometry coordinates using GPU.
+ *
+ * See <a href="overview_geometry.html#inversegeom">geometry overview</a> for description of the algorithm. */
 class isce::cuda::geometry::Geo2rdr : public isce::geometry::Geo2rdr {
 
     public:
-        // Constructor from Product
+        /** Constructor from Product */
         inline Geo2rdr(isce::product::Product & product) :
             isce::geometry::Geo2rdr(product) {}
 
-        // Constructor from isce::core objects
+        /** Constructor from isce::core objects */
         inline Geo2rdr(const isce::core::Ellipsoid & ellps,
                        const isce::core::Orbit & orbit,
                        const isce::core::Poly2d & doppler,
@@ -49,16 +52,16 @@ class isce::cuda::geometry::Geo2rdr : public isce::geometry::Geo2rdr {
         size_t _linesPerBlock = 1000;
 
     private:
-        // Print extents and image info
+        /** Print extents and image info */
         void _printExtents(pyre::journal::info_t &,
                            double, double, double,
                            double, double, double,
                            size_t, size_t);
 
-        // Check we can interpolate orbit to middle of DEM
+        /** Check we can interpolate orbit to middle of DEM */
         void _checkOrbitInterpolation(double);
 
-        // Compute number of lines per block dynamically from GPU memmory
+        /** Compute number of lines per block dynamically from GPU memmory */
         void computeLinesPerBlock();
 };
 

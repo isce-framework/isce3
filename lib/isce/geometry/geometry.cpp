@@ -96,7 +96,7 @@ rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
  * @param[in] maxIter Number of primary iterations
  * @param[in] extraIter Number of secondary iterations
  *
- * This is meant to be the light version of isce::geometry::Topo and not meant to be used for processing large number of targets of interest. Since, the TCNbasis has already been computed - this method can be used to evaluate radar coordinates for number of targets on the same line. Since, wavelength and doppler are not exposed, this method cannot be used for Native Doppler geometries. For algorithmic details, see \ref overview_geometry "geometry overview".*/ 
+ * This is the elementary transformation from radar geometry to map geometry. The transformation is applicable for a single slant range and azimuth time (i.e., a single point target). The slant range and Doppler information are encapsulated in the Pixel object, so this function can work for both zero and native Doppler geometries. The azimuth time information is encapsulated in the TCNbasis and StateVector of the platform. For algorithmic details, see \ref overview_geometry "geometry overview".*/
 int isce::geometry::
 rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp,
@@ -238,7 +238,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
  * @param[in] maxIter Maximum number of Newton-Raphson iterations
  * @param[in] deltaRange step size used for computing derivative of doppler
  *
- * This is the light weight version of isce::geometry::Geo2rdr. This is not meant to be used with large number of targets of interest. For algorithmic details, see \ref overview_geometry "geometry overview".*/
+ * This is the elementary transformation from map geometry to radar geometry. The transformation is applicable for a single lon/lat/h coordinate (i.e., a single point target). For algorithmic details, see \ref overview_geometry "geometry overview".*/
 int isce::geometry::
 geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const Poly2d & doppler, const ImageMode & mode, double & aztime, double & slantRange,

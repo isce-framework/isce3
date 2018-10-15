@@ -19,6 +19,9 @@ namespace isce {
 }
 
 // CUDA Topo class definition
+/** Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude on GPU
+ *
+ * See <a href="overview_geometry.html#forwardgeom">geometry overview</a> for a description of the algorithm*/
 class isce::cuda::geometry::Topo : public isce::geometry::Topo {
 
     public:
