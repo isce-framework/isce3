@@ -79,9 +79,6 @@ std::vector<std::string> findByName(hid_t loc_id,
                                     std::string returnedPath) {
 
     isce::io::findMeta findMetaInfo;
-    htri_t status;
-    hid_t lapl_id;
-    H5O_info_t info; 
 
     if (nameIn.empty())
         return findMetaInfo.outList;
@@ -670,7 +667,7 @@ std::vector<std::string> isce::io::IGroup::getAttrs() {
         return outList;
 
     // Iterate over all the attributes and get their names
-    int idx = H5::H5Object::iterateAttrs(attrsNames , NULL, &outList);
+    H5::H5Object::iterateAttrs(attrsNames , NULL, &outList);
 
     return outList;
 }

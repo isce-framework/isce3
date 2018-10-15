@@ -8,6 +8,14 @@
 #include "DEMInterpolator.h"
 
 // Load DEM subset into memory
+/** @param[in] demRaster input DEM raster to subset
+  * @param[in] minLon Longitude of western edge of bounding box
+  * @param[in] maxLon Longitude of eastern edge of bounding box
+  * @param[in] minLat Latitude of southern edge of bounding box
+  * @param[in] maxLat Latitude of northern edge of bounding box
+  * @param[in] epsgcode EPSG code of DEM raster
+  *
+  * Loads a DEM subset given the extents of a bounding box */
 void isce::geometry::DEMInterpolator::
 loadDEM(isce::io::Raster & demRaster, double minLon, double maxLon,
         double minLat, double maxLat, int epsgcode) {
@@ -94,7 +102,7 @@ loadDEM(isce::io::Raster & demRaster, double minLon, double maxLon,
     _haveRaster = true;
 }
 
-// Load DEM subset into memory
+// Debugging output
 void isce::geometry::DEMInterpolator::
 declare() const {
     pyre::journal::info_t info("isce.core.DEMInterpolator");
@@ -106,7 +114,9 @@ declare() const {
          << "Dimensions: " << _dem.width() << " " << _dem.length() << pyre::journal::endl;
 }
 
-// Compute maximum DEM height
+/** @param[out] maxValue Maximum DEM height
+  * @param[out] meanValue Mean DEM height
+  * @param[in] info Pyre journal channel for printing info. */
 void isce::geometry::DEMInterpolator::
 computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & info) const {
     // Announce myself
@@ -149,7 +159,10 @@ midLonLat() const {
     return llh;
 }
 
-// Interpolate DEM at a given longitude and latitude (in radians)
+/** @param[in] lon Longitude of interpolation point.
+  * @param[in] lat Latitude of interpolation point. 
+  *
+  * Interpolate DEM at a given longitude and latitude */
 double isce::geometry::DEMInterpolator::
 interpolateLonLat(double lon, double lat) const {
 
@@ -170,7 +183,10 @@ interpolateLonLat(double lon, double lat) const {
     return value;
 }
 
-// Interpolate DEM at native coordinates
+/** @param[in] x X-coordinate of interpolation point.
+  * @param[in] y Y-coordinate of interpolation point.
+  *
+  * Interpolate DEM at native coordinates */
 double isce::geometry::DEMInterpolator::
 interpolateXY(double x, double y) const {
 

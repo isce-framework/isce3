@@ -10,6 +10,7 @@ from libcpp.string cimport string
 from Poly2d cimport Poly2d
 from Product cimport Product
 from ImageMode cimport ImageMode
+from Raster cimport Raster
 
 cdef extern from "isce/image/ResampSlc.h" namespace "isce::image":
 
@@ -46,8 +47,12 @@ cdef extern from "isce/image/ResampSlc.h" namespace "isce::image":
         void resamp(const string &, const string &, const string &,
                     const string &, bool, bool, int)
 
-        # Alternative generic resamp entry point
+        # Generic resamp entry point: use filenames to create rasters
         void resamp(const string &, const string &, const string &,
                     const string &, int, bool, bool, int)
+
+        # Generic resamp entry point from externally created rasters
+        void resamp(Raster &, Raster &, Raster &, Raster &,
+                    int, bool, bool, int)
 
 # end of file

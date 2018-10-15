@@ -52,7 +52,7 @@ namespace isce {
 namespace cuda {
 namespace geometry {
 
-    // radar->geo with orbit and ellipsoid
+    /** Radar geometry coordinates to map coordinates transformer*/
     CUDA_DEV int rdr2geo(double, double, double,
                          const isce::cuda::core::gpuOrbit &,
                          const isce::cuda::core::gpuEllipsoid &,
@@ -61,7 +61,7 @@ namespace geometry {
                          double, int, double, int, int,
                          isce::core::orbitInterpMethod);
 
-    // Main radar->geo entrypoint
+    /** Radar geometry coordinates to map coordinates transformer*/
     CUDA_DEV int rdr2geo(const isce::cuda::core::gpuPixel &,
                          const isce::cuda::core::gpuBasis &,
                          const isce::cuda::core::gpuStateVector &,
@@ -70,7 +70,7 @@ namespace geometry {
                          double *,
                          int, double, int, int);
 
-    // geo->radar
+    /** Map coordinates to radar geometry coordinates transformer*/
     CUDA_DEV int geo2rdr(double *,
                          const isce::cuda::core::gpuEllipsoid &,
                          const isce::cuda::core::gpuOrbit &,
@@ -79,7 +79,7 @@ namespace geometry {
                          double *, double *,
                          double, int, double);
 
-    // Host radar->geo to test underlying functions in a single-threaded context
+    /** Radar geometry coordinates to map coordinates transformer (host testing) */
     CUDA_HOST int rdr2geo_h(const isce::core::Pixel &,
                             const isce::core::Basis &,
                             const isce::core::StateVector &,
@@ -88,7 +88,7 @@ namespace geometry {
                             cartesian_t &,
                             int, double, int, int);
 
-    // Host geo->radar to test underlying functions in a single-threaded context
+    /** Map coordinates to radar geometry coordinates transformer (host testing) */
     CUDA_HOST int geo2rdr_h(const cartesian_t &,
                             const isce::core::Ellipsoid &,
                             const isce::core::Orbit &,
@@ -101,10 +101,10 @@ namespace geometry {
 } // namespace cuda
 } // namespace isce
 
-// Create ProjectionBase pointer on the device (meant to be run by a single thread)
+/** Create ProjectionBase pointer on the device (meant to be run by a single thread) */
 CUDA_GLOBAL void createProjection(isce::cuda::core::ProjectionBase **, int); 
 
-// Delete ProjectionBase pointer on the device (meant to be run by a single thread)
+/** Delete ProjectionBase pointer on the device (meant to be run by a single thread) */
 CUDA_GLOBAL void deleteProjection(isce::cuda::core::ProjectionBase **);
 
 #endif
