@@ -16,3 +16,27 @@ Core Datastructures
 * :doc:`pyPoly1d <./pyPoly1d>`
 * :doc:`pyPoly2d <./pyPoly2d>`
 * :doc:`pyOrbit <./pyOrbit>`
+
+I/O Datastructures
+------------------
+
+* :doc:`pyIH5File <./pyIH5>`
+* :doc:`pyRaster <./pyRaster>`
+
+Product Datastructures
+----------------------
+
+* :doc:`pyProduct <./pyProduct>`
+* :doc:`pyMetadata <./pyMetadata>`
+* :doc:`pyComplexImagery <./pyComplexImagery>`
+* :doc:`pyImageMode <./pyImageMode>`
+
+Image Datastructures
+--------------------
+
+* :doc:`pyResampSlc <./pyResampSlc>`
+
+Geometry Datastructures
+-----------------------
+* :doc:`pyTopo <./pyTopo>`
+* :doc:`pyGeo2rdr <./pyGeo2rdr>`
