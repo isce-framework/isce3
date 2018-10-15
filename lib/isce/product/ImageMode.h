@@ -35,7 +35,7 @@ class isce::product::ImageMode {
 
     public:
         /** Default constructor. */
-        inline ImageMode() : _modeType("primary") {};
+        inline ImageMode() : _modeType("primary"), _prf(1.0), _wavelength(1.0) {};
 
         /** Copy constructor. */
         inline ImageMode(const ImageMode &);

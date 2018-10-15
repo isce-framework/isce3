@@ -4,6 +4,7 @@
 <ul>
 <li> Raster imagery tutorial [\ref tutorial_raster "C++"][Python]
 <li> Radar geometry tutorial [\ref tutorial_geometry "C++"][Python]
+<li> Image resampling tutorial [\ref tutorial_resamp "C++"][Python]
 <li> pyre::grid_t N-D array tutorial [C++][Python] 
 <li> 2D interpolation tutorial [C++][Python]
 <li> FFT tutorial [C++][Python]
