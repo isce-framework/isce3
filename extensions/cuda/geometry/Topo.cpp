@@ -18,25 +18,29 @@ using isce::io::Raster;
 using isce::geometry::DEMInterpolator;
 using isce::geometry::TopoLayers;
 
-// Main topo driver
+// Main topo driver; internally create topo rasters
+/** @param[in] demRaster input DEM raster
+ * @param[in] outdir  directory to write outputs to
+ *
+ * This is the main topo driver. The pixel-by-pixel output file names are fixed for now
+ * <ul>
+ * <li> x.rdr - X coordinate in requested projection system (meters or degrees)
+ * <li> y.rdr - Y cooordinate in requested projection system (meters or degrees)
+ * <li> z.rdr - Height above ellipsoid (meters)
+ * <li> inc.rdr - Incidence angle (degrees) computed from vertical at target
+ * <li> hdg.rdr - Azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
+ * <li> localInc.rdr - Local incidence angle (degrees) at target
+ * <li> locaPsi.rdr - Local projection angle (degrees) at target
+ * <li> simamp.rdr - Simulated amplitude image.
+ * </ul>*/
 void isce::cuda::geometry::Topo::
 topo(Raster & demRaster,
      const std::string outdir) {
 
-    // Create reusable pyre::journal channels
-    pyre::journal::warning_t warning("isce.cuda.geometry.Topo");
-    pyre::journal::info_t info("isce.cuda.geometry.Topo");
-
-    // First check that variables have been initialized
-    checkInitialization(info); 
-
-    // Cache ISCE objects (use public interface of parent isce::geometry::Topo class)
-    ImageMode mode = this->mode();
-    Ellipsoid ellipsoid = this->ellipsoid();
-    Orbit orbit = this->orbit();
-    Poly2d doppler = this->doppler();
-
     { // Topo scope for creating output rasters
+
+    // Cache ImageMode
+    ImageMode mode = this->mode();
 
     // Create rasters for individual layers
     Raster xRaster = Raster(outdir + "/x.rdr", mode.width(), mode.length(), 1,
@@ -55,6 +59,59 @@ topo(Raster & demRaster,
         GDT_Float32, "ISCE");
     Raster simRaster = Raster(outdir + "/simamp.rdr", mode.width(), mode.length(), 1,
         GDT_Float32, "ISCE");
+
+    // Call topo with rasters
+    topo(demRaster, xRaster, yRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
+         localPsiRaster, simRaster);
+
+    } // end Topo scope to release raster resources
+
+    // Write out multi-band topo VRT
+    const std::vector<Raster> rasterTopoVec = {
+        Raster(outdir + "/x.rdr" ),
+        Raster(outdir + "/y.rdr" ),
+        Raster(outdir + "/z.rdr" ),
+        Raster(outdir + "/inc.rdr" ),
+        Raster(outdir + "/hdg.rdr" ),
+        Raster(outdir + "/localInc.rdr" ),
+        Raster(outdir + "/localPsi.rdr" ),
+        Raster(outdir + "/simamp.rdr" )
+    };
+    Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
+    // Set its EPSG code
+    vrt.setEPSG(this->epsgOut());
+}
+
+/** @param[in] demRaster input DEM raster
+  * @param[in] xRaster output raster for X coordinate in requested projection system 
+                   (meters or degrees)
+  * @param[in] yRaster output raster for Y cooordinate in requested projection system
+                   (meters or degrees)
+  * @param[in] zRaster output raster for height above ellipsoid (meters)
+  * @param[in] incRaster output raster for incidence angle (degrees) computed from vertical 
+               at target
+  * @param[in] hdgRaster output raster for azimuth angle (degrees) computed anti-clockwise 
+               from EAST (Right hand rule)
+  * @param[in] localIncRaster output raster for local incidence angle (degrees) at target
+  * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
+  * @param[in] simRaster output raster for simulated amplitude image. */
+void isce::cuda::geometry::Topo::
+topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
+     Raster & incRaster, Raster & hdgRaster, Raster & localIncRaster, Raster & localPsiRaster,
+     Raster & simRaster) {
+
+    // Create reusable pyre::journal channels
+    pyre::journal::warning_t warning("isce.cuda.geometry.Topo");
+    pyre::journal::info_t info("isce.cuda.geometry.Topo");
+
+    // First check that variables have been initialized
+    checkInitialization(info); 
+
+    // Cache ISCE objects (use public interface of parent isce::geometry::Topo class)
+    ImageMode mode = this->mode();
+    Ellipsoid ellipsoid = this->ellipsoid();
+    Orbit orbit = this->orbit();
+    Poly2d doppler = this->doppler();
 
     // Create and start a timer
     auto timerStart = std::chrono::steady_clock::now();
@@ -134,24 +191,6 @@ topo(Raster & demRaster,
         timerEnd - timerStart).count();
     info << "Elapsed processing time: " << elapsed << " sec"
          << pyre::journal::newline;
-
-    } // end Topo scope to release raster resources
-
-    // Write out multi-band topo VRT
-    const std::vector<Raster> rasterTopoVec = {
-        Raster(outdir + "/x.rdr" ),
-        Raster(outdir + "/y.rdr" ),
-        Raster(outdir + "/z.rdr" ),
-        Raster(outdir + "/inc.rdr" ),
-        Raster(outdir + "/hdg.rdr" ),
-        Raster(outdir + "/localInc.rdr" ),
-        Raster(outdir + "/localPsi.rdr" ),
-        Raster(outdir + "/simamp.rdr" )
-    };
-    Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
-    // Set its EPSG code
-    vrt.setEPSG(this->epsgOut());
-
 }
 
 // Compute number of lines per block dynamically from GPU memory

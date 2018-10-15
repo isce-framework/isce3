@@ -23,8 +23,12 @@ cdef extern from "isce/cuda/geometry/Topo.h" namespace "isce::cuda::geometry":
         # Constructor
         Topo(Product &) except +
         
-        # Main topo entrypoint
-        void topo(Raster &, string)
+        # Main topo entrypoint; internal construction of topo rasters
+        void topo(Raster &, const string)
+
+        # Run topo with externally created topo rasters
+        void topo(Raster &, Raster &, Raster &, Raster &, Raster &,
+                  Raster &, Raster &, Raster &, Raster &)
 
         # Setting processing options
         void initialized(bool)

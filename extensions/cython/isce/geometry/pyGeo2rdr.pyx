@@ -52,23 +52,37 @@ cdef class pyGeo2rdr:
         if self.__owner:
             del self.c_geo2rdr
 
-    def geo2rdr(self, pyRaster topoRaster, outputDir, double azshift=0.0, double rgshift=0.0):
+    def geo2rdr(self, pyRaster topoRaster, pyRaster rgoffRaster=None, pyRaster azoffRaster=None,
+                outputDir=None, double azshift=0.0, double rgshift=0.0):
         """
         Run geo2rdr.
         
         Args:
-            topoRaster (pyRaster):              Raster for topo products.
-            outputDir (str):                    String for output directory.
+            topoRaster (pyRaster):              Raster for input topo products.
+            rgoffRaster (Optional[pyRaster]):   Raster for output range offset.
+            azoffRaster (Optional[pyRaster]):   Raster for output azimuth offset.
+            outputDir (Optional[str]):          String for output directory.
             azshift (Optional[double]):         Constant azimuth offset.
             rgshift (Optional[double]):         Constant range offset. 
 
         Return:
             None
         """
-        # Convert output directory to C++ string
-        cdef string outdir = pyStringToBytes(outputDir)
+        cdef string outdir
 
-        # Run geo2rdr
-        self.c_geo2rdr.geo2rdr(deref(topoRaster.c_raster), outdir, azshift, rgshift)
+        if rgoffRaster is not None and azoffRaster is not None:
+            # Run geo2rdr directly
+            self.c_geo2rdr.geo2rdr(deref(topoRaster.c_raster), deref(rgoffRaster.c_raster),
+                                   deref(azoffRaster.c_raster), azshift, rgshift)
+
+        elif outputDir is not None:
+            # Convert output directory to C++ string
+            outdir = pyStringToBytes(outputDir)
+            # Run geo2rdr
+            self.c_geo2rdr.geo2rdr(deref(topoRaster.c_raster), outdir, azshift, rgshift)
+
+        else:
+            assert False, 'No offset rasters or output directory provided'
+
 
 # end of file
