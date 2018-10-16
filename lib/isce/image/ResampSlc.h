@@ -44,9 +44,13 @@ class isce::image::ResampSlc {
     // Meta-methods
     public:
         // Default constructor
+        inline ResampSlc();
+        // Constructor from an isce::product::Product
         inline ResampSlc(const isce::product::Product &);
+        // Constructor from isce::core::Poly2d and isce::product::ImageMode
+        inline ResampSlc(const isce::core::Poly2d &, const isce::product::ImageMode &);
         // Constructor from isce::core objects
-        inline ResampSlc(const isce::core::Poly2d, const isce::core::Metadata);
+        inline ResampSlc(const isce::core::Poly2d &, const isce::core::Metadata &);
         // Destructor
         inline ~ResampSlc();
 
