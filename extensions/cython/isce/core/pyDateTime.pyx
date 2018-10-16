@@ -11,18 +11,58 @@ from TimeDelta cimport TimeDelta
 from DateTime cimport DateTime
 
 cdef class pyDateTime:
+    '''
+    Python wrapper for isce::core::DateTime
+
+    Args:
+        inobj (Optional[datetime or str]): Input python datetime object or iso-8601 string
+    '''
     cdef DateTime * c_datetime
     cdef bool __owner
 
     def __cinit__(self):
+        '''
+        Pre-constructor that creates a C++ isce::core::DateTime object and binds it to a python instance.
+        '''
         self.c_datetime = new DateTime()
         self.__owner = True
+   
+    def __init__(self, inobj=None):
+        import datetime
+
+        if isinstance(inobj, (str, datetime.datetime)):
+            self.set(inobj)
+        elif inobj is not None:
+            raise ValueError('pyDateTime object can be instantiated with a str or datetime.datetime object only')
+
+    def set(self, inobj):
+        '''
+        Set pyDateTime using datetime.datetime or str object.
+
+        Args:
+            inobj [datetime.datetime or str]: Input object.
+        '''
+        import datetime
+        if isinstance(inobj, str):
+            self.strptime(inobj)
+        elif isinstance(inobj, datetime.datetime):
+            self.strptime(inobj.isoformat())
+        elif inobj is not None:
+            raise ValueError('pyDateTime object can be set with a str or datetime.datetime object only')
+
+
     def __dealloc__(self):
         if self.__owner:
             del self.c_datetime
 
     @staticmethod
     def bind(pyDateTime dt):
+        '''
+        Binds the current pyEllipsoid instance to another C++ DateTime pointer.
+
+        Args:
+            dt (pyDateTime): Source of C++ DateTime pointer.
+        '''
         new_dt = pyDateTime()
         del new_dt.c_datetime
         new_dt.c_datetime = dt.c_datetime
@@ -31,6 +71,12 @@ cdef class pyDateTime:
 
     @staticmethod
     cdef cbind(DateTime dt):
+        '''
+        Creates a new pyDateTime instance from a C++ DateTime instance.
+
+        Args:
+            dt (DateTime): C++ DateTime instance.
+        '''
         new_dt = pyDateTime()
         del new_dt.c_datetime
         new_dt.c_datetime = new DateTime(dt)
@@ -38,6 +84,9 @@ cdef class pyDateTime:
         return new_dt
 
     def __richcmp__(self, pyDateTime dt, int comp):
+        '''
+        Rich comparison operator
+        '''
         if (comp == 0):
             # <
             return self.c_datetime < dt.c_datetime
@@ -58,14 +107,26 @@ cdef class pyDateTime:
             return self.c_datetime >= dt.c_datetime
 
     def __sub__(pyDateTime dt1, pyDateTime dt2):
+        '''
+        pyTimeDelta: Difference operator.
+        '''
         tdelta = pyTimeDelta()
         tdelta.c_timedelta = deref(dt1.c_datetime) - deref(dt2.c_datetime)
         return tdelta
 
     def isoformat(self):
+        '''
+        str: Date time in ISO-8601 format
+        '''
         return str(self.c_datetime.isoformat())
 
     def strptime(self, pydatestr):
+        '''
+        Sets underlying C++ DateTime object using time tag in ISO-8601 format
+
+        Args:
+            pydatestr (str): Time tag in ISO-8601 format
+        '''
         self.c_datetime.strptime(pyStringToBytes(pydatestr))
 
 # Instantiate a DateTime set at MIN_DATE_TIME
