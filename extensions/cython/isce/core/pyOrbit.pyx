@@ -65,15 +65,15 @@ cdef class pyOrbit:
         str: ISO-8601 DateTime representation of reference epoch
         '''
 
-        return str(self.c_orbit.refEpoch.isoformat())
+        return pyDateTime(self.c_orbit.refEpoch.isoformat().decode('UTF-8'))
 
     @refEpoch.setter
-    def refEpoch(self, instr):
+    def refEpoch(self, pyDateTime epoch):
         '''
         Args:
             instr (str): ISO-8601 DateTime representation of reference epoch
         '''
-        self.c_orbit.refEpoch.strptime(pyStringToBytes(instr))
+        self.c_orbit.refEpoch.strptime(pyStringToBytes(epoch.isoformat()))
 
 
     @property

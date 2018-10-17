@@ -118,7 +118,7 @@ cdef class pyDateTime:
         '''
         str: Date time in ISO-8601 format
         '''
-        return str(self.c_datetime.isoformat())
+        return self.c_datetime.isoformat().decode('UTF-8')
 
     def strptime(self, pydatestr):
         '''
