@@ -47,16 +47,16 @@ cdef class pyInterpolator:
         numpyToMatrix(c, cmat)
         return self.c_interp.bilinear[double](a, b, cmat)
 
-    def bicubic(self, double a, double b, np.ndarray[np.float64_t, ndim=2] c):
-        cdef Matrix[double] cmat = Matrix[double](c.shape[0], c.shape[1])
-        numpyToMatrix(c, cmat)
-        return self.c_interp.bicubic[double](a, b, cmat)
+    #def bicubic(self, double a, double b, np.ndarray[np.float64_t, ndim=2] c):
+    #    cdef Matrix[double] cmat = Matrix[double](c.shape[0], c.shape[1])
+    #    numpyToMatrix(c, cmat)
+    #    return self.c_interp.bicubic[double](a, b, cmat)
 
-    def interp_2d_spline(self, double a, double b, np.ndarray[np.float64_t, ndim=2] dat,
-                         int degree):
-        cdef Matrix[double] mat = Matrix[double](dat.shape[0], dat.shape[1])
-        numpyToMatrix(dat, mat)
-        return self.c_interp.interp_2d_spline(degree, mat, a, b)
+    #def interp_2d_spline(self, double a, double b, np.ndarray[np.float64_t, ndim=2] dat,
+    #                     int degree):
+    #    cdef Matrix[double] mat = Matrix[double](dat.shape[0], dat.shape[1])
+    #    numpyToMatrix(dat, mat)
+    #    return self.c_interp.interp_2d_spline(degree, mat, a, b)
 
     def quadInterpolate(self, x, y, double xintp):
         cdef int i, N
@@ -68,9 +68,9 @@ cdef class pyInterpolator:
             y_array[i] = y[i]
         return self.c_interp.quadInterpolate(x_array, y_array, xintp)
 
-    def akima(self, double x, double y, np.ndarray[np.float32_t, ndim=2] c):
-        cdef Matrix[float] cmat = Matrix[float](c.shape[0], c.shape[1])
-        numpyToMatrixFloat(c, cmat)
-        return self.c_interp.akima(x, y, cmat)
+    #def akima(self, double x, double y, np.ndarray[np.float32_t, ndim=2] c):
+    #    cdef Matrix[float] cmat = Matrix[float](c.shape[0], c.shape[1])
+    #    numpyToMatrixFloat(c, cmat)
+    #    return self.c_interp.akima(x, y, cmat)
 
 # end of file

@@ -43,6 +43,8 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Interpolator.h
                                     LUT2d.h
                                     LinAlg.h
+                                    Matrix.h
+                                    Matrix.icc
                                     Metadata.h
                                     Orbit.h
                                     Peg.h

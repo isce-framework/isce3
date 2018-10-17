@@ -83,8 +83,8 @@ class isce::geometry::DEMInterpolator {
         /** Set reference height of interpolator */
         void refHeight(double h) { _refHeight = h; }
 
-        /** Get valarray reference to underlying DEM data */
-        std::valarray<float> & data() { return _dem.data(); }
+        /** Get pointer to underlying DEM data */
+        float * data() { return _dem.data(); }
 
         /** Get width of DEM data used for interpolation */
         inline size_t width() const { return _dem.width(); }

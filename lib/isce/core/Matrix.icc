@@ -1,0 +1,266 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Author: Bryan V. Riel
+// Copyright 2017-2018
+
+#if !defined(ISCE_CORE_MATRIX_ICC)
+#error "Matrix.icc is an implementation detail of class Matrix"
+#endif
+
+/** Default constructor */
+template <typename cell_t>
+isce::core::Matrix<cell_t>::
+Matrix() : _nrows{0}, _ncols{0}, _owner{false} {}
+
+/** Constructor with number of rows and number of columns 
+  * @param[in] nrows Number of rows 
+  * @param[in] ncols Number of columns */
+template <typename cell_t>
+isce::core::Matrix<cell_t>::
+Matrix(size_t nrows, size_t ncols) : 
+    _nrows{nrows}, 
+    _ncols{ncols}, 
+    _buffer{new cell_t[nrows*ncols]},
+    _owner{true} {}
+
+/** Deep copy constructor - allocates memory and copies values 
+  * @param[in] m isce::core::Matrix object to copy */
+template <typename cell_t>
+isce::core::Matrix<cell_t>::
+Matrix(const Matrix<cell_t> & m) :
+    _nrows{m.length()},
+    _ncols{m.width()},
+    _buffer{new cell_t[_nrows*_ncols]},
+    _owner{true} {
+    std::cout << "in deep constructor" << std::endl;
+    std::copy(m.data(), m.data() + _nrows*_ncols, _buffer);
+}
+
+/** Shallow copy constructor - does not allocate its own memory 
+  * @param[in] m isce::core::Matrix object to copy */
+template <typename cell_t>
+isce::core::Matrix<cell_t>::
+Matrix(Matrix<cell_t> & m) :
+    _nrows{m.length()},
+    _ncols{m.width()},
+    _buffer{m.data()},
+    _owner{false} { std::cout << "in shallow constructor" << std::endl; }
+
+/** Copy constructor from a grid view (copy values) 
+  * @param[in] view pyre::grid_t::view_type to copy from */
+template <typename cell_t>
+isce::core::Matrix<cell_t>::
+Matrix(const view_t & view) {
+    // Set the shape from the view
+    auto shape = view.layout().shape();
+    _nrows = shape[0];
+    _ncols = shape[1];
+    // Allocate memory
+    _owner = true;
+    _buffer = new cell_t[_nrows*_ncols];
+    // Copy values
+    std::copy(view.begin(), view.end(), _buffer);
+}
+
+/** Destructor */
+template <typename cell_t>
+isce::core::Matrix<cell_t>::
+~Matrix() {
+    // If I allocated memory myself, delete it
+    if (_owner) {
+        std::cout << "trying to delete memory" << std::endl;
+        delete [] _buffer;
+    }
+}
+
+/** Deep assignment operator - allocates memory and copies values 
+  * @param[in] m isce::core::Matrix object to copy */
+template <typename cell_t>
+isce::core::Matrix<cell_t> &
+isce::core::Matrix<cell_t>::
+operator=(const Matrix<cell_t> & m) {
+    // Resize my storage
+    resize(m.length(), m.width());
+    // Copy values
+    std::copy(m.data(), m.data() + _nrows*_ncols, _buffer);
+    return *this;
+}
+
+/** Shallow assignment operator - does not allocate its own memory 
+  * @param[in] m isce::core::Matrix object to copy */
+template <typename cell_t>
+isce::core::Matrix<cell_t> &
+isce::core::Matrix<cell_t>::
+operator=(Matrix<cell_t> & m) {
+    _nrows = m.length();
+    _ncols = m.width();
+    _buffer = m.data();
+    _owner = false;
+    return *this;
+}
+
+/** Assignment operator from a grid view (copy values) 
+  * @param[in] view pyre::grid_t::view_type to copy from */
+template <typename cell_t>
+isce::core::Matrix<cell_t> &
+isce::core::Matrix<cell_t>::
+operator=(const view_t & view) {
+    // Set the shape from the view
+    auto shape = view.layout().shape();
+    _nrows = shape[0];
+    _ncols = shape[1];
+    // Allocate memory
+    _owner = true;
+    _buffer = new cell_t[_nrows*_ncols];
+    // Copy values
+    std::copy(view.begin(), view.end(), _buffer);
+    return *this;
+}
+
+/** Resize memory for a given number of rows and columns (no value initialization)
+  * @param[in] nrows Number of rows 
+  * @param[in] ncols Number of columns */
+template <typename cell_t>
+void
+isce::core::Matrix<cell_t>::
+resize(size_t nrows, size_t ncols) {
+
+    // If I have already allocated memory, delete it first
+    if (_owner) {
+        delete [] _buffer;
+    }
+
+    // Allocate new memory and save shape
+    _nrows = nrows;
+    _ncols = ncols;
+    _buffer = new cell_t[_nrows * _ncols];
+    _owner = true;
+}
+
+/** Extract copy of sub-matrix given starting indices and span */
+template <typename cell_t>
+isce::core::Matrix<cell_t>
+isce::core::Matrix<cell_t>::
+submat(size_t row, size_t col, size_t rowspan, size_t colspan) {
+
+    // Create grid for my data
+    const shape_t shape{_nrows, _ncols};
+    grid_t grid{{shape}, &_buffer[0]};
+    
+    // Create slice
+    const index_t low = {row, col};
+    const index_t high = {row + rowspan, col + colspan};
+    const packing_t packing{1ul, 0ul};
+    const slice_t slice = {low, high, packing};
+
+    // Make a new matrix from the view
+    Matrix<cell_t> m = grid.view(slice);
+    return m;
+}
+
+/** Access to data buffer */
+template <typename cell_t>
+cell_t *
+isce::core::Matrix<cell_t>::
+data() {
+    return _buffer;
+}
+
+/** Read-only access to data buffer */
+template <typename cell_t>
+const cell_t *
+isce::core::Matrix<cell_t>::
+data() const {
+    return _buffer;
+}
+
+/** Access matrix value for a given row and column 
+  * @param[in] row Row coordinate to access
+  * @param[in] col Column coordinate to access */
+template <typename cell_t>
+cell_t &
+isce::core::Matrix<cell_t>::
+operator()(size_t row, size_t col) {
+    return _buffer[row*_ncols + col];
+}
+
+/** Read-only access to matrix value for a given row and column
+  * @param[in] row Row coordinate to access
+  * @param[in] col Column coordinate to access */
+template <typename cell_t>
+const cell_t &
+isce::core::Matrix<cell_t>::
+operator()(size_t row, size_t col) const {
+    return _buffer[row*_ncols + col];
+}
+
+/** Access matrix value for a flattened index
+  * @param[in] index Flattened index to access */
+template <typename cell_t>
+cell_t &
+isce::core::Matrix<cell_t>::
+operator()(size_t index) {
+    return _buffer[index];
+}
+
+/** Read-only access to matrix value for a flattened index
+  * @param[in] index Flattened index to access */
+template <typename cell_t>
+const cell_t &
+isce::core::Matrix<cell_t>::
+operator()(size_t index) const {
+    return _buffer[index];
+}
+
+/** Access matrix value for a given grid::index_type 
+  * @param[in] index pyre::grid_t::index_type for coordinate */
+template <typename cell_t>
+cell_t &
+isce::core::Matrix<cell_t>::
+operator[](const index_t & index) {
+    // Create grid for my data
+    shape_t shape{_nrows, _ncols};
+    grid_t grid{{shape}, &_buffer[0]};
+    // Pass it an index
+    return grid[index];
+}
+
+/** Read-only access to matrix value for a given grid::idnex_type
+  * @param[in] index pyre::grid_t::index_type for coordinate */
+template <typename cell_t>
+const cell_t &
+isce::core::Matrix<cell_t>::
+operator[](const index_t & index) const {
+    // Create grid for my data
+    shape_t shape{_nrows, _ncols};
+    grid_t grid{{shape}, &_buffer[0]};
+    // Pass it an index
+    return grid[index];
+}
+
+/** Get shape information as grid::shape_type */
+template <typename cell_t>
+typename isce::core::Matrix<cell_t>::shape_t
+isce::core::Matrix<cell_t>::
+shape() const {
+    return {_nrows, _ncols};
+}
+
+/** Get matrix width */
+template <typename cell_t>
+size_t
+isce::core::Matrix<cell_t>::
+width() const {
+    return _ncols;
+}
+
+/** Get matrix length */
+template <typename cell_t>
+size_t
+isce::core::Matrix<cell_t>::
+length() const {
+    return _nrows;
+}
+
+// end of file
