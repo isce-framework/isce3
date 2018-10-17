@@ -55,7 +55,7 @@ namespace isce { namespace core {
         AKIMA_METHOD,
         BIQUINTIC_METHOD
     };
-
+    
     /** Semi-major axis for WGS84 */
     const double EarthSemiMajorAxis = 6378137.0;
 
