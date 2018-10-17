@@ -28,7 +28,7 @@ Create a Projection object
    llh = osr.SpatialReference()
    llh.ImportFromEPSG(4326)
 
-   utm20n = osr.SpatilReference()
+   utm20n = osr.SpatialReference()
    utm20n.ImportFromEPSG(32620)
 
 
