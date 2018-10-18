@@ -13,8 +13,8 @@ template <typename cell_t>
 isce::core::Matrix<cell_t>::
 Matrix() : _nrows{0}, _ncols{0}, _owner{false} {}
 
-/** Constructor with number of rows and number of columns 
-  * @param[in] nrows Number of rows 
+// Constructor with number of rows and number of columns 
+/** @param[in] nrows Number of rows 
   * @param[in] ncols Number of columns */
 template <typename cell_t>
 isce::core::Matrix<cell_t>::
@@ -24,8 +24,8 @@ Matrix(size_t nrows, size_t ncols) :
     _buffer{new cell_t[nrows*ncols]},
     _owner{true} {}
 
-/** Deep copy constructor - allocates memory and copies values 
-  * @param[in] m isce::core::Matrix object to copy */
+// Deep copy constructor - allocates memory and copies values 
+/** @param[in] m isce::core::Matrix object to copy */
 template <typename cell_t>
 isce::core::Matrix<cell_t>::
 Matrix(const Matrix<cell_t> & m) :
@@ -36,8 +36,8 @@ Matrix(const Matrix<cell_t> & m) :
     std::copy(m.data(), m.data() + _nrows*_ncols, _buffer);
 }
 
-/** Shallow copy constructor - does not allocate its own memory 
-  * @param[in] m isce::core::Matrix object to copy */
+// Shallow copy constructor - does not allocate its own memory 
+/** @param[in] m isce::core::Matrix object to copy */
 template <typename cell_t>
 isce::core::Matrix<cell_t>::
 Matrix(Matrix<cell_t> & m) :
@@ -46,8 +46,8 @@ Matrix(Matrix<cell_t> & m) :
     _buffer{m.data()},
     _owner{false} {}
 
-/** Copy constructor from a grid view (copy values) 
-  * @param[in] view pyre::grid_t::view_type to copy from */
+// Copy constructor from a grid view (copy values) 
+/** @param[in] view pyre::grid_t::view_type to copy from */
 template <typename cell_t>
 isce::core::Matrix<cell_t>::
 Matrix(const view_t & view) {
@@ -72,8 +72,8 @@ isce::core::Matrix<cell_t>::
     }
 }
 
-/** Deep assignment operator - allocates memory and copies values 
-  * @param[in] m isce::core::Matrix object to copy */
+// Deep assignment operator - allocates memory and copies values 
+/** @param[in] m isce::core::Matrix object to copy */
 template <typename cell_t>
 isce::core::Matrix<cell_t> &
 isce::core::Matrix<cell_t>::
@@ -85,8 +85,8 @@ operator=(const Matrix<cell_t> & m) {
     return *this;
 }
 
-/** Shallow assignment operator - does not allocate its own memory 
-  * @param[in] m isce::core::Matrix object to copy */
+// Shallow assignment operator - does not allocate its own memory 
+/** @param[in] m isce::core::Matrix object to copy */
 template <typename cell_t>
 isce::core::Matrix<cell_t> &
 isce::core::Matrix<cell_t>::
@@ -98,8 +98,8 @@ operator=(Matrix<cell_t> & m) {
     return *this;
 }
 
-/** Assignment operator from a grid view (copy values) 
-  * @param[in] view pyre::grid_t::view_type to copy from */
+// Assignment operator from a grid view (copy values) 
+/** @param[in] view pyre::grid_t::view_type to copy from */
 template <typename cell_t>
 isce::core::Matrix<cell_t> &
 isce::core::Matrix<cell_t>::
@@ -116,8 +116,8 @@ operator=(const view_t & view) {
     return *this;
 }
 
-/** Resize memory for a given number of rows and columns (no value initialization)
-  * @param[in] nrows Number of rows 
+// Resize memory for a given number of rows and columns (no value initialization)
+/** @param[in] nrows Number of rows 
   * @param[in] ncols Number of columns */
 template <typename cell_t>
 void
@@ -136,7 +136,11 @@ resize(size_t nrows, size_t ncols) {
     _owner = true;
 }
 
-/** Extract copy of sub-matrix given starting indices and span */
+// Extract copy of sub-matrix given starting indices and span
+/** @param[in] row Starting row of submatrix
+  * @param[in] col Starting column of submatrix
+  * @param[in] rowspan Number of rows of submatrix
+  * @param[in] colspan Number of columns of submatrix */
 template <typename cell_t>
 isce::core::Matrix<cell_t>
 isce::core::Matrix<cell_t>::
@@ -173,8 +177,8 @@ data() const {
     return _buffer;
 }
 
-/** Access matrix value for a given row and column 
-  * @param[in] row Row coordinate to access
+// Access matrix value for a given row and column 
+/** @param[in] row Row coordinate to access
   * @param[in] col Column coordinate to access */
 template <typename cell_t>
 cell_t &
@@ -183,8 +187,8 @@ operator()(size_t row, size_t col) {
     return _buffer[row*_ncols + col];
 }
 
-/** Read-only access to matrix value for a given row and column
-  * @param[in] row Row coordinate to access
+// Read-only access to matrix value for a given row and column
+/** @param[in] row Row coordinate to access
   * @param[in] col Column coordinate to access */
 template <typename cell_t>
 const cell_t &
@@ -193,8 +197,8 @@ operator()(size_t row, size_t col) const {
     return _buffer[row*_ncols + col];
 }
 
-/** Access matrix value for a flattened index
-  * @param[in] index Flattened index to access */
+// Access matrix value for a flattened index
+/** @param[in] index Flattened index to access */
 template <typename cell_t>
 cell_t &
 isce::core::Matrix<cell_t>::
@@ -202,8 +206,8 @@ operator()(size_t index) {
     return _buffer[index];
 }
 
-/** Read-only access to matrix value for a flattened index
-  * @param[in] index Flattened index to access */
+// Read-only access to matrix value for a flattened index
+/** @param[in] index Flattened index to access */
 template <typename cell_t>
 const cell_t &
 isce::core::Matrix<cell_t>::
@@ -211,8 +215,8 @@ operator()(size_t index) const {
     return _buffer[index];
 }
 
-/** Access matrix value for a given grid::index_type 
-  * @param[in] index pyre::grid_t::index_type for coordinate */
+// Access matrix value for a given grid::index_type 
+/** @param[in] index pyre::grid_t::index_type for coordinate */
 template <typename cell_t>
 cell_t &
 isce::core::Matrix<cell_t>::
@@ -224,8 +228,8 @@ operator[](const index_t & index) {
     return grid[index];
 }
 
-/** Read-only access to matrix value for a given grid::idnex_type
-  * @param[in] index pyre::grid_t::index_type for coordinate */
+// Read-only access to matrix value for a given grid::idnex_type
+/** @param[in] index pyre::grid_t::index_type for coordinate */
 template <typename cell_t>
 const cell_t &
 isce::core::Matrix<cell_t>::
