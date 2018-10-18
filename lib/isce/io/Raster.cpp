@@ -172,13 +172,20 @@ int isce::io::Raster::getEPSG()
         //Create a spatial reference object
         OGRSpatialReference hSRS(nullptr);
 
-	//These two lines can be deleted if we enforce GDAL >= 2.3 
-	char* pszProjectionTmp = new char[strlen(pszProjection)];
-	strncpy(pszProjectionTmp, pszProjection, strlen(pszProjection));
+	//These two lines can be deleted if we enforce GDAL >= 2.3
+        //This dance to move from const char* to char* for older versions
+        int lenstr = strlen(pszProjection);             //Does not include null char
+        char* pszProjectionTmp = new char[lenstr+1];    //Assign space including null char
+        strncpy(pszProjectionTmp, pszProjection, lenstr); //Copy valid data
+        pszProjectionTmp[lenstr] = '\0';                //Ensure null char at end
+
+        //Assign to temp variable as importFromWkt increments pointer
+        //We keep track of assigned memorty in pszProjectionTmp for delete later
+        char *ptr = pszProjectionTmp;
 	
         //Try to import WKT discovered from dataset
 	//if ( hSRS.importFromWkt(&pszProjection) == 0 )  // use char* if we enforce GDAL >= 2.3
-        if ( hSRS.importFromWkt( & pszProjectionTmp ) == 0 )
+        if ( hSRS.importFromWkt( &ptr ) == 0 )
         {
 
             //This part of the code is for features below GDAL 2.3
@@ -272,6 +279,7 @@ int isce::io::Raster::getEPSG()
             std::cout << "Could not interpret following string as a valid wkt projection \n";
             std::cout << pszProjection << "\n";
         }
+        delete [] pszProjectionTmp;
     }
 
     return epsgcode; 
