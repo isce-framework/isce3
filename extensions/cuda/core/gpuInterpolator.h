@@ -63,17 +63,26 @@ class gpuSpline2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
         CUDA_DEV U interpolate(double, double, const U*, size_t, size_t);
         CUDA_HOST void interpolate_h(const Matrix<double>&, Matrix<U>&, double, double, U*);
 };
-}}}
 
-/*
-// Akima class derived from abstract gpuInterpolator class
+
+// gpuSinc2dInterpolator class derived from abstract gpuInterpolator class
 template <class U>
-class isce::cuda::core::Akima {
+class gpuSinc2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
+    protected:
+        double *kernel_d;
+        int kernel_length, kernel_width;    // filter dimension idec=length, ilen=width
+        int intpx, intpy;                   // sub-chip/image bounds? unclear...
+        // True if initialized from host, false if copy-constructed from gpuSinc2dInterpolator on device
+        bool owner;
     public:
-        U interpolate(double, double, const Matrix<U> &);
+        CUDA_HOSTDEV gpuSinc2dInterpolator(const gpuSinc2dInterpolator &i): 
+            kernel_d(i.kernel_d), kernel_length(i.kernel_length), kernel_width(i.kernel_width), 
+            intpx(i.intpx), intpy(i.intpy), owner(false) {};
+        ~gpuSinc2dInterpolator();
+        CUDA_HOST void sinc_coef(double, int, double, int);
+        CUDA_DEV U interpolate(double, double, const U*, size_t, size_t);
+        CUDA_HOST void interpolate_h(const Matrix<double>&, Matrix<U>&, double, double, U*);
 };
-
-
-*/
+}}}
 
 #endif

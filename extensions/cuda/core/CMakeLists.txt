@@ -26,6 +26,7 @@ set(LOCAL_SRCS
         gpuPegtrans.cu 
         gpuPoly2d.cu 
         gpuProjections.cu 
+        gpuSinc2dInterpolator.cu 
         gpuSpline2dInterpolator.cu )
 
 # Append current path to every source file
