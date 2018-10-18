@@ -33,7 +33,6 @@ Matrix(const Matrix<cell_t> & m) :
     _ncols{m.width()},
     _buffer{new cell_t[_nrows*_ncols]},
     _owner{true} {
-    std::cout << "in deep constructor" << std::endl;
     std::copy(m.data(), m.data() + _nrows*_ncols, _buffer);
 }
 
@@ -45,7 +44,7 @@ Matrix(Matrix<cell_t> & m) :
     _nrows{m.length()},
     _ncols{m.width()},
     _buffer{m.data()},
-    _owner{false} { std::cout << "in shallow constructor" << std::endl; }
+    _owner{false} {}
 
 /** Copy constructor from a grid view (copy values) 
   * @param[in] view pyre::grid_t::view_type to copy from */
@@ -69,7 +68,6 @@ isce::core::Matrix<cell_t>::
 ~Matrix() {
     // If I allocated memory myself, delete it
     if (_owner) {
-        std::cout << "trying to delete memory" << std::endl;
         delete [] _buffer;
     }
 }
