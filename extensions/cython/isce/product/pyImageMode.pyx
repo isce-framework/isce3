@@ -4,7 +4,7 @@
 # Copyright 2017-2018
 #
 
-from ImageMode cimport ImageMode
+from ImageMode cimport ImageMode, sizearray2
 
 cdef class pyImageMode:
     """
@@ -34,6 +34,9 @@ cdef class pyImageMode:
 
     @staticmethod
     cdef cbind(ImageMode mode):
+        '''
+        Bind a pyImageMode mode to a specific ImageMode pointer.
+        '''
         new_mode = pyImageMode()
         del new_mode.c_imagemode
         new_mode.c_imagemode = new ImageMode(mode)
@@ -53,6 +56,18 @@ cdef class pyImageMode:
         Get the image width.
         """
         return self.c_imagemode.width()
+
+    def setDimensions(self, dims):
+        '''
+        Set the dimensions of ImageMode.
+
+        Args:
+            dims (list):     Pair of integers [length, width]
+        '''
+        cdef sizearray2 indims
+        indims[0] = dims[0]
+        indims[1] = dims[1]
+        self.c_imagemode.dataDimensions(indims)
 
     def dataPath(self, pol):
         """
