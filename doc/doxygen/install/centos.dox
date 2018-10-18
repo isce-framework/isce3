@@ -203,9 +203,12 @@ In this section we will walk through the directory setup and build system instru
 Other optional arguments can be added to the cmake line
 <table>
     <caption id="multi_row">Additional cmake options</caption>
-    <tr><th>Option<th>Description
-    <tr><td>-DWITH_CUDA=ON <td>Build with CUDA support - will need CUDA libraries installed
-    <tr><td>-DWITH_DOC=ON <td>Build documentation from code using doxygen and sphinx. These need to be installed
+    <tr><th>Option <th>Description
+    <tr><td>-DWITH_CUDA=ON  <td>Build with CUDA support - will need CUDA libraries installed)
+    <tr><td>-DWITH_DOC=ON   <td>Build documentation from code using doxygen and sphinx. These need to be installed.
+    <tr><td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --track-origins=yes" -DCMAKE_BUILD_TYPE=Debug<td>  
+    <tr><td>Run tests with "-T memcheck" to check for memory leaks.
+    <tr><td>valgrind needs to be installed.
 </table>
 
 <li> Build the software
