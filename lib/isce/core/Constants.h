@@ -55,6 +55,12 @@ namespace isce { namespace core {
         AKIMA_METHOD,
         BIQUINTIC_METHOD
     };
+
+    /** Default sinc parameters */
+    const int SINC_HALF = 4;
+    const int SINC_LEN = 8;
+    const int SINC_ONE = 9;
+    const int SINC_SUB = 8192;
     
     /** Semi-major axis for WGS84 */
     const double EarthSemiMajorAxis = 6378137.0;

@@ -345,9 +345,9 @@ _transformTile(Tile_t & tile,
                 }
             }
 
-            // Interpolate fractional component
-            const std::complex<float> cval = _interpolateComplex(
-                chip, (SINC_HALF + 1), (SINC_HALF + 1), fracAz, fracRg, SINC_ONE, SINC_ONE
+            // Interpolate chip
+            const std::complex<float> cval = _interp->interpolate(
+                SINC_HALF + fracRg + 1, SINC_HALF + fracAz + 1, chip
             );
 
             // Add doppler to interpolated value and save

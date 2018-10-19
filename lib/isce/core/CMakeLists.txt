@@ -6,6 +6,8 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 set(LOCAL_SRCS
               Attitude.cpp
               Baseline.cpp
+              BilinearInterpolator.cpp
+              BicubicInterpolator.cpp
               DateTime.cpp
               Doppler.cpp
               Ellipsoid.cpp
@@ -22,6 +24,8 @@ set(LOCAL_SRCS
               Position.cpp
               Projections.cpp
               Quaternion.cpp
+              Sinc2dInterpolator.cpp
+              Spline2dInterpolator.cpp
               TimeDelta.cpp)
 
 ####Append current path to every source file

@@ -29,6 +29,9 @@ namespace isce { namespace core {
         /** Value constructor with EPSG code as input. Ellipsoid is always initialized to standard WGS84 ellipse.*/
         ProjectionBase(int code) : ellipse(6378137.,.0066943799901), _epsgcode(code) {}
 
+        /** Virtual destructor */
+        virtual ~ProjectionBase() {}
+
         /** Print function for debugging */
         virtual void print() const = 0;
 

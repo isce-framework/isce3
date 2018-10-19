@@ -81,13 +81,16 @@ struct InterpolatorTest : public ::testing::Test {
 TEST_F(InterpolatorTest, Bilinear) {
     size_t N_pts = true_values.length();
     double error = 0.0;
+    // Create interpolator
+    isce::core::BilinearInterpolator<double> interp;
+    // Loop over test points
     for (size_t i = 0; i < N_pts; ++i) {
         // Unpack location to interpolate
         const double x = (true_values(i,0) - start) / delta;
         const double y = (true_values(i,1) - start) / delta;
         const double zref = true_values(i,2);
         // Perform interpolation
-        double z = isce::core::Interpolator::bilinear(x, y, M);
+        double z = interp.interpolate(x, y, M);
         // Check
         ASSERT_NEAR(z, zref, 1.0e-8);
         // Accumulate error
@@ -101,13 +104,16 @@ TEST_F(InterpolatorTest, Bilinear) {
 TEST_F(InterpolatorTest, Bicubic) {
     size_t N_pts = true_values.length();
     double error = 0.0;
+    // Create interpolator
+    isce::core::BicubicInterpolator<double> interp;
+    // Loop over test points
     for (size_t i = 0; i < N_pts; ++i) {
         // Unpack location to interpolate
         const double x = (true_values(i,0) - start) / delta;
         const double y = (true_values(i,1) - start) / delta;
         const double zref = true_values(i,5);
         // Perform interpolation
-        double z = isce::core::Interpolator::bicubic(x, y, M);
+        double z = interp.interpolate(x, y, M);
         // Accumulate error
         error += std::pow(z - zref, 2);
     }
@@ -118,13 +124,16 @@ TEST_F(InterpolatorTest, Bicubic) {
 TEST_F(InterpolatorTest, Biquintic) {
     size_t N_pts = true_values.length();
     double error = 0.0;
+    // Create interpolator
+    isce::core::Spline2dInterpolator<double> interp(6);
+    // Loop over test points
     for (size_t i = 0; i < N_pts; ++i) {
         // Unpack location to interpolate
         const double x = (true_values(i,0) - start) / delta;
         const double y = (true_values(i,1) - start) / delta;
         const double zref = true_values(i,5);
         // Perform interpolation
-        double z = isce::core::Interpolator::interp_2d_spline(6, M, x, y);
+        double z = interp.interpolate(x, y, M);
         // Accumulate error
         error += std::pow(z - zref, 2);
     }
