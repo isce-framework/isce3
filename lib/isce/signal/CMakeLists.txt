@@ -14,7 +14,8 @@ endforeach()
 
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS
-    Signal.h)
+    Signal.h
+    fftw3cxx.h)
 
 ###Install headers into build/include
 ###This is where regex can be used on the header files if needed
