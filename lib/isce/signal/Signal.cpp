@@ -2,10 +2,7 @@
 #include <iostream>
 
 isce::signal::Signal::
-~Signal() {
-    //fftwf_destroy_plan(_plan_fwd);
-    //fftwf_destroy_plan(_plan_inv);
-}
+~Signal() {}
 
 template<typename T>
 void isce::signal::Signal::
@@ -60,15 +57,31 @@ forwardRangeFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::compl
 
 }
 
-/*
+
 template<typename T>
 void isce::signal::Signal::
-forwardAzimuthFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::complex<T>> &spectrum,
-                        int incolumns, int inrows, outcolumns, outrows)
+forwardAzimuthFFT(std::valarray<std::complex<T>> &signal, 
+                std::valarray<std::complex<T>> &spectrum,
+                int incolumns, int inrows, int outcolumns, int outrows)
 {
-        in
+
+    int rank = 1;
+    int n = inrows;
+    int howmany = incolumns;
+    int inembed = inrows;
+    int istride = incolumns;
+    int idist = 1;
+
+    int onembed = outrows;
+    int ostride = outcolumns;
+    int odist = 1;
+
+    forwardFFT(signal, spectrum, rank, n, howmany,
+                inembed, istride, idist,
+                onembed, ostride, odist);
+
 }
-*/
+
 
 // need to decalre each template function specifically to make them visible to compiler
 // We currently allow float and double. If at any time "long double" is needed we should add it here. 
@@ -108,4 +121,13 @@ forwardRangeFFT(std::valarray<std::complex<double>> &signal,
                 std::valarray<std::complex<double>> &spectrum,
                 int incolumns, int inrows, int outcolumns,int outrows);
 
+template void isce::signal::Signal::
+forwardAzimuthFFT(std::valarray<std::complex<float>> &signal,
+                std::valarray<std::complex<float>> &spectrum,
+                int incolumns, int inrows, int outcolumns,int outrows);
+
+template void isce::signal::Signal::
+forwardAzimuthFFT(std::valarray<std::complex<double>> &signal,
+                std::valarray<std::complex<double>> &spectrum,
+                int incolumns, int inrows, int outcolumns,int outrows);
 

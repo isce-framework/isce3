@@ -45,7 +45,13 @@ class isce::signal::Signal {
 	
         template<typename T> void forwardRangeFFT(std::valarray<std::complex<T>>& signal, 
 					std::valarray<std::complex<T>>& spectrum,
-                			int incolumns, int inrows, int outcolumns, int outrows);
+                			int incolumns, int inrows, 
+                                        int outcolumns, int outrows);
+
+        template<typename T> void forwardAzimuthFFT(std::valarray<std::complex<T>> &signal,
+                                                    std::valarray<std::complex<T>> &spectrum,
+                                                    int incolumns, int inrows, 
+                                                    int outcolumns, int outrows);
 
         //template<typename T> void forwardFFT(std::valarray<std::complex<T>>& signal,
         //                                        std::valarray<std::complex<T>>& spectrum,
