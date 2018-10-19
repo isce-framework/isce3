@@ -7,12 +7,15 @@
 #include <valarray>
 
 //fftw
-#include <fftw3.h>
-
+//#include <fftw3.h>
 // isce::core
 #include <isce/core/Constants.h>
 
-const std::complex<float> I(0, 1);
+#include "fftw3cxx.h"
+
+//template <typename T>
+//const std::complex<T> I(0, 1);
+
 const float PI = std::acos(-1);
 // Declaration
 namespace isce {
@@ -29,46 +32,50 @@ class isce::signal::Signal {
 
         ~Signal();
 
-        Signal(std::vector<std::complex<float>>& data, int oversample);
+        template<typename T> void forwardFFT_1D(std::valarray<std::complex<T>>& signal, 
+                                            std::valarray<std::complex<T>>& spectrum,
+                                            size_t N);
+
+        template<typename T> void forwardFFT(std::valarray<std::complex<T>> &signal, 
+					std::valarray<std::complex<T>> &spectrum,
+            				int rank, int n, int howmany,
+            				int inembed, int istride, int idist,
+            				int onembed, int ostride, int odist);
+	
+	
+        template<typename T> void forwardRangeFFT(std::valarray<std::complex<T>>& signal, 
+					std::valarray<std::complex<T>>& spectrum,
+                			int incolumns, int inrows, int outcolumns, int outrows);
+
+        //template<typename T> void forwardFFT(std::valarray<std::complex<T>>& signal,
+        //                                        std::valarray<std::complex<T>>& spectrum,
+        //                                        size_t N);
         
-        void initFFTPlans();
-        // forward 1D fft
 
-        void forwardFFT() { fftwf_execute(_plan_fwd);}
+        //template<typename T> void inverseFFT(std::valarray<T>& spectrum, std::valarray<T>& signal);
 
-        // inverse 1D fftw
-        void inverseFFT() { fftwf_execute(_plan_inv); }
+        //template<typename T> void rangeFFT(std::valarray<T>& signal, std::valarray<T>& spectrum);
+        //template<typename T> void azimuthFFT(std::valarray<T>& signal, std::valarray<T>& spectrum);
 
         //band pass filter to certain sub-bands 
         //each sub-band is specified by its center frequency and its bandwidth
-        void bandPass(double samplingRate, std::vector<double> Band);
 
-        void bandPass(double samplingRate, double subBandCenterFrequency, double subBandBandwidth);
+        //void bandPass(double samplingRate, std::vector<double> band);
+
+        //void bandPass(double samplingRate, double subBandCenterFrequency, double subBandBandwidth);
 
         // Filter the spectrum in frequency domain
-        void Filter(std::vector<float>&);
+        //void applyFilter(std::vector<float>&);
 
         // baseband the signal 
-        void demodulate(float samplingRate, float subBandCenterFrequency);
-
-        std::vector< std::complex<float> > getData();
-        std::vector< std::complex<float> > getSpectrum();
-        std::vector< std::complex<float> > getFilteredData();
-        std::vector< std::complex<float> > getFilteredSpectrum();
+        //void demodulate(float samplingRate, float subBandCenterFrequency);
 
     private:
         int _nfft;
         int _oversample;
 
         // data members 
-        std::vector< std::complex<float> > _data;
-        std::vector< std::complex<float> > _spectrum;
-        std::vector< std::complex<float> > _filteredData;
-        std::vector< std::complex<float> > _filteredSpectrum;
         std::vector<float>  _frequencies;
-
-        // FFTW plans
-        fftwf_plan _plan_fwd, _plan_inv;
         int _indexOfFrequency(double S, int N, double f);
 
 };

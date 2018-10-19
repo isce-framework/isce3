@@ -1,126 +1,111 @@
-
 #include "Signal.h"
 #include <iostream>
 
 isce::signal::Signal::
-Signal(std::vector< std::complex<float>>& data, int oversample) {
-    _nfft = data.size();
-    _oversample = oversample;
-    _data = data;
-    _spectrum.resize(_nfft);
-    _filteredData.resize(_oversample*_nfft);
-    _filteredSpectrum.resize(_oversample*_nfft);
-}
-
-isce::signal::Signal::
 ~Signal() {
-    fftwf_destroy_plan(_plan_fwd);
-    fftwf_destroy_plan(_plan_inv);
+    //fftwf_destroy_plan(_plan_fwd);
+    //fftwf_destroy_plan(_plan_inv);
 }
 
+template<typename T>
 void isce::signal::Signal::
-initFFTPlans() {
-
-    _plan_fwd = fftwf_plan_dft_1d(
-        _nfft,
-        (fftwf_complex *) (&_data[0]),
-        (fftwf_complex *) (&_spectrum[0]),
-        FFTW_FORWARD,
-        FFTW_ESTIMATE);
-
-    _plan_inv = fftwf_plan_dft_1d(
-        _oversample*_nfft,
-        (fftwf_complex *) (&_filteredSpectrum[0]),
-        (fftwf_complex *) (&_filteredData[0]),
-        FFTW_BACKWARD,
-        FFTW_ESTIMATE
-    );
-
-}
-
-void isce::signal::Signal::
-bandPass(double samplingRate, double subBandCenterFrequency, double subBandBandwidth)
-{
-    std::vector<double> Band;
-    Band.push_back(subBandCenterFrequency - subBandBandwidth/2.0);
-    Band.push_back(subBandCenterFrequency + subBandBandwidth/2.0);
-    bandPass(samplingRate, Band);
-    
-}
-
-void isce::signal::Signal::
-bandPass(double samplingRate, std::vector<double> Band)
-{
-    // index of the lower bound of the sub-band
-    int indLowerBound = _indexOfFrequency(samplingRate, _nfft, Band[0]);
-    // index of the higher bound of the sub-band
-    int indHigherBound = _indexOfFrequency(samplingRate, _nfft, Band[1]);
-
-    std::vector<float> weights(_nfft);
-    for (int i=indLowerBound; i<indHigherBound; i++) // Or i<indHigherBound + 1
-        weights[i] = 1.0;
-
-    Filter(weights);
-}
-
-int isce::signal::Signal::
-_indexOfFrequency(double S, int N, double f)
-{
-// deterrmine the index (n) of a given frequency f for a signal 
-// with sampling rate of S and length of N
-// Assumption: for indices 0 to (N-1)/2, frequency is positive
-//             and for indices larger than (N-1)/2 frequency is negative
-    int n;
-    double df = S/N;
-    if (f < 0)
-        n = round(f/df + N);
-    else
-        n = round(f/df);
-    return n;
-
-}
-
-void isce::signal::Signal::
-Filter(std::vector<float>& filter )
-{  
-    _filteredSpectrum = _spectrum; // ???
-    for (int i=0; i< _nfft; i++)
-         _filteredSpectrum[i] = _filteredSpectrum[i]*filter[i];
-    
-}
-
-
-void isce::signal::Signal::
-demodulate(float samplingRate, float subBandCenterFrequency)
+forwardFFT_1D(std::valarray<std::complex<T>> &signal, std::valarray<std::complex<T>> &spectrum, size_t N)
 {
 
-    std::vector<float> time(_nfft);
-    for (int i = 0; i < _nfft; i++)
-        time[i] = i/samplingRate;
-
-    for (int i = 0; i < _nfft; i++)
-        _filteredData[i] = _filteredData[i]*(std::exp(-1.0f*I*2.0f*PI*subBandCenterFrequency*time[i]));
+    isce::fftw3cxx::plan<T> _plan;
+    _plan = fftw3cxx::plan<T>::plan_dft_1d(N, 
+                                            &signal[0], 
+                                            &spectrum[0], 
+                                            FFTW_FORWARD, FFTW_ESTIMATE);
+    _plan.execute();
 
 }
 
+template<typename T>
+void isce::signal::Signal::
+forwardFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::complex<T>> &spectrum, 
+	    int rank, int n, int howmany,
+            int inembed, int istride, int idist,
+            int onembed, int ostride, int odist)
+{
 
-std::vector< std::complex<float> > isce::signal::Signal::
-getData(){
-    return _data;
+    isce::fftw3cxx::plan<T> _plan;
+    _plan = fftw3cxx::plan<T>::plan_many_dft(rank, &n, howmany,
+                                            &signal[0], &inembed, istride, idist,
+                                            &spectrum[0], &onembed, ostride, odist,
+                                            FFTW_FORWARD, FFTW_ESTIMATE);
+    _plan.execute();
+
 }
 
-std::vector< std::complex<float> > isce::signal::Signal::
-getSpectrum(){
-    return _spectrum;
+template<typename T>
+void isce::signal::Signal::
+forwardRangeFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::complex<T>> &spectrum,
+                int incolumns, int inrows, int outcolumns, int outrows)
+{
+    int rank = 1;
+    int n = incolumns;
+    int howmany = inrows;
+    int inembed = incolumns;
+    int istride = 1;
+    int idist = incolumns;
+
+    int onembed = outcolumns;
+    int ostride = 1;
+    int odist = outcolumns;
+
+    forwardFFT(signal, spectrum, rank, n, howmany,
+                inembed, istride, idist,
+                onembed, ostride, odist);
+
 }
 
-std::vector< std::complex<float> > isce::signal::Signal::
-getFilteredData(){
-    return _filteredData;
+/*
+template<typename T>
+void isce::signal::Signal::
+forwardAzimuthFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::complex<T>> &spectrum,
+                        int incolumns, int inrows, outcolumns, outrows)
+{
+        in
 }
+*/
 
-std::vector< std::complex<float> > isce::signal::Signal::
-getFilteredSpectrum(){
-    return _filteredSpectrum;
-}
+// need to decalre each template function specifically to make them visible to compiler
+// We currently allow float and double. If at any time "long double" is needed we should add it here. 
+
+template void isce::signal::Signal::
+forwardFFT_1D(std::valarray<std::complex<float>> &signal, 
+                std::valarray<std::complex<float>> &spectrum, 
+                size_t N);
+template void isce::signal::Signal::
+forwardFFT_1D(std::valarray<std::complex<double>> &signal, 
+            std::valarray<std::complex<double>> &spectrum, 
+            size_t N);
+
+
+template void isce::signal::Signal::
+forwardFFT(std::valarray<std::complex<float>> &signal, 
+            std::valarray<std::complex<float>> &spectrum,
+            int rank, int n, int howmany,
+            int inembed, int istride, int idist,
+            int onembed, int ostride, int odist);
+
+template void isce::signal::Signal::
+forwardFFT(std::valarray<std::complex<double>> &signal,
+            std::valarray<std::complex<double>> &spectrum,
+            int rank, int n, int howmany,
+            int inembed, int istride, int idist,
+            int onembed, int ostride, int odist);
+
+
+template void isce::signal::Signal::
+forwardRangeFFT(std::valarray<std::complex<float>> &signal,
+                std::valarray<std::complex<float>> &spectrum,
+                int incolumns, int inrows, int outcolumns,int outrows);
+
+template void isce::signal::Signal::
+forwardRangeFFT(std::valarray<std::complex<double>> &signal, 
+                std::valarray<std::complex<double>> &spectrum,
+                int incolumns, int inrows, int outcolumns,int outrows);
+
 
