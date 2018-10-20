@@ -32,15 +32,11 @@ class isce::signal::Signal {
 
         ~Signal();
 
-        template<typename T> void forwardFFT_1D(std::valarray<std::complex<T>>& signal, 
-                                            std::valarray<std::complex<T>>& spectrum,
-                                            size_t N);
-
-        template<typename T> void forwardFFT(std::valarray<std::complex<T>> &signal, 
-					std::valarray<std::complex<T>> &spectrum,
+        template<typename T> void FFT(std::valarray<std::complex<T>> &input, 
+					std::valarray<std::complex<T>> &output,
             				int rank, int n, int howmany,
             				int inembed, int istride, int idist,
-            				int onembed, int ostride, int odist);
+            				int onembed, int ostride, int odist, int sign);
 	
 	
         template<typename T> void forwardRangeFFT(std::valarray<std::complex<T>>& signal, 
@@ -53,15 +49,17 @@ class isce::signal::Signal {
                                                     int incolumns, int inrows, 
                                                     int outcolumns, int outrows);
 
-        //template<typename T> void forwardFFT(std::valarray<std::complex<T>>& signal,
-        //                                        std::valarray<std::complex<T>>& spectrum,
-        //                                        size_t N);
         
+        template<typename T> void inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, 
+                                                    std::valarray<std::complex<T>> &signal,
+                                                    int incolumns, int inrows, 
+                                                    int outcolumns, int outrows);
 
-        //template<typename T> void inverseFFT(std::valarray<T>& spectrum, std::valarray<T>& signal);
+        template<typename T> void inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
+                                                    std::valarray<std::complex<T>> &signal,
+                                                    int incolumns, int inrows,
+                                                    int outcolumns, int outrows);
 
-        //template<typename T> void rangeFFT(std::valarray<T>& signal, std::valarray<T>& spectrum);
-        //template<typename T> void azimuthFFT(std::valarray<T>& signal, std::valarray<T>& spectrum);
 
         //band pass filter to certain sub-bands 
         //each sub-band is specified by its center frequency and its bandwidth
