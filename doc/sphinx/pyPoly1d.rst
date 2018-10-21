@@ -1,3 +1,10 @@
+:orphan:
+
+.. title:: pyPoly1d
+
+pyPoly1d
+========
+
 pyPoly1d is a data structure meant to capture 1D functions of the form
 
 .. math::

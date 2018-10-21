@@ -24,12 +24,12 @@ set (INPUT_SRCS envisat.h5
                 topo/localPsi.rdr
                 topo/localPsi.hdr)
 
-set (TESTDATA_SRCS "")
+add_custom_target(geom_test_data)
 foreach (DATASRC ${INPUT_SRCS})
     get_filename_component(RELDIR_PATH ${DATASRC} DIRECTORY)
-    file(COPY ${DATASRC} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/${RELDIR_PATH})
-    list(APPEND TESTDATA_SRCS ${CMAKE_CURRENT_BINARY_DIR}/${DATASRC})
+    add_custom_command(TARGET geom_test_data PRE_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E
+                       copy  ${CMAKE_CURRENT_SOURCE_DIR}/${DATASRC} ${CMAKE_CURRENT_BINARY_DIR}/${DATASRC})
 endforeach()
 
-add_custom_target(geom_test_data DEPENDS ${TESTDATA_SRCS})
 # end of file
