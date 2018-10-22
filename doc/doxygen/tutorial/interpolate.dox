@@ -1,0 +1,76 @@
+/*! \page tutorial_interpolate 2D Interpolation Tutorial
+
+\section interpmain Tutorial
+
+2D interpolation is a fundamental operation for image resampling, oversampling, terrain extraction, etc. ISCE currently implements several basic types of interpolation methods: bilinear, bicubic, spline, and sinc interpolation. For this example, we will test the first three interpolators on a synthetic low-resolution image. 
+
+\code{.cpp}
+
+// std
+#include <cmath>
+#include <cstdio>
+#include <vector>
+
+// isce::core
+#include "isce/core/Constants.h"
+#include "isce/core/Interpolator.h"
+
+int main() {
+
+    // Create coordinates for test data
+    std::vector<double> xvals = isce::core::arange(-5.01, 5.01, 0.25);
+    std::vector<double> yvals = isce::core::arange(-5.01, 5.01, 0.25);
+    size_t nx = xvals.size();
+    size_t ny = yvals.size();
+
+    // Fill matrix values with function z = sin(x**2 + y**2)
+    isce::core::Matrix<double> M(ny, nx);
+    for (size_t i = 0; i < ny; ++i) {
+        for (size_t j = 0; j < nx; ++j) {
+            M(i,j) = std::sin(yvals[i]*yvals[i] + xvals[j]*xvals[j]);
+        }
+    }
+
+    // Create different interpolators
+    isce::core::Interpolator<double> * bilinear = isce::core::createInterpolator<double>(
+        isce::core::BILINEAR_METHOD);
+    isce::core::Interpolator<double> * bicubic = isce::core::createInterpolator<double>(
+        isce::core::BICUBIC_METHOD);
+    isce::core::Interpolator<double> * spline = isce::core::createInterpolator<double>(
+        isce::core::BIQUINTIC_METHOD);
+
+    // Create coordinates we want to interpolate at
+    const size_t npts = 500;
+    std::vector<double> xnew = isce::core::linspace(0.0, 1.0*(nx - 1), npts);
+    std::vector<double> ynew(npts, 1.0 * (ny / 2));
+
+    // Create vectors for storing interpolated results
+    std::vector<double> z_bilinear(npts), z_bicubic(npts), z_spline(npts);
+
+    // Loop over points to perform interpolation
+    for (size_t i = 0; i < npts; ++i) {
+        z_bilinear[i] = bilinear->interpolate(xnew[i], ynew[i], M);
+        z_bicubic[i] = bicubic->interpolate(xnew[i], ynew[i], M);
+        z_spline[i] = spline->interpolate(xnew[i], ynew[i], M);
+    }
+
+    // Print results to screen
+    for (size_t i = 0; i < npts; ++i) {
+        printf("%12.6f %12.6f %12.6f\n", z_bilinear[i], z_bicubic[i], z_spline[i]);
+    }
+
+    // Clean up
+    delete bilinear;
+    delete bicubic;
+    delete spline;
+
+    return 0;
+}
+
+\endcode
+
+We first generated a synthetic 2D low-resolution image which we wish to interpolate (this code follows the SciPy interp2d <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp2d.html">tutorial</a> test data). The data are stored in an isce::core::Matrix object which will be passed to all interpolation routines. Then, three different interpolators are created. Note that they are all instantiated as isce::core::Interpolator pointers, which is the base class for all derived interpolator classes. The function isce::core::createInterpolator takes as input an enum type that specifies the type of interpolation method we wish to use and then returns a pointer to the appropriate derived interpolation class. After creating vectors at which we want to perform the interpolation, we call each interpolator's interpolate() function. The plotted interpolation results are below:
+
+\image html "interp_demo_cpp.png"
+
+*/
