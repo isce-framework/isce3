@@ -34,7 +34,7 @@ class isce::core::Interpolator {
         /** Virtual destructor (allow destruction of base Interpolator pointer) */
         virtual ~Interpolator() {}
 
-        /** Interpolate at a given coordinate. */
+        /** Interpolate at a given coordinate for an input isce::core::Matrix */
         virtual U interpolate(double x, double y, const Matrix<U> & z) = 0;
 
         /** Return interpolation method. */
@@ -58,6 +58,18 @@ class isce::core::BilinearInterpolator : public isce::core::Interpolator<U> {
 
         /** Interpolate at a given coordinate. */
         U interpolate(double x, double y, const Matrix<U> & z);
+
+        /** Interpolate at a given coordinate for data passed as a valarray */
+        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+
+        /** Interpolate at a given coordinate for data passed as a vector */
+        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
 };
 
 // Definition of BicubicInterpolator
@@ -71,6 +83,18 @@ class isce::core::BicubicInterpolator : public isce::core::Interpolator<U> {
         /** Interpolate at a given coordinate. */
         U interpolate(double x, double y, const Matrix<U> & z);
 
+        /** Interpolate at a given coordinate for data passed as a valarray */
+        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+
+        /** Interpolate at a given coordinate for data passed as a vector */
+        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+
     // Kernel weights
     private:
         std::valarray<double> _weights;
@@ -81,11 +105,26 @@ template <typename U>
 class isce::core::Spline2dInterpolator : public isce::core::Interpolator<U> {
 
     public:
+        using isce::core::Interpolator<U>::interpolate; 
+
+    public:
         /** Default constructor. */
         Spline2dInterpolator(size_t order);
 
         /** Interpolate at a given coordinate. */
         U interpolate(double x, double y, const Matrix<U> & z);
+
+        /** Interpolate at a given coordinate for data passed as a valarray */
+        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+
+        /** Interpolate at a given coordinate for data passed as a vector */
+        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
 
     // Data members
     private:
@@ -114,6 +153,18 @@ class isce::core::Sinc2dInterpolator : public isce::core::Interpolator<U> {
 
         /** Interpolate at a given coordinate. */
         U interpolate(double x, double y, const Matrix<U> & z);
+
+        /** Interpolate at a given coordinate for data passed as a valarray */
+        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+
+        /** Interpolate at a given coordinate for data passed as a vector */
+        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
 
     private:
         // Compute sinc coefficients 

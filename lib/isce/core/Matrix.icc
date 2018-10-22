@@ -62,6 +62,28 @@ Matrix(const view_t & view) {
     std::copy(view.begin(), view.end(), _buffer);
 }
 
+// Shallow copy constructor from an std::valarray - does not allocate own memory
+/** @param[in] data Valarray containing data
+  * @param[in] ncols Number of columns for data (assume row major packing) */
+template <typename cell_t>
+isce::core::Matrix<cell_t>::
+Matrix(std::valarray<cell_t> & data, size_t ncols) :
+    _nrows{data.size() / ncols},
+    _ncols{ncols},
+    _buffer{&data[0]},
+    _owner{false} {}
+
+// Shallow copy constructor from an std::vector - does not allocate own memory
+/** @param[in] data Vector containing data
+  * @param[in] ncols Number of columns for data (assume row major packing) */
+template <typename cell_t>
+isce::core::Matrix<cell_t>::
+Matrix(std::vector<cell_t> & data, size_t ncols) :
+    _nrows{data.size() / ncols},
+    _ncols{ncols},
+    _buffer{data.data()},
+    _owner{false} {}
+
 /** Destructor */
 template <typename cell_t>
 isce::core::Matrix<cell_t>::

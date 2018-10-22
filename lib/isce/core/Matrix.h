@@ -8,6 +8,8 @@
 #define ISCE_CORE_MATRIX_H
 
 #include <cmath>
+#include <valarray>
+#include <vector>
 #include <pyre/grid.h>
 
 // Declaration
@@ -43,14 +45,20 @@ class isce::core::Matrix {
         /** Constructor with number of rows and number of columns */
         inline Matrix(size_t nrows, size_t ncols);
         
-        /** Deep copy constructor - allocates memory and copies values */
+        /** Deep copy constructor from another matrix - allocates memory and copies values */
         inline Matrix(const Matrix<cell_t> & m);
 
-        /** Shallow copy constructor - does not allocate own memory */
+        /** Shallow copy constructor from another matrix - does not allocate own memory */
         inline Matrix(Matrix<cell_t> & m);
 
         /** Copy constructor from a grid view (copy values) */
         inline Matrix(const view_t & view);
+
+        /** Shallow copy constructor from an std::valarray - does not allocate own memory */
+        inline Matrix(std::valarray<cell_t> & data, size_t ncols);
+
+        /** Shallow copy constructor from an std::vector - does not allocate own memory */
+        inline Matrix(std::vector<cell_t> & data, size_t ncols);
 
         /** Destructor */
         inline ~Matrix();
