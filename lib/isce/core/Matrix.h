@@ -54,6 +54,9 @@ class isce::core::Matrix {
         /** Copy constructor from a grid view (copy values) */
         inline Matrix(const view_t & view);
 
+        /** Shallow copy constructor from raw pointer to data - does not allocate own memory */
+        inline Matrix(cell_t * data, size_t nrows, size_t ncols);
+
         /** Shallow copy constructor from an std::valarray - does not allocate own memory */
         inline Matrix(std::valarray<cell_t> & data, size_t ncols);
 

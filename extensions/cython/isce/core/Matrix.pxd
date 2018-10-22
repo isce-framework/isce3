@@ -19,6 +19,7 @@ cdef extern from "isce/core/Matrix.h" namespace "isce::core":
         # Constructors
         Matrix() except +
         Matrix(size_t length, size_t width) except +
+        Matrix(T * data, size_t length, size_t width) except +
         # Functions
         void resize(size_t length, size_t width)
         # Access element
