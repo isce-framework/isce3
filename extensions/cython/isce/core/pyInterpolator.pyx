@@ -12,58 +12,67 @@ from libcpp.vector cimport vector
 from Interpolator cimport *
 from Matrix cimport Matrix, valarray
 
-cdef numpyToMatrix(np.ndarray[double, ndim=2] a, Matrix[double] & b):
+cdef Matrix[double] numpyToMatrix(np.ndarray[double, ndim=2] a):
     """
-    Utility function to copy double or single precision numpy array to isce::core::Matrix.
+    Utility function to create an isce::core::Matrix 'view' of a numpy array.
     """
-    cdef int i, j
-    for i in range(a.shape[0]):
-        for j in range(a.shape[1]):
-            b.data()[i*a.shape[1] + j] = a[i,j]
-    return
-
+    cdef int nrows, ncols
+    nrows, ncols = a.shape[0], a.shape[1] 
+    return Matrix[double](&a[0,0], nrows, ncols)
 
 cdef class pyInterpolator:
     """
     Cython class for creating and calling all Interpolator classes.
     """
     cdef int order
+    cdef string method
 
     def __init__(self, method='bilinear', order=6):
 
         # Validate the method
         assert method in ('bilinear', 'bicubic', 'spline'), \
             'Unsupported interpolation method'
-        self.method = method
+        self.method = pyStringToBytes(method)
 
         # Validate the order (for spline only)
         assert order > 2 and order < 21, 'Invalid interpolation order'
         self.order = order
         
-    def interpolate(self, double x, double y, np.ndarray[double, ndim=2] z):
+    def interpolate(self, x, y, np.ndarray[double, ndim=2] z):
         """
-        Interpolate at specified coordinate.
+        Interpolate at specified coordinates.
         """
         # Convert numpy array to isce::core::Matrix
-        cdef Matrix[double] zmat = Matrix[double](z.shape[0], z.shape[1])
-        numpyToMatrix(z, zmat)
+        cdef Matrix[double] zmat = numpyToMatrix(z)
+
+        # Make sure coordinates are numpy arrays
+        cdef np.ndarray[double, ndim=1] x_np = np.array(x).squeeze()
+        cdef np.ndarray[double, ndim=1] y_np = np.array(y).squeeze()
+        cdef np.ndarray[double, ndim=1] values = np.empty_like(x_np, dtype=np.float64)
+        cdef int n_pts = x_np.shape[0]
+
+        # Create pointer views to numpy arrays
+        #cdef double[:] xview = <double[:]>(&x_np[0])
+        #cdef double[:] yview = <double[:]>(&y_np[0]) 
+        #cdef double[:] values_view = <double[:]>(&values[0])
 
         # Dynamically create interpolation object
         cdef Interpolator[double] * c_interp;
-        if self.method == 'bilinear':
+        if self.method == b'bilinear':
             c_interp = new BilinearInterpolator[double]()
-        elif self.method == 'bicubic':
+        elif self.method == b'bicubic':
             c_interp = new BicubicInterpolator[double]()
-        elif self.method == 'spline':
+        elif self.method == b'spline':
             c_interp = new Spline2dInterpolator[double](self.order)
 
-        # Call interpolator
-        cdef double value = c_interp.interpolate(x, y, zmat)
+        # Call interpolator for all points
+        cdef int i
+        for i in range(n_pts):
+            values[i] = c_interp.interpolate(x_np[i], y_np[i], zmat)
 
         # Done
         del c_interp
-        return value
-
+        return values
 
     #def quadInterpolate(self, x, y, double xintp):
     #    cdef int i, N
