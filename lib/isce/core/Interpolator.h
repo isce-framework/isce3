@@ -10,8 +10,8 @@
 #include <valarray>
 
 // isce::core
-#include <isce/core/Constants.h>
-#include <isce/core/Matrix.h>
+#include "Constants.h"
+#include "Matrix.h"
 
 // Declaration
 namespace isce {

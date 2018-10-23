@@ -1,11 +1,10 @@
 //
-// Author: Joshua Cohen
-// Copyright 2017
+// Author: Joshua Cohen, Bryan Riel
+// Copyright 2017-2018
 //
 
-#ifndef __ISCE_CORE_CONSTANTS_H__
-#define __ISCE_CORE_CONSTANTS_H__
-
+#ifndef ISCE_CORE_CONSTANTS_H
+#define ISCE_CORE_CONSTANTS_H
 
 #include <stdexcept>
 #include <string>
