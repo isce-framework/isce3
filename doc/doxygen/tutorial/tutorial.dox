@@ -4,7 +4,7 @@
 <ul>
 <li> Raster imagery tutorial [\ref tutorial_raster "C++"][<a href="sphinx/html/tutorial/raster.html"><b>Python</b></a>]
 <li> Radar geometry tutorial [\ref tutorial_geometry "C++"][<a href="sphinx/html/tutorial/geometry.html"><b>Python</b></a>]
-<li> Image resampling tutorial [\ref tutorial_resamp "C++"][<a href="sphinx/html/tutorial/resamp.html"><b>Python</b></a>]
+<li> Image resampling tutorial [\ref tutorial_resamp "C++"][Python]
 <li> Map projections tutorial [\ref tutorial_projections "C++"][<a href="sphinx/html/tutorial/projections.html"><b>Python</b></a>]
 <li> pyre::grid_t N-D array tutorial [C++][Python] 
 <li> 2D interpolation tutorial [\ref tutorial_interpolate "C++"][<a href="sphinx/html/tutorial/interpolate.html"><b>Python</b></a>]
