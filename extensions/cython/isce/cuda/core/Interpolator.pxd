@@ -17,24 +17,29 @@ cdef extern from "isce/core/Constants.h" namespace "isce::core":
         BIQUINTIC_METHOD = 5
 
 cdef extern from "isce/core/Interpolator.h" namespace "isce::core":
-    cdef cppclass Interpolator:
-        Interpolator() except +
-        @staticmethod
-        U bilinear[U](double, double, const Matrix[U] &)
-        @staticmethod
-        U bicubic[U](double, double, const Matrix[U] &)
-        @staticmethod
-        void sinc_coef(double, double, int, double, int, valarray[double] &)
-        @staticmethod
-        U sinc_eval[U,V](const Matrix[U] &, const Matrix[V] &, int, int, double, int)
-        @staticmethod
-        U sinc_eval_2d[U,V](const Matrix[U] &, const Matrix[V] &,
-                            int, int, double, double, int, int)
-        @staticmethod
-        float interp_2d_spline[U](int, const Matrix[U] &, double, double)
-        @staticmethod
-        double quadInterpolate(valarray[double] &, valarray[double] &, double)
-        @staticmethod
-        double akima(double, double, const Matrix[float] &)
+
+    # Base interpolator class
+    cdef cppclass Interpolator[U]:
+        U interpolate(double x, double y, const Matrix[U] & z)
+
+
+cdef extern from "isce/core/Interpolator.h" namespace "isce::core":
+
+    # Base interpolator class
+    #cdef cppclass Interpolator[U]:
+    #    interpolate(double x, double y, const Matrix[U] & z)
+
+    # Bilinear interpolator class
+    cdef cppclass BilinearInterpolator[U](Interpolator[U]):
+        BilinearInterpolator() except +
+
+    # Bicubic interpolator class
+    cdef cppclass BicubicInterpolator[U](Interpolator[U]):
+        BicubicInterpolator() except +
+
+    # 2D Spline interpolator class
+    cdef cppclass Spline2dInterpolator[U](Interpolator[U]):
+        Spline2dInterpolator(size_t order) except +
+
 
 # end of file
