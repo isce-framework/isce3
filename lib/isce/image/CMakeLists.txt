@@ -13,8 +13,7 @@ foreach(CPPFILE ${LOCAL_SRCS})
 endforeach()
 
 #####Library headers
-set(${PACKAGENAME}_EXPORT_HEADERS   Constants.h
-                                    ResampSlc.h
+set(${PACKAGENAME}_EXPORT_HEADERS   ResampSlc.h
                                     ResampSlc.icc
                                     Tile.h
                                     Tile.icc)

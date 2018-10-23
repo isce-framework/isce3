@@ -12,9 +12,9 @@ add_library(${LCUDAISCE} SHARED
             ${ISCE_CUDA_core_SRCS}
             ${ISCE_CUDA_geometry_SRCS})
 
-# Force nvcc to compile with c++11
+# Force nvcc to compile with c++14
 get_target_property(MYPROPS ${LCUDAISCE} COMPILE_OPTIONS)
-string(REPLACE "c++17" "c++11" MYPROPS ${MYPROPS})
+string(REPLACE "c++17" "c++14" MYPROPS ${MYPROPS})
 set_target_properties(${LCUDAISCE} PROPERTIES COMPILE_OPTIONS ${MYPROPS})
 
 # Allow for separable compilation and device code linking (-dc flag to nvcc)

@@ -14,16 +14,17 @@ cdef extern from "<valarray>" namespace "std":
         T & operator[](int)
 
 # Matrix
-cdef extern from "isce/core/Interpolator.h" namespace "isce::core":
+cdef extern from "isce/core/Matrix.h" namespace "isce::core":
     cdef cppclass Matrix[T]:
         # Constructors
         Matrix() except +
         Matrix(size_t length, size_t width) except +
+        Matrix(T * data, size_t length, size_t width) except +
         # Functions
         void resize(size_t length, size_t width)
         # Access element
         T & operator()(size_t row, size_t column)
-        # Get reference to valarray data
-        valarray[T] & data()
+        # Get pointer to underlying data
+        T * data()
  
 # end of file 
