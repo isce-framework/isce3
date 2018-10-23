@@ -23,6 +23,11 @@ cdef Matrix[double] numpyToMatrix(np.ndarray[double, ndim=2] a):
 cdef class pyInterpolator:
     """
     Cython class for creating and calling all Interpolator classes.
+
+    Args:
+        method (Optional[str]): Interpolation method to use from
+                                ('bilinear', 'bicubic', 'spline')
+        order (Optional[int]): Order of 2D spline if using spline interpolator.
     """
     cdef int order
     cdef string method
@@ -41,6 +46,14 @@ cdef class pyInterpolator:
     def interpolate(self, x, y, np.ndarray[double, ndim=2] z):
         """
         Interpolate at specified coordinates.
+
+        Args:
+            x (float or ndarray): X coordinates at which to interpolate
+            y (float or ndarray): Y coordinates at which to interpolate
+            z (ndarray): 2D array of values to interpolate at x and y coordinates
+
+        Returns:
+            values (float or ndarray): Interpolated values
         """
         # Convert numpy array to isce::core::Matrix
         cdef Matrix[double] zmat = numpyToMatrix(z)
@@ -50,12 +63,7 @@ cdef class pyInterpolator:
         cdef np.ndarray[double, ndim=1] y_np = np.array(y).squeeze()
         cdef np.ndarray[double, ndim=1] values = np.empty_like(x_np, dtype=np.float64)
         cdef int n_pts = x_np.shape[0]
-
-        # Create pointer views to numpy arrays
-        #cdef double[:] xview = <double[:]>(&x_np[0])
-        #cdef double[:] yview = <double[:]>(&y_np[0]) 
-        #cdef double[:] values_view = <double[:]>(&values[0])
-
+        
         # Dynamically create interpolation object
         cdef Interpolator[double] * c_interp;
         if self.method == b'bilinear':
@@ -72,7 +80,7 @@ cdef class pyInterpolator:
 
         # Done
         del c_interp
-        return values
+        return values.squeeze()
 
     #def quadInterpolate(self, x, y, double xintp):
     #    cdef int i, N
