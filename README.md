@@ -64,6 +64,7 @@ Basic:
 * gcc >= 4.7
 * fftw 3.2.2
 * Python >= 3.3
+* gdal >= 2.3.1
 * curl - for automatic DEM downloads
 
 For a few sensor types:
