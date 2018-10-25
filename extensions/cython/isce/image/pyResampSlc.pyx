@@ -23,11 +23,26 @@ cdef class pyResampSlc:
     cdef ResampSlc * c_resamp
     cdef bool __owner
     
-    def __cinit__(self, pyProduct product):
+    def __cinit__(self, product=None, doppler=None, mode=None):
         """
         Initialize C++ objects.
         """
-        self.c_resamp = new ResampSlc(deref(product.c_product))
+        cdef pyProduct c_product
+        cdef pyPoly2d c_doppler
+        cdef pyImageMode c_mode
+        
+        if product is not None:
+            c_product = <pyProduct> product
+            self.c_resamp = new ResampSlc(deref(c_product.c_product))
+
+        elif doppler is not None and mode is not None:
+            c_doppler = <pyPoly2d> doppler
+            c_mode = <pyImageMode> mode
+            self.c_resamp = new ResampSlc(deref(c_doppler.c_poly2d), deref(c_mode.c_imagemode))
+
+        else:
+            self.c_resamp = new ResampSlc()
+
         self.__owner = True
         return
 
