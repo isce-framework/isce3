@@ -1,0 +1,197 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pyImageMode &#8212; ISCE  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pyimagemode">
+<h1>pyImageMode<a class="headerlink" href="#pyimagemode" title="Permalink to this headline">¶</a></h1>
+<p>pyImageMode provides a wrapper for the isce::product::ImageMode class which contains most of the relevation radar image metadata.</p>
+<dl class="class">
+<dt id="isceextension.pyImageMode">
+<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyImageMode</code><a class="headerlink" href="#isceextension.pyImageMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cython wrapper for isce::product::ImageMode.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mode</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Mode (‘aux’, ‘primary’)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="isceextension.pyImageMode.dataPath">
+<code class="descname">dataPath</code><span class="sig-paren">(</span><em>self</em>, <em>pol</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyImageMode.dataPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the HDF5 path to a dataset with a given polarization.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pol</strong> (<em>str</em>) – Polarization (‘hh’, ‘hv’, ‘vh’, ‘vv’)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyImageMode.endAzTime">
+<code class="descname">endAzTime</code><a class="headerlink" href="#isceextension.pyImageMode.endAzTime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get endAzTime.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyImageMode.length">
+<code class="descname">length</code><a class="headerlink" href="#isceextension.pyImageMode.length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the image length.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyImageMode.numberAzimuthLooks">
+<code class="descname">numberAzimuthLooks</code><a class="headerlink" href="#isceextension.pyImageMode.numberAzimuthLooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get numberAzimuthLooks.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyImageMode.numberRangeLooks">
+<code class="descname">numberRangeLooks</code><a class="headerlink" href="#isceextension.pyImageMode.numberRangeLooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get numberRangeLooks.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyImageMode.prf">
+<code class="descname">prf</code><a class="headerlink" href="#isceextension.pyImageMode.prf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get PRF value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyImageMode.rangeBandwidth">
+<code class="descname">rangeBandwidth</code><a class="headerlink" href="#isceextension.pyImageMode.rangeBandwidth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get range bandwidth.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyImageMode.rangePixelSpacing">
+<code class="descname">rangePixelSpacing</code><a class="headerlink" href="#isceextension.pyImageMode.rangePixelSpacing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get rangePixelSpacing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyImageMode.setDimensions">
+<code class="descname">setDimensions</code><span class="sig-paren">(</span><em>self</em>, <em>dims</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyImageMode.setDimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the dimensions of ImageMode.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dims</strong> (<em>list</em>) – Pair of integers [length, width]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyImageMode.startAzTime">
+<code class="descname">startAzTime</code><a class="headerlink" href="#isceextension.pyImageMode.startAzTime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get copy of starting azimuth time.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyImageMode.startingRange">
+<code class="descname">startingRange</code><a class="headerlink" href="#isceextension.pyImageMode.startingRange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get startingRange.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyImageMode.wavelength">
+<code class="descname">wavelength</code><a class="headerlink" href="#isceextension.pyImageMode.wavelength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get radar instrument wavelength.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyImageMode.width">
+<code class="descname">width</code><a class="headerlink" href="#isceextension.pyImageMode.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the image width.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/pyImageMode.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, JPL/Caltech.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,221 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pyRaster &#8212; ISCE  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pyraster">
+<h1>pyRaster<a class="headerlink" href="#pyraster" title="Permalink to this headline">¶</a></h1>
+<p>pyRaster provides a light wrapper for ISCE Raster objects for the primary purpose of passing GDAL-compatible rasters to lower-level ISCE routines. Provides basic querying of raster information.</p>
+<dl class="class">
+<dt id="isceextension.pyRaster">
+<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyRaster</code><a class="headerlink" href="#isceextension.pyRaster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Python wrapper for isce::core::Raster</p>
+<p>All parameters like dimensions, data types etc must be known at the time of creation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – Filename on disk to create or to read</li>
+<li><strong>access</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – gdal.GA_ReadOnly or gdal.GA_Update</li>
+<li><strong>dtype</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – gdal.GDT_* for creating new raster</li>
+<li><strong>width</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – width of new raster to be created</li>
+<li><strong>length</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – length of new raster to created</li>
+<li><strong>numBands</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – number of bands in new raster to be created</li>
+<li><strong>driver</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – GDAL driver to use for creation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="isceextension.pyRaster.EPSG">
+<code class="descname">EPSG</code><a class="headerlink" href="#isceextension.pyRaster.EPSG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns EPSG code associated with raster.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">EPSG code</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyRaster.addRasterToVRT">
+<code class="descname">addRasterToVRT</code><span class="sig-paren">(</span><em>self</em>, <em>pyRaster raster</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyRaster.addRasterToVRT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add Raster to VRT Raster.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>raster</strong> (<a class="reference internal" href="#isceextension.pyRaster" title="isceextension.pyRaster"><em>pyRaster</em></a>) – Another instance of raster</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyRaster.getDatatype">
+<code class="descname">getDatatype</code><span class="sig-paren">(</span><em>self</em>, <em>int band=1</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyRaster.getDatatype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return GDAL data type of Raster.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">gdal.GDT_* datatype</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyRaster.isReadOnly">
+<code class="descname">isReadOnly</code><a class="headerlink" href="#isceextension.pyRaster.isReadOnly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns flag to indicate if raster is read only.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Flag indicating if raster is read only.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyRaster.length">
+<code class="descname">length</code><a class="headerlink" href="#isceextension.pyRaster.length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return length of the raster.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Length of the raster</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyRaster.numBands">
+<code class="descname">numBands</code><a class="headerlink" href="#isceextension.pyRaster.numBands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return number of Bands in the raster.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Number of bands in the raster.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyRaster.width">
+<code class="descname">width</code><a class="headerlink" href="#isceextension.pyRaster.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return width of the raster.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Width of the raster</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/pyRaster.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, JPL/Caltech.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+    </div>
+  </body>
+</html>
