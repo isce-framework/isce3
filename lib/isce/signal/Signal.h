@@ -2,65 +2,73 @@
 #ifndef ISCE_SIGNAL_SIGNAL_H
 #define ISCE_SIGNAL_SIGNAL_H
 
-// std
 #include <cmath>
 #include <valarray>
 
-//fftw
-//#include <fftw3.h>
-// isce::core
 #include <isce/core/Constants.h>
 
 #include "fftw3cxx.h"
 
-//template <typename T>
-//const std::complex<T> I(0, 1);
-
-const float PI = std::acos(-1);
 // Declaration
 namespace isce {
     namespace signal {
+        template<class T>
         class Signal;
     }
 }
 
-
+template<class T> 
 class isce::signal::Signal {
     public:
         /** Default constructor. */ 
         Signal() {};
 
-        ~Signal();
+        ~Signal() {};
 
-        template<typename T> void FFT(std::valarray<std::complex<T>> &input, 
+        T fftPlanForward(std::valarray<std::complex<T>> &input, 
 					std::valarray<std::complex<T>> &output,
             				int rank, int n, int howmany,
             				int inembed, int istride, int idist,
             				int onembed, int ostride, int odist, int sign);
-	
-	
-        template<typename T> void forwardRangeFFT(std::valarray<std::complex<T>>& signal, 
+
+        T fftPlanBackward(std::valarray<std::complex<T>> &input,
+                                        std::valarray<std::complex<T>> &output,
+                                        int rank, int n, int howmany,
+                                        int inembed, int istride, int idist,
+                                        int onembed, int ostride, int odist, int sign);	
+
+        T forward(std::valarray<std::complex<T>> &input,
+                                        std::valarray<std::complex<T>> &output);
+        
+        T inverse(std::valarray<std::complex<T>> &input,
+                                        std::valarray<std::complex<T>> &output);
+
+        T forwardRangeFFT(std::valarray<std::complex<T>>& signal, 
 					std::valarray<std::complex<T>>& spectrum,
                 			int incolumns, int inrows, 
                                         int outcolumns, int outrows);
 
-        template<typename T> void forwardAzimuthFFT(std::valarray<std::complex<T>> &signal,
-                                                    std::valarray<std::complex<T>> &spectrum,
-                                                    int incolumns, int inrows, 
-                                                    int outcolumns, int outrows);
+        T forwardAzimuthFFT(std::valarray<std::complex<T>> &signal,
+                                        std::valarray<std::complex<T>> &spectrum,
+                                        int incolumns, int inrows, 
+                                        int outcolumns, int outrows);
 
         
-        template<typename T> void inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, 
-                                                    std::valarray<std::complex<T>> &signal,
-                                                    int incolumns, int inrows, 
-                                                    int outcolumns, int outrows);
+        T inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, 
+                                        std::valarray<std::complex<T>> &signal,
+                                        int incolumns, int inrows, 
+                                        int outcolumns, int outrows);
 
-        template<typename T> void inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
-                                                    std::valarray<std::complex<T>> &signal,
-                                                    int incolumns, int inrows,
-                                                    int outcolumns, int outrows);
+        T inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
+                                        std::valarray<std::complex<T>> &signal,
+                                        int incolumns, int inrows,
+                                        int outcolumns, int outrows);
 
+        T upsample(std::valarray<std::complex<T>> &signal,
+                                        std::valarray<std::complex<T>> &signalOversampled,
+                                        int rows, int cols, int nfft, int oversampleFactor);
 
+        //
         //band pass filter to certain sub-bands 
         //each sub-band is specified by its center frequency and its bandwidth
 
@@ -77,7 +85,8 @@ class isce::signal::Signal {
     private:
         int _nfft;
         int _oversample;
-
+        isce::fftw3cxx::plan<T> _plan_fwd;
+        isce::fftw3cxx::plan<T> _plan_inv;
         // data members 
         std::vector<float>  _frequencies;
         int _indexOfFrequency(double S, int N, double f);

@@ -35,8 +35,9 @@ int main()
     inputSlc.getBlock(data, 0, 0, width, blockLength);
     
     std::cout << "call signal" << std::endl;
-    isce::signal::Signal sig;
+    isce::signal::Signal<float> sig;
     sig.forwardRangeFFT(data, range_spectrum, width, blockLength, width, blockLength);
+
     sig.forwardAzimuthFFT(data, azimuth_spectrum, width, blockLength, width, blockLength);
 
     sig.inverseRangeFFT(range_spectrum, invertData, width, blockLength, width, blockLength);

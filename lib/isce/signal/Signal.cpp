@@ -1,29 +1,58 @@
 #include "Signal.h"
 #include <iostream>
 
-isce::signal::Signal::
-~Signal() {}
 
-
-template<typename T>
-void isce::signal::Signal::
-FFT(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output, 
+template <class T>
+T 
+isce::signal::Signal<T>::
+fftPlanForward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output, 
 	    int rank, int n, int howmany,
             int inembed, int istride, int idist,
             int onembed, int ostride, int odist, int sign)
 {
 
-    isce::fftw3cxx::plan<T> _plan;
-    _plan = fftw3cxx::plan<T>::plan_many_dft(rank, &n, howmany,
+    _plan_fwd = fftw3cxx::plan<T>::plan_many_dft(rank, &n, howmany,
                                             &input[0], &inembed, istride, idist,
                                             &output[0], &onembed, ostride, odist,
                                             sign, FFTW_ESTIMATE);
-    _plan.execute();
 
 }
 
-template<typename T>
-void isce::signal::Signal::
+template<class T>
+T 
+isce::signal::Signal<T>::
+fftPlanBackward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output,
+            int rank, int n, int howmany,
+            int inembed, int istride, int idist,
+            int onembed, int ostride, int odist, int sign)
+{
+
+    _plan_inv = fftw3cxx::plan<T>::plan_many_dft(rank, &n, howmany,
+                                            &input[0], &inembed, istride, idist,
+                                            &output[0], &onembed, ostride, odist,
+                                            sign, FFTW_ESTIMATE);
+
+}
+
+template<class T>
+T
+isce::signal::Signal<T>::
+forward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
+{
+    _plan_fwd.execute_dft(&input[0], &output[0]);
+}
+
+template<class T>
+T
+isce::signal::Signal<T>::
+inverse(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
+{
+    _plan_inv.execute_dft(&input[0], &output[0]);
+}
+
+
+template<class T>
+T isce::signal::Signal<T>::
 forwardRangeFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::complex<T>> &spectrum,
                 int incolumns, int inrows, int outcolumns, int outrows)
 {
@@ -38,15 +67,14 @@ forwardRangeFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::compl
     int ostride = 1;
     int odist = outcolumns;
 
-    FFT(signal, spectrum, rank, n, howmany,
+    fftPlanForward(signal, spectrum, rank, n, howmany,
                 inembed, istride, idist,
                 onembed, ostride, odist, FFTW_FORWARD);
 
 }
 
-
-template<typename T>
-void isce::signal::Signal::
+template<class T>
+T isce::signal::Signal<T>::
 forwardAzimuthFFT(std::valarray<std::complex<T>> &signal, 
                 std::valarray<std::complex<T>> &spectrum,
                 int incolumns, int inrows, int outcolumns, int outrows)
@@ -63,14 +91,14 @@ forwardAzimuthFFT(std::valarray<std::complex<T>> &signal,
     int ostride = outcolumns;
     int odist = 1;
 
-    FFT(signal, spectrum, rank, n, howmany,
+    fftPlanForward(signal, spectrum, rank, n, howmany,
                 inembed, istride, idist,
                onembed, ostride, odist, FFTW_FORWARD);
 
 }
 
-template<typename T>
-void isce::signal::Signal::
+template<class T>
+T isce::signal::Signal<T>::
 inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, std::valarray<std::complex<T>> &signal,
                 int incolumns, int inrows, int outcolumns, int outrows)
 {
@@ -85,14 +113,13 @@ inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, std::valarray<std::com
     int ostride = 1;
     int odist = outcolumns;
 
-    FFT(spectrum, signal, rank, n, howmany,
+    fftPlanBackward(spectrum, signal, rank, n, howmany,
                 inembed, istride, idist,
                 onembed, ostride, odist, FFTW_BACKWARD);
-    signal /=n;
 }
 
-template<typename T>
-void isce::signal::Signal::
+template<class T>
+T isce::signal::Signal<T>::
 inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
                 std::valarray<std::complex<T>> &signal,
                 int incolumns, int inrows, int outcolumns, int outrows)
@@ -109,67 +136,42 @@ inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
     int ostride = outcolumns;
     int odist = 1;
 
-    FFT(spectrum, signal, rank, n, howmany,
+    fftPlanBackward(spectrum, signal, rank, n, howmany,
                 inembed, istride, idist,
                onembed, ostride, odist, FFTW_BACKWARD);
-    signal/=n;
 }
 
-// need to decalre each template function specifically to make them visible to compiler
-// We currently allow float and double. If at any time "long double" is needed we should add it here. 
+template<class T> 
+T isce::signal::Signal<T>::
+upsample(std::valarray<std::complex<T>> &signal,
+         std::valarray<std::complex<T>> &signalUpsampled,
+         int rows, int cols, int nfft, int upsampleFactor)
+{
+    // temporary storage for the spectrum
+    std::valarray<std::complex<T>> spectrum(upsampleFactor*nfft*rows);
+
+    // forward fft in range
+    forwardRangeFFT(signal, spectrum,
+                    cols, rows, 
+                    upsampleFactor*nfft, rows);
+
+    //shift the spectrum
+
+    // inverse fft to get the upsampled signal
+    inverseRangeFFT(spectrum, signalUpsampled,
+                    upsampleFactor*nfft, rows, 
+                    upsampleFactor*nfft, rows);
+    
+    // Normalize
+    //signalUpsampled /=n fft;
+}
 
 
-template void isce::signal::Signal::
-FFT(std::valarray<std::complex<float>> &input, 
-            std::valarray<std::complex<float>> &output,
-            int rank, int n, int howmany,
-            int inembed, int istride, int idist,
-            int onembed, int ostride, int odist, int sign);
+// Declaration of the class
+// We currently allow float and double. If at any time "long double" is needed, 
+// declaration should be added here. 
 
-template void isce::signal::Signal::
-FFT(std::valarray<std::complex<double>> &input,
-            std::valarray<std::complex<double>> &output,
-            int rank, int n, int howmany,
-            int inembed, int istride, int idist,
-            int onembed, int ostride, int odist, int sign);
+template class isce::signal::Signal<float>;
+template class isce::signal::Signal<double>;
 
-
-template void isce::signal::Signal::
-forwardRangeFFT(std::valarray<std::complex<float>> &signal,
-                std::valarray<std::complex<float>> &spectrum,
-                int incolumns, int inrows, int outcolumns,int outrows);
-
-template void isce::signal::Signal::
-forwardRangeFFT(std::valarray<std::complex<double>> &signal, 
-                std::valarray<std::complex<double>> &spectrum,
-                int incolumns, int inrows, int outcolumns,int outrows);
-
-template void isce::signal::Signal::
-forwardAzimuthFFT(std::valarray<std::complex<float>> &signal,
-                std::valarray<std::complex<float>> &spectrum,
-                int incolumns, int inrows, int outcolumns,int outrows);
-
-template void isce::signal::Signal::
-forwardAzimuthFFT(std::valarray<std::complex<double>> &signal,
-                std::valarray<std::complex<double>> &spectrum,
-                int incolumns, int inrows, int outcolumns,int outrows);
-
-template void isce::signal::Signal::
-inverseRangeFFT(std::valarray<std::complex<float>> &spectrum, 
-		std::valarray<std::complex<float>> &signal,
-                int incolumns, int inrows, int outcolumns, int outrows);
-
-template void isce::signal::Signal::
-inverseRangeFFT(std::valarray<std::complex<double>> &spectrum,
-                std::valarray<std::complex<double>> &signal,
-                int incolumns, int inrows, int outcolumns, int outrows);
-
-template void isce::signal::Signal::
-inverseAzimuthFFT(std::valarray<std::complex<float>> &spectrum,
-                std::valarray<std::complex<float>> &signal,
-                int incolumns, int inrows, int outcolumns, int outrows);
-
-template void isce::signal::Signal::
-inverseAzimuthFFT(std::valarray<std::complex<double>> &spectrum,
-                std::valarray<std::complex<double>> &signal,
-                int incolumns, int inrows, int outcolumns, int outrows);
+//end of file
