@@ -66,7 +66,7 @@ class isce::signal::Signal {
 
         T upsample(std::valarray<std::complex<T>> &signal,
                                         std::valarray<std::complex<T>> &signalOversampled,
-                                        int rows, int cols, int nfft, int oversampleFactor);
+                                        int rows, int nfft, int oversampleFactor);
 
         //
         //band pass filter to certain sub-bands 

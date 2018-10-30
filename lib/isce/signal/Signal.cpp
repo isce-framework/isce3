@@ -141,29 +141,51 @@ inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
                onembed, ostride, odist, FFTW_BACKWARD);
 }
 
-template<class T> 
+
+template<class T>
 T isce::signal::Signal<T>::
 upsample(std::valarray<std::complex<T>> &signal,
          std::valarray<std::complex<T>> &signalUpsampled,
-         int rows, int cols, int nfft, int upsampleFactor)
+         int rows, int nfft, int upsampleFactor)
 {
-    // temporary storage for the spectrum
-    std::valarray<std::complex<T>> spectrum(upsampleFactor*nfft*rows);
+
+    // number of columns of upsampled spectrum
+    int columns = upsampleFactor*nfft;
+
+    // temporary storage for the spectrum before and after the shift
+    std::valarray<std::complex<T>> spectrum(nfft*rows);
+    std::valarray<std::complex<T>> spectrumShifted(columns*rows);
 
     // forward fft in range
-    forwardRangeFFT(signal, spectrum,
-                    cols, rows, 
-                    upsampleFactor*nfft, rows);
+    std::cout << "fwd fft " << std::endl;
+    _plan_fwd.execute_dft(&signal[0], &spectrum[0]);
 
     //shift the spectrum
+    // The spectrum has values from begining to nfft index for each line. We want
+    // to put the spectrum in correct ouput locations such that the spectrum of 
+    // the upsampled data has values from 0 to nfft/2 and from upsampleFactor*nfft - nfft/2 to the end.
+    // For a 1D example:
+    //      spectrum = [1,2,3,4,5,6,0,0,0,0,0,0]
+    //  becomes:
+    //      spectrumShifted = [1,2,3,0,0,0,0,0,0,4,5,6]
+    //
+    std::cout << "shift the spectrum " << std::endl;
+    
+    for (size_t column = 0; column<nfft/2 - 1; ++column)
+        spectrumShifted[std::slice(column, rows, columns)] = spectrum[std::slice(column, rows, nfft)];
+   
+    size_t j;
+    for (size_t i = 0; i<nfft/2; ++i){
+        j = upsampleFactor*nfft - nfft/2 + i - 1;
+        spectrumShifted[std::slice(j, rows, columns)] = spectrum[std::slice(i+nfft/2, rows, nfft)];
+    }
+    
 
     // inverse fft to get the upsampled signal
-    inverseRangeFFT(spectrum, signalUpsampled,
-                    upsampleFactor*nfft, rows, 
-                    upsampleFactor*nfft, rows);
-    
+    std::cout << "inverse fft " << std::endl;
+    _plan_inv.execute_dft(&spectrumShifted[0], &signalUpsampled[0]);
     // Normalize
-    //signalUpsampled /=n fft;
+    signalUpsampled /=nfft;
 }
 
 
