@@ -63,6 +63,12 @@ function(CheckHDF5)
     # Use more standard names to propagate variables
     set(HDF5_INCLUDE_DIR ${HDF5_INCLUDE_DIRS} CACHE PATH "HDF5 include directory")
     set(HDF5_LIBRARY "${HDF5_CXX_LIBRARIES}" CACHE STRING "HDF5 libraries")
+    # Use old glibc++ ABI for compatibility with HDF5 libs
+    if (CMAKE_COMPILER_IS_GNUCXX)
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "5.1.0")
+            add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+        endif()
+    endif()
 endfunction()
 
 ##Check for Armadillo installation
@@ -94,7 +100,7 @@ function(InitInstallDirLayout)
 
     ###install/lib
     if (NOT ISCE_LIBDIR)
-        set (ISCE_LIBDIR lib CACHE STRING "isce/lib") 
+        set (ISCE_LIBDIR lib CACHE STRING "isce/lib")
     endif(NOT ISCE_LIBDIR)
 
     ###build/lib
