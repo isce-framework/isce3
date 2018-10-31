@@ -1,3 +1,9 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// Author: Heresh Fattahi
+// Copyright 2018-
+//
 
 #ifndef ISCE_LIB_CROSSMUL_H
 #define ISCE_LIB_CROSSMUL_H

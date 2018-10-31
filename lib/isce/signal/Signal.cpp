@@ -1,3 +1,10 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// Author: Heresh Fattahi
+// Copyright 2018-
+//
+
 #include "Signal.h"
 #include <iostream>
 

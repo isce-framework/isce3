@@ -15,7 +15,8 @@
 TEST(Signal, ForwardBackwardRangeFloat)
 {
     // take a block of data, perform range FFT and then iverse FFT and compare with original data   
-    isce::io::Raster inputSlc("/Users/fattahi/tools/ISCE3_forked/src/isce/tests/lib/isce/data/warped_envisat.slc.vrt");
+    //isce::io::Raster inputSlc("/Users/fattahi/tools/ISCE3_forked/src/isce/tests/lib/isce/data/warped_envisat.slc.vrt");
+    isce::io::Raster inputSlc("../data/warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
     int length = inputSlc.length();

@@ -1,3 +1,9 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+// 
+// Author: Heresh Fattahi
+// Copyright 2018-
+//
 
 #ifndef ISCE_SIGNAL_SIGNAL_H
 #define ISCE_SIGNAL_SIGNAL_H
