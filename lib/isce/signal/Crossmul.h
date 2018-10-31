@@ -2,12 +2,14 @@
 #ifndef ISCE_LIB_CROSSMUL_H
 #define ISCE_LIB_CROSSMUL_H
 
+# include <assert.h>
+
 // pyre
 #include <portinfo>
 #include <pyre/journal.h>
 
 #include <isce/io/Raster.h>
-#include <isce/io/Signal.h>
+#include "Signal.h"
 
 namespace isce {
     namespace signal {
@@ -15,13 +17,18 @@ namespace isce {
     }
 }
 
-isce::signal::Crossmul {
+class isce::signal::Crossmul {
     public:
         // Constructor from product
-        void Crossmul(const isce::product::Product& referenceSLC,
+        Crossmul() {};
+
+        ~Crossmul() {};
+        
+        /*void crossmul(const isce::product::Product& referenceSLC,
                     const isce::product::Product& secondarySLC,
                     int numberOfRangeLooks,
                     int numberOfAzimuthLooks);
+        */
 
         /* Do we need a constructro from raster?
         void Crossmul(isce::io::Raster& referenceSLC,
@@ -46,7 +53,7 @@ isce::signal::Crossmul {
 
     private:
         int nrows; 
-        int nclos;
+        int ncols;
         int rowsLooks;
         int colsLooks;
         int nrows_ifgram;
