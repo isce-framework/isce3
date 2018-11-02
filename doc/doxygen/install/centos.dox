@@ -209,6 +209,7 @@ Other optional arguments can be added to the cmake line
     <tr><td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --track-origins=yes" -DCMAKE_BUILD_TYPE=Debug<td>  
     <tr><td>Run tests with "-T memcheck" to check for memory leaks.
     <tr><td>valgrind needs to be installed.
+    <tr><td>-DPYTHON_EXECUTABLE:FILENAME=<path_to_python_exe><td>Pass this argument if installing to a python virtual environment
 </table>
 
 <li> Build the software
