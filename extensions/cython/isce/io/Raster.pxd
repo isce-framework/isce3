@@ -38,6 +38,7 @@ cdef extern from "isce/io/Raster.h" namespace "isce::io":
         bool match(const Raster &)
         void open(string &, GDALAccess)
         int getEPSG()
+        GDALDataset* dataset()
 
         # Setters
         void addRasterToVRT(const Raster &)

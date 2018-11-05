@@ -23,11 +23,8 @@ cdef class pyTopo:
         threshold (Optional[float]):         Threshold for iteration stop for slant range.
         numIterations (Optional[int]):       Max number of normal iterations.
         extraIterations (Optional[int]):     Number of extra refinement iterations.
-        orbitMethod (Optional[str]):         Orbit interpolation method
-                                                 ('hermite', 'sch', 'legendre')
-        demMethod (Optional[int]):           DEM interpolation method
-                                                 ('sinc', 'bilinear', 'bicubic', 'nearest',
-                                                  'akima', 'biquintic')
+        orbitMethod (Optional[str]):         Orbit interpolation method ('hermite', 'sch', 'legendre')
+        demMethod (Optional[int]):           DEM interpolation method ('sinc', 'bilinear', 'bicubic', 'nearest', 'akima', 'biquintic')
         epsgOut (Optional[int]):             EPSG code for output topo layers.
 
     Return:

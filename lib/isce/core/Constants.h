@@ -1,11 +1,10 @@
 //
-// Author: Joshua Cohen
-// Copyright 2017
+// Author: Joshua Cohen, Bryan Riel
+// Copyright 2017-2018
 //
 
-#ifndef __ISCE_CORE_CONSTANTS_H__
-#define __ISCE_CORE_CONSTANTS_H__
-
+#ifndef ISCE_CORE_CONSTANTS_H
+#define ISCE_CORE_CONSTANTS_H
 
 #include <stdexcept>
 #include <string>
@@ -56,6 +55,12 @@ namespace isce { namespace core {
         BIQUINTIC_METHOD
     };
 
+    /** Default sinc parameters */
+    const int SINC_HALF = 4;
+    const int SINC_LEN = 8;
+    const int SINC_ONE = 9;
+    const int SINC_SUB = 8192;
+    
     /** Semi-major axis for WGS84 */
     const double EarthSemiMajorAxis = 6378137.0;
 
@@ -98,6 +103,83 @@ namespace isce { namespace core {
                                  std::to_string(len) + " x " + std::to_string(width) + ").";
             throw std::invalid_argument(errstr);
         }
+    }
+
+    /** Function to return a Python style arange vector 
+      * @param[in] low Starting value of vector
+      * @param[in] high Ending value of vector (non-inclusive)
+      * @param[in] increment Spacing between vector elements */
+    template<typename T>
+    std::vector<T> arange(T low, T high, T increment) {
+        // Instantiate the vector
+        std::vector<T> data;
+        // Set the first value
+        T current = low;
+        // Loop over the increments and add to vector
+        while (current < high) {
+            data.push_back(current);
+            current += increment;
+        }
+        // done
+        return data;
+    }
+
+    /** Function to return a Matlab/Python style linspace vector 
+      * @param[in] low Starting value of vector
+      * @param[in] high Ending value of vector (inclusive)
+      * @param[in] number Number of vector elements */
+    template<typename T>
+    std::vector<T> linspace(T low, T high, std::size_t number) {
+        // Instantiate the vector
+        std::vector<T> data;
+        // Compute the increment
+        T increment = (high - low) / (number - 1);
+        // Handle cases where number in (0, 1)
+        if (number == 0) {
+            return data;
+        }
+        if (number == 1) {
+            data.push_back(low);
+            return data;
+        }
+        // Loop over the increments and add to vector
+        for (std::size_t i = 0; i < number - 1; ++i) {
+            data.push_back(low + i * increment);
+        }
+        // Add the last element
+        data.push_back(high);
+        // done
+        return data;
+    }
+
+    /** Function to return a Matlab/Python style logspace vector 
+      * @param[in] first base^first is the starting value of the vector
+      * @param[in] last base^last is the ending value of the vector
+      * @param[in] Number of vector elements
+      * @param[in] base Base of the log space */
+    template<typename T>
+    std::vector<T> logspace(T first, T last, std::size_t number, T base=10) {
+        // Instantiate the vector
+        std::vector<T> data;
+        // Compute the increment of the powers
+        T increment = (last - first) / (number - 1);
+        // Handle cases where number in (0, 1)
+        if (number == 0) {
+            return data;
+        }
+        if (number == 1) {
+            data.push_back(pow(base, first));
+            return data;
+        }
+        // Loop over the increments and add to vector
+        for (std::size_t i = 0; i < number - 1; ++i) {
+            T value = pow(base, first + i * increment);
+            data.push_back(value);
+        }
+        // Add the last element
+        data.push_back(pow(base, last));
+        // done
+        return data;
     }
 
   }

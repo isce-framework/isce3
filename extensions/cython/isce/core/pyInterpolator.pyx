@@ -9,68 +9,92 @@ import numpy as np
 cimport numpy as np
 from libcpp cimport bool
 from libcpp.vector cimport vector
-from Interpolator cimport Interpolator
+from Interpolator cimport *
 from Matrix cimport Matrix, valarray
 
-cdef numpyToMatrix(np.ndarray[np.float64_t, ndim=2] a,
-                   Matrix[double] & b):
-    cdef int i, j
-    for i in range(a.shape[0]):
-        for j in range(a.shape[1]):
-            b.data()[i*a.shape[1] + j] = a[i,j]
-    return
-
-cdef numpyToMatrixFloat(np.ndarray[np.float32_t, ndim=2] a,
-                        Matrix[float] & b):
-    cdef int i, j
-    for i in range(a.shape[0]):
-        for j in range(a.shape[1]):
-            b.data()[i*a.shape[1] + j] = a[i,j]
-    return
+cdef Matrix[double] numpyToMatrix(np.ndarray[double, ndim=2] a):
+    """
+    Utility function to create an isce::core::Matrix 'view' of a numpy array.
+    """
+    cdef int nrows, ncols
+    nrows, ncols = a.shape[0], a.shape[1] 
+    return Matrix[double](&a[0,0], nrows, ncols)
 
 cdef class pyInterpolator:
-    cdef Interpolator *c_interp
-    cdef bool __owner
+    """
+    Cython class for creating and calling all Interpolator classes.
 
-    def __cinit__(self):
-        self.c_interp = new Interpolator()
-        self.__owner = True
-    def __dealloc__(self):
-        if self.__owner:
-            del self.c_interp
+    Args:
+        method (Optional[str]): Interpolation method to use from
+                                ('bilinear', 'bicubic', 'spline')
+        order (Optional[int]): Order of 2D spline if using spline interpolator.
+    """
+    cdef int order
+    cdef string method
 
-    # Note no static binder since we'll never need to pass any particular Interpolator object
-    # around...
+    def __init__(self, method='bilinear', order=6):
 
-    def bilinear(self, double a, double b, np.ndarray[np.float64_t, ndim=2] c):
-        cdef Matrix[double] cmat = Matrix[double](c.shape[0], c.shape[1])
-        numpyToMatrix(c, cmat)
-        return self.c_interp.bilinear[double](a, b, cmat)
+        # Validate the method
+        assert method in ('bilinear', 'bicubic', 'spline'), \
+            'Unsupported interpolation method'
+        self.method = pyStringToBytes(method)
 
-    def bicubic(self, double a, double b, np.ndarray[np.float64_t, ndim=2] c):
-        cdef Matrix[double] cmat = Matrix[double](c.shape[0], c.shape[1])
-        numpyToMatrix(c, cmat)
-        return self.c_interp.bicubic[double](a, b, cmat)
+        # Validate the order (for spline only)
+        assert order > 2 and order < 21, 'Invalid interpolation order'
+        self.order = order
+        
+    def interpolate(self, x, y, np.ndarray[double, ndim=2] z):
+        """
+        Interpolate at specified coordinates.
 
-    def interp_2d_spline(self, double a, double b, np.ndarray[np.float64_t, ndim=2] dat,
-                         int degree):
-        cdef Matrix[double] mat = Matrix[double](dat.shape[0], dat.shape[1])
-        numpyToMatrix(dat, mat)
-        return self.c_interp.interp_2d_spline(degree, mat, a, b)
+        Args:
+            x (float or ndarray): X coordinates at which to interpolate
+            y (float or ndarray): Y coordinates at which to interpolate
+            z (ndarray): 2D array of values to interpolate at x and y coordinates
 
-    def quadInterpolate(self, x, y, double xintp):
-        cdef int i, N
-        N = x.size
-        cdef valarray[double] x_array = valarray[double](N)
-        cdef valarray[double] y_array = valarray[double](N)
-        for i in range(N):
-            x_array[i] = x[i]
-            y_array[i] = y[i]
-        return self.c_interp.quadInterpolate(x_array, y_array, xintp)
+        Returns:
+            values (float or ndarray): Interpolated values
+        """
+        # Convert numpy array to isce::core::Matrix
+        cdef Matrix[double] zmat = numpyToMatrix(z)
 
-    def akima(self, double x, double y, np.ndarray[np.float32_t, ndim=2] c):
-        cdef Matrix[float] cmat = Matrix[float](c.shape[0], c.shape[1])
-        numpyToMatrixFloat(c, cmat)
-        return self.c_interp.akima(x, y, cmat)
+        # Make sure coordinates are numpy arrays
+        cdef np.ndarray[double, ndim=1] x_np = np.array(x).squeeze()
+        cdef np.ndarray[double, ndim=1] y_np = np.array(y).squeeze()
+        cdef np.ndarray[double, ndim=1] values = np.empty_like(x_np, dtype=np.float64)
+        cdef int n_pts = x_np.shape[0]
+        
+        # Dynamically create interpolation object
+        cdef Interpolator[double] * c_interp;
+        if self.method == b'bilinear':
+            c_interp = new BilinearInterpolator[double]()
+        elif self.method == b'bicubic':
+            c_interp = new BicubicInterpolator[double]()
+        elif self.method == b'spline':
+            c_interp = new Spline2dInterpolator[double](self.order)
+
+        # Call interpolator for all points
+        cdef int i
+        for i in range(n_pts):
+            values[i] = c_interp.interpolate(x_np[i], y_np[i], zmat)
+
+        # Done
+        del c_interp
+        return values.squeeze()
+
+    #def quadInterpolate(self, x, y, double xintp):
+    #    cdef int i, N
+    #    N = x.size
+    #    cdef valarray[double] x_array = valarray[double](N)
+    #    cdef valarray[double] y_array = valarray[double](N)
+    #    for i in range(N):
+    #        x_array[i] = x[i]
+    #        y_array[i] = y[i]
+    #    return self.c_interp.quadInterpolate(x_array, y_array, xintp)
+
+    #def akima(self, double x, double y, np.ndarray[np.float32_t, ndim=2] c):
+    #    cdef Matrix[float] cmat = Matrix[float](c.shape[0], c.shape[1])
+    #    numpyToMatrixFloat(c, cmat)
+    #    return self.c_interp.akima(x, y, cmat)
 
 # end of file

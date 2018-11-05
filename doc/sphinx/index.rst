@@ -12,6 +12,7 @@ Python bindings for ISCE are available via the module named "isceextension". The
 Core Datastructures
 --------------------
 
+* :doc:`pyDateTime <./pyDateTime>` / :doc:`pyTimeDelta <./pyTimeDelta>`
 * :doc:`pyEllipsoid <./pyEllipsoid>`
 * :doc:`pyPoly1d <./pyPoly1d>`
 * :doc:`pyPoly2d <./pyPoly2d>`

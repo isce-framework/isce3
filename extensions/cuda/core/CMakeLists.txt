@@ -50,6 +50,7 @@ include_directories(${LCUDAISCE} PUBLIC
                     ${CEREAL_SRC_INCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
+                    ${PYRE_INCLUDE_DIR}
                     ${GDAL_INCLUDE_DIR})
 
 # Install headers into final installation directory

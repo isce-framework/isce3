@@ -60,6 +60,23 @@ cdef class pyOrbit:
         return new_orb
 
     @property
+    def refEpoch(self):
+        '''
+        str: ISO-8601 DateTime representation of reference epoch
+        '''
+
+        return pyDateTime(self.c_orbit.refEpoch.isoformat().decode('UTF-8'))
+
+    @refEpoch.setter
+    def refEpoch(self, pyDateTime epoch):
+        '''
+        Args:
+            instr (str): ISO-8601 DateTime representation of reference epoch
+        '''
+        self.c_orbit.refEpoch.strptime(pyStringToBytes(epoch.isoformat()))
+
+
+    @property
     def nVectors(self):
         '''
         int: Number of state vectors.
@@ -196,6 +213,7 @@ cdef class pyOrbit:
             self.UTCtime = orb.UTCtime
             self.position = orb.position
             self.velocity = orb.velocity
+            self.refEpoch = orb.refEpoch
         except:
             raise ValueError("Object passed in to copy is incompatible with object of type pyOrbit.")
     

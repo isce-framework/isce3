@@ -1,5 +1,5 @@
 //
-// Author: Joshua Cohen, Bryan Riel
+// Author: Joshua Cohen, Bryan Riel, Liang Yu
 // Copyright 2017-2018
 //
 
@@ -9,94 +9,201 @@
 #include <complex>
 #include <valarray>
 
+// isce::core
+#include "Constants.h"
+#include "Matrix.h"
+
 // Declaration
 namespace isce {
     namespace core {
-        class Interpolator;
-        template <class U> class Matrix;
+        // The interpolator classes
+        template <typename U> class Interpolator;
+        template <typename U> class BilinearInterpolator;
+        template <typename U> class BicubicInterpolator;
+        template <typename U> class Spline2dInterpolator;
+        template <typename U> class Sinc2dInterpolator;
     }
 }
 
-// Simple convenience class for 2-dimensional matrices; will replace with
-// dedicated array class in the near future
-template <class U>
-class isce::core::Matrix {
+// Definition of parent Interpolator
+template <typename U>
+class isce::core::Interpolator {
+
+    // Public interface
     public:
-        // Constructors
-        Matrix() : Matrix(1, 1) {};
-        Matrix(size_t length, size_t width) : _length(length), _width(width),
-            _data(length*width) {}
-        // Resize
-        void resize(size_t length, size_t width) {
-            _length = length;
-            _width = width;
-            _data.resize(length * width);
+        /** Virtual destructor (allow destruction of base Interpolator pointer) */
+        virtual ~Interpolator() {}
+
+        /** Interpolate at a given coordinate for an input isce::core::Matrix */
+        virtual U interpolate(double x, double y, const Matrix<U> & z) = 0;
+
+        /** Return interpolation method. */
+        isce::core::dataInterpMethod method() const { return _method; }
+
+    // Protected constructor and data to be used by derived classes
+    protected:
+        inline Interpolator(isce::core::dataInterpMethod method) :
+            _method{method} {}
+        isce::core::dataInterpMethod _method;
+};
+
+// Definition of BilinearInterpolator
+template <typename U>
+class isce::core::BilinearInterpolator : public isce::core::Interpolator<U> {
+
+    public:
+        /** Default constructor */
+        inline BilinearInterpolator() : 
+            isce::core::Interpolator<U>(isce::core::BILINEAR_METHOD) {}
+
+        /** Interpolate at a given coordinate. */
+        U interpolate(double x, double y, const Matrix<U> & z);
+
+        /** Interpolate at a given coordinate for data passed as a valarray */
+        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
         }
-        // Access element in 2D
-        U & operator()(size_t row, size_t column) {return _data[row*_width + column];}
-        // Read-only access element in 2D
-        const U & operator()(size_t row, size_t column) const {
-            return _data[row*_width + column];
+
+        /** Interpolate at a given coordinate for data passed as a vector */
+        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
         }
-        // Access flattened index
-        U & operator()(size_t index) {return _data[index];}
-        // Access flattened index in read-only
-        const U & operator()(size_t index) const {return _data[index];}
-        // Get reference to data
-        std::valarray<U> & data() {return _data;}
-        // Get geometry
-        size_t width() const {return _width;}
-        size_t length() const {return _length;}
+};
+
+// Definition of BicubicInterpolator
+template <typename U>
+class isce::core::BicubicInterpolator : public isce::core::Interpolator<U> {
+
+    public:
+        /** Default constructor */
+        BicubicInterpolator();
+
+        /** Interpolate at a given coordinate. */
+        U interpolate(double x, double y, const Matrix<U> & z);
+
+        /** Interpolate at a given coordinate for data passed as a valarray */
+        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+
+        /** Interpolate at a given coordinate for data passed as a vector */
+        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+
+    // Kernel weights
+    private:
+        std::valarray<double> _weights;
+};
+
+// Definition of Spline2dInterpolator
+template <typename U>
+class isce::core::Spline2dInterpolator : public isce::core::Interpolator<U> {
+
+    public:
+        using isce::core::Interpolator<U>::interpolate; 
+
+    public:
+        /** Default constructor. */
+        Spline2dInterpolator(size_t order);
+
+        /** Interpolate at a given coordinate. */
+        U interpolate(double x, double y, const Matrix<U> & z);
+
+        /** Interpolate at a given coordinate for data passed as a valarray */
+        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+
+        /** Interpolate at a given coordinate for data passed as a vector */
+        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+
+    // Data members
+    private:
+        size_t _order;
+
+    // Utility spline functions
+    private:
+        void _initSpline(const std::valarray<double> &,
+                         int,
+                         std::valarray<double> &,
+                         std::valarray<double> &);
+
+        double _spline(double,
+                       const std::valarray<double> &,
+                       int,
+                       const std::valarray<double> &);
+};
+
+// Definition of Sinc2dInterpolator
+template <typename U>
+class isce::core::Sinc2dInterpolator : public isce::core::Interpolator<U> {
+
+    public:
+        /** Default constructor. */
+        Sinc2dInterpolator(int sincLen, int sincSub);
+
+        /** Interpolate at a given coordinate. */
+        U interpolate(double x, double y, const Matrix<U> & z);
+
+        /** Interpolate at a given coordinate for data passed as a valarray */
+        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+
+        /** Interpolate at a given coordinate for data passed as a vector */
+        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
 
     private:
-        size_t _length;
-        size_t _width;
-        std::valarray<U> _data;
-};
-    
-// Definition of Interpolator
-class isce::core::Interpolator {
-    public:
-        // Bilinear interpolation
-        template <class U>
-        static U bilinear(double, double, const Matrix<U> &);
-        // Bicubic interpolation 
-        template <class U>
-        static U bicubic(double, double, const Matrix<U> &);
         // Compute sinc coefficients 
-        static void sinc_coef(double, double, int, double, int, std::valarray<double> &); 
-        // Sinc evaluation in 1D 
-        template <class U, class V>
-        static U sinc_eval(const Matrix<U> &, const Matrix <V> &,
-                           int, int, double, int);
-        // Sinc evaluation in 2D 
-        template <class U, class V>
-        static U sinc_eval_2d(const Matrix<U> &, const Matrix<V> &,
-                              int, int, double, double, int, int);
-        // Spline interpolation 
-        template <class U>
-        static U interp_2d_spline(int, const Matrix<U> &, double, double);
-        // Quadratic interpolation
-        static double quadInterpolate(const std::valarray<double> &,
-                                      const std::valarray<double> &, double);
-        // Akima interpolation
-        static double akima(double, double, const Matrix<float> &);
-};
+        void _sinc_coef(double beta, double relfiltlen, int decfactor, double pedestal,
+                        int weight, std::valarray<double> & filter);
 
-// Spline utilities
+        // Evaluate sinc
+        U _sinc_eval_2d(const isce::core::Matrix<U> & z, int intpx, int intpy,
+                        double frpx, double frpy, int xlen, int ylen);
+
+    private:
+        isce::core::Matrix<double> _kernel;
+        int _kernelLength, _kernelWidth, _sincHalf;
+}; 
+
+// Extra interpolation and utility functions
 namespace isce {
     namespace core {
-        void initSpline(
-            const std::valarray<double> &,
-            int, std::valarray<double> &,
-            std::valarray<double> &
-        );
-        double spline(
-            double,
-            const std::valarray<double> &,
-            int,
-            const std::valarray<double> &
-        );
+
+        /** Utility function to create interpolator pointer given an interpolator enum type */
+        template <typename U>
+        inline Interpolator<U> * createInterpolator(
+            isce::core::dataInterpMethod method, size_t order = 6
+            ) {
+            if (method == isce::core::BILINEAR_METHOD) {
+                return new isce::core::BilinearInterpolator<U>();
+            } else if (method == isce::core::BICUBIC_METHOD) {
+                return new isce::core::BicubicInterpolator<U>();
+            } else if (method == isce::core::BIQUINTIC_METHOD) {
+                return new isce::core::Spline2dInterpolator<U>(order);
+            } else {
+                return new isce::core::BilinearInterpolator<U>();
+            }
+        }
+
+        // Sinc evaluation in 1D 
+        template <class U, class V>
+        U sinc_eval(const Matrix<U> &, const Matrix <V> &, int, int, double, int);
+
     }
 }
 

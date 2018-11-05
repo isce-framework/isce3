@@ -98,6 +98,9 @@ loadDEM(isce::io::Raster & demRaster, double minLon, double maxLon,
     // Read in the DEM
     demRaster.getBlock(_dem.data(), xstart, ystart, width, length);
 
+    // Initialize internal interpolator
+    _interp = isce::core::createInterpolator<float>(_interpMethod);
+
     // Indicate we have loaded a valid raster
     _haveRaster = true;
 }
@@ -208,21 +211,9 @@ interpolateXY(double x, double y) const {
         return _refHeight;
     if (icol < 2 || icol >= int(_dem.width() - 1))
         return _refHeight;
-    
-    // Choose correct interpolation routine
-    if (_interpMethod == isce::core::BILINEAR_METHOD) {
-        value = isce::core::Interpolator::bilinear(col, row, _dem);
-    } else if (_interpMethod == isce::core::BICUBIC_METHOD) {
-        value = isce::core::Interpolator::bicubic(col, row, _dem);
-    } else if (_interpMethod == isce::core::AKIMA_METHOD) {
-        value = isce::core::Interpolator::akima(col, row, _dem);
-    } else if (_interpMethod == isce::core::BIQUINTIC_METHOD) { 
-        value = isce::core::Interpolator::interp_2d_spline(6, _dem, col, row);
-    } else if (_interpMethod == isce::core::NEAREST_METHOD) {
-        value = _dem(int(std::round(row)), int(std::round(col)));
-    }
-    // Done
-    return value;
+
+    // Call interpolator and return value
+    return _interp->interpolate(col, row, _dem);
 }
 
 // end of file

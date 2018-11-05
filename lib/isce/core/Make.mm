@@ -9,6 +9,8 @@ PACKAGE = isce/core
 PROJ_SRCS = \
     Attitude.cpp \
     Baseline.cpp \
+    BilinearInterpolator.cpp \
+    BicubicInterpolator.cpp \
     DateTime.cpp \
     Doppler.cpp \
     Ellipsoid.cpp \
@@ -25,6 +27,8 @@ PROJ_SRCS = \
     Position.cpp \
     Projections.cpp \
     Quaternion.cpp \
+    Sinc2dInterpolator.cpp \
+    Spline2dInterpolator.cpp \
     TimeDelta.cpp \
 
 # products
@@ -49,6 +53,8 @@ EXPORT_PKG_HEADERS = \
     Interpolator.h \
     LUT2d.h \
     LinAlg.h \
+    Matrix.h \
+    Matrix.icc \
     Metadata.h \
     Orbit.h \
     Peg.h \
