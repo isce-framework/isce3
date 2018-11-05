@@ -85,6 +85,7 @@ h5py
 libgdal
 nose
 numpy
+fftw
 \endverbatim
 
 <li> We can then install Anaconda and these requirements as shown below:
