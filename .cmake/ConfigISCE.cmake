@@ -43,14 +43,10 @@ function(CheckGDAL)
     FIND_PACKAGE(GDAL REQUIRED)
     execute_process( COMMAND gdal-config --version
                     OUTPUT_VARIABLE GDAL_VERSION)
-    string(REGEX MATCHALL "[0-9]+" GDAL_VERSION_PARTS ${GDAL_VERSION})
-    list(GET GDAL_VERSION_PARTS 0 GDAL_MAJOR)
-    list(GET GDAL_VERSION_PARTS 1 GDAL_MINOR)
 
-    if ((GDAL_VERSION VERSION_GREATER 2.0.0) OR (GDAL_VERSION VERSION_EQUAL 2.0.0))
-        message (STATUS "Found gdal:  ${GDAL_VERSION}")
-    else()
-        message (FATAL_ERROR "Did not find GDAL version >= 2.1")
+    message(STATUS "Found GDAL: ${GDAL_VERSION}")
+    if (GDAL_VERSION VERSION_LESS 2.3)
+        message (FATAL_ERROR "Did not find GDAL version >= 2.3")
     endif()
 endfunction()
 
@@ -58,6 +54,9 @@ endfunction()
 function(CheckHDF5)
     FIND_PACKAGE(HDF5 REQUIRED COMPONENTS CXX)
     message(STATUS "Found HDF5: ${HDF5_VERSION} ${HDF5_CXX_LIBRARIES}")
+    if (HDF5_VERSION VERSION_LESS "1.10.2")
+        message(FATAL_ERROR "Did not find HDF5 version >= 1.10.2")
+    endif()
 
     # Use old glibc++ ABI when necessary for compatibility with HDF5 libs
     if (CMAKE_COMPILER_IS_GNUCXX AND
