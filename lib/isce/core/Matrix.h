@@ -79,7 +79,7 @@ class isce::core::Matrix {
         inline void resize(size_t nrows, size_t ncols);
 
         /** Extract copy of sub-matrix given starting indices and span */
-        inline Matrix<cell_t> submat(size_t row, size_t col, size_t rowspan, size_t colspan);
+        inline const view_t submat(size_t row, size_t col, size_t rowspan, size_t colspan);
             
         /** Access to data buffer */
         inline cell_t * data();
@@ -105,6 +105,12 @@ class isce::core::Matrix {
         /** Read-only access to matrix value for a given grid::idnex_type */
         inline const cell_t & operator[](const index_t & index) const;
 
+        /** Fill with zeros */
+        inline void zeros();
+
+        /** Fill with a constant value */
+        inline void fill(cell_t value);
+
         /** Get shape information as grid::shape_type */
         inline shape_t shape() const;
 
@@ -114,12 +120,23 @@ class isce::core::Matrix {
         /** Get matrix length */
         inline size_t length() const;
 
+    // Data members
     private:
-        // Data members
+        // Shape information
         size_t _nrows;
         size_t _ncols;
+
+        // Dynamic memory data
         cell_t * _buffer;
         bool _owner;
+
+        // grid pointer for slicing support
+        grid_t * _grid;
+
+    // Utility functions
+    private:
+        // Reset grid pointer
+        inline void _resetGrid();
 };
 
 // Get inline implementations for Matrix
