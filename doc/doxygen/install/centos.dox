@@ -85,6 +85,7 @@ h5py
 libgdal
 nose
 numpy
+fftw
 \endverbatim
 
 <li> We can then install Anaconda and these requirements as shown below:
@@ -165,6 +166,10 @@ In this section we will walk through the directory setup and build system instru
 <li> Check out the latest version of the source code from git
 \code{.sh}
 > git clone https://github-fn.jpl.nasa.gov/ericmg/isce
+\endcode
+<li> Ensure you are building the branch that you want to use. For example, if you want to build the <b>develop</b> branch
+\code{.sh}
+> git checkout develop
 \endcode
 </ol>
 
