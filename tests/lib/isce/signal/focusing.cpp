@@ -26,7 +26,8 @@ int main()
     double ta = 0.6;                     // Aperture time [s]
     double prf = 1679.902;               // Pulse Repitition Frequency [Hz]
 
-    isce::io::Raster Raw_data_raster("/Users/fattahi/Tutorials/ID_1302_SAR-EDU_Tutorial_Focusing_Python/Data/test.bin.vrt");
+    //isce::io::Raster Raw_data_raster("/Users/fattahi/Tutorials/ID_1302_SAR-EDU_Tutorial_Focusing_Python/Data/test.bin.vrt");
+    isce::io::Raster Raw_data_raster("/Users/fattahi/Tutorials/ID_1302_SAR-EDU_Tutorial_Focusing_Python/Data/ERS.raw.vrt");
 
     size_t size_azimuth = Raw_data_raster.length();
     size_t size_range = Raw_data_raster.width();
@@ -41,7 +42,9 @@ int main()
     Raw_data_raster.getBlock(Raw_data, 0, 0, size_range, size_azimuth);
 
     std::cout << "tau , omega" << std::endl;
-    size_t size_chirp_r = 704;
+    //size_t size_chirp_r = 704;
+    size_t size_chirp_r = std::ceil(tau_p*fs);
+
     std::valarray<double> tau(size_chirp_r); // time in range
     std::valarray<double> omega(size_chirp_r); // frequency in range
     for (size_t i; i<tau.size(); i++){
@@ -114,7 +117,8 @@ int main()
 
     // Azimuth chirp
     std::valarray<std::complex<double>> azimuth_chirp(size_azimuth*size_range);
-    size_t size_chirp_a = 1008;
+    //size_t size_chirp_a = 1008;
+    size_t size_chirp_a = std::ceil(ta*prf);
     std::valarray<double> t(size_chirp_a); // time in azimuth
     std::valarray<double> v(size_chirp_a); // frequency in azimuth
     for (size_t i=0; i<t.size(); i++){
