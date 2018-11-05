@@ -58,8 +58,25 @@ endfunction()
 function(CheckHDF5)
     FIND_PACKAGE(HDF5 REQUIRED COMPONENTS CXX)
     message(STATUS "Found HDF5: ${HDF5_VERSION} ${HDF5_CXX_LIBRARIES}")
-    # Create space separated list of libraries
-    #string(REPLACE ";" " " TEMP_ITEM "${HDF5_CXX_LIBRARIES}")
+
+    # Use old glibc++ ABI when necessary for compatibility with HDF5 libs
+    if (CMAKE_COMPILER_IS_GNUCXX AND
+            CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "5.1.0")
+        # get the file path of the hdf5_cpp shared object
+        set(hdf5_cpp ${HDF5_CXX_LIBRARIES})
+        list(FILTER hdf5_cpp INCLUDE REGEX "hdf5_cpp")
+
+        # look for GCC version comment
+        file(STRINGS "${hdf5_cpp}" gcc_comment REGEX "GCC:")
+        string(REGEX MATCH "([0-9]|\\.)+" hdf5_gcc_version ${gcc_comment})
+
+        if (hdf5_gcc_version AND hdf5_gcc_version VERSION_LESS "5.1.0")
+            message(WARNING "Using old glibc++ ABI "
+                "(found HDF5 compiled with GCC ${hdf5_gcc_version})")
+            add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+        endif()
+    endif()
+
     # Use more standard names to propagate variables
     set(HDF5_INCLUDE_DIR ${HDF5_INCLUDE_DIRS} CACHE PATH "HDF5 include directory")
     set(HDF5_LIBRARY "${HDF5_CXX_LIBRARIES}" CACHE STRING "HDF5 libraries")
@@ -94,7 +111,7 @@ function(InitInstallDirLayout)
 
     ###install/lib
     if (NOT ISCE_LIBDIR)
-        set (ISCE_LIBDIR lib CACHE STRING "isce/lib") 
+        set (ISCE_LIBDIR lib CACHE STRING "isce/lib")
     endif(NOT ISCE_LIBDIR)
 
     ###build/lib
