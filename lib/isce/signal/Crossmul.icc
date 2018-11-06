@@ -1,0 +1,97 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// Author: Heresh Fattahi
+// Copyright 2018-
+//
+
+#if !defined(ISCE_SIGNAL_CROSSMUL_ICC)
+#error "Crossmul.icc is an implementation detail of class Crossmul"
+#endif
+
+
+/** @param[in] 2D Doppler polynomial for refernce SLC
+*   @param[in] 2D Doppler polynomial for secondary SLC
+*
+*   Set Doppler polynomials for refernce and secondary SLCs
+*/
+void isce::signal::Crossmul::
+doppler(isce::core::Poly2d refSlcDoppler, isce::core::Poly2d secSlcDoppler)
+{
+    
+    _refDoppler = refSlcDoppler;
+
+    _secDoppler = secSlcDoppler;
+
+}
+
+
+/** @param[in] pulse repetition interval
+*
+*   Setting the pulse repetition interval 
+*/
+void isce::signal::Crossmul::
+prf(double prf)
+{
+    _prf = prf;
+}
+
+/** @param[in] common azimuth bandwidth
+*
+*   Setting the common azimuth bandwidth
+*/
+void isce::signal::Crossmul::
+commonAzimuthBandwidth(double commonAzimuthBandwidth)
+{
+    _commonAzimuthBandwidth = commonAzimuthBandwidth ;
+}
+
+/** @param[in] beta parameter for the azimuth common band filter design
+*
+*   Setting beta for the common azimuth band filter design
+*/
+void isce::signal::Crossmul::
+beta(double par)
+{
+    _beta = par ;
+
+}
+
+/** @param[in] number of looks in range direction
+*
+*   Setting number of looks in range direction to be taken on the output multilooked interferogram
+*/
+void isce::signal::Crossmul::
+rangeLooks(int rangeLooks)
+{
+    _rangeLooks = rangeLooks ;
+}
+
+/** @param[in] number of looks in azimuth direction
+*
+*   Setting number of looks in azimuth direction to be taken on the output multilooked interferogram
+*/
+void isce::signal::Crossmul::
+azimuthLooks(int azimuthLooks)
+{
+    _azimuthLooks = azimuthLooks ;
+}
+
+/** @param[in] flag to mark if common azimuth band filtering should be applied
+*
+*/
+void isce::signal::Crossmul::
+doCommonAzimuthbandFiltering(bool flag )
+{
+    _doCommonAzimuthbandFilter = flag ;
+}
+
+/** @param[in] flag to mark if common range band filtering should be applied */
+void isce::signal::Crossmul::
+doCommonRangebandFiltering(bool flag )
+{
+    _doCommonRangebandFilter = flag ;
+}
+
+
+
