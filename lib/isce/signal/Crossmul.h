@@ -23,6 +23,10 @@ namespace isce {
     }
 }
 
+/** \brief Intereferogram generation by cross-multiplication of reference and secondary SLCs.
+ *
+ *  The secondary SLC is expected to have been coregistered to the refernce SLC's grid.
+ */
 class isce::signal::Crossmul {
     public:
         // Constructor from product
@@ -30,41 +34,72 @@ class isce::signal::Crossmul {
 
         ~Crossmul() {};
         
-        /*void crossmul(const isce::product::Product& referenceSLC,
+        /*
+        void Crossmul(const isce::product::Product& referenceSLC,
                     const isce::product::Product& secondarySLC,
                     int numberOfRangeLooks,
-                    int numberOfAzimuthLooks);
+                    int numberOfAzimuthLooks,
+                    const isce::product::Product& outputInterferogram);
         */
 
-        /* Do we need a constructro from raster?
-        void Crossmul(isce::io::Raster& referenceSLC,
-                      isce::io::Raster& secondarySLC,
-                      int numberOfRangeLooks,
-                      int numberOfAzimuthLooks,
-                      isce::io::Raster& interferogram)
-        */
-        // Run crossmul 
+
+        /** \brief Run crossmul  
+         *
+         * @param[in] Raster object of refernce SLC
+         * @param[in] Raster object of secondary SLC
+         * @param[in] Raster object of output interferogram 
+         * */
         void crossmul(isce::io::Raster& referenceSLC, 
                       isce::io::Raster& secondarySLC,
-                      int numberOfRangeLooks,
-                      int numberOfAzimuthLooks,
-                      double commonAzimuthBandwidth,
                       isce::io::Raster& interferogram);
 
-        //estimateCommonAzimuthBandwidth();
-        //estimateCommonRangeBandwidth();
-       //void azimuthCommonBandFiltering();
-       //void rangeCommonBandFiltering();
-       //void crossmul();
+
+       /** Set doppler polynomials dor reference and secondary SLCs*/
+        inline void doppler(isce::core::Poly2d, 
+                            isce::core::Poly2d);
+
+        /** Set pulse repetition frequency (PRF) */
+        inline void prf(double);
+
+        /** Set azimuth common bandwidth */
+        inline void commonAzimuthBandwidth(double);
+
+        /** Set number of range looks */ 
+        inline void rangeLooks(int);
+
+        /** Set number of azimuth looks */
+        inline void azimuthLooks(int);
+
+        /** Set common azimuth band filtering flag */
+        inline void doCommonAzimuthbandFiltering(bool);
+
+        /** Set common range band filtering flag */
+        inline void doCommonRangebandFiltering(bool);
 
     private:
-        int nrows; 
-        int ncols;
-        int rowsLooks;
-        int colsLooks;
-        int nrows_ifgram;
-        int ncols_ifgram;
-        int nfft;
+        //Doppler polynomial for the refernce SLC
+        isce::core::Poly2d _refDoppler;
+
+        //Doppler polynomial for the secondary SLC
+        isce::core::Poly2d _secDoppler;
+
+        //pulse repetition frequency
+        double _prf;
+
+        //azimuth common bandwidth
+        double _azimuthCommonBandwidth;
+
+        // number of range looks
+        int _rangeLooks;
+
+        // number of azimuth looks
+        int _azimuthLooks;
+
+        // Flag for common azimuth band filtering
+        bool _doCommonAzimuthbandFilter;
+
+        // Flag for common range band filtering
+        bool _doCommonRangebandFilter;
 
 };
 

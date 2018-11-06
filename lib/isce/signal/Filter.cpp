@@ -10,11 +10,37 @@
 template <class T>
 T
 isce::signal::Filter<T>::
-constructRangeBandPassFilter(double rangeSamplingFrequency,
+constructRangeBandpassFilter(double rangeSamplingFrequency,
+                                std::valarray<double> subBandCenterFrequencies,
+                                std::valarray<double> subBandBandwidths,
+                                std::valarray<std::complex<T>> &signal,
+                                std::valarray<std::complex<T>> &spectrum,
+                                size_t ncols,
+                                size_t nrows,
+                                std::string filterType)
+{
+    if (filterType=="boxcar"){
+        constructRangeBandpassBoxcar(rangeSamplingFrequency,
+                             subBandCenterFrequencies,
+                             subBandBandwidths,
+                             ncols,
+                             nrows);
+        
+    }    
+
+    _signal.forwardRangeFFT(signal, spectrum, ncols, nrows, ncols, nrows);
+    _signal.inverseRangeFFT(spectrum, signal, ncols, nrows, ncols, nrows);
+   
+}
+
+template <class T>
+T
+isce::signal::Filter<T>::
+constructRangeBandpassBoxcar(double rangeSamplingFrequency,
                              std::valarray<double> subBandCenterFrequencies,
                              std::valarray<double> subBandBandwidths,
-                             int ncols,
-                             int nrows)
+                             size_t ncols,
+                             size_t nrows)
 {
     // construct a bandpass filter in frequency domian 
     // which may have several bands defined by centerferquencies and 
@@ -116,20 +142,20 @@ constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
         }
     }
     
-    _signalAzimuth.forwardAzimuthFFT(signal, spectrum, ncols, nrows, ncols, nrows);
-    _signalAzimuth.inverseAzimuthFFT(spectrum, signal, ncols, nrows, ncols, nrows);
+    _signal.forwardAzimuthFFT(signal, spectrum, ncols, nrows, ncols, nrows);
+    _signal.inverseAzimuthFFT(spectrum, signal, ncols, nrows, ncols, nrows);
 }
 
 
 template <class T>
 T
 isce::signal::Filter<T>::
-filterSpectrum(std::valarray<std::complex<T>> &signal,
+filter(std::valarray<std::complex<T>> &signal,
                 std::valarray<std::complex<T>> &spectrum)
 {
-    _signalAzimuth.forward(signal, spectrum);
+    _signal.forward(signal, spectrum);
     spectrum = spectrum*_filter;
-    _signalAzimuth.inverse(spectrum, signal);   
+    _signal.inverse(spectrum, signal);   
 }
 
 
