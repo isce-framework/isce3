@@ -89,7 +89,7 @@ isce::signal::Filter<T>::
 constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
                         const isce::core::Poly2d & secDoppler,
                         double bandwidth,
-                        double pulseRepetitionInterval,
+                        double prf,
                         double beta,
                         std::valarray<std::complex<T>> &signal,
                         std::valarray<std::complex<T>> &spectrum,
@@ -111,7 +111,7 @@ constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
     int nfft = nrows;
     // Construct vector of frequencies
     std::valarray<double> frequency(nfft);
-    fftfreq(nfft, pulseRepetitionInterval, frequency);
+    fftfreq(nfft, 1.0/prf, frequency);
     
     // Loop over range bins
     for (int j = 0; j < ncols; ++j) {

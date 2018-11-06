@@ -15,7 +15,10 @@
 #include <pyre/journal.h>
 
 #include <isce/io/Raster.h>
+#include <isce/core/Poly2d.h>
 #include "Signal.h"
+#include "Filter.h"
+
 
 namespace isce {
     namespace signal {
@@ -25,7 +28,7 @@ namespace isce {
 
 /** \brief Intereferogram generation by cross-multiplication of reference and secondary SLCs.
  *
- *  The secondary SLC is expected to have been coregistered to the refernce SLC's grid.
+ *  The secondary SLC must be on the same image grid as the reference SLC, 
  */
 class isce::signal::Crossmul {
     public:
@@ -37,8 +40,6 @@ class isce::signal::Crossmul {
         /*
         void Crossmul(const isce::product::Product& referenceSLC,
                     const isce::product::Product& secondarySLC,
-                    int numberOfRangeLooks,
-                    int numberOfAzimuthLooks,
                     const isce::product::Product& outputInterferogram);
         */
 
@@ -64,6 +65,10 @@ class isce::signal::Crossmul {
         /** Set azimuth common bandwidth */
         inline void commonAzimuthBandwidth(double);
 
+        /** Set beta parameter for the azimuth common band filter */
+        inline void beta(double);
+
+
         /** Set number of range looks */ 
         inline void rangeLooks(int);
 
@@ -87,7 +92,10 @@ class isce::signal::Crossmul {
         double _prf;
 
         //azimuth common bandwidth
-        double _azimuthCommonBandwidth;
+        double _commonAzimuthBandwidth;
+
+        // beta parameter for constructing common azimuth band filter
+        double _beta;
 
         // number of range looks
         int _rangeLooks;
@@ -100,7 +108,12 @@ class isce::signal::Crossmul {
 
         // Flag for common range band filtering
         bool _doCommonRangebandFilter;
-
+        
 };
+
+// Get inline implementations for Topo
+#define ISCE_SIGNAL_CROSSMUL_ICC
+#include "Crossmul.icc"
+#undef ISCE_SIGNAL_CROSSMUL_ICC
 
 #endif

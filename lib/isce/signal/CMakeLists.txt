@@ -5,7 +5,8 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 ####List the source files
 set(LOCAL_SRCS 
     Signal.cpp
-    Crossmul.cpp)
+    Crossmul.cpp
+    Filter.cpp)
 
 ####Append current path to every source file
 set(${PACKAGENAME}_SRCS "")
@@ -17,7 +18,9 @@ endforeach()
 set(${PACKAGENAME}_EXPORT_HEADERS
     Signal.h
     fftw3cxx.h
-    Crossmul.h)
+    Crossmul.h
+    Crossmul.icc
+    Filter.h)
 
 ###Install headers into build/include
 ###This is where regex can be used on the header files if needed

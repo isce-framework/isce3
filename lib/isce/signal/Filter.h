@@ -53,7 +53,7 @@ class isce::signal::Filter {
         T constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
                                 const isce::core::Poly2d & secDoppler,
                                 double bandwidth,
-                                double pulseRepetitionInterval,
+                                double prf,
                                 double beta,
                                 std::valarray<std::complex<T>> &signal,
                                 std::valarray<std::complex<T>> &spectrum,
