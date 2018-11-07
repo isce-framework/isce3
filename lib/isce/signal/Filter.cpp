@@ -36,7 +36,10 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
                              ncols,
                              nrows);
         
-    }    
+    }else{
+        std::cout << filterType << " filter has not been implemented" << std::endl;
+    }
+    
 
     _signal.forwardRangeFFT(signal, spectrum, ncols, nrows, ncols, nrows);
     _signal.inverseRangeFFT(spectrum, signal, ncols, nrows, ncols, nrows);
@@ -74,6 +77,7 @@ constructRangeBandpassBoxcar(double rangeSamplingFrequency,
     fftfreq(nfft, dt, frequency);
 
     for (size_t i = 0; i<subBandCenterFrequencies.size(); ++i){
+        std::cout << "i: " << i << std::endl;
         //frequency of the lower bound of this band
         double fL = subBandCenterFrequencies[i] - subBandBandwidths[i]/2;
 
@@ -85,12 +89,22 @@ constructRangeBandpassBoxcar(double rangeSamplingFrequency,
         indexOfFrequency(dt, nfft, fL, indL); 
         int indH;
         indexOfFrequency(dt, nfft, fH, indH);
+        std::cout << "fL: "<< fL << " , fH: " << fH << " indL: " << indL << " , indH: " << indH << std::endl;
+        if (fL<0 && fH>=0){
+            for (size_t ind = indL; ind < nfft; ++ind){
+                _filter1col[ind] = std::complex<T>(1.0, 1.0);
+            }
+            for (size_t ind = 0; ind < indH; ++ind){
+                _filter1col[ind] = std::complex<T>(1.0, 1.0);
+            }
 
-        for (size_t ind = indL; ind < indH; ++ind){
-            _filter1col[ind] = std::complex<T>(1.0, 1.0);
+        }else{
+            for (size_t ind = indL; ind < indH; ++ind){
+                _filter1col[ind] = std::complex<T>(1.0, 1.0);
+            }
         }
-
     }
+
 
     for (size_t line = 0; line < nrows; line++ ){
         for (size_t col = 0; col < nfft; col++ ){
@@ -128,7 +142,6 @@ constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
 
     // Pedestal-dependent frequency offset for transition region
     const double df = 0.5 * bandwidth * beta;
-    
     // Compute normalization factor for preserving average power between input
     // data and filtered data. Assumes both filter and input signal have flat
     // spectra in the passband.
@@ -143,7 +156,6 @@ constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
     
     // Loop over range bins
     for (int j = 0; j < ncols; ++j) {
-
         // Compute center frequency of common band
         const double fmid = 0.5 * (refDoppler.eval(0, j) + secDoppler.eval(0, j));
 
@@ -155,11 +167,11 @@ constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
 
             // Passband
             if (freq <= (0.5 * bandwidth - df)) {
-                _filter[i+j*ncols] = std::complex<T>(norm, 0.0);
+                _filter[i*ncols+j] = std::complex<T>(norm, 0.0);
 
             // Transition region
             } else if (freq > (0.5 * bandwidth - df) && freq <= (0.5 * bandwidth + df)) {
-                _filter[i+j*ncols] = std::complex<T>(norm * 0.5 * 
+                _filter[i*ncols+j] = std::complex<T>(norm * 0.5 * 
                                     (1.0 + std::cos(M_PI / (bandwidth*beta) * 
                                     (freq - 0.5 * (1.0 - beta) * bandwidth))), 0.0);
 
@@ -169,7 +181,7 @@ constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
             }
         }
     }
-    
+
     _signal.forwardAzimuthFFT(signal, spectrum, ncols, nrows, ncols, nrows);
     _signal.inverseAzimuthFFT(spectrum, signal, ncols, nrows, ncols, nrows);
 }
@@ -239,7 +251,16 @@ indexOfFrequency(double dt, int N, double f, int &n)
         n = round(f/df + N);
     else
         n = round(f/df);
-    return n;
+}
+
+template <class T>
+T
+isce::signal::Filter<T>::
+writeFilter(size_t ncols, size_t nrows)
+{
+    isce::io::Raster filterRaster("filter.bin", ncols, nrows, 1, GDT_CFloat32, "ISCE");
+    filterRaster.setBlock(_filter, 0, 0, ncols, nrows);
+
 }
 
 template class isce::signal::Filter<float>;

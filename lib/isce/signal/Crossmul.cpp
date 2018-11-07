@@ -32,7 +32,9 @@ crossmul(isce::io::Raster& referenceSLC,
 
     int nrows = referenceSLC.length();
     int ncols = referenceSLC.width();
-    
+
+    std::cout << "ncols, nrows" << ncols << " , " << nrows << std::endl;
+    /*
     if (nrows =! secondarySLC.length()) {
         pyre::journal::error_t error("isce.signal.Crossmul");
         error
@@ -50,8 +52,8 @@ crossmul(isce::io::Raster& referenceSLC,
             << "SLC should be the same as the refernce SLC."
             << pyre::journal::endl;
     }
-
-    
+    */
+    std::cout << "ncols, nrows" << ncols << " , " << nrows << std::endl; 
 
     // Compute FFT size (power of 2)
     int nfft = ncols; //nextPow2(ncols);
@@ -59,7 +61,6 @@ crossmul(isce::io::Raster& referenceSLC,
     // it should be determined somehow
     int blockRows = 90;
     int oversample = 2;
-    int nBlocks;
 
     int nblocks = nrows / blockRows;
     if (nblocks == 0) {
@@ -116,6 +117,7 @@ crossmul(isce::io::Raster& referenceSLC,
     isce::signal::Filter<float> filter;
 
     // construct azimuth common band filter for a block of data
+    std::cout << "constructAzimuthCommonbandFilte " << std::endl;
     filter.constructAzimuthCommonbandFilter(_refDoppler, 
 					    _secDoppler, 
                                             _commonAzimuthBandwidth,
@@ -123,11 +125,11 @@ crossmul(isce::io::Raster& referenceSLC,
                                             _beta,
                                             refSlc, refSpectrum,
                                             ncols, blockRows);
-
+    
     // loop over all blocks
     std::cout << "nblocks : " << nblocks << std::endl;
 
-    for (size_t block = 0; block < nBlocks; block++) {
+    for (size_t block = 0; block < nblocks; ++block) {
        
         // start row for this block
         size_t rowStart;
@@ -152,19 +154,24 @@ crossmul(isce::io::Raster& referenceSLC,
         ifgram = 0;
 
         // get a block of reference and secondary SLC data
+        std::cout << rowStart << " , " << ncols << " , " << blockRowsData << std::endl;
+
         referenceSLC.getBlock(refSlc, 0, rowStart, ncols, blockRowsData);
         secondarySLC.getBlock(secSlc, 0, rowStart, ncols, blockRowsData);
     
-        //commaon azimuth band-pass filter reference SLC
+        //commaon azimuth band-pass filter the reference and secondary SLCs
+        std::cout << "common band filtering" << std::endl;
         if (_doCommonAzimuthbandFilter){
             filter.filter(refSlc, refSpectrum);
             filter.filter(secSlc, secSpectrum);
         }
 
         // upsample the refernce and secondary SLCs
+        std::cout << "upsampling " << std::endl;
         refSignal.upsample(refSlc, refSlcUpsampled, blockRows, nfft, oversample);
         secSignal.upsample(secSlc, secSlcUpsampled, blockRows, nfft, oversample);
-        
+       
+        std::cout << "upsampled ifgram " << std::endl;
         // Compute oversampled interferogram data
         for (size_t line=0; line < blockRowsData; ++line){
             for (size_t i=0; i<oversample*ncols; ++i){

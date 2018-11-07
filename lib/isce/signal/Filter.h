@@ -72,6 +72,8 @@ class isce::signal::Filter {
         /** Find the index of a specific frequency for a signal with a specific sampling rate*/
         T indexOfFrequency(double dt, int N, double f, int& n);
 
+        T writeFilter(size_t ncols, size_t nrows);
+
     private:
         isce::signal::Signal<T> _signal;
         std::valarray<std::complex<T>> _filter;
