@@ -13,58 +13,13 @@ Crossmul(const isce::product::Product& referenceSlcProduct,
          const isce::product::Product& secondarySlcProduct,
          isce::product::Product& outputInterferogramProduct)
 */
-/*
-isce::signal::Crossmul::
-Crossmul(std::string referenceSlcFile,
-         std::string secondarySlcFile,
-         int numberOfRangeLooks,
-         int numberOfAzimuthLooks,
-         std::string outputInterferogramFile)
-{
 
-    // Get sizes
-    nrows = referenceSLC.length();
-    ncols = referenceSLC.width();
-    // Check consistency
-    assert(nrows == int(secondarySLC.length()));
-    assert(ncols == int(secondarySLC.width()));
 
-    // Instantiate an ImageMode object for reference SLC
-    isce::product::ImageMode refMode = referenceSlcProduct.complexImagery().primaryMode();
-
-    // Instantiate an ImageMode object for secondary SLC
-    isce::product::ImageMode secMode = secondarySlcProduct.complexImagery().primaryMode();
-
-    // Make a Radar object
-    isce::radar::Radar instrument;
-
-    _prf = mode.prf(); 
-
-    // get the  Doppler polynomial for reference Slc
-    isce::core::Poly2d doppler1 = instrument.contentDoppler();
-
-    // Assume the same  Doppler for secondary Slc
-    isce::core::Poly2d doppler2 = instrument.contentDoppler();
-
-    rowsLooks = numberOfRangeLooks;
-    colsLooks = numberOfAzimuthLooks;
-
-    // Compute sizes after looks
-    nrows_ifgram = nrows / numberOfAzimuthLooks;
-    ncols_ifgram = ncols / numberOfRangeLooks;
-    
-    
-    // Open raster for writing
-    isce::io::Raster ifgramRaster(outputInterferogramFile, ncols_ifgram, nrows_ifgram, 1,
-                                          GDT_CFloat32, "ISCE");
-
-      	
-}
+/**
+* @param[in] Raster object of refernce SLC
+* @param[in] Raster object of secondary SLC
+* @param[out] Raster object of output interferogram
 */
-
-
-
-
 void isce::signal::Crossmul::
 crossmul(isce::io::Raster& referenceSLC,
         isce::io::Raster& secondarySLC,

@@ -36,19 +36,6 @@ class isce::signal::Signal {
 
         /** \brief initiate forward FFTW3 plan for a block of data
          *  input parameters follow FFTW3 interface for fftw_plan_many_dft
-         *
-         *  @param[in] input block of data
-         *  @param[in] output block of data
-         *  @param[in] rank
-         *  @param[in] size
-         *  @param[in] howmany
-         *  @param[in] inembed
-         *  @param[in] istride
-         *  @param[in] idist
-         *  @param[in] onembed
-         *  @param[in] ostride
-         *  @param[in] odist
-         *  @param[in] sign 
          */
         T fftPlanForward(std::valarray<std::complex<T>> &input, 
 					std::valarray<std::complex<T>> &output,
@@ -59,19 +46,6 @@ class isce::signal::Signal {
 
         /** \brief initiate iverse FFTW3 plan for a block of data
          *  input parameters follow FFTW3 interface for fftw_plan_many_dft
-         *
-         *  @param[in] input block of data
-         *  @param[in] output block of data
-         *  @param[in] rank
-         *  @param[in] size
-         *  @param[in] howmany
-         *  @param[in] inembed
-         *  @param[in] istride
-         *  @param[in] idist
-         *  @param[in] onembed
-         *  @param[in] ostride
-         *  @param[in] odist
-         *  @param[in] sign
          */
         T fftPlanBackward(std::valarray<std::complex<T>> &input,
                                         std::valarray<std::complex<T>> &output,
@@ -79,27 +53,15 @@ class isce::signal::Signal {
                                         int inembed, int istride, int idist,
                                         int onembed, int ostride, int odist, int sign);	
 
-	/** perform forward FFT
-         *  @param[in] input block of data
-         *  @param[in] output block of spectrum
-	*/
+	/** perform forward FFT */
         T forward(std::valarray<std::complex<T>> &input,
                     std::valarray<std::complex<T>> &output);
         
-        /** perform forward FFT
-         *  @param[in] input block of spectrum
-         *  @param[in] output block of data
-         */
+        /** perform forward FFT*/
         T inverse(std::valarray<std::complex<T>> &input,
                     std::valarray<std::complex<T>> &output);
 
         /** \brief initiate plan for forward FFT in range direction for a block of data
-         *  @param[in] input block of data
-         *  @param[in] output block of spectrum
-         *  @param[in] number of columns of the input block of data
-         *  @param[in] number of rows of the input block of data
-         *  @param[in] number of columns of the output block of data (this is considered as length of fft)
-         *  @param[in] number of rows of the output block of data
          */
         T forwardRangeFFT(std::valarray<std::complex<T>>& signal, 
 					std::valarray<std::complex<T>>& spectrum,
@@ -107,12 +69,6 @@ class isce::signal::Signal {
                                         int outcolumns, int outrows);
 
         /** \brief initiate plan for forward FFT in azimuth direction for a block of data
-         *  @param[in] input block of data
-         *  @param[in] output block of spectrum
-         *  @param[in] number of columns of the input block of data
-         *  @param[in] number of rows of the input block of data
-         *  @param[in] number of columns of the output block of data
-         *  @param[in] number of rows of the output block of data (this is considered as length of fft)
          */
         T forwardAzimuthFFT(std::valarray<std::complex<T>> &signal,
                                         std::valarray<std::complex<T>> &spectrum,
@@ -120,12 +76,6 @@ class isce::signal::Signal {
                                         int outcolumns, int outrows);
 
         /** \brief initiate plan for backward FFT in range direction for a block of data
-         *  @param[in] input block of spectrum
-         *  @param[in] output block of data
-         *  @param[in] number of columns of the input block of data
-         *  @param[in] number of rows of the input block of data
-         *  @param[in] number of columns of the output block of data (this is considered as length of fft)
-         *  @param[in] number of rows of the output block of data
          */
         T inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, 
                                         std::valarray<std::complex<T>> &signal,
@@ -133,25 +83,13 @@ class isce::signal::Signal {
                                         int outcolumns, int outrows);
 
 	/** \brief initiate plan for inverse FFT in azimuth direction for a block of data
-         *  @param[in] input block of spectrum
-         *  @param[in] output block of data
-         *  @param[in] number of columns of the input block of data
-         *  @param[in] number of rows of the input block of data
-         *  @param[in] number of columns of the output block of data
-         *  @param[in] number of rows of the output block of data (this is considered as length of fft)
          */
         T inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
                                         std::valarray<std::complex<T>> &signal,
                                         int incolumns, int inrows,
                                         int outcolumns, int outrows);
 
-	/** \brief upsampling a block of data in range direction
-	*   @param[in] input block of data
-        *   @param[in] output block of oversampled data
-        *   @param[in] number of rows of the block of input and upsampled data
-        *   @param[in] number of columns of the block of input data
-        *   @param[in] upsampling factor
-	*/
+	/** \brief upsampling a block of data in range direction */
         T upsample(std::valarray<std::complex<T>> &signal,
                     std::valarray<std::complex<T>> &signalOversampled,
                     int rows, int nfft, int oversampleFactor);

@@ -32,7 +32,7 @@ class isce::signal::Filter {
 
         ~Filter() {};
 
-       	//  
+        /** Construct range band-pass filter*/
         T constructRangeBandpassFilter(double rangeSamplingFrequency,
                                         std::valarray<double> subBandCenterFrequencies,
                                         std::valarray<double> subBandBandwidths,
@@ -42,6 +42,7 @@ class isce::signal::Filter {
                                         size_t nrows,
                                         std::string filterType);
 
+        /** Construct a box car range band-pass filter for multiple bands*/
         T constructRangeBandpassBoxcar(double rangeSamplingFrequency, 
                                         std::valarray<double> subBandCenterFrequencies, 
                                         std::valarray<double> subBandBandwidths,
@@ -50,6 +51,7 @@ class isce::signal::Filter {
 
 	//T constructRangeCommonbandFilter();
 
+        /** Construct azimuth common band filter*/
         T constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
                                 const isce::core::Poly2d & secDoppler,
                                 double bandwidth,
@@ -60,12 +62,14 @@ class isce::signal::Filter {
                                 size_t ncols,
                                 size_t nrows);
 
+        /** Filter a signal in frequency domain*/
         T filter(std::valarray<std::complex<T>> &signal,
                 std::valarray<std::complex<T>> &spectrum);
 
-
+        /** Create a vector of frequencies*/
         T fftfreq(int N, double dt, std::valarray<double> &freq);
 
+        /** Find the index of a specific frequency for a signal with a specific sampling rate*/
         T indexOfFrequency(double dt, int N, double f, int& n);
 
     private:

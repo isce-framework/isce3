@@ -44,12 +44,7 @@ class isce::signal::Crossmul {
         */
 
 
-        /** \brief Run crossmul  
-         *
-         * @param[in] Raster object of refernce SLC
-         * @param[in] Raster object of secondary SLC
-         * @param[in] Raster object of output interferogram 
-         * */
+        /** \brief Run crossmul */
         void crossmul(isce::io::Raster& referenceSLC, 
                       isce::io::Raster& secondarySLC,
                       isce::io::Raster& interferogram);
