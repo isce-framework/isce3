@@ -15,12 +15,12 @@
 #include <isce/radar/Serialization.h>
 #include <isce/product/Serialization.h>
 
-//TEST(Crossmul, InterferogramZero)
-//{
-int main(){
+TEST(Filter, constructAzimuthCommonbandFilter)
+{
+//int main(){
     //This test creates an interferogram between an SLC and itself and checks if the phase is zero.
     //
-    isce::io::Raster referenceSlc("/Users/fattahi/tools/ISCE3_forked/src/isce/tests/lib/isce/data/warped_envisat.slc.vrt");
+    //isce::io::Raster referenceSlc("/Users/fattahi/tools/ISCE3_forked/src/isce/tests/lib/isce/data/warped_envisat.slc.vrt");
 
     
     // make a raster of reference SLC
@@ -48,7 +48,6 @@ int main(){
 
 
     double prf = mode.prf(); 
-    //1652.415691672402;
     double beta = 0.25;
     double commonAzimuthBandwidth = 2000;
 
@@ -60,8 +59,26 @@ int main(){
                                             beta,
                                             refSlc, refSpectrum,
                                             ncols, blockRows);
-    filter.writeFilter(ncols, blockRows);
-    
+    //filter.writeFilter(ncols, blockRows);
+
+}
+
+TEST(Filter, constructBoxcarRangeBandpassFilter)
+{
+
+    int ncols = 500;
+    int blockRows = 500;
+
+    std::valarray<std::complex<float>> refSlc(ncols*blockRows);
+    std::valarray<std::complex<float>> refSpectrum(ncols*blockRows);
+
+    std::string h5file("/Users/fattahi/tools/ISCE3_forked/src/isce/tests/lib/isce/data/envisat.h5");
+    isce::io::IH5File file(h5file);
+
+    // Instantiate an ImageMode object
+    isce::product::ImageMode mode;
+    isce::product::load(file, mode, "aux");
+    //
     double BW = mode.rangeBandwidth();
     
     //Assume Range sampling Frequency to be the same as
@@ -72,6 +89,7 @@ int main(){
     //std::valarray<double> subBandBandwidths{8.0e6,};
     std::string filterType = "boxcar";
 
+    isce::signal::Filter<float> filter;
     filter.constructRangeBandpassFilter(BW,
                                 subBandCenterFrequencies,
                                 subBandBandwidths,
@@ -81,18 +99,13 @@ int main(){
                                 blockRows,
                                 filterType);
 
-    filter.writeFilter(ncols, blockRows);
-
-    //Assume Range sampling Frequency to be the same as 
-
-      //ASSERT_LT(max_err, 1.0e-9);
-
-
+    //filter.writeFilter(ncols, blockRows);
+    
 }
-/*
+
 int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-*/
+
 

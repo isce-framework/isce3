@@ -47,10 +47,17 @@ int main()
 
     std::valarray<double> tau(size_chirp_r); // time in range
     std::valarray<double> omega(size_chirp_r); // frequency in range
-    for (size_t i; i<tau.size(); i++){
+    /*for (size_t i; i<tau.size(); i++){
         tau[i] = -1.0*tau_p/2.+i/fs;
         omega[i] = -1.0*fs/2.0+i/tau_p;
+    }*/
+
+    for (size_t i; i<tau.size(); i++){
+          tau[i] = -1.0*tau_p/2.+i/fs;
+          omega[i] = -1.0*fs/2.0+i/tau_p;
     }
+    
+
     std::cout << "ra_chirp_temp" << std::endl;
     std::valarray<std::complex<double>> ra_chirp_temp(size_chirp_r);   
     for (size_t i; i<tau.size(); i++){
