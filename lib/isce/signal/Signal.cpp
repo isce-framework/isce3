@@ -237,6 +237,7 @@ upsample(std::valarray<std::complex<T>> &signal,
     std::cout << "fwd fft " << std::endl;
     _plan_fwd.execute_dft(&signal[0], &spectrum[0]);
 
+    //spectrum /=nfft;
     //shift the spectrum
     // The spectrum has values from begining to nfft index for each line. We want
     // to put the spectrum in correct ouput locations such that the spectrum of 
@@ -249,11 +250,14 @@ upsample(std::valarray<std::complex<T>> &signal,
     std::cout << "shift the spectrum " << std::endl;
     
     for (size_t column = 0; column<nfft/2 - 1; ++column)
+    //for (size_t column = 0; column<nfft/2; ++column)
         spectrumShifted[std::slice(column, rows, columns)] = spectrum[std::slice(column, rows, nfft)];
    
-    size_t j;
+    //size_t j;
     for (size_t i = 0; i<nfft/2; ++i){
-        j = upsampleFactor*nfft - nfft/2 + i - 1;
+        //size_t j = upsampleFactor*nfft - nfft/2 + i - 1;
+        size_t j = upsampleFactor*nfft - nfft/2 + i;
+        //spectrumShifted[std::slice(j, rows, columns)] = spectrum[std::slice(i+nfft/2-1, rows, nfft)];
         spectrumShifted[std::slice(j, rows, columns)] = spectrum[std::slice(i+nfft/2, rows, nfft)];
     }
     
@@ -264,6 +268,8 @@ upsample(std::valarray<std::complex<T>> &signal,
 
     // Normalize
     signalUpsampled /=nfft;
+    //signalUpsampled /=upsampleFactor;
+
 }
 
 

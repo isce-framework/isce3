@@ -56,7 +56,7 @@ crossmul(isce::io::Raster& referenceSLC,
     std::cout << "ncols, nrows" << ncols << " , " << nrows << std::endl; 
 
     // Compute FFT size (power of 2)
-    int nfft = ncols; //nextPow2(ncols);
+    int nfft = 512; //ncols; //nextPow2(ncols);
     
     // it should be determined somehow
     int blockRows = 90;
@@ -115,17 +115,18 @@ crossmul(isce::io::Raster& referenceSLC,
 
     //filter object
     isce::signal::Filter<float> filter;
+    if (_doCommonAzimuthbandFilter){
 
-    // construct azimuth common band filter for a block of data
-    std::cout << "constructAzimuthCommonbandFilte " << std::endl;
-    filter.constructAzimuthCommonbandFilter(_refDoppler, 
+        // construct azimuth common band filter for a block of data
+        filter.constructAzimuthCommonbandFilter(_refDoppler, 
 					    _secDoppler, 
                                             _commonAzimuthBandwidth,
                                             _prf, 
                                             _beta,
                                             refSlc, refSpectrum,
                                             ncols, blockRows);
-    
+    }
+
     // loop over all blocks
     std::cout << "nblocks : " << nblocks << std::endl;
 
@@ -173,20 +174,32 @@ crossmul(isce::io::Raster& referenceSLC,
        
         std::cout << "upsampled ifgram " << std::endl;
         // Compute oversampled interferogram data
-        for (size_t line=0; line < blockRowsData; ++line){
-            for (size_t i=0; i<oversample*ncols; ++i){
-                ifgramUpsampled[line*(oversample*ncols)+i] = 
-                        refSlcUpsampled[line*(oversample*nfft)+i]*
-                        std::conj(secSlcUpsampled[line*(oversample*ncols)+i]);
+
+        /*
+        for (size_t line = 0; line < blockRowsData; ++line){
+            for (size_t col = 0; col < oversample*ncols; ++col){
+                ifgramUpsampled[line*(oversample*ncols) + col] =
+                        refSlc[line*(oversample*nfft) + col]*
+                        std::conj(secSlc[line*(oversample*nfft) + col]);
             }
         }
+        */
+        
+        for (size_t line = 0; line < blockRowsData; line++){
+            for (size_t col = 0; col < oversample*ncols; col++){
+                ifgramUpsampled[line*(oversample*ncols) + col] = 
+                        refSlcUpsampled[line*(oversample*nfft) + col]*
+                        std::conj(secSlcUpsampled[line*(oversample*nfft) + col]);
+            }
+        }
+        std::cout << "full res ifgram " << std::endl;
         // Reclaim the extra oversample looks across
-        for (size_t line=0; line < blockRowsData; ++line){
-            for (size_t i=0; i<ncols; ++i){
+        for (size_t line = 0; line < blockRowsData; line++){
+            for (size_t col = 0; col < ncols; col++){
                 std::complex<float> sum =(0,0);
-                for (size_t j=0; j<oversample; ++j)
-                    sum += ifgramUpsampled[line*(nfft*oversample) + 2*i + j];
-                ifgram[line*ncols + i] = sum;            
+                for (size_t j=0; j< oversample; j++)
+                    sum += ifgramUpsampled[line*(ncols*oversample) + j + col*oversample]; // + 2*col];
+                ifgram[line*ncols + col] = sum;            
             }
         }
 
@@ -194,6 +207,7 @@ crossmul(isce::io::Raster& referenceSLC,
         
 	// set the block of interferogram
         interferogram.setBlock(ifgram, 0, rowStart, ncols, blockRowsData);
+        //interferogram.setBlock(ifgramUpsampled, 0, rowStart, ncols*oversample, blockRowsData);
     }
 }
 
