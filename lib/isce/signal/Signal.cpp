@@ -92,12 +92,12 @@ inverse(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &o
 }
 
 /**
-*  @param[in] input block of data
-*  @param[out] output block of spectrum
-*  @param[in] number of columns of the input block of data
-*  @param[in] number of rows of the input block of data
-*  @param[in] number of columns of the output block of data (this is considered as length of fft)
-*  @param[in] number of rows of the output block of data
+*  @param[in] signal input block of data
+*  @param[out] spectrum output block of spectrum
+*  @param[in] incolumns number of columns of the input block of data
+*  @param[in] inrows number of rows of the input block of data
+*  @param[in] outcolumns number of columns of the output block of data (this is considered as length of fft)
+*  @param[in] outrows number of rows of the output block of data
  */
 template<class T>
 T isce::signal::Signal<T>::
@@ -122,12 +122,12 @@ forwardRangeFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::compl
 }
 
 /**
-*  @param[in] input block of data
-*  @param[out] output block of spectrum
-*  @param[in] number of columns of the input block of data
-*  @param[in] number of rows of the input block of data
-*  @param[in] number of columns of the output block of data
-*  @param[in] number of rows of the output block of data (this is considered as length of fft)
+*  @param[in] signal input block of data
+*  @param[out] spectrum output block of spectrum
+*  @param[in] incolumns number of columns of the input block of data
+*  @param[in] inrows number of rows of the input block of data
+*  @param[in] outcolumns number of columns of the output block of data
+*  @param[in] outrows number of rows of the output block of data (this is considered as length of fft)
 */
 template<class T>
 T isce::signal::Signal<T>::
@@ -153,12 +153,12 @@ forwardAzimuthFFT(std::valarray<std::complex<T>> &signal,
 }
 
 /**
-*  @param[in] input block of spectrum
-*  @param[out] output block of data
-*  @param[in] number of columns of the input block of data
-*  @param[in] number of rows of the input block of data
-*  @param[in] number of columns of the output block of data (this is considered as length of fft)
-*  @param[in] number of rows of the output block of data
+*  @param[in] spectrum input block of spectrum
+*  @param[out] signal output block of data
+*  @param[in] incolumns number of columns of the input block of data
+*  @param[in] inrows number of rows of the input block of data
+*  @param[in] outcolumns number of columns of the output block of data (this is considered as length of fft)
+*  @param[in] outrows number of rows of the output block of data
 */
 template<class T>
 T isce::signal::Signal<T>::
@@ -181,12 +181,12 @@ inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, std::valarray<std::com
 }
 
 /**
-*  @param[in] input block of spectrum
-*  @param[out] output block of data
-*  @param[in] number of columns of the input block of data
-*  @param[in] number of rows of the input block of data
-*  @param[in] number of columns of the output block of data
-*  @param[in] number of rows of the output block of data (this is considered as length of fft)
+*  @param[in] spectrum input block of spectrum
+*  @param[out] signal output block of data
+*  @param[in] incolumns number of columns of the input block of data
+*  @param[in] inrows number of rows of the input block of data
+*  @param[in] outcolumns number of columns of the output block of data
+*  @param[in] outrows number of rows of the output block of data (this is considered as length of fft)
 */
 template<class T>
 T isce::signal::Signal<T>::
@@ -213,11 +213,11 @@ inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
 
 
 /**
-*   @param[in] input block of data
-*   @param[in] output block of oversampled data
-*   @param[in] number of rows of the block of input and upsampled data
-*   @param[in] number of columns of the block of input data
-*   @param[in] upsampling factor
+*   @param[in] signal input block of data
+*   @param[in] signalUpsampled output block of oversampled data
+*   @param[in] rows number of rows of the block of input and upsampled data
+*   @param[in] nfft number of columns of the block of input data
+*   @param[in] upsampleFactor upsampling factor
 */
 template<class T>
 T isce::signal::Signal<T>::
@@ -247,28 +247,21 @@ upsample(std::valarray<std::complex<T>> &signal,
     //  becomes:
     //      spectrumShifted = [1,2,3,0,0,0,0,0,0,4,5,6]
     //
-    std::cout << "shift the spectrum " << std::endl;
     
     for (size_t column = 0; column<nfft/2 - 1; ++column)
-    //for (size_t column = 0; column<nfft/2; ++column)
         spectrumShifted[std::slice(column, rows, columns)] = spectrum[std::slice(column, rows, nfft)];
    
-    //size_t j;
     for (size_t i = 0; i<nfft/2; ++i){
-        //size_t j = upsampleFactor*nfft - nfft/2 + i - 1;
         size_t j = upsampleFactor*nfft - nfft/2 + i;
-        //spectrumShifted[std::slice(j, rows, columns)] = spectrum[std::slice(i+nfft/2-1, rows, nfft)];
         spectrumShifted[std::slice(j, rows, columns)] = spectrum[std::slice(i+nfft/2, rows, nfft)];
     }
     
 
     // inverse fft to get the upsampled signal
-    std::cout << "inverse fft " << std::endl;
     _plan_inv.execute_dft(&spectrumShifted[0], &signalUpsampled[0]);
 
     // Normalize
     signalUpsampled /=nfft;
-    //signalUpsampled /=upsampleFactor;
 
 }
 

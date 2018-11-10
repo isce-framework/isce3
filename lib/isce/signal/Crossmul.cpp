@@ -16,9 +16,9 @@ Crossmul(const isce::product::Product& referenceSlcProduct,
 
 
 /**
-* @param[in] Raster object of refernce SLC
-* @param[in] Raster object of secondary SLC
-* @param[out] Raster object of output interferogram
+* @param[in] referenceSLC Raster object of refernce SLC
+* @param[in] secondarySLC Raster object of secondary SLC
+* @param[out] interferogram Raster object of output interferogram
 */
 void isce::signal::Crossmul::
 crossmul(isce::io::Raster& referenceSLC,

@@ -8,14 +8,14 @@
 #include "Filter.h"
 
 /**
- * @param[in] range sampling frequency
- * @param[in] a vector of center frequencies for each band
- * @param[in] a vector of bandwidths for each band
- * @param[in] a block of data to filter
- * @param[in] a block of spectrum, which is internally used for FFT computations
- * @param[in] number of columns of the block of data
- * @param[in] number of rows of the block of data
- * @param[in] type of the band-pass filter
+ * @param[in] rangeSamplingFrequency range sampling frequency
+ * @param[in] subBandCenterFrequencies a vector of center frequencies for each band
+ * @param[in] subBandBandwidths a vector of bandwidths for each band
+ * @param[in] signal a block of data to filter
+ * @param[in] spectrum a block of spectrum, which is internally used for FFT computations
+ * @param[in] ncols number of columns of the block of data
+ * @param[in] nrows number of rows of the block of data
+ * @param[in] filterType type of the band-pass filter
  */
 template <class T>
 T
@@ -47,11 +47,11 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
 }
 
 /**
- * @param[in] range sampling frequency
- * @param[in] a vector of center frequencies for each band
- * @param[in] a vector of bandwidths for each band
- * @param[in] number of columns of the block of data
- * @param[in] number of rows of the block of data
+ * @param[in] rangeSamplingFrequency range sampling frequency
+ * @param[in] subBandCenterFrequencies a vector of center frequencies for each band
+ * @param[in] subBandBandwidths a vector of bandwidths for each band
+ * @param[in] ncols number of columns of the block of data
+ * @param[in] nrows number of rows of the block of data
  */
 template <class T>
 T
@@ -115,15 +115,15 @@ constructRangeBandpassBoxcar(double rangeSamplingFrequency,
 }
 
 /**
-* @param[in] Doppler polynomial of the reference SLC
-* @param[in] Doppler polynomial of the secondary SLC
-* @param[in] common bandwidth in azimuth
-* @param[in] pulse repetition frequency
-* @param[in] beta parameter
-* @param[in] a block of data to filter
+* @param[in] refDoppler Doppler polynomial of the reference SLC
+* @param[in] secDoppler Doppler polynomial of the secondary SLC
+* @param[in] bandwidth common bandwidth in azimuth
+* @param[in] prf pulse repetition frequency
+* @param[in] beta parameter for raised cosine filter
+* @param[in] signal a block of data to filter
 * @param[in] spectrum of the block of data
-* @param[in] number of columns of the block of data
-* @param[in] number of rows of the block of data
+* @param[in] ncols number of columns of the block of data
+* @param[in] nrows number of rows of the block of data
 */
 template <class T>
 T
@@ -187,7 +187,7 @@ constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
 }
 
 /**
-* @param[in] a block of data to filter.
+* @param[in] signal a block of data to filter.
 * @param[in] spectrum of the block of the data 
 */
 template <class T>
@@ -202,9 +202,9 @@ filter(std::valarray<std::complex<T>> &signal,
 }
 
 /**
- * @param[in] length of the signal
- * @param[in] sampling interval of the signal
- * @param[out] output vector of the frequencies 
+ * @param[in] N length of the signal
+ * @param[in] dt sampling interval of the signal
+ * @param[out] freq output vector of the frequencies 
  */
 template <class T>
 T
@@ -229,10 +229,10 @@ fftfreq(int N, double dt, std::valarray<double> &freq){
 }
 
 /**
- * @param[in] sampling interval of the signal
- * @param[in] length of the signal
- * @param[in] frequency of interest
- * @param[out] index of the frequency
+ * @param[in] dt sampling interval of the signal
+ * @param[in] N length of the signal
+ * @param[in] f frequency of interest
+ * @param[out] n index of the frequency
  */
 template <class T>
 T

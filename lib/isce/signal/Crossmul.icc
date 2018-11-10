@@ -10,10 +10,8 @@
 #endif
 
 
-/** @param[in] 2D Doppler polynomial for refernce SLC
-*   @param[in] 2D Doppler polynomial for secondary SLC
-*
-*   Set Doppler polynomials for refernce and secondary SLCs
+/** @param[in] refSlcDoppler 2D Doppler polynomial for refernce SLC
+*   @param[in] secSlcDoppler 2D Doppler polynomial for secondary SLC
 */
 void isce::signal::Crossmul::
 doppler(isce::core::Poly2d refSlcDoppler, isce::core::Poly2d secSlcDoppler)
@@ -26,9 +24,7 @@ doppler(isce::core::Poly2d refSlcDoppler, isce::core::Poly2d secSlcDoppler)
 }
 
 
-/** @param[in] pulse repetition interval
-*
-*   Setting the pulse repetition interval 
+/** @param[in] prf pulse repetition interval
 */
 void isce::signal::Crossmul::
 prf(double prf)
@@ -36,9 +32,7 @@ prf(double prf)
     _prf = prf;
 }
 
-/** @param[in] common azimuth bandwidth
-*
-*   Setting the common azimuth bandwidth
+/** @param[in] commonAzimuthBandwidth common azimuth bandwidth
 */
 void isce::signal::Crossmul::
 commonAzimuthBandwidth(double commonAzimuthBandwidth)
@@ -47,8 +41,6 @@ commonAzimuthBandwidth(double commonAzimuthBandwidth)
 }
 
 /** @param[in] beta parameter for the azimuth common band filter design
-*
-*   Setting beta for the common azimuth band filter design
 */
 void isce::signal::Crossmul::
 beta(double par)
@@ -57,9 +49,7 @@ beta(double par)
 
 }
 
-/** @param[in] number of looks in range direction
-*
-*   Setting number of looks in range direction to be taken on the output multilooked interferogram
+/** @param[in] rangeLooks number of looks in range direction
 */
 void isce::signal::Crossmul::
 rangeLooks(int rangeLooks)
@@ -67,9 +57,7 @@ rangeLooks(int rangeLooks)
     _rangeLooks = rangeLooks ;
 }
 
-/** @param[in] number of looks in azimuth direction
-*
-*   Setting number of looks in azimuth direction to be taken on the output multilooked interferogram
+/** @param[in] azimuthLooks number of looks in azimuth direction
 */
 void isce::signal::Crossmul::
 azimuthLooks(int azimuthLooks)
@@ -78,7 +66,6 @@ azimuthLooks(int azimuthLooks)
 }
 
 /** @param[in] flag to mark if common azimuth band filtering should be applied
-*
 */
 void isce::signal::Crossmul::
 doCommonAzimuthbandFiltering(bool flag )
