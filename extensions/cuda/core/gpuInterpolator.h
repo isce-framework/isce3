@@ -75,10 +75,10 @@ class gpuSinc2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
         // True if initialized from host, false if copy-constructed from gpuSinc2dInterpolator on device
         bool owner;
     public:
-        CUDA_HOSTDEV gpuSinc2dInterpolator(const gpuSinc2dInterpolator &i): 
+        CUDA_DEV gpuSinc2dInterpolator(const gpuSinc2dInterpolator &i): 
             kernel_d(i.kernel_d), kernel_length(i.kernel_length), kernel_width(i.kernel_width), 
             intpx(i.intpx), intpy(i.intpy), owner(false) {};
-        ~gpuSinc2dInterpolator();
+        CUDA_HOSTDEV ~gpuSinc2dInterpolator();
         CUDA_HOST void sinc_coef(double, int, double, int);
         CUDA_DEV U interpolate(double, double, const U*, size_t, size_t);
         CUDA_HOST void interpolate_h(const Matrix<double>&, Matrix<U>&, double, double, U*);

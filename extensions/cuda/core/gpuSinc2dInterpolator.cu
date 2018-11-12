@@ -144,7 +144,7 @@ __device__ U gpuSinc2dInterpolator<U>::interpolate(double x, double y, const U* 
 
 
 template <class U>
-gpuSinc2dInterpolator<U>::~gpuSinc2dInterpolator() {
+__host__ __device__ gpuSinc2dInterpolator<U>::~gpuSinc2dInterpolator() {
     if (owner)
         checkCudaErrors(cudaFree(kernel_d));
 }
@@ -158,7 +158,6 @@ template class gpuSinc2dInterpolator<gpuComplex<double>>;
 template __global__ void
 gpuInterpolator_g<double>(gpuSinc2dInterpolator<double> interp, double *x, double *y,
                                   const double *z, double *value, size_t nx, size_t ny);
-
 template __global__ void
 gpuInterpolator_g<gpuComplex<double>>(gpuSinc2dInterpolator<gpuComplex<double>> interp, double *x, double *y,
-                                  const double *z, double *value, size_t nx, size_t ny);
+                                  const gpuComplex<double> *z, gpuComplex<double> *value, size_t nx, size_t ny);
