@@ -94,11 +94,17 @@ class isce::signal::Signal {
                     std::valarray<std::complex<T>> &signalOversampled,
                     int rows, int nfft, int oversampleFactor);
 
+        T nextPowerOfTwo(size_t N, size_t& fftLength);
+
     private:
         isce::fftw3cxx::plan<T> _plan_fwd;
         isce::fftw3cxx::plan<T> _plan_inv;
 
 };
+
+#define ISCE_SIGNAL_SIGNAL_ICC
+#include "Signal.icc"
+#undef ISCE_SIGNAL_SIGNAL_ICC
 
 #endif
 

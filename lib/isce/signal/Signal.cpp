@@ -234,7 +234,6 @@ upsample(std::valarray<std::complex<T>> &signal,
     std::valarray<std::complex<T>> spectrumShifted(columns*rows);
 
     // forward fft in range
-    std::cout << "fwd fft " << std::endl;
     _plan_fwd.execute_dft(&signal[0], &spectrum[0]);
 
     //spectrum /=nfft;

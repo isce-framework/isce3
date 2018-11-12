@@ -50,7 +50,7 @@ class isce::signal::Crossmul {
                       isce::io::Raster& interferogram);
 
 
-       /** Set doppler polynomials dor reference and secondary SLCs*/
+       /** Set doppler polynomials for reference and secondary SLCs*/
         inline void doppler(isce::core::Poly2d, 
                             isce::core::Poly2d);
 
@@ -103,10 +103,15 @@ class isce::signal::Crossmul {
 
         // Flag for common range band filtering
         bool _doCommonRangebandFilter;
-        
+
+        // number of lines per block
+        size_t blockRows = 1000;
+
+        // upsampling factor
+        size_t oversample = 2;
 };
 
-// Get inline implementations for Topo
+// Get inline implementations for Crossmul
 #define ISCE_SIGNAL_CROSSMUL_ICC
 #include "Crossmul.icc"
 #undef ISCE_SIGNAL_CROSSMUL_ICC

@@ -17,6 +17,7 @@ endforeach()
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS
     Signal.h
+    Signal.icc
     fftw3cxx.h
     Crossmul.h
     Crossmul.icc

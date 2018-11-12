@@ -30,39 +30,21 @@ crossmul(isce::io::Raster& referenceSLC,
     pyre::journal::warning_t warning("isce.geometry.Topo");
     pyre::journal::info_t info("isce.geometry.Topo");
 
-    int nrows = referenceSLC.length();
-    int ncols = referenceSLC.width();
+    size_t nrows = referenceSLC.length();
+    size_t ncols = referenceSLC.width();
 
-    std::cout << "ncols, nrows" << ncols << " , " << nrows << std::endl;
-    /*
-    if (nrows =! secondarySLC.length()) {
-        pyre::journal::error_t error("isce.signal.Crossmul");
-        error
-            << pyre::journal::at(__HERE__)
-            << "Error in Crossmul::crossmul - number of rows in secondary "
-            << "SLC should be the same as the refernce SLC."
-            << pyre::journal::endl;
-    }
+    //signal object for refSlc
+    isce::signal::Signal<float> refSignal;
 
-    if (ncols =! secondarySLC.width()) {
-        pyre::journal::error_t error("isce.signal.Crossmul");
-        error
-            << pyre::journal::at(__HERE__)
-            << "Error in Crossmul::crossmul - number of columns in secondary "
-            << "SLC should be the same as the refernce SLC."
-            << pyre::journal::endl;
-    }
-    */
-    std::cout << "ncols, nrows" << ncols << " , " << nrows << std::endl; 
+    //signal object for secSlc
+    isce::signal::Signal<float> secSignal;
 
     // Compute FFT size (power of 2)
-    int nfft = 512; //ncols; //nextPow2(ncols);
-    
-    // it should be determined somehow
-    int blockRows = 90;
-    int oversample = 2;
+    size_t nfft;
+    refSignal.nextPowerOfTwo(ncols, nfft);
 
-    int nblocks = nrows / blockRows;
+    // number of blocks to process
+    size_t nblocks = nrows / blockRows;
     if (nblocks == 0) {
         nblocks = 1;
     } else if (nrows % (nblocks * blockRows) != 0) {
@@ -98,12 +80,6 @@ crossmul(isce::io::Raster& referenceSLC,
 
     // full resolution interferogram
     std::valarray<std::complex<float>> ifgram(ncols*blockRows);
-
-    //signal object for refSlc
-    isce::signal::Signal<float> refSignal;
-
-    //signal object for secSlc
-    isce::signal::Signal<float> secSignal;
 
     // make forward and inverse fft plans for the reference SLC 
     refSignal.forwardRangeFFT(refSlc, refSpectrum, ncols, blockRows, nfft, blockRows);
@@ -141,7 +117,7 @@ crossmul(isce::io::Raster& referenceSLC,
         //blockRowsData might be less than or equal to blockRows.
         //e.g. if nrows = 512, and blockRows = 100, then 
         //blockRowsData for last block will be 12
-	int blockRowsData;
+	size_t blockRowsData;
         if ((rowStart+blockRows)>nrows) {
             blockRowsData = nrows - rowStart;
         } else {
@@ -155,36 +131,20 @@ crossmul(isce::io::Raster& referenceSLC,
         ifgram = 0;
 
         // get a block of reference and secondary SLC data
-        std::cout << rowStart << " , " << ncols << " , " << blockRowsData << std::endl;
-
         referenceSLC.getBlock(refSlc, 0, rowStart, ncols, blockRowsData);
         secondarySLC.getBlock(secSlc, 0, rowStart, ncols, blockRowsData);
     
         //commaon azimuth band-pass filter the reference and secondary SLCs
-        std::cout << "common band filtering" << std::endl;
         if (_doCommonAzimuthbandFilter){
             filter.filter(refSlc, refSpectrum);
             filter.filter(secSlc, secSpectrum);
         }
 
         // upsample the refernce and secondary SLCs
-        std::cout << "upsampling " << std::endl;
         refSignal.upsample(refSlc, refSlcUpsampled, blockRows, nfft, oversample);
         secSignal.upsample(secSlc, secSlcUpsampled, blockRows, nfft, oversample);
        
-        std::cout << "upsampled ifgram " << std::endl;
         // Compute oversampled interferogram data
-
-        /*
-        for (size_t line = 0; line < blockRowsData; ++line){
-            for (size_t col = 0; col < oversample*ncols; ++col){
-                ifgramUpsampled[line*(oversample*ncols) + col] =
-                        refSlc[line*(oversample*nfft) + col]*
-                        std::conj(secSlc[line*(oversample*nfft) + col]);
-            }
-        }
-        */
-        
         for (size_t line = 0; line < blockRowsData; line++){
             for (size_t col = 0; col < oversample*ncols; col++){
                 ifgramUpsampled[line*(oversample*ncols) + col] = 
@@ -192,13 +152,13 @@ crossmul(isce::io::Raster& referenceSLC,
                         std::conj(secSlcUpsampled[line*(oversample*nfft) + col]);
             }
         }
-        std::cout << "full res ifgram " << std::endl;
+
         // Reclaim the extra oversample looks across
         for (size_t line = 0; line < blockRowsData; line++){
             for (size_t col = 0; col < ncols; col++){
                 std::complex<float> sum =(0,0);
                 for (size_t j=0; j< oversample; j++)
-                    sum += ifgramUpsampled[line*(ncols*oversample) + j + col*oversample]; // + 2*col];
+                    sum += ifgramUpsampled[line*(ncols*oversample) + j + col*oversample];
                 ifgram[line*ncols + col] = sum;            
             }
         }
@@ -207,7 +167,7 @@ crossmul(isce::io::Raster& referenceSLC,
         
 	// set the block of interferogram
         interferogram.setBlock(ifgram, 0, rowStart, ncols, blockRowsData);
-        //interferogram.setBlock(ifgramUpsampled, 0, rowStart, ncols*oversample, blockRowsData);
+
     }
 }
 
