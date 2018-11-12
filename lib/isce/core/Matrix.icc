@@ -198,6 +198,7 @@ isce::core::Matrix<cell_t>::
 submat(size_t row, size_t col, size_t rowspan, size_t colspan) {
 
     // Allocate grid pointer for my data
+    _resetGrid();
     const shape_t shape{_nrows, _ncols};
     _grid = new grid_t{{shape}, &_buffer[0]};
     
