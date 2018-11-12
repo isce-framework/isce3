@@ -11,10 +11,10 @@
 /**
 *  @param[in] input block of data
 *  @param[out] output block of data
-*  @param[in] rank
-*  @param[in] size
-*  @param[in] howmany
-*  @param[in] inembed
+*  @param[in] rank rank of the transform (1: for one dimensional and 2: for two dimensional transform)
+*  @param[in] size size of each transform (ncols: for range FFT, nrows: for azimuth FFT)
+*  @param[in] howmany number of FFT transforms for a block of data (nrows: for range FFT, ncols: for azimuth FFT)
+*  @param[in] inembed 
 *  @param[in] istride
 *  @param[in] idist
 *  @param[in] onembed
