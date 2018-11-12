@@ -77,7 +77,7 @@ geo2rdr(isce::io::Raster & topoRaster,
     Orbit orbit = this->orbit();
     Poly2d doppler = this->doppler();
     DateTime sensingStart = this->sensingStart();
- 
+
     // Cache sensing start in seconds since reference epoch
     double t0 = sensingStart.secondsSinceEpoch(this->refEpoch());
     // Adjust for const azimuth shift

@@ -78,7 +78,7 @@ geo2rdr(isce::io::Raster & topoRaster,
 
     // Initialize projection for topo results
     _projTopo = isce::core::createProj(topoRaster.getEPSG());
-    
+
     // Cache sensing start
     double t0 = _sensingStart.secondsSinceEpoch(_refEpoch);
     // Adjust for const azimuth shift
