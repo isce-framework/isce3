@@ -43,14 +43,10 @@ function(CheckGDAL)
     FIND_PACKAGE(GDAL REQUIRED)
     execute_process( COMMAND gdal-config --version
                     OUTPUT_VARIABLE GDAL_VERSION)
-    string(REGEX MATCHALL "[0-9]+" GDAL_VERSION_PARTS ${GDAL_VERSION})
-    list(GET GDAL_VERSION_PARTS 0 GDAL_MAJOR)
-    list(GET GDAL_VERSION_PARTS 1 GDAL_MINOR)
 
-    if ((GDAL_VERSION VERSION_GREATER 2.0.0) OR (GDAL_VERSION VERSION_EQUAL 2.0.0))
-        message (STATUS "Found gdal:  ${GDAL_VERSION}")
-    else()
-        message (FATAL_ERROR "Did not find GDAL version >= 2.1")
+    message(STATUS "Found GDAL: ${GDAL_VERSION}")
+    if (GDAL_VERSION VERSION_LESS 2.3)
+        message (FATAL_ERROR "Did not find GDAL version >= 2.3")
     endif()
 endfunction()
 
@@ -58,8 +54,28 @@ endfunction()
 function(CheckHDF5)
     FIND_PACKAGE(HDF5 REQUIRED COMPONENTS CXX)
     message(STATUS "Found HDF5: ${HDF5_VERSION} ${HDF5_CXX_LIBRARIES}")
-    # Create space separated list of libraries
-    #string(REPLACE ";" " " TEMP_ITEM "${HDF5_CXX_LIBRARIES}")
+    if (HDF5_VERSION VERSION_LESS "1.10.2")
+        message(FATAL_ERROR "Did not find HDF5 version >= 1.10.2")
+    endif()
+
+    # Use old glibc++ ABI when necessary for compatibility with HDF5 libs
+    if (CMAKE_COMPILER_IS_GNUCXX AND
+            CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "5.1.0")
+        # get the file path of the hdf5_cpp shared object
+        set(hdf5_cpp ${HDF5_CXX_LIBRARIES})
+        list(FILTER hdf5_cpp INCLUDE REGEX "hdf5_cpp")
+
+        # look for GCC version comment
+        file(STRINGS "${hdf5_cpp}" gcc_comment REGEX "GCC:")
+        string(REGEX MATCH "([0-9]|\\.)+" hdf5_gcc_version ${gcc_comment})
+
+        if (hdf5_gcc_version AND hdf5_gcc_version VERSION_LESS "5.1.0")
+            message(WARNING "Using old glibc++ ABI "
+                "(found HDF5 compiled with GCC ${hdf5_gcc_version})")
+            add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+        endif()
+    endif()
+
     # Use more standard names to propagate variables
     set(HDF5_INCLUDE_DIR ${HDF5_INCLUDE_DIRS} CACHE PATH "HDF5 include directory")
     set(HDF5_LIBRARY "${HDF5_CXX_LIBRARIES}" CACHE STRING "HDF5 libraries")
@@ -94,7 +110,7 @@ function(InitInstallDirLayout)
 
     ###install/lib
     if (NOT ISCE_LIBDIR)
-        set (ISCE_LIBDIR lib CACHE STRING "isce/lib") 
+        set (ISCE_LIBDIR lib CACHE STRING "isce/lib")
     endif(NOT ISCE_LIBDIR)
 
     ###build/lib
