@@ -18,60 +18,79 @@ template <class U>
     struct gpuComplex {
         U r, i;
         CUDA_HOSTDEV gpuComplex(): r(0.), i(0.) {};
+        CUDA_HOSTDEV gpuComplex(U real): r(real), i(0.) {};
         CUDA_HOSTDEV gpuComplex(U real, U imag): r(real), i(imag) {};
+        CUDA_HOSTDEV gpuComplex<U>& operator+=(gpuComplex<U> const& other) {
+            r += other.r;
+            i += other.i;
+            return *this;
+        }
+        CUDA_HOSTDEV gpuComplex<U>& operator+=(double const& other) {
+            r += other;
+            return *this;
+        }
+        CUDA_HOSTDEV gpuComplex<U>& operator-=(gpuComplex<U> const& other) {
+            r -= other.r;
+            i -= other.i;
+            return *this;
+        }
+        CUDA_HOSTDEV gpuComplex<U>& operator-=(double const& other) {
+            r -= other;
+            return *this;
+        }
     };
 
 // add
 template <class U>
-gpuComplex<U> operator +(gpuComplex<U> x, gpuComplex<U> y) {
+CUDA_HOSTDEV gpuComplex<U> operator +(gpuComplex<U> x, gpuComplex<U> y) {
     return gpuComplex<U>(x.r + y.r, x.i + y.i);
 }
 
 template <class U>
-gpuComplex<U> operator +(gpuComplex<U> x, double y) {
-    return gpuComplex<U>(x.r + y.r, x.i);
+CUDA_HOSTDEV gpuComplex<U> operator +(gpuComplex<U> x, double y) {
+    return gpuComplex<U>(x.r + y, x.i);
 }
 
 template <class U>
-gpuComplex<U> operator +(double x, gpuComplex<U> y) {
+CUDA_HOSTDEV gpuComplex<U> operator +(double x, gpuComplex<U> y) {
     return gpuComplex<U>(x + y.r, y.i);
 }
 
 // subtract
 template <class U>
-gpuComplex<U> operator -(gpuComplex<U> x, gpuComplex<U> y) {
+CUDA_HOSTDEV gpuComplex<U> operator -(gpuComplex<U> x, gpuComplex<U> y) {
     return gpuComplex<U>(x.r - y.r, x.i - y.i);
 }
 
 template <class U>
-gpuComplex<U> operator -(gpuComplex<U> x, double y) {
+CUDA_HOSTDEV gpuComplex<U> operator -(gpuComplex<U> x, double y) {
     return gpuComplex<U>(x.r - y, x.i);
 }
 
 template <class U>
-gpuComplex<U> operator -(double x, gpuComplex<U> y) {
+CUDA_HOSTDEV gpuComplex<U> operator -(double x, gpuComplex<U> y) {
     return gpuComplex<U>(x - y.r, y.i);
 }
 
 // multiply
 template <class U>
-gpuComplex<U> operator *(gpuComplex<U> x, gpuComplex<U> y) {
+CUDA_HOSTDEV gpuComplex<U> operator *(gpuComplex<U> x, gpuComplex<U> y) {
     return gpuComplex<U>(x.r*y.r + x.i*y.i, x.r*y.i + x.i*y.r);
 }
 
 template <class U>
-gpuComplex<U> operator *(gpuComplex<U> x, double y) {
+CUDA_HOSTDEV gpuComplex<U> operator *(gpuComplex<U> x, double y) {
     return gpuComplex<U>(x.r*y, x.r*y);
 }
 
 template <class U>
-gpuComplex<U> operator *(double x, gpuComplex<U> y) {
-    return gpuComplex<U>(x*y.r, x.i*y);
+CUDA_HOSTDEV gpuComplex<U> operator *(double x, gpuComplex<U> y) {
+    return gpuComplex<U>(x*y.r, x*y);
 }
 
 // divide
 template <class U>
-gpuComplex<U> operator /(gpuComplex<U> x, gpuComplex<U> y) {
+CUDA_HOSTDEV gpuComplex<U> operator /(gpuComplex<U> x, gpuComplex<U> y) {
     U s = fabsf(y.r + fabsf(y.i));
     U oos = 1.0 / s;
     U ars = x.r * oos;
@@ -85,13 +104,13 @@ gpuComplex<U> operator /(gpuComplex<U> x, gpuComplex<U> y) {
 }
 
 template <class U>
-gpuComplex<U> operator /(gpuComplex<U> x, double y) {
+CUDA_HOSTDEV gpuComplex<U> operator /(gpuComplex<U> x, double y) {
     // TODO div by 0 check
     return gpuComplex<U>(x.r/y, x.r/y);
 }
 
 template <class U>
-gpuComplex<U> operator /(double x, gpuComplex<U> y) {
+CUDA_HOSTDEV gpuComplex<U> operator /(double x, gpuComplex<U> y) {
     U s = fabsf(y.r + fabsf(y.i));
     U oos = 1.0 / s;
     U ars = x;
@@ -104,7 +123,7 @@ gpuComplex<U> operator /(double x, gpuComplex<U> y) {
 
 // magnitude
 template <class U>
-U abs(gpuComplex<U> x) {
+CUDA_HOSTDEV U abs(gpuComplex<U> x) {
     U v, w, t;
     U a = fabsf(x.r);
     U b = fabsf(x.i);

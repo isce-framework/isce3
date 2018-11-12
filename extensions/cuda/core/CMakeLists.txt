@@ -5,6 +5,7 @@ set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 set(ISCE_CUDA_${PACKAGENAME}_HEADERS
         gpuBasis.h
+        gpuComplex.h
         gpuEllipsoid.h
         gpuInterpolator.h
         gpuLinAlg.h
