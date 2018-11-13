@@ -14,7 +14,7 @@
 *   @param[in] fftLength next power of two 
 */
 template <class T>
-T
+void
 isce::signal::Signal<T>::
 nextPowerOfTwo(size_t N, size_t &fftLength)
 {

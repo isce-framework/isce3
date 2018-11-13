@@ -23,7 +23,7 @@
 *  @param[in] sign
 */
 template <class T>
-T 
+void 
 isce::signal::Signal<T>::
 fftPlanForward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output, 
 	    int rank, int n, int howmany,
@@ -52,7 +52,7 @@ fftPlanForward(std::valarray<std::complex<T>> &input, std::valarray<std::complex
 *  @param[in] odist
 */
 template<class T>
-T 
+void 
 isce::signal::Signal<T>::
 fftPlanBackward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output,
             int rank, int n, int howmany,
@@ -72,7 +72,7 @@ fftPlanBackward(std::valarray<std::complex<T>> &input, std::valarray<std::comple
 *  @param[out] output block of spectrum
 */
 template<class T>
-T
+void
 isce::signal::Signal<T>::
 forward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
 {
@@ -86,7 +86,7 @@ forward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &o
 *  @param[out] output block of data
 */
 template<class T>
-T
+void
 isce::signal::Signal<T>::
 inverse(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
 {
@@ -102,7 +102,7 @@ inverse(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &o
 *  @param[in] outrows number of rows of the output block of data
  */
 template<class T>
-T isce::signal::Signal<T>::
+void isce::signal::Signal<T>::
 forwardRangeFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::complex<T>> &spectrum,
                 int incolumns, int inrows, int outcolumns, int outrows)
 {
@@ -132,7 +132,7 @@ forwardRangeFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::compl
 *  @param[in] outrows number of rows of the output block of data (this is considered as length of fft)
 */
 template<class T>
-T isce::signal::Signal<T>::
+void isce::signal::Signal<T>::
 forwardAzimuthFFT(std::valarray<std::complex<T>> &signal, 
                 std::valarray<std::complex<T>> &spectrum,
                 int incolumns, int inrows, int outcolumns, int outrows)
@@ -163,7 +163,7 @@ forwardAzimuthFFT(std::valarray<std::complex<T>> &signal,
 *  @param[in] outrows number of rows of the output block of data
 */
 template<class T>
-T isce::signal::Signal<T>::
+void isce::signal::Signal<T>::
 inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, std::valarray<std::complex<T>> &signal,
                 int incolumns, int inrows, int outcolumns, int outrows)
 {
@@ -191,7 +191,7 @@ inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, std::valarray<std::com
 *  @param[in] outrows number of rows of the output block of data (this is considered as length of fft)
 */
 template<class T>
-T isce::signal::Signal<T>::
+void isce::signal::Signal<T>::
 inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
                 std::valarray<std::complex<T>> &signal,
                 int incolumns, int inrows, int outcolumns, int outrows)
@@ -222,7 +222,7 @@ inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
 *   @param[in] upsampleFactor upsampling factor
 */
 template<class T>
-T isce::signal::Signal<T>::
+void isce::signal::Signal<T>::
 upsample(std::valarray<std::complex<T>> &signal,
          std::valarray<std::complex<T>> &signalUpsampled,
          int rows, int nfft, int upsampleFactor)

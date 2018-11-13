@@ -18,7 +18,7 @@
  * @param[in] filterType type of the band-pass filter
  */
 template <class T>
-T
+void
 isce::signal::Filter<T>::
 constructRangeBandpassFilter(double rangeSamplingFrequency,
                                 std::valarray<double> subBandCenterFrequencies,
@@ -82,7 +82,7 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
  * @param[out] _filter1D one dimensional boxcar bandpass filter in frequency domain 
  */
 template <class T>
-T
+void
 isce::signal::Filter<T>::
 constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
                              std::valarray<double> subBandBandwidths,
@@ -134,7 +134,7 @@ constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
  * @param[out] _filter1D one dimensional boxcar bandpass filter in frequency domain
  */
 template <class T>
-T
+void
 isce::signal::Filter<T>::
 constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
                              std::valarray<double> subBandBandwidths,
@@ -184,7 +184,7 @@ constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
 * @param[in] nrows number of rows of the block of data
 */
 template <class T>
-T
+void
 isce::signal::Filter<T>::
 constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
                         const isce::core::Poly2d & secDoppler,
@@ -249,7 +249,7 @@ constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
 * @param[in] spectrum of the block of the data 
 */
 template <class T>
-T
+void
 isce::signal::Filter<T>::
 filter(std::valarray<std::complex<T>> &signal,
                 std::valarray<std::complex<T>> &spectrum)
@@ -270,9 +270,8 @@ filter(std::valarray<std::complex<T>> &signal,
  * @param[out] freq output vector of the frequencies 
  */
 template <class T>
-T
+void
 isce::signal::Filter<T>::
-//void isce::signal::Filter::
 fftfreq(int N, double dt, std::valarray<double> &freq){
 
     // Scale factor
@@ -298,7 +297,7 @@ fftfreq(int N, double dt, std::valarray<double> &freq){
  * @param[out] n index of the frequency
  */
 template <class T>
-T
+void
 isce::signal::Filter<T>::
 indexOfFrequency(double dt, int N, double f, int &n)
 // deterrmine the index (n) of a given frequency f
@@ -317,7 +316,7 @@ indexOfFrequency(double dt, int N, double f, int &n)
 }
 
 template <class T>
-T
+void
 isce::signal::Filter<T>::
 writeFilter(size_t ncols, size_t nrows)
 {
