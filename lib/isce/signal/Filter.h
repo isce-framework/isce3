@@ -43,13 +43,21 @@ class isce::signal::Filter {
                                         std::string filterType);
 
         /** Construct a box car range band-pass filter for multiple bands*/
-        T constructRangeBandpassBoxcar(double rangeSamplingFrequency, 
-                                        std::valarray<double> subBandCenterFrequencies, 
-                                        std::valarray<double> subBandBandwidths,
-                                        size_t ncols, 
-                                        size_t nrows);
+        T constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
+                                       std::valarray<double> subBandBandwidths,
+                                       double dt,
+                                       int nfft,
+                                       std::valarray<std::complex<T>> &_filter1D);
 
-	//T constructRangeCommonbandFilter();
+        T constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
+                             std::valarray<double> subBandBandwidths,
+                             double dt,
+                             int nfft,
+                             std::valarray<double>& frequency,
+                             double beta,
+                             std::valarray<std::complex<T>>& _filter1D);
+
+        //T constructRangeCommonbandFilter();
 
         /** Construct azimuth common band filter*/
         T constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,

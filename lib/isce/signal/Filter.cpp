@@ -30,17 +30,44 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
                                 std::string filterType)
 {
 
+    int nfft = ncols;
+
+    _filter.resize(nfft*nrows);
+    std::valarray<std::complex<T>> _filter1D(nfft); //
+    _filter1D = std::complex<T>(0.0,0.0);
+
+    std::valarray<double> frequency(nfft);
+    double dt = 1.0/rangeSamplingFrequency;
+    fftfreq(nfft, dt, frequency);
+
     if (filterType=="boxcar"){
-        constructRangeBandpassBoxcar(rangeSamplingFrequency,
-                             subBandCenterFrequencies,
-                             subBandBandwidths,
-                             ncols,
-                             nrows);
+        constructRangeBandpassBoxcar(
+                            subBandCenterFrequencies,
+                            subBandBandwidths,
+			    dt,
+                            nfft,
+	                    _filter1D);
         
-    }else{
+    } else if (filterType=="cosine"){
+        double beta = 0.25;
+        constructRangeBandpassCosine(subBandCenterFrequencies,
+                            subBandBandwidths,
+                            dt,
+                            nfft,
+                            frequency,
+                            beta,
+                            _filter1D); 
+
+    } else {
         std::cout << filterType << " filter has not been implemented" << std::endl;
     }
     
+    //construct a block of the filter
+    for (size_t line = 0; line < nrows; line++ ){
+        for (size_t col = 0; col < nfft; col++ ){
+            _filter[line*nfft+col] = _filter1D[col];
+        }
+    }
 
     _signal.forwardRangeFFT(signal, spectrum, ncols, nrows, ncols, nrows);
     _signal.inverseRangeFFT(spectrum, signal, ncols, nrows, ncols, nrows);
@@ -48,35 +75,24 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
 }
 
 /**
- * @param[in] rangeSamplingFrequency range sampling frequency
  * @param[in] subBandCenterFrequencies a vector of center frequencies for each band
  * @param[in] subBandBandwidths a vector of bandwidths for each band
- * @param[in] ncols number of columns of the block of data
- * @param[in] nrows number of rows of the block of data
+ * @param[in] dt samplig rate of the signal
+ * @param[in] nfft length of the spectrum
+ * @param[out] _filter1D one dimensional boxcar bandpass filter in frequency domain 
  */
 template <class T>
 T
 isce::signal::Filter<T>::
-constructRangeBandpassBoxcar(double rangeSamplingFrequency,
-                             std::valarray<double> subBandCenterFrequencies,
+constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
                              std::valarray<double> subBandBandwidths,
-                             size_t ncols,
-                             size_t nrows)
+                             double dt,
+                             int nfft,
+                             std::valarray<std::complex<T>>& _filter1D)
 {
     // construct a boxcar bandpass filter in frequency domian 
     // which may have several bands defined by centerferquencies and 
     // subBandBandwidths
-
-    int nfft = ncols;
-
-    _filter.resize(nfft*nrows);
-    std::valarray<std::complex<T>> _filter1col(nfft); // 
-    _filter1col = std::complex<T>(0.0,0.0);
-
-    std::valarray<double> frequency(nfft);
-    double dt = 1.0/rangeSamplingFrequency;
-    fftfreq(nfft, dt, frequency);
-
     for (size_t i = 0; i<subBandCenterFrequencies.size(); ++i){
         std::cout << "i: " << i << std::endl;
         //frequency of the lower bound of this band
@@ -93,26 +109,67 @@ constructRangeBandpassBoxcar(double rangeSamplingFrequency,
         std::cout << "fL: "<< fL << " , fH: " << fH << " indL: " << indL << " , indH: " << indH << std::endl;
         if (fL<0 && fH>=0){
             for (size_t ind = indL; ind < nfft; ++ind){
-                _filter1col[ind] = std::complex<T>(1.0, 1.0);
+                _filter1D[ind] = std::complex<T>(1.0, 0.0);
             }
             for (size_t ind = 0; ind < indH; ++ind){
-                _filter1col[ind] = std::complex<T>(1.0, 1.0);
+                _filter1D[ind] = std::complex<T>(1.0, 0.0);
             }
 
         }else{
             for (size_t ind = indL; ind < indH; ++ind){
-                _filter1col[ind] = std::complex<T>(1.0, 1.0);
+                _filter1D[ind] = std::complex<T>(1.0, 0.0);
             }
         }
     }
 
+}
 
-    for (size_t line = 0; line < nrows; line++ ){
-        for (size_t col = 0; col < nfft; col++ ){
-            _filter[line*nfft+col] = _filter1col[col];
+/**
+ * @param[in] subBandCenterFrequencies a vector of center frequencies for each band
+ * @param[in] subBandBandwidths a vector of bandwidths for each band
+ * @param[in] dt samplig rate of the signal
+ * @param[in] nfft length of the spectrum
+ * @param[in] frequency a vector of frequencies
+ * @param[in] beta parameter for the raised cosine filter (0 <= beta <= 1)
+ * @param[out] _filter1D one dimensional boxcar bandpass filter in frequency domain
+ */
+template <class T>
+T
+isce::signal::Filter<T>::
+constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
+                             std::valarray<double> subBandBandwidths,
+                             double dt,
+                             int nfft,
+                             std::valarray<double>& frequency,
+                             double beta,
+                             std::valarray<std::complex<T>>& _filter1D)
+{
+
+    const double norm = 1.0;	
+    
+    for (size_t i = 0; i<subBandCenterFrequencies.size(); ++i){
+        double fmid = subBandCenterFrequencies[i];
+        double bandwidth = subBandBandwidths[i];
+        const double df = 0.5 * bandwidth * beta;
+        for (size_t i = 0; i < frequency.size(); ++i) {
+
+            // Get the absolute value of shifted frequency
+            const double freq = std::abs(frequency[i] - fmid);
+
+            // Passband
+            if (freq <= (0.5 * bandwidth - df)) {
+                _filter1D[i] = std::complex<T>(norm, 0.0);
+
+            // Transition region
+            } else if (freq > (0.5 * bandwidth - df) && freq <= (0.5 * bandwidth + df)) {
+                _filter1D[i] = std::complex<T>(norm * 0.5 *
+                                    (1.0 + std::cos(M_PI / (bandwidth*beta) *
+                                    (freq - 0.5 * (1.0 - beta) * bandwidth))), 0.0);
+
+	    }
         }
-    }
 
+    }
 }
 
 /**

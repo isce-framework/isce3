@@ -98,7 +98,6 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
     std::valarray<double> subBandBandwidths{2.0e6, 2.0e6, 2.0e6};
 
     std::string filterType = "boxcar";
-
     // Assume range sampling frequency equals bandwidth for this test
     double rangeSamplingFrequency = BW;
 
@@ -111,6 +110,19 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
                                 ncols,
                                 blockRows,
                                 filterType);
+
+    //filter.writeFilter(ncols, blockRows);
+
+    // change the filter type to cosine
+    filterType = "cosine";
+    filter.constructRangeBandpassFilter(rangeSamplingFrequency,
+                                  subBandCenterFrequencies,
+                                  subBandBandwidths,
+                                  refSlc,
+                                  refSpectrum,
+                                  ncols,
+                                  blockRows,
+                                  filterType);
 
     //filter.writeFilter(ncols, blockRows);
     
