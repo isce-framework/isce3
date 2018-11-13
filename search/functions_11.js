@@ -22,5 +22,5 @@ var searchData=
   ['startingrange',['startingRange',['../classisce_1_1product_1_1ImageMode.html#acd6e644e362aa3b9d9849bd2c7f1b61f',1,'isce::product::ImageMode::startingRange() const'],['../classisce_1_1product_1_1ImageMode.html#a1df9b0440c9c9af162b9da0ea090d6a5',1,'isce::product::ImageMode::startingRange(double value)']]],
   ['statevector',['StateVector',['../classisce_1_1core_1_1StateVector.html#a55efa058115dfa14ec8a7a924b080bb8',1,'isce::core::StateVector']]],
   ['strptime',['strptime',['../structisce_1_1core_1_1DateTime.html#aa3055c9e3412e55fbe8f207ba71e671e',1,'isce::core::DateTime']]],
-  ['submat',['submat',['../classisce_1_1core_1_1Matrix.html#aab3a7892fc938a5ffa686041a3ee4272',1,'isce::core::Matrix']]]
+  ['submat',['submat',['../classisce_1_1core_1_1Matrix.html#a75d7751271ac4e7a9a969fd7bccee68d',1,'isce::core::Matrix']]]
 ];

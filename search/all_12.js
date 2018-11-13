@@ -26,5 +26,5 @@ var searchData=
   ['statevector',['StateVector',['../classisce_1_1core_1_1StateVector.html',1,'isce::core::StateVector'],['../classisce_1_1core_1_1StateVector.html#a55efa058115dfa14ec8a7a924b080bb8',1,'isce::core::StateVector::StateVector()']]],
   ['statevectors',['stateVectors',['../structisce_1_1core_1_1Orbit.html#a919190f179fb4d5f554e4966e6f59629',1,'isce::core::Orbit']]],
   ['strptime',['strptime',['../structisce_1_1core_1_1DateTime.html#aa3055c9e3412e55fbe8f207ba71e671e',1,'isce::core::DateTime']]],
-  ['submat',['submat',['../classisce_1_1core_1_1Matrix.html#aab3a7892fc938a5ffa686041a3ee4272',1,'isce::core::Matrix']]]
+  ['submat',['submat',['../classisce_1_1core_1_1Matrix.html#a75d7751271ac4e7a9a969fd7bccee68d',1,'isce::core::Matrix']]]
 ];
