@@ -39,9 +39,14 @@ TEST(Crossmul, RunCrossmul)
     //H5 object
     isce::io::IH5File file(h5file);
 
+    // Open group containing instrument data
+    isce::io::IGroup group = file.openGroup("/science/metadata/instrument_data");
+
     //Radar object and load the h5 file 
     isce::radar::Radar instrument;
-    isce::radar::load(file, instrument);
+
+    // Deserialize the radar instrument
+    isce::radar::loadFromH5(group, instrument);
 
     // get the Doppler polynomial for refernce SLC
     isce::core::Poly2d dop1 = instrument.contentDoppler();
@@ -52,7 +57,12 @@ TEST(Crossmul, RunCrossmul)
 
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;
-    isce::product::load(file, mode, "aux");
+    
+    // Open group for image mode
+    isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
+    
+    // Deserialize the primary_mode
+    isce::product::loadFromH5(modeGroup, mode, "aux");
 
     // get the pulse repetition frequency (PRF)
     double prf = mode.prf();
@@ -126,9 +136,14 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     //H5 object
     isce::io::IH5File file(h5file);
 
+    // Open group containing instrument data
+    isce::io::IGroup group = file.openGroup("/science/metadata/instrument_data");
+
     //Radar object and load the h5 file
     isce::radar::Radar instrument;
-    isce::radar::load(file, instrument);
+
+    // Deserialize the radar instrument
+    isce::radar::loadFromH5(group, instrument);
 
     // get the Doppler polynomial for refernce SLC
     isce::core::Poly2d dop1 = instrument.contentDoppler();
@@ -139,7 +154,15 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
 
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;
-    isce::product::load(file, mode, "aux");
+
+    // Open group for image mode
+    isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
+
+    // Deserialize the primary_mode
+    isce::product::loadFromH5(modeGroup, mode, "aux");
+    
+
+    //isce::product::load(file, mode, "aux");
 
     // get the pulse repetition frequency (PRF)
     double prf = mode.prf();
@@ -201,20 +224,30 @@ TEST(Crossmul, CheckCrossmul)
     int width = referenceSlc.width();
     int length = referenceSlc.length();
 
-
-    //std::valarray<std::complex<float>> geometryIgram(width*length);
-   
-
     std::string h5file("../data/envisat.h5");
     isce::io::IH5File file(h5file);
+
+    // Open group containing instrument data
+    isce::io::IGroup group = file.openGroup("/science/metadata/instrument_data");
+
     isce::radar::Radar instrument;
-    isce::radar::load(file, instrument);
+
+    // Deserialize the radar instrument
+    isce::radar::loadFromH5(group, instrument);
+
+    // extract the Doppler polynomial
     isce::core::Poly2d dop1 = instrument.contentDoppler();
     isce::core::Poly2d dop2 = instrument.contentDoppler();
 
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;
-    isce::product::load(file, mode, "aux");
+
+    // Open group for image mode
+    isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
+
+    // Deserialize the primary_mode
+    isce::product::loadFromH5(modeGroup, mode, "aux");
+
 
     // get the wavelength
     double wvl = mode.wavelength();

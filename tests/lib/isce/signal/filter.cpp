@@ -37,8 +37,14 @@ TEST(Filter, constructAzimuthCommonbandFilter)
     // a radra object
     isce::radar::Radar instrument;
 
-    // load the HDF5 and populate the instrument metadata
-    isce::radar::load(file, instrument);
+    // Open group containing instrument data
+    isce::io::IGroup group = file.openGroup("/science/metadata/instrument_data");
+
+    // Deserialize the radar instrument
+    isce::radar::loadFromH5(group, instrument);
+
+    // Open group for image mode
+    isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
 
     // Get the Doppler polynomial and use it for both refernce and secondary SLCs
     isce::core::Poly2d dop1 = instrument.contentDoppler();
@@ -46,8 +52,10 @@ TEST(Filter, constructAzimuthCommonbandFilter)
 
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;
-    isce::product::load(file, mode, "aux");
-
+   
+    // Deserialize the primary_mode
+    isce::product::loadFromH5(modeGroup, mode, "aux");
+ 
     // get pulase repetition frequency (prf)
     double prf = mode.prf(); 
     std::cout << "prf: " << std::setprecision(16)<< prf << std::endl;
@@ -80,13 +88,17 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
     std::valarray<std::complex<float>> refSlc(ncols*blockRows);
     std::valarray<std::complex<float>> refSpectrum(ncols*blockRows);
 
-    //std::string h5file("/Users/fattahi/tools/ISCE3_forked/src/isce/tests/lib/isce/data/envisat.h5");
     std::string h5file("../data/envisat.h5");
     isce::io::IH5File file(h5file);
 
+    // Open group for image mode
+    isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
+    
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;
-    isce::product::load(file, mode, "aux");
+
+    // Deserialize the primary_mode
+    isce::product::loadFromH5(modeGroup, mode, "aux");
 
     // get the range bandwidth
     double BW = mode.rangeBandwidth();

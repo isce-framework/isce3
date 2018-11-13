@@ -67,7 +67,7 @@ fftPlanBackward(std::valarray<std::complex<T>> &input, std::valarray<std::comple
 
 }
 
-/**
+/** unnormalized forward DFT computation
 *  @param[in] input block of data
 *  @param[out] output block of spectrum
 */
@@ -79,7 +79,9 @@ forward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &o
     _plan_fwd.execute_dft(&input[0], &output[0]);
 }
 
-/**
+/** unnormalized forward DFT computation. 
+* Note that since the FFTW library does not
+* normalize the DFT computations, computing a forward followed by a backward transform (or vice versa) results in the original array scaled by length of fft.
 *  @param[in] input block of spectrum
 *  @param[out] output block of data
 */
