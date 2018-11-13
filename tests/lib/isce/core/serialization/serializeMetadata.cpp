@@ -25,7 +25,7 @@ TEST(MetadataTest, CheckArchive) {
     isce::io::IH5File file(h5file);
 
     // Deserialize the metadata
-    isce::core::load(file, meta, "primary");
+    isce::core::loadFromH5(file, meta, "primary");
 
     // Check values
     ASSERT_NEAR(meta.slantRangePixelSpacing, 7.803973670948287, 1.0e-10);

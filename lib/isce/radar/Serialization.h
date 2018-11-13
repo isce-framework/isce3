@@ -27,19 +27,22 @@ namespace isce {
 
         /** Load Radar parameters from HDF5.
          *
-         * @param[in] file          HDF5 file object.
+         * @param[in] group         HDF5 group object.
          * @param[in] radar         Radar object to be configured. */
-        inline void load(isce::io::IH5File & file, Radar & radar) {
+        inline void loadFromH5(isce::io::IGroup & group, Radar & radar) {
+
+            // Get doppler subgroup
+            isce::io::IGroup dopGroup = group.openGroup("doppler_centroid");
 
             // Configure a temporary Poly2d object with data polynomial
             isce::core::Poly2d cpoly;
-            isce::core::load(file, cpoly, "data_dcpolynomial");
+            isce::core::loadFromH5(dopGroup, cpoly, "data_dcpolynomial");
             // Save to radar
             radar.contentDoppler(cpoly);
 
             // Configure Poly2d object with skew polynomial
             isce::core::Poly2d spoly;
-            isce::core::load(file, spoly, "skew_dcpolynomial");
+            isce::core::loadFromH5(dopGroup, spoly, "skew_dcpolynomial");
             // Save to radar
             radar.skewDoppler(spoly);
         }

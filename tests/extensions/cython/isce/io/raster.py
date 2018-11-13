@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+from osgeo import gdal
+gdal.UseExceptions()
+
 class commonClass:
     def __init__(self):
         self.nc = 100
@@ -15,10 +18,8 @@ class commonClass:
 
 def test_createGeoTiffFloat():
     from isceextension import pyRaster
-    from osgeo import gdal
     import os
     import numpy as np
-    gdal.UseExceptions()
 
     cmn = commonClass()
     if os.path.exists( cmn.latFilename):
@@ -45,12 +46,9 @@ def test_createGeoTiffFloat():
 
 def test_createVRTDouble_setGetValue():
     from isceextension import pyRaster
-    from osgeo import gdal
     import os
     import numpy as np
     import numpy.testing as npt
-
-    gdal.UseExceptions()
 
     cmn = commonClass()
     if os.path.exists( cmn.lonFilename):
@@ -84,10 +82,8 @@ def test_createVRTDouble_setGetValue():
 
 def test_createTwoBandEnvi():
     from isceextension import pyRaster
-    from osgeo import gdal
     import os
     import numpy as np
-    gdal.UseExceptions()
 
     cmn = commonClass()
     if os.path.exists( cmn.incFilename):
@@ -107,9 +103,7 @@ def test_createTwoBandEnvi():
 
 def test_createMultiBandVRT():
     from isceextension import pyRaster
-    from osgeo import gdal
     import os
-    gdal.UseExceptions()
 
     cmn = commonClass()
     lat = pyRaster(cmn.latFilename)
@@ -134,9 +128,8 @@ def test_createMultiBandVRT():
 def test_createNumpyDataset():
     import numpy as np
     from isceextension import pyRaster
-    from osgeo import gdal, gdal_array
+    from osgeo import gdal_array
     import os
-    gdal.UseExceptions()
 
     ny, nx = 200, 100
     data = np.random.randn(ny, nx).astype(np.float32)

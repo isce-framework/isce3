@@ -1,0 +1,111 @@
+/*! \page tutorial_resamp Image Resampling Tutorial
+
+\tableofcontents
+
+\section resampintro Introduction
+
+One of the key operations for SLC co-registration is resampling SLC images from one geometry to another. Resampling is the process of moving pixels from one place in an image to another in a new image while accounting for fractional pixel indices via interpolation. Currently, we represent the transformation with a pixel-by-pixel map of "range" offsets (i.e., offsets in the horizontal direction) and "azimuth" offsets (i.e., offsets in the vertical direction):
+
+\f[
+I^\prime\left(x, y\right) = I\left(x, y, \Delta x, \Delta y\right)
+\f]
+
+where \f$I^\prime()\f$ represents the resampled image, \f$I()\f$ represents the original image, \f$x\f$ and \f$y\f$ are the image coordinates in the output geometry, and \f$\Delta x\f$ and \f$\Delta y\f$ are the offsets between the input and output geometries. For SLC co-registration, in addition to resampling of the complex pixel data, the user may also need to account for non-zero carrier phases in the azimuth direction (e.g., for native Doppler images) and flattening of the complex phase to account for differences in center frequency between the image and a master image. The isce::image::ResampSlc class contains all relevant operations for SLC co-registration.
+
+\section resampmain Example 1: SLC resampling
+
+For the basic task of image resampling without carrier phase or flattening considerations, let's look at the following example. Here, we have a crop of an Envisat SLC, azimuth offsets that represent a contraction of the image in the vertical dimension, and range offsets that represent a shearing in the horizontal dimension.
+
+\image html "resamp_demo.png"
+
+The following is example code to perform the resampling.
+
+\code{.cpp}
+
+#include <isce/image/ResampSlc.h>
+
+int main() {
+
+    // Instantiate a ResampSlc object
+    isce::image::ResampSlc resamp;
+
+    // Open rasters for input files
+    isce::io::Raster inputSlc("input.slc");
+    isce::io::Raster rgOff("range.off");
+    isce::io::Raster azOff("azimuth.off");
+
+    // Create raster for output resampled SLC
+    isce::io::Raster outputSlc("output.slc", rgOff.width(), rgOff.length(), 1,
+                               GDT_CFloat32, "ISCE");
+
+    // Re-run resamp
+    resamp.resamp(inputSlc, outputSlc, rgOff, azOff, 1);
+
+    return 0;
+}
+
+\endcode
+
+First, we created isce::io::Raster objects for all input rasters: the input SLC image, the pixel-by-pixel range offsets, and the pixel-by-pixel azimuth offsets. We then created an output SLC image with the output geometry determined by the either the range or azimuth offset raster. These objects are then passed to a default isce::image::ResampSlc instance to perform the resampling. After resampling, we obtain the following image:
+
+\image html "resamp_demo_result.png"
+
+\section resampdopp Example 2: SLC resampling with carrier phase and flattening
+
+If the user wishes to account for SLCs with native Doppler frequencies in the azimuth direction and flattening with respect to a master SLC, the following code can be used.
+
+\code{.cpp}
+
+// isce::core
+#include <isce/core/Poly2d.h>
+// isce::product
+#include <isce/product/ImageMode.h>
+// isce::image
+#include <isce/image/ResampSlc.h>
+
+int main() {
+
+    // Create polynomial for native Doppler
+    // Note: 0th order in azimuth, 2nd order in range
+    isce::core::Poly2d doppler(2, 0, 0.0, 0.0, 1.0, 1.0);
+    doppler.coeffs = {301.35306906319204, -0.04633312447837377, 2.044436266418998e-06};
+
+    // Create an ImageMode for the input image using Envisat parameters
+    isce::product::ImageMode mode;
+    // Set relevant parameters
+    mode.wavelength(0.056);
+    mode.startingRange(826988.69);
+    mode.rangePixelSpacing(7.80);
+    mode.prf(1652.416);
+
+    // Create an ImageMode for the reference master image
+    isce::product::ImageMode modeRef;
+    // Set relevant parameters for reference
+    modeRef.wavelength(0.057);
+    modeRef.startingRange(826991.0);
+    modeRef.rangePixelSpacing(7.80);
+    modeRef.prf(1652.416);
+
+    // Instantiate a ResampSlc object
+    isce::image::ResampSlc resamp(doppler, mode);
+    // Feed it a reference mode
+    resamp.refImageMode(modeRef);
+
+    // Open rasters for input files
+    isce::io::Raster inputSlc("input.slc");
+    isce::io::Raster rgOff("range.off");
+    isce::io::Raster azOff("azimuth.off");
+
+    // Create raster for output resampled SLC
+    isce::io::Raster outputSlc("output.slc", rgOff.width(), rgOff.length(), 1,
+                               GDT_CFloat32, "ISCE");
+
+    // Re-run resamp
+    resamp.resamp(inputSlc, outputSlc, rgOff, azOff, 1);
+
+    return 0;
+}
+
+\endcode
+
+*/

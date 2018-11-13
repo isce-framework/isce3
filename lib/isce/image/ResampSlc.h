@@ -24,7 +24,6 @@
 #include "isce/product/Product.h"
 
 // isce::image
-#include "Constants.h"
 #include "Tile.h"
 
 // Declarations
@@ -40,13 +39,19 @@ class isce::image::ResampSlc {
     // Public data members
     public:
         typedef Tile<std::complex<float>> Tile_t;
+        const int SINC_ONE = isce::core::SINC_ONE;
+        const int SINC_HALF = isce::core::SINC_HALF;
 
     // Meta-methods
     public:
         // Default constructor
+        inline ResampSlc();
+        // Constructor from an isce::product::Product
         inline ResampSlc(const isce::product::Product &);
+        // Constructor from isce::core::Poly2d and isce::product::ImageMode
+        inline ResampSlc(const isce::core::Poly2d &, const isce::product::ImageMode &);
         // Constructor from isce::core objects
-        inline ResampSlc(const isce::core::Poly2d, const isce::core::Metadata);
+        inline ResampSlc(const isce::core::Poly2d &, const isce::core::Metadata &);
         // Destructor
         inline ~ResampSlc();
 
@@ -76,7 +81,12 @@ class isce::image::ResampSlc {
         // Convenience functions
         inline void declare(int, int, int, int) const;
 
-        // Alternative generic resamp entry point
+        // Generic resamp entry point from externally created rasters
+        void resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
+                    isce::io::Raster & rgOffsetRaster, isce::io::Raster & azOffsetRaster,
+                    int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40);
+
+        // Generic resamp entry point: use filenames to create rasters
         void resamp(const std::string & inputFilename, const std::string & outputFilename,
                     const std::string & rgOffsetFilename, const std::string & azOffsetFilename,
                     int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40);
@@ -96,6 +106,8 @@ class isce::image::ResampSlc {
         std::string _filename;
         // Flag indicating if we have a reference mode
         bool _haveRefMode;
+        // Interpolator pointer
+        isce::core::Interpolator<std::complex<float>> * _interp;
 
         // Polynomials
         isce::core::Poly2d _rgCarrier;            // range carrier polynomial
@@ -129,12 +141,8 @@ class isce::image::ResampSlc {
         // Convenience functions
         inline int _computeNumberOfTiles(int, int);
 
-        // Resampling interpolation methods
-        void _prepareInterpMethods(int);
-        inline std::complex<float> _interpolateComplex(
-            isce::core::Matrix<std::complex<float>> &,
-            int, int, double, double, int, int
-        );
+        // Initialize interpolator pointer
+        void _prepareInterpMethods(isce::core::dataInterpMethod);
 };
 
 // Get inline implementations for ResampSlc

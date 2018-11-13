@@ -34,17 +34,38 @@ resamp(const std::string & outputFilename,
     const std::string dataPath = _mode.dataPath(polarization);
     const std::string h5path = "HDF5:\"" + _filename + "\":/" + dataPath;
 
-    // Call alternative resmap entry point
+    // Call alternative resmap entry point using filenames
     resamp(h5path, outputFilename, rgOffsetFilename, azOffsetFilename, 1,
            flatten, isComplex, rowBuffer);
 }
 
-// Alternative generic resamp entry point
+// Alternative generic resamp entry point: use filenames to internally create rasters
 void isce::image::ResampSlc::
 resamp(const std::string & inputFilename,          // filename of input SLC
        const std::string & outputFilename,         // filename of output resampled SLC
        const std::string & rgOffsetFilename,       // filename of range offsets
        const std::string & azOffsetFilename,       // filename of azimuth offsets
+       int inputBand, bool flatten, bool isComplex, int rowBuffer) {
+
+    // Make input rasters
+    Raster inputSlc(inputFilename, GA_ReadOnly);
+    Raster rgOffsetRaster(rgOffsetFilename, GA_ReadOnly);
+    Raster azOffsetRaster(azOffsetFilename, GA_ReadOnly);
+
+    // Make output raster; geometry defined by offset rasters
+    const int outLength = rgOffsetRaster.length();
+    const int outWidth = rgOffsetRaster.width();
+    Raster outputSlc(outputFilename, outWidth, outLength, 1, GDT_CFloat32, "ISCE");
+
+    // Call generic resamp
+    resamp(inputSlc, outputSlc, rgOffsetRaster, azOffsetRaster, inputBand, flatten,
+           isComplex, rowBuffer);
+}
+
+// Generic resamp entry point from externally created rasters
+void isce::image::ResampSlc::
+resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
+       isce::io::Raster & rgOffsetRaster, isce::io::Raster & azOffsetRaster,
        int inputBand, bool flatten, bool isComplex, int rowBuffer) {
 
     // Initialize journal channel for info
@@ -61,10 +82,6 @@ resamp(const std::string & inputFilename,          // filename of input SLC
         return;
     }
         
-    // Make input rasters
-    Raster inputSlc(inputFilename, GA_ReadOnly);
-    Raster rgOffsetRaster(rgOffsetFilename, GA_ReadOnly);
-    Raster azOffsetRaster(azOffsetFilename, GA_ReadOnly);
     // Set the band number for input SLC
     _inputBand = inputBand;
     // Cache width of SLC image
@@ -73,9 +90,6 @@ resamp(const std::string & inputFilename,          // filename of input SLC
     // Cache output length and width from offset images
     const int outLength = rgOffsetRaster.length();
     const int outWidth = rgOffsetRaster.width();
-
-    // Make output raster
-    Raster outputSlc(outputFilename, outWidth, outLength, 1, GDT_CFloat32, "ISCE");
 
     // Announce myself to the world
     declare(inLength, inWidth, outLength, outWidth);
@@ -259,20 +273,24 @@ _transformTile(Tile_t & tile,
     const int outWidth = azOffTile.width();
     const int outLength = azOffTile.length();
 
-    // Allocate valarray for working sinc chip
-    isce::core::Matrix<std::complex<float>> chip(SINC_ONE, SINC_ONE);
-
     // Allocate valarray for output image block
     std::valarray<std::complex<float>> imgOut(outLength * outWidth);
     // Initialize to zeros
     imgOut = std::complex<float>(0.0, 0.0);
+
+    // From this point on, transformation is multithreaded
+    int tileLine = 0;
+    #pragma omp parallel shared(imgOut)
+    {
+
+    // Allocate matrix for working sinc chip
+    isce::core::Matrix<std::complex<float>> chip(SINC_ONE, SINC_ONE);
     
     // Loop over lines to perform interpolation
-    int tileLine = 0;
     for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
 
         // Loop over width
-        #pragma omp parallel for firstprivate(chip)
+        #pragma omp for
         for (int j = 0; j < outWidth; ++j) {
 
             // Unpack offsets
@@ -327,9 +345,9 @@ _transformTile(Tile_t & tile,
                 }
             }
 
-            // Interpolate fractional component
-            const std::complex<float> cval = _interpolateComplex(
-                chip, (SINC_HALF + 1), (SINC_HALF + 1), fracAz, fracRg, SINC_ONE, SINC_ONE
+            // Interpolate chip
+            const std::complex<float> cval = _interp->interpolate(
+                SINC_HALF + fracRg + 1, SINC_HALF + fracAz + 1, chip
             );
 
             // Add doppler to interpolated value and save
@@ -340,9 +358,14 @@ _transformTile(Tile_t & tile,
         } // end for over width
 
         // Update input line counter
+        #pragma omp single
+        {
         ++tileLine;
+        }
 
     } // end for over length
+
+    } // end multithreaded block
 
     // Write block of data
     outputSlc.setBlock(imgOut, 0, tile.rowStart(), outWidth, outLength);

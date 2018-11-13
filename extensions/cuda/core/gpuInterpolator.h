@@ -18,7 +18,7 @@
 #define CUDA_GLOBAL
 #endif
 
-#include "isce/core/Interpolator.h"
+#include "isce/core/Matrix.h"
 #include <stdio.h>
 
 using isce::core::Matrix;

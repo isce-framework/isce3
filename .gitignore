@@ -2,3 +2,4 @@
 *~
 extensions/isce/core/export/
 *.swp
+build/

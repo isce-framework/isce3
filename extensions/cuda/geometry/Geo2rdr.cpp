@@ -17,11 +17,47 @@ using isce::core::DateTime;
 using isce::product::ImageMode;
 using isce::io::Raster;
 
-
-// Run geo2rdr - main entrypoint
+// Run geo2rdr with no offsets; internal creation of offset rasters
+/** @param[in] topoRaster outputs of topo -i.e, pixel-by-pixel x,y,h as bands
+  * @param[in] outdir directory to write outputs to
+  * @param[in] azshift Number of lines to shift by in azimuth
+  * @param[in] rgshift Number of pixels to shift by in range 
+  *
+  * This is the main geo2rdr driver. The pixel-by-pixel output filenames are fixed for now
+  * <ul>
+  * <li>azimuth.off - Azimuth offset to be applied to product to align with topoRaster
+  * <li>range.off - Range offset to be applied to product to align with topoRaster
+*/
 void isce::cuda::geometry::Geo2rdr::
 geo2rdr(isce::io::Raster & topoRaster,
         const std::string & outdir,
+        double azshift, double rgshift) {
+
+    // Cache the size of the DEM images
+    const size_t demWidth = topoRaster.width();
+    const size_t demLength = topoRaster.length();
+
+    // Create output rasters
+    Raster rgoffRaster = Raster(outdir + "/range.off", demWidth, demLength, 1,
+        GDT_Float32, "ISCE");
+    Raster azoffRaster = Raster(outdir + "/azimuth.off", demWidth, demLength, 1,
+        GDT_Float32, "ISCE");
+
+    // Call main geo2rdr with offsets set to zero
+    geo2rdr(topoRaster, rgoffRaster, azoffRaster, azshift, rgshift);
+}
+
+// Run geo2rdr with externally created offset rasters
+/** @param[in] topoRaster outputs of topo - i.e, pixel-by-pixel x,y,h as bands
+  * @param[in] outdir directory to write outputs to
+  * @param[in] rgoffRaster range offset output
+  * @param[in] azoffRaster azimuth offset output 
+  * @param[in] azshift Number of lines to shift by in azimuth
+  * @param[in] rgshift Number of pixels to shift by in range */
+void isce::cuda::geometry::Geo2rdr::
+geo2rdr(isce::io::Raster & topoRaster,
+        isce::io::Raster & rgoffRaster,
+        isce::io::Raster & azoffRaster,
         double azshift, double rgshift) {
 
     // Create reusable pyre::journal channels
@@ -42,12 +78,6 @@ geo2rdr(isce::io::Raster & topoRaster,
     Poly2d doppler = this->doppler();
     DateTime sensingStart = this->sensingStart();
  
-    // Create output rasters
-    Raster rgoffRaster = Raster(outdir + "/range.off", demWidth, demLength, 1,
-        GDT_Float32, "ISCE");
-    Raster azoffRaster = Raster(outdir + "/azimuth.off", demWidth, demLength, 1,
-        GDT_Float32, "ISCE");
-    
     // Cache sensing start in seconds since reference epoch
     double t0 = sensingStart.secondsSinceEpoch(this->refEpoch());
     // Adjust for const azimuth shift

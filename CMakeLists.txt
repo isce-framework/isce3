@@ -88,7 +88,7 @@ add_subdirectory(tests)
 if (WITH_DOC)
 
     ##If Doxygen is available, build C++ documentation
-    FIND_PACKAGE(DOXYGEN)
+    FIND_PACKAGE(Doxygen)
     if (DOXYGEN_FOUND)
         set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen/Doxyfile.in)
         set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
@@ -101,12 +101,13 @@ if (WITH_DOC)
             VERBATIM )
         install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/html 
             DESTINATION ${ISCE_DOCDIR}) 
+        message("Doxygen found. Generating C++ doc ....")
     else()
         message("Doxygen not found. Skipping C++ doc ....")
     endif(DOXYGEN_FOUND)
 
     ##If Sphinx is available, build python documentation
-    FIND_PACKAGE(SPHINX)
+    FIND_PACKAGE(Sphinx)
     if (SPHINX_FOUND)
         set(SPHX_HTML_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc/html/sphinx/html)
         set(SPHX_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc/html/sphinx/_build)
@@ -122,6 +123,7 @@ if (WITH_DOC)
             DEPENDS isceextension)
         install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/html/sphinx
             DESTINATION ${ISCE_DOCDIR}/html)
+        message("Sphinx found. Generating python doc ....")
     else()
         message("Sphinx not found. Skipping python doc ....")
     endif(SPHINX_FOUND)

@@ -77,14 +77,12 @@ namespace isce {
 
         /** Load Ellipsoid parameters from HDF5.
          *
-         * @param[in] file          HDF5 file object.
+         * @param[in] group         HDF5 group object.
          * @param[in] ellps         Ellipsoid object to be configured. */
-        inline void load(isce::io::IH5File & file, Ellipsoid & ellps) {
-            // Find the ellipsoid dataset
-            std::vector<std::string> ellpsList = file.find("ellipsoid");
+        inline void loadFromH5(isce::io::IGroup & group, Ellipsoid & ellps) {
             // Read data
             std::vector<double> ellpsData;
-            isce::io::loadFromH5(file, ellpsList[0], ellpsData);
+            isce::io::loadFromH5(group, "ellipsoid", ellpsData);
             // Set ellipsoid properties
             ellps.a(ellpsData[0]);
             ellps.e2(ellpsData[1]);
@@ -109,12 +107,14 @@ namespace isce {
 
         /** \brief Load orbit data from HDF5 product.
          *
-         * @param[in] file          HDF5 file object.
+         * @param[in] group         HDF5 group object.
          * @param[in] orbit         Orbit object to be configured.
          * @param[in] orbit_type    orbit type (NOE, MOE, POE).
          * @param[in] refEpoch      DateTime reference epoch. */
-        inline void load(isce::io::IH5File & file, Orbit & orbit, std::string orbit_type="POE",
-                  DateTime refEpoch=MIN_DATE_TIME) {
+        inline void loadFromH5(isce::io::IGroup & group,
+                               Orbit & orbit,
+                               std::string orbit_type="POE",
+                               DateTime refEpoch=MIN_DATE_TIME) {
             // Reset orbit data
             orbit.position.clear(); 
             orbit.velocity.clear(); 
@@ -124,18 +124,18 @@ namespace isce {
             // Save the reference epoch
             orbit.refEpoch = refEpoch;
 
+            // Open subgroup based on the orbit type
+            isce::io::IGroup orbGroup = group.openGroup(orbit_type);
+
             // Load position
-            isce::io::loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/position",
-                                 orbit.position);
+            isce::io::loadFromH5(orbGroup, "position", orbit.position);
 
             // Load velocity
-            isce::io::loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/velocity",
-                                 orbit.velocity);
+            isce::io::loadFromH5(orbGroup, "velocity", orbit.velocity);
 
             // Load timestamp
             std::vector<isce::core::FixedString> timestamps;
-            isce::io::loadFromH5(file, "/science/metadata/orbit/" + orbit_type + "/timestamp",
-                                 timestamps);
+            isce::io::loadFromH5(orbGroup, "timestamp", timestamps);
             orbit.nVectors = timestamps.size();
             orbit.UTCtime.resize(orbit.nVectors);
             orbit.epochs.resize(orbit.nVectors);
@@ -149,7 +149,6 @@ namespace isce {
                 orbit.UTCtime[i] = date.secondsSinceEpoch(refEpoch);
             }
         }
-
 
         // ------------------------------------------------------------------------
         // Serialization for Metadata
@@ -200,26 +199,28 @@ namespace isce {
          * @param[in] file          HDF5 file object.
          * @param[in] meta          Metadata to be configured.
          * @param[in] mode          Imagery mode (aux, primary). */
-        inline void load(isce::io::IH5File & file, Metadata & meta, std::string mode="primary") {
+        inline void loadFromH5(isce::io::IH5File & file, Metadata & meta,
+                               std::string mode="primary") {
 
             double pri, bandwidth, centerFrequency;
             std::string sensingStart, lookDir;
 
-            // Make full mode string
+            // Get group for image mode
             std::string path = "/science/complex_imagery/" + mode + "_mode";
+            isce::io::IGroup imGroup = file.openGroup(path);
 
             // Get dimension of imagery
-            std::vector<int> dims = isce::io::getImageDims(file, path + "/hh");
+            std::vector<int> dims = isce::io::getImageDims(imGroup, "hh");
             meta.length = dims[0];
             meta.width = dims[1];
 
             // Load values
-            isce::io::loadFromH5(file, path + "/slant_range_start", meta.rangeFirstSample);
-            isce::io::loadFromH5(file, path + "/slant_range_spacing", meta.slantRangePixelSpacing);
-            isce::io::loadFromH5(file, path + "/az_time_interval", pri);
-            isce::io::loadFromH5(file, path + "/bandwidth", bandwidth);
-            isce::io::loadFromH5(file, path + "/freq_center", centerFrequency);
-            isce::io::loadFromH5(file, path + "/zero_doppler_start_az_time", sensingStart);
+            isce::io::loadFromH5(imGroup, "slant_range_start", meta.rangeFirstSample);
+            isce::io::loadFromH5(imGroup, "slant_range_spacing", meta.slantRangePixelSpacing);
+            isce::io::loadFromH5(imGroup, "az_time_interval", pri);
+            isce::io::loadFromH5(imGroup, "bandwidth", bandwidth);
+            isce::io::loadFromH5(imGroup, "freq_center", centerFrequency);
+            isce::io::loadFromH5(imGroup, "zero_doppler_start_az_time", sensingStart);
             isce::io::loadFromH5(file, "/science/metadata/identification/look_direction", lookDir);
 
             // Fields not currently defined in HDF5 product
@@ -255,23 +256,13 @@ namespace isce {
 
         /** \brief Load polynomial coefficients from HDF5 product.
          *
-         * @param[in] file          HDF5 file object.
+         * @param[in] group         HDF5 group object.
          * @param[in] poly          Poly2d to be configured.
-         * @param[in] name          Dataset name. */
-        inline void load(isce::io::IH5File & file, Poly2d & poly, std::string name) {
-
-            // Find the right Poly2d dataset
-            std::vector<std::string> polys = file.find(name);
-            if (polys.size() == 0) {
-                pyre::journal::error_t errorChannel("isce.core.Serialization");
-                errorChannel
-                    << pyre::journal::at(__HERE__)
-                    << "Could not find Poly2d dataset."
-                    << pyre::journal::endl;
-            }
-
+         * @param[in] name          Dataset name within group. */
+        inline void loadFromH5(isce::io::IGroup & group, Poly2d & poly, std::string name) {
+            
             // Configure the polynomial coefficients
-            isce::io::loadFromH5(file, polys[0], poly.coeffs);
+            isce::io::loadFromH5(group, name, poly.coeffs);
             
             // Set other polynomial properties
             poly.rangeOrder = poly.coeffs.size() - 1;

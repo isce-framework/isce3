@@ -22,8 +22,11 @@ TEST(DopplerTest, CheckArchive) {
     std::string h5file("../../data/envisat.h5");
     isce::io::IH5File file(h5file);
 
+    // Open group containing Doppler
+    isce::io::IGroup group = file.openGroup("/science/metadata/instrument_data/doppler_centroid");
+
     // Deserialize the Doppler
-    isce::core::load(file, doppler, "data_dcpolynomial");
+    isce::core::loadFromH5(group, doppler, "data_dcpolynomial");
     
     // Check values
     ASSERT_NEAR(doppler.coeffs[0], 301.353069063192, 1.0e-10);

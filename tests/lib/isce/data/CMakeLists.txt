@@ -1,30 +1,35 @@
+#Input files for tests
+set (INPUT_SRCS envisat.h5
+                warped_envisat.slc
+                warped_envisat.slc.vrt
+                topo.xml
+                srtm_cropped.tif
+                offsets/range.off
+                offsets/range.off.xml
+                offsets/azimuth.off
+                offsets/azimuth.off.xml
+                topo/topo.vrt
+                topo/x.rdr
+                topo/x.hdr
+                topo/y.rdr
+                topo/y.hdr
+                topo/z.rdr
+                topo/z.hdr
+                topo/inc.rdr
+                topo/inc.hdr
+                topo/hdg.rdr
+                topo/hdg.hdr
+                topo/localInc.rdr
+                topo/localInc.hdr
+                topo/localPsi.rdr
+                topo/localPsi.hdr)
 
-# Copy files used for various tests
-file(COPY envisat.h5 DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY warped_envisat.slc DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY warped_envisat.slc.vrt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY topo.xml DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY srtm_cropped.tif DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY offsets/range.off DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/offsets)
-file(COPY offsets/range.off.xml DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/offsets)
-file(COPY offsets/azimuth.off DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/offsets)
-file(COPY offsets/azimuth.off.xml DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/offsets)
-
-# Copy files necessary for topo comparison
-file(COPY topo/topo.vrt DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/x.rdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/x.hdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/y.rdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/y.hdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/z.rdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/z.hdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/inc.rdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/inc.hdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/hdg.rdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/hdg.hdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/localInc.rdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/localInc.hdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/localPsi.rdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
-file(COPY topo/localPsi.hdr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/topo)
+add_custom_target(geom_test_data)
+foreach (DATASRC ${INPUT_SRCS})
+    get_filename_component(RELDIR_PATH ${DATASRC} DIRECTORY)
+    add_custom_command(TARGET geom_test_data PRE_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E
+                       copy  ${CMAKE_CURRENT_SOURCE_DIR}/${DATASRC} ${CMAKE_CURRENT_BINARY_DIR}/${DATASRC})
+endforeach()
 
 # end of file

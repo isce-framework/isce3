@@ -1,0 +1,265 @@
+/*! \page tutorial_geometry Geometry Tutorial
+
+\tableofcontents
+
+\section geominclude Include headers
+
+In general, one only needs to include the following headerfiles. 
+\code{.cpp}
+#include "isce/core/Orbit.h"
+#include "isce/geometry/geometry.h"
+\endcode
+
+If one is looking to use this with other features from ISCE, you might need additional appropriate header files.
+
+\section geomorbit Orbit
+
+isce::core::Orbit is at the heart of all geometric manipulation in ISCE. This is just a time-tagged collection of state vectors. In this example, we will just walk through an example of constructing an Orbit object with a list of time-tagged position and velocity state vectors.
+
+\code{.cpp}
+
+#include "isce/geometry/geometry.h"
+#include <sstream>
+#include <fstream>
+#include <iostream>
+
+int main(int argc, char *argv[])
+{
+    isce::core::Orbit orbit;
+
+    std::ifstream ifid("input_orbit.txt");
+    std::string line;
+    
+    while(std::getline(ifid, line))
+    {
+        std::stringstream stream;
+        std::string aztime;
+        isce::core::cartesian_t pos, vel;
+
+        stream << line;
+        std::cout << line << "\n";
+        stream >> aztime >> pos[0] >> pos[1] >> pos[2] >> vel[0] >> vel[1] >> vel[2];
+        //Create StateVector Object
+        isce::core::StateVector sv;
+        sv.date(aztime);    //ISO-8601 format
+        sv.position(pos);
+        sv.velocity(vel);
+
+        //Add state vector to orbit
+        orbit.stateVectors.push_back(sv);
+    }
+    ifid.close();
+
+    //Assume that the state vectors are sorted on input.
+    //Prepare orbit object for computations
+    orbit.reformatOrbit( orbit.stateVectors[0].date());
+
+    //Print orbit for debugging
+    orbit.printOrbit();
+
+    return 0;
+}
+\endcode
+
+
+The "input_orbit.txt" file looks like
+
+\verbatim
+2016-04-08T09:13:13.000000 -3752316.976337 4925051.878499 3417259.473609 3505.330104 -1842.136554 6482.122476
+2016-04-08T09:13:23.000000 -3717067.52658 4906329.056304 3481886.455117 3544.479224 -1902.402281 6443.152265
+...
+\endverbatim
+
+In the above example, we used a 7-column text file with datetime in ISO-8601 format, ECEF position (m) and ECEF velocity (m/s). Similar readers can be easily written to parse state vector information in other formats like HDF5, XML etc.
+
+\section geomfwd Forward mapping - determining bounding boxes
+
+In this example, we will demonstrate the forward mapping algorithm by using it to determine approximate bounding boxes on the ground. See \ref overview_geometry "geometry overview" for details on the implemented algorithm.
+
+
+\code{.cpp}
+
+#include "isce/geometry/geometry.h"
+#include <sstream>
+#include <fstream>
+#include <iostream>
+
+int main(int argc, char *argv[])
+{
+
+    isce::core::Orbit orbit;
+
+    //Read in orbit from file
+    ...
+
+    //Create WGS84 ellipsoid
+    isce::core::Ellipsoid ellipse(6378137.,.0066943799901);
+
+    //Early and late time from radar image metadata
+    std::vector<isce::core::DateTime> timetags;
+    timetags.push_back(isce::core::DateTime("2016-04-08T09:13:55.454821"));
+    timetags.push_back(isce::core::DateTime("2016-04-08T09:14:09.555937"));
+
+    //Near and far slant range from radar image metadata
+    std::vector<double> ranges;
+    ranges.push_back(800000.);
+    ranges.push_back(950000.);
+
+    //Assume height ranges - can look up an actual DEM as well if needed
+    //We just use min/max to get approximate bounds
+    std::vector<double> zrange;
+    zrange.push_back(-100.);
+    zrange.push_back(2000.);
+
+    //Wavelength from metadata
+    double wvl = 0.06;
+
+    //Look side from metadata
+    int side = -1; //Right-looking
+
+    //Container to store sets of returned results
+    std::vector<double> lats;
+    std::vector<double> lons;
+
+    //For each time-tag
+    for (int tt=0; tt<timetags.size(); tt++)
+    {
+        //Azimuth time to interpolate w.r.t reference epoch of orbit
+        double tintp = timetags[tt].secondsSinceEpoch(orbit.refEpoch);
+        
+        //For each slant range
+        for(int rr=0; rr<ranges.size(); rr++)
+        {
+            //Slant range to pixel
+            double rng = ranges[rr];
+            
+            //For each height
+            for(int zz=0; zz<zrange.size(); zz++)
+            {
+                //To store Lon/Lat/Hae of target
+                isce::core::cartesian_t llh;
+
+                //Constant height DEM
+                isce::geometry::DEMInterpolator constDEM(zrange[zz]);
+
+                //Map target to DEM assuming Zero Doppler geometry
+                int status = isce::geometry::rdr2geo(tintp,  //aztime
+                                        rng,    //slant range
+                                        0.,     //doppler
+                                        orbit, 
+                                        ellipse, 
+                                        constDEM, 
+                                        llh,    //output LLH
+                                        wvl,    //wavelength
+                                        side,   //lookside
+                                        5.0e-2, //distance threshold
+                                        2,     //primary iterations
+                                        0,     //secondary iterations,
+                                        isce::core::HERMITE_METHOD);
+
+                //Convert to degrees 
+                lons.push_back(llh[0] * 180.0/M_PI);
+                lats.push_back(llh[1] * 180.0/M_PI);
+            }
+        }
+    }
+
+    auto lonresult = std::minmax_element(lons.begin(), lons.end());
+    std::cout << "Lon limits (deg): " << lons[lonresult.first - lons.begin()] << "  "
+                                << lons[lonresult.second - lons.begin()] << "\n";
+
+    auto latresult = std::minmax_element(lats.begin(), lats.end());
+    std::cout << "Lat limits (deg): " << lats[latresult.first - lats.begin()] << "  "
+                                << lats[latresult.second - lats.begin()] << "\n";
+                
+    return 0;
+}
+\endcode
+
+
+\section geominv Inverse mapping - locating corner reflectors
+
+In this example, we will demonstrate the inverse mapping algorithm by using it to determine the location of a known target in a radar image.
+
+\code{.cpp}
+#include "isce/geometry/geometry.h"
+#include <sstream>
+#include <fstream>
+#include <iostream>
+
+int main(int argc, char *argv[])
+{
+
+    isce::core::Orbit orbit;
+
+    //Read in orbit from file
+    ...
+
+    //Create WGS84 ellipsoid
+    isce::core::Ellipsoid ellipse(6378137.,.0066943799901);
+
+    //Known targets / corner reflector locations - can be read in from a file
+    std::vector<isce::core::cartesian_t> targets;
+    targets.push_back( isce::core::cartesian_t{{131.55, 32.85, 475.}});
+    targets.push_back( isce::core::cartesian_t{{131.65, 32.95, 150.}});
+
+    //Wavelength
+    double wvl = 0.06;
+
+    //Look side
+    int side = -1; //Right-looking
+
+    //We will create a fake product with relevant metadata for use
+    isce::product::ImageMode mode;
+    std::array<size_t,2> dims{{1500,1000}};
+    mode.dataDimensions(dims); //1500 lines x 1000 pixels
+    mode.prf(1000.);
+    mode.rangeBandwidth(20.0e6);       //Dummy
+    mode.wavelength(0.06); 
+    mode.startingRange(8.0e5);
+    mode.rangePixelSpacing(10.);
+    mode.numberAzimuthLooks(10);
+    mode.numberRangeLooks(10);
+    isce::core::DateTime t0("2016-04-08T09:13:55.454821");
+    mode.startAzTime(t0);
+    isce::core::DateTime t1("2016-04-08T09:14:10.454821");
+    mode.endAzTime(t1);
+
+    //Create Doppler polynomial - Zero Doppler for now
+    isce::core::Poly2d dop(0,0,0.,0.,1.,1.);
+    dop.setCoeff(0,0,0.);
+
+    for (int tt=0; tt<targets.size(); tt++)
+    {
+        double rng;
+        double aztime;
+       
+        //Convert from degrees to radians
+        isce::core::cartesian_t llh;
+        llh[0] = targets[tt][0] * M_PI / 180.0;
+        llh[1] = targets[tt][1] * M_PI / 180.0;
+        llh[2] = targets[tt][2];
+
+        isce::geometry::geo2rdr( llh,       //Target location
+                                 ellipse,   //Ellipsoid
+                                 orbit,     //Orbit
+                                 dop,       //Doppler
+                                 mode,      //Product metadata
+                                 aztime,    //Estimated azimuth time
+                                 rng,       //Estimated slant range
+                                 1.0e-8,    //Convergence threshold
+                                 51,        //Number of iterations
+                                 1.0e-8);
+
+        std::cout << "Target at: " << targets[tt][0] << " " << targets[tt][1] << " " << targets[tt][2] << "\n";
+        std::cout << "Estimated line number: " << (aztime - mode.startAzTime().secondsSinceEpoch(orbit.refEpoch)) * mode.prf() /   mode.numberAzimuthLooks() << "\n";
+        std::cout << "Estimated pixel number: " << (rng - mode.startingRange())/mode.rangePixelSpacing() / mode.numberRangeLooks() << "\n\n"; 
+    }
+
+    return 0;
+}
+
+\endcode
+
+
+*/

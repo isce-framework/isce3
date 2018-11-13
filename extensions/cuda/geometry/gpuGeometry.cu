@@ -9,6 +9,18 @@
 
 using isce::cuda::core::gpuLinAlg;
 
+/** @param[in] pixel gpuPixel object
+ * @param[in] TCNbasis Geocentric TCN basis corresponding to pixel
+ * @param[in] state gpuStateVector object
+ * @param[in] ellipsoid gpuEllipsoid object
+ * @param[in] demInterp gpuDEMInterpolator object
+ * @param[out] targetLLH output Lon/Lat/Hae corresponding to pixel
+ * @param[in] side +1 for left and -1 for right
+ * @param[in] threshold Distance threshold for convergence
+ * @param[in] maxIter Number of primary iterations
+ * @param[in] extraIter Number of secondary iterations
+ *
+ * This is the elementary device-side transformation from radar geometry to map geometry. The transformation is applicable for a single slant range and azimuth time. The slant range and Doppler information are encapsulated in the Pixel object, so this function can work for both zero and native Doppler geometries. The azimuth time information is encapsulated in the TCNbasis and StateVector of the platform. For algorithmic details, see \ref overview_geometry "geometry overview".*/
 CUDA_DEV
 int isce::cuda::geometry::
 rdr2geo(const isce::cuda::core::gpuPixel & pixel,
@@ -141,6 +153,18 @@ rdr2geo(const isce::cuda::core::gpuPixel & pixel,
     return converged;
 }
 
+/** @param[in] inputLLH Lon/Lat/Hae of target of interest
+ * @param[in] ellipsoid gpuEllipsoid object
+ * @param[in] orbit gpuOrbit object
+ * @param[in] doppler gpuPoly2D Doppler model
+ * @param[in] mode  gpuImageMode object
+ * @param[out] aztime azimuth time of inputLLH w.r.t reference epoch of the orbit
+ * @param[out] slantRange slant range to inputLLH
+ * @param[in] threshold azimuth time convergence threshold in seconds
+ * @param[in] maxIter Maximum number of Newton-Raphson iterations
+ * @param[in] deltaRange step size used for computing derivative of doppler
+ *
+ * This is the elementary device-side transformation from map geometry to radar geometry. The transformation is applicable for a single lon/lat/h coordinate (i.e., a single point target). For algorithmic details, see \ref overview_geometry "geometry overview".*/
 CUDA_DEV
 int isce::cuda::geometry::
 geo2rdr(double * inputLLH,

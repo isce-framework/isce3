@@ -26,9 +26,12 @@ TEST(ImageModeTest, FromHDF5) {
 
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;
+
+    // Open group for image mode
+    isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
     
     // Deserialize the primary_mode
-    isce::product::load(file, mode, "aux");
+    isce::product::loadFromH5(modeGroup, mode, "aux");
 
     // Check values
     ASSERT_NEAR(mode.rangePixelSpacing(), 7.803973670948287, 1.0e-10);

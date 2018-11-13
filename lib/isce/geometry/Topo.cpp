@@ -28,17 +28,24 @@ using isce::core::LinAlg;
 using isce::core::StateVector;
 using isce::io::Raster;
 
-// Main topo driver
+// Main topo driver; internally create topo rasters
+/** @param[in] demRaster input DEM raster
+  * @param[in] outdir  directory to write outputs to
+  *
+  * This is the main topo driver. The pixel-by-pixel output file names are fixed for now
+  * <ul>
+  * <li> x.rdr - X coordinate in requested projection system (meters or degrees)
+  * <li> y.rdr - Y cooordinate in requested projection system (meters or degrees)
+  * <li> z.rdr - Height above ellipsoid (meters)
+  * <li> inc.rdr - Incidence angle (degrees) computed from vertical at target
+  * <li> hdg.rdr - Azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
+  * <li> localInc.rdr - Local incidence angle (degrees) at target
+  * <li> locaPsi.rdr - Local projection angle (degrees) at target
+  * <li> simamp.rdr - Simulated amplitude image.
+  * </ul>*/
 void isce::geometry::Topo::
 topo(Raster & demRaster,
      const std::string outdir) {
-
-    // Create reusable pyre::journal channels
-    pyre::journal::warning_t warning("isce.geometry.Topo");
-    pyre::journal::info_t info("isce.geometry.Topo");
-
-    // First check that variables have been initialized
-    checkInitialization(info); 
 
     { // Topo scope for creating output rasters
 
@@ -59,6 +66,53 @@ topo(Raster & demRaster,
         GDT_Float32, "ISCE");
     Raster simRaster = Raster(outdir + "/simamp.rdr", _mode.width(), _mode.length(), 1,
         GDT_Float32, "ISCE");
+
+    // Call topo with rasters
+    topo(demRaster, xRaster, yRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
+         localPsiRaster, simRaster);
+
+    } // end Topo scope to release raster resources
+
+    // Write out multi-band topo VRT
+    const std::vector<Raster> rasterTopoVec = {
+        Raster(outdir + "/x.rdr" ),
+        Raster(outdir + "/y.rdr" ),
+        Raster(outdir + "/z.rdr" ),
+        Raster(outdir + "/inc.rdr" ),
+        Raster(outdir + "/hdg.rdr" ),
+        Raster(outdir + "/localInc.rdr" ),
+        Raster(outdir + "/localPsi.rdr" ),
+        Raster(outdir + "/simamp.rdr" )
+    };
+    Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
+    // Set its EPSG code
+    vrt.setEPSG(_epsgOut);
+}
+
+/** @param[in] demRaster input DEM raster
+  * @param[in] xRaster output raster for X coordinate in requested projection system 
+                   (meters or degrees)
+  * @param[in] yRaster output raster for Y cooordinate in requested projection system
+                   (meters or degrees)
+  * @param[in] zRaster output raster for height above ellipsoid (meters)
+  * @param[in] incRaster output raster for incidence angle (degrees) computed from vertical 
+               at target
+  * @param[in] hdgRaster output raster for azimuth angle (degrees) computed anti-clockwise 
+               from EAST (Right hand rule)
+  * @param[in] localIncRaster output raster for local incidence angle (degrees) at target
+  * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
+  * @param[in] simRaster output raster for simulated amplitude image. */
+void isce::geometry::Topo::
+topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
+     Raster & incRaster, Raster & hdgRaster, Raster & localIncRaster, Raster & localPsiRaster,
+     Raster & simRaster) {
+
+    // Create reusable pyre::journal channels
+    pyre::journal::warning_t warning("isce.geometry.Topo");
+    pyre::journal::info_t info("isce.geometry.Topo");
+
+    // First check that variables have been initialized
+    checkInitialization(info); 
 
     // Create and start a timer
     auto timerStart = std::chrono::steady_clock::now();
@@ -172,27 +226,13 @@ topo(Raster & demRaster,
         timerEnd - timerStart).count();
     info << "Elapsed processing time: " << elapsed << " sec"
          << pyre::journal::newline;
-
-    } // end Topo scope to release raster resources
-
-    // Write out multi-band topo VRT
-    const std::vector<Raster> rasterTopoVec = {
-        Raster(outdir + "/x.rdr" ),
-        Raster(outdir + "/y.rdr" ),
-        Raster(outdir + "/z.rdr" ),
-        Raster(outdir + "/inc.rdr" ),
-        Raster(outdir + "/hdg.rdr" ),
-        Raster(outdir + "/localInc.rdr" ),
-        Raster(outdir + "/localPsi.rdr" ),
-        Raster(outdir + "/simamp.rdr" )
-    };
-    Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
-    // Set its EPSG code
-    vrt.setEPSG(_epsgOut);
-
 }
 
-// Perform data initialization for a given azimuth line
+/** @param[in] line line number of input radar geometry product
+ * @param[out] state store state variables needed for processing the line
+ * @param[out] TCNbasis TCN basis corresponding to the state
+ *
+ * The module is optimized to work with range doppler coordinates. This section would need to be changed to work with data in PFA coordinates (not currently supported). */
 void isce::geometry::Topo::
 _initAzimuthLine(size_t line, StateVector & state, Basis & TCNbasis) {
 
@@ -292,7 +332,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
         Pixel pixel(rng, dopfact, rbin);
 
         // Run topo for one iteration for two different heights
-        cartesian_t llh;
+        cartesian_t llh = {0, 0, 0};
         std::array<double, 2> testHeights = {MIN_H, MAX_H};
         for (int k = 0; k < 2; ++k) {
 
@@ -330,7 +370,15 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
     demInterp.declare();
 }
 
-// Generate output topo layers
+/** @param[in] llh Lon/Lat/Hae for target 
+ * @param[in] layers Object containing output layers
+ * @param[in] line line number to write to output
+ * @param[in] pixel pixel number to write to output
+ * @param[in] state state for the line under consideration
+ * @param[in] TCNbasis basis for the line under consideration
+ * @param[in] demInterp DEM interpolator object used to compute local slope
+ *
+ * Currently, local slopes are computed by simple numerical differencing. In the future, we should accommodate possibility of reading in this as an external layer*/
 void isce::geometry::Topo::
 _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
                      Pixel & pixel, StateVector & state, Basis & TCNbasis,

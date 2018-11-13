@@ -4,7 +4,12 @@
 // Author: Bryan Riel
 // Copyright 2017-2018
 //
-
+/** \file geometry.h
+ * Collection of simple commonly used geometry functions
+ *
+ * There are no classes defined in this file. Its a collection of functions 
+ * that are meant to be light weight versions of isce::geometry::Topo and 
+ * isce::geometry::Geo2rdr.*/
 #ifndef ISCE_CORE_GEOMETRY_H
 #define ISCE_CORE_GEOMETRY_H
 
@@ -37,7 +42,7 @@ namespace isce {
         typedef isce::core::cartesian_t cartesian_t;
         typedef isce::core::cartmat_t cartmat_t;
 
-        // radar->geo using an Orbit and DEM
+        /** Radar geometry coordinates to map coordinates transformer*/
         int rdr2geo(double, double, double,
                     const isce::core::Orbit &,
                     const isce::core::Ellipsoid &,
@@ -45,7 +50,8 @@ namespace isce {
                     cartesian_t &,
                     double, int, double, int, int,
                     isce::core::orbitInterpMethod); 
-        
+       
+        /** Radar geometry coordinates to map coordinates transformer*/
         int rdr2geo(const isce::core::Pixel &,
                     const isce::core::Basis &,
                     const isce::core::StateVector &,
@@ -54,7 +60,7 @@ namespace isce {
                     cartesian_t &,
                     int, double, int, int);
 
-        // geo->radar
+        /** Map coordinates to radar geometry coordinates transformer*/
         int geo2rdr(const cartesian_t &,
                     const isce::core::Ellipsoid &,
                     const isce::core::Orbit &,
