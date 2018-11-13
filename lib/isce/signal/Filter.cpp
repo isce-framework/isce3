@@ -29,6 +29,7 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
                                 size_t nrows,
                                 std::string filterType)
 {
+
     if (filterType=="boxcar"){
         constructRangeBandpassBoxcar(rangeSamplingFrequency,
                              subBandCenterFrequencies,
@@ -196,8 +197,13 @@ isce::signal::Filter<T>::
 filter(std::valarray<std::complex<T>> &signal,
                 std::valarray<std::complex<T>> &spectrum)
 {
+    std::cout << "forward FFT" << std::endl;
     _signal.forward(signal, spectrum);
+    std::cout << "multiply spectrum by filter" << std::endl;
+    std::cout << spectrum.size() << std::endl;
+    std::cout << _filter.size() << std::endl;
     spectrum = spectrum*_filter;
+    std::cout << "inverse FFT" << std::endl;
     _signal.inverse(spectrum, signal);   
 }
 
@@ -258,7 +264,7 @@ T
 isce::signal::Filter<T>::
 writeFilter(size_t ncols, size_t nrows)
 {
-    isce::io::Raster filterRaster("filter.bin", ncols, nrows, 1, GDT_CFloat32, "ISCE");
+    isce::io::Raster filterRaster("filter.bin", ncols, nrows, 1, GDT_CFloat32, "ENVI");
     filterRaster.setBlock(_filter, 0, 0, ncols, nrows);
 
 }

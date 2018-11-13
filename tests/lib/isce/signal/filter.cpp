@@ -50,12 +50,13 @@ TEST(Filter, constructAzimuthCommonbandFilter)
 
     // get pulase repetition frequency (prf)
     double prf = mode.prf(); 
+    std::cout << "prf: " << std::setprecision(16)<< prf << std::endl;
 
     // beta parameter for the raised cosine filter used for constructing the common azimuth band filter
     double beta = 0.25;
 
     // desired common azimuth band
-    double commonAzimuthBandwidth = 2000;
+    double commonAzimuthBandwidth = 1000.0;
 
     isce::signal::Filter<float> filter;
     filter.constructAzimuthCommonbandFilter(dop1,
@@ -65,7 +66,7 @@ TEST(Filter, constructAzimuthCommonbandFilter)
                                             beta,
                                             refSlc, refSpectrum,
                                             ncols, blockRows);
-    //filter.writeFilter(ncols, blockRows);
+    filter.writeFilter(ncols, blockRows);
 
 }
 

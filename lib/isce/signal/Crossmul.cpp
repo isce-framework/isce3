@@ -91,15 +91,16 @@ crossmul(isce::io::Raster& referenceSLC,
 
     //filter object
     isce::signal::Filter<float> filter;
+    // storage for azimuth spectrum used by filter
+    std::valarray<std::complex<float>> refAzimuthSpectrum(ncols*blockRows);
     if (_doCommonAzimuthbandFilter){
-
         // construct azimuth common band filter for a block of data
         filter.constructAzimuthCommonbandFilter(_refDoppler, 
 					    _secDoppler, 
                                             _commonAzimuthBandwidth,
                                             _prf, 
                                             _beta,
-                                            refSlc, refSpectrum,
+                                            refSlc, refAzimuthSpectrum,
                                             ncols, blockRows);
     }
 
@@ -136,8 +137,10 @@ crossmul(isce::io::Raster& referenceSLC,
     
         //commaon azimuth band-pass filter the reference and secondary SLCs
         if (_doCommonAzimuthbandFilter){
-            filter.filter(refSlc, refSpectrum);
-            filter.filter(secSlc, secSpectrum);
+            std::cout << "filter the refSlc " << std::endl;
+            filter.filter(refSlc, refAzimuthSpectrum);
+            std::cout << "filter the secSlc " << std::endl;
+            filter.filter(secSlc, refAzimuthSpectrum);
         }
 
         // upsample the refernce and secondary SLCs

@@ -103,6 +103,94 @@ TEST(Crossmul, RunCrossmul)
       ASSERT_LT(max_err, 1.0e-9);
 }
 
+TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
+{
+    //This test creates an interferogram between an SLC and itself with azimuth
+    //common band filtering and checks if the
+    //interferometric phase is zero.
+
+    //a raster object for the reference SLC
+    isce::io::Raster referenceSlc("../data/warped_envisat.slc.vrt");
+
+    // get the length and width of the SLC
+    int width = referenceSlc.width();
+    int length = referenceSlc.length();
+
+
+    // a raster object for the interferogram
+    isce::io::Raster interferogram("/vsimem/igram.int", width, length, 1, GDT_CFloat32, "ISCE");
+
+    // HDF5 file with required metadata
+    std::string h5file("../data/envisat.h5");
+
+    //H5 object
+    isce::io::IH5File file(h5file);
+
+    //Radar object and load the h5 file
+    isce::radar::Radar instrument;
+    isce::radar::load(file, instrument);
+
+    // get the Doppler polynomial for refernce SLC
+    isce::core::Poly2d dop1 = instrument.contentDoppler();
+
+    // Since this test careates an interferogram between the refernce SLC and itself,
+    // the second Doppler is the same as the first
+    isce::core::Poly2d dop2 = instrument.contentDoppler();
+
+    // Instantiate an ImageMode object
+    isce::product::ImageMode mode;
+    isce::product::load(file, mode, "aux");
+
+    // get the pulse repetition frequency (PRF)
+    double prf = mode.prf();
+
+    //instantiate the Crossmul class
+    isce::signal::Crossmul crsmul;
+
+    // set Doppler polynomials for refernce and secondary SLCs
+    crsmul.doppler(dop1, dop2);
+
+    // set prf
+    crsmul.prf(prf);
+
+    // set commonAzimuthBandwidth
+    crsmul.commonAzimuthBandwidth(2000.0);
+
+    // set beta parameter for cosine filter in commonAzimuthBandwidth filter
+    crsmul.beta(0.25);
+
+    // set number of interferogram looks in range
+    crsmul.rangeLooks(1);
+
+    // set number of interferogram looks in azimuth
+    crsmul.azimuthLooks(1);
+
+    // set flag for performing common azimuthband filtering
+    crsmul.doCommonAzimuthbandFiltering(true);
+
+    // running crossmul
+    crsmul.crossmul(referenceSlc, referenceSlc, interferogram);
+
+    // an array for the computed interferogram
+    std::valarray<std::complex<float>> data(width*length);
+
+    // get a block of the computed interferogram
+    interferogram.getBlock(data, 0, 0, width, length);
+
+    // check if the interferometric phase is zero
+    double err = 0.0;
+    double max_err = 0.0;
+    for ( size_t i = 0; i < data.size(); ++i ) {
+        err = std::arg(data[i]);
+        if (std::abs(err) > max_err){
+            max_err = std::abs(err);
+        }
+    }
+
+    ASSERT_LT(max_err, 1.0e-9);
+}
+         
+
 TEST(Crossmul, CheckCrossmul)
 {
 
@@ -152,16 +240,16 @@ TEST(Crossmul, CheckCrossmul)
     // phase of the second slc is the sum of phase of first slc and the geometryPhase
     secSlc = refSlc*geometryPhase;
 
-
-    /*isce::io::Raster simInterferogram("simulatedIgram.int", 500, 500, 1, GDT_CFloat32, "ISCE");
-    simInterferogram.setBlock(Igram, 0 ,0 , width, length);
+    /*
+    isce::io::Raster simInterferogram("simulatedIgram.int", width, length, 1, GDT_CFloat32, "ISCE");
+    simInterferogram.setBlock(geometryPhase, 0 ,0 , width, length);
     */
     
-    isce::io::Raster secondarySlc("/vsimem/secSlc.slc", 500, 500, 1, GDT_CFloat32, "ISCE");   
+    isce::io::Raster secondarySlc("/vsimem/secSlc.slc", width, length, 1, GDT_CFloat32, "ISCE");   
     secondarySlc.setBlock(secSlc, 0 ,0 , width, length);
     
 
-    isce::io::Raster interferogram("computedIgram.int", 500, 500, 1, GDT_CFloat32, "ISCE");
+    isce::io::Raster interferogram("computedIgram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
     //instantiate the Crossmul class
     isce::signal::Crossmul crsmul;
