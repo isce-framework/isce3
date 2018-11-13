@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['nextpoweroftwo',['nextPowerOfTwo',['../classisce_1_1signal_1_1Signal.html#a1d587614e9d2f99f8084cd44fad5ed02',1,'isce::signal::Signal']]],
   ['norm',['norm',['../structisce_1_1core_1_1Poly1d.html#a123489f472adff67a1712d6d30d6f45c',1,'isce::core::Poly1d::norm()'],['../structisce_1_1core_1_1LinAlg.html#a2ea558879192a37e4a92365fcfff4263',1,'isce::core::LinAlg::norm()']]],
   ['null_5fvalue',['NULL_VALUE',['../classisce_1_1geometry_1_1Geo2rdr.html#a619f025773af42d47a89b1b699872de1',1,'isce::geometry::Geo2rdr']]],
   ['numbands',['numBands',['../classisce_1_1io_1_1Raster.html#a795efa83de13f28c5216d7e4196dc2e7',1,'isce::io::Raster']]],

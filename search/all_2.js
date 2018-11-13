@@ -10,6 +10,7 @@ var searchData=
   ['attitude',['Attitude',['../classisce_1_1core_1_1Attitude.html',1,'isce::core::Attitude'],['../classisce_1_1core_1_1Attitude.html#a909af97050ff424424be2eed032241bf',1,'isce::core::Attitude::Attitude()']]],
   ['attitudetype',['attitudeType',['../classisce_1_1core_1_1Attitude.html#a129636b7ac027b943a4ecb7a0aa18676',1,'isce::core::Attitude']]],
   ['auxmode',['auxMode',['../classisce_1_1product_1_1ComplexImagery.html#a13b9ddda0c32ea11b7d7f52cce01a4ec',1,'isce::product::ComplexImagery::auxMode() const'],['../classisce_1_1product_1_1ComplexImagery.html#aeb68473979e7483696d8bebc724fa91e',1,'isce::product::ComplexImagery::auxMode(const ImageMode &amp;mode)']]],
+  ['azimuthlooks',['azimuthLooks',['../classisce_1_1signal_1_1Crossmul.html#a8259371554fcc2c0ab1011d6bee1ccdb',1,'isce::signal::Crossmul']]],
   ['azimuthmean',['azimuthMean',['../structisce_1_1core_1_1Poly2d.html#a8ef844f41400b1e867ec41f08d779ada',1,'isce::core::Poly2d']]],
   ['azimuthnorm',['azimuthNorm',['../structisce_1_1core_1_1Poly2d.html#a37da4f4990f225094c99505eca80d5e0',1,'isce::core::Poly2d']]],
   ['azimuthorder',['azimuthOrder',['../structisce_1_1core_1_1Poly2d.html#a03ff9aee7b05163f06e26e572eebbe5d',1,'isce::core::Poly2d']]]
