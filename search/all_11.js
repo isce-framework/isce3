@@ -2,10 +2,11 @@ var searchData=
 [
   ['radar_20geometry_20handling_20in_20isce',['Radar Geometry Handling in ISCE',['../overview_geometry.html',1,'']]],
   ['raster_20data_20model_20in_20isce',['Raster Data Model in ISCE',['../overview_raster.html',1,'']]],
-  ['radar',['Radar',['../classisce_1_1radar_1_1Radar.html',1,'isce::radar::Radar'],['../classisce_1_1core_1_1Baseline.html#a8bead7070d04bc98202eac81a210f8d2',1,'isce::core::Baseline::radar()'],['../classisce_1_1radar_1_1Radar.html#acecea9642ef923ac89754547a66139ac',1,'isce::radar::Radar::Radar()'],['../classisce_1_1radar_1_1Radar.html#ac6a833ca62a3f59e445bc10d118dc270',1,'isce::radar::Radar::Radar(const isce::core::Poly2d &amp;skew, const isce::core::Poly2d &amp;content)'],['../classisce_1_1radar_1_1Radar.html#a7ed4d6b2d7e0cc2bf8a73b20bbba8d7a',1,'isce::radar::Radar::Radar(const Radar &amp;)']]],
+  ['radar',['Radar',['../classisce_1_1radar_1_1Radar.html',1,'isce::radar::Radar'],['../classisce_1_1radar_1_1Radar.html#acecea9642ef923ac89754547a66139ac',1,'isce::radar::Radar::Radar()'],['../classisce_1_1radar_1_1Radar.html#ac6a833ca62a3f59e445bc10d118dc270',1,'isce::radar::Radar::Radar(const isce::core::Poly2d &amp;skew, const isce::core::Poly2d &amp;content)'],['../classisce_1_1radar_1_1Radar.html#a7ed4d6b2d7e0cc2bf8a73b20bbba8d7a',1,'isce::radar::Radar::Radar(const Radar &amp;)'],['../classisce_1_1core_1_1Baseline.html#a8bead7070d04bc98202eac81a210f8d2',1,'isce::core::Baseline::radar()']]],
   ['radartoxyz',['radarToXYZ',['../structisce_1_1core_1_1Pegtrans.html#a6c45eea8b485e5798cd6e6e2a6b2ddec',1,'isce::core::Pegtrans']]],
   ['radcur',['radcur',['../structisce_1_1core_1_1Pegtrans.html#afc1cef48d19152dbbc28fe2d70e6059a',1,'isce::core::Pegtrans']]],
   ['rangebandwidth',['rangeBandwidth',['../classisce_1_1product_1_1ImageMode.html#a311b0c9dcdb2eae3e18202a4d7674279',1,'isce::product::ImageMode::rangeBandwidth() const'],['../classisce_1_1product_1_1ImageMode.html#abe9847f63449045b2523410c974b659d',1,'isce::product::ImageMode::rangeBandwidth(double value)']]],
+  ['rangelooks',['rangeLooks',['../classisce_1_1signal_1_1Crossmul.html#a879f135d1f60b0c6cb0ae978b54c4a51',1,'isce::signal::Crossmul']]],
   ['rangemean',['rangeMean',['../structisce_1_1core_1_1Poly2d.html#a7b53783b7f3a7d631524073414f74687',1,'isce::core::Poly2d']]],
   ['rangenorm',['rangeNorm',['../structisce_1_1core_1_1Poly2d.html#a9930fcccf722b3f34101db17a1d52cbb',1,'isce::core::Poly2d']]],
   ['rangeorder',['rangeOrder',['../structisce_1_1core_1_1Poly2d.html#a288f180ed3f55eaa0654bde70ba27096',1,'isce::core::Poly2d']]],
@@ -26,6 +27,5 @@ var searchData=
   ['roll',['roll',['../classisce_1_1core_1_1EulerAngles.html#ae2e4444f6268130a2ef16984ff62fbba',1,'isce::core::EulerAngles::roll() const'],['../classisce_1_1core_1_1EulerAngles.html#afcf0b0a7eaf22801b14dc327be446147',1,'isce::core::EulerAngles::roll(const double)']]],
   ['rotmat',['rotmat',['../classisce_1_1core_1_1Attitude.html#adeca445e31f739791309aac148426c1d',1,'isce::core::Attitude::rotmat()'],['../classisce_1_1core_1_1EulerAngles.html#a37482c9e7946ee14d467f77e419e0ba7',1,'isce::core::EulerAngles::rotmat()'],['../classisce_1_1core_1_1Quaternion.html#a4ce17e0b2b719823704577c5e4754503',1,'isce::core::Quaternion::rotmat()']]],
   ['rotmat2ypr',['rotmat2ypr',['../classisce_1_1core_1_1EulerAngles.html#a17cfdc94a76faec9187680d93b417777',1,'isce::core::EulerAngles']]],
-  ['rowptr',['rowptr',['../classisce_1_1core_1_1Matrix.html#ac6f6c05aa6cd6aa0883aebe977803cad',1,'isce::core::Matrix::rowptr(size_t row)'],['../classisce_1_1core_1_1Matrix.html#a5e184a6bc325b77fa25d162c0610ffd3',1,'isce::core::Matrix::rowptr(size_t row) const']]],
   ['raster_20tutorial',['Raster Tutorial',['../tutorial_raster.html',1,'']]]
 ];
