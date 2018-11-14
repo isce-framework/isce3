@@ -53,7 +53,6 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
         constructRangeBandpassCosine(subBandCenterFrequencies,
                             subBandBandwidths,
                             dt,
-                            nfft,
                             frequency,
                             beta,
                             _filter1D); 
@@ -69,8 +68,8 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
         }
     }
 
-    _signal.forwardRangeFFT(signal, spectrum, ncols, nrows, ncols, nrows);
-    _signal.inverseRangeFFT(spectrum, signal, ncols, nrows, ncols, nrows);
+    _signal.forwardRangeFFT(signal, spectrum, ncols, nrows);
+    _signal.inverseRangeFFT(spectrum, signal, ncols, nrows);
    
 }
 
@@ -128,7 +127,6 @@ constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
  * @param[in] subBandCenterFrequencies a vector of center frequencies for each band
  * @param[in] subBandBandwidths a vector of bandwidths for each band
  * @param[in] dt samplig rate of the signal
- * @param[in] nfft length of the spectrum
  * @param[in] frequency a vector of frequencies
  * @param[in] beta parameter for the raised cosine filter (0 <= beta <= 1)
  * @param[out] _filter1D one dimensional boxcar bandpass filter in frequency domain
@@ -139,7 +137,6 @@ isce::signal::Filter<T>::
 constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
                              std::valarray<double> subBandBandwidths,
                              double dt,
-                             int nfft,
                              std::valarray<double>& frequency,
                              double beta,
                              std::valarray<std::complex<T>>& _filter1D)
@@ -240,8 +237,8 @@ constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
         }
     }
 
-    _signal.forwardAzimuthFFT(signal, spectrum, ncols, nrows, ncols, nrows);
-    _signal.inverseAzimuthFFT(spectrum, signal, ncols, nrows, ncols, nrows);
+    _signal.forwardAzimuthFFT(signal, spectrum, ncols, nrows);
+    _signal.inverseAzimuthFFT(spectrum, signal, ncols, nrows);
 }
 
 /**
@@ -254,13 +251,8 @@ isce::signal::Filter<T>::
 filter(std::valarray<std::complex<T>> &signal,
                 std::valarray<std::complex<T>> &spectrum)
 {
-    std::cout << "forward FFT" << std::endl;
     _signal.forward(signal, spectrum);
-    std::cout << "multiply spectrum by filter" << std::endl;
-    std::cout << spectrum.size() << std::endl;
-    std::cout << _filter.size() << std::endl;
     spectrum = spectrum*_filter;
-    std::cout << "inverse FFT" << std::endl;
     _signal.inverse(spectrum, signal);   
 }
 

@@ -96,26 +96,27 @@ inverse(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &o
 /**
 *  @param[in] signal input block of data
 *  @param[out] spectrum output block of spectrum
-*  @param[in] incolumns number of columns of the input block of data
-*  @param[in] inrows number of rows of the input block of data
-*  @param[in] outcolumns number of columns of the output block of data (this is considered as length of fft)
-*  @param[in] outrows number of rows of the output block of data
+*  @param[in] ncolumns number of columns of the block of data
+*  @param[in] nrows number of rows of the block of data
  */
 template<class T>
 void isce::signal::Signal<T>::
-forwardRangeFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::complex<T>> &spectrum,
-                int incolumns, int inrows, int outcolumns, int outrows)
+//forwardRangeFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::complex<T>> &spectrum,
+//                int incolumns, int inrows, int outcolumns, int outrows)
+forwardRangeFFT(std::valarray<std::complex<T>> &signal, 
+	        std::valarray<std::complex<T>> &spectrum,
+                int ncolumns, int nrows)
 {
     int rank = 1;
-    int n = outcolumns;
-    int howmany = inrows;
-    int inembed = incolumns;
+    int n = ncolumns;
+    int howmany = nrows;
+    int inembed = ncolumns;
     int istride = 1;
-    int idist = incolumns;
+    int idist = ncolumns;
 
-    int onembed = outcolumns;
+    int onembed = ncolumns;
     int ostride = 1;
-    int odist = outcolumns;
+    int odist = ncolumns;
 
     fftPlanForward(signal, spectrum, rank, n, howmany,
                 inembed, istride, idist,
@@ -126,26 +127,24 @@ forwardRangeFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::compl
 /**
 *  @param[in] signal input block of data
 *  @param[out] spectrum output block of spectrum
-*  @param[in] incolumns number of columns of the input block of data
-*  @param[in] inrows number of rows of the input block of data
-*  @param[in] outcolumns number of columns of the output block of data
-*  @param[in] outrows number of rows of the output block of data (this is considered as length of fft)
+*  @param[in] ncolumns number of columns of the block of data
+*  @param[in] nrows number of rows of the block of data
 */
 template<class T>
 void isce::signal::Signal<T>::
 forwardAzimuthFFT(std::valarray<std::complex<T>> &signal, 
                 std::valarray<std::complex<T>> &spectrum,
-                int incolumns, int inrows, int outcolumns, int outrows)
+                int ncolumns, int nrows)
 {
 
     int rank = 1;
-    int n = outrows;
-    int howmany = incolumns;
-    int inembed = inrows;
-    int istride = incolumns;
+    int n = nrows;
+    int howmany = ncolumns;
+    int inembed = nrows;
+    int istride = ncolumns;
     int idist = 1;
-    int onembed = outrows;
-    int ostride = outcolumns;
+    int onembed = nrows;
+    int ostride = ncolumns;
     int odist = 1;
 
     fftPlanForward(signal, spectrum, rank, n, howmany,
@@ -157,25 +156,24 @@ forwardAzimuthFFT(std::valarray<std::complex<T>> &signal,
 /**
 *  @param[in] spectrum input block of spectrum
 *  @param[out] signal output block of data
-*  @param[in] incolumns number of columns of the input block of data
-*  @param[in] inrows number of rows of the input block of data
-*  @param[in] outcolumns number of columns of the output block of data (this is considered as length of fft)
-*  @param[in] outrows number of rows of the output block of data
+*  @param[in] ncolumns number of columns of the block of data
+*  @param[in] nrows number of rows of the block of data
 */
 template<class T>
 void isce::signal::Signal<T>::
-inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, std::valarray<std::complex<T>> &signal,
-                int incolumns, int inrows, int outcolumns, int outrows)
+inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, 
+                std::valarray<std::complex<T>> &signal,
+                int ncolumns, int nrows)
 {
     int rank = 1;
-    int n = outcolumns;
-    int howmany = inrows;
-    int inembed = incolumns;
+    int n = ncolumns;
+    int howmany = nrows;
+    int inembed = ncolumns;
     int istride = 1;
-    int idist = incolumns;
-    int onembed = outcolumns;
+    int idist = ncolumns;
+    int onembed = ncolumns;
     int ostride = 1;
-    int odist = outcolumns;
+    int odist = ncolumns;
 
     fftPlanBackward(spectrum, signal, rank, n, howmany,
                 inembed, istride, idist,
@@ -185,27 +183,25 @@ inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, std::valarray<std::com
 /**
 *  @param[in] spectrum input block of spectrum
 *  @param[out] signal output block of data
-*  @param[in] incolumns number of columns of the input block of data
-*  @param[in] inrows number of rows of the input block of data
-*  @param[in] outcolumns number of columns of the output block of data
-*  @param[in] outrows number of rows of the output block of data (this is considered as length of fft)
+*  @param[in] ncolumns number of columns of the block of data
+*  @param[in] nrows number of rows of the block of data
 */
 template<class T>
 void isce::signal::Signal<T>::
 inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
                 std::valarray<std::complex<T>> &signal,
-                int incolumns, int inrows, int outcolumns, int outrows)
+                int ncolumns, int nrows)
 {
 
     int rank = 1;
-    int n = outrows;
-    int howmany = incolumns;
-    int inembed = inrows;
-    int istride = incolumns;
+    int n = nrows;
+    int howmany = ncolumns;
+    int inembed = nrows;
+    int istride = ncolumns;
     int idist = 1;
 
-    int onembed = outrows;
-    int ostride = outcolumns;
+    int onembed = nrows;
+    int ostride = ncolumns;
     int odist = 1;
 
     fftPlanBackward(spectrum, signal, rank, n, howmany,

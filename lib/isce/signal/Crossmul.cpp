@@ -52,10 +52,10 @@ crossmul(isce::io::Raster& referenceSLC,
     }
 
     // storage for a block of reference SLC data
-    std::valarray<std::complex<float>> refSlc(ncols*blockRows);
+    std::valarray<std::complex<float>> refSlc(nfft*blockRows);
 
     // storage for a block of secondary SLC data
-    std::valarray<std::complex<float>> secSlc(ncols*blockRows);
+    std::valarray<std::complex<float>> secSlc(nfft*blockRows);
 
     // storage for spectrum of the block of data in reference SLC
     std::valarray<std::complex<float>> refSpectrum(nfft*blockRows);
@@ -82,17 +82,17 @@ crossmul(isce::io::Raster& referenceSLC,
     std::valarray<std::complex<float>> ifgram(ncols*blockRows);
 
     // make forward and inverse fft plans for the reference SLC 
-    refSignal.forwardRangeFFT(refSlc, refSpectrum, ncols, blockRows, nfft, blockRows);
-    refSignal.inverseRangeFFT(refSpectrumUpsampled, refSlcUpsampled, nfft*oversample, blockRows, nfft*oversample, blockRows);
+    refSignal.forwardRangeFFT(refSlc, refSpectrum, nfft, blockRows);
+    refSignal.inverseRangeFFT(refSpectrumUpsampled, refSlcUpsampled, nfft*oversample, blockRows);
 
     // make forward and inverse fft plans for the secondary SLC
-    secSignal.forwardRangeFFT(secSlc, secSpectrum, ncols, blockRows, nfft, blockRows);
-    secSignal.inverseRangeFFT(secSpectrumUpsampled, secSlcUpsampled, nfft*oversample, blockRows, nfft*oversample, blockRows);
+    secSignal.forwardRangeFFT(secSlc, secSpectrum, nfft, blockRows);
+    secSignal.inverseRangeFFT(secSpectrumUpsampled, secSlcUpsampled, nfft*oversample, blockRows);
 
     //filter object
     isce::signal::Filter<float> filter;
     // storage for azimuth spectrum used by filter
-    std::valarray<std::complex<float>> refAzimuthSpectrum(ncols*blockRows);
+    std::valarray<std::complex<float>> refAzimuthSpectrum(nfft*blockRows);
     if (_doCommonAzimuthbandFilter){
         // construct azimuth common band filter for a block of data
         filter.constructAzimuthCommonbandFilter(_refDoppler, 
@@ -101,7 +101,7 @@ crossmul(isce::io::Raster& referenceSLC,
                                             _prf, 
                                             _beta,
                                             refSlc, refAzimuthSpectrum,
-                                            ncols, blockRows);
+                                            nfft, blockRows);
     }
 
     // loop over all blocks
@@ -132,8 +132,18 @@ crossmul(isce::io::Raster& referenceSLC,
         ifgram = 0;
 
         // get a block of reference and secondary SLC data
-        referenceSLC.getBlock(refSlc, 0, rowStart, ncols, blockRowsData);
-        secondarySLC.getBlock(secSlc, 0, rowStart, ncols, blockRowsData);
+        // This will change once we have the functionality to 
+        // get a block of data directly in to a slice
+        std::valarray<std::complex<float>> dataLine(ncols);
+        for (size_t line = 0; line < blockRowsData; ++line){
+            referenceSLC.getLine(dataLine, line);
+            refSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
+
+            secondarySLC.getLine(dataLine, line);
+            secSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
+        }
+        //referenceSLC.getBlock(refSlc, 0, rowStart, ncols, blockRowsData);
+        //secondarySLC.getBlock(secSlc, 0, rowStart, ncols, blockRowsData);
     
         //commaon azimuth band-pass filter the reference and secondary SLCs
         if (_doCommonAzimuthbandFilter){

@@ -65,29 +65,25 @@ class isce::signal::Signal {
          */
         void forwardRangeFFT(std::valarray<std::complex<T>>& signal, 
 					std::valarray<std::complex<T>>& spectrum,
-                			int incolumns, int inrows, 
-                                        int outcolumns, int outrows);
+                			int ncolumns, int nrows);
 
         /** \brief initiate plan for forward FFT in azimuth direction for a block of data
          */
         void forwardAzimuthFFT(std::valarray<std::complex<T>> &signal,
-                                        std::valarray<std::complex<T>> &spectrum,
-                                        int incolumns, int inrows, 
-                                        int outcolumns, int outrows);
+                                std::valarray<std::complex<T>> &spectrum,
+                                int ncolumns, int nrows);
 
         /** \brief initiate plan for backward FFT in range direction for a block of data
          */
         void inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, 
                                         std::valarray<std::complex<T>> &signal,
-                                        int incolumns, int inrows, 
-                                        int outcolumns, int outrows);
+                                        int ncolumns, int nrows);
 
 	/** \brief initiate plan for inverse FFT in azimuth direction for a block of data
          */
         void inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
                                         std::valarray<std::complex<T>> &signal,
-                                        int incolumns, int inrows,
-                                        int outcolumns, int outrows);
+                                        int ncolumns, int nrows);
 
 	/** \brief upsampling a block of data in range direction */
         void upsample(std::valarray<std::complex<T>> &signal,

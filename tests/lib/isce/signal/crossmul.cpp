@@ -324,7 +324,9 @@ TEST(Crossmul, CheckCrossmul)
             }
         }
     }
-    
+
+    // needs better understanding of the impact of oversampling
+    // This threshold should be much smaller
     ASSERT_LT(max_err, 6.0e-1);
         
 
