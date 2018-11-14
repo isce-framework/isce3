@@ -145,9 +145,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1131b6253548680c9b0fc60c7a3892eb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Matrix.html#a1131b6253548680c9b0fc60c7a3892eb">resize</a> (size_t nrows, size_t ncols)</td></tr>
 <tr class="memdesc:a1131b6253548680c9b0fc60c7a3892eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resize memory for a given number of rows and columns.  <a href="#a1131b6253548680c9b0fc60c7a3892eb">More...</a><br /></td></tr>
 <tr class="separator:a1131b6253548680c9b0fc60c7a3892eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aab3a7892fc938a5ffa686041a3ee4272"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classisce_1_1core_1_1Matrix.html">Matrix</a>&lt; cell_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Matrix.html#aab3a7892fc938a5ffa686041a3ee4272">submat</a> (size_t row, size_t col, size_t rowspan, size_t colspan)</td></tr>
-<tr class="memdesc:aab3a7892fc938a5ffa686041a3ee4272"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract copy of sub-matrix given starting indices and span.  <a href="#aab3a7892fc938a5ffa686041a3ee4272">More...</a><br /></td></tr>
-<tr class="separator:aab3a7892fc938a5ffa686041a3ee4272"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75d7751271ac4e7a9a969fd7bccee68d"><td class="memItemLeft" align="right" valign="top">const view_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Matrix.html#a75d7751271ac4e7a9a969fd7bccee68d">submat</a> (size_t row, size_t col, size_t rowspan, size_t colspan)</td></tr>
+<tr class="memdesc:a75d7751271ac4e7a9a969fd7bccee68d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract copy of sub-matrix given starting indices and span.  <a href="#a75d7751271ac4e7a9a969fd7bccee68d">More...</a><br /></td></tr>
+<tr class="separator:a75d7751271ac4e7a9a969fd7bccee68d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a249ed1a5a898f6fda604c899fe56de02"><td class="memItemLeft" align="right" valign="top"><a id="a249ed1a5a898f6fda604c899fe56de02"></a>
 cell_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Matrix.html#a249ed1a5a898f6fda604c899fe56de02">data</a> ()</td></tr>
 <tr class="memdesc:a249ed1a5a898f6fda604c899fe56de02"><td class="mdescLeft">&#160;</td><td class="mdescRight">Access to data buffer. <br /></td></tr>
@@ -156,6 +156,12 @@ cell_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 const cell_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Matrix.html#a1decaa38a5c9a4db5d175d5f97c6fb56">data</a> () const</td></tr>
 <tr class="memdesc:a1decaa38a5c9a4db5d175d5f97c6fb56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read-only access to data buffer. <br /></td></tr>
 <tr class="separator:a1decaa38a5c9a4db5d175d5f97c6fb56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6f6c05aa6cd6aa0883aebe977803cad"><td class="memItemLeft" align="right" valign="top">cell_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Matrix.html#ac6f6c05aa6cd6aa0883aebe977803cad">rowptr</a> (size_t row)</td></tr>
+<tr class="memdesc:ac6f6c05aa6cd6aa0883aebe977803cad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Access to data buffer at a specific row.  <a href="#ac6f6c05aa6cd6aa0883aebe977803cad">More...</a><br /></td></tr>
+<tr class="separator:ac6f6c05aa6cd6aa0883aebe977803cad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e184a6bc325b77fa25d162c0610ffd3"><td class="memItemLeft" align="right" valign="top">const cell_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Matrix.html#a5e184a6bc325b77fa25d162c0610ffd3">rowptr</a> (size_t row) const</td></tr>
+<tr class="memdesc:a5e184a6bc325b77fa25d162c0610ffd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read-only access to data buffer at a specific row.  <a href="#a5e184a6bc325b77fa25d162c0610ffd3">More...</a><br /></td></tr>
+<tr class="separator:a5e184a6bc325b77fa25d162c0610ffd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2da0cd91435c7e829f5e01260e86800c"><td class="memItemLeft" align="right" valign="top">cell_t &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Matrix.html#a2da0cd91435c7e829f5e01260e86800c">operator()</a> (size_t row, size_t col)</td></tr>
 <tr class="memdesc:a2da0cd91435c7e829f5e01260e86800c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Access matrix value for a given row and column.  <a href="#a2da0cd91435c7e829f5e01260e86800c">More...</a><br /></td></tr>
 <tr class="separator:a2da0cd91435c7e829f5e01260e86800c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -174,6 +180,14 @@ const cell_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" 
 <tr class="memitem:ac982527f443fcdd53f04e63bc88e0958"><td class="memItemLeft" align="right" valign="top">const cell_t &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Matrix.html#ac982527f443fcdd53f04e63bc88e0958">operator[]</a> (const index_t &amp;index) const</td></tr>
 <tr class="memdesc:ac982527f443fcdd53f04e63bc88e0958"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read-only access to matrix value for a given grid::idnex_type.  <a href="#ac982527f443fcdd53f04e63bc88e0958">More...</a><br /></td></tr>
 <tr class="separator:ac982527f443fcdd53f04e63bc88e0958"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b21248a40307f9114e6eee1dec7eeda"><td class="memItemLeft" align="right" valign="top"><a id="a4b21248a40307f9114e6eee1dec7eeda"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Matrix.html#a4b21248a40307f9114e6eee1dec7eeda">zeros</a> ()</td></tr>
+<tr class="memdesc:a4b21248a40307f9114e6eee1dec7eeda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fill with zeros. <br /></td></tr>
+<tr class="separator:a4b21248a40307f9114e6eee1dec7eeda"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68b763fd6c4ee199bc5da5f6ea108d6a"><td class="memItemLeft" align="right" valign="top"><a id="a68b763fd6c4ee199bc5da5f6ea108d6a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Matrix.html#a68b763fd6c4ee199bc5da5f6ea108d6a">fill</a> (cell_t value)</td></tr>
+<tr class="memdesc:a68b763fd6c4ee199bc5da5f6ea108d6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fill with a constant value. <br /></td></tr>
+<tr class="separator:a68b763fd6c4ee199bc5da5f6ea108d6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa3b8ebfaab7373a141bee33d798cafe9"><td class="memItemLeft" align="right" valign="top"><a id="aa3b8ebfaab7373a141bee33d798cafe9"></a>
 shape_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Matrix.html#aa3b8ebfaab7373a141bee33d798cafe9">shape</a> () const</td></tr>
 <tr class="memdesc:aa3b8ebfaab7373a141bee33d798cafe9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get shape information as grid::shape_type. <br /></td></tr>
@@ -884,8 +898,8 @@ template&lt;typename cell_t &gt; </div>
 
 </div>
 </div>
-<a id="aab3a7892fc938a5ffa686041a3ee4272"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aab3a7892fc938a5ffa686041a3ee4272">&#9670;&nbsp;</a></span>submat()</h2>
+<a id="ac6f6c05aa6cd6aa0883aebe977803cad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac6f6c05aa6cd6aa0883aebe977803cad">&#9670;&nbsp;</a></span>rowptr() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -896,7 +910,69 @@ template&lt;typename cell_t &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; cell_t &gt; <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; cell_t &gt;::submat </td>
+          <td class="memname">cell_t * <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; cell_t &gt;::rowptr </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>row</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Access to data buffer at a specific row. </p>
+<p>Access to data buffer at specific row. </p>
+
+</div>
+</div>
+<a id="a5e184a6bc325b77fa25d162c0610ffd3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5e184a6bc325b77fa25d162c0610ffd3">&#9670;&nbsp;</a></span>rowptr() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename cell_t &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const cell_t * <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; cell_t &gt;::rowptr </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>row</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Read-only access to data buffer at a specific row. </p>
+<p>Read-only access to data buffer at specific row. </p>
+
+</div>
+</div>
+<a id="a75d7751271ac4e7a9a969fd7bccee68d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a75d7751271ac4e7a9a969fd7bccee68d">&#9670;&nbsp;</a></span>submat()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename cell_t &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; cell_t &gt;::view_t <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; cell_t &gt;::submat </td>
           <td>(</td>
           <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>row</em>, </td>
