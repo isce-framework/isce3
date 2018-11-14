@@ -87,6 +87,12 @@ class isce::core::Matrix {
         /** Read-only access to data buffer */
         inline const cell_t * data() const;
 
+        /** Access to data buffer at a specific row */
+        inline cell_t * rowptr(size_t row);
+
+        /** Read-only access to data buffer at a specific row */
+        inline const cell_t * rowptr(size_t row) const;
+
         /** Access matrix value for a given row and column */
         inline cell_t & operator()(size_t row, size_t col);
 

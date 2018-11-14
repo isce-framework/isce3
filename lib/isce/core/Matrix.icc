@@ -228,6 +228,28 @@ data() const {
     return _buffer;
 }
 
+/** Access to data buffer at specific row */
+template <typename cell_t>
+cell_t *
+isce::core::Matrix<cell_t>::
+rowptr(size_t row) {
+    // Make a view pointing to row
+    auto view = submat(row, 0, 1, 1);
+    // Return pointer
+    return &(*view.begin());
+}
+
+/** Read-only access to data buffer at specific row */
+template <typename cell_t>
+const cell_t *
+isce::core::Matrix<cell_t>::
+rowptr(size_t row) const {
+    // Make a view pointing to row
+    auto view = submat(row, 0, 1, 1);
+    // Return pointer
+    return &(*view.begin());
+}
+
 // Access matrix value for a given row and column 
 /** @param[in] row Row coordinate to access
   * @param[in] col Column coordinate to access */
