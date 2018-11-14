@@ -24,7 +24,6 @@
 #include "isce/product/Product.h"
 
 // isce::image
-#include "Constants.h"
 #include "Tile.h"
 
 // Declarations
@@ -40,6 +39,8 @@ class isce::image::ResampSlc {
     // Public data members
     public:
         typedef Tile<std::complex<float>> Tile_t;
+        const int SINC_ONE = isce::core::SINC_ONE;
+        const int SINC_HALF = isce::core::SINC_HALF;
 
     // Meta-methods
     public:
@@ -105,6 +106,8 @@ class isce::image::ResampSlc {
         std::string _filename;
         // Flag indicating if we have a reference mode
         bool _haveRefMode;
+        // Interpolator pointer
+        isce::core::Interpolator<std::complex<float>> * _interp;
 
         // Polynomials
         isce::core::Poly2d _rgCarrier;            // range carrier polynomial
@@ -138,12 +141,8 @@ class isce::image::ResampSlc {
         // Convenience functions
         inline int _computeNumberOfTiles(int, int);
 
-        // Resampling interpolation methods
-        void _prepareInterpMethods(int);
-        inline std::complex<float> _interpolateComplex(
-            isce::core::Matrix<std::complex<float>> &,
-            int, int, double, double, int, int
-        );
+        // Initialize interpolator pointer
+        void _prepareInterpMethods(isce::core::dataInterpMethod);
 };
 
 // Get inline implementations for ResampSlc

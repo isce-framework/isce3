@@ -7,6 +7,7 @@
 from libcpp.vector cimport vector
 from libcpp cimport bool
 from Cartesian cimport cartesian_t
+from DateTime cimport DateTime
 
 cdef extern from "isce/core/Constants.h" namespace "isce::core":
     cdef enum orbitInterpMethod:
@@ -20,6 +21,7 @@ cdef extern from "isce/core/Orbit.h" namespace "isce::core":
         vector[double] position
         vector[double] velocity
         vector[double] UTCtime
+        DateTime refEpoch
 
         Orbit() except +
         Orbit(int) except +

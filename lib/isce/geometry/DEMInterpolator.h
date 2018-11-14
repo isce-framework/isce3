@@ -32,14 +32,32 @@ class isce::geometry::DEMInterpolator {
 
     public:
         /** Default constructor with reference height of 0, bilinear interpolation */
-        DEMInterpolator() : 
-            _haveRaster(false), _refHeight(0.0), _interpMethod(isce::core::BILINEAR_METHOD) {}
+        inline DEMInterpolator() : 
+            _haveRaster{false},
+            _refHeight{0.0},
+            _interpMethod{isce::core::BILINEAR_METHOD} {}
+
         /** Constructor with custom reference height and bilinear interpolation */
-        DEMInterpolator(float height) : 
-            _haveRaster(false), _refHeight(height), _interpMethod(isce::core::BILINEAR_METHOD) {}
-        /** Constructor with custom reference height and custom interpolation method */
-        DEMInterpolator(float height, isce::core::dataInterpMethod method) : 
-            _haveRaster(false), _refHeight(height), _interpMethod(method) {}
+        inline DEMInterpolator(float height) : 
+            _haveRaster{false},
+            _refHeight{height},
+            _interpMethod{isce::core::BILINEAR_METHOD} {}
+
+        /** Constructor with custom reference height and custom interpolator method */
+        inline DEMInterpolator(float height, isce::core::dataInterpMethod method) : 
+            _haveRaster{false},
+            _refHeight{height},
+            _interpMethod{method} {}
+
+        /** Destructor */
+        inline ~DEMInterpolator() {
+            if (_interp) {
+                delete _interp;
+            }
+            if (_proj) {
+                delete _proj;
+            }
+        }
 
         /** Read in subset of data from a DEM with a supported projection */
         void loadDEM(isce::io::Raster &demRaster,
@@ -83,8 +101,8 @@ class isce::geometry::DEMInterpolator {
         /** Set reference height of interpolator */
         void refHeight(double h) { _refHeight = h; }
 
-        /** Get valarray reference to underlying DEM data */
-        std::valarray<float> & data() { return _dem.data(); }
+        /** Get pointer to underlying DEM data */
+        float * data() { return _dem.data(); }
 
         /** Get width of DEM data used for interpolation */
         inline size_t width() const { return _dem.width(); }
@@ -94,7 +112,7 @@ class isce::geometry::DEMInterpolator {
         /** Get EPSG code for input DEM */
         inline int epsgCode() const { return _epsgcode; }
 
-        /** Get interpolator method */
+        /** Get interpolator method enum */
         inline isce::core::dataInterpMethod interpMethod() const {
             return _interpMethod;
         }
@@ -106,13 +124,14 @@ class isce::geometry::DEMInterpolator {
         float _refHeight;
         // Pointer to a ProjectionBase
         int _epsgcode;
-        isce::core::ProjectionBase * _proj;
+        isce::core::ProjectionBase * _proj = nullptr;
+        // Pointer to an Interpolator
+        isce::core::dataInterpMethod _interpMethod;
+        isce::core::Interpolator<float> * _interp = nullptr;
         // 2D array for storing DEM subset
         isce::core::Matrix<float> _dem;
         // Starting x/y for DEM subset and spacing
         double _xstart, _ystart, _deltax, _deltay;
-        // Interpolation method
-        isce::core::dataInterpMethod _interpMethod;
 };
 
 #endif

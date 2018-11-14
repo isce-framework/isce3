@@ -273,20 +273,24 @@ _transformTile(Tile_t & tile,
     const int outWidth = azOffTile.width();
     const int outLength = azOffTile.length();
 
-    // Allocate valarray for working sinc chip
-    isce::core::Matrix<std::complex<float>> chip(SINC_ONE, SINC_ONE);
-
     // Allocate valarray for output image block
     std::valarray<std::complex<float>> imgOut(outLength * outWidth);
     // Initialize to zeros
     imgOut = std::complex<float>(0.0, 0.0);
+
+    // From this point on, transformation is multithreaded
+    int tileLine = 0;
+    #pragma omp parallel shared(imgOut)
+    {
+
+    // Allocate matrix for working sinc chip
+    isce::core::Matrix<std::complex<float>> chip(SINC_ONE, SINC_ONE);
     
     // Loop over lines to perform interpolation
-    int tileLine = 0;
     for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
 
         // Loop over width
-        #pragma omp parallel for firstprivate(chip)
+        #pragma omp for
         for (int j = 0; j < outWidth; ++j) {
 
             // Unpack offsets
@@ -341,9 +345,9 @@ _transformTile(Tile_t & tile,
                 }
             }
 
-            // Interpolate fractional component
-            const std::complex<float> cval = _interpolateComplex(
-                chip, (SINC_HALF + 1), (SINC_HALF + 1), fracAz, fracRg, SINC_ONE, SINC_ONE
+            // Interpolate chip
+            const std::complex<float> cval = _interp->interpolate(
+                SINC_HALF + fracRg + 1, SINC_HALF + fracAz + 1, chip
             );
 
             // Add doppler to interpolated value and save
@@ -354,9 +358,14 @@ _transformTile(Tile_t & tile,
         } // end for over width
 
         // Update input line counter
+        #pragma omp single
+        {
         ++tileLine;
+        }
 
     } // end for over length
+
+    } // end multithreaded block
 
     // Write block of data
     outputSlc.setBlock(imgOut, 0, tile.rowStart(), outWidth, outLength);

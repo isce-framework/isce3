@@ -11,6 +11,7 @@ target_link_libraries(gpuInterpolator PUBLIC ${LISCE} ${LCUDAISCE} gtest)
 target_include_directories(gpuInterpolator PUBLIC 
                            ${ISCE_BUILDINCLUDEDIR} 
                            ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/cuda 
+                           ${PYRE_INCLUDE_DIR}
                            ${GDAL_INCLUDE_DIR})
 
 message(STATUS ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/cuda)

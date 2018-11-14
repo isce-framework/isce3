@@ -7,6 +7,13 @@
 from libcpp.string cimport string
 from DateTime cimport DateTime
 
+
+cdef extern from "<array>" namespace "std" nogil:
+    cdef cppclass sizearray2 "std::array<size_t, 2>":
+        sizearray2() except+
+        size_t& operator[](size_t)
+
+
 cdef extern from "isce/product/ImageMode.h" namespace "isce::product":
    
     # Image mode class
@@ -63,5 +70,7 @@ cdef extern from "isce/product/ImageMode.h" namespace "isce::product":
         DateTime endAzTime()
         void endAzTime(const DateTime &)
 
+        #Data Dimensions
+        void dataDimensions(sizearray2&)
 
 # end of file 

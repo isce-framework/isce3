@@ -2,7 +2,7 @@
 
 \tableofcontents
 
-\section resampinto Introduction
+\section resampintro Introduction
 
 One of the key operations for SLC co-registration is resampling SLC images from one geometry to another. Resampling is the process of moving pixels from one place in an image to another in a new image while accounting for fractional pixel indices via interpolation. Currently, we represent the transformation with a pixel-by-pixel map of "range" offsets (i.e., offsets in the horizontal direction) and "azimuth" offsets (i.e., offsets in the vertical direction):
 

@@ -18,7 +18,11 @@ cdef extern from "isce/image/ResampSlc.h" namespace "isce::image":
     cdef cppclass ResampSlc:
 
         # Default constructor
+        ResampSlc() except +
+        # Constructor with a Product
         ResampSlc(const Product & product) except +
+        # Constructor with Doppler and ImageMode
+        ResampSlc(const Poly2d & doppler, const ImageMode & mode) except +
 
         # Polynomial getters
         Poly2d rgCarrier()
