@@ -108,7 +108,7 @@ crossmul(isce::io::Raster& referenceSLC,
     std::cout << "nblocks : " << nblocks << std::endl;
 
     for (size_t block = 0; block < nblocks; ++block) {
-       
+        std::cout << "block: " << block << std::endl;       
         // start row for this block
         size_t rowStart;
         rowStart = block * blockRows;
@@ -136,10 +136,10 @@ crossmul(isce::io::Raster& referenceSLC,
         // get a block of data directly in to a slice
         std::valarray<std::complex<float>> dataLine(ncols);
         for (size_t line = 0; line < blockRowsData; ++line){
-            referenceSLC.getLine(dataLine, line);
+            referenceSLC.getLine(dataLine, rowStart + line);
             refSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
 
-            secondarySLC.getLine(dataLine, line);
+            secondarySLC.getLine(dataLine, rowStart + line);
             secSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
         }
         //referenceSLC.getBlock(refSlc, 0, rowStart, ncols, blockRowsData);
