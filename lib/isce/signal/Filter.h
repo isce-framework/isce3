@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // -*- coding: utf-8 -*-
 //
-// Author: Heresh Fattahi
+// Author: Heresh Fattahi, Bryan Riel
 // Copyright 2018-
 //
 

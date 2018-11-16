@@ -32,6 +32,14 @@ prf(double prf)
     _prf = prf;
 }
 
+/** @param[in] rngSamplingFreq range sampling frequency
+*/
+void isce::signal::Crossmul::
+rangeSamplingFrequency(double rngSamplingFreq)
+{
+    _rangeSamplingFrequency = rngSamplingFreq;
+}
+
 /** @param[in] commonAzimuthBandwidth common azimuth bandwidth
 */
 void isce::signal::Crossmul::

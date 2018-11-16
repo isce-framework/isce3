@@ -264,6 +264,55 @@ upsample(std::valarray<std::complex<T>> &signal,
 
 }
 
+template<class T>
+void isce::signal::Signal<T>::
+upsample(std::valarray<std::complex<T>> &signal,
+         std::valarray<std::complex<T>> &signalUpsampled,
+         int rows, int nfft, int upsampleFactor, std::valarray<std::complex<T>> shiftImpact)
+{
+
+    // number of columns of upsampled spectrum
+    int columns = upsampleFactor*nfft;
+
+    // temporary storage for the spectrum before and after the shift
+    std::valarray<std::complex<T>> spectrum(nfft*rows);
+    std::valarray<std::complex<T>> spectrumShifted(columns*rows);
+
+    spectrumShifted = std::complex<T> (0.0,0.0);
+
+    // forward fft in range
+    _plan_fwd.execute_dft(&signal[0], &spectrum[0]);
+
+    //spectrum /=nfft;
+    //shift the spectrum
+    // The spectrum has values from begining to nfft index for each line. We want
+    // to put the spectrum in correct ouput locations such that the spectrum of
+    // the upsampled data has values from 0 to nfft/2 and from upsampleFactor*nfft - nfft/2 to the end.
+    // For a 1D example:
+    //      spectrum = [1,2,3,4,5,6,0,0,0,0,0,0]
+    //  becomes:
+    //      spectrumShifted = [1,2,3,0,0,0,0,0,0,4,5,6]
+    //
+
+    for (size_t column = 0; column<nfft/2; ++column)
+        spectrumShifted[std::slice(column, rows, columns)] = spectrum[std::slice(column, rows, nfft)];
+
+    for (size_t i = 0; i<nfft/2; ++i){
+        size_t j = upsampleFactor*nfft - nfft/2 + i;
+        spectrumShifted[std::slice(j, rows, columns)] = spectrum[std::slice(i+nfft/2, rows, nfft)];
+    }
+
+
+    spectrumShifted *= shiftImpact;
+
+    // inverse fft to get the upsampled signal
+    _plan_inv.execute_dft(&spectrumShifted[0], &signalUpsampled[0]);
+
+    // Normalize
+    signalUpsampled /=nfft;
+
+}
+
 
 // We currently allow float and double. If at any time "long double" is needed, 
 // declaration should be added here. 

@@ -90,6 +90,11 @@ class isce::signal::Signal {
                     std::valarray<std::complex<T>> &signalOversampled,
                     int rows, int nfft, int oversampleFactor);
 
+        void upsample(std::valarray<std::complex<T>> &signal,
+                    std::valarray<std::complex<T>> &signalOversampled,
+                    int rows, int nfft, int oversampleFactor, 
+                    std::valarray<std::complex<T>> shiftImpact);
+
         void nextPowerOfTwo(size_t N, size_t& fftLength);
 
     private:

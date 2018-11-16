@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // -*- coding: utf-8 -*-
 //
-// Author: Heresh Fattahi
+// Author: Heresh Fattahi, Bryan Riel
 // Copyright 2018-
 //
 
@@ -57,6 +57,9 @@ class isce::signal::Crossmul {
         /** Set pulse repetition frequency (PRF) */
         inline void prf(double);
 
+        /** Set range sampling frequency  */
+        inline void rangeSamplingFrequency(double);
+
         /** Set azimuth common bandwidth */
         inline void commonAzimuthBandwidth(double);
 
@@ -85,6 +88,9 @@ class isce::signal::Crossmul {
 
         //pulse repetition frequency
         double _prf;
+
+        // range samping frequency
+        double _rangeSamplingFrequency;
 
         //azimuth common bandwidth
         double _commonAzimuthBandwidth;
