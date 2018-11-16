@@ -6,7 +6,6 @@ var searchData=
   ['radartoxyz',['radarToXYZ',['../structisce_1_1core_1_1Pegtrans.html#a6c45eea8b485e5798cd6e6e2a6b2ddec',1,'isce::core::Pegtrans']]],
   ['radcur',['radcur',['../structisce_1_1core_1_1Pegtrans.html#afc1cef48d19152dbbc28fe2d70e6059a',1,'isce::core::Pegtrans']]],
   ['rangebandwidth',['rangeBandwidth',['../classisce_1_1product_1_1ImageMode.html#a311b0c9dcdb2eae3e18202a4d7674279',1,'isce::product::ImageMode::rangeBandwidth() const'],['../classisce_1_1product_1_1ImageMode.html#abe9847f63449045b2523410c974b659d',1,'isce::product::ImageMode::rangeBandwidth(double value)']]],
-  ['rangelooks',['rangeLooks',['../classisce_1_1signal_1_1Crossmul.html#a879f135d1f60b0c6cb0ae978b54c4a51',1,'isce::signal::Crossmul']]],
   ['rangemean',['rangeMean',['../structisce_1_1core_1_1Poly2d.html#a7b53783b7f3a7d631524073414f74687',1,'isce::core::Poly2d']]],
   ['rangenorm',['rangeNorm',['../structisce_1_1core_1_1Poly2d.html#a9930fcccf722b3f34101db17a1d52cbb',1,'isce::core::Poly2d']]],
   ['rangeorder',['rangeOrder',['../structisce_1_1core_1_1Poly2d.html#a288f180ed3f55eaa0654bde70ba27096',1,'isce::core::Poly2d']]],
