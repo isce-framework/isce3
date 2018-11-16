@@ -89,55 +89,19 @@ crossmul(isce::io::Raster& referenceSLC,
     secSignal.forwardRangeFFT(secSlc, secSpectrum, nfft, blockRows);
     secSignal.inverseRangeFFT(secSpectrumUpsampled, secSlcUpsampled, nfft*oversample, blockRows);
 
-    //filter object 
-    isce::signal::Filter<float> filter;
-
-    
-    // range frequencies given nfft and oversampling factor
-    std::valarray<double> rangeFrequencies(oversample*nfft);
-
-    // sampling in range
-    double dt = 1.0;///_rangeSamplingFrequency;
-
-    // get the vector of range frequencies
-    filter.fftfreq(oversample*nfft, dt, rangeFrequencies);
-
-    // in the process of upsampling the SLCs, creating upsampled interferogram
-    // and then looking down the upsampled interferogram to the original size of
-    // the SLCs, a shift is introduced in range direction.
-    // As an example for a signal with length of 5 and :
-    // original sample locations:   0       1       2       3        4  
-    // upsampled sample locations:  0   0.5 1  1.5  2  2.5  3   3.5  4   4.5
-    // Looked dow sample locations:   0.25    1.25    2.25    3.25    4.25
-    // Obviously the signal after looking down would be shifted by 0.25 pixel in 
-    // range comared to the original signal. Since a shift in time domain introcues 
-    // a liner phase in frequency domain, here is the impact in frequency domain
-    // for one range line:
-
-    // predict the shift based on the oversample factor
-    double shift = 0.0;
-    if (oversample == 2){
-        shift = 0.25;
-    } else if (oversample > 2){
-        shift = (1.0 - 1.0/oversample)/2.0; 
-    }
-
-    std::valarray<std::complex<float>> shiftImpactLine(oversample*nfft);
-    for (size_t col=0; col<shiftImpactLine.size(); ++col){
-        double phase = -1.0*shift*2.0*M_PI*rangeFrequencies[col];
-        shiftImpactLine[col] = std::complex<float> (std::cos(phase),
-                                                    std::sin(phase)); 
-    }
-    
-
+    // looking down the upsampled interferogram may shift the samples by a fraction of a pixel
+    // depending on the oversample factor. predicting the impact of the shift in frequency domain 
+    // which is a linear phase allows to account for it during the upsampling process
     std::valarray<std::complex<float>> shiftImpact(oversample*nfft*blockRows);
+    lookdownShiftImpact(oversample,  nfft, 
+                        blockRows, shiftImpact);
 
-    for (size_t line = 0; line < blockRows; ++line){
-            shiftImpact[std::slice(line*nfft*oversample, nfft*oversample, 1)] = shiftImpactLine;
-    }
+    //filter object
+    isce::signal::Filter<float> filter;
 
     // storage for azimuth spectrum used by filter
     std::valarray<std::complex<float>> refAzimuthSpectrum(nfft*blockRows);
+
     if (_doCommonAzimuthbandFilter){
         // construct azimuth common band filter for a block of data
         filter.constructAzimuthCommonbandFilter(_refDoppler, 
@@ -230,4 +194,49 @@ crossmul(isce::io::Raster& referenceSLC,
 }
 
 
+void isce::signal::Crossmul::
+lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows, 
+		std::valarray<std::complex<float>> &shiftImpact)
+{
+    // range frequencies given nfft and oversampling factor
+    std::valarray<double> rangeFrequencies(oversample*nfft);
 
+    // sampling in range
+    double dt = 1.0;///_rangeSamplingFrequency;
+
+    // get the vector of range frequencies
+    //filter object
+    isce::signal::Filter<float> tempFilter;
+    tempFilter.fftfreq(oversample*nfft, dt, rangeFrequencies);
+
+    // in the process of upsampling the SLCs, creating upsampled interferogram
+    // and then looking down the upsampled interferogram to the original size of
+    // the SLCs, a shift is introduced in range direction.
+    // As an example for a signal with length of 5 and :
+    // original sample locations:   0       1       2       3        4
+    // upsampled sample locations:  0   0.5 1  1.5  2  2.5  3   3.5  4   4.5
+    // Looked dow sample locations:   0.25    1.25    2.25    3.25    4.25
+    // Obviously the signal after looking down would be shifted by 0.25 pixel in
+    // range comared to the original signal. Since a shift in time domain introcues
+    // a liner phase in frequency domain, here is the impact in frequency domain
+
+    // the constant shift based on the oversampling factor
+    double shift = 0.0;
+    if (oversample == 2){
+        shift = 0.25;
+    } else if (oversample > 2){
+        shift = (1.0 - 1.0/oversample)/2.0;
+    }
+
+    std::valarray<std::complex<float>> shiftImpactLine(oversample*nfft);
+    for (size_t col=0; col<shiftImpactLine.size(); ++col){
+        double phase = -1.0*shift*2.0*M_PI*rangeFrequencies[col];
+        shiftImpactLine[col] = std::complex<float> (std::cos(phase),
+                                                    std::sin(phase));
+    }
+
+    // The imapct is the same for each range line. Therefore copying the line for the block
+    for (size_t line = 0; line < blockRows; ++line){
+            shiftImpact[std::slice(line*nfft*oversample, nfft*oversample, 1)] = shiftImpactLine;
+    }
+}

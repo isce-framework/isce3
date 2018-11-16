@@ -49,6 +49,10 @@ class isce::signal::Crossmul {
                       isce::io::Raster& secondarySLC,
                       isce::io::Raster& interferogram);
 
+        /** */
+        void lookdownShiftImpact(size_t oversample, size_t nfft, 
+                                size_t blockRows,
+                                std::valarray<std::complex<float>> &shiftImpact);
 
        /** Set doppler polynomials for reference and secondary SLCs*/
         inline void doppler(isce::core::Poly2d, 
