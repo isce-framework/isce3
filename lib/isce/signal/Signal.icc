@@ -1,0 +1,29 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// Author: Heresh Fattahi
+// Copyright 2018-
+//
+
+#if !defined(ISCE_SIGNAL_SIGNAL_ICC)
+#error "Signal.icc is an implementation detail of Signal"
+#endif
+
+
+/** @param[in] N the actual length of a signal
+*   @param[in] fftLength next power of two 
+*/
+template <class T>
+void
+isce::signal::Signal<T>::
+nextPowerOfTwo(size_t N, size_t &fftLength)
+{
+    for (size_t i = 0; i < 17; ++i) {
+        fftLength = std::pow(2, i);
+        if (fftLength >= N) {
+            break;
+        }
+    }
+
+}
+

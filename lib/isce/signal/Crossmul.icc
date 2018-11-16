@@ -1,0 +1,84 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// Author: Heresh Fattahi
+// Copyright 2018-
+//
+
+#if !defined(ISCE_SIGNAL_CROSSMUL_ICC)
+#error "Crossmul.icc is an implementation detail of class Crossmul"
+#endif
+
+
+/** @param[in] refSlcDoppler 2D Doppler polynomial for refernce SLC
+*   @param[in] secSlcDoppler 2D Doppler polynomial for secondary SLC
+*/
+void isce::signal::Crossmul::
+doppler(isce::core::Poly2d refSlcDoppler, isce::core::Poly2d secSlcDoppler)
+{
+    
+    _refDoppler = refSlcDoppler;
+
+    _secDoppler = secSlcDoppler;
+
+}
+
+
+/** @param[in] prf pulse repetition interval
+*/
+void isce::signal::Crossmul::
+prf(double prf)
+{
+    _prf = prf;
+}
+
+/** @param[in] commonAzimuthBandwidth common azimuth bandwidth
+*/
+void isce::signal::Crossmul::
+commonAzimuthBandwidth(double commonAzimuthBandwidth)
+{
+    _commonAzimuthBandwidth = commonAzimuthBandwidth ;
+}
+
+/** @param[in] beta parameter for the azimuth common band filter design
+*/
+void isce::signal::Crossmul::
+beta(double par)
+{
+    _beta = par ;
+
+}
+
+/** @param[in] rangeLooks number of looks in range direction
+*/
+void isce::signal::Crossmul::
+rangeLooks(int rangeLooks)
+{
+    _rangeLooks = rangeLooks ;
+}
+
+/** @param[in] azimuthLooks number of looks in azimuth direction
+*/
+void isce::signal::Crossmul::
+azimuthLooks(int azimuthLooks)
+{
+    _azimuthLooks = azimuthLooks ;
+}
+
+/** @param[in] flag to mark if common azimuth band filtering should be applied
+*/
+void isce::signal::Crossmul::
+doCommonAzimuthbandFiltering(bool flag )
+{
+    _doCommonAzimuthbandFilter = flag ;
+}
+
+/** @param[in] flag to mark if common range band filtering should be applied */
+void isce::signal::Crossmul::
+doCommonRangebandFiltering(bool flag )
+{
+    _doCommonRangebandFilter = flag ;
+}
+
+
+
