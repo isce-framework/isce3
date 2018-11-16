@@ -67,12 +67,14 @@ function(CheckHDF5)
 
         # look for GCC version comment
         file(STRINGS "${hdf5_cpp}" gcc_comment REGEX "GCC:")
-        string(REGEX MATCH "([0-9]|\\.)+" hdf5_gcc_version ${gcc_comment})
+        if (gcc_comment)
+            string(REGEX MATCH "([0-9]|\\.)+" hdf5_gcc_version ${gcc_comment})
 
-        if (hdf5_gcc_version AND hdf5_gcc_version VERSION_LESS "5.1.0")
-            message(WARNING "Using old glibc++ ABI "
-                "(found HDF5 compiled with GCC ${hdf5_gcc_version})")
-            add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+            if (hdf5_gcc_version AND hdf5_gcc_version VERSION_LESS "5.1.0")
+                message(WARNING "Using old glibc++ ABI "
+                    "(found HDF5 compiled with GCC ${hdf5_gcc_version})")
+                add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+            endif()
         endif()
     endif()
 
@@ -124,6 +126,16 @@ function(InitInstallDirLayout)
     if (NOT ISCE_BUILDINCLUDEDIR)
         set (ISCE_BUILDINCLUDEDIR ${CMAKE_BINARY_DIR}/include/isce-${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR} CACHE STRING "build/isce/include")
     endif(NOT ISCE_BUILDINCLUDEDIR)
+
+    ###install/cyinclude
+    if (NOT ISCE_CYINCLUDEDIR)
+        set (ISCE_CYINCLUDEDIR cyinclude CACHE STRING "isce/cyinclude")
+    endif(NOT ISCE_CYINCLUDEDIR)
+
+    ###build/cyinclude
+    if (NOT ISCE_BUILDCYINCLUDEDIR)
+        set (ISCE_BUILDCYINCLUDEDIR ${CMAKE_BINARY_DIR}/include/cyinclude CACHE STRING "build/isce/cyinclude")
+    endif(NOT ISCE_BUILDCYINCLUDEDIR)
 
     ###install/defaults
     if (NOT ISCE_DEFAULTSDIR)
