@@ -9,5 +9,6 @@ var searchData=
   ['arange',['arange',['../namespaceisce_1_1core.html#a607ae942e885db44bc22f28d80a82b39',1,'isce::core']]],
   ['attitude',['Attitude',['../classisce_1_1core_1_1Attitude.html#a909af97050ff424424be2eed032241bf',1,'isce::core::Attitude']]],
   ['attitudetype',['attitudeType',['../classisce_1_1core_1_1Attitude.html#a129636b7ac027b943a4ecb7a0aa18676',1,'isce::core::Attitude']]],
-  ['auxmode',['auxMode',['../classisce_1_1product_1_1ComplexImagery.html#a13b9ddda0c32ea11b7d7f52cce01a4ec',1,'isce::product::ComplexImagery::auxMode() const'],['../classisce_1_1product_1_1ComplexImagery.html#aeb68473979e7483696d8bebc724fa91e',1,'isce::product::ComplexImagery::auxMode(const ImageMode &amp;mode)']]]
+  ['auxmode',['auxMode',['../classisce_1_1product_1_1ComplexImagery.html#a13b9ddda0c32ea11b7d7f52cce01a4ec',1,'isce::product::ComplexImagery::auxMode() const'],['../classisce_1_1product_1_1ComplexImagery.html#aeb68473979e7483696d8bebc724fa91e',1,'isce::product::ComplexImagery::auxMode(const ImageMode &amp;mode)']]],
+  ['azimuthlooks',['azimuthLooks',['../classisce_1_1signal_1_1Crossmul.html#a8259371554fcc2c0ab1011d6bee1ccdb',1,'isce::signal::Crossmul']]]
 ];

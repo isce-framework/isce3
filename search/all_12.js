@@ -14,6 +14,7 @@ var searchData=
   ['setstatevector',['setStateVector',['../structisce_1_1core_1_1Orbit.html#a3ffbd7d76c45d8663f3319477f829a40',1,'isce::core::Orbit']]],
   ['setvalue',['setValue',['../classisce_1_1io_1_1Raster.html#a41f423d3af812651f9c528261acbf3df',1,'isce::io::Raster::setValue(T &amp;buffer, size_t xidx, size_t yidx, size_t band)'],['../classisce_1_1io_1_1Raster.html#a0cb4ad3e0888d52653e826cb4f11a593',1,'isce::io::Raster::setValue(T &amp;buffer, size_t xidx, size_t yidx)']]],
   ['shape',['shape',['../classisce_1_1core_1_1Matrix.html#aa3b8ebfaab7373a141bee33d798cafe9',1,'isce::core::Matrix']]],
+  ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html',1,'isce::signal::Signal&lt; T &gt;'],['../classisce_1_1signal_1_1Signal.html#afc9c8c9f9cfe1701558205600ab7b1f2',1,'isce::signal::Signal::Signal()']]],
   ['sinc2dinterpolator',['Sinc2dInterpolator',['../classisce_1_1core_1_1Sinc2dInterpolator.html',1,'isce::core::Sinc2dInterpolator&lt; U &gt;'],['../classisce_1_1core_1_1Sinc2dInterpolator.html#a623e07dc83dd6a14c7b976adfbcda11e',1,'isce::core::Sinc2dInterpolator::Sinc2dInterpolator()']]],
   ['sinc_5feval',['sinc_eval',['../namespaceisce_1_1core.html#abb0055edd764350e6e27aa3cf77c3eb4',1,'isce::core']]],
   ['sinc_5fhalf',['SINC_HALF',['../namespaceisce_1_1core.html#a7257d73b8c42029e99427afae907ec73',1,'isce::core']]],
