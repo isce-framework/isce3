@@ -20,10 +20,28 @@ Crossmul(const isce::product::Product& referenceSlcProduct,
 * @param[in] secondarySLC Raster object of secondary SLC
 * @param[out] interferogram Raster object of output interferogram
 */
+
+
 void isce::signal::Crossmul::
 crossmul(isce::io::Raster& referenceSLC,
         isce::io::Raster& secondarySLC,
         isce::io::Raster& interferogram)
+{
+
+    _doCommonRangebandFilter = false;
+    isce::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_CFloat32, "ENVI");
+    crossmul(referenceSLC, 
+            secondarySLC, 
+            interferogram, 
+            rngOffsetRaster);
+
+}
+
+void isce::signal::Crossmul::
+crossmul(isce::io::Raster& referenceSLC,
+        isce::io::Raster& secondarySLC,
+        isce::io::Raster& interferogram,
+        isce::io::Raster& rngOffsetRaster)
 {
 
     // Create reusable pyre::journal channels
@@ -56,6 +74,9 @@ crossmul(isce::io::Raster& referenceSLC,
 
     // storage for a block of secondary SLC data
     std::valarray<std::complex<float>> secSlc(nfft*blockRows);
+
+    // storage for a block of range offsets
+    std::valarray<double> rngOffset(nfft*blockRows);
 
     // storage for spectrum of the block of data in reference SLC
     std::valarray<std::complex<float>> refSpectrum(nfft*blockRows);
@@ -162,6 +183,26 @@ crossmul(isce::io::Raster& referenceSLC,
             filter.filter(secSlc, refAzimuthSpectrum);
         }
 
+        // common range band-pass filtering
+        if (_doCommonRangebandFilter){
+
+            // get a block of range offsets
+            std::valarray<double> offsetLine(ncols);
+            for (size_t line = 0; line < blockRowsData; ++line){
+                rngOffsetRaster.getLine(offsetLine, rowStart + line);
+                rngOffset[std::slice(line*nfft, ncols, 1)] = offsetLine;
+            }
+
+            // do the range common band filter
+            rangeCommonBandFilter(refSlc,
+                                secSlc,
+                                rngOffset,
+                                _rangePixelSpacing,
+                                _wavelength,
+                                blockRows,
+                                nfft);
+        }
+
         // upsample the refernce and secondary SLCs
         refSignal.upsample(refSlc, refSlcUpsampled, blockRows, nfft, oversample, shiftImpact);
         secSignal.upsample(secSlc, secSlcUpsampled, blockRows, nfft, oversample, shiftImpact);
@@ -240,3 +281,76 @@ lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows,
             shiftImpact[std::slice(line*nfft*oversample, nfft*oversample, 1)] = shiftImpactLine;
     }
 }
+
+void isce::signal::Crossmul::
+rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
+                        std::valarray<std::complex<float>> &secSlc,
+                        std::valarray<double> rngOffset,
+                        double rangePixelSpacing,
+                        double wavelength,
+                        size_t blockLength,
+                        size_t ncols)
+{
+    // size of the arrays 
+    size_t vectorLength = refSlc.size();
+
+    std::valarray<std::complex<float>> tempRefSlc(vectorLength);
+    std::valarray<std::complex<float>> tempSecSlc(vectorLength);
+
+    // Shifting the range spectrum of each image according to the local (slope-dependent) wavenumber.
+    // This shift in frequency domain is achieved by removing/adding the geometrical (representing topography) 
+    // from/to refernce and secondary SLCs in time domain. 
+    for (size_t i = 0; i < vectorLength; ++i){
+
+        // the phase due to baseline separation obtained from range difference 
+        // from refernce and secondary antennas to the target (i.e., range offser derived from 
+        // geometrical coregistration)
+        double phase = 4.0*M_PI*rangePixelSpacing*rngOffset[i]/wavelength;
+
+        // refSLc = refSlc*exp(-1J*phase)
+        tempRefSlc[i] = refSlc[i] * std::complex<float>(std::cos(phase), -1.0*std::sin(phase));
+
+        // refSLc = secSlc*exp(1J*phase)
+        tempSecSlc[i] = secSlc[i] * std::complex<float> (std::cos(phase), std::sin(phase));
+
+    }
+
+    // low pass filter the ref and sec slc
+    // For now we low-pass filter the reference and secondary SLCs with a simple
+    // hamming window
+    float hwCoef1 = 0.23;
+    float hwCoef2 = 0.54;
+    float hwCoef3 = 0.23;
+    for (size_t line = 0; line < blockLength; ++line){
+        for (size_t col = 1; col < ncols-1; ++col){
+
+            refSlc[line*ncols + col] = hwCoef1*tempRefSlc[line*ncols + col - 1] +
+                                            hwCoef2*tempRefSlc[line*ncols + col] +
+                                            hwCoef3*tempRefSlc[line*ncols + col + 1];
+
+            secSlc[line*ncols + col] = hwCoef1*tempSecSlc[line*ncols + col-1] + 
+                                            hwCoef2*tempSecSlc[line*ncols + col] + 
+                                            hwCoef3*tempSecSlc[line*ncols + col + 1];
+        }
+    }
+    
+    
+    // add/remove half geometrical phase to/from reference and secondary SLCs
+    for (size_t i = 0; i < vectorLength; ++i){
+
+        // Half phase due to baseline separation obtained from range difference
+        // from refernce and secondary antennas to the target (i.e., range offser derived from
+        // geometrical coregistration)
+        double halfPhase = 2.0*M_PI*rangePixelSpacing*rngOffset[i]/wavelength;
+
+        // refSLc = refSlc*exp(1J*halfPhase)
+        refSlc[i] = refSlc[i] * std::complex<float> (std::cos(halfPhase), std::sin(halfPhase));
+
+        // refSLc = secSlc*exp(-1J*halfPhase)
+        secSlc[i] = secSlc[i] * std::complex<float> (std::cos(halfPhase), -1*std::sin(halfPhase));
+
+    }
+
+
+}
+

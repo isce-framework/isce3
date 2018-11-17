@@ -40,6 +40,23 @@ rangeSamplingFrequency(double rngSamplingFreq)
     _rangeSamplingFrequency = rngSamplingFreq;
 }
 
+/** @param[in] rngPixelSpacing range pixel spacing
+*/
+void isce::signal::Crossmul::
+rangePixelSpacing(double rngPixelSpacing)
+{
+    _rangePixelSpacing = rngPixelSpacing;
+}
+
+
+/** @param[in] wvl radar wavelength
+*/
+void isce::signal::Crossmul::
+wavelength(double wvl)
+{
+    _wavelength = wvl;
+}
+
 /** @param[in] commonAzimuthBandwidth common azimuth bandwidth
 */
 void isce::signal::Crossmul::

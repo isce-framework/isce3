@@ -45,14 +45,27 @@ class isce::signal::Crossmul {
 
 
         /** \brief Run crossmul */
+        void crossmul(isce::io::Raster& referenceSLC,
+                    isce::io::Raster& secondarySLC,
+                    isce::io::Raster& interferogram,
+		    isce::io::Raster& rngOffset);
+        
         void crossmul(isce::io::Raster& referenceSLC, 
-                      isce::io::Raster& secondarySLC,
-                      isce::io::Raster& interferogram);
+                    isce::io::Raster& secondarySLC,
+                    isce::io::Raster& interferogram);
 
         /** */
         void lookdownShiftImpact(size_t oversample, size_t nfft, 
                                 size_t blockRows,
                                 std::valarray<std::complex<float>> &shiftImpact);
+
+        void rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
+                        std::valarray<std::complex<float>> &secSlc,
+                        std::valarray<double> rngOffset,
+                        double rngPixelSpacing,
+                        double wavelength,
+                        size_t blockRows,
+                        size_t ncols);
 
        /** Set doppler polynomials for reference and secondary SLCs*/
         inline void doppler(isce::core::Poly2d, 
@@ -63,6 +76,13 @@ class isce::signal::Crossmul {
 
         /** Set range sampling frequency  */
         inline void rangeSamplingFrequency(double);
+
+        /** Range pixel spacing */
+        inline void rangePixelSpacing(double);
+
+        /** Set Wavelength*/
+        inline void wavelength(double);
+
 
         /** Set azimuth common bandwidth */
         inline void commonAzimuthBandwidth(double);
@@ -95,6 +115,12 @@ class isce::signal::Crossmul {
 
         // range samping frequency
         double _rangeSamplingFrequency;
+
+        // range pixel spacing
+        double _rangePixelSpacing;
+
+        // radar wavelength
+        double _wavelength;
 
         //azimuth common bandwidth
         double _commonAzimuthBandwidth;
