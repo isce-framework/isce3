@@ -40,6 +40,15 @@ rangeSamplingFrequency(double rngSamplingFreq)
     _rangeSamplingFrequency = rngSamplingFreq;
 }
 
+/** @param[in] rngBandwidth range bandwidth
+*/
+void isce::signal::Crossmul::
+rangeBandwidth(double rngBandwidth)
+{
+    _rangeBandwidth = rngBandwidth;
+
+}
+
 /** @param[in] rngPixelSpacing range pixel spacing
 */
 void isce::signal::Crossmul::

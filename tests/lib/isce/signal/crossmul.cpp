@@ -273,10 +273,10 @@ TEST(Crossmul, CheckCrossmul)
     // phase of the second slc is the sum of phase of first slc and the geometryPhase
     secSlc = refSlc*geometryPhase;
 
-    /*
+    
     isce::io::Raster simInterferogram("simulatedIgram.int", width, length, 1, GDT_CFloat32, "ISCE");
     simInterferogram.setBlock(geometryPhase, 0 ,0 , width, length);
-    */
+    
     
     isce::io::Raster secondarySlc("/vsimem/secSlc.slc", width, length, 1, GDT_CFloat32, "ISCE");   
     secondarySlc.setBlock(secSlc, 0 ,0 , width, length);

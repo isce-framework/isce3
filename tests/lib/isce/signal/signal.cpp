@@ -209,8 +209,8 @@ TEST(Signal, upsample)
 
       // instantiate a signal object
       isce::signal::Signal<float> sig;
-      sig.nextPowerOfTwo(width, nfft);
-
+      //sig.nextPowerOfTwo(width, nfft);
+      nfft = width;
       // upsampling factor
       int oversample = 2;
 
@@ -246,9 +246,9 @@ TEST(Signal, upsample)
 
       sig.upsample(data, dataUpsampled, blockLength, nfft, oversample);
 
-      /*isce::io::Raster outputSlc("slcUpsampled.slc", nfft*oversample, length, 1, GDT_CFloat32, "ENVI");
+      isce::io::Raster outputSlc("slcUpsampled.slc", nfft*oversample, length, 1, GDT_CFloat32, "ENVI");
       outputSlc.setBlock(dataUpsampled, 0 ,0 , nfft*oversample, length);
-      */
+      
 
       // needs an evaluation of the upsampled SLC
 

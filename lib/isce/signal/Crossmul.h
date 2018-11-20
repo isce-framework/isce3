@@ -67,6 +67,16 @@ class isce::signal::Crossmul {
                         size_t blockRows,
                         size_t ncols);
 
+        void rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
+                        std::valarray<std::complex<float>> &secSlc,
+                        std::valarray<double> rngOffset,
+                        double rngPixelSpacing,
+                        double wavelength,
+                        size_t blockRows,
+                        size_t ncols,
+			isce::signal::Filter<float> &rngFilter,
+                        std::valarray<std::complex<float>> &spectrum);
+
        /** Set doppler polynomials for reference and secondary SLCs*/
         inline void doppler(isce::core::Poly2d, 
                             isce::core::Poly2d);
@@ -76,6 +86,9 @@ class isce::signal::Crossmul {
 
         /** Set range sampling frequency  */
         inline void rangeSamplingFrequency(double);
+
+        /** Set the range bandwidth */
+        inline void rangeBandwidth(double);
 
         /** Range pixel spacing */
         inline void rangePixelSpacing(double);
@@ -116,6 +129,9 @@ class isce::signal::Crossmul {
         // range samping frequency
         double _rangeSamplingFrequency;
 
+        // range signal bandwidth
+        double _rangeBandwidth;
+        
         // range pixel spacing
         double _rangePixelSpacing;
 

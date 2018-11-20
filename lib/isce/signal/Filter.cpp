@@ -8,6 +8,43 @@
 #include "Filter.h"
 
 /**
+ * @param[in] signal a block of data to filte
+ * @param[in] spectrum a block of spectrum, which is internally used for FFT computations
+ * @param[in] ncols number of columns of the block of the data
+ * @param[in] nrows number of rows of the block of the data
+*/
+
+template <class T>
+void
+isce::signal::Filter<T>::
+initiateRangeFilter(std::valarray<std::complex<T>> &signal,
+                    std::valarray<std::complex<T>> &spectrum,
+                    size_t ncols,
+                    size_t nrows)
+{
+    _signal.forwardRangeFFT(signal, spectrum, ncols, nrows);
+    _signal.inverseRangeFFT(spectrum, signal, ncols, nrows);   
+}
+
+/**
+ * @param[in] signal a block of data to filte
+ * @param[in] spectrum a block of spectrum, which is internally used for FFT computations
+ * @param[in] ncols number of columns of the block of the data
+ * @param[in] nrows number of rows of the block of the data
+*/
+template <class T>
+void
+isce::signal::Filter<T>::
+initiateAzimuthFilter(std::valarray<std::complex<T>> &signal,
+                    std::valarray<std::complex<T>> &spectrum,
+                    size_t ncols,
+                    size_t nrows)
+{
+    _signal.forwardAzimuthFFT(signal, spectrum, ncols, nrows);
+    _signal.inverseAzimuthFFT(spectrum, signal, ncols, nrows);
+}
+
+/**
  * @param[in] rangeSamplingFrequency range sampling frequency
  * @param[in] subBandCenterFrequencies a vector of center frequencies for each band
  * @param[in] subBandBandwidths a vector of bandwidths for each band
@@ -29,7 +66,15 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
                                 size_t nrows,
                                 std::string filterType)
 {
+    constructRangeBandpassFilter(rangeSamplingFrequency,
+                                subBandCenterFrequencies,
+                                subBandBandwidths,
+                                ncols,
+                                nrows,
+                                filterType);
 
+
+    /*	
     int nfft = ncols;
 
     _filter.resize(nfft*nrows);
@@ -67,11 +112,64 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
             _filter[line*nfft+col] = _filter1D[col];
         }
     }
+    */
 
     _signal.forwardRangeFFT(signal, spectrum, ncols, nrows);
     _signal.inverseRangeFFT(spectrum, signal, ncols, nrows);
    
 }
+
+template <class T>
+void
+isce::signal::Filter<T>::
+constructRangeBandpassFilter(double rangeSamplingFrequency,
+                                std::valarray<double> subBandCenterFrequencies,
+                                std::valarray<double> subBandBandwidths,
+                                size_t ncols,
+                                size_t nrows,
+                                std::string filterType)
+{
+
+    int nfft = ncols;
+
+    _filter.resize(nfft*nrows);
+    std::valarray<std::complex<T>> _filter1D(nfft); //
+    _filter1D = std::complex<T>(0.0,0.0);
+
+    std::valarray<double> frequency(nfft);
+    double dt = 1.0/rangeSamplingFrequency;
+    fftfreq(nfft, dt, frequency);
+
+    if (filterType=="boxcar"){
+        constructRangeBandpassBoxcar(
+                            subBandCenterFrequencies,
+                            subBandBandwidths,
+                            dt,
+                            nfft,
+                            _filter1D);
+
+    } else if (filterType=="cosine"){
+        double beta = 0.25;
+        constructRangeBandpassCosine(subBandCenterFrequencies,
+                            subBandBandwidths,
+                            dt,
+                            frequency,
+                            beta,
+                            _filter1D);
+
+    } else {
+        std::cout << filterType << " filter has not been implemented" << std::endl;
+    }
+
+    //construct a block of the filter
+    for (size_t line = 0; line < nrows; line++ ){
+        for (size_t col = 0; col < nfft; col++ ){
+            _filter[line*nfft+col] = _filter1D[col];
+        }
+    }
+
+}
+
 
 /**
  * @param[in] subBandCenterFrequencies a vector of center frequencies for each band
