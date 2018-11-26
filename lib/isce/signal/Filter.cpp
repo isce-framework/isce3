@@ -73,47 +73,6 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
                                 nrows,
                                 filterType);
 
-
-    /*	
-    int nfft = ncols;
-
-    _filter.resize(nfft*nrows);
-    std::valarray<std::complex<T>> _filter1D(nfft); //
-    _filter1D = std::complex<T>(0.0,0.0);
-
-    std::valarray<double> frequency(nfft);
-    double dt = 1.0/rangeSamplingFrequency;
-    fftfreq(nfft, dt, frequency);
-
-    if (filterType=="boxcar"){
-        constructRangeBandpassBoxcar(
-                            subBandCenterFrequencies,
-                            subBandBandwidths,
-			    dt,
-                            nfft,
-	                    _filter1D);
-        
-    } else if (filterType=="cosine"){
-        double beta = 0.25;
-        constructRangeBandpassCosine(subBandCenterFrequencies,
-                            subBandBandwidths,
-                            dt,
-                            frequency,
-                            beta,
-                            _filter1D); 
-
-    } else {
-        std::cout << filterType << " filter has not been implemented" << std::endl;
-    }
-    
-    //construct a block of the filter
-    for (size_t line = 0; line < nrows; line++ ){
-        for (size_t col = 0; col < nfft; col++ ){
-            _filter[line*nfft+col] = _filter1D[col];
-        }
-    }
-    */
-
     _signal.forwardRangeFFT(signal, spectrum, ncols, nrows);
     _signal.inverseRangeFFT(spectrum, signal, ncols, nrows);
    
