@@ -247,8 +247,8 @@ lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows,
     // range frequencies given nfft and oversampling factor
     std::valarray<double> rangeFrequencies(oversample*nfft);
 
-    // sampling in range
-    double dt = 1.0;///_rangeSamplingFrequency;
+    // sampling interval in range
+    double dt = 1.0/oversample;
 
     // get the vector of range frequencies
     //filter object
@@ -274,6 +274,7 @@ lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows,
         shift = (1.0 - 1.0/oversample)/2.0;
     }
 
+    // compute the frequency response of the subpixel shift in range direction
     std::valarray<std::complex<float>> shiftImpactLine(oversample*nfft);
     for (size_t col=0; col<shiftImpactLine.size(); ++col){
         double phase = -1.0*shift*2.0*M_PI*rangeFrequencies[col];
