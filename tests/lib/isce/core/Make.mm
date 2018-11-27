@@ -20,6 +20,7 @@ PACKAGES = \
     ellipsoid \
     interpolator \
     lut2d \
+    matrix \
     orbit \
     poly \
     projections \
