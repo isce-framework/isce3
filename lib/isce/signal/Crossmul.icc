@@ -114,5 +114,57 @@ doCommonRangebandFiltering(bool flag )
     _doCommonRangebandFilter = flag ;
 }
 
+void isce::signal::Crossmul::
+rangeFrequencyShift(std::valarray<std::complex<float>> &refSpectrum,
+                    std::valarray<std::complex<float>> &secSpectrum,
+                    std::valarray<double> &rangeFrequencies,
+		    size_t blockRowsData,
+		    size_t nfft,
+                    double &frequencyShift)
+{
 
+    std::valarray<float> refAvgSpectrum(nfft); 
+    refAvgSpectrum = 0.0;
+    std::valarray<float> secAvgSpectrum(nfft); 
+    secAvgSpectrum = 0.0;
+
+    for (size_t line = 0; line < blockRowsData; ++line){
+        for (size_t col = 0; col < nfft; ++col){
+            refAvgSpectrum[col] += std::abs(refSpectrum[line*nfft + col]);
+            secAvgSpectrum[col] += std::abs(secSpectrum[line*nfft + col]);
+        }
+    }
+
+    // index of the max of refAvgSpectrum
+    size_t idx1;
+
+    // index of the max of secAvgSpectrum
+    size_t idx2;
+
+    // get the index of the max of refAvgSpectrum
+    getPeakIndex(refAvgSpectrum, idx1);
+
+    // get the index of the max of secAvgSpectrum
+    getPeakIndex(secAvgSpectrum, idx2);
+
+    std::cout << "idx1, idx2: "<< idx1 << " , " << idx2 <<  std::endl;
+
+    // frequency shift is the difference of the two peaks
+    frequencyShift = rangeFrequencies[idx1] - rangeFrequencies[idx2];
+
+}
+
+void isce::signal::Crossmul::
+getPeakIndex(std::valarray<float> data, size_t &peakIndex)
+{
+    size_t dataLength = data.size();
+    peakIndex = 0;
+    double peak = data[peakIndex];
+    for (size_t i = 1; i< dataLength;  ++i){
+        if (std::abs(data[i]) > peak){
+            peak = data[i];
+            peakIndex = i;
+        }
+    }
+}
 

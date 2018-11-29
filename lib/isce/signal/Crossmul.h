@@ -70,12 +70,19 @@ class isce::signal::Crossmul {
         void rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
                         std::valarray<std::complex<float>> &secSlc,
                         std::valarray<double> rngOffset,
+                        std::valarray<std::complex<float>> geometryIfgram,
+                        std::valarray<std::complex<float>> geometryIfgramConj,
                         double rngPixelSpacing,
                         double wavelength,
                         size_t blockRows,
                         size_t ncols,
 			isce::signal::Filter<float> &rngFilter,
-                        std::valarray<std::complex<float>> &spectrum);
+                        isce::signal::Signal<float> &rngSignal,
+                        std::valarray<std::complex<float>> &refSpectrum,
+                        std::valarray<std::complex<float>> &secSpectrum,
+                        std::valarray<double> &rangeFrequencies);
+
+        
 
        /** Set doppler polynomials for reference and secondary SLCs*/
         inline void doppler(isce::core::Poly2d, 
@@ -115,6 +122,16 @@ class isce::signal::Crossmul {
 
         /** Set common range band filtering flag */
         inline void doCommonRangebandFiltering(bool);
+
+        inline void rangeFrequencyShift(std::valarray<std::complex<float>> &refAvgSpectrum,
+                                        std::valarray<std::complex<float>> &secAvgSpectrum,
+                                        std::valarray<double> &rangeFrequencies,
+                                        size_t blockRowsData,
+                                        size_t nfft,
+                                        double &frequencyShift);
+
+        inline void getPeakIndex(std::valarray<float> data, 
+                                size_t &peakIndex);
 
     private:
         //Doppler polynomial for the refernce SLC
