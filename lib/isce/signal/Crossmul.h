@@ -61,27 +61,14 @@ class isce::signal::Crossmul {
 
         void rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
                         std::valarray<std::complex<float>> &secSlc,
-                        std::valarray<double> rngOffset,
-                        double rngPixelSpacing,
-                        double wavelength,
-                        size_t blockRows,
-                        size_t ncols);
-
-        void rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
-                        std::valarray<std::complex<float>> &secSlc,
-                        std::valarray<double> rngOffset,
                         std::valarray<std::complex<float>> geometryIfgram,
                         std::valarray<std::complex<float>> geometryIfgramConj,
-                        double rngPixelSpacing,
-                        double wavelength,
-                        size_t blockRows,
-                        size_t ncols,
-			isce::signal::Filter<float> &rngFilter,
-                        isce::signal::Signal<float> &rngSignal,
                         std::valarray<std::complex<float>> &refSpectrum,
                         std::valarray<std::complex<float>> &secSpectrum,
-                        std::valarray<double> &rangeFrequencies);
-
+                        std::valarray<double> &rangeFrequencies,
+                        isce::signal::Filter<float> &rngFilter,
+                        size_t blockRows,
+                        size_t ncols);
         
 
        /** Set doppler polynomials for reference and secondary SLCs*/

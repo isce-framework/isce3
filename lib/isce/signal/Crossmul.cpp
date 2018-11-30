@@ -193,28 +193,9 @@ crossmul(isce::io::Raster& referenceSLC,
             rngOffset[std::slice(line*ncols, ncols, 1)] = offsetLine;
 
         }
-        std::cout << "data reading finished " << std::endl;
         //referenceSLC.getBlock(refSlc, 0, rowStart, ncols, blockRowsData);
         //secondarySLC.getBlock(secSlc, 0, rowStart, ncols, blockRowsData);
    
-	/*size_t vectorSize = geometryIfgram.size();
-        for (size_t i = 0; i < vectorSize ; ++i){
-
-            double phase = 4.0*M_PI*_rangePixelSpacing*rngOffset[i]/_wavelength; 
-	    geometryIfgram[i] = std::complex<float> (std::cos(phase), std::sin(phase));
-	    geometryIfgramConj[i] = std::complex<float> (std::cos(phase), -1.0*std::sin(phase));
-	}*/
-
-        for (size_t line = 0; line < blockRowsData; ++line){
-            for (size_t col = 0; col < ncols; ++col){
-                double phase = 4.0*M_PI*_rangePixelSpacing*rngOffset[line*ncols+col]/_wavelength;
-                geometryIfgram[line*nfft + col] = std::complex<float> (std::cos(phase), std::sin(phase));
-            	geometryIfgramConj[line*nfft + col] = std::complex<float> (std::cos(phase), -1.0*std::sin(phase));
-
-            }
-        }
-        refSignal.forward(geometryIfgramConj, refSpectrum);
-        testGeomIgramSpec.setBlock(geometryIfgramConj, 0, rowStart, nfft, blockRowsData);
         //commaon azimuth band-pass filter the reference and secondary SLCs
         if (_doCommonAzimuthbandFilter){
             std::cout << "filter the refSlc " << std::endl;
@@ -225,22 +206,30 @@ crossmul(isce::io::Raster& referenceSLC,
 
         // common range band-pass filtering
         if (_doCommonRangebandFilter){
+            
+            for (size_t line = 0; line < blockRowsData; ++line){
+                for (size_t col = 0; col < ncols; ++col){
+                    double phase = 4.0*M_PI*_rangePixelSpacing*rngOffset[line*ncols+col]/_wavelength;
+                    geometryIfgram[line*nfft + col] = std::complex<float> (std::cos(phase), std::sin(phase));
+                    geometryIfgramConj[line*nfft + col] = std::complex<float> (std::cos(phase), -1.0*std::sin(phase));
+
+                }
+            }
+            refSignal.forward(geometryIfgramConj, refSpectrum);
+            refSignal.forward(geometryIfgram, secSpectrum);
 
             // do the range common band filter
             rangeCommonBandFilter(refSlc,
                                 secSlc,
-                                rngOffset,
                                 geometryIfgram,
                                 geometryIfgramConj,
-                                _rangePixelSpacing,
-                                _wavelength,
-                                blockRows,
-                                nfft,
-                                rangeFilter,
-                                refSignal,
                                 refSpectrum,
                                 secSpectrum,
-                                rangeFrequencies);
+                                rangeFrequencies,
+                                rangeFilter,
+                                blockRows,
+                                nfft);
+                                
         }
 
         // upsample the refernce and secondary SLCs
@@ -326,90 +315,14 @@ lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows,
 void isce::signal::Crossmul::
 rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
                         std::valarray<std::complex<float>> &secSlc,
-                        std::valarray<double> rngOffset,
-                        double rangePixelSpacing,
-                        double wavelength,
-                        size_t blockLength,
-                        size_t ncols)
-{
-    // size of the arrays 
-    size_t vectorLength = refSlc.size();
-
-    std::valarray<std::complex<float>> tempRefSlc(vectorLength);
-    std::valarray<std::complex<float>> tempSecSlc(vectorLength);
-
-    // Shifting the range spectrum of each image according to the local (slope-dependent) wavenumber.
-    // This shift in frequency domain is achieved by removing/adding the geometrical (representing topography) 
-    // from/to refernce and secondary SLCs in time domain. 
-    for (size_t i = 0; i < vectorLength; ++i){
-
-        // the phase due to baseline separation obtained from range difference 
-        // from refernce and secondary antennas to the target (i.e., range offser derived from 
-        // geometrical coregistration)
-        double phase = 4.0*M_PI*rangePixelSpacing*rngOffset[i]/wavelength;
-
-        // refSLc = refSlc*exp(-1J*phase)
-        tempRefSlc[i] = refSlc[i] * std::complex<float>(std::cos(phase), -1.0*std::sin(phase));
-
-        // refSLc = secSlc*exp(1J*phase)
-        tempSecSlc[i] = secSlc[i] * std::complex<float> (std::cos(phase), std::sin(phase));
-
-    }
-
-    // low pass filter the ref and sec slc
-    // For now we low-pass filter the reference and secondary SLCs with a simple
-    // hamming window
-    float hwCoef1 = 0.23;
-    float hwCoef2 = 0.54;
-    float hwCoef3 = 0.23;
-    for (size_t line = 0; line < blockLength; ++line){
-        for (size_t col = 1; col < ncols-1; ++col){
-
-            refSlc[line*ncols + col] = hwCoef1*tempRefSlc[line*ncols + col - 1] +
-                                            hwCoef2*tempRefSlc[line*ncols + col] +
-                                            hwCoef3*tempRefSlc[line*ncols + col + 1];
-
-            secSlc[line*ncols + col] = hwCoef1*tempSecSlc[line*ncols + col-1] + 
-                                            hwCoef2*tempSecSlc[line*ncols + col] + 
-                                            hwCoef3*tempSecSlc[line*ncols + col + 1];
-        }
-    }
-    
-    
-    // add/remove half geometrical phase to/from reference and secondary SLCs
-    for (size_t i = 0; i < vectorLength; ++i){
-
-        // Half phase due to baseline separation obtained from range difference
-        // from refernce and secondary antennas to the target (i.e., range offser derived from
-        // geometrical coregistration)
-        double halfPhase = 2.0*M_PI*rangePixelSpacing*rngOffset[i]/wavelength;
-
-        // refSLc = refSlc*exp(1J*halfPhase)
-        refSlc[i] = refSlc[i] * std::complex<float> (std::cos(halfPhase), std::sin(halfPhase));
-
-        // refSLc = secSlc*exp(-1J*halfPhase)
-        secSlc[i] = secSlc[i] * std::complex<float> (std::cos(halfPhase), -1*std::sin(halfPhase));
-
-    }
-
-
-}
-
-void isce::signal::Crossmul::
-rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
-                        std::valarray<std::complex<float>> &secSlc,
-                        std::valarray<double> rngOffset,
                         std::valarray<std::complex<float>> geometryIfgram,
                         std::valarray<std::complex<float>> geometryIfgramConj,
-                        double rangePixelSpacing,
-                        double wavelength,
-                        size_t blockLength,
-                        size_t ncols,
-                        isce::signal::Filter<float> &rngFilter,
-                        isce::signal::Signal<float> &refSignal,
                         std::valarray<std::complex<float>> &refSpectrum,
                         std::valarray<std::complex<float>> &secSpectrum,
-                        std::valarray<double> &rangeFrequencies)
+                        std::valarray<double> &rangeFrequencies,
+			isce::signal::Filter<float> &rngFilter,
+                        size_t blockLength,
+                        size_t ncols)
 {
     // size of the arrays
     size_t vectorLength = refSlc.size();
@@ -421,10 +334,6 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
     // from/to refernce and secondary SLCs in time domain.
     refSlc *= geometryIfgramConj;
     secSlc *= geometryIfgram;
-
-    // compute the spectrum of geometry phase
-    refSignal.forward(geometryIfgramConj, refSpectrum);
-    refSignal.forward(geometryIfgram, secSpectrum);
 
     // range frequency shift
     double frequencyShift = 0.0;
@@ -464,7 +373,7 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
     for (size_t i = 0; i < vectorLength; ++i){
 
         // Half phase due to baseline separation obtained from range difference
-        // from refernce and secondary antennas to the target (i.e., range offser derived from
+        // from refernce and secondary antennas to the target (i.e., range offset derived from
         // geometrical coregistration)
         double halfPhase = std::arg(geometryIfgram[i])/2.0;
         // refSLc = refSlc*exp(1J*halfPhase)
@@ -474,7 +383,5 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
         secSlc[i] = secSlc[i] * std::complex<float> (std::cos(halfPhase), -1*std::sin(halfPhase));
 
     }
-
-
 }
 
