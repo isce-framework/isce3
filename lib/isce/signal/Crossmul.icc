@@ -114,6 +114,13 @@ doCommonRangebandFiltering(bool flag )
     _doCommonRangebandFilter = flag ;
 }
 
+/** @param[in] refSpectrum the spectrum of a block of a complex data
+@param[in] secSpectrum the spectrum of a block of complex data 
+@param[in] rangeFrequencies the frequencies in range direction
+@param[in] blockRowsData number of rows in refSpectrum and secSpectrum
+@param[in] nfft number of columns in refSpectrum and secSpectrum
+@param[out] estimated frequency shift between refSpectrum and secSpectrum
+*/
 void isce::signal::Crossmul::
 rangeFrequencyShift(std::valarray<std::complex<float>> &refSpectrum,
                     std::valarray<std::complex<float>> &secSpectrum,
@@ -154,6 +161,9 @@ rangeFrequencyShift(std::valarray<std::complex<float>> &refSpectrum,
 
 }
 
+/**@param[in] data a vector to be evaluated for the index of its maximum
+@param[out] peakIndex index of the maximum value in data
+*/
 void isce::signal::Crossmul::
 getPeakIndex(std::valarray<float> data, size_t &peakIndex)
 {

@@ -20,8 +20,6 @@ Crossmul(const isce::product::Product& referenceSlcProduct,
 * @param[in] secondarySLC Raster object of secondary SLC
 * @param[out] interferogram Raster object of output interferogram
 */
-
-
 void isce::signal::Crossmul::
 crossmul(isce::io::Raster& referenceSLC,
         isce::io::Raster& secondarySLC,
@@ -37,11 +35,17 @@ crossmul(isce::io::Raster& referenceSLC,
 
 }
 
+/**
+* @param[in] referenceSLC Raster object of refernce SLC
+* @param[in] secondarySLC Raster object of secondary SLC
+* @param[in] rngOffsetRaster Raster object of range offsets between reference and secondary SLCs
+* @param[out] interferogram Raster object of output interferogram
+*/
 void isce::signal::Crossmul::
 crossmul(isce::io::Raster& referenceSLC,
         isce::io::Raster& secondarySLC,
-        isce::io::Raster& interferogram,
-        isce::io::Raster& rngOffsetRaster)
+	isce::io::Raster& rngOffsetRaster,
+        isce::io::Raster& interferogram)
 {
 
     // Create reusable pyre::journal channels
@@ -263,7 +267,12 @@ crossmul(isce::io::Raster& referenceSLC,
     }
 }
 
-
+/**
+ * @param[in] oversample upsampling factor
+ * @param[in] nfft fft length in range direction
+ * @param[in] blockRows number of rows of the block of data
+ * @param[out] shiftImpact frequency responce (a linear phase) to a sub-pixel shift in time domain introduced by upsampling followed by downsampling 
+ */
 void isce::signal::Crossmul::
 lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows, 
 		std::valarray<std::complex<float>> &shiftImpact)
@@ -312,6 +321,18 @@ lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows,
     }
 }
 
+/**
+* @param[in] refSlc a block of the reference SLC to be filtered
+* @param[in] secSlc a block of second SLC to be filtered
+* @param[in] geometryIfgram a simulated interferogram that contains the geometrical phase due to baseline separation
+* @param[in] geometryIfgramConj conjugate of geometryIfgram
+* @param[in] refSpectrum spectrum of geometryIfgramConj in range direction
+* @param[in] secSpectrum spectrum of geometryIfgram in range direction
+* @param[in] rangeFrequencies frequencies in range direction
+* @param[in] rngFilter a filter object
+* @param[in] blockLength number of rows
+* @param[in] ncols number of columns
+*/
 void isce::signal::Crossmul::
 rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
                         std::valarray<std::complex<float>> &secSlc,

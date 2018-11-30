@@ -47,18 +47,20 @@ class isce::signal::Crossmul {
         /** \brief Run crossmul */
         void crossmul(isce::io::Raster& referenceSLC,
                     isce::io::Raster& secondarySLC,
-                    isce::io::Raster& interferogram,
-		    isce::io::Raster& rngOffset);
-        
+                    isce::io::Raster& rngOffset,
+                    isce::io::Raster& interferogram);
+
+        /** \brief Run crossmul */
         void crossmul(isce::io::Raster& referenceSLC, 
                     isce::io::Raster& secondarySLC,
                     isce::io::Raster& interferogram);
 
-        /** */
+        /** Compute the frequency response due to a subpixel shift introduced by upsampling and downsampling*/
         void lookdownShiftImpact(size_t oversample, size_t nfft, 
                                 size_t blockRows,
                                 std::valarray<std::complex<float>> &shiftImpact);
 
+        /** Range common band filtering*/
         void rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
                         std::valarray<std::complex<float>> &secSlc,
                         std::valarray<std::complex<float>> geometryIfgram,
@@ -110,6 +112,7 @@ class isce::signal::Crossmul {
         /** Set common range band filtering flag */
         inline void doCommonRangebandFiltering(bool);
 
+        /** Compute the avergae frequency shift in range direction between two SLCs*/
         inline void rangeFrequencyShift(std::valarray<std::complex<float>> &refAvgSpectrum,
                                         std::valarray<std::complex<float>> &secAvgSpectrum,
                                         std::valarray<double> &rangeFrequencies,
@@ -117,6 +120,7 @@ class isce::signal::Crossmul {
                                         size_t nfft,
                                         double &frequencyShift);
 
+        /** estimate the index of the maximum of a vector of data */
         inline void getPeakIndex(std::valarray<float> data, 
                                 size_t &peakIndex);
 
