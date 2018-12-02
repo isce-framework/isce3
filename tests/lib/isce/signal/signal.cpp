@@ -62,7 +62,7 @@ TEST(Signal, ForwardBackwardRangeFloat)
         }
     }
 
-    ASSERT_LT(max_err, 1.0e-5);
+    ASSERT_LT(max_err, 1.0e-4);
 }
 
 TEST(Signal, ForwardBackwardAzimuthFloat)
@@ -114,8 +114,8 @@ TEST(Signal, ForwardBackwardAzimuthFloat)
               max_err = std::abs(err);
           }
       }
-
-      ASSERT_LT(max_err, 1.0e-5);
+      std::cout << std::setprecision(16)<< "max_err:" << max_err << std::endl;
+      ASSERT_LT(max_err, 1.0e-4);
 }
 
 
@@ -130,7 +130,7 @@ TEST(Signal, nfft)
     int blockLength = length;
     
     // fft length for FFT computations 
-    int nfft = 1024;
+    int nfft = 512;
 
 
 
@@ -190,18 +190,67 @@ TEST(Signal, nfft)
         }
     }
 
-    ASSERT_LT(max_err, 1.0e-5);   
+    std::cout << std::setprecision(16) << "max_err: " << max_err<< std::endl;
+    ASSERT_LT(max_err, 1.0e-4);   
 
 }
 
-TEST(Signal, upsample)
-  {
-      // This test is same as the previous test but with nfft used for FFT computation instead of number of column  s
-      isce::io::Raster inputSlc("../data/warped_envisat.slc.vrt");
 
-      int width = inputSlc.width();
-      int length = inputSlc.length();
-      //width = 51;
+
+TEST(Signal, nfftDouble)
+{
+    int width = 100; //16;
+    int length = 1;
+    int blockLength = length;
+
+    // fft length for FFT computations
+    size_t nfft;
+
+    // instantiate a signal object
+    isce::signal::Signal<double> sig;
+    sig.nextPowerOfTwo(width, nfft);
+    //nfft = width;
+
+    // reserve memory for a block of data with the size of nfft
+    std::valarray<std::complex<double>> data(nfft);
+    std::valarray<std::complex<double>> spec(nfft);
+    std::valarray<std::complex<double>> dataInv(nfft);
+
+    for (size_t i=0; i<width; ++i){
+        double phase = std::sin(10*M_PI*i/width);
+        data[i] = std::complex<double> (std::cos(phase), std::sin(phase));
+    }
+
+    sig.forwardRangeFFT(data, spec, nfft, 1);
+    sig.inverseRangeFFT(spec, dataInv, nfft, 1);
+    
+    sig.forward(data, spec);
+    sig.inverse(spec, dataInv);
+
+    dataInv /=nfft; 
+
+    std::complex<double> err(0.0, 0.0);
+    bool Test = true;
+    double max_err = 0.0;
+
+    for (size_t line = 0; line<blockLength; line++){
+          for (size_t col = 0; col<width; col++){
+              err = dataInv[line*nfft+col] - data[line*nfft+col];
+              if (std::abs(err) > max_err){
+                      max_err = std::abs(err);
+              }
+          }
+     }
+
+    std::cout << std::setprecision(16)<< "max_err:" << max_err << std::endl; 
+    ASSERT_LT(max_err, 1.0e-12);
+}
+
+
+TEST(Signal, nfftFloat)
+{
+      int width = 100; //16;
+      int length = 1;
       int blockLength = length;
 
       // fft length for FFT computations
@@ -209,50 +258,62 @@ TEST(Signal, upsample)
 
       // instantiate a signal object
       isce::signal::Signal<float> sig;
-      //sig.nextPowerOfTwo(width, nfft);
-      nfft = width;
-      // upsampling factor
-      int oversample = 2;
+      sig.nextPowerOfTwo(width, nfft);
+      //nfft = width;
 
       // reserve memory for a block of data with the size of nfft
-      std::valarray<std::complex<float>> data(nfft*blockLength);
+      std::valarray<std::complex<float>> data(nfft);
+      std::valarray<std::complex<float>> spec(nfft);
+      std::valarray<std::complex<float>> dataInv(nfft);
 
-      // reserve memory for the spectrum of the block of data
-      std::valarray<std::complex<float>> rangeSpectrum(nfft*blockLength);
-
-      std::valarray<std::complex<float>> rangeSpectrumUpsampled(oversample*nfft*blockLength);
-
-      // reserve memory for the block of data after inverse fft
-      std::valarray<std::complex<float>> dataUpsampled(nfft*oversample*blockLength);
-
-      data = 0;
-      rangeSpectrum = 0;
-
-      dataUpsampled = 0;
-      rangeSpectrumUpsampled = 0;
-
-
-      // create the forward and backward plans
-      sig.forwardRangeFFT(data, rangeSpectrum, nfft, blockLength);
-      sig.inverseRangeFFT(rangeSpectrumUpsampled, dataUpsampled, nfft*oversample, blockLength);
-
-
-      // read a block of data
-      std::valarray<std::complex<float>> dataLine(width);
-      for (size_t line = 0; line<blockLength; ++line){
-          inputSlc.getLine(dataLine, line);
-          data[std::slice(line*nfft,width,1)] = dataLine; //[std::slice(0,width,0)];
+      for (size_t i=0; i<width; ++i){
+          double phase = std::sin(10*M_PI*i/width);
+          data[i] = std::complex<float> (std::cos(phase), std::sin(phase));
       }
 
-      sig.upsample(data, dataUpsampled, blockLength, nfft, oversample);
+      sig.forwardRangeFFT(data, spec, nfft, 1);
+      sig.inverseRangeFFT(spec, dataInv, nfft, 1);
 
-      isce::io::Raster outputSlc("slcUpsampled.slc", nfft*oversample, length, 1, GDT_CFloat32, "ENVI");
-      outputSlc.setBlock(dataUpsampled, 0 ,0 , nfft*oversample, length);
+      sig.forward(data, spec);
+      sig.inverse(spec, dataInv);
+
+      dataInv /=nfft;
+
+      std::complex<float> err(0.0, 0.0);
+      bool Test = true;
+      double max_err = 0.0;
+
+      for (size_t line = 0; line<blockLength; line++){
+            for (size_t col = 0; col<width; col++){
+                err = dataInv[line*nfft+col] - data[line*nfft+col];
+                if (std::abs(err) > max_err){
+                        max_err = std::abs(err);
+                }
+            }
+       }
+
+      std::cout << std::setprecision(16)<< "max_err:" << max_err << std::endl;
+
+      // average L2 error as described on 
+      // http://www.fftw.org/accuracy/method.html
+      std::complex<float> errorL2 ;
+      std::complex<float> sumErr;
+      std::complex<float> sumB;
+      for (size_t line = 0; line<blockLength; line++){
+              for (size_t col = 0; col<width; col++){
+                  sumErr += std::pow((dataInv[line*nfft+col] - data[line*nfft+col]),2);
+                  sumB += std::pow(dataInv[line*nfft+col], 2);
+              }
+         }
+ 
+      errorL2 = std::sqrt(sumErr)/std::sqrt(sumB);
       
-
-      // needs an evaluation of the upsampled SLC
-
+      std::cout << std::setprecision(16)<< "errorL2: " << std::abs(errorL2) << std::  endl;
+      ASSERT_LT(max_err, 1.0e-4);
+      ASSERT_LT(std::abs(errorL2), 1.0e-4);
 }
+
+
 
 int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);
