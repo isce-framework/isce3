@@ -76,9 +76,18 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:ad57c995570d004e41d0361ae6defb788"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#ad57c995570d004e41d0361ae6defb788">initiateRangeFilter</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, size_t ncols, size_t nrows)</td></tr>
+<tr class="memdesc:ad57c995570d004e41d0361ae6defb788"><td class="mdescLeft">&#160;</td><td class="mdescRight">constructs forward abd backward FFT plans for filtering a block of data in range direction.  <a href="#ad57c995570d004e41d0361ae6defb788">More...</a><br /></td></tr>
+<tr class="separator:ad57c995570d004e41d0361ae6defb788"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3636862e2e86cf73c53b958a7ac3441e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#a3636862e2e86cf73c53b958a7ac3441e">initiateAzimuthFilter</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, size_t ncols, size_t nrows)</td></tr>
+<tr class="memdesc:a3636862e2e86cf73c53b958a7ac3441e"><td class="mdescLeft">&#160;</td><td class="mdescRight">constructs forward abd backward FFT plans for filtering a block of data in azimuth direction.  <a href="#a3636862e2e86cf73c53b958a7ac3441e">More...</a><br /></td></tr>
+<tr class="separator:a3636862e2e86cf73c53b958a7ac3441e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a089e0953caf0115d409426cd6f143d7b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#a089e0953caf0115d409426cd6f143d7b">constructRangeBandpassFilter</a> (double rangeSamplingFrequency, std::valarray&lt; double &gt; subBandCenterFrequencies, std::valarray&lt; double &gt; subBandBandwidths, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, size_t ncols, size_t nrows, std::string filterType)</td></tr>
-<tr class="memdesc:a089e0953caf0115d409426cd6f143d7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct range band-pass filter.  <a href="#a089e0953caf0115d409426cd6f143d7b">More...</a><br /></td></tr>
+<tr class="memdesc:a089e0953caf0115d409426cd6f143d7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets an existing filter to be used by the filter object.  <a href="#a089e0953caf0115d409426cd6f143d7b">More...</a><br /></td></tr>
 <tr class="separator:a089e0953caf0115d409426cd6f143d7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afea730ac8af38930195aac230ff7e6df"><td class="memItemLeft" align="right" valign="top"><a id="afea730ac8af38930195aac230ff7e6df"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>constructRangeBandpassFilter</b> (double rangeSamplingFrequency, std::valarray&lt; double &gt; subBandCenterFrequencies, std::valarray&lt; double &gt; subBandBandwidths, size_t ncols, size_t nrows, std::string filterType)</td></tr>
+<tr class="separator:afea730ac8af38930195aac230ff7e6df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a061110822c43d2e2dbfda0448d96e67a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#a061110822c43d2e2dbfda0448d96e67a">constructRangeBandpassBoxcar</a> (std::valarray&lt; double &gt; subBandCenterFrequencies, std::valarray&lt; double &gt; subBandBandwidths, double dt, int nfft, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;_filter1D)</td></tr>
 <tr class="memdesc:a061110822c43d2e2dbfda0448d96e67a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a box car range band-pass filter for multiple bands.  <a href="#a061110822c43d2e2dbfda0448d96e67a">More...</a><br /></td></tr>
 <tr class="separator:a061110822c43d2e2dbfda0448d96e67a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -378,7 +387,8 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Construct range band-pass filter. </p>
+<p>Sets an existing filter to be used by the filter object. </p>
+<p>Construct range band-pass filter</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">rangeSamplingFrequency</td><td>range sampling frequency </td></tr>
@@ -527,6 +537,112 @@ template&lt;class T &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">N</td><td>length of the signal </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">f</td><td>frequency of interest </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">n</td><td>index of the frequency </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a3636862e2e86cf73c53b958a7ac3441e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3636862e2e86cf73c53b958a7ac3441e">&#9670;&nbsp;</a></span>initiateAzimuthFilter()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Filter.html">isce::signal::Filter</a>&lt; T &gt;::initiateAzimuthFilter </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>ncols</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>constructs forward abd backward FFT plans for filtering a block of data in azimuth direction. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>a block of data to filte </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">spectrum</td><td>a block of spectrum, which is internally used for FFT computations </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncols</td><td>number of columns of the block of the data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of the data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ad57c995570d004e41d0361ae6defb788"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad57c995570d004e41d0361ae6defb788">&#9670;&nbsp;</a></span>initiateRangeFilter()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Filter.html">isce::signal::Filter</a>&lt; T &gt;::initiateRangeFilter </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>ncols</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>constructs forward abd backward FFT plans for filtering a block of data in range direction. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>a block of data to filte </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">spectrum</td><td>a block of spectrum, which is internally used for FFT computations </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncols</td><td>number of columns of the block of the data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of the data </td></tr>
   </table>
   </dd>
 </dl>
