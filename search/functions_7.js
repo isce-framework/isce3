@@ -16,7 +16,6 @@ var searchData=
   ['getnumbits',['getNumBits',['../classisce_1_1io_1_1IDataSet.html#afa4a30e7561b664a4af9295a34f7d22d',1,'isce::io::IDataSet']]],
   ['getnumelements',['getNumElements',['../classisce_1_1io_1_1IDataSet.html#af43aacd3814f2f2253632a6b1d48a73b',1,'isce::io::IDataSet']]],
   ['getpathname',['getPathname',['../classisce_1_1io_1_1IGroup.html#a180c1b95db0e31f581f866099a87720a',1,'isce::io::IGroup']]],
-  ['getpeakindex',['getPeakIndex',['../classisce_1_1signal_1_1Crossmul.html#aa9836bb8215b66253e369ea01734b50e',1,'isce::signal::Crossmul']]],
   ['getrank',['getRank',['../classisce_1_1io_1_1IDataSet.html#accb783ff3d34dce8b2ac265d7d1ba40c',1,'isce::io::IDataSet']]],
   ['getsetblock',['getSetBlock',['../classisce_1_1io_1_1Raster.html#ac708a394e57645ad1aaa6959558ebcde',1,'isce::io::Raster']]],
   ['getsetline',['getSetLine',['../classisce_1_1io_1_1Raster.html#ad780d1b76fafe65eb8ae2626a4d5a10e',1,'isce::io::Raster']]],
