@@ -32,7 +32,7 @@ class isce::signal::Filter {
 
         ~Filter() {};
 
-	/** constructs forward abd backward FFT plans for filtering a block of data in range direction. */
+    /** constructs forward abd backward FFT plans for filtering a block of data in range direction. */
         void initiateRangeFilter(std::valarray<std::complex<T>> &signal,
                                 std::valarray<std::complex<T>> &spectrum,
                                 size_t ncols,
@@ -45,7 +45,7 @@ class isce::signal::Filter {
                                 size_t nrows);
 
         /** Sets an existing filter to be used by the filter object*/
-	//void setFilter(std::valarray<std::complex<T>>);
+        //void setFilter(std::valarray<std::complex<T>>);
 
         /** Construct range band-pass filter*/
         void constructRangeBandpassFilter(double rangeSamplingFrequency,

@@ -199,7 +199,7 @@ constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
                              std::valarray<std::complex<T>>& _filter1D)
 {
 
-    const double norm = 1.0;	
+    const double norm = 1.0;    
     
     for (size_t i = 0; i<subBandCenterFrequencies.size(); ++i){
         double fmid = subBandCenterFrequencies[i];
@@ -220,7 +220,7 @@ constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
                                     (1.0 + std::cos(M_PI / (bandwidth*beta) *
                                     (freq - 0.5 * (1.0 - beta) * bandwidth))), 0.0);
 
-	    }
+            }
         }
 
     }

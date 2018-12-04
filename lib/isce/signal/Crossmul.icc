@@ -125,8 +125,8 @@ void isce::signal::Crossmul::
 rangeFrequencyShift(std::valarray<std::complex<float>> &refSpectrum,
                     std::valarray<std::complex<float>> &secSpectrum,
                     std::valarray<double> &rangeFrequencies,
-		    size_t blockRowsData,
-		    size_t nfft,
+            size_t blockRowsData,
+            size_t nfft,
                     double &frequencyShift)
 {
 

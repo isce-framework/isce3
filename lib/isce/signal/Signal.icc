@@ -24,6 +24,5 @@ nextPowerOfTwo(size_t N, size_t &fftLength)
             break;
         }
     }
-
 }
 

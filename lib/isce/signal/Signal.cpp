@@ -26,7 +26,7 @@ template <class T>
 void 
 isce::signal::Signal<T>::
 fftPlanForward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output, 
-	    int rank, int n, int howmany,
+            int rank, int n, int howmany,
             int inembed, int istride, int idist,
             int onembed, int ostride, int odist, int sign)
 {
@@ -104,7 +104,7 @@ void isce::signal::Signal<T>::
 //forwardRangeFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::complex<T>> &spectrum,
 //                int incolumns, int inrows, int outcolumns, int outrows)
 forwardRangeFFT(std::valarray<std::complex<T>> &signal, 
-	        std::valarray<std::complex<T>> &spectrum,
+            std::valarray<std::complex<T>> &spectrum,
                 int ncolumns, int nrows)
 {
     int rank = 1;

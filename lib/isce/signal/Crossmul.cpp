@@ -44,7 +44,7 @@ crossmul(isce::io::Raster& referenceSLC,
 void isce::signal::Crossmul::
 crossmul(isce::io::Raster& referenceSLC,
         isce::io::Raster& secondarySLC,
-	isce::io::Raster& rngOffsetRaster,
+        isce::io::Raster& rngOffsetRaster,
         isce::io::Raster& interferogram)
 {
 
@@ -144,7 +144,7 @@ crossmul(isce::io::Raster& referenceSLC,
     if (_doCommonAzimuthbandFilter){
         // construct azimuth common band filter for a block of data
         azimuthFilter.constructAzimuthCommonbandFilter(_refDoppler, 
-					    _secDoppler, 
+                                            _secDoppler, 
                                             _commonAzimuthBandwidth,
                                             _prf, 
                                             _beta,
@@ -168,7 +168,7 @@ crossmul(isce::io::Raster& referenceSLC,
         //blockRowsData might be less than or equal to blockRows.
         //e.g. if nrows = 512, and blockRows = 100, then 
         //blockRowsData for last block will be 12
-	size_t blockRowsData;
+        size_t blockRowsData;
         if ((rowStart+blockRows)>nrows) {
             blockRowsData = nrows - rowStart;
         } else {
@@ -202,9 +202,7 @@ crossmul(isce::io::Raster& referenceSLC,
    
         //commaon azimuth band-pass filter the reference and secondary SLCs
         if (_doCommonAzimuthbandFilter){
-            std::cout << "filter the refSlc " << std::endl;
             azimuthFilter.filter(refSlc, refAzimuthSpectrum);
-            std::cout << "filter the secSlc " << std::endl;
             azimuthFilter.filter(secSlc, refAzimuthSpectrum);
         }
 
@@ -215,7 +213,8 @@ crossmul(isce::io::Raster& referenceSLC,
                 for (size_t col = 0; col < ncols; ++col){
                     double phase = 4.0*M_PI*_rangePixelSpacing*rngOffset[line*ncols+col]/_wavelength;
                     geometryIfgram[line*nfft + col] = std::complex<float> (std::cos(phase), std::sin(phase));
-                    geometryIfgramConj[line*nfft + col] = std::complex<float> (std::cos(phase), -1.0*std::sin(phase));
+                    geometryIfgramConj[line*nfft + col] = std::complex<float> (std::cos(phase), 
+                                                                            -1.0*std::sin(phase));
 
                 }
             }
@@ -259,9 +258,9 @@ crossmul(isce::io::Raster& referenceSLC,
             }
         }
 
-	// Take looks down (summing columns)
+    // Take looks down (summing columns)
         
-	// set the block of interferogram
+    // set the block of interferogram
         interferogram.setBlock(ifgram, 0, rowStart, ncols, blockRowsData);
 
     }
@@ -275,7 +274,7 @@ crossmul(isce::io::Raster& referenceSLC,
  */
 void isce::signal::Crossmul::
 lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows, 
-		std::valarray<std::complex<float>> &shiftImpact)
+        std::valarray<std::complex<float>> &shiftImpact)
 {
     // range frequencies given nfft and oversampling factor
     std::valarray<double> rangeFrequencies(oversample*nfft);
@@ -301,11 +300,7 @@ lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows,
 
     // the constant shift based on the oversampling factor
     double shift = 0.0;
-    if (oversample == 2){
-        shift = 0.25;
-    } else if (oversample > 2){
-        shift = (1.0 - 1.0/oversample)/2.0;
-    }
+    shift = (1.0 - 1.0/oversample)/2.0;
 
     // compute the frequency response of the subpixel shift in range direction
     std::valarray<std::complex<float>> shiftImpactLine(oversample*nfft);
@@ -341,7 +336,7 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
                         std::valarray<std::complex<float>> &refSpectrum,
                         std::valarray<std::complex<float>> &secSpectrum,
                         std::valarray<double> &rangeFrequencies,
-			isce::signal::Filter<float> &rngFilter,
+            isce::signal::Filter<float> &rngFilter,
                         size_t blockLength,
                         size_t ncols)
 {
@@ -362,8 +357,8 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
     // determine the frequency shift based on the power spectral density of 
     // the geometrical interferometric pphase using an emprirical approach
     rangeFrequencyShift(refSpectrum,
-                    	secSpectrum,
-                    	rangeFrequencies,
+                        secSpectrum,
+                        rangeFrequencies,
                         blockLength,
                         ncols,
                         frequencyShift);
