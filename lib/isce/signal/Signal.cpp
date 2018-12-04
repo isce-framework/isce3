@@ -26,7 +26,7 @@ template <class T>
 void 
 isce::signal::Signal<T>::
 fftPlanForward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output, 
-	    int rank, int n, int howmany,
+            int rank, int n, int howmany,
             int inembed, int istride, int idist,
             int onembed, int ostride, int odist, int sign)
 {
@@ -104,7 +104,7 @@ void isce::signal::Signal<T>::
 //forwardRangeFFT(std::valarray<std::complex<T>> &signal, std::valarray<std::complex<T>> &spectrum,
 //                int incolumns, int inrows, int outcolumns, int outrows)
 forwardRangeFFT(std::valarray<std::complex<T>> &signal, 
-	        std::valarray<std::complex<T>> &spectrum,
+            std::valarray<std::complex<T>> &spectrum,
                 int ncolumns, int nrows)
 {
     int rank = 1;
@@ -224,6 +224,24 @@ upsample(std::valarray<std::complex<T>> &signal,
          int rows, int nfft, int upsampleFactor)
 {
 
+    // a dummy zero size valarray for shiftImpacts. Using this zero size 
+    // shiftImpact will be interpreted as no shift application to 
+    // the upsampled signal
+    std::valarray<std::complex<T>> shiftImpact(0);
+    
+    // actually upsampling the signal
+    upsample(signal, signalUpsampled,
+            rows, nfft, upsampleFactor, shiftImpact);
+
+}
+
+template<class T>
+void isce::signal::Signal<T>::
+upsample(std::valarray<std::complex<T>> &signal,
+         std::valarray<std::complex<T>> &signalUpsampled,
+         int rows, int nfft, int upsampleFactor, std::valarray<std::complex<T>> shiftImpact)
+{
+
     // number of columns of upsampled spectrum
     int columns = upsampleFactor*nfft;
 
@@ -239,22 +257,27 @@ upsample(std::valarray<std::complex<T>> &signal,
     //spectrum /=nfft;
     //shift the spectrum
     // The spectrum has values from begining to nfft index for each line. We want
-    // to put the spectrum in correct ouput locations such that the spectrum of 
+    // to put the spectrum in correct ouput locations such that the spectrum of
     // the upsampled data has values from 0 to nfft/2 and from upsampleFactor*nfft - nfft/2 to the end.
     // For a 1D example:
     //      spectrum = [1,2,3,4,5,6,0,0,0,0,0,0]
     //  becomes:
     //      spectrumShifted = [1,2,3,0,0,0,0,0,0,4,5,6]
     //
-    
+
     for (size_t column = 0; column<nfft/2; ++column)
         spectrumShifted[std::slice(column, rows, columns)] = spectrum[std::slice(column, rows, nfft)];
-   
+
     for (size_t i = 0; i<nfft/2; ++i){
         size_t j = upsampleFactor*nfft - nfft/2 + i;
         spectrumShifted[std::slice(j, rows, columns)] = spectrum[std::slice(i+nfft/2, rows, nfft)];
     }
-    
+
+
+    // multiply the shiftImpact (a linear phase is frequency domain
+    // equivalent to a shift in time domain) by the spectrum
+    if (spectrumShifted.size() == shiftImpact.size())
+        spectrumShifted *= shiftImpact;
 
     // inverse fft to get the upsampled signal
     _plan_inv.execute_dft(&spectrumShifted[0], &signalUpsampled[0]);
