@@ -12,6 +12,7 @@ var searchData=
   ['lonlattoxyz',['lonLatToXyz',['../classisce_1_1core_1_1Ellipsoid.html#a9a80b69455ccd78e1d3fce0e86fcd3d9',1,'isce::core::Ellipsoid']]],
   ['look',['look',['../classisce_1_1core_1_1Baseline.html#af3a2bc294d5cbf24a4f6c603efa60809',1,'isce::core::Baseline']]],
   ['lookdirection',['lookDirection',['../classisce_1_1product_1_1Identification.html#ac18788fa969ea5aa55565620fc1e5399',1,'isce::product::Identification::lookDirection() const'],['../classisce_1_1product_1_1Identification.html#acaf4466fac4d496016065d33b3de4a0c',1,'isce::product::Identification::lookDirection(int)'],['../classisce_1_1product_1_1Identification.html#acb71140bfb390be0deb9a07ce1327bc9',1,'isce::product::Identification::lookDirection(const std::string &amp;)']]],
+  ['lookdownshiftimpact',['lookdownShiftImpact',['../classisce_1_1signal_1_1Crossmul.html#a9ed1b6e1b931702e95e05646ddaa27e9',1,'isce::signal::Crossmul']]],
   ['lookside',['lookSide',['../classisce_1_1geometry_1_1Topo.html#a71cb34345119befb1f2e2e69c8b161bf',1,'isce::geometry::Topo']]],
   ['lut2d',['LUT2d',['../structisce_1_1core_1_1LUT2d.html',1,'isce::core']]]
 ];
