@@ -28,7 +28,7 @@ set(${PACKAGENAME}_EXPORT_HEADERS
 ###This is where regex can be used on the header files if needed
 set(${PACKAGENAME}_BUILD_HEADERS "")
 foreach(HFILE ${${PACKAGENAME}_EXPORT_HEADERS})
-    message(STATUS "${HFILE} : to : ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/${HFILE}")
+    #    message(STATUS "${HFILE} : to : ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/${HFILE}")
     configure_file(
         ${CMAKE_CURRENT_LIST_DIR}/${HFILE}
         ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/${HFILE}

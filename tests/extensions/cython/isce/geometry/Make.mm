@@ -16,6 +16,6 @@ all: test
 test: geometry
 
 geometry:
-	nosetests ./geometry.py
+	${PYTHON} -m pytest ./geometry.py
 
 # end of file

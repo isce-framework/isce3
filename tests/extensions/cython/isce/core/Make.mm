@@ -19,15 +19,15 @@ all: test
 test: attitude ellipsoid orbit poly1d
 
 attitude:
-	nosetests ./attitude.py
+	${PYTHON} -m pytest ./attitude.py
 
 ellipsoid:
-	nosetests ./ellipsoid.py
+	${PYTHON} -m pytest ./ellipsoid.py
 
 orbit:
-	nosetests ./orbit.py
+	${PYTHON} -m pytest ./orbit.py
 
 poly1d:
-	nosetests ./poly1d.py
+	${PYTHON} -m pytest ./poly1d.py
 
 # end of file
