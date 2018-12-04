@@ -295,8 +295,8 @@ lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows,
     // upsampled sample locations:  0   0.5 1  1.5  2  2.5  3   3.5  4   4.5
     // Looked dow sample locations:   0.25    1.25    2.25    3.25    4.25
     // Obviously the signal after looking down would be shifted by 0.25 pixel in
-    // range comared to the original signal. Since a shift in time domain introcues
-    // a liner phase in frequency domain, here is the impact in frequency domain
+    // range comared to the original signal. Since a shift in time domain introduces
+    // a liner phase in frequency domain, we compute the impact in frequency domain.
 
     // the constant shift based on the oversampling factor
     double shift = 0.0;
