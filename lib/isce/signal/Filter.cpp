@@ -227,8 +227,8 @@ constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
 }
 
 /**
-* @param[in] refDoppler Doppler polynomial of the reference SLC
-* @param[in] secDoppler Doppler polynomial of the secondary SLC
+* @param[in] refDoppler Doppler LUT1d of the reference SLC
+* @param[in] secDoppler Doppler LUT1d of the secondary SLC
 * @param[in] bandwidth common bandwidth in azimuth
 * @param[in] prf pulse repetition frequency
 * @param[in] beta parameter for raised cosine filter
