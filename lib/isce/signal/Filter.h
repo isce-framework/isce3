@@ -13,7 +13,7 @@
 
 #include <isce/core/Constants.h>
 #include <isce/io/Raster.h>
-#include <isce/core/Poly2d.h>
+#include <isce/core/LUT1d.h>
 #include "Signal.h"
 
 // Declaration
@@ -59,8 +59,8 @@ class isce::signal::Filter {
         //T constructRangeCommonbandFilter();
 
         /** Construct azimuth common band filter*/
-        void constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
-                                const isce::core::Poly2d & secDoppler,
+        void constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
+                                const isce::core::LUT1d<double> & secDoppler,
                                 double bandwidth,
                                 double prf,
                                 double beta,

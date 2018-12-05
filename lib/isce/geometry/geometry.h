@@ -26,6 +26,7 @@
 #include <isce/core/Pegtrans.h>
 #include <isce/core/Pixel.h>
 #include <isce/core/Poly2d.h>
+#include <isce/core/LUT1d.h>
 #include <isce/core/StateVector.h>
 
 // isce::product
@@ -65,6 +66,14 @@ namespace isce {
                     const isce::core::Ellipsoid &,
                     const isce::core::Orbit &,
                     const isce::core::Poly2d &,
+                    const isce::product::ImageMode &,
+                    double &, double &,
+                    double, int, double);
+
+        int geo2rdr(const cartesian_t &,
+                    const isce::core::Ellipsoid &,
+                    const isce::core::Orbit &,
+                    const isce::core::LUT1d<double> &,
                     const isce::product::ImageMode &,
                     double &, double &,
                     double, int, double);

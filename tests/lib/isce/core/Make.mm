@@ -19,7 +19,7 @@ PACKAGES = \
     doppler \
     ellipsoid \
     interpolator \
-    lut2d \
+    lut \
     matrix \
     orbit \
     poly \

@@ -49,11 +49,11 @@ TEST(Crossmul, RunCrossmul)
     isce::radar::loadFromH5(group, instrument);
 
     // get the Doppler polynomial for refernce SLC
-    isce::core::Poly2d dop1 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop1 = instrument.contentDoppler();
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
-    isce::core::Poly2d dop2 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop2 = instrument.contentDoppler();
 
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;
@@ -146,11 +146,11 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     isce::radar::loadFromH5(group, instrument);
 
     // get the Doppler polynomial for refernce SLC
-    isce::core::Poly2d dop1 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop1 = instrument.contentDoppler();
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
-    isce::core::Poly2d dop2 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop2 = instrument.contentDoppler();
 
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;
@@ -236,8 +236,8 @@ TEST(Crossmul, CheckCrossmul)
     isce::radar::loadFromH5(group, instrument);
 
     // extract the Doppler polynomial
-    isce::core::Poly2d dop1 = instrument.contentDoppler();
-    isce::core::Poly2d dop2 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop1 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop2 = instrument.contentDoppler();
 
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;

@@ -15,7 +15,7 @@
 #include <pyre/journal.h>
 
 #include <isce/io/Raster.h>
-#include <isce/core/Poly2d.h>
+#include <isce/core/LUT1d.h>
 #include "Signal.h"
 #include "Filter.h"
 
@@ -50,9 +50,9 @@ class isce::signal::Crossmul {
                       isce::io::Raster& interferogram);
 
 
-       /** Set doppler polynomials for reference and secondary SLCs*/
-        inline void doppler(isce::core::Poly2d, 
-                            isce::core::Poly2d);
+       /** Set doppler LUTs for reference and secondary SLCs*/
+        inline void doppler(isce::core::LUT1d<double>, 
+                            isce::core::LUT1d<double>);
 
         /** Set pulse repetition frequency (PRF) */
         inline void prf(double);
@@ -77,11 +77,11 @@ class isce::signal::Crossmul {
         inline void doCommonRangebandFiltering(bool);
 
     private:
-        //Doppler polynomial for the refernce SLC
-        isce::core::Poly2d _refDoppler;
+        //Doppler LUT for the refernce SLC
+        isce::core::LUT1d<double> _refDoppler;
 
-        //Doppler polynomial for the secondary SLC
-        isce::core::Poly2d _secDoppler;
+        //Doppler LUT for the secondary SLC
+        isce::core::LUT1d<double> _secDoppler;
 
         //pulse repetition frequency
         double _prf;
