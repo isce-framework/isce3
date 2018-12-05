@@ -38,10 +38,10 @@ class isce::signal::Signal {
          *  input parameters follow FFTW3 interface for fftw_plan_many_dft
          */
         void fftPlanForward(std::valarray<std::complex<T>> &input, 
-					std::valarray<std::complex<T>> &output,
-            				int rank, int n, int howmany,
-            				int inembed, int istride, int idist,
-            				int onembed, int ostride, int odist, int sign);
+                            std::valarray<std::complex<T>> &output,
+                            int rank, int n, int howmany,
+                            int inembed, int istride, int idist,
+                            int onembed, int ostride, int odist, int sign);
 
 
         /** \brief initiate iverse FFTW3 plan for a block of data
@@ -51,9 +51,9 @@ class isce::signal::Signal {
                                         std::valarray<std::complex<T>> &output,
                                         int rank, int n, int howmany,
                                         int inembed, int istride, int idist,
-                                        int onembed, int ostride, int odist, int sign);	
+                                        int onembed, int ostride, int odist, int sign);    
 
-	/** perform forward FFT */
+        /** perform forward FFT */
         void forward(std::valarray<std::complex<T>> &input,
                     std::valarray<std::complex<T>> &output);
         
@@ -64,8 +64,8 @@ class isce::signal::Signal {
         /** \brief initiate plan for forward FFT in range direction for a block of data
          */
         void forwardRangeFFT(std::valarray<std::complex<T>>& signal, 
-					std::valarray<std::complex<T>>& spectrum,
-                			int ncolumns, int nrows);
+                    std::valarray<std::complex<T>>& spectrum,
+                    int ncolumns, int nrows);
 
         /** \brief initiate plan for forward FFT in azimuth direction for a block of data
          */
@@ -79,16 +79,21 @@ class isce::signal::Signal {
                                         std::valarray<std::complex<T>> &signal,
                                         int ncolumns, int nrows);
 
-	/** \brief initiate plan for inverse FFT in azimuth direction for a block of data
+        /** \brief initiate plan for inverse FFT in azimuth direction for a block of data
          */
         void inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
                                         std::valarray<std::complex<T>> &signal,
                                         int ncolumns, int nrows);
 
-	/** \brief upsampling a block of data in range direction */
+        /** \brief upsampling a block of data in range direction */
         void upsample(std::valarray<std::complex<T>> &signal,
                     std::valarray<std::complex<T>> &signalOversampled,
                     int rows, int nfft, int oversampleFactor);
+
+        void upsample(std::valarray<std::complex<T>> &signal,
+                    std::valarray<std::complex<T>> &signalOversampled,
+                    int rows, int nfft, int oversampleFactor, 
+                    std::valarray<std::complex<T>> shiftImpact);
 
         void nextPowerOfTwo(size_t N, size_t& fftLength);
 

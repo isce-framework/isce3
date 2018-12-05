@@ -8,7 +8,7 @@ def test_geo2rdr():
     Test single call to geo2rdr.
     """
     import datetime
-    import gdal
+    from osgeo import gdal
 
     # Open the HDF5 SLC product for the master scene
     h5 = isceextension.pyIH5File('../../../../lib/isce/data/envisat.h5')
