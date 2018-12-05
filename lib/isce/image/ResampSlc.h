@@ -97,7 +97,7 @@ class isce::image::ResampSlc {
                     bool flatten=false, bool isComplex=true, int rowBuffer=40);
 
     // Data members
-    private:
+    protected:
         // Number of lines per tile
         size_t _linesPerTile = 1000;
         // Band number
