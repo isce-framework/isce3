@@ -32,7 +32,7 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
         /** Constructor from isce::core objects */
         inline Topo(const isce::core::Ellipsoid & ellps,
                     const isce::core::Orbit & orbit,
-                    const isce::core::Poly2d & doppler,
+                    const isce::core::LUT1d<double> & doppler,
                     const isce::core::Metadata & meta) :
             isce::geometry::Topo(ellps, orbit, doppler, meta) {}
 

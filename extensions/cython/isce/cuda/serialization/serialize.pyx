@@ -29,6 +29,9 @@ def deserialize(pyIGroup group, isceobj, **kwargs):
     elif isinstance(isceobj, pyPoly2d):
         loadPoly2d(group, isceobj, **kwargs)
 
+    elif isinstance(isceobj, pyLUT1d):
+        loadLUT1d(group, isceobj, **kwargs)
+
     elif isinstance(isceobj, pyRadar):
         loadRadar(group, isceobj)
 
@@ -94,6 +97,22 @@ def loadPoly2d(pyIGroup group, pyPoly2d poly, poly_name='skew_dcpolynomial'):
         None
     """
     loadFromH5(group.c_igroup, deref(poly.c_poly2d), <string> pyStringToBytes(poly_name))
+
+def loadLUT1d(pyIGroup group, pyLUT1d lut, name_coords='r0', name_values='skewdc_values'):
+    """
+    Load LUT1d data from HDF5 file.
+
+    Args:
+        group (pyIGroup):                       IH5File for product.
+        lut (pyLUT1d):                          pyLUT1d instance.
+        name_coords (str):                      H5 dataset for LUT coordinates.
+        name_values (str):                      H5 dataset for LUT values.
+
+    Return:
+        None
+    """
+    loadFromH5(group.c_igroup, deref(lut.c_lut), <string> pyStringToBytes(name_coords),
+               <string> pyStringToBytes(name_values))
 
 # --------------------------------------------------------------------------------
 # Serialization functions for isce::radar objects

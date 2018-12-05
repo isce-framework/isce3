@@ -10,6 +10,7 @@ from Orbit cimport Orbit
 from Ellipsoid cimport Ellipsoid
 from Metadata cimport Metadata
 from Poly2d cimport Poly2d
+from LUT1d cimport LUT1d
 from IH5 cimport IH5File, IGroup
 
 from Radar cimport Radar
@@ -34,6 +35,9 @@ cdef extern from "isce/core/Serialization.h" namespace "isce::core":
 
     # Load Poly2d
     void loadFromH5(IGroup & group, Poly2d & poly, string dtype)
+
+    # Load LUT1d
+    void loadFromH5(IGroup & group, LUT1d[double] & lut, string name_coords, string name_values)
 
     # Load metadata
     void loadFromH5(IGroup & group, Metadata & meta, string mode)

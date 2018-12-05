@@ -525,6 +525,18 @@ cdef class pyOrbit:
                 accview[ii,jj] = _acc[jj]
 
         return (flag, acc)
+
+    def updateUTCTimes(self, pyDateTime epoch):
+        '''
+        Update reference time to epoch and update UTC times relative to new epoch.
+
+        Args:
+            epoch (pyDateTime): Reference epoch.
+
+        Returns:
+            None
+        '''
+        self.c_orbit.updateUTCTimes(deref(epoch.c_datetime))
     
     def printOrbit(self):
         '''

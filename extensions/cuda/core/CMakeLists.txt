@@ -8,6 +8,7 @@ set(ISCE_CUDA_${PACKAGENAME}_HEADERS
         gpuEllipsoid.h
         gpuInterpolator.h
         gpuLinAlg.h
+        gpuLUT1d.h
         gpuOrbit.h
         gpuPeg.h
         gpuPegtrans.h 
@@ -21,6 +22,7 @@ set(LOCAL_SRCS
         gpuBilinearInterpolator.cu
         gpuBicubicInterpolator.cu
         gpuLinAlg.cu
+        gpuLUT1d.cu
         gpuOrbit.cu
         gpuPeg.cu
         gpuPegtrans.cu 

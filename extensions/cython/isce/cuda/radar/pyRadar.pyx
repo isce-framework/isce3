@@ -11,8 +11,8 @@ cdef class pyRadar:
     Cython wrapper for isce::radar::Radar.
 
     Args:
-        skew (Optional[pyPoly2d]):              pyPoly2d for skew Doppler.
-        content (Optional[pyPoly2d]):           pyPoly2d for content Doppler.
+        skew (Optional[pyLUT1d]):              pyLUT1d for skew Doppler.
+        content (Optional[pyLUT1d]):           pyLUT1d for content Doppler.
 
     Return:
         None
@@ -21,14 +21,14 @@ cdef class pyRadar:
     cdef Radar * c_radar
     cdef bool __owner
 
-    def __cinit__(self, pyPoly2d skew=None, pyPoly2d content=None):
+    def __cinit__(self, pyLUT1d skew=None, pyLUT1d content=None):
         """
         Pre-constructor that creates a C++ isce::radar::Radar object and binds it to 
         python instance.
         """
         # Call the right constructor
         if skew is not None and content is not None:
-            self.c_radar = new Radar(deref(skew.c_poly2d), deref(content.c_poly2d))
+            self.c_radar = new Radar(deref(skew.c_lut), deref(content.c_lut))
         else: 
             self.c_radar = new Radar()
         self.__owner = True
@@ -51,55 +51,55 @@ cdef class pyRadar:
     @property
     def contentDoppler(self):
         """
-        Get a copy of the Poly2d associated with the content Doppler.
+        Get a copy of the LUT1d associated with the content Doppler.
         
         Args:
             None
 
         Return:
-            poly (pyPoly2d):                    pyPoly2d for content Doppler.
+            lut (pyLUT1d):                    pyLUT1d for content Doppler.
         """
-        poly = pyPoly2d.cbind(self.c_radar.contentDoppler())
-        return poly
+        lut = pyLUT1d.cbind(self.c_radar.contentDoppler())
+        return lut
 
     @contentDoppler.setter
-    def contentDoppler(self, pyPoly2d dopp):
+    def contentDoppler(self, pyLUT1d dopp):
         """
-        Set the content Doppler from Poly2d.
+        Set the content Doppler from LUT1d.
 
         Args:
-            dopp (pyPoly2d):                    pyPoly2d for content Doppler.
+            dopp (pyLUT1d):                    pyLUT1d for content Doppler.
 
         Return:
             None
         """
-        self.c_radar.contentDoppler(deref(dopp.c_poly2d))
+        self.c_radar.contentDoppler(deref(dopp.c_lut))
 
     @property
     def skewDoppler(self):
         """
-        Get the Poly2d associated with the skew Doppler.
+        Get the LUT1d associated with the skew Doppler.
 
         Args:
             None
 
         Return:
-            poly (pyPoly2d):                    pyPoly2d for skew Doppler.
+            lut (pyLUT1d):                    pyLUT1d for skew Doppler.
         """
-        poly = pyPoly2d.cbind(self.c_radar.skewDoppler())
-        return poly
+        lut = pyLUT1d.cbind(self.c_radar.skewDoppler())
+        return lut
 
     @skewDoppler.setter
-    def skewDoppler(self, pyPoly2d dopp):
+    def skewDoppler(self, pyLUT1d dopp):
         """
-        Set the skew Doppler from Poly2d.
+        Set the skew Doppler from LUT1d.
 
         Args:
-            dopp (pyPoly2d):                    pyPoly2d for skew Doppler.
+            dopp (pyLUT1d):                    pyLUT1d for skew Doppler.
 
         Return:
             None
         """
-        self.c_radar.skewDoppler(deref(dopp.c_poly2d))
+        self.c_radar.skewDoppler(deref(dopp.c_lut))
 
 # end of file
