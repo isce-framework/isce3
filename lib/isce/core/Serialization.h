@@ -27,6 +27,7 @@
 #include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/Poly2d.h>
+#include <isce/core/LUT1d.h>
 #include <isce/core/StateVector.h>
 
 // isce::io
@@ -271,6 +272,29 @@ namespace isce {
             poly.azimuthMean = 0.0;
             poly.rangeNorm = 1.0;
             poly.azimuthNorm = 1.0;
+        }
+
+        // ------------------------------------------------------------------------
+        // Serialization for LUT1d
+        // ------------------------------------------------------------------------
+
+        /** \brief Load polynomial coefficients from HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] poly          Poly2d to be configured.
+         * @param[in] name          Dataset name within group. */
+        template <typename T>
+        inline void loadFromH5(isce::io::IGroup & group, LUT1d<T> & lut,
+                               std::string name_coords, std::string name_values) {
+            // Valarrays for storing results
+            std::valarray<double> x, y;
+            // Load the LUT values
+            isce::io::loadFromH5(group, name_values, y);
+            // Load the LUT coordinates
+            isce::io::loadFromH5(group, name_coords, x);
+            // Set LUT data
+            lut.coords(x);
+            lut.values(y);
         }
 
         // ------------------------------------------------------------------------
