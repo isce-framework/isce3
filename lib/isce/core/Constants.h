@@ -7,6 +7,7 @@
 #define ISCE_CORE_CONSTANTS_H
 
 #include <stdexcept>
+#include <sstream>
 #include <string>
 #include <array>
 #include <vector>
@@ -180,6 +181,36 @@ namespace isce { namespace core {
         data.push_back(pow(base, last));
         // done
         return data;
+    }
+
+    /** Parse a space-separated string into a vector
+      * @param[in] str String of values
+      * @param[out] vec Vector of values */
+    template <typename T>
+    std::vector<T> stringToVector(const std::string & str) {
+        // Make a stream
+        std::stringstream stream(str);
+        // Parse string
+        T number;
+        std::vector<T> vec;
+        while (stream >> number) {
+            vec.push_back(number);
+        }
+        // done
+        return vec;
+    }
+
+    /** Generate a string of space-separated values from a vector
+      * @param[in] vec Vector of values
+      * @param[out] str String of values */
+    template <typename T>
+    std::string vectorToString(const std::vector<T> & vec) {
+        // Initialize stream
+        std::stringstream stream;
+        // Print values
+        std::copy(vec.begin(), vec.end(), std::ostream_iterator<T>(stream, " "));
+        // done
+        return stream.str();
     }
 
   }
