@@ -35,16 +35,21 @@ class isce::core::LUT1d {
             _values = y;
         } 
         
-        /** Constructor with coordinates and values */
+        /** Constructor with coordinates and values 
+          * @param[in] coords Valarray for coordinates of LUT
+          * @param[in] values Valarray for values of LUT
+          * @param[in] extrapolate Flag for allowing extrapolation beyond bounds */
         inline LUT1d(const std::valarray<double> & coords, const std::valarray<T> & values,
                      bool extrapolate = false) : _coords(coords), _values(values),
                      _extrapolate{extrapolate} {}
 
-        /** Copy constructor. */
+        /** Copy constructor. 
+          * @param[in] lut LUT1d object to copy from */
         inline LUT1d(const LUT1d<T> & lut) :
             _coords(lut.coords()), _values(lut.values()), _extrapolate(lut.extrapolate()) {}
 
-        /** Assignment operator. */
+        /** Assignment operator. 
+          * @param[in] lut LUT1d object to assign from */
         inline LUT1d & operator=(const LUT1d<T> & lut) {
             _coords = lut.coords();
             _values = lut.values();
@@ -52,25 +57,32 @@ class isce::core::LUT1d {
             return *this;
         }
 
-        /** Get the coordinates */
+        /** Get the coordinates 
+          * @param[out] coords Copy of valarray for coordinates */
         inline std::valarray<double> coords() const { return _coords; }
 
-        /** Set the coordinates */
+        /** Set the coordinates 
+          * @param[in] c Input valarray for coordinates */ 
         inline void coords(const std::valarray<double> & c) { _coords = c; }
 
-        /** Get the values */
+        /** Get the values 
+          * @param[out] values Copy of valarray for values */
         inline std::valarray<T> values() const { return _values; }
 
-        /** Set the values */
+        /** Set the values 
+          * @param[in] v Input valarray for values */
         inline void values(const std::valarray<T> & v) { _values = v; }
 
-        /** Get extrapolate flag */
+        /** Get extrapolate flag 
+          * @param[out] flag Extrapolation flag */
         inline bool extrapolate() const { return _extrapolate; }
 
-        /** Set extrapolate flag */
+        /** Set extrapolate flag 
+          * @param[in] flag Extrapolation flag */
         inline void extrapolate(bool flag) { _extrapolate = flag; }
 
-        /** Get size of LUT */
+        /** Get size of LUT 
+          * @param[out] size Size (number of coordinates) of LUT */
         inline size_t size() const { return _coords.size(); }
 
         /** Evaluate the LUT */
