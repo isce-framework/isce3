@@ -305,8 +305,8 @@ namespace isce {
             // Copy vector to LUT valarrays
             std::valarray<double> v_coords(coords.data(), coords.size());
             std::valarray<T> v_values(values.data(), values.size());
-            lut.coords(coords);
-            lut.values(values);
+            lut.coords(v_coords);
+            lut.values(v_values);
         }
 
         /** \brief Load polynomial coefficients from HDF5 product.
