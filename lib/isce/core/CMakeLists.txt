@@ -64,7 +64,8 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Serialization.h
                                     Serialization.h
                                     StateVector.h
-                                    TimeDelta.h)
+                                    TimeDelta.h
+                                    Utilities.h)
 
 ###Install headers into build/include
 ###This is where regex can be used on the header files if needed
