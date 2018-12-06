@@ -102,6 +102,10 @@ Functions</h2></td></tr>
 <tr class="memitem:a1df60672434d0bfada46ecf42dd2faad"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#a1df60672434d0bfada46ecf42dd2faad">loadFromH5</a> (H5obj &amp;h5obj, const std::string &amp;datasetPath, std::vector&lt; T &gt; &amp;v)</td></tr>
 <tr class="memdesc:a1df60672434d0bfada46ecf42dd2faad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load vector dataset from HDF5 file.  <a href="#a1df60672434d0bfada46ecf42dd2faad">More...</a><br /></td></tr>
 <tr class="separator:a1df60672434d0bfada46ecf42dd2faad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a942a3392af55e6091a1461f8283ac12f"><td class="memTemplParams" colspan="2">template&lt;typename H5obj , typename T &gt; </td></tr>
+<tr class="memitem:a942a3392af55e6091a1461f8283ac12f"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#a942a3392af55e6091a1461f8283ac12f">loadFromH5</a> (H5obj &amp;h5obj, const std::string &amp;datasetPath, std::valarray&lt; T &gt; &amp;v)</td></tr>
+<tr class="memdesc:a942a3392af55e6091a1461f8283ac12f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load valarray dataset from HDF5 file.  <a href="#a942a3392af55e6091a1461f8283ac12f">More...</a><br /></td></tr>
+<tr class="separator:a942a3392af55e6091a1461f8283ac12f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab499ddb417f6ddf7c48f2100bf1f2cf"><td class="memTemplParams" colspan="2">template&lt;typename H5obj &gt; </td></tr>
 <tr class="memitem:aab499ddb417f6ddf7c48f2100bf1f2cf"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; int &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#aab499ddb417f6ddf7c48f2100bf1f2cf">getImageDims</a> (H5obj &amp;h5obj, const std::string &amp;datasetPath)</td></tr>
 <tr class="memdesc:aab499ddb417f6ddf7c48f2100bf1f2cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get dimensions of complex imagery from HDF5 file.  <a href="#aab499ddb417f6ddf7c48f2100bf1f2cf">More...</a><br /></td></tr>
@@ -171,7 +175,7 @@ template&lt;typename H5obj &gt; </div>
 </div>
 </div>
 <a id="ae96538b781df97ffbcda47c4d92ffbb6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae96538b781df97ffbcda47c4d92ffbb6">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ae96538b781df97ffbcda47c4d92ffbb6">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -225,7 +229,7 @@ template&lt;typename H5obj , typename T &gt; </div>
 </div>
 </div>
 <a id="a1df60672434d0bfada46ecf42dd2faad"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1df60672434d0bfada46ecf42dd2faad">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a1df60672434d0bfada46ecf42dd2faad">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -272,6 +276,60 @@ template&lt;typename H5obj , typename T &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>Vector to store dataset. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a942a3392af55e6091a1461f8283ac12f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a942a3392af55e6091a1461f8283ac12f">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[3/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename H5obj , typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::loadFromH5 </td>
+          <td>(</td>
+          <td class="paramtype">H5obj &amp;&#160;</td>
+          <td class="paramname"><em>h5obj</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>datasetPath</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>v</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Load valarray dataset from HDF5 file. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>Valarray to store dataset. </td></tr>
   </table>
   </dd>
 </dl>
