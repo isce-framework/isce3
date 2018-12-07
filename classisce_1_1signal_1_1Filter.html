@@ -93,9 +93,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>constructRangeBandpas
 <tr class="separator:a061110822c43d2e2dbfda0448d96e67a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4d92863f4f8cd966f2c856d82b76726"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#ac4d92863f4f8cd966f2c856d82b76726">constructRangeBandpassCosine</a> (std::valarray&lt; double &gt; subBandCenterFrequencies, std::valarray&lt; double &gt; subBandBandwidths, double dt, std::valarray&lt; double &gt; &amp;frequency, double beta, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;_filter1D)</td></tr>
 <tr class="separator:ac4d92863f4f8cd966f2c856d82b76726"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96a3d4f5a41641e8229f93ff3b7f9535"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#a96a3d4f5a41641e8229f93ff3b7f9535">constructAzimuthCommonbandFilter</a> (const <a class="el" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d</a>&lt; double &gt; &amp;refDoppler, const <a class="el" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d</a>&lt; double &gt; &amp;secDoppler, double bandwidth, double prf, double beta, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, size_t ncols, size_t nrows)</td></tr>
-<tr class="memdesc:a96a3d4f5a41641e8229f93ff3b7f9535"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct azimuth common band filter.  <a href="#a96a3d4f5a41641e8229f93ff3b7f9535">More...</a><br /></td></tr>
-<tr class="separator:a96a3d4f5a41641e8229f93ff3b7f9535"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ede0054c14137139b9cd35d4f424662"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#a5ede0054c14137139b9cd35d4f424662">constructAzimuthCommonbandFilter</a> (const <a class="el" href="structisce_1_1core_1_1Poly2d.html">isce::core::Poly2d</a> &amp;refDoppler, const <a class="el" href="structisce_1_1core_1_1Poly2d.html">isce::core::Poly2d</a> &amp;secDoppler, double bandwidth, double prf, double beta, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, size_t ncols, size_t nrows)</td></tr>
+<tr class="memdesc:a5ede0054c14137139b9cd35d4f424662"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct azimuth common band filter.  <a href="#a5ede0054c14137139b9cd35d4f424662">More...</a><br /></td></tr>
+<tr class="separator:a5ede0054c14137139b9cd35d4f424662"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a077db6bb7d395b5ace61bd6b47b0e167"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#a077db6bb7d395b5ace61bd6b47b0e167">filter</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum)</td></tr>
 <tr class="memdesc:a077db6bb7d395b5ace61bd6b47b0e167"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classisce_1_1signal_1_1Filter.html">Filter</a> a signal in frequency domain.  <a href="#a077db6bb7d395b5ace61bd6b47b0e167">More...</a><br /></td></tr>
 <tr class="separator:a077db6bb7d395b5ace61bd6b47b0e167"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -110,8 +110,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>writeFilter</b> (size
 <tr class="separator:a5aef0b3fceb4b579da3b7882784f6c0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a96a3d4f5a41641e8229f93ff3b7f9535"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a96a3d4f5a41641e8229f93ff3b7f9535">&#9670;&nbsp;</a></span>constructAzimuthCommonbandFilter()</h2>
+<a id="a5ede0054c14137139b9cd35d4f424662"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5ede0054c14137139b9cd35d4f424662">&#9670;&nbsp;</a></span>constructAzimuthCommonbandFilter()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -121,13 +121,13 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Filter.html">isce::signal::Filter</a>&lt; T &gt;::constructAzimuthCommonbandFilter </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d</a>&lt; double &gt; &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="structisce_1_1core_1_1Poly2d.html">isce::core::Poly2d</a> &amp;&#160;</td>
           <td class="paramname"><em>refDoppler</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d</a>&lt; double &gt; &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="structisce_1_1core_1_1Poly2d.html">isce::core::Poly2d</a> &amp;&#160;</td>
           <td class="paramname"><em>secDoppler</em>, </td>
         </tr>
         <tr>
@@ -183,8 +183,8 @@ template&lt;class T &gt; </div>
 <p>Construct azimuth common band filter. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">refDoppler</td><td>Doppler LUT1d of the reference SLC </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">secDoppler</td><td>Doppler LUT1d of the secondary SLC </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">refDoppler</td><td>Doppler polynomial of the reference SLC </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">secDoppler</td><td>Doppler polynomial of the secondary SLC </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">bandwidth</td><td>common bandwidth in azimuth </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">prf</td><td>pulse repetition frequency </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">beta</td><td>parameter for raised cosine filter </td></tr>

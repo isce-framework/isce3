@@ -87,7 +87,6 @@ $(function() {
 <code>#include &lt;isce/core/Pegtrans.h&gt;</code><br />
 <code>#include &lt;isce/core/Pixel.h&gt;</code><br />
 <code>#include &lt;isce/core/Poly2d.h&gt;</code><br />
-<code>#include &lt;isce/core/LUT1d.h&gt;</code><br />
 <code>#include &lt;isce/core/StateVector.h&gt;</code><br />
 <code>#include &lt;isce/product/ImageMode.h&gt;</code><br />
 <code>#include &quot;DEMInterpolator.h&quot;</code><br />
@@ -120,8 +119,6 @@ Functions</h2></td></tr>
 <tr class="memitem:ade34d885e4815bbde77ac547695fdd94"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="geometry_8h.html#ade34d885e4815bbde77ac547695fdd94">isce::geometry::geo2rdr</a> (const cartesian_t &amp;, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;, const <a class="el" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;, const <a class="el" href="structisce_1_1core_1_1Poly2d.html">isce::core::Poly2d</a> &amp;, const <a class="el" href="classisce_1_1product_1_1ImageMode.html">isce::product::ImageMode</a> &amp;, double &amp;, double &amp;, double, int, double)</td></tr>
 <tr class="memdesc:ade34d885e4815bbde77ac547695fdd94"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map coordinates to radar geometry coordinates transformer.  <a href="geometry_8h.html#ade34d885e4815bbde77ac547695fdd94">More...</a><br /></td></tr>
 <tr class="separator:ade34d885e4815bbde77ac547695fdd94"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16a51739a15e8aa39fd9525c293b2b95"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="geometry_8h.html#a16a51739a15e8aa39fd9525c293b2b95">isce::geometry::geo2rdr</a> (const cartesian_t &amp;, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;, const <a class="el" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;, const <a class="el" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d</a>&lt; double &gt; &amp;, const <a class="el" href="classisce_1_1product_1_1ImageMode.html">isce::product::ImageMode</a> &amp;, double &amp;, double &amp;, double, int, double)</td></tr>
-<tr class="separator:a16a51739a15e8aa39fd9525c293b2b95"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aefb458e2d0a07e853252bcff25d660ab"><td class="memItemLeft" align="right" valign="top"><a id="aefb458e2d0a07e853252bcff25d660ab"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>isce::geometry::geocentricTCN</b> (<a class="el" href="classisce_1_1core_1_1StateVector.html">isce::core::StateVector</a> &amp;, <a class="el" href="classisce_1_1core_1_1Basis.html">isce::core::Basis</a> &amp;)</td></tr>
 <tr class="separator:aefb458e2d0a07e853252bcff25d660ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -131,7 +128,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>isce::geometry::geoce
 <p>There are no classes defined in this file. Its a collection of functions that are meant to be light weight versions of <a class="el" href="classisce_1_1geometry_1_1Topo.html" title="Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude...">isce::geometry::Topo</a> and <a class="el" href="classisce_1_1geometry_1_1Geo2rdr.html" title="Transformer from map coordinates to radar geometry coordinates. ">isce::geometry::Geo2rdr</a>. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="file_ade34d885e4815bbde77ac547695fdd94"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_ade34d885e4815bbde77ac547695fdd94">&#9670;&nbsp;</a></span>geo2rdr() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#file_ade34d885e4815bbde77ac547695fdd94">&#9670;&nbsp;</a></span>geo2rdr()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -205,98 +202,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>isce::geometry::geoce
 </div><div class="memdoc">
 
 <p>Map coordinates to radar geometry coordinates transformer. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">inputLLH</td><td>Lon/Lat/Hae of target of interest </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ellipsoid</td><td>Ellipsoid object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">orbit</td><td>Orbit object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">doppler</td><td>Poly2D Doppler model </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">mode</td><td>ImageMode object </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">aztime</td><td>azimuth time of inputLLH w.r.t reference epoch of the orbit </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">slantRange</td><td>slant range to inputLLH </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">threshold</td><td>azimuth time convergence threshold in seconds </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">maxIter</td><td>Maximum number of Newton-Raphson iterations </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">deltaRange</td><td>step size used for computing derivative of doppler</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>This is the elementary transformation from map geometry to radar geometry. The transformation is applicable for a single lon/lat/h coordinate (i.e., a single point target). For algorithmic details, see <a class="el" href="overview_geometry.html">geometry overview</a>. </p>
-
-</div>
-</div>
-<a id="file_a16a51739a15e8aa39fd9525c293b2b95"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#file_a16a51739a15e8aa39fd9525c293b2b95">&#9670;&nbsp;</a></span>geo2rdr() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int isce::geometry::geo2rdr </td>
-          <td>(</td>
-          <td class="paramtype">const cartesian_t &amp;&#160;</td>
-          <td class="paramname"><em>inputLLH</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;&#160;</td>
-          <td class="paramname"><em>ellipsoid</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;&#160;</td>
-          <td class="paramname"><em>orbit</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d</a>&lt; double &gt; &amp;&#160;</td>
-          <td class="paramname"><em>doppler</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1product_1_1ImageMode.html">isce::product::ImageMode</a> &amp;&#160;</td>
-          <td class="paramname"><em>mode</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double &amp;&#160;</td>
-          <td class="paramname"><em>aztime</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double &amp;&#160;</td>
-          <td class="paramname"><em>slantRange</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>threshold</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>maxIter</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>deltaRange</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">inputLLH</td><td>Lon/Lat/Hae of target of interest </td></tr>

@@ -124,8 +124,6 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1LonLat.html">LonLat</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Standard WGS84 Lon/Lat Projection extension of ProjBase - EPSG:4326.  <a href="structisce_1_1core_1_1LonLat.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1LUT1d.html">LUT1d</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1LUT2d.html">LUT2d</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Matrix.html">Matrix</a></td></tr>
@@ -217,6 +215,26 @@ Enumerations</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a94fb25766eab8d9a67a8bd7fe5045d3e"><td class="memTemplParams" colspan="2"><a id="a94fb25766eab8d9a67a8bd7fe5045d3e"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a94fb25766eab8d9a67a8bd7fe5045d3e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>checkVecLenDebug</b> (const std::vector&lt; T &gt; &amp;vec, size_t len, const char *vec_name, const char *parent_func)</td></tr>
+<tr class="separator:a94fb25766eab8d9a67a8bd7fe5045d3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4fe462b957b9f39a6a2c6d437677d32e"><td class="memTemplParams" colspan="2"><a id="a4fe462b957b9f39a6a2c6d437677d32e"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a4fe462b957b9f39a6a2c6d437677d32e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>check2dVecLenDebug</b> (const std::vector&lt; std::vector&lt; T &gt;&gt; &amp;vec, size_t len, size_t width, const char *vec_name, const char *parent_func)</td></tr>
+<tr class="separator:a4fe462b957b9f39a6a2c6d437677d32e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a607ae942e885db44bc22f28d80a82b39"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a607ae942e885db44bc22f28d80a82b39"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a607ae942e885db44bc22f28d80a82b39">arange</a> (T low, T high, T increment)</td></tr>
+<tr class="memdesc:a607ae942e885db44bc22f28d80a82b39"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to return a Python style arange vector.  <a href="#a607ae942e885db44bc22f28d80a82b39">More...</a><br /></td></tr>
+<tr class="separator:a607ae942e885db44bc22f28d80a82b39"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7b34dffee2880f200ff9249eae16989"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aa7b34dffee2880f200ff9249eae16989"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">linspace</a> (T low, T high, std::size_t number)</td></tr>
+<tr class="memdesc:aa7b34dffee2880f200ff9249eae16989"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to return a Matlab/Python style linspace vector.  <a href="#aa7b34dffee2880f200ff9249eae16989">More...</a><br /></td></tr>
+<tr class="separator:aa7b34dffee2880f200ff9249eae16989"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7fe9017a304146b33c054e90dd733105"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a7fe9017a304146b33c054e90dd733105"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a7fe9017a304146b33c054e90dd733105">logspace</a> (T first, T last, std::size_t number, T base=10)</td></tr>
+<tr class="memdesc:a7fe9017a304146b33c054e90dd733105"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to return a Matlab/Python style logspace vector.  <a href="#a7fe9017a304146b33c054e90dd733105">More...</a><br /></td></tr>
+<tr class="separator:a7fe9017a304146b33c054e90dd733105"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e75fd03bfcab2d6d624eff6453cd0fb"><td class="memItemLeft" align="right" valign="top"><a id="a5e75fd03bfcab2d6d624eff6453cd0fb"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>_is_leap</b> (int)</td></tr>
 <tr class="separator:a5e75fd03bfcab2d6d624eff6453cd0fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -302,18 +320,6 @@ template&lt;class Archive &gt; </td></tr>
 <tr class="memitem:ab11f207e09c1eee42c709349856e6859"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#ab11f207e09c1eee42c709349856e6859">loadFromH5</a> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, <a class="el" href="structisce_1_1core_1_1Poly2d.html">Poly2d</a> &amp;poly, std::string name)</td></tr>
 <tr class="memdesc:ab11f207e09c1eee42c709349856e6859"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load polynomial coefficients from HDF5 product.  <a href="#ab11f207e09c1eee42c709349856e6859">More...</a><br /></td></tr>
 <tr class="separator:ab11f207e09c1eee42c709349856e6859"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a183bc2beca4f2872ec144f5552bf0f51"><td class="memTemplParams" colspan="2"><a id="a183bc2beca4f2872ec144f5552bf0f51"></a>
-template&lt;class Archive , typename T &gt; </td></tr>
-<tr class="memitem:a183bc2beca4f2872ec144f5552bf0f51"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>save</b> (Archive &amp;archive, <a class="el" href="classisce_1_1core_1_1LUT1d.html">LUT1d</a>&lt; T &gt; const &amp;lut)</td></tr>
-<tr class="separator:a183bc2beca4f2872ec144f5552bf0f51"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af4bae1ac789eb00b5e6dcecdfe561d2e"><td class="memTemplParams" colspan="2"><a id="af4bae1ac789eb00b5e6dcecdfe561d2e"></a>
-template&lt;class Archive , typename T &gt; </td></tr>
-<tr class="memitem:af4bae1ac789eb00b5e6dcecdfe561d2e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>load</b> (Archive &amp;archive, <a class="el" href="classisce_1_1core_1_1LUT1d.html">LUT1d</a>&lt; T &gt; &amp;lut)</td></tr>
-<tr class="separator:af4bae1ac789eb00b5e6dcecdfe561d2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5cc4818bb295a2e9b217a0475eaea01d"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a5cc4818bb295a2e9b217a0475eaea01d"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a5cc4818bb295a2e9b217a0475eaea01d">loadFromH5</a> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, <a class="el" href="classisce_1_1core_1_1LUT1d.html">LUT1d</a>&lt; T &gt; &amp;lut, std::string name_coords, std::string name_values)</td></tr>
-<tr class="memdesc:a5cc4818bb295a2e9b217a0475eaea01d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load polynomial coefficients from HDF5 product.  <a href="#a5cc4818bb295a2e9b217a0475eaea01d">More...</a><br /></td></tr>
-<tr class="separator:a5cc4818bb295a2e9b217a0475eaea01d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac20b1fadd409972ec076c05afae28807"><td class="memTemplParams" colspan="2"><a id="ac20b1fadd409972ec076c05afae28807"></a>
 template&lt;class Archive &gt; </td></tr>
 <tr class="memitem:ac20b1fadd409972ec076c05afae28807"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>save</b> (Archive &amp;archive, <a class="el" href="classisce_1_1core_1_1StateVector.html">StateVector</a> const &amp;sv)</td></tr>
@@ -322,37 +328,6 @@ template&lt;class Archive &gt; </td></tr>
 template&lt;class Archive &gt; </td></tr>
 <tr class="memitem:a64f7a62d3a62643842e694e52a745f7e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>load</b> (Archive &amp;archive, <a class="el" href="classisce_1_1core_1_1StateVector.html">StateVector</a> &amp;sv)</td></tr>
 <tr class="separator:a64f7a62d3a62643842e694e52a745f7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a94fb25766eab8d9a67a8bd7fe5045d3e"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a94fb25766eab8d9a67a8bd7fe5045d3e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e">checkVecLenDebug</a> (const std::vector&lt; T &gt; &amp;vec, size_t len, const char *vec_name, const char *parent_func)</td></tr>
-<tr class="memdesc:a94fb25766eab8d9a67a8bd7fe5045d3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Inline function for input checking on vector lengths (primarily to check to see if 3D vector has the correct number of inputs, but is generalized to any length).  <a href="#a94fb25766eab8d9a67a8bd7fe5045d3e">More...</a><br /></td></tr>
-<tr class="separator:a94fb25766eab8d9a67a8bd7fe5045d3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4fe462b957b9f39a6a2c6d437677d32e"><td class="memTemplParams" colspan="2"><a id="a4fe462b957b9f39a6a2c6d437677d32e"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a4fe462b957b9f39a6a2c6d437677d32e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>check2dVecLenDebug</b> (const std::vector&lt; std::vector&lt; T &gt;&gt; &amp;vec, size_t len, size_t width, const char *vec_name, const char *parent_func)</td></tr>
-<tr class="separator:a4fe462b957b9f39a6a2c6d437677d32e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a607ae942e885db44bc22f28d80a82b39"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a607ae942e885db44bc22f28d80a82b39"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a607ae942e885db44bc22f28d80a82b39">arange</a> (T low, T high, T increment)</td></tr>
-<tr class="memdesc:a607ae942e885db44bc22f28d80a82b39"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to return a Python style arange vector.  <a href="#a607ae942e885db44bc22f28d80a82b39">More...</a><br /></td></tr>
-<tr class="separator:a607ae942e885db44bc22f28d80a82b39"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa7b34dffee2880f200ff9249eae16989"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:aa7b34dffee2880f200ff9249eae16989"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">linspace</a> (T low, T high, std::size_t number)</td></tr>
-<tr class="memdesc:aa7b34dffee2880f200ff9249eae16989"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to return a Matlab/Python style linspace vector.  <a href="#aa7b34dffee2880f200ff9249eae16989">More...</a><br /></td></tr>
-<tr class="separator:aa7b34dffee2880f200ff9249eae16989"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7fe9017a304146b33c054e90dd733105"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a7fe9017a304146b33c054e90dd733105"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a7fe9017a304146b33c054e90dd733105">logspace</a> (T first, T last, std::size_t number, T base=10)</td></tr>
-<tr class="memdesc:a7fe9017a304146b33c054e90dd733105"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to return a Matlab/Python style logspace vector.  <a href="#a7fe9017a304146b33c054e90dd733105">More...</a><br /></td></tr>
-<tr class="separator:a7fe9017a304146b33c054e90dd733105"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22545d2fc4f92173946f1049862d89e9"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a22545d2fc4f92173946f1049862d89e9"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a22545d2fc4f92173946f1049862d89e9">stringToVector</a> (const std::string &amp;str)</td></tr>
-<tr class="memdesc:a22545d2fc4f92173946f1049862d89e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse a space-separated string into a vector.  <a href="#a22545d2fc4f92173946f1049862d89e9">More...</a><br /></td></tr>
-<tr class="separator:a22545d2fc4f92173946f1049862d89e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab3ab15086fc03cd08e41914466ef5f1c"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:ab3ab15086fc03cd08e41914466ef5f1c"><td class="memTemplItemLeft" align="right" valign="top">std::string&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#ab3ab15086fc03cd08e41914466ef5f1c">vectorToString</a> (const std::vector&lt; T &gt; &amp;vec)</td></tr>
-<tr class="memdesc:ab3ab15086fc03cd08e41914466ef5f1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate a string of space-separated values from a vector.  <a href="#ab3ab15086fc03cd08e41914466ef5f1c">More...</a><br /></td></tr>
-<tr class="separator:ab3ab15086fc03cd08e41914466ef5f1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4123e8e839c6bc00ea12744cf8781f3a"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a4123e8e839c6bc00ea12744cf8781f3a">stringFromVRT</a> (const char *filename, int bandNum=1)</td></tr>
-<tr class="memdesc:a4123e8e839c6bc00ea12744cf8781f3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read metadata from a VRT file and return an std::string.  <a href="#a4123e8e839c6bc00ea12744cf8781f3a">More...</a><br /></td></tr>
-<tr class="separator:a4123e8e839c6bc00ea12744cf8781f3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
@@ -416,9 +391,6 @@ const int&#160;</td><td class="memItemRight" valign="bottom"><b>DAY_TO_HOUR</b> 
 <div class="memproto">
 <div class="memtemplate">
 template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">std::vector&lt;T&gt; isce::core::arange </td>
@@ -444,11 +416,6 @@ template&lt;typename T &gt; </div>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Function to return a Python style arange vector. </p>
@@ -463,59 +430,6 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="a94fb25766eab8d9a67a8bd7fe5045d3e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a94fb25766eab8d9a67a8bd7fe5045d3e">&#9670;&nbsp;</a></span>checkVecLenDebug()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void isce::core::checkVecLenDebug </td>
-          <td>(</td>
-          <td class="paramtype">const std::vector&lt; T &gt; &amp;&#160;</td>
-          <td class="paramname"><em>vec</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>len</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>vec_name</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>parent_func</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Inline function for input checking on vector lengths (primarily to check to see if 3D vector has the correct number of inputs, but is generalized to any length). </p>
-<p>'vec_name' is passed in by the wrapper macro (stringified vector name), and 'parent_func' is passed in the same way through <b>PRETTY_FUNCTION</b> </p>
-
-</div>
-</div>
 <a id="aa7b34dffee2880f200ff9249eae16989"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa7b34dffee2880f200ff9249eae16989">&#9670;&nbsp;</a></span>linspace()</h2>
 
@@ -523,9 +437,6 @@ template&lt;typename T &gt; </div>
 <div class="memproto">
 <div class="memtemplate">
 template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">std::vector&lt;T&gt; isce::core::linspace </td>
@@ -551,11 +462,6 @@ template&lt;typename T &gt; </div>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Function to return a Matlab/Python style linspace vector. </p>
@@ -571,7 +477,7 @@ template&lt;typename T &gt; </div>
 </div>
 </div>
 <a id="a8921e0b091f2af23ac3c625a7b67f7b6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8921e0b091f2af23ac3c625a7b67f7b6">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[1/5]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a8921e0b091f2af23ac3c625a7b67f7b6">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -616,7 +522,7 @@ template&lt;typename T &gt; </div>
 </div>
 </div>
 <a id="a90dfc518485c1cb7421391e9a3842109"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a90dfc518485c1cb7421391e9a3842109">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[2/5]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a90dfc518485c1cb7421391e9a3842109">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[2/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -675,7 +581,7 @@ template&lt;typename T &gt; </div>
 </div>
 </div>
 <a id="a02d43485a706815640536abb05a8bf10"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a02d43485a706815640536abb05a8bf10">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[3/5]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a02d43485a706815640536abb05a8bf10">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[3/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -727,7 +633,7 @@ template&lt;typename T &gt; </div>
 </div>
 </div>
 <a id="ab11f207e09c1eee42c709349856e6859"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab11f207e09c1eee42c709349856e6859">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[4/5]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ab11f207e09c1eee42c709349856e6859">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[4/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -778,66 +684,6 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="a5cc4818bb295a2e9b217a0475eaea01d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5cc4818bb295a2e9b217a0475eaea01d">&#9670;&nbsp;</a></span>loadFromH5() <span class="overload">[5/5]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void isce::core::loadFromH5 </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;&#160;</td>
-          <td class="paramname"><em>group</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1LUT1d.html">LUT1d</a>&lt; T &gt; &amp;&#160;</td>
-          <td class="paramname"><em>lut</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::string&#160;</td>
-          <td class="paramname"><em>name_coords</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::string&#160;</td>
-          <td class="paramname"><em>name_values</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Load polynomial coefficients from HDF5 product. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">group</td><td>HDF5 group object. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">poly</td><td><a class="el" href="structisce_1_1core_1_1Poly2d.html" title="Data structure for representing 1D polynomials. ">Poly2d</a> to be configured. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Dataset name within group. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a id="a7fe9017a304146b33c054e90dd733105"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7fe9017a304146b33c054e90dd733105">&#9670;&nbsp;</a></span>logspace()</h2>
 
@@ -845,9 +691,6 @@ template&lt;typename T &gt; </div>
 <div class="memproto">
 <div class="memtemplate">
 template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">std::vector&lt;T&gt; isce::core::logspace </td>
@@ -879,11 +722,6 @@ template&lt;typename T &gt; </div>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Function to return a Matlab/Python style logspace vector. </p>
@@ -893,126 +731,6 @@ template&lt;typename T &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">last</td><td>base^last is the ending value of the vector </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">Number</td><td>of vector elements </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">base</td><td>Base of the log space </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a4123e8e839c6bc00ea12744cf8781f3a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4123e8e839c6bc00ea12744cf8781f3a">&#9670;&nbsp;</a></span>stringFromVRT()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::string isce::core::stringFromVRT </td>
-          <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>filename</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>bandNum</em> = <code>1</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Read metadata from a VRT file and return an std::string. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">filename</td><td>VRT product filename </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">bandNum</td><td>Band number to retrieve metadata from </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">meta</td><td>std::string containing metadata </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a22545d2fc4f92173946f1049862d89e9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a22545d2fc4f92173946f1049862d89e9">&#9670;&nbsp;</a></span>stringToVector()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;T&gt; isce::core::stringToVector </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>str</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Parse a space-separated string into a vector. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>String of values </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">vec</td><td>Vector of values </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="ab3ab15086fc03cd08e41914466ef5f1c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab3ab15086fc03cd08e41914466ef5f1c">&#9670;&nbsp;</a></span>vectorToString()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::string isce::core::vectorToString </td>
-          <td>(</td>
-          <td class="paramtype">const std::vector&lt; T &gt; &amp;&#160;</td>
-          <td class="paramname"><em>vec</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Generate a string of space-separated values from a vector. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">vec</td><td>Vector of values </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">str</td><td>String of values </td></tr>
   </table>
   </dd>
 </dl>

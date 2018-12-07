@@ -17,14 +17,11 @@ var searchData=
   ['sinc2dinterpolator',['Sinc2dInterpolator',['../classisce_1_1core_1_1Sinc2dInterpolator.html#a623e07dc83dd6a14c7b976adfbcda11e',1,'isce::core::Sinc2dInterpolator']]],
   ['sinc_5feval',['sinc_eval',['../namespaceisce_1_1core.html#abb0055edd764350e6e27aa3cf77c3eb4',1,'isce::core']]],
   ['sinlook',['sinLook',['../classisce_1_1core_1_1Baseline.html#a2ec531b1ccb2e5fb163b08f339f547d5',1,'isce::core::Baseline']]],
-  ['size',['size',['../classisce_1_1core_1_1LUT1d.html#a51ded8232999c519bd1a12528171a2f2',1,'isce::core::LUT1d']]],
-  ['skewdoppler',['skewDoppler',['../classisce_1_1radar_1_1Radar.html#a8754c12957a9d8415fe75e9e8181a611',1,'isce::radar::Radar::skewDoppler() const'],['../classisce_1_1radar_1_1Radar.html#a6db0d1be42d6799504dd86b2ccf6a210',1,'isce::radar::Radar::skewDoppler(const isce::core::LUT1d&lt; double &gt; &amp;)']]],
+  ['skewdoppler',['skewDoppler',['../classisce_1_1radar_1_1Radar.html#a07b4575974b9c04cc0475ae2f5664538',1,'isce::radar::Radar::skewDoppler() const'],['../classisce_1_1radar_1_1Radar.html#a8bcf3992383c85a0c466f3b59e821c03',1,'isce::radar::Radar::skewDoppler(const isce::core::Poly2d &amp;)']]],
   ['spline2dinterpolator',['Spline2dInterpolator',['../classisce_1_1core_1_1Spline2dInterpolator.html#ac667aaa2f1ebdca2394b9c0a9cd121ab',1,'isce::core::Spline2dInterpolator']]],
   ['startaztime',['startAzTime',['../classisce_1_1product_1_1ImageMode.html#ac96ae93c5dc5f17c29a47cba5decd41e',1,'isce::product::ImageMode::startAzTime() const'],['../classisce_1_1product_1_1ImageMode.html#ad5cbaca53ad8da50f992d60baae6663f',1,'isce::product::ImageMode::startAzTime(const isce::core::DateTime &amp;dtime)']]],
   ['startingrange',['startingRange',['../classisce_1_1product_1_1ImageMode.html#acd6e644e362aa3b9d9849bd2c7f1b61f',1,'isce::product::ImageMode::startingRange() const'],['../classisce_1_1product_1_1ImageMode.html#a1df9b0440c9c9af162b9da0ea090d6a5',1,'isce::product::ImageMode::startingRange(double value)']]],
   ['statevector',['StateVector',['../classisce_1_1core_1_1StateVector.html#a55efa058115dfa14ec8a7a924b080bb8',1,'isce::core::StateVector']]],
-  ['stringfromvrt',['stringFromVRT',['../namespaceisce_1_1core.html#a4123e8e839c6bc00ea12744cf8781f3a',1,'isce::core']]],
-  ['stringtovector',['stringToVector',['../namespaceisce_1_1core.html#a22545d2fc4f92173946f1049862d89e9',1,'isce::core']]],
   ['strptime',['strptime',['../structisce_1_1core_1_1DateTime.html#aa3055c9e3412e55fbe8f207ba71e671e',1,'isce::core::DateTime']]],
   ['submat',['submat',['../classisce_1_1core_1_1Matrix.html#a75d7751271ac4e7a9a969fd7bccee68d',1,'isce::core::Matrix']]]
 ];
