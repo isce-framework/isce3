@@ -126,6 +126,8 @@ class isce::core::Matrix {
         /** Get matrix length */
         inline size_t length() const;
 
+        /** Get byteoffset for row and column for reading flat binary buffer */
+        inline shape_t byteoffset() const;
     // Data members
     private:
         // Shape information
