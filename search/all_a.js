@@ -8,6 +8,7 @@ var searchData=
   ['imagemode',['ImageMode',['../classisce_1_1product_1_1ImageMode.html',1,'isce::product::ImageMode'],['../classisce_1_1product_1_1ImageMode.html#a55d5f24cec9139e4bf11eab7c190d9c8',1,'isce::product::ImageMode::ImageMode()'],['../classisce_1_1product_1_1ImageMode.html#a4460a47c9a02c987d19bfff6be177224',1,'isce::product::ImageMode::ImageMode(const ImageMode &amp;)'],['../classisce_1_1product_1_1ImageMode.html#afed3846fd00cf9250784ea10b79ec4a7',1,'isce::product::ImageMode::ImageMode(const std::string &amp;)'],['../classisce_1_1product_1_1ImageMode.html#a2f034d51113ac11220c635e0a8db0e25',1,'isce::product::ImageMode::ImageMode(const isce::core::Metadata &amp;)']]],
   ['isce_20_2d_20insar_20scientific_20computing_20environment',['ISCE - InSAR Scientific Computing Environment',['../index.html',1,'']]],
   ['indexoffrequency',['indexOfFrequency',['../classisce_1_1signal_1_1Filter.html#aa5cea79bfe6e39ef9c120eb3705201cf',1,'isce::signal::Filter']]],
+  ['initfrompointer',['initFromPointer',['../classisce_1_1io_1_1Raster.html#a7f0e5381ba751bf0548f0c3b98a4ca9e',1,'isce::io::Raster']]],
   ['initialized',['initialized',['../classisce_1_1geometry_1_1Topo.html#ac00ad2046ee1b258bff20da204580e77',1,'isce::geometry::Topo']]],
   ['initiateazimuthfilter',['initiateAzimuthFilter',['../classisce_1_1signal_1_1Filter.html#a3636862e2e86cf73c53b958a7ac3441e',1,'isce::signal::Filter']]],
   ['initiaterangefilter',['initiateRangeFilter',['../classisce_1_1signal_1_1Filter.html#ad57c995570d004e41d0361ae6defb788',1,'isce::signal::Filter']]],
