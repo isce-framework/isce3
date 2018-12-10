@@ -71,6 +71,7 @@ TEST(Looks, realData)
     float max_err = 0;
     float err = 0;
     for (size_t i = 0; i< widthLooked*lengthLooked; ++i){
+        err = std::abs(xlksExpected[i] - xlks[i]); 
         if (err > max_err)
             max_err = err;
     }
