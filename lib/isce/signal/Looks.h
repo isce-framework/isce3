@@ -36,19 +36,26 @@ class isce::signal::Looks {
         void multilook(std::valarray<std::complex<T>> &input, 
                         std::valarray<std::complex<T>> &output);
 
-        /*void multilook(std::valarray<std::complex<T>> &input,
+        void multilook(std::valarray<std::complex<T>> &input,
+                        std::valarray<std::complex<T>> &output,
+                        std::complex<T> noDataValue);
+
+        void multilook(std::valarray<std::complex<T>> &input,
                         std::valarray<bool> &mask,
                         std::valarray<std::complex<T>> &output);
-        */
-
-        /*void multilook(std::valarray<std::complex<T>> &input,
+        
+        void multilook(std::valarray<std::complex<T>> &input,
                         std::valarray<T> &weights,
                         std::valarray<std::complex<T>> &output);
-        */
+        
 
         /** multi-looking an array of real data */
         void multilook(std::valarray<T> &input,
                         std::valarray<T> &output);
+
+        void multilook(std::valarray<T> &input,
+                        std::valarray<T> &output,
+                        T noDataValue);
 
         void multilook(std::valarray<T> &input,
 			std::valarray<bool> &mask,
