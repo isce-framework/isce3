@@ -33,6 +33,7 @@ TEST(Crossmul, RunCrossmul)
     // a raster object for the interferogram
     isce::io::Raster interferogram("/vsimem/igram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
+    isce::io::Raster coherence("/vsimem/coherence.bin.", width, length, 1, GDT_Float32, "ISCE");
     // HDF5 file with required metadata
     std::string h5file("../data/envisat.h5");
     
@@ -92,7 +93,7 @@ TEST(Crossmul, RunCrossmul)
     crsmul.doCommonAzimuthbandFiltering(false);
 
     // running crossmul
-    crsmul.crossmul(referenceSlc, referenceSlc, interferogram);
+    crsmul.crossmul(referenceSlc, referenceSlc, interferogram, coherence);
 
     // an array for the computed interferogram
     std::valarray<std::complex<float>> data(width*length);
@@ -129,6 +130,8 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
 
     // a raster object for the interferogram
     isce::io::Raster interferogram("/vsimem/igram.int", width, length, 1, GDT_CFloat32, "ISCE");
+
+    isce::io::Raster coherence("/vsimem/coherence.bin.", width, length, 1, GDT_Float32, "ISCE");
 
     // HDF5 file with required metadata
     std::string h5file("../data/envisat.h5");
@@ -192,7 +195,7 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     crsmul.doCommonAzimuthbandFiltering(true);
 
     // running crossmul
-    crsmul.crossmul(referenceSlc, referenceSlc, interferogram);
+    crsmul.crossmul(referenceSlc, referenceSlc, interferogram, coherence);
 
     // an array for the computed interferogram
     std::valarray<std::complex<float>> data(width*length);

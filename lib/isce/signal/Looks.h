@@ -32,45 +32,55 @@ class isce::signal::Looks {
 	
 	//void multilook(isce::io::Raster &input, isce::io::Raster &output);
 
-        /** multi-looking an array of real data */
+        /** Multi-looking an array of real data */
         void multilook(std::valarray<T> &input,
                         std::valarray<T> &output);
 
-         /** multi-looking an array of real data (excluding noData values) */     
+         /** Multi-looking an array of real data (excluding noData values) */     
         void multilook(std::valarray<T> &input,
                         std::valarray<T> &output,
                         T noDataValue);
 
-        /** multi-looking an array of real data (a binary mask is used to mask data before multilooking)*/
+        /** \brief Multi-looking an array of real data 
+         * a binary mask is used to mask the data before multilooking */
         void multilook(std::valarray<T> &input,
 			std::valarray<bool> &mask,
                         std::valarray<T> &output);
 
-        /** multi-looking an array of real data (a weighted average)*/
+        /** Multi-looking an array of real data (a weighted averaging)*/
         void multilook(std::valarray<T> &input,
                         std::valarray<T> &weights,
                         std::valarray<T> &output);
 
-        /** multi-looking an array of complex data */
+        /** Multi-looking an array of complex data */
         void multilook(std::valarray<std::complex<T>> &input,
                         std::valarray<std::complex<T>> &output);
 
-        /** multi-looking an array of complex data (excluding noData values)*/
+        /** Multi-looking an array of complex data (excluding noData values)*/
         void multilook(std::valarray<std::complex<T>> &input,
                         std::valarray<std::complex<T>> &output,
                         std::complex<T> noDataValue);
 
-        /** multi-looking an array of complex data (a binary mask is used to mask data before multilooking)*/
+        /** \brief Multi-looking an array of complex data. 
+         * A binary mask is used to mask data before multilooking*/
         void multilook(std::valarray<std::complex<T>> &input,
                         std::valarray<bool> &mask,
                         std::valarray<std::complex<T>> &output);
 
-        /** multi-looking an array of real data (weighted based on the input weight array)*/
+        /** \brief Multi-looking an array of complex data.
+         * The complex data are weighted based on the input weight array.*/
         void multilook(std::valarray<std::complex<T>> &input,
                         std::valarray<T> &weights,
                         std::valarray<std::complex<T>> &output);
 
-        /** multi-looking anmplitude of an array of complex data */
+        /** Multi-looking anmplitude of an array of complex data. 
+        * The amplitudes may be raised by an exponent before summation
+        * \f[
+        * a = \sum_{i=0}^{N} |x_i|^p
+        * \f]
+        *
+        * where \f$a\f$ represents the sum of amplitudes (to the power of p) in a widow, N is the number of pixels in the multi-looking window, x_i is the ith element of the complex data, p represents the exponent.
+        */
         void multilook(std::valarray<std::complex<T>> &input,
                         std::valarray<T> &output, int p);
 

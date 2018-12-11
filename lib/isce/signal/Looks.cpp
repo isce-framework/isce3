@@ -7,7 +7,10 @@
 
 #include "Looks.h"
 
-
+/**
+ * * @param[in] input input array to be multi-looked
+ * * @param[out] output output multilooked and downsampled array 
+ * */
 template <class T>
 void
 isce::signal::Looks<T>::
@@ -43,6 +46,11 @@ multilook(std::valarray<T> &input,
     output /= (_colsLooks*_rowsLooks);
 }
 
+/**
+ * @param[in] input input array to be multi-looked
+ * @param[out] output output multilooked and downsampled array
+ * @param[in] noDataValue invalid data which will be excluded when multi-looking
+ */
 template <class T>
 void
 isce::signal::Looks<T>::
@@ -58,6 +66,11 @@ multilook(std::valarray<T> &input,
 
 }
 
+/**
+ * @param[in] input input array to be multi-looked
+ * @param[in] mask input boolean mask array to mask the input array before multi-looking 
+ * @param[out] output output multilooked and downsampled array
+ */
 template <class T>
 void
 isce::signal::Looks<T>::
@@ -74,7 +87,11 @@ multilook(std::valarray<T> &input,
 }
 
 
-
+/** 
+ * @param[in] input input array to be multi-looked
+ * @param[in] weights input weight array to weight the input array for multi-looking
+ * @param[out] output output multilooked and downsampled array
+ */
 template <class T>
 void
 isce::signal::Looks<T>::
@@ -120,7 +137,10 @@ multilook(std::valarray<T> &input,
 
 }
 
-
+/**
+ * @param[in] input input array of complex data to be multi-looked
+ * @param[out] output output multilooked and downsampled array of complex data
+ */
 template <class T>
 void
 isce::signal::Looks<T>::
@@ -155,7 +175,11 @@ multilook(std::valarray<std::complex<T>> &input,
    
 }
 
-
+/**
+ * @param[in] input input array of complex data to be multi-looked
+ * @param[out] output output multilooked and downsampled array of complex data
+ * @param[out] noDataValue invalid complex data which will be excluded when multi-looking
+ */
 template <class T>
 void
 isce::signal::Looks<T>::
@@ -171,6 +195,11 @@ multilook(std::valarray<std::complex<T>> &input,
 
 }
 
+/**
+ * @param[in] input input array of complex data to be multi-looked
+ * @param[in] mask input boolean mask array to mask the input array before multi-looking 
+ * @param[out] noDataValue invalid complex data which will be excluded when multi-looking
+ */
 template <class T>
 void
 isce::signal::Looks<T>::
@@ -186,6 +215,11 @@ multilook(std::valarray<std::complex<T>> &input,
 
 }
 
+/**
+ * @param[in] input input array of complex data to be multi-looked
+ * @param[in] weights input weight array to weight the input array for multi-looking
+ * @param[out] noDataValue invalid complex data which will be excluded when multi-looking
+ */
 template <class T>
 void
 isce::signal::Looks<T>::
@@ -224,7 +258,11 @@ multilook(std::valarray<std::complex<T>> &input,
     
 }
 
-
+/**
+ * @param[in] input input array of complex data
+ * @param[out] output output array of real data
+ * @param[in] p exponent, the power to which the absolute of complex data are raisen to before multi-looking  
+*/
 template <class T>
 void
 isce::signal::Looks<T>::

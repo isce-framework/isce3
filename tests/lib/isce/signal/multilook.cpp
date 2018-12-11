@@ -66,7 +66,7 @@ TEST(Looks, Multilook)
     // multilook the complex data
     lksObj.multilook(cpxData, cpxDataLooked) ;
     
-    // excluding pixels with 1 + 0.0J values (i.e., 1*exp(0))
+    // excluding pixels with 1 + 0.0J values (i.e., 1*exp(0.0j))
     std::complex<float>  cpxNoData = std::complex<float> (std::cos(0), std::sin(0));
     lksObj.multilook(cpxData, cpxDataLookednoData, cpxNoData) ;
 
@@ -78,11 +78,11 @@ TEST(Looks, Multilook)
     //expected output for the multilooked array
     std::valarray<float> dataLookedExp(widthLooked*lengthLooked);
     // Given the number of looks in range and azimuth (3x3) 
-    // and given the array given above the multi-looked array
+    // and given data above, the multi-looked array
     // has the following values at the begining of each line
     // firstX = {1, 4, 7, 10, 13, 16, 19};
-    // Also along the columns the following values are added to
-    // first sample of the line. 
+    // Also along the columns the following values (multiplied by column number) 
+    // are added to first sample of the line. 
     // increment = {3 ,12 ,21 ,30 ,39 ,48 ,57};
     // So the expected multi-looked array is:
 
