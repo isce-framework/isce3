@@ -372,6 +372,54 @@ TEST(Signal, upsample)
 
 }
 
+TEST(Signal, FFT2D)
+  {
+
+        int width = 12;
+        int length = 10;
+
+        //
+        int blockLength = length;
+
+        // reserve memory for a block of data
+        std::valarray<std::complex<double>> data(width*blockLength);
+
+        // reserve memory for the spectrum of the block of data
+        std::valarray<std::complex<double>> spectrum(width*blockLength);
+
+        // reserve memory for a block of data computed from inverse FFT
+        std::valarray<std::complex<double>> invertData(width*blockLength);
+
+        // a signal object
+        isce::signal::Signal<double> sig;
+
+        // create the forward and backward plans
+        sig.forward2DFFT(data, spectrum, width, blockLength);
+        sig.inverse2DFFT(spectrum, invertData, width, blockLength);
+
+        for (size_t i = 0; i< length; ++i){
+            for (size_t j = 0; j< width; ++j){
+                data[i*width + j] = std::complex<double> (std::cos(i*j), std::sin(i*j));
+            }
+        }
+  
+        sig.forward(data, spectrum);
+        sig.inverse(spectrum, invertData);
+        invertData /=(width*length);
+
+        double max_err = 0.0;
+        double err = 0.0;
+        for (size_t i = 0; i< length; ++i){
+            for (size_t j = 0; j< width; ++j){
+                err = std::abs(data[i*width + j] - invertData[i*width + j]);
+                if (err > max_err)
+                    max_err = err;
+            }
+        }
+
+        ASSERT_LT(max_err, 1.0e-12);
+}
+
 int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

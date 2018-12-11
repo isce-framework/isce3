@@ -26,14 +26,14 @@ template <class T>
 void 
 isce::signal::Signal<T>::
 fftPlanForward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output, 
-            int rank, int n, int howmany,
-            int inembed, int istride, int idist,
-            int onembed, int ostride, int odist, int sign)
+            int rank, int *n, int howmany,
+            int *inembed, int istride, int idist,
+            int *onembed, int ostride, int odist, int sign)
 {
 
-    _plan_fwd = fftw3cxx::plan<T>::plan_many_dft(rank, &n, howmany,
-                                            &input[0], &inembed, istride, idist,
-                                            &output[0], &onembed, ostride, odist,
+    _plan_fwd = fftw3cxx::plan<T>::plan_many_dft(rank, n, howmany,
+                                            &input[0], inembed, istride, idist,
+                                            &output[0], onembed, ostride, odist,
                                             sign, FFTW_ESTIMATE);
 
 }
@@ -55,14 +55,14 @@ template<class T>
 void 
 isce::signal::Signal<T>::
 fftPlanBackward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output,
-            int rank, int n, int howmany,
-            int inembed, int istride, int idist,
-            int onembed, int ostride, int odist, int sign)
+            int rank, int *n, int howmany,
+            int *inembed, int istride, int idist,
+            int *onembed, int ostride, int odist, int sign)
 {
 
-    _plan_inv = fftw3cxx::plan<T>::plan_many_dft(rank, &n, howmany,
-                                            &input[0], &inembed, istride, idist,
-                                            &output[0], &onembed, ostride, odist,
+    _plan_inv = fftw3cxx::plan<T>::plan_many_dft(rank, n, howmany,
+                                            &input[0], inembed, istride, idist,
+                                            &output[0], onembed, ostride, odist,
                                             sign, FFTW_ESTIMATE);
 
 }
@@ -108,13 +108,13 @@ forwardRangeFFT(std::valarray<std::complex<T>> &signal,
                 int ncolumns, int nrows)
 {
     int rank = 1;
-    int n = ncolumns;
+    int n[] = {ncolumns};
     int howmany = nrows;
-    int inembed = ncolumns;
+    int inembed[] = {ncolumns};
     int istride = 1;
     int idist = ncolumns;
 
-    int onembed = ncolumns;
+    int onembed[] = {ncolumns};
     int ostride = 1;
     int odist = ncolumns;
 
@@ -138,14 +138,43 @@ forwardAzimuthFFT(std::valarray<std::complex<T>> &signal,
 {
 
     int rank = 1;
-    int n = nrows;
+    int n[] = {nrows};
     int howmany = ncolumns;
-    int inembed = nrows;
+    int inembed[] = {nrows};
     int istride = ncolumns;
     int idist = 1;
-    int onembed = nrows;
+    int onembed[] = {nrows};
     int ostride = ncolumns;
     int odist = 1;
+
+    fftPlanForward(signal, spectrum, rank, n, howmany,
+                inembed, istride, idist,
+               onembed, ostride, odist, FFTW_FORWARD);
+
+}
+
+/**
+*  @param[in] signal input block of data
+*  @param[out] spectrum output block of spectrum
+*  @param[in] ncolumns number of columns of the block of data
+*  @param[in] nrows number of rows of the block of data
+*/
+template<class T>
+void isce::signal::Signal<T>::
+forward2DFFT(std::valarray<std::complex<T>> &signal,
+                std::valarray<std::complex<T>> &spectrum,
+                int ncolumns, int nrows)
+{
+
+    int rank = 2;
+    int n[] = {nrows, ncolumns};
+    int howmany = 1;
+    int inembed[] = {nrows, ncolumns};
+    int istride = 1;
+    int idist = 0;
+    int onembed[] = {nrows, ncolumns};
+    int ostride = 1;
+    int odist = 0;
 
     fftPlanForward(signal, spectrum, rank, n, howmany,
                 inembed, istride, idist,
@@ -166,12 +195,12 @@ inverseRangeFFT(std::valarray<std::complex<T>> &spectrum,
                 int ncolumns, int nrows)
 {
     int rank = 1;
-    int n = ncolumns;
+    int n[] = {ncolumns};
     int howmany = nrows;
-    int inembed = ncolumns;
+    int inembed[] = {ncolumns};
     int istride = 1;
     int idist = ncolumns;
-    int onembed = ncolumns;
+    int onembed[] = {ncolumns};
     int ostride = 1;
     int odist = ncolumns;
 
@@ -194,15 +223,44 @@ inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
 {
 
     int rank = 1;
-    int n = nrows;
+    int n[] = {nrows};
     int howmany = ncolumns;
-    int inembed = nrows;
+    int inembed[] = {nrows};
     int istride = ncolumns;
     int idist = 1;
 
-    int onembed = nrows;
+    int onembed[] = {nrows};
     int ostride = ncolumns;
     int odist = 1;
+
+    fftPlanBackward(spectrum, signal, rank, n, howmany,
+                inembed, istride, idist,
+               onembed, ostride, odist, FFTW_BACKWARD);
+}
+
+/**
+*  @param[in] spectrum input block of spectrum
+*  @param[out] signal output block of data
+*  @param[in] ncolumns number of columns of the block of data
+*  @param[in] nrows number of rows of the block of data
+*/
+template<class T>
+void isce::signal::Signal<T>::
+inverse2DFFT(std::valarray<std::complex<T>> &spectrum,
+                std::valarray<std::complex<T>> &signal,
+                int ncolumns, int nrows)
+{
+
+    int rank = 2;
+    int n[] = {nrows, ncolumns};
+    int howmany = 1;
+    int inembed[] = {nrows, ncolumns};
+    int istride = 1;
+    int idist = 0;
+
+    int onembed[] = {nrows, ncolumns};
+    int ostride = 1;
+    int odist = 0;
 
     fftPlanBackward(spectrum, signal, rank, n, howmany,
                 inembed, istride, idist,

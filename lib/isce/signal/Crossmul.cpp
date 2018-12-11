@@ -216,15 +216,12 @@ crossmul(isce::io::Raster& referenceSLC,
         // This will change once we have the functionality to 
         // get a block of data directly in to a slice
         std::valarray<std::complex<float>> dataLine(ncols);
-        std::valarray<double> offsetLine(ncols);
         for (size_t line = 0; line < blockRowsData; ++line){
             referenceSLC.getLine(dataLine, rowStart + line);
             refSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
 
             secondarySLC.getLine(dataLine, rowStart + line);
             secSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
-            rngOffsetRaster.getLine(offsetLine, rowStart + line);
-            rngOffset[std::slice(line*ncols, ncols, 1)] = offsetLine;
 
         }
         //referenceSLC.getBlock(refSlc, 0, rowStart, ncols, blockRowsData);
@@ -238,6 +235,12 @@ crossmul(isce::io::Raster& referenceSLC,
 
         // common range band-pass filtering
         if (_doCommonRangebandFilter){
+            std::valarray<double> offsetLine(ncols);
+            for (size_t line = 0; line < blockRowsData; ++line){
+                rngOffsetRaster.getLine(offsetLine, rowStart + line);
+                rngOffset[std::slice(line*ncols, ncols, 1)] = offsetLine;
+            }
+
             std::cout << "Common range band filtering " << std::endl;        
             for (size_t line = 0; line < blockRowsData; ++line){
                 for (size_t col = 0; col < ncols; ++col){

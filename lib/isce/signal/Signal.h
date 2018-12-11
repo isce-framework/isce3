@@ -39,9 +39,9 @@ class isce::signal::Signal {
          */
         void fftPlanForward(std::valarray<std::complex<T>> &input, 
                             std::valarray<std::complex<T>> &output,
-                            int rank, int n, int howmany,
-                            int inembed, int istride, int idist,
-                            int onembed, int ostride, int odist, int sign);
+                            int rank, int* n, int howmany,
+                            int* inembed, int istride, int idist,
+                            int* onembed, int ostride, int odist, int sign);
 
 
         /** \brief initiate iverse FFTW3 plan for a block of data
@@ -49,9 +49,9 @@ class isce::signal::Signal {
          */
         void fftPlanBackward(std::valarray<std::complex<T>> &input,
                                         std::valarray<std::complex<T>> &output,
-                                        int rank, int n, int howmany,
-                                        int inembed, int istride, int idist,
-                                        int onembed, int ostride, int odist, int sign);    
+                                        int rank, int* n, int howmany,
+                                        int* inembed, int istride, int idist,
+                                        int* onembed, int ostride, int odist, int sign);    
 
         /** perform forward FFT */
         void forward(std::valarray<std::complex<T>> &input,
@@ -73,6 +73,12 @@ class isce::signal::Signal {
                                 std::valarray<std::complex<T>> &spectrum,
                                 int ncolumns, int nrows);
 
+        /** \brief initiate plan for forward two imensional FFT for  a block of data
+         */
+        void forward2DFFT(std::valarray<std::complex<T>> &signal,
+                                std::valarray<std::complex<T>> &spectrum,
+                                int ncolumns, int nrows);
+
         /** \brief initiate plan for backward FFT in range direction for a block of data
          */
         void inverseRangeFFT(std::valarray<std::complex<T>> &spectrum, 
@@ -82,6 +88,12 @@ class isce::signal::Signal {
         /** \brief initiate plan for inverse FFT in azimuth direction for a block of data
          */
         void inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
+                                        std::valarray<std::complex<T>> &signal,
+                                        int ncolumns, int nrows);
+
+        /** \brief initiate plan for inverse two dimensional FFT for a block of data
+         */
+        void inverse2DFFT(std::valarray<std::complex<T>> &spectrum,
                                         std::valarray<std::complex<T>> &signal,
                                         int ncolumns, int nrows);
 
