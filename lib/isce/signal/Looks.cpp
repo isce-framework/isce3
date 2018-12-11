@@ -109,15 +109,13 @@ multilook(std::valarray<T> &input,
         T sumWgt = 0;
         for (size_t i=line*_rowsLooks; i<(line+1)*_rowsLooks; ++i){
 
-            sum += tempSumWeights[i*_ncolsLooked + col]*
-                        tempOutput[i*_ncolsLooked + col];
-
+            sum += tempOutput[i*_ncolsLooked + col];
             sumWgt += tempSumWeights[i*_ncolsLooked + col];
         }
 
-            // To avoid dividing by zero
-            if (sumWgt>0)
-                output[line*_ncolsLooked + col] = sum/sumWgt;
+        // To avoid dividing by zero
+        if (sumWgt>0)
+            output[line*_ncolsLooked + col] = sum/sumWgt;
     }
 
 }
@@ -195,9 +193,8 @@ multilook(std::valarray<std::complex<T>> &input,
             std::valarray<T> &weights,
             std::valarray<std::complex<T>> &output)
 {
-    
+
     std::valarray<std::complex<T>> tempOutput(_nrows*_ncolsLooked);
-    std::valarray<T> tempSumWeights(_nrows*_ncolsLooked);
     
     #pragma omp parallel for
     for (size_t kk = 0; kk < _nrows*_ncolsLooked; ++kk){
@@ -205,15 +202,12 @@ multilook(std::valarray<std::complex<T>> &input,
         size_t col = kk%_ncolsLooked;
 
         std::complex<T> sum = std::complex<T> (0.0, 0.0);
-        T sumWgt = 0;
             
         for (size_t j=col*_colsLooks; j<(col+1)*_colsLooks; ++j){
-            sum += input[line*_ncols+j];
-            sumWgt += weights[line*_ncols+j];
+            sum += weights[line*_ncols+j] * input[line*_ncols+j];
         }
 
         tempOutput[line*_ncolsLooked + col] = sum;
-        tempSumWeights[line*_ncolsLooked + col] = sumWgt;
     }
 
     #pragma omp parallel for
@@ -222,9 +216,7 @@ multilook(std::valarray<std::complex<T>> &input,
         size_t col = kk%_ncolsLooked;
         std::complex<T> sum = std::complex<T> (0.0 , 0.0);
         for (size_t i=line*_rowsLooks; i<(line+1)*_rowsLooks; ++i){
-
-            sum += tempSumWeights[i*_ncolsLooked + col]*
-                    tempOutput[i*_ncolsLooked + col];
+            sum += tempOutput[i*_ncolsLooked + col];
         }
 
         output[line*_ncolsLooked+col] = sum;
