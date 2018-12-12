@@ -18,8 +18,10 @@
 #define CUDA_GLOBAL
 #endif
 
-#include "isce/core/Matrix.h"
 #include <stdio.h>
+#include <complex>
+#include "isce/core/Matrix.h"
+#include "isce/core/Interpolator.h"
 
 using isce::core::Matrix;
 
@@ -69,17 +71,18 @@ class gpuSpline2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
 template <class U>
 class gpuSinc2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
     protected:
-        double *kernel_d;
-        int kernel_length, kernel_width;    // filter dimension idec=length, ilen=width
+        double *kernel;
+        int kernel_length, kernel_width, sinc_half;    // filter dimension idec=length, ilen=width
         int intpx, intpy;                   // sub-chip/image bounds? unclear...
         // True if initialized from host, false if copy-constructed from gpuSinc2dInterpolator on device
         bool owner;
     public:
+        CUDA_HOST gpuSinc2dInterpolator(int sincLen, int sincSub);
         CUDA_DEV gpuSinc2dInterpolator(const gpuSinc2dInterpolator &i): 
-            kernel_d(i.kernel_d), kernel_length(i.kernel_length), kernel_width(i.kernel_width), 
+            kernel(i.kernel), kernel_length(i.kernel_length), kernel_width(i.kernel_width), 
             intpx(i.intpx), intpy(i.intpy), owner(false) {};
         CUDA_HOSTDEV ~gpuSinc2dInterpolator();
-        CUDA_HOST void sinc_coef(double, int, double, int);
+        CUDA_HOST void sinc_coef(double, double, int, double, int, std::valarray<double>&);
         CUDA_DEV U interpolate(double, double, const U*, size_t, size_t);
         CUDA_HOST void interpolate_h(const Matrix<double>&, Matrix<U>&, double, double, U*);
 };

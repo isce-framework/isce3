@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <stdio.h>
+#include <valarray>
 #include <cuda_runtime.h>
 #include "gpuInterpolator.h"
 #include "gpuComplex.h"
@@ -18,6 +19,44 @@ using isce::cuda::core::gpuComplex;
 /*
    each derived class needs it's own wrapper_d, gpuInterpolator_g...
 */
+
+template <class U>
+__host__ gpuSinc2dInterpolator<U>::gpuSinc2dInterpolator(int sincLen, int sincSub) :
+        kernel_length(sincSub), kernel_width(sincLen), sinc_half(sincLen/2), 
+        owner(true) {
+    // Temporary valarray for storing sinc coefficients
+    std::valarray<double> filter(0.0, sincSub * sincLen + 1);
+    sinc_coef(1.0, sincLen, sincSub, 0.0, 1, filter);
+
+    // Normalize filter
+    for (size_t i = 0; i < sincSub; ++i) {
+        // Compute filter sum
+        double ssum = 0.0;
+        for (size_t j = 0; j < sincLen; ++j) {
+            ssum += filter[i + sincSub*j];
+        }
+        // Normalize the filter
+        for (size_t j = 0; j < sincLen; ++j) {
+            filter[i + sincSub*j] /= ssum;
+        }
+    }
+
+    // Copy transpose of filter coefficients to member kernel matrix
+    Matrix<double> h_kernel;
+    h_kernel.resize(sincSub, sincLen);
+    for (size_t i = 0; i < sincLen; ++i) {
+        for (size_t j = 0; j < sincSub; ++j) {
+            h_kernel(j,i) = filter[j + sincSub*i];
+        }
+    }
+
+    // Malloc device-side memory (this API is host-side only)
+    cudaMalloc((void**)kernel, filter.size()*sizeof(double));
+    // Copy Orbit data to device-side memory and keep device pointer in gpuOrbit object. Device-side 
+    // copy constructor simply shallow-copies the device pointers when called
+    cudaMemcpy(kernel, &(h_kernel[0]), filter.size()*sizeof(double), cudaMemcpyHostToDevice);
+}
+
 
 template <class U>
 __device__ void wrapper_d(gpuSinc2dInterpolator<U> interp, double x, double y, const U *z, U *value, size_t nx, size_t ny=0) {
@@ -90,24 +129,21 @@ __host__ void gpuSinc2dInterpolator<U>::interpolate_h(const Matrix<double>& trut
 
 
 template <class U>
-__host__ void gpuSinc2dInterpolator<U>::sinc_coef(double beta, int decfactor, double pedestal, int weight) { 
-    size_t n_coefs = kernel_length*kernel_width - 1;
-    std::vector<double> kernel_h(n_coefs);
-    size_t kernel_sz = n_coefs * sizeof(double);
+__host__ void 
+gpuSinc2dInterpolator<U>::
+        sinc_coef(double beta, double relfiltlen, int decfactor, double pedestal, int weight, std::valarray<double> & filter) { 
+
+    int filtercoef = int(filter.size()) - 1;
     double wgthgt = (1.0 - pedestal) / 2.0;
-    double soff = (n_coefs - 1.) / 2.;
+    double soff = (filtercoef - 1.) / 2.;
 
     double wgt, s, fct;
-    for (int i = 0; i < n_coefs; i++) {
+    for (int i = 0; i < filtercoef; i++) {
         wgt = (1. - wgthgt) + (wgthgt * cos((M_PI * (i - soff)) / soff));
         s = (floor(i - soff) * beta) / (1. * decfactor);
         fct = ((s != 0.) ? (sin(M_PI * s) / (M_PI * s)) : 1.);
-        kernel_h[i] = ((weight == 1) ? (fct * wgt) : fct);
+        filter[i] = ((weight == 1) ? (fct * wgt) : fct);
     }
-
-    checkCudaErrors(cudaMalloc((void**)&kernel_d, kernel_sz));
-    checkCudaErrors(cudaMemcpy(kernel_d, kernel_h.data(), kernel_sz, cudaMemcpyHostToDevice));
-    owner = true;
 }
 
 
@@ -123,18 +159,33 @@ __device__ U gpuSinc2dInterpolator<U>::interpolate(double x, double y, const U* 
     */
     // Initialize return value
     U ret(0.0);
-    // Interpolate for valid indices
-    if ((intpx >= (kernel_width-1)) && (intpx < nx) && (intpy >= (kernel_width-1)) && (intpy < ny)) {
-        // Get nearest kernel indices
-        int ifracx = min(max(0, int(x)*kernel_length), kernel_length-1);
-        int ifracy = min(max(0, int(y)*kernel_length), kernel_length-1);
-        // Compute weighted sum
-        // return _data[row*_width + column];
-        for (int i = 0; i < kernel_width; i++) {
-            for (int j = 0; j < kernel_width; j++) {
-                ret += z[(intpx-i)*nx + intpy - j]
-                     * kernel_d[ifracx*kernel_width + i]
-                     * kernel_d[ifracy*kernel_width + j];
+
+    // Separate interpolation coordinates into integer and fractional components
+    const int ix = __double2int_rd(x);
+    const int iy = __double2int_rd(y);
+    const double frpx = x - ix;
+    const double frpy = y - iy;
+
+    if (!((ix < sinc_half) || (ix > (ny - sinc_half))) || 
+         ((iy < sinc_half) || (iy > (nx - sinc_half)))) {
+    
+        // Modify integer interpolation coordinates for sinc evaluation
+        const int intpx = ix + sinc_half - 1;
+        const int intpy = iy + sinc_half - 1;
+
+        // Interpolate for valid indices
+        if ((intpx >= (kernel_width-1)) && (intpx < nx) && (intpy >= (kernel_width-1)) && (intpy < ny)) {
+            // Get nearest kernel indices
+            int ifracx = min(max(0, int(frpx*kernel_length)), kernel_length-1);
+            int ifracy = min(max(0, int(frpy*kernel_length)), kernel_length-1);
+            // Compute weighted sum
+            // return _data[row*_width + column];
+            for (int i = 0; i < kernel_width; i++) {
+                for (int j = 0; j < kernel_width; j++) {
+                    ret += z[(intpx-i)*nx + intpy - j]
+                         * kernel[ifracx*kernel_width + i]
+                         * kernel[ifracy*kernel_width + j];
+                }
             }
         }
     }
@@ -146,7 +197,7 @@ __device__ U gpuSinc2dInterpolator<U>::interpolate(double x, double y, const U* 
 template <class U>
 __host__ __device__ gpuSinc2dInterpolator<U>::~gpuSinc2dInterpolator() {
     if (owner)
-        checkCudaErrors(cudaFree(kernel_d));
+        checkCudaErrors(cudaFree(kernel));
 }
 
 /*
@@ -154,6 +205,7 @@ __host__ __device__ gpuSinc2dInterpolator<U>::~gpuSinc2dInterpolator() {
  */
 template class gpuSinc2dInterpolator<double>;
 template class gpuSinc2dInterpolator<gpuComplex<double>>;
+template class gpuSinc2dInterpolator<gpuComplex<float>>;
 
 template __global__ void
 gpuInterpolator_g<double>(gpuSinc2dInterpolator<double> interp, double *x, double *y,
@@ -161,3 +213,6 @@ gpuInterpolator_g<double>(gpuSinc2dInterpolator<double> interp, double *x, doubl
 template __global__ void
 gpuInterpolator_g<gpuComplex<double>>(gpuSinc2dInterpolator<gpuComplex<double>> interp, double *x, double *y,
                                   const gpuComplex<double> *z, gpuComplex<double> *value, size_t nx, size_t ny);
+template __global__ void
+gpuInterpolator_g<gpuComplex<float>>(gpuSinc2dInterpolator<gpuComplex<float>> interp, double *x, double *y,
+                                  const gpuComplex<float> *z, gpuComplex<float> *value, size_t nx, size_t ny);

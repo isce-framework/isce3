@@ -130,7 +130,12 @@ resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
     
         // Perform interpolation
         infoChannel << "Interpolating tile " << tileCount << pyre::journal::endl;
-        gpuTransformTile(tile, outputSlc, rgOffTile, azOffTile, _rgCarrier, _azCarrier, _dopplerPoly, inLength, flatten);
+        gpuTransformTile(tile, outputSlc, 
+                rgOffTile, azOffTile, 
+                _rgCarrier, _azCarrier, 
+                _dopplerPoly, 
+                _mode, _refMode, _haveRefMode,
+                inLength, flatten);
     }
 
     // Print out timing information and reset

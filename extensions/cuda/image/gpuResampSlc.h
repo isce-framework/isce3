@@ -32,6 +32,9 @@ namespace isce {
                                 const isce::core::Poly2d & rgCarrier,
                                 const isce::core::Poly2d & azCarrier,
                                 const isce::core::Poly2d & doppler,
+                                isce::product::ImageMode mode,       // image mode for image to be resampled
+                                isce::product::ImageMode refMode,    // image mode for reference master image
+                                bool haveRefMode,
                                 int inLength, bool flatten);
         }
     }
