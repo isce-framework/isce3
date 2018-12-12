@@ -4,6 +4,7 @@
 // Copyright: 2018
 
 // isce::core
+#include "isce/core/Constants.h"
 #include "isce/core/Interpolator.h"
 #include "isce/core/Poly2d.h"
 
@@ -139,7 +140,7 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
     if (haveRefMode)
         gpuImageMode d_mode(refMode);
     gpuPoly2d d_doppler(doppler);
-    gpuSinc2dInterpolator<gpuComplex<float>> *d_interp;
+    gpuSinc2dInterpolator<gpuComplex<float>> d_interp(isce::core::SINC_LEN, isce::core::SINC_SUB);
 
     // allocate equivalent ofjects in device memory
     // gpuPoly2d objects allocated when instantiated
@@ -166,7 +167,7 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
                             d_doppler, 
                             d_mode, 
                             d_refMode,
-                            d_interp,
+                            &d_interp,
                             flatten); 
 
     // copy to host memory
