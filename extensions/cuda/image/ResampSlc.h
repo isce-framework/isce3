@@ -39,9 +39,6 @@ class isce::cuda::image::ResampSlc : public isce::image::ResampSlc {
         inline ResampSlc(const isce::core::Poly2d &poly, const isce::core::Metadata &metaData) :
             isce::image::ResampSlc(poly, metaData) {};
 
-        // Destructor
-        inline ~ResampSlc();
-
         // All resamp need? to be redefined to ensure derived functions used
         // Generic resamp entry point from externally created rasters
         void resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,

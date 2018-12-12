@@ -41,7 +41,7 @@ TEST(ResampSlcTest, Resamp) {
     isce::product::Product product(file);
 
     // Instantiate a ResampSLC object
-    isce::image::ResampSlc resamp(product);
+    isce::cuda::image::ResampSlc resamp(product);
 
     // Use same product as a reference
     resamp.referenceProduct(product);
