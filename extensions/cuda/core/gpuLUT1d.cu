@@ -100,20 +100,26 @@ eval(double x) const {
     }
 
     // Otherwise, proceed with interpolation
-    // Iterate over coordinates to find x bounds
-    double xdiff = -100.0;
-    int j;
-    for (j = 0; j < n - 1; ++j) {
-        // Compute difference with current coordinate
-        xdiff = _coords[j] - x;
-        // Break if sign has changed
-        if (xdiff > 0.0)
-            break;
+    // Binary search to find leftmost coordinate
+    int low = 0;
+    int high = _size;
+    while (low < high) {
+        const int midpoint = (low + high) / 2;
+        if (_coords[midpoint] < x) {
+            low = midpoint + 1;
+        } else { 
+            high = midpoint;
+        }
+    }
+
+    // Check if right on top of a coordinate
+    if (abs(_coords[high] - x) < 1.0e-12) {
+        return _values[high];
     }
 
     // The indices of the x bounds
-    const int j0 = j - 1;
-    const int j1 = j;
+    const int j0 = high - 1;
+    const int j1 = high;
     
     // Get coordinates at bounds
     double x1 = _coords[j0];

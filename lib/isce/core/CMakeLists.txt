@@ -46,6 +46,7 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     EulerAngles.icc
                                     Interpolator.h
                                     LUT1d.h
+                                    LUT1d.icc
                                     LUT2d.h
                                     LinAlg.h
                                     Matrix.h

@@ -95,72 +95,10 @@ class isce::core::LUT1d {
         bool _extrapolate;
 };
 
-/** @param[in] x Point to evaluate the LUT
-  * @param[out] result Interpolated value */
-template <typename T>
-T isce::core::LUT1d<T>::
-eval(double x) const {
-
-    // Check bounds to see if we need to perform linear extrapolation
-    const int n = _coords.size();
-    if (x < _coords[0]) {
-        if (_extrapolate) {
-            const double dx = _coords[0] - _coords[1];
-            const double dy = _values[0] - _values[1];
-            const double d = x - _coords[1];
-            T result = (dy / dx) * d + _values[1];
-            return result;
-        } else {
-            pyre::journal::error_t errorChannel("isce.core.LUT1d");
-            errorChannel
-                << pyre::journal::at(__HERE__)
-                << "Out of bounds evaluation for LUT1d."
-                << pyre::journal::newline
-                << pyre::journal::endl;
-            return 0;
-        }
-    } else if (x > _coords[n-1]) {
-        if (_extrapolate) {
-            const double dx = _coords[n-1] - _coords[n-2];
-            const double dy = _values[n-1] - _values[n-2];
-            const double d = x - _coords[n-2];
-            T result = (dy / dx) * d + _values[n-2];
-            return result;
-        } else {
-            pyre::journal::error_t errorChannel("isce.core.LUT1d");
-            errorChannel
-                << pyre::journal::at(__HERE__)
-                << "Out of bounds evaluation for LUT1d."
-                << pyre::journal::newline
-                << pyre::journal::endl;
-            return 0;
-        }
-    }
-
-    // Otherwise, proceed with interpolation
-    // Iterate over coordinates to find x bounds
-    double xdiff = -100.0;
-    int j;
-    for (j = 0; j < n - 1; ++j) {
-        // Compute difference with current coordinate
-        xdiff = _coords[j] - x;
-        // Break if sign has changed
-        if (xdiff > 0.0)
-            break;
-    }
-    
-    // The indices of the x bounds
-    const int j0 = j - 1;
-    const int j1 = j;
-    
-    // Get coordinates at bounds
-    double x1 = _coords[j0];
-    double x2 = _coords[j1];
-
-    // Interpolate
-    T result = (x2 - x) / (x2 - x1) * _values[j0] + (x - x1) / (x2 - x1) * _values[j1];
-    return result;
-}
+// Get inline implementations for LUT1d
+#define ISCE_CORE_LUT1D_ICC
+#include "LUT1d.icc"
+#undef ISCE_CORE_LUT1D_ICC
 
 #endif
 
