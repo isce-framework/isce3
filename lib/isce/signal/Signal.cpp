@@ -278,8 +278,8 @@ inverse2DFFT(std::valarray<std::complex<T>> &spectrum,
 template<class T>
 void isce::signal::Signal<T>::
 upsample(std::valarray<std::complex<T>> &signal,
-         std::valarray<std::complex<T>> &signalUpsampled,
-         int rows, int nfft, int upsampleFactor)
+            std::valarray<std::complex<T>> &signalUpsampled,
+            int rows, int nfft, int upsampleFactor)
 {
 
     // a dummy zero size valarray for shiftImpacts. Using this zero size 
@@ -293,11 +293,20 @@ upsample(std::valarray<std::complex<T>> &signal,
 
 }
 
+/**
+*   @param[in] signal input block of data
+*   @param[out] signalUpsampled output block of oversampled data
+*   @param[in] rows number of rows of the block of input and upsampled data
+*   @param[in] nfft number of columns of the block of input data
+*   @param[in] upsampleFactor upsampling factor
+*   @param[out] shiftImpact a linear phase term equivalent to a constant shift in time domain 
+*/
 template<class T>
 void isce::signal::Signal<T>::
 upsample(std::valarray<std::complex<T>> &signal,
-         std::valarray<std::complex<T>> &signalUpsampled,
-         int rows, int nfft, int upsampleFactor, std::valarray<std::complex<T>> shiftImpact)
+            std::valarray<std::complex<T>> &signalUpsampled,
+            int rows, int nfft, int upsampleFactor, 
+            std::valarray<std::complex<T>> shiftImpact)
 {
 
     // number of columns of upsampled spectrum

@@ -105,6 +105,10 @@ class isce::signal::Signal {
                     std::valarray<std::complex<T>> &signalOversampled,
                     int rows, int nfft, int oversampleFactor);
 
+        /** \brief upsampling a block of data in range direction and shifting 
+         * the upsampled signal by a constant. The shift is applied by an 
+         * inout linear phase term in frequency domain. 
+         */
         void upsample(std::valarray<std::complex<T>> &signal,
                     std::valarray<std::complex<T>> &signalOversampled,
                     int rows, int nfft, int oversampleFactor, 
