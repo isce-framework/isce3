@@ -428,22 +428,22 @@ TEST(Signal, MultiThread)
     int width = 1000;
     int length = 1000;
 
-          //
+    // length of a block
     int blockLength = length;
 
-          // reserve memory for a block of data
+    // reserve memory for a block of data
     std::valarray<std::complex<double>> data(width*blockLength);
 
-          // reserve memory for the spectrum of the block of data
+    // reserve memory for the spectrum of the block of data
     std::valarray<std::complex<double>> spectrum(width*blockLength);
 
-          // reserve memory for a block of data computed from inverse FFT
+    // reserve memory for a block of data computed from inverse FFT
     std::valarray<std::complex<double>> invertData(width*blockLength);
 
-          // a signal object
+    // a signal object
     isce::signal::Signal<double> sig(4);
 
-          // create the forward and backward plans
+    // create the forward and backward plans
     sig.forwardRangeFFT(data, spectrum, width, blockLength);
     sig.inverseRangeFFT(spectrum, invertData, width, blockLength);
 

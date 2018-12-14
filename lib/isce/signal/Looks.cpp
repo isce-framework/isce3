@@ -18,8 +18,23 @@ multilook(std::valarray<T> &input,
         std::valarray<T> &output)
 {
 
+    // Time-domain multi-looking of an array with following parameters 
+    // size of input array: _ncols * _nrows
+    // number of looks on columns : _colsLooks
+    // number of looks on rows : _rowsLooks
+    // size of output array: _ncolsLooked * _nrowsLooked
+    //
+    // The mean of a box of size _colsLooks * _rowsLooks is computed 
+    //
+    // This function is implemented to perform time domain 
+    // multi-looking in two steps: 
+    //  1) multi-looking in range direction (columns) and store the results in a temporary buffer
+    //  2) multi-looking the temporary array from previous step in azimuth direction (rows) 
+
+    // a temporary buffer to store the multi-looked data in range (columns) direction
     std::valarray<T> tempOutput(_nrows*_ncolsLooked);
-    
+   
+    // multi-lokking in range direction (columns)
     #pragma omp parallel for
     for (size_t kk = 0; kk < _nrows*_ncolsLooked; ++kk){
         size_t line = kk/_ncolsLooked;
@@ -31,6 +46,7 @@ multilook(std::valarray<T> &input,
         tempOutput[line*_ncolsLooked + col] = sum;
     }
 
+    // multi-lokking in azimuth direction (rows)
     #pragma omp parallel for
     for (size_t kk = 0; kk < _ncolsLooked*_nrowsLooked; ++kk){
         size_t line = kk/_ncolsLooked ;
@@ -42,7 +58,8 @@ multilook(std::valarray<T> &input,
 
         output[line*_ncolsLooked+col] = sum;
     }
-    
+ 
+    // To compute the mean
     output /= (_colsLooks*_rowsLooks);
 }
 
@@ -58,10 +75,20 @@ multilook(std::valarray<T> &input,
             std::valarray<T> &output,
             T noDataValue)
 {
-    
+   
+    // Multi-looking an array while taking into account the noDataValue.
+    // Pixels whose value equals "noDataValue" is excluded in mult-looking.
+
+    // create a boolean mask array with the same size of the input array 
     std::valarray<bool> mask(input.size());
+
+    // by default all pixels are used 
     mask = true;
+
+    // exclude pixels with noDataValue
     mask[input==noDataValue] = false;
+
+    // perform multi-looking using the mask array
     multilook(input, mask, output);
 
 }
@@ -79,9 +106,19 @@ multilook(std::valarray<T> &input,
         std::valarray<T> &output)
 {
 
+    // Multi-looking an array while taking into account a boolean mask.
+    // Invalid pixels are excluded based on the mask.
+
+    // a buffer for weights
     std::valarray<T> weights(input.size());
+
+    // fill the weights array with zero
     weights = 0.0;
+
+    // fill the weights for pixels with valid mask with one
     weights[mask] = 1.0;
+
+    // multi-looking with the zero-one weight array
     multilook(input, weights, output);
 
 }
@@ -100,9 +137,14 @@ multilook(std::valarray<T> &input,
         std::valarray<T> &output)
 {
 
+    // A general implementation of multi-looking with weight array.
+
+    // temporary buffers used for mult-looking columns for the 
+    // data and the weights
     std::valarray<T> tempOutput(_nrows*_ncolsLooked);
     std::valarray<T> tempSumWeights(_nrows*_ncolsLooked);
 
+    // weighted multi-looking the columns 
     #pragma omp parallel for
     for (size_t kk = 0; kk < _nrows*_ncolsLooked; ++kk){
         size_t line = kk/_ncolsLooked;
@@ -117,6 +159,7 @@ multilook(std::valarray<T> &input,
         tempSumWeights[line*_ncolsLooked + col] = sumWgt;
     }
 
+    // weighted multi-looking the rows
     #pragma omp parallel for
     for (size_t kk = 0; kk < _nrowsLooked*_ncolsLooked; ++kk){
         size_t line = kk/_ncolsLooked;
@@ -126,6 +169,8 @@ multilook(std::valarray<T> &input,
         T sumWgt = 0;
         for (size_t i=line*_rowsLooks; i<(line+1)*_rowsLooks; ++i){
 
+            // Note that the elements of tempOutput are already weighted in the previous loop. 
+            // So no need to weight them again.
             sum += tempOutput[i*_ncolsLooked + col];
             sumWgt += tempSumWeights[i*_ncolsLooked + col];
         }
@@ -147,6 +192,8 @@ isce::signal::Looks<T>::
 multilook(std::valarray<std::complex<T>> &input,
         std::valarray<std::complex<T>> &output)
 {
+
+    // The implementation details are same as real data. See the notes above.
 
     std::valarray<std::complex<T>> tempOutput(_nrows*_ncolsLooked);
     
