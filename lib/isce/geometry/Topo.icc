@@ -37,14 +37,14 @@ Topo(isce::product::Product & product) : _initialized(false) {
 
 /** @param[in] ellipsoid Ellipsoid object
  * @param[in] orbit     Orbit object
- * @param[in] doppler   Poly2D doppler model
+ * @param[in] doppler   LUT1d doppler model
  * @param[in] meta      Metadata object with radar image parameters
  *
  * Alternative constructor from ellipsoid orbit and metadata.
  * Used for supporting VRT-formatted products.*/
 isce::geometry::Topo::
 Topo(isce::core::Ellipsoid ellipsoid, isce::core::Orbit orbit,
-     isce::core::Poly2d doppler, isce::core::Metadata meta) :
+     isce::core::LUT1d<double> doppler, isce::core::Metadata meta) :
     _orbit(orbit), _ellipsoid(ellipsoid), _doppler(doppler), _mode(meta),
     _initialized(false) {
 

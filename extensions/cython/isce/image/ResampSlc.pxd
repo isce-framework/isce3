@@ -7,6 +7,7 @@
 from libcpp cimport bool
 from libcpp.string cimport string
 
+from LUT1d cimport LUT1d
 from Poly2d cimport Poly2d
 from Product cimport Product
 from ImageMode cimport ImageMode
@@ -22,16 +23,16 @@ cdef extern from "isce/image/ResampSlc.h" namespace "isce::image":
         # Constructor with a Product
         ResampSlc(const Product & product) except +
         # Constructor with Doppler and ImageMode
-        ResampSlc(const Poly2d & doppler, const ImageMode & mode) except +
+        ResampSlc(const LUT1d[double] & doppler, const ImageMode & mode) except +
 
         # Polynomial getters
         Poly2d rgCarrier()
         Poly2d azCarrier()
-        Poly2d doppler()
+        LUT1d[double] doppler()
         # Polynomial setters
         void rgCarrier(Poly2d &)
         void azCarrier(Poly2d &)
-        void doppler(Poly2d &)
+        void doppler(LUT1d[double] &)
 
         # Set reference product
         void referenceProduct(const Product & refProduct)

@@ -22,7 +22,7 @@
 
 // pull in some isce::core namespaces
 using isce::io::Raster;
-using isce::core::Poly2d;
+using isce::core::LUT1d;
 using isce::core::LinAlg;
 
 // Run geo2rdr with no offsets; internal creation of offset rasters
@@ -131,9 +131,9 @@ geo2rdr(isce::io::Raster & topoRaster,
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
-             << _doppler.eval(0, 0) << " "
-             << _doppler.eval(0, (_mode.width() / 2) - 1) << " "
-             << _doppler.eval(0, _mode.width() - 1) << " "
+             << _doppler.values()[0] << " "
+             << _doppler.values()[_doppler.size() / 2] << " " 
+             << _doppler.values()[_doppler.size() - 1] << " "
              << pyre::journal::endl;
 
         // Valarrays to hold input block from topo rasters

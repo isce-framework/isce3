@@ -12,7 +12,7 @@
 // pull in some isce namespaces
 using isce::core::Ellipsoid;
 using isce::core::Orbit;
-using isce::core::Poly2d;
+using isce::core::LUT1d;
 using isce::core::DateTime;
 using isce::product::ImageMode;
 using isce::io::Raster;
@@ -75,7 +75,7 @@ geo2rdr(isce::io::Raster & topoRaster,
     ImageMode mode = this->mode();
     Ellipsoid ellipsoid = this->ellipsoid();
     Orbit orbit = this->orbit();
-    Poly2d doppler = this->doppler();
+    LUT1d<double> doppler = this->doppler();
     DateTime sensingStart = this->sensingStart();
 
     // Cache sensing start in seconds since reference epoch
@@ -130,9 +130,9 @@ geo2rdr(isce::io::Raster & topoRaster,
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
-             << doppler.eval(0, 0) << " "
-             << doppler.eval(0, (mode.width() / 2) - 1) << " "
-             << doppler.eval(0, mode.width() - 1) << " "
+             << doppler.values()[0] << " "
+             << doppler.values()[doppler.size() / 2] << " "
+             << doppler.values()[doppler.size() - 1] << " "
              << pyre::journal::endl;
 
         // Valarrays to hold input block from topo rasters

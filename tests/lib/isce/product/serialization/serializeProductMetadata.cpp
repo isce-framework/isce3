@@ -10,7 +10,7 @@
 #include <gtest/gtest.h>
 
 // isce::core
-#include <isce/core/Poly2d.h>
+#include <isce/core/LUT1d.h>
 
 // isce::io
 #include <isce/io/IH5.h>
@@ -40,16 +40,19 @@ TEST(MetadataTest, FromHDF5) {
     isce::radar::Radar instrument = meta.instrument();
 
     // Check values for content Doppler
-    isce::core::Poly2d content = instrument.contentDoppler();
-    ASSERT_NEAR(content.coeffs[0], 301.353069063192, 1.0e-10);
-    ASSERT_NEAR(content.coeffs[1], -0.04633312447837376, 1.0e-10);
-    ASSERT_NEAR(content.coeffs[2], 2.044436266418998e-6, 1.0e-12);
+    isce::core::LUT1d<double> content = instrument.contentDoppler();
+    const size_t n = content.size();
+    ASSERT_NEAR(content.values()[0], 301.353069063192, 1.0e-10);
+    ASSERT_NEAR(content.values()[n-1], 278.74190662325805, 1.0e-12);
 
     // Check values for skew Doppler
-    isce::core::Poly2d skew = instrument.skewDoppler();
-    ASSERT_NEAR(content.coeffs[0], 301.353069063192, 1.0e-10);
-    ASSERT_NEAR(content.coeffs[1], -0.04633312447837376, 1.0e-10);
-    ASSERT_NEAR(content.coeffs[2], 2.044436266418998e-6, 1.0e-12);
+    isce::core::LUT1d<double> skew = instrument.skewDoppler();
+    ASSERT_NEAR(skew.values()[0], 301.353069063192, 1.0e-10);
+    ASSERT_NEAR(skew.values()[n-1], 278.74190662325805, 1.0e-12);
+
+    // Check range coordinates
+    ASSERT_NEAR(content.coords()[0], 826988.6900674499, 1.0e-6);
+    ASSERT_NEAR(content.coords()[n-1], 830882.8729292531, 1.0e-6);
 
     // Get the Identification
     isce::product::Identification id = meta.identification();

@@ -25,4 +25,3 @@ cdef extern from "isce/core/Poly2d.h" namespace "isce::core":
         double eval(double,double)
         void printPoly()
 
-
