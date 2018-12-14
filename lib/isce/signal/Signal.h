@@ -32,6 +32,9 @@ class isce::signal::Signal {
         /** Default constructor. */ 
         Signal() {};
 
+        /** Constructor with number of threads. This uses the Multi-threaded FFTW */
+        Signal(int nthreads) {fftw3cxx::init_threads<T>(); fftw3cxx::plan_with_nthreads<T>(nthreads);};
+
         ~Signal() {};
 
         /** \brief initiate forward FFTW3 plan for a block of data
