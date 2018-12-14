@@ -51,10 +51,10 @@ __host__ gpuSinc2dInterpolator<U>::gpuSinc2dInterpolator(int sincLen, int sincSu
     }
 
     // Malloc device-side memory (this API is host-side only)
-    cudaMalloc((void**)kernel, filter.size()*sizeof(double));
+    checkCudaErrors(cudaMalloc(&kernel, filter.size()*sizeof(double)));
     // Copy Orbit data to device-side memory and keep device pointer in gpuOrbit object. Device-side 
     // copy constructor simply shallow-copies the device pointers when called
-    cudaMemcpy(kernel, &(h_kernel[0]), filter.size()*sizeof(double), cudaMemcpyHostToDevice);
+    checkCudaErrors(cudaMemcpy(kernel, &(h_kernel[0]), filter.size()*sizeof(double), cudaMemcpyHostToDevice));
 }
 
 
