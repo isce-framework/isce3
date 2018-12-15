@@ -470,6 +470,220 @@ TEST(Signal, MultiThread)
     ASSERT_LT(max_err, 1.0e-12);
 }
 
+TEST(Signal, rawPointerArrayComplex)
+{
+    int width = 120;
+    int length = 100;
+
+    int blockLength = length;
+
+    // reserve memory for a block of data
+    std::complex<double> *data = new std::complex<double>[width*blockLength];
+    
+    // reserve memory for the spectrum of the block of data
+    std::complex<double> *spectrum = new std::complex<double>[width*blockLength];
+    
+    // reserve memory for a block of data computed from inverse FFT
+    std::complex<double> *invertData = new std::complex<double>[width*blockLength];
+    
+    // a signal object
+    isce::signal::Signal<double> sig;
+
+    for (size_t i = 0; i< length; ++i){
+        for (size_t j = 0; j< width; ++j){
+            data[i*width + j] = std::complex<double> (std::cos(i*j), std::sin(i*j));
+        }
+    }
+
+    // ********************************
+    // create the forward and backward plans
+    sig.forward2DFFT(data, spectrum, width, blockLength);
+    sig.inverse2DFFT(spectrum, invertData, width, blockLength);
+
+    // forward and inverse transforms
+    sig.forward(data, spectrum);
+    sig.inverse(spectrum, invertData);
+
+    for (size_t i = 0; i< length; ++i){
+        for (size_t j = 0; j< width; ++j){
+            invertData[i*width + j] /=(width*length);
+        }
+    }
+
+    double max_err_2DFFT = 0.0;
+    double err = 0.0;
+    for (size_t i = 0; i< length; ++i){
+        for (size_t j = 0; j< width; ++j){
+            err = std::abs(data[i*width + j] - invertData[i*width + j]);
+            if (err > max_err_2DFFT)
+                max_err_2DFFT = err;
+        }
+    }
+
+    // ********************************
+    // create the forward and backward plans
+      sig.forwardRangeFFT(data, spectrum, width, blockLength);
+      sig.inverseRangeFFT(spectrum, invertData, width, blockLength);
+
+      // forward and inverse transforms
+      sig.forward(data, spectrum);
+      sig.inverse(spectrum, invertData);
+
+      for (size_t i = 0; i< length; ++i){
+          for (size_t j = 0; j< width; ++j){
+              invertData[i*width + j] /=(width);
+          }
+      }
+
+      double max_err_range = 0.0;
+      err = 0.0;
+      for (size_t i = 0; i< length; ++i){
+          for (size_t j = 0; j< width; ++j){
+              err = std::abs(data[i*width + j] - invertData[i*width + j]);
+              if (err > max_err_range)
+                  max_err_range = err;
+          }
+      }
+      
+    // ********************************
+    // create the forward and backward plans
+    sig.forwardAzimuthFFT(data, spectrum, width, blockLength);
+    sig.inverseAzimuthFFT(spectrum, invertData, width, blockLength);
+
+    // forward and inverse transforms
+    sig.forward(data, spectrum);
+    sig.inverse(spectrum, invertData);
+
+    for (size_t i = 0; i< length; ++i){
+        for (size_t j = 0; j< width; ++j){
+            invertData[i*width + j] /=(length);
+        }
+    }
+
+    double max_err_az = 0.0;
+    err = 0.0;
+    for (size_t i = 0; i< length; ++i){
+        for (size_t j = 0; j< width; ++j){
+            err = std::abs(data[i*width + j] - invertData[i*width + j]);
+            if (err > max_err_az)
+                max_err_az = err;
+        }
+    }
+
+    // ********************************
+    // Check the error for 2D FFT
+    ASSERT_LT(max_err_2DFFT, 1.0e-12);
+
+    // Check the error for FFT in range
+    ASSERT_LT(max_err_range, 1.0e-12);
+
+    // Check the error for FFT in azimuth
+    ASSERT_LT(max_err_az, 1.0e-12);
+}
+
+TEST(Signal, realDataFFT)
+{
+      int width = 120;
+      int length = 100;
+
+      int blockLength = length;
+
+      // reserve memory for a block of data
+      double *data = new double[width*blockLength];
+
+      // reserve memory for the spectrum of the block of data
+      std::complex<double> *spectrum = new std::complex<double>[width*blockLength];
+
+      // reserve memory for a block of data computed from inverse FFT
+      double *invertData = new double[width*blockLength];
+
+      // a signal object
+      isce::signal::Signal<double> sig;
+
+      for (size_t i = 0; i< length; ++i){
+          for (size_t j = 0; j< width; ++j){
+              data[i*width + j] = i+j; 
+          }
+      }
+
+      // ********************************
+      // create the forward and backward plans
+      sig.forward2DFFT(data, spectrum, width, blockLength);
+      sig.inverse2DFFT(spectrum, invertData, width, blockLength);
+
+      // forward and inverse transforms
+      sig.forward(data, spectrum);
+      sig.inverse(spectrum, invertData);
+
+      for (size_t i = 0; i< length; ++i){
+          for (size_t j = 0; j< width; ++j){
+              invertData[i*width + j] /=(width*length);
+          }
+      }
+
+      double max_err_2DFFT = 0.0;
+      double err = 0.0;
+      for (size_t i = 0; i< length; ++i){
+          for (size_t j = 0; j< width; ++j){
+              err = std::abs(data[i*width + j] - invertData[i*width + j]);
+              if (err > max_err_2DFFT)
+                  max_err_2DFFT = err;
+          }
+      }
+   
+      // ********************************
+    sig.forwardRangeFFT(data, spectrum, width, blockLength);
+        sig.inverseRangeFFT(spectrum, invertData, width, blockLength);
+
+        // forward and inverse transforms
+        sig.forward(data, spectrum);
+        sig.inverse(spectrum, invertData);
+
+        for (size_t i = 0; i< length; ++i){
+            for (size_t j = 0; j< width; ++j){
+                invertData[i*width + j] /=(width);
+            }
+        }
+
+        double max_err_range = 0.0;
+        err = 0.0;
+        for (size_t i = 0; i< length; ++i){
+            for (size_t j = 0; j< width; ++j){
+                err = std::abs(data[i*width + j] - invertData[i*width + j]);
+                if (err > max_err_range)
+                    max_err_range = err;
+            }
+        }
+
+    // ************************************
+    sig.forwardAzimuthFFT(data, spectrum, width, blockLength);
+        sig.inverseAzimuthFFT(spectrum, invertData, width, blockLength);
+
+        // forward and inverse transforms
+        sig.forward(data, spectrum);
+        sig.inverse(spectrum, invertData);
+
+        for (size_t i = 0; i< length; ++i){
+            for (size_t j = 0; j< width; ++j){
+                invertData[i*width + j] /=(length);
+            }
+        }
+
+        double max_err_az = 0.0;
+        err = 0.0;
+        for (size_t i = 0; i< length; ++i){
+            for (size_t j = 0; j< width; ++j){
+                err = std::abs(data[i*width + j] - invertData[i*width + j]);
+                if (err > max_err_az)
+                    max_err_az = err;
+            }
+        }
+    // ************************************
+    ASSERT_LT(max_err_2DFFT, 1.0e-12);
+    
+}
+
+
 int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
