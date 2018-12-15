@@ -680,7 +680,10 @@ TEST(Signal, realDataFFT)
         }
     // ************************************
     ASSERT_LT(max_err_2DFFT, 1.0e-12);
-    
+
+    ASSERT_LT(max_err_range, 1.0e-12);
+
+    ASSERT_LT(max_err_az, 1.0e-12);
 }
 
 
