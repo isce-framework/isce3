@@ -26,3 +26,80 @@ nextPowerOfTwo(size_t N, size_t &fftLength)
     }
 }
 
+template <class T>
+void
+isce::signal::Signal<T>::
+_configureRangeFFT(int ncolumns, int nrows)
+{
+    _rank = 1;
+    _n = new int[1];
+    _n[0] = ncolumns;
+
+    _howmany = nrows;
+    
+    _inembed = new int[1];
+    _inembed[0] = ncolumns;
+
+    _istride = 1;
+    _idist = ncolumns;
+    
+    _onembed = new int[1];
+    _onembed[0] = ncolumns;
+
+    _ostride = 1;
+    _odist = ncolumns;
+}
+
+template <class T>
+void
+isce::signal::Signal<T>::
+_configureAzimuthFFT(int ncolumns, int nrows)
+{
+    _rank = 1;
+    _n = new int[1];
+    _n[0] = nrows;
+
+    _howmany = ncolumns;
+
+    _inembed = new int[1];
+    _inembed[0] = nrows;
+
+    _istride = ncolumns;
+    _idist = 1;
+
+    _onembed = new int[1];
+    _onembed[0] = nrows;
+
+    _ostride = ncolumns;
+    _odist = 1;
+}
+
+
+
+template <class T>
+void
+isce::signal::Signal<T>::
+_configure2DFFT(int ncolumns, int nrows)
+{
+    _rank = 2;
+    _n = new int[2]; 
+    _n[0] = nrows; 
+    _n[1] = ncolumns;
+
+    _howmany = 1;
+
+    _inembed = new int[2]; 
+    _inembed[0] = nrows;
+    _inembed[1] = ncolumns;
+
+    _istride = 1;
+    _idist = 0;
+
+    _onembed = new int[2];
+    _onembed[0] = nrows; 
+    _onembed[1] = ncolumns;
+
+    _ostride = 1;
+    _odist = 0;
+}
+
