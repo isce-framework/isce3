@@ -8,8 +8,11 @@
 #ifndef ISCE_RADAR_RADAR_H
 #define ISCE_RADAR_RADAR_H
 
+// std
+#include <valarray>
+
 // isce::core
-#include "isce/core/Poly2d.h"
+#include <isce/core/LUT1d.h>
 
 // Declaration
 namespace isce {
@@ -25,8 +28,14 @@ class isce::radar::Radar {
         /** Default constructor. */
         inline Radar() {};
 
-        /** Constructor with skew and content Dopplers. */
-        inline Radar(const isce::core::Poly2d & skew, const isce::core::Poly2d & content);
+        /** Constructor with slant range coordinates and Doppler values. */
+        inline Radar(const std::valarray<double> & slantRange,
+                     const std::valarray<double> & skew,
+                     const std::valarray<double> & content);
+
+        /** Constructor with pre-constructed skew and content Doppler LUTs. */
+        inline Radar(const isce::core::LUT1d<double> & skew,
+                     const isce::core::LUT1d<double> & content);
 
         /** Copy constructor. */
         inline Radar(const Radar &);
@@ -34,20 +43,21 @@ class isce::radar::Radar {
         /** Assignment operator. */
         inline Radar & operator=(const Radar &);
 
-        /** Get copy of content Doppler polynomial */
-        inline isce::core::Poly2d contentDoppler() const;
+        /** Get copy of content Doppler LUT */
+        inline isce::core::LUT1d<double> contentDoppler() const;
         /** Set content Doppler polynomial */
-        inline void contentDoppler(const isce::core::Poly2d &);
+        inline void contentDoppler(const isce::core::LUT1d<double> &);
 
-        /** Get copy of skew Doppler polynomial */
-        inline isce::core::Poly2d skewDoppler() const;
+        /** Get copy of skew Doppler LUT */
+        inline isce::core::LUT1d<double> skewDoppler() const;
         /** Set skew Doppler polynomial */
-        inline void skewDoppler(const isce::core::Poly2d &);
+        inline void skewDoppler(const isce::core::LUT1d<double> &);
         
     private:
         // Doppler data
-        isce::core::Poly2d _skewDoppler;
-        isce::core::Poly2d _contentDoppler;
+        isce::core::LUT1d<double> _skewDoppler;
+        isce::core::LUT1d<double> _contentDoppler;
+
 };
 
 // Get inline implementations for Radar

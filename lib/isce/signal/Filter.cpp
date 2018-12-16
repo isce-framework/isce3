@@ -227,8 +227,8 @@ constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
 }
 
 /**
-* @param[in] refDoppler Doppler polynomial of the reference SLC
-* @param[in] secDoppler Doppler polynomial of the secondary SLC
+* @param[in] refDoppler Doppler LUT1d of the reference SLC
+* @param[in] secDoppler Doppler LUT1d of the secondary SLC
 * @param[in] bandwidth common bandwidth in azimuth
 * @param[in] prf pulse repetition frequency
 * @param[in] beta parameter for raised cosine filter
@@ -240,8 +240,8 @@ constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
 template <class T>
 void
 isce::signal::Filter<T>::
-constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
-                        const isce::core::Poly2d & secDoppler,
+constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
+                        const isce::core::LUT1d<double> & secDoppler,
                         double bandwidth,
                         double prf,
                         double beta,
@@ -269,7 +269,7 @@ constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
     // Loop over range bins
     for (int j = 0; j < ncols; ++j) {
         // Compute center frequency of common band
-        const double fmid = 0.5 * (refDoppler.eval(0, j) + secDoppler.eval(0, j));
+        const double fmid = 0.5 * (refDoppler.eval(j) + secDoppler.eval(j));
 
         // Compute filter
         for (size_t i = 0; i < frequency.size(); ++i) {

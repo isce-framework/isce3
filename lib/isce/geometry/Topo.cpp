@@ -23,7 +23,6 @@
 // pull in some isce::core namespaces
 using isce::core::Basis;
 using isce::core::Pixel;
-using isce::core::Poly2d;
 using isce::core::LinAlg;
 using isce::core::StateVector;
 using isce::io::Raster;
@@ -143,9 +142,9 @@ topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRast
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
-             << _doppler.eval(0, 0) << " "
-             << _doppler.eval(0, (_mode.width() / 2) - 1) << " "
-             << _doppler.eval(0, _mode.width() - 1) << " "
+             << _doppler.values()[0] << " "
+             << _doppler.values()[_doppler.size() / 2] << " " 
+             << _doppler.values()[_doppler.size() - 1] << " "
              << pyre::journal::endl;
 
         // Load DEM subset for SLC image block
@@ -183,7 +182,7 @@ topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRast
 
                 // Get current Doppler value
                 const double dopfact = (0.5 * _mode.wavelength()
-                                     * (_doppler.eval(0, rbin) / satVmag)) * rng;
+                                     * (_doppler.eval(rng) / satVmag)) * rng;
 
                 // Store slant range bin data in Pixel
                 Pixel pixel(rng, dopfact, rbin);
@@ -326,7 +325,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
         // Get proper slant range and Doppler factor
         const size_t rbin = rgInd[i];
         double rng = _mode.startingRange() + rbin * _mode.rangePixelSpacing();
-        double dopfact = (0.5 * _mode.wavelength() * (_doppler.eval(0, rbin)
+        double dopfact = (0.5 * _mode.wavelength() * (_doppler.eval(rng)
                         / satVmag)) * rng;
         // Store in Pixel object
         Pixel pixel(rng, dopfact, rbin);

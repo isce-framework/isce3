@@ -34,6 +34,7 @@ cdef extern from "isce/core/Orbit.h" namespace "isce::core":
         int interpolateLegendreOrbit(double,cartesian_t&,cartesian_t&)
         int interpolateSCHOrbit(double,cartesian_t&,cartesian_t&)
         int computeAcceleration(double,cartesian_t&)
+        void updateUTCTimes(const DateTime &)
         void printOrbit()
         void loadFromHDR(const char*)
         void dumpToHDR(const char*)

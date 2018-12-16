@@ -83,7 +83,7 @@ gdal
 git
 h5py
 libgdal
-nose
+pytest
 numpy
 fftw
 \endverbatim

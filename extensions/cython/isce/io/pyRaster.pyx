@@ -4,7 +4,7 @@
 # Copyright 2017-2018
 #
 
-import gdal
+from osgeo import gdal
 from libcpp cimport bool
 from libcpp.string cimport string
 from libcpp.vector cimport vector
