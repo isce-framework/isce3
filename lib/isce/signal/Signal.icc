@@ -26,6 +26,9 @@ nextPowerOfTwo(size_t N, size_t &fftLength)
     }
 }
 
+/** @param[in] ncolumns number of columns
+*   @param[in] nrows number of rows
+*/
 template <class T>
 void
 isce::signal::Signal<T>::
@@ -50,6 +53,9 @@ _configureRangeFFT(int ncolumns, int nrows)
     _odist = ncolumns;
 }
 
+/** @param[in] ncolumns number of columns
+*   @param[in] nrows number of rows
+*/
 template <class T>
 void
 isce::signal::Signal<T>::
@@ -74,8 +80,9 @@ _configureAzimuthFFT(int ncolumns, int nrows)
     _odist = 1;
 }
 
-
-
+/** @param[in] ncolumns number of columns
+*   @param[in] nrows number of rows
+*/
 template <class T>
 void
 isce::signal::Signal<T>::

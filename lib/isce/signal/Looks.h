@@ -29,8 +29,8 @@ class isce::signal::Looks {
         Looks() {};
 
         ~Looks() {};
-	
-	//void multilook(isce::io::Raster &input, isce::io::Raster &output);
+    
+    //void multilook(isce::io::Raster &input, isce::io::Raster &output);
 
         /** Multi-looking an array of real data */
         void multilook(std::valarray<T> &input,
@@ -44,7 +44,7 @@ class isce::signal::Looks {
         /** \brief Multi-looking an array of real data 
          * a binary mask is used to mask the data before multilooking */
         void multilook(std::valarray<T> &input,
-			std::valarray<bool> &mask,
+            std::valarray<bool> &mask,
                         std::valarray<T> &output);
 
         /** Multi-looking an array of real data (a weighted averaging)*/
@@ -113,7 +113,7 @@ class isce::signal::Looks {
         // number of rows after multilooking
         size_t _nrowsLooked;
 
-	// number of columns after multilooking
+    // number of columns after multilooking
         size_t _ncolsLooked;
 
         // number of looks in range direction (columns)
@@ -122,8 +122,8 @@ class isce::signal::Looks {
         // numbe of looks in azimuth direction (rows)
         size_t _rowsLooks;
 
-	// multilooking method
-	//size_t _method;
+    // multilooking method
+    //size_t _method;
 
 };
 
