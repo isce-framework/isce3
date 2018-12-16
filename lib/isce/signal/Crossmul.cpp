@@ -140,8 +140,13 @@ crossmul(isce::io::Raster& referenceSLC,
     // multi-looked interferogram
     std::valarray<std::complex<float>> ifgramMultiLooked(ncolsMultiLooked*blockRowsMultiLooked);
 
+    // multi-looked amplitude of reference SLC
     std::valarray<float> refAmplitudeLooked(ncolsMultiLooked*blockRowsMultiLooked);
+
+    // multi-looked amplitude of secondary SLC
     std::valarray<float> secAmplitudeLooked(ncolsMultiLooked*blockRowsMultiLooked);
+
+    // coherence for multi-looked interferogram
     std::valarray<float> coherence(ncolsMultiLooked*blockRowsMultiLooked);
 
     // make forward and inverse fft plans for the reference SLC 
@@ -184,8 +189,6 @@ crossmul(isce::io::Raster& referenceSLC,
 
     // loop over all blocks
     std::cout << "nblocks : " << nblocks << std::endl;
-
-    isce::io::Raster testGeomIgramSpec("geometryIgramSpec.bin", nfft, nrows, 1, GDT_CFloat32, "ENVI");
 
     for (size_t block = 0; block < nblocks; ++block) {
         std::cout << "block: " << block << std::endl;       
@@ -272,10 +275,7 @@ crossmul(isce::io::Raster& referenceSLC,
         // refAmplitudeLooked = sum(abs(refSlc)^2)
         looksObj.multilook(refSlc, refAmplitudeLooked, 2);
         looksObj.multilook(secSlc, secAmplitudeLooked, 2);
-        //coherenceRaster.setBlock(refAmplitudeLooked, 0, rowStart/_azimuthLooks,
-        //                                ncols/_rangeLooks, blockRowsData/_azimuthLooks);
-        //std::cout << rowStart/_azimuthLooks << "," <<
-        //                                ncols/_rangeLooks << ", " << blockRowsData/_azimuthLooks << std::endl;
+
         // upsample the refernce and secondary SLCs
         refSignal.upsample(refSlc, refSlcUpsampled, blockRows, nfft, oversample, shiftImpact);
         secSignal.upsample(secSlc, secSlcUpsampled, blockRows, nfft, oversample, shiftImpact);
@@ -305,14 +305,15 @@ crossmul(isce::io::Raster& referenceSLC,
         if (_doMultiLook){
             looksObj.ncols(ncols);
             looksObj.multilook(ifgram, ifgramMultiLooked);
+
             for (size_t i = 0; i< ifgramMultiLooked.size(); ++i){
                 coherence[i] = std::abs(ifgramMultiLooked[i])/
                             std::sqrt(refAmplitudeLooked[i]*secAmplitudeLooked[i]);
             }
-            std::cout << std::abs(ifgramMultiLooked[2000]) << " , " << refAmplitudeLooked[2000] << " , " << secAmplitudeLooked[2000] << std::endl;
-            std::cout << "coh: " << coherence[2000] << std::endl;
+
             interferogram.setBlock(ifgramMultiLooked, 0, rowStart/_azimuthLooks, 
                         ncols/_rangeLooks, blockRowsData/_azimuthLooks);
+
             coherenceRaster.setBlock(coherence, 0, rowStart/_azimuthLooks,
                         ncols/_rangeLooks, blockRowsData/_azimuthLooks);
         } else {
