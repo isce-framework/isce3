@@ -4,11 +4,8 @@ var searchData=
   ['chat',['chat',['../classisce_1_1core_1_1Baseline.html#a73c046a1b22890f5d18e031843e767c8',1,'isce::core::Baseline']]],
   ['checkinitialization',['checkInitialization',['../classisce_1_1geometry_1_1Topo.html#a35b16405bf9bbf615f1236327d49f833',1,'isce::geometry::Topo']]],
   ['checkveclendebug',['checkVecLenDebug',['../namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e',1,'isce::core']]],
-  ['colslooks',['colsLooks',['../classisce_1_1signal_1_1Looks.html#a5b744e68b7372727a7e3b5c6595d496d',1,'isce::signal::Looks']]],
   ['combine',['combine',['../classisce_1_1core_1_1Basis.html#a718e5b30ca8f4bc25918abd32a1640a1',1,'isce::core::Basis']]],
   ['commonazimuthbandwidth',['commonAzimuthBandwidth',['../classisce_1_1signal_1_1Crossmul.html#a4cfc97b9e81a68ba948760534fb8ddab',1,'isce::signal::Crossmul']]],
-  ['comparecomplex',['compareComplex',['../namespaceisce_1_1core.html#af5eda98731f7f62fce5c7f428f0e61a5',1,'isce::core']]],
-  ['comparefloatingpoint',['compareFloatingPoint',['../namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2',1,'isce::core']]],
   ['compleximagery',['ComplexImagery',['../classisce_1_1product_1_1ComplexImagery.html#a9af8d19ee8d9b542baa4eb8154abea01',1,'isce::product::ComplexImagery::ComplexImagery()'],['../classisce_1_1product_1_1Product.html#a4f8fae3fdcca9a789ed9d42fefe8bb4e',1,'isce::product::Product::complexImagery()']]],
   ['computeacceleration',['computeAcceleration',['../structisce_1_1core_1_1Orbit.html#abb6d924454f150c2318b4eccb7ad22cc',1,'isce::core::Orbit']]],
   ['computeheightstats',['computeHeightStats',['../classisce_1_1geometry_1_1DEMInterpolator.html#a06d63a769a22d13200f5bd7b083052ca',1,'isce::geometry::DEMInterpolator']]],
@@ -25,5 +22,5 @@ var searchData=
   ['coslook',['cosLook',['../classisce_1_1core_1_1Baseline.html#aa214415f7d1f9a3cb44dd599f3696a4c',1,'isce::core::Baseline']]],
   ['createinterpolator',['createInterpolator',['../namespaceisce_1_1core.html#afbf5c63abca7227dfa8d8c0d21a16350',1,'isce::core']]],
   ['cross',['cross',['../structisce_1_1core_1_1LinAlg.html#aa93865d560d663bd3575189f8da8220e',1,'isce::core::LinAlg']]],
-  ['crossmul',['crossmul',['../classisce_1_1signal_1_1Crossmul.html#a5de800d1b41b9c98e176462887a4d95d',1,'isce::signal::Crossmul::crossmul(isce::io::Raster &amp;referenceSLC, isce::io::Raster &amp;secondarySLC, isce::io::Raster &amp;rngOffset, isce::io::Raster &amp;interferogram, isce::io::Raster &amp;coherence)'],['../classisce_1_1signal_1_1Crossmul.html#af838cd9ab2ba16016c0c4f8ee4203218',1,'isce::signal::Crossmul::crossmul(isce::io::Raster &amp;referenceSLC, isce::io::Raster &amp;secondarySLC, isce::io::Raster &amp;interferogram, isce::io::Raster &amp;coherence)']]]
+  ['crossmul',['crossmul',['../classisce_1_1signal_1_1Crossmul.html#a8b7d9f379544aa95f0359de0797e4d40',1,'isce::signal::Crossmul::crossmul(isce::io::Raster &amp;referenceSLC, isce::io::Raster &amp;secondarySLC, isce::io::Raster &amp;rngOffset, isce::io::Raster &amp;interferogram)'],['../classisce_1_1signal_1_1Crossmul.html#ab5e452da1d373f99e3f5f7ee0255651d',1,'isce::signal::Crossmul::crossmul(isce::io::Raster &amp;referenceSLC, isce::io::Raster &amp;secondarySLC, isce::io::Raster &amp;interferogram)']]]
 ];
