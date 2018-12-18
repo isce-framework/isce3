@@ -74,7 +74,7 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
-<p>A class to handle 1D FFT in range and azimuth directions.  
+<p>A class to handle 2D FFT or 1D FFT in range or azimuth directions.  
  <a href="classisce_1_1signal_1_1Signal.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="Signal_8h_source.html">Signal.h</a>&gt;</code></p>
@@ -84,48 +84,156 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:afc9c8c9f9cfe1701558205600ab7b1f2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#afc9c8c9f9cfe1701558205600ab7b1f2">Signal</a> ()</td></tr>
 <tr class="memdesc:afc9c8c9f9cfe1701558205600ab7b1f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default constructor.  <a href="#afc9c8c9f9cfe1701558205600ab7b1f2">More...</a><br /></td></tr>
 <tr class="separator:afc9c8c9f9cfe1701558205600ab7b1f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1bba483ce51a202dda6a5190a0a0fce6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a1bba483ce51a202dda6a5190a0a0fce6">fftPlanForward</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;input, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;output, int rank, int n, int howmany, int inembed, int istride, int idist, int onembed, int ostride, int odist, int sign)</td></tr>
-<tr class="memdesc:a1bba483ce51a202dda6a5190a0a0fce6"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate forward FFTW3 plan for a block of data input parameters follow FFTW3 interface for fftw_plan_many_dft  <a href="#a1bba483ce51a202dda6a5190a0a0fce6">More...</a><br /></td></tr>
-<tr class="separator:a1bba483ce51a202dda6a5190a0a0fce6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa992ec062e7db18c11e928267e145497"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#aa992ec062e7db18c11e928267e145497">fftPlanBackward</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;input, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;output, int rank, int n, int howmany, int inembed, int istride, int idist, int onembed, int ostride, int odist, int sign)</td></tr>
-<tr class="memdesc:aa992ec062e7db18c11e928267e145497"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate iverse FFTW3 plan for a block of data input parameters follow FFTW3 interface for fftw_plan_many_dft  <a href="#aa992ec062e7db18c11e928267e145497">More...</a><br /></td></tr>
-<tr class="separator:aa992ec062e7db18c11e928267e145497"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a759653d297ab23e66963aebec0cdafc0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a759653d297ab23e66963aebec0cdafc0">Signal</a> (int nthreads)</td></tr>
+<tr class="memdesc:a759653d297ab23e66963aebec0cdafc0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor with number of threads.  <a href="#a759653d297ab23e66963aebec0cdafc0">More...</a><br /></td></tr>
+<tr class="separator:a759653d297ab23e66963aebec0cdafc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a385eaf9837019012da8aeece4f7c184c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a385eaf9837019012da8aeece4f7c184c">fftPlanForward</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;input, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;output, int rank, int *n, int howmany, int *inembed, int istride, int idist, int *onembed, int ostride, int odist, int sign)</td></tr>
+<tr class="memdesc:a385eaf9837019012da8aeece4f7c184c"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate forward FFTW3 plan for a block of complex data input parameters follow FFTW3 interface for fftw_plan_many_dft  <a href="#a385eaf9837019012da8aeece4f7c184c">More...</a><br /></td></tr>
+<tr class="separator:a385eaf9837019012da8aeece4f7c184c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a41a402759fb9d86796fe7002e716e16d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a41a402759fb9d86796fe7002e716e16d">fftPlanForward</a> (std::complex&lt; T &gt; *input, std::complex&lt; T &gt; *output, int rank, int *n, int howmany, int *inembed, int istride, int idist, int *onembed, int ostride, int odist, int sign)</td></tr>
+<tr class="memdesc:a41a402759fb9d86796fe7002e716e16d"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate forward FFTW3 plan for a block of complex data input parameters follow FFTW3 interface for fftw_plan_many_dft  <a href="#a41a402759fb9d86796fe7002e716e16d">More...</a><br /></td></tr>
+<tr class="separator:a41a402759fb9d86796fe7002e716e16d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac2aac7b1b9e631eb39bb8442777b57a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#aac2aac7b1b9e631eb39bb8442777b57a">fftPlanForward</a> (std::valarray&lt; T &gt; &amp;input, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;output, int rank, int *n, int howmany, int *inembed, int istride, int idist, int *onembed, int ostride, int odist)</td></tr>
+<tr class="memdesc:aac2aac7b1b9e631eb39bb8442777b57a"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate forward FFTW3 plan for a block of real data input parameters follow FFTW3 interface for fftw_plan_many_dft_r2c  <a href="#aac2aac7b1b9e631eb39bb8442777b57a">More...</a><br /></td></tr>
+<tr class="separator:aac2aac7b1b9e631eb39bb8442777b57a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae82fc5bd428135f098220df00e80f586"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#ae82fc5bd428135f098220df00e80f586">fftPlanForward</a> (T *input, std::complex&lt; T &gt; *output, int rank, int *n, int howmany, int *inembed, int istride, int idist, int *onembed, int ostride, int odist)</td></tr>
+<tr class="memdesc:ae82fc5bd428135f098220df00e80f586"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate forward FFTW3 plan for a block of real data input parameters follow FFTW3 interface for fftw_plan_many_dft_r2c  <a href="#ae82fc5bd428135f098220df00e80f586">More...</a><br /></td></tr>
+<tr class="separator:ae82fc5bd428135f098220df00e80f586"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af222f3b94cb8834524698a0c3af84767"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#af222f3b94cb8834524698a0c3af84767">fftPlanBackward</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;input, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;output, int rank, int *n, int howmany, int *inembed, int istride, int idist, int *onembed, int ostride, int odist, int sign)</td></tr>
+<tr class="memdesc:af222f3b94cb8834524698a0c3af84767"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate iverse FFTW3 plan for a block of spectrum input parameters follow FFTW3 interface for fftw_plan_many_dft  <a href="#af222f3b94cb8834524698a0c3af84767">More...</a><br /></td></tr>
+<tr class="separator:af222f3b94cb8834524698a0c3af84767"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a506ad25f8ab5c23f52183537fc014631"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a506ad25f8ab5c23f52183537fc014631">fftPlanBackward</a> (std::complex&lt; T &gt; *input, std::complex&lt; T &gt; *output, int rank, int *n, int howmany, int *inembed, int istride, int idist, int *onembed, int ostride, int odist, int sign)</td></tr>
+<tr class="memdesc:a506ad25f8ab5c23f52183537fc014631"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate iverse FFTW3 plan for a block of spectrum input parameters follow FFTW3 interface for fftw_plan_many_dft  <a href="#a506ad25f8ab5c23f52183537fc014631">More...</a><br /></td></tr>
+<tr class="separator:a506ad25f8ab5c23f52183537fc014631"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab1aec57f3f9ee2670dd896adf9c46902"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#ab1aec57f3f9ee2670dd896adf9c46902">fftPlanBackward</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;input, std::valarray&lt; T &gt; &amp;output, int rank, int *n, int howmany, int *inembed, int istride, int idist, int *onembed, int ostride, int odist)</td></tr>
+<tr class="memdesc:ab1aec57f3f9ee2670dd896adf9c46902"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate iverse FFTW3 plan for a block of spectrum to be transformed to real data input parameters follow FFTW3 interface for fftw_plan_many_dft_c2r  <a href="#ab1aec57f3f9ee2670dd896adf9c46902">More...</a><br /></td></tr>
+<tr class="separator:ab1aec57f3f9ee2670dd896adf9c46902"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99a10ee5ce3f0520f1b30c29ff5db4b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a99a10ee5ce3f0520f1b30c29ff5db4b9">fftPlanBackward</a> (std::complex&lt; T &gt; *input, T *output, int rank, int *n, int howmany, int *inembed, int istride, int idist, int *onembed, int ostride, int odist)</td></tr>
+<tr class="memdesc:a99a10ee5ce3f0520f1b30c29ff5db4b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate iverse FFTW3 plan for a block of spectrum to be transformed to real data input parameters follow FFTW3 interface for fftw_plan_many_dft_c2r  <a href="#a99a10ee5ce3f0520f1b30c29ff5db4b9">More...</a><br /></td></tr>
+<tr class="separator:a99a10ee5ce3f0520f1b30c29ff5db4b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a40963f7f9962f04558899ffc42ad4c06"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a40963f7f9962f04558899ffc42ad4c06">forward</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;input, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;output)</td></tr>
-<tr class="memdesc:a40963f7f9962f04558899ffc42ad4c06"><td class="mdescLeft">&#160;</td><td class="mdescRight">perform forward FFT  <a href="#a40963f7f9962f04558899ffc42ad4c06">More...</a><br /></td></tr>
+<tr class="memdesc:a40963f7f9962f04558899ffc42ad4c06"><td class="mdescLeft">&#160;</td><td class="mdescRight">forward transform  <a href="#a40963f7f9962f04558899ffc42ad4c06">More...</a><br /></td></tr>
 <tr class="separator:a40963f7f9962f04558899ffc42ad4c06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a522948bd3489c13a1535bc14bc19af82"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a522948bd3489c13a1535bc14bc19af82">forward</a> (std::complex&lt; T &gt; *input, std::complex&lt; T &gt; *output)</td></tr>
+<tr class="memdesc:a522948bd3489c13a1535bc14bc19af82"><td class="mdescLeft">&#160;</td><td class="mdescRight">forward transform  <a href="#a522948bd3489c13a1535bc14bc19af82">More...</a><br /></td></tr>
+<tr class="separator:a522948bd3489c13a1535bc14bc19af82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9547db9dc62adab2f8629452f73249d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#ad9547db9dc62adab2f8629452f73249d">forward</a> (std::valarray&lt; T &gt; &amp;input, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;output)</td></tr>
+<tr class="memdesc:ad9547db9dc62adab2f8629452f73249d"><td class="mdescLeft">&#160;</td><td class="mdescRight">forward transform  <a href="#ad9547db9dc62adab2f8629452f73249d">More...</a><br /></td></tr>
+<tr class="separator:ad9547db9dc62adab2f8629452f73249d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff2eb10b0ca0805ed32fcc7a181949fe"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#aff2eb10b0ca0805ed32fcc7a181949fe">forward</a> (T *input, std::complex&lt; T &gt; *output)</td></tr>
+<tr class="memdesc:aff2eb10b0ca0805ed32fcc7a181949fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">forward transform  <a href="#aff2eb10b0ca0805ed32fcc7a181949fe">More...</a><br /></td></tr>
+<tr class="separator:aff2eb10b0ca0805ed32fcc7a181949fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afce0e33d0c371e9f0221b3f2d75b6a1b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#afce0e33d0c371e9f0221b3f2d75b6a1b">inverse</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;input, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;output)</td></tr>
-<tr class="memdesc:afce0e33d0c371e9f0221b3f2d75b6a1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">perform forward FFT  <a href="#afce0e33d0c371e9f0221b3f2d75b6a1b">More...</a><br /></td></tr>
+<tr class="memdesc:afce0e33d0c371e9f0221b3f2d75b6a1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">inverse transform  <a href="#afce0e33d0c371e9f0221b3f2d75b6a1b">More...</a><br /></td></tr>
 <tr class="separator:afce0e33d0c371e9f0221b3f2d75b6a1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa6d727c9404097b63981e062cffa49c1"><td class="memItemLeft" align="right" valign="top"><a id="aa6d727c9404097b63981e062cffa49c1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#aa6d727c9404097b63981e062cffa49c1">forwardRangeFFT</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, int ncolumns, int nrows)</td></tr>
-<tr class="memdesc:aa6d727c9404097b63981e062cffa49c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward FFT in range direction for a block of data <br /></td></tr>
+<tr class="memitem:ab2c01dde5725abb3d50306e99fececf9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#ab2c01dde5725abb3d50306e99fececf9">inverse</a> (std::complex&lt; T &gt; *input, std::complex&lt; T &gt; *output)</td></tr>
+<tr class="memdesc:ab2c01dde5725abb3d50306e99fececf9"><td class="mdescLeft">&#160;</td><td class="mdescRight">inverse transform  <a href="#ab2c01dde5725abb3d50306e99fececf9">More...</a><br /></td></tr>
+<tr class="separator:ab2c01dde5725abb3d50306e99fececf9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8320905afdad620c12a6b8ce7972b6d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a8320905afdad620c12a6b8ce7972b6d4">inverse</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;input, std::valarray&lt; T &gt; &amp;output)</td></tr>
+<tr class="memdesc:a8320905afdad620c12a6b8ce7972b6d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">inverse transform  <a href="#a8320905afdad620c12a6b8ce7972b6d4">More...</a><br /></td></tr>
+<tr class="separator:a8320905afdad620c12a6b8ce7972b6d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa1f4d12b3c5b13604727c59363d72d49"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#aa1f4d12b3c5b13604727c59363d72d49">inverse</a> (std::complex&lt; T &gt; *input, T *output)</td></tr>
+<tr class="memdesc:aa1f4d12b3c5b13604727c59363d72d49"><td class="mdescLeft">&#160;</td><td class="mdescRight">inverse transform  <a href="#aa1f4d12b3c5b13604727c59363d72d49">More...</a><br /></td></tr>
+<tr class="separator:aa1f4d12b3c5b13604727c59363d72d49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6d727c9404097b63981e062cffa49c1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#aa6d727c9404097b63981e062cffa49c1">forwardRangeFFT</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:aa6d727c9404097b63981e062cffa49c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward FFT in range direction for a block of complex data.  <a href="#aa6d727c9404097b63981e062cffa49c1">More...</a><br /></td></tr>
 <tr class="separator:aa6d727c9404097b63981e062cffa49c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a481b08c150844658a95ddcb627dc1e76"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a481b08c150844658a95ddcb627dc1e76">forwardRangeFFT</a> (std::complex&lt; T &gt; *signal, std::complex&lt; T &gt; *spectrum, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a481b08c150844658a95ddcb627dc1e76"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward FFT in range direction for a block of complex data.  <a href="#a481b08c150844658a95ddcb627dc1e76">More...</a><br /></td></tr>
+<tr class="separator:a481b08c150844658a95ddcb627dc1e76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af839b35f04e26d466707be603ce48322"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#af839b35f04e26d466707be603ce48322">forwardRangeFFT</a> (std::valarray&lt; T &gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:af839b35f04e26d466707be603ce48322"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward FFT in range direction for a block of real data.  <a href="#af839b35f04e26d466707be603ce48322">More...</a><br /></td></tr>
+<tr class="separator:af839b35f04e26d466707be603ce48322"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3406d388d90f6aa72e7399137eb6a908"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a3406d388d90f6aa72e7399137eb6a908">forwardRangeFFT</a> (T *signal, std::complex&lt; T &gt; *spectrum, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a3406d388d90f6aa72e7399137eb6a908"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward FFT in range direction for a block of real data.  <a href="#a3406d388d90f6aa72e7399137eb6a908">More...</a><br /></td></tr>
+<tr class="separator:a3406d388d90f6aa72e7399137eb6a908"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e7720139b0c4f8f1e56b9ca2cd3fbfa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a9e7720139b0c4f8f1e56b9ca2cd3fbfa">forwardAzimuthFFT</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, int ncolumns, int nrows)</td></tr>
-<tr class="memdesc:a9e7720139b0c4f8f1e56b9ca2cd3fbfa"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward FFT in azimuth direction for a block of data  <a href="#a9e7720139b0c4f8f1e56b9ca2cd3fbfa">More...</a><br /></td></tr>
+<tr class="memdesc:a9e7720139b0c4f8f1e56b9ca2cd3fbfa"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward FFT in azimuth direction for a block of complex data.  <a href="#a9e7720139b0c4f8f1e56b9ca2cd3fbfa">More...</a><br /></td></tr>
 <tr class="separator:a9e7720139b0c4f8f1e56b9ca2cd3fbfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c22fdb2e17feee1b4a29a5f3a6c0f02"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a0c22fdb2e17feee1b4a29a5f3a6c0f02">forwardAzimuthFFT</a> (std::complex&lt; T &gt; *signal, std::complex&lt; T &gt; *spectrum, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a0c22fdb2e17feee1b4a29a5f3a6c0f02"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward FFT in azimuth direction for a block of complex data.  <a href="#a0c22fdb2e17feee1b4a29a5f3a6c0f02">More...</a><br /></td></tr>
+<tr class="separator:a0c22fdb2e17feee1b4a29a5f3a6c0f02"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ef098dac7e46d654133a7a2cfb9f7f9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a4ef098dac7e46d654133a7a2cfb9f7f9">forwardAzimuthFFT</a> (std::valarray&lt; T &gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a4ef098dac7e46d654133a7a2cfb9f7f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward FFT in azimuth direction for a block of real data.  <a href="#a4ef098dac7e46d654133a7a2cfb9f7f9">More...</a><br /></td></tr>
+<tr class="separator:a4ef098dac7e46d654133a7a2cfb9f7f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03411a758fa60b6cd8ab9cba4afea81e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a03411a758fa60b6cd8ab9cba4afea81e">forwardAzimuthFFT</a> (T *signal, std::complex&lt; T &gt; *spectrum, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a03411a758fa60b6cd8ab9cba4afea81e"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward FFT in azimuth direction for a block of real data.  <a href="#a03411a758fa60b6cd8ab9cba4afea81e">More...</a><br /></td></tr>
+<tr class="separator:a03411a758fa60b6cd8ab9cba4afea81e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50d5c7589ababa28d5172acc60934f31"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a50d5c7589ababa28d5172acc60934f31">forward2DFFT</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a50d5c7589ababa28d5172acc60934f31"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward two imensional FFT for a block of complex data  <a href="#a50d5c7589ababa28d5172acc60934f31">More...</a><br /></td></tr>
+<tr class="separator:a50d5c7589ababa28d5172acc60934f31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5b1f931b0c8615e72f36de8b1baaaee"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#ac5b1f931b0c8615e72f36de8b1baaaee">forward2DFFT</a> (std::complex&lt; T &gt; *signal, std::complex&lt; T &gt; *spectrum, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:ac5b1f931b0c8615e72f36de8b1baaaee"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward two imensional FFT for a block of complex data  <a href="#ac5b1f931b0c8615e72f36de8b1baaaee">More...</a><br /></td></tr>
+<tr class="separator:ac5b1f931b0c8615e72f36de8b1baaaee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74976c952da22749413833c8f71d134a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a74976c952da22749413833c8f71d134a">forward2DFFT</a> (std::valarray&lt; T &gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a74976c952da22749413833c8f71d134a"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward two imensional FFT for a block of real data  <a href="#a74976c952da22749413833c8f71d134a">More...</a><br /></td></tr>
+<tr class="separator:a74976c952da22749413833c8f71d134a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad84a017263a6c0bf567c0223308d59a3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#ad84a017263a6c0bf567c0223308d59a3">forward2DFFT</a> (T *signal, std::complex&lt; T &gt; *spectrum, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:ad84a017263a6c0bf567c0223308d59a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for forward two imensional FFT for a block of real data  <a href="#ad84a017263a6c0bf567c0223308d59a3">More...</a><br /></td></tr>
+<tr class="separator:ad84a017263a6c0bf567c0223308d59a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ad75c09b749c04f0949b51f96d0e8c2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a4ad75c09b749c04f0949b51f96d0e8c2">inverseRangeFFT</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, int ncolumns, int nrows)</td></tr>
 <tr class="memdesc:a4ad75c09b749c04f0949b51f96d0e8c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for backward FFT in range direction for a block of data  <a href="#a4ad75c09b749c04f0949b51f96d0e8c2">More...</a><br /></td></tr>
 <tr class="separator:a4ad75c09b749c04f0949b51f96d0e8c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a613e1b016eabbc92706e3066817315cb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a613e1b016eabbc92706e3066817315cb">inverseRangeFFT</a> (std::complex&lt; T &gt; *spectrum, std::complex&lt; T &gt; *signal, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a613e1b016eabbc92706e3066817315cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for backward FFT in range direction for a block of data  <a href="#a613e1b016eabbc92706e3066817315cb">More...</a><br /></td></tr>
+<tr class="separator:a613e1b016eabbc92706e3066817315cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d05eb54f3b86c0645ef25f3a06dbee5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a0d05eb54f3b86c0645ef25f3a06dbee5">inverseRangeFFT</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, std::valarray&lt; T &gt; &amp;signal, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a0d05eb54f3b86c0645ef25f3a06dbee5"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for backward FFT in range direction for a block of data  <a href="#a0d05eb54f3b86c0645ef25f3a06dbee5">More...</a><br /></td></tr>
+<tr class="separator:a0d05eb54f3b86c0645ef25f3a06dbee5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78b747522a267ce2fbe22a5cc155d210"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a78b747522a267ce2fbe22a5cc155d210">inverseRangeFFT</a> (std::complex&lt; T &gt; *spectrum, T *signal, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a78b747522a267ce2fbe22a5cc155d210"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for backward FFT in range direction for a block of data  <a href="#a78b747522a267ce2fbe22a5cc155d210">More...</a><br /></td></tr>
+<tr class="separator:a78b747522a267ce2fbe22a5cc155d210"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a51a26a03af17c2b292fe54cceaff1406"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a51a26a03af17c2b292fe54cceaff1406">inverseAzimuthFFT</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, int ncolumns, int nrows)</td></tr>
 <tr class="memdesc:a51a26a03af17c2b292fe54cceaff1406"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for inverse FFT in azimuth direction for a block of data  <a href="#a51a26a03af17c2b292fe54cceaff1406">More...</a><br /></td></tr>
 <tr class="separator:a51a26a03af17c2b292fe54cceaff1406"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac28a498746a9a6104285ddb63c215acb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#ac28a498746a9a6104285ddb63c215acb">inverseAzimuthFFT</a> (std::complex&lt; T &gt; *spectrum, std::complex&lt; T &gt; *signal, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:ac28a498746a9a6104285ddb63c215acb"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for inverse FFT in azimuth direction for a block of data  <a href="#ac28a498746a9a6104285ddb63c215acb">More...</a><br /></td></tr>
+<tr class="separator:ac28a498746a9a6104285ddb63c215acb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae5115e499aa93ca1ddd8bd7a856a8494"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#ae5115e499aa93ca1ddd8bd7a856a8494">inverseAzimuthFFT</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, std::valarray&lt; T &gt; &amp;signal, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:ae5115e499aa93ca1ddd8bd7a856a8494"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for inverse FFT in azimuth direction for a block of data  <a href="#ae5115e499aa93ca1ddd8bd7a856a8494">More...</a><br /></td></tr>
+<tr class="separator:ae5115e499aa93ca1ddd8bd7a856a8494"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8fcc15ca58b558e9affc3823ce9b8d12"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a8fcc15ca58b558e9affc3823ce9b8d12">inverseAzimuthFFT</a> (std::complex&lt; T &gt; *spectrum, T *signal, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a8fcc15ca58b558e9affc3823ce9b8d12"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for inverse FFT in azimuth direction for a block of data  <a href="#a8fcc15ca58b558e9affc3823ce9b8d12">More...</a><br /></td></tr>
+<tr class="separator:a8fcc15ca58b558e9affc3823ce9b8d12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66b2e47a7ce00ef85d730ccb1aea4257"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a66b2e47a7ce00ef85d730ccb1aea4257">inverse2DFFT</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a66b2e47a7ce00ef85d730ccb1aea4257"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for inverse two dimensional FFT for a block of data  <a href="#a66b2e47a7ce00ef85d730ccb1aea4257">More...</a><br /></td></tr>
+<tr class="separator:a66b2e47a7ce00ef85d730ccb1aea4257"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b3506de5d69eef38caa0722cab44879"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a6b3506de5d69eef38caa0722cab44879">inverse2DFFT</a> (std::complex&lt; T &gt; *spectrum, std::complex&lt; T &gt; *signal, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a6b3506de5d69eef38caa0722cab44879"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for inverse two dimensional FFT for a block of data  <a href="#a6b3506de5d69eef38caa0722cab44879">More...</a><br /></td></tr>
+<tr class="separator:a6b3506de5d69eef38caa0722cab44879"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c56fc4920789c0bcee43feb3e82d6e0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a4c56fc4920789c0bcee43feb3e82d6e0">inverse2DFFT</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, std::valarray&lt; T &gt; &amp;signal, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a4c56fc4920789c0bcee43feb3e82d6e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for inverse two dimensional FFT for a block of data  <a href="#a4c56fc4920789c0bcee43feb3e82d6e0">More...</a><br /></td></tr>
+<tr class="separator:a4c56fc4920789c0bcee43feb3e82d6e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3f5cb5e67b39c8091301ecd1cbadc3b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#ad3f5cb5e67b39c8091301ecd1cbadc3b">inverse2DFFT</a> (std::complex&lt; T &gt; *spectrum, T *signal, int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:ad3f5cb5e67b39c8091301ecd1cbadc3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">initiate plan for inverse two dimensional FFT for a block of data  <a href="#ad3f5cb5e67b39c8091301ecd1cbadc3b">More...</a><br /></td></tr>
+<tr class="separator:ad3f5cb5e67b39c8091301ecd1cbadc3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a259eaa5b9c89404fcacb2e9caa29c246"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a259eaa5b9c89404fcacb2e9caa29c246">upsample</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signalOversampled, int rows, int nfft, int oversampleFactor)</td></tr>
 <tr class="memdesc:a259eaa5b9c89404fcacb2e9caa29c246"><td class="mdescLeft">&#160;</td><td class="mdescRight">upsampling a block of data in range direction  <a href="#a259eaa5b9c89404fcacb2e9caa29c246">More...</a><br /></td></tr>
 <tr class="separator:a259eaa5b9c89404fcacb2e9caa29c246"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1c3c4b058c26b8f97aa589f0054a45a0"><td class="memItemLeft" align="right" valign="top"><a id="a1c3c4b058c26b8f97aa589f0054a45a0"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>upsample</b> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signalOversampled, int rows, int nfft, int oversampleFactor, std::valarray&lt; std::complex&lt; T &gt;&gt; shiftImpact)</td></tr>
+<tr class="memitem:a1c3c4b058c26b8f97aa589f0054a45a0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a1c3c4b058c26b8f97aa589f0054a45a0">upsample</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signalOversampled, int rows, int nfft, int oversampleFactor, std::valarray&lt; std::complex&lt; T &gt;&gt; shiftImpact)</td></tr>
+<tr class="memdesc:a1c3c4b058c26b8f97aa589f0054a45a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">upsampling a block of data in range direction and shifting the upsampled signal by a constant.  <a href="#a1c3c4b058c26b8f97aa589f0054a45a0">More...</a><br /></td></tr>
 <tr class="separator:a1c3c4b058c26b8f97aa589f0054a45a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a46a99f0d46794440b29a5c7e558f04f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a46a99f0d46794440b29a5c7e558f04f2">nextPowerOfTwo</a> (size_t N, size_t &amp;fftLength)</td></tr>
+<tr class="memdesc:a46a99f0d46794440b29a5c7e558f04f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">next power of two  <a href="#a46a99f0d46794440b29a5c7e558f04f2">More...</a><br /></td></tr>
 <tr class="separator:a46a99f0d46794440b29a5c7e558f04f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a789aeabb2898ee602e9c5320bd80d0d5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a789aeabb2898ee602e9c5320bd80d0d5">_configureRangeFFT</a> (int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a789aeabb2898ee602e9c5320bd80d0d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">determine the required parameters for setting range FFT plans  <a href="#a789aeabb2898ee602e9c5320bd80d0d5">More...</a><br /></td></tr>
+<tr class="separator:a789aeabb2898ee602e9c5320bd80d0d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5de174b1cdbc518a870e97a26efa1dbd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a5de174b1cdbc518a870e97a26efa1dbd">_configureAzimuthFFT</a> (int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a5de174b1cdbc518a870e97a26efa1dbd"><td class="mdescLeft">&#160;</td><td class="mdescRight">determine the required parameters for setting azimuth FFT plans  <a href="#a5de174b1cdbc518a870e97a26efa1dbd">More...</a><br /></td></tr>
+<tr class="separator:a5de174b1cdbc518a870e97a26efa1dbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d3ba76c82865d52392f711b3d252f6e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Signal.html#a4d3ba76c82865d52392f711b3d252f6e">_configure2DFFT</a> (int ncolumns, int nrows)</td></tr>
+<tr class="memdesc:a4d3ba76c82865d52392f711b3d252f6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">determine the required parameters for setting 2D FFT plans  <a href="#a4d3ba76c82865d52392f711b3d252f6e">More...</a><br /></td></tr>
+<tr class="separator:a4d3ba76c82865d52392f711b3d252f6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;class T&gt;<br />
 class isce::signal::Signal&lt; T &gt;</h3>
 
-<p>A class to handle 1D FFT in range and azimuth directions. </p>
+<p>A class to handle 2D FFT or 1D FFT in range or azimuth directions. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="afc9c8c9f9cfe1701558205600ab7b1f2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afc9c8c9f9cfe1701558205600ab7b1f2">&#9670;&nbsp;</a></span>Signal()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#afc9c8c9f9cfe1701558205600ab7b1f2">&#9670;&nbsp;</a></span>Signal() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -153,9 +261,181 @@ template&lt;class T&gt; </div>
 
 </div>
 </div>
+<a id="a759653d297ab23e66963aebec0cdafc0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a759653d297ab23e66963aebec0cdafc0">&#9670;&nbsp;</a></span>Signal() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::<a class="el" href="classisce_1_1signal_1_1Signal.html">Signal</a> </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nthreads</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Constructor with number of threads. </p>
+<p>This uses the Multi-threaded FFTW </p>
+
+</div>
+</div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="aa992ec062e7db18c11e928267e145497"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa992ec062e7db18c11e928267e145497">&#9670;&nbsp;</a></span>fftPlanBackward()</h2>
+<a id="a4d3ba76c82865d52392f711b3d252f6e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4d3ba76c82865d52392f711b3d252f6e">&#9670;&nbsp;</a></span>_configure2DFFT()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::_configure2DFFT </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>determine the required parameters for setting 2D FFT plans </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a5de174b1cdbc518a870e97a26efa1dbd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5de174b1cdbc518a870e97a26efa1dbd">&#9670;&nbsp;</a></span>_configureAzimuthFFT()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::_configureAzimuthFFT </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>determine the required parameters for setting azimuth FFT plans </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a789aeabb2898ee602e9c5320bd80d0d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a789aeabb2898ee602e9c5320bd80d0d5">&#9670;&nbsp;</a></span>_configureRangeFFT()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::_configureRangeFFT </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>determine the required parameters for setting range FFT plans </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="af222f3b94cb8834524698a0c3af84767"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af222f3b94cb8834524698a0c3af84767">&#9670;&nbsp;</a></span>fftPlanBackward() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -183,7 +463,7 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">int *&#160;</td>
           <td class="paramname"><em>n</em>, </td>
         </tr>
         <tr>
@@ -195,7 +475,7 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">int *&#160;</td>
           <td class="paramname"><em>inembed</em>, </td>
         </tr>
         <tr>
@@ -213,7 +493,7 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">int *&#160;</td>
           <td class="paramname"><em>onembed</em>, </td>
         </tr>
         <tr>
@@ -242,7 +522,219 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>initiate iverse FFTW3 plan for a block of data input parameters follow FFTW3 interface for fftw_plan_many_dft </p>
+<p>initiate iverse FFTW3 plan for a block of spectrum input parameters follow FFTW3 interface for fftw_plan_many_dft </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">output</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rank</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">howmany</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">inembed</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">istride</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">idist</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">onembed</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ostride</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">odist</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sign</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a506ad25f8ab5c23f52183537fc014631"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a506ad25f8ab5c23f52183537fc014631">&#9670;&nbsp;</a></span>fftPlanBackward() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::fftPlanBackward </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>output</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>rank</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>howmany</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>inembed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>istride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>idist</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>onembed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ostride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>odist</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>sign</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate iverse FFTW3 plan for a block of spectrum input parameters follow FFTW3 interface for fftw_plan_many_dft </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">output</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rank</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">howmany</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">inembed</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">istride</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">idist</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">onembed</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ostride</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">odist</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sign</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ab1aec57f3f9ee2670dd896adf9c46902"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab1aec57f3f9ee2670dd896adf9c46902">&#9670;&nbsp;</a></span>fftPlanBackward() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::fftPlanBackward </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>output</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>rank</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>howmany</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>inembed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>istride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>idist</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>onembed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ostride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>odist</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate iverse FFTW3 plan for a block of spectrum to be transformed to real data input parameters follow FFTW3 interface for fftw_plan_many_dft_c2r </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>block of data </td></tr>
@@ -262,8 +754,110 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a id="a1bba483ce51a202dda6a5190a0a0fce6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1bba483ce51a202dda6a5190a0a0fce6">&#9670;&nbsp;</a></span>fftPlanForward()</h2>
+<a id="a99a10ee5ce3f0520f1b30c29ff5db4b9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a99a10ee5ce3f0520f1b30c29ff5db4b9">&#9670;&nbsp;</a></span>fftPlanBackward() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::fftPlanBackward </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>output</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>rank</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>howmany</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>inembed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>istride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>idist</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>onembed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ostride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>odist</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate iverse FFTW3 plan for a block of spectrum to be transformed to real data input parameters follow FFTW3 interface for fftw_plan_many_dft_c2r </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">output</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rank</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">howmany</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">inembed</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">istride</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">idist</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">onembed</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ostride</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">odist</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a385eaf9837019012da8aeece4f7c184c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a385eaf9837019012da8aeece4f7c184c">&#9670;&nbsp;</a></span>fftPlanForward() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -291,7 +885,7 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">int *&#160;</td>
           <td class="paramname"><em>n</em>, </td>
         </tr>
         <tr>
@@ -303,7 +897,7 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">int *&#160;</td>
           <td class="paramname"><em>inembed</em>, </td>
         </tr>
         <tr>
@@ -321,7 +915,7 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">int *&#160;</td>
           <td class="paramname"><em>onembed</em>, </td>
         </tr>
         <tr>
@@ -350,7 +944,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>initiate forward FFTW3 plan for a block of data input parameters follow FFTW3 interface for fftw_plan_many_dft </p>
+<p>initiate forward FFTW3 plan for a block of complex data input parameters follow FFTW3 interface for fftw_plan_many_dft </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>block of data </td></tr>
@@ -371,8 +965,321 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
+<a id="a41a402759fb9d86796fe7002e716e16d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a41a402759fb9d86796fe7002e716e16d">&#9670;&nbsp;</a></span>fftPlanForward() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::fftPlanForward </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>output</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>rank</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>howmany</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>inembed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>istride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>idist</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>onembed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ostride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>odist</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>sign</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate forward FFTW3 plan for a block of complex data input parameters follow FFTW3 interface for fftw_plan_many_dft </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">output</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rank</td><td>rank of the transform (1: for one dimensional and 2: for two dimensional transform) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>size of each transform (ncols: for range FFT, nrows: for azimuth FFT) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">howmany</td><td>number of FFT transforms for a block of data (nrows: for range FFT, ncols: for azimuth FFT) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">inembed</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">istride</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">idist</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">onembed</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ostride</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">odist</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sign</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aac2aac7b1b9e631eb39bb8442777b57a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aac2aac7b1b9e631eb39bb8442777b57a">&#9670;&nbsp;</a></span>fftPlanForward() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::fftPlanForward </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>output</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>rank</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>howmany</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>inembed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>istride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>idist</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>onembed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ostride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>odist</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate forward FFTW3 plan for a block of real data input parameters follow FFTW3 interface for fftw_plan_many_dft_r2c </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">output</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rank</td><td>rank of the transform (1: for one dimensional and 2: for two dimensional transform) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>size of each transform (ncols: for range FFT, nrows: for azimuth FFT) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">howmany</td><td>number of FFT transforms for a block of data (nrows: for range FFT, ncols: for azimuth FFT) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">inembed</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">istride</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">idist</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">onembed</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ostride</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">odist</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ae82fc5bd428135f098220df00e80f586"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae82fc5bd428135f098220df00e80f586">&#9670;&nbsp;</a></span>fftPlanForward() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::fftPlanForward </td>
+          <td>(</td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>output</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>rank</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>howmany</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>inembed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>istride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>idist</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>onembed</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ostride</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>odist</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate forward FFTW3 plan for a block of real data input parameters follow FFTW3 interface for fftw_plan_many_dft_r2c </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">output</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rank</td><td>rank of the transform (1: for one dimensional and 2: for two dimensional transform) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>size of each transform (ncols: for range FFT, nrows: for azimuth FFT) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">howmany</td><td>number of FFT transforms for a block of data (nrows: for range FFT, ncols: for azimuth FFT) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">inembed</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">istride</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">idist</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">onembed</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ostride</td><td></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">odist</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a40963f7f9962f04558899ffc42ad4c06"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a40963f7f9962f04558899ffc42ad4c06">&#9670;&nbsp;</a></span>forward()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a40963f7f9962f04558899ffc42ad4c06">&#9670;&nbsp;</a></span>forward() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -399,8 +1306,8 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>perform forward FFT </p>
-<p>unnormalized forward DFT computation</p>
+<p>forward transform </p>
+<p>unnormalized forward transform</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>block of data </td></tr>
@@ -411,8 +1318,340 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
+<a id="a522948bd3489c13a1535bc14bc19af82"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a522948bd3489c13a1535bc14bc19af82">&#9670;&nbsp;</a></span>forward() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forward </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>forward transform </p>
+<p>unnormalized forward transform</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">output</td><td>block of spectrum </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ad9547db9dc62adab2f8629452f73249d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad9547db9dc62adab2f8629452f73249d">&#9670;&nbsp;</a></span>forward() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forward </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>forward transform </p>
+<p>unnormalized forward transform</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">output</td><td>block of spectrum </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aff2eb10b0ca0805ed32fcc7a181949fe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff2eb10b0ca0805ed32fcc7a181949fe">&#9670;&nbsp;</a></span>forward() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forward </td>
+          <td>(</td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>forward transform </p>
+<p>unnormalized forward transform</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">output</td><td>block of spectrum </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a50d5c7589ababa28d5172acc60934f31"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a50d5c7589ababa28d5172acc60934f31">&#9670;&nbsp;</a></span>forward2DFFT() <span class="overload">[1/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forward2DFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for forward two imensional FFT for a block of complex data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>input block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">spectrum</td><td>output block of spectrum </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ac5b1f931b0c8615e72f36de8b1baaaee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac5b1f931b0c8615e72f36de8b1baaaee">&#9670;&nbsp;</a></span>forward2DFFT() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forward2DFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for forward two imensional FFT for a block of complex data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>input block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">spectrum</td><td>output block of spectrum </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a74976c952da22749413833c8f71d134a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a74976c952da22749413833c8f71d134a">&#9670;&nbsp;</a></span>forward2DFFT() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forward2DFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for forward two imensional FFT for a block of real data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>input block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">spectrum</td><td>output block of spectrum </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ad84a017263a6c0bf567c0223308d59a3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad84a017263a6c0bf567c0223308d59a3">&#9670;&nbsp;</a></span>forward2DFFT() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forward2DFFT </td>
+          <td>(</td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for forward two imensional FFT for a block of real data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>input block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">spectrum</td><td>output block of spectrum </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a9e7720139b0c4f8f1e56b9ca2cd3fbfa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9e7720139b0c4f8f1e56b9ca2cd3fbfa">&#9670;&nbsp;</a></span>forwardAzimuthFFT()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a9e7720139b0c4f8f1e56b9ca2cd3fbfa">&#9670;&nbsp;</a></span>forwardAzimuthFFT() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -451,7 +1690,386 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>initiate plan for forward FFT in azimuth direction for a block of data </p>
+<p>initiate plan for forward FFT in azimuth direction for a block of complex data. </p>
+<p>azimuth direction is assumed to be in the direction of the rows of the array.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>input block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">spectrum</td><td>output block of spectrum </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a0c22fdb2e17feee1b4a29a5f3a6c0f02"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0c22fdb2e17feee1b4a29a5f3a6c0f02">&#9670;&nbsp;</a></span>forwardAzimuthFFT() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forwardAzimuthFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for forward FFT in azimuth direction for a block of complex data. </p>
+<p>azimuth direction is assumed to be in the direction of the rows of the array.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>input block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">spectrum</td><td>output block of spectrum </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a4ef098dac7e46d654133a7a2cfb9f7f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ef098dac7e46d654133a7a2cfb9f7f9">&#9670;&nbsp;</a></span>forwardAzimuthFFT() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forwardAzimuthFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for forward FFT in azimuth direction for a block of real data. </p>
+<p>azimuth direction is assumed to be in the direction of the rows of the array.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>input block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">spectrum</td><td>output block of spectrum </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a03411a758fa60b6cd8ab9cba4afea81e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a03411a758fa60b6cd8ab9cba4afea81e">&#9670;&nbsp;</a></span>forwardAzimuthFFT() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forwardAzimuthFFT </td>
+          <td>(</td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for forward FFT in azimuth direction for a block of real data. </p>
+<p>azimuth direction is assumed to be in the direction of the rows of the array.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>input block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">spectrum</td><td>output block of spectrum </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aa6d727c9404097b63981e062cffa49c1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa6d727c9404097b63981e062cffa49c1">&#9670;&nbsp;</a></span>forwardRangeFFT() <span class="overload">[1/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forwardRangeFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for forward FFT in range direction for a block of complex data. </p>
+<p>range direction is assumed to be in the direction of the columns of the array.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>input block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">spectrum</td><td>output block of spectrum </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a481b08c150844658a95ddcb627dc1e76"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a481b08c150844658a95ddcb627dc1e76">&#9670;&nbsp;</a></span>forwardRangeFFT() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forwardRangeFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for forward FFT in range direction for a block of complex data. </p>
+<p>range direction is assumed to be in the direction of the columns of the array.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>input block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">spectrum</td><td>output block of spectrum </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="af839b35f04e26d466707be603ce48322"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af839b35f04e26d466707be603ce48322">&#9670;&nbsp;</a></span>forwardRangeFFT() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forwardRangeFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for forward FFT in range direction for a block of real data. </p>
+<p>range direction is assumed to be in the direction of the columns of the array.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>input block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">spectrum</td><td>output block of spectrum </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a3406d388d90f6aa72e7399137eb6a908"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3406d388d90f6aa72e7399137eb6a908">&#9670;&nbsp;</a></span>forwardRangeFFT() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::forwardRangeFFT </td>
+          <td>(</td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for forward FFT in range direction for a block of real data. </p>
+<p>range direction is assumed to be in the direction of the columns of the array.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>input block of data </td></tr>
@@ -465,7 +2083,7 @@ template&lt;class T &gt; </div>
 </div>
 </div>
 <a id="afce0e33d0c371e9f0221b3f2d75b6a1b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afce0e33d0c371e9f0221b3f2d75b6a1b">&#9670;&nbsp;</a></span>inverse()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#afce0e33d0c371e9f0221b3f2d75b6a1b">&#9670;&nbsp;</a></span>inverse() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -492,8 +2110,8 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>perform forward FFT </p>
-<p>unnormalized forward DFT computation.</p>
+<p>inverse transform </p>
+<p>unnormalized inverse transform.</p>
 <p>Note that since the FFTW library does not normalize the DFT computations, computing a forward followed by a backward transform (or vice versa) results in the original array scaled by length of fft. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">input</td><td>block of spectrum </td></tr>
@@ -504,8 +2122,319 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
+<a id="ab2c01dde5725abb3d50306e99fececf9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab2c01dde5725abb3d50306e99fececf9">&#9670;&nbsp;</a></span>inverse() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::inverse </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>inverse transform </p>
+<p>unnormalized inverse transform.</p>
+
+</div>
+</div>
+<a id="a8320905afdad620c12a6b8ce7972b6d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8320905afdad620c12a6b8ce7972b6d4">&#9670;&nbsp;</a></span>inverse() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::inverse </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>inverse transform </p>
+<p>unnormalized inverse transform.</p>
+
+</div>
+</div>
+<a id="aa1f4d12b3c5b13604727c59363d72d49"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa1f4d12b3c5b13604727c59363d72d49">&#9670;&nbsp;</a></span>inverse() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::inverse </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>input</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>output</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>inverse transform </p>
+<p>unnormalized inverse transform.</p>
+
+</div>
+</div>
+<a id="a66b2e47a7ce00ef85d730ccb1aea4257"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a66b2e47a7ce00ef85d730ccb1aea4257">&#9670;&nbsp;</a></span>inverse2DFFT() <span class="overload">[1/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::inverse2DFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for inverse two dimensional FFT for a block of data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">spectrum</td><td>input block of spectrum </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">signal</td><td>output block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a6b3506de5d69eef38caa0722cab44879"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6b3506de5d69eef38caa0722cab44879">&#9670;&nbsp;</a></span>inverse2DFFT() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::inverse2DFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for inverse two dimensional FFT for a block of data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">spectrum</td><td>input block of spectrum </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">signal</td><td>output block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a4c56fc4920789c0bcee43feb3e82d6e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c56fc4920789c0bcee43feb3e82d6e0">&#9670;&nbsp;</a></span>inverse2DFFT() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::inverse2DFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for inverse two dimensional FFT for a block of data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">spectrum</td><td>input block of spectrum </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">signal</td><td>output block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ad3f5cb5e67b39c8091301ecd1cbadc3b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3f5cb5e67b39c8091301ecd1cbadc3b">&#9670;&nbsp;</a></span>inverse2DFFT() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::inverse2DFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for inverse two dimensional FFT for a block of data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">spectrum</td><td>input block of spectrum </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">signal</td><td>output block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a51a26a03af17c2b292fe54cceaff1406"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a51a26a03af17c2b292fe54cceaff1406">&#9670;&nbsp;</a></span>inverseAzimuthFFT()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a51a26a03af17c2b292fe54cceaff1406">&#9670;&nbsp;</a></span>inverseAzimuthFFT() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -557,8 +2486,167 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
+<a id="ac28a498746a9a6104285ddb63c215acb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac28a498746a9a6104285ddb63c215acb">&#9670;&nbsp;</a></span>inverseAzimuthFFT() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::inverseAzimuthFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for inverse FFT in azimuth direction for a block of data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">spectrum</td><td>input block of spectrum </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">signal</td><td>output block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ae5115e499aa93ca1ddd8bd7a856a8494"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae5115e499aa93ca1ddd8bd7a856a8494">&#9670;&nbsp;</a></span>inverseAzimuthFFT() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::inverseAzimuthFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for inverse FFT in azimuth direction for a block of data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">spectrum</td><td>input block of spectrum </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">signal</td><td>output block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a8fcc15ca58b558e9affc3823ce9b8d12"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8fcc15ca58b558e9affc3823ce9b8d12">&#9670;&nbsp;</a></span>inverseAzimuthFFT() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::inverseAzimuthFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for inverse FFT in azimuth direction for a block of data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">spectrum</td><td>input block of spectrum </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">signal</td><td>output block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a4ad75c09b749c04f0949b51f96d0e8c2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4ad75c09b749c04f0949b51f96d0e8c2">&#9670;&nbsp;</a></span>inverseRangeFFT()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ad75c09b749c04f0949b51f96d0e8c2">&#9670;&nbsp;</a></span>inverseRangeFFT() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -610,6 +2698,165 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
+<a id="a613e1b016eabbc92706e3066817315cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a613e1b016eabbc92706e3066817315cb">&#9670;&nbsp;</a></span>inverseRangeFFT() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::inverseRangeFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for backward FFT in range direction for a block of data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">spectrum</td><td>input block of spectrum </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">signal</td><td>output block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a0d05eb54f3b86c0645ef25f3a06dbee5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0d05eb54f3b86c0645ef25f3a06dbee5">&#9670;&nbsp;</a></span>inverseRangeFFT() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::inverseRangeFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for backward FFT in range direction for a block of data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">spectrum</td><td>input block of spectrum </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">signal</td><td>output block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a78b747522a267ce2fbe22a5cc155d210"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a78b747522a267ce2fbe22a5cc155d210">&#9670;&nbsp;</a></span>inverseRangeFFT() <span class="overload">[4/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::inverseRangeFFT </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt; *&#160;</td>
+          <td class="paramname"><em>spectrum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T *&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ncolumns</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nrows</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>initiate plan for backward FFT in range direction for a block of data </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">spectrum</td><td>input block of spectrum </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">signal</td><td>output block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ncolumns</td><td>number of columns of the block of data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nrows</td><td>number of rows of the block of data </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a46a99f0d46794440b29a5c7e558f04f2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a46a99f0d46794440b29a5c7e558f04f2">&#9670;&nbsp;</a></span>nextPowerOfTwo()</h2>
 
@@ -617,6 +2864,9 @@ template&lt;class T &gt; </div>
 <div class="memproto">
 <div class="memtemplate">
 template&lt;class T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::nextPowerOfTwo </td>
@@ -636,7 +2886,14 @@ template&lt;class T &gt; </div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
+
+<p>next power of two </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">N</td><td>the actual length of a signal </td></tr>
@@ -648,7 +2905,7 @@ template&lt;class T &gt; </div>
 </div>
 </div>
 <a id="a259eaa5b9c89404fcacb2e9caa29c246"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a259eaa5b9c89404fcacb2e9caa29c246">&#9670;&nbsp;</a></span>upsample()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a259eaa5b9c89404fcacb2e9caa29c246">&#9670;&nbsp;</a></span>upsample() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -701,6 +2958,74 @@ template&lt;class T &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">rows</td><td>number of rows of the block of input and upsampled data </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nfft</td><td>number of columns of the block of input data </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">upsampleFactor</td><td>upsampling factor </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a1c3c4b058c26b8f97aa589f0054a45a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1c3c4b058c26b8f97aa589f0054a45a0">&#9670;&nbsp;</a></span>upsample() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Signal.html">isce::signal::Signal</a>&lt; T &gt;::upsample </td>
+          <td>(</td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>signal</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>signalUpsampled</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>rows</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nfft</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>upsampleFactor</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; std::complex&lt; T &gt;&gt;&#160;</td>
+          <td class="paramname"><em>shiftImpact</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>upsampling a block of data in range direction and shifting the upsampled signal by a constant. </p>
+<p>The shift is applied by an inout linear phase term in frequency domain.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">signal</td><td>input block of data </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">signalUpsampled</td><td>output block of oversampled data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rows</td><td>number of rows of the block of input and upsampled data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nfft</td><td>number of columns of the block of input data </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">upsampleFactor</td><td>upsampling factor </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">shiftImpact</td><td>a linear phase term equivalent to a constant shift in time domain </td></tr>
   </table>
   </dd>
 </dl>
