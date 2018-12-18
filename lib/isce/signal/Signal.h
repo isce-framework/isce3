@@ -23,8 +23,7 @@ namespace isce {
     }
 }
 
-/** A class to handle 1D FFT in range and azimuth directions 
- *
+/** A class to handle 2D FFT or 1D FFT in range or azimuth directions 
  */
 template<class T> 
 class isce::signal::Signal {

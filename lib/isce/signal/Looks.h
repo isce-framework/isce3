@@ -14,6 +14,7 @@
 #include <portinfo>
 #include <pyre/journal.h>
 
+#include <isce/core/Utilities.h>
 #include <isce/io/Raster.h>
 
 namespace isce {
@@ -41,8 +42,8 @@ class isce::signal::Looks {
                         std::valarray<T> &output,
                         T noDataValue);
 
-        /** \brief Multi-looking an array of real data 
-         * a binary mask is used to mask the data before multilooking */
+        /** \brief Multi-looking an array of real data. 
+         * A binary mask is used to mask the data before multilooking */
         void multilook(std::valarray<T> &input,
             std::valarray<bool> &mask,
                         std::valarray<T> &output);

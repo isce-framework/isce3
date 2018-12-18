@@ -7,10 +7,13 @@
 #ifndef ISCE_CORE_UTILITIES_H
 #define ISCE_CORE_UTILITIES_H
 
+#include <algorithm>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <valarray>
 #include <complex>
 #include <cstdint>
 #include <gdal.h>
@@ -189,6 +192,67 @@ namespace isce { namespace core {
         // All done
         return meta;
     }
+
+    /** Combined absolute and relative tolerance test 
+     * @param[in] first first value
+     * @param[in] second second value
+     * @param[out] returns comparison result (true or false)
+     * */
+
+    template <typename T>
+    inline bool
+    compareFloatingPoint(T first, T second) {
+        const T scale = std::max({static_cast<T>(1.0), std::abs(first), std::abs(second)});
+        return std::abs(first - second) <= std::numeric_limits<T>::epsilon() * scale;
+    }
+
+    /** Tolerance test for real and imaginary components for scalar value 
+     * @param[in] first first complex value
+     * @param[in] second second complex value
+     * @param[out] returns comparison result (true or false)*/
+    template <typename T>
+    inline bool
+    compareComplex(std::complex<T> first, std::complex<T> second) {
+        return compareFloatingPoint(first.real(), second.real()) *
+                compareFloatingPoint(first.imag(), second.imag());
+    }
+
+    /** making a boolean mask for an array based on noDataValue
+     * @param[in] v inout array
+     * @param[in] noDataValue the value used to create the mask
+     * @param[out] returns a boolean mask */
+    template <typename T>
+    inline std::valarray<bool>
+    makeMask(const std::valarray<std::complex<T>> & v, std::complex<T> noDataValue) {
+        std::valarray<bool> mask(v.size());
+        for (size_t i = 0; i < v.size(); ++i) {
+            if (compareComplex(v[i], noDataValue)) {
+                mask[i] = false;
+            } else {
+                mask[i] = true;
+            }
+        }
+        return mask;
+    }
+
+    /** making a boolean mask for an array based on noDataValue
+     * @param[in] v inout array
+     * @param[in] noDataValue the value used to create the mask
+     * @param[out] returns a boolean mask */
+    template <typename T>
+    inline std::valarray<bool>
+    makeMask(const std::valarray<T> & v, T noDataValue) {
+        std::valarray<bool> mask(v.size());
+        for (size_t i = 0; i < v.size(); ++i) {
+            if (compareFloatingPoint(v[i], noDataValue)) {
+                mask[i] = false;
+            } else {
+                mask[i] = true;
+            }
+        }
+        return mask;
+    }
+
 
 }}
 

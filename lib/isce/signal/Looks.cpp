@@ -79,14 +79,11 @@ multilook(std::valarray<T> &input,
     // Multi-looking an array while taking into account the noDataValue.
     // Pixels whose value equals "noDataValue" is excluded in mult-looking.
 
-    // create a boolean mask array with the same size of the input array 
+    // a buffer for a boolean mask with the same size of the input array 
     std::valarray<bool> mask(input.size());
 
-    // by default all pixels are used 
-    mask = true;
-
-    // exclude pixels with noDataValue
-    mask[input==noDataValue] = false;
+    // create the mask. (mask[input==noDataValue] = false) 
+    mask = isce::core::makeMask(input, noDataValue);
 
     // perform multi-looking using the mask array
     multilook(input, mask, output);
@@ -235,9 +232,13 @@ multilook(std::valarray<std::complex<T>> &input,
             std::complex<T> noDataValue)
 {
 
+    // buffer for a boolean mask
     std::valarray<bool> mask(input.size());
-    mask = true;
-    mask[input == noDataValue] = false;
+
+    // create the mask. (mask[input==noDataValue] = false)
+    mask = isce::core::makeMask(input, noDataValue);
+
+    // multilooking 
     multilook(input, mask, output);
 
 }
