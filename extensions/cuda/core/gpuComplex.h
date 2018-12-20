@@ -20,30 +20,117 @@ template <class U>
         CUDA_HOSTDEV gpuComplex(): r(0.), i(0.) {};
         CUDA_HOSTDEV gpuComplex(U real): r(real), i(0.) {};
         CUDA_HOSTDEV gpuComplex(U real, U imag): r(real), i(imag) {};
-        CUDA_HOSTDEV gpuComplex<U>& operator+=(gpuComplex<U> const& other) {
-            r += other.r;
-            i += other.i;
-            return *this;
-        }
-        CUDA_HOSTDEV gpuComplex<U>& operator+=(double const& other) {
+
+        CUDA_HOSTDEV gpuComplex<U>& operator+=(float const& other) {
             r += other;
             return *this;
         }
-        CUDA_HOSTDEV gpuComplex<U>& operator-=(gpuComplex<U> const& other) {
-            r -= other.r;
-            i -= other.i;
+        CUDA_HOSTDEV gpuComplex<U>& operator-=(float const& other) {
+            r -= other;
+            return *this;
+        }
+        CUDA_HOSTDEV gpuComplex<U>& operator*=(float const& other) {
+            r *= other;
+            i *= other;
+            return *this;
+        }
+        CUDA_HOSTDEV gpuComplex<U>& operator/=(float const& other) {
+            r /= other;
+            i /= other;
+            return *this;
+        }
+
+        CUDA_HOSTDEV gpuComplex<U>& operator+=(double const& other) {
+            r += other;
             return *this;
         }
         CUDA_HOSTDEV gpuComplex<U>& operator-=(double const& other) {
             r -= other;
             return *this;
         }
+        CUDA_HOSTDEV gpuComplex<U>& operator*=(double const& other) {
+            r *= other;
+            i *= other;
+            return *this;
+        }
+        CUDA_HOSTDEV gpuComplex<U>& operator/=(double const& other) {
+            r /= other;
+            i /= other;
+            return *this;
+        }
+
+        CUDA_HOSTDEV gpuComplex<U>& operator+=(gpuComplex<float> const& other) {
+            r += other.r;
+            i += other.i;
+            return *this;
+        }
+        CUDA_HOSTDEV gpuComplex<U>& operator-=(gpuComplex<float> const& other) {
+            r -= other.r;
+            i -= other.i;
+            return *this;
+        }
+        CUDA_HOSTDEV gpuComplex<U>& operator*=(gpuComplex<float> const& other) {
+            r = r*other.r + i*other.i;
+            i = r*other.i + i*other.r;
+            return *this;
+        }
+        CUDA_HOSTDEV gpuComplex<U>& operator/=(gpuComplex<float> const& other) {
+            U s = fabsf(other.r + fabsf(other.i));
+            U oos = 1.0 / s;
+            U ars = r * oos;
+            U ais = i * oos;
+            U brs = other.r * oos;
+            U bis = other.i * oos;
+            s = (brs * brs) + (bis * bis);
+            oos = 1.0f / s;
+            return gpuComplex<U>(((ars * brs) + (ais * bis)) * oos,
+                                ((ais * brs) - (ars * bis)) * oos);
+        }
+
+        CUDA_HOSTDEV gpuComplex<U>& operator+=(gpuComplex<double> const& other) {
+            r += other.r;
+            i += other.i;
+            return *this;
+        }
+        CUDA_HOSTDEV gpuComplex<U>& operator-=(gpuComplex<double> const& other) {
+            r -= other.r;
+            i -= other.i;
+            return *this;
+        }
+        CUDA_HOSTDEV gpuComplex<U>& operator*=(gpuComplex<double> const& other) {
+            r = r*other.r + i*other.i;
+            i = r*other.i + i*other.r;
+            return *this;
+        }
+        CUDA_HOSTDEV gpuComplex<U>& operator/=(gpuComplex<double> const& other) {
+            U s = fabsf(other.r + fabsf(other.i));
+            U oos = 1.0 / s;
+            U ars = r * oos;
+            U ais = i * oos;
+            U brs = other.r * oos;
+            U bis = other.i * oos;
+            s = (brs * brs) + (bis * bis);
+            oos = 1.0f / s;
+            return gpuComplex<U>(((ars * brs) + (ais * bis)) * oos,
+                                ((ais * brs) - (ars * bis)) * oos);
+        }
+
     };
 
 // add
 template <class U>
 CUDA_HOSTDEV gpuComplex<U> operator +(gpuComplex<U> x, gpuComplex<U> y) {
     return gpuComplex<U>(x.r + y.r, x.i + y.i);
+}
+
+template <class U>
+CUDA_HOSTDEV gpuComplex<U> operator +(gpuComplex<U> x, float y) {
+    return gpuComplex<U>(x.r + y, x.i);
+}
+
+template <class U>
+CUDA_HOSTDEV gpuComplex<U> operator +(float x, gpuComplex<U> y) {
+    return gpuComplex<U>(x + y.r, y.i);
 }
 
 template <class U>
@@ -63,13 +150,23 @@ CUDA_HOSTDEV gpuComplex<U> operator -(gpuComplex<U> x, gpuComplex<U> y) {
 }
 
 template <class U>
+CUDA_HOSTDEV gpuComplex<U> operator -(gpuComplex<U> x, float y) {
+    return gpuComplex<U>(x.r - y, x.i);
+}
+
+template <class U>
+CUDA_HOSTDEV gpuComplex<U> operator -(float x, gpuComplex<U> y) {
+    return gpuComplex<U>(x - y.r, -y.i);
+}
+
+template <class U>
 CUDA_HOSTDEV gpuComplex<U> operator -(gpuComplex<U> x, double y) {
     return gpuComplex<U>(x.r - y, x.i);
 }
 
 template <class U>
 CUDA_HOSTDEV gpuComplex<U> operator -(double x, gpuComplex<U> y) {
-    return gpuComplex<U>(x - y.r, y.i);
+    return gpuComplex<U>(x - y.r, -y.i);
 }
 
 // multiply
@@ -79,13 +176,23 @@ CUDA_HOSTDEV gpuComplex<U> operator *(gpuComplex<U> x, gpuComplex<U> y) {
 }
 
 template <class U>
+CUDA_HOSTDEV gpuComplex<U> operator *(gpuComplex<U> x, float y) {
+    return gpuComplex<U>(x.r*y, x.i*y);
+}
+
+template <class U>
+CUDA_HOSTDEV gpuComplex<U> operator *(float x, gpuComplex<U> y) {
+    return gpuComplex<U>(x*y.r, x*y.i);
+}
+
+template <class U>
 CUDA_HOSTDEV gpuComplex<U> operator *(gpuComplex<U> x, double y) {
-    return gpuComplex<U>(x.r*y, x.r*y);
+    return gpuComplex<U>(x.r*y, x.i*y);
 }
 
 template <class U>
 CUDA_HOSTDEV gpuComplex<U> operator *(double x, gpuComplex<U> y) {
-    return gpuComplex<U>(x*y.r, x*y);
+    return gpuComplex<U>(x*y.r, x*y.i);
 }
 
 // divide
