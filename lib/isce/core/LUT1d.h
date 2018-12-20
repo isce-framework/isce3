@@ -12,7 +12,6 @@
 #include <valarray>
 
 // pyre
-#include <portinfo>
 #include <pyre/journal.h>
 
 // Declaration
