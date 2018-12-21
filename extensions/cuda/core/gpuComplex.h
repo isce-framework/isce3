@@ -98,7 +98,7 @@ template <class U>
             return *this;
         }
         CUDA_HOSTDEV gpuComplex<U>& operator*=(gpuComplex<double> const& other) {
-            r = r*other.r + i*other.i;
+            r = r*other.r - i*other.i;
             i = r*other.i + i*other.r;
             return *this;
         }
@@ -172,7 +172,7 @@ CUDA_HOSTDEV gpuComplex<U> operator -(double x, gpuComplex<U> y) {
 // multiply
 template <class U>
 CUDA_HOSTDEV gpuComplex<U> operator *(gpuComplex<U> x, gpuComplex<U> y) {
-    return gpuComplex<U>(x.r*y.r + x.i*y.i, x.r*y.i + x.i*y.r);
+    return gpuComplex<U>(x.r*y.r - x.i*y.i, x.r*y.i + x.i*y.r);
 }
 
 template <class U>
