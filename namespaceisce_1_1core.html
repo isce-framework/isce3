@@ -353,6 +353,22 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a4123e8e839c6bc00ea12744cf8781f3a"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a4123e8e839c6bc00ea12744cf8781f3a">stringFromVRT</a> (const char *filename, int bandNum=1)</td></tr>
 <tr class="memdesc:a4123e8e839c6bc00ea12744cf8781f3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read metadata from a VRT file and return an std::string.  <a href="#a4123e8e839c6bc00ea12744cf8781f3a">More...</a><br /></td></tr>
 <tr class="separator:a4123e8e839c6bc00ea12744cf8781f3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac18b3e621f399811a3e54baafd30c8f2"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ac18b3e621f399811a3e54baafd30c8f2"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">compareFloatingPoint</a> (T first, T second)</td></tr>
+<tr class="memdesc:ac18b3e621f399811a3e54baafd30c8f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Combined absolute and relative tolerance test.  <a href="#ac18b3e621f399811a3e54baafd30c8f2">More...</a><br /></td></tr>
+<tr class="separator:ac18b3e621f399811a3e54baafd30c8f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5eda98731f7f62fce5c7f428f0e61a5"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:af5eda98731f7f62fce5c7f428f0e61a5"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#af5eda98731f7f62fce5c7f428f0e61a5">compareComplex</a> (std::complex&lt; T &gt; first, std::complex&lt; T &gt; second)</td></tr>
+<tr class="memdesc:af5eda98731f7f62fce5c7f428f0e61a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tolerance test for real and imaginary components for scalar value.  <a href="#af5eda98731f7f62fce5c7f428f0e61a5">More...</a><br /></td></tr>
+<tr class="separator:af5eda98731f7f62fce5c7f428f0e61a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55c1c561c113f7d0aeead8d9e772403e"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a55c1c561c113f7d0aeead8d9e772403e"><td class="memTemplItemLeft" align="right" valign="top">std::valarray&lt; bool &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a55c1c561c113f7d0aeead8d9e772403e">makeMask</a> (const std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;v, std::complex&lt; T &gt; noDataValue)</td></tr>
+<tr class="memdesc:a55c1c561c113f7d0aeead8d9e772403e"><td class="mdescLeft">&#160;</td><td class="mdescRight">making a boolean mask for an array based on noDataValue  <a href="#a55c1c561c113f7d0aeead8d9e772403e">More...</a><br /></td></tr>
+<tr class="separator:a55c1c561c113f7d0aeead8d9e772403e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f15714f1c3862ea7655253bd0cf750e"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a1f15714f1c3862ea7655253bd0cf750e"><td class="memTemplItemLeft" align="right" valign="top">std::valarray&lt; bool &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a1f15714f1c3862ea7655253bd0cf750e">makeMask</a> (const std::valarray&lt; T &gt; &amp;v, T noDataValue)</td></tr>
+<tr class="memdesc:a1f15714f1c3862ea7655253bd0cf750e"><td class="mdescLeft">&#160;</td><td class="mdescRight">making a boolean mask for an array based on noDataValue  <a href="#a1f15714f1c3862ea7655253bd0cf750e">More...</a><br /></td></tr>
+<tr class="separator:a1f15714f1c3862ea7655253bd0cf750e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
@@ -513,6 +529,102 @@ template&lt;typename T &gt; </div>
 
 <p>Inline function for input checking on vector lengths (primarily to check to see if 3D vector has the correct number of inputs, but is generalized to any length). </p>
 <p>'vec_name' is passed in by the wrapper macro (stringified vector name), and 'parent_func' is passed in the same way through <b>PRETTY_FUNCTION</b> </p>
+
+</div>
+</div>
+<a id="af5eda98731f7f62fce5c7f428f0e61a5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af5eda98731f7f62fce5c7f428f0e61a5">&#9670;&nbsp;</a></span>compareComplex()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool isce::core::compareComplex </td>
+          <td>(</td>
+          <td class="paramtype">std::complex&lt; T &gt;&#160;</td>
+          <td class="paramname"><em>first</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt;&#160;</td>
+          <td class="paramname"><em>second</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Tolerance test for real and imaginary components for scalar value. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">first</td><td>first complex value </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">second</td><td>second complex value </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">returns</td><td>comparison result (true or false) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ac18b3e621f399811a3e54baafd30c8f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac18b3e621f399811a3e54baafd30c8f2">&#9670;&nbsp;</a></span>compareFloatingPoint()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool isce::core::compareFloatingPoint </td>
+          <td>(</td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>first</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>second</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Combined absolute and relative tolerance test. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">first</td><td>first value </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">second</td><td>second value </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">returns</td><td>comparison result (true or false) </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -893,6 +1005,102 @@ template&lt;typename T &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">last</td><td>base^last is the ending value of the vector </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">Number</td><td>of vector elements </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">base</td><td>Base of the log space </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a55c1c561c113f7d0aeead8d9e772403e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a55c1c561c113f7d0aeead8d9e772403e">&#9670;&nbsp;</a></span>makeMask() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::valarray&lt;bool&gt; isce::core::makeMask </td>
+          <td>(</td>
+          <td class="paramtype">const std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>v</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::complex&lt; T &gt;&#160;</td>
+          <td class="paramname"><em>noDataValue</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>making a boolean mask for an array based on noDataValue </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>inout array </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">noDataValue</td><td>the value used to create the mask </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">returns</td><td>a boolean mask </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a1f15714f1c3862ea7655253bd0cf750e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f15714f1c3862ea7655253bd0cf750e">&#9670;&nbsp;</a></span>makeMask() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::valarray&lt;bool&gt; isce::core::makeMask </td>
+          <td>(</td>
+          <td class="paramtype">const std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>v</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>noDataValue</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>making a boolean mask for an array based on noDataValue </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>inout array </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">noDataValue</td><td>the value used to create the mask </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">returns</td><td>a boolean mask </td></tr>
   </table>
   </dd>
 </dl>
