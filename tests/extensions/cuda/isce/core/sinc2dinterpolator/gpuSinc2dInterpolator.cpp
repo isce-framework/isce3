@@ -100,11 +100,9 @@ TEST_F(gpuSinc2dInterpolatorTest, Sinc2dFloat) {
     }
         
     cpu_z = cpuSinc2d.interpolate(xindex, yindex, chip);
-    printf("cpu_z %f %f\n", std::real(cpu_z), std::imag(cpu_z));
     gpuSinc2d.interpolate_h(indices, gpu_chip, start, delta, gpu_z);
 
     for (int i=0; i<2; ++i) {
-        printf("gpu_z %f %f\n", gpu_z[i].r, gpu_z[i].i);
         ASSERT_NEAR(gpu_z[i].r, std::real(cpu_z), 1.0e-8);
         ASSERT_NEAR(gpu_z[i].i, std::imag(cpu_z), 1.0e-8);
     }

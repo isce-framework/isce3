@@ -52,6 +52,7 @@ __host__ gpuSinc2dInterpolator<U>::gpuSinc2dInterpolator(int sincLen, int sincSu
 
     // Malloc device-side memory (this API is host-side only)
     checkCudaErrors(cudaMalloc(&kernel, filter.size()*sizeof(double)));
+
     // Copy Orbit data to device-side memory and keep device pointer in gpuOrbit object. Device-side 
     // copy constructor simply shallow-copies the device pointers when called
     checkCudaErrors(cudaMemcpy(kernel, &(h_kernel[0]), filter.size()*sizeof(double), cudaMemcpyHostToDevice));
@@ -81,6 +82,10 @@ template <class U>
 __host__ void gpuSinc2dInterpolator<U>::interpolate_h(const Matrix<double>& truth, Matrix<U>& m, double start, double delta, U* h_z) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread for consistency checking
+        truth = indices to interpolate to
+        m = chip
+        start, delta = unused
+        h_z = output
      */
 
     // allocate host side memory
@@ -91,14 +96,14 @@ __host__ void gpuSinc2dInterpolator<U>::interpolate_h(const Matrix<double>& trut
 
     // assign host side inputs
     for (size_t i = 0; i < truth.length(); ++i) {
-        h_x[i] = (truth(i,0) - start) / delta;
-        h_y[i] = (truth(i,1) - start) / delta;
+        h_x[i] = truth(i,0);
+        h_y[i] = truth(i,1);
     }
 
     size_t nx = m.width();
     size_t ny = m.length();
 
-    // allocate devie side memory
+    // allocate device side memory
     double *d_x;
     checkCudaErrors(cudaMalloc((void**)&d_x, size_input_pts));
     double *d_y;
@@ -148,9 +153,9 @@ gpuSinc2dInterpolator<U>::
 
 
 template <class U>
-__device__ U gpuSinc2dInterpolator<U>::interpolate(double x, double y, const U* z, size_t nx, size_t ny) {
+__device__ U gpuSinc2dInterpolator<U>::interpolate(double x, double y, const U* chip, size_t nx, size_t ny) {
     /*
-    definitions with respect to ResampSlc
+    definitions with respect to ResampSlc interpolate and sinc_eval_2d
     x   := fracAz
     y   := fracRg
     z   := chip
@@ -179,12 +184,11 @@ __device__ U gpuSinc2dInterpolator<U>::interpolate(double x, double y, const U* 
             int ifracx = min(max(0, int(frpx*kernel_length)), kernel_length-1);
             int ifracy = min(max(0, int(frpy*kernel_length)), kernel_length-1);
             // Compute weighted sum
-            // return _data[row*_width + column];
             for (int i = 0; i < kernel_width; i++) {
                 for (int j = 0; j < kernel_width; j++) {
-                    ret += z[(intpx-i)*nx + intpy - j]
-                         * kernel[ifracx*kernel_width + i]
-                         * kernel[ifracy*kernel_width + j];
+                    ret += chip[(intpy-i)*nx + intpx - j]
+                         * kernel[ifracy*kernel_width + i]
+                         * kernel[ifracx*kernel_width + j];
                 }
             }
         }
@@ -196,8 +200,10 @@ __device__ U gpuSinc2dInterpolator<U>::interpolate(double x, double y, const U* 
 
 template <class U>
 __host__ __device__ gpuSinc2dInterpolator<U>::~gpuSinc2dInterpolator() {
+#ifndef __CUDA_ARCH__
     if (owner)
         checkCudaErrors(cudaFree(kernel));
+#endif
 }
 
 /*
