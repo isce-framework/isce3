@@ -77,9 +77,10 @@ class gpuSinc2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
         // True if initialized from host, false if copy-constructed from gpuSinc2dInterpolator on device
         bool owner;
     public:
+        CUDA_HOSTDEV gpuSinc2dInterpolator(){};
         CUDA_HOST gpuSinc2dInterpolator(int sincLen, int sincSub);
         CUDA_DEV gpuSinc2dInterpolator(const gpuSinc2dInterpolator &i): 
-            kernel(i.kernel), kernel_length(i.kernel_length), kernel_width(i.kernel_width), 
+            kernel(i.kernel), kernel_length(i.kernel_length), kernel_width(i.kernel_width), sinc_half(i.sinc_half),
             intpx(i.intpx), intpy(i.intpy), owner(false) {};
         CUDA_HOSTDEV ~gpuSinc2dInterpolator();
         CUDA_HOST void sinc_coef(double, double, int, double, int, std::valarray<double>&);
