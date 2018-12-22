@@ -60,30 +60,21 @@ __host__ gpuSinc2dInterpolator<U>::gpuSinc2dInterpolator(int sincLen, int sincSu
 
 
 template <class U>
-__device__ void wrapper_d(gpuSinc2dInterpolator<U> interp, double x, double y, const U *z, U *value, size_t nx, size_t ny=0) {
-    /*
-     *  device side wrapper used to get map interfaces of actual device function to global test function
-     */
-    *value = interp.interpolate(x, y, z, nx, ny); 
-}
-
-
-template <class U>
 __global__ void gpuInterpolator_g(gpuSinc2dInterpolator<U> interp, double *x, double *y, const U *z, U *value, size_t nx, size_t ny=0) {
     /*
      *  GPU kernel to test interpolate() on the device for consistency.
+        z := chip
      */
     int i = threadIdx.x;
-    wrapper_d(interp, x[i], y[i], z, &value[i], nx, ny);
+    value[i] = interp.interpolate(x[i], y[i], z, nx, ny); 
 }
 
 
 template <class U>
-__host__ void gpuSinc2dInterpolator<U>::interpolate_h(const Matrix<double>& truth, Matrix<U>& m, double start, double delta, U* h_z) {
+__host__ void gpuSinc2dInterpolator<U>::interpolate_h(const Matrix<double>& truth, Matrix<U>& chip, double start, double delta, U* h_z) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread for consistency checking
         truth = indices to interpolate to
-        m = chip
         start, delta = unused
         h_z = output
      */
@@ -100,8 +91,8 @@ __host__ void gpuSinc2dInterpolator<U>::interpolate_h(const Matrix<double>& trut
         h_y[i] = truth(i,1);
     }
 
-    size_t nx = m.width();
-    size_t ny = m.length();
+    size_t nx = chip.width();
+    size_t ny = chip.length();
 
     // allocate device side memory
     double *d_x;
@@ -110,17 +101,17 @@ __host__ void gpuSinc2dInterpolator<U>::interpolate_h(const Matrix<double>& trut
     checkCudaErrors(cudaMalloc((void**)&d_y, size_input_pts));
     U *d_z;
     checkCudaErrors(cudaMalloc((void**)&d_z, size_output_pts));
-    U *d_m;
-    checkCudaErrors(cudaMalloc((U**)&d_m, m.length()*m.width()*sizeof(U)));
+    U *d_chip;
+    checkCudaErrors(cudaMalloc((U**)&d_chip, chip.length()*chip.width()*sizeof(U)));
 
     // copy input data
     checkCudaErrors(cudaMemcpy(d_x, h_x, size_input_pts, cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(d_y, h_y, size_input_pts, cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaMemcpy(d_m, &m.data()[0], m.length()*m.width()*sizeof(U), cudaMemcpyHostToDevice)); 
+    checkCudaErrors(cudaMemcpy(d_chip, &chip.data()[0], chip.length()*chip.width()*sizeof(U), cudaMemcpyHostToDevice)); 
 
     // launch!
     int n_threads = truth.length();
-    gpuInterpolator_g<U><<<1, n_threads>>>(*this, d_x, d_y, d_m, d_z, nx, ny);
+    gpuInterpolator_g<U><<<1, n_threads>>>(*this, d_x, d_y, d_chip, d_z, nx, ny);
     
     // copy device results to host
     checkCudaErrors(cudaMemcpy(h_z, d_z, size_output_pts, cudaMemcpyDeviceToHost));
@@ -129,7 +120,7 @@ __host__ void gpuSinc2dInterpolator<U>::interpolate_h(const Matrix<double>& trut
     checkCudaErrors(cudaFree(d_x));
     checkCudaErrors(cudaFree(d_y));
     checkCudaErrors(cudaFree(d_z));
-    checkCudaErrors(cudaFree(d_m));
+    checkCudaErrors(cudaFree(d_chip));
 }
 
 
