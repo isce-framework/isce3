@@ -198,6 +198,8 @@ int main() {
 }
 \endcode
 
+For more examples see isce::signal::Crossmul and also multiple unit tests in isce/tests/lib/isce/signal.
+
 */
 
 
