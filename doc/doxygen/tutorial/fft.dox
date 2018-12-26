@@ -1,0 +1,205 @@
+/*! \page tutorial_fft FFT Tutorial
+
+\tableofcontents
+A higher level interface to FFTW3 library is available in ISCE3 through isce::signal::Signal. This templated Signal class allows to compute 1D fft in range or azimuth direction or 2D fft. Signal supports both real and complex data and can be applied on block of data.
+
+\section fftinclude Include headers
+
+The following header file is required:
+
+\code{.cpp}
+#include "isce/signal/Signal.h"
+\endcode
+
+\section signalconstruct Constructors
+Signal can be isntatiated for a multi-threaded FFT computation or for a signle thread computation.
+
+\subsection signalconstructsingle  single thread
+
+For computing forward and inverse FFT with signle thread on real or complex float data, one can instatiate Signal as follows:
+
+\code{.cpp}
+isce::signal::Signal<float> sig;
+\endcode
+
+Similarly for double precision real or complex data, one can instantiate an object of Signal as:
+
+\code{.cpp}
+isce::signal::Signal<double> sig;
+\endcode
+
+\subsection signalconstructmulti  Multi-threaded 
+For instantiating Signal to use the multi-threaded FFTW library, one can simply add the number of threads as follows: 
+
+\code{.cpp}
+int numThreads = 8;
+isce::signal::Signal<float> sig(numThreads);
+\endcode
+
+\section forward Forward FFT 
+For a forward transofrmation of a block of data, one needs to create the forward FFT plan which can be re-used many times for the actual transformation. To set up the FFT plans one need to have buffers defined for a block of data. For our applications we usually work on a two dimensional array of data. Given a block of data with number of lines of "length" and number of samples of "width" the required buffer can be defined as a std::valarray or as a raw pointer array:  
+
+\code{.cpp}
+// reserve memory for a block of data
+std::valarray<std::complex<float>> data(width*length);
+
+// reserve memory for the spectrum of the block of data
+std::valarray<std::complex<float>> spectrum(width*length);
+\endcode
+
+\subsection forwardrange Forward FFT in range direction (fast time)
+Assuming the range (fast time) direction to be over the columns of an array, the forward FFT plan in range direction can be created as:
+
+\code{.cpp}
+sig.forwardRangeFFT(data, spectrum, width, length);
+\endcode
+
+\subsection forwardazimuth Forward FFT in azimuth direction (slow time)
+Assuming the azimuth (slow time) direction to be over the rows of an array, the forward FFT plan in azimuth direction can be created as:
+
+\code{.cpp}
+sig.forwardAzimuthFFT(data, spectrum, width, length);
+\endcode
+
+
+\subsection forward2d Forward 2D FFT
+Similarly to create forward 2D FFT plan one can call the  
+
+\code{.cpp}
+sig.forward2DFFT(data, spectrum, width, length);
+\endcode
+
+\subsection forwardfwd Forward transformation
+Once the required FFT plan is created for 1D transform in range or azimuth direction or for 2D transform, then the actual transformation can be done by calling isce::signal::Signal::forward as:
+
+\code{.cpp}
+sig.forward(data, spectrum);
+\endcode
+
+Note that regardless of the created plan (range, azimuth or 2D), the transformation is computed using the same function.
+
+\section inverse Inverse FFT
+Similar to Forward transformation, equivalent interfaces exist for inverse FFT transformation of a block of the spectrum.
+
+\subsection inverserange Inverse FFT in range direction (fast time)
+Assuming the range (fast time) direction to be over the columns of an array, the inverse FFT plan in range direction can be created as:
+
+\code{.cpp}
+sig.inverseRangeFFT(spectrum, data, width, length);
+\endcode
+
+\subsection inverseazimuth Inverse FFT in azimuth direction (slow time)
+The inverse FFT plan in azimuth direction can be created as:
+
+\code{.cpp}
+sig.inverseAzimuthFFT(spectrum, data, width, length);
+\endcode
+
+\subsection inverse2d Inverse 2D FFT
+Similarly, to create inverse 2D FFT plan, one can create an inverse FFT plan as follows:
+
+\code{.cpp}
+sig.inverse2DFFT(spectrum, data, width, length);
+\endcode
+
+\subsection inverseinv Inverse transformation
+Once the required FFT plan is created for 1D transformation in range or azimuth direction or for 2D transformation, then the actual transformation can be done by calling isce::signal::Signal::inverse as:
+
+\code{.cpp}
+sig.inverse(spectrum, data);
+\endcode
+
+\section normalization Un-normalized transformations
+Signal, follows FFTW3 convention and keeps the un-normalized FFT transformations as computed by FFTW3. This means that a forward FFT followed by an inverse FFT or vise versa results in the original signal scaled by length of fft. Depending on 1D transformation in range, azimuth or 2D transformation one may normalize the final results by dividing by length of FFT. 
+
+Assuming the data and spectrum blocks with a shape of (length x width) as introduced above, normalizing the results of forwrd and backward  FFT computations in range, azimuth or 2D the final results should be divided by width, length or (widthxlength) respectively.
+
+
+\section nfft Length of FFT
+As described in FFTW3 documentation, FFTW is best at handling sizes of the form  \f$2^a\f$  \f$3^b\f$  \f$5^c\f$  \f$7^d\f$  \f$11^e\f$ \f$13^f\f$  2a 3b 5c 7d 11e 13f, where \f$e+f\f$ is either 0 or 1, and the other exponents are arbitrary. Other sizes are computed by means of a slow algorithm.
+Transforms whose sizes are powers of 2 are especially fast. Therefore a user of Signal may use isce::signal::Signal::nextPowerOfTwo to compute the efficient length of signal and zero pad the signal accordingly before setting FFT plans.
+
+
+\section upsample Upsampling a signal in range direction
+Signal provides a function isce::signal::Signal::upsample to upsample a block of data in range direction by a given oversampling factor.
+After creating the forward range FFT plan based on the original signal and the inverse range FFT plan based on the upsampled signal, then upsampling can be done by calling the upsample function. For example for a block of signal with shape of (nrows*width) zero padded to (nrows*nfft) where nfft is the next power of 2 for width, then the oversampling of the signal can be done as:
+
+\code{.cpp}
+
+sig.forwardRangeFFT(data, spectrum, nfft, nrows);
+
+sig.inverseRangeFFT(spectrumUpsampled, dataUpsampled, nfft*oversample, nrows);
+
+sig.upsample(data, dataUpsampled, nrows, nfft, oversample);
+
+\endcode
+
+In case if shifting the upsampled signal in time-domain by a constant is desired, one can calculate the liner phase ramp in frequency domain introduced by the constant shift and pass this shift imapct as an extra argument to upsample function directly
+
+\code{.cpp}
+
+sig.upsample(data, dataUpsampled, nrows, nfft, oversample, shiftImpact);
+
+\endcode
+
+\section example1 Example 1: forward and inverse FFT transformation in range direction
+
+\code{.cpp}
+
+#include "isce/signal/Signal.h"
+
+
+int main() {
+
+    \\ number of columns in the signal
+    int width = 100;
+
+    \\ number of rows in the signal
+    int length = 1;
+
+    // fft length for FFT computations
+    size_t nfft;
+
+    // instantiate a signal object
+    isce::signal::Signal<double> sig;
+
+    //compute FFT length     
+    sig.nextPowerOfTwo(width, nfft);
+
+    // reserve memory for a block of data with the size of nfft
+    std::valarray<std::complex<double>> data(nfft);
+
+    // buffer for the spectrum
+    std::valarray<std::complex<double>> spec(nfft);
+
+    // buffer for data after inverse transformation
+    std::valarray<std::complex<double>> dataInv(nfft);
+
+    // fill in the data 
+    for (size_t i=0; i<width; ++i){
+        double phase = std::sin(10*M_PI*i/width);
+        data[i] = std::complex<double> (std::cos(phase), std::sin(phase));
+    }
+
+    // create the forward and backward plans
+    sig.forwardRangeFFT(data, spec, nfft, length);
+    sig.inverseRangeFFT(spec, dataInv, nfft, length);
+    
+    // forward transforming the data. Result will be in spec
+    sig.forward(data, spec);
+
+    // backward transformation of spec. Result will be dataInv. 
+    sig.inverse(spec, dataInv);
+
+    // normalize dataInv by length of fft. After this normalization, dataInv should be comparable with original data. 
+    dataInv /=nfft; 
+
+    return 0;
+}
+\endcode
+
+*/
+
+
+
+
