@@ -13,6 +13,7 @@
 #include <iostream>
 #include <vector>
 #include <complex>
+#include <cstdlib>
 #include "gtest/gtest.h"
 
 #include "isce/core/Constants.h"
@@ -75,15 +76,16 @@ struct gpuSinc2dInterpolatorTest : public ::testing::Test {
 // Test sinc2d interpolation
 TEST_F(gpuSinc2dInterpolatorTest, Sinc2dFloat) {
     isce::core::Matrix<double> indices;
-    indices.resize(2,2);
-    for (int i = 0; i < 2; ++i) {
+    int n_instances = 1024;
+    indices.resize(n_instances,2);
+    for (int i = 0; i < n_instances; ++i) {
         indices(i,0) = xindex;
         indices(i,1) = yindex;
     }
 
     size_t N_pts = indices.length();
     double error = 0.0;
-    gpuComplex<float> gpu_z[2];
+    gpuComplex<float> gpu_z[n_instances];
     std::complex<float> cpu_z;
     
     // instantiate GPU and CPU class
@@ -102,7 +104,7 @@ TEST_F(gpuSinc2dInterpolatorTest, Sinc2dFloat) {
     cpu_z = cpuSinc2d.interpolate(xindex, yindex, chip);
     gpuSinc2d.interpolate_h(indices, gpu_chip, start, delta, gpu_z);
 
-    for (int i=0; i<2; ++i) {
+    for (int i=0; i<n_instances; ++i) {
         ASSERT_NEAR(gpu_z[i].r, std::real(cpu_z), 1.0e-8);
         ASSERT_NEAR(gpu_z[i].i, std::imag(cpu_z), 1.0e-8);
     }
