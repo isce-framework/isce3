@@ -154,7 +154,7 @@ __device__ U gpuSinc2dInterpolator<U>::interpolate(double x, double y, const U* 
     ny  := chip width
     */
     // Initialize return value
-    U ret(0.0);
+    U interp_val(0.0);
 
     // Separate interpolation coordinates into integer and fractional components
     const int ix = __double2int_rd(x);
@@ -162,8 +162,10 @@ __device__ U gpuSinc2dInterpolator<U>::interpolate(double x, double y, const U* 
     const double frpx = x - ix;
     const double frpy = y - iy;
 
-    if (!((ix < sinc_half) || (ix > (ny - sinc_half))) || 
-         ((iy < sinc_half) || (iy > (nx - sinc_half)))) {
+    // Check edge conditions
+    bool x_in_bounds = ((ix >= sinc_half) && (ix <= (ny - sinc_half)));
+    bool y_in_bounds = ((iy >= sinc_half) && (iy <= (nx - sinc_half)));
+    if (x_in_bounds && y_in_bounds) {
     
         // Modify integer interpolation coordinates for sinc evaluation
         const int intpx = ix + sinc_half - 1;
@@ -177,7 +179,7 @@ __device__ U gpuSinc2dInterpolator<U>::interpolate(double x, double y, const U* 
             // Compute weighted sum
             for (int i = 0; i < kernel_width; i++) {
                 for (int j = 0; j < kernel_width; j++) {
-                    ret += chip[(intpy-i)*nx + intpx - j]
+                    interp_val += chip[(intpy-i)*nx + intpx - j]
                          * kernel[ifracy*kernel_width + i]
                          * kernel[ifracx*kernel_width + j];
                 }
@@ -185,7 +187,7 @@ __device__ U gpuSinc2dInterpolator<U>::interpolate(double x, double y, const U* 
         }
     }
     // Done
-    return ret;
+    return interp_val;
 }
 
 
