@@ -47,8 +47,8 @@ TEST(Filter, constructAzimuthCommonbandFilter)
     isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
 
     // Get the Doppler polynomial and use it for both refernce and secondary SLCs
-    isce::core::Poly2d dop1 = instrument.contentDoppler();
-    isce::core::Poly2d dop2 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop1 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop2 = instrument.contentDoppler();
 
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;

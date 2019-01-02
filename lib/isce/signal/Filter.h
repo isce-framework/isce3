@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // -*- coding: utf-8 -*-
 //
-// Author: Heresh Fattahi
+// Author: Heresh Fattahi, Bryan Riel
 // Copyright 2018-
 //
 
@@ -13,7 +13,7 @@
 
 #include <isce/core/Constants.h>
 #include <isce/io/Raster.h>
-#include <isce/core/Poly2d.h>
+#include <isce/core/LUT1d.h>
 #include "Signal.h"
 
 // Declaration
@@ -32,12 +32,34 @@ class isce::signal::Filter {
 
         ~Filter() {};
 
+    /** constructs forward abd backward FFT plans for filtering a block of data in range direction. */
+        void initiateRangeFilter(std::valarray<std::complex<T>> &signal,
+                                std::valarray<std::complex<T>> &spectrum,
+                                size_t ncols,
+                                size_t nrows);
+
+        /** constructs forward abd backward FFT plans for filtering a block of data in azimuth direction. */
+        void initiateAzimuthFilter(std::valarray<std::complex<T>> &signal,
+                                std::valarray<std::complex<T>> &spectrum,
+                                size_t ncols,
+                                size_t nrows);
+
+        /** Sets an existing filter to be used by the filter object*/
+        //void setFilter(std::valarray<std::complex<T>>);
+
         /** Construct range band-pass filter*/
         void constructRangeBandpassFilter(double rangeSamplingFrequency,
                                         std::valarray<double> subBandCenterFrequencies,
                                         std::valarray<double> subBandBandwidths,
                                         std::valarray<std::complex<T>> &signal,
                                         std::valarray<std::complex<T>> &spectrum,
+                                        size_t ncols,
+                                        size_t nrows,
+                                        std::string filterType);
+
+        void constructRangeBandpassFilter(double rangeSamplingFrequency,
+                                        std::valarray<double> subBandCenterFrequencies,
+                                        std::valarray<double> subBandBandwidths,
                                         size_t ncols,
                                         size_t nrows,
                                         std::string filterType);
@@ -59,8 +81,8 @@ class isce::signal::Filter {
         //T constructRangeCommonbandFilter();
 
         /** Construct azimuth common band filter*/
-        void constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
-                                const isce::core::Poly2d & secDoppler,
+        void constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
+                                const isce::core::LUT1d<double> & secDoppler,
                                 double bandwidth,
                                 double prf,
                                 double beta,

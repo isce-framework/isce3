@@ -97,9 +97,9 @@ function(CheckOpenMP)
     FIND_PACKAGE(OpenMP)
 endfunction()
 
-#Check for nosetests
-function(CheckNosetests)
-    FIND_PACKAGE(Nosetests)
+#Check for pytest
+function(CheckPytest)
+    FIND_PACKAGE(Pytest)
 endfunction()
 
 function(InitInstallDirLayout)

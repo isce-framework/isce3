@@ -48,6 +48,20 @@ namespace isce {
             dataset.read(v);
         }
 
+        /** Load valarray dataset from HDF5 file.
+         *
+         * @param[in] file          HDF5 file or group object.
+         * @param[in] datasetPath   H5 path of dataset relative to h5obj.
+         * @param[in] v             Valarray to store dataset. */
+        template <typename H5obj, typename T>
+        inline void loadFromH5(H5obj & h5obj, const std::string & datasetPath,
+                               std::valarray<T> & v) {
+            // Open dataset
+            isce::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
+            // Read the vector dataset
+            dataset.read(v);
+        }
+
         /** Get dimensions of complex imagery from HDF5 file.
          *
          * @param[in] file          HDF5 file or group object.

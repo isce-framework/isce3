@@ -14,7 +14,7 @@
 *   @param[in] secSlcDoppler 2D Doppler polynomial for secondary SLC
 */
 void isce::signal::Crossmul::
-doppler(isce::core::Poly2d refSlcDoppler, isce::core::Poly2d secSlcDoppler)
+doppler(isce::core::LUT1d<double> refSlcDoppler, isce::core::LUT1d<double> secSlcDoppler)
 {
     
     _refDoppler = refSlcDoppler;
@@ -30,6 +30,40 @@ void isce::signal::Crossmul::
 prf(double prf)
 {
     _prf = prf;
+}
+
+/** @param[in] rngSamplingFreq range sampling frequency
+*/
+void isce::signal::Crossmul::
+rangeSamplingFrequency(double rngSamplingFreq)
+{
+    _rangeSamplingFrequency = rngSamplingFreq;
+}
+
+/** @param[in] rngBandwidth range bandwidth
+*/
+void isce::signal::Crossmul::
+rangeBandwidth(double rngBandwidth)
+{
+    _rangeBandwidth = rngBandwidth;
+
+}
+
+/** @param[in] rngPixelSpacing range pixel spacing
+*/
+void isce::signal::Crossmul::
+rangePixelSpacing(double rngPixelSpacing)
+{
+    _rangePixelSpacing = rngPixelSpacing;
+}
+
+
+/** @param[in] wvl radar wavelength
+*/
+void isce::signal::Crossmul::
+wavelength(double wvl)
+{
+    _wavelength = wvl;
 }
 
 /** @param[in] commonAzimuthBandwidth common azimuth bandwidth
@@ -55,6 +89,7 @@ void isce::signal::Crossmul::
 rangeLooks(int rangeLooks)
 {
     _rangeLooks = rangeLooks ;
+    _doMultiLook = true;
 }
 
 /** @param[in] azimuthLooks number of looks in azimuth direction
@@ -63,6 +98,7 @@ void isce::signal::Crossmul::
 azimuthLooks(int azimuthLooks)
 {
     _azimuthLooks = azimuthLooks ;
+    _doMultiLook = true;
 }
 
 /** @param[in] flag to mark if common azimuth band filtering should be applied
@@ -80,5 +116,67 @@ doCommonRangebandFiltering(bool flag )
     _doCommonRangebandFilter = flag ;
 }
 
+/** @param[in] refSpectrum the spectrum of a block of a complex data
+@param[in] secSpectrum the spectrum of a block of complex data 
+@param[in] rangeFrequencies the frequencies in range direction
+@param[in] blockRowsData number of rows in refSpectrum and secSpectrum
+@param[in] nfft number of columns in refSpectrum and secSpectrum
+@param[out] estimated frequency shift between refSpectrum and secSpectrum
+*/
+void isce::signal::Crossmul::
+rangeFrequencyShift(std::valarray<std::complex<float>> &refSpectrum,
+                    std::valarray<std::complex<float>> &secSpectrum,
+                    std::valarray<double> &rangeFrequencies,
+            size_t blockRowsData,
+            size_t nfft,
+                    double &frequencyShift)
+{
 
+    std::valarray<float> refAvgSpectrum(nfft); 
+    refAvgSpectrum = 0.0;
+    std::valarray<float> secAvgSpectrum(nfft); 
+    secAvgSpectrum = 0.0;
+
+    for (size_t line = 0; line < blockRowsData; ++line){
+        for (size_t col = 0; col < nfft; ++col){
+            refAvgSpectrum[col] += std::abs(refSpectrum[line*nfft + col]);
+            secAvgSpectrum[col] += std::abs(secSpectrum[line*nfft + col]);
+        }
+    }
+
+    // index of the max of refAvgSpectrum
+    size_t idx1;
+
+    // index of the max of secAvgSpectrum
+    size_t idx2;
+
+    // get the index of the max of refAvgSpectrum
+    getPeakIndex(refAvgSpectrum, idx1);
+
+    // get the index of the max of secAvgSpectrum
+    getPeakIndex(secAvgSpectrum, idx2);
+
+    std::cout << "idx1, idx2: "<< idx1 << " , " << idx2 <<  std::endl;
+
+    // frequency shift is the difference of the two peaks
+    frequencyShift = rangeFrequencies[idx1] - rangeFrequencies[idx2];
+
+}
+
+/**@param[in] data a vector to be evaluated for the index of its maximum
+@param[out] peakIndex index of the maximum value in data
+*/
+void isce::signal::Crossmul::
+getPeakIndex(std::valarray<float> data, size_t &peakIndex)
+{
+    size_t dataLength = data.size();
+    peakIndex = 0;
+    double peak = data[peakIndex];
+    for (size_t i = 1; i< dataLength;  ++i){
+        if (std::abs(data[i]) > peak){
+            peak = data[i];
+            peakIndex = i;
+        }
+    }
+}
 

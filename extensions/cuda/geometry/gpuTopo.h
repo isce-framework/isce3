@@ -9,7 +9,7 @@
 // isce::core
 #include "isce/core/Ellipsoid.h"
 #include "isce/core/Orbit.h"
-#include "isce/core/Poly2d.h"
+#include "isce/core/LUT1d.h"
 // isce::product
 #include  "isce/product/ImageMode.h"
 // isce::geometry
@@ -22,7 +22,7 @@ namespace isce {
             // C++ interface for running topo for a block of data on GPU
             void runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
                             const isce::core::Orbit & orbit,
-                            const isce::core::Poly2d & doppler,
+                            const isce::core::LUT1d<double> & doppler,
                             const isce::product::ImageMode & mode,
                             isce::geometry::DEMInterpolator & demInterp,
                             isce::geometry::TopoLayers & layers,

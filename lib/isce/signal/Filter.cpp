@@ -1,11 +1,48 @@
 // -*- C++ -*-
 // -*- coding: utf-8 -*-
 //
-// Author: Heresh Fattahi
+// Author: Heresh Fattahi, Bryan Riel
 // Copyright 2018-
 //
 
 #include "Filter.h"
+
+/**
+ * @param[in] signal a block of data to filte
+ * @param[in] spectrum a block of spectrum, which is internally used for FFT computations
+ * @param[in] ncols number of columns of the block of the data
+ * @param[in] nrows number of rows of the block of the data
+*/
+
+template <class T>
+void
+isce::signal::Filter<T>::
+initiateRangeFilter(std::valarray<std::complex<T>> &signal,
+                    std::valarray<std::complex<T>> &spectrum,
+                    size_t ncols,
+                    size_t nrows)
+{
+    _signal.forwardRangeFFT(signal, spectrum, ncols, nrows);
+    _signal.inverseRangeFFT(spectrum, signal, ncols, nrows);   
+}
+
+/**
+ * @param[in] signal a block of data to filte
+ * @param[in] spectrum a block of spectrum, which is internally used for FFT computations
+ * @param[in] ncols number of columns of the block of the data
+ * @param[in] nrows number of rows of the block of the data
+*/
+template <class T>
+void
+isce::signal::Filter<T>::
+initiateAzimuthFilter(std::valarray<std::complex<T>> &signal,
+                    std::valarray<std::complex<T>> &spectrum,
+                    size_t ncols,
+                    size_t nrows)
+{
+    _signal.forwardAzimuthFFT(signal, spectrum, ncols, nrows);
+    _signal.inverseAzimuthFFT(spectrum, signal, ncols, nrows);
+}
 
 /**
  * @param[in] rangeSamplingFrequency range sampling frequency
@@ -29,6 +66,28 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
                                 size_t nrows,
                                 std::string filterType)
 {
+    constructRangeBandpassFilter(rangeSamplingFrequency,
+                                subBandCenterFrequencies,
+                                subBandBandwidths,
+                                ncols,
+                                nrows,
+                                filterType);
+
+    _signal.forwardRangeFFT(signal, spectrum, ncols, nrows);
+    _signal.inverseRangeFFT(spectrum, signal, ncols, nrows);
+   
+}
+
+template <class T>
+void
+isce::signal::Filter<T>::
+constructRangeBandpassFilter(double rangeSamplingFrequency,
+                                std::valarray<double> subBandCenterFrequencies,
+                                std::valarray<double> subBandBandwidths,
+                                size_t ncols,
+                                size_t nrows,
+                                std::string filterType)
+{
 
     int nfft = ncols;
 
@@ -44,10 +103,10 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
         constructRangeBandpassBoxcar(
                             subBandCenterFrequencies,
                             subBandBandwidths,
-			    dt,
+                            dt,
                             nfft,
-	                    _filter1D);
-        
+                            _filter1D);
+
     } else if (filterType=="cosine"){
         double beta = 0.25;
         constructRangeBandpassCosine(subBandCenterFrequencies,
@@ -55,12 +114,12 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
                             dt,
                             frequency,
                             beta,
-                            _filter1D); 
+                            _filter1D);
 
     } else {
         std::cout << filterType << " filter has not been implemented" << std::endl;
     }
-    
+
     //construct a block of the filter
     for (size_t line = 0; line < nrows; line++ ){
         for (size_t col = 0; col < nfft; col++ ){
@@ -68,10 +127,8 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
         }
     }
 
-    _signal.forwardRangeFFT(signal, spectrum, ncols, nrows);
-    _signal.inverseRangeFFT(spectrum, signal, ncols, nrows);
-   
 }
+
 
 /**
  * @param[in] subBandCenterFrequencies a vector of center frequencies for each band
@@ -142,7 +199,7 @@ constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
                              std::valarray<std::complex<T>>& _filter1D)
 {
 
-    const double norm = 1.0;	
+    const double norm = 1.0;    
     
     for (size_t i = 0; i<subBandCenterFrequencies.size(); ++i){
         double fmid = subBandCenterFrequencies[i];
@@ -163,15 +220,15 @@ constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
                                     (1.0 + std::cos(M_PI / (bandwidth*beta) *
                                     (freq - 0.5 * (1.0 - beta) * bandwidth))), 0.0);
 
-	    }
+            }
         }
 
     }
 }
 
 /**
-* @param[in] refDoppler Doppler polynomial of the reference SLC
-* @param[in] secDoppler Doppler polynomial of the secondary SLC
+* @param[in] refDoppler Doppler LUT1d of the reference SLC
+* @param[in] secDoppler Doppler LUT1d of the secondary SLC
 * @param[in] bandwidth common bandwidth in azimuth
 * @param[in] prf pulse repetition frequency
 * @param[in] beta parameter for raised cosine filter
@@ -183,8 +240,8 @@ constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
 template <class T>
 void
 isce::signal::Filter<T>::
-constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
-                        const isce::core::Poly2d & secDoppler,
+constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
+                        const isce::core::LUT1d<double> & secDoppler,
                         double bandwidth,
                         double prf,
                         double beta,
@@ -212,7 +269,7 @@ constructAzimuthCommonbandFilter(const isce::core::Poly2d & refDoppler,
     // Loop over range bins
     for (int j = 0; j < ncols; ++j) {
         // Compute center frequency of common band
-        const double fmid = 0.5 * (refDoppler.eval(0, j) + secDoppler.eval(0, j));
+        const double fmid = 0.5 * (refDoppler.eval(j) + secDoppler.eval(j));
 
         // Compute filter
         for (size_t i = 0; i < frequency.size(); ++i) {

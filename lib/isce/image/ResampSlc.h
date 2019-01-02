@@ -16,6 +16,7 @@
 // isce::core
 #include "isce/core/Interpolator.h"
 #include "isce/core/Poly2d.h"
+#include "isce/core/LUT1d.h"
 
 // isce::io
 #include "isce/io/Raster.h"
@@ -48,21 +49,21 @@ class isce::image::ResampSlc {
         inline ResampSlc();
         // Constructor from an isce::product::Product
         inline ResampSlc(const isce::product::Product &);
-        // Constructor from isce::core::Poly2d and isce::product::ImageMode
-        inline ResampSlc(const isce::core::Poly2d &, const isce::product::ImageMode &);
+        // Constructor from isce::core::LUT1d<double> and isce::product::ImageMode
+        inline ResampSlc(const isce::core::LUT1d<double> &, const isce::product::ImageMode &);
         // Constructor from isce::core objects
-        inline ResampSlc(const isce::core::Poly2d &, const isce::core::Metadata &);
+        inline ResampSlc(const isce::core::LUT1d<double> &, const isce::core::Metadata &);
         // Destructor
         inline ~ResampSlc();
 
-        // Polynomial getters
+        // Poly2d and LUT getters
         inline isce::core::Poly2d rgCarrier() const;
         inline isce::core::Poly2d azCarrier() const;
-        inline isce::core::Poly2d doppler() const;
-        // Polynomial setters
+        inline isce::core::LUT1d<double> doppler() const;
+        // Poly2d and LUT setters
         inline void rgCarrier(isce::core::Poly2d &);
         inline void azCarrier(isce::core::Poly2d &);
-        inline void doppler(isce::core::Poly2d &);
+        inline void doppler(isce::core::LUT1d<double> &);
 
         // Set reference product for flattening
         inline void referenceProduct(const isce::product::Product &);
@@ -109,10 +110,10 @@ class isce::image::ResampSlc {
         // Interpolator pointer
         isce::core::Interpolator<std::complex<float>> * _interp;
 
-        // Polynomials
+        // Polynomials and LUTs
         isce::core::Poly2d _rgCarrier;            // range carrier polynomial
         isce::core::Poly2d _azCarrier;            // azimuth carrier polynomial
-        isce::core::Poly2d _dopplerPoly;          // Doppler polynomial
+        isce::core::LUT1d<double> _dopplerLUT;    // Doppler LUT
 
         // ImageMode
         isce::product::ImageMode _mode;       // image mode for image to be resampled

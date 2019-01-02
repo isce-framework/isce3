@@ -16,6 +16,6 @@ all: test
 test: raster
 
 raster:
-	nosetests ./raster.py
+	${PYTHON} -m pytest ./raster.py
 
 # end of file

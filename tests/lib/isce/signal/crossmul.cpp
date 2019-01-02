@@ -33,6 +33,7 @@ TEST(Crossmul, RunCrossmul)
     // a raster object for the interferogram
     isce::io::Raster interferogram("/vsimem/igram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
+    isce::io::Raster coherence("/vsimem/coherence.bin.", width, length, 1, GDT_Float32, "ISCE");
     // HDF5 file with required metadata
     std::string h5file("../data/envisat.h5");
     
@@ -49,11 +50,11 @@ TEST(Crossmul, RunCrossmul)
     isce::radar::loadFromH5(group, instrument);
 
     // get the Doppler polynomial for refernce SLC
-    isce::core::Poly2d dop1 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop1 = instrument.contentDoppler();
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
-    isce::core::Poly2d dop2 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop2 = instrument.contentDoppler();
 
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;
@@ -92,7 +93,7 @@ TEST(Crossmul, RunCrossmul)
     crsmul.doCommonAzimuthbandFiltering(false);
 
     // running crossmul
-    crsmul.crossmul(referenceSlc, referenceSlc, interferogram);
+    crsmul.crossmul(referenceSlc, referenceSlc, interferogram, coherence);
 
     // an array for the computed interferogram
     std::valarray<std::complex<float>> data(width*length);
@@ -130,6 +131,8 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     // a raster object for the interferogram
     isce::io::Raster interferogram("/vsimem/igram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
+    isce::io::Raster coherence("/vsimem/coherence.bin.", width, length, 1, GDT_Float32, "ISCE");
+
     // HDF5 file with required metadata
     std::string h5file("../data/envisat.h5");
 
@@ -146,11 +149,11 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     isce::radar::loadFromH5(group, instrument);
 
     // get the Doppler polynomial for refernce SLC
-    isce::core::Poly2d dop1 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop1 = instrument.contentDoppler();
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
-    isce::core::Poly2d dop2 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop2 = instrument.contentDoppler();
 
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;
@@ -192,7 +195,7 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     crsmul.doCommonAzimuthbandFiltering(true);
 
     // running crossmul
-    crsmul.crossmul(referenceSlc, referenceSlc, interferogram);
+    crsmul.crossmul(referenceSlc, referenceSlc, interferogram, coherence);
 
     // an array for the computed interferogram
     std::valarray<std::complex<float>> data(width*length);
@@ -214,123 +217,6 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
 }
          
 
-TEST(Crossmul, CheckCrossmul)
-{
-
-    // a raster object for the reference SLC
-    isce::io::Raster referenceSlc("../data/warped_envisat.slc.vrt");
-
-    // get length and width
-    int width = referenceSlc.width();
-    int length = referenceSlc.length();
-
-    std::string h5file("../data/envisat.h5");
-    isce::io::IH5File file(h5file);
-
-    // Open group containing instrument data
-    isce::io::IGroup group = file.openGroup("/science/metadata/instrument_data");
-
-    isce::radar::Radar instrument;
-
-    // Deserialize the radar instrument
-    isce::radar::loadFromH5(group, instrument);
-
-    // extract the Doppler polynomial
-    isce::core::Poly2d dop1 = instrument.contentDoppler();
-    isce::core::Poly2d dop2 = instrument.contentDoppler();
-
-    // Instantiate an ImageMode object
-    isce::product::ImageMode mode;
-
-    // Open group for image mode
-    isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
-
-    // Deserialize the primary_mode
-    isce::product::loadFromH5(modeGroup, mode, "aux");
-
-
-    // get the wavelength
-    double wvl = mode.wavelength();
-
-    // get range spacing
-    double rngSpacing = mode.rangePixelSpacing();
-
-    
-    std::valarray<float> deltaR(width*length);
-    std::valarray<std::complex<float>> geometryPhase(width*length);
-    std::valarray<std::complex<float>> refSlc(width*length);
-    std::valarray<std::complex<float>> secSlc(width*length);
-
-    referenceSlc.getBlock(refSlc, 0 ,0, width, length);
-
-    for (size_t line = 0; line < length; ++line){
-        for (size_t col=0; col< width; ++col){
-            deltaR[line*width + col] = rngSpacing * col /100;
-            geometryPhase[line*width + col] = std::complex<float>(std::cos(deltaR[line*width + col]), std::sin(deltaR[line*width + col]));
-        }
-    }
-
-    // phase of the second slc is the sum of phase of first slc and the geometryPhase
-    secSlc = refSlc*geometryPhase;
-
-    /*
-    isce::io::Raster simInterferogram("simulatedIgram.int", width, length, 1, GDT_CFloat32, "ISCE");
-    simInterferogram.setBlock(geometryPhase, 0 ,0 , width, length);
-    */
-    
-    isce::io::Raster secondarySlc("/vsimem/secSlc.slc", width, length, 1, GDT_CFloat32, "ISCE");   
-    secondarySlc.setBlock(secSlc, 0 ,0 , width, length);
-    
-
-    isce::io::Raster interferogram("computedIgram.int", width, length, 1, GDT_CFloat32, "ISCE");
-
-    //instantiate the Crossmul class
-    isce::signal::Crossmul crsmul;
-
-    // set number of interferogram looks in range
-    crsmul.rangeLooks(1);
-
-    // set number of interferogram looks in azimuth
-    crsmul.azimuthLooks(1);
-
-    // set flag for performing common azimuthband filtering
-    crsmul.doCommonAzimuthbandFiltering(false);
-
-    // running crossmul
-    crsmul.crossmul(referenceSlc, secondarySlc, interferogram); 
-
-    // an array for the interferogram
-    std::valarray<std::complex<float>> data(width*length);
-
-    // get the generated interferogram
-    interferogram.getBlock(data, 0, 0, width, length);
-   
-
-    
-    double err = 0.0;
-    double max_err = 0.0;
-    int idx_max = 0;
-    
-    //don't evaluate the boundary of the interferogram for about 10 pixels
-    int edge=20;
-    
-    for (size_t line = edge; line< length - edge; ++line){
-	for (size_t col = edge; col< width - edge; ++col){
-	    size_t i = line*width + col;
-            err = std::arg(data[i]*(geometryPhase[i]));
-            if (std::abs(err) > max_err){
-                max_err = std::abs(err);
-                idx_max = i;
-            }
-        }
-    }
-
-    // needs better understanding of the impact of oversampling
-    // This threshold should be much smaller
-    ASSERT_LT(max_err, 6.0e-1);
-        
-
-}
 
 int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);
