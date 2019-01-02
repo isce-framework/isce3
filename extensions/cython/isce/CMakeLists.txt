@@ -14,6 +14,44 @@ set_source_files_properties(
     PROPERTIES CYTHON_IS_CXX TRUE
 )
 
+
+###Start by configuring all pxds build/cyinclude
+set(PXD_LIST    core/pyAttitude.pxd
+	        core/pyBasis.pxd
+	        core/pyDateTime.pxd
+	        core/pyDoppler.pxd
+	        core/pyEllipsoid.pxd
+	        core/pyInterpolator.pxd
+	        core/pyLinAlg.pxd
+	        core/pyOrbit.pxd
+	        core/pyPeg.pxd
+	        core/pyPegtrans.pxd
+	        core/pyPoly1d.pxd
+	        core/pyPoly2d.pxd
+	        core/pyPosition.pxd
+	        core/pyTimeDelta.pxd
+	        geometry/pyGeo2rdr.pxd
+	        geometry/pyTopo.pxd
+	        image/pyResampSlc.pxd
+	        io/pyGDAL.pxd
+	        io/pyIH5.pxd
+	        io/pyRaster.pxd
+	        product/pyComplexImagery.pxd
+	        product/pyIdentification.pxd
+	        product/pyImageMode.pxd
+	        product/pyMetadata.pxd
+	        product/pyProduct.pxd
+	        radar/pyRadar.pxd) 
+
+foreach(HFILE ${PXD_LIST})
+    get_filename_component(HFILE_BASE ${HFILE} NAME)
+    configure_file(
+        ${CMAKE_CURRENT_LIST_DIR}/${HFILE}
+        ${ISCE_BUILDCYINCLUDEDIR}/${HFILE_BASE}
+        COPYONLY)
+endforeach()
+
+
 # Add Cython module
 cython_add_module(isceextension isceextension.pyx)
 
