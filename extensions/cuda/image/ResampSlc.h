@@ -43,22 +43,20 @@ class isce::cuda::image::ResampSlc : public isce::image::ResampSlc {
         // Generic resamp entry point from externally created rasters
         void resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
                     isce::io::Raster & rgOffsetRaster, isce::io::Raster & azOffsetRaster,
-                    int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40);
+                    int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40, 
+                    int chipSize=isce::core::SINC_ONE);
 
         // Generic resamp entry point: use filenames to create rasters
         void resamp(const std::string & inputFilename, const std::string & outputFilename,
                     const std::string & rgOffsetFilename, const std::string & azOffsetFilename,
-                    int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40);
+                    int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40,
+                    int chipSize=isce::core::SINC_ONE);
 
         // Main product-based resamp entry point
         void resamp(const std::string & outputFilename, const std::string & polarization,
                     const std::string & rgOffsetFilename, const std::string & azOffsetFilename,
-                    bool flatten=false, bool isComplex=true, int rowBuffer=40);
-
-    // Data members
-    private:
-        // Number of lines per tile
-        size_t _linesPerTile = 1000;
+                    bool flatten=false, bool isComplex=true, int rowBuffer=40,
+                    int chipSize=isce::core::SINC_ONE);
 };
 
 #endif

@@ -20,6 +20,13 @@
 // isce::product
 #include "isce/product/Product.h"
 
+// isce::cuda::core
+#include "isce/cuda/core/gpuComplex.h"
+#include "isce/cuda/core/gpuInterpolator.h"
+
+using isce::cuda::core::gpuSinc2dInterpolator;
+using isce::cuda::core::gpuComplex;
+
 namespace isce {
     namespace cuda {
         namespace image {
@@ -35,7 +42,9 @@ namespace isce {
                                 isce::product::ImageMode mode,       // image mode for image to be resampled
                                 isce::product::ImageMode refMode,    // image mode for reference master image
                                 bool haveRefMode,
-                                int inLength, bool flatten);
+                                gpuSinc2dInterpolator<gpuComplex<float>> interp,
+                                int inLength, bool flatten, 
+                                int chipSize);
         }
     }
 }

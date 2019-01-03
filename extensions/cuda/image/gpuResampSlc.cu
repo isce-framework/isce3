@@ -10,8 +10,6 @@
 #include "isce/core/Poly2d.h"
 
 // isce::cuda::core
-#include "isce/cuda/core/gpuComplex.h"
-#include "isce/cuda/core/gpuInterpolator.h"
 #include "isce/cuda/core/gpuPoly2d.h"
 
 // isce::cuda::image
@@ -27,8 +25,6 @@ using isce::cuda::core::gpuSinc2dInterpolator;
 using isce::cuda::image::gpuImageMode;
 
 #define THRD_PER_BLOCK 512// Number of threads per block (should always %32==0)
-#define SINC_ONE 9
-#define SINC_HALF 4
 
 __global__
 void transformTile(const gpuComplex<float> *tile,
@@ -44,10 +40,13 @@ void transformTile(const gpuComplex<float> *tile,
                    gpuSinc2dInterpolator<gpuComplex<float>> interp,
                    bool flatten,
                    int outWidth,
-                   int outLength) {
+                   int outLength,
+                   int chipSize) {
 
     int iTileOut = blockDim.x * blockIdx.x + threadIdx.x;
-    int iChip = iTileOut * SINC_ONE * SINC_ONE;
+    int iChip = iTileOut * chipSize * chipSize;                                          
+    int chipHalf = chipSize/2;
+
     if (iTileOut < outWidth*outLength) {
         int i = iTileOut / outWidth;
         int j = iTileOut % outWidth;
@@ -64,8 +63,8 @@ void transformTile(const gpuComplex<float> *tile,
         const double fracRg = j + rgOff - intRg;
        
         // Check bounds again
-        bool intAzInBounds = !((intAz < SINC_HALF) || (intAz >= (outLength - SINC_HALF)));
-        bool intRgInBounds = !((intRg < SINC_HALF) || (intRg >= (outWidth - SINC_HALF)));
+        bool intAzInBounds = !((intAz < chipHalf) || (intAz >= (outLength - chipHalf)));
+        bool intRgInBounds = !((intRg < chipHalf) || (intRg >= (outWidth - chipHalf)));
 
         if (intAzInBounds && intRgInBounds) {
             // evaluate Doppler polynomial
@@ -91,24 +90,24 @@ void transformTile(const gpuComplex<float> *tile,
             phase = fmod(phase, 2.0*M_PI);
             
             // Read data chip without the carrier phases
-            for (int ii = 0; ii < SINC_ONE; ++ii) {
+            for (int ii = 0; ii < chipSize; ++ii) {
                 // Row to read from
-                const int chipRow = intAz + ii - SINC_HALF;
+                const int chipRow = intAz + ii - chipHalf;
                 // Carrier phase
                 const double phase = dop * (ii - 4.0);
                 const gpuComplex<float> cval(cos(phase), -sin(phase));
                 // Set the data values after removing doppler in azimuth
-                for (int jj = 0; jj < SINC_ONE; ++jj) {
+                for (int jj = 0; jj < chipSize; ++jj) {
                     // Column to read from
-                    const int chipCol = intRg + jj - SINC_HALF;
-                    chip[iChip + ii*SINC_ONE+jj] = tile[chipRow*outWidth+chipCol] * cval;
+                    const int chipCol = intRg + jj - chipHalf;
+                    chip[iChip + ii*chipSize+jj] = tile[chipRow*outWidth+chipCol] * cval;
                 }
             }
 
             // Interpolate chip
             //const gpuComplex<float> cval(1., 1.);
             const gpuComplex<float> cval = interp.interpolate(
-                SINC_HALF + fracRg + 1, SINC_HALF + fracAz + 1, &chip[iChip], SINC_ONE, SINC_ONE
+                chipHalf + fracRg + 1, chipHalf + fracAz + 1, &chip[iChip], chipSize, chipSize
             );
 
             // Add doppler to interpolated value and save
@@ -130,7 +129,8 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
                isce::product::ImageMode mode,       // image mode for image to be resampled
                isce::product::ImageMode refMode,    // image mode for reference master image
                bool haveRefMode,
-               int inLength, bool flatten) {
+               isce::cuda::core::gpuSinc2dInterpolator<gpuComplex<float>> interp,
+               int inLength, bool flatten, int chipSize) {
 
     // Cache geometry values
     const int outWidth = azOffTile.width();
@@ -154,13 +154,10 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
         gpuImageMode d_mode(refMode);
     gpuPoly2d d_doppler(doppler);
 
-    // initialize interpolator
-    gpuSinc2dInterpolator<gpuComplex<float>> d_interp(isce::core::SINC_LEN, isce::core::SINC_SUB);
-
     // allocate equivalent objects in device memory
     size_t nPixels = imgOut.size();
     size_t nTileBytes = nPixels * sizeof(gpuComplex<float>);
-    size_t nChipBytes = nTileBytes * SINC_ONE * SINC_ONE;
+    size_t nChipBytes = nTileBytes * chipSize * chipSize;
 
     checkCudaErrors(cudaMalloc(&d_tile, nTileBytes));
     checkCudaErrors(cudaMalloc(&d_chip, nChipBytes));
@@ -188,10 +185,11 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
                                    d_doppler, 
                                    d_mode, 
                                    d_refMode,
-                                   d_interp,
+                                   interp,
                                    flatten,
                                    outWidth,
-                                   outLength);
+                                   outLength,
+                                   chipSize);
 
     // Check for any kernel errors
     checkCudaErrors(cudaPeekAtLastError());
