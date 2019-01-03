@@ -115,37 +115,7 @@ fftw
 
 \section pyreinstall Installing pyre
 
-\subsection pyrebin Option 1: Install pyre binaries
-
-If pre-built pyre binaries are available, we can simply download the binaries and install them in the correct location. We will install pyre binaries in ${HOME}/tools/pyre.
-
-<ol>
-
-<li>Download the pyre binaries.
-\code{.sh}
-> cd ${HOME}/tools
-> curl -sSL http://pyre.orthologue.com/pyre-1.0.cpython-36m-x86_64-linux-gnu.zip -o pyre.zip
-\endcode
-
-<li>Unzip the zip file.
-\code{.sh}
-> cd ${HOME}/tools
-> mkdir pyre
-> cd pyre
-> unzip ../pyre.zip
-\endcode
-
-<li>Setup relevant environment variables
-\code{.sh}
-export PYREDIR=${HOME}/tools/pyre
-export PATH=$PYREDIR/bin:$PATH
-export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH
-export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
-\endcode
-
-</ol>
-
-\subsection pyresrc Option 2: Install pyre from source
+\subsection pyresrc Option 1: Install pyre from source
 
 In order to install pyre from source, we must first download the config package which is a Python-based build system built on top of GNU `make`.
 \code{.sh}
@@ -208,7 +178,11 @@ PYTHON_LIB = python3.7m
 PYTHON_LIBDIR = $(PYTHON_DIR)/lib
 PYTHON_PYCFLAGS = -b
 \endcode
-We can install pyre with the following command:
+At the moment, we need to comment out one set of tests that fails for several platforms. Run the following command from the top-level directory:
+\code{.sh}
+sed -i 's|externals|#externals|g' tests/pyre/Make.mm
+\endcode
+Finally, we can install pyre with the following command:
 \code{.sh}
 > mm
 \endcode
@@ -219,6 +193,36 @@ export PATH=$PYREDIR/bin:$PATH
 export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH
 export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
 \endcode
+
+\subsection pyrebin Option 2: Install pyre binaries (warning: currently not available)
+
+If pre-built pyre binaries are available, we can simply download the binaries and install them in the correct location. We will install pyre binaries in ${HOME}/tools/pyre.
+
+<ol>
+
+<li>Download the pyre binaries.
+\code{.sh}
+> cd ${HOME}/tools
+> curl -sSL http://pyre.orthologue.com/pyre-1.0.cpython-36m-x86_64-linux-gnu.zip -o pyre.zip
+\endcode
+
+<li>Unzip the zip file.
+\code{.sh}
+> cd ${HOME}/tools
+> mkdir pyre
+> cd pyre
+> unzip ../pyre.zip
+\endcode
+
+<li>Setup relevant environment variables
+\code{.sh}
+export PYREDIR=${HOME}/tools/pyre
+export PATH=$PYREDIR/bin:$PATH
+export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH
+export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
+\endcode
+
+</ol>
 
 \section isce3linux Install ISCE from source
 
@@ -269,7 +273,10 @@ In this section we will walk through the directory setup and build system instru
 > cd build
 \endcode
 
-<li> Ensure that you have activated the scl environment (Centos), conda and set environment variables needed by pyre following instructions provided above. Note: for some operating systems, if you wish to build the CUDA extensions, you may need to run `export CUDACXX=/usr/local/cuda/bin/nvcc`.
+<li> Ensure that you have activated the scl environment (Centos), conda and set environment variables needed by pyre following instructions provided above. Note: for some operating systems, if you wish to build the CUDA extensions, you may need to run
+\code{.sh}
+export CUDACXX=/usr/local/cuda/bin/nvcc
+\endcode
 
 <li> Run cmake with the correct inputs
 \code{.sh}
@@ -323,6 +330,37 @@ Other optional arguments can be added to the cmake line
     <tr><td>PYTHONPATH<td>$PYTHONPATH:${HOME}/tools/isce/packages<td>ISCE python package
     <tr><td>LD_LIBRARY_PATH<td>$LD_LIBRARY_PATH:${HOME}/tools/isce/lib<td>Shared libraries built by ISCE
 </table>
+
+We also recommend setting these environment variables in your appropriate `.bashrc` or `.bash_profile` file to avoid having to set them for each new session. For example:
+
+\code{.sh}
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+. ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+# miniconda3
+export PATH=${HOME}/python/miniconda3/bin:$PATH
+export LD_LIBRARY_PATH=${HOME}/python/miniconda3/lib:$LD_LIBRARY_PATH
+
+# cuda
+export CUDACXX=/usr/local/cuda/bin/nvcc
+
+# pyre
+export PYREDIR=${HOME}/tools/pyre
+export PATH=$PYREDIR/bin:$PATH
+export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH
+export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
+
+# isce
+export PATH=$PATH:${HOME}/tools/isce/bin
+export PYTHONPATH=$PYTHONPATH:${HOME}/tools/isce/packages
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOME}/tools/isce/lib
+\endcode
 
 </ol>
 */
