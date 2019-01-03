@@ -1,7 +1,7 @@
 
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
-foreach (TESTNAME signal crossmul filter)
+foreach (TESTNAME signal crossmul filter multilook)
     add_executable(${TESTNAME} ${TESTNAME}.cpp)
     target_link_libraries(${TESTNAME} PUBLIC ${LISCE} gtest)
     target_include_directories(${TESTNAME} PUBLIC ${ISCE_BUILDINCLUDEDIR})

@@ -19,19 +19,22 @@ Crossmul(const isce::product::Product& referenceSlcProduct,
 * @param[in] referenceSLC Raster object of refernce SLC
 * @param[in] secondarySLC Raster object of secondary SLC
 * @param[out] interferogram Raster object of output interferogram
+* @param[out] coherence Raster object of output coherence
 */
 void isce::signal::Crossmul::
 crossmul(isce::io::Raster& referenceSLC,
         isce::io::Raster& secondarySLC,
-        isce::io::Raster& interferogram)
+        isce::io::Raster& interferogram,
+        isce::io::Raster& coherence)
 {
 
     _doCommonRangebandFilter = false;
     isce::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_CFloat32, "ENVI");
     crossmul(referenceSLC, 
-            secondarySLC, 
-            interferogram, 
-            rngOffsetRaster);
+            secondarySLC,
+            rngOffsetRaster,
+            interferogram,
+            coherence);
 
 }
 
@@ -40,12 +43,14 @@ crossmul(isce::io::Raster& referenceSLC,
 * @param[in] secondarySLC Raster object of secondary SLC
 * @param[in] rngOffsetRaster Raster object of range offsets between reference and secondary SLCs
 * @param[out] interferogram Raster object of output interferogram
+* @param[out] coherence Raster object of output coherence
 */
 void isce::signal::Crossmul::
 crossmul(isce::io::Raster& referenceSLC,
         isce::io::Raster& secondarySLC,
         isce::io::Raster& rngOffsetRaster,
-        isce::io::Raster& interferogram)
+        isce::io::Raster& interferogram,
+        isce::io::Raster& coherenceRaster)
 {
 
     // Create reusable pyre::journal channels
@@ -61,6 +66,24 @@ crossmul(isce::io::Raster& referenceSLC,
     //signal object for secSlc
     isce::signal::Signal<float> secSignal;
 
+    // instantiate Looks used for multi-looking the interferogram
+    isce::signal::Looks<float> looksObj;
+
+    // setting the parameters of the multi-looking oject
+    if (_doMultiLook){
+        // Making sure that the number of rows in each block (blockRows) 
+        // to be an integer number of azimuth looks.
+        blockRows = (blockRows/_azimuthLooks)*_azimuthLooks;
+    }
+    size_t blockRowsMultiLooked = blockRows/_azimuthLooks;
+    size_t ncolsMultiLooked = ncols/_rangeLooks;
+    looksObj.nrows(blockRows);
+    looksObj.ncols(ncols);
+    looksObj.rowsLooks(_azimuthLooks);
+    looksObj.colsLooks(_rangeLooks);
+    looksObj.nrowsLooked(blockRowsMultiLooked);
+    looksObj.ncolsLooked(ncolsMultiLooked);
+    
     // Compute FFT size (power of 2)
     size_t nfft;
     refSignal.nextPowerOfTwo(ncols, nfft);
@@ -114,6 +137,18 @@ crossmul(isce::io::Raster& referenceSLC,
     // full resolution interferogram
     std::valarray<std::complex<float>> ifgram(ncols*blockRows);
 
+    // multi-looked interferogram
+    std::valarray<std::complex<float>> ifgramMultiLooked(ncolsMultiLooked*blockRowsMultiLooked);
+
+    // multi-looked amplitude of reference SLC
+    std::valarray<float> refAmplitudeLooked(ncolsMultiLooked*blockRowsMultiLooked);
+
+    // multi-looked amplitude of secondary SLC
+    std::valarray<float> secAmplitudeLooked(ncolsMultiLooked*blockRowsMultiLooked);
+
+    // coherence for multi-looked interferogram
+    std::valarray<float> coherence(ncolsMultiLooked*blockRowsMultiLooked);
+
     // make forward and inverse fft plans for the reference SLC 
     refSignal.forwardRangeFFT(refSlc, refSpectrum, nfft, blockRows);
     refSignal.inverseRangeFFT(refSpectrumUpsampled, refSlcUpsampled, nfft*oversample, blockRows);
@@ -155,8 +190,6 @@ crossmul(isce::io::Raster& referenceSLC,
     // loop over all blocks
     std::cout << "nblocks : " << nblocks << std::endl;
 
-    isce::io::Raster testGeomIgramSpec("geometryIgramSpec.bin", nfft, nrows, 1, GDT_CFloat32, "ENVI");
-
     for (size_t block = 0; block < nblocks; ++block) {
         std::cout << "block: " << block << std::endl;       
         // start row for this block
@@ -169,7 +202,7 @@ crossmul(isce::io::Raster& referenceSLC,
         //e.g. if nrows = 512, and blockRows = 100, then 
         //blockRowsData for last block will be 12
         size_t blockRowsData;
-        if ((rowStart+blockRows)>nrows) {
+        if ((rowStart + blockRows) > nrows) {
             blockRowsData = nrows - rowStart;
         } else {
             blockRowsData = blockRows;
@@ -186,15 +219,12 @@ crossmul(isce::io::Raster& referenceSLC,
         // This will change once we have the functionality to 
         // get a block of data directly in to a slice
         std::valarray<std::complex<float>> dataLine(ncols);
-        std::valarray<double> offsetLine(ncols);
         for (size_t line = 0; line < blockRowsData; ++line){
             referenceSLC.getLine(dataLine, rowStart + line);
             refSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
 
             secondarySLC.getLine(dataLine, rowStart + line);
             secSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
-            rngOffsetRaster.getLine(offsetLine, rowStart + line);
-            rngOffset[std::slice(line*ncols, ncols, 1)] = offsetLine;
 
         }
         //referenceSLC.getBlock(refSlc, 0, rowStart, ncols, blockRowsData);
@@ -208,7 +238,13 @@ crossmul(isce::io::Raster& referenceSLC,
 
         // common range band-pass filtering
         if (_doCommonRangebandFilter){
-            
+            std::valarray<double> offsetLine(ncols);
+            for (size_t line = 0; line < blockRowsData; ++line){
+                rngOffsetRaster.getLine(offsetLine, rowStart + line);
+                rngOffset[std::slice(line*ncols, ncols, 1)] = offsetLine;
+            }
+
+            std::cout << "Common range band filtering " << std::endl;        
             for (size_t line = 0; line < blockRowsData; ++line){
                 for (size_t col = 0; col < ncols; ++col){
                     double phase = 4.0*M_PI*_rangePixelSpacing*rngOffset[line*ncols+col]/_wavelength;
@@ -234,6 +270,11 @@ crossmul(isce::io::Raster& referenceSLC,
                                 nfft);
                                 
         }
+        
+        looksObj.ncols(nfft);
+        // refAmplitudeLooked = sum(abs(refSlc)^2)
+        looksObj.multilook(refSlc, refAmplitudeLooked, 2);
+        looksObj.multilook(secSlc, secAmplitudeLooked, 2);
 
         // upsample the refernce and secondary SLCs
         refSignal.upsample(refSlc, refSlcUpsampled, blockRows, nfft, oversample, shiftImpact);
@@ -249,20 +290,37 @@ crossmul(isce::io::Raster& referenceSLC,
         }
 
         // Reclaim the extra oversample looks across
+        float ov = oversample;
         for (size_t line = 0; line < blockRowsData; line++){
             for (size_t col = 0; col < ncols; col++){
                 std::complex<float> sum =(0,0);
                 for (size_t j=0; j< oversample; j++)
                     sum += ifgramUpsampled[line*(ncols*oversample) + j + col*oversample];
-                ifgram[line*ncols + col] = sum;            
+                ifgram[line*ncols + col] = sum/ov;            
             }
         }
+    
 
-    // Take looks down (summing columns)
-        
-    // set the block of interferogram
-        interferogram.setBlock(ifgram, 0, rowStart, ncols, blockRowsData);
+        // Take looks down (summing columns)
+        if (_doMultiLook){
+            looksObj.ncols(ncols);
+            looksObj.multilook(ifgram, ifgramMultiLooked);
 
+            for (size_t i = 0; i< ifgramMultiLooked.size(); ++i){
+                coherence[i] = std::abs(ifgramMultiLooked[i])/
+                            std::sqrt(refAmplitudeLooked[i]*secAmplitudeLooked[i]);
+            }
+
+            interferogram.setBlock(ifgramMultiLooked, 0, rowStart/_azimuthLooks, 
+                        ncols/_rangeLooks, blockRowsData/_azimuthLooks);
+
+            coherenceRaster.setBlock(coherence, 0, rowStart/_azimuthLooks,
+                        ncols/_rangeLooks, blockRowsData/_azimuthLooks);
+        } else {
+
+            // set the block of interferogram
+            interferogram.setBlock(ifgram, 0, rowStart, ncols, blockRowsData);
+        }
     }
 }
 

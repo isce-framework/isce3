@@ -17,7 +17,7 @@
 #include <isce/core/LUT1d.h>
 #include "Signal.h"
 #include "Filter.h"
-
+#include "Looks.h"
 
 namespace isce {
     namespace signal {
@@ -47,12 +47,14 @@ class isce::signal::Crossmul {
         void crossmul(isce::io::Raster& referenceSLC,
                     isce::io::Raster& secondarySLC,
                     isce::io::Raster& rngOffset,
-                    isce::io::Raster& interferogram);
+                    isce::io::Raster& interferogram,
+                    isce::io::Raster& coherence);
 
         /** \brief Run crossmul */
         void crossmul(isce::io::Raster& referenceSLC, 
                     isce::io::Raster& secondarySLC,
-                    isce::io::Raster& interferogram);
+                    isce::io::Raster& interferogram,
+                    isce::io::Raster& coherence);
 
         /** Compute the frequency response due to a subpixel shift introduced by upsampling and downsampling*/
         void lookdownShiftImpact(size_t oversample, size_t nfft, 
@@ -152,22 +154,26 @@ class isce::signal::Crossmul {
         double _beta;
 
         // number of range looks
-        int _rangeLooks;
+        int _rangeLooks = 1;
 
         // number of azimuth looks
-        int _azimuthLooks;
+        int _azimuthLooks = 1;
+
+        bool _doMultiLook = false;
 
         // Flag for common azimuth band filtering
-        bool _doCommonAzimuthbandFilter;
+        bool _doCommonAzimuthbandFilter = false;
 
         // Flag for common range band filtering
-        bool _doCommonRangebandFilter;
+        bool _doCommonRangebandFilter = false;
 
         // number of lines per block
         size_t blockRows = 1000;
 
         // upsampling factor
-        size_t oversample = 2;
+        size_t oversample = 1;
+
+        
 };
 
 // Get inline implementations for Crossmul
