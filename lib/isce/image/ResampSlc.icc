@@ -188,9 +188,9 @@ _computeNumberOfTiles(int outLength, int linesPerTile) {
 
 // Prepare interpolation pointer
 void isce::image::ResampSlc::
-_prepareInterpMethods(isce::core::dataInterpMethod method) {
+_prepareInterpMethods(isce::core::dataInterpMethod method, int sinc_len) {
     _interp = new isce::core::Sinc2dInterpolator<std::complex<float>>(
-                  isce::core::SINC_LEN, isce::core::SINC_SUB);
+                  sinc_len, isce::core::SINC_SUB);
 }
 
 // end of file
