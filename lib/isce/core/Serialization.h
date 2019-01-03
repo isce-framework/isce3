@@ -18,7 +18,6 @@
 #include <cereal/archives/xml.hpp>
 
 // pyre
-#include <portinfo>
 #include <pyre/journal.h>
 
 // isce::core

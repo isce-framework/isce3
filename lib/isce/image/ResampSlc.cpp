@@ -11,7 +11,6 @@
 #include <cmath>
 
 // pyre
-#include <portinfo>
 #include <pyre/journal.h>
 
 // isce::core

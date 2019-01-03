@@ -72,6 +72,7 @@ function(CheckHDF5)
         # look for GCC version comment
         file(STRINGS "${hdf5_cpp}" gcc_comment REGEX "GCC:")
         if (gcc_comment)
+            string(REGEX REPLACE "\\(([^\\(]*)\\)" "" gcc_comment ${gcc_comment})
             string(REGEX MATCH "([0-9]|\\.)+" hdf5_gcc_version ${gcc_comment})
             if (hdf5_gcc_version AND hdf5_gcc_version VERSION_LESS "5.1.0")
                 message(WARNING "Using old glibc++ ABI "
