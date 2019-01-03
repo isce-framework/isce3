@@ -14,10 +14,7 @@ ISCE has the following dependencies
 <li> CUDA 9.0 or above (for GPU-based processing)
 </ol>
 
-Centos 7.5 is the operational OS for the NISAR processing system and this is probably the most tested set of instructions. In this set of instructions, we directly use the x86_64 binaries provided on the pyre website and do not compile the package from source. 
-
-The instructions for Centos 7.5 / Ubuntu 18.04 are more or less the same except for the parts specific to using the standard package managers to install compilers and some basic packages.
-
+Centos 7.5 is the operational OS for the NISAR processing system and this is probably the most tested set of instructions. The instructions for Centos 7.5 / Ubuntu 18.04 are more or less the same except for the parts specific to using the standard package managers to install compilers and some basic packages.
 
 \section linuxpack Installing packages using builtin package manager
 
@@ -71,7 +68,7 @@ If CUDA support is desired, install the following set of packages with apt-get a
 
 \section conda Installing Anaconda and Python packages
 
-In this set of instructions, we rely on <a href="https://anaconda.org/">Anaconda</a> for installing Python dependencies. We will install Python3 to the location /home/username/python/anaconda3. 
+In this set of instructions, we rely on <a href="https://anaconda.org/">Anaconda</a> for installing Python dependencies. We will install Python3 to the location /home/username/python/anaconda3. We recommend that users install packages only from the default Anaconda channel (e.g., not from conda-forge) in order to avoid C++ linking conflicts during compilation of pyre and ISCE.
 
 <ol>
 <li> We will list all the required packages in a text file called "requirements.txt" located under /home/tools/python. The contents of the requirements.txt file is shown below:
@@ -95,21 +92,22 @@ fftw
 > bash miniconda.sh -b -p /home/username/python/anaconda3
 > touch /home/username/python/anaconda3/conda-meta/pinned
 > export PATH=/home/username/python/anaconda3/bin:$PATH
+> export LD_LIBRARY_PATH=/home/username/python/anaconda3/lib:$LD_LIBRARY_PATH
 > conda config --set show_channel_urls True
-> conda config --add channels conda-forge 
-> conda update --all --yes
-> conda install --yes --file /home/username/python/requirements.txt
-#> conda install --yes -c conda-forge/label/broken gdal=2.3.1
+> conda update --all
+> conda install --file /home/username/python/requirements.txt
 \endcode
 
-<li> Activate the conda root environment
+
+<li> (Optional) On some systems, it may be necessary to activate the conda root environment in order to export important environment variables used by make, cmake, etc. To activate the environment, use:
 \verbatim
 > . /home/username/python/anaconda3/bin/activate root
 \endverbatim
 </ol>
 
+\section pyreinstall Installing pyre
 
-\section pyrebin Installing pyre binaries
+\subsection pyrebin Option 1: Install pyre binaries
 
 We will install pyre binaries in /home/username/tools/pyre.
 
@@ -139,8 +137,82 @@ export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
 
 </ol>
 
+\subsection pyresrc Option 2: Install pyre from source
 
-\section isce3linux Install ISCE3 from source
+In order to install pyre from source, we must first download the config package which is a Python-based build system built on top of GNU `make`.
+\code{.sh}
+> cd /home/username/tools
+> git clone https://github.com/aivazis/config.git
+\endcode
+In order to use config, it is recommended to add the following aliases to the startup files for your shell:
+\code{.sh}
+alias mm='python3 ${HOME}/tools/config/make/mm.py'
+alias mm.env='mm --env=sh'
+alias mm.show='mm --show --dry'
+alias mm.bldroot='mm --dry --quiet --show=BLD_ROOT'
+
+mm.paths() {
+    # get {mm} to print out the path variables and add them to the current environment
+    eval $(python3 ${HOME}/tools/config/make/mm.py --quiet --paths=sh $*)
+}
+\endcode
+Additionally, we would like to control where pyre get installed:
+\code{.sh}
+> cd ~
+> mkdir .mm
+> cd .mm
+> vi username.py
+\endcode
+where `username.py` is replaced with your username. The contents of the file are as follows:
+\code{.py}
+# support
+import os
+
+# adjust the {builder} with {developer} choices
+def developer(builder):
+    """
+    Decorate the builder with developer specific choices
+    """
+    # get the developer name
+    user = builder.user
+    # place temporary build files in my 'tmp' directory
+    builder.bldroot = os.path.join(user.home, 'tmp', 'builds')
+    # and the products in my 'tools/pyre' directory
+    builder.prefix = os.path.join(user.home, 'tools', 'pyre')
+
+# all done
+return builder
+\endcode
+Then, we can download the pyre source.
+\code{.sh}
+> cd /home/username/tools
+> mkdir pyre
+> cd pyre
+> git clone https://github.com/pyre/pyre.git src
+> cd src
+\endcode
+For the most basic pyre build, we must point config to the Python we wish to use (in this case, the Python included with our Miniconda distribution). To do this, once we are in the `src` directory, we create a file `.mm/config.def` with the following content:
+\code{.sh}
+PYTHON = python3.7m
+PYTHON_DIR = /home/username/python/anaconda3
+PYTHON_INCDIR = $(PYTHON_DIR)/include/python3.7m
+PYTHON_LIB = python3.7m
+PYTHON_LIBDIR = $(PYTHON_DIR)/lib
+PYTHON_PYCFLAGS = -b
+\endcode
+We can install pyre with the following command:
+\code{.sh}
+> mm
+\endcode
+Once installation and testing is complete, we setup the following environment variables:
+\code{.sh}
+export PYREDIR=/home/username/tools/pyre
+export PATH=$PYREDIR/bin:$PATH
+export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH
+export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
+\endcode
+
+\section isce3linux Install ISCE from source
 
 In this section we will walk through the directory setup and build system instructions for installing ISCE. ISCE can be built with 2 different build systems - <a href="https://github.com/aivazis/config">mm</a> and <a href="https://cmake.org/">cmake</a>. In this set of instructions, we focus on cmake as it is already available via standard package managers. We assume the following directory structure in this tutorial
 
