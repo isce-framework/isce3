@@ -116,7 +116,7 @@ Assuming the data and spectrum blocks with a shape of (length x width) as introd
 
 
 \section nfft Length of FFT
-As described in FFTW3 documentation, FFTW is best at handling sizes of the form  \f$2^a\f$  \f$3^b\f$  \f$5^c\f$  \f$7^d\f$  \f$11^e\f$ \f$13^f\f$  2a 3b 5c 7d 11e 13f, where \f$e+f\f$ is either 0 or 1, and the other exponents are arbitrary. Other sizes are computed by means of a slow algorithm.
+As described in FFTW3 documentation, FFTW is best at handling sizes of the form  \f$2^a\f$  \f$3^b\f$  \f$5^c\f$  \f$7^d\f$  \f$11^e\f$ \f$13^f\f$, where \f$e+f\f$ is either 0 or 1, and the other exponents are arbitrary. Other sizes are computed by means of a slow algorithm.
 Transforms whose sizes are powers of 2 are especially fast. Therefore a user of Signal may use isce::signal::Signal::nextPowerOfTwo to compute the efficient length of signal and zero pad the signal accordingly before setting FFT plans.
 
 
