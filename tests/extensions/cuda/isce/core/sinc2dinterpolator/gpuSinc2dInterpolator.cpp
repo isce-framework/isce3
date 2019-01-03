@@ -101,6 +101,7 @@ TEST_F(gpuSinc2dInterpolatorTest, Sinc2dFloat) {
             gpu_chip(i,j) = gpuComplex<float>(std::real(chip(i,j)), std::imag(chip(i,j)));
     }
         
+    // Perform interpolation
     cpu_z = cpuSinc2d.interpolate(xindex, yindex, chip);
     gpuSinc2d.interpolate_h(indices, gpu_chip, start, delta, gpu_z);
 

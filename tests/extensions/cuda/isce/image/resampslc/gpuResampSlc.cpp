@@ -1,7 +1,7 @@
 //-*- C++ -*-
 //-*- coding: utf-8 -*-
 //
-// Author: Bryan Riel
+// Author: Liang Yu
 // Copyright 2018
 //
 
@@ -23,9 +23,6 @@
 // isce::product
 #include "isce/product/Product.h"
 
-// isce::image
-#include "isce/image/ResampSlc.h"
-
 // isce::cuda::image
 #include "isce/cuda/image/ResampSlc.h"
 
@@ -42,7 +39,6 @@ TEST(ResampSlcTest, Resamp) {
 
     // Instantiate a ResampSLC object
     isce::cuda::image::ResampSlc gpu_resamp(product);
-    isce::image::ResampSlc cpu_resamp(product);
 
     // Use same product as a reference
     gpu_resamp.referenceProduct(product);
@@ -51,9 +47,7 @@ TEST(ResampSlcTest, Resamp) {
     ASSERT_NEAR(gpu_resamp.imageMode().startingRange(), 826988.6900674499, 1.0e-10);
     ASSERT_NEAR(gpu_resamp.doppler().coeffs[0], 301.35306906319204, 1.0e-8);
     // Perform gpu_resampling with default lines per tile
-    cpu_resamp.resamp("c_warped.slc", "hh",
-                  "../../../../../lib/isce/data/offsets/range.off", "../../../../../lib/isce/data/offsets/azimuth.off");
-    gpu_resamp.resamp("g_warped.slc", "hh",
+    gpu_resamp.resamp("warped.slc", "hh",
                   "../../../../../lib/isce/data/offsets/range.off", "../../../../../lib/isce/data/offsets/azimuth.off");
     
     // Set lines per tile to be a weird multiple of the number of output lines
