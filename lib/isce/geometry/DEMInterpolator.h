@@ -9,7 +9,6 @@
 #define ISCE_CORE_DEMInterpolator_H
 
 // pyre
-#include <portinfo>
 #include <pyre/journal.h>
 
 // isce::core

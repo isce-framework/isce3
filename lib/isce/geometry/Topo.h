@@ -8,7 +8,6 @@
 #define ISCE_GEOMETRY_TOPO_H
 
 // pyre
-#include <portinfo>
 #include <pyre/journal.h>
 
 // isce::core
