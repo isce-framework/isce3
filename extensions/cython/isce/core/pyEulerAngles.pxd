@@ -5,14 +5,10 @@
 #
 
 from libcpp cimport bool
-from Attitude cimport EulerAngles, Quaternion
+from EulerAngles cimport EulerAngles
 
 cdef class pyEulerAngles:
     cdef EulerAngles * c_eulerangles
-    cdef bool __owner
-
-cdef class pyQuaternion:
-    cdef Quaternion * c_quaternion
     cdef bool __owner
 
 # end of file

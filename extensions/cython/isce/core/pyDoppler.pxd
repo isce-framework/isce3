@@ -7,7 +7,8 @@
 from libcpp.string cimport string
 from libcpp cimport bool
 from Doppler cimport Doppler
-from pyAttitude cimport pyEulerAngles, pyQuaternion
+from isceextension cimport pyEulerAngles
+from isceextension cimport pyQuaternion
 
 cdef class pyDoppler:
     cdef Doppler * c_doppler

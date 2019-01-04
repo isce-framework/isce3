@@ -8,14 +8,10 @@ from libcpp.string cimport string
 from libcpp cimport bool
 
 # Cython declaration for isce::io objects
-from Raster cimport Raster
-
-# Cython declarations for isce::product objects
-from Product cimport Product
-
-# Interpolation methods
-from Orbit cimport orbitInterpMethod
-from Interpolator cimport dataInterpMethod
+from isceextension cimport Raster
+from isceextension cimport Product
+from isceextension cimport orbitInterpMethod
+from isceextension cimport dataInterpMethod
 
 cdef extern from "isce/cuda/geometry/Topo.h" namespace "isce::cuda::geometry":
     cdef cppclass Topo:

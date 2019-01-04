@@ -5,6 +5,12 @@
 # Find Numpy
 find_package(Numpy REQUIRED)
 
+###Create a function for concatenating pxd files
+function(catpxd IN_FILE OUT_FILE)
+    FILE(READ ${IN_FILE} CONTENTS)
+    FILE(APPEND ${OUT_FILE} "${CONTENTS}")
+endfunction()
+
 # Set the name for the ISCE C++ library
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
@@ -15,42 +21,13 @@ set_source_files_properties(
 )
 
 
-###Start by configuring all pxds build/cyinclude
-set(PXD_LIST    core/pyAttitude.pxd
-	        core/pyBasis.pxd
-	        core/pyDateTime.pxd
-	        core/pyDoppler.pxd
-	        core/pyEllipsoid.pxd
-	        core/pyInterpolator.pxd
-	        core/pyLinAlg.pxd
-	        core/pyOrbit.pxd
-	        core/pyPeg.pxd
-	        core/pyPegtrans.pxd
-	        core/pyPoly1d.pxd
-	        core/pyPoly2d.pxd
-	        core/pyPosition.pxd
-	        core/pyTimeDelta.pxd
-	        geometry/pyGeo2rdr.pxd
-	        geometry/pyTopo.pxd
-	        image/pyResampSlc.pxd
-	        io/pyGDAL.pxd
-	        io/pyIH5.pxd
-	        io/pyRaster.pxd
-	        product/pyComplexImagery.pxd
-	        product/pyIdentification.pxd
-	        product/pyImageMode.pxd
-	        product/pyMetadata.pxd
-	        product/pyProduct.pxd
-	        radar/pyRadar.pxd) 
-
+###Put together all the pxd files into one giant pxd
+FILE(GLOB PXD_LIST ${CMAKE_CURRENT_LIST_DIR}/*/*.pxd) 
 foreach(HFILE ${PXD_LIST})
-    get_filename_component(HFILE_BASE ${HFILE} NAME)
-    configure_file(
-        ${CMAKE_CURRENT_LIST_DIR}/${HFILE}
-        ${ISCE_BUILDCYINCLUDEDIR}/${HFILE_BASE}
-        COPYONLY)
+    GET_FILENAME_COMPONENT(HFILEBASE  ${HFILE} NAME)
+    configure_file(${HFILE} ${ISCE_BUILDCYINCLUDEDIR}/${HFILEBASE} COPYONLY)
 endforeach()
-
+configure_file(isceextension.pxd.in ${ISCE_BUILDCYINCLUDEDIR}/isceextension.pxd COPYONLY)
 
 # Add Cython module
 cython_add_module(isceextension isceextension.pyx)

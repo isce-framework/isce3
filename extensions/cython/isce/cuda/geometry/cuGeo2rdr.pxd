@@ -7,13 +7,9 @@
 from libcpp.string cimport string
 
 # Cython declarations for isce::core objects
-from Raster cimport Raster
-
-# Cython declarations for isce::product objects
-from Product cimport Product
-
-# Interpolation methods
-from Orbit cimport orbitInterpMethod
+from isceextension cimport Raster
+from isceextension cimport Product
+from isceextension cimport orbitInterpMethod
 
 cdef extern from "isce/cuda/geometry/Geo2rdr.h" namespace "isce::cuda::geometry":
 
