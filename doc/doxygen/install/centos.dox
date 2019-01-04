@@ -186,6 +186,10 @@ Finally, we can install pyre with the following command:
 \code{.sh}
 > mm
 \endcode
+If the conda root environment has been activated (see optional Step 3 in the previous section), then there may be a conflict with the environment variable `PROJ_LIB` and `mm`. In that case, run `mm` in the following manner:
+\code{.sh}
+> PROJ_LIB='' mm
+\endcode
 Once installation and testing is complete, we setup the following environment variables:
 \code{.sh}
 export PYREDIR=${HOME}/tools/pyre
@@ -289,7 +293,7 @@ Other optional arguments can be added to the cmake line
 <table>
     <caption id="multi_row">Additional cmake options</caption>
     <tr><th>Option <th>Description
-    <tr><td>-DWITH_CUDA=ON  <td>Build with CUDA support - will need CUDA libraries installed)
+    <tr><td>-DWITH_CUDA=ON  <td>Build with CUDA support (will need CUDA libraries installed)
     <tr><td>-DWITH_DOC=ON   <td>Build documentation from code using doxygen and sphinx. These need to be installed.
     <tr><td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --track-origins=yes" -DCMAKE_BUILD_TYPE=Debug<td>  
     <tr><td>Run tests with "-T memcheck" to check for memory leaks.
