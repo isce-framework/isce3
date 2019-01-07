@@ -13,6 +13,8 @@
 #define CUDA_GLOBAL
 #endif
 
+#include <complex>
+
 namespace isce { namespace cuda { namespace core {
 template <class U>
     struct gpuComplex {
@@ -20,6 +22,7 @@ template <class U>
         CUDA_HOSTDEV gpuComplex(): r(0.), i(0.) {};
         CUDA_HOSTDEV gpuComplex(U real): r(real), i(0.) {};
         CUDA_HOSTDEV gpuComplex(U real, U imag): r(real), i(imag) {};
+        CUDA_HOST gpuComplex(std::complex<float> x): r(std::real(x)), i(std::imag(x)) {};
 
         CUDA_HOSTDEV gpuComplex<U>& operator+=(float const& other) {
             r += other;
