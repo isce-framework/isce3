@@ -117,13 +117,8 @@ resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
     
         // Perform interpolation
         std::cout << "Interpolating tile " << tileCount << std::endl;
-        gpuTransformTile(tile, outputSlc, 
-                rgOffTile, azOffTile, 
-                _rgCarrier, _azCarrier, 
-                _dopplerPoly, 
-                _mode, _refMode, _haveRefMode,
-                interp, 
-                inLength, flatten, chipSize);
+        gpuTransformTile(tile, outputSlc, rgOffTile, azOffTile, _rgCarrier, _azCarrier, 
+                _dopplerPoly, _mode, _refMode, _haveRefMode, interp, inWidth, inLength, flatten, chipSize);
     }
 
     // Print out timing information and reset
