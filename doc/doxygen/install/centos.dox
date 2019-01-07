@@ -367,4 +367,14 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOME}/tools/isce/lib
 \endcode
 
 </ol>
+
+\section tips Additional installation tips
+
+During the installation process, users may need to implement additional steps depending on their operating system, prerequisites, development environment, etc.
+
+\subsection tips_cuda 1. Set TMP_DIR for compilation of CUDA extensions
+
+During compilation of CUDA extensions with nvcc and cmake, temporary files are placed in `/tmp` or the directory pointed to by the environment variable `TMP_DIR`. Therefore, if users wish to place temporary files in a custom directory, they must set `TMP_DIR`.
+
+
 */
