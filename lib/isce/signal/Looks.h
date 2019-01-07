@@ -11,7 +11,6 @@
 # include <assert.h>
 
 // pyre
-#include <portinfo>
 #include <pyre/journal.h>
 
 #include <isce/core/Utilities.h>

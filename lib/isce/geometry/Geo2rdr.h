@@ -8,7 +8,6 @@
 #define ISCE_CORE_GEO2RDR_H
 
 // pyre
-#include <portinfo>
 #include <pyre/journal.h>
 
 // isce::core
