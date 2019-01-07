@@ -43,7 +43,7 @@ namespace isce {
                                 isce::product::ImageMode refMode,    // image mode for reference master image
                                 bool haveRefMode,
                                 gpuSinc2dInterpolator<gpuComplex<float>> interp,
-                                int inLength, bool flatten, 
+                                int inWidth, int inLength, bool flatten, 
                                 int chipSize);
         }
     }

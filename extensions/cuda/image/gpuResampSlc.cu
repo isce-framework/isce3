@@ -41,7 +41,9 @@ void transformTile(const gpuComplex<float> *tile,
                    bool flatten,
                    int outWidth,
                    int outLength,
-                   int chipSize) {
+		   int inWidth,
+                   int inLength,
+		   int chipSize) {
 
     int iTileOut = blockDim.x * blockIdx.x + threadIdx.x;
     int iChip = iTileOut * chipSize * chipSize;                                          
@@ -50,7 +52,8 @@ void transformTile(const gpuComplex<float> *tile,
     if (iTileOut < outWidth*outLength) {
         int i = iTileOut / outWidth;
         int j = iTileOut % outWidth;
-        imgOut[iTileOut] = gpuComplex<float>(-1., 1.);
+        imgOut[iTileOut] = gpuComplex<float>(0., 0.);
+        //imgOut[iTileOut] = tile[iTileOut];
 
         // Unpack offsets
         const float azOff = azOffTile[iTileOut];
@@ -63,10 +66,11 @@ void transformTile(const gpuComplex<float> *tile,
         const double fracRg = j + rgOff - intRg;
        
         // Check bounds again
-        bool intAzInBounds = !((intAz < chipHalf) || (intAz >= (outLength - chipHalf)));
-        bool intRgInBounds = !((intRg < chipHalf) || (intRg >= (outWidth - chipHalf)));
+        bool intAzInBounds = !((intAz < chipHalf) || (intAz >= (inLength - chipHalf)));
+        bool intRgInBounds = !((intRg < chipHalf) || (intRg >= (inWidth - chipHalf)));
 
         if (intAzInBounds && intRgInBounds) {
+        //if (false) {
             // evaluate Doppler polynomial
             const double dop = doppler.eval(0, j) * 2 * M_PI / mode.prf;
 
@@ -92,7 +96,7 @@ void transformTile(const gpuComplex<float> *tile,
             // Read data chip without the carrier phases
             for (int ii = 0; ii < chipSize; ++ii) {
                 // Row to read from
-                const int chipRow = intAz + ii - chipHalf;
+                const int chipRow = intAz - ii - chipHalf;
                 // Carrier phase
                 const double phase = dop * (ii - 4.0);
                 const gpuComplex<float> cval(cos(phase), -sin(phase));
@@ -130,7 +134,7 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
                isce::product::ImageMode refMode,    // image mode for reference master image
                bool haveRefMode,
                isce::cuda::core::gpuSinc2dInterpolator<gpuComplex<float>> interp,
-               int inLength, bool flatten, int chipSize) {
+               int inWidth, int inLength, bool flatten, int chipSize) {
 
     // Cache geometry values
     const int outWidth = azOffTile.width();
@@ -166,7 +170,7 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
     checkCudaErrors(cudaMalloc(&d_rgOffTile, nPixels*sizeof(float)));
 
     // copy objects to device memory
-    checkCudaErrors(cudaMemcpy(d_tile, &tile[tile.rowStart()], nPixels*sizeof(gpuComplex<float>), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_tile, &tile[0], nPixels*sizeof(gpuComplex<float>), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(d_azOffTile, &azOffTile[azOffTile.rowStart()], nPixels*sizeof(float), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(d_rgOffTile, &rgOffTile[rgOffTile.rowStart()], nPixels*sizeof(float), cudaMemcpyHostToDevice));
 
@@ -189,6 +193,8 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
                                    flatten,
                                    outWidth,
                                    outLength,
+                                   inWidth,
+                                   inLength,
                                    chipSize);
 
     // Check for any kernel errors
