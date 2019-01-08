@@ -17,7 +17,8 @@
 #include "gpuImageMode.h"
 
 #include "isce/cuda/helper_cuda.h"
-
+#include <fstream>
+#include <string>
 using isce::cuda::core::gpuComplex;
 using isce::cuda::core::gpuPoly2d;
 using isce::cuda::core::gpuInterpolator;
@@ -41,9 +42,10 @@ void transformTile(const gpuComplex<float> *tile,
                    bool flatten,
                    int outWidth,
                    int outLength,
-		   int inWidth,
+                   int inWidth,
                    int inLength,
-		   int chipSize) {
+                   int chipSize,
+                   int rowOffset) {
 
     int iTileOut = blockDim.x * blockIdx.x + threadIdx.x;
     int iChip = iTileOut * chipSize * chipSize;                                          
@@ -65,10 +67,14 @@ void transformTile(const gpuComplex<float> *tile,
         const double fracAz = i + azOff - intAz;
         const double fracRg = j + rgOff - intRg;
        
-        // Check bounds again
-        bool intAzInBounds = !((intAz < chipHalf) || (intAz >= (inLength - chipHalf)));
+        // Check bounds again. Use rowOffset to account tiles where tile.rowStart != tile.firstRowImage
+        bool intAzInBounds = !((intAz+rowOffset < chipHalf) || (intAz >= (inLength - chipHalf)));
         bool intRgInBounds = !((intRg < chipHalf) || (intRg >= (inWidth - chipHalf)));
 
+        int i_dbg = 62250;
+        //if (iTileOut % i_dbg == 0)
+        //    printf("RiB %d, AiB %d, intAz %d, chipHalf %d, outLength %d\n", 
+        //            intRgInBounds, intAzInBounds, intAz, chipHalf, inLength);
         if (intAzInBounds && intRgInBounds) {
         //if (false) {
             // evaluate Doppler polynomial
@@ -96,16 +102,24 @@ void transformTile(const gpuComplex<float> *tile,
             // Read data chip without the carrier phases
             for (int ii = 0; ii < chipSize; ++ii) {
                 // Row to read from
-                const int chipRow = intAz - ii - chipHalf;
+                const int chipRow = intAz + ii - chipHalf + rowOffset;
                 // Carrier phase
                 const double phase = dop * (ii - 4.0);
                 const gpuComplex<float> cval(cos(phase), -sin(phase));
+                if (iTileOut % i_dbg == 0)
+                    printf("i%d j%d cR%d iA%d ii%d cH%d| ", i, j, chipRow, intAz, ii, chipHalf);
                 // Set the data values after removing doppler in azimuth
                 for (int jj = 0; jj < chipSize; ++jj) {
                     // Column to read from
                     const int chipCol = intRg + jj - chipHalf;
                     chip[iChip + ii*chipSize+jj] = tile[chipRow*outWidth+chipCol] * cval;
+                    gpuComplex<float> tile_val = tile[chipRow*outWidth+chipCol];
+                    if (iTileOut % i_dbg == 0)
+                        printf("%f,%f ", tile_val.r, tile_val.i);
+                        //printf("%d ", chipCol);
                 }
+                if (iTileOut % i_dbg == 0)
+                    printf("\n");
             }
 
             // Interpolate chip
@@ -158,26 +172,31 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
         gpuImageMode d_mode(refMode);
     gpuPoly2d d_doppler(doppler);
 
-    // allocate equivalent objects in device memory
-    size_t nPixels = imgOut.size();
-    size_t nTileBytes = nPixels * sizeof(gpuComplex<float>);
-    size_t nChipBytes = nTileBytes * chipSize * chipSize;
+    // determine sizes
+    size_t nInPixels = (tile.lastImageRow() - tile.firstImageRow() + 1) * outWidth;
+    size_t nOutPixels = imgOut.size();
+    size_t nOutBytes = nOutPixels * sizeof(gpuComplex<float>);
+    size_t nChipBytes = nOutBytes * chipSize * chipSize;
 
-    checkCudaErrors(cudaMalloc(&d_tile, nTileBytes));
+    // allocate equivalent objects in device memory
+    checkCudaErrors(cudaMalloc(&d_tile, nInPixels*sizeof(gpuComplex<float>)));
     checkCudaErrors(cudaMalloc(&d_chip, nChipBytes));
-    checkCudaErrors(cudaMalloc(&d_imgOut, nTileBytes));
-    checkCudaErrors(cudaMalloc(&d_azOffTile, nPixels*sizeof(float)));
-    checkCudaErrors(cudaMalloc(&d_rgOffTile, nPixels*sizeof(float)));
+    checkCudaErrors(cudaMalloc(&d_imgOut, nOutBytes));
+    checkCudaErrors(cudaMalloc(&d_azOffTile, nInPixels*sizeof(float)));
+    checkCudaErrors(cudaMalloc(&d_rgOffTile, nInPixels*sizeof(float)));
 
     // copy objects to device memory
-    checkCudaErrors(cudaMemcpy(d_tile, &tile[0], nPixels*sizeof(gpuComplex<float>), cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaMemcpy(d_azOffTile, &azOffTile[azOffTile.rowStart()], nPixels*sizeof(float), cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaMemcpy(d_rgOffTile, &rgOffTile[rgOffTile.rowStart()], nPixels*sizeof(float), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_tile, &tile[0], nInPixels*sizeof(gpuComplex<float>), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_azOffTile, &azOffTile[0], nInPixels*sizeof(float), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_rgOffTile, &rgOffTile[0], nInPixels*sizeof(float), cudaMemcpyHostToDevice));
 
     // determine block layout
     dim3 block(THRD_PER_BLOCK);
-    dim3 grid((nPixels+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
+    dim3 grid((nOutPixels+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
+    printf("rowStart=%d outWidth=%d outLength=%d inLength=%d firstImageRow=%d lastImageRow=%d imgOut\n",
+            tile.rowStart(),outWidth,outLength,inLength,
+            tile.firstImageRow(),tile.lastImageRow());
     // global call to transform
     transformTile<<<grid, block>>>(d_tile, 
                                    d_chip,
@@ -195,13 +214,23 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
                                    outLength,
                                    inWidth,
                                    inLength,
-                                   chipSize);
+                                   chipSize,
+                                   tile.rowStart()-tile.firstImageRow());
 
     // Check for any kernel errors
     checkCudaErrors(cudaPeekAtLastError());
 
     // copy to host memory
-    checkCudaErrors(cudaMemcpy(&imgOut[0], d_imgOut, nPixels*sizeof(gpuComplex<float>), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(&imgOut[0], d_imgOut, nOutBytes, cudaMemcpyDeviceToHost));
+
+    if (outLength != 500) {
+        std::string fname = "gpu_"+std::to_string(outLength)+"_"+std::to_string(tile.rowStart())+"_.bin";        
+        std::ofstream ofile(fname, std::ios::binary);
+        ofile.write((char*)&imgOut[0], nOutBytes);
+    }
+    for (int i = 0; i < 10; ++i)
+        printf("%f,%f ", std::real(imgOut[i]), std::imag(imgOut[i]));
+    printf("\n");
 
     // deallocate to device memory
     checkCudaErrors(cudaFree(d_tile));
