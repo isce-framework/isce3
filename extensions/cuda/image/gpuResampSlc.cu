@@ -45,7 +45,8 @@ void transformTile(const gpuComplex<float> *tile,
                    int inWidth,
                    int inLength,
                    int chipSize,
-                   int rowOffset, int rowStart) {
+                   int rowOffset, 
+                   int rowStart) {
 
     int iTileOut = blockDim.x * blockIdx.x + threadIdx.x;
     int iChip = iTileOut * chipSize * chipSize;                                          
@@ -71,15 +72,7 @@ void transformTile(const gpuComplex<float> *tile,
         bool intAzInBounds = !((intAz+rowOffset < chipHalf) || (intAz >= (inLength - chipHalf)));
         bool intRgInBounds = !((intRg < chipHalf) || (intRg >= (inWidth - chipHalf)));
 
-        //int i_dbg = 62250;
-        //bool dbg_ok = iTileOut % i_dbg == 0;
-        //bool dbg_ok = outLength == 2 && iTileOut == 4;
-        bool dbg_ok = iTileOut == 4;
-        if (dbg_ok)
-            printf("RiB %d, AiB %d, intAz %d, chipHalf %d, inLength %d azOff %f fracAc %f\n", 
-                    intRgInBounds, intAzInBounds, intAz, chipHalf, inLength, azOff, fracAz);
         if (intAzInBounds && intRgInBounds) {
-        //if (false) {
             // evaluate Doppler polynomial
             const double dop = doppler.eval(0, j) * 2 * M_PI / mode.prf;
 
@@ -109,20 +102,12 @@ void transformTile(const gpuComplex<float> *tile,
                 // Carrier phase
                 const double phase = dop * (ii - 4.0);
                 const gpuComplex<float> cval(cos(phase), -sin(phase));
-                if (dbg_ok)
-                    printf("i%d j%d cR%d iA%d ii%d cH%d| ", i, j, chipRow, intAz, ii, chipHalf);
                 // Set the data values after removing doppler in azimuth
                 for (int jj = 0; jj < chipSize; ++jj) {
                     // Column to read from
                     const int chipCol = intRg + jj - chipHalf;
                     chip[iChip + ii*chipSize+jj] = tile[chipRow*outWidth+chipCol] * cval;
-                    gpuComplex<float> tile_val = tile[chipRow*outWidth+chipCol];
-                    if (dbg_ok)
-                        printf("%f,%f ", tile_val.r, tile_val.i);
-                        //printf("%d ", chipCol);
                 }
-                if (dbg_ok)
-                    printf("\n");
             }
 
             // Interpolate chip
@@ -130,14 +115,9 @@ void transformTile(const gpuComplex<float> *tile,
             const gpuComplex<float> cval = interp.interpolate(
                 chipHalf + fracRg + 1, chipHalf + fracAz + 1, &chip[iChip], chipSize, chipSize
             );
-                if (dbg_ok)
-                    printf("%f %f\n", 
-                chipHalf + fracRg + 1, chipHalf + fracAz + 1);
 
             // Add doppler to interpolated value and save
             imgOut[iTileOut] = cval * gpuComplex<float>(cos(phase), sin(phase));
-                if (dbg_ok)
-                    printf("%f %f\n", cval.r, cval.i);
         }
     }
 }
@@ -175,9 +155,9 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
     gpuPoly2d d_rgCarrier(rgCarrier);
     gpuPoly2d d_azCarrier(azCarrier);
     gpuImageMode d_mode(mode);
-    gpuImageMode d_refMode;
+    gpuImageMode d_refMode;             // empty by default
     if (haveRefMode)
-        gpuImageMode d_mode(refMode);
+        gpuImageMode d_mode(refMode);   // populate from CPU version if provided
     gpuPoly2d d_doppler(doppler);
 
     // determine sizes
@@ -202,9 +182,6 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
     dim3 block(THRD_PER_BLOCK);
     dim3 grid((nOutPixels+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
-    printf("rowStart=%d outWidth=%d outLength=%d inLength=%d firstImageRow=%d lastImageRow=%d\n",
-            tile.rowStart(),outWidth,outLength,inLength,
-            tile.firstImageRow(),tile.lastImageRow());
     // global call to transform
     transformTile<<<grid, block>>>(d_tile, 
                                    d_chip,
@@ -223,22 +200,14 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
                                    inWidth,
                                    inLength,
                                    chipSize,
-                                   tile.rowStart()-tile.firstImageRow(), tile.rowStart());
+                                   tile.rowStart()-tile.firstImageRow(),// needed to keep az in bounds in subtiles
+                                   tile.rowStart());                    // needed to match az components on CPU
 
     // Check for any kernel errors
     checkCudaErrors(cudaPeekAtLastError());
 
     // copy to host memory
     checkCudaErrors(cudaMemcpy(&imgOut[0], d_imgOut, nOutBytes, cudaMemcpyDeviceToHost));
-
-    if (outLength != 500) {
-        std::string fname = "gpu_"+std::to_string(outLength)+"_"+std::to_string(tile.rowStart())+"_.bin";        
-        std::ofstream ofile(fname, std::ios::binary);
-        ofile.write((char*)&imgOut[0], nOutBytes);
-    }
-    for (int i = 0; i < 10; ++i)
-        printf("%f,%f ", std::real(imgOut[i]), std::imag(imgOut[i]));
-    printf("\n");
 
     // deallocate to device memory
     checkCudaErrors(cudaFree(d_tile));
