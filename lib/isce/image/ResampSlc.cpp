@@ -107,8 +107,10 @@ resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
         tile.rowStart(tileCount * _linesPerTile);
         if (tileCount == (nTiles - 1)) {
             tile.rowEnd(outLength);
+            //printf("%d\n",outLength);
         } else {
             tile.rowEnd(tile.rowStart() + _linesPerTile);
+            //printf("%d\n",tile.rowStart() + _linesPerTile);
         }
 
         // Initialize offsets tiles
@@ -120,6 +122,18 @@ resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
         std::cout << "Reading in image data for tile " << tileCount << "\n";
         _initializeTile(tile, inputSlc, azOffTile, outLength, rowBuffer, chipSize/2); 
     
+        /*int m=3;
+        int n=3;
+        int p=3;
+        for (int i=4; i<m+n*m; i+=p) {
+            for (int j=4; j<m+n*m; j+=p) {
+                printf("%d %d %f %f %f %f\n", 
+                        i, j, 
+                        std::real(tile(i,j)), std::imag(tile(i,j)),
+                        azOffTile(i,j), rgOffTile(i,j));
+            }
+        }*/
+
         // Perform interpolation
         std::cout << "Interpolating tile " << tileCount << "\n";
         _transformTile(tile, outputSlc, rgOffTile, azOffTile, inLength, flatten, chipSize);
@@ -264,9 +278,18 @@ _transformTile(Tile_t & tile,
 
     // Allocate valarray for output image block
     std::valarray<std::complex<float>> imgOut(outLength * outWidth);
+    //printf("w=%d l=%d\n", outWidth, outLength);
     // Initialize to zeros
     imgOut = std::complex<float>(0.0, 0.0);
 
+    int m = 10;
+    int n = tile.rowStart() + 0;
+    auto rS = tile.rowStart();
+    printf("rowStart=%d outWidth=%d outLength=%d inWidth=%d inLength=%d chipHalf=%d\n",tile.rowStart(),outWidth,outLength,inWidth,inLength,chipHalf);
+    for (int i=n; i<n+m; ++i)
+        printf("%f|%f ", std::real(tile[i]), std::imag(tile[i]));
+    printf("\n");
+    
     // From this point on, transformation is multithreaded
     int tileLine = 0;
     #pragma omp parallel shared(imgOut)
@@ -275,7 +298,7 @@ _transformTile(Tile_t & tile,
     // set half chip size
     // Allocate matrix for working sinc chip
     isce::core::Matrix<std::complex<float>> chip(chipSize, chipSize);
-    
+
     // Loop over lines to perform interpolation
     for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
 
@@ -293,6 +316,19 @@ _transformTile(Tile_t & tile,
             const double fracAz = i + azOff - intAz;
             const double fracRg = j + rgOff - intRg;
            
+            bool intAzInBounds = !((intAz < chipHalf) || (intAz >= (inLength - chipHalf)));
+            bool intRgInBounds = !((intRg < chipHalf) || (intRg >= (inWidth - chipHalf)));
+
+            int i_dbg = 62250;
+            auto iImgOut = tileLine*outWidth + j;
+            auto iTileOut = i*tile.width()+j;
+            //bool dbg_ok = iTileOut % i_dbg == 0;
+            //bool dbg_ok = outLength == 2 && iTileOut == tile.rowStart()*tile.width()+4;
+            bool dbg_ok = iTileOut == tile.rowStart()*tile.width()+4;
+            if (dbg_ok)
+                printf("i%d j%d RiB %d, AiB %d, intAz %d, chipHalf %d, inLength %d, azOff %f fracAz %f\n", 
+                        i, j, intRgInBounds, intAzInBounds, intAz, chipHalf, inLength, azOff, fracAz);
+
             // Check bounds
             if ((intAz < chipHalf) || (intAz >= (inLength - chipHalf)))
                 continue;
@@ -327,23 +363,47 @@ _transformTile(Tile_t & tile,
                 // Carrier phase
                 const double phase = dop * (ii - 4.0);
                 const std::complex<float> cval(std::cos(phase), -std::sin(phase));
+                if (dbg_ok)
+                    printf("i%d j%d cR%d iA%d ii%d cH%d| ", 
+                            i, j, chipRow, intAz, ii, chipHalf);
                 // Set the data values after removing doppler in azimuth
                 for (int jj = 0; jj < chipSize; ++jj) {
                     // Column to read from
                     const int chipCol = intRg + jj - chipHalf;
                     chip(ii,jj) = tile(chipRow,chipCol) * cval;
+                    if (dbg_ok) 
+                        printf("%f,%f ", 
+                                std::real(tile(chipRow,chipCol)), std::imag(tile(chipRow,chipCol)));
+                        //printf("%d ", chipCol);
                 }
+                if (dbg_ok)
+                    printf("\n");
             }
 
             // Interpolate chip
             const std::complex<float> cval = _interp->interpolate(
                 chipHalf + fracRg + 1, chipHalf + fracAz + 1, chip
             );
+                    if (dbg_ok) 
+                        printf("%f,%f\n", 
+                chipHalf + fracRg + 1, chipHalf + fracAz + 1);
 
             // Add doppler to interpolated value and save
             imgOut[tileLine*outWidth + j] = cval * std::complex<float>(
                 std::cos(phase), std::sin(phase)
             );
+                    if (dbg_ok) 
+                        printf("%f,%f\n", std::real(cval), std::imag(cval));
+            /*if ((i*tile.width()+j)%12450==0) {
+            if ((i*tile.width()+j)%24900==0) {
+                printf("i %d, j %d, azOff %f, rgOff %f %f|%f, %f|%f %f|%f\n",
+                        i, j, azOff, rgOff,
+                        std::real(chip(0,0)), std::imag(chip(0,0)),
+                        std::real(chip(3,3)), std::imag(chip(3,3)),
+                        std::real(chip(6,6)), std::imag(chip(6,6)));
+                printf("i %d, j %d, azOff %f, rgOff %f intAz %d intRg %d fracAz %f fracRg %f\n",
+                        i, j, azOff, rgOff, intAz, intRg, fracAz, fracRg);
+            }*/
 
         } // end for over width
 
@@ -356,6 +416,17 @@ _transformTile(Tile_t & tile,
     } // end for over length
 
     } // end multithreaded block
+
+    m = 10;
+    n = outWidth*outLength;
+    if (outLength != 500) {
+        std::string fname = "cpu_"+std::to_string(outLength)+"_"+std::to_string(tile.rowStart())+"_.bin";        
+        std::ofstream ofile(fname, std::ios::binary);
+        ofile.write((char*)&imgOut[0], outWidth*outLength*sizeof(std::complex<float>));
+    }
+    for (size_t i=0; i<n; i+=n/10)
+        printf("%f|%f ", std::real(imgOut[i]), std::imag(imgOut[i]));
+    printf("\n");
 
     // Write block of data
     outputSlc.setBlock(imgOut, 0, tile.rowStart(), outWidth, outLength);

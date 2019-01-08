@@ -47,7 +47,7 @@ TEST(ResampSlcTest, Resamp) {
     ASSERT_NEAR(gpu_resamp.imageMode().startingRange(), 826988.6900674499, 1.0e-10);
     ASSERT_NEAR(gpu_resamp.doppler().coeffs[0], 301.35306906319204, 1.0e-8);
     // Perform gpu_resampling with default lines per tile
-    gpu_resamp.resamp("warped.slc", "hh",
+    gpu_resamp.resamp("warped_1000.slc", "hh",
                   "../../../../../lib/isce/data/offsets/range.off", "../../../../../lib/isce/data/offsets/azimuth.off");
     
     // Set lines per tile to be a weird multiple of the number of output lines

@@ -45,7 +45,7 @@ void transformTile(const gpuComplex<float> *tile,
                    int inWidth,
                    int inLength,
                    int chipSize,
-                   int rowOffset) {
+                   int rowOffset, int rowStart) {
 
     int iTileOut = blockDim.x * blockIdx.x + threadIdx.x;
     int iChip = iTileOut * chipSize * chipSize;                                          
@@ -62,19 +62,22 @@ void transformTile(const gpuComplex<float> *tile,
         const float rgOff = rgOffTile[iTileOut];
 
         // Break into fractional and integer parts
-        const int intAz = __float2int_rd(i + azOff);
+        const int intAz = __float2int_rd(i + azOff + rowStart);
         const int intRg = __float2int_rd(j + rgOff);
-        const double fracAz = i + azOff - intAz;
+        const double fracAz = i + azOff - intAz + rowStart;
         const double fracRg = j + rgOff - intRg;
        
         // Check bounds again. Use rowOffset to account tiles where tile.rowStart != tile.firstRowImage
         bool intAzInBounds = !((intAz+rowOffset < chipHalf) || (intAz >= (inLength - chipHalf)));
         bool intRgInBounds = !((intRg < chipHalf) || (intRg >= (inWidth - chipHalf)));
 
-        int i_dbg = 62250;
-        //if (iTileOut % i_dbg == 0)
-        //    printf("RiB %d, AiB %d, intAz %d, chipHalf %d, outLength %d\n", 
-        //            intRgInBounds, intAzInBounds, intAz, chipHalf, inLength);
+        //int i_dbg = 62250;
+        //bool dbg_ok = iTileOut % i_dbg == 0;
+        //bool dbg_ok = outLength == 2 && iTileOut == 4;
+        bool dbg_ok = iTileOut == 4;
+        if (dbg_ok)
+            printf("RiB %d, AiB %d, intAz %d, chipHalf %d, inLength %d azOff %f fracAc %f\n", 
+                    intRgInBounds, intAzInBounds, intAz, chipHalf, inLength, azOff, fracAz);
         if (intAzInBounds && intRgInBounds) {
         //if (false) {
             // evaluate Doppler polynomial
@@ -102,11 +105,11 @@ void transformTile(const gpuComplex<float> *tile,
             // Read data chip without the carrier phases
             for (int ii = 0; ii < chipSize; ++ii) {
                 // Row to read from
-                const int chipRow = intAz + ii - chipHalf + rowOffset;
+                const int chipRow = intAz + ii - chipHalf + rowOffset - rowStart;
                 // Carrier phase
                 const double phase = dop * (ii - 4.0);
                 const gpuComplex<float> cval(cos(phase), -sin(phase));
-                if (iTileOut % i_dbg == 0)
+                if (dbg_ok)
                     printf("i%d j%d cR%d iA%d ii%d cH%d| ", i, j, chipRow, intAz, ii, chipHalf);
                 // Set the data values after removing doppler in azimuth
                 for (int jj = 0; jj < chipSize; ++jj) {
@@ -114,11 +117,11 @@ void transformTile(const gpuComplex<float> *tile,
                     const int chipCol = intRg + jj - chipHalf;
                     chip[iChip + ii*chipSize+jj] = tile[chipRow*outWidth+chipCol] * cval;
                     gpuComplex<float> tile_val = tile[chipRow*outWidth+chipCol];
-                    if (iTileOut % i_dbg == 0)
+                    if (dbg_ok)
                         printf("%f,%f ", tile_val.r, tile_val.i);
                         //printf("%d ", chipCol);
                 }
-                if (iTileOut % i_dbg == 0)
+                if (dbg_ok)
                     printf("\n");
             }
 
@@ -127,9 +130,14 @@ void transformTile(const gpuComplex<float> *tile,
             const gpuComplex<float> cval = interp.interpolate(
                 chipHalf + fracRg + 1, chipHalf + fracAz + 1, &chip[iChip], chipSize, chipSize
             );
+                if (dbg_ok)
+                    printf("%f %f\n", 
+                chipHalf + fracRg + 1, chipHalf + fracAz + 1);
 
             // Add doppler to interpolated value and save
             imgOut[iTileOut] = cval * gpuComplex<float>(cos(phase), sin(phase));
+                if (dbg_ok)
+                    printf("%f %f\n", cval.r, cval.i);
         }
     }
 }
@@ -194,7 +202,7 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
     dim3 block(THRD_PER_BLOCK);
     dim3 grid((nOutPixels+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
-    printf("rowStart=%d outWidth=%d outLength=%d inLength=%d firstImageRow=%d lastImageRow=%d imgOut\n",
+    printf("rowStart=%d outWidth=%d outLength=%d inLength=%d firstImageRow=%d lastImageRow=%d\n",
             tile.rowStart(),outWidth,outLength,inLength,
             tile.firstImageRow(),tile.lastImageRow());
     // global call to transform
@@ -215,7 +223,7 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
                                    inWidth,
                                    inLength,
                                    chipSize,
-                                   tile.rowStart()-tile.firstImageRow());
+                                   tile.rowStart()-tile.firstImageRow(), tile.rowStart());
 
     // Check for any kernel errors
     checkCudaErrors(cudaPeekAtLastError());
