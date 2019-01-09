@@ -48,6 +48,9 @@ include "product/pyProduct.pyx"
 # Include the image extensions
 include "image/pyResampSlc.pyx"
 
+# Include the signal extensions
+include "signal/pyCrossmul.pyx"
+
 # Include the geometry extensions
 include "geometry/pyTopo.pyx"
 include "geometry/pyGeo2rdr.pyx"
