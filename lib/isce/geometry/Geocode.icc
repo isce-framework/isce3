@@ -1,0 +1,53 @@
+#if !defined(ISCE_GEOMETRY_GEOCODE_ICC)
+#error "Geocode.icc is an implementation detail of class Geocode"
+#endif
+
+void isce::geometry::Geocode::
+geoGrid(double geoGridStartX, double geoGridStartY,
+        double geoGridSpacingX, double geoGridSpacingY,
+        double geoGridEndX, double geoGridEndY,
+        int epsgcode) {
+   
+    int length = 1 + (geoGridEndY - geoGridStartY) /
+                    geoGridSpacingY;
+
+    int width = 1 + (geoGridEndX - geoGridStartX) /
+                    geoGridSpacingX;
+
+    geoGrid(geoGridStartX, geoGridStartY,
+        geoGridSpacingX, geoGridSpacingY,
+        length, width, epsgcode);
+
+}
+
+void isce::geometry::Geocode::
+geoGrid(double geoGridStartX, double geoGridStartY,
+        double geoGridSpacingX, double geoGridSpacingY,
+        int length, int width, int epsgcode) {
+
+    // the starting coordinate of the output geocoded grid in X direction 
+    _geoGridStartX = geoGridStartX;
+
+    // the starting coordinate of the output geocoded grid in Y direction
+    _geoGridStartY = geoGridStartY;
+
+    // spacing of the output geocoded grid in X
+    _geoGridSpacingX = geoGridSpacingX;
+
+    // spacing of the output geocoded grid in Y
+    _geoGridSpacingY = geoGridSpacingY;
+
+    // number of lines (rows) in the geocoded grid (Y direction)
+    _geoGridLength = length;
+
+    // number of columns in the geocoded grid (Y direction)
+    _geoGridWidth = width;
+
+    // Save the EPSG code
+    _epsgOut = epsgcode;
+
+    // Initialize the projection
+    _proj = isce::core::createProj(epsgcode);
+
+}
+

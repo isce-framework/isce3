@@ -47,8 +47,14 @@ class isce::geometry::Geocode {
                 isce::io::Raster & demRaster);
 
         /** Set the output geocoded grid*/
-        //inline geoGrid(double _geoGridStartX, double _geoGridStartY, 
-        //        double _geoGridSpacingX, double _geoGridSpacingY);
+        void geoGrid(double geoGridStartX, double geoGridStartY,
+                double geoGridSpacingX, double geoGridSpacingY,
+                double geoGridEndX, double geoGridEndY,
+                int epsgcode);
+        
+        inline void geoGrid(double geoGridStartX, double geoGridStartY, 
+                double geoGridSpacingX, double geoGridSpacingY,
+                int length, int width, int epsgcode);
 
     private:
 
@@ -123,5 +129,12 @@ class isce::geometry::Geocode {
         int _radarBlockMargin;
 
 };
+
+// Get inline implementations for Geocode
+#define ISCE_GEOMETRY_GEOCODE_ICC
+#include "Geocode.icc"
+#undef ISCE_GEOMETRY_GEOCODE_ICC
+
+
 #endif
 

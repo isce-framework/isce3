@@ -18,9 +18,6 @@ geocode(isce::io::Raster & inputRaster,
     // instantiate the DEMInterpolator 
     isce::geometry::DEMInterpolator demInterp;
 
-    std::valarray<double> azimuthTime;
-    std::valarray<double> slantRange;
-
     // Compute number of blocks in the output geocoded grid
     size_t nBlocks = _geoGridLength / _linesPerBlock;
     if ((_geoGridLength % _linesPerBlock) != 0)
@@ -60,6 +57,12 @@ geocode(isce::io::Raster & inputRaster,
                         _radarBlockMargin, demInterp,
                         azimuthFirstLine, azimuthLastLine,
                         rangeFirstPixel, rangeLastPixel);
+
+	size_t radarBlockSize = (azimuthLastLine - azimuthFirstLine + 1) * 
+                                (rangeLastPixel - rangeFirstPixel + 1);
+
+        std::valarray<double> azimuthTime(radarBlockSize);
+    	std::valarray<double> slantRange(radarBlockSize);
 
         // Loop over lines of the output grid
         for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
@@ -120,7 +123,8 @@ void isce::geometry::Geocode::
 _loadDEM(isce::io::Raster demRaster,
         isce::geometry::DEMInterpolator & demInterp,
         isce::core::ProjectionBase * _proj, 
-        int lineStart, int blockLength, int blockWidth, double demMargin)
+        int lineStart, int blockLength, 
+        int blockWidth, double demMargin)
 {
     // convert the corner of the current geocoded grid to lon lat
     double maxY = _geoGridStartY + _geoGridSpacingY*lineStart;
@@ -146,6 +150,9 @@ _loadDEM(isce::io::Raster demRaster,
 
     double maxLon = llh[0];
     double minLat = llh[1];
+
+    // convert the margin to radians
+    demMargin *= (M_PI/180.0);
 
     // Account for margins
     minLon -= demMargin;
