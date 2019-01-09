@@ -6,11 +6,11 @@
 
 // isce::core
 #include "isce/core/Constants.h"
-#include "isce/core/Interpolator.h"
 #include "isce/core/Poly2d.h"
 
 // isce::cuda::core
 #include "isce/cuda/core/gpuPoly2d.h"
+#include "isce/cuda/core/gpuLUT1d.h"
 
 // isce::cuda::image
 #include "gpuResampSlc.h"
@@ -22,6 +22,7 @@
 using isce::cuda::core::gpuComplex;
 using isce::cuda::core::gpuPoly2d;
 using isce::cuda::core::gpuInterpolator;
+using isce::cuda::core::gpuLUT1d;
 using isce::cuda::core::gpuSinc2dInterpolator;
 using isce::cuda::image::gpuImageMode;
 
@@ -35,7 +36,7 @@ void transformTile(const gpuComplex<float> *tile,
                    const float *azOffTile,
                    const gpuPoly2d rgCarrier,
                    const gpuPoly2d azCarrier,
-                   const gpuPoly2d doppler,
+                   const gpuLUT1d<double> dopplerLUT,
                    gpuImageMode mode,       // image mode for image to be resampled
                    gpuImageMode refMode,    // image mode for reference master image
                    gpuSinc2dInterpolator<gpuComplex<float>> interp,
@@ -74,7 +75,8 @@ void transformTile(const gpuComplex<float> *tile,
 
         if (intAzInBounds && intRgInBounds) {
             // evaluate Doppler polynomial
-            const double dop = doppler.eval(0, j) * 2 * M_PI / mode.prf;
+            const double rng = mode.startingRange + j * mode.rangePixelSpacing;
+            const double dop = dopplerLUT.eval(rng) * 2 * M_PI / mode.prf;
 
             // Doppler to be added back. Simultaneously evaluate carrier that needs to
             // be added back after interpolation
@@ -131,7 +133,7 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
                isce::image::Tile<float> & azOffTile,
                const isce::core::Poly2d & rgCarrier,
                const isce::core::Poly2d & azCarrier,
-               const isce::core::Poly2d & doppler,
+               const isce::core::LUT1d<double> & dopplerLUT,
                isce::product::ImageMode mode,       // image mode for image to be resampled
                isce::product::ImageMode refMode,    // image mode for reference master image
                bool haveRefMode,
@@ -158,7 +160,7 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
     gpuImageMode d_refMode;             // empty by default
     if (haveRefMode)
         gpuImageMode d_mode(refMode);   // populate from CPU version if provided
-    gpuPoly2d d_doppler(doppler);
+    gpuLUT1d<double> d_dopplerLUT(dopplerLUT);
 
     // determine sizes
     size_t nInPixels = (tile.lastImageRow() - tile.firstImageRow() + 1) * outWidth;
@@ -190,7 +192,7 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
                                    d_azOffTile, 
                                    d_rgCarrier, 
                                    d_azCarrier, 
-                                   d_doppler, 
+                                   d_dopplerLUT, 
                                    d_mode, 
                                    d_refMode,
                                    interp,

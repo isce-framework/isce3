@@ -10,6 +10,7 @@
 
 // isce::core
 #include "isce/core/Poly2d.h"
+#include "isce/core/LUT1d.h"
 
 // isce:io:
 #include  "isce/io/Raster.h"
@@ -38,7 +39,7 @@ namespace isce {
                                 isce::image::Tile<float> & azOffTile,
                                 const isce::core::Poly2d & rgCarrier,
                                 const isce::core::Poly2d & azCarrier,
-                                const isce::core::Poly2d & doppler,
+                                const isce::core::LUT1d<double> & dopplerLUT,
                                 isce::product::ImageMode mode,       // image mode for image to be resampled
                                 isce::product::ImageMode refMode,    // image mode for reference master image
                                 bool haveRefMode,

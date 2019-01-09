@@ -27,17 +27,18 @@ class isce::cuda::image::ResampSlc : public isce::image::ResampSlc {
         // Meta-methods
         // Default constructor
         inline ResampSlc();
+
         // Constructor from an isce::product::Product
         inline ResampSlc(const isce::product::Product &product) :
             isce::image::ResampSlc(product) {};
 
-        // Constructor from isce::core::Poly2d and isce::product::ImageMode
-        inline ResampSlc(const isce::core::Poly2d &poly, const isce::product::ImageMode &imageMode) :
-            isce::image::ResampSlc(poly, imageMode) {};
+        // Constructor from isce::core::LUT1d<double> and isce::product::ImageMode
+        inline ResampSlc(const isce::core::LUT1d<double> &lut, const isce::product::ImageMode &imageMode) :
+            isce::image::ResampSlc(lut, imageMode) {};
 
         // Constructor from isce::core objects
-        inline ResampSlc(const isce::core::Poly2d &poly, const isce::core::Metadata &metaData) :
-            isce::image::ResampSlc(poly, metaData) {};
+        inline ResampSlc(const isce::core::LUT1d<double> &lut, const isce::core::Metadata &metaData) :
+            isce::image::ResampSlc(lut, metaData) {};
 
         // All resamp need? to be redefined to ensure derived functions used
         // Generic resamp entry point from externally created rasters
