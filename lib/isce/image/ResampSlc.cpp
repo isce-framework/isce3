@@ -11,7 +11,6 @@
 #include <cmath>
 
 // pyre
-#include <portinfo>
 #include <pyre/journal.h>
 
 // isce::core
@@ -182,7 +181,7 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, const isce::image::Tile<float>
             // Get azimuth offset for pixel
             const double azOff = azOffTile(i,j);
             // Skip null values
-            if (azOff < -5.0e5) {
+            if (azOff < -5.0e5 || std::isnan(azOff)) {
                 continue;
             } else {
                 haveOffsets = true;
@@ -208,7 +207,7 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, const isce::image::Tile<float>
             // Get azimuth offset for pixel
             const double azOff = azOffTile(i,j);
             // Skip null values 
-            if (azOff < -5.0e5) {
+            if (azOff < -5.0e5 || std::isnan(azOff)) {
                 continue;
             } else {
                 haveOffsets = true;
@@ -261,6 +260,9 @@ _transformTile(Tile_t & tile,
     const int outWidth = azOffTile.width();
     const int outLength = azOffTile.length();
     int chipHalf = chipSize / 2;
+    const double R0 = _mode.startingRange();
+    const double dR = _mode.rangePixelSpacing();
+    const double az0 = _mode.startAzTime().secondsSinceEpoch();
 
     // Allocate valarray for output image block
     std::valarray<std::complex<float>> imgOut(outLength * outWidth);
@@ -279,11 +281,14 @@ _transformTile(Tile_t & tile,
     // Loop over lines to perform interpolation
     for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
 
+        // Compute current azimuth time
+        const double az = az0 + i / _mode.prf();
+
         // Loop over width
         #pragma omp for
         for (int j = 0; j < outWidth; ++j) {
 
-            // Unpack offsets
+            // Unpack offsets (units of bins)
             const float azOff = azOffTile(tileLine, j);
             const float rgOff = rgOffTile(tileLine, j);
 
@@ -300,7 +305,8 @@ _transformTile(Tile_t & tile,
                 continue;
 
             // Evaluate Doppler polynomial
-            const double dop = _dopplerPoly.eval(0, j) * 2*M_PI / _mode.prf();
+            const double rng = R0 + j * dR;
+            const double dop = _dopplerLUT.eval(rng) * 2*M_PI / _mode.prf();
 
             // Doppler to be added back. Simultaneously evaluate carrier that needs to
             // be added back after interpolation

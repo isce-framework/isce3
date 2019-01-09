@@ -45,7 +45,7 @@ TEST(ResampSlcTest, Resamp) {
     
     // Check values
     ASSERT_NEAR(resamp.imageMode().startingRange(), 826988.6900674499, 1.0e-10);
-    ASSERT_NEAR(resamp.doppler().coeffs[0], 301.35306906319204, 1.0e-8);
+    ASSERT_NEAR(resamp.doppler().values()[0], 301.353069063192, 1.0e-8);
 
     // Perform resampling with default lines per tile
     resamp.resamp("warped.slc", "hh",

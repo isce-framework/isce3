@@ -1,0 +1,96 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Source Author: Bryan Riel
+// Copyright 2017-2018
+//
+
+#if !defined(ISCE_CORE_LUT1D_ICC)
+#error "LUT1d.icc is an implementation detail of class LUT1d"
+#endif
+
+/** @param[in] x Point to evaluate the LUT
+  * @param[out] result Interpolated value */
+template <typename T>
+T isce::core::LUT1d<T>::
+eval(double x) const {
+
+    // Check bounds to see if we need to perform linear extrapolation
+    const int n = _coords.size();
+    if (x < _coords[0]) {
+        if (_extrapolate) {
+            const double dx = _coords[0] - _coords[1];
+            const double dy = _values[0] - _values[1];
+            const double d = x - _coords[1];
+            T result = (dy / dx) * d + _values[1];
+            return result;
+        } else {
+            pyre::journal::error_t errorChannel("isce.core.LUT1d");
+            errorChannel
+                << pyre::journal::at(__HERE__)
+                << "Out of bounds evaluation for LUT1d."
+                << pyre::journal::newline
+                << pyre::journal::endl;
+            return 0;
+        }
+    } else if (x > _coords[n-1]) {
+        if (_extrapolate) {
+            const double dx = _coords[n-1] - _coords[n-2];
+            const double dy = _values[n-1] - _values[n-2];
+            const double d = x - _coords[n-2];
+            T result = (dy / dx) * d + _values[n-2];
+            return result;
+        } else {
+            pyre::journal::error_t errorChannel("isce.core.LUT1d");
+            errorChannel
+                << pyre::journal::at(__HERE__)
+                << "Out of bounds evaluation for LUT1d."
+                << pyre::journal::newline
+                << pyre::journal::endl;
+            return 0;
+        }
+    }
+
+    // Otherwise, proceed with interpolation
+    // Binary search to find leftmost coordinate
+    int low = 0;
+    int high = _coords.size();
+    while (low < high) {
+        const int midpoint = (low + high) / 2;
+        if (_coords[midpoint] < x) {
+            low = midpoint + 1;
+        } else {
+            high = midpoint;
+        }
+    }
+
+    // Check search convergence
+    if (low != high) {
+        pyre::journal::error_t errorChannel("isce.core.LUT1d");
+        errorChannel
+            << pyre::journal::at(__HERE__)
+            << "Binary search did not converge."
+            << pyre::journal::newline
+            << pyre::journal::endl;
+        return 0;
+    }
+
+    // Check if right on top of a coordinate
+    if (std::abs(_coords[high] - x) < 1.0e-12) {
+        return _values[high];
+    }
+
+    // The indices of the x bounds
+    const int j0 = high - 1;
+    const int j1 = high;
+    
+    // Get coordinates at bounds
+    double x1 = _coords[j0];
+    double x2 = _coords[j1];
+
+    // Interpolate
+    T result = (x2 - x) / (x2 - x1) * _values[j0] + (x - x1) / (x2 - x1) * _values[j1];
+    return result;
+}
+
+// end of file

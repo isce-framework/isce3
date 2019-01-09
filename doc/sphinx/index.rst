@@ -16,6 +16,7 @@ Core Datastructures
 * :doc:`pyEllipsoid <./pyEllipsoid>`
 * :doc:`pyPoly1d <./pyPoly1d>`
 * :doc:`pyPoly2d <./pyPoly2d>`
+* :doc:`pyLUT1d <./pyLUT1d>`
 * :doc:`pyOrbit <./pyOrbit>`
 
 I/O Datastructures

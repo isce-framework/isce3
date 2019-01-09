@@ -61,11 +61,13 @@ CheckGDAL()
 ##Check for HDF5
 CheckHDF5()
 
+#Check FFTW3
+CheckFFTW3()
 ##Check for Armadillo
 ##CheckArmadillo()
 
-##Check for Nosetests
-CheckNosetests()
+##Check for pytest
+CheckPytest()
 
 ###Layout same install directory structure as pyre
 InitInstallDirLayout()

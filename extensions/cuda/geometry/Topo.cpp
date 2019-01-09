@@ -12,7 +12,7 @@
 // pull in some isce namespaces
 using isce::core::Ellipsoid;
 using isce::core::Orbit;
-using isce::core::Poly2d;
+using isce::core::LUT1d;
 using isce::product::ImageMode;
 using isce::io::Raster;
 using isce::geometry::DEMInterpolator;
@@ -111,7 +111,7 @@ topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRast
     ImageMode mode = this->mode();
     Ellipsoid ellipsoid = this->ellipsoid();
     Orbit orbit = this->orbit();
-    Poly2d doppler = this->doppler();
+    LUT1d<double> doppler = this->doppler();
 
     // Create and start a timer
     auto timerStart = std::chrono::steady_clock::now();
@@ -145,9 +145,9 @@ topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRast
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
-             << doppler.eval(0, 0) << " "
-             << doppler.eval(0, (mode.width() / 2) - 1) << " "
-             << doppler.eval(0, mode.width() - 1) << " "
+             << doppler.values()[0] << " "
+             << doppler.values()[doppler.size() / 2] << " "
+             << doppler.values()[doppler.size() - 1] << " "
              << pyre::journal::endl;
 
         // Load DEM subset for SLC image block

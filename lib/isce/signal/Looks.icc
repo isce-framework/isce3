@@ -1,0 +1,66 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// Author: Heresh Fattahi
+// Copyright 2018-
+//
+
+#if !defined(ISCE_SIGNAL_LOOKS_ICC)
+#error "Looks.icc is an implementation detail of class Looks"
+#endif
+
+
+/** @param[in] numberOfRows number of rows before multi-looking
+*/
+template <class T>
+void isce::signal::Looks<T>::
+nrows(int numberOfRows)
+{
+    _nrows = numberOfRows;
+}
+
+/** @param[in] numberOfColumns number of columns before multi-looking
+*/
+template <class T>
+void isce::signal::Looks<T>::
+ncols(int numberOfColumns)
+{
+    _ncols = numberOfColumns;
+}
+
+/** @param[in] numLooksRow number of looks to be taken on rows
+*/
+template <class T>
+void isce::signal::Looks<T>::
+rowsLooks(int numLooksRow)
+{
+    _rowsLooks = numLooksRow;
+}
+
+/** @param[in] numLooksCol number of looks to be taken on columns
+*/
+template <class T>
+void isce::signal::Looks<T>::
+colsLooks(int numLooksCol)
+{
+    _colsLooks = numLooksCol;
+}
+
+/** @param[in] numberOfRows number of rows after multi-looking
+*/
+template <class T>
+void isce::signal::Looks<T>::
+nrowsLooked(int numberOfRows)
+{
+    _nrowsLooked = numberOfRows;
+}
+
+/** @param[in] numberOfColumns number of columns after multi-looking
+*/
+template <class T>
+void isce::signal::Looks<T>::
+ncolsLooked(int numberOfColumns)
+{
+    _ncolsLooked = numberOfColumns;
+}
+

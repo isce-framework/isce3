@@ -11,9 +11,9 @@
 // Default constructor (assumes zero-Doppler imaging and no flattening)
 isce::image::ResampSlc::
 ResampSlc() : _haveRefMode(false) {
-    // Make a zero-doppler Polynomial
-    isce::core::Poly2d zerodop(0, 0, 0.0, 0.0, 1.0, 1.0);
-    _dopplerPoly = zerodop;
+    // Make a default LUT (zero-doppler)
+    isce::core::LUT1d<double> zerodop;
+    _dopplerLUT = zerodop;
     // Create an empty ImageMode
     isce::product::ImageMode mode;
     _mode = mode;
@@ -25,17 +25,17 @@ ResampSlc(const isce::product::Product & product) : _haveRefMode(false) {
     // Cache the instrument
     isce::radar::Radar instrument = product.metadata().instrument();
     // Set the doppler
-    _dopplerPoly = instrument.contentDoppler();
+    _dopplerLUT = instrument.contentDoppler();
     // Set the image mode
     _mode = product.complexImagery().primaryMode();
     // Save the filename
     _filename = product.filename();
 }
 
-// Constructor from isce::core::Poly2d and isce::product::ImageMode
+// Constructor from isce::core::LUT1d<double> and isce::product::ImageMode
 isce::image::ResampSlc::
-ResampSlc(const isce::core::Poly2d & doppler, const isce::product::ImageMode & mode) :
-    _dopplerPoly(doppler), _mode(mode), _haveRefMode(false) {
+ResampSlc(const isce::core::LUT1d<double> & doppler, const isce::product::ImageMode & mode) :
+    _dopplerLUT(doppler), _mode(mode), _haveRefMode(false) {
     // _filename variable set to empty string since it shouldn't be used with
     // a non-HDF5 constructor
     _filename = " ";
@@ -43,8 +43,8 @@ ResampSlc(const isce::core::Poly2d & doppler, const isce::product::ImageMode & m
 
 // Constructor from isce::core objects
 isce::image::ResampSlc::
-ResampSlc(const isce::core::Poly2d & doppler, const isce::core::Metadata & meta) :
-    _dopplerPoly(doppler), _mode(meta) {
+ResampSlc(const isce::core::LUT1d<double> & doppler, const isce::core::Metadata & meta) :
+    _dopplerLUT(doppler), _mode(meta) {
     // _filename variable set to empty string since it shouldn't be used with
     // a non-HDF5 constructor
     _filename = " ";
@@ -63,8 +63,8 @@ rgCarrier() const {
 
 // Set range carrier polynomial
 void isce::image::ResampSlc::
-rgCarrier(isce::core::Poly2d & poly) {
-    _rgCarrier = poly;
+rgCarrier(isce::core::Poly2d & lut) {
+    _rgCarrier = lut;
 }
 
 // Get azimuth carrier polynomial
@@ -76,21 +76,21 @@ azCarrier() const {
 
 // Set azimuth carrier polynomial
 void isce::image::ResampSlc::
-azCarrier(isce::core::Poly2d & poly) {
-    _azCarrier = poly;
+azCarrier(isce::core::Poly2d & lut) {
+    _azCarrier = lut;
 }
 
-// Get Doppler polynomial
-isce::core::Poly2d
+// Get Doppler LUT
+isce::core::LUT1d<double>
 isce::image::ResampSlc::
 doppler() const {
-    return _dopplerPoly;
+    return _dopplerLUT;
 }
 
-// Set Doppler polynomial
+// Set Doppler LUT
 void isce::image::ResampSlc::
-doppler(isce::core::Poly2d & poly) {
-    _dopplerPoly = poly;
+doppler(isce::core::LUT1d<double> & lut) {
+    _dopplerLUT = lut;
 }
 
 // Set reference product
@@ -146,19 +146,6 @@ declare(int inLength, int inWidth,
             << pyre::journal::newline << pyre::journal::newline;
     //channel << "Number of threads: " << omp_get_max_threads() << pyre::journal::newline;
     channel << "Complex data interpolation" << pyre::journal::newline;
-    // Polynomial info
-    channel << "Azimuth Carrier Poly" << pyre::journal::newline;
-    for (int j = 0; j <= _azCarrier.rangeOrder; ++j)
-        channel << _azCarrier.getCoeff(0, j) << " ";
-    channel << pyre::journal::newline;
-    channel << "Range Carrier Poly" << pyre::journal::newline;
-    for (int j = 0; j <= _rgCarrier.rangeOrder; ++j)
-        channel << _rgCarrier.getCoeff(0, j) << " ";
-    channel << pyre::journal::newline;
-    channel << "Doppler Poly" << pyre::journal::newline;
-    for (int j = 0; j <= _dopplerPoly.rangeOrder; ++j)
-        channel << _dopplerPoly.getCoeff(0, j) << " ";
-    channel << pyre::journal::endl;
 }
 
 // Get the number of lines per tile

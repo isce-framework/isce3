@@ -14,10 +14,15 @@ ISCE has the following dependencies
 <li> CUDA 9.0 or above (for GPU-based processing)
 </ol>
 
-Centos 7.5 is the operational OS for the NISAR processing system and this is probably the most tested set of instructions. In this set of instructions, we directly use the x86_64 binaries provided on the pyre website and do not compile the package from source. 
+Centos 7.5 is the operational OS for the NISAR processing system and this is probably the most tested set of instructions. The instructions for Centos 7.5 / Ubuntu 18.04 are more or less the same except for the parts specific to using the standard package managers to install compilers and some basic packages. Our overall strategy for directory layouts is as follows:
 
-The instructions for Centos 7.5 / Ubuntu 18.04 are more or less the same except for the parts specific to using the standard package managers to install compilers and some basic packages.
-
+<table>
+<caption id="multi_row">Assumed directory structure for installation</caption>
+<tr><th>Path<th>Description
+<tr><td>${HOME}/python/miniconda3<td>Miniconda3 installation directory
+<tr><td>${HOME}/src<td>Directory for downloading pyre and ISCE source
+<tr><td>${HOME}/tools<td>Directory for installing pyre and ISCE
+</table>
 
 \section linuxpack Installing packages using builtin package manager
 
@@ -48,7 +53,7 @@ If CUDA support is desired, install the following set of packages with yum as we
 
 Don't forget to activate the devtoolset by running the following command.
 \code{.sh}
-> scl enable devtoolset-6 bash
+> source /opt/rh/devtoolset-6/enable
 \endcode
 
 \subsection ubuntuapt apt-get on Ubuntu 18.04
@@ -71,7 +76,7 @@ If CUDA support is desired, install the following set of packages with apt-get a
 
 \section conda Installing Anaconda and Python packages
 
-In this set of instructions, we rely on <a href="https://anaconda.org/">Anaconda</a> for installing Python dependencies. We will install Python3 to the location /home/username/python/anaconda3. 
+In this set of instructions, we rely on <a href="https://anaconda.org/">Anaconda</a> for installing Python dependencies. We will install Python3 to the location ${HOME}/python/miniconda3. We recommend that users install packages only from the default Anaconda channel (e.g., not from conda-forge) in order to avoid C++ linking conflicts during compilation of pyre and ISCE.
 
 <ol>
 <li> We will list all the required packages in a text file called "requirements.txt" located under /home/tools/python. The contents of the requirements.txt file is shown below:
@@ -83,47 +88,131 @@ gdal
 git
 h5py
 libgdal
-nose
+pytest
 numpy
 fftw
 \endverbatim
 
 <li> We can then install Anaconda and these requirements as shown below:
 \code{.sh}
-> cd /home/username/python
+> cd ${HOME}/python
 > curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o miniconda.sh
-> bash miniconda.sh -b -p /home/username/python/anaconda3
-> touch /home/username/python/anaconda3/conda-meta/pinned
-> export PATH=/home/username/python/anaconda3/bin:$PATH
+> bash miniconda.sh -b -p ${HOME}/python/miniconda3
+> touch ${HOME}/python/miniconda3/conda-meta/pinned
+> export PATH=${HOME}/python/miniconda3/bin:$PATH
+> export LD_LIBRARY_PATH=${HOME}/python/miniconda3/lib:$LD_LIBRARY_PATH
 > conda config --set show_channel_urls True
-> conda config --add channels conda-forge 
-> conda update --all --yes
-> conda install --yes --file /home/username/python/requirements.txt
-#> conda install --yes -c conda-forge/label/broken gdal=2.3.1
+> conda update --all
+> conda install --file ${HOME}/python/requirements.txt
 \endcode
 
-<li> Activate the conda root environment
+
+<li> (Optional) On some systems, it may be necessary to activate the conda root environment in order to export important environment variables used by make, cmake, etc. To activate the environment, use:
 \verbatim
-> . /home/username/python/anaconda3/bin/activate root
+> . ${HOME}/python/miniconda3/bin/activate root
 \endverbatim
 </ol>
 
+\section pyreinstall Installing pyre
 
-\section pyrebin Installing pyre binaries
+\subsection pyresrc Option 1: Install pyre from source
 
-We will install pyre binaries in /home/username/tools/pyre.
+In order to install pyre from source, we must first download the config package which is a Python-based build system built on top of GNU `make`.
+\code{.sh}
+> cd ${HOME}/tools
+> git clone https://github.com/aivazis/config.git
+\endcode
+In order to use config, it is recommended to add the following aliases to the startup files for your shell:
+\code{.sh}
+alias mm='python3 ${HOME}/tools/config/make/mm.py'
+alias mm.env='mm --env=sh'
+alias mm.show='mm --show --dry'
+alias mm.bldroot='mm --dry --quiet --show=BLD_ROOT'
+
+mm.paths() {
+    # get {mm} to print out the path variables and add them to the current environment
+    eval $(python3 ${HOME}/tools/config/make/mm.py --quiet --paths=sh $*)
+}
+\endcode
+Additionally, we would like to control where pyre get installed:
+\code{.sh}
+> cd ~
+> mkdir .mm
+> cd .mm
+> vi username.py
+\endcode
+where `username.py` is replaced with your username. The contents of the file are as follows:
+\code{.py}
+# support
+import os
+
+# adjust the {builder} with {developer} choices
+def developer(builder):
+    """
+    Decorate the builder with developer specific choices
+    """
+    # get the developer name
+    user = builder.user
+    # place temporary build files in my 'tmp' directory
+    builder.bldroot = os.path.join(user.home, 'tmp', 'builds')
+    # and the products in my 'tools/pyre' directory
+    builder.prefix = os.path.join(user.home, 'tools', 'pyre')
+
+# all done
+return builder
+\endcode
+Then, we can download the pyre source.
+\code{.sh}
+> cd ~
+> mkdir src
+> cd src
+> git clone https://github.com/pyre/pyre.git
+> cd pyre
+\endcode
+For the most basic pyre build, we must point config to the Python we wish to use (in this case, the Python included with our Miniconda distribution). To do this, once we are in the pyre source directory, we create a file `.mm/config.def` with the following content (modify for Python 3.6 if needed):
+\code{.sh}
+PYTHON = python3.7m
+PYTHON_DIR = ${HOME}/python/miniconda3
+PYTHON_INCDIR = $(PYTHON_DIR)/include/python3.7m
+PYTHON_LIB = python3.7m
+PYTHON_LIBDIR = $(PYTHON_DIR)/lib
+PYTHON_PYCFLAGS = -b
+\endcode
+At the moment, we need to comment out one set of tests that fails for several platforms. Run the following command from the top-level directory:
+\code{.sh}
+sed -i 's|externals|#externals|g' tests/pyre/Make.mm
+\endcode
+Finally, we can install pyre with the following command:
+\code{.sh}
+> mm
+\endcode
+If the conda root environment has been activated (see optional Step 3 in the previous section), then there may be a conflict with the environment variable `PROJ_LIB` and `mm`. In that case, run `mm` in the following manner:
+\code{.sh}
+> PROJ_LIB='' mm
+\endcode
+Once installation and testing is complete, we setup the following environment variables:
+\code{.sh}
+export PYREDIR=${HOME}/tools/pyre
+export PATH=$PYREDIR/bin:$PATH
+export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH
+export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
+\endcode
+
+\subsection pyrebin Option 2: Install pyre binaries (warning: currently not available)
+
+If pre-built pyre binaries are available, we can simply download the binaries and install them in the correct location. We will install pyre binaries in ${HOME}/tools/pyre.
 
 <ol>
 
 <li>Download the pyre binaries.
 \code{.sh}
-> cd /home/username/tools
+> cd ${HOME}/tools
 > curl -sSL http://pyre.orthologue.com/pyre-1.0.cpython-36m-x86_64-linux-gnu.zip -o pyre.zip
 \endcode
 
 <li>Unzip the zip file.
 \code{.sh}
-> cd /home/username/tools
+> cd ${HOME}/tools
 > mkdir pyre
 > cd pyre
 > unzip ../pyre.zip
@@ -131,7 +220,7 @@ We will install pyre binaries in /home/username/tools/pyre.
 
 <li>Setup relevant environment variables
 \code{.sh}
-export PYREDIR=/home/username/tools/pyre
+export PYREDIR=${HOME}/tools/pyre
 export PATH=$PYREDIR/bin:$PATH
 export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH
 export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
@@ -139,20 +228,9 @@ export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
 
 </ol>
 
+\section isce3linux Install ISCE from source
 
-\section isce3linux Install ISCE3 from source
-
-In this section we will walk through the directory setup and build system instructions for installing ISCE. ISCE can be built with 2 different build systems - <a href="https://github.com/aivazis/config">mm</a> and <a href="https://cmake.org/">cmake</a>. In this set of instructions, we focus on cmake as it is already available via standard package managers. We assume the following directory structure in this tutorial
-
-<table>
-    <caption id="multi_row">Assumed directory structure for installing ISCE</caption>
-    <tr><th>Location<th>Description
-    <tr><td>/home/username/tools/pyre <td> Pyre install location
-    <tr><td>/home/username/tools/isce/src <td> git checkout location/ unpacked tarball location of ISCE source
-    <tr><td>/home/username/tools/isce/build <td> cmake build location
-    <tr><td>/home/username/tools/isce/install <td>cmake install location
-</table>
-
+In this section we will walk through the directory setup and build system instructions for installing ISCE. ISCE can be built with 2 different build systems - <a href="https://github.com/aivazis/config">mm</a> and <a href="https://cmake.org/">cmake</a>. In this set of instructions, we focus on cmake as it is already available via standard package managers.
 
 \subsection isce3targit Step 1: Get latest version of ISCE source
 
@@ -161,7 +239,7 @@ In this section we will walk through the directory setup and build system instru
 <ol>
 <li> Ensure that you are in the source folder
 \code{.sh}
-> cd /home/username/tools/isce/src
+> cd ${HOME}/src
 \endcode
 <li> Check out the latest version of the source code from git
 \code{.sh}
@@ -169,6 +247,7 @@ In this section we will walk through the directory setup and build system instru
 \endcode
 <li> Ensure you are building the branch that you want to use. For example, if you want to build the <b>develop</b> branch
 \code{.sh}
+> cd isce
 > git checkout develop
 \endcode
 </ol>
@@ -179,7 +258,7 @@ In this section we will walk through the directory setup and build system instru
 <ol>
 <li> Ensure that you are in the source folder
 \code{.sh}
-> cd /home/username/tools/isce/src
+> cd ${HOME}/src
 \endcode
 <li> Unpack the tarball.
 \code{.sh}
@@ -191,17 +270,22 @@ In this section we will walk through the directory setup and build system instru
 \subsection isce3build Step 2: Build the software
 
 <ol>
-<li> Ensure that you are in the build folder
+<li> For our cmake build, we follow the practice of building outside of the source parent directory. To that end, we first create a temporary build directory:
 \code{.sh}
-> cd /home/username/tools/isce/build
+> cd ${HOME}/src/isce
+> mkdir build
+> cd build
 \endcode
 
-<li> Ensure that you have activated the scl environment (Centos), conda and set environment variables needed by pyre following instructions provided above.
+<li> Ensure that you have activated the scl environment (Centos), conda and set environment variables needed by pyre following instructions provided above. Note: for some operating systems, if you wish to build the CUDA extensions, you may need to run
+\code{.sh}
+export CUDACXX=/usr/local/cuda/bin/nvcc
+\endcode
 
 <li> Run cmake with the correct inputs
 \code{.sh}
 
-> CC=gcc CXX=g++ cmake -DCMAKE_INSTALL_PREFIX=/home/username/tools/isce/install /home/username/tools/isce/src/isce
+> CC=gcc CXX=g++ cmake -DCMAKE_INSTALL_PREFIX=${HOME}/tools/isce ${HOME}/src/isce
 
 \endcode
 
@@ -209,7 +293,7 @@ Other optional arguments can be added to the cmake line
 <table>
     <caption id="multi_row">Additional cmake options</caption>
     <tr><th>Option <th>Description
-    <tr><td>-DWITH_CUDA=ON  <td>Build with CUDA support - will need CUDA libraries installed)
+    <tr><td>-DWITH_CUDA=ON  <td>Build with CUDA support (will need CUDA libraries installed)
     <tr><td>-DWITH_DOC=ON   <td>Build documentation from code using doxygen and sphinx. These need to be installed.
     <tr><td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --track-origins=yes" -DCMAKE_BUILD_TYPE=Debug<td>  
     <tr><td>Run tests with "-T memcheck" to check for memory leaks.
@@ -222,7 +306,7 @@ Other optional arguments can be added to the cmake line
 > make VERBOSE=ON
 \endcode
 
-<li> Run the unittests to ensure that software was built correctly
+<li> Run the unit tests to ensure that software was built correctly
 \code{.sh}
 > ctest
 \endcode
@@ -233,7 +317,7 @@ Other optional arguments can be added to the cmake line
 <ol>
 <li> Ensure that you are in the build folder
 \code{.sh}
-> cd /home/username/tools/isce/build
+> cd ${HOME}/src/isce/build
 \endcode 
 
 <li> Install the software
@@ -246,10 +330,51 @@ Other optional arguments can be added to the cmake line
 <table>
     <caption id="multi_row">Environment variables to set after installing ISCE</caption>
     <tr><th>Variable<th>Setting<th>Description
-    <tr><td>PATH<td>$PATH:/home/username/tools/isce/install/bin<td>For executables installed by ISCE
-    <tr><td>PYTHONPATH<td>$PYTHONPATH:/home/username/tools/isce/install/packages<td>ISCE python package
-    <tr><td>LD_LIBRARY_PATH<td>$LD_LIBRARY_PATH:/home/username/tools/isce/install/lib<td>Shared libraries built by ISCE
+    <tr><td>PATH<td>$PATH:${HOME}/tools/isce/bin<td>For executables installed by ISCE
+    <tr><td>PYTHONPATH<td>$PYTHONPATH:${HOME}/tools/isce/packages<td>ISCE python package
+    <tr><td>LD_LIBRARY_PATH<td>$LD_LIBRARY_PATH:${HOME}/tools/isce/lib<td>Shared libraries built by ISCE
 </table>
 
+We also recommend setting these environment variables in your appropriate `.bashrc` or `.bash_profile` file to avoid having to set them for each new session. For example:
+
+\code{.sh}
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+. ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+# miniconda3
+export PATH=${HOME}/python/miniconda3/bin:$PATH
+export LD_LIBRARY_PATH=${HOME}/python/miniconda3/lib:$LD_LIBRARY_PATH
+
+# cuda
+export CUDACXX=/usr/local/cuda/bin/nvcc
+
+# pyre
+export PYREDIR=${HOME}/tools/pyre
+export PATH=$PYREDIR/bin:$PATH
+export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH
+export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
+
+# isce
+export PATH=$PATH:${HOME}/tools/isce/bin
+export PYTHONPATH=$PYTHONPATH:${HOME}/tools/isce/packages
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOME}/tools/isce/lib
+\endcode
+
 </ol>
+
+\section tips Additional installation tips
+
+During the installation process, users may need to implement additional steps depending on their operating system, prerequisites, development environment, etc.
+
+\subsection tips_cuda 1. Set TMP_DIR for compilation of CUDA extensions
+
+During compilation of CUDA extensions with nvcc and cmake, temporary files are placed in `/tmp` or the directory pointed to by the environment variable `TMP_DIR`. Therefore, if users wish to place temporary files in a custom directory, they must set `TMP_DIR`.
+
+
 */
