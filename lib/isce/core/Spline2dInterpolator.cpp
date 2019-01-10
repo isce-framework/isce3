@@ -51,7 +51,7 @@ interpolate(double x, double y, const isce::core::Matrix<U> & z) {
     i0 = i0 - (_order / 2) + 1;
     j0 = j0 - (_order / 2) + 1;
 
-    std::valarray<double> A(_order), R(_order), Q(_order), HC(_order);
+    std::valarray<U> A(_order), R(_order), Q(_order), HC(_order);
     
     for (int i = 0; i < _order; ++i) {
         const int indi = std::min(std::max(i0 + i, 0), ny - 2);
@@ -68,34 +68,38 @@ interpolate(double x, double y, const isce::core::Matrix<U> & z) {
 }
 
 template <typename U>
-double isce::core::Spline2dInterpolator<U>::
-_spline(double x, const std::valarray<double> & Y, int n, const std::valarray<double> & R) {
+U isce::core::Spline2dInterpolator<U>::
+_spline(double x, const std::valarray<U> & Y, int n, const std::valarray<U> & R) {
 
+    const U denom = static_cast<U>(6.0);
     if (x < 1.0) {
-        return Y[0] + (x - 1.0) * (Y[1] - Y[0] - (R[1] / 6.0));
+        return Y[0] + static_cast<U>(x - 1.0) * (Y[1] - Y[0] - (R[1] / denom));
     } else if (x > n) {
-        return Y[n-1] + ((x - n) * (Y[n-1] - Y[n-2] + (R[n-2] / 6.)));
+        return Y[n-1] + (static_cast<U>(x - n) * (Y[n-1] - Y[n-2] + (R[n-2] / denom)));
     } else {
         int j = int(std::floor(x));
-        auto xx = x - j;
-        auto t0 = Y[j] - Y[j-1] - (R[j-1] / 3.0) - (R[j] / 6.0);
-        auto t1 = xx * ((R[j-1] / 2.0) + (xx * ((R[j] - R[j-1]) / 6)));
+        U xx = static_cast<U>(x - j);
+        auto t0 = Y[j] - Y[j-1] - (R[j-1] / static_cast<U>(3.0)) - (R[j] / denom);
+        auto t1 = xx * ((R[j-1] / static_cast<U>(2.0)) + (xx * ((R[j] - R[j-1]) / denom)));
         return Y[j-1] + (xx * (t0 + t1));
     }
 }
 
 template <typename U>
 void isce::core::Spline2dInterpolator<U>::
-_initSpline(const std::valarray<double> & Y, int n, std::valarray<double> & R,
-            std::valarray<double> & Q) {
-    Q[0] = 0.0;
-    R[0] = 0.0;
+_initSpline(const std::valarray<U> & Y, int n, std::valarray<U> & R,
+            std::valarray<U> & Q) {
+    Q[0] = U(0.0);
+    R[0] = U(0.0);
     for (int i = 1; i < n - 1; ++i) {
-        const double p = 1.0 / (0.5 * Q[i-1] + 2.0);
-        Q[i] = -0.5 * p;
-        R[i] = (3 * (Y[i+1] - 2*Y[i] + Y[i-1]) - 0.5*R[i-1]) * p;
+        const U p = static_cast<U>(1.0) / 
+                   (static_cast<U>(0.5) * Q[i-1] + static_cast<U>(2.0));
+        Q[i] = static_cast<U>(-0.5) * p;
+        R[i] = (static_cast<U>(3.0) * 
+                (Y[i+1] - static_cast<U>(2.0) * Y[i] + Y[i-1]) - 
+                 static_cast<U>(0.5) * R[i-1]) * p;
     }
-    R[n-1] = 0.0;
+    R[n-1] = U(0.0);
     for (int i = (n - 2); i > 0; --i)
         R[i] = Q[i] * R[i+1] + R[i];
 }
@@ -103,5 +107,7 @@ _initSpline(const std::valarray<double> & Y, int n, std::valarray<double> & R,
 // Forward declaration of classes
 template class isce::core::Spline2dInterpolator<double>;
 template class isce::core::Spline2dInterpolator<float>;
+template class isce::core::Spline2dInterpolator<std::complex<double>>;
+template class isce::core::Spline2dInterpolator<std::complex<float>>;
 
 // end of file 

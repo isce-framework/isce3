@@ -158,15 +158,15 @@ class isce::core::Spline2dInterpolator : public isce::core::Interpolator<U> {
 
     // Utility spline functions
     private:
-        void _initSpline(const std::valarray<double> &,
+        void _initSpline(const std::valarray<U> &,
                          int,
-                         std::valarray<double> &,
-                         std::valarray<double> &);
+                         std::valarray<U> &,
+                         std::valarray<U> &);
 
-        double _spline(double,
-                       const std::valarray<double> &,
-                       int,
-                       const std::valarray<double> &);
+        U _spline(double,
+                  const std::valarray<U> &,
+                  int,
+                  const std::valarray<U> &);
 };
 
 // Definition of Sinc2dInterpolator
