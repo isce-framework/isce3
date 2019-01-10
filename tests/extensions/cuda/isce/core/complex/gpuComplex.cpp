@@ -7,19 +7,15 @@
 
 #include <cmath>
 #include <iostream>
-#include <vector>
+#include <valarray>
 #include "isce/cuda/core/gpuComplex.h"
 #include "gtest/gtest.h"
+#include "gpuComplex.h"
 
-using isce::core::orbitInterpMethod;
-using isce::core::HERMITE_METHOD;
-using isce::core::LEGENDRE_METHOD;
-using isce::core::SCH_METHOD;
-using isce::core::Orbit;
 using isce::cuda::core::gpuComplex;
 using std::endl;
-using std::vector;
-using isce::core::cartesian_t;
+using std::valarray;
+using std::complex;
 
 struct gpuComplexTest : public ::testing::Test {
     virtual void SetUp() {
@@ -30,58 +26,55 @@ struct gpuComplexTest : public ::testing::Test {
             std::cerr << "gpuComplex::TearDown sees failures" << std::endl;
         }
     }
+    size_t n_data_pts = 10000;
+    valarray<float> a_float_real = valarray<float>(n_data_pts);
+    valarray<float> b_float_real = valarray<float>(n_data_pts);
+    valarray<complex<float>> a_float_cpu_complex = valarray<complex<float>>(n_data_pts);
+    valarray<complex<float>> b_float_cpu_complex = valarray<complex<float>>(n_data_pts);
+    valarray<gpuComplex<float>> a_float_gpu_complex = valarray<gpuComplex<float>>(n_data_pts);
+    valarray<gpuComplex<float>> b_float_gpu_complex = valarray<gpuComplex<float>>(n_data_pts);
+    valarray<double> a_double_real = valarray<double>(n_data_pts);
+    valarray<double> b_double_real = valarray<double>(n_data_pts);
+    valarray<complex<double>> a_double_cpu_complex = valarray<complex<double>>(n_data_pts);
+    valarray<complex<double>> b_double_cpu_complex = valarray<complex<double>>(n_data_pts);
+    valarray<gpuComplex<double>> a_double_gpu_complex = valarray<gpuComplex<double>>(n_data_pts);
+    valarray<gpuComplex<double>> b_double_gpu_complex = valarray<gpuComplex<double>>(n_data_pts);
     unsigned fails;
+
+    protected:
+        // constructor
+        gpuComplexTest() {
+            // create all the float test data
+            makeRandomReal<float>(a_float_real, n_data_pts);
+            makeRandomReal<float>(b_float_real, n_data_pts);
+            makeRandomStdComplex<complex<float>>(a_float_cpu_complex, n_data_pts);
+            makeRandomStdComplex<complex<float>>(b_float_cpu_complex, n_data_pts);
+            memcpy(&a_float_gpu_complex[0], &a_float_cpu_complex[0], n_data_pts*sizeof(complex<float>));
+            memcpy(&b_float_gpu_complex[0], &b_float_cpu_complex[0], n_data_pts*sizeof(complex<float>));
+            // create all the double test data
+            makeRandomReal<double>(a_double_real, n_data_pts);
+            makeRandomReal<double>(b_double_real, n_data_pts);
+            makeRandomStdComplex<complex<double>>(a_double_cpu_complex, n_data_pts);
+            makeRandomStdComplex<complex<double>>(b_double_cpu_complex, n_data_pts);
+            memcpy(&a_double_gpu_complex[0], &a_double_cpu_complex[0], n_data_pts*sizeof(complex<double>));
+            memcpy(&b_double_gpu_complex[0], &b_double_cpu_complex[0], n_data_pts*sizeof(complex<double>));
+
+        }
 };
 
-#define compareTriplet(a,b,c)\
-    EXPECT_NEAR(a[0], b[0], c); \
-    EXPECT_NEAR(a[1], b[1], c); \
-    EXPECT_NEAR(a[2], b[2], c);
+// test then copy, paste, modify 63x for other operator combinations
+TEST_F(gpuComplexTest, AddComplexFloatComplexFloat) {
+    auto c_cpu = a_float_cpu_complex + b_float_cpu_complex;
+    auto c_gpu = a_float_gpu_complex + b_float_gpu_complex;
 
-void makeLinearSV(double dt, cartesian_t &opos, cartesian_t &ovel, cartesian_t &pos,
-                  cartesian_t &vel) {
-    pos = {opos[0] + (dt * ovel[0]), opos[1] + (dt * ovel[1]), opos[2] + (dt * ovel[2])};
-    vel = ovel;
-}
-
-TEST_F(gpuComplexTest, LinearSCH) {
-    /*
-     * Test linear orbit.
-     */
-
-    // create mirror orbit objects
-    Orbit orb_cpu(11);
-    double t = 1000.;
-    cartesian_t opos = {0., 0., 0.};
-    cartesian_t ovel = {4000., -1000., 4500.};
-    cartesian_t pos, vel;
-    cartesian_t hpos, hvel;
-
-    // Create straight-line orbit with 11 state vectors, each 10 s apart
-    for (int i=0; i<11; i++) {
-        makeLinearSV(i*10., opos, ovel, pos, vel); 
-        orb_cpu.setStateVector(i, t+(i*10.), pos, vel);
-    }
-
-    // deep copy create same orbit on GPU
-    gpuOrbit orb_gpu(orb_cpu);
-
-    // Interpolation test times
-    double test_t[] = {23.3, 36.7, 54.5, 89.3};
-    cartesian_t ref_pos, ref_vel;
-
-    for (int i=0; i<4; i++) {
-        makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
-        orb_cpu.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
-        orb_gpu.interpolateSCHOrbit_h(t+test_t[i], hpos, hvel);
-        compareTriplet(pos, hpos, 1.0e-5);
-        compareTriplet(vel, hvel, 1.0e-6);
-        compareTriplet(ref_pos, hpos, 1.0e-5);
-        compareTriplet(ref_vel, hvel, 1.0e-6);
+    for (int i=0; i<n_data_pts; ++i) {
+        ASSERT_NEAR(std::real(c_cpu[i]), c_gpu[i].r, 1.0e-6);
+        ASSERT_NEAR(std::imag(c_cpu[i]), c_gpu[i].i, 1.0e-6);
     }
 
     fails += ::testing::Test::HasFailure();
 }
+
 
 int main(int argc, char **argv) {
 
