@@ -199,7 +199,7 @@ class isce::core::Sinc2dInterpolator : public isce::core::Interpolator<U> {
 
         // Evaluate sinc
         U _sinc_eval_2d(const isce::core::Matrix<U> & z, int intpx, int intpy,
-                        double frpx, double frpy, int xlen, int ylen);
+                        double frpx, double frpy);
 
     private:
         isce::core::Matrix<double> _kernel;
@@ -213,7 +213,8 @@ namespace isce {
         /** Utility function to create interpolator pointer given an interpolator enum type */
         template <typename U>
         inline Interpolator<U> * createInterpolator(
-            isce::core::dataInterpMethod method, size_t order = 6
+            isce::core::dataInterpMethod method, size_t order = 6,
+            int sincLen = isce::core::SINC_LEN, int sincSub = isce::core::SINC_SUB
             ) {
             if (method == isce::core::BILINEAR_METHOD) {
                 return new isce::core::BilinearInterpolator<U>();
@@ -221,6 +222,12 @@ namespace isce {
                 return new isce::core::BicubicInterpolator<U>();
             } else if (method == isce::core::BIQUINTIC_METHOD) {
                 return new isce::core::Spline2dInterpolator<U>(order);
+            } else if (method == isce::core::NEAREST_METHOD) {
+                return new isce::core::NearestNeighborInterpolator<U>();
+            } else if (method == isce::core::SINC_METHOD) {
+                return new isce::core::Sinc2dInterpolator<U>(
+                    sincLen, sincSub
+                );
             } else {
                 return new isce::core::BilinearInterpolator<U>();
             }

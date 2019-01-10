@@ -186,6 +186,33 @@ TEST_F(InterpolatorTest, BiquinticVector) {
     ASSERT_TRUE((error / N_pts) < 0.058);
 }
 
+// Test sinc interpolation
+TEST_F(InterpolatorTest, Sinc2d) {
+    double error = 0.0;
+    size_t N_pts = 0;
+    // Create interpolator (exercise flexible interpolator creation)
+    isce::core::Interpolator<double> * interp = isce::core::createInterpolator<double>(
+        isce::core::SINC_METHOD, 0, 8, 8192
+    );
+    // Loop over test points
+    for (size_t i = 0; i < true_values.length(); ++i) {
+        // Unpack location to interpolate
+        const double x = (true_values(i,0) - start) / delta;
+        const double y = (true_values(i,1) - start) / delta;
+        // Skip for invalid sinc windows
+        if ((x < 3) || (y < 3) || (x > M.width() -5 ) || (y > M.length() - 5))
+            continue;
+        const double zref = true_values(i,5);
+        // Perform interpolation
+        const double z = interp->interpolate(x, y, M);
+        // Accumulate error
+        error += std::pow(z - zref, 2);
+        N_pts += 1;
+    }
+    ASSERT_TRUE((error / N_pts) < 0.0003);
+    // Clean up
+    delete interp;
+}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
