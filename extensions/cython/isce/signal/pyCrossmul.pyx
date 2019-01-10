@@ -37,7 +37,8 @@ cdef class pyCrossmul:
     # Run crossmul
     def crossmul(self, pyRaster referenceSLC, pyRaster secondarySLC,
                  pyRaster interferogram, pyRaster coherence, pyRaster rngOffset=None,
-                 refDoppler=None, secDoppler=None, int rangeLooks=1, int azimuthLooks=1):
+                 refDoppler=None, secDoppler=None, int rangeLooks=1, int azimuthLooks=1,
+                 double prf=1.0, double azimuthBandwidth=1.0):
         '''
         Run crossmul to generate interferogram and coherence image.
 
@@ -50,10 +51,18 @@ cdef class pyCrossmul:
         cdef pyLUT1d c_refdoppler
         cdef pyLUT1d c_secdoppler
         if refDoppler is not None and secDoppler is not None:
+
+            # Get the dopplers
             c_refdoppler = <pyLUT1d> refDoppler
             c_secdoppler = <pyLUT1d> secDoppler
             self.c_crossmul.doppler(deref(c_refdoppler.c_lut), deref(c_secdoppler.c_lut))
             self.c_crossmul.doCommonAzimuthbandFiltering(True)
+
+            # Set the PRF
+            self.c_crossmul.prf(prf)
+
+            # Set the azimuth bandwidth
+            self.c_crossmul.commonAzimuthBandwidth(azimuthBandwidth)
 
         # Set the number of looks
         if rangeLooks > 1:
