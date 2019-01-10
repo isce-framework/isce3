@@ -1,6 +1,18 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Author: Heresh Fattahi
+// Copyright 2019-
+
 #if !defined(ISCE_GEOMETRY_GEOCODE_ICC)
 #error "Geocode.icc is an implementation detail of class Geocode"
 #endif
+
+//void isce::geometry::Geocode::
+//Geocode(isce::product::Product & product) {
+
+//}
+
 
 void isce::geometry::Geocode::
 geoGrid(double geoGridStartX, double geoGridStartY,

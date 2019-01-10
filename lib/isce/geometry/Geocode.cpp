@@ -58,11 +58,13 @@ geocode(isce::io::Raster & inputRaster,
                         azimuthFirstLine, azimuthLastLine,
                         rangeFirstPixel, rangeLastPixel);
 
-	size_t radarBlockSize = (azimuthLastLine - azimuthFirstLine + 1) * 
-                                (rangeLastPixel - rangeFirstPixel + 1);
+        size_t rdrBlockLength = azimuthLastLine - azimuthFirstLine + 1;
+        size_t rdrBlockWidth = rangeLastPixel - rangeFirstPixel + 1;
+        size_t rdrBlockSize = rdrBlockLength * rdrBlockWidth;
 
-        std::valarray<double> azimuthTime(radarBlockSize);
-    	std::valarray<double> slantRange(radarBlockSize);
+        // X and Y indicies of the geocoded pixels in the radar coordinates
+        std::valarray<double> radarX(blockSize);
+    	std::valarray<double> radarY(blockSize);
 
         // Loop over lines of the output grid
         for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
@@ -85,6 +87,18 @@ geocode(isce::io::Raster & inputRaster,
                 double aztime, srange;
                 _geo2rdr(x, y, aztime, srange, demInterp);
 
+                // get the row and column index in the radar grid
+                double rdrX, rdrY;
+                rdrY = (aztime - _sensingStart.secondsSinceEpoch(_refEpoch))/
+                                _azimuthTimeInterval;
+		
+                rdrX = (srange - _startingRange)/_rangeSpacing;		
+
+                // adjust the x,y indicies for the current block, 
+                // i.e., moving the origin to the top-left of this radar block.
+                rdrY -= azimuthFirstLine;
+                rdrX -= rangeFirstPixel;
+
                 // Check if solution is out of bounds
                 /*bool isOutside = false;
                 if ((aztime < t0) || (aztime > tend))
@@ -95,29 +109,43 @@ geocode(isce::io::Raster & inputRaster,
 
                 //if (!isOutside) {
                     // interpolate the inputRaster to get the value at aztime, slantRange
-                //    azimuthTime[blockLine*geoGridWidth + pixel] = aztime;
-                //    slantRange[blockLine*geoGridWidth + pixel] = srange;
+                radarX[blockLine*_geoGridWidth + pixel] = rdrX;
+                radarY[blockLine*_geoGridWidth + pixel] = rdrY;
                 //} else {
                 //    output[index] = NULL_VALUE;
                 //}
 
             } // end loop over pixels of output grid 
         } // end loops over lines of output grid
+        //isce::core::Matrix<T> rdrDataBlock(rdrBlockLength, rdrBlockWidth);
+        
 
         //for each band in the input:
-        //_interpolate(inputDataBlock, outputDataBlock, azimuthTime, slantRange, ....);      
-    
+	// get a block of data
+        /*inputRaster.getBlock(rdrDataBlock.data(),
+                                    rangeFirstPixel, azimuthFirstLine,
+                                    rdrBlockWidth, rdrBlockLength);
+        */
+        //_interpolate(rdrDataBlock, geoDataBlock, radarX, radarY);
+
         // set output block of data
     } // end loop over block of DEM
 
 }
 
-/*void isce::geometry::Geocode::
-_interpolate(inputDataBlock, outputDataBlock, azimuthTime, slantRange, ....);
+/*
+void isce::geometry::Geocode<T>::
+_interpolate(isce::core::Matrix<T> rdrDataBlock, isce::core::Matrix<T> geoDataBlock,
+            std::valarray<double> radarX, std::valarray<double> radarY);
 {
+    size_t blockSize = radarX.size;
+    #pragma omp parallel for
+    for (size_t i = 0; i < blockSize; ++i)
+        geoDataBlock[i] = _interp->interpolate(radarX[i], radarY[i], rdrDataBlock);
 
 }
 */
+
 
 void isce::geometry::Geocode::
 _loadDEM(isce::io::Raster demRaster,

@@ -42,12 +42,14 @@ class isce::geometry::Geocode {
 
         ~Geocode() {};
 
+        //inline Geocode(isce::product::Product &);
+
         void geocode(isce::io::Raster & input, 
                 isce::io::Raster & output,
                 isce::io::Raster & demRaster);
 
         /** Set the output geocoded grid*/
-        void geoGrid(double geoGridStartX, double geoGridStartY,
+        inline void geoGrid(double geoGridStartX, double geoGridStartY,
                 double geoGridSpacingX, double geoGridSpacingY,
                 double geoGridEndX, double geoGridEndY,
                 int epsgcode);
@@ -73,6 +75,8 @@ class isce::geometry::Geocode {
         void _geo2rdr(double x, double y,
                     double & azimuthTime, double & slantRange,
                     isce::geometry::DEMInterpolator & demInterp);
+
+        
 
     private:
         
@@ -127,6 +131,9 @@ class isce::geometry::Geocode {
 
         // margin around the computed bounding box for radar dara (integer number of lines/pixels)
         int _radarBlockMargin;
+
+        //interpolator 
+        //isce::core::Interpolator<T> * _interp = nullptr;
 
 };
 
