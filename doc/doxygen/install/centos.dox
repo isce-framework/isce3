@@ -158,8 +158,8 @@ def developer(builder):
     # and the products in my 'tools/pyre' directory
     builder.prefix = os.path.join(user.home, 'tools', 'pyre')
 
-# all done
-return builder
+    # all done
+    return builder
 \endcode
 Then, we can download the pyre source.
 \code{.sh}
