@@ -27,7 +27,6 @@ foreach(HFILE ${PXD_LIST})
     GET_FILENAME_COMPONENT(HFILEBASE  ${HFILE} NAME)
     configure_file(${HFILE} ${ISCE_BUILDCYINCLUDEDIR}/${HFILEBASE} COPYONLY)
 endforeach()
-configure_file(isceextension.pxd.in ${ISCE_BUILDCYINCLUDEDIR}/isceextension.pxd COPYONLY)
 
 # Add Cython module
 cython_add_module(isceextension isceextension.pyx)
