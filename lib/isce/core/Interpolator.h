@@ -20,6 +20,7 @@ namespace isce {
         template <typename U> class Interpolator;
         template <typename U> class BilinearInterpolator;
         template <typename U> class BicubicInterpolator;
+        template <typename U> class NearestNeighborInterpolator;
         template <typename U> class Spline2dInterpolator;
         template <typename U> class Sinc2dInterpolator;
     }
@@ -98,6 +99,31 @@ class isce::core::BicubicInterpolator : public isce::core::Interpolator<U> {
     // Kernel weights
     private:
         std::valarray<double> _weights;
+};
+
+// Definition of NearestNeighborInterpolator
+template <typename U>
+class isce::core::NearestNeighborInterpolator : public isce::core::Interpolator<U> {
+
+    public:
+        /** Default constructor */
+        inline NearestNeighborInterpolator() : 
+            isce::core::Interpolator<U>(isce::core::NEAREST_METHOD) {}
+
+        /** Interpolate at a given coordinate. */
+        U interpolate(double x, double y, const Matrix<U> & z);
+
+        /** Interpolate at a given coordinate for data passed as a valarray */
+        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+
+        /** Interpolate at a given coordinate for data passed as a vector */
+        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
 };
 
 // Definition of Spline2dInterpolator

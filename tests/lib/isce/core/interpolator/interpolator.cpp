@@ -81,6 +81,28 @@ struct InterpolatorTest : public ::testing::Test {
         }
 };
 
+// Test nearest neighbor interpolation
+TEST_F(InterpolatorTest, Nearest) {
+    size_t N_pts = true_values.length();
+    double error = 0.0;
+    // Create interpolator
+    isce::core::NearestNeighborInterpolator<double> interp;
+    // Loop over test points
+    for (size_t i = 0; i < N_pts; ++i) {
+        // Unpack location to interpolate
+        const double x = (true_values(i,0) - start) / delta;
+        const double y = (true_values(i,1) - start) / delta;
+        // Perform interpolation
+        const double z = interp.interpolate(x, y, M);
+        // Manually get nearest neighbor
+        const size_t col = (size_t) std::round(x);
+        const size_t row = (size_t) std::round(y);
+        const double zref = M(row, col);
+        // Check
+        ASSERT_NEAR(z, zref, 1.0e-8);
+    }
+}
+
 // Test bilinear interpolation
 TEST_F(InterpolatorTest, Bilinear) {
     size_t N_pts = true_values.length();
