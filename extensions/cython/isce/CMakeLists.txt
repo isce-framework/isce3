@@ -5,6 +5,12 @@
 # Find Numpy
 find_package(Numpy REQUIRED)
 
+###Create a function for concatenating pxd files
+function(catpxd IN_FILE OUT_FILE)
+    FILE(READ ${IN_FILE} CONTENTS)
+    FILE(APPEND ${OUT_FILE} "${CONTENTS}")
+endfunction()
+
 # Set the name for the ISCE C++ library
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
@@ -13,6 +19,14 @@ set_source_files_properties(
     isceextension.pyx
     PROPERTIES CYTHON_IS_CXX TRUE
 )
+
+
+###Put together all the pxd files into one giant pxd
+FILE(GLOB PXD_LIST ${CMAKE_CURRENT_LIST_DIR}/*/*.pxd) 
+foreach(HFILE ${PXD_LIST})
+    GET_FILENAME_COMPONENT(HFILEBASE  ${HFILE} NAME)
+    configure_file(${HFILE} ${ISCE_BUILDCYINCLUDEDIR}/${HFILEBASE} COPYONLY)
+endforeach()
 
 # Add Cython module
 cython_add_module(isceextension isceextension.pyx)

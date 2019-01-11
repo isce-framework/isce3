@@ -13,6 +13,8 @@ from libcpp.string cimport string
 from libcpp cimport bool
 
 from Doppler cimport Doppler
+from EulerAngles cimport Attitude, EulerAngles
+from Quaternion cimport Quaternion
 
 cdef class pyDoppler:
 
@@ -77,9 +79,10 @@ cdef class pyDopplerEuler(pyDoppler):
     
     def __cinit__(self, pyOrbit orbit, pyEulerAngles eulerangles, pyEllipsoid ellipsoid,
         double epoch, int side=-1, bool precession=False, frame='inertial'):
+        cdef Attitude*  attwrapper = <Attitude*>(eulerangles.c_eulerangles); 
         self.c_doppler = new Doppler(
             deref(orbit.c_orbit),
-            eulerangles.c_eulerangles,
+            attwrapper,
             deref(ellipsoid.c_ellipsoid), epoch
         )
         self.eulerangles = eulerangles
@@ -143,9 +146,10 @@ cdef class pyDopplerQuaternion(pyDoppler):
     
     def __cinit__(self, pyOrbit orbit, pyQuaternion quaternion, pyEllipsoid ellipsoid,
         double epoch):
+        cdef Attitude* quadwrapper = <Attitude*>(quaternion.c_quaternion)
         self.c_doppler = new Doppler(
             deref(orbit.c_orbit),
-            quaternion.c_quaternion,
+            quadwrapper,
             deref(ellipsoid.c_ellipsoid), epoch
         )
         self.quaternion = quaternion
