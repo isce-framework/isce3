@@ -15,6 +15,9 @@ set_source_files_properties(
     PROPERTIES CYTHON_IS_CXX TRUE
 )
 
+#Include for pxd files
+include_directories(${ISCE_BUILDCYINCLUDEDIR})
+
 # Add Cython module
 cython_add_module(iscecudaextension iscecudaextension.pyx)
 
@@ -22,6 +25,7 @@ cython_add_module(iscecudaextension iscecudaextension.pyx)
 target_include_directories(
         iscecudaextension PUBLIC
         ${ISCE_BUILDINCLUDEDIR}
+        ${ISCE_BUILDCYINCLUDEDIR}
         ${PYTHON_NUMPY_INCLUDE_DIR}
         ${GDAL_INCLUDE_DIR}
         ${CMAKE_SOURCE_DIR}/contrib/cereal/include
