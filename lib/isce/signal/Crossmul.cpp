@@ -7,6 +7,15 @@
 
 #include "Crossmul.h"
 
+// Utility function to get number of OpenMP threads
+// (gcc sometimes has problems with omp_get_num_threads)
+size_t omp_thread_count() {
+    size_t n = 0;
+    #pragma omp parallel reduction(+:n)
+    n += 1;
+    return n;
+}
+
 /*
 isce::signal::Crossmul::
 Crossmul(const isce::product::Product& referenceSlcProduct,
@@ -59,12 +68,13 @@ crossmul(isce::io::Raster& referenceSLC,
 
     size_t nrows = referenceSLC.length();
     size_t ncols = referenceSLC.width();
+    size_t nthreads = omp_thread_count();
 
     //signal object for refSlc
-    isce::signal::Signal<float> refSignal;
+    isce::signal::Signal<float> refSignal(nthreads);
 
     //signal object for secSlc
-    isce::signal::Signal<float> secSignal;
+    isce::signal::Signal<float> secSignal(nthreads);
 
     // instantiate Looks used for multi-looking the interferogram
     isce::signal::Looks<float> looksObj;
