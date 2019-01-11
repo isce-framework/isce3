@@ -23,6 +23,7 @@ cdef extern from "isce/core/LUT1d.h" namespace "isce::core":
         void values(const valarray[T] &)
         bool extrapolate()
         void extrapolate(bool)
+        size_t size()
 
         # Evaluation
         T eval(double)
