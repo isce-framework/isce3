@@ -222,10 +222,8 @@ crossmul(isce::io::Raster& referenceSLC,
         for (size_t line = 0; line < blockRowsData; ++line){
             referenceSLC.getLine(dataLine, rowStart + line);
             refSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
-
             secondarySLC.getLine(dataLine, rowStart + line);
             secSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
-
         }
         //referenceSLC.getBlock(refSlc, 0, rowStart, ncols, blockRowsData);
         //secondarySLC.getBlock(secSlc, 0, rowStart, ncols, blockRowsData);
@@ -238,13 +236,15 @@ crossmul(isce::io::Raster& referenceSLC,
 
         // common range band-pass filtering
         if (_doCommonRangebandFilter){
+
+            // Read range offsets
             std::valarray<double> offsetLine(ncols);
             for (size_t line = 0; line < blockRowsData; ++line){
                 rngOffsetRaster.getLine(offsetLine, rowStart + line);
                 rngOffset[std::slice(line*ncols, ncols, 1)] = offsetLine;
             }
 
-            std::cout << "Common range band filtering " << std::endl;        
+            #pragma omp parallel for
             for (size_t line = 0; line < blockRowsData; ++line){
                 for (size_t col = 0; col < ncols; ++col){
                     double phase = 4.0*M_PI*_rangePixelSpacing*rngOffset[line*ncols+col]/_wavelength;
@@ -254,6 +254,7 @@ crossmul(isce::io::Raster& referenceSLC,
 
                 }
             }
+
             refSignal.forward(geometryIfgramConj, refSpectrum);
             refSignal.forward(geometryIfgram, secSpectrum);
 
@@ -270,7 +271,6 @@ crossmul(isce::io::Raster& referenceSLC,
                                 nfft);
                                 
         }
-        
         looksObj.ncols(nfft);
         // refAmplitudeLooked = sum(abs(refSlc)^2)
         looksObj.multilook(refSlc, refAmplitudeLooked, 2);
@@ -281,6 +281,7 @@ crossmul(isce::io::Raster& referenceSLC,
         secSignal.upsample(secSlc, secSlcUpsampled, blockRows, nfft, oversample, shiftImpact);
        
         // Compute oversampled interferogram data
+        #pragma omp parallel for
         for (size_t line = 0; line < blockRowsData; line++){
             for (size_t col = 0; col < oversample*ncols; col++){
                 ifgramUpsampled[line*(oversample*ncols) + col] = 
@@ -291,6 +292,7 @@ crossmul(isce::io::Raster& referenceSLC,
 
         // Reclaim the extra oversample looks across
         float ov = oversample;
+        #pragma omp parallel for
         for (size_t line = 0; line < blockRowsData; line++){
             for (size_t col = 0; col < ncols; col++){
                 std::complex<float> sum =(0,0);
@@ -299,13 +301,14 @@ crossmul(isce::io::Raster& referenceSLC,
                 ifgram[line*ncols + col] = sum/ov;            
             }
         }
-    
 
         // Take looks down (summing columns)
         if (_doMultiLook){
+
             looksObj.ncols(ncols);
             looksObj.multilook(ifgram, ifgramMultiLooked);
 
+            #pragma omp parallel for
             for (size_t i = 0; i< ifgramMultiLooked.size(); ++i){
                 coherence[i] = std::abs(ifgramMultiLooked[i])/
                             std::sqrt(refAmplitudeLooked[i]*secAmplitudeLooked[i]);
@@ -317,7 +320,6 @@ crossmul(isce::io::Raster& referenceSLC,
             coherenceRaster.setBlock(coherence, 0, rowStart/_azimuthLooks,
                         ncols/_rangeLooks, blockRowsData/_azimuthLooks);
         } else {
-
             // set the block of interferogram
             interferogram.setBlock(ifgram, 0, rowStart, ncols, blockRowsData);
         }
@@ -394,7 +396,7 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
                         std::valarray<std::complex<float>> &refSpectrum,
                         std::valarray<std::complex<float>> &secSpectrum,
                         std::valarray<double> &rangeFrequencies,
-            isce::signal::Filter<float> &rngFilter,
+                        isce::signal::Filter<float> &rngFilter,
                         size_t blockLength,
                         size_t ncols)
 {
@@ -444,6 +446,7 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
     rngFilter.filter(secSlc, secSpectrum);
 
     // add/remove half geometrical phase to/from reference and secondary SLCs
+    #pragma omp parallel for
     for (size_t i = 0; i < vectorLength; ++i){
 
         // Half phase due to baseline separation obtained from range difference
