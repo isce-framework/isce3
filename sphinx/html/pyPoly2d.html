@@ -380,6 +380,245 @@ Transcript written on math.log.
 </div>
  is the set of coefficients.</li>
 </ul>
+<dl class="class">
+<dt id="isceextension.pyPoly2d">
+<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyPoly2d</code><a class="headerlink" href="#isceextension.pyPoly2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Python wrapper for isce::core::Poly2D</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Always set the orders of the polynomials before assigning coefficients to it.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>azimuthOrder</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Order of polynomial in azimuth (y)</li>
+<li><strong>rangeOrder</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Order of polynomial in range (x)</li>
+<li><strong>azimuthMean</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Mean for normalizing value of input in azimuth</li>
+<li><strong>rangeMean</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Mean for normalizing value of input in range</li>
+<li><strong>azimuthNorm</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Scale for normalizing value of input in azimuth</li>
+<li><strong>rangeNorm</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Scale for normalizing value of input in range</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="isceextension.pyPoly2d.azimuthMean">
+<code class="descname">azimuthMean</code><a class="headerlink" href="#isceextension.pyPoly2d.azimuthMean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return azimuth mean.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">azimuth mean of the polynomial.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyPoly2d.azimuthNorm">
+<code class="descname">azimuthNorm</code><a class="headerlink" href="#isceextension.pyPoly2d.azimuthNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return azimuth norm.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">azimuth norm</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyPoly2d.azimuthOrder">
+<code class="descname">azimuthOrder</code><a class="headerlink" href="#isceextension.pyPoly2d.azimuthOrder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns azimuth order.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Azimuth order of polynomial</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="isceextension.pyPoly2d.bind">
+<em class="property">static </em><code class="descname">bind</code><span class="sig-paren">(</span><em>pyPoly2d poly</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.bind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a pyPoly2d object that acts as a reference to an existing
+pyPoly2d instance.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyPoly2d.coeffs">
+<code class="descname">coeffs</code><a class="headerlink" href="#isceextension.pyPoly2d.coeffs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return polynomial coefficients.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method returns an actual reference to the array of coefficients. Modifying contents will affect data at C++ level and deleting the C++ datastructure will impact the returned array.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of coefficients</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">numpy.array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyPoly2d.dPrint">
+<code class="descname">dPrint</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.dPrint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Debug print of underlying C++ structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyPoly2d.eval">
+<code class="descname">eval</code><span class="sig-paren">(</span><em>self</em>, <em>double azi</em>, <em>double rng</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate polynomial at given point.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>azi</strong> (<em>float</em>) – Azimuth coordinate</li>
+<li><strong>rng</strong> (<em>float</em>) – Range coordinate</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Value of polynomial at (azi, rng)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyPoly2d.getCoeff">
+<code class="descname">getCoeff</code><span class="sig-paren">(</span><em>self</em>, <em>int row</em>, <em>int col</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.getCoeff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get polynomial coefficient using row and col indices.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>row</strong> (<em>int</em>) – Index in azimuth direction</li>
+<li><strong>col</strong> (<em>int</em>) – Index in range direction</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Value of coefficient</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyPoly2d.printPoly">
+<code class="descname">printPoly</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.printPoly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Debug print function of underlying C++ structure.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyPoly2d.rangeMean">
+<code class="descname">rangeMean</code><a class="headerlink" href="#isceextension.pyPoly2d.rangeMean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return range mean.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">range mean</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyPoly2d.rangeNorm">
+<code class="descname">rangeNorm</code><a class="headerlink" href="#isceextension.pyPoly2d.rangeNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return range norm</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">range norm</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyPoly2d.rangeOrder">
+<code class="descname">rangeOrder</code><a class="headerlink" href="#isceextension.pyPoly2d.rangeOrder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the range order of polynomial.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Range order of polynomial.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyPoly2d.setCoeff">
+<code class="descname">setCoeff</code><span class="sig-paren">(</span><em>self</em>, <em>int row</em>, <em>int col</em>, <em>double val</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.setCoeff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set polynomial coefficient using row and col indices.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>row</strong> (<em>int</em>) – Index in azimuth direction</li>
+<li><strong>col</strong> (<em>int</em>) – Index in range direction</li>
+<li><strong>val</strong> (<em>float</em>) – Value of coefficient</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 

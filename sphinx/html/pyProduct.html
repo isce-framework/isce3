@@ -37,6 +37,40 @@
   <div class="section" id="pyproduct">
 <h1>pyProduct<a class="headerlink" href="#pyproduct" title="Permalink to this headline">¶</a></h1>
 <p>pyProduct provides a light wrapper for the isce::product::Product class instantiated from a pyIH5File object, which is the highest level representation of an ISCE radar product.</p>
+<dl class="class">
+<dt id="isceextension.pyProduct">
+<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyProduct</code><a class="headerlink" href="#isceextension.pyProduct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cython wrapper for isce::product::Product.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>h5file</strong> (<a class="reference internal" href="pyIH5.html#isceextension.pyIH5File" title="isceextension.pyIH5File"><em>pyIH5File</em></a>) – IH5File for product.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="isceextension.pyProduct.complexImagery">
+<code class="descname">complexImagery</code><a class="headerlink" href="#isceextension.pyProduct.complexImagery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get copy of complex imagery object.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyProduct.filename">
+<code class="descname">filename</code><a class="headerlink" href="#isceextension.pyProduct.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the filename of the HDF5 product file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyProduct.metadata">
+<code class="descname">metadata</code><a class="headerlink" href="#isceextension.pyProduct.metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get copy of metadata object.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 

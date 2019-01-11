@@ -37,6 +37,61 @@
   <div class="section" id="pytopo">
 <h1>pyTopo<a class="headerlink" href="#pytopo" title="Permalink to this headline">¶</a></h1>
 <p>Python transformer from radar geometry coordinates to map coordinates with DEM / reference altitude.</p>
+<dl class="class">
+<dt id="isceextension.pyTopo">
+<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyTopo</code><a class="headerlink" href="#isceextension.pyTopo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cython wrapper for isce::geometry::Topo.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>product</strong> (<a class="reference internal" href="pyProduct.html#isceextension.pyProduct" title="isceextension.pyProduct"><em>pyProduct</em></a>) – Configured Product.</li>
+<li><strong>threshold</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Threshold for iteration stop for slant range.</li>
+<li><strong>numIterations</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Max number of normal iterations.</li>
+<li><strong>extraIterations</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Number of extra refinement iterations.</li>
+<li><strong>orbitMethod</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Orbit interpolation method (‘hermite’, ‘sch’, ‘legendre’)</li>
+<li><strong>demMethod</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – DEM interpolation method (‘sinc’, ‘bilinear’, ‘bicubic’, ‘nearest’, ‘akima’, ‘biquintic’)</li>
+<li><strong>epsgOut</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – EPSG code for output topo layers.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="isceextension.pyTopo.topo">
+<code class="descname">topo</code><span class="sig-paren">(</span><em>self</em>, <em>pyRaster demRaster</em>, <em>pyRaster xRaster=None</em>, <em>pyRaster yRaster=None</em>, <em>pyRaster heightRaster=None</em>, <em>pyRaster incRaster=None</em>, <em>pyRaster hdgRaster=None</em>, <em>pyRaster localIncRaster=None</em>, <em>pyRaster localPsiRaster=None</em>, <em>pyRaster simRaster=None</em>, <em>outputDir=None</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyTopo.topo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run topo.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>demRaster</strong> (<a class="reference internal" href="pyRaster.html#isceextension.pyRaster" title="isceextension.pyRaster"><em>pyRaster</em></a>) – Raster for input DEM.</li>
+<li><strong>xRaster</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Raster for output X coordinate.</li>
+<li><strong>yRaster</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Raster for output Y coordinate.</li>
+<li><strong>heightRaster</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Raster for output height/Z coordinate.</li>
+<li><strong>incRaster</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Raster for output incidence angle.</li>
+<li><strong>hdgRaster</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Raster for output heading angle.</li>
+<li><strong>localIncRaster</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Raster for output local incidence angle.</li>
+<li><strong>localPsiRaster</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Raster for output local projection angle.</li>
+<li><strong>simRaster</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Raster for output simulated amplitude image.</li>
+<li><strong>outputDir</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – String for output directory for internal rasters.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 

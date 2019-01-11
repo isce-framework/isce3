@@ -37,6 +37,67 @@
   <div class="section" id="pyih5file">
 <h1>pyIH5File<a class="headerlink" href="#pyih5file" title="Permalink to this headline">¶</a></h1>
 <p>pyIH5File provides opening of HDF5 files and loading of datasets and groups compatible with ISCE routines.</p>
+<dl class="class">
+<dt id="isceextension.pyIH5File">
+<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyIH5File</code><a class="headerlink" href="#isceextension.pyIH5File" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cython wrapper for isce::io::IH5File.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>py_filename</strong> (<em>str</em>) – Name of H5 file.</li>
+<li><strong>access</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Access mode.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="isceextension.pyIH5File.find">
+<code class="descname">find</code><span class="sig-paren">(</span><em>self</em>, <em>name</em>, <em>start</em>, <em>dtype=u'BOTH'</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyIH5File.find" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of datasets with a given name relative to a starting path in HDF5 file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<em>str</em>) – Dataset name to search for.</li>
+<li><strong>start</strong> (<em>str</em>) – Starting path.</li>
+<li><strong>dtype</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Specify to return ‘DATASET’, ‘GROUP’, or ‘BOTH’.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List of datasets found.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">datasets (list)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyIH5File.openGroup">
+<code class="descname">openGroup</code><span class="sig-paren">(</span><em>self</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyIH5File.openGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open an HDF5 group.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) – Group name to search for.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">pyIGroup.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">group (pyIGroup)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 
