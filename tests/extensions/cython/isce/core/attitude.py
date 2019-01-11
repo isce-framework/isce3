@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 def test_CythonInterface():
-    from isceextension import pyEulerAngles
+    from isce3.extensions.isceextension import pyEulerAngles
     import numpy as np
     import numpy.testing as npt
 

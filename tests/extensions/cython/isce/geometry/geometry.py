@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import numpy as np
-import isceextension
+import isce3.extensions.isceextension as isceextension
 
 def test_geo2rdr():
     """
