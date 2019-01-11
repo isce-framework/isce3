@@ -58,6 +58,44 @@ class isce::geometry::Geocode {
                 double geoGridSpacingX, double geoGridSpacingY,
                 int length, int width, int epsgcode);
 
+        // Set the input radar grid 
+        inline void radarGrid(isce::core::LUT1d<double> doppler,
+                                isce::core::DateTime azimuthStartTime,
+                                double azimuthTimeInterval,
+                                int radarGridLength,
+                                double startingRange,
+                                double rangeSpacing,
+                                int radarGridWidth);
+
+        // Set interpolator 
+        inline void interpolator(isce::core::dataInterpMethodi& method);
+
+        inline void orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch);
+
+        inline void orbitInterploationMethod(isce::core::orbitInterpMethod& orbitMethod);
+
+        inline void ellipsoid(isce::core::Ellipsoid& ellipsoid);
+
+        inline void mode(isce::product::ImageMode& _mode);
+
+        inline void projection(isce::core::ProjectionBase * proj);
+
+        inline void thersholdGeo2rdr(double& threshold);
+
+        inline void numiterGeo2rdr(int& numiter);
+
+        inline void linesPerBlock(size_t linesPerBlock);
+
+        inline void demBlockMargin(double demBlockMargin);
+
+        inline void radarBlockMargin(int radarBlockMargin);
+
+        //interpolator
+        //isce::core::Interpolator * _interp = nullptr;
+        inline void (isce::core::Interpolator<float> * interp);
+
+
+
     private:
 
         void _computeRangeAzimuthBoundingBox(int lineStart, 
@@ -76,6 +114,9 @@ class isce::geometry::Geocode {
                     double & azimuthTime, double & slantRange,
                     isce::geometry::DEMInterpolator & demInterp);
 
+        void _interpolate(isce::core::Matrix<float> rdrDataBlock, 
+                    isce::core::Matrix<float> geoDataBlock,
+                    std::valarray<double> radarX, std::valarray<double> radarY);
         
 
     private:
@@ -95,7 +136,7 @@ class isce::geometry::Geocode {
 
         // radar grids parameters
         isce::core::LUT1d<double> _doppler;
-        isce::core::DateTime _sensingStart, _refEpoch;
+        isce::core::DateTime _azimuthStartTime, _refEpoch;
         double _azimuthTimeInterval;
         double _startingRange;
         double _rangeSpacing;
@@ -133,8 +174,8 @@ class isce::geometry::Geocode {
         int _radarBlockMargin;
 
         //interpolator 
-        //isce::core::Interpolator<T> * _interp = nullptr;
-
+        //isce::core::Interpolator * _interp = nullptr;
+        isce::core::Interpolator<float> * _interp = nullptr;
 };
 
 // Get inline implementations for Geocode

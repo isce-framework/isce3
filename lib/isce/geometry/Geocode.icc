@@ -8,11 +8,12 @@
 #error "Geocode.icc is an implementation detail of class Geocode"
 #endif
 
-//void isce::geometry::Geocode::
-//Geocode(isce::product::Product & product) {
+void isce::geometry::Geocode::
+interpolator(isce::core::dataInterpMethod method) {
 
-//}
+    _interp = isce::core::createInterpolator<float>(method);
 
+}
 
 void isce::geometry::Geocode::
 geoGrid(double geoGridStartX, double geoGridStartY,
