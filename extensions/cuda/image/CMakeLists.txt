@@ -1,36 +1,16 @@
 
-set(PACKAGENAME core)
+set(PACKAGENAME image)
 string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 set(ISCE_CUDA_${PACKAGENAME}_HEADERS
-        gpuBasis.h
-        gpuComplex.h
-        gpuEllipsoid.h
-        gpuInterpolator.h
-        gpuLinAlg.h
-        gpuLUT1d.h
-        gpuOrbit.h
-        gpuPeg.h
-        gpuPegtrans.h 
-        gpuPixel.h
-        gpuPoly2d.h
-        gpuProjections.h
-        gpuStateVector.h )
+        gpuImageMode.h
+        gpuResampSlc.h
+        ResampSlc.h)
 
-set(LOCAL_SRCS 
-        gpuEllipsoid.cu
-        gpuBilinearInterpolator.cu
-        gpuBicubicInterpolator.cu
-        gpuLinAlg.cu
-        gpuLUT1d.cu
-        gpuOrbit.cu
-        gpuPeg.cu
-        gpuPegtrans.cu 
-        gpuPoly2d.cu 
-        gpuProjections.cu 
-        gpuSinc2dInterpolator.cu 
-        gpuSpline2dInterpolator.cu )
+set(LOCAL_SRCS
+        gpuResampSlc.cu
+        ResampSlc.cpp)
 
 # Append current path to every source file
 set(ISCE_CUDA_${PACKAGENAME}_SRCS "")
@@ -53,7 +33,6 @@ include_directories(${LCUDAISCE} PUBLIC
                     ${CEREAL_SRC_INCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
-                    ${PYRE_INCLUDE_DIR}
                     ${GDAL_INCLUDE_DIR})
 
 # Install headers into final installation directory
