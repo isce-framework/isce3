@@ -70,8 +70,6 @@ $(function() {
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="#pro-methods">Protected Member Functions</a> &#124;
-<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classisce_1_1image_1_1ResampSlc-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">isce::image::ResampSlc Class Reference</div>  </div>
@@ -137,15 +135,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>linesPerTile</b> (siz
 <tr class="memitem:a5eba23fc86c75824d65d947fd6ee1e03"><td class="memItemLeft" align="right" valign="top"><a id="a5eba23fc86c75824d65d947fd6ee1e03"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>declare</b> (int, int, int, int) const</td></tr>
 <tr class="separator:a5eba23fc86c75824d65d947fd6ee1e03"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a318911e6c06c179097996cbc0d1d9b10"><td class="memItemLeft" align="right" valign="top"><a id="a318911e6c06c179097996cbc0d1d9b10"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resamp</b> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;inputSlc, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;outputSlc, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;rgOffsetRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;azOffsetRaster, int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40, int chipSize=isce::core::SINC_ONE)</td></tr>
-<tr class="separator:a318911e6c06c179097996cbc0d1d9b10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac8c2591d0c6a88276c046c3d5649789f"><td class="memItemLeft" align="right" valign="top"><a id="ac8c2591d0c6a88276c046c3d5649789f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resamp</b> (const std::string &amp;inputFilename, const std::string &amp;outputFilename, const std::string &amp;rgOffsetFilename, const std::string &amp;azOffsetFilename, int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40, int chipSize=isce::core::SINC_ONE)</td></tr>
-<tr class="separator:ac8c2591d0c6a88276c046c3d5649789f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a08e5da4c950d8037ac4c50c4235699e7"><td class="memItemLeft" align="right" valign="top"><a id="a08e5da4c950d8037ac4c50c4235699e7"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resamp</b> (const std::string &amp;outputFilename, const std::string &amp;polarization, const std::string &amp;rgOffsetFilename, const std::string &amp;azOffsetFilename, bool flatten=false, bool isComplex=true, int rowBuffer=40, int chipSize=isce::core::SINC_ONE)</td></tr>
-<tr class="separator:a08e5da4c950d8037ac4c50c4235699e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad04d6af8318c9c00ce6b567aeba7eba9"><td class="memItemLeft" align="right" valign="top"><a id="ad04d6af8318c9c00ce6b567aeba7eba9"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>resamp</b> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;inputSlc, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;outputSlc, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;rgOffsetRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;azOffsetRaster, int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40)</td></tr>
+<tr class="separator:ad04d6af8318c9c00ce6b567aeba7eba9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f9294f8e5d34877616f3e10ac288bdb"><td class="memItemLeft" align="right" valign="top"><a id="a2f9294f8e5d34877616f3e10ac288bdb"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>resamp</b> (const std::string &amp;inputFilename, const std::string &amp;outputFilename, const std::string &amp;rgOffsetFilename, const std::string &amp;azOffsetFilename, int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40)</td></tr>
+<tr class="separator:a2f9294f8e5d34877616f3e10ac288bdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a115549b285237bb19fb316a2e429baeb"><td class="memItemLeft" align="right" valign="top"><a id="a115549b285237bb19fb316a2e429baeb"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>resamp</b> (const std::string &amp;outputFilename, const std::string &amp;polarization, const std::string &amp;rgOffsetFilename, const std::string &amp;azOffsetFilename, bool flatten=false, bool isComplex=true, int rowBuffer=40)</td></tr>
+<tr class="separator:a115549b285237bb19fb316a2e429baeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -155,60 +153,6 @@ const int&#160;</td><td class="memItemRight" valign="bottom"><b>SINC_ONE</b> = i
 <tr class="memitem:a5eab428e57bb252253b06c3adf1b1c5d"><td class="memItemLeft" align="right" valign="top"><a id="a5eab428e57bb252253b06c3adf1b1c5d"></a>
 const int&#160;</td><td class="memItemRight" valign="bottom"><b>SINC_HALF</b> = isce::core::SINC_HALF</td></tr>
 <tr class="separator:a5eab428e57bb252253b06c3adf1b1c5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
-Protected Member Functions</h2></td></tr>
-<tr class="memitem:a5bd40ad740668593cf3c5a1000e26b91"><td class="memItemLeft" align="right" valign="top"><a id="a5bd40ad740668593cf3c5a1000e26b91"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>_initializeOffsetTiles</b> (<a class="el" href="classisce_1_1image_1_1Tile.html">Tile_t</a> &amp;, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;, <a class="el" href="classisce_1_1image_1_1Tile.html">isce::image::Tile</a>&lt; float &gt; &amp;, <a class="el" href="classisce_1_1image_1_1Tile.html">isce::image::Tile</a>&lt; float &gt; &amp;, int)</td></tr>
-<tr class="separator:a5bd40ad740668593cf3c5a1000e26b91"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a31fd82a21cd1fe90ef524fd75221c126"><td class="memItemLeft" align="right" valign="top"><a id="a31fd82a21cd1fe90ef524fd75221c126"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>_initializeTile</b> (<a class="el" href="classisce_1_1image_1_1Tile.html">Tile_t</a> &amp;, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;, const <a class="el" href="classisce_1_1image_1_1Tile.html">isce::image::Tile</a>&lt; float &gt; &amp;, int, int, int)</td></tr>
-<tr class="separator:a31fd82a21cd1fe90ef524fd75221c126"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad8400e1c005d5c605370425aecdd4ce7"><td class="memItemLeft" align="right" valign="top"><a id="ad8400e1c005d5c605370425aecdd4ce7"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>_transformTile</b> (<a class="el" href="classisce_1_1image_1_1Tile.html">Tile_t</a> &amp;tile, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;outputSlc, const <a class="el" href="classisce_1_1image_1_1Tile.html">isce::image::Tile</a>&lt; float &gt; &amp;rgOffTile, const <a class="el" href="classisce_1_1image_1_1Tile.html">isce::image::Tile</a>&lt; float &gt; &amp;azOffTile, int inLength, bool flatten, int chipSize)</td></tr>
-<tr class="separator:ad8400e1c005d5c605370425aecdd4ce7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a854e787bf5c2454f97ce2588f471ef1b"><td class="memItemLeft" align="right" valign="top"><a id="a854e787bf5c2454f97ce2588f471ef1b"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>_computeNumberOfTiles</b> (int, int)</td></tr>
-<tr class="separator:a854e787bf5c2454f97ce2588f471ef1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab7fd35d92110c47e128a776008d213d3"><td class="memItemLeft" align="right" valign="top"><a id="ab7fd35d92110c47e128a776008d213d3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>_prepareInterpMethods</b> (<a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a>, int)</td></tr>
-<tr class="separator:ab7fd35d92110c47e128a776008d213d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
-Protected Attributes</h2></td></tr>
-<tr class="memitem:a841226b3de5467c49da14c1f58a0f962"><td class="memItemLeft" align="right" valign="top"><a id="a841226b3de5467c49da14c1f58a0f962"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>_linesPerTile</b> = 1000</td></tr>
-<tr class="separator:a841226b3de5467c49da14c1f58a0f962"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8427d67ab5a12e98524c954aea56a269"><td class="memItemLeft" align="right" valign="top"><a id="a8427d67ab5a12e98524c954aea56a269"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>_inputBand</b></td></tr>
-<tr class="separator:a8427d67ab5a12e98524c954aea56a269"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f7945ce726c056e73013b73d006e334"><td class="memItemLeft" align="right" valign="top"><a id="a8f7945ce726c056e73013b73d006e334"></a>
-std::string&#160;</td><td class="memItemRight" valign="bottom"><b>_filename</b></td></tr>
-<tr class="separator:a8f7945ce726c056e73013b73d006e334"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afd8aaf4cc0876f460344cd8ce9fdb921"><td class="memItemLeft" align="right" valign="top"><a id="afd8aaf4cc0876f460344cd8ce9fdb921"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>_haveRefMode</b></td></tr>
-<tr class="separator:afd8aaf4cc0876f460344cd8ce9fdb921"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2cab757e37ee37cd5cba15efe56eaaad"><td class="memItemLeft" align="right" valign="top"><a id="a2cab757e37ee37cd5cba15efe56eaaad"></a>
-<a class="el" href="classisce_1_1core_1_1Interpolator.html">isce::core::Interpolator</a>&lt; std::complex&lt; float &gt; &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>_interp</b></td></tr>
-<tr class="separator:a2cab757e37ee37cd5cba15efe56eaaad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48b6b3817d1de06a579937f858befb8b"><td class="memItemLeft" align="right" valign="top"><a id="a48b6b3817d1de06a579937f858befb8b"></a>
-<a class="el" href="structisce_1_1core_1_1Poly2d.html">isce::core::Poly2d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>_rgCarrier</b></td></tr>
-<tr class="separator:a48b6b3817d1de06a579937f858befb8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40866a68e768d3ce88c470ce66d7b05e"><td class="memItemLeft" align="right" valign="top"><a id="a40866a68e768d3ce88c470ce66d7b05e"></a>
-<a class="el" href="structisce_1_1core_1_1Poly2d.html">isce::core::Poly2d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>_azCarrier</b></td></tr>
-<tr class="separator:a40866a68e768d3ce88c470ce66d7b05e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa8112f507235b7791e3918cc78ad923c"><td class="memItemLeft" align="right" valign="top"><a id="aa8112f507235b7791e3918cc78ad923c"></a>
-<a class="el" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d</a>&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>_dopplerLUT</b></td></tr>
-<tr class="separator:aa8112f507235b7791e3918cc78ad923c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4a1cce6e926c74add7beb8a516615cb4"><td class="memItemLeft" align="right" valign="top"><a id="a4a1cce6e926c74add7beb8a516615cb4"></a>
-<a class="el" href="classisce_1_1product_1_1ImageMode.html">isce::product::ImageMode</a>&#160;</td><td class="memItemRight" valign="bottom"><b>_mode</b></td></tr>
-<tr class="separator:a4a1cce6e926c74add7beb8a516615cb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae94342c4ea8316c60491106fbc6d437b"><td class="memItemLeft" align="right" valign="top"><a id="ae94342c4ea8316c60491106fbc6d437b"></a>
-<a class="el" href="classisce_1_1product_1_1ImageMode.html">isce::product::ImageMode</a>&#160;</td><td class="memItemRight" valign="bottom"><b>_refMode</b></td></tr>
-<tr class="separator:ae94342c4ea8316c60491106fbc6d437b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa3c2f30fc25dbd969b6efb1815ddcd20"><td class="memItemLeft" align="right" valign="top"><a id="aa3c2f30fc25dbd969b6efb1815ddcd20"></a>
-<a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; float &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>_fintp</b></td></tr>
-<tr class="separator:aa3c2f30fc25dbd969b6efb1815ddcd20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="ResampSlc_8h_source.html">ResampSlc.h</a></li>
