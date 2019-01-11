@@ -9,13 +9,6 @@
 #endif
 
 void isce::geometry::Geocode::
-interpolator(isce::core::dataInterpMethod method) {
-
-    _interp = isce::core::createInterpolator<float>(method);
-
-}
-
-void isce::geometry::Geocode::
 geoGrid(double geoGridStartX, double geoGridStartY,
         double geoGridSpacingX, double geoGridSpacingY,
         double geoGridEndX, double geoGridEndY,
@@ -64,3 +57,116 @@ geoGrid(double geoGridStartX, double geoGridStartY,
 
 }
 
+
+void isce::geometry::Geocode::
+radarGrid(isce::core::LUT1d<double> doppler,
+            isce::core::DateTime azimuthStartTime,
+            double azimuthTimeInterval,
+            int radarGridLength,
+            double startingRange,
+            double rangeSpacing,
+            int radarGridWidth){
+
+    _doppler = doppler;
+
+    _azimuthStartTime = azimuthStartTime;
+
+    _azimuthTimeInterval = azimuthTimeInterval;
+
+    _radarGridLength = radarGridLength;
+
+    _startingRange = startingRange;
+
+    _rangeSpacing = rangeSpacing;
+
+    _radarGridWidth = radarGridWidth;
+
+}
+
+
+
+void isce::geometry::Geocode::
+interpolator(isce::core::dataInterpMethod method) {
+
+      _interp = isce::core::createInterpolator<float>(method);
+
+}
+
+void isce::geometry::Geocode::
+orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch) {
+
+    _orbit = orbit;
+
+    _orbit.updateUTCTimes(_refEpoch);
+
+}
+
+void isce::geometry::Geocode::
+orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod) {
+
+    _orbitMethod = orbitMethod;
+
+}
+
+void isce::geometry::Geocode::
+ellipsoid(isce::core::Ellipsoid& ellipsoid) {
+
+    _ellipsoid = ellipsoid;
+
+}
+
+void isce::geometry::Geocode::
+mode(isce::product::ImageMode& mode) {
+
+    _mode = mode;
+
+}
+
+void isce::geometry::Geocode::
+projection(isce::core::ProjectionBase * proj) {
+
+    _proj = proj;
+
+}
+
+void isce::geometry::Geocode::
+thersholdGeo2rdr(double threshold) {
+
+    _threshold = threshold;
+
+}
+
+void isce::geometry::Geocode::
+numiterGeo2rdr(int numiter) {
+
+    _numiter = numiter;
+
+}
+
+void isce::geometry::Geocode::
+linesPerBlock(size_t linesPerBlock) {
+
+    _linesPerBlock = linesPerBlock;
+
+}
+
+void isce::geometry::Geocode::
+demBlockMargin(double demBlockMargin) {
+
+    _demBlockMargin = demBlockMargin;
+
+}
+
+void isce::geometry::Geocode::
+radarBlockMargin(int radarBlockMargin) {
+
+    _radarBlockMargin = radarBlockMargin;
+
+}
+//interpolator
+//void isce::geometry::Geocode::
+//interpolator(isce::core::Interpolator<float> * interp) {
+
+//    _interp = interp;
+
+//}

@@ -261,14 +261,14 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
     if (azimuthFirstLine < 0)
         azimuthFirstLine = 0;
 
-    if (azimuthLastLine > (_radarRasterLength - 1))
-        azimuthLastLine = _radarRasterLength - 1;
+    if (azimuthLastLine > (_radarGridLength - 1))
+        azimuthLastLine = _radarGridLength - 1;
 
     if (rangeFirstPixel < 0)
         rangeFirstPixel = 0;
 
-    if (rangeLastPixel > (_radarRasterWidth - 1))
-        rangeLastPixel = _radarRasterWidth - 1;
+    if (rangeLastPixel > (_radarGridWidth - 1))
+        rangeLastPixel = _radarGridWidth - 1;
 
 }
 

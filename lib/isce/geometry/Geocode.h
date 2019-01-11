@@ -10,12 +10,15 @@
 // pyre
 #include <pyre/journal.h>
 
+// isce::core
 #include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/Poly2d.h>
 #include <isce/core/LUT1d.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Projections.h>
+#include "isce/core/Interpolator.h"
+#include "isce/core/Constants.h"
 
 // isce::io
 #include <isce/io/Raster.h>
@@ -68,21 +71,21 @@ class isce::geometry::Geocode {
                                 int radarGridWidth);
 
         // Set interpolator 
-        inline void interpolator(isce::core::dataInterpMethodi& method);
+        inline void interpolator(isce::core::dataInterpMethod method);
 
         inline void orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch);
 
-        inline void orbitInterploationMethod(isce::core::orbitInterpMethod& orbitMethod);
+        inline void orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod);
 
         inline void ellipsoid(isce::core::Ellipsoid& ellipsoid);
 
-        inline void mode(isce::product::ImageMode& _mode);
+        inline void mode(isce::product::ImageMode& mode);
 
         inline void projection(isce::core::ProjectionBase * proj);
 
-        inline void thersholdGeo2rdr(double& threshold);
+        inline void thersholdGeo2rdr(double threshold);
 
-        inline void numiterGeo2rdr(int& numiter);
+        inline void numiterGeo2rdr(int numiter);
 
         inline void linesPerBlock(size_t linesPerBlock);
 
@@ -92,7 +95,7 @@ class isce::geometry::Geocode {
 
         //interpolator
         //isce::core::Interpolator * _interp = nullptr;
-        inline void (isce::core::Interpolator<float> * interp);
+        //inline void (isce::core::Interpolator<float> interp);
 
 
 
@@ -140,8 +143,8 @@ class isce::geometry::Geocode {
         double _azimuthTimeInterval;
         double _startingRange;
         double _rangeSpacing;
-        int _radarRasterLength;
-        int _radarRasterWidth;
+        int _radarGridLength;
+        int _radarGridWidth;
 
         // start X position for the output geocoded grid
         double _geoGridStartX;
