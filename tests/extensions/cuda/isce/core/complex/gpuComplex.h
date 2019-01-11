@@ -15,7 +15,8 @@ void makeRandomReal(valarray<T> &random_data, size_t n_pts) {
 }
 
 template <class T>
-void makeRandomStdComplex(valarray<complex<T>> &random_data, size_t n_pts) {
+valarray<complex<T>> makeRandomStdComplex(size_t n_pts) {
+    valarray<complex<T>> random_data = valarray<complex<T>>(n_pts);
     std::default_random_engine generator;
     std::uniform_real_distribution<T> distribution(-100.,100.);
     for (int i=0; i<n_pts; ++i) {
@@ -23,5 +24,6 @@ void makeRandomStdComplex(valarray<complex<T>> &random_data, size_t n_pts) {
         T imag = distribution(generator);
         random_data[i] = complex<T>(real, imag);
     }
+    return random_data;
 }
 
