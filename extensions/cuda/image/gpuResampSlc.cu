@@ -115,7 +115,7 @@ void transformTile(const gpuComplex<float> *tile,
             // Interpolate chip
             //const gpuComplex<float> cval(1., 1.);
             const gpuComplex<float> cval = interp.interpolate(
-                chipHalf + fracRg + 1, chipHalf + fracAz + 1, &chip[iChip], chipSize, chipSize
+                chipHalf + fracRg, chipHalf + fracAz, &chip[iChip], chipSize, chipSize
             );
 
             // Add doppler to interpolated value and save
