@@ -17,7 +17,7 @@ class commonClass:
 
 
 def test_createGeoTiffFloat():
-    from isceextension import pyRaster
+    from isce3.extensions.isceextension import pyRaster
     import os
     import numpy as np
 
@@ -45,7 +45,7 @@ def test_createGeoTiffFloat():
     ds = None
 
 def test_createVRTDouble_setGetValue():
-    from isceextension import pyRaster
+    from isce3.extensions.isceextension import pyRaster
     import os
     import numpy as np
     import numpy.testing as npt
@@ -81,7 +81,7 @@ def test_createVRTDouble_setGetValue():
 
 
 def test_createTwoBandEnvi():
-    from isceextension import pyRaster
+    from isce3.extensions.isceextension import pyRaster
     import os
     import numpy as np
 
@@ -102,7 +102,7 @@ def test_createTwoBandEnvi():
     del raster
 
 def test_createMultiBandVRT():
-    from isceextension import pyRaster
+    from isce3.extensions.isceextension import pyRaster
     import os
 
     cmn = commonClass()
@@ -127,7 +127,7 @@ def test_createMultiBandVRT():
 
 def test_createNumpyDataset():
     import numpy as np
-    from isceextension import pyRaster
+    from isce3.extensions.isceextension import pyRaster
     from osgeo import gdal_array
     import os
 

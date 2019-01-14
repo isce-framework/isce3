@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 def test_CythonInterface():
-    from isceextension import pyPoly1d
+    from isce3.extensions.isceextension import pyPoly1d
     import numpy.testing as npt
         
     refpoly = pyPoly1d(order=5,
@@ -16,7 +16,7 @@ def test_CythonInterface():
     npt.assert_array_equal(refpoly.coeffs[0:3],1.0)
 
 def test_Constant():
-    from isceextension import pyPoly1d
+    from isce3.extensions.isceextension import pyPoly1d
 
     refval = 10.0
     for ii in range(1,6):
@@ -28,7 +28,7 @@ def test_Constant():
 
 
 def test_MeanShift():
-    from isceextension import pyPoly1d
+    from isce3.extensions.isceextension import pyPoly1d
     import numpy.testing as npt
 
     def getPoly():
@@ -48,7 +48,7 @@ def test_MeanShift():
                     decimal=12)
 
 def test_NormShift():
-    from isceextension import pyPoly1d
+    from isce3.extensions.isceextension import pyPoly1d
     import numpy.testing as npt
 
     def getPoly():
@@ -67,7 +67,7 @@ def test_NormShift():
                 decimal=12)
 
 def test_NumpyPolyval():
-    from isceextension import pyPoly1d
+    from isce3.extensions.isceextension import pyPoly1d
     import numpy as np
 
     for ii in range(6):

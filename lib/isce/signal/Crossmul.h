@@ -168,7 +168,7 @@ class isce::signal::Crossmul {
         bool _doCommonRangebandFilter = false;
 
         // number of lines per block
-        size_t blockRows = 1000;
+        size_t blockRows = 8192;
 
         // upsampling factor
         size_t oversample = 1;

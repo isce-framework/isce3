@@ -27,7 +27,8 @@ resamp(const std::string & outputFilename,
        const std::string & polarization,
        const std::string & rgOffsetFilename,
        const std::string & azOffsetFilename,
-       bool flatten, bool isComplex, int rowBuffer) {
+       bool flatten, bool isComplex, int rowBuffer,
+       int chipSize) {
 
     // Form the GDAL-compatible path for the HDF5 dataset
     const std::string dataPath = _mode.dataPath(polarization);
@@ -35,7 +36,7 @@ resamp(const std::string & outputFilename,
 
     // Call alternative resmap entry point using filenames
     resamp(h5path, outputFilename, rgOffsetFilename, azOffsetFilename, 1,
-           flatten, isComplex, rowBuffer);
+           flatten, isComplex, rowBuffer, chipSize);
 }
 
 // Alternative generic resamp entry point: use filenames to internally create rasters
@@ -44,7 +45,8 @@ resamp(const std::string & inputFilename,          // filename of input SLC
        const std::string & outputFilename,         // filename of output resampled SLC
        const std::string & rgOffsetFilename,       // filename of range offsets
        const std::string & azOffsetFilename,       // filename of azimuth offsets
-       int inputBand, bool flatten, bool isComplex, int rowBuffer) {
+       int inputBand, bool flatten, bool isComplex, int rowBuffer,
+       int chipSize) {
 
     // Make input rasters
     Raster inputSlc(inputFilename, GA_ReadOnly);
@@ -58,26 +60,19 @@ resamp(const std::string & inputFilename,          // filename of input SLC
 
     // Call generic resamp
     resamp(inputSlc, outputSlc, rgOffsetRaster, azOffsetRaster, inputBand, flatten,
-           isComplex, rowBuffer);
+           isComplex, rowBuffer, chipSize);
 }
 
 // Generic resamp entry point from externally created rasters
 void isce::image::ResampSlc::
 resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
        isce::io::Raster & rgOffsetRaster, isce::io::Raster & azOffsetRaster,
-       int inputBand, bool flatten, bool isComplex, int rowBuffer) {
-
-    // Initialize journal channel for info
-    pyre::journal::info_t infoChannel("isce.core.ResampSlc");
+       int inputBand, bool flatten, bool isComplex, int rowBuffer,
+       int chipSize) {
 
     // Check if data are not complex
     if (!isComplex) {
-        pyre::journal::error_t errorChannel("isce.core.ResampSlc");
-        errorChannel
-            << pyre::journal::at(__HERE__)
-            << "Real data interpolation not implemented yet."
-            << pyre::journal::newline
-            << pyre::journal::endl;
+        std::cout << "Real data interpolation not implemented yet.\n";
         return;
     }
         
@@ -90,19 +85,14 @@ resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
     const int outLength = rgOffsetRaster.length();
     const int outWidth = rgOffsetRaster.width();
 
-    // Announce myself to the world
-    declare(inLength, inWidth, outLength, outWidth);
-
     // Initialize resampling methods
-    _prepareInterpMethods(isce::core::SINC_METHOD);
+    _prepareInterpMethods(isce::core::SINC_METHOD, chipSize-1);
    
     // Determine number of tiles needed to process image
     const int nTiles = _computeNumberOfTiles(outLength, _linesPerTile);
-    infoChannel << 
+    std::cout<< 
         "Resampling using " << nTiles << " tiles of " << _linesPerTile 
-        << " lines per tile"
-        << pyre::journal::newline << pyre::journal::endl;
-    
+        << " lines per tile\n";
     // Start timer
     auto timerStart = std::chrono::steady_clock::now();
 
@@ -126,22 +116,19 @@ resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
                                azOffTile, rgOffTile, outWidth);
 
         // Get corresponding image indices
-        infoChannel << "Reading in image data for tile " << tileCount << pyre::journal::newline;
-        _initializeTile(tile, inputSlc, azOffTile, outLength, rowBuffer); 
-        // Send some diagnostics to the journal
-        tile.declare(infoChannel);
+        std::cout << "Reading in image data for tile " << tileCount << "\n";
+        _initializeTile(tile, inputSlc, azOffTile, outLength, rowBuffer, chipSize/2); 
     
         // Perform interpolation
-        infoChannel << "Interpolating tile " << tileCount << pyre::journal::endl;
-        _transformTile(tile, outputSlc, rgOffTile, azOffTile, inLength, flatten);
+        std::cout << "Interpolating tile " << tileCount << "\n";
+        _transformTile(tile, outputSlc, rgOffTile, azOffTile, inLength, flatten, chipSize);
     }
 
     // Print out timing information and reset
     auto timerEnd = std::chrono::steady_clock::now();
     const double elapsed = 1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
         timerEnd - timerStart).count();
-    infoChannel << "Elapsed processing time: " << elapsed << " sec"
-                << pyre::journal::endl;
+    std::cout << "Elapsed processing time: " << elapsed << " sec\n";
 }
 
 // Initialize and read azimuth and range offsets
@@ -179,7 +166,7 @@ _initializeOffsetTiles(Tile_t & tile,
 // Initialize tile bounds
 void isce::image::ResampSlc::
 _initializeTile(Tile_t & tile, Raster & inputSlc, const isce::image::Tile<float> & azOffTile,
-                int outLength, int rowBuffer) {
+                int outLength, int rowBuffer, int chipHalf) {
 
     // Cache geometry values
     const int inLength = inputSlc.length();
@@ -200,7 +187,7 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, const isce::image::Tile<float>
                 haveOffsets = true;
             }
             // Calculate corresponding minimum line index of input image
-            const int imageLine = static_cast<int>(i + azOff + azOffTile.rowStart() - SINC_HALF);
+            const int imageLine = static_cast<int>(i + azOff + azOffTile.rowStart() - chipHalf);
             // Update minimum row index
             tile.firstImageRow(std::min(tile.firstImageRow(), imageLine));
         }
@@ -226,7 +213,7 @@ _initializeTile(Tile_t & tile, Raster & inputSlc, const isce::image::Tile<float>
                 haveOffsets = true;
             }
             // Calculate corresponding minimum line index of input image
-            const int imageLine = static_cast<int>(i + azOff + azOffTile.rowStart() + SINC_HALF);
+            const int imageLine = static_cast<int>(i + azOff + azOffTile.rowStart() + chipHalf);
             // Update maximum row index
             tile.lastImageRow(std::max(tile.lastImageRow(), imageLine));
         }
@@ -265,12 +252,14 @@ _transformTile(Tile_t & tile,
                Raster & outputSlc,
                const isce::image::Tile<float> & rgOffTile,
                const isce::image::Tile<float> & azOffTile,
-               int inLength, bool flatten) {
+               int inLength, bool flatten,
+               int chipSize) {
 
     // Cache geometry values
     const int inWidth = tile.width();
     const int outWidth = azOffTile.width();
     const int outLength = azOffTile.length();
+    int chipHalf = chipSize / 2;
     const double R0 = _mode.startingRange();
     const double dR = _mode.rangePixelSpacing();
     const double az0 = _mode.startAzTime().secondsSinceEpoch();
@@ -285,9 +274,10 @@ _transformTile(Tile_t & tile,
     #pragma omp parallel shared(imgOut)
     {
 
+    // set half chip size
     // Allocate matrix for working sinc chip
-    isce::core::Matrix<std::complex<float>> chip(SINC_ONE, SINC_ONE);
-    
+    isce::core::Matrix<std::complex<float>> chip(chipSize, chipSize);
+
     // Loop over lines to perform interpolation
     for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
 
@@ -309,9 +299,9 @@ _transformTile(Tile_t & tile,
             const double fracRg = j + rgOff - intRg;
            
             // Check bounds
-            if ((intAz < SINC_HALF) || (intAz >= (inLength - SINC_HALF)))
+            if ((intAz < chipHalf) || (intAz >= (inLength - chipHalf)))
                 continue;
-            if ((intRg < SINC_HALF) || (intRg >= (inWidth - SINC_HALF)))
+            if ((intRg < chipHalf) || (intRg >= (inWidth - chipHalf)))
                 continue;
 
             // Evaluate Doppler polynomial
@@ -337,16 +327,16 @@ _transformTile(Tile_t & tile,
             phase = modulo_f(phase, 2.0*M_PI);
             
             // Read data chip without the carrier phases
-            for (int ii = 0; ii < SINC_ONE; ++ii) {
+            for (int ii = 0; ii < chipSize; ++ii) {
                 // Row to read from
-                const int chipRow = intAz - tile.firstImageRow() + ii - SINC_HALF;
+                const int chipRow = intAz - tile.firstImageRow() + ii - chipHalf;
                 // Carrier phase
                 const double phase = dop * (ii - 4.0);
                 const std::complex<float> cval(std::cos(phase), -std::sin(phase));
                 // Set the data values after removing doppler in azimuth
-                for (int jj = 0; jj < SINC_ONE; ++jj) {
+                for (int jj = 0; jj < chipSize; ++jj) {
                     // Column to read from
-                    const int chipCol = intRg + jj - SINC_HALF;
+                    const int chipCol = intRg + jj - chipHalf;
                     chip(ii,jj) = tile(chipRow,chipCol) * cval;
                 }
             }
