@@ -18,8 +18,21 @@ set_source_files_properties(
 #Include for pxd files
 include_directories(${ISCE_BUILDCYINCLUDEDIR})
 
+# Tweak the binary director to place extensions alongside isceextension
+set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/..)
+
+# Initialize build directory for extension module to mimic install directory
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/isce3/extensions)
+
 # Add Cython module
 cython_add_module(iscecudaextension iscecudaextension.pyx)
+
+# Override output shared object name to place in desired location
+set_target_properties(
+    iscecudaextension
+    PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/isce3/extensions
+)
 
 # Add necessary include directories
 target_include_directories(
@@ -38,7 +51,7 @@ target_link_libraries(iscecudaextension ${LISCECUDA} ${LISCE} m)
 # Install
 install(
     TARGETS iscecudaextension
-    DESTINATION ${ISCE_PACKAGESDIR}
+    DESTINATION ${ISCE_PACKAGESDIR}/isce3/extensions
     COMPONENT extensions
 )
 

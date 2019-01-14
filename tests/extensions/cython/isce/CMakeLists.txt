@@ -9,7 +9,7 @@ set (PYTEST_LD_LIBRARY_PATH "${LISCELOCATION}:$ENV{LD_LIBRARY_PATH}" CACHE INTER
 
 #Get iscecore module path for PYTHONPATH
 set (MISCELOCATION ${CMAKE_BINARY_DIR}/extensions/cython/isce)
-set(PYTEST_PYTHONPATH "${MISCELOCATION}:${MISCELOCATION}/cuda:$ENV{PYTHONPATH}" CACHE INTERNAL "python paths for pytest")
+set(PYTEST_PYTHONPATH "${MISCELOCATION}:$ENV{PYTHONPATH}" CACHE INTERNAL "python paths for pytest")
 
 add_subdirectory(io)
 add_subdirectory(core)

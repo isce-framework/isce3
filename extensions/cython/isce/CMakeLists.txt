@@ -20,6 +20,8 @@ set_source_files_properties(
     PROPERTIES CYTHON_IS_CXX TRUE
 )
 
+# Initialize build directory for extension module to mimic install directory
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/isce3/extensions)
 
 ###Put together all the pxd files into one giant pxd
 FILE(GLOB PXD_LIST ${CMAKE_CURRENT_LIST_DIR}/*/*.pxd) 
@@ -30,6 +32,13 @@ endforeach()
 
 # Add Cython module
 cython_add_module(isceextension isceextension.pyx)
+
+# Override output shared object name to place in desired location
+set_target_properties(
+    isceextension
+    PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/isce3/extensions
+)
 
 # Add necessary include directories
 target_include_directories(
@@ -47,7 +56,7 @@ target_link_libraries(isceextension ${LISCE} m)
 # Install
 install(
     TARGETS isceextension
-    DESTINATION ${ISCE_PACKAGESDIR}
+    DESTINATION ${ISCE_PACKAGESDIR}/isce3/extensions
     COMPONENT extensions
 )
 
