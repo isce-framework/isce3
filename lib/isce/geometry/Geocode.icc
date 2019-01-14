@@ -29,7 +29,7 @@ geoGrid(double geoGridStartX, double geoGridStartY,
 void isce::geometry::Geocode::
 geoGrid(double geoGridStartX, double geoGridStartY,
         double geoGridSpacingX, double geoGridSpacingY,
-        int length, int width, int epsgcode) {
+        int width, int length, int epsgcode) {
 
     // the starting coordinate of the output geocoded grid in X direction 
     _geoGridStartX = geoGridStartX;
@@ -86,13 +86,6 @@ radarGrid(isce::core::LUT1d<double> doppler,
 
 
 void isce::geometry::Geocode::
-interpolator(isce::core::dataInterpMethod method) {
-
-      _interp = isce::core::createInterpolator<float>(method);
-
-}
-
-void isce::geometry::Geocode::
 orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch) {
 
     _orbit = orbit;
@@ -130,7 +123,7 @@ projection(isce::core::ProjectionBase * proj) {
 }
 
 void isce::geometry::Geocode::
-thersholdGeo2rdr(double threshold) {
+thresholdGeo2rdr(double threshold) {
 
     _threshold = threshold;
 
@@ -163,10 +156,18 @@ radarBlockMargin(int radarBlockMargin) {
     _radarBlockMargin = radarBlockMargin;
 
 }
+
 //interpolator
-//void isce::geometry::Geocode::
-//interpolator(isce::core::Interpolator<float> * interp) {
+void isce::geometry::Geocode::
+interpolator(isce::core::Interpolator<float> * interp) {
 
-//    _interp = interp;
+    _interp = interp;
 
-//}
+}
+
+void isce::geometry::Geocode::
+interpolator(isce::core::dataInterpMethod method) {
+
+        _interp = isce::core::createInterpolator<float>(method);
+
+}

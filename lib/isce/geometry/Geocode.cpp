@@ -13,7 +13,7 @@ geocode(isce::io::Raster & inputRaster,
 {
 
     // create projection based on _epsg code
-     _proj = isce::core::createProj(_epsgOut);
+    _proj = isce::core::createProj(_epsgOut);
 
     // instantiate the DEMInterpolator 
     isce::geometry::DEMInterpolator demInterp;
@@ -23,18 +23,19 @@ geocode(isce::io::Raster & inputRaster,
     if ((_geoGridLength % _linesPerBlock) != 0)
         nBlocks += 1;
 
+    std::cout << " nBlocks: " << nBlocks << std::endl;
     //loop over the blocks of DEM
     for (size_t block = 0; block < nBlocks; ++block) {
-
+        std::cout << "block : " << block << std::endl;
         // Get block extents (of the geocoded grid)
-        size_t lineStart, blockLength;
+        size_t lineStart, geoBlockLength;
         lineStart = block * _linesPerBlock;
         if (block == (nBlocks - 1)) {
-            blockLength = _geoGridLength - lineStart;
+            geoBlockLength = _geoGridLength - lineStart;
         } else {
-            blockLength = _linesPerBlock;
+            geoBlockLength = _linesPerBlock;
         }
-        size_t blockSize = blockLength * _geoGridWidth;
+        size_t blockSize = geoBlockLength * _geoGridWidth;
 
         //First and last line of the data block in radar coordinates
         int azimuthFirstLine, azimuthLastLine;
@@ -44,7 +45,7 @@ geocode(isce::io::Raster & inputRaster,
 
         // load a block of DEM for the current geocoded grid
         _loadDEM(demRaster, demInterp, _proj,
-                lineStart, blockLength, _geoGridWidth, 
+                lineStart, geoBlockLength, _geoGridWidth, 
                 _demBlockMargin);
 
         //Given the current block on geocoded grid,
@@ -53,7 +54,7 @@ geocode(isce::io::Raster & inputRaster,
         //values to the geocoded block
 
         _computeRangeAzimuthBoundingBox(lineStart, 
-                        blockLength, _geoGridWidth,
+                        geoBlockLength, _geoGridWidth,
                         _radarBlockMargin, demInterp,
                         azimuthFirstLine, azimuthLastLine,
                         rangeFirstPixel, rangeLastPixel);
@@ -67,8 +68,7 @@ geocode(isce::io::Raster & inputRaster,
     	std::valarray<double> radarY(blockSize);
 
         // Loop over lines of the output grid
-        for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
-
+        for (size_t blockLine = 0; blockLine < geoBlockLength; ++blockLine) {
             // Global line index
             const size_t line = lineStart + blockLine;
            
@@ -76,7 +76,7 @@ geocode(isce::io::Raster & inputRaster,
             double y = _geoGridStartY + _geoGridSpacingY*line;
 
             // Loop over DEM pixels
-            #pragma omp parallel for
+            //#pragma omp parallel for
             for (size_t pixel = 0; pixel < _geoGridWidth; ++pixel) {
                 
                 // x in the output geocoded Grid
@@ -94,49 +94,39 @@ geocode(isce::io::Raster & inputRaster,
 		
                 rdrX = (srange - _startingRange)/_rangeSpacing;		
 
-                // adjust the x,y indicies for the current block, 
+                // adjust the row and column indicies for the current block, 
                 // i.e., moving the origin to the top-left of this radar block.
                 rdrY -= azimuthFirstLine;
                 rdrX -= rangeFirstPixel;
-
-                // Check if solution is out of bounds
-                /*bool isOutside = false;
-                if ((aztime < t0) || (aztime > tend))
-                    isOutside = true;
-                if ((slantRange < r0) || (slantRange > rngend))
-                    isOutside = true;
-                */
-
-                //if (!isOutside) {
-                    // interpolate the inputRaster to get the value at aztime, slantRange
+                
                 radarX[blockLine*_geoGridWidth + pixel] = rdrX;
                 radarY[blockLine*_geoGridWidth + pixel] = rdrY;
-                //} else {
-                //    output[index] = NULL_VALUE;
-                //}
 
             } // end loop over pixels of output grid 
         } // end loops over lines of output grid
-        
+
         // define the matrix based on the rasterbands data type
-        //isce::core::Matrix<T> rdrDataBlock(rdrBlockLength, rdrBlockWidth);
-        isce::core::Matrix<float> rdrDataBlock(rdrBlockLength, rdrBlockWidth);
+        isce::core::Matrix<float> rdrDataBlock(rdrBlockLength, rdrBlockWidth);        
+        isce::core::Matrix<float> geoDataBlock(geoBlockLength, _geoGridWidth);
 
-        isce::core::Matrix<float> geoDataBlock(blockLength, _geoGridWidth);
-
+        // fill both matrices with zero
+        rdrDataBlock.zeros();
+        geoDataBlock.zeros();
+         
         //for each band in the input:
 	// get a block of data
-        inputRaster.getBlock(rdrDataBlock.data(),
+         inputRaster.getBlock(rdrDataBlock.data(),
                                     rangeFirstPixel, azimuthFirstLine,
                                     rdrBlockWidth, rdrBlockLength);
+       
+        // interpolate to estimate the values on the geocoded grid
+        _interpolate(rdrDataBlock, geoDataBlock, radarX, radarY, rdrBlockWidth, rdrBlockLength);
+
+        // 
+        outputRaster.setBlock(geoDataBlock.data(), 0, lineStart, _geoGridWidth, geoBlockLength);
         
-        _interpolate(rdrDataBlock, geoDataBlock, radarX, radarY);
-
-        outputRaster.setBlock(geoDataBlock.data(), 0, lineStart, _geoGridWidth, blockLength);
-
         // set output block of data
-    } // end loop over block of DEM
-
+    } // end loop over block of output grid
 }
 
 /*
@@ -147,13 +137,20 @@ _interpolate(isce::core::Matrix<T> rdrDataBlock, isce::core::Matrix<T> geoDataBl
 */
 
 void isce::geometry::Geocode::
-_interpolate(isce::core::Matrix<float> rdrDataBlock, isce::core::Matrix<float> geoDataBlock,
-        std::valarray<double> radarX, std::valarray<double> radarY)
+_interpolate(isce::core::Matrix<float>& rdrDataBlock, isce::core::Matrix<float>& geoDataBlock,
+        std::valarray<double>& radarX, std::valarray<double>& radarY, 
+        int radarBlockWidth, int radarBlockLength)
 {
-    size_t blockSize = radarX.size();
-    #pragma omp parallel for
-    for (size_t i = 0; i < blockSize; ++i)
-        geoDataBlock[i] = _interp->interpolate(radarX[i], radarY[i], rdrDataBlock);
+
+    size_t length = geoDataBlock.length();
+    size_t width = geoDataBlock.width();
+    for (size_t i = 0; i< length; ++i) {
+        for (size_t j = 0; j < width; ++j) {
+            if (radarX[i*width + j] >= 0 && radarY[i*width + j] >= 0 && 
+                    radarX[i*width + j] < radarBlockWidth && radarY[i*width + j] < radarBlockLength )
+                geoDataBlock(i,j) = _interp->interpolate(radarX[i*width + j], radarY[i*width + j], rdrDataBlock);
+        }
+    }
 
 }
 
@@ -170,6 +167,8 @@ _loadDEM(isce::io::Raster demRaster,
     double minY = _geoGridStartY + _geoGridSpacingY*(lineStart + blockLength - 1);
     double minX = _geoGridStartX;
     double maxX = _geoGridStartX + _geoGridSpacingX*(blockWidth - 1);
+
+    std::cout << minX << " , " << minY << " , " << maxX << " , " << maxY << std::endl;
 
     isce::core::cartesian_t xyz;
     isce::core::cartesian_t llh;
@@ -200,12 +199,14 @@ _loadDEM(isce::io::Raster demRaster,
     maxLat += demMargin;
 
     // load the DEM for this bounding box
+    std::cout << minLon << "," << maxLon << " , " << minLat << " , " << maxLat << std::endl;
+
     demInterp.loadDEM(demRaster, minLon, maxLon, minLat, maxLat,
                                     demRaster.getEPSG());
 
     // declare the dem interpolator
     demInterp.declare();
-
+    std::cout << "load EDM finished" << std::endl;
 }
 
 void isce::geometry::Geocode::
@@ -290,11 +291,13 @@ _geo2rdr(double x, double y,
     // interpolate the height from the DEM for this pixel
     llh[2] = demInterp.interpolateLonLat(llh[0], llh[1]);
 
+    //std::cout << "llh: " << llh[0] << " , " << llh[1] << " , " << llh[2] << " , " << std::endl;
     // Perform geo->rdr iterations
     int geostat = isce::geometry::geo2rdr(
                     llh, _ellipsoid, _orbit, _doppler, _mode, azimuthTime, slantRange, _threshold,
                     _numiter, 1.0e-8);
 
+    //std::cout << "azimuthTime , slantRange  " << azimuthTime << " , " << slantRange << std::endl;
 }
 
 

@@ -17,8 +17,8 @@
 #include <isce/core/LUT1d.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Projections.h>
-#include "isce/core/Interpolator.h"
-#include "isce/core/Constants.h"
+#include <isce/core/Interpolator.h>
+#include <isce/core/Constants.h>
 
 // isce::io
 #include <isce/io/Raster.h>
@@ -59,7 +59,7 @@ class isce::geometry::Geocode {
         
         inline void geoGrid(double geoGridStartX, double geoGridStartY, 
                 double geoGridSpacingX, double geoGridSpacingY,
-                int length, int width, int epsgcode);
+                int width, int length, int epsgcode);
 
         // Set the input radar grid 
         inline void radarGrid(isce::core::LUT1d<double> doppler,
@@ -83,7 +83,7 @@ class isce::geometry::Geocode {
 
         inline void projection(isce::core::ProjectionBase * proj);
 
-        inline void thersholdGeo2rdr(double threshold);
+        inline void thresholdGeo2rdr(double threshold);
 
         inline void numiterGeo2rdr(int numiter);
 
@@ -95,7 +95,7 @@ class isce::geometry::Geocode {
 
         //interpolator
         //isce::core::Interpolator * _interp = nullptr;
-        //inline void (isce::core::Interpolator<float> interp);
+        inline void interpolator(isce::core::Interpolator<float> * interp);
 
 
 
@@ -117,9 +117,10 @@ class isce::geometry::Geocode {
                     double & azimuthTime, double & slantRange,
                     isce::geometry::DEMInterpolator & demInterp);
 
-        void _interpolate(isce::core::Matrix<float> rdrDataBlock, 
-                    isce::core::Matrix<float> geoDataBlock,
-                    std::valarray<double> radarX, std::valarray<double> radarY);
+        void _interpolate(isce::core::Matrix<float>& rdrDataBlock, 
+                    isce::core::Matrix<float>& geoDataBlock,
+                    std::valarray<double>& radarX, std::valarray<double>& radarY,
+                    int rdrBlockWidth, int rdrBlockLength);
         
 
     private:
