@@ -39,6 +39,49 @@ std::array<double, 3> computePlaneNormal(std::array<double, 3> & x1,
     return nhat;
 }
 
+double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp,
+                               const isce::product::ImageMode& mode,
+                               const isce::core::Ellipsoid& ellps) {
+    // Create a projection object from the DEM interpolator
+    isce::core::ProjectionBase * proj = isce::core::createProj(dem_interp.epsgCode());
+
+    // Get middle XY coordinate in DEM coords, lat/lon, and ECEF XYZ
+    isce::core::cartesian_t demXY{dem_interp.midX(), dem_interp.midY(), 0.0}, llh;
+    proj->inverse(demXY, llh);
+    isce::core::cartesian_t xyz0;
+    ellps.lonLatToXyz(llh, xyz0);
+
+    // Repeat for middle coordinate + deltaX
+    demXY[0] += dem_interp.deltaX();
+    proj->inverse(demXY, llh);
+    isce::core::cartesian_t xyz1;
+    ellps.lonLatToXyz(llh, xyz1);
+
+    // Repeat for middle coordinate + deltaX + deltaY
+    demXY[1] += dem_interp.deltaY();
+    proj->inverse(demXY, llh);
+    isce::core::cartesian_t xyz2;
+    ellps.lonLatToXyz(llh, xyz2);
+
+    // Estimate width of DEM pixel
+    isce::core::cartesian_t delta;
+    isce::core::LinAlg::linComb(1., xyz1, -1., xyz0, delta);
+    const double dx = isce::core::LinAlg::norm(delta);
+
+    // Estimate length of DEM pixel
+    isce::core::LinAlg::linComb(1., xyz2, -1., xyz1, delta);
+    const double dy = isce::core::LinAlg::norm(delta);
+
+    // Compute area of DEM pixel
+    const double demArea = dx * dy;
+
+    // Compute area of radar pixel (for now, just use spacing in range direction)
+    const double radarArea = mode.rangePixelSpacing() * mode.rangePixelSpacing();
+
+    // Upsampling factor is the ratio
+    return demArea / radarArea;
+}
+
 void facetRTC(isce::product::Product& product, isce::io::Raster& dem, isce::io::Raster& out_raster) {
     using isce::core::LinAlg;
     const double RAD = M_PI / 180.;
@@ -87,8 +130,7 @@ void facetRTC(isce::product::Product& product, isce::io::Raster& dem, isce::io::
     // Enter loop to read in SLC range/azimuth coordinates and compute area
     std::cout << std::endl;
 
-    const float upsample_factor = mode.length() * mode.width()
-                                / (dem_interp.length() * dem_interp.width());
+    const float upsample_factor = computeUpsamplingFactor(dem_interp, mode, ellps);
 
     const size_t imax = dem_interp.length() * upsample_factor;
     const size_t jmax = dem_interp.width()  * upsample_factor;
