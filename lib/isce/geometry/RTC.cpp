@@ -235,7 +235,7 @@ void facetRTC(isce::product::Product& product, isce::io::Raster& dem, isce::io::
         isce::core::cartesian_t xyz_plat, vel;
         orbit.interpolateWGS84Orbit(start + i * pixazm, xyz_plat, vel);
 
-        //#pragma omp parallel for schedule(dynamic) firstprivate(mode, orbit, ellps, flat_interp)
+        #pragma omp parallel for schedule(dynamic)
         for (size_t j = 0; j < mode.width(); ++j) {
 
             // Slant range for current pixel
@@ -248,21 +248,16 @@ void facetRTC(isce::product::Product& product, isce::io::Raster& dem, isce::io::
                     product.metadata().identification().lookDirection(),
                     1e-4, 20, 20, isce::core::HERMITE_METHOD);
 
-            // Compute look angle
-            lookXYZ = {xyz_plat[0] - targetXYZ[0],
-                       xyz_plat[1] - targetXYZ[1],
-                       xyz_plat[2] - targetXYZ[2]};
-            const double norm = LinAlg::norm(lookXYZ);
-            lookXYZ[0] /= norm;
-            lookXYZ[1] /= norm;
-            lookXYZ[2] /= norm;
+            // Computation of ENU coordinates around ground target
+            isce::core::cartesian_t satToGround, enu;
+            isce::core::cartmat_t enumat, xyz2enu;
+            LinAlg::linComb(1.0, targetXYZ, -1.0, xyz_plat, satToGround);
+            LinAlg::enuBasis(targetLLH[1], targetLLH[0], enumat);
+            LinAlg::tranMat(enumat, xyz2enu);
+            LinAlg::matVec(xyz2enu, satToGround, enu);
 
-            //ellps.lonLatToXyz(targetLLH, targetXYZ);
-            isce::core::cartesian_t normXYZ;
-            ellps.nVector(targetLLH[0], targetLLH[1], normXYZ);
-
-            // Compute incidence angle
-            const double costheta = LinAlg::dot(normXYZ, lookXYZ);
+            // Compute incidence angle components
+            const double costheta = std::abs(enu[2]) / LinAlg::norm(enu);
             const double sintheta = std::sqrt(1. - costheta*costheta);
 
             const float area_value = out[mode.width() * i + j];
