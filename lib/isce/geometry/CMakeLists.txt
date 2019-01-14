@@ -7,6 +7,7 @@ set(LOCAL_SRCS
     DEMInterpolator.cpp
     Geo2rdr.cpp
     geometry.cpp
+    RTC.cpp
     Topo.cpp)
 
 ####Append current path to every source file
@@ -21,6 +22,7 @@ set(${PACKAGENAME}_EXPORT_HEADERS
     Geo2rdr.h
     Geo2rdr.icc
     geometry.h
+    RTC.h
     Serialization.h
     Topo.h
     Topo.icc
