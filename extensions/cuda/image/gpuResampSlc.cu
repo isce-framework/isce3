@@ -57,7 +57,6 @@ void transformTile(const gpuComplex<float> *tile,
         int i = iTileOut / outWidth;
         int j = iTileOut % outWidth;
         imgOut[iTileOut] = gpuComplex<float>(0., 0.);
-        //imgOut[iTileOut] = tile[iTileOut];
 
         // Unpack offsets
         const float azOff = azOffTile[iTileOut];
@@ -113,7 +112,6 @@ void transformTile(const gpuComplex<float> *tile,
             }
 
             // Interpolate chip
-            //const gpuComplex<float> cval(1., 1.);
             const gpuComplex<float> cval = interp.interpolate(
                 chipHalf + fracRg, chipHalf + fracAz, &chip[iChip], chipSize, chipSize
             );
@@ -172,13 +170,13 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
     checkCudaErrors(cudaMalloc(&d_tile, nInPixels*sizeof(gpuComplex<float>)));
     checkCudaErrors(cudaMalloc(&d_chip, nChipBytes));
     checkCudaErrors(cudaMalloc(&d_imgOut, nOutBytes));
-    checkCudaErrors(cudaMalloc(&d_azOffTile, nInPixels*sizeof(float)));
-    checkCudaErrors(cudaMalloc(&d_rgOffTile, nInPixels*sizeof(float)));
+    checkCudaErrors(cudaMalloc(&d_azOffTile, nOutPixels*sizeof(float)));
+    checkCudaErrors(cudaMalloc(&d_rgOffTile, nOutPixels*sizeof(float)));
 
     // copy objects to device memory
     checkCudaErrors(cudaMemcpy(d_tile, &tile[0], nInPixels*sizeof(gpuComplex<float>), cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaMemcpy(d_azOffTile, &azOffTile[0], nInPixels*sizeof(float), cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaMemcpy(d_rgOffTile, &rgOffTile[0], nInPixels*sizeof(float), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_azOffTile, &azOffTile[0], nOutPixels*sizeof(float), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_rgOffTile, &rgOffTile[0], nOutPixels*sizeof(float), cudaMemcpyHostToDevice));
 
     // determine block layout
     dim3 block(THRD_PER_BLOCK);
