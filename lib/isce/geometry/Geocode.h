@@ -33,10 +33,12 @@
 // Declaration
 namespace isce {
     namespace geometry {
+        template<class T>
         class Geocode;
     }
 }
 
+template<class T>
 class isce::geometry::Geocode {
 
     public:
@@ -95,7 +97,7 @@ class isce::geometry::Geocode {
 
         //interpolator
         //isce::core::Interpolator * _interp = nullptr;
-        inline void interpolator(isce::core::Interpolator<float> * interp);
+        inline void interpolator(isce::core::Interpolator<T> * interp);
 
 
 
@@ -117,8 +119,8 @@ class isce::geometry::Geocode {
                     double & azimuthTime, double & slantRange,
                     isce::geometry::DEMInterpolator & demInterp);
 
-        void _interpolate(isce::core::Matrix<float>& rdrDataBlock, 
-                    isce::core::Matrix<float>& geoDataBlock,
+        void _interpolate(isce::core::Matrix<T>& rdrDataBlock, 
+                    isce::core::Matrix<T>& geoDataBlock,
                     std::valarray<double>& radarX, std::valarray<double>& radarY,
                     int rdrBlockWidth, int rdrBlockLength);
         
@@ -179,7 +181,7 @@ class isce::geometry::Geocode {
 
         //interpolator 
         //isce::core::Interpolator * _interp = nullptr;
-        isce::core::Interpolator<float> * _interp = nullptr;
+        isce::core::Interpolator<T> * _interp = nullptr;
 };
 
 // Get inline implementations for Geocode

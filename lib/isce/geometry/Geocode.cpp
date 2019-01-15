@@ -6,7 +6,8 @@
 
 #include "Geocode.h"
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 geocode(isce::io::Raster & inputRaster,
         isce::io::Raster & outputRaster,
         isce::io::Raster & demRaster) 
@@ -111,8 +112,8 @@ geocode(isce::io::Raster & inputRaster,
         } // end loops over lines of output grid
 
         // define the matrix based on the rasterbands data type
-        isce::core::Matrix<float> rdrDataBlock(rdrBlockLength, rdrBlockWidth);        
-        isce::core::Matrix<float> geoDataBlock(geoBlockLength, _geoGridWidth);
+        isce::core::Matrix<T> rdrDataBlock(rdrBlockLength, rdrBlockWidth);        
+        isce::core::Matrix<T> geoDataBlock(geoBlockLength, _geoGridWidth);
 
         // fill both matrices with zero
         rdrDataBlock.zeros();
@@ -148,10 +149,10 @@ _interpolate(isce::core::Matrix<T> rdrDataBlock, isce::core::Matrix<T> geoDataBl
             std::valarray<double> radarX, std::valarray<double> radarY);
 
 */
-
-void isce::geometry::Geocode::
-_interpolate(isce::core::Matrix<float>& rdrDataBlock, 
-            isce::core::Matrix<float>& geoDataBlock,
+template<class T>
+void isce::geometry::Geocode<T>::
+_interpolate(isce::core::Matrix<T>& rdrDataBlock, 
+            isce::core::Matrix<T>& geoDataBlock,
             std::valarray<double>& radarX, std::valarray<double>& radarY, 
             int radarBlockWidth, int radarBlockLength)
 {
@@ -177,8 +178,8 @@ _interpolate(isce::core::Matrix<float>& rdrDataBlock,
 
 }
 
-
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 _loadDEM(isce::io::Raster demRaster,
         isce::geometry::DEMInterpolator & demInterp,
         isce::core::ProjectionBase * _proj, 
@@ -230,7 +231,8 @@ _loadDEM(isce::io::Raster demRaster,
     demInterp.declare();
 }
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
                         int margin, isce::geometry::DEMInterpolator & demInterp,
                         int & azimuthFirstLine, int & azimuthLastLine,
@@ -301,8 +303,8 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
 
 }
 
-
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 _geo2rdr(double x, double y, 
         double & azimuthTime, double & slantRange,
         isce::geometry::DEMInterpolator & demInterp)
@@ -321,9 +323,11 @@ _geo2rdr(double x, double y,
 
     // Perform geo->rdr iterations
     int geostat = isce::geometry::geo2rdr(
-                    llh, _ellipsoid, _orbit, _doppler, _mode, azimuthTime, slantRange, _threshold,
+                    llh, _ellipsoid, _orbit, _doppler, _mode, 
+                    azimuthTime, slantRange, _threshold,
                     _numiter, 1.0e-8);
 
 }
 
-
+template class isce::geometry::Geocode<float>;
+template class isce::geometry::Geocode<double>;

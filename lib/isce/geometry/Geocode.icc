@@ -8,7 +8,8 @@
 #error "Geocode.icc is an implementation detail of class Geocode"
 #endif
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 geoGrid(double geoGridStartX, double geoGridStartY,
         double geoGridSpacingX, double geoGridSpacingY,
         double geoGridEndX, double geoGridEndY,
@@ -26,7 +27,8 @@ geoGrid(double geoGridStartX, double geoGridStartY,
 
 }
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 geoGrid(double geoGridStartX, double geoGridStartY,
         double geoGridSpacingX, double geoGridSpacingY,
         int width, int length, int epsgcode) {
@@ -57,8 +59,8 @@ geoGrid(double geoGridStartX, double geoGridStartY,
 
 }
 
-
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 radarGrid(isce::core::LUT1d<double> doppler,
             isce::core::DateTime azimuthStartTime,
             double azimuthTimeInterval,
@@ -84,8 +86,8 @@ radarGrid(isce::core::LUT1d<double> doppler,
 }
 
 
-
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch) {
 
     _orbit = orbit;
@@ -94,63 +96,72 @@ orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch) {
 
 }
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod) {
 
     _orbitMethod = orbitMethod;
 
 }
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 ellipsoid(isce::core::Ellipsoid& ellipsoid) {
 
     _ellipsoid = ellipsoid;
 
 }
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 mode(isce::product::ImageMode& mode) {
 
     _mode = mode;
 
 }
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 projection(isce::core::ProjectionBase * proj) {
 
     _proj = proj;
 
 }
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 thresholdGeo2rdr(double threshold) {
 
     _threshold = threshold;
 
 }
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 numiterGeo2rdr(int numiter) {
 
     _numiter = numiter;
 
 }
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 linesPerBlock(size_t linesPerBlock) {
 
     _linesPerBlock = linesPerBlock;
 
 }
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 demBlockMargin(double demBlockMargin) {
 
     _demBlockMargin = demBlockMargin;
 
 }
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 radarBlockMargin(int radarBlockMargin) {
 
     _radarBlockMargin = radarBlockMargin;
@@ -158,16 +169,18 @@ radarBlockMargin(int radarBlockMargin) {
 }
 
 //interpolator
-void isce::geometry::Geocode::
-interpolator(isce::core::Interpolator<float> * interp) {
+template<class T>
+void isce::geometry::Geocode<T>::
+interpolator(isce::core::Interpolator<T> * interp) {
 
     _interp = interp;
 
 }
 
-void isce::geometry::Geocode::
+template<class T>
+void isce::geometry::Geocode<T>::
 interpolator(isce::core::dataInterpMethod method) {
 
-        _interp = isce::core::createInterpolator<float>(method);
+        _interp = isce::core::createInterpolator<T>(method);
 
 }
