@@ -10,7 +10,7 @@ var searchData=
   ['matrix_3c_20float_20_3e',['Matrix&lt; float &gt;',['../classisce_1_1core_1_1Matrix.html',1,'isce::core']]],
   ['matvec',['matVec',['../structisce_1_1core_1_1LinAlg.html#ab76892255785ba086c768959c3acc836',1,'isce::core::LinAlg']]],
   ['mean',['mean',['../structisce_1_1core_1_1Poly1d.html#a5d1232ac38aa195ef04b93cab1009f17',1,'isce::core::Poly1d']]],
-  ['metadata',['Metadata',['../structisce_1_1core_1_1Metadata.html',1,'isce::core::Metadata'],['../classisce_1_1product_1_1Metadata.html',1,'isce::product::Metadata'],['../classisce_1_1product_1_1Metadata.html#a6f8c6110daedb73b995eee773ab5bd24',1,'isce::product::Metadata::Metadata()'],['../classisce_1_1product_1_1Product.html#abf6e58555c6518bc942bbb3de9b3d1b6',1,'isce::product::Product::metadata()']]],
+  ['metadata',['Metadata',['../structisce_1_1core_1_1Metadata.html',1,'isce::core::Metadata'],['../classisce_1_1product_1_1Metadata.html',1,'isce::product::Metadata'],['../classisce_1_1product_1_1Product.html#abf6e58555c6518bc942bbb3de9b3d1b6',1,'isce::product::Product::metadata()'],['../classisce_1_1product_1_1Metadata.html#a6f8c6110daedb73b995eee773ab5bd24',1,'isce::product::Metadata::Metadata()']]],
   ['method',['method',['../classisce_1_1core_1_1Interpolator.html#a40529a930d22ef81e8d15e354cede77d',1,'isce::core::Interpolator']]],
   ['midlonlat',['midLonLat',['../classisce_1_1geometry_1_1DEMInterpolator.html#a3d7a6093fe957763b53ee040038b7e3e',1,'isce::geometry::DEMInterpolator']]],
   ['midx',['midX',['../classisce_1_1geometry_1_1DEMInterpolator.html#ab5ee9a3ca3d5c61b2e4b434d70c32480',1,'isce::geometry::DEMInterpolator']]],
