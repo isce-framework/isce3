@@ -2,7 +2,6 @@ var searchData=
 [
   ['ncols',['ncols',['../classisce_1_1signal_1_1Looks.html#acc92832573210d4d2b74627b01eec1c8',1,'isce::signal::Looks']]],
   ['ncolslooked',['ncolsLooked',['../classisce_1_1signal_1_1Looks.html#a7a23f11f79fb00de1ff8ede78960d664',1,'isce::signal::Looks']]],
-  ['nearestneighborinterpolator',['NearestNeighborInterpolator',['../classisce_1_1core_1_1NearestNeighborInterpolator.html',1,'isce::core::NearestNeighborInterpolator&lt; U &gt;'],['../classisce_1_1core_1_1NearestNeighborInterpolator.html#a12eaa3fc21a21eb97bc7686d9c91dcfe',1,'isce::core::NearestNeighborInterpolator::NearestNeighborInterpolator()']]],
   ['nextpoweroftwo',['nextPowerOfTwo',['../classisce_1_1signal_1_1Signal.html#a46a99f0d46794440b29a5c7e558f04f2',1,'isce::signal::Signal']]],
   ['norm',['norm',['../structisce_1_1core_1_1Poly1d.html#a123489f472adff67a1712d6d30d6f45c',1,'isce::core::Poly1d::norm()'],['../structisce_1_1core_1_1LinAlg.html#a2ea558879192a37e4a92365fcfff4263',1,'isce::core::LinAlg::norm()']]],
   ['nrows',['nrows',['../classisce_1_1signal_1_1Looks.html#afb7040577a8fd31e3f50f1169d9ee024',1,'isce::signal::Looks']]],
