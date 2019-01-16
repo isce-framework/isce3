@@ -13,46 +13,12 @@ def pyStringToBytes(s):
     else:
         raise ValueError('Input Python string not str or bytes')
 
-# Include the io extensions
-include "io/pyGDAL.pyx"
-include "io/pyRaster.pyx"
-include "io/pyIH5.pyx"
-
-# Include the core extensions
-include "core/pyTimeDelta.pyx"
-include "core/pyDateTime.pyx"
-include "core/pyAttitude.pyx"
-include "core/pyBasis.pyx"
-include "core/pyDoppler.pyx"
-include "core/pyEllipsoid.pyx"
-include "core/pyInterpolator.pyx"
-include "core/pyPeg.pyx"
-include "core/pyPegtrans.pyx"
-include "core/pyPosition.pyx"
-include "core/pyLinAlg.pyx"
-include "core/pyLUT1d.pyx"
-include "core/pyOrbit.pyx"
-include "core/pyPoly1d.pyx"
-include "core/pyPoly2d.pyx"
-
-# Include the radar extensions
-include "radar/pyRadar.pyx"
-
-# Include the product extensions
-include "product/pyImageMode.pyx"
-include "product/pyIdentification.pyx"
-include "product/pyMetadata.pyx"
-include "product/pyComplexImagery.pyx"
-include "product/pyProduct.pyx"
-
-# Include the image extensions
+# Include the image extensiosn
 include "image/pyResampSlc.pyx"
 
 # Include the geometry extensions
 include "geometry/pyTopo.pyx"
 include "geometry/pyGeo2rdr.pyx"
 
-# The separate serialization routines
-include "serialization/serialize.pyx"
 
 # end of file

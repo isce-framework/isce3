@@ -57,42 +57,39 @@ interpolate(double x, double y, const isce::core::Matrix<U> & z) {
 
     // Check edge conditions
     U interpVal(0.0);
-    if ((ix < _sincHalf) || (ix > (z.width() - _sincHalf)))
+    if ((ix < (_sincHalf - 1)) || (ix > (z.width() - _sincHalf - 1)))
         return interpVal;
-    if ((iy < _sincHalf) || (iy > (z.length() - _sincHalf)))
+    if ((iy < (_sincHalf - 1)) || (iy > (z.length() - _sincHalf - 1)))
         return interpVal;
 
     // Modify integer interpolation coordinates for sinc evaluation
-    const int xx = ix + _sincHalf - 1;
-    const int yy = iy + _sincHalf - 1;
+    const int xx = ix + _sincHalf;
+    const int yy = iy + _sincHalf;
 
     // Call sinc interpolator
-    interpVal = _sinc_eval_2d(z, xx, yy, fx, fy, _kernelWidth+1, _kernelWidth+1);
+    interpVal = _sinc_eval_2d(z, xx, yy, fx, fy);
     return interpVal;
 }
 
 template <class U>
 U
 isce::core::Sinc2dInterpolator<U>::
-_sinc_eval_2d(const isce::core::Matrix<U> & arrin, int intpx, int intpy, double frpx,
-              double frpy, int xlen, int ylen) {
+_sinc_eval_2d(const isce::core::Matrix<U> & arrin, int intpx, int intpy,
+              double frpx, double frpy) {
 
     // Initialize return value
     U ret(0.0);
+    
+    // Get nearest kernel indices
+    int ifracx = std::min(std::max(0, int(frpx*_kernelLength)), _kernelLength-1);
+    int ifracy = std::min(std::max(0, int(frpy*_kernelLength)), _kernelLength-1);
 
-    // Interpolate for valid indices
-    if ((intpy >= (_kernelWidth-1)) && (intpy < ylen) && 
-        (intpx >= (_kernelWidth-1)) && (intpx < xlen)) {
-        // Get nearest kernel indices
-        int ifracx = std::min(std::max(0, int(frpx*_kernelLength)), _kernelLength-1);
-        int ifracy = std::min(std::max(0, int(frpy*_kernelLength)), _kernelLength-1);
-        // Compute weighted sum from kernel
-        for (int i = 0; i < _kernelWidth; i++) {
-            for (int j = 0; j < _kernelWidth; j++) {
-                ret += arrin(intpy-i,intpx-j) * 
-                       static_cast<U>(_kernel(ifracy,i)) * 
-                       static_cast<U>(_kernel(ifracx,j));
-            }
+    // Compute weighted sum from kernel
+    for (int i = 0; i < _kernelWidth; i++) {
+        for (int j = 0; j < _kernelWidth; j++) {
+            ret += arrin(intpy-i,intpx-j) * 
+                   static_cast<U>(_kernel(ifracy,i)) * 
+                   static_cast<U>(_kernel(ifracx,j));
         }
     }
 

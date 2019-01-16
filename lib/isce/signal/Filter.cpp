@@ -289,7 +289,7 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
 
             // Stop band
             } else {
-                _filter[i+j*ncols] = std::complex<T>(0.0, 0.0);
+                _filter[i*ncols+j] = std::complex<T>(0.0, 0.0);
             }
         }
     }

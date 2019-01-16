@@ -16,6 +16,7 @@ set(LOCAL_SRCS
               LUT2d.cpp
               LinAlg.cpp
               Metadata.cpp
+              NearestNeighborInterpolator.cpp
               Orbit.cpp
               Peg.cpp
               Pegtrans.cpp

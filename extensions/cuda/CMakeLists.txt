@@ -6,11 +6,13 @@ set (LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 include(core/CMakeLists.txt)
 include(product/CMakeLists.txt)
 include(geometry/CMakeLists.txt)
+include(image/CMakeLists.txt)
 
 # Set the output library
 add_library(${LCUDAISCE} SHARED
             ${ISCE_CUDA_core_SRCS}
-            ${ISCE_CUDA_geometry_SRCS})
+            ${ISCE_CUDA_geometry_SRCS}
+            ${ISCE_CUDA_image_SRCS})
 
 # Force nvcc to compile with c++14
 get_target_property(MYPROPS ${LCUDAISCE} COMPILE_OPTIONS)

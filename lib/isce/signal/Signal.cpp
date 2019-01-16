@@ -866,9 +866,11 @@ upsample(std::valarray<std::complex<T>> &signal,
     //      spectrumShifted = [1,2,3,0,0,0,0,0,0,4,5,6]
     //
 
+    #pragma omp parallel for
     for (size_t column = 0; column<nfft/2; ++column)
         spectrumShifted[std::slice(column, rows, columns)] = spectrum[std::slice(column, rows, nfft)];
 
+    #pragma omp parallel for
     for (size_t i = 0; i<nfft/2; ++i){
         size_t j = upsampleFactor*nfft - nfft/2 + i;
         spectrumShifted[std::slice(j, rows, columns)] = spectrum[std::slice(i+nfft/2, rows, nfft)];

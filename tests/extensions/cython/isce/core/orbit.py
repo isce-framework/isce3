@@ -23,7 +23,7 @@ class LinearOrbit():
         return t, pos, vel
 
     def makeOrbit(self):
-        from isceextension import pyOrbit
+        from isce3.extensions.isceextension import pyOrbit
         orb = pyOrbit(nVectors=self.nVec)
         for ii in range(self.nVec):
             t, pos, vel = self.makeStateVector(ii*self.dt)
@@ -67,7 +67,7 @@ class CirculatOrbit():
         return t, pos, vel
 
     def makeOrbit(self):
-        from isceextension import pyOrbit
+        from isce3.extensions.isceextension import pyOrbit
         orb = pyOrbit(nVectors=self.nVec)
         for ii in range(self.nVec):
             t, pos, vel = self.makeStateVector(ii*self.dt)
@@ -109,7 +109,7 @@ class PolynomialOrbit:
         return t, pos, vel
 
     def makeOrbit(self):
-        from isceextension import pyOrbit
+        from isce3.extensions.isceextension import pyOrbit
         orb = pyOrbit(nVectors=self.nVec)
         for ii in range(self.nVec):
             t, pos, vel = self.makeStateVector(ii * self.dt)
@@ -159,7 +159,7 @@ def test_Edges():
             
 def test_Reverse():
     import numpy.testing as npt
-    from isceextension import pyOrbit
+    from isce3.extensions.isceextension import pyOrbit
 
     orb = linorb.makeOrbit()
 
@@ -179,7 +179,7 @@ def test_Reverse():
 
 def test_OutOfOrder():
     import numpy.testing as npt
-    from isceextension import pyOrbit
+    from isce3.extensions.isceextension import pyOrbit
 
     orb = linorb.makeOrbit()
 

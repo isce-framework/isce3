@@ -6,7 +6,15 @@
 
 from libcpp cimport bool
 from libcpp.string cimport string
-from ResampSlc cimport ResampSlc
+from cython.operator cimport dereference as deref
+
+# Pull in Cython classes from isceextension
+from isceextension cimport pyLUT1d
+from isceextension cimport pyProduct
+from isceextension cimport pyImageMode
+from isceextension cimport pyRaster
+
+from cuResampSlc cimport ResampSlc
 
 cdef class pyResampSlc:
     """
