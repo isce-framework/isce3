@@ -5,6 +5,5 @@ var searchData=
   ['basis',['Basis',['../classisce_1_1core_1_1Basis.html#a61d26157ac702fcfadf1046f2a912cdc',1,'isce::core::Basis::Basis()'],['../classisce_1_1core_1_1Basis.html#a7c343bfeb6b93ab225074ff53ee9df59',1,'isce::core::Basis::Basis(cartesian_t &amp;x0, cartesian_t &amp;x1, cartesian_t &amp;x2)']]],
   ['beta',['beta',['../classisce_1_1signal_1_1Crossmul.html#af251748003cb48812a1e884faee4715e',1,'isce::signal::Crossmul']]],
   ['bicubicinterpolator',['BicubicInterpolator',['../classisce_1_1core_1_1BicubicInterpolator.html#a14ba55881438ccb62445786af38fabab',1,'isce::core::BicubicInterpolator']]],
-  ['bilinearinterpolator',['BilinearInterpolator',['../classisce_1_1core_1_1BilinearInterpolator.html#a1ca5c850e4eae19408b470ac55e14a3a',1,'isce::core::BilinearInterpolator']]],
-  ['byteoffset',['byteoffset',['../classisce_1_1core_1_1Matrix.html#a74de0fbe34091cd52c699ae589bfed1c',1,'isce::core::Matrix']]]
+  ['bilinearinterpolator',['BilinearInterpolator',['../classisce_1_1core_1_1BilinearInterpolator.html#a1ca5c850e4eae19408b470ac55e14a3a',1,'isce::core::BilinearInterpolator']]]
 ];
