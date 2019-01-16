@@ -603,7 +603,7 @@ TEST_F(IH5Test, datasetReadFloatWithVector) {
 
     std::vector<float> dval;
     dset.read(dval);
-    ASSERT_EQ(dval.size(), 45);
+    ASSERT_EQ(dval.size(), 33);
     ASSERT_FLOAT_EQ(dval[0], 0);
 
     dset.close();

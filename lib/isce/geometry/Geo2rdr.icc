@@ -30,13 +30,13 @@ Geo2rdr(isce::product::Product & product) {
 
 /** @param[in] ellipsoid Ellipsoid object
  * @param[in] orbit Orbit object
- * @param[in] doppler Poly2D doppler model
+ * @param[in] doppler LUT1d doppler model
  * @param[in] meta Metadata object
  *
- * Alternative constructor from ellipsoid, orbit and metadata.*/
+ * Alternative constructor from ellipsoid, orbit, doppler, and metadata.*/
 isce::geometry::Geo2rdr::
 Geo2rdr(const isce::core::Ellipsoid & ellipsoid, const isce::core::Orbit & orbit,
-        const isce::core::Poly2d & doppler, const isce::core::Metadata & meta) :
+        const isce::core::LUT1d<double> & doppler, const isce::core::Metadata & meta) :
         _ellipsoid(ellipsoid), _orbit(orbit), _doppler(doppler), _mode(meta) {
 
     // For numerical precision purposes, set reference epoch 2 days prior

@@ -7,7 +7,7 @@
 from Orbit cimport Orbit
 from Ellipsoid cimport Ellipsoid
 from Cartesian cimport cartesian_t
-from Poly2d cimport Poly2d
+from LUT1d cimport LUT1d
 from ImageMode cimport ImageMode
 
 cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
@@ -15,7 +15,7 @@ cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
     int geo2rdr(cartesian_t &,
                 Ellipsoid &,
                 Orbit &,
-                Poly2d &,
+                LUT1d[double] &,
                 ImageMode &,
                 double &, double &,
                 double, int, double)

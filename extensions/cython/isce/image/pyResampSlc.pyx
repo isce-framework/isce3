@@ -28,7 +28,7 @@ cdef class pyResampSlc:
         Initialize C++ objects.
         """
         cdef pyProduct c_product
-        cdef pyPoly2d c_doppler
+        cdef pyLUT1d c_doppler
         cdef pyImageMode c_mode
         
         if product is not None:
@@ -36,9 +36,9 @@ cdef class pyResampSlc:
             self.c_resamp = new ResampSlc(deref(c_product.c_product))
 
         elif doppler is not None and mode is not None:
-            c_doppler = <pyPoly2d> doppler
+            c_doppler = <pyLUT1d> doppler
             c_mode = <pyImageMode> mode
-            self.c_resamp = new ResampSlc(deref(c_doppler.c_poly2d), deref(c_mode.c_imagemode))
+            self.c_resamp = new ResampSlc(deref(c_doppler.c_lut), deref(c_mode.c_imagemode))
 
         else:
             self.c_resamp = new ResampSlc()
@@ -59,17 +59,17 @@ cdef class pyResampSlc:
     @property
     def doppler(self):
         """
-        Get the content Doppler polynomial for the product to be resampled.
+        Get the content Doppler LUT for the product to be resampled.
         """
-        poly = pyPoly2d.cbind(self.c_resamp.doppler())
-        return self.poly
+        lut = pyLUT1d.cbind(self.c_resamp.doppler())
+        return self.lut
 
     @doppler.setter
-    def doppler(self, pyPoly2d dop):
+    def doppler(self, pyLUT1d dop):
         """
-        Override the content Doppler polynomial from a pyPoly2d instance.
+        Override the content Doppler LUT from a pyLUT1d instance.
         """
-        self.c_resamp.doppler(deref(dop.c_poly2d))
+        self.c_resamp.doppler(deref(dop.c_lut))
 
     @property
     def imageMode(self):

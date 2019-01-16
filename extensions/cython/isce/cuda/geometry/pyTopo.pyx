@@ -8,11 +8,9 @@ cimport numpy as np
 from libcpp cimport bool
 from libcpp.string cimport string
 from cython.operator cimport dereference as deref
-
-from SerializeGeometry cimport load_archive
-from Topo cimport *
-from Orbit cimport orbitInterpMethod
-from Interpolator cimport dataInterpMethod
+from isceextension cimport pyProduct
+from isceextension cimport pyRaster
+from cuTopo cimport *
 
 cdef class pyTopo:
     """

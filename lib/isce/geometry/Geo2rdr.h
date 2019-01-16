@@ -8,13 +8,13 @@
 #define ISCE_CORE_GEO2RDR_H
 
 // pyre
-#include <portinfo>
 #include <pyre/journal.h>
 
 // isce::core
 #include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/Poly2d.h>
+#include <isce/core/LUT1d.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Peg.h>
 #include <isce/core/Pegtrans.h>
@@ -45,7 +45,7 @@ class isce::geometry::Geo2rdr {
         /** Constructor from core objects*/
         inline Geo2rdr(const isce::core::Ellipsoid &,
                        const isce::core::Orbit &,
-                       const isce::core::Poly2d &,
+                       const isce::core::LUT1d<double> &,
                        const isce::core::Metadata &);
 
         /** Set convergence threshold*/
@@ -75,7 +75,7 @@ class isce::geometry::Geo2rdr {
         /** Get Ellipsoid object used for processing */
         inline const isce::core::Ellipsoid & ellipsoid() const { return _ellipsoid; }
         /** Get Doppler model used for processing */
-        inline const isce::core::Poly2d & doppler() const { return _doppler; }
+        inline const isce::core::LUT1d<double> & doppler() const { return _doppler; }
         /** Get sensingStart used for processing */
         inline const isce::core::DateTime & sensingStart() const { return _sensingStart; }
         /** Get reference epoch of the orbit used for processing */
@@ -105,7 +105,7 @@ class isce::geometry::Geo2rdr {
         // isce::core objects
         isce::core::Ellipsoid _ellipsoid;
         isce::core::Orbit _orbit;
-        isce::core::Poly2d _doppler;
+        isce::core::LUT1d<double> _doppler;
         isce::core::DateTime _refEpoch;
         isce::core::DateTime _sensingStart;
 

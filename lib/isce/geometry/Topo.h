@@ -8,7 +8,6 @@
 #define ISCE_GEOMETRY_TOPO_H
 
 // pyre
-#include <portinfo>
 #include <pyre/journal.h>
 
 // isce::core
@@ -44,7 +43,7 @@ class isce::geometry::Topo {
         /** Constructor using core objects*/
         inline Topo(isce::core::Ellipsoid,
                     isce::core::Orbit,
-                    isce::core::Poly2d,
+                    isce::core::LUT1d<double>,
                     isce::core::Metadata);
         
         /** Set initialization flag*/
@@ -101,7 +100,7 @@ class isce::geometry::Topo {
         /** Get the ellipsoid used for processing */
         inline const isce::core::Ellipsoid & ellipsoid() const { return _ellipsoid; }
         /** Get the doppler module used for processing */
-        inline const isce::core::Poly2d & doppler() const { return _doppler; }
+        inline const isce::core::LUT1d<double> & doppler() const { return _doppler; }
         /** Get the sensingStart used for processing */
         inline const isce::core::DateTime & sensingStart() const { return _sensingStart; }
         /** Get the imageMode object used for processing */
@@ -127,7 +126,7 @@ class isce::geometry::Topo {
         // isce::core objects
         isce::core::Orbit _orbit;
         isce::core::Ellipsoid _ellipsoid;
-        isce::core::Poly2d _doppler;
+        isce::core::LUT1d<double> _doppler;
         isce::core::DateTime _sensingStart, _refEpoch;
 
         // isce::product objects

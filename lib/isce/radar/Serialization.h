@@ -34,17 +34,17 @@ namespace isce {
             // Get doppler subgroup
             isce::io::IGroup dopGroup = group.openGroup("doppler_centroid");
 
-            // Configure a temporary Poly2d object with data polynomial
-            isce::core::Poly2d cpoly;
-            isce::core::loadFromH5(dopGroup, cpoly, "data_dcpolynomial");
-            // Save to radar
-            radar.contentDoppler(cpoly);
+            // Load Doppler data
+            std::valarray<double> r0, skew, content;
+            isce::io::loadFromH5(dopGroup, "r0", r0);
+            isce::io::loadFromH5(dopGroup, "skewdc_values", skew);
+            isce::io::loadFromH5(dopGroup, "datadc_values", content);
 
-            // Configure Poly2d object with skew polynomial
-            isce::core::Poly2d spoly;
-            isce::core::loadFromH5(dopGroup, spoly, "skew_dcpolynomial");
-            // Save to radar
-            radar.skewDoppler(spoly);
+            // Create a temporary Radar object
+            Radar temp(r0, skew, content);
+
+            // Copy to output Radar object
+            radar = temp;
         }
 
     }

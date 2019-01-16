@@ -5,10 +5,27 @@
 #error "Radar.icc is an implementation detail of class Radar."
 #endif
 
-/** @param[in]              Poly2d for skew Doppler.
- *  @param[in]              Poly2d for content Doppler. */
+/** @param[in]              Slant range coordinates for Doppler values
+  * @param[in]              Doppler values for radar skew
+  * @param[in]              Doppler values for radar data */
 isce::radar::Radar::
-Radar(const isce::core::Poly2d & skew, const isce::core::Poly2d & content) :
+Radar(const std::valarray<double> & slantRange,
+      const std::valarray<double> & skew,
+      const std::valarray<double> & content) {
+    // Create LUTs
+    isce::core::LUT1d<double> skewLUT(slantRange, skew, true);
+    isce::core::LUT1d<double> contentLUT(slantRange, content, true);
+    _skewDoppler = skewLUT;
+    _contentDoppler = contentLUT;
+
+    //_skewDoppler = isce::core::LUT1d<double>(slantRange, skew, true);
+    //_contentDoppler = isce::core::LUT1d<double>(slantRange, content, true);
+}
+
+/** @param[in]              LUT1d for skew Doppler.
+ *  @param[in]              LUT1d for content Doppler. */
+isce::radar::Radar::
+Radar(const isce::core::LUT1d<double> & skew, const isce::core::LUT1d<double> & content) :
     _skewDoppler(skew), _contentDoppler(content) {}
 
 /** @param[in]              isce::radar::Radar. */
@@ -26,33 +43,32 @@ operator=(const isce::radar::Radar & radar) {
     return *this;
 }
 
-/** @param[out]             isce::core::Poly2d. */
-isce::core::Poly2d
+/** @param[out]             isce::core::LUT1d<double>. */
+isce::core::LUT1d<double>
 isce::radar::Radar::
 contentDoppler() const {
     return _contentDoppler;
 }
 
-/** @param[in]              isce::core::Poly2d. */
+/** @param[in]              isce::core::LUT1d<double>. */
 void
 isce::radar::Radar::
-contentDoppler(const isce::core::Poly2d & poly) {
-    _contentDoppler = poly;
+contentDoppler(const isce::core::LUT1d<double> & lut) {
+    _contentDoppler = lut;
 }
 
-/** @param[out]             isce::core::Poly2d. */
-isce::core::Poly2d
+/** @param[out]             isce::core::LUT1d<double>. */
+isce::core::LUT1d<double>
 isce::radar::Radar::
 skewDoppler() const {
     return _skewDoppler;
 }
 
-/** @param[in]              isce::core::Poly2d. */
+/** @param[in]              isce::core::LUT1d<double>. */
 void
 isce::radar::Radar::
-skewDoppler(const isce::core::Poly2d & poly) {
-    _skewDoppler = poly;
+skewDoppler(const isce::core::LUT1d<double> & lut) {
+    _skewDoppler = lut;
 }
-
 
 // end of file

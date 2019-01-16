@@ -32,7 +32,7 @@ class isce::cuda::geometry::Geo2rdr : public isce::geometry::Geo2rdr {
         /** Constructor from isce::core objects */
         inline Geo2rdr(const isce::core::Ellipsoid & ellps,
                        const isce::core::Orbit & orbit,
-                       const isce::core::Poly2d & doppler,
+                       const isce::core::LUT1d<double> & doppler,
                        const isce::core::Metadata & meta) :
             isce::geometry::Geo2rdr(ellps, orbit, doppler, meta) {}
 

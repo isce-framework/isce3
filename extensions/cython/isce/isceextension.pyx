@@ -21,7 +21,8 @@ include "io/pyIH5.pyx"
 # Include the core extensions
 include "core/pyTimeDelta.pyx"
 include "core/pyDateTime.pyx"
-include "core/pyAttitude.pyx"
+include "core/pyEulerAngles.pyx"
+include "core/pyQuaternion.pyx"
 include "core/pyBasis.pyx"
 include "core/pyDoppler.pyx"
 include "core/pyEllipsoid.pyx"
@@ -30,6 +31,7 @@ include "core/pyPeg.pyx"
 include "core/pyPegtrans.pyx"
 include "core/pyPosition.pyx"
 include "core/pyLinAlg.pyx"
+include "core/pyLUT1d.pyx"
 include "core/pyOrbit.pyx"
 include "core/pyPoly1d.pyx"
 include "core/pyPoly2d.pyx"
@@ -46,6 +48,9 @@ include "product/pyProduct.pyx"
 
 # Include the image extensions
 include "image/pyResampSlc.pyx"
+
+# Include the signal extensions
+include "signal/pyCrossmul.pyx"
 
 # Include the geometry extensions
 include "geometry/pygeometry.pyx"

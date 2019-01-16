@@ -5,9 +5,11 @@ set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 set(ISCE_CUDA_${PACKAGENAME}_HEADERS
         gpuBasis.h
+        gpuComplex.h
         gpuEllipsoid.h
         gpuInterpolator.h
         gpuLinAlg.h
+        gpuLUT1d.h
         gpuOrbit.h
         gpuPeg.h
         gpuPegtrans.h 
@@ -21,11 +23,13 @@ set(LOCAL_SRCS
         gpuBilinearInterpolator.cu
         gpuBicubicInterpolator.cu
         gpuLinAlg.cu
+        gpuLUT1d.cu
         gpuOrbit.cu
         gpuPeg.cu
         gpuPegtrans.cu 
         gpuPoly2d.cu 
         gpuProjections.cu 
+        gpuSinc2dInterpolator.cu 
         gpuSpline2dInterpolator.cu )
 
 # Append current path to every source file

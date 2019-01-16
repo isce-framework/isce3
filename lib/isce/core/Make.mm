@@ -69,6 +69,7 @@ EXPORT_PKG_HEADERS = \
     Serialization.h \
     StateVector.h \
     TimeDelta.h \
+    Utilities.h \
 
 # build
 PROJ_CXX_INCLUDES += $(EXPORT_ROOT)/include/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)

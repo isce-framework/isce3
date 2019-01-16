@@ -33,6 +33,7 @@ TEST(Crossmul, RunCrossmul)
     // a raster object for the interferogram
     isce::io::Raster interferogram("/vsimem/igram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
+    isce::io::Raster coherence("/vsimem/coherence.bin.", width, length, 1, GDT_Float32, "ISCE");
     // HDF5 file with required metadata
     std::string h5file("../data/envisat.h5");
     
@@ -49,11 +50,11 @@ TEST(Crossmul, RunCrossmul)
     isce::radar::loadFromH5(group, instrument);
 
     // get the Doppler polynomial for refernce SLC
-    isce::core::Poly2d dop1 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop1 = instrument.contentDoppler();
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
-    isce::core::Poly2d dop2 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop2 = instrument.contentDoppler();
 
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;
@@ -92,7 +93,7 @@ TEST(Crossmul, RunCrossmul)
     crsmul.doCommonAzimuthbandFiltering(false);
 
     // running crossmul
-    crsmul.crossmul(referenceSlc, referenceSlc, interferogram);
+    crsmul.crossmul(referenceSlc, referenceSlc, interferogram, coherence);
 
     // an array for the computed interferogram
     std::valarray<std::complex<float>> data(width*length);
@@ -130,6 +131,8 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     // a raster object for the interferogram
     isce::io::Raster interferogram("/vsimem/igram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
+    isce::io::Raster coherence("/vsimem/coherence.bin.", width, length, 1, GDT_Float32, "ISCE");
+
     // HDF5 file with required metadata
     std::string h5file("../data/envisat.h5");
 
@@ -146,11 +149,11 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     isce::radar::loadFromH5(group, instrument);
 
     // get the Doppler polynomial for refernce SLC
-    isce::core::Poly2d dop1 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop1 = instrument.contentDoppler();
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
-    isce::core::Poly2d dop2 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop2 = instrument.contentDoppler();
 
     // Instantiate an ImageMode object
     isce::product::ImageMode mode;
@@ -192,7 +195,7 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     crsmul.doCommonAzimuthbandFiltering(true);
 
     // running crossmul
-    crsmul.crossmul(referenceSlc, referenceSlc, interferogram);
+    crsmul.crossmul(referenceSlc, referenceSlc, interferogram, coherence);
 
     // an array for the computed interferogram
     std::valarray<std::complex<float>> data(width*length);

@@ -44,7 +44,7 @@ data = [
 
 
 def test_CythonInterface():
-    from isceextension import pyEllipsoid
+    from isce3.extensions.isceextension import pyEllipsoid
     import numpy.testing as npt
 
     elp = pyEllipsoid(a=6387137., e2=0.00000001)
@@ -54,7 +54,7 @@ def test_CythonInterface():
 
 
 def test_lonLatToXyzPoints():
-    from isceextension import pyEllipsoid
+    from isce3.extensions.isceextension import pyEllipsoid
     import numpy.testing as npt
 
     wgs84 = pyEllipsoid()
@@ -68,7 +68,7 @@ def test_lonLatToXyzPoints():
         npt.assert_array_almost_equal(xyz, res, decimal=6, err_msg="Failed {0}".format(tname))
 
 def test_xyzToLonLatPoints():
-    from isceextension import pyEllipsoid
+    from isce3.extensions.isceextension import pyEllipsoid
     import numpy.testing as npt
 
     wgs84 = pyEllipsoid()
@@ -83,7 +83,7 @@ def test_xyzToLonLatPoints():
         npt.assert_array_almost_equal(llh[2], res[2], decimal=6, err_msg="Failed {0}".format(tname))
 
 def test_lonLattoXyzArray():
-    from isceextension import pyEllipsoid
+    from isce3.extensions.isceextension import pyEllipsoid
     import numpy.testing as npt
 
     tname = "lon lat to xyz array"
@@ -98,7 +98,7 @@ def test_lonLattoXyzArray():
     npt.assert_array_almost_equal(xyz, res, decimal=6, err_msg="Failed {0}".format(tname))
 
 def test_xyztoLonLatArray():
-    from isceextension import pyEllipsoid
+    from isce3.extensions.isceextension import pyEllipsoid
     import numpy.testing as npt
 
     tname = "xyz to lat lon array"

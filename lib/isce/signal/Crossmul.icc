@@ -14,7 +14,7 @@
 *   @param[in] secSlcDoppler 2D Doppler polynomial for secondary SLC
 */
 void isce::signal::Crossmul::
-doppler(isce::core::Poly2d refSlcDoppler, isce::core::Poly2d secSlcDoppler)
+doppler(isce::core::LUT1d<double> refSlcDoppler, isce::core::LUT1d<double> secSlcDoppler)
 {
     
     _refDoppler = refSlcDoppler;
@@ -89,6 +89,7 @@ void isce::signal::Crossmul::
 rangeLooks(int rangeLooks)
 {
     _rangeLooks = rangeLooks ;
+    _doMultiLook = true;
 }
 
 /** @param[in] azimuthLooks number of looks in azimuth direction
@@ -97,6 +98,7 @@ void isce::signal::Crossmul::
 azimuthLooks(int azimuthLooks)
 {
     _azimuthLooks = azimuthLooks ;
+    _doMultiLook = true;
 }
 
 /** @param[in] flag to mark if common azimuth band filtering should be applied

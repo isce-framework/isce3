@@ -15,26 +15,13 @@ using isce::cuda::core::gpuInterpolator;
 using isce::cuda::core::gpuSpline2dInterpolator;
 
 
-/*
-   each derived class needs it's own wrapper_d, gpuInterpolator_g...
-*/
-
-template <class U>
-__device__ void wrapper_d(gpuSpline2dInterpolator<U> interp, double x, double y, const U *z, U *value, size_t nx, size_t ny=0) {
-    /*
-     *  device side wrapper used to get map interfaces of actual device function to global test function
-     */
-    *value = interp.interpolate(x, y, z, nx, ny);
-}
-
-
 template <class U>
 __global__ void gpuInterpolator_g(gpuSpline2dInterpolator<U> interp, double *x, double *y, const U *z, U *value, size_t nx, size_t ny=0) {
     /*
      *  GPU kernel to test interpolate() on the device for consistency.
      */
     int i = threadIdx.x;
-    wrapper_d(interp, x[i], y[i], z, &value[i], nx, ny);
+    value[i] = interp.interpolate(x[i], y[i], z, nx, ny); 
 }
 
 

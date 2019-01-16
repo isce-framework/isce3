@@ -6,8 +6,9 @@
 
 from libcpp cimport bool
 from libcpp.string cimport string
+from isceextension cimport pyRaster
 
-from Geo2rdr cimport *
+from cuGeo2rdr cimport *
 
 cdef class pyGeo2rdr:
     """

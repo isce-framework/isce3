@@ -39,7 +39,14 @@ endfunction()
 
 function(CheckFFTW3)
     FIND_PACKAGE(FFTW3 REQUIRED)
-    message (${FFTW_INCLUDES} ${FFTW_LIBRARIES} ${FFTW_LIB} ${FFTWF_LIB} ${FFTWL_LIB} ${FFTW_THREADS_LIB} ${FFTWF_THREADS_LIB} ${FFTWL_THREADS_LIB})
+    message (STATUS "FFTW3 includes: ${FFTW_INCLUDES}")
+    message (STATUS "FFTW3 libraries: ${FFTW_LIBRARIES}")
+    message (STATUS "FFTW3 double: ${FFTW_LIB} ")
+    message (STATUS "FFTW3 single: ${FFTWF_LIB}")
+    message (STATUS "FFTW3 quad: ${FFTWL_LIB}")
+    message (STATUS "FFTW3 double with threads: ${FFTW_THREADS_LIB}")
+    message (STATUS "FFTW3 single with threads: ${FFTWF_THREADS_LIB}")
+    message (STATUS "FFTW3 quad with threads: ${FFTWL_THREADS_LIB}")
 endfunction()
 
 ##Check for GDAL installation
@@ -72,6 +79,7 @@ function(CheckHDF5)
         # look for GCC version comment
         file(STRINGS "${hdf5_cpp}" gcc_comment REGEX "GCC:")
         if (gcc_comment)
+            string(REGEX REPLACE "\\(([^\\(]*)\\)" "" gcc_comment ${gcc_comment})
             string(REGEX MATCH "([0-9]|\\.)+" hdf5_gcc_version ${gcc_comment})
             if (hdf5_gcc_version AND hdf5_gcc_version VERSION_LESS "5.1.0")
                 message(WARNING "Using old glibc++ ABI "
@@ -129,6 +137,16 @@ function(InitInstallDirLayout)
     if (NOT ISCE_BUILDINCLUDEDIR)
         set (ISCE_BUILDINCLUDEDIR ${CMAKE_BINARY_DIR}/include/isce-${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR} CACHE STRING "build/isce/include")
     endif(NOT ISCE_BUILDINCLUDEDIR)
+
+    ###install/cyinclude
+    if (NOT ISCE_CYINCLUDEDIR)
+        set (ISCE_CYINCLUDEDIR "cyinclude" CACHE STRING "isce/cyinclude")
+    endif(NOT ISCE_CYINCLUDEDIR)
+
+    ###build/cyinclude
+    if (NOT ISCE_BUILDCYINCLUDEDIR)
+        set (ISCE_BUILDCYINCLUDEDIR ${CMAKE_BINARY_DIR}/include/cyinclude CACHE STRING "build/isce/cyinclude")
+    endif(NOT ISCE_BUILDCYINCLUDEDIR)
 
     ###install/defaults
     if (NOT ISCE_DEFAULTSDIR)

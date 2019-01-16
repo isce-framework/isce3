@@ -14,6 +14,7 @@
 
 // isce::core
 #include "isce/core/Constants.h"
+#include "isce/core/Utilities.h"
 #include "isce/core/Matrix.h"
 
 TEST(MatrixTest, SimpleConstructor) {
