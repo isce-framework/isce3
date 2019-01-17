@@ -152,6 +152,20 @@ cdef class pyImageMode:
         self.c_imagemode.rangePixelSpacing(value)
 
     @property
+    def azimuthPixelSpacing(self):
+        """
+        Get azimuthPixelSpacing.
+        """
+        return self.c_imagemode.azimuthPixelSpacing()
+
+    @azimuthPixelSpacing.setter
+    def azimuthPixelSpacing(self, double value):
+        """
+        Set azimuthPixelSpacing.
+        """
+        self.c_imagemode.azimuthPixelSpacing(value)
+
+    @property
     def numberAzimuthLooks(self):
         """
         Get numberAzimuthLooks.
