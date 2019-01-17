@@ -54,6 +54,10 @@ cdef extern from "isce/product/ImageMode.h" namespace "isce::product":
         double rangePixelSpacing()
         void rangePixelSpacing(double)
 
+        # Azimuth pixel spacing
+        double azimuthPixelSpacing()
+        void azimuthPixelSpacing(double)
+
         # Number of azimuth looks
         size_t numberAzimuthLooks()
         void numberAzimuthLooks(size_t)
