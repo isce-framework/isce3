@@ -10,6 +10,5 @@ var searchData=
   ['attitude',['Attitude',['../classisce_1_1core_1_1Attitude.html#a909af97050ff424424be2eed032241bf',1,'isce::core::Attitude']]],
   ['attitudetype',['attitudeType',['../classisce_1_1core_1_1Attitude.html#a129636b7ac027b943a4ecb7a0aa18676',1,'isce::core::Attitude']]],
   ['auxmode',['auxMode',['../classisce_1_1product_1_1ComplexImagery.html#a13b9ddda0c32ea11b7d7f52cce01a4ec',1,'isce::product::ComplexImagery::auxMode() const'],['../classisce_1_1product_1_1ComplexImagery.html#aeb68473979e7483696d8bebc724fa91e',1,'isce::product::ComplexImagery::auxMode(const ImageMode &amp;mode)']]],
-  ['azimuthlooks',['azimuthLooks',['../classisce_1_1signal_1_1Crossmul.html#a8259371554fcc2c0ab1011d6bee1ccdb',1,'isce::signal::Crossmul']]],
-  ['azimuthpixelspacing',['azimuthPixelSpacing',['../classisce_1_1product_1_1ImageMode.html#acc0d1a5e3ec1d3feb7ead0d9906a4db6',1,'isce::product::ImageMode::azimuthPixelSpacing() const'],['../classisce_1_1product_1_1ImageMode.html#a2e00547485f20c536de70bc91793261c',1,'isce::product::ImageMode::azimuthPixelSpacing(double value)']]]
+  ['azimuthlooks',['azimuthLooks',['../classisce_1_1signal_1_1Crossmul.html#a8259371554fcc2c0ab1011d6bee1ccdb',1,'isce::signal::Crossmul']]]
 ];
