@@ -358,6 +358,15 @@ length() const {
     return _nrows;
 }
 
+/** Get matrix byte offset for row and column for raw binary buffer */
+template <typename cell_t>
+typename isce::core::Matrix<cell_t>::shape_t
+isce::core::Matrix<cell_t>::
+byteoffset() const {
+    size_t unitsize = sizeof(cell_t);
+    return { _ncols * unitsize, unitsize}; 
+}
+
 // Reset grid pointer for matrix views
 template <typename cell_t>
 void 
