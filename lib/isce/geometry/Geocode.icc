@@ -33,11 +33,26 @@ geoGrid(double geoGridStartX, double geoGridStartY,
         double geoGridSpacingX, double geoGridSpacingY,
         int width, int length, int epsgcode) {
 
-    // the starting coordinate of the output geocoded grid in X direction 
-    _geoGridStartX = geoGridStartX;
+    // populate the geoTransform 
+    // Assumption: origin is the top-left corner of 
+    //               the top-left pixel of the grid
+    _geoTrans = new double[6];
+    _geoTrans[0] = geoGridStartX;
+    _geoTrans[1] = geoGridSpacingX;
+    _geoTrans[2] = 0.0;
+    _geoTrans[3] = geoGridStartY;
+    _geoTrans[4] = 0.0;
+    _geoTrans[5] = geoGridSpacingY;
+    
 
-    // the starting coordinate of the output geocoded grid in Y direction
-    _geoGridStartY = geoGridStartY;
+    // the starting coordinate of the output geocoded grid in X direction.
+    // Since the input is alwayas referring to the top-left corner of the 
+    // top-left pixel, we adjust to the center for internal use only
+    _geoGridStartX = geoGridStartX + geoGridSpacingX/2;
+
+    // the starting coordinate of the output geocoded grid in Y direction.
+    // adjusted to the center of the pixel for internal use only
+    _geoGridStartY = geoGridStartY + geoGridSpacingY/2;
 
     // spacing of the output geocoded grid in X
     _geoGridSpacingX = geoGridSpacingX;
@@ -180,7 +195,7 @@ interpolator(isce::core::Interpolator<T> * interp) {
 template<class T>
 void isce::geometry::Geocode<T>::
 interpolator(isce::core::dataInterpMethod method) {
-
-        _interp = isce::core::createInterpolator<T>(method);
+    
+    _interp = isce::core::createInterpolator<T>(method);
 
 }

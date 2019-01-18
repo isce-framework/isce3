@@ -167,6 +167,10 @@ class isce::geometry::Geocode {
         // number of lines in north-south direction (Y direction)
         size_t _geoGridLength;
 
+
+        // geoTransform array (gdal style)
+        double * _geoTrans;
+
         // epsg code for the output geocoded grid
         int _epsgOut;
 
@@ -180,8 +184,9 @@ class isce::geometry::Geocode {
         int _radarBlockMargin;
 
         //interpolator 
-        //isce::core::Interpolator * _interp = nullptr;
         isce::core::Interpolator<T> * _interp = nullptr;
+
+       
 };
 
 // Get inline implementations for Geocode

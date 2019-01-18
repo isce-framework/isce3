@@ -119,6 +119,7 @@ geocode(isce::io::Raster & inputRaster,
         rdrDataBlock.zeros();
         geoDataBlock.zeros();
         
+         
         //for each band in the input:
         for (size_t band = 0; band < nbands; ++band){
 
@@ -128,8 +129,8 @@ geocode(isce::io::Raster & inputRaster,
             inputRaster.getBlock(rdrDataBlock.data(),
                                 rangeFirstPixel, azimuthFirstLine,
                                 rdrBlockWidth, rdrBlockLength, band+1);
-       
-            // interpolate to estimate the values on the geocoded grid
+
+            // interpolate the data in radar grid to the geocoded grid
             std::cout << "interpolate " << std::endl;
             _interpolate(rdrDataBlock, geoDataBlock, radarX, radarY, 
                                 rdrBlockWidth, rdrBlockLength);
@@ -141,14 +142,11 @@ geocode(isce::io::Raster & inputRaster,
         }
         // set output block of data
     } // end loop over block of output grid
+
+    outputRaster.setGeoTransform(_geoTrans);
+    outputRaster.setEPSG(_epsgOut);
 }
 
-/*
-void isce::geometry::Geocode<T>::
-_interpolate(isce::core::Matrix<T> rdrDataBlock, isce::core::Matrix<T> geoDataBlock,
-            std::valarray<double> radarX, std::valarray<double> radarY);
-
-*/
 template<class T>
 void isce::geometry::Geocode<T>::
 _interpolate(isce::core::Matrix<T>& rdrDataBlock, 
@@ -331,3 +329,6 @@ _geo2rdr(double x, double y,
 
 template class isce::geometry::Geocode<float>;
 template class isce::geometry::Geocode<double>;
+template class isce::geometry::Geocode<std::complex<float>>;
+template class isce::geometry::Geocode<std::complex<double>>;
+
