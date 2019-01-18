@@ -48,27 +48,14 @@ topo(Raster & demRaster,
 
     { // Topo scope for creating output rasters
 
-    // Create rasters for individual layers
-    Raster xRaster = Raster(outdir + "/x.rdr", _mode.width(), _mode.length(), 1,
-        GDT_Float64, "ISCE");
-    Raster yRaster = Raster(outdir + "/y.rdr", _mode.width(), _mode.length(), 1,
-        GDT_Float64, "ISCE");
-    Raster heightRaster = Raster(outdir + "/z.rdr", _mode.width(), _mode.length(), 1,
-        GDT_Float64, "ISCE");
-    Raster incRaster = Raster(outdir + "/inc.rdr", _mode.width(), _mode.length(), 1,
-        GDT_Float32, "ISCE");
-    Raster hdgRaster = Raster(outdir + "/hdg.rdr", _mode.width(), _mode.length(), 1,
-        GDT_Float32, "ISCE");
-    Raster localIncRaster = Raster(outdir + "/localInc.rdr", _mode.width(), _mode.length(), 1,
-        GDT_Float32, "ISCE");
-    Raster localPsiRaster = Raster(outdir + "/localPsi.rdr", _mode.width(), _mode.length(), 1,
-        GDT_Float32, "ISCE");
-    Raster simRaster = Raster(outdir + "/simamp.rdr", _mode.width(), _mode.length(), 1,
-        GDT_Float32, "ISCE");
+    // Initialize a TopoLayers object to handle block data and raster data
+    TopoLayers layers;
 
-    // Call topo with rasters
-    topo(demRaster, xRaster, yRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
-         localPsiRaster, simRaster);
+    // Create rasters for individual layers (provide output raster sizes)
+    layers.initRasters(outdir, _mode.width(), _mode.length());
+
+    // Call topo with layers
+    topo(demRaster, layers);
 
     } // end Topo scope to release raster resources
 
@@ -81,7 +68,8 @@ topo(Raster & demRaster,
         Raster(outdir + "/hdg.rdr" ),
         Raster(outdir + "/localInc.rdr" ),
         Raster(outdir + "/localPsi.rdr" ),
-        Raster(outdir + "/simamp.rdr" )
+        Raster(outdir + "/simamp.rdr" ),
+        Raster(outdir + "/mask.rdr" )
     };
     Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
     // Set its EPSG code
@@ -104,7 +92,24 @@ topo(Raster & demRaster,
 void isce::geometry::Topo::
 topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
      Raster & incRaster, Raster & hdgRaster, Raster & localIncRaster, Raster & localPsiRaster,
-     Raster & simRaster) {
+     Raster & simRaster, Raster & maskRaster) {
+
+    // Initialize a TopoLayers object to handle block data and raster data
+    TopoLayers layers;
+
+    // Create rasters for individual layers (provide output raster sizes)
+    layers.setRasters(xRaster, yRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
+                      localPsiRaster, simRaster, maskRaster);
+
+    // Call topo with layers
+    topo(demRaster, layers);
+}
+
+/** @param[in] demRaster input DEM raster
+  * @param[in] layers TopoLayers object for storing and writing results
+  */
+void isce::geometry::Topo::
+topo(Raster & demRaster, TopoLayers & layers) {
 
     // Create reusable pyre::journal channels
     pyre::journal::warning_t warning("isce.geometry.Topo");
@@ -156,8 +161,8 @@ topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRast
         // Reset reference height for DEMInterpolator
         demInterp.refHeight(dem_avg);
 
-        // Output layers for block
-        TopoLayers layers(blockLength, _mode.width());
+        // Set output block sizes in layers
+        layers.setBlockSize(blockLength, _mode.width());
 
         // For each line in block
         for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
@@ -203,16 +208,9 @@ topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRast
             } // end OMP for loop pixels in block
         } // end for loop lines in block
 
-        // Write out block of data for every product
-        xRaster.setBlock(layers.x(), 0, lineStart, _mode.width(), blockLength);
-        yRaster.setBlock(layers.y(), 0, lineStart, _mode.width(), blockLength);
-        heightRaster.setBlock(layers.z(), 0, lineStart, _mode.width(), blockLength);
-        incRaster.setBlock(layers.inc(), 0, lineStart, _mode.width(), blockLength);
-        hdgRaster.setBlock(layers.hdg(), 0, lineStart, _mode.width(), blockLength);
-        localIncRaster.setBlock(layers.localInc(), 0, lineStart, _mode.width(), blockLength);
-        localPsiRaster.setBlock(layers.localPsi(), 0, lineStart, _mode.width(), blockLength);
-        simRaster.setBlock(layers.sim(), 0, lineStart, _mode.width(), blockLength);
-
+        // Write out block of data for all topo layers
+        layers.writeData(0, lineStart);    
+        
     } // end for loop blocks
 
     // Print out convergence statistics

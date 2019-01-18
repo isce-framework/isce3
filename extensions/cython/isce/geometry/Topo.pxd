@@ -28,7 +28,7 @@ cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
 
         # Run topo with externally created topo rasters
         void topo(Raster &, Raster &, Raster &, Raster &, Raster &,
-                  Raster &, Raster &, Raster &, Raster &)
+                  Raster &, Raster &, Raster &, Raster &, Raster &)
 
         # Setting processing options
         void initialized(bool)

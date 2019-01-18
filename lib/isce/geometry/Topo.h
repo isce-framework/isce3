@@ -86,12 +86,15 @@ class isce::geometry::Topo {
         /** Main entry point for the module; internal creation of topo rasters */
         void topo(isce::io::Raster &, const std::string);
 
+        /** Run topo with externally created topo rasters in TopoLayers object */
+        void topo(isce::io::Raster & demRaster, TopoLayers & layers);
+
         /** Run topo with externally created topo rasters */
         void topo(isce::io::Raster & demRaster, isce::io::Raster & xRaster,
                   isce::io::Raster & yRaster, isce::io::Raster & heightRaster,
                   isce::io::Raster & incRaster, isce::io::Raster & hdgRaster,
                   isce::io::Raster & localIncRaster, isce::io::Raster & localPsiRaster,
-                  isce::io::Raster & simRaster);
+                  isce::io::Raster & simRaster, isce::io::Raster & maskRaster);
 
         // Getters for isce objects
 
