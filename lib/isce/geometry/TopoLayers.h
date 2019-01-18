@@ -158,6 +158,43 @@ class isce::geometry::TopoLayers {
             _mask[row*_width + col] = value;
         }
 
+        // Get values for a single index
+        double x(size_t row, size_t col) const {
+            return _x[row*_width+col];
+        }
+        
+        double y(size_t row, size_t col) const {
+            return _y[row*_width + col];
+        }
+        
+        double z(size_t row, size_t col) const {
+            return _z[row*_width + col];
+        }
+        
+        float inc(size_t row, size_t col) const {
+            return _inc[row*_width + col];
+        }
+        
+        float hdg(size_t row, size_t col) const {
+            return _hdg[row*_width + col];
+        }
+        
+        float localInc(size_t row, size_t col) const {
+            return _localInc[row*_width + col];
+        }
+        
+        float localPsi(size_t row, size_t col) const {
+            return _localPsi[row*_width + col];
+        }
+    
+        float sim(size_t row, size_t col) const {
+            return _sim[row*_width + col];
+        }
+
+        int mask(size_t row, size_t col) const {
+            return _mask[row*_width + col];
+        }
+
         // Write data with rasters
         void writeData(size_t xidx, size_t yidx) {
             _xRaster->setBlock(_x, xidx, yidx, _width, _length);

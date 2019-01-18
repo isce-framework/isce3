@@ -125,6 +125,9 @@ class isce::geometry::Topo {
                                   isce::core::Basis &,
                                   DEMInterpolator &);
 
+        /** Compute layover/shadow masks */
+        void _setLayoverShadow(TopoLayers &, isce::core::StateVector &, size_t);
+
     private:
         // isce::core objects
         isce::core::Orbit _orbit;
