@@ -170,12 +170,7 @@ topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRast
         );
 
         // Compute layover/shadow masks for the block
-        auto timerStart = std::chrono::steady_clock::now();
         this->setLayoverShadow(layers);
-        auto timerEnd = std::chrono::steady_clock::now();
-        const double elapsed = 1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
-            timerEnd - timerStart).count();
-        std::cout << "layover computation: " << elapsed << " sec" << std::endl;
         
         // Write out block of data for every product
         xRaster.setBlock(layers.x(), 0, lineStart, mode.width(), blockLength);
