@@ -35,6 +35,7 @@ class isce::geometry::TopoLayers {
             _localPsi.resize(length*width);
             _sim.resize(length*width);
             _mask.resize(length*width);
+            _slantRange.resize(length*width);
         }
         // Destructor
         ~TopoLayers() {
@@ -64,6 +65,7 @@ class isce::geometry::TopoLayers {
             _localPsi.resize(length*width);
             _sim.resize(length*width);
             _mask.resize(length*width);
+            _slantRange.resize(length*width);
         }
 
         // Get sizes
@@ -120,6 +122,7 @@ class isce::geometry::TopoLayers {
         std::valarray<float> & localPsi() { return _localPsi; }
         std::valarray<float> & sim() { return _sim; }
         std::valarray<int> & mask() { return _mask; }
+        std::valarray<double> & slantRange() { return _slantRange; }
         
         // Set values for a single index
         void x(size_t row, size_t col, double value) {
@@ -156,6 +159,10 @@ class isce::geometry::TopoLayers {
 
         void mask(size_t row, size_t col, int value) {
             _mask[row*_width + col] = value;
+        }
+
+        void slantRange(size_t row, size_t col, double value) {
+            _slantRange[row*_width + col] = value;
         }
 
         // Get values for a single index
@@ -195,6 +202,10 @@ class isce::geometry::TopoLayers {
             return _mask[row*_width + col];
         }
 
+        double slantRange(size_t row, size_t col) const {
+            return _slantRange[row*_width + col];
+        }
+
         // Write data with rasters
         void writeData(size_t xidx, size_t yidx) {
             _xRaster->setBlock(_x, xidx, yidx, _width, _length);
@@ -219,6 +230,7 @@ class isce::geometry::TopoLayers {
         std::valarray<float> _localPsi;
         std::valarray<float> _sim;
         std::valarray<int> _mask;
+        std::valarray<double> _slantRange; // internal usage only; not saved to Raster
 
         // Raster pointers for each layer
         isce::io::Raster * _xRaster;

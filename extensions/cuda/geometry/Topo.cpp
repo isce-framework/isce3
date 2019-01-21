@@ -168,6 +168,14 @@ topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRast
             this->epsgOut(), this->threshold(), this->numiter(), this->extraiter(),
             totalconv
         );
+
+        // Compute layover/shadow masks for the block
+        auto timerStart = std::chrono::steady_clock::now();
+        this->setLayoverShadow(layers);
+        auto timerEnd = std::chrono::steady_clock::now();
+        const double elapsed = 1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
+            timerEnd - timerStart).count();
+        std::cout << "layover computation: " << elapsed << " sec" << std::endl;
         
         // Write out block of data for every product
         xRaster.setBlock(layers.x(), 0, lineStart, mode.width(), blockLength);
@@ -214,7 +222,7 @@ computeLinesPerBlock(isce::io::Raster & demRaster) {
 
     // Compute pixels per Block (3 double and 5 float output topo layers)
     size_t pixelsPerBlock = (nGPUBytes - nDEMBytes - gpuBuffer) /
-                            (3 * sizeof(double) + 5 * sizeof(float));
+                            (4 * sizeof(double) + 5 * sizeof(float));
     // Round down to nearest 10 million pixels
     pixelsPerBlock = (pixelsPerBlock / 10000000) * 10000000;
 

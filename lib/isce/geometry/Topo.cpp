@@ -206,11 +206,10 @@ topo(Raster & demRaster, TopoLayers & layers) {
                 _setOutputTopoLayers(llh, layers, blockLine, pixel, state, TCNbasis, demInterp);
 
             } // end OMP for loop pixels in block
-
-            // Compute layover/shadow masks
-            _setLayoverShadow(layers, state, blockLine);
-
         } // end for loop lines in block
+
+        // Compute layover/shadow masks for the block
+        setLayoverShadow(layers);
 
         // Write out block of data for all topo layers
         layers.writeData(0, lineStart);    
@@ -408,6 +407,7 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
 
     // Compute vector from satellite to ground point
     LinAlg::linComb(1.0, targetXYZ, -1.0, state.position(), satToGround);
+    layers.slantRange(line, bin, LinAlg::norm(satToGround));
 
     // Compute unit velocity vector
     LinAlg::unitVec(state.velocity(), vhat);
@@ -460,75 +460,61 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
 }
 
 /** @param[in] layers Object containing output layers
- *  @param[in] state state for the line under consideration
- *  @param[in] line line number to write to output
  *
  *  Compute layer and shadow mask following the logic from Sentinel-1 Toolbox
  *  (SARSimulationOp.java)
  */
 void isce::geometry::Topo::
-_setLayoverShadow(TopoLayers & layers, StateVector & state, size_t line) {
+setLayoverShadow(TopoLayers & layers) {
 
-    std::valarray<double> slantRange(layers.width()), elevAngle(layers.width());
-
-    // Cache the magnitude of the sensor position
-    const double R_sensor = LinAlg::norm(state.position());
+    // Cache the width of the block
     const int width = layers.width();
 
-    // Compute slant range and elevation angle over every range bin
+    // Loop over lines in block
     #pragma omp parallel for
-    for (int i = 0; i < width; ++i) {
-
-        // Convert topo XYZ to ECEF xyz
-        cartesian_t llh, xyz;
-        cartesian_t topoXYZ{layers.x(line, i), layers.y(line, i), layers.z(line, i)};
-        _proj->inverse(topoXYZ, llh);
-        _ellipsoid.lonLatToXyz(llh, xyz);
-
-        // Compute slant range
-        cartesian_t satToGround;
-        LinAlg::linComb(1.0, xyz, -1.0, state.position(), satToGround);
-        const double rho = LinAlg::norm(satToGround);
-        slantRange[i] = rho;
-
-        // Compute elevation angle
-        const double R_targ = LinAlg::norm(xyz);
-        elevAngle[i] = std::acos((rho*rho + R_sensor*R_sensor - R_targ*R_targ) / 
-                                  (2.0 * rho * R_sensor));
-    }
-
-    // Traverse from near range to far range to detect layover area
-    double maxSlantRange = 0.0;
-    for (int i = 0; i < width; ++i) {
-        // Initialize to 0
-        layers.mask(line, i, 0);
-        // Test layover
-        if (slantRange[i] > maxSlantRange) {
-            maxSlantRange = slantRange[i];
-        } else {
-            layers.mask(line, i, 1);
-        }
-    }
+    for (size_t line = 0; line < layers.length(); ++line) {
     
-    // Traverse from far range to near range to detect remaining layover area
-    double minSlantRange = maxSlantRange;
-    for (int i = width - 1; i >= 0; --i) {
-        if (slantRange[i] <= minSlantRange) {
-            minSlantRange = slantRange[i];
-        } else {
-            layers.mask(line, i, 1);
+        // Traverse from near range to far range to detect layover area
+        double maxSlantRange = 0.0;
+        for (int i = 0; i < width; ++i) {
+            // Initialize to 0
+            layers.mask(line, i, 0);
+            // Get slant range
+            const double slantRange = layers.slantRange(line, i);
+            // Test layover
+            if (slantRange > maxSlantRange) {
+                maxSlantRange = slantRange;
+            } else {
+                layers.mask(line, i, 1);
+            }
         }
-    }
+        
+        // Traverse from far range to near range to detect remaining layover area
+        double minSlantRange = maxSlantRange;
+        for (int i = width - 1; i >= 0; --i) {
+            // Get slant range
+            const double slantRange = layers.slantRange(line, i);
+            // Test layover
+            if (slantRange <= minSlantRange) {
+                minSlantRange = slantRange;
+            } else {
+                layers.mask(line, i, 1);
+            }
+        }
 
-    // Traverse from near range to far range to detect shadow area
-    double maxElevAngle = 0.0;
-    for (int i = 0; i < width; ++i) {
-        if (elevAngle[i] > maxElevAngle) {
-            maxElevAngle = elevAngle[i];
-        } else {
-            layers.mask(line, i, 2 + layers.mask(line, i));
+        // Traverse from near range to far range to detect shadow area
+        double maxIncAngle = 0.0;
+        for (int i = 0; i < width; ++i) {
+            // Get incidence angle 
+            const double inc = layers.inc(line, i);
+            // Test shadow
+            if (inc > maxIncAngle) {
+                maxIncAngle = inc;
+            } else {
+                layers.mask(line, i, 2 + layers.mask(line, i));
+            }
         }
-    }
+    } // end loop lines
 }
 
 // end of file

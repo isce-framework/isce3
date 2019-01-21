@@ -96,6 +96,9 @@ class isce::geometry::Topo {
                   isce::io::Raster & localIncRaster, isce::io::Raster & localPsiRaster,
                   isce::io::Raster & simRaster, isce::io::Raster & maskRaster);
 
+        /** Compute layover/shadow masks */
+        void setLayoverShadow(TopoLayers &);
+
         // Getters for isce objects
 
         /** Get the orbits used for processing */
@@ -124,10 +127,7 @@ class isce::geometry::Topo {
                                   isce::core::StateVector &,
                                   isce::core::Basis &,
                                   DEMInterpolator &);
-
-        /** Compute layover/shadow masks */
-        void _setLayoverShadow(TopoLayers &, isce::core::StateVector &, size_t);
-
+        
     private:
         // isce::core objects
         isce::core::Orbit _orbit;

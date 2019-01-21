@@ -50,6 +50,7 @@ class isce::cuda::geometry::gpuTopoLayers {
             checkCudaErrors(cudaMalloc((float **) &_localInc, _nbytes_float));
             checkCudaErrors(cudaMalloc((float **) &_localPsi, _nbytes_float));
             checkCudaErrors(cudaMalloc((float **) &_sim, _nbytes_float));
+            checkCudaErrors(cudaMalloc((double **) &_slantRange, _nbytes_double));
         }
     
         // Copy constructor on device (these should nominally be CUDA_HOSTDEV)
@@ -57,8 +58,8 @@ class isce::cuda::geometry::gpuTopoLayers {
             _length(layers.length()), _width(layers.width()), _x(layers._x),
             _y(layers._y), _z(layers._z), _inc(layers._inc), _hdg(layers._hdg),
             _localInc(layers._localInc), _localPsi(layers._localPsi), _sim(layers._sim),
-            _nbytes_double(layers.nbytes_double()), _nbytes_float(layers.nbytes_float()),
-            _owner(false) {}
+            _slantRange(layers._slantRange), _nbytes_double(layers.nbytes_double()),
+            _nbytes_float(layers.nbytes_float()), _owner(false) {}
 
         // Destructor
         inline ~gpuTopoLayers() {
@@ -71,6 +72,7 @@ class isce::cuda::geometry::gpuTopoLayers {
                 checkCudaErrors(cudaFree(_localInc));
                 checkCudaErrors(cudaFree(_localPsi));
                 checkCudaErrors(cudaFree(_sim));
+                checkCudaErrors(cudaFree(_slantRange));
             }
         }
 
@@ -107,6 +109,10 @@ class isce::cuda::geometry::gpuTopoLayers {
             _sim[index] = value;
         }
 
+        CUDA_DEV inline void slantRange(size_t index, double value) {
+            _slantRange[index] = value;
+        }
+
         // Get sizes on host or device
         CUDA_HOSTDEV inline size_t length() const { return _length; }
         CUDA_HOSTDEV inline size_t width() const { return _width; }
@@ -131,6 +137,8 @@ class isce::cuda::geometry::gpuTopoLayers {
                             cudaMemcpyDeviceToHost));
             checkCudaErrors(cudaMemcpy(&layers.sim()[0], _sim, _nbytes_float,
                             cudaMemcpyDeviceToHost));
+            checkCudaErrors(cudaMemcpy(&layers.slantRange()[0], _slantRange, _nbytes_double,
+                            cudaMemcpyDeviceToHost));
         }
 
         // Unlike CPU version, make the data pointers public to allow for easy
@@ -144,6 +152,7 @@ class isce::cuda::geometry::gpuTopoLayers {
         float * _localInc;
         float * _localPsi;
         float * _sim;
+        double * _slantRange;
 
     private:
         size_t _length;
