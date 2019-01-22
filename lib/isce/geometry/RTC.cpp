@@ -17,10 +17,9 @@
 #include "isce/core/Ellipsoid.h"
 #include "isce/core/Peg.h"
 #include "isce/core/Pegtrans.h"
-#include "isce/product/Product.h"
 #include "isce/geometry/geometry.h"
+#include "isce/geometry/RTC.h"
 #include "isce/geometry/Topo.h"
-#include "isce/io/Raster.h"
 
 // Function to compute normal vector to a plane given three points
 std::array<double, 3> computePlaneNormal(std::array<double, 3> & x1,
@@ -82,7 +81,9 @@ double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp
     return std::sqrt(demArea / radarArea);
 }
 
-void facetRTC(isce::product::Product& product, isce::io::Raster& dem, isce::io::Raster& out_raster) {
+void isce::geometry::facetRTC(isce::product::Product& product,
+                              isce::io::Raster& dem,
+                              isce::io::Raster& out_raster) {
     using isce::core::LinAlg;
     const double RAD = M_PI / 180.;
 
@@ -111,8 +112,6 @@ void facetRTC(isce::product::Product& product, isce::io::Raster& dem, isce::io::
 
     // Output raster
     float* out = new float[mode.length() * mode.width()];
-
-    // isce::io::Raster out_raster("out.raster", mode.width(), mode.length());
 
     // ------------------------------------------------------------------------
     // Main code: decompose DEM into facets, compute RDC coordinates
