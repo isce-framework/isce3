@@ -97,7 +97,9 @@ class isce::geometry::Topo {
                   isce::io::Raster & simRaster, isce::io::Raster & maskRaster);
 
         /** Compute layover/shadow masks */
-        void setLayoverShadow(TopoLayers &);
+        void setLayoverShadow(TopoLayers &,
+                              DEMInterpolator &,
+                              std::vector<isce::core::cartesian_t> &);
 
         // Getters for isce objects
 

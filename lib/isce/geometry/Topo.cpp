@@ -10,12 +10,14 @@
 #include <chrono>
 #include <fstream>
 #include <future>
+#include <vector>
 #include <valarray>
 #include <algorithm>
 
 // isce::core
 #include <isce/core/Constants.h>
 #include <isce/core/LinAlg.h>
+#include <isce/core/Utilities.h>
 
 // isce::geometry
 #include "Topo.h"
@@ -164,6 +166,9 @@ topo(Raster & demRaster, TopoLayers & layers) {
         // Set output block sizes in layers
         layers.setBlockSize(blockLength, _mode.width());
 
+        // Allocate vector for storing satellite position for each line
+        std::vector<cartesian_t> satPosition(blockLength);
+
         // For each line in block
         for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
 
@@ -174,6 +179,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
             Basis TCNbasis;
             StateVector state;
             _initAzimuthLine(line, state, TCNbasis);
+            satPosition[blockLine] = state.position();
 
             // Compute velocity magnitude
             const double satVmag = LinAlg::norm(state.velocity());
@@ -209,7 +215,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
         } // end for loop lines in block
 
         // Compute layover/shadow masks for the block
-        setLayoverShadow(layers);
+        setLayoverShadow(layers, demInterp, satPosition);
 
         // Write out block of data for all topo layers
         layers.writeData(0, lineStart);    
@@ -407,7 +413,9 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
 
     // Compute vector from satellite to ground point
     LinAlg::linComb(1.0, targetXYZ, -1.0, state.position(), satToGround);
-    layers.slantRange(line, bin, LinAlg::norm(satToGround));
+
+    // Compute cross-track range
+    layers.crossTrack(line, bin, LinAlg::dot(satToGround, TCNbasis.x1()));
 
     // Compute unit velocity vector
     LinAlg::unitVec(state.velocity(), vhat);
@@ -459,44 +467,155 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
     layers.localPsi(line, bin, std::acos(cospsi) * degrees);
 }
 
+/** Sort arrays a, b, c by the values in array a */
+void insertionSort(std::valarray<double> & a,
+                   std::valarray<double> & b,
+                   std::valarray<double> & c) {
+    for (size_t i = 1; i < a.size(); ++i) {
+        size_t j = i - 1;
+        const double tempa = a[i];
+        const double tempb = b[i];
+        const double tempc = c[i];
+        while (j >= 0 && a[j] > tempa) {
+            a[j+1] = a[j];
+            b[j+1] = b[j];
+            c[j+1] = c[j];
+            j -= 1;
+        }
+        a[j+1] = tempa;
+        b[j+1] = tempb;
+        c[j+1] = tempc;
+    }
+}
+
+/** Sort arrays a, bby the values in array a */
+void insertionSort(std::valarray<double> & a,
+                   std::valarray<double> & b) {
+    for (size_t i = 1; i < a.size(); ++i) {
+        size_t j = i - 1;
+        const double tempa = a[i];
+        const double tempb = b[i];
+        while (j >= 0 && a[j] > tempa) {
+            a[j+1] = a[j];
+            b[j+1] = b[j];
+            j -= 1;
+        }
+        a[j+1] = tempa;
+        b[j+1] = tempb;
+    }
+}
+
+/** Searches array for index closest to provided value */   
+int binarySearch(std::valarray<double> & array, double value) {
+
+    int left = 0;
+    int right = array.size() - 1;
+    int index;
+    while (left <= right) {
+        const int middle = static_cast<int>(std::round(0.5 * (left + right)));
+        if (left == (right - 1)) {
+            index = left;
+            return index;
+        }
+        if (array[middle] <= value) {
+            left = middle;
+        } else if (array[middle] > value) {
+            right = middle;
+        }
+    }
+    index = left;
+    return index;
+}
+
 /** @param[in] layers Object containing output layers
  *
  *  Compute layer and shadow mask following the logic from Sentinel-1 Toolbox
  *  (SARSimulationOp.java)
  */
 void isce::geometry::Topo::
-setLayoverShadow(TopoLayers & layers) {
+setLayoverShadow(TopoLayers & layers, DEMInterpolator & demInterp,
+                 std::vector<cartesian_t> & satPosition) {
 
     // Cache the width of the block
     const int width = layers.width();
+    std::valarray<double> x(width), y(width), ctrack(width), ctrackGrid(width);
+    std::valarray<double> slantRange(width);
 
     // Loop over lines in block
-    #pragma omp parallel for
+    #pragma omp parallel for private(x, y, ctrack, ctrackGrid, slantRange)
     for (size_t line = 0; line < layers.length(); ++line) {
+
+        // Cache satellite position for this line
+        cartesian_t xyzsat = satPosition[line];
+
+        // Copy cross-track, x, and y values for the line
+        for (int i = 0; i < width; ++i) {
+            ctrack[i] = layers.crossTrack(line, i);
+            x[i] = layers.x(line, i);
+            y[i] = layers.y(line, i);
+        }
+
+        // Sort ctrack, x, and y by values in ctrack
+        insertionSort(ctrack, x, y);
+ 
+        // Create regular grid for cross-track values
+        const double cmin = ctrack.min();
+        const double cmax = ctrack.max();
+        isce::core::linspace<double>(cmin, cmax, ctrackGrid);
+
+        // Interpolate DEM to regular cross-track grid
+        for (int i = 0; i < width; ++i) {
+
+            // Compute nearest ctrack index for current ctrackGrid value
+            int k = binarySearch(ctrack, ctrackGrid[i]);
+            if (k == (width - 1)) k = width - 2;
+            if (k < 0) k = 0;
+
+            // Bilinear interpolation to estimate DEM x/y coordinates
+            const double frac = (ctrackGrid[i] - ctrack[k]) / (ctrack[k+1] - ctrack[k]);
+            const double x_grid = x[k] + frac * (x[k+1] - x[k]);
+            const double y_grid = y[k] + frac * (y[k+1] - y[k]);
+
+            // Interpolate DEM at x/y
+            const float z_grid = demInterp.interpolateXY(x_grid, y_grid);
+
+            // Convert DEM XYZ to ECEF XYZ
+            cartesian_t demXYZ{x_grid, y_grid, z_grid};
+            cartesian_t llh, xyz, satToGround;
+            _proj->inverse(demXYZ, llh);
+            _ellipsoid.lonLatToXyz(llh, xyz);
+
+            // Compute and save slant range
+            LinAlg::linComb(1.0, xyz, -1.0, xyzsat, satToGround);
+            slantRange[i] = LinAlg::norm(satToGround);
+        }
+
+        // Now sort cross-track grid in terms of slant range
+        insertionSort(slantRange, ctrackGrid);
     
         // Traverse from near range to far range to detect layover area
-        double maxSlantRange = 0.0;
+        double maxCrossTrack = 0.0;
         for (int i = 0; i < width; ++i) {
             // Initialize to 0
             layers.mask(line, i, 0);
-            // Get slant range
-            const double slantRange = layers.slantRange(line, i);
+            // Get cross track range
+            const double crossTrack = ctrackGrid[i];
             // Test layover
-            if (slantRange > maxSlantRange) {
-                maxSlantRange = slantRange;
+            if (crossTrack > maxCrossTrack) {
+                maxCrossTrack = crossTrack;
             } else {
                 layers.mask(line, i, 1);
             }
         }
         
         // Traverse from far range to near range to detect remaining layover area
-        double minSlantRange = maxSlantRange;
+        double minCrossTrack = maxCrossTrack;
         for (int i = width - 1; i >= 0; --i) {
-            // Get slant range
-            const double slantRange = layers.slantRange(line, i);
+            // Get cross track range
+            const double crossTrack = ctrackGrid[i];
             // Test layover
-            if (slantRange <= minSlantRange) {
-                minSlantRange = slantRange;
+            if (crossTrack <= minCrossTrack) {
+                minCrossTrack = crossTrack;
             } else {
                 layers.mask(line, i, 1);
             }

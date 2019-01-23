@@ -35,7 +35,7 @@ class isce::geometry::TopoLayers {
             _localPsi.resize(length*width);
             _sim.resize(length*width);
             _mask.resize(length*width);
-            _slantRange.resize(length*width);
+            _crossTrack.resize(length*width);
         }
         // Destructor
         ~TopoLayers() {
@@ -65,7 +65,7 @@ class isce::geometry::TopoLayers {
             _localPsi.resize(length*width);
             _sim.resize(length*width);
             _mask.resize(length*width);
-            _slantRange.resize(length*width);
+            _crossTrack.resize(length*width);
         }
 
         // Get sizes
@@ -122,7 +122,7 @@ class isce::geometry::TopoLayers {
         std::valarray<float> & localPsi() { return _localPsi; }
         std::valarray<float> & sim() { return _sim; }
         std::valarray<int> & mask() { return _mask; }
-        std::valarray<double> & slantRange() { return _slantRange; }
+        std::valarray<double> & crossTrack() { return _crossTrack; }
         
         // Set values for a single index
         void x(size_t row, size_t col, double value) {
@@ -161,8 +161,8 @@ class isce::geometry::TopoLayers {
             _mask[row*_width + col] = value;
         }
 
-        void slantRange(size_t row, size_t col, double value) {
-            _slantRange[row*_width + col] = value;
+        void crossTrack(size_t row, size_t col, double value) {
+            _crossTrack[row*_width + col] = value;
         }
 
         // Get values for a single index
@@ -202,8 +202,8 @@ class isce::geometry::TopoLayers {
             return _mask[row*_width + col];
         }
 
-        double slantRange(size_t row, size_t col) const {
-            return _slantRange[row*_width + col];
+        double crossTrack(size_t row, size_t col) const {
+            return _crossTrack[row*_width + col];
         }
 
         // Write data with rasters
@@ -230,7 +230,7 @@ class isce::geometry::TopoLayers {
         std::valarray<float> _localPsi;
         std::valarray<float> _sim;
         std::valarray<int> _mask;
-        std::valarray<double> _slantRange; // internal usage only; not saved to Raster
+        std::valarray<double> _crossTrack; // internal usage only; not saved to Raster
 
         // Raster pointers for each layer
         isce::io::Raster * _xRaster;
