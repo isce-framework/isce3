@@ -45,9 +45,9 @@ void createTestData();
 TEST(GeocodeTest, RunGeocode) {
 
     // This test runs Topo to compute lat lon height on ellipsoid for a given 
-    // radar dataset. Then the each of the computed latitude and longitude 
+    // radar dataset. Then each of the computed latitude and longitude 
     // grids (radar grids) get geocoded. This will allow to check geocoding by 
-    // comparing the value of the geocoded pixel with its coordinate. 
+    // comparing the values of the geocoded pixels with its coordinate. 
 
     // Create a DEM with zero height (ellipsoid surface)
     createZeroDem();
@@ -81,11 +81,11 @@ TEST(GeocodeTest, RunGeocode) {
     int numiter = 25;
     size_t linesPerBlock = 1000;
     double demBlockMargin = 0.1;
-    int radarBlockMargin = 20;
+    int radarBlockMargin = 10;
 
     double azimuthTimeInterval = 1.0/mode.prf();
 
-    // output geocoded grid
+    // output geocoded grid (can be different from DEM)
     double geoGridStartX = -115.65;
     double geoGridStartY = 34.84;
     double geoGridSpacingX = 0.0002;
@@ -97,8 +97,10 @@ TEST(GeocodeTest, RunGeocode) {
     // The DEM to be used for geocoding 
     isce::io::Raster demRaster("zeroHeightDEM.geo");
 
+    // input raster in radar coordinates to be geocoded
     isce::io::Raster radarRaster("x.rdr");
 
+    // geocoded raster
     isce::io::Raster geocodedRaster("x.geo", 
                         geoGridWidth, geoGridLength,
                         1, GDT_Float64, "ENVI");
@@ -108,7 +110,8 @@ TEST(GeocodeTest, RunGeocode) {
 
     // The interpolation method used for geocoding
     //isce::core::dataInterpMethod method = isce::core::BICUBIC_METHOD;
-    isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD;
+    //isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD;
+    isce::core::dataInterpMethod method = isce::core::BIQUINTIC_METHOD;
 
     // Geocode object
     isce::geometry::Geocode<double> geoObj;
@@ -154,17 +157,19 @@ TEST(GeocodeTest, RunGeocode) {
     // create another raster for latitude data from Topo
     isce::io::Raster radarRaster2("y.rdr");
 
-
+    // create output raster for geocoded latitude
     isce::io::Raster geocodedRaster2("y.geo", geoGridWidth, geoGridLength,
                 1, GDT_Float64, "ENVI");
 
-    // geocode the latitude data
+    // geocode the latitude data using the same geocode object
     geoObj.geocode(radarRaster2, geocodedRaster2, demRaster);
 
 }
 
 TEST(GeocodeTest, CheckGeocode) {
-
+    // The geocoded latitude and longitude data should be 
+    // consistent with the geocoded pixel location.
+    
     isce::io::Raster xRaster("x.geo");
 
     isce::io::Raster yRaster("y.geo");
