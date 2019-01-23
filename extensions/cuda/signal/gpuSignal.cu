@@ -1,0 +1,149 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// Source Author: Liang Yu
+// Copyright 2019
+
+#include "gpuSignal.h"
+
+#include <cuda_runtime.h>
+#include <cufftXt.h>
+#include "isce/cuda/helper_cuda.h"
+#include "isce/cuda/helper_functions.h"
+
+using isce::cuda::signal::gpuSignal;
+/**
+*  @param[in] signal input block of data
+*  @param[out] spectrum output block of spectrum
+*  @param[in] ncolumns number of columns of the block of data
+*  @param[in] nrows number of rows of the block of data
+ */
+template<class T>
+void gpuSignal<T>::
+forwardRangeFFT(int ncolumns, int nrows)
+                
+{
+
+    _configureRangeFFT(ncolumns, nrows);
+    
+    fftPlanForward(_rank, _n, _howmany,
+                    _inembed, _istride, _idist,
+                    _onembed, _ostride, _odist);
+
+}
+
+/**
+*  @param[in] rank rank of the transform (1: for one dimensional and 2: for two dimensional transform)
+*  @param[in] size size of each transform (ncols: for range FFT, nrows: for azimuth FFT)
+*  @param[in] howmany number of FFT transforms for a block of data (nrows: for range FFT, ncols: for azimuth FFT)
+*  @param[in] inembed
+*  @param[in] istride
+*  @param[in] idist
+*  @param[in] onembed
+*  @param[in] ostride
+*  @param[in] odist
+*/
+template <class T>
+void gpuSignal<T>::
+fftPlanForward(int rank, int *n, int howmany,
+                int *inembed, int istride, int idist,
+                int *onembed, int ostride, int odist)
+{
+    _cufft_type = CUFFT_C2C;
+    checkCudaErrors(cufftCreate(&_plan));
+    size_t worksize;
+    printf("rank %d\n", _rank);
+    checkCudaErrors(cufftMakePlanMany(_plan, rank, n, inembed,
+                                      istride, idist, onembed, ostride, 
+                                      odist, _cufft_type, 1, &worksize));
+    printf("worksize %ld\n", worksize);
+
+    //checkCudaErrors(cufftMakePlan2d(_plan, n[0], n[1], _cufft_type, worksize));
+}
+
+/** @param[in] ncolumns number of columns
+*   @param[in] nrows number of rows
+*/
+template <class T>
+void gpuSignal<T>::
+_configureRangeFFT(int ncolumns, int nrows)
+{
+    _rank = 1;
+    _n = new int[1];
+    _n[0] = ncolumns;
+
+    _howmany = nrows;
+    
+    _inembed = new int[1];
+    _inembed[0] = ncolumns;
+
+    _istride = 1;
+    _idist = ncolumns;
+    
+    _onembed = new int[1];
+    _onembed[0] = ncolumns;
+
+    _ostride = 1;
+    _odist = ncolumns;
+}
+
+/** unnormalized forward transform
+*  @param[in] input block of data
+*  @param[out] output block of spectrum
+*/
+template<class T>
+void isce::cuda::signal::gpuSignal<T>::
+forward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
+{
+    size_t input_size = input.size()*sizeof(std::complex<T>);
+    //size_t input_size = input.size()*sizeof(T)*2;
+    size_t output_size = output.size()*sizeof(T)*2;
+
+    printf("in_sz=%ld, out_sz=%ld\n", input_size, output_size);
+    // allocate device memory 
+    T *d_input;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
+    T *d_output;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_output), output_size));
+
+    // copy input
+    checkCudaErrors(cudaMemcpy(d_input, &input[0], input_size, cudaMemcpyHostToDevice));
+
+    // transform
+    checkCudaErrors(cufftExecC2C(_plan, reinterpret_cast<cufftComplex *>(d_input),
+                                reinterpret_cast<cufftComplex *>(d_output),
+                                CUFFT_FORWARD));
+
+    // copy output
+    checkCudaErrors(cudaMemcpy(&output[0], d_output, output_size, cudaMemcpyDeviceToHost));
+}
+
+/**
+*  @param[in] rank rank of the transform (1: for one dimensional and 2: for two dimensional transform)
+*  @param[in] size size of each transform (ncols: for range FFT, nrows: for azimuth FFT)
+*  @param[in] howmany number of FFT transforms for a block of data (nrows: for range FFT, ncols: for azimuth FFT)
+*  @param[in] inembed
+*  @param[in] istride
+*  @param[in] idist
+*  @param[in] onembed
+*  @param[in] ostride
+*  @param[in] odist
+template <class T>
+void
+gpuSignal<T>::
+fftPlanBackward(int rank, int *n, int howmany,
+                int *inembed, int istride, int idist,
+                int *onembed, int ostride, int odist)
+{
+    size_t worksize;
+    checkCudaErrors(cufftCreate(&_plan_inv));
+    checkCudaErrors(cufftMakePlanMany(_plan_inv, rank, n, inembed,
+                                      istride, idist, onembed, ostride, 
+                                      odist, _cufft_type, 1, worksize)
+}
+
+*/
+/*
+ each template parameter needs it's own declaration here
+ */
+template class gpuSignal<float>;

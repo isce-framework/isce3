@@ -7,12 +7,14 @@ include(core/CMakeLists.txt)
 include(product/CMakeLists.txt)
 include(geometry/CMakeLists.txt)
 include(image/CMakeLists.txt)
+include(signal/CMakeLists.txt)
 
 # Set the output library
 add_library(${LCUDAISCE} SHARED
             ${ISCE_CUDA_core_SRCS}
             ${ISCE_CUDA_geometry_SRCS}
-            ${ISCE_CUDA_image_SRCS})
+            ${ISCE_CUDA_image_SRCS}
+            ${ISCE_CUDA_signal_SRCS})
 
 # Force nvcc to compile with c++14
 get_target_property(MYPROPS ${LCUDAISCE} COMPILE_OPTIONS)
@@ -24,11 +26,15 @@ set_target_properties(${LCUDAISCE} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 set_target_properties(${LCUDAISCE} PROPERTIES CUDA_HOST_COMPILATION_CPP ON)
 
 # Add library dependencies
+find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
+target_link_libraries(${LCUDAISCE} ${CUDART_LIBRARY})
+find_library(CUDAFFT_LIBRARY cufft ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
+target_link_libraries(${LCUDAISCE} ${CUDAFFT_LIBRARY})
 target_link_libraries(${LCUDAISCE} ${LISCE})
 
 # Install CUDA helper header files
 set(HELPER_HEADERS "")
-foreach(HFILE helper_cuda.h helper_string.h)
+foreach(HFILE helper_cuda.h helper_functions.h helper_string.h exception.h helper_image.h helper_timer.h)
     set(DESTFILE ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${HFILE})
     configure_file(${CMAKE_CURRENT_LIST_DIR}/${HFILE} ${DESTFILE} COPYONLY)
     list(APPEND ${HELPER_HEADERS} ${DESTFILE})
