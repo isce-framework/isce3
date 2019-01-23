@@ -45,7 +45,15 @@ class isce::geometry::Geocode {
 
         Geocode() {};
 
-        ~Geocode() {};
+        ~Geocode() {
+ 
+           if (_interp) {
+                delete _interp;
+            }
+            if (_proj) {
+                delete _proj;
+            }    
+        };
 
         //inline Geocode(isce::product::Product &);
 

@@ -157,15 +157,17 @@ _interpolate(isce::core::Matrix<T>& rdrDataBlock,
 
     size_t length = geoDataBlock.length();
     size_t width = geoDataBlock.width();
+    double extraMargin = 4.0;
     for (size_t i = 0; i< length; ++i) {
         for (size_t j = 0; j < width; ++j) {
 
             // if this point falls somewhere within the radar data box, 
             // then perform the interpolation
-            if (radarX[i*width + j] >= 0 && 
-                    radarY[i*width + j] >= 0 && 
-                    radarX[i*width + j] < (radarBlockWidth - 1) && 
-                    radarY[i*width + j] < (radarBlockLength - 1) ) {
+
+            if (radarX[i*width + j] >= extraMargin &&
+                    radarY[i*width + j] >= extraMargin &&
+                    radarX[i*width + j] < (radarBlockWidth - extraMargin) &&
+                    radarY[i*width + j] < (radarBlockLength - extraMargin) ) {
 
                 geoDataBlock(i,j) = _interp->interpolate(radarX[i*width + j], 
                                                 radarY[i*width + j], rdrDataBlock);
