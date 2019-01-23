@@ -17,9 +17,9 @@ cdef extern from "isce/core/LUT1d.h" namespace "isce::core":
         LUT1d(const LUT1d[T] &) except +
 
         # Setters and getters
-        valarray[double] coords()
+        const valarray[double] & coords()
         void coords(const valarray[double] &)
-        valarray[T] values()
+        const valarray[T] & values()
         void values(const valarray[T] &)
         bool extrapolate()
         void extrapolate(bool)

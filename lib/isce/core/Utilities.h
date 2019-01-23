@@ -104,6 +104,55 @@ namespace isce { namespace core {
         return data;
     }
 
+    /** Function to fill a Matlab/Python style linspace vector 
+      * @param[in] low Starting value of vector
+      * @param[in] high Ending value of vector (inclusive)
+      * @param[in] data Vector to fill in */
+    template <typename T>
+    inline void linspace(T low, T high, std::vector<T> & data) {
+        // Compute the increment
+        int number = data.size();
+        T increment = (high - low) / (number - 1);
+        // Handle cases where number in (0, 1)
+        if (number == 0) {
+            return;
+        }
+        if (number == 1) {
+            data[0] = low;
+            return;
+        }
+        // Loop over the increments and add to vector
+        for (std::size_t i = 0; i < number; ++i) {
+            data[i] = low + i * increment;
+        }
+        // done
+        return data;
+    }
+
+    /** Function to fill a Matlab/Python style linspace valarray
+      * @param[in] low Starting value of vector
+      * @param[in] high Ending value of vector (inclusive)
+      * @param[in] data Vector to fill in */
+    template <typename T>
+    inline void linspace(T low, T high, std::valarray<T> & data) {
+        // Compute the increment
+        int number = data.size();
+        T increment = (high - low) / (number - 1);
+        // Handle cases where number in (0, 1)
+        if (number == 0) {
+            return;
+        }
+        if (number == 1) {
+            data[0] = low;
+            return;
+        }
+        // Loop over the increments and add to vector
+        for (std::size_t i = 0; i < number; ++i) {
+            data[i] = low + i * increment;
+        }
+        // done
+    }
+
     /** Function to return a Matlab/Python style logspace vector 
       * @param[in] first base^first is the starting value of the vector
       * @param[in] last base^last is the ending value of the vector
