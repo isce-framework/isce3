@@ -44,6 +44,7 @@ include_directories(${${PACKAGENAME}_DLL} PUBLIC
     ${ISCE_BUILDINCLUDEDIR}
     ${GDAL_INCLUDE_DIR}
     ${HDF5_INCLUDE_DIR}
+    /home/lyu/python/miniconda3/include
 ) 
 
 #Install headers as files

@@ -16,6 +16,7 @@
 #include <valarray>
 #include <complex>
 #include <cstdint>
+#include <iterator>
 #include <gdal.h>
 #include <gdal_priv.h>
 

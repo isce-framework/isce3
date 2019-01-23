@@ -88,6 +88,7 @@ include_directories(${${PACKAGENAME}_DLL}
         ${GDAL_INCLUDE_DIR}
         ${ISCE_BUILDINCLUDEDIR}
         ${CEREAL_SRC_INCLUDEDIR}
+        /home/lyu/python/miniconda3/include
 ) 
 
 #Install headers as files
