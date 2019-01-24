@@ -117,10 +117,6 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     // Main code: decompose DEM into facets, compute RDC coordinates
     // ------------------------------------------------------------------------
 
-    std::array<double, 3> llh00, llh01, llh10, llh11;
-    std::array<double, 3> xyz00, xyz01, xyz10, xyz11, xyz_mid;
-    std::array<double, 3> P00_01, P00_10, P10_01, P11_01, P11_10;
-    std::array<double, 3> lookXYZ, normalFacet1, normalFacet2;
     isce::geometry::DEMInterpolator dem_interp(0, isce::core::dataInterpMethod::BIQUINTIC_METHOD);
 
     // Determine DEM bounds
@@ -146,10 +142,12 @@ void isce::geometry::facetRTC(isce::product::Product& product,
         const double lat_mid = dem_interp.yStart() + (0.5 + ii) * dem_interp.deltaY() / upsample_factor;
 
         // Loop over pixels
-        #pragma omp parallel for schedule(dynamic) firstprivate( \
-            lookXYZ, normalFacet1, normalFacet2, llh00, llh01, llh10, llh11, \
-            xyz00, xyz01, xyz10, xyz11, P00_01, P00_10, P10_01, P11_01, P11_10)
+        #pragma omp parallel for schedule(dynamic)
         for (size_t jj = 0; jj < jmax; ++jj) {
+            isce::core::cartesian_t llh00, llh01, llh10, llh11,
+                                    xyz00, xyz01, xyz10, xyz11, xyz_mid,
+                                    P00_01, P00_10, P10_01, P11_01, P11_10,
+                                    lookXYZ, normalFacet1, normalFacet2;
 
             const double lon_mid = dem_interp.xStart() + dem_interp.deltaX() * (jj + 0.5) / upsample_factor;
 
@@ -253,9 +251,13 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             const float Wac = 1. - Wa;
 
             // Use bilinear weighting to distribute area
+            #pragma omp atomic
             out[mode.width() * iy1 + ix1] += area * Wrc * Wac;
+            #pragma omp atomic
             out[mode.width() * iy1 + ix2] += area * Wr * Wac;
+            #pragma omp atomic
             out[mode.width() * iy2 + ix1] += area * Wrc * Wa;
+            #pragma omp atomic
             out[mode.width() * iy2 + ix2] += area * Wr * Wa;
         }
     }
@@ -301,8 +303,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             const double costheta = std::abs(enu[2]) / LinAlg::norm(enu);
             const double sintheta = std::sqrt(1. - costheta*costheta);
 
-            const float area_value = out[mode.width() * i + j];
-            out[mode.width() * i + j] = area_value * sintheta;
+            out[mode.width() * i + j] *= sintheta;
         }
     }
     std::cout << std::endl;
