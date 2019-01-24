@@ -28,7 +28,8 @@ class isce::cuda::signal::gpuSignal {
 
     public:
         // Default constructor
-        gpuSignal() : _rank(0) {};
+        gpuSignal() {};
+        ~gpuSignal();
 
         /** \brief initiate plan for forward FFT in range direction 
          * for a block of complex data.

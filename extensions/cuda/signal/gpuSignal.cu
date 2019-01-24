@@ -12,6 +12,15 @@
 #include "isce/cuda/helper_functions.h"
 
 using isce::cuda::signal::gpuSignal;
+
+
+/** Destructor **/
+template<class T>
+gpuSignal<T>::
+~gpuSignal() {
+    cufftDestroy(_plan);
+}
+
 /**
 *  @param[in] signal input block of data
 *  @param[out] spectrum output block of spectrum
@@ -50,6 +59,8 @@ fftPlanForward(int rank, int *n, int howmany,
                 int *onembed, int ostride, int odist)
 {
     _cufft_type = CUFFT_C2C;
+    checkCudaErrors(cufftPlan1d(&_plan, n[0], _cufft_type, 1));
+    /*
     checkCudaErrors(cufftCreate(&_plan));
     size_t worksize;
     printf("rank %d\n", _rank);
@@ -58,6 +69,7 @@ fftPlanForward(int rank, int *n, int howmany,
                                       odist, _cufft_type, 1, &worksize));
     printf("worksize %ld\n", worksize);
 
+    */
     //checkCudaErrors(cufftMakePlan2d(_plan, n[0], n[1], _cufft_type, worksize));
 }
 
@@ -115,7 +127,10 @@ forward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &o
                                 CUFFT_FORWARD));
 
     // copy output
-    checkCudaErrors(cudaMemcpy(&output[0], d_output, output_size, cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(&output[0], d_output, input_size, cudaMemcpyDeviceToHost));
+    
+    cudaFree(d_input);
+    cudaFree(d_output);
 }
 
 /**
