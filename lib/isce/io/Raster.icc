@@ -90,9 +90,8 @@ isce::io::Raster::Raster(isce::core::Matrix<T> &matrix)
 
 
 // Constructor for a 1 band dataset from isce::core::Matrix<T>::grid_type::view_type
-// To be fixed when a way to deduce cell_type from viewtype argument can be figured out
-/*template <typename viewtype>
-isce::io::Raster::Raster(viewtype& view)
+template <typename T>
+isce::io::Raster::Raster(pyre::grid::View<T>& view)
 {
     //If we add a similar byteoffset method to pyre::grid::View, we could use that
     //For now, we need to do the math ourselves
@@ -113,7 +112,7 @@ isce::io::Raster::Raster(viewtype& view)
     }
 
     //Size of each element
-    size_t bytesperunit = sizeof(typename viewtype::grid_type::cell_type);
+    size_t bytesperunit = sizeof(typename T::cell_type);
     //std::cout << "Element size in bytes: " << bytesperunit << "\n";
 
     //Get shape
@@ -143,12 +142,12 @@ isce::io::Raster::Raster(viewtype& view)
     }
 
     initFromPointer(startoffset,
-                    isce::io::GDT.at(typeid(typename viewtype::grid_type::cell_type)),
+                    isce::io::GDT.at(typeid(typename T::cell_type)),
                     shape[1],
                     shape[0],
                     pixeloffset,
                     lineoffset);
-}*/
+}
 
 
 // Copy constructor
@@ -665,9 +664,8 @@ void isce::io::Raster::setBlock(isce::core::Matrix<T>& mat, size_t xidx, size_t 
 
 
 // Get/Set a block of data for given x/y position and band from Matrix<T>::view_type
-// A way to figure out cell_type from viewtype is needed here
-template<typename viewtype>
-void isce::io::Raster::getSetBlock(viewtype& view, size_t xidx, size_t yidx, size_t band, GDALRWFlag iodir)
+template<typename T>
+void isce::io::Raster::getSetBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band, GDALRWFlag iodir)
 {
     //Ensure that the view is 2D and Row major
     //Unclear if view currently supports numpy-like squeeze 
@@ -692,7 +690,7 @@ void isce::io::Raster::getSetBlock(viewtype& view, size_t xidx, size_t yidx, siz
     }
 
     //Size of each element
-    size_t bytesperunit = sizeof(typename viewtype::grid_type::cell_type);
+    size_t bytesperunit = sizeof(typename T::cell_type);
     //std::cout << "Element size in bytes: " << bytesperunit << "\n";
 
     //Get shape
@@ -725,42 +723,42 @@ void isce::io::Raster::getSetBlock(viewtype& view, size_t xidx, size_t yidx, siz
     //          << "Pixel offset: " << pixeloffset << "\n"
     //          << "Line offset: " << lineoffset << "\n";
 
-  if (isce::io::GDT.count(typeid(typename viewtype::grid_type::cell_type))) { // buffer type is supported by GDAL
-    auto iostat =  _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, shape[1], shape[0], startoffset, shape[1], shape[0], isce::io::GDT.at(typeid(typename viewtype::grid_type::cell_type)), pixeloffset, lineoffset);
+  if (isce::io::GDT.count(typeid(typename T::cell_type))) { // buffer type is supported by GDAL
+    auto iostat =  _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, shape[1], shape[0], startoffset, shape[1], shape[0], isce::io::GDT.at(typeid(typename T::cell_type)), pixeloffset, lineoffset);
 
     if (iostat != CPLE_None) // RasterIO returned errors
         std::cout << "In isce::io::Raster::get/setValue() - error in RasterIO." << std::endl;
     }
     else
-        std::cout << "In isce::io::Raster::get/setBlock() - Buffer datatype " << typeid(typename viewtype::grid_type::cell_type).name() <<
+        std::cout << "In isce::io::Raster::get/setBlock() - Buffer datatype " << typeid(typename T::cell_type).name() <<
       " is not mappable to a GDALDataType." << std::endl;
 
 }
 
 //Get block of data from given band
-template<typename viewtype>
-void isce::io::Raster::getBlock(viewtype& view, size_t xidx, size_t yidx, size_t band)
+template<typename T>
+void isce::io::Raster::getBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band)
 {
     this->getSetBlock(view, xidx, yidx, band, GF_Read);
 }
 
 //Get block of data from band 1
-template<typename viewtype>
-void isce::io::Raster::getBlock(viewtype& view, size_t xidx, size_t yidx)
+template<typename T>
+void isce::io::Raster::getBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx)
 {
     this->getSetBlock(view, xidx, yidx, 1, GF_Read);
 }
 
 //Set block of data from given band
-template<typename viewtype>
-void isce::io::Raster::setBlock(viewtype& view, size_t xidx, size_t yidx, size_t band)
+template<typename T>
+void isce::io::Raster::setBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band)
 {
     this->getSetBlock(view, xidx, yidx, band, GF_Write);
 }
 
 //Set block of data from given band
-template<typename viewtype>
-void isce::io::Raster::setBlock(viewtype& view, size_t xidx, size_t yidx)
+template<typename T>
+void isce::io::Raster::setBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx)
 {
     this->getSetBlock(view, xidx, yidx, 1, GF_Write);
 }
