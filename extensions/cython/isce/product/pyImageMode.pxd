@@ -10,5 +10,8 @@ from libcpp cimport bool
 cdef class pyImageMode:
     cdef ImageMode * c_imagemode
     cdef bool __owner
+
+    @staticmethod
+    cdef cbind(ImageMode)
     
 # end of file

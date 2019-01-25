@@ -26,7 +26,7 @@ class isce::cuda::image::ResampSlc : public isce::image::ResampSlc {
     public:
         // Meta-methods
         // Default constructor
-        inline ResampSlc();
+        inline ResampSlc() : isce::image::ResampSlc() {};
 
         // Constructor from an isce::product::Product
         inline ResampSlc(const isce::product::Product &product) :

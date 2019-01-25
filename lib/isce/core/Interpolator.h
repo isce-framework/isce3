@@ -20,6 +20,7 @@ namespace isce {
         template <typename U> class Interpolator;
         template <typename U> class BilinearInterpolator;
         template <typename U> class BicubicInterpolator;
+        template <typename U> class NearestNeighborInterpolator;
         template <typename U> class Spline2dInterpolator;
         template <typename U> class Sinc2dInterpolator;
     }
@@ -100,6 +101,31 @@ class isce::core::BicubicInterpolator : public isce::core::Interpolator<U> {
         std::valarray<double> _weights;
 };
 
+// Definition of NearestNeighborInterpolator
+template <typename U>
+class isce::core::NearestNeighborInterpolator : public isce::core::Interpolator<U> {
+
+    public:
+        /** Default constructor */
+        inline NearestNeighborInterpolator() : 
+            isce::core::Interpolator<U>(isce::core::NEAREST_METHOD) {}
+
+        /** Interpolate at a given coordinate. */
+        U interpolate(double x, double y, const Matrix<U> & z);
+
+        /** Interpolate at a given coordinate for data passed as a valarray */
+        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+
+        /** Interpolate at a given coordinate for data passed as a vector */
+        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+};
+
 // Definition of Spline2dInterpolator
 template <typename U>
 class isce::core::Spline2dInterpolator : public isce::core::Interpolator<U> {
@@ -132,15 +158,15 @@ class isce::core::Spline2dInterpolator : public isce::core::Interpolator<U> {
 
     // Utility spline functions
     private:
-        void _initSpline(const std::valarray<double> &,
+        void _initSpline(const std::valarray<U> &,
                          int,
-                         std::valarray<double> &,
-                         std::valarray<double> &);
+                         std::valarray<U> &,
+                         std::valarray<U> &);
 
-        double _spline(double,
-                       const std::valarray<double> &,
-                       int,
-                       const std::valarray<double> &);
+        U _spline(double,
+                  const std::valarray<U> &,
+                  int,
+                  const std::valarray<U> &);
 };
 
 // Definition of Sinc2dInterpolator
@@ -173,7 +199,7 @@ class isce::core::Sinc2dInterpolator : public isce::core::Interpolator<U> {
 
         // Evaluate sinc
         U _sinc_eval_2d(const isce::core::Matrix<U> & z, int intpx, int intpy,
-                        double frpx, double frpy, int xlen, int ylen);
+                        double frpx, double frpy);
 
     private:
         isce::core::Matrix<double> _kernel;
@@ -187,7 +213,8 @@ namespace isce {
         /** Utility function to create interpolator pointer given an interpolator enum type */
         template <typename U>
         inline Interpolator<U> * createInterpolator(
-            isce::core::dataInterpMethod method, size_t order = 6
+            isce::core::dataInterpMethod method, size_t order = 6,
+            int sincLen = isce::core::SINC_LEN, int sincSub = isce::core::SINC_SUB
             ) {
             if (method == isce::core::BILINEAR_METHOD) {
                 return new isce::core::BilinearInterpolator<U>();
@@ -195,6 +222,12 @@ namespace isce {
                 return new isce::core::BicubicInterpolator<U>();
             } else if (method == isce::core::BIQUINTIC_METHOD) {
                 return new isce::core::Spline2dInterpolator<U>(order);
+            } else if (method == isce::core::NEAREST_METHOD) {
+                return new isce::core::NearestNeighborInterpolator<U>();
+            } else if (method == isce::core::SINC_METHOD) {
+                return new isce::core::Sinc2dInterpolator<U>(
+                    sincLen, sincSub
+                );
             } else {
                 return new isce::core::BilinearInterpolator<U>();
             }

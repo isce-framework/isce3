@@ -2,7 +2,7 @@
 
 def testConstruction():
     import datetime
-    from isceextension import pyDateTime
+    from isce3.extensions.isceextension import pyDateTime
 
     #Reference datetime
     refobjs = [datetime.datetime(2017,5,12,1,12,30,141592),
@@ -29,7 +29,7 @@ def testConstruction():
 
 
 def testTimeDelta():
-    from isceextension import pyDateTime, pyTimeDelta
+    from isce3.extensions.isceextension import pyDateTime, pyTimeDelta
 
     dtime1 = pyDateTime("2017-05-12T01:12:30.141592")
     dtime2 = pyDateTime("2017-05-13T02:12:33.241592")

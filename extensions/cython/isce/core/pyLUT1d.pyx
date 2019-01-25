@@ -8,6 +8,7 @@ from libcpp cimport bool
 import numpy as np
 cimport numpy as np
 from LUT1d cimport LUT1d
+from Matrix cimport valarray
 
 cdef class pyLUT1d:
     '''
@@ -24,17 +25,12 @@ cdef class pyLUT1d:
     def __cinit__(self, x=None, y=None, bool extrapolate=False):
 
         cdef int i, N
-        cdef np.ndarray[double, ndim=1] x_np, y_np
         cdef valarray[double] x_array, y_array
 
         if x is not None and y is not None:
 
-            # Make sure coordinates and values are numpy arrays
-            x_np = np.array(x).squeeze()
-            y_np = np.array(y).squeeze()
-
             # Copy to valarrays
-            N = x_np.shape[0]
+            N = x.size
             x_array = valarray[double](N)
             y_array = valarray[double](N)
             for i in range(N):
@@ -110,5 +106,57 @@ cdef class pyLUT1d:
             float : Value of LUT at x
         '''
         return self.eval(x)
+
+    @property
+    def coordinates(self):
+        '''
+        Get coordinates of LUT.
+        '''
+        # Get valarray for coordinates
+        cdef valarray[double] c = self.c_lut.coords()
+
+        # Copy to numpy array
+        cdef np.ndarray[double, ndim=1] c_np = np.zeros(self.size, dtype=np.float64)
+        cdef int i
+        for i in range(self.size):
+            c_np[i] = c[i]
+
+        return c_np
+
+    @coordinates.setter
+    def coordinates(self, coords):
+        raise NotImplementedError('Cannot set coordinates yet.')
+
+    @property
+    def values(self):
+        '''
+        Get values of LUT.
+        '''
+        # Get valarray for coordinates
+        cdef valarray[double] v = self.c_lut.values()
+
+        # Copy to numpy array
+        cdef np.ndarray[double, ndim=1] v_np = np.zeros(self.size, dtype=np.float64)
+        cdef int i
+        for i in range(self.size):
+            v_np[i] = v[i]
+
+        return v_np
+
+    @values.setter
+    def values(self, vals):
+        raise NotImplementedError('Cannot set values yet.')
+
+    @property
+    def size(self):
+        '''
+        Get size of LUT.
+        '''
+        cdef int N = self.c_lut.size()
+        return N
+
+    @size.setter
+    def size(self, s):
+        raise NotImplementedError('Cannot overwrite LUT size.')
     
 # end of file 
