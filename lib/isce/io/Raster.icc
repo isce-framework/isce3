@@ -294,7 +294,7 @@ void isce::io::Raster::setValue(T &buffer, size_t xidx, size_t yidx, size_t band
  * @param[in] yidx Line index (0-based)*/
 template<typename T>
 void isce::io::Raster::setValue(T &buffer, size_t xidx, size_t yidx) {
-  setValue(buffer, xidx, yidx, 1, GF_Write);
+  setValue(buffer, xidx, yidx, 1);
 }
 
 
