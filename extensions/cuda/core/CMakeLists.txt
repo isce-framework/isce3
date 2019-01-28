@@ -54,7 +54,8 @@ include_directories(${LCUDAISCE} PUBLIC
                     ${ISCE_BUILDINCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
                     ${PYRE_INCLUDE_DIR}
-                    ${GDAL_INCLUDE_DIR})
+                    ${GDAL_INCLUDE_DIR}
+                    ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 # Install headers into final installation directory
 install(FILES ${${PACKAGENAME}_BUILD_HEADERS}

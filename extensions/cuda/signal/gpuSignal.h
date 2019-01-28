@@ -31,6 +31,10 @@ class isce::cuda::signal::gpuSignal {
         gpuSignal() {};
         ~gpuSignal();
 
+        void dbgTodos(int n, 
+                      std::valarray<std::complex<T>> &input, 
+                      std::valarray<std::complex<T>> &output);
+
         /** \brief initiate plan for forward FFT in range direction 
          * for a block of complex data.
          * range direction is assumed to be in the direction of the 
@@ -50,6 +54,10 @@ class isce::cuda::signal::gpuSignal {
 
         /** forward transform */
         void forward(std::valarray<std::complex<T>> &input,
+                    std::valarray<std::complex<T>> &output);
+
+        /** forward transform */
+        void inverse(std::valarray<std::complex<T>> &input,
                     std::valarray<std::complex<T>> &output);
 
         /** \brief initiate forward FFTW3 plan for a block of complex data

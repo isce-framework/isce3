@@ -27,7 +27,6 @@ TEST(Signal, ForwardBackwardRangeFloat)
 
     int width = inputSlc.width();
     int length = inputSlc.length();
-    printf("w%d l%d\n", width, length);
 
     // 
     int blockLength = length;
@@ -39,14 +38,13 @@ TEST(Signal, ForwardBackwardRangeFloat)
     std::valarray<std::complex<float>> range_spectrum(width*blockLength);
 
     // reserve memory for a block of data computed from inverse FFT
-    std::valarray<std::complex<float>> invertData(width*blockLength);
+    std::valarray<std::complex<float>> inverted_data(width*blockLength);
 
     // a signal object
     gpuSignal<float> sig;
 
     // create the forward and backward plans
     sig.forwardRangeFFT(width, blockLength);
-    //sig.inverseRangeFFT(range_spectrum, invertData, width, blockLength);
     
     // read a block of data
     inputSlc.getBlock(data, 0, 0, width, blockLength);
@@ -54,33 +52,35 @@ TEST(Signal, ForwardBackwardRangeFloat)
     // forward fft transform
     sig.forward(data, range_spectrum);
 
+    // save outputs
     auto dbg_file_in = std::fstream("data_in.bin", std::ios::out | std::ios::binary);
     dbg_file_in.write((char*)&data[0], sizeof(float)*range_spectrum.size()*2);
     dbg_file_in.close();
-    auto dbg_file_out = std::fstream("data_transformed.bin", std::ios::out | std::ios::binary);
-    dbg_file_out.write((char*)&range_spectrum[0], sizeof(float)*range_spectrum.size()*2);
+    auto dbg_file_spec = std::fstream("data_spectrum.bin", std::ios::out | std::ios::binary);
+    dbg_file_spec.write((char*)&range_spectrum[0], sizeof(float)*range_spectrum.size()*2);
+    dbg_file_spec.close();
+    auto dbg_file_out = std::fstream("data_out.bin", std::ios::out | std::ios::binary);
+    dbg_file_out.write((char*)&inverted_data[0], sizeof(float)*inverted_data.size()*2);
     dbg_file_out.close();
 
-/*
     // inverse fft transform
-    sig.inverse(range_spectrum, invertData);
+    sig.inverse(range_spectrum, inverted_data);
 
     //normalize the result of inverse fft 
-    invertData /=width;
+    inverted_data /=width;
 
     int blockSize = width*blockLength;
     std::complex<float> err(0.0, 0.0);
     bool Test = true;
     double max_err = 0.0;
     for ( size_t i = 0; i < blockSize; ++i ) {
-        err = invertData[i] - data[i];
+        err = inverted_data[i] - data[i];
         if (std::abs(err) > max_err){
             max_err = std::abs(err);
         }
     }
 
     ASSERT_LT(max_err, 1.0e-4);
-    */
 }
 
 int main(int argc, char * argv[]) {
