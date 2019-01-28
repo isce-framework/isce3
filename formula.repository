@@ -90,10 +90,17 @@
 \form#89:\[ \left[ \begin{array}{c} X_{left} \\ Y_{top} \end{array} \right] = \left[ \begin{array}{c} G_0 \\ G_3 \end{array}\right] + \left[ \begin{array}{cc} G_1 & G_2 \\ G_4 & G_5 \end{array} \right] \cdot \left[ \begin{array}{c} P \\ L \end{array} \right] \]
 \form#90:$X_{left}$
 \form#91:$Y_{top}$
-\form#92:\[ I^\prime\left(x, y\right) = I\left(x, y, \Delta x, \Delta y\right) \]
-\form#93:$I^\prime()$
-\form#94:$I()$
-\form#95:$x$
-\form#96:$y$
-\form#97:$\Delta x$
-\form#98:$\Delta y$
+\form#92:$2^a$
+\form#93:$3^b$
+\form#94:$5^c$
+\form#95:$7^d$
+\form#96:$11^e$
+\form#97:$13^f$
+\form#98:$e+f$
+\form#99:\[ I^\prime\left(x, y\right) = I\left(x, y, \Delta x, \Delta y\right) \]
+\form#100:$I^\prime()$
+\form#101:$I()$
+\form#102:$x$
+\form#103:$y$
+\form#104:$\Delta x$
+\form#105:$\Delta y$
