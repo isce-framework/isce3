@@ -99,6 +99,8 @@ class isce::core::BicubicInterpolator : public isce::core::Interpolator<U> {
     // Kernel weights
     private:
         std::valarray<double> _weights;
+        isce::core::Matrix<double> _X;
+        isce::core::Matrix<double> _Y;
 };
 
 // Definition of NearestNeighborInterpolator

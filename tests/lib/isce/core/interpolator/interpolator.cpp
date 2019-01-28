@@ -371,6 +371,83 @@ TEST_F(InterpolatorTest, Sinc2dComplex) {
     delete interp;
 }
 
+TEST_F(InterpolatorTest, SimpleRampTest) {
+
+    // This test creates a matrix of data whose values form a 
+    // linear ramp in x direction (Values are x indices). 
+    // For a given interpolation point x,y the interpolated value is compared aginst x.
+    // bilinear, bicubic and biquintic methods are tested.
+
+    size_t length = 100;
+    size_t width = 100;
+
+    isce::core::Matrix<double> M(length, width);
+
+    for (size_t line = 20; line < 60; ++line) {
+        for (size_t pixel = 20; pixel < 60; ++pixel) {
+            M(line, pixel) = pixel;
+        }
+    }
+
+    double interp_val = 0.0;
+    double interp_val2 = 0.0;
+
+    double err = 0.0; //interp_val - x;
+    double err2 = 0.0;
+      
+    isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD;
+    isce::core::Interpolator<double> * interp = nullptr;
+    interp = isce::core::createInterpolator<double>(method);
+
+    isce::core::Interpolator<double> * interp2 = nullptr;
+    interp2 = isce::core::createInterpolator<double>(isce::core::BICUBIC_METHOD);
+
+    isce::core::Interpolator<double> * interp3 = nullptr;
+    interp3 = isce::core::createInterpolator<double>(isce::core::BIQUINTIC_METHOD);
+
+    double y = 40.0;
+    double x = 30.0;
+    double p = 0.0;
+    double maxErr = 0.0;
+    double maxErr2 = 0.0;
+    double maxErr3 = 0.0;
+    while(x<35){
+
+        x += 0.1;
+        p = interp->interpolate(x, y, M);
+        err = p - x;
+        
+        if (std::abs(err) > maxErr)
+            maxErr = std::abs(err);
+
+        p = interp2->interpolate(x, y, M);
+        err = p - x;
+
+        if (std::abs(err) > maxErr2)
+            maxErr2 = std::abs(err);
+
+        p = interp3->interpolate(x, y, M);
+        err = p - x;
+
+        if (std::abs(err) > maxErr3)
+            maxErr3 = std::abs(err);
+    }
+
+    // Check the BILINEAR_METHOD
+    ASSERT_LT(maxErr, 1.0e-8);
+
+    // Check the BICUBIC_METHOD
+    ASSERT_LT(maxErr2, 1.0e-8);
+
+    // Check the BIQUINTIC_METHOD
+    ASSERT_LT(maxErr3, 1.0e-8);
+
+    delete interp;
+    delete interp2;
+    delete interp3;
+}
+
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
