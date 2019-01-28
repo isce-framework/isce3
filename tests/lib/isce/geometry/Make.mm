@@ -17,6 +17,7 @@ PACKAGES = \
     geometry \
     topo \
     geo2rdr \
+    rtc \
 
 # the standard targets
 all:

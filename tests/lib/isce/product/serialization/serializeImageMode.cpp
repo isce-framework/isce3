@@ -35,6 +35,7 @@ TEST(ImageModeTest, FromHDF5) {
 
     // Check values
     ASSERT_NEAR(mode.rangePixelSpacing(), 7.803973670948287, 1.0e-10);
+    ASSERT_NEAR(mode.azimuthPixelSpacing(), 4.570707149778046, 1.0e-10);
     ASSERT_NEAR(mode.startingRange(), 826988.6900674499, 1.0e-10);
     ASSERT_EQ(mode.startAzTime().isoformat(), "2003-02-26T17:55:30.843491759");
     ASSERT_NEAR(mode.prf(), 1652.415691672402, 1.0e-10);

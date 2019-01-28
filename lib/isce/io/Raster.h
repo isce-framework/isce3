@@ -21,6 +21,7 @@
 #include "gdal_vrt.h"
 #include "ogr_spatialref.h"
 #include "Constants.h"
+#include "isce/core/Matrix.h"
 
 //#include <pyre/journal.h>
 
@@ -57,6 +58,15 @@ namespace isce {
       /** Constructor to create a 1 band dataset with default Driver and data type*/
       Raster(const std::string& fname, size_t width, size_t length);
 
+      /** Constructor for a 1 band dataset from isce::core::Matrix<T> */
+      template<typename T> Raster(isce::core::Matrix<T> &matrix);
+
+      // Constructor for a 1 band dataset from isce::core::Matrix<T>::view_type 
+      // Currently, not implemented as this conflicts with constructor using a string
+      // If a method can be found to deduce template type from view_type argument
+      // This would make life easier.
+      //template<typename viewtype> Raster(viewtype &view);
+
       /** Create new raster object like another */
       Raster(const std::string& fname, const Raster& rast);
       template<typename T> Raster(const std::string&, const std::vector<T>&,   size_t);
@@ -70,6 +80,9 @@ namespace isce {
 
       /** Constructor from an existing GDAL Dataset*/
       Raster(GDALDataset *inputDataset);
+
+      /** Construct dataset for a 1 band dataset with raw pointer, dimensions and offsets */
+      inline void initFromPointer(void* ptr, GDALDataType dtype, size_t width, size_t length, size_t pixeloffset, size_t lineoffset);
 
       /** Destructor */
       ~Raster();
@@ -189,7 +202,35 @@ namespace isce {
       template<typename T> void setBlock(std::valarray<T>& arr, size_t xidx, size_t yidx, size_t iowidth, size_t iolength, size_t band);
       /** Write block of data to band 1 from std::valarray*/
       template<typename T> void setBlock(std::valarray<T>& arr, size_t xidx, size_t yidx, size_t iowidth, size_t iolength);
-     
+    
+      //2D block read/write for Matrix<T>, optional band index
+      /** Read block of data from given band to Matrix<T> */
+      template<typename T> void getBlock(isce::core::Matrix<T>& mat, size_t xidx, size_t yidx, size_t band);
+
+      /** Read block of data from band 1 to Matrix<T> */
+      template<typename T> void getBlock(isce::core::Matrix<T>& mat, size_t xidx, size_t yidx);
+      
+      /** Write block of data to given band from Matrix<T> */
+      template<typename T> void setBlock(isce::core::Matrix<T>& mat, size_t xidx, size_t yidx, size_t band);
+
+      /** Write block of data to band 1 from Matrix<T> */
+      template<typename T> void setBlock(isce::core::Matrix<T>& mat, size_t xidx, size_t yidx); 
+
+      //2D block read/write for Matrix<T>, optional band index
+      /** Read/Write block of data from given band to/from Matrix<T>::view_type */
+      template<typename viewtype> void getSetBlock(viewtype& view, size_t xidx, size_t yidx, size_t band, GDALRWFlag iodir);
+
+      /** Read block of data from given band to Matrix<T>::view_type */
+      template<typename viewtype> void getBlock(viewtype& view, size_t xidx, size_t yidx, size_t band);
+
+      /** Read block of data from band 1 to Matrix<T>::view_type */
+      template<typename viewtype> void getBlock(viewtype& view, size_t xidx, size_t yidx);
+
+      /** Write block of data to given band from Matrix<T>::view_type */
+      template<typename viewtype> void setBlock(viewtype& view, size_t xidx, size_t yidx, size_t band);
+
+      /** Write block of data to band 1 from Matrix<T>::view_type */
+      template<typename viewtype> void setBlock(viewtype& view, size_t xidx, size_t yidx);
 
       //Functions to deal with projections and geotransform information
       /** Return EPSG code corresponding to raster*/

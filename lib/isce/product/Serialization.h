@@ -133,6 +133,10 @@ namespace isce {
             isce::io::loadFromH5(modeGroup, "slant_range_spacing", value);
             mode.rangePixelSpacing(value);
 
+            // Set azimuth pixel spacing
+            isce::io::loadFromH5(modeGroup, "az_spacing", value);
+            mode.azimuthPixelSpacing(value);
+
             // Set wavelength
             isce::io::loadFromH5(modeGroup, "freq_center", value);
             mode.wavelength(isce::core::SPEED_OF_LIGHT / value);
