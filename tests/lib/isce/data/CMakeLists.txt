@@ -8,6 +8,8 @@ set (INPUT_SRCS envisat.h5
                 offsets/range.off.xml
                 offsets/azimuth.off
                 offsets/azimuth.off.xml
+                rtc/rtc
+                rtc/rtc.vrt
                 topo/topo.vrt
                 topo/x.rdr
                 topo/x.hdr
