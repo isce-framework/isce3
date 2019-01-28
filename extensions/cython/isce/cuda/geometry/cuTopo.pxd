@@ -24,7 +24,7 @@ cdef extern from "isce/cuda/geometry/Topo.h" namespace "isce::cuda::geometry":
 
         # Run topo with externally created topo rasters
         void topo(Raster &, Raster &, Raster &, Raster &, Raster &,
-                  Raster &, Raster &, Raster &, Raster &)
+                  Raster &, Raster &, Raster &, Raster &, Raster &)
 
         # Setting processing options
         void initialized(bool)

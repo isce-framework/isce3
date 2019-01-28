@@ -91,7 +91,7 @@ class isce::geometry::TopoLayers {
             _simRaster = new isce::io::Raster(outdir + "/simamp.rdr", width, length, 1,
                 GDT_Float32, "ISCE");
             _maskRaster = new isce::io::Raster(outdir + "/mask.rdr", width, length, 1,
-                GDT_Int16, "ISCE");
+                GDT_Byte, "ISCE");
             _haveRasters = true;
         }
 
@@ -121,7 +121,7 @@ class isce::geometry::TopoLayers {
         std::valarray<float> & localInc() { return _localInc; }
         std::valarray<float> & localPsi() { return _localPsi; }
         std::valarray<float> & sim() { return _sim; }
-        std::valarray<int> & mask() { return _mask; }
+        std::valarray<short> & mask() { return _mask; }
         std::valarray<double> & crossTrack() { return _crossTrack; }
         
         // Set values for a single index
@@ -157,7 +157,7 @@ class isce::geometry::TopoLayers {
             _sim[row*_width + col] = value;
         }
 
-        void mask(size_t row, size_t col, int value) {
+        void mask(size_t row, size_t col, short value) {
             _mask[row*_width + col] = value;
         }
 
@@ -198,7 +198,7 @@ class isce::geometry::TopoLayers {
             return _sim[row*_width + col];
         }
 
-        int mask(size_t row, size_t col) const {
+        short mask(size_t row, size_t col) const {
             return _mask[row*_width + col];
         }
 
@@ -229,7 +229,7 @@ class isce::geometry::TopoLayers {
         std::valarray<float> _localInc;
         std::valarray<float> _localPsi;
         std::valarray<float> _sim;
-        std::valarray<int> _mask;
+        std::valarray<short> _mask;
         std::valarray<double> _crossTrack; // internal usage only; not saved to Raster
 
         // Raster pointers for each layer

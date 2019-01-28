@@ -16,6 +16,7 @@
 #include <valarray>
 #include <complex>
 #include <cstdint>
+#include <iterator>
 #include <gdal.h>
 #include <gdal_priv.h>
 
@@ -302,6 +303,66 @@ namespace isce { namespace core {
         return mask;
     }
 
+    /** Sort arrays a, b, c by the values in array a */
+    inline void insertionSort(std::valarray<double> & a,
+                              std::valarray<double> & b,
+                              std::valarray<double> & c) {
+        for (int i = 1; i < a.size(); ++i) {
+            int j = i - 1;
+            const double tempa = a[i];
+            const double tempb = b[i];
+            const double tempc = c[i];
+            while (j >= 0 && a[j] > tempa) {
+                a[j+1] = a[j];
+                b[j+1] = b[j];
+                c[j+1] = c[j];
+                j = j - 1;
+            }
+            a[j+1] = tempa;
+            b[j+1] = tempb;
+            c[j+1] = tempc;
+        }
+    }
+    
+    /** Sort arrays a and b by the values in array a */
+    inline void insertionSort(std::valarray<double> & a,
+                              std::valarray<double> & b) {
+        for (int i = 1; i < a.size(); ++i) {
+            int j = i - 1;
+            const double tempa = a[i];
+            const double tempb = b[i];
+            while (j >= 0 && a[j] > tempa) {
+                a[j+1] = a[j];
+                b[j+1] = b[j];
+                j = j - 1;
+            }
+            a[j+1] = tempa;
+            b[j+1] = tempb;
+        }
+    }
+    
+    /** Searches array for index closest to provided value */   
+    inline int binarySearch(const std::valarray<double> & array, double value) {
+   
+        // Do the binary search 
+        int left = 0;
+        int right = array.size() - 1;
+        int index;
+        while (left <= right) {
+            const int middle = static_cast<int>(std::round(0.5 * (left + right)));
+            if (left == (right - 1)) {
+                index = left;
+                return index;
+            }
+            if (array[middle] <= value) {
+                left = middle;
+            } else if (array[middle] > value) {
+                right = middle;
+            }
+        }
+        index = left;
+        return index;
+    }
 
 }}
 

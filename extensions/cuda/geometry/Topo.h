@@ -8,6 +8,8 @@
 
 // isce::geometry
 #include "isce/geometry/Topo.h"
+#include "isce/geometry/TopoLayers.h"
+#include "isce/geometry/DEMInterpolator.h"
 
 // Declaration
 namespace isce {
@@ -44,7 +46,10 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
                   isce::io::Raster & yRaster, isce::io::Raster & heightRaster,
                   isce::io::Raster & incRaster, isce::io::Raster & hdgRaster,
                   isce::io::Raster & localIncRaster, isce::io::Raster & localPsiRaster,
-                  isce::io::Raster & simRaster);
+                  isce::io::Raster & simRaster, isce::io::Raster & maskRaster);
+
+        /** Run topo - main entrypoint; internal creation of topo rasters */
+        void topo(isce::io::Raster &, isce::geometry::TopoLayers &);
 
     private:
         // Default number of lines per block
@@ -52,6 +57,13 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
 
         // Compute number of lines per block dynamically from GPU memmory
         void computeLinesPerBlock(isce::io::Raster &);
+
+        // Generate layover/shadow masks using an orbit
+        void _setLayoverShadowWithOrbit(isce::core::Orbit & orbit,
+                                        isce::product::ImageMode & mode,
+                                        isce::geometry::TopoLayers & layers,
+                                        isce::geometry::DEMInterpolator & demInterp,
+                                        size_t lineStart);
 };
 
 #endif

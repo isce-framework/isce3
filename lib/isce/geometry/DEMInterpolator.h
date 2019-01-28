@@ -34,18 +34,24 @@ class isce::geometry::DEMInterpolator {
         inline DEMInterpolator() : 
             _haveRaster{false},
             _refHeight{0.0},
+            _meanValue{0.0},
+            _maxValue{0.0},
             _interpMethod{isce::core::BILINEAR_METHOD} {}
 
         /** Constructor with custom reference height and bilinear interpolation */
         inline DEMInterpolator(float height) : 
             _haveRaster{false},
             _refHeight{height},
+            _meanValue{height},
+            _maxValue{height},
             _interpMethod{isce::core::BILINEAR_METHOD} {}
 
         /** Constructor with custom reference height and custom interpolator method */
         inline DEMInterpolator(float height, isce::core::dataInterpMethod method) : 
             _haveRaster{false},
             _refHeight{height},
+            _meanValue{height},
+            _maxValue{height},
             _interpMethod{method} {}
 
         /** Destructor */
@@ -69,7 +75,7 @@ class isce::geometry::DEMInterpolator {
 
         /** Compute max and mean DEM height */
         void computeHeightStats(float &maxValue, float &meanValue,
-                                pyre::journal::info_t &info) const;
+                                pyre::journal::info_t &info);
 
         /** Interpolate at a given longitude and latitude */
         double interpolateLonLat(double lon, double lat) const;
@@ -99,6 +105,12 @@ class isce::geometry::DEMInterpolator {
         double refHeight() const { return _refHeight; }
         /** Set reference height of interpolator */
         void refHeight(double h) { _refHeight = h; }
+
+        /** Get mean height value */
+        inline double meanHeight() const { return _meanValue; }
+
+        /** Get max height value */
+        inline double maxHeight() const { return _maxValue; }
 
         /** Get pointer to underlying DEM data */
         float * data() { return _dem.data(); }
@@ -131,6 +143,9 @@ class isce::geometry::DEMInterpolator {
         isce::core::Matrix<float> _dem;
         // Starting x/y for DEM subset and spacing
         double _xstart, _ystart, _deltax, _deltay;
+        // Statistics
+        float _maxValue;
+        float _meanValue;
 };
 
 #endif

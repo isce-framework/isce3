@@ -13,6 +13,7 @@
 using isce::core::Ellipsoid;
 using isce::core::Orbit;
 using isce::core::LUT1d;
+using isce::core::cartesian_t;
 using isce::product::ImageMode;
 using isce::io::Raster;
 using isce::geometry::DEMInterpolator;
@@ -32,6 +33,7 @@ using isce::geometry::TopoLayers;
  * <li> localInc.rdr - Local incidence angle (degrees) at target
  * <li> locaPsi.rdr - Local projection angle (degrees) at target
  * <li> simamp.rdr - Simulated amplitude image.
+ * <li> mask.rdr - Layover and shadow image.
  * </ul>*/
 void isce::cuda::geometry::Topo::
 topo(Raster & demRaster,
@@ -39,30 +41,14 @@ topo(Raster & demRaster,
 
     { // Topo scope for creating output rasters
 
-    // Cache ImageMode
-    ImageMode mode = this->mode();
+    // Initialize a TopoLayers object to handle block data and raster data
+    TopoLayers layers;
 
-    // Create rasters for individual layers
-    Raster xRaster = Raster(outdir + "/x.rdr", mode.width(), mode.length(), 1,
-        GDT_Float64, "ISCE");
-    Raster yRaster = Raster(outdir + "/y.rdr", mode.width(), mode.length(), 1,
-        GDT_Float64, "ISCE");
-    Raster heightRaster = Raster(outdir + "/z.rdr", mode.width(), mode.length(), 1,
-        GDT_Float64, "ISCE");
-    Raster incRaster = Raster(outdir + "/inc.rdr", mode.width(), mode.length(), 1,
-        GDT_Float32, "ISCE");
-    Raster hdgRaster = Raster(outdir + "/hdg.rdr", mode.width(), mode.length(), 1,
-        GDT_Float32, "ISCE");
-    Raster localIncRaster = Raster(outdir + "/localInc.rdr", mode.width(), mode.length(), 1,
-        GDT_Float32, "ISCE");
-    Raster localPsiRaster = Raster(outdir + "/localPsi.rdr", mode.width(), mode.length(), 1,
-        GDT_Float32, "ISCE");
-    Raster simRaster = Raster(outdir + "/simamp.rdr", mode.width(), mode.length(), 1,
-        GDT_Float32, "ISCE");
+    // Create rasters for individual layers (provide output raster sizes)
+    layers.initRasters(outdir, this->mode().width(), this->mode().length());
 
-    // Call topo with rasters
-    topo(demRaster, xRaster, yRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
-         localPsiRaster, simRaster);
+    // Call topo with layers
+    topo(demRaster, layers);
 
     } // end Topo scope to release raster resources
 
@@ -75,7 +61,8 @@ topo(Raster & demRaster,
         Raster(outdir + "/hdg.rdr" ),
         Raster(outdir + "/localInc.rdr" ),
         Raster(outdir + "/localPsi.rdr" ),
-        Raster(outdir + "/simamp.rdr" )
+        Raster(outdir + "/simamp.rdr" ),
+        Raster(outdir + "/mask.rdr" )
     };
     Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
     // Set its EPSG code
@@ -98,7 +85,24 @@ topo(Raster & demRaster,
 void isce::cuda::geometry::Topo::
 topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
      Raster & incRaster, Raster & hdgRaster, Raster & localIncRaster, Raster & localPsiRaster,
-     Raster & simRaster) {
+     Raster & simRaster, Raster & maskRaster) {
+
+    // Initialize a TopoLayers object to handle block data and raster data
+    TopoLayers layers;
+
+    // Create rasters for individual layers (provide output raster sizes)
+    layers.setRasters(xRaster, yRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
+                      localPsiRaster, simRaster, maskRaster);
+
+    // Call topo with layers
+    topo(demRaster, layers);
+}
+
+/** @param[in] demRaster input DEM raster
+  * @param[in] layers TopoLayers object for storing and writing results
+  */
+void isce::cuda::geometry::Topo::
+topo(Raster & demRaster, TopoLayers & layers) {
 
     // Create reusable pyre::journal channels
     pyre::journal::warning_t warning("isce.cuda.geometry.Topo");
@@ -159,8 +163,8 @@ topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRast
         // Reset reference height using mean
         demInterp.refHeight(dem_avg);
 
-        // Output layers for block
-        TopoLayers layers(blockLength, mode.width());
+        // Set output block sizes in layers
+        layers.setBlockSize(blockLength, mode.width());
 
         // Run Topo on the GPU for this block
         isce::cuda::geometry::runGPUTopo(
@@ -170,17 +174,15 @@ topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRast
         );
 
         // Compute layover/shadow masks for the block
-        this->setLayoverShadow(layers);
-        
-        // Write out block of data for every product
-        xRaster.setBlock(layers.x(), 0, lineStart, mode.width(), blockLength);
-        yRaster.setBlock(layers.y(), 0, lineStart, mode.width(), blockLength);
-        heightRaster.setBlock(layers.z(), 0, lineStart, mode.width(), blockLength);
-        incRaster.setBlock(layers.inc(), 0, lineStart, mode.width(), blockLength);
-        hdgRaster.setBlock(layers.hdg(), 0, lineStart, mode.width(), blockLength);
-        localIncRaster.setBlock(layers.localInc(), 0, lineStart, mode.width(), blockLength);
-        localPsiRaster.setBlock(layers.localPsi(), 0, lineStart, mode.width(), blockLength);
-        simRaster.setBlock(layers.sim(), 0, lineStart, mode.width(), blockLength);
+        auto timerStart = std::chrono::steady_clock::now();
+        _setLayoverShadowWithOrbit(orbit, mode, layers, demInterp, lineStart);
+        auto timerEnd = std::chrono::steady_clock::now();
+        const double elapsed = 1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
+            timerEnd - timerStart).count();
+        info << "Time for layover shadow: " << elapsed << " sec" << pyre::journal::endl;
+
+        // Write out block of data for all topo layers
+        layers.writeData(0, lineStart);
 
     } // end for loop blocks
 
@@ -215,7 +217,7 @@ computeLinesPerBlock(isce::io::Raster & demRaster) {
         gpuBuffer = 500e6;
     }
 
-    // Compute pixels per Block (3 double and 5 float output topo layers)
+    // Compute pixels per Block (4 double and 5 float output topo layers)
     size_t pixelsPerBlock = (nGPUBytes - nDEMBytes - gpuBuffer) /
                             (4 * sizeof(double) + 5 * sizeof(float));
     // Round down to nearest 10 million pixels
@@ -225,6 +227,32 @@ computeLinesPerBlock(isce::io::Raster & demRaster) {
     _linesPerBlock = pixelsPerBlock / this->mode().width();
     // Round down to nearest 500 lines
     _linesPerBlock = (_linesPerBlock / 500) * 500;
+}
+
+// Compute layover and shadow masks
+void isce::cuda::geometry::Topo::
+_setLayoverShadowWithOrbit(isce::core::Orbit & orbit, isce::product::ImageMode & mode,
+                           TopoLayers & layers, DEMInterpolator & demInterp, size_t lineStart) {
+
+    // As with orbits, set reference epoch 2 days prior
+    isce::core::DateTime refEpoch = mode.startAzTime() - 86400*2;
+
+    // Create vector of satellite positions for each line in block
+    std::vector<cartesian_t> satPosition(layers.length());
+    for (size_t i = 0; i < layers.length(); ++i) {
+
+        // Get satellite azimuth time
+        const double tline = mode.startAzTime().secondsSinceEpoch(refEpoch)
+                          + (mode.numberAzimuthLooks() * ((i + lineStart) / mode.prf()));
+
+        // Get state vector
+        cartesian_t xyzsat, velsat;
+        orbit.interpolateWGS84Orbit(tline, xyzsat, velsat);
+        satPosition[i] = xyzsat;
+    }
+        
+    // Call standard layover/shadow mask generation function
+    this->setLayoverShadow(layers, demInterp, satPosition);
 }
 
 // end of file

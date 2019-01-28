@@ -78,7 +78,7 @@ cdef class pyTopo:
     def topo(self, pyRaster demRaster, pyRaster xRaster=None, pyRaster yRaster=None,
              pyRaster heightRaster=None, pyRaster incRaster=None, pyRaster hdgRaster=None,
              pyRaster localIncRaster=None, pyRaster localPsiRaster=None,
-             pyRaster simRaster=None, outputDir=None):
+             pyRaster simRaster=None, pyRaster maskRaster=None, outputDir=None):
         """
         Run topo.
         
@@ -92,6 +92,7 @@ cdef class pyTopo:
             localIncRaster (Optional[str]):     Raster for output local incidence angle.
             localPsiRaster (Optional[str]):     Raster for output local projection angle.
             simRaster (Optional[str]):          Raster for output simulated amplitude image.
+            maskRaster (Optional[str]):         Raster for output layover/shadow mask.
             outputDir (Optional[str]):          String for output directory for internal rasters.
 
         Return:
@@ -105,7 +106,7 @@ cdef class pyTopo:
                              deref(yRaster.c_raster), deref(heightRaster.c_raster),
                              deref(incRaster.c_raster), deref(hdgRaster.c_raster),
                              deref(localIncRaster.c_raster), deref(localPsiRaster.c_raster),
-                             deref(simRaster.c_raster))
+                             deref(simRaster.c_raster), deref(maskRaster.c_raster))
 
         elif outputDir is not None:
             # Convert output directory to C++ string

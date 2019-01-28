@@ -79,6 +79,9 @@ namespace isce { namespace core {
         char str[50];
     };
 
+    /** Layover and shadow values */
+    const short SHADOW_VALUE = 1;
+    const short LAYOVER_VALUE = 2;
     
   }
 }
