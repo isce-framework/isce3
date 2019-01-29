@@ -11,3 +11,4 @@ cdef extern from "isce/geometry/DEMInterpolator.h" namespace "isce::geometry":
 
         # Constructor
         DEMInterpolator() except +
+        DEMInterpolator(double height) except +
