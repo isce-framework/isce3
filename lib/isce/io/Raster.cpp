@@ -172,69 +172,11 @@ int isce::io::Raster::getEPSG()
         //Create a spatial reference object
         OGRSpatialReference hSRS(nullptr);
 
-	//These two lines can be deleted if we enforce GDAL >= 2.3
-        //This dance to move from const char* to char* for older versions
-        int lenstr = strlen(pszProjection);             //Does not include null char
-        char* pszProjectionTmp = new char[lenstr+1];    //Assign space including null char
-        strncpy(pszProjectionTmp, pszProjection, lenstr); //Copy valid data
-        pszProjectionTmp[lenstr] = '\0';                //Ensure null char at end
-
-        //Assign to temp variable as importFromWkt increments pointer
-        //We keep track of assigned memorty in pszProjectionTmp for delete later
-        char *ptr = pszProjectionTmp;
-	
         //Try to import WKT discovered from dataset
-	//if ( hSRS.importFromWkt(&pszProjection) == 0 )  // use char* if we enforce GDAL >= 2.3
-        if ( hSRS.importFromWkt( &ptr ) == 0 )
+        if (hSRS.importFromWkt(&pszProjection) == 0)
         {
-
-            //This part of the code is for features below GDAL 2.3
-            //We are forced to use AutoIdentifyEPSG which is not complete
-            
-#if GDAL_VERSION_MINOR < 3
-            if (hSRS.AutoIdentifyEPSG() == 0) 
-            {
-                std::string authorityName, authorityCode;
-
-                //For geographic system, authority is provided by GEOGCS
-                if (hSRS.IsGeographic())
-                {
-                    std::cout << "Geographic \n";
-                    authorityName.assign("GEOGCS");
-                }
-                //For projected system, authority is provided by PROJCS
-                else if (hSRS.IsProjected())
-                {
-                    std::cout << "Projected \n";
-                    authorityName.assign("PROJCS");
-                }
-                else if (hSRS.IsLocal())
-                {
-                    throw "EPSG codes associated with local systems are not supported";
-                }
-                else
-                {
-                    throw "Unsupported coordinate system encountered";
-                }
-
-                //Use authority name to extract authority code
-                const char* ptr = authorityName.c_str();
-                authorityCode.assign( hSRS.GetAuthorityCode(ptr));
-                epsgcode = std::atoi(authorityCode.c_str());
-            }
-            else
-            {
-                epsgcode = -9997;
-                //Should be captured by journal in future
-                std::cout << "Could not auto-identify EPSG for wkt representation: \n";
-                std::cout << pszProjection << "\n";
-            }
-#else
             //GDAL 2.3 provides OSRFindMatches which is more robust and thorough.
             //Auto-discovery is only bound to get better. 
-            //GDAL 2.3 (May 2018) is still relatively new. 
-            //In about a year's time we will be able
-            //to deprecate the above part.
             int nEntries = 0;
             int* panConfidence = nullptr;
             OGRSpatialReferenceH* pahSRS = nullptr;
@@ -271,7 +213,6 @@ int isce::io::Raster::getEPSG()
 
             OSRFreeSRSArray(pahSRS);
             CPLFree(panConfidence);
-#endif
         }
         else
         {
@@ -279,7 +220,6 @@ int isce::io::Raster::getEPSG()
             std::cout << "Could not interpret following string as a valid wkt projection \n";
             std::cout << pszProjection << "\n";
         }
-        delete [] pszProjectionTmp;
     }
 
     return epsgcode; 
