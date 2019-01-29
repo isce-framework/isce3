@@ -31,11 +31,14 @@ class isce::cuda::signal::gpuSignal {
         gpuSignal() {};
         ~gpuSignal();
 
-        void dbgTodos(int n, 
-                      std::valarray<std::complex<T>> &input, 
-                      std::valarray<std::complex<T>> &output);
-
         /** \brief initiate plan for forward FFT in range direction 
+         * for a block of complex data.
+         * range direction is assumed to be in the direction of the 
+         * columns of the array.
+         */
+        void forwardAzimuthFFT(int ncolumns, int nrows);
+
+        /** \brief initiate plan for forward FFT in azimuth direction 
          * for a block of complex data.
          * range direction is assumed to be in the direction of the 
          * columns of the array.
@@ -52,6 +55,9 @@ class isce::cuda::signal::gpuSignal {
         /** \brief determine the required parameters for setting range FFT plans */
         inline void _configureRangeFFT(int ncolumns, int nrows);
 
+        /** \brief determine the required parameters for setting azimuth FFT plans */
+        inline void _configureAzimuthFFT(int ncolumns, int nrows);
+
         /** forward transform */
         void forward(std::valarray<std::complex<T>> &input,
                     std::valarray<std::complex<T>> &output);
@@ -59,13 +65,6 @@ class isce::cuda::signal::gpuSignal {
         /** forward transform */
         void inverse(std::valarray<std::complex<T>> &input,
                     std::valarray<std::complex<T>> &output);
-
-        /** \brief initiate forward FFTW3 plan for a block of complex data
-         *  input parameters follow FFTW3 interface for fftw_plan_many_dft
-        void fftPlanBackward(int rank, int* n, int howmany,                   
-                            int* inembed, int istride, int idist,
-                            int* onembed, int ostride, int odist);
-         */
 
     private:
         cufftHandle _plan;
