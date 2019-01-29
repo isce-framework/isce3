@@ -108,6 +108,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a03101674ba5120fd63f767689604c2c8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a03101674ba5120fd63f767689604c2c8">epsgOut</a> (int)</td></tr>
 <tr class="memdesc:a03101674ba5120fd63f767689604c2c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set output coordinate system.  <a href="#a03101674ba5120fd63f767689604c2c8">More...</a><br /></td></tr>
 <tr class="separator:a03101674ba5120fd63f767689604c2c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a89e406428af7bac0d49bc57c657430"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a6a89e406428af7bac0d49bc57c657430">computeMask</a> (bool)</td></tr>
+<tr class="memdesc:a6a89e406428af7bac0d49bc57c657430"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set mask computation flag.  <a href="#a6a89e406428af7bac0d49bc57c657430">More...</a><br /></td></tr>
+<tr class="separator:a6a89e406428af7bac0d49bc57c657430"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71cb34345119befb1f2e2e69c8b161bf"><td class="memItemLeft" align="right" valign="top"><a id="a71cb34345119befb1f2e2e69c8b161bf"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a71cb34345119befb1f2e2e69c8b161bf">lookSide</a> () const</td></tr>
 <tr class="memdesc:a71cb34345119befb1f2e2e69c8b161bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get lookSide used for processing. <br /></td></tr>
@@ -132,6 +135,10 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 <a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a28145b7ced86a6c138a7dfe5e5d150aa">demMethod</a> () const</td></tr>
 <tr class="memdesc:a28145b7ced86a6c138a7dfe5e5d150aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the DEM interpolation method used for processing. <br /></td></tr>
 <tr class="separator:a28145b7ced86a6c138a7dfe5e5d150aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03712dcaed5d3ce24ca80f2ff58a0125"><td class="memItemLeft" align="right" valign="top"><a id="a03712dcaed5d3ce24ca80f2ff58a0125"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a03712dcaed5d3ce24ca80f2ff58a0125">computeMask</a> () const</td></tr>
+<tr class="memdesc:a03712dcaed5d3ce24ca80f2ff58a0125"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get mask computation flag. <br /></td></tr>
+<tr class="separator:a03712dcaed5d3ce24ca80f2ff58a0125"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a35b16405bf9bbf615f1236327d49f833"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a35b16405bf9bbf615f1236327d49f833">checkInitialization</a> (pyre::journal::info_t &amp;) const</td></tr>
 <tr class="memdesc:a35b16405bf9bbf615f1236327d49f833"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check initialization of processing module.  <a href="#a35b16405bf9bbf615f1236327d49f833">More...</a><br /></td></tr>
 <tr class="separator:a35b16405bf9bbf615f1236327d49f833"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,9 +148,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>computeDEMBounds</b> 
 <tr class="memitem:ad68ec1aeb2bb756c573d18d5b5d14bb0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#ad68ec1aeb2bb756c573d18d5b5d14bb0">topo</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;, const std::string)</td></tr>
 <tr class="memdesc:ad68ec1aeb2bb756c573d18d5b5d14bb0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Main entry point for the module; internal creation of topo rasters.  <a href="#ad68ec1aeb2bb756c573d18d5b5d14bb0">More...</a><br /></td></tr>
 <tr class="separator:ad68ec1aeb2bb756c573d18d5b5d14bb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac901231be5441416dd8a2245ef2619c8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#ac901231be5441416dd8a2245ef2619c8">topo</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;demRaster, <a class="el" href="classisce_1_1geometry_1_1TopoLayers.html">TopoLayers</a> &amp;layers)</td></tr>
+<tr class="memdesc:ac901231be5441416dd8a2245ef2619c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run topo with externally created topo rasters in <a class="el" href="classisce_1_1geometry_1_1TopoLayers.html">TopoLayers</a> object.  <a href="#ac901231be5441416dd8a2245ef2619c8">More...</a><br /></td></tr>
+<tr class="separator:ac901231be5441416dd8a2245ef2619c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3798089b58561a9ceaa0bbc1b720400"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#ae3798089b58561a9ceaa0bbc1b720400">topo</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;demRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;xRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;yRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;heightRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;incRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;hdgRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;localIncRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;localPsiRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;simRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;maskRaster)</td></tr>
+<tr class="memdesc:ae3798089b58561a9ceaa0bbc1b720400"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run topo with externally created topo rasters; generate mask.  <a href="#ae3798089b58561a9ceaa0bbc1b720400">More...</a><br /></td></tr>
+<tr class="separator:ae3798089b58561a9ceaa0bbc1b720400"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a17090cd38d12b6fefe39b0705f6bbecd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a17090cd38d12b6fefe39b0705f6bbecd">topo</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;demRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;xRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;yRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;heightRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;incRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;hdgRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;localIncRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;localPsiRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;simRaster)</td></tr>
-<tr class="memdesc:a17090cd38d12b6fefe39b0705f6bbecd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run topo with externally created topo rasters.  <a href="#a17090cd38d12b6fefe39b0705f6bbecd">More...</a><br /></td></tr>
+<tr class="memdesc:a17090cd38d12b6fefe39b0705f6bbecd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run topo with externally created topo rasters; generate mask.  <a href="#a17090cd38d12b6fefe39b0705f6bbecd">More...</a><br /></td></tr>
 <tr class="separator:a17090cd38d12b6fefe39b0705f6bbecd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a393e8e51b297cc8e1cc3461413481893"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a393e8e51b297cc8e1cc3461413481893">setLayoverShadow</a> (<a class="el" href="classisce_1_1geometry_1_1TopoLayers.html">TopoLayers</a> &amp;, <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> &amp;, std::vector&lt; <a class="el" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">isce::core::cartesian_t</a> &gt; &amp;)</td></tr>
+<tr class="memdesc:a393e8e51b297cc8e1cc3461413481893"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute layover/shadow masks.  <a href="#a393e8e51b297cc8e1cc3461413481893">More...</a><br /></td></tr>
+<tr class="separator:a393e8e51b297cc8e1cc3461413481893"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e531acfa2cc79a85d28721ccfb6902f"><td class="memItemLeft" align="right" valign="top"><a id="a5e531acfa2cc79a85d28721ccfb6902f"></a>
 const <a class="el" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a5e531acfa2cc79a85d28721ccfb6902f">orbit</a> () const</td></tr>
 <tr class="memdesc:a5e531acfa2cc79a85d28721ccfb6902f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the orbits used for processing. <br /></td></tr>
@@ -293,6 +309,40 @@ const <a class="el" href="classisce_1_1product_1_1ImageMode.html">isce::product:
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">info</td><td>Pyre journal log to write to </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a6a89e406428af7bac0d49bc57c657430"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a89e406428af7bac0d49bc57c657430">&#9670;&nbsp;</a></span>computeMask()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::geometry::Topo::computeMask </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>mask</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Set mask computation flag. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">mask</td><td>Boolean for mask computation </td></tr>
   </table>
   </dd>
 </dl>
@@ -508,6 +558,51 @@ const <a class="el" href="classisce_1_1product_1_1ImageMode.html">isce::product:
 
 </div>
 </div>
+<a id="a393e8e51b297cc8e1cc3461413481893"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a393e8e51b297cc8e1cc3461413481893">&#9670;&nbsp;</a></span>setLayoverShadow()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::geometry::Topo::setLayoverShadow </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1geometry_1_1TopoLayers.html">TopoLayers</a> &amp;&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> &amp;&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">isce::core::cartesian_t</a> &gt; &amp;&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Compute layover/shadow masks. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">layers</td><td>Object containing output layers </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">demInterp</td><td><a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> object </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">satPosition</td><td>Vector of cartesian_t of satellite position for each line in block</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Compute layer and shadow mask following the logic from ISCE 2 </p>
+
+</div>
+</div>
 <a id="ac36c634d9f9cd714511832920ecec44e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac36c634d9f9cd714511832920ecec44e">&#9670;&nbsp;</a></span>threshold()</h2>
 
@@ -543,7 +638,7 @@ const <a class="el" href="classisce_1_1product_1_1ImageMode.html">isce::product:
 </div>
 </div>
 <a id="ad68ec1aeb2bb756c573d18d5b5d14bb0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad68ec1aeb2bb756c573d18d5b5d14bb0">&#9670;&nbsp;</a></span>topo() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ad68ec1aeb2bb756c573d18d5b5d14bb0">&#9670;&nbsp;</a></span>topo() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -597,8 +692,138 @@ simamp.rdr - Simulated amplitude image. </li>
 
 </div>
 </div>
+<a id="ac901231be5441416dd8a2245ef2619c8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac901231be5441416dd8a2245ef2619c8">&#9670;&nbsp;</a></span>topo() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::geometry::Topo::topo </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>demRaster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1geometry_1_1TopoLayers.html">TopoLayers</a> &amp;&#160;</td>
+          <td class="paramname"><em>layers</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Run topo with externally created topo rasters in <a class="el" href="classisce_1_1geometry_1_1TopoLayers.html">TopoLayers</a> object. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">demRaster</td><td>input DEM raster </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">layers</td><td><a class="el" href="classisce_1_1geometry_1_1TopoLayers.html">TopoLayers</a> object for storing and writing results </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ae3798089b58561a9ceaa0bbc1b720400"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae3798089b58561a9ceaa0bbc1b720400">&#9670;&nbsp;</a></span>topo() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::geometry::Topo::topo </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>demRaster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>xRaster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>yRaster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>heightRaster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>incRaster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>hdgRaster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>localIncRaster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>localPsiRaster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>simRaster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>maskRaster</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Run topo with externally created topo rasters; generate mask. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">demRaster</td><td>input DEM raster </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xRaster</td><td>output raster for X coordinate in requested projection system (meters or degrees) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">yRaster</td><td>output raster for Y cooordinate in requested projection system (meters or degrees) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">zRaster</td><td>output raster for height above ellipsoid (meters) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">incRaster</td><td>output raster for incidence angle (degrees) computed from vertical at target </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hdgRaster</td><td>output raster for azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">localIncRaster</td><td>output raster for local incidence angle (degrees) at target </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">localPsiRaster</td><td>output raster for local projection angle (degrees) at target </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">simRaster</td><td>output raster for simulated amplitude image. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">maskRaster</td><td>output raster for layover/shadow mask. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a17090cd38d12b6fefe39b0705f6bbecd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a17090cd38d12b6fefe39b0705f6bbecd">&#9670;&nbsp;</a></span>topo() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a17090cd38d12b6fefe39b0705f6bbecd">&#9670;&nbsp;</a></span>topo() <span class="overload">[4/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -665,7 +890,7 @@ simamp.rdr - Simulated amplitude image. </li>
       </table>
 </div><div class="memdoc">
 
-<p>Run topo with externally created topo rasters. </p>
+<p>Run topo with externally created topo rasters; generate mask. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">demRaster</td><td>input DEM raster </td></tr>

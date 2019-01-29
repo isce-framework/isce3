@@ -340,6 +340,14 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memitem:aa7b34dffee2880f200ff9249eae16989"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">linspace</a> (T low, T high, std::size_t number)</td></tr>
 <tr class="memdesc:aa7b34dffee2880f200ff9249eae16989"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to return a Matlab/Python style linspace vector.  <a href="#aa7b34dffee2880f200ff9249eae16989">More...</a><br /></td></tr>
 <tr class="separator:aa7b34dffee2880f200ff9249eae16989"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3518c930a3511e0c92a17a849f9efe75"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a3518c930a3511e0c92a17a849f9efe75"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a3518c930a3511e0c92a17a849f9efe75">linspace</a> (T low, T high, std::vector&lt; T &gt; &amp;data)</td></tr>
+<tr class="memdesc:a3518c930a3511e0c92a17a849f9efe75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to fill a Matlab/Python style linspace vector.  <a href="#a3518c930a3511e0c92a17a849f9efe75">More...</a><br /></td></tr>
+<tr class="separator:a3518c930a3511e0c92a17a849f9efe75"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9df068ebd5a9cc6baece6398affa05d6"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a9df068ebd5a9cc6baece6398affa05d6"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a9df068ebd5a9cc6baece6398affa05d6">linspace</a> (T low, T high, std::valarray&lt; T &gt; &amp;data)</td></tr>
+<tr class="memdesc:a9df068ebd5a9cc6baece6398affa05d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to fill a Matlab/Python style linspace valarray.  <a href="#a9df068ebd5a9cc6baece6398affa05d6">More...</a><br /></td></tr>
+<tr class="separator:a9df068ebd5a9cc6baece6398affa05d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7fe9017a304146b33c054e90dd733105"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a7fe9017a304146b33c054e90dd733105"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a7fe9017a304146b33c054e90dd733105">logspace</a> (T first, T last, std::size_t number, T base=10)</td></tr>
 <tr class="memdesc:a7fe9017a304146b33c054e90dd733105"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to return a Matlab/Python style logspace vector.  <a href="#a7fe9017a304146b33c054e90dd733105">More...</a><br /></td></tr>
@@ -371,6 +379,18 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a1f15714f1c3862ea7655253bd0cf750e"><td class="memTemplItemLeft" align="right" valign="top">std::valarray&lt; bool &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a1f15714f1c3862ea7655253bd0cf750e">makeMask</a> (const std::valarray&lt; T &gt; &amp;v, T noDataValue)</td></tr>
 <tr class="memdesc:a1f15714f1c3862ea7655253bd0cf750e"><td class="mdescLeft">&#160;</td><td class="mdescRight">making a boolean mask for an array based on noDataValue  <a href="#a1f15714f1c3862ea7655253bd0cf750e">More...</a><br /></td></tr>
 <tr class="separator:a1f15714f1c3862ea7655253bd0cf750e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1802795a0f8e448f9120e1a137b95b38"><td class="memItemLeft" align="right" valign="top"><a id="a1802795a0f8e448f9120e1a137b95b38"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a1802795a0f8e448f9120e1a137b95b38">insertionSort</a> (std::valarray&lt; double &gt; &amp;a, std::valarray&lt; double &gt; &amp;b, std::valarray&lt; double &gt; &amp;c)</td></tr>
+<tr class="memdesc:a1802795a0f8e448f9120e1a137b95b38"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sort arrays a, b, c by the values in array a. <br /></td></tr>
+<tr class="separator:a1802795a0f8e448f9120e1a137b95b38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23f05852e3565b108c03494ccabefc8e"><td class="memItemLeft" align="right" valign="top"><a id="a23f05852e3565b108c03494ccabefc8e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a23f05852e3565b108c03494ccabefc8e">insertionSort</a> (std::valarray&lt; double &gt; &amp;a, std::valarray&lt; double &gt; &amp;b)</td></tr>
+<tr class="memdesc:a23f05852e3565b108c03494ccabefc8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sort arrays a and b by the values in array a. <br /></td></tr>
+<tr class="separator:a23f05852e3565b108c03494ccabefc8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa58e4e7320500f1e24913e17c79b0b09"><td class="memItemLeft" align="right" valign="top"><a id="aa58e4e7320500f1e24913e17c79b0b09"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#aa58e4e7320500f1e24913e17c79b0b09">binarySearch</a> (const std::valarray&lt; double &gt; &amp;array, double value)</td></tr>
+<tr class="memdesc:aa58e4e7320500f1e24913e17c79b0b09"><td class="mdescLeft">&#160;</td><td class="mdescRight">Searches array for index closest to provided value. <br /></td></tr>
+<tr class="separator:aa58e4e7320500f1e24913e17c79b0b09"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
@@ -399,6 +419,13 @@ const double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 const double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#ae093dcf449bfd82597995ab107de7f31">SPEED_OF_LIGHT</a> = 299792458.0</td></tr>
 <tr class="memdesc:ae093dcf449bfd82597995ab107de7f31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Speed of light. <br /></td></tr>
 <tr class="separator:ae093dcf449bfd82597995ab107de7f31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5265c2ca41ceac4302d34abaa663f153"><td class="memItemLeft" align="right" valign="top"><a id="a5265c2ca41ceac4302d34abaa663f153"></a>
+const short&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a5265c2ca41ceac4302d34abaa663f153">SHADOW_VALUE</a> = 1</td></tr>
+<tr class="memdesc:a5265c2ca41ceac4302d34abaa663f153"><td class="mdescLeft">&#160;</td><td class="mdescRight">Layover and shadow values. <br /></td></tr>
+<tr class="separator:a5265c2ca41ceac4302d34abaa663f153"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7992ea37848fd3f64b617f7fb5612fba"><td class="memItemLeft" align="right" valign="top"><a id="a7992ea37848fd3f64b617f7fb5612fba"></a>
+const short&#160;</td><td class="memItemRight" valign="bottom"><b>LAYOVER_VALUE</b> = 2</td></tr>
+<tr class="separator:a7992ea37848fd3f64b617f7fb5612fba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a72f9d25be2a57a5685f9faa52a33db9f"><td class="memItemLeft" align="right" valign="top"><a id="a72f9d25be2a57a5685f9faa52a33db9f"></a>
 const <a class="el" href="structisce_1_1core_1_1DateTime.html">DateTime</a>&#160;</td><td class="memItemRight" valign="bottom"><b>MIN_DATE_TIME</b> = <a class="el" href="structisce_1_1core_1_1DateTime.html">DateTime</a>(1970, 1, 1)</td></tr>
 <tr class="separator:a72f9d25be2a57a5685f9faa52a33db9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -631,7 +658,7 @@ template&lt;typename T &gt; </div>
 </div>
 </div>
 <a id="aa7b34dffee2880f200ff9249eae16989"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa7b34dffee2880f200ff9249eae16989">&#9670;&nbsp;</a></span>linspace()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aa7b34dffee2880f200ff9249eae16989">&#9670;&nbsp;</a></span>linspace() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -678,6 +705,114 @@ template&lt;typename T &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">low</td><td>Starting value of vector </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">high</td><td>Ending value of vector (inclusive) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">number</td><td>Number of vector elements </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a3518c930a3511e0c92a17a849f9efe75"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3518c930a3511e0c92a17a849f9efe75">&#9670;&nbsp;</a></span>linspace() <span class="overload">[2/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::core::linspace </td>
+          <td>(</td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>low</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>high</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Function to fill a Matlab/Python style linspace vector. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">low</td><td>Starting value of vector </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">high</td><td>Ending value of vector (inclusive) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Vector to fill in </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a9df068ebd5a9cc6baece6398affa05d6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9df068ebd5a9cc6baece6398affa05d6">&#9670;&nbsp;</a></span>linspace() <span class="overload">[3/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::core::linspace </td>
+          <td>(</td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>low</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">T&#160;</td>
+          <td class="paramname"><em>high</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Function to fill a Matlab/Python style linspace valarray. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">low</td><td>Starting value of vector </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">high</td><td>Ending value of vector (inclusive) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Vector to fill in </td></tr>
   </table>
   </dd>
 </dl>

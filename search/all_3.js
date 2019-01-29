@@ -6,6 +6,7 @@ var searchData=
   ['beta',['beta',['../classisce_1_1signal_1_1Crossmul.html#af251748003cb48812a1e884faee4715e',1,'isce::signal::Crossmul']]],
   ['bicubicinterpolator',['BicubicInterpolator',['../classisce_1_1core_1_1BicubicInterpolator.html',1,'isce::core::BicubicInterpolator&lt; U &gt;'],['../classisce_1_1core_1_1BicubicInterpolator.html#a14ba55881438ccb62445786af38fabab',1,'isce::core::BicubicInterpolator::BicubicInterpolator()']]],
   ['bilinearinterpolator',['BilinearInterpolator',['../classisce_1_1core_1_1BilinearInterpolator.html',1,'isce::core::BilinearInterpolator&lt; U &gt;'],['../classisce_1_1core_1_1BilinearInterpolator.html#a1ca5c850e4eae19408b470ac55e14a3a',1,'isce::core::BilinearInterpolator::BilinearInterpolator()']]],
+  ['binarysearch',['binarySearch',['../namespaceisce_1_1core.html#aa58e4e7320500f1e24913e17c79b0b09',1,'isce::core']]],
   ['byteoffset',['byteoffset',['../classisce_1_1core_1_1Matrix.html#a74de0fbe34091cd52c699ae589bfed1c',1,'isce::core::Matrix']]],
   ['bibliography',['Bibliography',['../citelist.html',1,'']]]
 ];
