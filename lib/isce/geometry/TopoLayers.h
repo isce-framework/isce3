@@ -48,7 +48,9 @@ class isce::geometry::TopoLayers {
                 delete _localIncRaster;
                 delete _localPsiRaster;
                 delete _simRaster;
-                delete _maskRaster;
+                if (_maskRaster) {
+                    delete _maskRaster;
+                }
             }
         }
 
@@ -73,7 +75,10 @@ class isce::geometry::TopoLayers {
         inline size_t width() const { return _width; }
 
         // Initialize rasters
-        void initRasters(const std::string & outdir, size_t width, size_t length) {
+        void initRasters(const std::string & outdir, size_t width, size_t length,
+                         bool computeMask = false) {
+
+            // Initialize the standard output rasters
             _xRaster = new isce::io::Raster(outdir + "/x.rdr", width, length, 1,
                 GDT_Float64, "ISCE");
             _yRaster = new isce::io::Raster(outdir + "/y.rdr", width, length, 1,
@@ -90,12 +95,35 @@ class isce::geometry::TopoLayers {
                 GDT_Float32, "ISCE");
             _simRaster = new isce::io::Raster(outdir + "/simamp.rdr", width, length, 1,
                 GDT_Float32, "ISCE");
-            _maskRaster = new isce::io::Raster(outdir + "/mask.rdr", width, length, 1,
-                GDT_Byte, "ISCE");
+       
+            // Optional mask raster
+            if (computeMask) { 
+                _maskRaster = new isce::io::Raster(outdir + "/mask.rdr", width, length, 1,
+                    GDT_Byte, "ISCE");
+            } else {
+                _maskRaster = nullptr;
+            }
+
+            // Indicate that we have initialized rasters
             _haveRasters = true;
         }
 
-        // Set rasters from externally created rasters
+        // Set rasters (plus mask raster) from externally created rasters
+        void setRasters(isce::io::Raster & xRaster, isce::io::Raster & yRaster,
+                        isce::io::Raster & zRaster, isce::io::Raster & incRaster,
+                        isce::io::Raster & hdgRaster, isce::io::Raster & localIncRaster,
+                        isce::io::Raster & localPsiRaster, isce::io::Raster & simRaster) {
+            _xRaster = &xRaster;
+            _yRaster = &yRaster;
+            _zRaster = &zRaster;
+            _incRaster = &incRaster;
+            _hdgRaster = &hdgRaster;
+            _localIncRaster = &localIncRaster;
+            _localPsiRaster = &localPsiRaster;
+            _simRaster = &simRaster;
+        }
+
+        // Set rasters (plus mask raster) from externally created rasters
         void setRasters(isce::io::Raster & xRaster, isce::io::Raster & yRaster,
                         isce::io::Raster & zRaster, isce::io::Raster & incRaster,
                         isce::io::Raster & hdgRaster, isce::io::Raster & localIncRaster,
@@ -216,7 +244,9 @@ class isce::geometry::TopoLayers {
             _localIncRaster->setBlock(_localInc, xidx, yidx, _width, _length);
             _localPsiRaster->setBlock(_localPsi, xidx, yidx, _width, _length);
             _simRaster->setBlock(_sim, xidx, yidx, _width, _length);
-            _maskRaster->setBlock(_mask, xidx, yidx, _width, _length);
+            if (_maskRaster) {
+                _maskRaster->setBlock(_mask, xidx, yidx, _width, _length);
+            }
         }
         
     private:

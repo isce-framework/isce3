@@ -26,7 +26,11 @@ cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
         # Main topo entrypoint; internal construction of topo rasters
         void topo(Raster &, const string)
 
-        # Run topo with externally created topo rasters
+        # Run topo with externally created topo rasters (plus mask raster)
+        void topo(Raster &, Raster &, Raster &, Raster &, Raster &,
+                  Raster &, Raster &, Raster &, Raster &)
+
+        # Run topo with externally created topo rasters (plus mask raster)
         void topo(Raster &, Raster &, Raster &, Raster &, Raster &,
                   Raster &, Raster &, Raster &, Raster &, Raster &)
 
@@ -38,5 +42,6 @@ cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
         void orbitMethod(orbitInterpMethod)
         void demMethod(dataInterpMethod)
         void epsgOut(int)
+        void computeMask(bool)
         
 # end of file

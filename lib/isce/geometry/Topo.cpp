@@ -54,7 +54,7 @@ topo(Raster & demRaster,
     TopoLayers layers;
 
     // Create rasters for individual layers (provide output raster sizes)
-    layers.initRasters(outdir, _mode.width(), _mode.length());
+    layers.initRasters(outdir, _mode.width(), _mode.length(), _computeMask);
 
     // Call topo with layers
     topo(demRaster, layers);
@@ -62,7 +62,7 @@ topo(Raster & demRaster,
     } // end Topo scope to release raster resources
 
     // Write out multi-band topo VRT
-    const std::vector<Raster> rasterTopoVec = {
+    std::vector<Raster> rasterTopoVec = {
         Raster(outdir + "/x.rdr" ),
         Raster(outdir + "/y.rdr" ),
         Raster(outdir + "/z.rdr" ),
@@ -70,12 +70,49 @@ topo(Raster & demRaster,
         Raster(outdir + "/hdg.rdr" ),
         Raster(outdir + "/localInc.rdr" ),
         Raster(outdir + "/localPsi.rdr" ),
-        Raster(outdir + "/simamp.rdr" ),
-        Raster(outdir + "/mask.rdr" )
+        Raster(outdir + "/simamp.rdr" )
     };
+
+    // Add optional mask raster
+    if (_computeMask) {
+        rasterTopoVec.push_back(Raster(outdir + "/mask.rdr" ));
+    };
+
     Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
     // Set its EPSG code
     vrt.setEPSG(_epsgOut);
+}
+
+/** @param[in] demRaster input DEM raster
+  * @param[in] xRaster output raster for X coordinate in requested projection system 
+                   (meters or degrees)
+  * @param[in] yRaster output raster for Y cooordinate in requested projection system
+                   (meters or degrees)
+  * @param[in] zRaster output raster for height above ellipsoid (meters)
+  * @param[in] incRaster output raster for incidence angle (degrees) computed from vertical 
+               at target
+  * @param[in] hdgRaster output raster for azimuth angle (degrees) computed anti-clockwise 
+               from EAST (Right hand rule)
+  * @param[in] localIncRaster output raster for local incidence angle (degrees) at target
+  * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
+  * @param[in] simRaster output raster for simulated amplitude image. 
+  * @param[in] maskRaster output raster for layover/shadow mask. */
+void isce::geometry::Topo::
+topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
+     Raster & incRaster, Raster & hdgRaster, Raster & localIncRaster, Raster & localPsiRaster,
+     Raster & simRaster, Raster & maskRaster) {
+
+    // Initialize a TopoLayers object to handle block data and raster data
+    TopoLayers layers;
+
+    // Create rasters for individual layers (provide output raster sizes)
+    layers.setRasters(xRaster, yRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
+                      localPsiRaster, simRaster, maskRaster);
+    // Indicate a mask raster has been provided for writing
+    computeMask(true);
+
+    // Call topo with layers
+    topo(demRaster, layers);
 }
 
 /** @param[in] demRaster input DEM raster
@@ -94,14 +131,16 @@ topo(Raster & demRaster,
 void isce::geometry::Topo::
 topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
      Raster & incRaster, Raster & hdgRaster, Raster & localIncRaster, Raster & localPsiRaster,
-     Raster & simRaster, Raster & maskRaster) {
+     Raster & simRaster) {
 
     // Initialize a TopoLayers object to handle block data and raster data
     TopoLayers layers;
 
     // Create rasters for individual layers (provide output raster sizes)
     layers.setRasters(xRaster, yRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
-                      localPsiRaster, simRaster, maskRaster);
+                      localPsiRaster, simRaster);
+    // Indicate no mask raster has been provided for writing
+    computeMask(false);
 
     // Call topo with layers
     topo(demRaster, layers);
@@ -215,7 +254,9 @@ topo(Raster & demRaster, TopoLayers & layers) {
         } // end for loop lines in block
 
         // Compute layover/shadow masks for the block
-        setLayoverShadow(layers, demInterp, satPosition);
+        if (_computeMask) {
+            setLayoverShadow(layers, demInterp, satPosition);
+        }
 
         // Write out block of data for all topo layers
         layers.writeData(0, lineStart);    
