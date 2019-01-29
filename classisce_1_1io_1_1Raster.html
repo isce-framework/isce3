@@ -107,6 +107,10 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memitem:aa2d963634b8192d3257a5246844fd2cd"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#aa2d963634b8192d3257a5246844fd2cd">Raster</a> (<a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; T &gt; &amp;matrix)</td></tr>
 <tr class="memdesc:aa2d963634b8192d3257a5246844fd2cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for a 1 band dataset from isce::core::Matrix&lt;T&gt; <br /></td></tr>
 <tr class="separator:aa2d963634b8192d3257a5246844fd2cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40c929b07e145d17121be4864dfe8f63"><td class="memTemplParams" colspan="2"><a id="a40c929b07e145d17121be4864dfe8f63"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a40c929b07e145d17121be4864dfe8f63"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Raster</b> (pyre::grid::View&lt; T &gt; &amp;view)</td></tr>
+<tr class="separator:a40c929b07e145d17121be4864dfe8f63"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae54383a557f622276f7fc8fd3ab0af38"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#ae54383a557f622276f7fc8fd3ab0af38">Raster</a> (const std::string &amp;fname, const <a class="el" href="classisce_1_1io_1_1Raster.html">Raster</a> &amp;rast)</td></tr>
 <tr class="memdesc:ae54383a557f622276f7fc8fd3ab0af38"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create new raster object like another.  <a href="#ae54383a557f622276f7fc8fd3ab0af38">More...</a><br /></td></tr>
 <tr class="separator:ae54383a557f622276f7fc8fd3ab0af38"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -340,31 +344,31 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a770c94463660a81d95862a934a4f9fd9"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#a770c94463660a81d95862a934a4f9fd9">setBlock</a> (<a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; T &gt; &amp;mat, size_t xidx, size_t yidx)</td></tr>
 <tr class="memdesc:a770c94463660a81d95862a934a4f9fd9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write block of data to band 1 from Matrix&lt;T&gt; <br /></td></tr>
 <tr class="separator:a770c94463660a81d95862a934a4f9fd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa86c03f510fa3da71b0bb3c38c8c7de1"><td class="memTemplParams" colspan="2"><a id="aa86c03f510fa3da71b0bb3c38c8c7de1"></a>
-template&lt;typename viewtype &gt; </td></tr>
-<tr class="memitem:aa86c03f510fa3da71b0bb3c38c8c7de1"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#aa86c03f510fa3da71b0bb3c38c8c7de1">getSetBlock</a> (viewtype &amp;view, size_t xidx, size_t yidx, size_t band, GDALRWFlag iodir)</td></tr>
-<tr class="memdesc:aa86c03f510fa3da71b0bb3c38c8c7de1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read/Write block of data from given band to/from Matrix&lt;T&gt;::view_type. <br /></td></tr>
-<tr class="separator:aa86c03f510fa3da71b0bb3c38c8c7de1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a966194864e5898f22e3ce18e512b8b5a"><td class="memTemplParams" colspan="2"><a id="a966194864e5898f22e3ce18e512b8b5a"></a>
-template&lt;typename viewtype &gt; </td></tr>
-<tr class="memitem:a966194864e5898f22e3ce18e512b8b5a"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#a966194864e5898f22e3ce18e512b8b5a">getBlock</a> (viewtype &amp;view, size_t xidx, size_t yidx, size_t band)</td></tr>
-<tr class="memdesc:a966194864e5898f22e3ce18e512b8b5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read block of data from given band to Matrix&lt;T&gt;::view_type. <br /></td></tr>
-<tr class="separator:a966194864e5898f22e3ce18e512b8b5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adcb38951f4e47a0e7be0637eec5d8ff0"><td class="memTemplParams" colspan="2"><a id="adcb38951f4e47a0e7be0637eec5d8ff0"></a>
-template&lt;typename viewtype &gt; </td></tr>
-<tr class="memitem:adcb38951f4e47a0e7be0637eec5d8ff0"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#adcb38951f4e47a0e7be0637eec5d8ff0">getBlock</a> (viewtype &amp;view, size_t xidx, size_t yidx)</td></tr>
-<tr class="memdesc:adcb38951f4e47a0e7be0637eec5d8ff0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read block of data from band 1 to Matrix&lt;T&gt;::view_type. <br /></td></tr>
-<tr class="separator:adcb38951f4e47a0e7be0637eec5d8ff0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa6105d5b5caafd13ab28eea6b3bf9af4"><td class="memTemplParams" colspan="2"><a id="aa6105d5b5caafd13ab28eea6b3bf9af4"></a>
-template&lt;typename viewtype &gt; </td></tr>
-<tr class="memitem:aa6105d5b5caafd13ab28eea6b3bf9af4"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#aa6105d5b5caafd13ab28eea6b3bf9af4">setBlock</a> (viewtype &amp;view, size_t xidx, size_t yidx, size_t band)</td></tr>
-<tr class="memdesc:aa6105d5b5caafd13ab28eea6b3bf9af4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write block of data to given band from Matrix&lt;T&gt;::view_type. <br /></td></tr>
-<tr class="separator:aa6105d5b5caafd13ab28eea6b3bf9af4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6b6ad339c5ac54141a67cc1f8f21a259"><td class="memTemplParams" colspan="2"><a id="a6b6ad339c5ac54141a67cc1f8f21a259"></a>
-template&lt;typename viewtype &gt; </td></tr>
-<tr class="memitem:a6b6ad339c5ac54141a67cc1f8f21a259"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#a6b6ad339c5ac54141a67cc1f8f21a259">setBlock</a> (viewtype &amp;view, size_t xidx, size_t yidx)</td></tr>
-<tr class="memdesc:a6b6ad339c5ac54141a67cc1f8f21a259"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write block of data to band 1 from Matrix&lt;T&gt;::view_type. <br /></td></tr>
-<tr class="separator:a6b6ad339c5ac54141a67cc1f8f21a259"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8767d28cdf00e049bd41127be7fa586"><td class="memTemplParams" colspan="2"><a id="ab8767d28cdf00e049bd41127be7fa586"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ab8767d28cdf00e049bd41127be7fa586"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#ab8767d28cdf00e049bd41127be7fa586">getSetBlock</a> (pyre::grid::View&lt; T &gt; &amp;view, size_t xidx, size_t yidx, size_t band, GDALRWFlag iodir)</td></tr>
+<tr class="memdesc:ab8767d28cdf00e049bd41127be7fa586"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read/Write block of data from given band to/from Matrix&lt;T&gt;::view_type. <br /></td></tr>
+<tr class="separator:ab8767d28cdf00e049bd41127be7fa586"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9e40784df8d1075e276fc913ae3bb96f"><td class="memTemplParams" colspan="2"><a id="a9e40784df8d1075e276fc913ae3bb96f"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a9e40784df8d1075e276fc913ae3bb96f"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#a9e40784df8d1075e276fc913ae3bb96f">getBlock</a> (pyre::grid::View&lt; T &gt; &amp;view, size_t xidx, size_t yidx, size_t band)</td></tr>
+<tr class="memdesc:a9e40784df8d1075e276fc913ae3bb96f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read block of data from given band to Matrix&lt;T&gt;::view_type. <br /></td></tr>
+<tr class="separator:a9e40784df8d1075e276fc913ae3bb96f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95f77c39469c00c41b9c42f258a03976"><td class="memTemplParams" colspan="2"><a id="a95f77c39469c00c41b9c42f258a03976"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a95f77c39469c00c41b9c42f258a03976"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#a95f77c39469c00c41b9c42f258a03976">getBlock</a> (pyre::grid::View&lt; T &gt; &amp;view, size_t xidx, size_t yidx)</td></tr>
+<tr class="memdesc:a95f77c39469c00c41b9c42f258a03976"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read block of data from band 1 to Matrix&lt;T&gt;::view_type. <br /></td></tr>
+<tr class="separator:a95f77c39469c00c41b9c42f258a03976"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af71731bb665dab2162b3842533079224"><td class="memTemplParams" colspan="2"><a id="af71731bb665dab2162b3842533079224"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:af71731bb665dab2162b3842533079224"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#af71731bb665dab2162b3842533079224">setBlock</a> (pyre::grid::View&lt; T &gt; &amp;view, size_t xidx, size_t yidx, size_t band)</td></tr>
+<tr class="memdesc:af71731bb665dab2162b3842533079224"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write block of data to given band from Matrix&lt;T&gt;::view_type. <br /></td></tr>
+<tr class="separator:af71731bb665dab2162b3842533079224"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b8dfdf1772771bc38f61cf573319515"><td class="memTemplParams" colspan="2"><a id="a4b8dfdf1772771bc38f61cf573319515"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a4b8dfdf1772771bc38f61cf573319515"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#a4b8dfdf1772771bc38f61cf573319515">setBlock</a> (pyre::grid::View&lt; T &gt; &amp;view, size_t xidx, size_t yidx)</td></tr>
+<tr class="memdesc:a4b8dfdf1772771bc38f61cf573319515"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write block of data to band 1 from Matrix&lt;T&gt;::view_type. <br /></td></tr>
+<tr class="separator:a4b8dfdf1772771bc38f61cf573319515"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ccfdb340d30c7ad32898fdc52a90b87"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#a3ccfdb340d30c7ad32898fdc52a90b87">getEPSG</a> ()</td></tr>
 <tr class="memdesc:a3ccfdb340d30c7ad32898fdc52a90b87"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return EPSG code corresponding to raster.  <a href="#a3ccfdb340d30c7ad32898fdc52a90b87">More...</a><br /></td></tr>
 <tr class="separator:a3ccfdb340d30c7ad32898fdc52a90b87"><td class="memSeparator" colspan="2">&#160;</td></tr>
