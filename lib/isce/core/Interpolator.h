@@ -38,6 +38,12 @@ class isce::core::Interpolator {
         /** Interpolate at a given coordinate for an input isce::core::Matrix */
         virtual U interpolate(double x, double y, const Matrix<U> & z) = 0;
 
+        /** Interpolate at a given coordinate for data passed as a valarray */
+        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
+            isce::core::Matrix<U> z(z_data, width);
+            return interpolate(x, y, z);
+        }
+
         /** Return interpolation method. */
         isce::core::dataInterpMethod method() const { return _method; }
 
