@@ -114,7 +114,7 @@ struct isce::core::Orbit {
     /** Compute acceleration numerically at given epoch.*/
     int computeAcceleration(double tintp, cartesian_t &acc) const;
 
-    /** Compute Heading (clockwise w.r.t North) in degrees at given epoch*/
+    /** Compute Heading (clockwise w.r.t North) in radians at given epoch*/
     double getENUHeading(double aztime) const;
 
     /** Debug print function */
