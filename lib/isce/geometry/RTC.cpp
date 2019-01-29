@@ -111,7 +111,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     double ybound = mode.length() - 1.0;
 
     // Output raster
-    float* out = new float[mode.length() * mode.width()];
+    float* out = new float[mode.length() * mode.width()]();
 
     // ------------------------------------------------------------------------
     // Main code: decompose DEM into facets, compute RDC coordinates
@@ -294,6 +294,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             // Computation of ENU coordinates around ground target
             isce::core::cartesian_t satToGround, enu;
             isce::core::cartmat_t enumat, xyz2enu;
+            ellps.lonLatToXyz(targetLLH, targetXYZ);
             LinAlg::linComb(1.0, targetXYZ, -1.0, xyz_plat, satToGround);
             LinAlg::enuBasis(targetLLH[1], targetLLH[0], enumat);
             LinAlg::tranMat(enumat, xyz2enu);

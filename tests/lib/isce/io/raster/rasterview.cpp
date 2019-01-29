@@ -34,6 +34,44 @@ struct RasterTest : public ::testing::Test {
   const std::string testFilename = "test.tif";
 };
 
+// Create a Raster from a Matrix view
+TEST_F(RasterTest, constructors) {
+  using isce::io::Raster;
+
+  // Set up matrix/view with test values
+  isce::core::Matrix<float> mat(2, 2);
+  mat.fill(2);
+
+  GDALAllRegister();
+
+  {
+    Raster rast(mat);
+    // Test setValue
+    float val = 4;
+    rast.setValue(val, 1, 1);
+
+    // Test getValue
+    rast.getValue(val, 0, 0);
+    ASSERT_EQ(val, 2);
+    rast.getValue(val, 1, 1);
+    ASSERT_EQ(val, 4);
+  }
+
+  mat.fill(2);
+  auto view = mat.submat(0, 0, 2, 2);
+  {
+    Raster rast(view);
+    // Test setValue
+    float val = 4;
+    rast.setValue(val, 1, 1);
+
+    // Test getValue
+    rast.getValue(val, 0, 0);
+    ASSERT_EQ(val, 2);
+    rast.getValue(val, 1, 1);
+    ASSERT_EQ(val, 4);
+  }
+}
 
 // Populate first band of ENVI Raster with setBlock (blocks can't overflow image)
 TEST_F(RasterTest, setBlockView) {
