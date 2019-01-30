@@ -6,6 +6,8 @@
 #include <cmath>
 #include <valarray>
 #include <complex>
+#include <cufft.h>
+#include <cufftXt.h>
 #include <gtest/gtest.h>
 
 #include "isce/signal/Signal.h"
@@ -41,19 +43,19 @@ TEST(gpuSignal, ForwardBackwardRangeFloat)
     std::valarray<std::complex<float>> inverted_data(width*blockLength);
 
     // a signal object
-    gpuSignal<float> sig;
+    gpuSignal<float> sig(CUFFT_C2C);
 
-    // create the forward and backward plans
-    sig.forwardRangeFFT(width, blockLength);
+    // create the plan
+    sig.rangeFFT(width, blockLength);
     
     // read a block of data
     inputSlc.getBlock(data, 0, 0, width, blockLength);
    
     // forward fft transform
-    sig.forward(data, range_spectrum);
+    sig.forwardC2C(data, range_spectrum);
 
     // inverse fft transform
-    sig.inverse(range_spectrum, inverted_data);
+    sig.inverseC2C(range_spectrum, inverted_data);
 
     //normalize the result of inverse fft 
     inverted_data /=width;
@@ -93,31 +95,21 @@ TEST(gpuSignal, ForwardBackwardAzimuthFloat)
     std::valarray<std::complex<float>> inverted_data(width*blockLength);
 
     // a signal object
-    gpuSignal<float> sig;
+    gpuSignal<float> sig(CUFFT_C2C);
 
-    // create the forward and backward plans
-    sig.forwardAzimuthFFT(width, blockLength);
+    // create the plan
+    sig.azimuthFFT(width, blockLength);
     
     // read a block of data
     inputSlc.getBlock(data, 0, 0, width, blockLength);
    
     // forward fft transform
-    sig.forward(data, range_spectrum);
+    sig.forwardC2C(data, range_spectrum);
 
     // save outputs
-    /*auto dbg_file_in = std::fstream("data_in.bin", std::ios::out | std::ios::binary);
-    dbg_file_in.write((char*)&data[0], sizeof(float)*range_spectrum.size()*2);
-    dbg_file_in.close();
-    auto dbg_file_spec = std::fstream("data_spectrum.bin", std::ios::out | std::ios::binary);
-    dbg_file_spec.write((char*)&range_spectrum[0], sizeof(float)*range_spectrum.size()*2);
-    dbg_file_spec.close();
-    auto dbg_file_out = std::fstream("data_out.bin", std::ios::out | std::ios::binary);
-    dbg_file_out.write((char*)&inverted_data[0], sizeof(float)*inverted_data.size()*2);
-    dbg_file_out.close();
-    */
 
     // inverse fft transform
-    sig.inverse(range_spectrum, inverted_data);
+    sig.inverseC2C(range_spectrum, inverted_data);
 
     //normalize the result of inverse fft 
     inverted_data /=width;
@@ -143,7 +135,6 @@ TEST(gpuSignal, nfft)
 
     int width = inputSlc.width();
     int length = inputSlc.length();
-    //width = 51;
     int blockLength = length;
     
     // fft length for FFT computations 
@@ -166,19 +157,19 @@ TEST(gpuSignal, nfft)
     }
 
     // a signal object
-    gpuSignal<float> sig;
+    gpuSignal<float> sig(CUFFT_C2C);
 
     // create the forward and backward plans
-    sig.forwardRangeFFT(nfft, blockLength);
-   
+    sig.rangeFFT(nfft, blockLength);
+
     // forward fft transform
-    sig.forward(data, range_spectrum);
+    sig.forwardC2C(data, range_spectrum);
 
     // inverse fft transform
-    sig.inverse(range_spectrum, inverted_data);
+    sig.inverseC2C(range_spectrum, inverted_data);
 
-    //normalize the result of inverse fft 
-    inverted_data /=width;
+    //normalize the result of inverse fft
+    inverted_data /= nfft;
 
     int blockSize = width*blockLength;
     std::complex<float> err(0.0, 0.0);
@@ -190,6 +181,57 @@ TEST(gpuSignal, nfft)
             max_err = std::abs(err);
         }
     }
+
+    ASSERT_LT(max_err, 1.0e-4);
+}
+
+TEST(gpuSignal, nfftDouble)
+{
+    int width = 100; //16;
+    int length = 1;
+    int blockLength = length;
+
+    // fft length for FFT computations
+    size_t nfft;
+
+    // instantiate a signal object
+    gpuSignal<double> sig(CUFFT_Z2Z);
+    sig.nextPowerOfTwo(width, nfft);
+
+    // reserve memory for a block of data with the size of nfft
+    std::valarray<std::complex<double>> data(nfft);
+    std::valarray<std::complex<double>> spec(nfft);
+    std::valarray<std::complex<double>> inverted_data(nfft);
+
+    for (size_t i=0; i<width; ++i){
+        double phase = std::sin(10*M_PI*i/width);
+        data[i] = std::complex<double> (std::cos(phase), std::sin(phase));
+    }
+
+    // create the forward and backward plans
+    sig.rangeFFT(nfft, 1);
+
+    // forward fft transform
+    sig.forwardZ2Z(data, spec);
+
+    // inverse fft transform
+    sig.inverseZ2Z(spec, inverted_data);
+
+    //normalize the result of inverse fft
+    inverted_data /= nfft;
+
+    int blockSize = width*blockLength;
+    std::complex<float> err(0.0, 0.0);
+    bool Test = true;
+    double max_err = 0.0;
+    for ( size_t i = 0; i < blockSize; ++i ) {
+        err = inverted_data[i] - data[i];
+        if (std::abs(err) > max_err){
+            max_err = std::abs(err);
+        }
+    }
+
+    ASSERT_LT(max_err, 1.0e-4);
 }
 
 int main(int argc, char * argv[]) {

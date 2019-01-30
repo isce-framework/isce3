@@ -4,6 +4,10 @@
 // Source Author: Liang Yu
 // Copyright 2019
 
+#include <typeinfo>
+#include <cstdio>
+#include <string>
+
 #include "gpuSignal.h"
 
 #include <cuda_runtime.h>
@@ -29,15 +33,13 @@ gpuSignal<T>::
  */
 template<class T>
 void gpuSignal<T>::
-forwardRangeFFT(int ncolumns, int nrows)
+rangeFFT(int ncolumns, int nrows)
 {
-
     _configureRangeFFT(ncolumns, nrows);
     
-    fftPlanForward(_rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist);
-
+    fftPlan(_rank, _n, _howmany,
+            _inembed, _istride, _idist,
+            _onembed, _ostride, _odist);
 }
 
 /**
@@ -48,15 +50,13 @@ forwardRangeFFT(int ncolumns, int nrows)
  */
 template<class T>
 void gpuSignal<T>::
-forwardAzimuthFFT(int ncolumns, int nrows)
+azimuthFFT(int ncolumns, int nrows)
 {
-
     _configureAzimuthFFT(ncolumns, nrows);
     
-    fftPlanForward(_rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist);
-
+    fftPlan(_rank, _n, _howmany,
+            _inembed, _istride, _idist,
+            _onembed, _ostride, _odist);
 }
 
 /**
@@ -72,16 +72,30 @@ forwardAzimuthFFT(int ncolumns, int nrows)
 */
 template <class T>
 void gpuSignal<T>::
-fftPlanForward(int rank, int *n, int howmany,
-                int *inembed, int istride, int idist,
-                int *onembed, int ostride, int odist)
+fftPlan(int rank, int *n, int howmany,
+        int *inembed, int istride, int idist,
+        int *onembed, int ostride, int odist)
 {
-    _cufft_type = CUFFT_C2C;
     checkCudaErrors(cufftCreate(&_plan));
     size_t worksize;
     checkCudaErrors(cufftMakePlanMany(_plan, rank, n, inembed,
                                       istride, idist, onembed, ostride, 
                                       odist, _cufft_type, _howmany, &worksize));
+}
+
+/** @param[in] N the actual length of a signal
+*   @param[in] fftLength next power of two 
+*/
+template <class T>
+void gpuSignal<T>::
+nextPowerOfTwo(size_t N, size_t &fftLength)
+{
+    for (size_t i = 0; i < 17; ++i) {
+        fftLength = std::pow(2, i);
+        if (fftLength >= N) {
+            break;
+        }
+    }
 }
 
 /** @param[in] ncolumns number of columns
@@ -143,7 +157,7 @@ _configureAzimuthFFT(int ncolumns, int nrows)
 */
 template<class T>
 void isce::cuda::signal::gpuSignal<T>::
-forward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
+forwardC2C(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
 {
     size_t input_size = input.size()*sizeof(T)*2;
     size_t output_size = output.size()*sizeof(T)*2;
@@ -169,13 +183,41 @@ forward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &o
     cudaFree(d_output);
 }
 
+template<class T>
+void isce::cuda::signal::gpuSignal<T>::
+forwardZ2Z(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
+{
+    size_t input_size = input.size()*sizeof(T)*2;
+    size_t output_size = output.size()*sizeof(T)*2;
+
+    // allocate device memory 
+    T *d_input;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
+    T *d_output;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_output), output_size));
+
+    // copy input
+    checkCudaErrors(cudaMemcpy(d_input, &input[0], input_size, cudaMemcpyHostToDevice));
+
+    // transform
+    checkCudaErrors(cufftExecZ2Z(_plan, reinterpret_cast<cufftDoubleComplex *>(d_input),
+                                reinterpret_cast<cufftDoubleComplex *>(d_input),
+                                CUFFT_FORWARD));
+
+    // copy output
+    checkCudaErrors(cudaMemcpy(&output[0], d_input, input_size, cudaMemcpyDeviceToHost));
+    
+    cudaFree(d_input);
+    cudaFree(d_output);
+}
+
 /** unnormalized forward transform
 *  @param[in] input block of data
 *  @param[out] output block of spectrum
 */
 template<class T>
 void isce::cuda::signal::gpuSignal<T>::
-inverse(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
+inverseC2C(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
 {
     size_t input_size = input.size()*sizeof(T)*2;
     size_t output_size = output.size()*sizeof(T)*2;
@@ -201,7 +243,36 @@ inverse(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &o
     cudaFree(d_output);
 }
 
+template<class T>
+void isce::cuda::signal::gpuSignal<T>::
+inverseZ2Z(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
+{
+    size_t input_size = input.size()*sizeof(T)*2;
+    size_t output_size = output.size()*sizeof(T)*2;
+
+    // allocate device memory 
+    T *d_input;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
+    T *d_output;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_output), output_size));
+
+    // copy input
+    checkCudaErrors(cudaMemcpy(d_input, &input[0], input_size, cudaMemcpyHostToDevice));
+
+    // transform
+    checkCudaErrors(cufftExecZ2Z(_plan, reinterpret_cast<cufftDoubleComplex *>(d_input),
+                                reinterpret_cast<cufftDoubleComplex *>(d_input),
+                                CUFFT_INVERSE));
+
+    // copy output
+    checkCudaErrors(cudaMemcpy(&output[0], d_input, input_size, cudaMemcpyDeviceToHost));
+    
+    cudaFree(d_input);
+    cudaFree(d_output);
+}
+
 /*
  each template parameter needs it's own declaration here
  */
 template class gpuSignal<float>;
+template class gpuSignal<double>;

@@ -29,28 +29,32 @@ class isce::cuda::signal::gpuSignal {
     public:
         // Default constructor
         gpuSignal() {};
+        gpuSignal(cufftType _type) : _cufft_type(_type) {};
         ~gpuSignal();
 
-        /** \brief initiate plan for forward FFT in range direction 
+        /** \brief initiate plan for FFT in range direction 
+         * for a block of complex data.
+         * azimuth direction is assumed to be in the direction of the 
+         * columns of the array.
+         */
+        void azimuthFFT(int ncolumns, int nrows);
+
+        /** \brief initiate plan for FFT in azimuth direction 
          * for a block of complex data.
          * range direction is assumed to be in the direction of the 
          * columns of the array.
          */
-        void forwardAzimuthFFT(int ncolumns, int nrows);
+        void rangeFFT(int ncolumns, int nrows);
 
-        /** \brief initiate plan for forward FFT in azimuth direction 
-         * for a block of complex data.
-         * range direction is assumed to be in the direction of the 
-         * columns of the array.
+        /** \brief initiate cuFFT plan for a block of complex data
+         *  input parameters cuFFT interface for fftw_plan_many_dft
          */
-        void forwardRangeFFT(int ncolumns, int nrows);
+        void fftPlan(int rank, int* n, int howmany,                   
+                    int* inembed, int istride, int idist,
+                    int* onembed, int ostride, int odist);
 
-        /** \brief initiate forward FFTW3 plan for a block of complex data
-         *  input parameters follow FFTW3 interface for fftw_plan_many_dft
-         */
-        void fftPlanForward(int rank, int* n, int howmany,                   
-                            int* inembed, int istride, int idist,
-                            int* onembed, int ostride, int odist);
+        /** \brief next power of two*/
+        void nextPowerOfTwo(size_t N, size_t& fftLength);
 
         /** \brief determine the required parameters for setting range FFT plans */
         inline void _configureRangeFFT(int ncolumns, int nrows);
@@ -58,13 +62,17 @@ class isce::cuda::signal::gpuSignal {
         /** \brief determine the required parameters for setting azimuth FFT plans */
         inline void _configureAzimuthFFT(int ncolumns, int nrows);
 
-        /** forward transform */
-        void forward(std::valarray<std::complex<T>> &input,
-                    std::valarray<std::complex<T>> &output);
+        /** forward transforms */
+        void forwardC2C(std::valarray<std::complex<T>> &input,
+                        std::valarray<std::complex<T>> &output);
+        void forwardZ2Z(std::valarray<std::complex<T>> &input,
+                        std::valarray<std::complex<T>> &output);
 
-        /** forward transform */
-        void inverse(std::valarray<std::complex<T>> &input,
-                    std::valarray<std::complex<T>> &output);
+        /** inverse transforms */
+        void inverseC2C(std::valarray<std::complex<T>> &input,
+                        std::valarray<std::complex<T>> &output);
+        void inverseZ2Z(std::valarray<std::complex<T>> &input,
+                        std::valarray<std::complex<T>> &output);
 
     private:
         cufftHandle _plan;
