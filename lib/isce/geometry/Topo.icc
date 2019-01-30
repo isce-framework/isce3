@@ -184,4 +184,10 @@ epsgOut(int epsgcode) {
     _proj = isce::core::createProj(epsgcode);
 }
 
+/** @param[in] mask Boolean for mask computation */
+void isce::geometry::Topo::
+computeMask(bool mask) {
+    _computeMask = mask;
+}
+
 // end of file

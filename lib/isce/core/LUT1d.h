@@ -33,6 +33,12 @@ class isce::core::LUT1d {
             _coords = x;
             _values = y;
         } 
+
+        /** Constructor with size */
+        inline LUT1d(size_t size) : _extrapolate{true} {
+            _coords.resize(size);
+            _values.resize(size);
+        }
         
         /** Constructor with coordinates and values 
           * @param[in] coords Valarray for coordinates of LUT
@@ -56,17 +62,25 @@ class isce::core::LUT1d {
             return *this;
         }
 
-        /** Get the coordinates 
+        /** Get a reference to the coordinates
+          * @param[out] coords Reference to valarray for coordinates */
+        inline std::valarray<double> & coords() { return _coords; }
+
+        /** Get a read-only reference to the coordinates 
           * @param[out] coords Copy of valarray for coordinates */
-        inline std::valarray<double> coords() const { return _coords; }
+        inline const std::valarray<double> & coords() const { return _coords; }
 
         /** Set the coordinates 
           * @param[in] c Input valarray for coordinates */ 
         inline void coords(const std::valarray<double> & c) { _coords = c; }
 
-        /** Get the values 
+        /** Get a reference to the coordinates
+          * @param[out] values Reference to valarray for values */
+        inline std::valarray<T> & values() { return _values; }
+
+        /** Get a read-only reference to the values 
           * @param[out] values Copy of valarray for values */
-        inline std::valarray<T> values() const { return _values; }
+        inline const std::valarray<T> & values() const { return _values; }
 
         /** Set the values 
           * @param[in] v Input valarray for values */

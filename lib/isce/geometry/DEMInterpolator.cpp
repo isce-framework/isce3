@@ -121,7 +121,7 @@ declare() const {
   * @param[out] meanValue Mean DEM height
   * @param[in] info Pyre journal channel for printing info. */
 void isce::geometry::DEMInterpolator::
-computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & info) const {
+computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & info) {
     // Announce myself
     info << "Computing DEM statistics" << pyre::journal::newline << pyre::journal::newline;
     // If we don't have a DEM, just use reference height
@@ -141,6 +141,9 @@ computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & 
         }
         meanValue = sum / (_dem.width() * _dem.length());
     }
+    // Store updated statistics
+    _meanValue = meanValue;
+    _maxValue = maxValue;
     // Announce results
     info << "Max DEM height: " << maxValue << pyre::journal::newline
          << "Average DEM height: " << meanValue << pyre::journal::newline;
