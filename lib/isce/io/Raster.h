@@ -36,7 +36,9 @@ namespace isce {
     class Raster {
       
     public:
-      
+
+      Raster() {_dataset = nullptr;};
+
       /** Constructor to open existing file in ReadOnly mode*/
       Raster(const std::string&);
 
