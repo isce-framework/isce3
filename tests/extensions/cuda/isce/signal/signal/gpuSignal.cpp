@@ -234,6 +234,68 @@ TEST(gpuSignal, nfftDouble)
     ASSERT_LT(max_err, 1.0e-4);
 }
 
+TEST(gpuSignal, nfftFloat)
+{
+    int width = 100;
+    int length = 1;
+    int blockLength = length;
+
+    // fft length for FFT computations
+    size_t nfft;
+
+    // instantiate a signal object
+    gpuSignal<float> sig(CUFFT_C2C);
+    sig.nextPowerOfTwo(width, nfft);
+
+    // reserve memory for a block of data with the size of nfft
+    std::valarray<std::complex<float>> data(nfft);
+    std::valarray<std::complex<float>> spec(nfft);
+    std::valarray<std::complex<float>> dataInv(nfft);
+
+    for (size_t i=0; i<width; ++i){
+        double phase = std::sin(10*M_PI*i/width);
+        data[i] = std::complex<float> (std::cos(phase), std::sin(phase));
+    }
+
+    sig.rangeFFT(nfft, 1);
+
+    sig.forwardC2C(data, spec);
+    sig.inverseC2C(spec, dataInv);
+
+    dataInv /=nfft;
+
+    std::complex<float> err(0.0, 0.0);
+    bool Test = true;
+    double max_err = 0.0;
+
+    for (size_t line = 0; line<blockLength; line++){
+        for (size_t col = 0; col<width; col++){
+            err = dataInv[line*nfft+col] - data[line*nfft+col];
+            if (std::abs(err) > max_err){
+                    max_err = std::abs(err);
+            }
+        }
+     }
+
+
+    // average L2 error as described on 
+    // http://www.fftw.org/accuracy/method.html
+    std::complex<float> errorL2 ;
+    std::complex<float> sumErr;
+    std::complex<float> sumB;
+    for (size_t line = 0; line<blockLength; line++){
+         for (size_t col = 0; col<width; col++){
+             sumErr += std::pow((dataInv[line*nfft+col] - data[line*nfft+col]),2);
+             sumB += std::pow(dataInv[line*nfft+col], 2);
+         }
+    }
+
+    errorL2 = std::sqrt(sumErr)/std::sqrt(sumB);
+    
+    ASSERT_LT(max_err, 1.0e-4);
+    ASSERT_LT(std::abs(errorL2), 1.0e-4);
+}
+
 int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
