@@ -210,18 +210,11 @@ geocodeCovariance(isce::io::Raster& rdrCov,
         } // end loops over lines of output grid
 
         // define the matrix based on the rasterbands data type
-        //isce::core::Matrix<T> rdrDataBlock(rdrBlockLength, rdrBlockWidth);        
-        //isce::core::Matrix<T> rtcDataBlock(rdrBlockLength, rdrBlockWidth);
-        //isce::core::Matrix<T> geoDataBlock(geoBlockLength, _geoGridWidth);
 
-        std::valarray<std::complex<double>> rdrDataBlock(rdrBlockLength * rdrBlockWidth);
-        std::valarray<double> rtcDataBlock(rdrBlockLength * rdrBlockWidth);
-        std::valarray<std::complex<double>> geoDataBlock(geoBlockLength * _geoGridWidth);
+        std::valarray<T> rdrDataBlock(rdrBlockLength * rdrBlockWidth);
+        std::valarray<float> rtcDataBlock(rdrBlockLength * rdrBlockWidth);
+        std::valarray<T> geoDataBlock(geoBlockLength * _geoGridWidth);
 
-        // fill both matrices with zero
-        //rdrDataBlock.zeros();
-        //geoDataBlock.zeros();
-        
          
         //for each band in the input:
         for (size_t band = 0; band < nbands; ++band){
@@ -263,14 +256,23 @@ geocodeCovariance(isce::io::Raster& rdrCov,
 
 template<class T>
 void isce::signal::Covariance<T>::
-_correctRTC(std::valarray<std::complex<double>> & rdrDataBlock, 
-            std::valarray<double> & rtcDataBlock) {
+_correctRTC(std::valarray<std::complex<float>> & rdrDataBlock, 
+            std::valarray<float> & rtcDataBlock) {
 
     for (size_t i = 0; i<rdrDataBlock.size(); ++i)
         rdrDataBlock[i] = rdrDataBlock[i]*rtcDataBlock[i];
 
 }
 
+template<class T>
+void isce::signal::Covariance<T>::
+_correctRTC(std::valarray<std::complex<double>> & rdrDataBlock,
+            std::valarray<float> & rtcDataBlock) {
+
+    for (size_t i = 0; i<rdrDataBlock.size(); ++i)
+        rdrDataBlock[i] = rdrDataBlock[i] * static_cast<double>(rtcDataBlock[i]);
+
+}
 
 /*
 void isce::signal::Covariance::
@@ -428,8 +430,8 @@ _symmetrization()
 
 template<class T>
 void isce::signal::Covariance<T>::
-_interpolate(std::valarray<std::complex<double>>& rdrDataBlock,
-            std::valarray<std::complex<double>>& geoDataBlock,
+_interpolate(std::valarray<T>& rdrDataBlock,
+            std::valarray<T>& geoDataBlock,
             std::valarray<double>& radarX, std::valarray<double>& radarY,
             size_t radarBlockWidth, size_t radarBlockLength,
             size_t width, size_t length)

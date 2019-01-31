@@ -68,10 +68,78 @@ class isce::signal::Covariance {
                     isce::io::Raster & demRaster,
                     isce::io::Raster& geoCov);
 
+        inline void geoGrid(double geoGridStartX, double geoGridStartY,
+                double geoGridSpacingX, double geoGridSpacingY,
+                double geoGridEndX, double geoGridEndY,
+                int epsgcode);
+
+	inline void geoGrid(double geoGridStartX, double geoGridStartY, 
+                double geoGridSpacingX, double geoGridSpacingY,
+                int width, int length, int epsgcode);
+        
+        // Set the input radar grid 
+        inline void radarGrid(isce::core::LUT1d<double> doppler,
+                                isce::core::DateTime azimuthStartTime,
+                                double azimuthTimeInterval,
+                                int radarGridLength,
+                                double startingRange,
+                                double rangeSpacing,
+                                int radarGridWidth);
+
+        // Set interpolator 
+
+        inline void numberOfRangeLooks(int rngLooks);
+
+        inline void numberOfAzimuthLooks(int azimuthLooks);
+
+        inline void prf(double p);
+
+        inline void doppler(isce::core::LUT1d<double> dop);
+
+        inline void rangeSamplingFrequency(double rngSamplingFreq);
+
+        inline void rangeBandwidth(double rngBandwidth);
+
+        inline void rangePixelSpacing(double rngPixelSpacing);
+
+        inline void wavelength(double wvl);
+        
+        inline void interpolator(isce::core::dataInterpMethod method);
+
+        inline void orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch);
+
+        inline void orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod);
+
+        inline void ellipsoid(isce::core::Ellipsoid& ellipsoid);
+
+        inline void mode(isce::product::ImageMode& mode);
+
+        inline void projection(isce::core::ProjectionBase * proj);
+
+        inline void thresholdGeo2rdr(double threshold);
+
+        inline void numiterGeo2rdr(int numiter);
+
+        inline void linesPerBlock(size_t linesPerBlock);
+
+        inline void demBlockMargin(double demBlockMargin);
+
+        inline void radarBlockMargin(int radarBlockMargin);
+
+        //interpolator
+        //isce::core::Interpolator * _interp = nullptr;
+        inline void interpolator(isce::core::Interpolator<T> * interp);
+
+        
+
     private:
 
+        void _correctRTC(std::valarray<std::complex<float>> & rdrDataBlock,
+                        std::valarray<float> & rtcDataBlock);
+
         void _correctRTC(std::valarray<std::complex<double>> & rdrDataBlock,
-                        std::valarray<double> & rtcDataBlock);
+                        std::valarray<float> & rtcDataBlock);
+
 
         void _computeRangeAzimuthBoundingBox(int lineStart, 
                         int blockLength, int blockWidth,
@@ -96,8 +164,8 @@ class isce::signal::Covariance {
                     int rdrBlockWidth, int rdrBlockLength);
         */
 
-        void _interpolate(std::valarray<std::complex<double>>& rdrDataBlock,
-                    std::valarray<std::complex<double>>& geoDataBlock,
+        void _interpolate(std::valarray<T>& rdrDataBlock,
+                    std::valarray<T>& geoDataBlock,
                     std::valarray<double>& radarX, std::valarray<double>& radarY,
                     size_t radarBlockWidth, size_t radarBlockLength,
                     size_t width, size_t length);
@@ -186,9 +254,15 @@ class isce::signal::Covariance {
         int _radarBlockMargin;
 
         //interpolator 
-        isce::core::Interpolator<std::complex<double>> * _interp = nullptr;
+        isce::core::Interpolator<T> * _interp = nullptr;
 
 };
+
+// Get inline implementations for Geocode
+#define ISCE_SIGNAL_COVARIANCE_ICC
+#include "Covariance.icc"
+#undef ISCE_SIGNAL_COVARIANCE_ICC
+
 
 #endif
 
