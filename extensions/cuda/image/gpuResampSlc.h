@@ -19,7 +19,7 @@
 #include "isce/image/Tile.h"
 
 // isce::product
-#include "isce/product/Product.h"
+#include "isce/product/ImageMode.h"
 
 // isce::cuda::core
 #include "isce/cuda/core/gpuComplex.h"
