@@ -9,13 +9,44 @@
 
 template<class T>
 void isce::signal::Covariance<T>::
-covariance(isce::io::Raster& HH,
-                isce::io::Raster& VH,
-                isce::io::Raster& C11,
-                isce::io::Raster& C12,
-                isce::io::Raster& C22)
+covariance(std::map<std::string, isce::io::Raster> & slc,
+            std::map<std::pair<std::string, std::string>, isce::io::Raster> & cov)
+
 {
+
+    size_t numPolarizations = slc.size();
+    size_t numCovElements = cov.size();
+
+    bool dualPol = false;
+    bool quadPol = false;
+
+    std::string coPol;
+    std::string crossPol;
+
+    if (numPolarizations == 1){
+        std::cout << "Covariance estimation needs at least two polarizations" << std::endl;
+    } else if (numPolarizations == 2 && numCovElements == 3) {
+
+        dualPol = true;
+
+        if (slc.count("hh") > 0)
+            coPol = "hh";
+        else if (slc.count("vv") > 0)
+            coPol = "vv";
+
+        if (slc.count("hv") > 0)
+            crossPol = "hv";
+        else if (slc.count("vh") > 0)
+            crossPol = "vh";
+
+    } else if (numPolarizations == 4 && numCovElements == 10) {
+        quadPol = true;
+    } 
+
+    // instantiate the crossmul object
     isce::signal::Crossmul crsmul;
+
+    // set up crossmul
     crsmul.doppler(_doppler, _doppler);
 
     crsmul.prf(_prf);
@@ -34,87 +65,43 @@ covariance(isce::io::Raster& HH,
 
     crsmul.doCommonAzimuthbandFiltering(false);
 
-    crsmul.doCommonRangebandFiltering(false);
+    crsmul.doCommonRangebandFiltering(false);   
 
-    crsmul.crossmul(HH, HH, C11);
+    if (dualPol) {
 
-    crsmul.crossmul(HH, VH, C12);
+        crsmul.crossmul(slc[coPol], slc[coPol], cov[std::make_pair(coPol, coPol)]);
 
-    crsmul.crossmul(VH, VH, C22);
+        crsmul.crossmul(slc[coPol], slc[crossPol], cov[std::make_pair(coPol, crossPol)]);
 
+        crsmul.crossmul(slc[crossPol], slc[crossPol], cov[std::make_pair(crossPol, crossPol)]);
+
+
+    } else if (quadPol){
+
+        crsmul.crossmul(slc["hh"], slc["hh"], cov[std::make_pair("hh", "hh")]);
+
+        crsmul.crossmul(slc["hh"], slc["vh"], cov[std::make_pair("hh", "vh")]);
+
+        crsmul.crossmul(slc["hh"], slc["hv"], cov[std::make_pair("hh", "hv")]);
+
+        crsmul.crossmul(slc["hh"], slc["vv"], cov[std::make_pair("hh", "vv")]);
+
+        crsmul.crossmul(slc["vh"], slc["vh"], cov[std::make_pair("vh", "vh")]);
+
+        crsmul.crossmul(slc["vh"], slc["vh"], cov[std::make_pair("vh", "vh")]);
+
+        crsmul.crossmul(slc["vh"], slc["hv"], cov[std::make_pair("vh", "hv")]);
+
+        crsmul.crossmul(slc["vh"], slc["vv"], cov[std::make_pair("vh", "vv")]);
+
+        crsmul.crossmul(slc["hv"], slc["hv"], cov[std::make_pair("hv", "hv")]);
+
+        crsmul.crossmul(slc["hv"], slc["vv"], cov[std::make_pair("hv", "vv")]);
+
+        crsmul.crossmul(slc["vv"], slc["vv"], cov[std::make_pair("vv", "vv")]);
+
+    }
 }
-
-template<class T>
-void isce::signal::Covariance<T>::
-covariance(isce::io::Raster& HH,
-                isce::io::Raster& VH,
-                isce::io::Raster& HV,
-                isce::io::Raster& VV,
-                isce::io::Raster& C11,
-                isce::io::Raster& C12,
-                isce::io::Raster& C13,
-                isce::io::Raster& C14,
-                isce::io::Raster& C22,
-                isce::io::Raster& C23,
-                isce::io::Raster& C24,
-                isce::io::Raster& C33,
-                isce::io::Raster& C34,
-                isce::io::Raster& C44)
-{
-    isce::signal::Crossmul crsmul;
-    crsmul.doppler(_doppler, _doppler);
-
-    crsmul.prf(_prf);
-
-    crsmul.rangeSamplingFrequency(_rangeSamplingFrequency);
-
-    crsmul.rangeBandwidth(_rangeBandwidth);
-
-    crsmul.wavelength(_wavelength);
-
-    crsmul.rangePixelSpacing(_rangePixelSpacing);
-
-    crsmul.rangeLooks(_rangeLooks);
-
-    crsmul.azimuthLooks(_azimuthLooks);
-
-    crsmul.doCommonAzimuthbandFiltering(false);
-
-    crsmul.doCommonRangebandFiltering(false);
-
-    crsmul.crossmul(HH, HH, C11);
-
-    crsmul.crossmul(HH, VH, C12);
-
-    crsmul.crossmul(HH, HV, C13); 
-
-    crsmul.crossmul(HH, VV, C14);
-
-    crsmul.crossmul(VH, VH, C22);
-
-    crsmul.crossmul(VH, HV, C23);
- 
-    crsmul.crossmul(VH, VV, C24);
-
-    crsmul.crossmul(HV, HV, C33);
- 
-    crsmul.crossmul(HV, VV, C34);
-
-    crsmul.crossmul(VV, VV, C44);
-      
-}
-
-/*
-void isce::signal::Covariance::
-geocodeCovariance(isce::io::Raster& C11,
-                isce::io::Raster& C12,
-                isce::io::Raster& C22,
-                isce::io::Raster& TCF,
-                isce::io::Raster& GC11,
-                isce::io::Raster& GC12,
-                isce::io::Raster& GC13) {
-
-*/
 
 template<class T>
 void isce::signal::Covariance<T>::

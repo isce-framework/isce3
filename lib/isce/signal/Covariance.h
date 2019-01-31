@@ -8,6 +8,8 @@
 #ifndef ISCE_LIB_COVARIANCE_H
 #define ISCE_LIB_COVARIANCE_H
 
+#include <map>
+
 // isce::core
 #include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
@@ -56,29 +58,9 @@ class isce::signal::Covariance {
             }
         };
 
-        // Covariance estimation for dual-pol data (HH, VH)
-        void covariance(isce::io::Raster& HH,
-                isce::io::Raster& VH,
-                isce::io::Raster& C11,
-                isce::io::Raster& C12,
-                isce::io::Raster& C22);
-
-        void covariance(isce::io::Raster& HH,
-                isce::io::Raster& VH,
-                isce::io::Raster& HV,
-                isce::io::Raster& VV,
-                isce::io::Raster& C11,
-                isce::io::Raster& C12,
-                isce::io::Raster& C13,
-                isce::io::Raster& C14,
-                isce::io::Raster& C22,
-                isce::io::Raster& C23,
-                isce::io::Raster& C24,
-                isce::io::Raster& C33,
-                isce::io::Raster& C34,
-                isce::io::Raster& C44);
-
-        
+        // covariance estimation 
+        void covariance(std::map<std::string, isce::io::Raster> & slc,
+                std::map<std::pair<std::string, std::string>, isce::io::Raster> & cov);
 
         void geocodeCovariance(
                     isce::io::Raster& rdrCov,
