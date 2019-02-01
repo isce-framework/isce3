@@ -296,7 +296,121 @@ TEST(gpuSignal, nfftFloat)
     ASSERT_LT(std::abs(errorL2), 1.0e-4);
 }
 
-int main(int argc, char * argv[]) {
+/*
+TEST(gpuSignal, upsample)
+{
+    int width = 100; //16;
+    int length = 1;
+    int blockLength = length;
+
+    // fft length for FFT computations
+    size_t nfft;
+
+    //sig.nextPowerOfTwo(width, nfft);
+    nfft = width;
+    // upsampling factor
+    int oversample = 2;
+
+    // reserve memory for a block of data with the size of nfft
+    std::valarray<std::complex<double>> slc(nfft);
+    std::valarray<std::complex<double>> spec(nfft);
+    std::valarray<std::complex<double>> slcU(nfft*oversample);
+    std::valarray<std::complex<double>> specU(nfft*oversample);
+
+    for (size_t i=0; i<width; ++i){
+        double phase = std::sin(10*M_PI*i/width);
+        slc[i] = std::complex<double> (std::cos(phase), std::sin(phase));
+    }
+
+    // instantiate a signal object
+    gpuSignal<double> sig_normal(CUFFT_Z2Z);
+    gpuSignal<double> sig_upsample(CUFFT_Z2Z);
+ 
+    sig_normal.rangeFFT(nfft, 1);
+    sig.inverseRangeFFT(nfft*oversample, 1);
+    sig.upsample(slc, slcU, 1, nfft, oversample);
+
+    // Check if the original smaples have the same phase in the signal before and after upsampling
+    double max_err = 0.0;
+    double err;
+    for (size_t col = 0; col<width; col++){
+        err = std::arg(slc[col] * std::conj(slcU[oversample*col]));
+        if (std::abs(err) > max_err){
+            max_err = std::abs(err);
+        }
+    }
+
+    double max_err_u = 0.0;
+    double err_u;
+    double step = 1.0/oversample;
+    std::complex<double> cpxData;
+    for (size_t col = 0; col<width*oversample; col++){
+        double i = col*step;
+        double phase = std::sin(10*M_PI*i/(width));
+        cpxData = std::complex<double> (std::cos(phase), std::sin(phase));
+        err_u = std::arg(cpxData * std::conj(slcU[col]));
+        if (std::abs(err_u) > max_err_u){
+              max_err_u = std::abs(err_u);
+        }
+    }    
+
+    std::cout << "max_err " << max_err << std::endl;
+    std::cout << "max_err_u " << max_err_u << std::endl;
+    ASSERT_LT(max_err, 1.0e-14);
+    ASSERT_LT(max_err_u, 1.0e-9);
+}
+*/
+
+
+TEST(gpuSignal, FFT2D)
+{
+    int width = 12;
+    int length = 10;
+
+    //
+    int blockLength = length;
+
+    // reserve memory for a block of data
+    std::valarray<std::complex<double>> data(width*blockLength);
+
+    // reserve memory for the spectrum of the block of data
+    std::valarray<std::complex<double>> spectrum(width*blockLength);
+
+    // reserve memory for a block of data computed from inverse FFT
+    std::valarray<std::complex<double>> invertData(width*blockLength);
+
+    for (size_t i = 0; i< length; ++i){
+        for (size_t j = 0; j< width; ++j){
+            data[i*width + j] = std::complex<double> (std::cos(i*j), std::sin(i*j));
+        }
+    }
+
+    // a signal object
+    gpuSignal<double> sig(CUFFT_Z2Z);
+
+    // create plan
+    sig.FFT2D(width, blockLength);
+  
+    sig.forwardZ2Z(data, spectrum);
+    sig.inverseZ2Z(spectrum, invertData);
+    invertData /=(width*length);
+
+    double max_err = 0.0;
+    double err = 0.0;
+    for (size_t i = 0; i< length; ++i){
+        for (size_t j = 0; j< width; ++j){
+            err = std::abs(data[i*width + j] - invertData[i*width + j]);
+            if (err > max_err)
+                max_err = err;
+        }
+    }
+
+    ASSERT_LT(max_err, 1.0e-12);
+}
+
+
+int main(int argc, char * argv[]) 
+{
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

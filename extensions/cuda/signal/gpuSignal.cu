@@ -26,8 +26,6 @@ gpuSignal<T>::
 }
 
 /**
-*  @param[in] signal input block of data
-*  @param[out] spectrum output block of spectrum
 *  @param[in] ncolumns number of columns of the block of data
 *  @param[in] nrows number of rows of the block of data
  */
@@ -43,8 +41,6 @@ rangeFFT(int ncolumns, int nrows)
 }
 
 /**
-*  @param[in] signal input block of data
-*  @param[out] spectrum output block of spectrum
 *  @param[in] ncolumns number of columns of the block of data
 *  @param[in] nrows number of rows of the block of data
  */
@@ -57,6 +53,19 @@ azimuthFFT(int ncolumns, int nrows)
     fftPlan(_rank, _n, _howmany,
             _inembed, _istride, _idist,
             _onembed, _ostride, _odist);
+}
+
+/**
+*  @param[in] ncolumns number of columns of the block of data
+*  @param[in] nrows number of rows of the block of data
+ */
+template<class T>
+void gpuSignal<T>::
+FFT2D(int ncolumns, int nrows)
+{
+    checkCudaErrors(cufftCreate(&_plan));
+    size_t worksize;
+    checkCudaErrors(cufftMakePlan2d(_plan, nrows, ncolumns, _cufft_type, &worksize));
 }
 
 /**
@@ -78,9 +87,10 @@ fftPlan(int rank, int *n, int howmany,
 {
     checkCudaErrors(cufftCreate(&_plan));
     size_t worksize;
-    checkCudaErrors(cufftMakePlanMany(_plan, rank, n, inembed,
-                                      istride, idist, onembed, ostride, 
-                                      odist, _cufft_type, _howmany, &worksize));
+    checkCudaErrors(cufftMakePlanMany(_plan, rank, n, 
+                                      inembed, istride, idist, 
+                                      onembed, ostride, odist, 
+                                      _cufft_type, _howmany, &worksize));
 }
 
 /** @param[in] N the actual length of a signal
@@ -105,7 +115,7 @@ template <class T>
 void gpuSignal<T>::
 _configureRangeFFT(int ncolumns, int nrows)
 {
-    _rank = 1;                  // dimensionality of transform
+    _rank = 1;
     _n = new int[1];
     _n[0] = ncolumns;
 
@@ -128,8 +138,7 @@ _configureRangeFFT(int ncolumns, int nrows)
 *   @param[in] nrows number of rows
 */
 template <class T>
-void
-gpuSignal<T>::
+void gpuSignal<T>::
 _configureAzimuthFFT(int ncolumns, int nrows)
 {
     _rank = 1;

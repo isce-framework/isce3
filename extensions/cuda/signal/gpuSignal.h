@@ -46,6 +46,13 @@ class isce::cuda::signal::gpuSignal {
          */
         void rangeFFT(int ncolumns, int nrows);
 
+        /** \brief initiate plan for FFT in azimuth direction 
+         * for a block of complex data.
+         * range direction is assumed to be in the direction of the 
+         * columns of the array.
+         */
+        void FFT2D(int ncolumns, int nrows);
+
         /** \brief initiate cuFFT plan for a block of complex data
          *  input parameters cuFFT interface for fftw_plan_many_dft
          */
