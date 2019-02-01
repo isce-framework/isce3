@@ -13,7 +13,9 @@ target_include_directories(gpuSignal PUBLIC
                            ${CEREAL_SRC_INCLUDEDIR}
                            ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
                            ${GDAL_INCLUDE_DIR}
-                           ${PYRE_INCLUDE_DIR})
+                           ${PYRE_INCLUDE_DIR}
+                           ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+                           )
 
 message(STATUS ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME})
 add_test(NAME gpuSignal COMMAND gpuSignal)
