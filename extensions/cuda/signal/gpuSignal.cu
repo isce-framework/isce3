@@ -63,6 +63,7 @@ template<class T>
 void gpuSignal<T>::
 FFT2D(int ncolumns, int nrows)
 {
+    _n_elements = nrows * ncolumns;
     checkCudaErrors(cufftCreate(&_plan));
     size_t worksize;
     checkCudaErrors(cufftMakePlan2d(_plan, nrows, ncolumns, _cufft_type, &worksize));
@@ -166,6 +167,38 @@ _configureAzimuthFFT(int ncolumns, int nrows)
 */
 template<class T>
 void isce::cuda::signal::gpuSignal<T>::
+forwardC2C(std::complex<T> *input, std::complex<T> *output)
+{
+    size_t input_size = _n_elements*sizeof(T)*2;
+    size_t output_size = _n_elements*sizeof(T)*2;
+
+    // allocate device memory 
+    T *d_input;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
+    T *d_output;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_output), output_size));
+
+    // copy input
+    checkCudaErrors(cudaMemcpy(d_input, input, input_size, cudaMemcpyHostToDevice));
+
+    // transform
+    checkCudaErrors(cufftExecC2C(_plan, reinterpret_cast<cufftComplex *>(d_input),
+                                reinterpret_cast<cufftComplex *>(d_input),
+                                CUFFT_FORWARD));
+
+    // copy output
+    checkCudaErrors(cudaMemcpy(output, d_input, input_size, cudaMemcpyDeviceToHost));
+    
+    cudaFree(d_input);
+    cudaFree(d_output);
+}
+
+/** unnormalized forward transform
+*  @param[in] input block of data
+*  @param[out] output block of spectrum
+*/
+template<class T>
+void isce::cuda::signal::gpuSignal<T>::
 forwardC2C(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
 {
     size_t input_size = input.size()*sizeof(T)*2;
@@ -187,6 +220,38 @@ forwardC2C(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>>
 
     // copy output
     checkCudaErrors(cudaMemcpy(&output[0], d_input, input_size, cudaMemcpyDeviceToHost));
+    
+    cudaFree(d_input);
+    cudaFree(d_output);
+}
+
+/** unnormalized forward transform
+*  @param[in] input block of data
+*  @param[out] output block of spectrum
+*/
+template<class T>
+void isce::cuda::signal::gpuSignal<T>::
+forwardZ2Z(std::complex<T> *input, std::complex<T> *output)
+{
+    size_t input_size = _n_elements*sizeof(T)*2;
+    size_t output_size = _n_elements*sizeof(T)*2;
+
+    // allocate device memory 
+    T *d_input;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
+    T *d_output;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_output), output_size));
+
+    // copy input
+    checkCudaErrors(cudaMemcpy(d_input, input, input_size, cudaMemcpyHostToDevice));
+
+    // transform
+    checkCudaErrors(cufftExecZ2Z(_plan, reinterpret_cast<cufftDoubleComplex *>(d_input),
+                                reinterpret_cast<cufftDoubleComplex *>(d_input),
+                                CUFFT_FORWARD));
+
+    // copy output
+    checkCudaErrors(cudaMemcpy(output, d_input, input_size, cudaMemcpyDeviceToHost));
     
     cudaFree(d_input);
     cudaFree(d_output);
@@ -226,6 +291,38 @@ forwardZ2Z(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>>
 */
 template<class T>
 void isce::cuda::signal::gpuSignal<T>::
+inverseC2C(std::complex<T> *input, std::complex<T> *output)
+{
+    size_t input_size = _n_elements*sizeof(T)*2;
+    size_t output_size = _n_elements*sizeof(T)*2;
+
+    // allocate device memory 
+    T *d_input;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
+    T *d_output;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_output), output_size));
+
+    // copy input
+    checkCudaErrors(cudaMemcpy(d_input, input, input_size, cudaMemcpyHostToDevice));
+
+    // transform
+    checkCudaErrors(cufftExecC2C(_plan, reinterpret_cast<cufftComplex *>(d_input),
+                                reinterpret_cast<cufftComplex *>(d_input),
+                                CUFFT_INVERSE));
+
+    // copy output
+    checkCudaErrors(cudaMemcpy(output, d_input, input_size, cudaMemcpyDeviceToHost));
+    
+    cudaFree(d_input);
+    cudaFree(d_output);
+}
+
+/** unnormalized forward transform
+*  @param[in] input block of data
+*  @param[out] output block of spectrum
+*/
+template<class T>
+void isce::cuda::signal::gpuSignal<T>::
 inverseC2C(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
 {
     size_t input_size = input.size()*sizeof(T)*2;
@@ -247,6 +344,38 @@ inverseC2C(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>>
 
     // copy output
     checkCudaErrors(cudaMemcpy(&output[0], d_input, input_size, cudaMemcpyDeviceToHost));
+    
+    cudaFree(d_input);
+    cudaFree(d_output);
+}
+
+/** unnormalized forward transform
+*  @param[in] input block of data
+*  @param[out] output block of spectrum
+*/
+template<class T>
+void isce::cuda::signal::gpuSignal<T>::
+inverseZ2Z(std::complex<T> *input, std::complex<T> *output)
+{
+    size_t input_size = _n_elements*sizeof(T)*2;
+    size_t output_size = _n_elements*sizeof(T)*2;
+
+    // allocate device memory 
+    T *d_input;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
+    T *d_output;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_output), output_size));
+
+    // copy input
+    checkCudaErrors(cudaMemcpy(d_input, input, input_size, cudaMemcpyHostToDevice));
+
+    // transform
+    checkCudaErrors(cufftExecZ2Z(_plan, reinterpret_cast<cufftDoubleComplex *>(d_input),
+                                reinterpret_cast<cufftDoubleComplex *>(d_input),
+                                CUFFT_INVERSE));
+
+    // copy output
+    checkCudaErrors(cudaMemcpy(output, d_input, input_size, cudaMemcpyDeviceToHost));
     
     cudaFree(d_input);
     cudaFree(d_output);

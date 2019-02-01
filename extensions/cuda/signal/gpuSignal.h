@@ -70,14 +70,18 @@ class isce::cuda::signal::gpuSignal {
         inline void _configureAzimuthFFT(int ncolumns, int nrows);
 
         /** forward transforms */
+        void forwardC2C(std::complex<T> *input, std::complex<T> *output);
         void forwardC2C(std::valarray<std::complex<T>> &input,
                         std::valarray<std::complex<T>> &output);
+        void forwardZ2Z(std::complex<T> *input, std::complex<T> *output);
         void forwardZ2Z(std::valarray<std::complex<T>> &input,
                         std::valarray<std::complex<T>> &output);
 
         /** inverse transforms */
+        void inverseC2C(std::complex<T> *input, std::complex<T> *output);
         void inverseC2C(std::valarray<std::complex<T>> &input,
                         std::valarray<std::complex<T>> &output);
+        void inverseZ2Z(std::complex<T> *input, std::complex<T> *output);
         void inverseZ2Z(std::valarray<std::complex<T>> &input,
                         std::valarray<std::complex<T>> &output);
 
@@ -94,6 +98,7 @@ class isce::cuda::signal::gpuSignal {
         int* _onembed;
         int _ostride;
         int _odist;
+        int _n_elements;
 
 };
 
