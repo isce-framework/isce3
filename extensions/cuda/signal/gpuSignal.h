@@ -29,7 +29,7 @@ class isce::cuda::signal::gpuSignal {
     public:
         // Default constructor
         gpuSignal() {};
-        gpuSignal(cufftType _type) : _cufft_type(_type) {};
+        gpuSignal(cufftType _type);
         ~gpuSignal();
 
         /** \brief initiate plan for FFT in range direction 

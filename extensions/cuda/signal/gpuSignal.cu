@@ -18,11 +18,26 @@
 using isce::cuda::signal::gpuSignal;
 
 
+/** Constructor **/
+template<class T>
+gpuSignal<T>::
+gpuSignal(cufftType _type) {
+    _cufft_type = _type;
+
+    _n = new int[2];
+    _inembed = new int[2];
+    _onembed = new int[2];
+}
+
 /** Destructor **/
 template<class T>
 gpuSignal<T>::
 ~gpuSignal() {
     cufftDestroy(_plan);
+
+    delete[] _n;
+    delete[] _inembed;
+    delete[] _onembed;
 }
 
 /**
@@ -117,22 +132,21 @@ void gpuSignal<T>::
 _configureRangeFFT(int ncolumns, int nrows)
 {
     _rank = 1;
-    _n = new int[1];
     _n[0] = ncolumns;
 
     _howmany = nrows;
     
-    _inembed = new int[1];
     _inembed[0] = ncolumns;
 
     _istride = 1;
     _idist = ncolumns;
     
-    _onembed = new int[1];
     _onembed[0] = ncolumns;
 
     _ostride = 1;
     _odist = ncolumns;
+
+    _n_elements = nrows * ncolumns;
 }
 
 /** @param[in] ncolumns number of columns
@@ -143,22 +157,21 @@ void gpuSignal<T>::
 _configureAzimuthFFT(int ncolumns, int nrows)
 {
     _rank = 1;
-    _n = new int[1];
     _n[0] = nrows;
 
     _howmany = ncolumns;
 
-    _inembed = new int[1];
     _inembed[0] = nrows;
 
     _istride = ncolumns;
     _idist = 1;
 
-    _onembed = new int[1];
     _onembed[0] = nrows;
 
     _ostride = ncolumns;
     _odist = 1;
+
+    _n_elements = nrows * ncolumns;
 }
 
 /** unnormalized forward transform
