@@ -76,6 +76,7 @@ class isce::cuda::signal::gpuSignal {
         void forwardZ2Z(std::complex<T> *input, std::complex<T> *output);
         void forwardZ2Z(std::valarray<std::complex<T>> &input,
                         std::valarray<std::complex<T>> &output);
+        void forwardD2Z(T *input, std::complex<T> *output);
 
         /** inverse transforms */
         void inverseC2C(std::complex<T> *input, std::complex<T> *output);
@@ -84,6 +85,7 @@ class isce::cuda::signal::gpuSignal {
         void inverseZ2Z(std::complex<T> *input, std::complex<T> *output);
         void inverseZ2Z(std::valarray<std::complex<T>> &input,
                         std::valarray<std::complex<T>> &output);
+        void inverseZ2D(std::complex<T> *input, T *output);
 
     private:
         cufftHandle _plan;

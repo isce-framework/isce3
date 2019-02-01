@@ -304,6 +304,37 @@ forwardZ2Z(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>>
 */
 template<class T>
 void isce::cuda::signal::gpuSignal<T>::
+forwardD2Z(T *input, std::complex<T> *output)
+{
+    size_t input_size = _n_elements*sizeof(T);
+    size_t output_size = _n_elements*sizeof(T)*2;
+
+    // allocate device memory 
+    T *d_input;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
+    T *d_output;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_output), output_size));
+
+    // copy input
+    checkCudaErrors(cudaMemcpy(d_input, input, input_size, cudaMemcpyHostToDevice));
+
+    // transform (implicitly forward)
+    checkCudaErrors(cufftExecD2Z(_plan, reinterpret_cast<cufftDoubleReal *>(d_input),
+                                reinterpret_cast<cufftDoubleComplex *>(d_output)));
+
+    // copy output
+    checkCudaErrors(cudaMemcpy(output, d_output, output_size, cudaMemcpyDeviceToHost));
+    
+    cudaFree(d_input);
+    cudaFree(d_output);
+}
+
+/** unnormalized forward transform
+*  @param[in] input block of data
+*  @param[out] output block of spectrum
+*/
+template<class T>
+void isce::cuda::signal::gpuSignal<T>::
 inverseC2C(std::complex<T> *input, std::complex<T> *output)
 {
     size_t input_size = _n_elements*sizeof(T)*2;
@@ -417,6 +448,37 @@ inverseZ2Z(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>>
 
     // copy output
     checkCudaErrors(cudaMemcpy(&output[0], d_input, input_size, cudaMemcpyDeviceToHost));
+    
+    cudaFree(d_input);
+    cudaFree(d_output);
+}
+
+/** unnormalized inverse transform
+*  @param[in] input block of data
+*  @param[out] output block of spectrum
+*/
+template<class T>
+void isce::cuda::signal::gpuSignal<T>::
+inverseZ2D(std::complex<T> *input, T *output)
+{
+    size_t input_size = _n_elements*sizeof(T)*2;
+    size_t output_size = _n_elements*sizeof(T);
+
+    // allocate device memory 
+    T *d_input;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
+    T *d_output;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_output), output_size));
+
+    // copy input
+    checkCudaErrors(cudaMemcpy(d_input, input, input_size, cudaMemcpyHostToDevice));
+
+    // transform (implicitly inverse)
+    checkCudaErrors(cufftExecZ2D(_plan, reinterpret_cast<cufftDoubleComplex *>(d_input),
+                                reinterpret_cast<cufftDoubleReal *>(d_output)));
+
+    // copy output
+    checkCudaErrors(cudaMemcpy(output, d_output, output_size, cudaMemcpyDeviceToHost));
     
     cudaFree(d_input);
     cudaFree(d_output);

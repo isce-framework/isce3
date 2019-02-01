@@ -462,6 +462,58 @@ TEST(gpuSignal, rawPointerArrayComplex)
     ASSERT_LT(max_err_2DFFT, 1.0e-12);
 }
 
+TEST(gpuSignal, realDataFFT)
+{
+    int width = 120;
+    int length = 100;
+
+    int blockLength = length;
+
+    // reserve memory for a block of data
+    double *data = new double[width*blockLength];
+
+    // reserve memory for the spectrum of the block of data
+    std::complex<double> *spectrum = new std::complex<double>[width*blockLength];
+
+    // reserve memory for a block of data computed from inverse FFT
+    double *invertData = new double[width*blockLength];
+
+    for (size_t i = 0; i< length; ++i){
+        for (size_t j = 0; j< width; ++j){
+            data[i*width + j] = i+j; 
+        }
+    }
+
+    // a signal objects
+    gpuSignal<double> sig_D2Z(CUFFT_D2Z);
+    gpuSignal<double> sig_Z2D(CUFFT_Z2D);
+
+    // make plans
+    sig_D2Z.FFT2D(width, blockLength);
+    sig_Z2D.FFT2D(width, blockLength);
+
+    // forward and inverse transform
+    sig_D2Z.forwardD2Z(data, spectrum);
+    sig_Z2D.inverseZ2D(spectrum, invertData);
+
+    for (size_t i = 0; i< length; ++i){
+        for (size_t j = 0; j< width; ++j){
+            invertData[i*width + j] /=(width*length);
+        }
+    }
+
+    double max_err_2DFFT = 0.0;
+    double err = 0.0;
+    for (size_t i = 0; i< length; ++i){
+        for (size_t j = 0; j< width; ++j){
+            err = std::abs(data[i*width + j] - invertData[i*width + j]);
+            if (err > max_err_2DFFT)
+                max_err_2DFFT = err;
+        }
+    }
+
+    ASSERT_LT(max_err_2DFFT, 1.0e-12);
+}
 
 int main(int argc, char * argv[]) 
 {
