@@ -5,6 +5,7 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 ####List the source files
 set(LOCAL_SRCS 
     IH5.cpp
+    IH5Dataset.cpp
     Raster.cpp
     )
 
@@ -22,6 +23,7 @@ set(${PACKAGENAME}_EXPORT_HEADERS
     Raster.h
     Raster.icc
     Serialization.h
+    IH5Dataset.h
 )
 
 ###Install headers into build/include

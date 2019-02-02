@@ -3,13 +3,19 @@ find_library(LPYRE pyre HINTS ${PYRE_LIB_DIR})
 find_library(LJOURNAL journal HINTS ${PYRE_LIB_DIR})
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
-foreach (TESTNAME ih5)
+foreach (TESTNAME ih5 
+                  ih5gdal 
+                  ih5nativeread 
+                  ih5castread 
+                  ih5nativewrite
+                  ih5castwrite)
     add_executable(${TESTNAME} ${TESTNAME}.cpp)
     target_link_libraries(${TESTNAME} PUBLIC ${LISCE} ${LPYRE} ${LJOURNAL} ${GDAL_LIBRARY} gtest)
     target_include_directories(${TESTNAME} PUBLIC
         ${ISCE_BUILDINCLUDEDIR}
         ${GDAL_INCLUDE_DIR}
         ${PYTHON_INCLUDE_DIR}
+        ${PYRE_INCLUDE_DIR}
     )
     add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
 endforeach ()
