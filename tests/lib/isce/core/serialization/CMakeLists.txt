@@ -9,7 +9,6 @@ foreach (TESTNAME serializeEllipsoid serializeOrbit serializeMetadata serializeD
         ${GDAL_INCLUDE_DIR}
         ${PYRE_INCLUDE_DIR}
         ${ISCE_SOURCE_DIR}/contrib/cereal/include
-        /home/lyu/python/miniconda3/include
     )
     add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
 endforeach ()

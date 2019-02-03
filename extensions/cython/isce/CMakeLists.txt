@@ -48,7 +48,6 @@ target_include_directories(
         ${GDAL_INCLUDE_DIR}
         ${CMAKE_SOURCE_DIR}/contrib/cereal/include
         ${PYRE_INCLUDE_DIR}
-        /home/lyu/python/miniconda3/include
 )
 
 # Add necessary library links

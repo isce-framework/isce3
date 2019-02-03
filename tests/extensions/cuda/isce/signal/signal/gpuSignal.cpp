@@ -15,8 +15,6 @@
 
 #include "isce/cuda/signal/gpuSignal.h"
 
-#include "isce/signal/fftw3cxx.h"
-
 // debug
 #include <fstream>
 
