@@ -87,6 +87,9 @@ class isce::cuda::signal::gpuSignal {
                         std::valarray<std::complex<T>> &output);
         void inverseZ2D(std::complex<T> *input, T *output);
 
+        int getRows() {return _rows;};
+        int getColumns() {return _columns;};
+
     private:
         cufftHandle _plan;
         cufftType _cufft_type;
@@ -101,8 +104,25 @@ class isce::cuda::signal::gpuSignal {
         int _ostride;
         int _odist;
         int _n_elements;
-
+        int _rows;
+        int _columns;
 };
+template<class T>
+void shift(std::valarray<std::complex<T>> &input,
+           std::valarray<std::complex<T>> &output,
+           int rows, int nfft, int columns);
+
+void upsampleC2C(std::valarray<std::complex<float>> &input,
+                 std::valarray<std::complex<float>> &output,
+                 std::valarray<std::complex<float>> &shiftImpact,
+                 isce::cuda::signal::gpuSignal<float> &fwd,
+                 isce::cuda::signal::gpuSignal<float> &inv);
+
+void upsampleZ2Z(std::valarray<std::complex<double>> &input,
+                 std::valarray<std::complex<double>> &output,
+                 std::valarray<std::complex<double>> &shiftImpact,
+                 isce::cuda::signal::gpuSignal<double> &fwd,
+                 isce::cuda::signal::gpuSignal<double> &inv);
 
 #endif
 

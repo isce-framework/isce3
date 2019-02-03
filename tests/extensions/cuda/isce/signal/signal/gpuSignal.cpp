@@ -296,72 +296,6 @@ TEST(gpuSignal, nfftFloat)
     ASSERT_LT(std::abs(errorL2), 1.0e-4);
 }
 
-/*
-TEST(gpuSignal, upsample)
-{
-    int width = 100; //16;
-    int length = 1;
-    int blockLength = length;
-
-    // fft length for FFT computations
-    size_t nfft;
-
-    //sig.nextPowerOfTwo(width, nfft);
-    nfft = width;
-    // upsampling factor
-    int oversample = 2;
-
-    // reserve memory for a block of data with the size of nfft
-    std::valarray<std::complex<double>> slc(nfft);
-    std::valarray<std::complex<double>> spec(nfft);
-    std::valarray<std::complex<double>> slcU(nfft*oversample);
-    std::valarray<std::complex<double>> specU(nfft*oversample);
-
-    for (size_t i=0; i<width; ++i){
-        double phase = std::sin(10*M_PI*i/width);
-        slc[i] = std::complex<double> (std::cos(phase), std::sin(phase));
-    }
-
-    // instantiate a signal object
-    gpuSignal<double> sig_normal(CUFFT_Z2Z);
-    gpuSignal<double> sig_upsample(CUFFT_Z2Z);
- 
-    sig_normal.rangeFFT(nfft, 1);
-    sig.inverseRangeFFT(nfft*oversample, 1);
-    sig.upsample(slc, slcU, 1, nfft, oversample);
-
-    // Check if the original smaples have the same phase in the signal before and after upsampling
-    double max_err = 0.0;
-    double err;
-    for (size_t col = 0; col<width; col++){
-        err = std::arg(slc[col] * std::conj(slcU[oversample*col]));
-        if (std::abs(err) > max_err){
-            max_err = std::abs(err);
-        }
-    }
-
-    double max_err_u = 0.0;
-    double err_u;
-    double step = 1.0/oversample;
-    std::complex<double> cpxData;
-    for (size_t col = 0; col<width*oversample; col++){
-        double i = col*step;
-        double phase = std::sin(10*M_PI*i/(width));
-        cpxData = std::complex<double> (std::cos(phase), std::sin(phase));
-        err_u = std::arg(cpxData * std::conj(slcU[col]));
-        if (std::abs(err_u) > max_err_u){
-              max_err_u = std::abs(err_u);
-        }
-    }    
-
-    std::cout << "max_err " << max_err << std::endl;
-    std::cout << "max_err_u " << max_err_u << std::endl;
-    ASSERT_LT(max_err, 1.0e-14);
-    ASSERT_LT(max_err_u, 1.0e-9);
-}
-*/
-
-
 TEST(gpuSignal, FFT2D)
 {
     int width = 12;
@@ -513,6 +447,66 @@ TEST(gpuSignal, realDataFFT)
     }
 
     ASSERT_LT(max_err_2DFFT, 1.0e-12);
+}
+
+TEST(gpuSignal, upsampleDouble)
+{
+    int width = 100;
+    int length = 1;
+    int blockLength = length;
+
+    // fft length for FFT computations
+    size_t nfft;
+
+    //sig.nextPowerOfTwo(width, nfft);
+    nfft = width;
+    // upsampling factor
+    int oversample = 2;
+
+    // reserve memory for a block of data with the size of nfft
+    std::valarray<std::complex<double>> slc(nfft);
+    std::valarray<std::complex<double>> slcU(nfft*oversample);
+
+    for (size_t i=0; i<width; ++i){
+        double phase = std::sin(10*M_PI*i/width);
+        slc[i] = std::complex<double> (std::cos(phase), std::sin(phase));
+    }
+
+    // instantiate a signal object
+    gpuSignal<double> sig_input(CUFFT_Z2Z);
+    gpuSignal<double> sig_upsample(CUFFT_Z2Z);
+ 
+    sig_input.rangeFFT(nfft, 1);
+    sig_upsample.rangeFFT(oversample*nfft, 1);
+
+    upsampleZ2Z(slc, slcU, slc, sig_input, sig_upsample);
+    
+    // Check if the original smaples have the same phase in the signal before and after upsampling
+    double max_err = 0.0;
+    double err = 0.0;
+    for (size_t col = 0; col<width; col++){
+        err = std::arg(slc[col] * std::conj(slcU[oversample*col]));
+        if (std::abs(err) > max_err){
+            max_err = std::abs(err);
+        }
+    }
+
+    double max_err_u = 0.0;
+    double err_u;
+    double step = 1.0/oversample;
+    std::complex<double> cpxData;
+    for (size_t col = 0; col<width*oversample; col++){
+        double i = col*step;
+        double phase = std::sin(10*M_PI*i/(width));
+        cpxData = std::complex<double> (std::cos(phase), std::sin(phase));
+        err_u = std::arg(cpxData * std::conj(slcU[col]));
+        if (std::abs(err_u) > max_err_u){
+              max_err_u = std::abs(err_u);
+        }
+    }    
+
+    ASSERT_LT(max_err, 1.0e-14);
+    ASSERT_LT(max_err_u, 1.0e-9);
 }
 
 int main(int argc, char * argv[]) 
