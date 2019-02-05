@@ -130,25 +130,17 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     const size_t imax = dem_interp.length() * upsample_factor;
     const size_t jmax = dem_interp.width()  * upsample_factor;
 
+    // Loop over DEM facets
+    #pragma omp parallel for collapse(2)
     for (size_t ii = 0; ii < imax; ++ii) {
-
-        if (ii % 100 == 0) {
-            std::cout << "At lat " << ii << " of " << imax << "\r" << std::flush;
-        }
-
-        // Current latitude
-        const double lat0 = dem_interp.yStart() + ii * dem_interp.deltaY() / upsample_factor;
-        const double lat1 = lat0 + dem_interp.deltaY() / upsample_factor;
-        const double lat_mid = dem_interp.yStart() + (0.5 + ii) * dem_interp.deltaY() / upsample_factor;
-
-        // Loop over pixels
-        #pragma omp parallel for schedule(dynamic)
         for (size_t jj = 0; jj < jmax; ++jj) {
             isce::core::cartesian_t llh00, llh01, llh10, llh11,
                                     xyz00, xyz01, xyz10, xyz11, xyz_mid,
                                     P00_01, P00_10, P10_01, P11_01, P11_10,
                                     lookXYZ, normalFacet1, normalFacet2;
 
+            // Central latitude/longitude of facets
+            const double lat_mid = dem_interp.yStart() + dem_interp.deltaY() * (ii + 0.5) / upsample_factor;
             const double lon_mid = dem_interp.xStart() + dem_interp.deltaX() * (jj + 0.5) / upsample_factor;
 
             double a, r;
@@ -169,7 +161,9 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             if (ranpix < 0.0 or x2 > xbound or azpix < 0.0 or y2 > ybound)
                 continue;
 
-            // Current longitude
+            // Corner latitude/longitude
+            const double lat0 = dem_interp.yStart() + ii * dem_interp.deltaY() / upsample_factor;
+            const double lat1 = lat0 + dem_interp.deltaY() / upsample_factor;
             const double lon0 = dem_interp.xStart() + dem_interp.deltaX() * jj / upsample_factor;
             const double lon1 = lon0 + dem_interp.deltaX() / upsample_factor;
 
@@ -261,7 +255,6 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             out[mode.width() * iy2 + ix2] += area * Wr * Wa;
         }
     }
-    std::cout << std::endl;
 
     float max_hgt, avg_hgt;
     pyre::journal::info_t info("facet_calib");
