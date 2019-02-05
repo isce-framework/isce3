@@ -45,7 +45,6 @@
 
 // isce::cuda::geometry
 #include "isce/cuda/geometry/gpuDEMInterpolator.h"
-#include "isce/cuda/helper_cuda.h"
 
 // Declaration
 namespace isce {
