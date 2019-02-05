@@ -80,8 +80,10 @@ interpolate(double x, double y, const isce::core::Matrix<U> & z) {
     double px = x - j;
     double py = y - i;
 
+    using double_t = typename isce::core::double_promote<U>::type;
+
     // the data matrix surrounding the interpolation point
-    isce::core::Matrix<U>  Z(4,4);
+    isce::core::Matrix<double_t>  Z(4,4);
     
     Z(0,0) = z(i-1, j-1);      //row0 col0 >> x0,y0
     Z(0,1) = z(i-1, j);         //row0 col1 >> x1,y0
@@ -161,26 +163,26 @@ interpolate(double x, double y, const isce::core::Matrix<U> & z) {
     Py[1] = std::pow(py, 2.0);
     Py[2] = py;
     Py[3] = 1.0;
-    
+
     // get elements of [X].[Px]
-    U g0 = static_cast<U> (Px[0]*_X(0,0) + Px[1]*_X(0,1) + Px[2]*_X(0,2) + Px[3]*_X(0,3));
-    U g1 = static_cast<U> (Px[0]*_X(1,0) + Px[1]*_X(1,1) + Px[2]*_X(1,2) + Px[3]*_X(1,3));
-    U g2 = static_cast<U> (Px[0]*_X(2,0) + Px[1]*_X(2,1) + Px[2]*_X(2,2) + Px[3]*_X(2,3));
-    U g3 = static_cast<U> (Px[0]*_X(3,0) + Px[1]*_X(3,1) + Px[2]*_X(3,2) + Px[3]*_X(3,3));
+    double_t g0 = static_cast<double_t> (Px[0]*_X(0,0) + Px[1]*_X(0,1) + Px[2]*_X(0,2) + Px[3]*_X(0,3));
+    double_t g1 = static_cast<double_t> (Px[0]*_X(1,0) + Px[1]*_X(1,1) + Px[2]*_X(1,2) + Px[3]*_X(1,3));
+    double_t g2 = static_cast<double_t> (Px[0]*_X(2,0) + Px[1]*_X(2,1) + Px[2]*_X(2,2) + Px[3]*_X(2,3));
+    double_t g3 = static_cast<double_t> (Px[0]*_X(3,0) + Px[1]*_X(3,1) + Px[2]*_X(3,2) + Px[3]*_X(3,3));
     
     // Given all required matrices and cetors, the value at position x,y
     // can be obtained as:
     // P = [Py].[Y].[Z].[X].[Px]
-    U P = static_cast<U> (Py[0]*_Y(0,0) + Py[1]*_Y(1,0) + Py[2]*_Y(2,0) + Py[3]*_Y(3,0)) *
-                (Z(0,0)*g0 + Z(0,1)*g1 + Z(0,2)*g2 + Z(0,3)*g3) +    
-            static_cast<U> (Py[0]*_Y(0,1) + Py[1]*_Y(1,1) + Py[2]*_Y(2,1) + Py[3]*_Y(3,1)) *
-                (Z(1,0)*g0 + Z(1,1)*g1 + Z(1,2)*g2 + Z(1,3)*g3) +
-            static_cast<U> (Py[0]*_Y(0,2) + Py[1]*_Y(1,2) + Py[2]*_Y(2,2) + Py[3]*_Y(3,2)) *
-                (Z(2,0)*g0 + Z(2,1)*g1 + Z(2,2)*g2 + Z(2,3)*g3) +
-            static_cast<U> (Py[0]*_Y(0,3) + Py[1]*_Y(1,3) + Py[2]*_Y(2,3) + Py[3]*_Y(3,3)) *
-                (Z(3,0)*g0 + Z(3,1)*g1 + Z(3,2)*g2 + Z(3,3)*g3);
+    double_t P = static_cast<double_t> (Py[0]*_Y(0,0) + Py[1]*_Y(1,0) + Py[2]*_Y(2,0) + Py[3]*_Y(3,0)) *
+                                       (Z(0,0)*g0 + Z(0,1)*g1 + Z(0,2)*g2 + Z(0,3)*g3) +
+                 static_cast<double_t> (Py[0]*_Y(0,1) + Py[1]*_Y(1,1) + Py[2]*_Y(2,1) + Py[3]*_Y(3,1)) *
+                                       (Z(1,0)*g0 + Z(1,1)*g1 + Z(1,2)*g2 + Z(1,3)*g3) +
+                 static_cast<double_t> (Py[0]*_Y(0,2) + Py[1]*_Y(1,2) + Py[2]*_Y(2,2) + Py[3]*_Y(3,2)) *
+                                       (Z(2,0)*g0 + Z(2,1)*g1 + Z(2,2)*g2 + Z(2,3)*g3) +
+                 static_cast<double_t> (Py[0]*_Y(0,3) + Py[1]*_Y(1,3) + Py[2]*_Y(2,3) + Py[3]*_Y(3,3)) *
+                                       (Z(3,0)*g0 + Z(3,1)*g1 + Z(3,2)*g2 + Z(3,3)*g3);
 
-    return P;
+    return static_cast<U>(P);
        
 }
 
