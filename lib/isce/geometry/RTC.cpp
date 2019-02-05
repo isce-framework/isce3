@@ -262,17 +262,12 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     isce::geometry::DEMInterpolator flat_interp(avg_hgt);
 
     // Compute the flat earth incidence angle correction applied by UAVSAR processing
+    #pragma omp parallel for collapse(2)
     for (size_t i = 0; i < mode.length(); ++i) {
-
-        if (i % 100 == 0)
-            std::cout << "At azimuth " << i << " of " << mode.length()
-                << "\r" << std::flush;
-
-        isce::core::cartesian_t xyz_plat, vel;
-        orbit.interpolateWGS84Orbit(start + i * pixazm, xyz_plat, vel);
-
-        #pragma omp parallel for schedule(dynamic)
         for (size_t j = 0; j < mode.width(); ++j) {
+
+            isce::core::cartesian_t xyz_plat, vel;
+            orbit.interpolateWGS84Orbit(start + i * pixazm, xyz_plat, vel);
 
             // Slant range for current pixel
             const double slt_range = r0 + j * dr;
