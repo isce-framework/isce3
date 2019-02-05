@@ -131,7 +131,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     const size_t jmax = dem_interp.width()  * upsample_factor;
 
     // Loop over DEM facets
-    #pragma omp parallel for collapse(2)
+    #pragma omp parallel for schedule(dynamic) collapse(2)
     for (size_t ii = 0; ii < imax; ++ii) {
         for (size_t jj = 0; jj < jmax; ++jj) {
             isce::core::cartesian_t llh00, llh01, llh10, llh11,
@@ -262,7 +262,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     isce::geometry::DEMInterpolator flat_interp(avg_hgt);
 
     // Compute the flat earth incidence angle correction applied by UAVSAR processing
-    #pragma omp parallel for collapse(2)
+    #pragma omp parallel for schedule(dynamic) collapse(2)
     for (size_t i = 0; i < mode.length(); ++i) {
         for (size_t j = 0; j < mode.width(); ++j) {
 
