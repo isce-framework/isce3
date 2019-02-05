@@ -130,10 +130,22 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     const size_t imax = dem_interp.length() * upsample_factor;
     const size_t jmax = dem_interp.width()  * upsample_factor;
 
+    const size_t progress_block = 1000;
+    size_t numdone = 0;
+
     // Loop over DEM facets
     #pragma omp parallel for schedule(dynamic) collapse(2)
     for (size_t ii = 0; ii < imax; ++ii) {
         for (size_t jj = 0; jj < jmax; ++jj) {
+
+            #pragma omp atomic
+            numdone++;
+
+            if (numdone % progress_block == 0)
+                #pragma omp critical
+                printf("\rRTC progress: %d%%", (int) (numdone * 1e2 / (imax * jmax))),
+                    fflush(stdout);
+
             isce::core::cartesian_t llh00, llh01, llh10, llh11,
                                     xyz00, xyz01, xyz10, xyz11, xyz_mid,
                                     P00_01, P00_10, P10_01, P11_01, P11_10,
