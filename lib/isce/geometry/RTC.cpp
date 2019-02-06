@@ -130,7 +130,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     const size_t imax = dem_interp.length() * upsample_factor;
     const size_t jmax = dem_interp.width()  * upsample_factor;
 
-    const size_t progress_block = 1000;
+    const size_t progress_block = imax*jmax/100;
     size_t numdone = 0;
 
     // Loop over DEM facets
