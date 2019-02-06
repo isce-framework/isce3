@@ -98,7 +98,7 @@ geoGrid(double geoGridStartX, double geoGridStartY,
 
     geoGrid(geoGridStartX, geoGridStartY,
         geoGridSpacingX, geoGridSpacingY,
-        length, width, epsgcode);
+        width, length, epsgcode);
 
 }
 

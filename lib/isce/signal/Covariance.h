@@ -62,6 +62,17 @@ class isce::signal::Covariance {
         void covariance(std::map<std::string, isce::io::Raster> & slc,
                 std::map<std::pair<std::string, std::string>, isce::io::Raster> & cov);
 
+        // estimate the Faraday rotation angle and correct the SLCs
+        void faradayRotation(std::map<std::string, isce::io::Raster> & slc,
+                    isce::io::Raster & faradayAngleRaster,
+                    std::map<std::string, isce::io::Raster> & correctedSlc,
+                    size_t rangeLooks, size_t azimuthLooks);
+
+        // estimate the Faraday rotation angle without correcting SLCs
+        void faradayRotation(std::map<std::string, isce::io::Raster> & slc,
+                    isce::io::Raster & faradayAngleRaster,
+                    size_t rangeLooks, size_t azimuthLooks);
+
         void geocodeCovariance(
                     isce::io::Raster& rdrCov,
                     isce::io::Raster& rtc,
@@ -170,6 +181,14 @@ class isce::signal::Covariance {
                     size_t radarBlockWidth, size_t radarBlockLength,
                     size_t width, size_t length);
 
+        void _faradayRotationAngle(std::valarray<T>& Shh,
+                    std::valarray<T>& Shv,
+                    std::valarray<T>& Svh,
+                    std::valarray<T>& Svv,
+                    std::valarray<float>& faradayRotation,
+                    size_t width, size_t length,
+                    size_t rngLooks, size_t azLooks);
+
     private:
 
         // following members are needed for crossmul
@@ -256,6 +275,8 @@ class isce::signal::Covariance {
         //interpolator 
         isce::core::Interpolator<T> * _interp = nullptr;
 
+        // 
+        bool _applyFaradayRotation = true;
 };
 
 // Get inline implementations for Geocode

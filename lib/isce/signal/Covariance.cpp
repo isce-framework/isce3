@@ -47,7 +47,7 @@ covariance(std::map<std::string, isce::io::Raster> & slc,
     isce::signal::Crossmul crsmul;
 
     // set up crossmul
-    crsmul.doppler(_doppler, _doppler);
+    /*crsmul.doppler(_doppler, _doppler);
 
     crsmul.prf(_prf);
 
@@ -58,7 +58,7 @@ covariance(std::map<std::string, isce::io::Raster> & slc,
     crsmul.wavelength(_wavelength);
 
     crsmul.rangePixelSpacing(_rangePixelSpacing);
-
+    */
     crsmul.rangeLooks(_rangeLooks);
 
     crsmul.azimuthLooks(_azimuthLooks);
@@ -85,8 +85,6 @@ covariance(std::map<std::string, isce::io::Raster> & slc,
         crsmul.crossmul(slc["hh"], slc["hv"], cov[std::make_pair("hh", "hv")]);
 
         crsmul.crossmul(slc["hh"], slc["vv"], cov[std::make_pair("hh", "vv")]);
-
-        crsmul.crossmul(slc["vh"], slc["vh"], cov[std::make_pair("vh", "vh")]);
 
         crsmul.crossmul(slc["vh"], slc["vh"], cov[std::make_pair("vh", "vh")]);
 
@@ -272,6 +270,152 @@ _correctRTC(std::valarray<std::complex<double>> & rdrDataBlock,
     for (size_t i = 0; i<rdrDataBlock.size(); ++i)
         rdrDataBlock[i] = rdrDataBlock[i] * static_cast<double>(rtcDataBlock[i]);
 
+}
+
+template<class T>
+void isce::signal::Covariance<T>::
+faradayRotation(std::map<std::string, isce::io::Raster> & slc,
+                    isce::io::Raster & faradayAngleRaster,
+                    size_t rangeLooks, size_t azimuthLooks)
+{
+    _applyFaradayRotation = false;
+    isce::io::Raster dummySlc("/vsimem/dummy", 1, 1, 1, GDT_CFloat32, "VRT");
+   
+    std::map<std::string, isce::io::Raster> correctedSlc =
+                {{"hh", dummySlc}};
+
+    faradayRotation(slc, faradayAngleRaster, correctedSlc,
+                    rangeLooks, azimuthLooks);
+
+}
+
+template<class T>
+void isce::signal::Covariance<T>::
+faradayRotation(std::map<std::string, isce::io::Raster> & slc,  
+                    isce::io::Raster & faradayAngleRaster,
+                    std::map<std::string, isce::io::Raster> & correctedSlc,
+                    size_t rangeLooks, size_t azimuthLooks)
+{
+    
+    size_t numPolarizations = slc.size();
+    if (numPolarizations < 4) {
+        // throw an error
+        std::cout << "quad-pol data are required for Faraday rotation estimation" << std::endl; 
+    }
+    
+    size_t nrows = slc["hh"].length();
+    size_t ncols = slc["hh"].width();
+
+    size_t blockRows = (blockRows/azimuthLooks)*azimuthLooks;
+    size_t blockRowsMultiLooked = blockRows/azimuthLooks;
+    size_t ncolsMultiLooked = ncols/rangeLooks;
+
+    // number of blocks to process
+    size_t nblocks = nrows / blockRows;
+    if (nblocks == 0) {
+        nblocks = 1;
+    } else if (nrows % (nblocks * blockRows) != 0) {
+        nblocks += 1;
+    }
+
+    // storage for a block of reference SLC data
+    std::valarray<T> Shh(nrows*blockRows);
+    std::valarray<T> Shv(nrows*blockRows);
+    std::valarray<T> Svh(nrows*blockRows);
+    std::valarray<T> Svv(nrows*blockRows);
+
+    std::valarray<float> faradayAngle(ncolsMultiLooked*blockRowsMultiLooked);
+    
+    for (size_t block = 0; block < nblocks; ++block) {
+        std::cout << "block: " << block << std::endl;       
+
+        // start row for this block
+        size_t rowStart;
+        rowStart = block * blockRows;
+
+        //number of lines of data in this block. blockRowsData<= blockRows
+        //Note that blockRows is fixed number of lines
+        //blockRowsData might be less than or equal to blockRows.
+        //e.g. if nrows = 512, and blockRows = 100, then 
+        //blockRowsData for last block will be 12
+        size_t blockRowsData;
+        if ((rowStart + blockRows) > nrows) {
+            blockRowsData = nrows - rowStart;
+        } else {
+            blockRowsData = blockRows;
+        }
+
+        // get blocks of quad-pol data 
+        slc["hh"].getBlock(Shh, 0, rowStart, ncols, blockRowsData);
+        slc["hv"].getBlock(Shv, 0, rowStart, ncols, blockRowsData);
+        slc["vh"].getBlock(Svh, 0, rowStart, ncols, blockRowsData);
+        slc["vv"].getBlock(Svv, 0, rowStart, ncols, blockRowsData);
+
+        // compute faraday rotation angle
+        _faradayRotationAngle(Shh, Shv, Svh, Svv, faradayAngle, 
+                                ncols, blockRows,
+                                rangeLooks, azimuthLooks);
+
+        faradayAngleRaster.setBlock(faradayAngle, 0, rowStart/azimuthLooks,
+                                        ncols/rangeLooks, blockRowsData/azimuthLooks);
+
+        // apply faraday rotation angle
+        if (_applyFaradayRotation) {
+            std::cout << "apply Faraday rotation angle" << std::endl;
+        }
+    }
+
+}
+
+
+
+template<class T>
+void isce::signal::Covariance<T>::
+_faradayRotationAngle(std::valarray<T>& Shh,
+                    std::valarray<T>& Shv,
+                    std::valarray<T>& Svh,
+                    std::valarray<T>& Svv,
+                    std::valarray<float>& faradayRotation,
+                    size_t width, size_t length,
+                    size_t rngLooks, size_t azLooks)
+{
+
+    size_t widthLooked = width/rngLooks;
+    size_t lengthLooked = length/azLooks;
+
+    size_t sizeData = Shh.size();
+    std::valarray<float> M1(sizeData);
+    std::valarray<float> M2(sizeData);
+    std::valarray<float> M3(sizeData);
+
+    for (size_t i = 0; i < sizeData; ++i ){
+        M1[i] = -2*std::real((Shv[i] - Svh[i])*std::conj(Shh[i] + Svv[i]));
+        M2[i] = std::pow(std::abs(Shh[i]-Svv[i]), 2.0);
+        M3[i] = std::pow(std::abs(Shv[i]-Svh[i]), 2.0);
+    }
+   
+    std::valarray<float> M1avg(widthLooked*lengthLooked);
+    std::valarray<float> M2avg(widthLooked*lengthLooked);
+    std::valarray<float> M3avg(widthLooked*lengthLooked);
+
+    isce::signal::Looks<float> looksObj;
+    looksObj.nrows(length);
+    looksObj.ncols(width);
+    looksObj.nrowsLooked(lengthLooked);
+    looksObj.ncolsLooked(widthLooked);
+    looksObj.rowsLooks(azLooks);
+    looksObj.colsLooks(rngLooks);
+
+    looksObj.multilook(M1, M1avg);
+    looksObj.multilook(M2, M2avg);
+    looksObj.multilook(M3, M3avg);
+    
+    size_t sizeOutput = faradayRotation.size();
+
+    for (size_t i = 0; i < sizeOutput; ++i ){ 
+        faradayRotation[i] = -0.25*std::atan2(M1[i], M2[i]-M3[i]);
+    }
+    
 }
 
 /*
