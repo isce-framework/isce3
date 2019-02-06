@@ -274,30 +274,14 @@ _correctRTC(std::valarray<std::complex<double>> & rdrDataBlock,
 
 template<class T>
 void isce::signal::Covariance<T>::
-faradayRotation(std::map<std::string, isce::io::Raster> & slc,
-                    isce::io::Raster & faradayAngleRaster,
-                    size_t rangeLooks, size_t azimuthLooks)
-{
-    _applyFaradayRotation = false;
-    isce::io::Raster dummySlc("/vsimem/dummy", 1, 1, 1, GDT_CFloat32, "VRT");
-   
-    std::map<std::string, isce::io::Raster> correctedSlc =
-                {{"hh", dummySlc}};
-
-    faradayRotation(slc, faradayAngleRaster, correctedSlc,
-                    rangeLooks, azimuthLooks);
-
-}
-
-template<class T>
-void isce::signal::Covariance<T>::
 faradayRotation(std::map<std::string, isce::io::Raster> & slc,  
                     isce::io::Raster & faradayAngleRaster,
-                    std::map<std::string, isce::io::Raster> & correctedSlc,
                     size_t rangeLooks, size_t azimuthLooks)
 {
     
     size_t numPolarizations = slc.size();
+    std::cout << "number of polarizations : "<<  numPolarizations << std::endl;
+
     if (numPolarizations < 4) {
         // throw an error
         std::cout << "quad-pol data are required for Faraday rotation estimation" << std::endl; 
@@ -305,11 +289,12 @@ faradayRotation(std::map<std::string, isce::io::Raster> & slc,
     
     size_t nrows = slc["hh"].length();
     size_t ncols = slc["hh"].width();
-
-    size_t blockRows = (blockRows/azimuthLooks)*azimuthLooks;
+    
+    size_t blockRows = (_linesPerBlock/azimuthLooks)*azimuthLooks;
     size_t blockRowsMultiLooked = blockRows/azimuthLooks;
     size_t ncolsMultiLooked = ncols/rangeLooks;
-
+    
+    std::cout << blockRows << " , " << blockRowsMultiLooked << " , " << ncolsMultiLooked << std::endl;
     // number of blocks to process
     size_t nblocks = nrows / blockRows;
     if (nblocks == 0) {
@@ -317,15 +302,17 @@ faradayRotation(std::map<std::string, isce::io::Raster> & slc,
     } else if (nrows % (nblocks * blockRows) != 0) {
         nblocks += 1;
     }
+   
+    std::cout << "number of blocks: " << nblocks << std::endl;
 
     // storage for a block of reference SLC data
-    std::valarray<T> Shh(nrows*blockRows);
-    std::valarray<T> Shv(nrows*blockRows);
-    std::valarray<T> Svh(nrows*blockRows);
-    std::valarray<T> Svv(nrows*blockRows);
+    std::valarray<T> Shh(ncols*blockRows);
+    std::valarray<T> Shv(ncols*blockRows);
+    std::valarray<T> Svh(ncols*blockRows);
+    std::valarray<T> Svv(ncols*blockRows);
 
     std::valarray<float> faradayAngle(ncolsMultiLooked*blockRowsMultiLooked);
-    
+
     for (size_t block = 0; block < nblocks; ++block) {
         std::cout << "block: " << block << std::endl;       
 
@@ -345,6 +332,7 @@ faradayRotation(std::map<std::string, isce::io::Raster> & slc,
             blockRowsData = blockRows;
         }
 
+
         // get blocks of quad-pol data 
         slc["hh"].getBlock(Shh, 0, rowStart, ncols, blockRowsData);
         slc["hv"].getBlock(Shv, 0, rowStart, ncols, blockRowsData);
@@ -359,10 +347,6 @@ faradayRotation(std::map<std::string, isce::io::Raster> & slc,
         faradayAngleRaster.setBlock(faradayAngle, 0, rowStart/azimuthLooks,
                                         ncols/rangeLooks, blockRowsData/azimuthLooks);
 
-        // apply faraday rotation angle
-        if (_applyFaradayRotation) {
-            std::cout << "apply Faraday rotation angle" << std::endl;
-        }
     }
 
 }
@@ -390,7 +374,7 @@ _faradayRotationAngle(std::valarray<T>& Shh,
 
     for (size_t i = 0; i < sizeData; ++i ){
         M1[i] = -2*std::real((Shv[i] - Svh[i])*std::conj(Shh[i] + Svv[i]));
-        M2[i] = std::pow(std::abs(Shh[i]-Svv[i]), 2.0);
+        M2[i] = std::pow(std::abs(Shh[i]+Svv[i]), 2.0);
         M3[i] = std::pow(std::abs(Shv[i]-Svh[i]), 2.0);
     }
    

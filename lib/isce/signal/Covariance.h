@@ -62,12 +62,6 @@ class isce::signal::Covariance {
         void covariance(std::map<std::string, isce::io::Raster> & slc,
                 std::map<std::pair<std::string, std::string>, isce::io::Raster> & cov);
 
-        // estimate the Faraday rotation angle and correct the SLCs
-        void faradayRotation(std::map<std::string, isce::io::Raster> & slc,
-                    isce::io::Raster & faradayAngleRaster,
-                    std::map<std::string, isce::io::Raster> & correctedSlc,
-                    size_t rangeLooks, size_t azimuthLooks);
-
         // estimate the Faraday rotation angle without correcting SLCs
         void faradayRotation(std::map<std::string, isce::io::Raster> & slc,
                     isce::io::Raster & faradayAngleRaster,
@@ -226,7 +220,7 @@ class isce::signal::Covariance {
         // Optimization options
         double _threshold;
         int _numiter;
-        size_t _linesPerBlock = 1000;
+        size_t _linesPerBlock = 2000;
         isce::core::orbitInterpMethod _orbitMethod;
 
         // radar grids parameters
@@ -277,6 +271,7 @@ class isce::signal::Covariance {
 
         // 
         bool _applyFaradayRotation = true;
+
 };
 
 // Get inline implementations for Geocode
