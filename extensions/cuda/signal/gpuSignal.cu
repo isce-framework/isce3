@@ -23,6 +23,8 @@ template<class T>
 gpuSignal<T>::
 gpuSignal(cufftType _type) {
     _cufft_type = _type;
+    _plan_set = false;
+    _d_data_set = false;
 
     _n = new int[2];
     _inembed = new int[2];
@@ -33,7 +35,11 @@ gpuSignal(cufftType _type) {
 template<class T>
 gpuSignal<T>::
 ~gpuSignal() {
-    cufftDestroy(_plan);
+    if (_plan_set)
+        cufftDestroy(_plan);
+
+    if (_d_data_set)
+        cudaFree(_d_data);
 
     delete[] _n;
     delete[] _inembed;
@@ -79,6 +85,9 @@ void gpuSignal<T>::
 FFT2D(int ncolumns, int nrows)
 {
     _n_elements = nrows * ncolumns;
+    if (_plan_set)
+        cufftDestroy(_plan);
+
     checkCudaErrors(cufftCreate(&_plan));
     size_t worksize;
     checkCudaErrors(cufftMakePlan2d(_plan, nrows, ncolumns, _cufft_type, &worksize));
@@ -101,7 +110,11 @@ fftPlan(int rank, int *n, int howmany,
         int *inembed, int istride, int idist,
         int *onembed, int ostride, int odist)
 {
+    if (_plan_set)
+        cufftDestroy(_plan);
+
     checkCudaErrors(cufftCreate(&_plan));
+    _plan_set = true;
     size_t worksize;
     checkCudaErrors(cufftMakePlanMany(_plan, rank, n, 
                                       inembed, istride, idist, 
@@ -178,6 +191,71 @@ _configureAzimuthFFT(int ncolumns, int nrows)
 
     _rows = nrows;
     _columns = ncolumns;
+}
+
+template<class T>
+void gpuSignal<T>::
+dataToDevice(std::complex<T> *input)
+{
+    if (!_d_data_set) {
+        size_t input_size = _n_elements*sizeof(T)*2;
+        // allocate input
+        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&_d_data), input_size));
+        // copy input
+        checkCudaErrors(cudaMemcpy(_d_data, input, input_size, cudaMemcpyHostToDevice));
+        _d_data_set = true;
+    }
+}
+
+template<class T>
+void gpuSignal<T>::
+dataToDevice(std::valarray<std::complex<T>> &input)
+{
+    if (!_d_data_set) {
+        size_t input_size = input.size()*sizeof(T)*2;
+        // allocate input
+        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&_d_data), input_size));
+        // copy input
+        checkCudaErrors(cudaMemcpy(_d_data, &input[0], input_size, cudaMemcpyHostToDevice));
+        _d_data_set = true;
+    }
+}
+
+template<class T>
+void gpuSignal<T>::
+dataToHost(std::complex<T> *output)
+{
+    if (_d_data_set) {
+        size_t output_size = _n_elements*sizeof(T)*2;
+        // copy output 
+        checkCudaErrors(cudaMemcpy(output, _d_data, output_size, cudaMemcpyDeviceToHost));
+    }
+}
+
+template<class T>
+void gpuSignal<T>::
+dataToHost(std::valarray<std::complex<T>> &output)
+{
+    if (_d_data_set) {
+        size_t output_size = _n_elements*sizeof(T)*2;
+        // copy output 
+        checkCudaErrors(cudaMemcpy(&output[0], _d_data, output_size, cudaMemcpyDeviceToHost));
+    }
+}
+
+/** unnormalized forward transform
+*  @param[in] input block of data
+*  @param[out] output block of spectrum
+*/
+template<class T>
+void gpuSignal<T>::
+forwardC2C()
+{
+    if (_plan_set && _d_data_set)
+        // transform
+        checkCudaErrors(cufftExecC2C(_plan, reinterpret_cast<cufftComplex *>(_d_data),
+                                    reinterpret_cast<cufftComplex *>(_d_data),
+                                    CUFFT_FORWARD));
 }
 
 /** unnormalized forward transform
@@ -333,6 +411,21 @@ forwardD2Z(T *input, std::complex<T> *output)
     
     cudaFree(d_input);
     cudaFree(d_output);
+}
+
+/** unnormalized forward transform
+*  @param[in] input block of data
+*  @param[out] output block of spectrum
+*/
+template<class T>
+void gpuSignal<T>::
+inverseC2C()
+{
+    if (_plan_set && _d_data_set)
+        // transform
+        checkCudaErrors(cufftExecC2C(_plan, reinterpret_cast<cufftComplex *>(_d_data),
+                                    reinterpret_cast<cufftComplex *>(_d_data),
+                                    CUFFT_INVERSE));
 }
 
 /** unnormalized forward transform
