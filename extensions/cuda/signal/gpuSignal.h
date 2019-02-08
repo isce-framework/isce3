@@ -133,6 +133,11 @@ void shift(std::valarray<std::complex<T>> &input,
            std::valarray<std::complex<T>> &output,
            int rows, int nfft, int columns);
 
+/** FFT shift on device
+ */
+template<class T>
+__global__ void rangeShift(T *data_lo_res, T *data_hi_res, int row_lo, int columns);
+
 void upsampleC2C(std::valarray<std::complex<float>> &input,
                  std::valarray<std::complex<float>> &output,
                  std::valarray<std::complex<float>> &shiftImpact,

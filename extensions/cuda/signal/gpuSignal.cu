@@ -618,6 +618,24 @@ void shift(std::valarray<std::complex<T>> &spectrum,
     }
 }
 
+/**
+    recast inputs to either cufftComplex or cufftDoubleComplex
+*/
+template<class T>
+__global__ void rangeShift(T *data_lo_res, T *data_hi_res, int n_rows, int n_cols_lo, int n_cols_hi)
+{
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    int i_row = i / n_rows;
+    int i_col = i % n_cols_lo;
+
+    if (i < n_cols_lo * n_rows) {
+        if (i_col < n_cols_lo / 2)
+            data_hi_res[i*n_cols_hi + i_col] = data_lo_res[i]; 
+        else
+            data_hi_res[(i+1) * n_cols_hi - (n_cols_lo-i_col)] = data_lo_res[i];
+    }
+}
+
 void upsampleC2C(std::valarray<std::complex<float>> &input,
                  std::valarray<std::complex<float>> &output,
                  std::valarray<std::complex<float>> &shiftImpact, 
