@@ -286,6 +286,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
 
             // Get LLH and XYZ coordinates for this azimuth/range
             isce::core::cartesian_t targetLLH, targetXYZ;
+            targetLLH[2] = avg_hgt; // initialize first guess
             isce::geometry::rdr2geo(start + i * pixazm, slt_range, 0, orbit, ellps,
                     flat_interp, targetLLH, mode.wavelength(),
                     product.metadata().identification().lookDirection(),
