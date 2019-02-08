@@ -32,7 +32,8 @@ TEST(TestRTC, CheckResults) {
                 testRaster.length() == refRaster.length());
 
     double error = 0; // pixelwise difference
-    int nskip = 0; // number of ignored pixels
+    int nnan = 0; // number of NaN pixels
+    int nneg = 0; // number of negative pixels
 
     // Valarray to hold line of data
     std::valarray<double> test(testRaster.width()), ref(refRaster.width());
@@ -42,9 +43,12 @@ TEST(TestRTC, CheckResults) {
         refRaster .getLine(ref,  i, 1);
         // Check each value in the line
         for (size_t j = 0; j < refRaster.width(); j++) {
-            if (std::isnan(test[j]) or std::isnan(ref[j]) or
-                ref[j] < 0 or test[j] < 0) {
-                nskip++;
+            if (std::isnan(test[j]) or std::isnan(ref[j])) {
+                nnan++;
+                continue;
+            }
+            if (ref[j] < 0 or test[j] < 0) {
+                nneg++;
                 continue;
             }
             error += std::abs(test[j] - ref[j]);
@@ -56,12 +60,14 @@ TEST(TestRTC, CheckResults) {
     error /= refRaster.width() * refRaster.length();
 
     printf("error = %g\n", error);
-    printf("nskip = %d\n", nskip);
+    printf("nnan = %d\n", nnan);
+    printf("nneg = %d\n", nneg);
 
     // Enforce bound on average pixel-error
     ASSERT_TRUE(error < 1e-3);
     // Enforce bound on number of ignored pixels
-    ASSERT_TRUE(nskip < 1e-3 * refRaster.width() * refRaster.length());
+    ASSERT_TRUE(nnan < 1e-4 * refRaster.width() * refRaster.length());
+    ASSERT_TRUE(nneg < 1e-4 * refRaster.width() * refRaster.length());
 }
 
 int main(int argc, char* argv[]) {
