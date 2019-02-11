@@ -31,6 +31,8 @@ class isce::product::Metadata {
         /** Default constructor */
         inline Metadata() {}
 
+        
+
         /** Get NOE orbit */
         inline isce::core::Orbit orbitNOE() const;
         /** Set NOE orbit */
@@ -52,6 +54,13 @@ class isce::product::Metadata {
         inline void identification(const Identification &);
 
     private:
+        //// Attitude
+        //isce::core::EulerAngles _attitude;
+        //// Orbit
+        //isce::core::Orbit _orbit;
+        
+
+
         // Orbits
         isce::core::Orbit _orbitMOE;
         isce::core::Orbit _orbitNOE;
