@@ -7,7 +7,7 @@ var searchData=
   ['matvec',['matVec',['../structisce_1_1core_1_1LinAlg.html#ab76892255785ba086c768959c3acc836',1,'isce::core::LinAlg']]],
   ['maxheight',['maxHeight',['../classisce_1_1geometry_1_1DEMInterpolator.html#a41fa8e2788e9400bc5b6675f8721f315',1,'isce::geometry::DEMInterpolator']]],
   ['meanheight',['meanHeight',['../classisce_1_1geometry_1_1DEMInterpolator.html#a8bcf686c7db33c4a93c06bcb32655f0a',1,'isce::geometry::DEMInterpolator']]],
-  ['metadata',['Metadata',['../classisce_1_1product_1_1Metadata.html#a6f8c6110daedb73b995eee773ab5bd24',1,'isce::product::Metadata::Metadata()'],['../classisce_1_1product_1_1Product.html#a416a1bece53f1859073b8c28c2c0d54b',1,'isce::product::Product::metadata()']]],
+  ['metadata',['metadata',['../classisce_1_1product_1_1Product.html#a416a1bece53f1859073b8c28c2c0d54b',1,'isce::product::Product::metadata()'],['../classisce_1_1product_1_1Metadata.html#a6f8c6110daedb73b995eee773ab5bd24',1,'isce::product::Metadata::Metadata()']]],
   ['method',['method',['../classisce_1_1core_1_1Interpolator.html#aec51de5e0e777c37020e127181aaa005',1,'isce::core::Interpolator']]],
   ['midlonlat',['midLonLat',['../classisce_1_1geometry_1_1DEMInterpolator.html#abb74d945bbcacd1d300520e3e261297e',1,'isce::geometry::DEMInterpolator']]],
   ['midx',['midX',['../classisce_1_1geometry_1_1DEMInterpolator.html#a8b4679fc1c6196233b065b45f77ad22b',1,'isce::geometry::DEMInterpolator']]],
