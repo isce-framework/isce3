@@ -115,9 +115,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a28be69c3e0388edbdc3fdea4856d6cec"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1Doppler.html#a28be69c3e0388edbdc3fdea4856d6cec">centroid</a> (double slantRange, double wvl, std::string frame, size_t max_iter=10, int side=-1, bool precession=false)</td></tr>
 <tr class="memdesc:a28be69c3e0388edbdc3fdea4856d6cec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the <a class="el" href="structisce_1_1core_1_1Doppler.html" title="Data structure for computing Doppler Centroids from Platform attitude and position. ">Doppler</a> Centroid at given slant range.  <a href="#a28be69c3e0388edbdc3fdea4856d6cec">More...</a><br/></td></tr>
 <tr class="separator:a28be69c3e0388edbdc3fdea4856d6cec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac213146f89eab0dc93920346e0d29e8b"><td class="memItemLeft" align="right" valign="top">std::vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1Doppler.html#ac213146f89eab0dc93920346e0d29e8b">centroidDerivs</a> (double slantRange, double wvl, std::string frame, size_t max_iter=10, int side=-1, bool precession=false, double delta=1.0e-10)</td></tr>
-<tr class="memdesc:ac213146f89eab0dc93920346e0d29e8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute <a class="el" href="structisce_1_1core_1_1Doppler.html" title="Data structure for computing Doppler Centroids from Platform attitude and position. ">Doppler</a> derivatives w.r.t.  <a href="#ac213146f89eab0dc93920346e0d29e8b">More...</a><br/></td></tr>
-<tr class="separator:ac213146f89eab0dc93920346e0d29e8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -256,77 +253,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>epoch</b></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">max_iter</td><td>Number of iterations. Default is 10. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">side</td><td>-1 for Right and +1 for left. Default is -1. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">precession</td><td>To apply precession correction or not </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="ac213146f89eab0dc93920346e0d29e8b"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt; double &gt; isce::core::Doppler::centroidDerivs </td>
-          <td>(</td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>slantRange</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>wvl</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::string&#160;</td>
-          <td class="paramname"><em>frame</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>max_iter</em> = <code>10</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>side</em> = <code>-1</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>precession</em> = <code>false</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>delta</em> = <code>1.0e-10</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Compute <a class="el" href="structisce_1_1core_1_1Doppler.html" title="Data structure for computing Doppler Centroids from Platform attitude and position. ">Doppler</a> derivatives w.r.t. </p>
-<p>attitude elements at a given slant range</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">slantRange</td><td>slant range to pixel of interest in meters </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wvl</td><td>Wavelength of imaging platform in meters </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">frame</td><td>Can be "inertial" or "fixed" </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">max_iter</td><td>Number of iterations. Default is 10. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">side</td><td>-1 for Right and +1 for left. Default is -1. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">precession</td><td>To apply precession correction or not </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">delta</td><td>Step size for attitude elements for computing finite difference </td></tr>
   </table>
   </dd>
 </dl>

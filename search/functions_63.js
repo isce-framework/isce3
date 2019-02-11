@@ -1,7 +1,6 @@
 var searchData=
 [
   ['centroid',['centroid',['../structisce_1_1core_1_1Doppler.html#a28be69c3e0388edbdc3fdea4856d6cec',1,'isce::core::Doppler']]],
-  ['centroidderivs',['centroidDerivs',['../structisce_1_1core_1_1Doppler.html#ac213146f89eab0dc93920346e0d29e8b',1,'isce::core::Doppler']]],
   ['chat',['chat',['../classisce_1_1core_1_1Baseline.html#a007ab04c95e9930dbfcf001e0ae49a07',1,'isce::core::Baseline']]],
   ['checkinitialization',['checkInitialization',['../classisce_1_1geometry_1_1Topo.html#af24834534464655c43bc3df425e061b7',1,'isce::geometry::Topo']]],
   ['checkveclendebug',['checkVecLenDebug',['../namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e',1,'isce::core']]],
