@@ -3,10 +3,9 @@
 // Copyright 2018
 //
 
-// isce::cuda::core
-
 #include "gpuGeometry.h"
 #include "../helper_cuda.h"
+#include "isce/cuda/core/gpuPixel.h"
 
 using isce::cuda::core::gpuLinAlg;
 
@@ -152,6 +151,72 @@ rdr2geo(const isce::cuda::core::gpuPixel & pixel,
 
     // Return convergence flag
     return converged;
+}
+
+// Utility function to compute geocentric tcn basis from state vector
+__device__ void geocentricTCN(const double* pos, const double* vel,
+                              isce::cuda::core::gpuBasis& basis) {
+    double t_hat[3], c_hat[3], n_hat[3], temp[3];
+    using isce::cuda::core::gpuLinAlg;
+    // Compute basis vectors
+    gpuLinAlg::unitVec(pos, n_hat);
+    gpuLinAlg::scale(n_hat, -1.);
+    gpuLinAlg::cross(n_hat, vel, temp);
+    gpuLinAlg::unitVec(temp, c_hat);
+    gpuLinAlg::cross(c_hat, n_hat, temp);
+    gpuLinAlg::unitVec(temp, t_hat);
+    // Store in basis object
+    for (int i = 0; i < 3; i++) {
+        basis.x0[i] = t_hat[i];
+        basis.x1[i] = c_hat[i];
+        basis.x2[i] = n_hat[i];
+    }
+}
+
+/*
+ * This is a helper function for calling the more primitive version of rdr2geo.
+ * For more information, see its CPU equivalent in isce/geometry/geometry.h.
+ * This GPU version is simplified since it cannot perform error checking.
+ */
+__device__ int isce::cuda::geometry::rdr2geo(
+        double aztime, double slant_range, double doppler,
+        const isce::cuda::core::gpuOrbit& orbit,
+        const isce::cuda::core::gpuEllipsoid& ellipsoid,
+        const isce::cuda::geometry::gpuDEMInterpolator& dem_interp,
+        double* target_llh, double wvl, int side, double threshold,
+        int max_iter, int extra_iter) {
+
+    /*
+     * Interpolate Orbit to azimuth time, compute TCN basis,
+     * and estimate geographic coordinates.
+     */
+
+    // Interpolate orbit to get state vector
+    double pos[3], vel[3];
+    orbit.interpolateWGS84Orbit(aztime, pos, vel);
+
+    // Set up geocentric TCN basis
+    isce::cuda::core::gpuBasis tcn_basis;
+    geocentricTCN(pos, vel, tcn_basis);
+
+    // Compute satellite velocity magnitude
+    const double vmag = isce::cuda::core::gpuLinAlg::norm(vel);
+
+    // Compute Doppler factor
+    const double dopfact = 0.5 * wvl * doppler * slant_range / vmag;
+
+    // Wrap range and Doppler factor in a Pixel object
+    isce::cuda::core::gpuPixel pixel(slant_range, dopfact, 0);
+
+    isce::cuda::core::gpuStateVector state;
+    for (int i = 0; i < 3; i++) {
+        state.position[i] = pos[i];
+        state.velocity[i] = vel[i];
+    }
+
+    // Finally, call rdr2geo
+    return rdr2geo(pixel, tcn_basis, state, ellipsoid, dem_interp,
+                   target_llh, side, threshold, max_iter, extra_iter);
 }
 
 /** @param[in] inputLLH Lon/Lat/Hae of target of interest
