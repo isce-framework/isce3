@@ -6,6 +6,7 @@ set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 set(ISCE_CUDA_${PACKAGENAME}_HEADERS
         gpuDEMInterpolator.h
         gpuGeometry.h 
+        gpuRTC.h
         gpuTopoLayers.h
         gpuGeo2rdr.h
         Topo.h
@@ -14,6 +15,7 @@ set(ISCE_CUDA_${PACKAGENAME}_HEADERS
 set(LOCAL_SRCS
         gpuDEMInterpolator.cu
         gpuGeometry.cu 
+        gpuRTC.cu
         gpuTopo.cu
         gpuTopoLayers.cu
         gpuGeo2rdr.cu
