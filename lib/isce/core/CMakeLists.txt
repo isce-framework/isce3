@@ -44,7 +44,6 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Doppler.h
                                     Ellipsoid.h
                                     EulerAngles.h
-                                    EulerAngles.icc
                                     Interpolator.h
                                     LUT1d.h
                                     LUT1d.icc
@@ -62,7 +61,6 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Position.h
                                     Projections.h
                                     Quaternion.h
-                                    Quaternion.icc
                                     Serialization.h
                                     Serialization.h
                                     StateVector.h

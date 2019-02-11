@@ -50,6 +50,14 @@ Doppler(Orbit & orbit, Attitude * attitude, Ellipsoid & ellipsoid, double epoch)
     // Set SCH information
     ptm.radarToXYZ(ellipsoid, peg);
 
+    // Pre-compute attitude rotation matrices evaluated at current epoch
+    // (ant->ECEF for quaternion, ant->TCN for Euler angles)
+    if (attitude->attitudeType() == QUATERNION_T) {
+        _rotmat = attitude->rotmat(epoch, "");
+    } else if (attitude->attitudeType() == EULERANGLES_T) {
+        _rotmat = attitude->rotmat(epoch, "ypr");
+    }
+
     // Save objects
     this->orbit = orbit;
     this->ellipsoid = ellipsoid;
@@ -67,7 +75,7 @@ Doppler(Orbit & orbit, Attitude * attitude, Ellipsoid & ellipsoid, double epoch)
  * @param[in] precession To apply precession correction or not*/
 double isce::core::Doppler::
 centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
-    int side, bool precession) {
+         int side, bool precession) {
 
     // Compute ECI velocity if attitude angles are provided in inertial frame
     cartesian_t Va;
@@ -84,10 +92,8 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
     // Compute u0 directly if quaternion
     cartesian_t u0, temp;
     if (attitude->attitudeType() == QUATERNION_T) {
-        
         temp = {1.0, 0.0, 0.0};
-        cartmat_t R = attitude->rotmat("");
-        LinAlg::matVec(R, temp, u0); 
+        LinAlg::matVec(_rotmat, temp, u0); 
 
     // Else multiply orbit and attitude matrix
     } else if (attitude->attitudeType() == EULERANGLES_T) {
@@ -115,12 +121,9 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
             L0[i][2] = c[i];
         }
 
-        // Get attitude matrix
-        cartmat_t L = attitude->rotmat("ypr");
-
         // Compute u0
         u0 = {1.0, 0.0, 0.0};
-        LinAlg::matVec(L, u0, temp);
+        LinAlg::matVec(_rotmat, u0, temp);
         LinAlg::matVec(L0, temp, u0);
     }
 
@@ -181,6 +184,85 @@ centroid(double slantRange, double wvl, std::string frame, size_t max_iter,
     // Compute doppler
     double fd = -2.0 / wvl * LinAlg::dot(satvel, Rhat);
     return fd;
+}
+
+/**@param[in] slantRange slant range to pixel of interest in meters
+ * @param[in] wvl Wavelength of imaging platform in meters
+ * @param[in] frame Can be "inertial" or "fixed"
+ * @param[in] max_iter Number of iterations. Default is 10.
+ * @param[in] side -1 for Right and +1 for left. Default is -1.
+ * @param[in] precession To apply precession correction or not
+ * @param[in] delta Step size for attitude elements for computing finite difference */
+std::vector<double>
+isce::core::Doppler::
+centroidDerivs(double slantRange, double wvl, std::string frame, size_t max_iter,
+               int side, bool precession, double delta) {
+
+    // Save original rotation matrix
+    isce::core::cartmat_t saveRotmat = _rotmat;
+
+    // Perturb attitude elements to compute Doppler derivatives using finite differences
+    std::vector<double> derivs;
+    double fd_pos, fd_neg;
+    if (attitude->attitudeType() == QUATERNION_T) {
+
+        // Resize derivative vector
+        derivs.resize(4);
+
+        // First element
+        _rotmat = attitude->rotmat(this->epoch, "", delta, 0.0, 0.0, 0.0);
+        fd_pos = this->centroid(slantRange, wvl, frame, max_iter, side, precession);
+        _rotmat = attitude->rotmat(this->epoch, "", -delta, 0.0, 0.0, 0.0);
+        fd_neg = this->centroid(slantRange, wvl, frame, max_iter, side, precession);
+        derivs[0] = (fd_pos - fd_neg) / (2.0 * delta);
+
+        // Second element
+        _rotmat = attitude->rotmat(this->epoch, "", 0.0, delta, 0.0, 0.0);
+        fd_pos = this->centroid(slantRange, wvl, frame, max_iter, side, precession);
+        _rotmat = attitude->rotmat(this->epoch, "", 0.0, -delta, 0.0, 0.0);
+        fd_neg = this->centroid(slantRange, wvl, frame, max_iter, side, precession);
+        derivs[1] = (fd_pos - fd_neg) / (2.0 * delta);
+
+        // Third element
+        _rotmat = attitude->rotmat(this->epoch, "", 0.0, 0.0, delta, 0.0);
+        fd_pos = this->centroid(slantRange, wvl, frame, max_iter, side, precession);
+        _rotmat = attitude->rotmat(this->epoch, "", 0.0, 0.0, -delta, 0.0);
+        fd_neg = this->centroid(slantRange, wvl, frame, max_iter, side, precession);
+        derivs[2] = (fd_pos - fd_neg) / (2.0 * delta);
+
+        // Fourth element
+        _rotmat = attitude->rotmat(this->epoch, "", 0.0, 0.0, 0.0, delta);
+        fd_pos = this->centroid(slantRange, wvl, frame, max_iter, side, precession);
+        _rotmat = attitude->rotmat(this->epoch, "", 0.0, 0.0, 0.0, -delta);
+        fd_neg = this->centroid(slantRange, wvl, frame, max_iter, side, precession);
+        derivs[3] = (fd_pos - fd_neg) / (2.0 * delta);
+
+    } else if (attitude->attitudeType() == EULERANGLES_T) {
+
+        // Resize derivative vector
+        derivs.resize(2);
+
+        // Yaw
+        _rotmat = attitude->rotmat(this->epoch, "", delta, 0.0);
+        fd_pos = this->centroid(slantRange, wvl, frame, max_iter, side, precession);
+        _rotmat = attitude->rotmat(this->epoch, "", -delta, 0.0);
+        fd_neg = this->centroid(slantRange, wvl, frame, max_iter, side, precession);
+        derivs[0] = (fd_pos - fd_neg) / (2.0 * delta);
+
+        // Pitch
+        _rotmat = attitude->rotmat(this->epoch, "", 0.0, delta);
+        fd_pos = this->centroid(slantRange, wvl, frame, max_iter, side, precession);
+        _rotmat = attitude->rotmat(this->epoch, "", 0.0, -delta);
+        fd_neg = this->centroid(slantRange, wvl, frame, max_iter, side, precession);
+        derivs[1] = (fd_pos - fd_neg) / (2.0 * delta);
+
+    }
+
+    // Reset the rotation matrix to original
+    _rotmat = saveRotmat;
+
+    // Return result
+    return derivs;
 }
 
 // end of file

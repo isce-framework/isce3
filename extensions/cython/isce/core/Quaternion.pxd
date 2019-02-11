@@ -18,12 +18,13 @@ cdef extern from "isce/core/Quaternion.h" namespace "isce::core":
     cdef cppclass Quaternion(Attitude):
         # Get copy of quaternion elements
         vector[double] qvec()
-        # Set quaternion elements
-        void qvecElement(double, int)
-        void qvec(vector[double])
+        # Get yaw, pitch, and roll representation
+        void ypr(double t, double & yaw, double & pitch, double & roll)
+        # Get rotation matrix
+        cartmat_t rotmat(double t, const string dummy)
         # Constructor
-        Quaternion(vector[double]) except +
+        Quaternion(vector[double], vector[double]) except +
         # Convert quaternion to yaw, pitch, and roll angles
-        cartesian_t factoredYPR(cartesian_t, cartesian_t, Ellipsoid *)
+        cartesian_t factoredYPR(double, cartesian_t, cartesian_t, Ellipsoid *)
 
 # end of file

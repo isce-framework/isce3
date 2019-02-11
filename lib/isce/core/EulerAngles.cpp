@@ -5,24 +5,23 @@
 // Copyright 2018
 //
 
+// std
 #include <iostream>
 #include <string>
 #include <cmath>
 #include <map>
 
+// pyre
+#include <pyre/journal.h>
+
+// isce::core
 #include "LinAlg.h"
 #include "EulerAngles.h"
 
-/** @param[in] yaw Yaw angle in radians 
- *  @param[in] pitch Pitch angle in radians
- *  @param[in] roll Roll angle in radians
- *  @param[in] yaw_orientation Can be "normal" or "center" */
+/** @param[in] yaw_orientation Can be "normal" or "center" */
 isce::core::EulerAngles::
-EulerAngles(double yaw, double pitch, double roll, const std::string yaw_orientation) 
+EulerAngles(const std::string yaw_orientation) 
     : Attitude(EULERANGLES_T) {
-    _yaw = yaw;
-    _pitch = pitch;
-    _roll = roll;
     if (yaw_orientation.compare("normal") == 0 || yaw_orientation.compare("center") == 0) {
         yawOrientation(yaw_orientation);
     } else {
@@ -31,22 +30,142 @@ EulerAngles(double yaw, double pitch, double roll, const std::string yaw_orienta
     }
 }
 
-// Return vector of Euler angles
-isce::core::cartesian_t
-isce::core::EulerAngles::ypr() {
-    cartesian_t v = {_yaw, _pitch, _roll};
-    return v;
+// Constructor with data vectors
+/** @param[in] time Vector of observation times in seconds since reference epoch
+  * @param[in] yaw Vector of yaw angles
+  * @param[in] pitch Vector of pitch angles
+  * @param[in] roll Vector of roll angles */
+isce::core::EulerAngles::
+EulerAngles(const std::vector<double> & time, const std::vector<double> & yaw,
+            const std::vector<double> & pitch, const std::vector<double> & roll,
+            const std::string yaw_orientation) : EulerAngles(yaw_orientation) {
+    // Call setter for data
+    this->data(time, yaw, pitch, roll);
 }
 
-// Rotation matrix for a given sequence
+// Set data after construction
+/** @param[in] time Vector of observation times in seconds since reference epoch
+  * @param[in] yaw Vector of yaw angles
+  * @param[in] pitch Vector of pitch angles
+  * @param[in] roll Vector of roll angles */
+void
+isce::core::EulerAngles::
+data(const std::vector<double> & time, const std::vector<double> & yaw,
+     const std::vector<double> & pitch, const std::vector<double> & roll) {
+    // Check size consistency
+    const bool flag = (time.size() == yaw.size()) && (yaw.size() == pitch.size()) &&
+                      (pitch.size() == roll.size());
+    if (!flag) {
+        pyre::journal::error_t errorChannel("isce.core.EulerAngles");
+        errorChannel    
+            << pyre::journal::at(__HERE__)
+            << "Inconsistent vector sizes"
+            << pyre::journal::endl;
+    }
+    // Copy vectors
+    _time = time;
+    _yaw = yaw;
+    _pitch = pitch;
+    _roll = roll;
+}
+    
+/** @param[in] tintp Seconds since reference epoch 
+  * @param[out] oyaw Interpolated yaw angle
+  * @param[out] opitch Interpolated pitch angle
+  * @param[out] oroll Interpolated roll angle */
+void
+isce::core::EulerAngles::
+ypr(double tintp, double & oyaw, double & opitch, double & oroll) {
+
+    // Check we have enough state vectors
+    const int n = nVectors();
+    if (n < 9) {
+        pyre::journal::error_t errorChannel("isce.core.EulerAngles");
+        errorChannel
+            << pyre::journal::at(__HERE__)
+            << "EulerAngles::ypr requires at least 9 state vectors to interpolate. "
+            << "EulerAngles only contains " << n
+            << pyre::journal::endl;
+    }
+    
+    // Check time bounds; warn if invalid time requested
+    if (tintp < _time[0] || tintp > _time[n-1]) {
+        pyre::journal::warning_t warnChannel("isce.core.EulerAngles");
+        warnChannel
+            << pyre::journal::at(__HERE__)
+            << "Requested out-of-bounds time. Attitude will be invalid."
+            << pyre::journal::endl;
+        return;
+    }
+
+    // Get nearest time index
+    int idx = -1;
+    for (int i = 0; i < n; ++i) {
+        if (_time[i] >= tintp) {
+            idx = i;
+            break;
+        }
+    }
+    idx -= 5;
+    idx = std::min(std::max(idx, 0), n - 9);
+
+    // Load inteprolation arrays
+    std::vector<double> t(9), yaw(9), pitch(9), roll(9);
+    for (int i = 0; i < 9; i++) {
+        t[i] = _time[idx+i];
+        yaw[i] = _yaw[idx+i];
+        pitch[i] = _pitch[idx+i];
+        roll[i] = _roll[idx+i];
+    }
+
+    const double trel = (8. * (tintp - t[0])) / (t[8] - t[0]);
+    double teller = 1.0;
+    for (int i = 0; i < 9; i++)
+        teller *= trel - i;
+
+    // Perform polynomial interpolation
+    oyaw = 0.0;
+    opitch = 0.0;
+    oroll = 0.0;
+    if (teller == 0.0) {
+        oyaw = yaw[int(trel)];
+        opitch = pitch[int(trel)];
+        oroll = roll[int(trel)];
+    } else {
+        const std::vector<double> noemer = {
+            40320.0, -5040.0, 1440.0, -720.0, 576.0, -720.0, 1440.0, -5040.0, 40320.0
+        };
+        for (int i = 0; i < 9; i++) {
+            double coeff = (teller / noemer[i]) / (trel - i);
+            oyaw += coeff * yaw[i];
+            opitch += coeff * pitch[i];
+            oroll += coeff * roll[i];
+        }
+    }
+}
+
+// Rotation matrix for a given sequence and time
+/** @param[in] tintp Seconds since reference epoch
+  * @param[in] sequence String of rotation sequence
+  * @param[in] dyaw Yaw perturbation
+  * @param[in] dpitch Pitch perturbation
+  * @param[in] d2 (Not used)
+  * @param[in] d3 (Not used)
+  * @param[out] R Rotation matrix for given sequence */
 isce::core::cartmat_t
-isce::core::EulerAngles::rotmat(const std::string sequence) {
+isce::core::EulerAngles::
+rotmat(double tintp, const std::string sequence, double dyaw, double dpitch,
+       double d2, double d3) {
+
+    // Interpolate to get YPR angles
+    double yaw, pitch, roll;
+    this->ypr(tintp, yaw, pitch, roll);
     
     // Construct map for Euler angles to elementary rotation matrices
     std::map<const char, cartmat_t> R_map;
-    R_map['y'] = T3(_yaw);
-    R_map['p'] = T2(_pitch);
-    R_map['r'] = T1(_roll);
+    R_map['y'] = T3(yaw + dyaw);
+    R_map['p'] = T2(pitch + dpitch);
+    R_map['r'] = T1(roll);
 
     // Build composite matrix
     cartmat_t R, R_tmp;
@@ -54,7 +173,6 @@ isce::core::EulerAngles::rotmat(const std::string sequence) {
     LinAlg::matMat(R_map[sequence[0]], R_tmp, R);
 
     return R;
-
 }
 
 // Rotation around Z-axis
@@ -117,16 +235,24 @@ isce::core::EulerAngles::rotmat2ypr(const cartmat_t & R) {
     return angles;
 }
 
-// Return quaternion elements; multiply by -1 to get consistent signs
+// Return quaternion elements at a given time; multiply by -1 to get consistent signs
+/** @param[in] tintp Seconds since reference epoch
+  * @param[out] q Vector of quaternion elements */
 std::vector<double>
-isce::core::EulerAngles::toQuaternionElements() {
+isce::core::EulerAngles::toQuaternionElements(double tintp) {
+
+    // Interpolate to get YPR angles
+    double yaw, pitch, roll;
+    this->ypr(tintp, yaw, pitch, roll);
+
     // Compute trig quantities
-    const double cy = std::cos(_yaw * 0.5);
-    const double sy = std::sin(_yaw * 0.5);
-    const double cp = std::cos(_pitch * 0.5);
-    const double sp = std::sin(_pitch * 0.5);
-    const double cr = std::cos(_roll * 0.5);
-    const double sr = std::sin(_roll * 0.5);
+    const double cy = std::cos(yaw * 0.5);
+    const double sy = std::sin(yaw * 0.5);
+    const double cp = std::cos(pitch * 0.5);
+    const double sp = std::sin(pitch * 0.5);
+    const double cr = std::cos(roll * 0.5);
+    const double sr = std::sin(roll * 0.5);
+
     // Make a vector
     std::vector<double> q = {
         -1.0 * (cy * cr * cp + sy * sr * sp),
@@ -137,13 +263,21 @@ isce::core::EulerAngles::toQuaternionElements() {
     return q;
 }
 
-// Return quaternion representation
+// Return quaternion representation for all epochs
+/** @param[out] quat Quaternion instance */
 isce::core::Quaternion
 isce::core::EulerAngles::toQuaternion() {
-    // Get elements
-    std::vector<double> qvec = toQuaternionElements();
+    // Vector to fill
+    std::vector<double> qvec(nVectors()*4);
+    // Loop over epochs and convert to quaternion values
+    for (size_t i = 0; i < nVectors(); ++i) {
+        std::vector<double> q = toQuaternionElements(_time[i]);
+        for (size_t j = 0; j < 4; ++j) {
+            qvec[i*4 + j] = q[j];
+        }
+    }
     // Make a quaternion
-    Quaternion quat(qvec);
+    Quaternion quat(_time, qvec);
     return quat;
 }
 
