@@ -5,7 +5,7 @@ var searchData=
   ['pegtrans',['Pegtrans',['../structisce_1_1core_1_1Pegtrans.html',1,'isce::core']]],
   ['pegtrans',['Pegtrans',['../structisce_1_1core_1_1Pegtrans.html#a512ae818a779c578311515cbdaf76755',1,'isce::core::Pegtrans::Pegtrans()'],['../structisce_1_1core_1_1Pegtrans.html#ae2e96765762db13bfab887032715ef0a',1,'isce::core::Pegtrans::Pegtrans(const Pegtrans &amp;p)']]],
   ['perpendicularbaseline',['perpendicularBaseline',['../classisce_1_1core_1_1Baseline.html#aaebfa84c726d1ab2e030a915b9e155be',1,'isce::core::Baseline']]],
-  ['pitch',['pitch',['../classisce_1_1core_1_1EulerAngles.html#ac105691fc4ec7402ee965800f5471df6',1,'isce::core::EulerAngles::pitch() const '],['../classisce_1_1core_1_1EulerAngles.html#a1b155742a8c6132aed1877a0c9404f6e',1,'isce::core::EulerAngles::pitch(const double)']]],
+  ['pitch',['pitch',['../classisce_1_1core_1_1EulerAngles.html#a33f26d3df15cbf37d155ef7bdda5097a',1,'isce::core::EulerAngles']]],
   ['pixel',['Pixel',['../classisce_1_1core_1_1Pixel.html',1,'isce::core']]],
   ['plan',['plan',['../classisce_1_1fftw3cxx_1_1plan.html',1,'isce::fftw3cxx']]],
   ['polarstereo',['PolarStereo',['../structisce_1_1core_1_1PolarStereo.html',1,'isce::core']]],
