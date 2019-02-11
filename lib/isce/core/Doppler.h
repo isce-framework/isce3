@@ -41,7 +41,15 @@ struct Doppler {
 
     /**Compute the Doppler Centroid at given slant range*/
     double centroid(double slantRange, double wvl, std::string frame,
-            size_t max_iter=10, int side=-1, bool precession=false);
+                    size_t max_iter=10, int side=-1, bool precession=false);
+
+    /**Compute Doppler derivatives w.r.t. attitude elements at a given slant range */
+    std::vector<double> centroidDerivs(double slantRange, double wvl, std::string frame,
+                                       size_t max_iter=10, int side=-1, bool precession=false,
+                                       double delta = 1.0e-10);
+
+    private:
+        cartmat_t _rotmat;
 
 };
 
