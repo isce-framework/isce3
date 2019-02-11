@@ -69,7 +69,7 @@ class isce::core::Ellipsoid {
         inline double rNorth(double lat) const;
 
         /** Return directional local radius */
-        inline double rDir(double lat, double hdg) const;
+        inline double rDir(double hdg, double lat) const;
 
         /** Transform WGS84 Lon/Lat/Hgt to ECEF xyz */
         void lonLatToXyz(const cartesian_t &llh, cartesian_t &xyz) const;
