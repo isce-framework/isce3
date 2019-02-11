@@ -47,18 +47,6 @@ covariance(std::map<std::string, isce::io::Raster> & slc,
     isce::signal::Crossmul crsmul;
 
     // set up crossmul
-    /*crsmul.doppler(_doppler, _doppler);
-
-    crsmul.prf(_prf);
-
-    crsmul.rangeSamplingFrequency(_rangeSamplingFrequency);
-
-    crsmul.rangeBandwidth(_rangeBandwidth);
-
-    crsmul.wavelength(_wavelength);
-
-    crsmul.rangePixelSpacing(_rangePixelSpacing);
-    */
     crsmul.rangeLooks(_rangeLooks);
 
     crsmul.azimuthLooks(_azimuthLooks);
@@ -351,8 +339,6 @@ faradayRotation(std::map<std::string, isce::io::Raster> & slc,
 
 }
 
-
-
 template<class T>
 void isce::signal::Covariance<T>::
 _faradayRotationAngle(std::valarray<T>& Shh,
@@ -397,68 +383,90 @@ _faradayRotationAngle(std::valarray<T>& Shh,
     size_t sizeOutput = faradayRotation.size();
 
     for (size_t i = 0; i < sizeOutput; ++i ){ 
-        faradayRotation[i] = -0.25*std::atan2(M1[i], M2[i]-M3[i]);
+        faradayRotation[i] = 0.25*std::atan2(M1[i], M2[i]-M3[i]);
     }
     
 }
 
-/*
-void isce::signal::Covariance::
-geocodeCovariance(isce::io::Raster& C11,
-                isce::io::Raster& C12,
-                isce::io::Raster& C22,
-                isce::io::Raster& TCF,
-                isce::io::Raster& GC11,
-                isce::io::Raster& GC12,
-                isce::io::Raster& GC13,
-                isce::io::Raster& GC21,
-                isce::io::Raster& GC22,
-                isce::io::Raster& GC23,
-                isce::io::Raster& GC31,
-                isce::io::Raster& GC32,
-                isce::io::Raster& GC33)
-{
-    
-    // buffers for blocks of data
 
-    //for each block in the geocoded grid:
-        
-        //read a block in radar coordintae for C11, C12, C22, RTC
-        
-        //RTC correction
-        
-        //Polarization estimation/correction
-        
-        //Effective number of looks
-        
-        //Faraday rotation estimation/correction
-        
-        //Symmetrization
-                
-        //Covariance 
+template<class T>
+void isce::signal::Covariance<T>::
+orientationAngle(isce::io::Raster& azimuthSlopeRaster,
+                isce::io::Raster& rangeSlopeRaster,
+                isce::io::Raster& lookAngleRaster,
+                isce::io::Raster& tauRaster)
+{
+ 
     
+    size_t nrows = azimuthSlopeRaster.length();
+    size_t ncols = azimuthSlopeRaster.width();
+   
+    size_t blockRows = _linesPerBlock;
+
+    std::valarray<float> azimuthSlope(ncols*blockRows);
+    std::valarray<float> rangeSlope(ncols*blockRows);
+    std::valarray<float> lookAngle(ncols*blockRows);
+    std::valarray<float> tau(ncols*blockRows);
+
+    size_t nblocks = nrows / blockRows;
+    if (nblocks == 0) {
+        nblocks = 1;
+    } else if (nrows % (nblocks * blockRows) != 0) {
+        nblocks += 1;
+    }
+
+    for (size_t block = 0; block < nblocks; ++block) {
+        std::cout << "block: " << block << std::endl;       
+
+        // start row for this block
+        size_t rowStart;
+        rowStart = block * blockRows;
+
+        //number of lines of data in this block. blockRowsData<= blockRows
+        //Note that blockRows is fixed number of lines
+        //blockRowsData might be less than or equal to blockRows.
+        //e.g. if nrows = 512, and blockRows = 100, then 
+        //blockRowsData for last block will be 12
+        size_t blockRowsData;
+        if ((rowStart + blockRows) > nrows) {
+            blockRowsData = nrows - rowStart;
+        } else {
+            blockRowsData = blockRows;
+        }
+
+        azimuthSlopeRaster.getBlock(azimuthSlope, 0, rowStart, ncols, blockRowsData);
+        rangeSlopeRaster.getBlock(rangeSlope, 0, rowStart, ncols, blockRowsData);
+        lookAngleRaster.getBlock(lookAngle, 0, rowStart, ncols, blockRowsData);
+
+        _orientationAngle(azimuthSlope, rangeSlope,
+                        lookAngle, tau);
+
+        tauRaster.setBlock(tau, 0, rowStart, ncols, blockRowsData);
+
+    }
+   
 }
 
-void isce::signal::Covariance::
-_rtcCorrection(std::valarray<std::complex<float>>& input, 
-                std::valarray<float>& TCF)
-{
-    input *= TCF; 
-}
 
-void isce::signal::Covariance::
+template<class T>
+void isce::signal::Covariance<T>::
 _orientationAngle(std::valarray<float>& azimuthSlope,
                 std::valarray<float>& rangeSlope,
                 std::valarray<float>& lookAngle,
                 std::valarray<float>& tau)
 {
-    tau = std::atan2(std::tan(azimuthSlope), 
+
+    size_t sizeData = tau.size();
+    for (size_t i = 0; i < sizeData; ++i ){
+            tau = std::atan2(std::tan(azimuthSlope[i]), 
                     std::sin(lookAngle) - 
                         std::tan(rangeSlope)*std::cos(lookAngle));
-
+    }
 }
 
-void isce::signal::Covariance::
+
+template<class T>
+void isce::signal::Covariance<T>::
 _correctOrientation(std::valarray<float>& tau, 
                     std::valarray<std::complex<float>>& C11,
                     std::valarray<std::complex<float>>& C12,
@@ -468,78 +476,99 @@ _correctOrientation(std::valarray<float>& tau,
                     std::valarray<std::complex<float>>& C23,
                     std::valarray<std::complex<float>>& C31,
                     std::valarray<std::complex<float>>& C32,
-                    std::valarray<std::complex<float>>& C33)
+                    std::valarray<std::complex<float>>& C33,
+                    std::valarray<std::complex<float>>& c11,
+                    std::valarray<std::complex<float>>& c12,
+                    std::valarray<std::complex<float>>& c13,
+                    std::valarray<std::complex<float>>& c21,
+                    std::valarray<std::complex<float>>& c22,
+                    std::valarray<std::complex<float>>& c23,
+                    std::valarray<std::complex<float>>& c31,
+                    std::valarray<std::complex<float>>& c32,
+                    std::valarray<std::complex<float>>& c33)
 {
+    // Given the 3x3 Covariance matrix, the matrix after 
+    // polarimetric orientation correction is obtained as:
+    // C = R*C*R_T
+    // where R is the rotation matrix and R_T is the transpose 
+    // of the rotation matrix.
+    
+    // the size of the rotation angle array
     size_t arraySize = tau.size();
+
+    // buffer for the first two elements of the rotation matrix
     std::valarray<float> R11(arraySize);
     std::valarray<float> R12(arraySize);
     
+    // the first two elements of the rotation matrix
+    R11 = 1.0 + std::cos(2.0f*tau);
+    R12 = std::sqrt(2.0)*std::sin(2.0f*tau);
+    
+    // All other elemensts of the rotation matrix
+    // can be derived from the first two elements. 
+    // R13 = 2.0 - R11;
+
+    // R21 = -1.0*R12;
+    // R22 = 2.0*(R11 - 1.0);
+    // R23 = R12;
+
+    // R31 = 2.0 - R11;
+    // R32 = -1.0*R12; 
+    // R33 = R11;
+    //
 
 
-    R11 = 1.0 + std::cos(2*tau);
-    R12 = std::sqrt(2)*std::sin(2*tau);
-    R13 = 2.0 - R11;
+    for (size_t i = 0; i < arraySize; ++i) {
+        float r11 = R11[i];
+        float r12 = R12[i];
+        float r13 = (2.0f - R11[i]);
+        float r21 = -1.0f*R12[i];
+        float r22 = 2.0f*(R11[i] - 1.0f);
+        float r23 = R12[i];
+        float r31 = 2.0f - R11[i];
+        float r32 = -1.0f*R12[i];
+        float r33 = R11[i];
+        
+        c11[i] = 0.25f*(r11*(C11[i]*r11 + C12[i]*r12 + C13[i]*r13) +
+                        r12*(C21[i]*r11 + C22[i]*r12 + C23[i]*r13) +
+                        r13*(C31[i]*r11 + C32[i]*r12 + C33[i]*r13));
 
-    R21 = -1.0*R12;
-    R22 = 2.0*(R11 - 1.0);
-    R23 = R12;
+        c12[i] = 0.25f*(r11*(C11[i]*r21 + C12[i]*r22 + C13[i]*r23) +
+                        r12*(C21[i]*r21 + C22[i]*r22 + C23[i]*r23) +
+                        r13*(C31[i]*r21 + C32[i]*r22 + C33[i]*r23));
+        
+        c13[i] = 0.25f*(r11*(C11[i]*r31 + C12[i]*r32 + C13[i]*r33) +
+                        r12*(C21[i]*r31 + C22[i]*r32 + C23[i]*r33) +
+                        r13*(C31[i]*r31 + C32[i]*r32 + C33[i]*r33));
 
-    R31 = 2.0 - R11;
-    R32 = -1*R12; 
-    R33 = R11;
+        c21[i] = 0.25f*(r21*(C11[i]*r11 + C12[i]*r12 + C13[i]*r13) +
+                        r22*(C21[i]*r11 + C22[i]*r12 + C23[i]*r13) +
+                        r23*(C31[i]*r11 + C32[i]*r12 + C33[i]*r13));
 
-    // 
-    c11 = 0.25*(R11*(C11*R11 + C12*R12 + C13*R13) +
-                R12*(C21*R11 + C22*R12 + C23*R13) +
-                R13*(C31*R11 + C32*R12 + C33*R13));
+        c22[i] = 0.25f*(r21*(C11[i]*r21 + C12[i]*r22 + C13[i]*r23) +
+                        r22*(C21[i]*r21 + C22[i]*r22 + C23[i]*r23) +
+                        r23*(C31[i]*r21 + C32[i]*r22 + C33[i]*r23));
 
-    c12 = 0.25*(R11*(C11*R21 + C12*R22 + C13*R23) + 
-                R12*(C21*R21 + C22*R22 + C23*R23) + 
-                R13*(C31*R21 + C32*R22 + C33*R23));
+        c23[i] = 0.25f*(r21*(C11[i]*r31 + C12[i]*r32 + C13[i]*r33) +
+                        r22*(C21[i]*r31 + C22[i]*r32 + C23[i]*r33) +
+                        r23*(C31[i]*r31 + C32[i]*r32 + C33[i]*r33));
 
-    c13 = 0.25*(R11*(C11*R31 + C12*R32 + C13*R33) +
-                R12*(C21*R31 + C22*R32 + C23*R33) +
-                R13*(C31*R31 + C32*R32 + C33*R33));
+        c31[i] = 0.25f*(r31*(C11[i]*r11 + C12[i]*r12 + C13[i]*r13) +
+                        r32*(C21[i]*r11 + C22[i]*r12 + C23[i]*r13) +
+                        r33*(C31[i]*r11 + C32[i]*r12 + C33[i]*r13));
 
-    c21 = 0.25*(R21*(C11*R11 + C12*R12 + C13*R13) +
-                R22*(C21*R11 + C22*R12 + C23*R13) +
-                R23*(C31*R11 + C32*R12 + C33*R13));
+        c32[i] = 0.25f*(r31*(C11[i]*r21 + C12[i]*r22 + C13[i]*r23) +
+                        r32*(C21[i]*r21 + C22[i]*r22 + C23[i]*r23) +
+                        r33*(C31[i]*r21 + C32[i]*r22 + C33[i]*r23));
 
-    c22 = 0.25*(R21*(C11*R21 + C12*R22 + C13*R23) +
-                R22*(C21*R21 + C22*R22 + C23*R23) +
-                R23*(C31*R21 + C32*R22 + C33*R23));
+        c33[i] = 0.25f*(r31*(C11[i]*r31 + C12[i]*r32 + C13[i]*r33) +
+                        r32*(C21[i]*r31 + C22[i]*r32 + C23[i]*r33) +
+                        r33*(C31[i]*r31 + C32[i]*r32 + C33[i]*r33));
 
-    c23 = 0.25*(R21*(C11*R31 + C12*R32 + C13*R33) +
-                R22*(C21*R31 + C22*R32 + C23*R33) +
-                R23*(C31*R31 + C32*R32 + C33*R33));
-
-    c31 = 0.25*(R31*(C11*R11 + C12*R12 + C13*R13) +
-                R32*(C21*R11 + C22*R12 + C23*R13) +
-                R33*(C31*R11 + C32*R12 + C33*R13));
-
-    c32 = 0.25*(R31*(C11*R21 + C12*R22 + C13*R23) +
-                R32*(C21*R21 + C22*R22 + C23*R23) +
-                R33*(C31*R21 + C32*R22 + C33*R23));
-
-    c33 = 0.25*(R31*(C11*R31 + C12*R32 + C13*R33) +
-                R32*(C21*R31 + C22*R32 + C23*R33) +
-                R33*(C31*R31 + C32*R32 + C33*R33));
-
+    }
 }
 
-void isce::signal::Covariance::
-_faradayRotationAngle(std::valarray<std::complex<float>>& Shh,
-                    std::valarray<std::complex<float>>& Shv,
-                    std::valarray<std::complex<float>>& Svh,
-                    std::valarray<std::complex<float>>& Svv,
-                    std::valarray<float>& delta)
-{
-    delta = 0.25*std::atan2(-2*std::real((Shv - Svh)*std::conj(Shh + Svv)) ,
-                            std::pow(std::abs(Shh + Svv), 2) - 
-                            std::pow(std::abs(Shv - Svh), 2) );
-
-
-}
+/*
 
 void isce::signal::Covariance::
 _correctFaradayRotation()

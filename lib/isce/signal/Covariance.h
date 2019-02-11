@@ -67,6 +67,12 @@ class isce::signal::Covariance {
                     isce::io::Raster & faradayAngleRaster,
                     size_t rangeLooks, size_t azimuthLooks);
 
+        // estimate Polarimetric orientation angle
+        void orientationAngle(isce::io::Raster& azimuthSlopeRaster,
+                                isce::io::Raster& rangeSlopeRaster,
+                                isce::io::Raster& lookAngleRaster,
+                                isce::io::Raster& tau);
+
         void geocodeCovariance(
                     isce::io::Raster& rdrCov,
                     isce::io::Raster& rtc,
@@ -132,7 +138,6 @@ class isce::signal::Covariance {
         inline void radarBlockMargin(int radarBlockMargin);
 
         //interpolator
-        //isce::core::Interpolator * _interp = nullptr;
         inline void interpolator(isce::core::Interpolator<T> * interp);
 
         
@@ -140,17 +145,17 @@ class isce::signal::Covariance {
     private:
 
         void _correctRTC(std::valarray<std::complex<float>> & rdrDataBlock,
-                        std::valarray<float> & rtcDataBlock);
+                    std::valarray<float> & rtcDataBlock);
 
         void _correctRTC(std::valarray<std::complex<double>> & rdrDataBlock,
-                        std::valarray<float> & rtcDataBlock);
+                    std::valarray<float> & rtcDataBlock);
 
 
         void _computeRangeAzimuthBoundingBox(int lineStart, 
-                        int blockLength, int blockWidth,
-                        int margin, isce::geometry::DEMInterpolator & demInterp,
-                        int & azimuthFirstLine, int & azimuthLastLine,
-                        int & rangeFirstPixel, int & rangeLastPixel);
+                    int blockLength, int blockWidth,
+                    int margin, isce::geometry::DEMInterpolator & demInterp,
+                    int & azimuthFirstLine, int & azimuthLastLine,
+                    int & rangeFirstPixel, int & rangeLastPixel);
 
         void _loadDEM(isce::io::Raster demRaster,
                     isce::geometry::DEMInterpolator & demInterp,
@@ -182,6 +187,31 @@ class isce::signal::Covariance {
                     std::valarray<float>& faradayRotation,
                     size_t width, size_t length,
                     size_t rngLooks, size_t azLooks);
+
+        void _orientationAngle(std::valarray<float>& azimuthSlope,
+                    std::valarray<float>& rangeSlope,
+                    std::valarray<float>& lookAngle,
+                    std::valarray<float>& tau);
+
+        void _correctOrientation(std::valarray<float>& tau,
+                    std::valarray<std::complex<float>>& C11,
+                    std::valarray<std::complex<float>>& C12,
+                    std::valarray<std::complex<float>>& C13,
+                    std::valarray<std::complex<float>>& C21,
+                    std::valarray<std::complex<float>>& C22,
+                    std::valarray<std::complex<float>>& C23,
+                    std::valarray<std::complex<float>>& C31,
+                    std::valarray<std::complex<float>>& C32,
+                    std::valarray<std::complex<float>>& C33,
+                    std::valarray<std::complex<float>>& c11,
+                    std::valarray<std::complex<float>>& c12,
+                    std::valarray<std::complex<float>>& c13,
+                    std::valarray<std::complex<float>>& c21,
+                    std::valarray<std::complex<float>>& c22,
+                    std::valarray<std::complex<float>>& c23,
+                    std::valarray<std::complex<float>>& c31,
+                    std::valarray<std::complex<float>>& c32,
+                    std::valarray<std::complex<float>>& c33);
 
     private:
 
