@@ -8,14 +8,8 @@
 #define ISCE_PRODUCT_METADATA_H
 
 // isce::core
-#include "isce/core/Attitude.h"
+#include "isce/core/EulerAngles.h"
 #include "isce/core/Orbit.h"
-
-// isce::radar
-#include "isce/radar/Radar.h"
-
-// isce::product
-#include "isce/product/Identification.h"
 
 // Declarations
 namespace isce {
@@ -31,52 +25,37 @@ class isce::product::Metadata {
         /** Default constructor */
         inline Metadata() {}
 
+        /** Copy constructor */
+        inline Metadata(const Metadata &);
+
+        /** Get read-only attitude */
+        inline const isce::core::EulerAngles & attitude() const;
+        /** Set attitude */
+        inline void attitude(const isce::core::EulerAngles &);
+
+        /** Get read-only orbit */
+        inline const isce::core::Orbit & orbit() const;
+        /** Set orbit */
+        inline void orbit(const isce::core::Orbit &);
+
+        /** Get reference to ProcessingInformation */
+        inline ProcessingInformation & procInfo() { return _procInfo; }
         
-
-        /** Get NOE orbit */
-        inline isce::core::Orbit orbitNOE() const;
-        /** Set NOE orbit */
-        inline void orbitNOE(const isce::core::Orbit &);
-
-        /** Get POE orbit */
-        inline isce::core::Orbit orbitPOE() const;
-        /** Set POE orbit */
-        inline void orbitPOE(const isce::core::Orbit &);
-
-        /** Get radar instrument */
-        inline isce::radar::Radar instrument() const;
-        /** Set instrument */
-        inline void instrument(const isce::radar::Radar &);
-
-        /** Get identification */
-        inline Identification identification() const;
-        /** Set identification */
-        inline void identification(const Identification &);
-
     private:
-        //// Attitude
-        //isce::core::EulerAngles _attitude;
-        //// Orbit
-        //isce::core::Orbit _orbit;
-        
+        // Attitude
+        isce::core::EulerAngles _attitude;
+        // Orbit
+        isce::core::Orbit _orbit;
+        // ProcessingInformation
+        isce::product::ProcessingInformation _procInfo;
 
-
-        // Orbits
-        isce::core::Orbit _orbitMOE;
-        isce::core::Orbit _orbitNOE;
-        isce::core::Orbit _orbitPOE;
-
-        // Radar instrument
-        isce::radar::Radar _instrument;
-
-        // Identification
-        Identification _id;
 };
 
-// Get inline implementations for Metadata
-#define ISCE_PRODUCT_METADATA_ICC
-#include "Metadata.icc"
-#undef ISCE_PRODUCT_METADATA_ICC
+// Copy constructor
+/** @param[in] meta Metadata object */
+isce::product::Metadata::
+Metadata(const Metadata & meta) : _attitude(meta.attitude()), _orbit(meta.orbit()),
+                                  _procInfo(meta.procInfo()) {}
 
 #endif
 

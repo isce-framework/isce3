@@ -6,12 +6,10 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS
     ComplexImagery.h
-    Identification.h
-    Identification.icc
     ImageMode.h
     ImageMode.icc
     Metadata.h
-    Metadata.icc
+    ProcessingInformation.h
     Product.h
     Product.icc
     Serialization.h

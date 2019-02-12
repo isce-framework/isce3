@@ -36,6 +36,25 @@ class isce::core::LUT2d {
               const std::valarray<double> & ycoord,
               const isce::core::Matrix<T> & data,
               isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD);
+
+        // Deep copy constructor
+        inline LUT2d(const LUT2d<T> & lut)
+
+        // Get interpolator method
+        inline isce::core::dataInterpMethod interpMethod() const {
+            return _interp->method();
+        }
+
+        // Get starting X-coordinate
+        inline double xStart() const { return _xstart; }
+        // Get starting Y-coordinate
+        inline double yStart() const { return _ystart; }
+        // Get X-spacing
+        inline double xSpacing() const { return _dx; }
+        // Get Y-spacing
+        inline double ySpacing() const { return _dy; }
+        // Get read-only reference to data
+        inline const isce::core::Matrix<T> & data() const { return _data; }
               
         // Evaluate LUT    
         T eval(double, double) const;
@@ -63,6 +82,15 @@ template <typename T>
 isce::core::LUT2d<T>::
 LUT2d(isce::core::dataInterpMethod method) {
     _setInterpolator(method);
+}
+
+// Deep copy constructor
+template <typename T>
+isce::core::LUT2d<T>::
+LUT2d(const isce::core::LUT2d<T> & lut) : _xstart(lut.xStart()), _ystart(lut.yStart()),
+                                          _dx(lut.xSpacing()), _dy(lut.ySpacing()),
+                                          _data(lut.data()) {
+    _setInterpolator(lut.interpMethod());
 }
 
 // Set interpolator method

@@ -9,6 +9,7 @@
 
 // std
 #include <string>
+#include <map>
 
 // isce::product
 #include <isce/product/ComplexImagery.h>
@@ -29,28 +30,46 @@ class isce::product::Product {
         /** Constructor from IH5File object. */
         inline Product(isce::io::IH5File &);
 
-        /** Constructor with ComplexImagery and Metadata objects. */
-        inline Product(const ComplexImagery &, const Metadata &);
+        /** Constructor with Metadata and Swath map. */
+        inline Product(const Metadata &, const std::map<char, isce::product::Swath> &);
 
-        /** Get a const reference to the complex imagery. */
-        inline const ComplexImagery & complexImagery() const { return _complexImagery; }
+        /** Get a reference to the metadata. */
+        inline Metadata & metadata() { return _metadata; }
 
-        /** Get a const reference to the metadata. */
-        inline const Metadata & metadata() const { return _metadata; }
+        /** Get a reference to a swath */
+        inline Swath & swath(char freq) { return _swaths[freq]; }
+        /** Set a swath */
+        inline void swath(const Swath & s, char freq) { _swaths[freq] = s; }
 
         /** Get the filename of the HDF5 file. */
         inline std::string filename() const { return _filename; }
 
     private:
-        ComplexImagery _complexImagery;
-        Metadata _metadata;
+        isce::product::Metadata _metadata;
+        std::map<char, isce::product::Swath> _swaths;
         std::string _filename;
 };
 
-// Get inline implementations for ImageMode
-#define ISCE_PRODUCT_PRODUCT_ICC
-#include "Product.icc"
-#undef ISCE_PRODUCT_PRODUCT_ICC
+/** @param[in] file IH5File object for product. */
+isce::product::Product::
+Product(isce::io::IH5File & file) {
+    // Get swaths group
+    isce::io::IGroup imGroup = file.openGroup("/science/LSAR/SLC/swaths");
+    // Configure swaths
+    loadFromH5(imGroup, _swaths);
+    // Get metadata group
+    isce::io::IGroup metaGroup = file.openGroup("/science/LSAR/SLC/metadata"); 
+    // Configure metadata
+    loadFromH5(metaGroup, _metadata);
+    // Save the filename
+    _filename = file.filename();
+}
+
+/** @param[in] meta Metadata object
+  * @param[in] swaths Map of Swath objects per frequency */
+isce::product::Product::
+Product(const Metadata & meta, const std::map<char, isce::product::Swath> & swaths) :
+    _metadata(meta), _swaths(swaths) {}
 
 #endif
 
