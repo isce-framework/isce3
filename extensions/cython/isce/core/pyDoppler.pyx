@@ -105,38 +105,12 @@ cdef class pyDopplerEuler(pyDoppler):
         cdef np.ndarray[np.float64_t, ndim=2] outDerivs = (
             np.zeros([nr,2], dtype=slantRange.dtype))
 
-        # Cache the old attitude values
-        yaw_ref = self.eulerangles.yaw
-        pitch_ref = self.eulerangles.pitch
-
-        # Loop over range values
+        # Loop over range values and compute derivatives
+        cdef vector[double] vec_deriv
         for j in range(nr):
-
-            # Yaw positive
-            self.eulerangles.yaw = yaw_ref + dx
-            fd_pos = self.centroid(slantRange[j], wvl, max_iter)
-
-            # Yaw negative
-            self.eulerangles.yaw = yaw_ref - dx
-            fd_neg = self.centroid(slantRange[j], wvl, max_iter)
-
-            # Yaw derivative
-            outDerivs[j,0] = (fd_pos - fd_neg) / (2.0 * dx)
-            # Reset
-            self.eulerangles.yaw = yaw_ref
-
-            # Pitch positive
-            self.eulerangles.pitch = pitch_ref + dx
-            fd_pos = self.centroid(slantRange[j], wvl, max_iter)
-
-            # Pitch negative
-            self.eulerangles.pitch = pitch_ref - dx
-            fd_neg = self.centroid(slantRange[j], wvl, max_iter)
-
-            # Pitch derivative
-            outDerivs[j,1] = (fd_pos - fd_neg) / (2.0 * dx)
-            # Reset
-            self.eulerangles.pitch = pitch_ref
+            vec_deriv = self.centroidDerivs(slantRange[j], wvl, max_iter)
+            outDerivs[j,0] = vec_deriv[0]
+            outDerivs[j,1] = vec_deriv[1]
 
         return outDerivs
         
@@ -156,34 +130,26 @@ cdef class pyDopplerQuaternion(pyDoppler):
         self.__owner = True
 
     def derivs(self, np.ndarray[np.float64_t, ndim=1] slantRange, double wvl,
-        string frame, int max_iter, int side, bool precession,
-        np.ndarray[np.float64_t, ndim=2] outDerivs):
+        string frame, int max_iter, int side, bool precession):
          
         cdef int nr, j, k
         cdef double fd_pos, fd_neg
         cdef double dx = 1.0e-10
 
+        # Get number of range bins
         nr = slantRange.shape[0]
 
-        # Cache the old attitude values
-        cdef vector[double] qref = self.quaternion.c_quaternion.qvec()
+        # Allocate output derivatives
+        cdef np.ndarray[np.float64_t, ndim=2] outDerivs = (
+            np.zeros([nr,4], dtype=slantRange.dtype))
 
-        # Loop over range values
+        # Loop over range values and compute derivatives
+        cdef vector[double] vec_deriv
         for j in range(nr):
-            # Loop over quaternion elements
+            vec_deriv = self.centroidDerivs(slantRange[j], wvl, max_iter)
             for k in range(4):
-                # Positive
-                self.quaternion.c_quaternion.qvecElement(qref[k] + dx, k)
-                fd_pos = self.centroid(slantRange[j], wvl, frame, max_iter, side, precession)
-                # Negative
-                self.quaternion.c_quaternion.qvecElement(qref[k] - dx, k)
-                fd_neg = self.centroid(slantRange[j], wvl, frame, max_iter, side, precession)
-                # Derivative
-                outDerivs[j,k] = (fd_pos - fd_neg) / (2.0 * dx)
-                # Reset
-                self.quaternion.c_quaternion.qvecElement(qref[k], k)
-
-        return
-
+                outDerivs[j,k] = vec_deriv[k]
+                
+        return outDerivs
 
 # end of file

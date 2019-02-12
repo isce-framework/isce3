@@ -8,8 +8,10 @@
 #include <iostream>
 #include <cstdio>
 #include <cmath>
+#include <vector>
 #include <gtest/gtest.h>
 
+#include "isce/core/Utilities.h"
 #include "isce/core/EulerAngles.h"
 
 
@@ -18,7 +20,7 @@ struct EulerTest : public ::testing::Test {
     typedef isce::core::EulerAngles EulerAngles;
     typedef isce::core::cartmat_t cartmat_t;
 
-    double yaw, pitch, roll, tol;
+    double tol;
     cartmat_t R_ypr_ref, R_rpy_ref;
     EulerAngles attitude;
 
@@ -26,13 +28,19 @@ struct EulerTest : public ::testing::Test {
 
         EulerTest() {
 
-            // Set the attitude angles
-            yaw = 0.1;
-            pitch = 0.05;
-            roll = -0.1;
+            // Make an array of epoch times
+            std::vector<double> time = isce::core::linspace(0.0, 10.0, 20);
 
-            // Instantate attitude object
-            attitude = EulerAngles(yaw, pitch, roll);
+            // Make constant arrays of Euler angles
+            std::vector<double> yaw, pitch, roll;
+            for (size_t i = 0; i < time.size(); ++i) {
+                yaw.push_back(0.1);
+                pitch.push_back(0.05);
+                roll.push_back(-0.1);
+            }
+
+            // Set data for EulerAngles object
+            attitude = EulerAngles(time, yaw, pitch, roll);
 
             // Define the reference rotation matrix (YPR)
             R_ypr_ref = {{
@@ -56,7 +64,7 @@ struct EulerTest : public ::testing::Test {
 };
 
 TEST_F(EulerTest, CheckYPR) {
-    cartmat_t R_ypr = attitude.rotmat("ypr");
+    cartmat_t R_ypr = attitude.rotmat(5.0, "ypr");
     for (size_t i = 0; i < 3; ++i) {
         for (size_t j = 0; j < 3; ++j) {
             ASSERT_NEAR(R_ypr_ref[i][j], R_ypr[i][j], tol);
@@ -65,7 +73,7 @@ TEST_F(EulerTest, CheckYPR) {
 }
 
 TEST_F(EulerTest, CheckRPY) {
-    cartmat_t R_rpy = attitude.rotmat("rpy");
+    cartmat_t R_rpy = attitude.rotmat(5.0, "rpy");
     for (size_t i = 0; i < 3; ++i) {
         for (size_t j = 0; j < 3; ++j) {
             ASSERT_NEAR(R_rpy_ref[i][j], R_rpy[i][j], tol);

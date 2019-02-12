@@ -18,62 +18,71 @@ class isce::core::EulerAngles : public isce::core::Attitude {
 
     public:
         /** Default constructor*/
-        EulerAngles(double yaw=0.0, double pitch=0.0, double roll=0.0,
-            const std::string yaw_orientation="normal");
+        EulerAngles(const std::string yaw_orientation="normal");
 
-        /** Return yaw, pitch and roll in a triplet*/
-        cartesian_t ypr();
+        /** Constructor with vectors of time and attitude angles */
+        EulerAngles(const std::vector<double> & time,
+                    const std::vector<double> & yaw,
+                    const std::vector<double> & pitch,
+                    const std::vector<double> & roll,
+                    const std::string yaw_orientation="normal");
 
-        /** Return rotation matrix*/
-        cartmat_t rotmat(const std::string);
+        /** Set data after construction */
+        void data(const std::vector<double> & time,
+                  const std::vector<double> & yaw,
+                  const std::vector<double> & pitch,
+                  const std::vector<double> & roll);
 
-        /** Return equivalent quaternion elements*/
-        std::vector<double> toQuaternionElements();
+        /** Return data vector of time */
+        inline const std::vector<double> & time() const { return _time; }
 
-        /** Return equivalent quaternion data structure*/
+        /** Return data vector of yaw */
+        inline const std::vector<double> & yaw() const { return _yaw; }
+
+        /** Return data vector of pitch */
+        inline const std::vector<double> & pitch() const { return _pitch; }
+
+        /** Return data vector of roll */
+        inline const std::vector<double> & roll() const { return _roll; }
+    
+        /** Interpolate yaw, pitch and roll at a given time */
+        void ypr(double tintp, double & yaw, double & pitch, double & roll);
+
+        /** Return rotation matrix at a given time with optional angle perturbations */
+        cartmat_t rotmat(double tintp, const std::string,
+                         double dyaw = 0.0, double dpitch = 0.0,
+                         double d2 = 0.0, double d3 = 0.0);
+
+        /** Return equivalent quaternion elements at a given time */
+        std::vector<double> toQuaternionElements(double tintp);
+
+        /** Return equivalent quaternion data structure */
         Quaternion toQuaternion();
 
-        /** Return T3 rotation matrix around Z-axis*/
+        /** Return T3 rotation matrix around Z-axis */
         cartmat_t T3(double);
 
-        /** Return T2 rotation matrix around Y-axis*/
+        /** Return T2 rotation matrix around Y-axis */
         cartmat_t T2(double);
 
         /** Return T1 rotation matrix around X-axis*/
         cartmat_t T1(double);
 
-        /** Utility method to convert rotation matrix to Euler angles*/
+        /** Utility method to convert rotation matrix to Euler angles */
         static cartesian_t rotmat2ypr(const cartmat_t &);
 
-        /** Return yaw*/
-        inline double yaw() const;
-
-        /** Return pitch*/
-        inline double pitch() const;
-
-        /** Return roll */
-        inline double roll() const;
-
-        /** Set yaw */
-        inline void yaw(const double);
-
-        /** Set pitch */
-        inline void pitch(const double);
-
-        /** Set roll */
-        inline void roll(const double);
+        /** Return number of epochs */
+        inline size_t nVectors() const { return _yaw.size(); }
 
     // Private data members
     private:
-        // Attitude angles
-        double _yaw, _pitch, _roll;
+        // Vectors of time and attitude angles
+        std::vector<double> _time;
+        std::vector<double> _yaw;
+        std::vector<double> _pitch;
+        std::vector<double> _roll;
 
 };
-
-// Get inline implementations for EulerAngles
-#define ISCE_CORE_EULERANGLES_ICC
-#include "EulerAngles.icc"
-#undef ISCE_CORE_EULERANGLES_ICC
 
 #endif
 
