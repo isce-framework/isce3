@@ -107,10 +107,8 @@ Inheritance diagram for isce::io::IH5File:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a42f5c949eb748a2162cedfdf424d9f86"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a42f5c949eb748a2162cedfdf424d9f86"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IH5File.html#a42f5c949eb748a2162cedfdf424d9f86">IH5File</a> (const H5std_string &amp;name)</td></tr>
-<tr class="memdesc:a42f5c949eb748a2162cedfdf424d9f86"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor. <br/></td></tr>
-<tr class="separator:a42f5c949eb748a2162cedfdf424d9f86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac322c456433b12fb971a03db517fde15"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IH5File.html#ac322c456433b12fb971a03db517fde15">IH5File</a> (const H5std_string &amp;name, const char mode= 'r')</td></tr>
+<tr class="separator:ac322c456433b12fb971a03db517fde15"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adc4f9fa66c95c080cfb269b67b49a707"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adc4f9fa66c95c080cfb269b67b49a707"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>openFile</b> (const H5std_string &amp;name)</td></tr>
 <tr class="separator:adc4f9fa66c95c080cfb269b67b49a707"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -126,8 +124,84 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>openFile</b> (const H
 <tr class="memitem:a4132d39fe9acdf2d6db7be1b3f024a43"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IH5File.html#a4132d39fe9acdf2d6db7be1b3f024a43">filename</a> () const </td></tr>
 <tr class="memdesc:a4132d39fe9acdf2d6db7be1b3f024a43"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get filename of HDF5 file.  <a href="#a4132d39fe9acdf2d6db7be1b3f024a43">More...</a><br/></td></tr>
 <tr class="separator:a4132d39fe9acdf2d6db7be1b3f024a43"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad523e45f20730127d0c19ecb6473e442"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classisce_1_1io_1_1IGroup.html">IGroup</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IH5File.html#ad523e45f20730127d0c19ecb6473e442">createGroup</a> (const H5std_string &amp;name)</td></tr>
+<tr class="memdesc:ad523e45f20730127d0c19ecb6473e442"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a group.  <a href="#ad523e45f20730127d0c19ecb6473e442">More...</a><br/></td></tr>
+<tr class="separator:ad523e45f20730127d0c19ecb6473e442"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a class="anchor" id="ac322c456433b12fb971a03db517fde15"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">isce::io::IH5File::IH5File </td>
+          <td>(</td>
+          <td class="paramtype">const H5std_string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char&#160;</td>
+          <td class="paramname"><em>mode</em> = <code>'r'</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the Hdf5 file to open. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">mode</td><td>File opening mode The different mode available are:<ul>
+<li>r: read only, file must exist (default)</li>
+<li>w: read/write, file must exist</li>
+<li>x: create file, overwrite if exist</li>
+<li>a: create file, fails if exist </li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="ad523e45f20730127d0c19ecb6473e442"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> isce::io::IH5File::createGroup </td>
+          <td>(</td>
+          <td class="paramtype">const H5std_string &amp;&#160;</td>
+          <td class="paramname"><em>name</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a group. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the group to create.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>name must contain the full path from root location and name of the group to create. </p>
+
+</div>
+</div>
 <a class="anchor" id="a4132d39fe9acdf2d6db7be1b3f024a43"></a>
 <div class="memitem">
 <div class="memproto">

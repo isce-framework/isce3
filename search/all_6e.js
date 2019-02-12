@@ -1,5 +1,7 @@
 var searchData=
 [
+  ['n1bit',['n1bit',['../structisce_1_1io_1_1n1bit.html',1,'isce::io']]],
+  ['n2bit',['n2bit',['../structisce_1_1io_1_1n2bit.html',1,'isce::io']]],
   ['ncols',['ncols',['../classisce_1_1signal_1_1Looks.html#acc92832573210d4d2b74627b01eec1c8',1,'isce::signal::Looks']]],
   ['ncolslooked',['ncolsLooked',['../classisce_1_1signal_1_1Looks.html#a7a23f11f79fb00de1ff8ede78960d664',1,'isce::signal::Looks']]],
   ['nearestneighborinterpolator',['NearestNeighborInterpolator',['../classisce_1_1core_1_1NearestNeighborInterpolator.html',1,'isce::core']]],

@@ -203,8 +203,419 @@ H5::DataSpace&#160;</td><td class="memItemRight" valign="bottom"><a class="el" h
 <tr class="memitem:ade431e9960aa62ace21cb7115cba1f5c"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#ade431e9960aa62ace21cb7115cba1f5c">read</a> (std::valarray&lt; T &gt; &amp;buf, const std::gslice *gsliceIn)</td></tr>
 <tr class="memdesc:ade431e9960aa62ace21cb7115cba1f5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reading multi-dimensional dataset in valarray with std:slice subsetting.  <a href="#ade431e9960aa62ace21cb7115cba1f5c">More...</a><br/></td></tr>
 <tr class="separator:ade431e9960aa62ace21cb7115cba1f5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa12ec698f76b893d64706a6a29fe6bcf"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aa12ec698f76b893d64706a6a29fe6bcf"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#aa12ec698f76b893d64706a6a29fe6bcf">write</a> (const std::vector&lt; T &gt; &amp;buf)</td></tr>
+<tr class="memdesc:aa12ec698f76b893d64706a6a29fe6bcf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writing std::vector data into a dataset.  <a href="#aa12ec698f76b893d64706a6a29fe6bcf">More...</a><br/></td></tr>
+<tr class="separator:aa12ec698f76b893d64706a6a29fe6bcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3146ad5961182cbd54b885879efb7d0e"><td class="memTemplParams" colspan="2">template&lt;typename T , size_t S&gt; </td></tr>
+<tr class="memitem:a3146ad5961182cbd54b885879efb7d0e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a3146ad5961182cbd54b885879efb7d0e">write</a> (const std::vector&lt; T &gt; &amp;buf, const std::array&lt; int, S &gt; &amp;startIn, const std::array&lt; int, S &gt; &amp;countIn, const std::array&lt; int, S &gt; &amp;strideIn)</td></tr>
+<tr class="memdesc:a3146ad5961182cbd54b885879efb7d0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writing std::vector data into a multi-dimensional dataset using std::array for subsetting.  <a href="#a3146ad5961182cbd54b885879efb7d0e">More...</a><br/></td></tr>
+<tr class="separator:a3146ad5961182cbd54b885879efb7d0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e024555e723ea49ef5c8cc7f9cabe40"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a2e024555e723ea49ef5c8cc7f9cabe40"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a2e024555e723ea49ef5c8cc7f9cabe40">write</a> (const std::vector&lt; T &gt; &amp;buf, const std::vector&lt; std::slice &gt; *slicesIn)</td></tr>
+<tr class="memdesc:a2e024555e723ea49ef5c8cc7f9cabe40"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writing std::vector data into a multi-dimensional dataset using std::slice for subsetting.  <a href="#a2e024555e723ea49ef5c8cc7f9cabe40">More...</a><br/></td></tr>
+<tr class="separator:a2e024555e723ea49ef5c8cc7f9cabe40"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb86bac61c947ef68bd22f14473357d9"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aeb86bac61c947ef68bd22f14473357d9"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#aeb86bac61c947ef68bd22f14473357d9">write</a> (const std::vector&lt; T &gt; &amp;buf, const std::gslice *gsliceIn)</td></tr>
+<tr class="memdesc:aeb86bac61c947ef68bd22f14473357d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writing std::vector data into a multi-dimensional dataset using std::gslice for subsetting.  <a href="#aeb86bac61c947ef68bd22f14473357d9">More...</a><br/></td></tr>
+<tr class="separator:aeb86bac61c947ef68bd22f14473357d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0dcb61396e6c5bae94b191d40936b9cf"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a0dcb61396e6c5bae94b191d40936b9cf"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a0dcb61396e6c5bae94b191d40936b9cf">write</a> (const std::valarray&lt; T &gt; &amp;buf)</td></tr>
+<tr class="memdesc:a0dcb61396e6c5bae94b191d40936b9cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writing std::valarray data into a dataset.  <a href="#a0dcb61396e6c5bae94b191d40936b9cf">More...</a><br/></td></tr>
+<tr class="separator:a0dcb61396e6c5bae94b191d40936b9cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5868309abd7fbc36ea633302f4f9345a"><td class="memTemplParams" colspan="2">template&lt;typename T , size_t S&gt; </td></tr>
+<tr class="memitem:a5868309abd7fbc36ea633302f4f9345a"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a5868309abd7fbc36ea633302f4f9345a">write</a> (const std::valarray&lt; T &gt; &amp;buf, const std::array&lt; int, S &gt; &amp;startIn, const std::array&lt; int, S &gt; &amp;countIn, const std::array&lt; int, S &gt; &amp;strideIn)</td></tr>
+<tr class="memdesc:a5868309abd7fbc36ea633302f4f9345a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writing std::valarray data into a multi-dimensional dataset using std::array for subsetting.  <a href="#a5868309abd7fbc36ea633302f4f9345a">More...</a><br/></td></tr>
+<tr class="separator:a5868309abd7fbc36ea633302f4f9345a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17436c420f3098413fb308a036e0f5a2"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a17436c420f3098413fb308a036e0f5a2"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a17436c420f3098413fb308a036e0f5a2">write</a> (const std::valarray&lt; T &gt; &amp;buf, const std::vector&lt; std::slice &gt; *slicesIn)</td></tr>
+<tr class="memdesc:a17436c420f3098413fb308a036e0f5a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writing std::valarray data into a multi-dimensional dataset using std::slice for subsetting.  <a href="#a17436c420f3098413fb308a036e0f5a2">More...</a><br/></td></tr>
+<tr class="separator:a17436c420f3098413fb308a036e0f5a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21a71d4400f09726bdd25bdd16978e38"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a21a71d4400f09726bdd25bdd16978e38"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a21a71d4400f09726bdd25bdd16978e38">write</a> (const std::valarray&lt; T &gt; &amp;buf, const std::gslice *gsliceIn)</td></tr>
+<tr class="memdesc:a21a71d4400f09726bdd25bdd16978e38"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writing std::valarray data into a multi-dimensional dataset using std::gslice for subsetting.  <a href="#a21a71d4400f09726bdd25bdd16978e38">More...</a><br/></td></tr>
+<tr class="separator:a21a71d4400f09726bdd25bdd16978e38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aafe122f655db0fdb00f266132627ae72"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aafe122f655db0fdb00f266132627ae72"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#aafe122f655db0fdb00f266132627ae72">write</a> (const T *buf, const size_t sz)</td></tr>
+<tr class="memdesc:aafe122f655db0fdb00f266132627ae72"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writing a raw pointer buffer into a dataset.  <a href="#aafe122f655db0fdb00f266132627ae72">More...</a><br/></td></tr>
+<tr class="separator:aafe122f655db0fdb00f266132627ae72"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c1f929c0f09f9bebd606510e7904bc3"><td class="memTemplParams" colspan="2">template&lt;typename T , size_t S&gt; </td></tr>
+<tr class="memitem:a6c1f929c0f09f9bebd606510e7904bc3"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a6c1f929c0f09f9bebd606510e7904bc3">write</a> (const T *buf, const std::array&lt; int, S &gt; &amp;startIn, const std::array&lt; int, S &gt; &amp;countIn, const std::array&lt; int, S &gt; &amp;strideIn)</td></tr>
+<tr class="memdesc:a6c1f929c0f09f9bebd606510e7904bc3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writing a raw pointer into a multi-dimensional dataset using std::array for subsetting.  <a href="#a6c1f929c0f09f9bebd606510e7904bc3">More...</a><br/></td></tr>
+<tr class="separator:a6c1f929c0f09f9bebd606510e7904bc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9b66bb8ef540f9f9f3afd95c7ec6593"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ad9b66bb8ef540f9f9f3afd95c7ec6593"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#ad9b66bb8ef540f9f9f3afd95c7ec6593">write</a> (const T *buf, const std::vector&lt; std::slice &gt; *slicesIn)</td></tr>
+<tr class="memdesc:ad9b66bb8ef540f9f9f3afd95c7ec6593"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writing a buffer into a multi-dimensional dataset using std::slice for subsetting.  <a href="#ad9b66bb8ef540f9f9f3afd95c7ec6593">More...</a><br/></td></tr>
+<tr class="separator:ad9b66bb8ef540f9f9f3afd95c7ec6593"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac46b14e93aa2b2784acc79dce8640ea4"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ac46b14e93aa2b2784acc79dce8640ea4"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#ac46b14e93aa2b2784acc79dce8640ea4">write</a> (const T *buf, const std::gslice *gsliceIn)</td></tr>
+<tr class="memdesc:ac46b14e93aa2b2784acc79dce8640ea4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writing a buffer into a multi-dimensional dataset using std::gslice for subsetting.  <a href="#ac46b14e93aa2b2784acc79dce8640ea4">More...</a><br/></td></tr>
+<tr class="separator:ac46b14e93aa2b2784acc79dce8640ea4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e69f2d6be9554846dc9aabe885dbbba"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a2e69f2d6be9554846dc9aabe885dbbba"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a> (const std::string &amp;name, const T &amp;data)</td></tr>
+<tr class="memdesc:a2e69f2d6be9554846dc9aabe885dbbba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a scalar as an attribute.  <a href="#a2e69f2d6be9554846dc9aabe885dbbba">More...</a><br/></td></tr>
+<tr class="separator:a2e69f2d6be9554846dc9aabe885dbbba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6d7f34382ef00cad69dd778dc22656c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#aa6d7f34382ef00cad69dd778dc22656c">createAttribute</a> (const std::string &amp;name, const std::string &amp;data)</td></tr>
+<tr class="memdesc:aa6d7f34382ef00cad69dd778dc22656c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a string attribute.  <a href="#aa6d7f34382ef00cad69dd778dc22656c">More...</a><br/></td></tr>
+<tr class="separator:aa6d7f34382ef00cad69dd778dc22656c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2378690126f2b303e9f75ea83cb861b3"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a2378690126f2b303e9f75ea83cb861b3"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a2378690126f2b303e9f75ea83cb861b3">createAttribute</a> (const std::string &amp;name, const std::vector&lt; T &gt; &amp;values)</td></tr>
+<tr class="memdesc:a2378690126f2b303e9f75ea83cb861b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a std::vector data as a 1D-array attribute.  <a href="#a2378690126f2b303e9f75ea83cb861b3">More...</a><br/></td></tr>
+<tr class="separator:a2378690126f2b303e9f75ea83cb861b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c5b797cb4c82d3e203aec56b1c7de0b"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a2c5b797cb4c82d3e203aec56b1c7de0b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a2c5b797cb4c82d3e203aec56b1c7de0b">createAttribute</a> (const std::string &amp;name, const std::valarray&lt; T &gt; &amp;values)</td></tr>
+<tr class="memdesc:a2c5b797cb4c82d3e203aec56b1c7de0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a std::valarray data as a 1D-array attribute.  <a href="#a2c5b797cb4c82d3e203aec56b1c7de0b">More...</a><br/></td></tr>
+<tr class="separator:a2c5b797cb4c82d3e203aec56b1c7de0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a689eba5aefa817ec4f93261b9e6a64af"><td class="memTemplParams" colspan="2">template&lt;typename T , typename T2 , size_t S&gt; </td></tr>
+<tr class="memitem:a689eba5aefa817ec4f93261b9e6a64af"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a689eba5aefa817ec4f93261b9e6a64af">createAttribute</a> (const std::string &amp;name, const std::array&lt; T2, S &gt; &amp;dims, const std::vector&lt; T &gt; &amp;values)</td></tr>
+<tr class="memdesc:a689eba5aefa817ec4f93261b9e6a64af"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a std::vector data with dimensions (std::array) as an attribute.  <a href="#a689eba5aefa817ec4f93261b9e6a64af">More...</a><br/></td></tr>
+<tr class="separator:a689eba5aefa817ec4f93261b9e6a64af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a84387972f05aa7a1748f657559de20ab"><td class="memTemplParams" colspan="2">template&lt;typename T , typename T2 , size_t S&gt; </td></tr>
+<tr class="memitem:a84387972f05aa7a1748f657559de20ab"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a84387972f05aa7a1748f657559de20ab">createAttribute</a> (const std::string &amp;name, const std::array&lt; T2, S &gt; &amp;dims, const std::valarray&lt; T &gt; &amp;values)</td></tr>
+<tr class="memdesc:a84387972f05aa7a1748f657559de20ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a std::valarray data with dimensions (std::array) as an attribute.  <a href="#a84387972f05aa7a1748f657559de20ab">More...</a><br/></td></tr>
+<tr class="separator:a84387972f05aa7a1748f657559de20ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25dcc697832e26b022692de9749a22bd"><td class="memTemplParams" colspan="2">template&lt;typename T , typename T2 , size_t S&gt; </td></tr>
+<tr class="memitem:a25dcc697832e26b022692de9749a22bd"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a25dcc697832e26b022692de9749a22bd">createAttribute</a> (const std::string &amp;name, const std::array&lt; T2, S &gt; &amp;dims, const T *buffer)</td></tr>
+<tr class="memdesc:a25dcc697832e26b022692de9749a22bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a raw pointer with dimensions (std::array) to data as an attribute.  <a href="#a25dcc697832e26b022692de9749a22bd">More...</a><br/></td></tr>
+<tr class="separator:a25dcc697832e26b022692de9749a22bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a2e69f2d6be9554846dc9aabe885dbbba"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::createAttribute </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const T &amp;&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Creating and writing a scalar as an attribute. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Reference to scalar attribute value </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="aa6d7f34382ef00cad69dd778dc22656c"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::createAttribute </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Creating and writing a string attribute. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>String scalar attribute </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a2378690126f2b303e9f75ea83cb861b3"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::createAttribute </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Creating and writing a std::vector data as a 1D-array attribute. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>std::vector of attribute data to write</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>The shape of the attribute is 1D. </p>
+
+</div>
+</div>
+<a class="anchor" id="a2c5b797cb4c82d3e203aec56b1c7de0b"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::createAttribute </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Creating and writing a std::valarray data as a 1D-array attribute. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>std::valarray of attribute data to write</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>The shape of the attribute is 1D. </p>
+
+</div>
+</div>
+<a class="anchor" id="a689eba5aefa817ec4f93261b9e6a64af"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T , typename T2 , size_t S&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::createAttribute </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::array&lt; T2, S &gt; &amp;&#160;</td>
+          <td class="paramname"><em>dims</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Creating and writing a std::vector data with dimensions (std::array) as an attribute. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dims</td><td>Array containing the size of each dimension of the attribute </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>std::vector of attribute data to write </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a84387972f05aa7a1748f657559de20ab"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T , typename T2 , size_t S&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::createAttribute </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::array&lt; T2, S &gt; &amp;&#160;</td>
+          <td class="paramname"><em>dims</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Creating and writing a std::valarray data with dimensions (std::array) as an attribute. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dims</td><td>Array containing the size of each dimension of the attribute </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>std::valarray of attribute data to write </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a25dcc697832e26b022692de9749a22bd"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T , typename T2 , size_t S&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::createAttribute </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::array&lt; T2, S &gt; &amp;&#160;</td>
+          <td class="paramname"><em>dims</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const T *&#160;</td>
+          <td class="paramname"><em>buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Creating and writing a raw pointer with dimensions (std::array) to data as an attribute. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dims</td><td>Array containing the size of each dimension of the attribute </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>Raw pointer buffer to attribute data to write </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="a34866e34d337ad79d7eb266569c263f2"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1114,6 +1525,568 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 <p>If the output container is undersized compared to the data to read the function will size it accordingly. If the container is larger than the data to be read, its size is unchanged. In both case the data read is stored at the beginning of the container. </p>
+
+</div>
+</div>
+<a class="anchor" id="aa12ec698f76b893d64706a6a29fe6bcf"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::write </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>buf</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Writing std::vector data into a dataset. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>std::vector of data to write to dataset. It is mandatory that the size of the dataset and the number of elements in the vector matches. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a3146ad5961182cbd54b885879efb7d0e"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T , size_t S&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::write </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::array&lt; int, S &gt; &amp;&#160;</td>
+          <td class="paramname"><em>startIn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::array&lt; int, S &gt; &amp;&#160;</td>
+          <td class="paramname"><em>countIn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::array&lt; int, S &gt; &amp;&#160;</td>
+          <td class="paramname"><em>strideIn</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Writing std::vector data into a multi-dimensional dataset using std::array for subsetting. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>std::vector of data to write to dataset. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">startIn</td><td>std::array containing the write start location in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">countIn</td><td>std::array containing the number of elements to write in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">strideIn</td><td>std::array containing the writing stride in each dimension. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a2e024555e723ea49ef5c8cc7f9cabe40"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::write </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::slice &gt; *&#160;</td>
+          <td class="paramname"><em>slicesIn</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Writing std::vector data into a multi-dimensional dataset using std::slice for subsetting. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>std::vector of data to write to dataset. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sliceIn</td><td>std::vector containing an std::slice for each dimension of the dataset </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="aeb86bac61c947ef68bd22f14473357d9"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::write </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::gslice *&#160;</td>
+          <td class="paramname"><em>gsliceIn</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Writing std::vector data into a multi-dimensional dataset using std::gslice for subsetting. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>std::vector of data to write to dataset. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gsliceIn</td><td>std::gslice for subsetting the dataset writing location </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a0dcb61396e6c5bae94b191d40936b9cf"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::write </td>
+          <td>(</td>
+          <td class="paramtype">const std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>buf</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Writing std::valarray data into a dataset. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>std::valarray of data to write to dataset. It is mandatory that the size of the dataset and the number of elements in the valarray matches. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a5868309abd7fbc36ea633302f4f9345a"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T , size_t S&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::write </td>
+          <td>(</td>
+          <td class="paramtype">const std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::array&lt; int, S &gt; &amp;&#160;</td>
+          <td class="paramname"><em>startIn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::array&lt; int, S &gt; &amp;&#160;</td>
+          <td class="paramname"><em>countIn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::array&lt; int, S &gt; &amp;&#160;</td>
+          <td class="paramname"><em>strideIn</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Writing std::valarray data into a multi-dimensional dataset using std::array for subsetting. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>std::valarray of data to write to dataset. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">startIn</td><td>std::array containing the write start location in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">countIn</td><td>std::array containing the number of elements to write in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">strideIn</td><td>std::array containing the writing stride in each dimension. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a17436c420f3098413fb308a036e0f5a2"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::write </td>
+          <td>(</td>
+          <td class="paramtype">const std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::slice &gt; *&#160;</td>
+          <td class="paramname"><em>slicesIn</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Writing std::valarray data into a multi-dimensional dataset using std::slice for subsetting. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>std::valarray of data to write to dataset. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sliceIn</td><td>std::vector containing an std::slice for each dimension of the dataset </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a21a71d4400f09726bdd25bdd16978e38"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::write </td>
+          <td>(</td>
+          <td class="paramtype">const std::valarray&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::gslice *&#160;</td>
+          <td class="paramname"><em>gsliceIn</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Writing std::valarray data into a multi-dimensional dataset using std::gslice for subsetting. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>std::valarray of data to write to dataset. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gsliceIn</td><td>std::gslice for subsetting the dataset writing location </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="aafe122f655db0fdb00f266132627ae72"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::write </td>
+          <td>(</td>
+          <td class="paramtype">const T *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const size_t&#160;</td>
+          <td class="paramname"><em>sz</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Writing a raw pointer buffer into a dataset. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>Raw pointer to buffer of data to write to dataset. The size of the dataset and the number of elements in the buffer must match. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a6c1f929c0f09f9bebd606510e7904bc3"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T , size_t S&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::write </td>
+          <td>(</td>
+          <td class="paramtype">const T *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::array&lt; int, S &gt; &amp;&#160;</td>
+          <td class="paramname"><em>startIn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::array&lt; int, S &gt; &amp;&#160;</td>
+          <td class="paramname"><em>countIn</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::array&lt; int, S &gt; &amp;&#160;</td>
+          <td class="paramname"><em>strideIn</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Writing a raw pointer into a multi-dimensional dataset using std::array for subsetting. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>raw pointer to a buffer of data to write to dataset. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">startIn</td><td>std::array containing the write start location in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">countIn</td><td>std::array containing the number of elements to write in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">strideIn</td><td>std::array containing the writing stride in each dimension.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>It the responsability of the caller to make sure that the size of the buffer inferred from the startIn/countIn/strideIn matches the actual size of the buffer. </p>
+
+</div>
+</div>
+<a class="anchor" id="ad9b66bb8ef540f9f9f3afd95c7ec6593"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::write </td>
+          <td>(</td>
+          <td class="paramtype">const T *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::slice &gt; *&#160;</td>
+          <td class="paramname"><em>slicesIn</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Writing a buffer into a multi-dimensional dataset using std::slice for subsetting. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>raw pointer to a buffer of data to write to dataset. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sliceIn</td><td>std::vector containing an std::slice for each dimension of the dataset</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>It the responsability of the caller to make sure that the size of the buffer inferred from the startIn/countIn/strideIn matches the actual size of the buffer. </p>
+
+</div>
+</div>
+<a class="anchor" id="ac46b14e93aa2b2784acc79dce8640ea4"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::write </td>
+          <td>(</td>
+          <td class="paramtype">const T *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::gslice *&#160;</td>
+          <td class="paramname"><em>gsliceIn</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Writing a buffer into a multi-dimensional dataset using std::gslice for subsetting. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>raw pointer to a buffer of data to write to dataset. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">gsliceIn</td><td>std::gslice for subsetting the dataset writing location</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>It the responsability of the caller to make sure that the size of the buffer inferred from the startIn/countIn/strideIn matches the actual size of the buffer. </p>
 
 </div>
 </div>
