@@ -20,5 +20,6 @@ cdef extern from "isce/core/Doppler.h" namespace "isce::core":
         vector[double] satllh
         Doppler(Orbit &, Attitude *, Ellipsoid &, double) except +
         double centroid(double, double, string, int, int, bool)
+        vector[double] centroidDerivs(double, double, string, int, int, bool, double)
 
 # end of file

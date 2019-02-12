@@ -14,6 +14,7 @@
 
 #include "isce/core/Doppler.h"
 #include "isce/core/EulerAngles.h"
+#include "isce/core/Utilities.h"
 
 isce::core::Orbit loadOrbitData();
 
@@ -33,16 +34,25 @@ struct DopplerTest : public ::testing::Test {
 
         DopplerTest() {
 
-            // Set the attitude angles
-            yaw = 0.1;
-            pitch = 0.05;
-            roll = -0.1;
+            // Make an array of epoch times
+            std::vector<double> time = isce::core::linspace(11800.0, 12000.0, 20);
 
-            // Set epoch
-            t_az = 11900.0;
+            // Make constant arrays of Euler angles
+            std::vector<double> yaw, pitch, roll;
+            for (size_t i = 0; i < time.size(); ++i) {
+                yaw.push_back(0.1);
+                pitch.push_back(0.05);
+                roll.push_back(-0.1);
+            }
+
+            // Set data for EulerAngles object
+            attitude = EulerAngles(time, yaw, pitch, roll);
 
             // Set the attitude
-            attitude = EulerAngles(yaw, pitch, roll);
+            attitude = EulerAngles(time, yaw, pitch, roll);
+
+            // Set epoch for evaluating angles
+            t_az = 11900.0;
     
             // Make ellipsoid
             ellipsoid = Ellipsoid(isce::core::EarthSemiMajorAxis,

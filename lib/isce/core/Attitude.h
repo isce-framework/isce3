@@ -31,29 +31,29 @@ class isce::core::Attitude {
 
     public:
         /** Constructor using time attitude representation type*/
-        Attitude(AttitudeType atype) : _time(MIN_DATE_TIME), _attitude_type(atype) {};
+        Attitude(AttitudeType atype) : _attitude_type(atype) {};
 
         /** Virtual destructor*/
         virtual ~Attitude() = 0;
 
         /** Virtual function to return yaw, pitch, roll */
-        virtual cartesian_t ypr() = 0;
+        virtual void ypr(double tintp, double & yaw, double & pitch, double & roll) = 0;
 
-        /** Virtual function return rotation matrix*/
-        virtual cartmat_t rotmat(const std::string) = 0;
+        /** Virtual function return rotation matrix with optional perturbations */
+        virtual cartmat_t rotmat(double tintp, const std::string, double d0 = 0.0,
+                                 double d1 = 0.0, double d2 = 0.0, double d3 = 0.0) = 0;
 
         /** Return type of attitude representation - quaternion or euler angle*/
         inline AttitudeType attitudeType() const {return _attitude_type;}
 
         /** Return yaw orientation - central or normal */
         inline std::string yawOrientation() const {return _yaw_orientation;}
-
+        
         /** Set yaw orientation - central or normal */
         inline void yawOrientation(const std::string);
 
     // Private data members
     private:
-        DateTime _time;
         AttitudeType _attitude_type;
         std::string _yaw_orientation;
         
