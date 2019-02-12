@@ -126,7 +126,7 @@ Part of data structure declaration with one input argument</h3>
 <div class="line"><span class="keywordtype">void</span> a(<span class="keywordtype">double</span> val) {_a = val;}</div>
 </div><!-- fragment --><h3><a class="anchor" id="docinlinecppmulti"></a>
 With multiple inputs</h3>
-<p>These types of functions should typically not be defined in the struct/class definition. These are included either in the .h header file or the .icc include file. In this case, a brief one liner is provided as part of the function declaration in the header file followed by a detail description of the parameters just before the function specification in the header file or the .icc file. For example, documentation of function <a class="el" href="classisce_1_1core_1_1Ellipsoid.html#a731b1b4ee06b5138f35c45e65137c789" title="Return directional local radius. ">isce::core::Ellipsoid::rDir</a> can be found in two places - first in the class declaration as</p>
+<p>These types of functions should typically not be defined in the struct/class definition. These are included either in the .h header file or the .icc include file. In this case, a brief one liner is provided as part of the function declaration in the header file followed by a detail description of the parameters just before the function specification in the header file or the .icc file. For example, documentation of function <a class="el" href="classisce_1_1core_1_1Ellipsoid.html#a804f9187fc54ae52491d87981e04f74a" title="Return directional local radius. ">isce::core::Ellipsoid::rDir</a> can be found in two places - first in the class declaration as</p>
 <div class="fragment"><div class="line"><span class="comment">/**  Return local radius in NS direction */</span></div>
 <div class="line"><span class="keyword">inline</span> <span class="keywordtype">double</span> rDir(<span class="keywordtype">double</span> lat, <span class="keywordtype">double</span> hdg) <span class="keyword">const</span>;</div>
 </div><!-- fragment --><p>and later in the header file, just before the function declaration as</p>
@@ -135,7 +135,7 @@ With multiple inputs</h3>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> *  Heading is measured in clockwise direction from the North direction.</span></div>
 <div class="line"><span class="comment"> *  See &lt;a href=&quot;https://en.wikipedia.org/wiki/Earth_radius#Directional&quot;&gt;Directional Radius&lt;/a&gt; */</span></div>
-<div class="line"><span class="keywordtype">double</span> <a class="code" href="classisce_1_1core_1_1Ellipsoid.html#a731b1b4ee06b5138f35c45e65137c789">isce::core::Ellipsoid::rDir</a>(<span class="keywordtype">double</span> hdg, <span class="keywordtype">double</span> lat)<span class="keyword"> const </span>{</div>
+<div class="line"><span class="keywordtype">double</span> <a class="code" href="classisce_1_1core_1_1Ellipsoid.html#a804f9187fc54ae52491d87981e04f74a">isce::core::Ellipsoid::rDir</a>(<span class="keywordtype">double</span> hdg, <span class="keywordtype">double</span> lat)<span class="keyword"> const </span>{</div>
 <div class="line">    <span class="keyword">auto</span> re = <a class="code" href="classisce_1_1core_1_1Ellipsoid.html#afe48b575e60b9d5c08da1edb4a738be2">rEast</a>(lat);</div>
 <div class="line">    <span class="keyword">auto</span> rn = <a class="code" href="classisce_1_1core_1_1Ellipsoid.html#a6d3368a3c544ddbc6e3ed754112c8cca">rNorth</a>(lat);</div>
 <div class="line">    <span class="keywordflow">return</span> (re * rn) / ((re * std::pow(std::cos(hdg), 2)) </div>
