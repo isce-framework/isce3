@@ -372,9 +372,7 @@ namespace isce { namespace cuda {
                 facet<<<grid, block>>>(out_d, xmax, ymax, upsample_factor,
                                        dem_interp, ellps, orbit, dop, mode);
                 checkCudaErrors(cudaPeekAtLastError());
-                printf("Kernel called OK!\n");
                 checkCudaErrors(cudaDeviceSynchronize());
-                printf("Kernel returned OK!\n");
             }
 
             {
@@ -384,9 +382,7 @@ namespace isce { namespace cuda {
                 flatearth<<<grid, block>>>(out_d, flat_interp, orbit, ellps, mode,
                         product.metadata().identification().lookDirection(), avg_hgt);
                 checkCudaErrors(cudaPeekAtLastError());
-                printf("Kernel called OK!\n");
                 checkCudaErrors(cudaDeviceSynchronize());
-                printf("Kernel returned OK!\n");
             }
 
             checkCudaErrors(cudaMemcpy(&out[0], out_d, mode.width() * mode.length() * sizeof(float),
