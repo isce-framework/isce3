@@ -8,6 +8,8 @@
 
 
 
+
+
 void attrsNames(H5::H5Object &loc, H5std_string nameAttr, void *opdata){
    auto up = reinterpret_cast<std::vector<std::string> *>(opdata);
    up->push_back(nameAttr);
@@ -39,17 +41,11 @@ herr_t matchName(hid_t loc_id, const char *name, const H5O_info_t *info,
    //std::regex pattern((*outList)[0]);
    std::regex pattern(meta->searchStr);
    if (std::regex_search(name, pattern)) {
-      //if(info->type == H5O_TYPE_GROUP && (*outList)[1].compare("GROUP") == 0)
       if(info->type == H5O_TYPE_GROUP && (meta->searchType).compare("GROUP") == 0)
-         //outList->push_back((*outList)[2]+name);
          meta->outList.push_back((meta->basePath)+name);
-      //else if (info->type == H5O_TYPE_DATASET && (*outList)[1].compare("DATASET") == 0)
       else if (info->type == H5O_TYPE_DATASET && (meta->searchType).compare("DATASET") == 0)
-         //outList->push_back((*outList)[2]+name);
          meta->outList.push_back((meta->basePath)+name);
-      //else if ((*outList)[1].compare("BOTH") == 0)
       else if (meta->searchType.compare("BOTH") == 0)
-           //outList->push_back((*outList)[2]+name);
          meta->outList.push_back((meta->basePath)+name);
       else {}
    }
@@ -429,10 +425,6 @@ int isce::io::IDataSet::getNumBits(const std::string &v) {
  *  reads the dataset scalar string value.
  *  For dataset/attributes containing more than one elements, see other
  *  function signature. */
-
-// TODO: Should be templated with above function. Will probably need some
-// sort of function specialization as the "read" function called inside is 
-// overloaded with parameters being a std::string or void *buffer.
 void isce::io::IDataSet::read(std::string &v, const std::string &att) {
 
     // Check that the dataset/attribute contains a scalar, i.e., rank=0
@@ -457,15 +449,212 @@ void isce::io::IDataSet::read(std::string &v, const std::string &att) {
     return;
 }
 
-H5::DataSpace isce::io::IDataSet::getReadMemorySpace(hsize_t nbElements) {
 
-    // Create a memory dataSpace describing the dataspace of the memory buffer
-    // that will receive the data. It's set up as a 1D array.
-    hsize_t memDims[1] = {(hsize_t)nbElements};
-    H5::DataSpace memspace((hsize_t)1,memDims);
-    return memspace;
+/** @param[in] att String containing the name of the attribute to read.
+ *  @param[out] buffer Raw pointer to array that will received the read data.
+ *
+ *  buffer has to be adequately allocated by caller. */
+void isce::io::IDataSet::read(std::string* buffer, const std::string &att) { 
+
+    // Check that attribute name is not null or empty
+    if (!attrExists(att)) {
+        std::cout << "Warning: Attribute: " << att << " does not exist!" << std::endl;
+        return;
+    }
+
+    // Open the attribute
+    H5::Attribute a = openAttribute(att);
+
+    // Get the number of elements in the attribute
+    int nbElements = getNumElements(att);
+
+    // Read the attribute string array as char* per H5 library requirements
+    char *rdata = new char[nbElements*isce::io::STRLENGTH];
+    char* p= &rdata[0];
+    try {
+       a.read(getH5Type<std::string>(), (void*)rdata);
+       //Assign raw buffer data to strings
+       for(int iStr=0; iStr<nbElements; iStr++) {
+          buffer[iStr] = std::string(p);
+          p += isce::io::STRLENGTH;
+       }
+       delete[] rdata;
+    }
+    catch(...) {
+       delete[] rdata;
+       std::cout << "ERROR while reading std::string dataset" << std::endl;
+       return;
+     }
+
+
+    // Close the attribute
+    a.close();
+}
+
+
+
+/** @param[in] dspace DataSpace of the subset to read
+ *  @param[out] buffer Raw pointer to std::string array that will received the read data.
+ *
+ *  buffer has to be adequately allocated by caller. */
+void isce::io::IDataSet::read(std::string * buffer, const H5::DataSpace& dspace) { 
+ 
+    // Check that the selection is valid (no out of bound)
+    // TODO - to be adjusted with preferred error/message handling
+    if (!dspace.selectValid()){
+       std::cout << "Sub-selection of dataset is invalid" << std::endl;
+       return;
+    }
+
+    // Get total number of elements to read
+    hssize_t nbElements = dspace.getSelectNpoints();
+    
+    // Format the dataspace of the memory to receive the data read from file
+    H5::DataSpace memspace = getReadMemorySpace((hsize_t)nbElements);
+
+    // Read the dataset to memory
+    // This is where specifics to std::string are handled
+    // H5::DataSet::read(buffer, getH5Type<T>() , memspace, dspace);
+
+    // Make sure we're dealing with strings
+    if (getDataType().getClass() != H5T_STRING) {
+       std::cout << "ERROR: Not a String class dataset!" << std::endl;
+       return;
+    }
+
+    char *rdata = new char[nbElements*isce::io::STRLENGTH];
+    char* p= &rdata[0];
+    try {
+       H5::DataSet::read((void*)rdata, getDataType() , memspace, dspace);
+       //Assign raw buffer data to strings
+       for(int iStr=0; iStr<nbElements; iStr++) {
+          buffer[iStr] = std::string(p);
+          p += isce::io::STRLENGTH;
+       }
+       delete[] rdata;
+    }
+    catch(...) {
+       //for(int iStr=0; iStr<nbElements; ++iStr)
+       //    delete[] rdata[iStr];
+       delete[] rdata;
+       std::cout << "ERROR while reading std::string dataset" << std::endl;
+       return;
+     }
+
+    // Close memory dataspaces
+    memspace.close();
 
 }
+
+
+
+
+
+
+/** @param[in] pointer to std::string buffer to write to dataset.
+ *  @param[in] DataSpace object for locating where to write the data in the dataset.
+ *  */
+void isce::io::IDataSet::write(const std::string* buf, const H5::DataSpace& dspace) {
+
+
+   // Check that the selection is valid (no out of bound)
+   // TODO - to be adjusted with preferred error/message handling
+   if (!dspace.selectValid()){
+      std::cout << "Sub-selection of dataset is invalid" << std::endl;
+      return;
+   }
+
+   // Construct the memory dataspace (i.e., dataspace of buf). For now, and that
+   // may change in a the future, there is no possibility to subset buf. The 
+   // full content of buf is to be selected. Buf dataspace is set to a 1D array 
+   // of size equals to the number of elements in the vector.
+   H5::DataSpace mspace = getReadMemorySpace(dspace.getSelectNpoints()); 
+
+
+   // Get the datatype of the dataset
+   H5::DataType dtype =  getDataType();
+
+    // Make sure we're dealing with strings
+    if (dtype.getClass() != H5T_STRING) {
+       std::cout << "ERROR: Not a String class dataset!" << std::endl;
+       return;
+    }
+
+   //Convert the array of string into a C string array.
+   //because the input function ::write requires that.
+   char *cStrArray = new char[dspace.getSelectNpoints() * isce::io::STRLENGTH];
+   for(int i=0; i < dspace.getSelectNpoints(); i++) {
+       std::strncpy(cStrArray, buf[i].c_str(), isce::io::STRLENGTH);
+       cStrArray[isce::io::STRLENGTH-1]= '\0';
+       cStrArray += isce::io::STRLENGTH;
+   }
+   cStrArray -= dspace.getSelectNpoints() * isce::io::STRLENGTH;
+
+   //Write data to dataset
+   H5::DataSet::write(cStrArray, dtype);
+
+   delete [] cStrArray;
+
+   dtype.close();
+   mspace.close();
+}
+
+
+
+
+
+
+/** 
+ * @param[in] name Name of the dataset attribute to create
+ * @param[in] datatype H5 data type of the attribute
+ * @param[in] dataspace H5 data space of the attribute
+ * @param[in] buffer of std::string values to write
+ */
+void isce::io::IDataSet::createAttribute(
+        const std::string& name, 
+        const H5::DataType& datatype,
+        const H5::DataSpace& dataspace,
+        const std::string * buffer) {
+
+   if (name.empty()) {
+       std::cout << "Can't have an empty name for Attribute creation!" << std::endl;
+       //THROW ERROR
+   }
+
+   if (attrExists(name.c_str())) {
+       std::cout << "Attribute already exists!" << std::endl;
+       //THROW ERROR
+   }
+
+   // Create the attribute
+   H5::Attribute attribute =  H5::H5Object::createAttribute(name, datatype, dataspace);
+
+   // Write the attribute data. 
+   // Specific process in case of std::string
+   if (datatype.getClass() == H5T_STRING) {
+   
+      //Convert the array of string into a C string array.
+      //because the input function ::write requires that.
+      char *cStrArray = new char[dataspace.getSelectNpoints() * isce::io::STRLENGTH];
+      for(int i=0; i < dataspace.getSelectNpoints(); i++) {
+         std::strncpy(cStrArray, buffer[i].c_str(), isce::io::STRLENGTH);
+         cStrArray[isce::io::STRLENGTH-1]= '\0';
+         cStrArray += isce::io::STRLENGTH;
+       }
+       cStrArray -= dataspace.getSelectNpoints() * isce::io::STRLENGTH;
+       attribute.write(datatype, cStrArray);
+       delete [] cStrArray;
+   }
+   else 
+       std::cout << "Error: Attribute type is not of string type!" << std::endl;
+
+   attribute.close();
+
+}
+
+
+
+
 
 H5::DataSpace isce::io::IDataSet::getReadDataSpace(const int * startIn, 
                                                    const int * countIn, 
@@ -474,7 +663,7 @@ H5::DataSpace isce::io::IDataSet::getReadDataSpace(const int * startIn,
     // Get information of the file dataspace       
     H5::DataSpace dspace = H5::DataSet::getSpace();	 
     int rank = dspace.getSimpleExtentNdims();
-
+  
     // Specific case if dataset contains a scalar
     if (rank == 0)
         return dspace;
@@ -482,7 +671,7 @@ H5::DataSpace isce::io::IDataSet::getReadDataSpace(const int * startIn,
 
     // HDF5 library expect startIn/countIn/strideIn to be in unsigned long long.
     // Convert input (int) and set default values
-    // WARNING: It is assumed that startIn, countIn, strideIn length are equal
+    // It is assumed that startIn, countIn, strideIn length are equal
     // to rank of the dataset
     
     // Get the start locations for each dimension of the dataset
@@ -509,6 +698,8 @@ H5::DataSpace isce::io::IDataSet::getReadDataSpace(const int * startIn,
         for (int i=0; i<rank; i++)
              stride[i] = (hsize_t)strideIn[i];
     }
+
+
 
     // Select the subset of the dataset to read
     // Note: H5 throws an error if this function is applied on a scalar dataset
@@ -653,6 +844,62 @@ H5::DataSpace isce::io::IDataSet::getReadDataSpace(const std::gslice * gsliceIn)
 
 
 
+
+H5::DataSpace isce::io::IDataSet::getReadDataSpace(const size_t xidx, const size_t yidx, const size_t iowidth, const size_t iolength, const size_t band) { 
+
+    int index = 0;
+
+    // Get information of the file dataspace       
+    H5::DataSpace dspace = H5::DataSet::getSpace();	 
+    int rank = dspace.getSimpleExtentNdims();
+
+    // Specific case if dataset contains a scalar
+    if (rank == 0)
+        return dspace;
+    if (rank > 3) {
+       std::cout << "Error: the use of get/setBlock methods on Hdf5 dataset are only valid for dataset with rank <= 3" << std::endl;
+       return dspace;
+    }
+    
+
+    // Get the start locations for each dimension of the dataset
+    // and initialize them to origin (i.e., 0)
+    hsize_t *start = new hsize_t[rank]();
+    if (rank == 3) start[index++] = static_cast<hsize_t>(band);
+    start[index++] = static_cast<hsize_t>(yidx); 
+    start[index] = static_cast<hsize_t>(xidx); 
+
+    // Get the number of elements to read in each dimension
+    // and initialize them to full dimension
+    index = 0;
+    hsize_t *count = new hsize_t[rank];
+    if (rank == 3) count[index++] = static_cast<hsize_t>(1);
+    count[index++] = static_cast<hsize_t>(iolength); 
+    count[index] = static_cast<hsize_t>(iowidth); 
+
+    // Get the stride of the reading in each dimension
+    // and initialize them to a stride of 1
+    hsize_t *stride = new hsize_t[rank];
+    std::fill_n(stride, rank, 1);
+
+    // Select the subset of the dataset to read
+    // Note: H5 throws an error if this function is applied on a scalar dataset
+    dspace.selectHyperslab(H5S_SELECT_SET, count, start, stride);
+
+    delete [] start;
+    delete [] count;
+    delete [] stride;
+
+    return dspace;
+}
+
+
+
+
+
+
+
+
 ///////////////////////// GROUP ///////////////////////////////////
 
 
@@ -720,6 +967,65 @@ std::string isce::io::IGroup::getPathname()
 }
 
 
+
+
+/** @param[in] v Name of the attribute.
+ *  Returns the H5::DataSpace of the attribute.
+ */
+H5::DataSpace isce::io::IGroup::getDataSpace(const std::string &name) {
+
+    H5::DataSpace dspace;
+
+    // Looking for the attribute of name v contained in the dataset itself
+    if (attrExists(name)){    
+
+       // Open the attribute of the given name
+       H5::Attribute attr = openAttribute(name);
+
+       // Open the dataspace of the current attribute
+       dspace = attr.getSpace();
+        
+       // Close the attribute
+       attr.close();
+    }
+    else {
+       std::cout << "Warning: Attribute: " << name << " does not exists" <<std::endl;
+    }//TODO throw exception
+
+    return dspace;
+}
+
+
+
+
+/** @param[in] v Name of the attribute.
+ *  Returns the number of elements in the attribute.
+ */
+int isce::io::IGroup::getNumElements(const std::string &name) {
+
+    int nbElements = -1;
+
+    if (attrExists(name)){    
+       // Get the dataspace of dataset or attribute
+       H5::DataSpace dspace = getDataSpace(name);
+  
+       // Get the total number of elements in the dataset
+       nbElements = dspace.getSimpleExtentNpoints();
+
+       // Close the dataspace
+       dspace.close();
+    }
+    else {
+       std::cout << "Warning: Attribute: " << name << " does not exists" <<std::endl;
+    }//TODO throw exception
+
+    return nbElements;
+}
+
+
+
+
+
 /** Open the dataset of the input name that belongs to the current group */
 isce::io::IDataSet isce::io::IGroup::openDataSet(const H5std_string &name) {
 
@@ -759,7 +1065,9 @@ void isce::io::IGroup::read(std::string &v, const std::string &att) {
        // If attribute contains a scalar, as it should, read the attribute's 
        // value
        if (dspace.getSimpleExtentNdims() == 0)
-          a.read(memType(v), v);
+          //a.read(memType(v), v);
+          //a.read(getH5Type<decltype(v)>(), v);
+          a.read(getH5Type<std::string>(), v);
        
        else {} // TODO warning/trow? 
                                    
@@ -775,7 +1083,158 @@ void isce::io::IGroup::read(std::string &v, const std::string &att) {
 
 
 
+/** @param[in] att String containing the name of the attribute to read.
+ *  @param[out] buffer Raw pointer to array that will received the read data.
+ *
+ *  buffer has to be adequately allocated by caller. */
+void isce::io::IGroup::read(std::string* buffer, const std::string &att) { 
+
+    // Check that attribute name is not null or empty
+    if (!attrExists(att)) {
+        std::cout << "Warning: Attribute: " << att << " does not exist!" << std::endl;
+        return;
+    }
+
+    // Open the attribute
+    H5::Attribute a = openAttribute(att);
+
+    // Get the number of elements in the attribute
+    int nbElements = getNumElements(att);
+
+    // Read the attribute string array as char* per H5 library requirements
+    char *rdata = new char[nbElements*isce::io::STRLENGTH];
+    char* p= &rdata[0];
+    try {
+       a.read(getH5Type<std::string>(), (void*)rdata);
+       //Assign raw buffer data to strings
+       for(int iStr=0; iStr<nbElements; iStr++) {
+          buffer[iStr] = std::string(p);
+          p += isce::io::STRLENGTH;
+       }
+       delete[] rdata;
+    }
+    catch(...) {
+       delete[] rdata;
+       std::cout << "ERROR while reading std::string dataset" << std::endl;
+       return;
+     }
+
+
+    // Close the attribute
+    a.close();
+}
+
+
+
+/** @param[in] name Name of the group to create.
+ *
+ * name must contain the full path from root location and name of the group
+ * to create. */
+isce::io::IGroup isce::io::IGroup::createGroup(const H5std_string &name) {
+            
+    // First activate the automatic creation of intermediate groups if they
+    // don't exist. Needs the C interface.
+    hid_t gcpl = H5Pcreate(H5P_LINK_CREATE);
+    herr_t status = H5Pset_create_intermediate_group(gcpl, 1);
+
+    hid_t group = H5Gcreate(this->getId(), name.c_str(), gcpl, H5P_DEFAULT, H5P_DEFAULT);
+    H5Pclose(gcpl);
+
+    return IGroup(group);
+};
+
+
+
+
+/** 
+ * @param[in] name Name of the dataset to create
+ * @param[in] data Scalar (std::string) data to write to the dataset
+ *
+ * The dataset is a 1-element dataset
+ */
+isce::io::IDataSet isce::io::IGroup::createDataSet(
+                const std::string& name,
+                const std::string& data) {
+
+   //return createDataSet(name, &data, 1);
+
+   H5::DataType dtype = getH5Type<std::string>();
+   H5::DataSet dset =  H5::Group::createDataSet(name, dtype, H5::DataSpace());
+   dset.write(data, dtype);
+
+   dtype.close();
+
+   return IDataSet(dset);
+
+}
+
+
+
+/** 
+ * @param[in] name Name of the group attribute to create
+ * @param[in] datatype H5 data type of the attribute
+ * @param[in] dataspace H5 data space of the attribute
+ * @param[in] buffer of std::string values to write
+ */
+void isce::io::IGroup::createAttribute(
+        const std::string& name, 
+        const H5::DataType& datatype,
+        const H5::DataSpace& dataspace,
+        const std::string * buffer) {
+
+   if (name.empty()) {
+       std::cout << "Can't have an empty name for Attribute creation!" << std::endl;
+       //THROW ERROR
+   }
+
+   if (attrExists(name.c_str())) {
+       std::cout << "Attribute already exists!" << std::endl;
+       //THROW ERROR
+   }
+
+   // Create the attribute
+   H5::Attribute attribute =  H5::H5Object::createAttribute(name, datatype, dataspace);
+
+   // Write the attribute data. 
+   // Specific process in case of std::string
+   if (datatype.getClass() == H5T_STRING) {
+   
+      //Convert the array of string into a C string array.
+      //because the input function ::write requires that.
+      char *cStrArray = new char[dataspace.getSelectNpoints() * isce::io::STRLENGTH];
+      for(int i=0; i < dataspace.getSelectNpoints(); i++) {
+         std::strncpy(cStrArray, buffer[i].c_str(), isce::io::STRLENGTH);
+         cStrArray[isce::io::STRLENGTH-1]= '\0';
+         cStrArray += isce::io::STRLENGTH;
+       }
+       cStrArray -= dataspace.getSelectNpoints() * isce::io::STRLENGTH;
+       attribute.write(datatype, cStrArray);
+       delete [] cStrArray;
+   }
+   else 
+       std::cout << "Error: Attribute type is not of string type!" << std::endl;
+
+   attribute.close();
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ///////////////////////// FILE ///////////////////////////////////
+
+
 
 
 
@@ -784,7 +1243,7 @@ void isce::io::IGroup::read(std::string &v, const std::string &att) {
  * name must contain the full path from root location and name of the dataset
  * to open. */
 isce::io::IDataSet isce::io::IH5File::openDataSet(const H5std_string &name) {
-            
+
     H5::DataSet dset = H5::H5File::openDataSet(name);
     return IDataSet(dset);
 
@@ -804,6 +1263,24 @@ isce::io::IGroup isce::io::IH5File::openGroup(const H5std_string &name) {
 };
 
 
+/** @param[in] name Name of the group to create.
+ *
+ * name must contain the full path from root location and name of the group
+ * to create. */
+isce::io::IGroup isce::io::IH5File::createGroup(const H5std_string &name) {
+            
+    // First activate the automatic creation of intermediate groups if they
+    // don't exist. Needs the C interface.
+    hid_t gcpl = H5Pcreate(H5P_LINK_CREATE);
+    herr_t status = H5Pset_create_intermediate_group(gcpl, 1);
+
+    hid_t group = H5Gcreate(this->getId(), name.c_str(), gcpl, H5P_DEFAULT, H5P_DEFAULT);
+    H5Pclose(gcpl);
+
+    //H5::Group group2 = H5::Group(group);
+    //return IGroup(group2);
+    return IGroup(group);
+};
 
 
 /** @param[in] name Regular Expression to search for.
