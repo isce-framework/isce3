@@ -12,15 +12,10 @@
 
 #include "isce/io/IH5.h"
 
-// Support function to check if file exists
-inline bool exists(const std::string& name) {
-  struct stat buffer;
-  return (stat (name.c_str(), &buffer) == 0);
-};
 
-
-
-
+// Output HDF5 file for file creation/writing tests
+std::string wFileName("../../data/dummyHdf5.h5");
+std::string rFileName("../../data/envisat.h5");
 
 struct IH5Test : public ::testing::Test {
 
@@ -28,10 +23,18 @@ struct IH5Test : public ::testing::Test {
 
    // Constructor
     protected:
-        IH5Test() : file("../../data/envisat.h5"){
+        IH5Test() : file(rFileName){
         }
 
 };
+
+
+
+
+/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+ *                                         IH5 API Reading test
+ * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+*/
 
 
 
@@ -608,6 +611,645 @@ TEST_F(IH5Test, datasetReadFloatWithVector) {
 
     dset.close();
 }
+
+
+
+
+/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+ *                                         IH5 API Writing test
+ * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+*/
+
+
+
+TEST_F(IH5Test, openFileMode) {
+
+    // Delete file if it exists
+    struct stat buffer;
+    if (stat (wFileName.c_str(), &buffer) == 0)
+       std::remove(wFileName.c_str());
+
+    isce::io::IH5File fic;
+
+    // Open unexisting file in default (reading) mode
+    EXPECT_ANY_THROW(fic = isce::io::IH5File(wFileName));
+
+    // Open unexisting file in explicit reading mode
+    EXPECT_ANY_THROW(fic = isce::io::IH5File(wFileName,'r'));
+
+    // Open unexisting file for read/write    
+    EXPECT_ANY_THROW(fic = isce::io::IH5File(wFileName,'w'));
+    
+    // Create file for write - whether or not it exists    
+    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'x'));
+    fic.close();
+  
+    // Create file for write - only if it does not exists
+    EXPECT_ANY_THROW(fic = isce::io::IH5File(wFileName,'a'));
+
+    // Delete the empty file
+    std::remove(wFileName.c_str());
+
+    // Create file for write - only if it does not exists
+    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'a'));
+}
+
+
+TEST_F(IH5Test, createGroups) {
+
+    std::vector<std::string> list;
+    isce::io::IH5File fic;
+
+    // Create file for write - whether or not it exists    
+    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'x'));
+
+    // Create a few groups in "/"
+    EXPECT_NO_THROW(isce::io::IGroup grp = fic.createGroup(std::string("groupVector")));
+    EXPECT_NO_THROW(isce::io::IGroup grp = fic.createGroup(std::string("groupValarray")));
+    EXPECT_NO_THROW(isce::io::IGroup grp = fic.createGroup("groupRawPointer"));
+    EXPECT_NO_THROW(isce::io::IGroup grp = fic.createGroup("groupScalar"));
+
+    // Does that group exists?
+    list = fic.find(std::string("groupVector"), "/", "GROUP");
+    ASSERT_EQ(list.size(), 1);
+
+    
+
+    // Create a group with unexisiting group path    
+    EXPECT_NO_THROW(isce::io::IGroup grp = fic.createGroup(std::string("groupX/groupXX/groupXXX")));
+    
+    // Does that group exists?
+    list.clear();
+    list = fic.find(std::string("groupXXX"), "/", "GROUP");
+    ASSERT_EQ(list.size(), 1);
+
+    fic.close();
+}
+
+
+
+TEST_F(IH5Test, createSimpleDatasetFromVectorBuffer) {
+
+    std::vector<std::string> list;
+    isce::io::IH5File fic;
+    isce::io::IDataSet dset;
+
+    // Open file for write    
+    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+
+
+
+    // Simple std::vector array with indices values
+    std::vector<int> v1(10*10);
+    std::iota(v1.begin(), v1.end(), 1);
+
+
+
+    // Create simple dataset in groupVector, stored as 1D array from a std::vector buffer
+    isce::io::IGroup grp = fic.openGroup("/groupVector");
+    dset = grp.createDataSet(std::string("v1"), v1);
+
+    // Check that Dataset has been created
+    list = fic.find("v1","/","DATASET");
+    ASSERT_EQ(list.size(), 1);
+
+    // Read back the values and check that they are correct
+    std::vector<int> v1r;
+    dset.read(v1r);
+    ASSERT_EQ(v1r.size(), 100);
+    ASSERT_EQ(v1r[0], 1);
+    ASSERT_EQ(v1r[99], 100);
+    dset.close();
+
+
+
+
+
+    // Create simple dataset, stored as 2D array, from a std::vector buffer
+    std::array<int, 2> dims = {10,10};
+    dset = grp.createDataSet(std::string("v2"), v1, dims);
+    
+    // Check that Dataset has been created
+    list.clear();
+    list = fic.find("v2","/","DATASET");
+    ASSERT_EQ(list.size(), 1);
+
+    // Check that rank of dataset is 2, and dimensions are 10x10
+    std::vector<int> dims2;
+    dims2 = dset.getDimensions();
+    ASSERT_EQ(dset.getRank(),2);
+    ASSERT_EQ(dims2[0],10);
+    ASSERT_EQ(dims2[1],10);
+
+    // Read back the values and check that they are correct
+    v1r.clear();
+    dset.read(v1r);
+    ASSERT_EQ(v1r.size(), 100);
+    ASSERT_EQ(v1r[0], 1);
+    ASSERT_EQ(v1r[99], 100);
+    dset.close();
+
+
+
+
+
+    // Create simple string dataset in groupVector, stored as 1D array from a std::vector buffer
+    std::vector<std::string> v3(10*10);
+    for(int i=0; i<100; i++) v3[i] = std::to_string(i+1);
+
+    dset = grp.createDataSet(std::string("v3"), v3);
+
+    // Check that Dataset has been created
+    list.clear();
+    list = fic.find("v3","/","DATASET");
+    ASSERT_EQ(list.size(), 1);
+
+    // Read back the values and check that they are correct
+    std::vector<std::string> v3r;
+    dset.read(v3r);
+    ASSERT_EQ(v3r.size(), 100);
+    ASSERT_EQ(v3r[0], std::string("1"));
+    ASSERT_EQ(v3r[99], std::string("100"));
+    dset.close();
+
+
+
+    fic.close();
+}
+
+
+
+
+
+TEST_F(IH5Test, createSimpleDatasetFromValarrayBuffer) {
+
+    std::vector<std::string> list;
+    isce::io::IH5File fic;
+    isce::io::IDataSet dset;
+
+    // Open file for write    
+    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+
+
+    // Simple std::vector array with indices values
+    std::valarray<int> v1(10*10);
+    int i=1;
+    for(auto& v:v1) v=i++;
+
+
+
+    // Create simple dataset in groupValarray, stored as 1D array from a std::valarray buffer
+    isce::io::IGroup grp = fic.openGroup("/groupValarray");
+    dset = grp.createDataSet(std::string("v1"), v1);
+
+    // Check that Dataset has been created
+    list = fic.find("v1","/groupValarray","DATASET");
+    ASSERT_EQ(list.size(), 1);
+
+    // Read back the values and check that they are correct
+    std::valarray<int> v1r;
+    dset.read(v1r);
+    ASSERT_EQ(v1r.size(), 100);
+    ASSERT_EQ(v1r[0], 1);
+    ASSERT_EQ(v1r[99], 100);
+    dset.close();
+
+
+
+    // Create simple dataset, stored as 2D array, from a std::valarray buffer
+    std::array<int, 2> dims = {10,10};
+    dset = grp.createDataSet(std::string("v2"), v1, dims);
+    
+    // Check that Dataset has been created
+    list.clear();
+    list = fic.find("v2","/groupValarray","DATASET");
+    ASSERT_EQ(list.size(), 1);
+
+    // Check that rank of dataset is 2, and dimensions are 10x10
+    std::vector<int> dims2;
+    dims2 = dset.getDimensions();
+    ASSERT_EQ(dset.getRank(),2);
+    ASSERT_EQ(dims2[0],10);
+    ASSERT_EQ(dims2[1],10);
+
+    // Read back the values and check that they are correct
+    v1r.resize(0); // clear the valarray
+    dset.read(v1r);
+    ASSERT_EQ(v1r.size(), 100);
+    ASSERT_EQ(v1r[0], 1);
+    ASSERT_EQ(v1r[99], 100);
+    dset.close();
+
+
+    // Create simple string dataset in groupValarray, stored as 1D array from a std::valarray buffer
+    std::valarray<std::string> v3(10*10);
+    for(int i=0; i<100; i++) v3[i] = std::to_string(i+1);
+
+    dset = grp.createDataSet(std::string("v3"), v3);
+
+    // Check that Dataset has been created
+    list.clear();
+    list = fic.find("v3","/groupValarray","DATASET");
+    ASSERT_EQ(list.size(), 1);
+
+    // Read back the values and check that they are correct
+    std::valarray<std::string> v3r;
+    dset.read(v3r);
+    ASSERT_EQ(v3r.size(), 100);
+    ASSERT_EQ(v3r[0], std::string("1"));
+    ASSERT_EQ(v3r[99], std::string("100"));
+    dset.close();
+
+    fic.close();
+}
+
+
+
+
+TEST_F(IH5Test, createSimpleDatasetFromRawPointer) {
+
+    std::vector<std::string> list;
+    isce::io::IH5File fic;
+    isce::io::IDataSet dset;
+
+    // Open file for write    
+    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+
+
+    // Simple buffer with indices values
+    int* v1 = new int[10*10];
+    for(int i=0; i<100; i++) v1[i] = i+1;
+
+    // Create simple dataset in groupRawPointer, stored as 1D array from a std::valarray buffer
+    isce::io::IGroup grp = fic.openGroup("/groupRawPointer");
+    dset = grp.createDataSet<int>(std::string("v1"), v1, 100);
+
+    // Check that Dataset has been created
+    list = fic.find("v1","/groupRawPointer","DATASET");
+    ASSERT_EQ(list.size(), 1);
+    ASSERT_EQ(dset.getNumElements(), 100);
+
+    // Read back the values and check that they are correct
+    int* v1r = new int[100];
+    dset.read(v1r);
+    ASSERT_EQ(v1r[0], 1);
+    ASSERT_EQ(v1r[99], 100);
+    dset.close();
+
+
+
+    // Create simple dataset, stored as 2D array, from a raw pointer
+    std::array<int, 2> dims = {10,10};
+    dset = grp.createDataSet<int,int>(std::string("v2"), v1, dims);
+    
+    // Check that Dataset has been created
+    list.clear();
+    list = fic.find("v2","/groupRawPointer","DATASET");
+    ASSERT_EQ(list.size(), 1);
+
+    // Check that rank of dataset is 2, and dimensions are 10x10
+    std::vector<int> dims2;
+    dims2 = dset.getDimensions();
+    ASSERT_EQ(dset.getRank(),2);
+    ASSERT_EQ(dims2[0],10);
+    ASSERT_EQ(dims2[1],10);
+
+    // Read back the values and check that they are correct
+    for(int i=0; i<100; i++) v1r[i]=0;
+    dset.read(v1r);
+    ASSERT_EQ(v1r[0], 1);
+    ASSERT_EQ(v1r[99], 100);
+    dset.close();
+
+    delete [] v1;
+    delete [] v1r;
+
+
+
+    // Create simple string dataset, stored as 1D array from a raw pointer buffer
+    std::string * v3 = new std::string[100];
+    for(int i=0; i<100; i++) v3[i] = std::to_string(i+1);
+
+    dset = grp.createDataSet(std::string("v3"), v3, 100);
+
+    // Check that Dataset has been created
+    list.clear();
+    list = fic.find("v3","/groupRawPointer","DATASET");
+    ASSERT_EQ(list.size(), 1);
+
+    // Read back the values and check that they are correct
+    std::string * v3r = new std::string[100];
+    dset.read(v3r);
+    ASSERT_EQ(v3r[0], std::string("1"));
+    ASSERT_EQ(v3r[99], std::string("100"));
+    dset.close();
+
+    delete [] v3;
+    delete [] v3r;
+
+    fic.close();
+
+}
+
+
+TEST_F(IH5Test, createSimpleDatasetFromScalar) {
+
+    std::vector<std::string> list;
+    isce::io::IH5File fic;
+    isce::io::IDataSet dset;
+
+    // Open file for write    
+    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+
+    float val1 = 9;
+    std::string val2("value1");
+
+    // Create simple dataset in groupScalar, stored as an int scalar
+    isce::io::IGroup grp = fic.openGroup("/groupScalar");
+    dset = grp.createDataSet(std::string("v1"), val1);
+
+    // Check that Dataset has been created
+    list = fic.find("v1","/groupScalar","DATASET");
+    ASSERT_EQ(list.size(), 1);
+
+    // Read back the values and check that they are correct
+    float val1r;
+    dset.read(val1r);
+    ASSERT_EQ(val1r, 9);
+
+
+
+    // Same thing with a string
+    dset = grp.createDataSet(std::string("v2"), val2);
+
+    // Check that Dataset has been created
+    list.clear();
+    list = fic.find("v2","/groupScalar","DATASET");
+    ASSERT_EQ(list.size(), 1);
+
+    // Read back the values and check that they are correct
+    std::string val2r;
+    dset.read(val2r);
+    ASSERT_EQ(val2r.compare(std::string("value1")), 0);
+
+
+    dset.close();
+    fic.close();
+}
+
+
+
+TEST_F(IH5Test, createGroupAttributes) {
+
+    std::vector<std::string> list;
+    isce::io::IH5File fic;
+
+    // Open file for write    
+    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+
+
+    // Open the root group
+    isce::io::IGroup grp = fic.openGroup("/");
+
+    // Create a scalar attribute (int) in the root group
+    int att1 = 9;
+    grp.createAttribute(std::string("att1"), att1);
+
+    // Create a scalar attribute (string) in the root group
+    //std::string att2("Root Group");
+    std::string att2("Root Group attribute");
+    grp.createAttribute(std::string("att2"), att2);
+
+    // Check that the attributes have been written
+    list = grp.getAttrs();
+    ASSERT_EQ(list.size(), 2);
+
+    // Check the values of the attributes
+    int att1r;
+    grp.read(att1r, list[0]);
+    ASSERT_EQ(att1, att1r);
+
+    std::string att2r;
+    grp.read(att2r, list[1]);
+    ASSERT_EQ(att2.compare(att2r), 0);
+
+
+    // Close current group and open another one
+    grp.close();
+    list.clear();
+    grp = fic.openGroup("/groupVector");
+
+    // Create a 1D array attribute (float) in the groupVector group
+    std::vector<float> attv1;
+    for(int i=0; i<10; i++) attv1.push_back(i);
+    grp.createAttribute("att1", attv1);
+
+    // Create a 1D array attribute (string) in the groupVector group
+    std::vector<std::string> attv2;
+    for(int i=0; i<10; i++) attv2.push_back(std::to_string(i));
+    grp.createAttribute("att2", attv2);
+
+    // Check that the attributes have been written
+    list = grp.getAttrs();
+    ASSERT_EQ(list.size(), 2);
+
+    
+    // Check the values of the attributes
+    std::vector<float> attv1r;
+    grp.read(attv1r, list[0]);
+    for(int i=0; i<attv1.size(); i++)
+        ASSERT_EQ(attv1[i], attv1r[i]);
+
+    std::vector<std::string> attv2r;
+    grp.read(attv2r, list[1]);
+    for(int i=0; i<attv2.size(); i++) 
+       ASSERT_EQ(attv2[i].compare(attv2r[i]),0);
+
+    grp.close();
+    fic.close();
+}
+
+
+TEST_F(IH5Test, createDataSetAttributes) {
+
+    std::vector<std::string> list;
+    isce::io::IH5File fic;
+    isce::io::IDataSet dset;
+
+    // Open file for write    
+    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+
+    // Open a group
+    isce::io::IGroup grp = fic.openGroup("/groupVector");
+
+    // Open dataset v1
+    dset = grp.openDataSet("v1");
+
+    // Create a scalar attribute (int) in the root group
+    int att1 = 9;
+    dset.createAttribute(std::string("att1"), att1);
+
+    // Create a scalar attribute (string) in the root group
+    //std::string att2("Root Group");
+    std::string att2("dataset attribute");
+    dset.createAttribute(std::string("att2"), att2);
+
+    // Check that the attributes have been written
+    list = dset.getAttrs();
+    ASSERT_EQ(list.size(), 2);
+
+    // Check the values of the attributes
+    int att1r;
+    dset.read(att1r, list[0]);
+    ASSERT_EQ(att1, att1r);
+
+    std::string att2r;
+    dset.read(att2r, list[1]);
+    ASSERT_EQ(att2.compare(att2r), 0);
+
+
+    // Close current dataset and open another one
+    dset.close();
+    list.clear();
+    dset = grp.openDataSet("v2");
+
+    // Create a 1D array attribute (float) in the groupVector group
+    std::vector<float> attv1;
+    for(int i=0; i<10; i++) attv1.push_back(i);
+    dset.createAttribute("att1", attv1);
+
+    // Create a 1D array attribute (string) in the groupVector group
+    std::vector<std::string> attv2;
+    for(int i=0; i<10; i++) attv2.push_back(std::to_string(i));
+    dset.createAttribute("att2", attv2);
+
+    // Check that the attributes have been written
+    list = grp.getAttrs();
+    ASSERT_EQ(list.size(), 2);
+
+    
+    // Check the values of the attributes
+    std::vector<float> attv1r;
+    dset.read(attv1r, list[0]);
+    for(int i=0; i<attv1.size(); i++)
+        ASSERT_EQ(attv1[i], attv1r[i]);
+
+    std::vector<std::string> attv2r;
+    dset.read(attv2r, list[1]);
+    for(int i=0; i<attv2.size(); i++) 
+       ASSERT_EQ(attv2[i].compare(attv2r[i]),0);
+
+    dset.close();
+    fic.close();
+   
+}
+
+
+TEST_F(IH5Test, createFloat16Dataset) {
+
+    std::vector<std::string> list;
+    isce::io::IH5File fic;
+    isce::io::IDataSet dset;
+
+    // Open file for write    
+    EXPECT_NO_THROW(fic = isce::io::IH5File(wFileName,'w'));
+
+
+    // Fill a vector with 0-255 values
+    std::vector<float> v1(1000*1000);
+    for(int i=0; i<1000*1000; i++) v1[i] = (float)((i+1)%255);
+
+
+    ////////////////////////////////////////////////////////////
+    // Create a dataset with float16 values, without NBIT filter
+    ////////////////////////////////////////////////////////////
+
+    isce::io::IGroup grp = fic.openGroup("/groupVector");
+    std::array<int, 2> dims = {1000,1000};
+    dset = grp.createDataSet<isce::io::float16>(std::string("vFloat16"), dims);
+    dset.write(v1);
+
+    // Check that Dataset has been created
+    list = fic.find("vFloat16","/","DATASET");
+    ASSERT_EQ(list.size(), 1);
+
+    // Read back the values and check that they are correct
+    std::vector<float> v1r;
+    dset.read(v1r);
+    ASSERT_EQ(v1r.size(), 1000000);
+    ASSERT_EQ(v1r[0], v1[0]);
+    ASSERT_EQ(v1r[99], v1[99]);
+
+    // Check the size on disk of the dataset
+    long storageSize1 = dset.getStorageSize();
+    ASSERT_EQ(storageSize1, 4000000);
+
+    dset.close();
+
+
+
+    ////////////////////////////////////////////////////////////
+    // Create a dataset with float16 values, with NBIT filter
+    ////////////////////////////////////////////////////////////
+
+    dset = grp.createDataSet<isce::io::float16>(std::string("vFloat16_nbit"), dims,1);
+    dset.write(v1);
+
+    // Check that Dataset has been created
+    list.clear();
+    list = fic.find("vFloat16_nbit","/","DATASET");
+    ASSERT_EQ(list.size(), 1);
+
+    // Read back the values and check that they are correct
+    v1r.clear();
+    dset.read(v1r);
+    ASSERT_EQ(v1r.size(), 1000000);
+    ASSERT_EQ(v1r[0], v1[0]);
+    ASSERT_EQ(v1r[99], v1[99]);
+
+    // Check the size on disk of the dataset
+    long storageSize2 = dset.getStorageSize();
+    EXPECT_GT(storageSize1, storageSize2);
+
+    dset.close();
+
+
+    
+
+    ////////////////////////////////////////////////////////////
+    // Create a dataset with float16 values, with NBIT filter + deflate
+    ////////////////////////////////////////////////////////////
+
+    dset = grp.createDataSet<isce::io::float16>(std::string("vFloat16_nbit_deflate"), dims,1,0,9);
+    dset.write(v1);
+
+    // Check that Dataset has been created
+    list.clear();
+    list = fic.find("vFloat16_nbit_deflate","/","DATASET");
+    ASSERT_EQ(list.size(), 1);
+
+    // Read back the values and check that they are correct
+    v1r.clear();
+    dset.read(v1r);
+    ASSERT_EQ(v1r.size(), 1000000);
+    ASSERT_EQ(v1r[0], v1[0]);
+    ASSERT_EQ(v1r[99], v1[99]);
+
+    // Check the size on disk of the dataset
+    long storageSize3 = dset.getStorageSize();
+    EXPECT_GT(storageSize2, storageSize3);
+
+    dset.close();
+
+
+
+    fic.close();
+}
+
+
+
+
+
 
 // Main
 int main( int argc, char * argv[] ) {
