@@ -202,7 +202,7 @@ geocodeCovariance(isce::io::Raster& rdrCov,
             double y = _geoGridStartY + _geoGridSpacingY*line;
 
             // Loop over DEM pixels
-            //#pragma omp parallel for
+            #pragma omp parallel for
             for (size_t pixel = 0; pixel < _geoGridWidth; ++pixel) {
                 
                 // x in the output geocoded Grid
@@ -257,7 +257,7 @@ geocodeCovariance(isce::io::Raster& rdrCov,
 
         }
 
-        if (_dualPol) {
+        //if (_dualPol) {
 
             //If dual-pol, correct RTC for each band and then  geocode it
 
@@ -291,12 +291,12 @@ geocodeCovariance(isce::io::Raster& rdrCov,
                 geoCov.setBlock(geoDataBlock, 0, lineStart, 
                                 _geoGridWidth, geoBlockLength, band+1);
             }
-        } 
-        else if (_quadPol) {
+        //} 
+        //else if (_quadPol) {
             
-            std::cout << "needs to be implemented "  << std::endl;
+        //    std::cout << "needs to be implemented "  << std::endl;
 
-        }
+        //}
 
 
         // set output block of data
@@ -313,6 +313,7 @@ void isce::signal::Covariance<T>::
 _correctRTC(std::valarray<std::complex<float>> & rdrDataBlock, 
             std::valarray<float> & rtcDataBlock) {
 
+    #pragma omp parallel for
     for (size_t i = 0; i<rdrDataBlock.size(); ++i)
         rdrDataBlock[i] = rdrDataBlock[i]*rtcDataBlock[i];
 
@@ -323,6 +324,7 @@ void isce::signal::Covariance<T>::
 _correctRTC(std::valarray<std::complex<double>> & rdrDataBlock,
             std::valarray<float> & rtcDataBlock) {
 
+    #pragma omp parallel for
     for (size_t i = 0; i<rdrDataBlock.size(); ++i)
         rdrDataBlock[i] = rdrDataBlock[i] * static_cast<double>(rtcDataBlock[i]);
 
@@ -426,6 +428,7 @@ _faradayRotationAngle(std::valarray<T>& Shh,
     std::valarray<float> M2(sizeData);
     std::valarray<float> M3(sizeData);
 
+    #pragma omp parallel for
     for (size_t i = 0; i < sizeData; ++i ){
         M1[i] = -2*std::real((Shv[i] - Svh[i])*std::conj(Shh[i] + Svv[i]));
         M2[i] = std::pow(std::abs(Shh[i]+Svv[i]), 2.0);
@@ -450,6 +453,7 @@ _faradayRotationAngle(std::valarray<T>& Shh,
     
     size_t sizeOutput = faradayRotation.size();
 
+    #pragma omp parallel for
     for (size_t i = 0; i < sizeOutput; ++i ){ 
         faradayRotation[i] = 0.25*std::atan2(M1[i], M2[i]-M3[i]);
     }
@@ -470,6 +474,7 @@ _correctFaradayRotation(isce::core::LUT2d<double>& faradayAngle,
 {
     size_t sizeData = Shh.size();  
 
+    #pragma omp parallel for
     for (size_t kk = 0; kk < length*width; ++kk) {
         size_t line = kk/width;
         size_t col = kk%width;
@@ -563,6 +568,7 @@ _orientationAngle(std::valarray<float>& azimuthSlope,
 {
 
     size_t sizeData = tau.size();
+    #pragma omp parallel for
     for (size_t i = 0; i < sizeData; ++i ){
             tau = std::atan2(std::tan(azimuthSlope[i]), 
                     std::sin(lookAngle) - 
@@ -613,7 +619,7 @@ _correctOrientation(std::valarray<float>& tau,
     // R33 = R11;
     // Therefore there is no need to compute them 
 
-
+    #pragma omp parallel for
     for (size_t i = 0; i < arraySize; ++i) {
         float r11 = R11[i];
         float r12 = R12[i];
@@ -702,12 +708,15 @@ _interpolate(std::valarray<T>& rdrDataBlock,
 {
 
     double extraMargin = 4.0;
-    for (size_t i = 0; i< length; ++i) {
-        for (size_t j = 0; j < width; ++j) {
+
+    #pragma omp parallel for
+    for (size_t kk = 0; kk < length*width; ++kk) {
+
+        size_t i = kk / width;
+        size_t j = kk % width;
 
             // if this point falls somewhere within the radar data box,
             // then perform the interpolation
-
             if (radarX[i*width + j] >= extraMargin &&
                     radarY[i*width + j] >= extraMargin &&
                     radarX[i*width + j] < (radarBlockWidth - extraMargin) &&
@@ -717,44 +726,9 @@ _interpolate(std::valarray<T>& rdrDataBlock,
                                                 radarY[i*width + j], rdrDataBlock, radarBlockWidth);
 
             }
-        }
     }
 
 }
-
-/*
-template<class T>
-void isce::signal::Covariance<T>::
-_interpolate(isce::core::Matrix<T>& rdrDataBlock, 
-            isce::core::Matrix<T>& geoDataBlock,
-            std::valarray<double>& radarX, std::valarray<double>& radarY, 
-            int radarBlockWidth, int radarBlockLength)
-{
-
-    size_t length = geoDataBlock.length();
-    size_t width = geoDataBlock.width();
-    double extraMargin = 4.0;
-    for (size_t i = 0; i< length; ++i) {
-        for (size_t j = 0; j < width; ++j) {
-
-            // if this point falls somewhere within the radar data box, 
-            // then perform the interpolation
-
-            if (radarX[i*width + j] >= extraMargin &&
-                    radarY[i*width + j] >= extraMargin &&
-                    radarX[i*width + j] < (radarBlockWidth - extraMargin) &&
-                    radarY[i*width + j] < (radarBlockLength - extraMargin) ) {
-
-                geoDataBlock(i,j) = _interp->interpolate(radarX[i*width + j], 
-                                                radarY[i*width + j], rdrDataBlock);
-            
-            }
-        }
-    }
-
-}
-*/
-
 
 template<class T>
 void isce::signal::Covariance<T>::
