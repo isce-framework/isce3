@@ -18,6 +18,7 @@
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Projections.h>
 #include <isce/core/Interpolator.h>
+#include <isce/core/LUT2d.h>
 
 // isce::product
 #include <isce/product/Product.h>
@@ -60,24 +61,42 @@ class isce::signal::Covariance {
 
         // covariance estimation 
         void covariance(std::map<std::string, isce::io::Raster> & slc,
-                std::map<std::pair<std::string, std::string>, isce::io::Raster> & cov);
+                    std::map<std::pair<std::string, std::string>, isce::io::Raster> & cov);
 
         // estimate the Faraday rotation angle without correcting SLCs
         void faradayRotation(std::map<std::string, isce::io::Raster> & slc,
                     isce::io::Raster & faradayAngleRaster,
                     size_t rangeLooks, size_t azimuthLooks);
 
+        /*
+        void correctFaradayRotation(std::map<std::string, isce::io::Raster> & slc,
+                    isce::core::LUT2d & faradayAngle,
+                    std::map<std::string, isce::io::Raster> & correctedSlc);
+        */
+
         // estimate Polarimetric orientation angle
         void orientationAngle(isce::io::Raster& azimuthSlopeRaster,
-                                isce::io::Raster& rangeSlopeRaster,
-                                isce::io::Raster& lookAngleRaster,
-                                isce::io::Raster& tau);
+                    isce::io::Raster& rangeSlopeRaster,
+                    isce::io::Raster& lookAngleRaster,
+                    isce::io::Raster& tau);
 
         void geocodeCovariance(
                     isce::io::Raster& rdrCov,
+                    isce::io::Raster& geoCov,
+                    isce::io::Raster& demRaster);
+
+        void geocodeCovariance(
+                    isce::io::Raster& rdrCov,
+                    isce::io::Raster& geoCov,
+                    isce::io::Raster& demRaster,
+                    isce::io::Raster& rtc);
+
+        void geocodeCovariance(
+                    isce::io::Raster& rdrCov,
+                    isce::io::Raster& geoCov,
+                    isce::io::Raster& demRaster,
                     isce::io::Raster& rtc,
-                    isce::io::Raster & demRaster,
-                    isce::io::Raster& geoCov);
+                    isce::io::Raster& orientationAngle);
 
         inline void geoGrid(double geoGridStartX, double geoGridStartY,
                 double geoGridSpacingX, double geoGridSpacingY,
@@ -90,12 +109,12 @@ class isce::signal::Covariance {
         
         // Set the input radar grid 
         inline void radarGrid(isce::core::LUT1d<double> doppler,
-                                isce::core::DateTime azimuthStartTime,
-                                double azimuthTimeInterval,
-                                int radarGridLength,
-                                double startingRange,
-                                double rangeSpacing,
-                                int radarGridWidth);
+                    isce::core::DateTime azimuthStartTime,
+                    double azimuthTimeInterval,
+                    int radarGridLength,
+                    double startingRange,
+                    double rangeSpacing,
+                    int radarGridWidth);
 
         // Set interpolator 
 
@@ -188,6 +207,15 @@ class isce::signal::Covariance {
                     size_t width, size_t length,
                     size_t rngLooks, size_t azLooks);
 
+        void _correctFaradayRotation(isce::core::LUT2d<double>& faradayAngle,
+                    std::valarray<std::complex<float>>& Shh,
+                    std::valarray<std::complex<float>>& Shv,
+                    std::valarray<std::complex<float>>& Svh,
+                    std::valarray<std::complex<float>>& Svv,
+                    size_t length,
+                    size_t width,
+                    size_t lineStart);
+
         void _orientationAngle(std::valarray<float>& azimuthSlope,
                     std::valarray<float>& rangeSlope,
                     std::valarray<float>& lookAngle,
@@ -202,16 +230,7 @@ class isce::signal::Covariance {
                     std::valarray<std::complex<float>>& C23,
                     std::valarray<std::complex<float>>& C31,
                     std::valarray<std::complex<float>>& C32,
-                    std::valarray<std::complex<float>>& C33,
-                    std::valarray<std::complex<float>>& c11,
-                    std::valarray<std::complex<float>>& c12,
-                    std::valarray<std::complex<float>>& c13,
-                    std::valarray<std::complex<float>>& c21,
-                    std::valarray<std::complex<float>>& c22,
-                    std::valarray<std::complex<float>>& c23,
-                    std::valarray<std::complex<float>>& c31,
-                    std::valarray<std::complex<float>>& c32,
-                    std::valarray<std::complex<float>>& c33);
+                    std::valarray<std::complex<float>>& C33);
 
     private:
 
@@ -300,7 +319,17 @@ class isce::signal::Covariance {
         isce::core::Interpolator<T> * _interp = nullptr;
 
         // 
-        bool _applyFaradayRotation = true;
+        bool _correctRtcFlag = true;
+        bool _correctOrientationFlag = true;
+
+        // dualPol or Quadpol flags
+        bool _dualPol = false;
+        bool _quadPol = false;
+
+        // coPol and crossPol names (used only for dual-pol)
+        std::string _coPol;
+        std::string _crossPol;
+
 
 };
 

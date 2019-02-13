@@ -17,9 +17,6 @@ covariance(std::map<std::string, isce::io::Raster> & slc,
     size_t numPolarizations = slc.size();
     size_t numCovElements = cov.size();
 
-    bool dualPol = false;
-    bool quadPol = false;
-
     std::string coPol;
     std::string crossPol;
 
@@ -27,20 +24,20 @@ covariance(std::map<std::string, isce::io::Raster> & slc,
         std::cout << "Covariance estimation needs at least two polarizations" << std::endl;
     } else if (numPolarizations == 2 && numCovElements == 3) {
 
-        dualPol = true;
+        _dualPol = true;
 
         if (slc.count("hh") > 0)
-            coPol = "hh";
+            _coPol = "hh";
         else if (slc.count("vv") > 0)
-            coPol = "vv";
+            _coPol = "vv";
 
         if (slc.count("hv") > 0)
-            crossPol = "hv";
+            _crossPol = "hv";
         else if (slc.count("vh") > 0)
-            crossPol = "vh";
+            _crossPol = "vh";
 
     } else if (numPolarizations == 4 && numCovElements == 10) {
-        quadPol = true;
+        _quadPol = true;
     } 
 
     // instantiate the crossmul object
@@ -55,16 +52,16 @@ covariance(std::map<std::string, isce::io::Raster> & slc,
 
     crsmul.doCommonRangebandFiltering(false);   
 
-    if (dualPol) {
+    if (_dualPol) {
 
-        crsmul.crossmul(slc[coPol], slc[coPol], cov[std::make_pair(coPol, coPol)]);
+        crsmul.crossmul(slc[_coPol], slc[_coPol], cov[std::make_pair(_coPol, _coPol)]);
 
-        crsmul.crossmul(slc[coPol], slc[crossPol], cov[std::make_pair(coPol, crossPol)]);
+        crsmul.crossmul(slc[_coPol], slc[_crossPol], cov[std::make_pair(_coPol, _crossPol)]);
 
-        crsmul.crossmul(slc[crossPol], slc[crossPol], cov[std::make_pair(crossPol, crossPol)]);
+        crsmul.crossmul(slc[_crossPol], slc[_crossPol], cov[std::make_pair(_crossPol, _crossPol)]);
 
 
-    } else if (quadPol){
+    } else if (_quadPol){
 
         crsmul.crossmul(slc["hh"], slc["hh"], cov[std::make_pair("hh", "hh")]);
 
@@ -92,9 +89,49 @@ covariance(std::map<std::string, isce::io::Raster> & slc,
 template<class T>
 void isce::signal::Covariance<T>::
 geocodeCovariance(isce::io::Raster& rdrCov,
-                isce::io::Raster& rtc,
+                isce::io::Raster& geoCov,
+                isce::io::Raster & demRaster) {
+
+    _correctRtcFlag = false;
+    _correctOrientationFlag = false;
+
+    isce::io::Raster rtcRaster("/vsimem/dummyRtc", 1, 1, 1, GDT_Float32, "ENVI");
+    isce::io::Raster orientationAngleRaster("/vsimem/dummyOrient", 1, 1, 1, GDT_Float32, "ENVI");
+    
+    geocodeCovariance(rdrCov,
+                geoCov,
+                demRaster,
+                rtcRaster,
+                orientationAngleRaster);
+
+
+}
+
+template<class T>
+void isce::signal::Covariance<T>::
+geocodeCovariance(isce::io::Raster& rdrCov,
+                isce::io::Raster& geoCov,
                 isce::io::Raster & demRaster,
-                isce::io::Raster& geoCov) {
+                isce::io::Raster& rtcRaster) {
+    
+    _correctOrientationFlag = false;
+    isce::io::Raster orientationAngleRaster("/vsimem/dummyOrient", 1, 1, 1, GDT_Float32, "ENVI");
+    
+    geocodeCovariance(rdrCov,
+                geoCov,
+                demRaster,
+                rtcRaster,
+                orientationAngleRaster);
+
+}
+
+template<class T>
+void isce::signal::Covariance<T>::
+geocodeCovariance(isce::io::Raster& rdrCov,
+                isce::io::Raster& geoCov,
+                isce::io::Raster & demRaster,
+                isce::io::Raster& rtc,
+                isce::io::Raster& orientationAngleRaster) {
 
     // number of bands in the input raster
     size_t nbands = rdrCov.numBands();
@@ -195,42 +232,73 @@ geocodeCovariance(isce::io::Raster& rdrCov,
             } // end loop over pixels of output grid 
         } // end loops over lines of output grid
 
-        // define the matrix based on the rasterbands data type
+        
+        std::valarray<float> rtcDataBlock(0);
+        if (_correctRtcFlag) {
 
-        std::valarray<T> rdrDataBlock(rdrBlockLength * rdrBlockWidth);
-        std::valarray<float> rtcDataBlock(rdrBlockLength * rdrBlockWidth);
-        std::valarray<T> geoDataBlock(geoBlockLength * _geoGridWidth);
-
-         
-        //for each band in the input:
-        for (size_t band = 0; band < nbands; ++band){
-
-            std::cout << "band: " << band << std::endl;
-            // get a block of data
-            std::cout << "get data block " << std::endl;
-            rdrCov.getBlock(rdrDataBlock,
-                                rangeFirstPixel, azimuthFirstLine,
-                                rdrBlockWidth, rdrBlockLength, band+1);
-
+            // resize the buffer for RTC
+            rtcDataBlock.resize(rdrBlockLength * rdrBlockWidth);
+        
+            // get a block of RTC
             rtc.getBlock(rtcDataBlock,
+                        rangeFirstPixel, azimuthFirstLine,
+                        rdrBlockWidth, rdrBlockLength);
+
+        }
+        
+        std::valarray<float> orientationAngleBlock(0);
+        if (_correctOrientationFlag) {
+            // buffer for the orientation angle
+            orientationAngleBlock.resize(rdrBlockLength * rdrBlockWidth);
+            // get a block of orientation angle
+            orientationAngleRaster.getBlock(orientationAngleBlock,
+                        rangeFirstPixel, azimuthFirstLine,
+                        rdrBlockWidth, rdrBlockLength);
+
+        }
+
+        if (_dualPol) {
+
+            //If dual-pol, correct RTC for each band and then  geocode it
+
+            std::valarray<T> rdrDataBlock(rdrBlockLength * rdrBlockWidth);
+            std::valarray<T> geoDataBlock(geoBlockLength * _geoGridWidth);
+
+
+            //for each band in the input:
+            for (size_t band = 0; band < nbands; ++band){
+
+                std::cout << "band: " << band << std::endl;
+                // get a block of data
+                std::cout << "get data block " << std::endl;
+                rdrCov.getBlock(rdrDataBlock,
                                 rangeFirstPixel, azimuthFirstLine,
                                 rdrBlockWidth, rdrBlockLength, band+1);
 
-            // apply RTC correction factor
-            //rdrDataBlock *= rtcDataBlock;
-            _correctRTC(rdrDataBlock, rtcDataBlock);
+                if (_correctRtcFlag) {
+                    // apply RTC correction factor
+                    _correctRTC(rdrDataBlock, rtcDataBlock);
+                }
 
-            // interpolate the data in radar grid to the geocoded grid
-            std::cout << "interpolate " << std::endl;
-            _interpolate(rdrDataBlock, geoDataBlock, radarX, radarY, 
+                // Geocode; interpolate the data in radar grid to the geocoded grid
+                std::cout << "interpolate " << std::endl;
+                _interpolate(rdrDataBlock, geoDataBlock, radarX, radarY, 
                                 rdrBlockWidth, rdrBlockLength, 
                                 _geoGridWidth, geoBlockLength);
 
-            // set output
-            std::cout << "set output " << std::endl;
-            geoCov.setBlock(geoDataBlock, 0, lineStart, 
+                // set output
+                std::cout << "set output " << std::endl;
+                geoCov.setBlock(geoDataBlock, 0, lineStart, 
                                 _geoGridWidth, geoBlockLength, band+1);
+            }
+        } 
+        else if (_quadPol) {
+            
+            std::cout << "needs to be implemented "  << std::endl;
+
         }
+
+
         // set output block of data
     } // end loop over block of output grid
 
@@ -388,6 +456,44 @@ _faradayRotationAngle(std::valarray<T>& Shh,
     
 }
 
+template<class T>
+void isce::signal::Covariance<T>::
+_correctFaradayRotation(isce::core::LUT2d<double>& faradayAngle, 
+                        std::valarray<std::complex<float>>& Shh,
+                    std::valarray<std::complex<float>>& Shv,
+                    std::valarray<std::complex<float>>& Svh,
+                    std::valarray<std::complex<float>>& Svv,
+                    size_t length,
+                    size_t width,
+                    size_t lineStart)
+
+{
+    size_t sizeData = Shh.size();  
+
+    for (size_t kk = 0; kk < length*width; ++kk) {
+        size_t line = kk/width;
+        size_t col = kk%width;
+        size_t y = line + lineStart;
+    
+        double delta = faradayAngle.eval(y, col);
+        float a = std::cos(delta);
+        float b = std::sin(delta);
+
+        T shh = a*a*Shh[kk] + a*b*Shv[kk] - a*b*Svh[kk] - b*b*Svv[kk];
+        T shv = a*a*Shv[kk] + a*b*Shh[kk] - a*b*Svv[kk] + b*b*Svh[kk];
+        T svh = a*b*Shh[kk] + b*b*Shv[kk] + a*a*Svh[kk] + a*b*Svv[kk];
+        T svv = a*b*Shv[kk] - b*b*Shh[kk] + a*a*Svv[kk] - a*b*Svh[kk];
+
+        Shh[kk] = shh;
+        Shv[kk] = shv;
+        Svh[kk] = svh;
+        Svv[kk] = svv;
+
+        
+        
+    }   
+}
+
 
 template<class T>
 void isce::signal::Covariance<T>::
@@ -476,16 +582,8 @@ _correctOrientation(std::valarray<float>& tau,
                     std::valarray<std::complex<float>>& C23,
                     std::valarray<std::complex<float>>& C31,
                     std::valarray<std::complex<float>>& C32,
-                    std::valarray<std::complex<float>>& C33,
-                    std::valarray<std::complex<float>>& c11,
-                    std::valarray<std::complex<float>>& c12,
-                    std::valarray<std::complex<float>>& c13,
-                    std::valarray<std::complex<float>>& c21,
-                    std::valarray<std::complex<float>>& c22,
-                    std::valarray<std::complex<float>>& c23,
-                    std::valarray<std::complex<float>>& c31,
-                    std::valarray<std::complex<float>>& c32,
-                    std::valarray<std::complex<float>>& c33)
+                    std::valarray<std::complex<float>>& C33)
+
 {
     // Given the 3x3 Covariance matrix, the matrix after 
     // polarimetric orientation correction is obtained as:
@@ -507,15 +605,13 @@ _correctOrientation(std::valarray<float>& tau,
     // All other elemensts of the rotation matrix
     // can be derived from the first two elements. 
     // R13 = 2.0 - R11;
-
     // R21 = -1.0*R12;
     // R22 = 2.0*(R11 - 1.0);
     // R23 = R12;
-
     // R31 = 2.0 - R11;
     // R32 = -1.0*R12; 
     // R33 = R11;
-    //
+    // Therefore there is no need to compute them 
 
 
     for (size_t i = 0; i < arraySize; ++i) {
@@ -528,42 +624,53 @@ _correctOrientation(std::valarray<float>& tau,
         float r31 = 2.0f - R11[i];
         float r32 = -1.0f*R12[i];
         float r33 = R11[i];
-        
-        c11[i] = 0.25f*(r11*(C11[i]*r11 + C12[i]*r12 + C13[i]*r13) +
+       
+        std::complex<float> c11 = 0.25f*(r11*(C11[i]*r11 + C12[i]*r12 + C13[i]*r13) +
                         r12*(C21[i]*r11 + C22[i]*r12 + C23[i]*r13) +
                         r13*(C31[i]*r11 + C32[i]*r12 + C33[i]*r13));
 
-        c12[i] = 0.25f*(r11*(C11[i]*r21 + C12[i]*r22 + C13[i]*r23) +
+        std::complex<float> c12 = 0.25f*(r11*(C11[i]*r21 + C12[i]*r22 + C13[i]*r23) +
                         r12*(C21[i]*r21 + C22[i]*r22 + C23[i]*r23) +
                         r13*(C31[i]*r21 + C32[i]*r22 + C33[i]*r23));
-        
-        c13[i] = 0.25f*(r11*(C11[i]*r31 + C12[i]*r32 + C13[i]*r33) +
+
+        std::complex<float> c13 = 0.25f*(r11*(C11[i]*r31 + C12[i]*r32 + C13[i]*r33) +
                         r12*(C21[i]*r31 + C22[i]*r32 + C23[i]*r33) +
                         r13*(C31[i]*r31 + C32[i]*r32 + C33[i]*r33));
 
-        c21[i] = 0.25f*(r21*(C11[i]*r11 + C12[i]*r12 + C13[i]*r13) +
+        std::complex<float> c21 = 0.25f*(r21*(C11[i]*r11 + C12[i]*r12 + C13[i]*r13) +
                         r22*(C21[i]*r11 + C22[i]*r12 + C23[i]*r13) +
                         r23*(C31[i]*r11 + C32[i]*r12 + C33[i]*r13));
 
-        c22[i] = 0.25f*(r21*(C11[i]*r21 + C12[i]*r22 + C13[i]*r23) +
+        std::complex<float> c22 = 0.25f*(r21*(C11[i]*r21 + C12[i]*r22 + C13[i]*r23) +
                         r22*(C21[i]*r21 + C22[i]*r22 + C23[i]*r23) +
                         r23*(C31[i]*r21 + C32[i]*r22 + C33[i]*r23));
 
-        c23[i] = 0.25f*(r21*(C11[i]*r31 + C12[i]*r32 + C13[i]*r33) +
+        std::complex<float> c23 = 0.25f*(r21*(C11[i]*r31 + C12[i]*r32 + C13[i]*r33) +
                         r22*(C21[i]*r31 + C22[i]*r32 + C23[i]*r33) +
                         r23*(C31[i]*r31 + C32[i]*r32 + C33[i]*r33));
 
-        c31[i] = 0.25f*(r31*(C11[i]*r11 + C12[i]*r12 + C13[i]*r13) +
+        std::complex<float> c31 = 0.25f*(r31*(C11[i]*r11 + C12[i]*r12 + C13[i]*r13) +
                         r32*(C21[i]*r11 + C22[i]*r12 + C23[i]*r13) +
                         r33*(C31[i]*r11 + C32[i]*r12 + C33[i]*r13));
 
-        c32[i] = 0.25f*(r31*(C11[i]*r21 + C12[i]*r22 + C13[i]*r23) +
+        std::complex<float> c32 = 0.25f*(r31*(C11[i]*r21 + C12[i]*r22 + C13[i]*r23) +
                         r32*(C21[i]*r21 + C22[i]*r22 + C23[i]*r23) +
                         r33*(C31[i]*r21 + C32[i]*r22 + C33[i]*r23));
 
-        c33[i] = 0.25f*(r31*(C11[i]*r31 + C12[i]*r32 + C13[i]*r33) +
+        std::complex<float> c33 = 0.25f*(r31*(C11[i]*r31 + C12[i]*r32 + C13[i]*r33) +
                         r32*(C21[i]*r31 + C22[i]*r32 + C23[i]*r33) +
                         r33*(C31[i]*r31 + C32[i]*r32 + C33[i]*r33));
+
+        C11[i] = c11;
+        C12[i] = c12;
+        C13[i] = c13;
+        C21[i] = c21;
+        C22[i] = c22;
+        C23[i] = c23;
+        C31[i] = c31;
+        C32[i] = c32;
+        C33[i] = c33;
+
 
     }
 }
