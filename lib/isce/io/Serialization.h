@@ -12,6 +12,7 @@
 #define ISCE_IO_SERIALIZATION_H
 
 #include <iostream>
+#include <sstream>
 
 // isce::io
 #include <isce/io/IH5.h>
@@ -74,6 +75,32 @@ namespace isce {
             return dataset.getDimensions();
         }
 
+        /** Parse time units in a dataset attribute to get a reference epoch
+          *
+          * @param[in] file         HDF5 file or group object.
+          * @param[in] datasetPath  H5 path of dataset relative to h5obj.
+          * @param[out] epoch       isce::core::DateTime of reference epoch. */
+        template <typename H5obj>
+        inline isce::core::DateTime getRefEpoch(H5 obj & h5obj, const std::string & datasetPath) {
+
+            // Open the dataset
+            isce::io::IDataSet dset = h5obj.openDataSet(datasetPath);
+
+            // Get the attribute
+            std::string unitAttr;
+            std::string attribute("units");
+            dset.read(unitAttr, attribute);
+
+            // Parse it
+            std::string dummy1, dummy2, datestr, timestr;
+            std::stringstream ss;
+            ss >> dummy1 >> dummy2 >> datestr >> timestr;
+            isce::core::DateTime epoch(datestr + " " + timestr);
+
+            // Done
+            return epoch;
+        }
+            
     }
 }
 

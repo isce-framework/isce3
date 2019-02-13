@@ -38,7 +38,12 @@ class isce::core::LUT2d {
               isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD);
 
         // Deep copy constructor
-        inline LUT2d(const LUT2d<T> & lut)
+        inline LUT2d(const LUT2d<T> & lut);
+
+        // Set data from external data
+        inline void setFromData(const std::valarray<double> & xcoord,
+                                const std::valarray<double> & ycoord,
+                                const isce::core::Matrix<T> & data);
 
         // Get interpolator method
         inline isce::core::dataInterpMethod interpMethod() const {

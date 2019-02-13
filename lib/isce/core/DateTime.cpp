@@ -5,6 +5,7 @@
 // Copyright 2017-2018
 
 #include <iostream>
+#include <pyre/journal.h>
 #include "DateTime.h"
 
 //Handful of utility functions
@@ -450,12 +451,24 @@ isoformat() const {
 
 // Parse string to fill date time contents
 void isce::core::DateTime::
-strptime(const std::string & datetime_string) {
+strptime(const std::string & datetime_string, const std::string & sep) {
     // Parse the string
     double decimal_seconds;
-    sscanf(datetime_string.c_str(), "%d-%d-%dT%d:%d:%lf", &this->year,
-        &this->months, &this->days, &this->hours, &this->minutes,
-        &decimal_seconds);
+    if (sep.compare("T") == 0) {
+        sscanf(datetime_string.c_str(), "%d-%d-%dT%d:%d:%lf", &this->year,
+            &this->months, &this->days, &this->hours, &this->minutes,
+            &decimal_seconds);
+    } else if (sep.compare(" ") == 0) {
+        sscanf(datetime_string.c_str(), "%d-%d-%d %d:%d:%lf", &this->year,
+            &this->months, &this->days, &this->hours, &this->minutes,
+            &decimal_seconds);
+    } else {
+        pyre::journal::error_t errorChannel("isce.core.DateTime");
+        errorChannel 
+            << pyre::journal::at(__HERE__)
+            << "Unsupported isoformat separator."
+            << pyre::journal::endl;
+    }
     // Convert decimal seconds to integer and fraction
     int integer_seconds = int(decimal_seconds);
     this->seconds = integer_seconds;

@@ -1,5 +1,8 @@
 //-*- C++ -*-
 //-*- coding: utf-8 -*-
+//
+// Author: Bryan V. Riel
+// Copyright 2017-2019
 
 // std
 #include <valarray>
@@ -21,6 +24,9 @@ class isce::product::ProcessingInformation {
     public:
         /** Default constructor */
         inline ProcessingInformation();
+
+        /** Copy constructor */
+        inline ProcessingInformation(const ProcessingInformation & proc);
 
         /** Deep assignment operator */
         inline ProcessingInformation & operator=(const ProcessingInformation & proc);
@@ -66,6 +72,7 @@ class isce::product::ProcessingInformation {
         // Coordinates
         std::valarray<double> _slantRange;
         std::valarray<double> _zeroDopplerTime;
+        isce::core::DateTime _refEpoch;
 
         // Constant look up tables
         isce::core::LUT2d<double> _effectiveVelocity;
@@ -74,6 +81,17 @@ class isce::product::ProcessingInformation {
         std::map<char, isce::core::LUT2d<double>> _azimuthFMRate;
         std::map<char, isce::core::LUT2d<double>> _dopplerCentroid;
 };
+
+// Copy constructor
+/** @param[in] proc ProcessingInformation */
+isce::product::ProcessingInformation::
+ProcessingInformation(const isce::product::ProcessingInformation & proc) :
+                      _slantRange(proc.slantRange()), _zeroDopplerTime(proc.zeroDopplerTime()) {
+    _azimuthFMRate['A'] = proc.azimuthFMRate('A');
+    _azimuthFMRate['B'] = proc.azimuthFMRate('B');
+    _dopplerCentroid['A'] = proc.dopplerCentroid('A');
+    _dopplerCentroid['B'] = proc.dopplerCentroid('B');
+}
 
 // Deep assignment operator
 /** @param[in] proc ProcessingInformation */

@@ -43,6 +43,12 @@ EulerAngles(const std::vector<double> & time, const std::vector<double> & yaw,
     this->data(time, yaw, pitch, roll);
 }
 
+// Copy constructor
+/** @param[in] euler EulerAngles object */
+isce::core::EulerAngles::
+EulerAngles(const EulerAngles & euler) : _time(euler.time()), _yaw(euler.yaw()),
+                                         _pitch(euler.pitch()), _roll(euler.roll()) {}
+
 // Set data after construction
 /** @param[in] time Vector of observation times in seconds since reference epoch
   * @param[in] yaw Vector of yaw angles

@@ -2,7 +2,7 @@
 // -*- coding: utf-8 -*-
 //
 // Source Author: Bryan Riel
-// Copyright 2017-2018
+// Copyright 2017-2019
 
 #ifndef ISCE_PRODUCT_METADATA_H
 #define ISCE_PRODUCT_METADATA_H
@@ -29,14 +29,14 @@ class isce::product::Metadata {
         inline Metadata(const Metadata &);
 
         /** Get read-only attitude */
-        inline const isce::core::EulerAngles & attitude() const;
+        inline const isce::core::EulerAngles & attitude() const { return _attitude; }
         /** Set attitude */
-        inline void attitude(const isce::core::EulerAngles &);
+        inline void attitude(const isce::core::EulerAngles & att) { _attitude = att; }
 
         /** Get read-only orbit */
-        inline const isce::core::Orbit & orbit() const;
+        inline const isce::core::Orbit & orbit() const { return _orbit; };
         /** Set orbit */
-        inline void orbit(const isce::core::Orbit &);
+        inline void orbit(const isce::core::Orbit & orb) { _orbit = orb; };
 
         /** Get reference to ProcessingInformation */
         inline ProcessingInformation & procInfo() { return _procInfo; }
@@ -48,7 +48,6 @@ class isce::product::Metadata {
         isce::core::Orbit _orbit;
         // ProcessingInformation
         isce::product::ProcessingInformation _procInfo;
-
 };
 
 // Copy constructor
