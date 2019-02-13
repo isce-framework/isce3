@@ -316,10 +316,9 @@ namespace isce { namespace cuda {
 
             const double start_h = mode_h.startAzTime().secondsSinceEpoch();
             const double   end   = mode_h.  endAzTime().secondsSinceEpoch();
-            const double pixazm_h = (end - start_h) * // azimuth difference per pixel
-                    mode_h.numberAzimuthLooks() / mode_h.length();
+            const double pixazm_h = (end - start_h) / mode_h.length(); // azimuth difference per pixel
             const double r0_h = mode_h.startingRange();
-            const double dr_h = mode_h.rangePixelSpacing() * mode_h.numberRangeLooks();
+            const double dr_h = mode_h.rangePixelSpacing();
             const float xbound_h = mode_h.width()  - 1.;
             const float ybound_h = mode_h.length() - 1.;
             checkCudaErrors(cudaMemcpyToSymbol(start,  &start_h, sizeof(start_h)));
