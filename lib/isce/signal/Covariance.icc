@@ -204,7 +204,9 @@ radarGrid(isce::core::LUT1d<double> doppler,
 
 }
 
-
+/** 
+ * @param[in] orbit platform's orbit object
+ * @param[in] refEpoch reference epoch of the orbit state vectors*/
 template<class T>
 void isce::signal::Covariance<T>::
 orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch) {
@@ -215,6 +217,9 @@ orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch) {
 
 }
 
+/**
+ *@param[in] orbitMethod orbit interpolation method
+ */
 template<class T>
 void isce::signal::Covariance<T>::
 orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod) {
@@ -223,6 +228,7 @@ orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod) {
 
 }
 
+/** @param[in] ellipsoid ellipsoid object*/
 template<class T>
 void isce::signal::Covariance<T>::
 ellipsoid(isce::core::Ellipsoid& ellipsoid) {
@@ -231,6 +237,7 @@ ellipsoid(isce::core::Ellipsoid& ellipsoid) {
 
 }
 
+/**@param[in] mode image mode object*/
 template<class T>
 void isce::signal::Covariance<T>::
 mode(isce::product::ImageMode& mode) {
@@ -239,6 +246,7 @@ mode(isce::product::ImageMode& mode) {
 
 }
 
+/** @param[in] proj projection object*/
 template<class T>
 void isce::signal::Covariance<T>::
 projection(isce::core::ProjectionBase * proj) {
@@ -247,6 +255,7 @@ projection(isce::core::ProjectionBase * proj) {
 
 }
 
+/** @param[in] threshold value for geo2rdr convergence */
 template<class T>
 void isce::signal::Covariance<T>::
 thresholdGeo2rdr(double threshold) {
@@ -255,6 +264,7 @@ thresholdGeo2rdr(double threshold) {
 
 }
 
+/** @param[in] numiter number of iterations for geo2rdr convergence*/
 template<class T>
 void isce::signal::Covariance<T>::
 numiterGeo2rdr(int numiter) {
@@ -263,6 +273,7 @@ numiterGeo2rdr(int numiter) {
 
 }
 
+/** @param[in] linesPerBlock lines per block */
 template<class T>
 void isce::signal::Covariance<T>::
 linesPerBlock(size_t linesPerBlock) {
@@ -271,6 +282,7 @@ linesPerBlock(size_t linesPerBlock) {
 
 }
 
+/** @param[in] demBlockMargin DEM block margin */
 template<class T>
 void isce::signal::Covariance<T>::
 demBlockMargin(double demBlockMargin) {
@@ -279,6 +291,7 @@ demBlockMargin(double demBlockMargin) {
 
 }
 
+/** @param[in] radarBlockMargin radar block margin */
 template<class T>
 void isce::signal::Covariance<T>::
 radarBlockMargin(int radarBlockMargin) {
@@ -287,7 +300,7 @@ radarBlockMargin(int radarBlockMargin) {
 
 }
 
-//interpolator
+/** @param[in] interp interpolation object*/
 template<class T>
 void isce::signal::Covariance<T>::
 interpolator(isce::core::Interpolator<T> * interp) {
@@ -296,6 +309,7 @@ interpolator(isce::core::Interpolator<T> * interp) {
 
 }
 
+/** @param[in] method interpolation method */
 template<class T>
 void isce::signal::Covariance<T>::
 interpolator(isce::core::dataInterpMethod method) {
