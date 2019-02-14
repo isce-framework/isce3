@@ -24,18 +24,30 @@ cdef class pyQuaternion:
     cdef Quaternion * c_quaternion
     cdef bool __owner
 
-    def __cinit__(self, list q):
-        cdef vector[double] _q;
-        for ii in range(4):
-            _q.push_back(q[ii])
-        self.c_quaternion = new Quaternion(_q)
+    def __cinit__(self,
+                  np.ndarray[np.float64_t, ndim=1] time,
+                  np.ndarray[np.float64_t, ndim=2] quaternions):
+
+        # Copy data to vectors manually (only doing this once, so hopefully
+        # performance hit isn't too big of an issue)
+        cdef i
+        cdef int n = time.shape[0]
+        cdef vector[double] vtime = vector[double](n)
+        cdef vector[double] vquat = vector[double](n*4)
+        for i in range(n):
+            vtime[i] = time[i]
+            for j in range(4):
+                vquat[i*4+j] = quaternions[i,j]
+
+        # Create Quaternion object
+        self.c_quaternion = new Quaternion(vtime, vquat)
         self.__owner = True
 
     def __dealloc__(self):
         if self.__owner:
             del self.c_quaternion
 
-    def ypr(self):
+    def ypr(self, double t):
         '''
         Return Euler Angles corresponding to quaternions.
 
@@ -43,11 +55,13 @@ cdef class pyQuaternion:
             numpy.array(3)
         '''
         cdef cartesian_t _ypr
-        _ypr = self.c_quaternion.ypr()
-        angles = np.asarray(<double[:3]>(&(_ypr[0])))
-        return angles
+        cdef double yaw = 0.0
+        cdef double pitch = 0.0
+        cdef double roll = 0.0
+        self.c_quaternion.ypr(t, yaw, pitch, roll)
+        return yaw, pitch, roll
 
-    def factoredYPR(self, list position, list velocity, pyEllipsoid pyEllps):
+    def factoredYPR(self, double t, list position, list velocity, pyEllipsoid pyEllps):
         '''
         Returned Factored Euler Angles.
         '''
@@ -57,11 +71,11 @@ cdef class pyQuaternion:
         for ii in range(3):
             xyz[ii] = position[ii]
             vel[ii] = velocity[ii]
-        cdef cartesian_t ypr_vec = self.c_quaternion.factoredYPR(xyz, vel, pyEllps.c_ellipsoid)
+        cdef cartesian_t ypr_vec = self.c_quaternion.factoredYPR(t, xyz, vel, pyEllps.c_ellipsoid)
         angles = np.asarray(<double[:3]>(&(ypr_vec[0])))
         return angles
 
-    def rotmat(self):
+    def rotmat(self, double t):
         '''
         Return the rotation matrix corresponding to the quaternions.
 
@@ -71,7 +85,7 @@ cdef class pyQuaternion:
     
         cdef cartmat_t Rvec
         cdef string sequence_str = pyStringToBytes("")
-        Rvec = self.c_quaternion.rotmat(sequence_str)
+        Rvec = self.c_quaternion.rotmat(t, sequence_str)
         R = np.empty((3,3), dtype=np.double)
         cdef double[:,:] Rview = R
         for ii in range(3):
@@ -79,30 +93,5 @@ cdef class pyQuaternion:
                  Rview[ii][jj] = Rvec[ii][jj]
 
         return R
-
-    @property
-    def qvec(self):
-        '''
-        Return the quaternions.
-
-        Returns:
-            numpy.array(4)
-        '''
-        cdef vector[double] qv = self.c_quaternion.qvec()
-        q = np.asarray(<double[:4]> (qv.data()))
-        return q
-
-    @qvec.setter
-    def qvec(self, vec):
-        '''
-        Set the quaternions.
-
-        Args:
-            vec (list or numpy.array(4)): Quaternions.
-        '''
-        cdef vector[double] qv
-        for ii in range(4):
-            qv.push_back(vec[ii])
-        self.c_quaternion.qvec(qv) 
-
+    
 # end of file

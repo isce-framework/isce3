@@ -16,7 +16,7 @@
 #include "gpuResampSlc.h"
 #include "gpuImageMode.h"
 
-#include "isce/cuda/helper_cuda.h"
+#include "../helper_cuda.h"
 #include <fstream>
 #include <string>
 using isce::cuda::core::gpuComplex;

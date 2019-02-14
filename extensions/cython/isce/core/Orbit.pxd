@@ -1,7 +1,7 @@
 #cython: language_level=3
 #
-# Author: Joshua Cohen
-# Copyright 2017
+# Author: Joshua Cohen, Tamas Gal
+# Copyright 2017-2019
 #
 
 from libcpp.vector cimport vector
@@ -35,7 +35,7 @@ cdef extern from "isce/core/Orbit.h" namespace "isce::core":
         int interpolateSCHOrbit(double,cartesian_t&,cartesian_t&)
         int computeAcceleration(double,cartesian_t&)
         void updateUTCTimes(const DateTime &)
+        double getENUHeading(double)
         void printOrbit()
         void loadFromHDR(const char*)
         void dumpToHDR(const char*)
-

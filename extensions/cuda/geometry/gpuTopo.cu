@@ -18,6 +18,7 @@
 #include "gpuTopoLayers.h"
 #include "gpuTopo.h"
 using isce::cuda::core::gpuLinAlg;
+#include "../helper_cuda.h"
 
 #define THRD_PER_BLOCK 96 // Number of threads per block (should always %32==0)
 
@@ -83,6 +84,9 @@ void setOutputTopoLayers(const double * targetLLH,
 
     // Compute vector from satellite to ground point
     gpuLinAlg::linComb(1.0, targetXYZ, -1.0, state.position, satToGround);
+
+    // Compute cross-track range
+    layers.crossTrack(index, -1*lookSide*gpuLinAlg::dot(satToGround, TCNbasis.x1));
 
     // Computation in ENU coordinates around target
     gpuLinAlg::enuBasis(targetLLH[1], targetLLH[0], enumat);

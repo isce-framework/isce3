@@ -64,10 +64,7 @@ namespace isce {
       template<typename T> Raster(isce::core::Matrix<T> &matrix);
 
       // Constructor for a 1 band dataset from isce::core::Matrix<T>::view_type 
-      // Currently, not implemented as this conflicts with constructor using a string
-      // If a method can be found to deduce template type from view_type argument
-      // This would make life easier.
-      //template<typename viewtype> Raster(viewtype &view);
+      template<typename T> Raster(pyre::grid::View<T> &view);
 
       /** Create new raster object like another */
       Raster(const std::string& fname, const Raster& rast);
@@ -220,19 +217,19 @@ namespace isce {
 
       //2D block read/write for Matrix<T>, optional band index
       /** Read/Write block of data from given band to/from Matrix<T>::view_type */
-      template<typename viewtype> void getSetBlock(viewtype& view, size_t xidx, size_t yidx, size_t band, GDALRWFlag iodir);
+      template<typename T> void getSetBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band, GDALRWFlag iodir);
 
       /** Read block of data from given band to Matrix<T>::view_type */
-      template<typename viewtype> void getBlock(viewtype& view, size_t xidx, size_t yidx, size_t band);
+      template<typename T> void getBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band);
 
       /** Read block of data from band 1 to Matrix<T>::view_type */
-      template<typename viewtype> void getBlock(viewtype& view, size_t xidx, size_t yidx);
+      template<typename T> void getBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx);
 
       /** Write block of data to given band from Matrix<T>::view_type */
-      template<typename viewtype> void setBlock(viewtype& view, size_t xidx, size_t yidx, size_t band);
+      template<typename T> void setBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band);
 
       /** Write block of data to band 1 from Matrix<T>::view_type */
-      template<typename viewtype> void setBlock(viewtype& view, size_t xidx, size_t yidx);
+      template<typename T> void setBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx);
 
       //Functions to deal with projections and geotransform information
       /** Return EPSG code corresponding to raster*/

@@ -16,20 +16,48 @@
 
 // Quaternion default constructor
 isce::core::Quaternion::
-Quaternion() : Attitude(QUATERNION_T), _qvec{0.0, 0.0, 0.0, 0.0} {}
-// Quaternion constructor with vector
-isce::core::Quaternion::
-Quaternion(std::vector<double> & q) : Attitude(QUATERNION_T), _qvec(q) {}
+Quaternion() : Attitude(QUATERNION_T) {}
 
-// Return vector of Euler angles
-isce::core::cartesian_t
-isce::core::Quaternion::ypr() {
+// Quaternion constructor with vectors of time and quaternions
+isce::core::Quaternion::
+Quaternion(const std::vector<double> & time, const std::vector<double> & quaternions) :
+           Attitude(QUATERNION_T) {
+    this->data(time, quaternions); 
+}
+
+// Return vector of Euler angles evaluated at a given time
+/** @param[in] tintp Seconds since reference epoch 
+  * @param[out] oyaw Interpolated yaw angle
+  * @param[out] opitch Interpolated pitch angle
+  * @param[out] oroll Interpolated roll angle */
+void
+isce::core::Quaternion::ypr(double tintp, double & yaw, double & pitch, double & roll) {
+
+    // Check time bounds; warn if invalid time requested
+    const int n = nVectors();
+    if (tintp < _time[0] || tintp > _time[n-1]) {
+        pyre::journal::warning_t warnChannel("isce.core.Quaternion");
+        warnChannel
+            << pyre::journal::at(__HERE__)
+            << "Requested out-of-bounds time. Attitude will be invalid."
+            << pyre::journal::endl;
+        return;
+    }
+
+    // For now, we only implement nearest neighbor
+    int idx = -1;
+    for (int i = 0; i < n; ++i) {
+        if (_time[i] >= tintp) {
+            idx = i;
+            break;
+        }
+    }
 
     // Get quaternion elements
-    double q0 = _qvec[0];
-    double q1 = _qvec[1];
-    double q2 = _qvec[2];
-    double q3 = _qvec[3];
+    double q0 = _qvec[idx*4 + 0];
+    double q1 = _qvec[idx*4 + 1];
+    double q2 = _qvec[idx*4 + 2];
+    double q3 = _qvec[idx*4 + 3];
 
     // Compute quaternion norm
     const double qmod = std::sqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
@@ -45,28 +73,40 @@ isce::core::Quaternion::ypr() {
     const double r21 = -2.0 * (q1*q3 - q0*q2);
     const double r31 = 2.0 * (q2*q3 + q0*q1);
     const double r32 = q0*q0 - q1*q1 - q2*q2 + q3*q3;
-    const double yaw = std::atan2(r11, r12);
-    const double pitch = std::asin(r21);
-    const double roll = std::atan2(r31, r32);
-
-    // Make vector and return
-    cartesian_t angles{yaw, pitch, roll};
-    return angles;
-    
+    yaw = std::atan2(r11, r12);
+    pitch = std::asin(r21);
+    roll = std::atan2(r31, r32);
 }
 
 // Convert quaternion to rotation matrix
 isce::core::cartmat_t
-isce::core::Quaternion::rotmat(const std::string dummy) {
+isce::core::Quaternion::
+rotmat(double tintp, const std::string dummy, double dq0, double dq1, double dq2, double dq3) {
 
-    // Cache quaternion elements
-    if (_qvec.size() != 4) {
-        std::cerr << "ERROR: quaternion does not have the right size" << std::endl;
+    // Check time bounds; error if out of bonds
+    const int n = nVectors();
+    if (tintp < _time[0] || tintp > _time[n-1]) {
+        pyre::journal::error_t errorChannel("isce.core.Quaternion");
+        errorChannel
+            << pyre::journal::at(__HERE__)
+            << "Requested out-of-bounds time."
+            << pyre::journal::endl;
     }
-    const double a = _qvec[0];
-    const double b = _qvec[1];
-    const double c = _qvec[2];
-    const double d = _qvec[3];
+
+    // For now, we only implement nearest neighbor
+    int idx = -1;
+    for (int i = 0; i < n; ++i) {
+        if (_time[i] >= tintp) {
+            idx = i;
+            break;
+        }
+    }
+
+    // Get quaternion elements
+    const double a = _qvec[idx*4 + 0] + dq0;
+    const double b = _qvec[idx*4 + 1] + dq1;
+    const double c = _qvec[idx*4 + 2] + dq2;
+    const double d = _qvec[idx*4 + 3] + dq2;
 
     // Construct rotation matrix
     cartmat_t R{{
@@ -84,10 +124,11 @@ isce::core::Quaternion::rotmat(const std::string dummy) {
     return R;
 }
 
-// Extract YPR after factoring out orbit matrix
+// Extract YPR at a given time after factoring out orbit matrix
 isce::core::cartesian_t
 isce::core::Quaternion::
-factoredYPR(const cartesian_t & satxyz,
+factoredYPR(double tintp,
+            const cartesian_t & satxyz,
             const cartesian_t & satvel,
             Ellipsoid * ellipsoid) {
 
@@ -116,7 +157,7 @@ factoredYPR(const cartesian_t & satxyz,
     }
 
     // Get total rotation matrix
-    cartmat_t R = rotmat("");
+    cartmat_t R = rotmat(tintp, "");
 
     // Multiply by transpose to get pure attitude matrix
     cartmat_t L;

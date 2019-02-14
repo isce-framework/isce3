@@ -111,7 +111,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     double ybound = mode.length() - 1.0;
 
     // Output raster
-    float* out = new float[mode.length() * mode.width()];
+    float* out = new float[mode.length() * mode.width()]();
 
     // ------------------------------------------------------------------------
     // Main code: decompose DEM into facets, compute RDC coordinates
@@ -130,25 +130,29 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     const size_t imax = dem_interp.length() * upsample_factor;
     const size_t jmax = dem_interp.width()  * upsample_factor;
 
+    const size_t progress_block = imax*jmax/100;
+    size_t numdone = 0;
+
+    // Loop over DEM facets
+    #pragma omp parallel for schedule(dynamic) collapse(2)
     for (size_t ii = 0; ii < imax; ++ii) {
-
-        if (ii % 100 == 0) {
-            std::cout << "At lat " << ii << " of " << imax << "\r" << std::flush;
-        }
-
-        // Current latitude
-        const double lat0 = dem_interp.yStart() + ii * dem_interp.deltaY() / upsample_factor;
-        const double lat1 = lat0 + dem_interp.deltaY() / upsample_factor;
-        const double lat_mid = dem_interp.yStart() + (0.5 + ii) * dem_interp.deltaY() / upsample_factor;
-
-        // Loop over pixels
-        #pragma omp parallel for schedule(dynamic)
         for (size_t jj = 0; jj < jmax; ++jj) {
+
+            #pragma omp atomic
+            numdone++;
+
+            if (numdone % progress_block == 0)
+                #pragma omp critical
+                printf("\rRTC progress: %d%%", (int) (numdone * 1e2 / (imax * jmax))),
+                    fflush(stdout);
+
             isce::core::cartesian_t llh00, llh01, llh10, llh11,
                                     xyz00, xyz01, xyz10, xyz11, xyz_mid,
                                     P00_01, P00_10, P10_01, P11_01, P11_10,
                                     lookXYZ, normalFacet1, normalFacet2;
 
+            // Central latitude/longitude of facets
+            const double lat_mid = dem_interp.yStart() + dem_interp.deltaY() * (ii + 0.5) / upsample_factor;
             const double lon_mid = dem_interp.xStart() + dem_interp.deltaX() * (jj + 0.5) / upsample_factor;
 
             double a, r;
@@ -169,7 +173,9 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             if (ranpix < 0.0 or x2 > xbound or azpix < 0.0 or y2 > ybound)
                 continue;
 
-            // Current longitude
+            // Corner latitude/longitude
+            const double lat0 = dem_interp.yStart() + ii * dem_interp.deltaY() / upsample_factor;
+            const double lat1 = lat0 + dem_interp.deltaY() / upsample_factor;
             const double lon0 = dem_interp.xStart() + dem_interp.deltaX() * jj / upsample_factor;
             const double lon1 = lon0 + dem_interp.deltaX() / upsample_factor;
 
@@ -261,7 +267,6 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             out[mode.width() * iy2 + ix2] += area * Wr * Wa;
         }
     }
-    std::cout << std::endl;
 
     float max_hgt, avg_hgt;
     pyre::journal::info_t info("facet_calib");
@@ -269,23 +274,19 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     isce::geometry::DEMInterpolator flat_interp(avg_hgt);
 
     // Compute the flat earth incidence angle correction applied by UAVSAR processing
+    #pragma omp parallel for schedule(dynamic) collapse(2)
     for (size_t i = 0; i < mode.length(); ++i) {
-
-        if (i % 100 == 0)
-            std::cout << "At azimuth " << i << " of " << mode.length()
-                << "\r" << std::flush;
-
-        isce::core::cartesian_t xyz_plat, vel;
-        orbit.interpolateWGS84Orbit(start + i * pixazm, xyz_plat, vel);
-
-        #pragma omp parallel for schedule(dynamic)
         for (size_t j = 0; j < mode.width(); ++j) {
+
+            isce::core::cartesian_t xyz_plat, vel;
+            orbit.interpolateWGS84Orbit(start + i * pixazm, xyz_plat, vel);
 
             // Slant range for current pixel
             const double slt_range = r0 + j * dr;
 
             // Get LLH and XYZ coordinates for this azimuth/range
             isce::core::cartesian_t targetLLH, targetXYZ;
+            targetLLH[2] = avg_hgt; // initialize first guess
             isce::geometry::rdr2geo(start + i * pixazm, slt_range, 0, orbit, ellps,
                     flat_interp, targetLLH, mode.wavelength(),
                     product.metadata().identification().lookDirection(),
@@ -294,6 +295,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             // Computation of ENU coordinates around ground target
             isce::core::cartesian_t satToGround, enu;
             isce::core::cartmat_t enumat, xyz2enu;
+            ellps.lonLatToXyz(targetLLH, targetXYZ);
             LinAlg::linComb(1.0, targetXYZ, -1.0, xyz_plat, satToGround);
             LinAlg::enuBasis(targetLLH[1], targetLLH[0], enumat);
             LinAlg::tranMat(enumat, xyz2enu);

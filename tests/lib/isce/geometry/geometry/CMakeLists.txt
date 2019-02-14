@@ -1,7 +1,7 @@
 
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
-foreach (TESTNAME geometry)
+foreach (TESTNAME geometry geometry_equator)
     add_executable(${TESTNAME} ${TESTNAME}.cpp)
     add_dependencies(${TESTNAME} geom_test_data)
     target_link_libraries(${TESTNAME} PUBLIC ${LISCE} gtest)
