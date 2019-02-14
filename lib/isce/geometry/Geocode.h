@@ -14,7 +14,7 @@
 #include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/Poly2d.h>
-#include <isce/core/LUT1d.h>
+#include <isce/core/LUT2d.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Projections.h>
 #include <isce/core/Interpolator.h>
@@ -72,12 +72,13 @@ class isce::geometry::Geocode {
                 int width, int length, int epsgcode);
 
         // Set the input radar grid 
-        inline void radarGrid(isce::core::LUT1d<double> doppler,
+        inline void radarGrid(isce::core::LUT2d<double> doppler,
                                 isce::core::DateTime azimuthStartTime,
                                 double azimuthTimeInterval,
                                 int radarGridLength,
                                 double startingRange,
                                 double rangeSpacing,
+                                double wavelength,
                                 int radarGridWidth);
 
         // Set interpolator 
@@ -88,8 +89,6 @@ class isce::geometry::Geocode {
         inline void orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod);
 
         inline void ellipsoid(isce::core::Ellipsoid& ellipsoid);
-
-        inline void mode(isce::product::ImageMode& mode);
 
         inline void projection(isce::core::ProjectionBase * proj);
 
@@ -139,9 +138,6 @@ class isce::geometry::Geocode {
         isce::core::Orbit _orbit;
         isce::core::Ellipsoid _ellipsoid;
 
-        // isce::product objects
-        isce::product::ImageMode _mode;
-    
         // Optimization options
         double _threshold;
         int _numiter;
@@ -149,11 +145,12 @@ class isce::geometry::Geocode {
         isce::core::orbitInterpMethod _orbitMethod;
 
         // radar grids parameters
-        isce::core::LUT1d<double> _doppler;
+        isce::core::LUT2d<double> _doppler;
         isce::core::DateTime _azimuthStartTime, _refEpoch;
         double _azimuthTimeInterval;
         double _startingRange;
         double _rangeSpacing;
+        double _wavelength;
         int _radarGridLength;
         int _radarGridWidth;
 

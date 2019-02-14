@@ -41,9 +41,9 @@ class isce::core::LUT2d {
         inline LUT2d(const LUT2d<T> & lut);
 
         // Set data from external data
-        inline void setFromData(const std::valarray<double> & xcoord,
-                                const std::valarray<double> & ycoord,
-                                const isce::core::Matrix<T> & data);
+        void setFromData(const std::valarray<double> & xcoord,
+                         const std::valarray<double> & ycoord,
+                         const isce::core::Matrix<T> & data);
 
         // Get interpolator method
         inline isce::core::dataInterpMethod interpMethod() const {
@@ -58,6 +58,10 @@ class isce::core::LUT2d {
         inline double xSpacing() const { return _dx; }
         // Get Y-spacing
         inline double ySpacing() const { return _dy; }
+        // Get LUT length (number of lines)
+        inline size_t length() const { return _data.length(); }
+        // Get LUT width (number of samples)
+        inline size_t width() const { return _data.width(); }
         // Get read-only reference to data
         inline const isce::core::Matrix<T> & data() const { return _data; }
               
@@ -65,6 +69,9 @@ class isce::core::LUT2d {
         T eval(double, double) const;
 
     private:
+        // Flags
+        bool _haveData;
+        T _refValue;
         // Data
         double _xstart, _ystart, _dx, _dy;
         isce::core::Matrix<T> _data;
@@ -78,21 +85,22 @@ class isce::core::LUT2d {
 // Default constructor using bilinear interpolator
 template <typename T>
 isce::core::LUT2d<T>::
-LUT2d() {
+LUT2d() : _haveData(false), _refValue(0.0) {
     _setInterpolator(isce::core::BILINEAR_METHOD);
 }
 
 // Constructor with specified interpolator
 template <typename T>
 isce::core::LUT2d<T>::
-LUT2d(isce::core::dataInterpMethod method) {
+LUT2d(isce::core::dataInterpMethod method) : _haveData(false), _refValue(0.0) {
     _setInterpolator(method);
 }
 
 // Deep copy constructor
 template <typename T>
 isce::core::LUT2d<T>::
-LUT2d(const isce::core::LUT2d<T> & lut) : _xstart(lut.xStart()), _ystart(lut.yStart()),
+LUT2d(const isce::core::LUT2d<T> & lut) : _haveData(true), _refValue(lut.data()(0,0)),
+                                          _xstart(lut.xStart()), _ystart(lut.yStart()),
                                           _dx(lut.xSpacing()), _dy(lut.ySpacing()),
                                           _data(lut.data()) {
     _setInterpolator(lut.interpMethod());

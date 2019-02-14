@@ -323,8 +323,8 @@ _geo2rdr(double x, double y,
 
     // Perform geo->rdr iterations
     int geostat = isce::geometry::geo2rdr(
-                    llh, _ellipsoid, _orbit, _doppler, _mode, 
-                    azimuthTime, slantRange, _threshold,
+                    llh, _ellipsoid, _orbit, _doppler,
+                    azimuthTime, slantRange, _wavelength, _threshold,
                     _numiter, 1.0e-8);
 
 }

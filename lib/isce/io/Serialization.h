@@ -59,8 +59,22 @@ namespace isce {
                                std::valarray<T> & v) {
             // Open dataset
             isce::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
-            // Read the vector dataset
+            // Read the valarray dataset
             dataset.read(v);
+        }
+
+        /** Load Matrix dataset from HDF5 file.
+          *
+          * @param[in] file          HDF5 file or group object.
+          * @param[in] datasetPath   H5 path of dataset relative to h5obj.
+          * @param[in] m             Matrix to store dataset. */
+        template <typename H5obj, typename T>
+        inline void loadFromH5(H5obj & h5obj, const std::string & datasetPath,
+                               isce::core::Matrix<T> & m) {
+            // Open dataset
+            isce::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
+            // Read the Matrix dataset using raw pointer interface
+            dataset.read(m.data());
         }
 
         /** Get dimensions of complex imagery from HDF5 file.
@@ -81,7 +95,7 @@ namespace isce {
           * @param[in] datasetPath  H5 path of dataset relative to h5obj.
           * @param[out] epoch       isce::core::DateTime of reference epoch. */
         template <typename H5obj>
-        inline isce::core::DateTime getRefEpoch(H5 obj & h5obj, const std::string & datasetPath) {
+        inline isce::core::DateTime getRefEpoch(H5obj & h5obj, const std::string & datasetPath) {
 
             // Open the dataset
             isce::io::IDataSet dset = h5obj.openDataSet(datasetPath);

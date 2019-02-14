@@ -8,31 +8,29 @@
 #error "Topo.icc is an implementation detail of class Topo"
 #endif
 
-/**  @param[in] product Input Product
- * 
- * Primary constructor of Topo object */
-isce::geometry::Topo::
-Topo(isce::product::Product & product) : _initialized(false) {
 
-    // Cache objects from product
-    isce::product::Identification id = product.metadata().identification();
-    isce::radar::Radar instrument = product.metadata().instrument();
+/** @param[in] product Input Product
+  * @param[in] frequency Frequency designation
+  * @param[in] numberAzimuthLooks Number of azimuth looks of input product
+  * @param[in] numberRangeLooks Number of range looks of input product
+  *
+  * Primary constructor of Topo object. */
+isce::geometry::Topo::
+Topo(isce::product::Product & product, char frequency,
+     size_t numberAzimuthLooks, size_t numberRangeLooks) : 
+     ConfigParameters(product, frequency, numberAzimuthLooks, numberRangeLooks) {
    
-    // Copy mode, orbit, ellipsoid, and doppler
-    _mode = product.complexImagery().primaryMode();
-    _orbit = product.metadata().orbitPOE();
-    _ellipsoid = id.ellipsoid();
-    _doppler = instrument.skewDoppler();
-    _lookSide = id.lookDirection();
+    // Copy orbit and doppler
+    _orbit = product.metadata().orbit();
+    _doppler = product.metadata().procInfo().dopplerCentroid(frequency);
+
+    // Make an ellipsoid manually
+    _ellipsoid = isce::core::Ellipsoid(isce::core::EarthSemiMajorAxis,
+                                       isce::core::EarthEccentricitySquared);
+    _lookSide = product.lookSide();
 
     // Adjust block length based in input SLC length
-    _linesPerBlock = std::min(_mode.length(), _linesPerBlock);
-
-    // For numerical precision purposes, set reference epoch 2 days prior
-    _refEpoch = _mode.startAzTime() - 86400*2;
-    // Update orbit epochs with new epoch
-    _orbit.updateUTCTimes(_refEpoch);
-
+    _linesPerBlock = std::min(_rlength, _linesPerBlock);
 }
 
 /** @param[in] ellipsoid Ellipsoid object
@@ -43,45 +41,17 @@ Topo(isce::product::Product & product) : _initialized(false) {
  * Alternative constructor from ellipsoid orbit and metadata.
  * Used for supporting VRT-formatted products.*/
 isce::geometry::Topo::
-Topo(isce::core::Ellipsoid ellipsoid, isce::core::Orbit orbit,
-     isce::core::LUT1d<double> doppler, isce::core::Metadata meta) :
-    _orbit(orbit), _ellipsoid(ellipsoid), _doppler(doppler), _mode(meta),
-    _initialized(false) {
+Topo(const isce::core::Ellipsoid & ellipsoid, const isce::core::Orbit & orbit,
+     const isce::core::LUT2d<double> & doppler, const isce::core::Metadata & meta,
+     size_t numberAzimuthLooks, size_t numberRangeLooks) :
+     ConfigParameters(meta, orbit.refEpoch, numberAzimuthLooks, numberRangeLooks),
+     _orbit(orbit), _ellipsoid(ellipsoid), _doppler(doppler) {
 
     // Other data
     _lookSide = meta.lookSide;
 
     // Adjust block length based in input SLC length
-    _linesPerBlock = std::min(_mode.length(), _linesPerBlock);
-
-    // For numerical precision purposes, set reference epoch 2 days prior
-    _refEpoch = _mode.startAzTime() - 86400*2;
-    // Update orbit epochs with new epoch
-    _orbit.updateUTCTimes(_refEpoch);
-
-}
-
-/** @param[in] flag To mark object as initialized or not */ 
-void isce::geometry::Topo::
-initialized(bool flag) {
-    _initialized = flag;
-}
-
-/** @param[in] info Pyre journal log to write to */
-void isce::geometry::Topo::
-checkInitialization(pyre::journal::info_t & info) const {
-    if (!_initialized) {
-        pyre::journal::error_t error("isce.geometry.Topo");
-        error 
-            << pyre::journal::at(__HERE__)
-            << "Topo options have not been set." 
-            << pyre::journal::endl;
-    } else {
-        info
-            << "Primary iterations: " << _numiter << pyre::journal::newline
-            << "Secondary iterations: " << _extraiter << pyre::journal::newline
-            << "Distance threshold: " << _threshold << pyre::journal::newline;
-    }
+    _linesPerBlock = std::min(_rlength, _linesPerBlock);
 }
 
 /** @param[in] t Distance threshold to flag convergence of iterations */

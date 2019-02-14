@@ -46,8 +46,17 @@ EulerAngles(const std::vector<double> & time, const std::vector<double> & yaw,
 // Copy constructor
 /** @param[in] euler EulerAngles object */
 isce::core::EulerAngles::
-EulerAngles(const EulerAngles & euler) : _time(euler.time()), _yaw(euler.yaw()),
-                                         _pitch(euler.pitch()), _roll(euler.roll()) {}
+EulerAngles(const EulerAngles & euler) : Attitude(EULERANGLES_T),
+                                         _time(euler.time()), _yaw(euler.yaw()),
+                                         _pitch(euler.pitch()), _roll(euler.roll()) {
+    const std::string yaw_orientation = euler.yawOrientation();
+    if (yaw_orientation.compare("normal") == 0 || yaw_orientation.compare("center") == 0) {
+        yawOrientation(yaw_orientation);
+    } else {
+        std::cerr << "Unsupported yaw orientation. Must be normal or center." << std::endl;
+        throw std::invalid_argument("Unsupported yaw orientation.");
+    }
+}
 
 // Set data after construction
 /** @param[in] time Vector of observation times in seconds since reference epoch

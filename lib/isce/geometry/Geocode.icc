@@ -76,12 +76,13 @@ geoGrid(double geoGridStartX, double geoGridStartY,
 
 template<class T>
 void isce::geometry::Geocode<T>::
-radarGrid(isce::core::LUT1d<double> doppler,
+radarGrid(isce::core::LUT2d<double> doppler,
             isce::core::DateTime azimuthStartTime,
             double azimuthTimeInterval,
             int radarGridLength,
             double startingRange,
             double rangeSpacing,
+            double wavelength,
             int radarGridWidth){
 
     _doppler = doppler;
@@ -124,14 +125,6 @@ void isce::geometry::Geocode<T>::
 ellipsoid(isce::core::Ellipsoid& ellipsoid) {
 
     _ellipsoid = ellipsoid;
-
-}
-
-template<class T>
-void isce::geometry::Geocode<T>::
-mode(isce::product::ImageMode& mode) {
-
-    _mode = mode;
 
 }
 

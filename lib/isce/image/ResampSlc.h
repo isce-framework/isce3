@@ -45,35 +45,49 @@ class isce::image::ResampSlc {
 
     // Meta-methods
     public:
-        // Default constructor
-        inline ResampSlc();
-        // Constructor from an isce::product::Product
-        inline ResampSlc(const isce::product::Product &);
-        // Constructor from isce::core::LUT1d<double> and isce::product::ImageMode
-        inline ResampSlc(const isce::core::LUT1d<double> &, const isce::product::ImageMode &);
-        // Constructor from isce::core objects
-        inline ResampSlc(const isce::core::LUT1d<double> &, const isce::core::Metadata &);
-        // Destructor
-        inline ~ResampSlc();
+        /** Constructor from an isce::product::Product (no flattening) */
+        inline ResampSlc(const isce::product::Product & product,
+                         char frequency = 'A');
+
+        /** Constructor from an isce::product::Product and reference product (flattening) */
+        inline ResampSlc(const isce::product::Product & product,
+                         const isce::product::Product & refProduct,
+                         char frequency = 'A');
+
+        /** Constructor from an isce::product::Swath (no flattening) */
+        inline ResampSlc(const isce::product::Swath & swath);
+
+        /** Constructor from an isce::product::Swath and reference swath (flattening) */
+        inline ResampSlc(const isce::product::Swath & swath,
+                         const isce::product::Swath & refSwath);
+
+        /** Constructor from individual components (no flattening) */
+        inline ResampSlc(const isce::core::LUT2d<double> & doppler,
+                         double startingRange, double rangePixelSpacing,
+                         double sensingStart, double prf, double wvl);
+
+        /** Constructor from individual components (flattening) */
+        inline ResampSlc(const isce::core::LUT2d<double> & doppler,
+                         double startingRange, double rangePixelSpacing,
+                         double sensingStart, double prf, double wvl,
+                         double refStartingRange, double refRangePixelSpacing,
+                         double refWvl);
+
+        /** Destructor */
+        inline ~ResampSlc() {};
 
         // Poly2d and LUT getters
         inline isce::core::Poly2d rgCarrier() const;
         inline isce::core::Poly2d azCarrier() const;
-        inline isce::core::LUT1d<double> doppler() const;
+        inline isce::core::LUT2d<double> doppler() const;
         // Poly2d and LUT setters
-        inline void rgCarrier(isce::core::Poly2d &);
-        inline void azCarrier(isce::core::Poly2d &);
-        inline void doppler(isce::core::LUT1d<double> &);
+        inline void rgCarrier(const isce::core::Poly2d &);
+        inline void azCarrier(const isce::core::Poly2d &);
+        inline void doppler(const isce::core::LUT2d<double> &);
 
         // Set reference product for flattening
-        inline void referenceProduct(const isce::product::Product &);
-
-        // Get image mode
-        inline isce::product::ImageMode imageMode() const;
-        inline isce::product::ImageMode refImageMode() const;
-        // Set image mode
-        inline void imageMode(const isce::product::ImageMode &);
-        inline void refImageMode(const isce::product::ImageMode &);
+        inline void referenceProduct(const isce::product::Product & product,
+                                     char frequency = 'A');
 
         // Get/set number of lines per processing tile
         inline size_t linesPerTile() const;
@@ -93,13 +107,7 @@ class isce::image::ResampSlc {
                     const std::string & rgOffsetFilename, const std::string & azOffsetFilename,
                     int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40,
                     int chipSize=isce::core::SINC_ONE);
-
-        // Main product-based resamp entry point
-        void resamp(const std::string & outputFilename, const std::string & polarization,
-                    const std::string & rgOffsetFilename, const std::string & azOffsetFilename,
-                    bool flatten=false, bool isComplex=true, int rowBuffer=40,
-                    int chipSize=isce::core::SINC_ONE);
-
+        
     // Data members
     protected:
         // Number of lines per tile
@@ -108,23 +116,29 @@ class isce::image::ResampSlc {
         int _inputBand;
         // Filename of the input product
         std::string _filename;
-        // Flag indicating if we have a reference mode
-        bool _haveRefMode;
+        // Flag indicating if we have a reference data (for flattening)
+        bool _haveRefData;
         // Interpolator pointer
         isce::core::Interpolator<std::complex<float>> * _interp;
 
         // Polynomials and LUTs
         isce::core::Poly2d _rgCarrier;            // range carrier polynomial
         isce::core::Poly2d _azCarrier;            // azimuth carrier polynomial
-        isce::core::LUT1d<double> _dopplerLUT;    // Doppler LUT
+        isce::core::LUT2d<double> _dopplerLUT;
 
-        // ImageMode
-        isce::product::ImageMode _mode;       // image mode for image to be resampled
-        isce::product::ImageMode _refMode;    // image mode for reference master image
+        // Variables ingested from a Swath
+        double _startingRange;
+        double _rangePixelSpacing;
+        double _sensingStart;
+        double _prf;
+        double _wavelength;
+        double _refStartingRange;
+        double _refRangePixelSpacing;
+        double _refWavelength;
 
-        // Array of sinc coefficient
-        isce::core::Matrix<float> _fintp;
-
+    // Protected functions
+    protected:
+        
         // Tile initialization for input offsets
         void _initializeOffsetTiles(Tile_t &, isce::io::Raster &, isce::io::Raster &,
                                     isce::image::Tile<float> &,
@@ -148,6 +162,12 @@ class isce::image::ResampSlc {
 
         // Initialize interpolator pointer
         void _prepareInterpMethods(isce::core::dataInterpMethod, int);
+
+        // Set radar parameters from an isce::product::Swath
+        inline void _setDataFromSwath(const isce::product::Swath & swath);
+
+        // Set reference radar parameters from an isce::product::Swath (for flattening)
+        inline void _setRefDataFromSwath(const isce::product::Swath & swath);
 };
 
 // Get inline implementations for ResampSlc

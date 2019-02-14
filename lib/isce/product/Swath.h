@@ -1,11 +1,15 @@
 //-*- C++ -*-
 //-*- coding: utf-8 -*-
 
+#ifndef ISCE_PRODUCT_SWATH_H
+#define ISCE_PRODUCT_SWATH_H
+
 // std
 #include <valarray>
 
 // isce::core
 #include <isce/core/LUT2d.h>
+#include <isce/core/Constants.h>
 
 // isce::io
 #include <isce/io/Raster.h>
@@ -24,6 +28,25 @@ class isce::product::Swath {
         // Constructors
         Swath();
 
+        /** Get slant range array */
+        inline const std::valarray<double> & slantRange() const { return _slantRange; }
+        /** Set slant range array */
+        inline void slantRange(const std::valarray<double> & rng) { _slantRange = rng; }
+
+        /** Get the range pixel spacing */
+        inline double rangePixelSpacing() const { return _slantRange[1] - _slantRange[0]; }
+
+        /** Get zero Doppler time array */
+        inline const std::valarray<double> & zeroDopplerTime() const { return _zeroDopplerTime; }
+        /** Set zero Doppler time array */
+        inline void zeroDopplerTime(const std::valarray<double> & t) { _zeroDopplerTime = t; }
+
+        /** Get the number of samples */
+        inline size_t samples() const { return _slantRange.size(); }
+
+        /** Get the number of lines */
+        inline size_t lines() const { return _zeroDopplerTime.size(); }
+
         /** Get acquired center frequency */
         inline double acquiredCenterFrequency() const { return _acquiredCenterFrequency; }
         /** Set acquired center frequency */
@@ -33,6 +56,11 @@ class isce::product::Swath {
         inline double processedCenterFrequency() const { return _processedCenterFrequency; }
         /** Set processed center frequency */
         inline void processedCenterFrequency(double f) { _processedCenterFrequency = f; }
+
+        /** Get processed wavelength */
+        inline double processedWavelength() const {
+            return _processedCenterFrequency / isce::core::SPEED_OF_LIGHT;
+        }
 
         /** Get acquired range bandwidth */
         inline double acquiredRangeBandwidth() const { return _acquiredRangeBandwidth; }
@@ -84,5 +112,7 @@ class isce::product::Swath {
         size_t _validStart;
         size_t _validEnd;
 };
+
+#endif
 
 // end of file

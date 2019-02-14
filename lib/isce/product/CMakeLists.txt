@@ -5,14 +5,12 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS
-    ComplexImagery.h
-    ImageMode.h
-    ImageMode.icc
+    ConfigParameters.h
     Metadata.h
     ProcessingInformation.h
     Product.h
-    Product.icc
     Serialization.h
+    Swath.h
 )
 
 ###Install headers into build/include

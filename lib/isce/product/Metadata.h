@@ -8,8 +8,11 @@
 #define ISCE_PRODUCT_METADATA_H
 
 // isce::core
-#include "isce/core/EulerAngles.h"
-#include "isce/core/Orbit.h"
+#include <isce/core/EulerAngles.h>
+#include <isce/core/Orbit.h>
+
+// isce::product
+#include <isce/product/ProcessingInformation.h>
 
 // Declarations
 namespace isce {
@@ -37,6 +40,9 @@ class isce::product::Metadata {
         inline const isce::core::Orbit & orbit() const { return _orbit; };
         /** Set orbit */
         inline void orbit(const isce::core::Orbit & orb) { _orbit = orb; };
+
+        /** Get read-only reference to ProcessingInformation */
+        inline const ProcessingInformation & procInfo() const { return _procInfo; }
 
         /** Get reference to ProcessingInformation */
         inline ProcessingInformation & procInfo() { return _procInfo; }

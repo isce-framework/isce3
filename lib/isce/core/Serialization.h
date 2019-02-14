@@ -22,11 +22,13 @@
 
 // isce::core
 #include <isce/core/DateTime.h>
+#include <isce/core/EulerAngles.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/Poly2d.h>
 #include <isce/core/LUT1d.h>
+#include <isce/core/LUT2d.h>
 #include <isce/core/StateVector.h>
 
 // isce::io
@@ -163,7 +165,7 @@ namespace isce {
             refEpoch = isce::io::getRefEpoch(group, "time");
 
             // Unpack the angles
-            const double rad = M_PI / 180.0
+            const double rad = M_PI / 180.0;
             for (size_t i = 0; i < time.size(); ++i) {
                 yaw[i] = rad * angles[i*3 + 0];
                 pitch[i] = rad * angles[i*3 + 1];
@@ -171,10 +173,7 @@ namespace isce {
             }
 
             // Save to EulerAngles object
-            euler.time(time);
-            euler.yaw(yaw);
-            euler.pitch(pitch);
-            euler.roll(roll);
+            euler.data(time, yaw, pitch, roll);
             euler.refEpoch(refEpoch);
         }
 
@@ -308,11 +307,11 @@ namespace isce {
          /** \brief Load LUT2d data from HDF5 product.
          *
          * @param[in] group         HDF5 group object.
-         * @param[in] lut           LUT2d to be configured.
-         * @param[in] name          Dataset name within frequency[A|B] group. */
+         * @param[in] dsetName      Dataset name within group
+         * @param[in] lut           LUT2d to be configured. */
         template <typename T>
-        inline void loadFromH5(isce::io::IGroup & group, isce::core::LUT2d<T> & lut,
-                               const std::string & dsetName, char frequency) {
+        inline void loadCalGrid(isce::io::IGroup & group, const std::string & dsetName,
+                                isce::core::LUT2d<T> & lut) {
 
             // Load coordinates
             std::valarray<double> slantRange, zeroDopplerTime;
@@ -322,14 +321,12 @@ namespace isce {
             // Get reference epoch
             isce::core::DateTime refEpoch = isce::io::getRefEpoch(group, "zeroDopplerTime");
 
-            // Load LUT2d data
-            std::valarray<double> mat_data;
-            isce::io::loadFromH5(group, "frequency" + frequency + "/" + dsetName, mat_data);
-            isce::core::Matrix<T> matrix(mat_data, slantRange.size());
+            // Load LUT2d data in matrix
+            isce::core::Matrix<T> matrix(zeroDopplerTime.size(), slantRange.size());
+            isce::io::loadFromH5(group, dsetName, matrix);
 
             // Set in lut
             lut.setFromData(slantRange, zeroDopplerTime, matrix);
-
         }
 
         // ------------------------------------------------------------------------

@@ -20,20 +20,102 @@
 #include <isce/io/IH5.h>
 #include <isce/io/Serialization.h>
 
-// isce::radar
-#include <isce/radar/Serialization.h>
-
 // isce::product
-#include <isce/product/ComplexImagery.h>
-#include <isce/product/ImageMode.h>
-#include <isce/product/Identification.h>
 #include <isce/product/Metadata.h>
-
+#include <isce/product/Swath.h>
 
 //! The isce namespace
 namespace isce {
     //! The isce::product namespace
     namespace product {
+
+        /** Load ProcessingInformation from HDF5.
+          *
+          * @param[in] group        HDF5 group object.
+          * @param[in] proc         ProcessingInformation object to be configured. */
+        inline void loadFromH5(isce::io::IGroup & group, ProcessingInformation & proc) {
+
+            // Load slant range
+            std::valarray<double> values;
+            isce::io::loadFromH5(group, "slantRange", values);
+            proc.slantRange(values);
+
+            // Load zero Doppler time
+            isce::io::loadFromH5(group, "zeroDopplerTime", values);
+            proc.zeroDopplerTime(values);
+
+            // Load effective velocity LUT
+            isce::core::LUT2d<double> lut;
+            isce::core::loadCalGrid(group, "effectiveVelocity", lut);
+            proc.effectiveVelocity(lut);
+
+            // Load azimuth FM rate for each frequency
+            isce::core::loadCalGrid(group, "frequencyA/azimuthFMRate", lut);
+            proc.azimuthFMRate(lut, 'A');
+            isce::core::loadCalGrid(group, "frequencyB/azimuthFMRate", lut);
+            proc.azimuthFMRate(lut, 'B');
+
+            // Load Doppler centroid for each frequency
+            isce::core::loadCalGrid(group, "frequencyA/dopplerCentroid", lut);
+            proc.dopplerCentroid(lut, 'A');
+            isce::core::loadCalGrid(group, "frequencyB/dopplerCentroid", lut);
+            proc.dopplerCentroid(lut, 'B');
+
+        }
+
+        /** Load Swath from HDF5
+          *
+          * @param[in] group        HDF5 group object.
+          * @param[in] swath        Swath object to be configured. 
+          * @param[in] freq         Frequency designation (e.g., A or B) */
+        inline void loadFromH5(isce::io::IGroup & group, Swath & swath, char freq) {
+
+            // Open appropriate frequency group
+            std::string freqString("frequency");
+            freqString.push_back(freq);
+            isce::io::IGroup fgroup = group.openGroup(freqString);
+
+            // Load slant range
+            std::valarray<double> array;
+            isce::io::loadFromH5(fgroup, "slantRange", array);
+            swath.slantRange(array);
+
+            // Load zero Doppler time
+            isce::io::loadFromH5(group, "zeroDopplerTime", array);
+            swath.zeroDopplerTime(array);
+
+            // Load other parameters
+            double value;
+            isce::io::loadFromH5(fgroup, "acquiredCenterFrequency", value);
+            swath.acquiredCenterFrequency(value);
+
+            isce::io::loadFromH5(fgroup, "processedCenterFrequency", value);
+            swath.processedCenterFrequency(value);
+
+            isce::io::loadFromH5(fgroup, "acquiredRangeBandwidth", value);
+            swath.acquiredRangeBandwidth(value);
+
+            isce::io::loadFromH5(fgroup, "processedRangeBandwidth", value);
+            swath.processedRangeBandwidth(value);
+
+            isce::io::loadFromH5(fgroup, "nominalAcquisitionPRF", value);
+            swath.nominalAcquisitionPRF(value);
+
+            isce::io::loadFromH5(fgroup, "nominalAlongTrackSpacing", value);
+            swath.nominalAlongTrackSpacing(value);
+
+            isce::io::loadFromH5(fgroup, "processedAzimuthBandwidth", value);
+            swath.processedAzimuthBandwidth(value);
+        }
+
+        /** Load multiple swaths from HDF5
+          *
+          * @param[in] group            HDF5 group object.
+          * @param[in] swaths           Map of Swaths to be configured. */
+        inline void loadFromH5(isce::io::IGroup & group, std::map<char, Swath> & swaths) {
+            loadFromH5(group, swaths['A'], 'A');
+            loadFromH5(group, swaths['B'], 'B');
+        }
 
         /** Load Metadata parameters from HDF5.
          *
@@ -60,43 +142,9 @@ namespace isce {
             // Get processing information subgroup
             isce::io::IGroup procGroup = group.openGroup("processingInformation/parameters");
             // Configure ProcessingInformation
-            isce::core::loadFromH5(procGroup, meta.procInfo());
+            loadFromH5(procGroup, meta.procInfo());
         }
 
-        /** Load ProcessingInformation from HDF5.
-          *
-          * @param[in] group        HDF5 group object.
-          * @param[in] proc         ProcessingInformation object to be configured. */
-        inline void loadFromH5((isce::io::IGroup & group, ProcessingInformation & proc) {
-
-            // Load slant range
-            std::valarray<double> values;
-            isce::io::loadFromH5(group, "slantRange", values);
-            proc.slantRange(values);
-
-            // Load zero Doppler time
-            isce::io::loadFromH5(group, "zeroDopplerTime", values);
-            proc.zeroDopplerTime(values);
-
-            // Load effective velocity
-            isce::core::LUT2d<double> lut;
-            isce::core::loadFromH5(group, "effectiveVelocity", lut);
-            proc.effectiveVelocity(lut);
-
-            // Load azimuth FM rate for each frequency
-            isce::core::loadFromH5(group, "frequencyA/azimuthFMRate", lut);
-            proc.azimuthFMRate(lut, 'A');
-            isce::core::loadFromH5(group, "frequencyB/azimuthFMRate", lut);
-            proc.azimuthFMRate(lut, 'B');
-
-            // Load Doppler centroid for each frequency
-            isce::core::loadFromH5(group, "frequencyA/dopplerCentroid", lut);
-            proc.dopplerCentroid(lut, 'A');
-            isce::core::loadFromH5(group, "frequencyB/dopplerCentroid", lut);
-            proc.dopplerCentroid(lut, 'B');
-
-        }
-        
     }
 }
 

@@ -4,6 +4,9 @@
 // Author: Bryan V. Riel
 // Copyright 2017-2019
 
+#ifndef ISCE_PRODUCT_PROCESSINGINFORMATION_H
+#define ISCE_PRODUCT_PROCESSINGINFORMATION_H
+
 // std
 #include <valarray>
 #include <map>
@@ -23,7 +26,7 @@ class isce::product::ProcessingInformation {
 
     public:
         /** Default constructor */
-        inline ProcessingInformation();
+        inline ProcessingInformation() {}
 
         /** Copy constructor */
         inline ProcessingInformation(const ProcessingInformation & proc);
@@ -52,7 +55,7 @@ class isce::product::ProcessingInformation {
 
         /** Get read-only look-up-table for azimuth FM rate */
         inline const isce::core::LUT2d<double> & azimuthFMRate(char freq) const {
-            return _azimuthFMRate[freq];
+            return _azimuthFMRate.at(freq);
         }
         /** Set look-up-table for azimuth FM rate */
         inline void azimuthFMRate(const isce::core::LUT2d<double> & lut, char freq) {
@@ -61,7 +64,7 @@ class isce::product::ProcessingInformation {
 
         /** Get read-only look-up-table for Doppler centroid */
         inline const isce::core::LUT2d<double> & dopplerCentroid(char freq) const {
-            return _dopplerCentroid[freq];
+            return _dopplerCentroid.at(freq);
         }
         /** Set look-up-table for azimuth FM rate */
         inline void dopplerCentroid(const isce::core::LUT2d<double> & lut, char freq) {
@@ -105,6 +108,9 @@ operator=(const isce::product::ProcessingInformation & proc) {
     _azimuthFMRate['B'] = proc.azimuthFMRate('B');
     _dopplerCentroid['A'] = proc.dopplerCentroid('A');
     _dopplerCentroid['B'] = proc.dopplerCentroid('B');
+    return *this;
 }
+
+#endif
 
 // end of file

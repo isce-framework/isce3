@@ -8,51 +8,85 @@
 // Since fmod(a,b) in C++ != MODULO(a,b) in Fortran for all a,b, define a C++ equivalent
 #define modulo_f(a,b) fmod(fmod(a,b)+(b),(b))
 
-// Default constructor (assumes zero-Doppler imaging and no flattening)
+/** Constructor from an isce::product::Product */
 isce::image::ResampSlc::
-ResampSlc() : _haveRefMode(false) {
-    // Make a default LUT (zero-doppler)
-    isce::core::LUT1d<double> zerodop;
-    _dopplerLUT = zerodop;
-    // Create an empty ImageMode
-    isce::product::ImageMode mode;
-    _mode = mode;
-}
-
-// Constructor from an isce::product::Product
-isce::image::ResampSlc::
-ResampSlc(const isce::product::Product & product) : _haveRefMode(false) {
-    // Cache the instrument
-    isce::radar::Radar instrument = product.metadata().instrument();
+ResampSlc(const isce::product::Product & product, char frequency) : 
+          ResampSlc(product.swath(frequency)) {
     // Set the doppler
-    _dopplerLUT = instrument.contentDoppler();
-    // Set the image mode
-    _mode = product.complexImagery().primaryMode();
+    _dopplerLUT = product.metadata().procInfo().dopplerCentroid(frequency);
     // Save the filename
     _filename = product.filename();
 }
 
-// Constructor from isce::core::LUT1d<double> and isce::product::ImageMode
+/** Constructor from an isce::product::Product and reference product (flattening) */
 isce::image::ResampSlc::
-ResampSlc(const isce::core::LUT1d<double> & doppler, const isce::product::ImageMode & mode) :
-    _dopplerLUT(doppler), _mode(mode), _haveRefMode(false) {
-    // _filename variable set to empty string since it shouldn't be used with
-    // a non-HDF5 constructor
-    _filename = " ";
+ResampSlc(const isce::product::Product & product,
+          const isce::product::Product & refProduct,
+          char frequency) :
+          ResampSlc(product.swath(frequency),
+                    refProduct.swath(frequency)) {
+    // Set the doppler
+    _dopplerLUT = product.metadata().procInfo().dopplerCentroid(frequency);
+    // Save the filename
+    _filename = product.filename();
 }
 
-// Constructor from isce::core objects
+/** Constructor from an isce::product::Swath (no flattening) */
 isce::image::ResampSlc::
-ResampSlc(const isce::core::LUT1d<double> & doppler, const isce::core::Metadata & meta) :
-    _dopplerLUT(doppler), _mode(meta) {
-    // _filename variable set to empty string since it shouldn't be used with
-    // a non-HDF5 constructor
-    _filename = " ";
+ResampSlc(const isce::product::Swath & swath) : _haveRefData(false) {
+    // Set radar parameters
+    _setDataFromSwath(swath);
 }
 
-// Destructor
+/** Constructor from an isce::product::Swath and reference swath (flattening) */
 isce::image::ResampSlc::
-~ResampSlc() {}
+ResampSlc(const isce::product::Swath & swath, const isce::product::Swath & refSwath) :
+          _haveRefData(true) {
+    // Set radar parameters
+    _setDataFromSwath(swath);
+    // Set reference radar parameters
+    _setRefDataFromSwath(refSwath);
+}
+
+/** Constructor from individual components (no flattening) */
+isce::image::ResampSlc::
+ResampSlc(const isce::core::LUT2d<double> & doppler, double startingRange,
+          double rangePixelSpacing, double sensingStart, double prf, double wvl) :
+          _haveRefData(false), _dopplerLUT(doppler), _startingRange(startingRange),
+          _rangePixelSpacing(rangePixelSpacing), _sensingStart(sensingStart),
+          _prf(prf), _wavelength(wvl) {}
+
+/** Constructor from individual components (flattening) */
+isce::image::ResampSlc::
+ResampSlc(const isce::core::LUT2d<double> & doppler, double startingRange,
+          double rangePixelSpacing, double sensingStart, double prf, double wvl,
+          double refStartingRange, double refRangePixelSpacing, double refWvl) :
+          _haveRefData(true), _dopplerLUT(doppler), _startingRange(startingRange),
+          _rangePixelSpacing(rangePixelSpacing), _sensingStart(sensingStart),
+          _prf(prf), _wavelength(wvl), _refStartingRange(refStartingRange),
+          _refRangePixelSpacing(refRangePixelSpacing), _refWavelength(refWvl) {}
+
+// Set radar parameters from an isce::product::Swath
+/** @param[in] swath            Input isce::product::Swath */
+void
+isce::image::ResampSlc::
+_setDataFromSwath(const isce::product::Swath & swath) {
+    _startingRange = swath.slantRange()[0];
+    _rangePixelSpacing = swath.rangePixelSpacing();
+    _sensingStart = swath.zeroDopplerTime()[0];
+    _prf = swath.nominalAcquisitionPRF();
+    _wavelength = swath.processedWavelength();
+}
+
+// Set reference radar parameters from an isce::product::Swath (for flattening)
+/** @param[in] swath            Input isce::product::Swath */
+void
+isce::image::ResampSlc::
+_setRefDataFromSwath(const isce::product::Swath & swath) {
+    _refStartingRange = swath.slantRange()[0];
+    _refRangePixelSpacing = swath.rangePixelSpacing();
+    _refWavelength = swath.processedWavelength();
+}
 
 // Get range carrier polynomial
 isce::core::Poly2d
@@ -63,7 +97,7 @@ rgCarrier() const {
 
 // Set range carrier polynomial
 void isce::image::ResampSlc::
-rgCarrier(isce::core::Poly2d & lut) {
+rgCarrier(const isce::core::Poly2d & lut) {
     _rgCarrier = lut;
 }
 
@@ -76,12 +110,12 @@ azCarrier() const {
 
 // Set azimuth carrier polynomial
 void isce::image::ResampSlc::
-azCarrier(isce::core::Poly2d & lut) {
+azCarrier(const isce::core::Poly2d & lut) {
     _azCarrier = lut;
 }
 
 // Get Doppler LUT
-isce::core::LUT1d<double>
+isce::core::LUT2d<double>
 isce::image::ResampSlc::
 doppler() const {
     return _dopplerLUT;
@@ -89,43 +123,15 @@ doppler() const {
 
 // Set Doppler LUT
 void isce::image::ResampSlc::
-doppler(isce::core::LUT1d<double> & lut) {
+doppler(const isce::core::LUT2d<double> & lut) {
     _dopplerLUT = lut;
 }
 
 // Set reference product
 void isce::image::ResampSlc::
-referenceProduct(const isce::product::Product & refProduct) {
-    // Extract the reference image mode
-    _refMode = refProduct.complexImagery().primaryMode();
-    // Indicate we have a reference mode
-    _haveRefMode = true;
-}
-
-// Get image mode
-isce::product::ImageMode
-isce::image::ResampSlc::
-imageMode() const {
-    return _mode;
-}
-
-// Set imageMode from copy
-void isce::image::ResampSlc::
-imageMode(const isce::product::ImageMode & mode) {
-    _mode = mode;
-}
-
-// Get reference imageMode
-isce::product::ImageMode
-isce::image::ResampSlc::
-refImageMode() const {
-    return _refMode;
-}
-
-// Set reference imageMode from copy
-void isce::image::ResampSlc::
-refImageMode(const isce::product::ImageMode & mode) {
-    _refMode = mode;
+referenceProduct(const isce::product::Product & refProduct, char frequency) {
+    _setRefDataFromSwath(refProduct.swath(frequency));
+    _haveRefData = true;
 }
 
 // Announce my properties to the world

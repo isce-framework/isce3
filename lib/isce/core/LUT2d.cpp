@@ -16,8 +16,8 @@
 template <typename T>
 isce::core::LUT2d<T>::
 LUT2d(double xstart, double ystart, double dx, double dy, const isce::core::Matrix<T> & data,
-      isce::core::dataInterpMethod method) : _xstart(xstart), _ystart(ystart),
-      _dx(dx), _dy(dy), _data(data) {
+      isce::core::dataInterpMethod method) : _haveData(true), _refValue(data(0,0)),
+      _xstart(xstart), _ystart(ystart), _dx(dx), _dy(dy), _data(data) {
     _setInterpolator(method);
 }
 
@@ -30,7 +30,8 @@ LUT2d(double xstart, double ystart, double dx, double dy, const isce::core::Matr
 template <typename T>
 isce::core::LUT2d<T>::
 LUT2d(const std::valarray<double> & xcoord, const std::valarray<double> & ycoord,
-      const isce::core::Matrix<T> & data, isce::core::dataInterpMethod method) {
+      const isce::core::Matrix<T> & data, isce::core::dataInterpMethod method) :
+      _haveData(true), _refValue(data(0,0)) {
     // Set the data
     setFromData(xcoord, ycoord, data);
     // Save interpolation data 
@@ -42,6 +43,7 @@ LUT2d(const std::valarray<double> & xcoord, const std::valarray<double> & ycoord
   * @param[in] ycoord Y-coordinates
   * @param[in] data Matrix of LUT data */
 template <typename T>
+void
 isce::core::LUT2d<T>::
 setFromData(const std::valarray<double> & xcoord, const std::valarray<double> & ycoord,
             const isce::core::Matrix<T> & data) {
@@ -89,6 +91,8 @@ setFromData(const std::valarray<double> & xcoord, const std::valarray<double> & 
 
     // Copy data
     _data = data;
+    _haveData = true;
+    _refValue = data(0,0);
 } 
 
 // Evaluate LUT at coordinate
@@ -102,12 +106,18 @@ eval(double y, double x) const {
      * Evaluate the LUT at the given coordinates.
      */
 
+    // Check if data are available; if not, return ref value
+    T value = _refValue;
+    if (!_haveData) {
+        return value;
+    }
+
     // Get matrix indices corresponding to requested coordinates
     const double x_idx = (x - _xstart) / _dx;
     const double y_idx = (y - _ystart) / _dy;
 
     // Call interpolator
-    T value = _interp->interpolate(x_idx, y_idx, _data);
+    value = _interp->interpolate(x_idx, y_idx, _data);
     return value;
 }
 
