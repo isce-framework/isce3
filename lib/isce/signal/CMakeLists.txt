@@ -7,7 +7,8 @@ set(LOCAL_SRCS
     Signal.cpp
     Crossmul.cpp
     Filter.cpp
-    Looks.cpp)
+    Looks.cpp
+    Covariance.cpp)
 
 ####Append current path to every source file
 set(${PACKAGENAME}_SRCS "")
@@ -24,7 +25,9 @@ set(${PACKAGENAME}_EXPORT_HEADERS
     Crossmul.icc
     Filter.h
     Looks.h
-    Looks.icc)
+    Looks.icc
+    Covariance.h
+    Covariance.icc)
 
 ###Install headers into build/include
 ###This is where regex can be used on the header files if needed
