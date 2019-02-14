@@ -2,7 +2,7 @@
 // -*- coding: utf-8 -*-
 //
 // Author: Heresh Fattahi
-// Copyright 2018-
+// Copyright 2019-
 //
 
 #ifndef ISCE_LIB_COVARIANCE_H
@@ -58,6 +58,7 @@ class isce::signal::Covariance {
                 delete _proj;
             }
         };
+        
 
         // covariance estimation 
         void covariance(std::map<std::string, isce::io::Raster> & slc,
@@ -307,7 +308,7 @@ class isce::signal::Covariance {
         int _epsgOut;
 
         // projection object
-        isce::core::ProjectionBase * _proj;        
+        isce::core::ProjectionBase * _proj = nullptr; 
 
         // margin around a computed bounding box for DEM (in degrees)
         double _demBlockMargin;
