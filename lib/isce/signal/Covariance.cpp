@@ -7,6 +7,10 @@
 
 #include "Covariance.h"
 
+/**
+ * @param[in] slc polarimetric channels provided as std::map of Raster object of polarimetric channels. The keys are two or four of hh, hv, vh, and vv channels.
+ * @param[out] cov covariance components obtained by cross multiplication and multi-looking the polarimetric channels
+ */
 template<class T>
 void isce::signal::Covariance<T>::
 covariance(std::map<std::string, isce::io::Raster> & slc,
@@ -86,6 +90,11 @@ covariance(std::map<std::string, isce::io::Raster> & slc,
     }
 }
 
+/**
+ * @param[in] rdrCov covariance componenets in radar range-doppler coordinates
+ * @param[out] geoCov geocoded covariance componenets
+ * @param[in] demRaster digital elevation model (DEM) raster object
+ */
 template<class T>
 void isce::signal::Covariance<T>::
 geocodeCovariance(isce::io::Raster& rdrCov,
@@ -107,6 +116,12 @@ geocodeCovariance(isce::io::Raster& rdrCov,
 
 }
 
+/**
+ * @param[in] rdrCov covariance componenets in radar range-doppler coordinates
+ * @param[out] geoCov geocoded covariance componenets
+ * @param[in] demRaster raster object for digital elevation model (DEM)
+ * @param[in] rtcRaster raster object for radiometric terrain correction (RTC) factor 
+ */
 template<class T>
 void isce::signal::Covariance<T>::
 geocodeCovariance(isce::io::Raster& rdrCov,
@@ -125,6 +140,13 @@ geocodeCovariance(isce::io::Raster& rdrCov,
 
 }
 
+/**
+ * @param[in] rdrCov covariance componenets in radar range-doppler coordinates
+ * @param[out] geoCov geocoded covariance componenets
+ * @param[in] demRaster raster object for digital elevation model (DEM)
+ * @param[in] rtcRaster raster object for radiometric terrain correction (RTC) factor
+ * @param[in] orientationAngleRaster raster object for polarimetric orientation angle
+ */
 template<class T>
 void isce::signal::Covariance<T>::
 geocodeCovariance(isce::io::Raster& rdrCov,
@@ -330,6 +352,12 @@ _correctRTC(std::valarray<std::complex<double>> & rdrDataBlock,
 
 }
 
+/**
+ * @param[in] slc polarimetric channels 
+ * @param[out] faradayAngleRaster raster object for Faraday rotation angle 
+ * @param[in] rangeLooks number of looks in range direction
+ * @param[in] azimuthLooks number of looks in azimuth direction
+ */
 template<class T>
 void isce::signal::Covariance<T>::
 faradayRotation(std::map<std::string, isce::io::Raster> & slc,  
@@ -499,7 +527,12 @@ _correctFaradayRotation(isce::core::LUT2d<double>& faradayAngle,
     }   
 }
 
-
+/**
+ * @param[in] azimuthSlopeRaster raster object of the DEM's slope in azimuth direction  
+ * @param[in] rangeSlopeRaster raster object of the DEM's slope in range direction
+ * @param[in] lookAngleRaster raster object of the look angle 
+ * @param[out] tauRaster raster object of the polarimetric orientation angle
+ */
 template<class T>
 void isce::signal::Covariance<T>::
 orientationAngle(isce::io::Raster& azimuthSlopeRaster,

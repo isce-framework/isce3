@@ -8,6 +8,7 @@
 #error "Covariance.icc is an implementation detail of class Covariance"
 #endif
 
+/** param[in] number of looks in range direction*/
 template<class T>
 void isce::signal::Covariance<T>::
 numberOfRangeLooks(int rngLooks) {
@@ -16,6 +17,7 @@ numberOfRangeLooks(int rngLooks) {
 
 }
 
+/** param[in] number of looks in azimuth direction*/
 template<class T>
 void isce::signal::Covariance<T>::
 numberOfAzimuthLooks(int azimuthLooks) {
@@ -24,6 +26,7 @@ numberOfAzimuthLooks(int azimuthLooks) {
 
 }
 
+/** param[in] pulse repetition frequency*/
 template<class T>
 void isce::signal::Covariance<T>::
 prf(double p) {
@@ -32,7 +35,7 @@ prf(double p) {
 
 }
 
-/** @param[in] 2D Doppler polynomial for refernce SLC
+/** @param[in] Doppler lookup table
 */
 template<class T>
 void isce::signal::Covariance<T>::
@@ -82,7 +85,15 @@ wavelength(double wvl)
     _wavelength = wvl;
 }
 
-
+/**
+ * @param[in] geoGridStartX coordinate X of the upper-left corner of the geocoded grid
+ * @param[in] geoGridStartY coordinate Y of the upper-left corner of the geocoded grid
+ * @param[in] geoGridSpacingX spacing of the geocoded grid in X direction 
+ * @param[in] geoGridSpacingY spacing of the geocoded grid in Y direction
+ * @param[in] geoGridEndX coordinate X of the lower-right corner of the geocoded grid
+ * @param[in] geoGridEndY coordinate Y of the lower-right corner of the geocoded grid
+ * @param[in] epsgcode EPSG code for defining the projection system
+*/
 template<class T>
 void isce::signal::Covariance<T>::
 geoGrid(double geoGridStartX, double geoGridStartY,
@@ -102,6 +113,15 @@ geoGrid(double geoGridStartX, double geoGridStartY,
 
 }
 
+/**
+   * @param[in] geoGridStartX coordinate X of the upper-left corner of the geocoded grid
+   * @param[in] geoGridStartY coordinate Y of the upper-left corner of the geocoded grid
+   * @param[in] geoGridSpacingX spacing of the geocoded grid in X direction
+   * @param[in] geoGridSpacingY spacing of the geocoded grid in Y direction
+   * @param[in] width number of pixels of the geocoded grid in X direction
+   * @param[in] length number of pixels of the geocoded grid in Y direction
+   * @param[in] epsgcode EPSG code for defining the projection system
+  */
 template<class T>
 void isce::signal::Covariance<T>::
 geoGrid(double geoGridStartX, double geoGridStartY,
@@ -149,6 +169,15 @@ geoGrid(double geoGridStartX, double geoGridStartY,
 
 }
 
+/** 
+* @param[in] doppler doppler lookup table
+* @param[in] azimuthStartTime start time of the radar grid in azimuth direction
+* @param[in] azimuthTimeInterval azimuth time interval 
+* @param[in] radarGridLength number of pixels of the radar grid in azimuth direction 
+* @param[in] startingRange starting slant range of the radar grid
+* @param[in] rangeSpacing range spacing
+* @param[in] radarGridWidth number of pixels of the radar grid in range direction 
+*/
 template<class T>
 void isce::signal::Covariance<T>::
 radarGrid(isce::core::LUT1d<double> doppler,

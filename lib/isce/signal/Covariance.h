@@ -42,13 +42,18 @@ namespace isce {
     }
 }
 
+/** \brief Covariance estimation from dual-polarization or quad-polarization data 
+ *
+ */
 template<class T>
 class isce::signal::Covariance {
 
     public:
-
+        
+        // constructor
         Covariance() {};
 
+        // destructor
         ~Covariance() {
         
             if (_interp) {
@@ -60,38 +65,43 @@ class isce::signal::Covariance {
         };
         
 
-        // covariance estimation 
+        /** Covariance estimation */
         void covariance(std::map<std::string, isce::io::Raster> & slc,
                     std::map<std::pair<std::string, std::string>, isce::io::Raster> & cov);
 
-        // estimate the Faraday rotation angle without correcting SLCs
+        /** Estimate the Faraday rotation angle from quad-pol data*/
         void faradayRotation(std::map<std::string, isce::io::Raster> & slc,
                     isce::io::Raster & faradayAngleRaster,
                     size_t rangeLooks, size_t azimuthLooks);
 
+        
+        /** Correct Faraday rotation for quad-pol data */
         /*
         void correctFaradayRotation(std::map<std::string, isce::io::Raster> & slc,
                     isce::core::LUT2d & faradayAngle,
                     std::map<std::string, isce::io::Raster> & correctedSlc);
         */
 
-        // estimate Polarimetric orientation angle
+        /** Estimate polarimetric orientation angle */
         void orientationAngle(isce::io::Raster& azimuthSlopeRaster,
                     isce::io::Raster& rangeSlopeRaster,
                     isce::io::Raster& lookAngleRaster,
                     isce::io::Raster& tau);
 
+        /** Geocode covariance components*/
         void geocodeCovariance(
                     isce::io::Raster& rdrCov,
                     isce::io::Raster& geoCov,
                     isce::io::Raster& demRaster);
 
+        /** Geocode covariance components. Radiometric Terrain Correction (RTC) is applied before geocoding. */
         void geocodeCovariance(
                     isce::io::Raster& rdrCov,
                     isce::io::Raster& geoCov,
                     isce::io::Raster& demRaster,
                     isce::io::Raster& rtc);
 
+        /** Geocode covariance components. RTC and polarimetric orientation angle are applied on Covariance components before geocoding. */
         void geocodeCovariance(
                     isce::io::Raster& rdrCov,
                     isce::io::Raster& geoCov,
@@ -99,16 +109,18 @@ class isce::signal::Covariance {
                     isce::io::Raster& rtc,
                     isce::io::Raster& orientationAngle);
 
+        /** Set geocoded grid. */
         inline void geoGrid(double geoGridStartX, double geoGridStartY,
                 double geoGridSpacingX, double geoGridSpacingY,
                 double geoGridEndX, double geoGridEndY,
                 int epsgcode);
 
+        /** Set geocoded grid. */
 	inline void geoGrid(double geoGridStartX, double geoGridStartY, 
                 double geoGridSpacingX, double geoGridSpacingY,
                 int width, int length, int epsgcode);
         
-        // Set the input radar grid 
+        /** Set the input radar grid. */
         inline void radarGrid(isce::core::LUT1d<double> doppler,
                     isce::core::DateTime azimuthStartTime,
                     double azimuthTimeInterval,
@@ -117,50 +129,65 @@ class isce::signal::Covariance {
                     double rangeSpacing,
                     int radarGridWidth);
 
-        // Set interpolator 
-
+        /** Set number of looks in range direction for covariance estimation */
         inline void numberOfRangeLooks(int rngLooks);
 
+        /** Set number of looks in azimuth direction for covariance estimation */
         inline void numberOfAzimuthLooks(int azimuthLooks);
 
+        /** Set pulse repetition frequency (PRF). */
         inline void prf(double p);
 
+        /** Set Doppler */
         inline void doppler(isce::core::LUT1d<double> dop);
 
+        /** Set range sampling frequency */
         inline void rangeSamplingFrequency(double rngSamplingFreq);
 
+        /** Set range bandwidth*/
         inline void rangeBandwidth(double rngBandwidth);
-
+        
+        /** Set range pixel spacing*/
         inline void rangePixelSpacing(double rngPixelSpacing);
 
+        /** Set radar wavelength*/
         inline void wavelength(double wvl);
         
+        /** Set interpolator method for geocoding*/
         inline void interpolator(isce::core::dataInterpMethod method);
 
+        /** Set platform's orbit*/
         inline void orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch);
 
+        /** Set orbit interploation method*/
         inline void orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod);
 
+        /** Set ellipsoid */
         inline void ellipsoid(isce::core::Ellipsoid& ellipsoid);
 
+        /** Set image mode*/
         inline void mode(isce::product::ImageMode& mode);
 
+        /** Set the projection object*/
         inline void projection(isce::core::ProjectionBase * proj);
 
+        /** Set the threshold for Geo2rdr computation*/
         inline void thresholdGeo2rdr(double threshold);
 
+        /** Set number of iterations Geo2rdr computation*/
         inline void numiterGeo2rdr(int numiter);
 
+        /** Set lines per block*/
         inline void linesPerBlock(size_t linesPerBlock);
 
+        /** Set DEM block margin*/
         inline void demBlockMargin(double demBlockMargin);
 
+        /** Set radar block margin*/
         inline void radarBlockMargin(int radarBlockMargin);
 
-        //interpolator
+        /** Set interpolator */
         inline void interpolator(isce::core::Interpolator<T> * interp);
-
-        
 
     private:
 
@@ -186,13 +213,6 @@ class isce::signal::Covariance {
         void _geo2rdr(double x, double y,
                     double & azimuthTime, double & slantRange,
                     isce::geometry::DEMInterpolator & demInterp);
-
-        /*
-        void _interpolate(isce::core::Matrix<T>& rdrDataBlock, 
-                    isce::core::Matrix<T>& geoDataBlock,
-                    std::valarray<double>& radarX, std::valarray<double>& radarY,
-                    int rdrBlockWidth, int rdrBlockLength);
-        */
 
         void _interpolate(std::valarray<T>& rdrDataBlock,
                     std::valarray<T>& geoDataBlock,
@@ -316,11 +336,13 @@ class isce::signal::Covariance {
         // margin around the computed bounding box for radar dara (integer number of lines/pixels)
         int _radarBlockMargin;
 
-        //interpolator 
+        // interpolator 
         isce::core::Interpolator<T> * _interp = nullptr;
 
-        // 
+        // RTC correction flag for geocoded covariance
         bool _correctRtcFlag = true;
+
+        // Polarimetric orientation correction flag for geocoded covariance
         bool _correctOrientationFlag = true;
 
         // dualPol or Quadpol flags
