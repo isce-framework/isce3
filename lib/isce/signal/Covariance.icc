@@ -1,0 +1,319 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Author: Heresh Fattahi
+// Copyright 2019-
+
+#if !defined(ISCE_SIGNAL_COVARIANCE_ICC)
+#error "Covariance.icc is an implementation detail of class Covariance"
+#endif
+
+/** param[in] number of looks in range direction*/
+template<class T>
+void isce::signal::Covariance<T>::
+numberOfRangeLooks(int rngLooks) {
+
+    _rangeLooks = rngLooks;
+
+}
+
+/** param[in] number of looks in azimuth direction*/
+template<class T>
+void isce::signal::Covariance<T>::
+numberOfAzimuthLooks(int azimuthLooks) {
+
+    _azimuthLooks = azimuthLooks;
+
+}
+
+/** param[in] pulse repetition frequency*/
+template<class T>
+void isce::signal::Covariance<T>::
+prf(double p) {
+
+    _prf = p;
+
+}
+
+/** @param[in] Doppler lookup table
+*/
+template<class T>
+void isce::signal::Covariance<T>::
+doppler(isce::core::LUT1d<double> dop)
+{
+    
+    _doppler = dop;
+
+}
+
+
+/** @param[in] rngSamplingFreq range sampling frequency
+*/
+template<class T>
+void isce::signal::Covariance<T>::
+rangeSamplingFrequency(double rngSamplingFreq)
+{
+    _rangeSamplingFrequency = rngSamplingFreq;
+}
+
+/** @param[in] rngBandwidth range bandwidth
+*/
+template<class T>
+void isce::signal::Covariance<T>::
+rangeBandwidth(double rngBandwidth)
+{
+    _rangeBandwidth = rngBandwidth;
+
+}
+
+/** @param[in] rngPixelSpacing range pixel spacing
+*/
+template<class T>
+void isce::signal::Covariance<T>::
+rangePixelSpacing(double rngPixelSpacing)
+{
+    _rangePixelSpacing = rngPixelSpacing;
+}
+
+
+/** @param[in] wvl radar wavelength
+*/
+template<class T>
+void isce::signal::Covariance<T>::
+wavelength(double wvl)
+{
+    _wavelength = wvl;
+}
+
+/**
+ * @param[in] geoGridStartX coordinate X of the upper-left corner of the geocoded grid
+ * @param[in] geoGridStartY coordinate Y of the upper-left corner of the geocoded grid
+ * @param[in] geoGridSpacingX spacing of the geocoded grid in X direction 
+ * @param[in] geoGridSpacingY spacing of the geocoded grid in Y direction
+ * @param[in] geoGridEndX coordinate X of the lower-right corner of the geocoded grid
+ * @param[in] geoGridEndY coordinate Y of the lower-right corner of the geocoded grid
+ * @param[in] epsgcode EPSG code for defining the projection system
+*/
+template<class T>
+void isce::signal::Covariance<T>::
+geoGrid(double geoGridStartX, double geoGridStartY,
+        double geoGridSpacingX, double geoGridSpacingY,
+        double geoGridEndX, double geoGridEndY,
+        int epsgcode) {
+   
+    int length = 1 + (geoGridEndY - geoGridStartY) /
+                    geoGridSpacingY;
+
+    int width = 1 + (geoGridEndX - geoGridStartX) /
+                    geoGridSpacingX;
+
+    geoGrid(geoGridStartX, geoGridStartY,
+        geoGridSpacingX, geoGridSpacingY,
+        width, length, epsgcode);
+
+}
+
+/**
+   * @param[in] geoGridStartX coordinate X of the upper-left corner of the geocoded grid
+   * @param[in] geoGridStartY coordinate Y of the upper-left corner of the geocoded grid
+   * @param[in] geoGridSpacingX spacing of the geocoded grid in X direction
+   * @param[in] geoGridSpacingY spacing of the geocoded grid in Y direction
+   * @param[in] width number of pixels of the geocoded grid in X direction
+   * @param[in] length number of pixels of the geocoded grid in Y direction
+   * @param[in] epsgcode EPSG code for defining the projection system
+  */
+template<class T>
+void isce::signal::Covariance<T>::
+geoGrid(double geoGridStartX, double geoGridStartY,
+        double geoGridSpacingX, double geoGridSpacingY,
+        int width, int length, int epsgcode) {
+
+    // populate the geoTransform 
+    // Assumption: origin is the top-left corner of 
+    //               the top-left pixel of the grid
+    _geoTrans = new double[6];
+    _geoTrans[0] = geoGridStartX;
+    _geoTrans[1] = geoGridSpacingX;
+    _geoTrans[2] = 0.0;
+    _geoTrans[3] = geoGridStartY;
+    _geoTrans[4] = 0.0;
+    _geoTrans[5] = geoGridSpacingY;
+    
+
+    // the starting coordinate of the output geocoded grid in X direction.
+    // Since the input is alwayas referring to the top-left corner of the 
+    // top-left pixel, we adjust to the center for internal use only
+    _geoGridStartX = geoGridStartX + geoGridSpacingX/2;
+
+    // the starting coordinate of the output geocoded grid in Y direction.
+    // adjusted to the center of the pixel for internal use only
+    _geoGridStartY = geoGridStartY + geoGridSpacingY/2;
+
+    // spacing of the output geocoded grid in X
+    _geoGridSpacingX = geoGridSpacingX;
+
+    // spacing of the output geocoded grid in Y
+    _geoGridSpacingY = geoGridSpacingY;
+
+    // number of lines (rows) in the geocoded grid (Y direction)
+    _geoGridLength = length;
+
+    // number of columns in the geocoded grid (Y direction)
+    _geoGridWidth = width;
+
+    // Save the EPSG code
+    _epsgOut = epsgcode;
+
+    // Initialize the projection
+    _proj = isce::core::createProj(epsgcode);
+
+}
+
+/** 
+* @param[in] doppler doppler lookup table
+* @param[in] azimuthStartTime start time of the radar grid in azimuth direction
+* @param[in] azimuthTimeInterval azimuth time interval 
+* @param[in] radarGridLength number of pixels of the radar grid in azimuth direction 
+* @param[in] startingRange starting slant range of the radar grid
+* @param[in] rangeSpacing range spacing
+* @param[in] radarGridWidth number of pixels of the radar grid in range direction 
+*/
+template<class T>
+void isce::signal::Covariance<T>::
+radarGrid(isce::core::LUT1d<double> doppler,
+            isce::core::DateTime azimuthStartTime,
+            double azimuthTimeInterval,
+            int radarGridLength,
+            double startingRange,
+            double rangeSpacing,
+            int radarGridWidth){
+
+    _doppler = doppler;
+
+    _azimuthStartTime = azimuthStartTime;
+
+    _azimuthTimeInterval = azimuthTimeInterval;
+
+    _radarGridLength = radarGridLength;
+
+    _startingRange = startingRange;
+
+    _rangeSpacing = rangeSpacing;
+
+    _radarGridWidth = radarGridWidth;
+
+}
+
+/** 
+ * @param[in] orbit platform's orbit object
+ * @param[in] refEpoch reference epoch of the orbit state vectors*/
+template<class T>
+void isce::signal::Covariance<T>::
+orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch) {
+
+    _orbit = orbit;
+
+    _orbit.updateUTCTimes(_refEpoch);
+
+}
+
+/**
+ *@param[in] orbitMethod orbit interpolation method
+ */
+template<class T>
+void isce::signal::Covariance<T>::
+orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod) {
+
+    _orbitMethod = orbitMethod;
+
+}
+
+/** @param[in] ellipsoid ellipsoid object*/
+template<class T>
+void isce::signal::Covariance<T>::
+ellipsoid(isce::core::Ellipsoid& ellipsoid) {
+
+    _ellipsoid = ellipsoid;
+
+}
+
+/**@param[in] mode image mode object*/
+template<class T>
+void isce::signal::Covariance<T>::
+mode(isce::product::ImageMode& mode) {
+
+    _mode = mode;
+
+}
+
+/** @param[in] proj projection object*/
+template<class T>
+void isce::signal::Covariance<T>::
+projection(isce::core::ProjectionBase * proj) {
+
+    _proj = proj;
+
+}
+
+/** @param[in] threshold value for geo2rdr convergence */
+template<class T>
+void isce::signal::Covariance<T>::
+thresholdGeo2rdr(double threshold) {
+
+    _threshold = threshold;
+
+}
+
+/** @param[in] numiter number of iterations for geo2rdr convergence*/
+template<class T>
+void isce::signal::Covariance<T>::
+numiterGeo2rdr(int numiter) {
+
+    _numiter = numiter;
+
+}
+
+/** @param[in] linesPerBlock lines per block */
+template<class T>
+void isce::signal::Covariance<T>::
+linesPerBlock(size_t linesPerBlock) {
+
+    _linesPerBlock = linesPerBlock;
+
+}
+
+/** @param[in] demBlockMargin DEM block margin */
+template<class T>
+void isce::signal::Covariance<T>::
+demBlockMargin(double demBlockMargin) {
+
+    _demBlockMargin = demBlockMargin;
+
+}
+
+/** @param[in] radarBlockMargin radar block margin */
+template<class T>
+void isce::signal::Covariance<T>::
+radarBlockMargin(int radarBlockMargin) {
+
+    _radarBlockMargin = radarBlockMargin;
+
+}
+
+/** @param[in] interp interpolation object*/
+template<class T>
+void isce::signal::Covariance<T>::
+interpolator(isce::core::Interpolator<T> * interp) {
+
+    _interp = interp;
+
+}
+
+/** @param[in] method interpolation method */
+template<class T>
+void isce::signal::Covariance<T>::
+interpolator(isce::core::dataInterpMethod method) {
+    
+    _interp = isce::core::createInterpolator<T>(method);
+
+}

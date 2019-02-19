@@ -80,8 +80,8 @@ geocode(isce::io::Raster & inputRaster,
             // y coordinate in the out put grid
             double y = _geoGridStartY + _geoGridSpacingY*line;
 
-            // Loop over DEM pixels
-            //#pragma omp parallel for
+            // Loop over geocoded grid pixels
+            #pragma omp parallel for
             for (size_t pixel = 0; pixel < _geoGridWidth; ++pixel) {
                 
                 // x in the output geocoded Grid
@@ -158,24 +158,24 @@ _interpolate(isce::core::Matrix<T>& rdrDataBlock,
     size_t length = geoDataBlock.length();
     size_t width = geoDataBlock.width();
     double extraMargin = 4.0;
-    for (size_t i = 0; i< length; ++i) {
-        for (size_t j = 0; j < width; ++j) {
 
-            // if this point falls somewhere within the radar data box, 
-            // then perform the interpolation
+    #pragma omp parallel for
+    for (size_t kk = 0; kk < length*width; ++kk) {
+        
+        size_t i = kk / width;
+        size_t j = kk % width;
 
-            if (radarX[i*width + j] >= extraMargin &&
+        if (radarX[i*width + j] >= extraMargin &&
                     radarY[i*width + j] >= extraMargin &&
                     radarX[i*width + j] < (radarBlockWidth - extraMargin) &&
                     radarY[i*width + j] < (radarBlockLength - extraMargin) ) {
 
-                geoDataBlock(i,j) = _interp->interpolate(radarX[i*width + j], 
+                geoDataBlock(i,j) = _interp->interpolate(radarX[i*width + j],
                                                 radarY[i*width + j], rdrDataBlock);
-            
-            }
-        }
-    }
 
+        }
+
+    }
 }
 
 template<class T>
