@@ -1,0 +1,54 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Author: Bryan V. Riel
+// Copyright 2018
+//
+
+#include <iostream>
+#include <fstream>
+#include <gtest/gtest.h>
+
+// isce::core
+#include <isce/core/EulerAngles.h>
+#include <isce/core/Serialization.h>
+
+#include <isce/io/IH5.h>
+
+
+TEST(OrbitTest, CheckArchive) {
+    // Make an attitude
+    isce::core::EulerAngles euler;
+
+    // Open the HDF5 product
+    std::string h5file("../../data/envisat.h5");
+    isce::io::IH5File file(h5file);
+
+    // Open group containing attitude
+    isce::io::IGroup group = file.openGroup("/science/LSAR/SLC/metadata/attitude");
+
+    // Deserialize the attitude
+    isce::core::DateTime epoch;
+    isce::core::loadFromH5(group, euler);
+
+    // Check we have the right number of state vectors
+    ASSERT_EQ(euler.nVectors(), 11);
+
+    // Check the values of the attitude angles
+    const double rad = M_PI / 180.0;
+    ASSERT_NEAR(euler.yaw()[5], rad*5.0, 1.0e-10);
+    ASSERT_NEAR(euler.pitch()[5], rad*5.0, 1.0e-10);
+    ASSERT_NEAR(euler.roll()[5], rad*5.0, 1.0e-10);
+    
+    // Check date of middle vector
+    isce::core::DateTime dtime = euler.refEpoch() + euler.time()[5];
+    ASSERT_EQ(dtime.isoformat(), "2003-02-26T17:55:28.000000000");
+
+}
+
+int main(int argc, char * argv[]) {
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+
+// end of file
