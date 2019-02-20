@@ -26,7 +26,7 @@ class isce::product::Swath {
 
     public:
         // Constructors
-        Swath();
+        inline Swath() {};
 
         /** Get slant range array */
         inline const std::valarray<double> & slantRange() const { return _slantRange; }
@@ -77,15 +77,24 @@ class isce::product::Swath {
         /** Set nominal acquisition PRF */
         inline void nominalAcquisitionPRF(double f) { _nominalAcquisitionPRF = f; }
 
-        /** Get nominal along track spacing */
-        inline double nominalAlongTrackSpacing() const { return _nominalAlongTrackSpacing; }
-        /** Set nominal along track spacing */
-        inline void nominalAlongTrackSpacing(double s) { _nominalAlongTrackSpacing = s; }
-
+        /** Get scene center ground range spacing */
+        inline double sceneCenterGroundRangeSpacing() const {
+            return _sceneCenterGroundRangeSpacing;
+        }
+        /** Set scene center ground range spacing */
+        inline void sceneCenterGroundRangeSpacing(double s) {
+            _sceneCenterGroundRangeSpacing = s;
+        }
+        
         /** Get processed azimuth bandwidth */
         inline double processedAzimuthBandwidth() const { return _processedAzimuthBandwidth; }
         /** Set processed azimuth bandwidth */
         inline void processedAzimuthBandwidth(double b) { _processedAzimuthBandwidth = b; }
+
+        /** Get reference epoch */
+        inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
+        /** Set reference epoch */
+        inline void refEpoch(const isce::core::DateTime & epoch) { _refEpoch = epoch; }
 
         /** Get valid array indices */
         inline std::array<size_t, 2> validSamples() const { return {_validStart, _validEnd}; }
@@ -106,11 +115,13 @@ class isce::product::Swath {
         double _acquiredRangeBandwidth;
         double _processedRangeBandwidth;
         double _nominalAcquisitionPRF;
-        double _nominalAlongTrackSpacing;
-        double _nominalGroundRangeSpacing;
+        double _sceneCenterGroundRangeSpacing;
         double _processedAzimuthBandwidth;
         size_t _validStart;
         size_t _validEnd;
+
+        // Reference epoch
+        isce::core::DateTime _refEpoch;
 };
 
 #endif

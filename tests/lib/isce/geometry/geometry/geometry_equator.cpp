@@ -169,21 +169,10 @@ TEST_F(GeometryTest, GeoToRdrEquator) {
     Setup(lon0, omega, Nvec);
 
     //Constant zero Doppler
-    isce::core::Poly2d zeroDoppler;
+    isce::core::LUT2d<double> zeroDoppler;
 
-
-    //Creating a dummy radar mode to work on
-    isce::product::ImageMode mode;
-    mode.dataDimensions( {12000, 10000});
-    mode.prf( 12000.0 / 96.0);
-    mode.rangeBandwidth(5.0e6);
-    mode.wavelength(0.24);
-    mode.startingRange(hsat );
-    mode.rangePixelSpacing(500.0);
-    mode.numberAzimuthLooks(1);
-    mode.numberRangeLooks(1);
-    mode.startAzTime((orbit.refEpoch + 2.0));
-    mode.endAzTime((orbit.refEpoch + 98.0));
+    // Dummy wavelength
+    const double wavelength = 0.24;
 
     //Test over 20 points
     for (size_t ii = 0; ii < 20; ++ii) 
@@ -220,7 +209,7 @@ TEST_F(GeometryTest, GeoToRdrEquator) {
 
         // Run rdr2geo with left looking side
         int stat = isce::geometry::geo2rdr(targ_LLH, ellipsoid, orbit,
-            zeroDoppler, mode, aztime, slantRange, 1.0e-9, 50, 10.0);
+            zeroDoppler, aztime, slantRange, wavelength, 1.0e-9, 50, 10.0);
 
         // Check
         ASSERT_EQ(stat, 1);

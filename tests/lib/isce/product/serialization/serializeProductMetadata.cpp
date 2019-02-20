@@ -10,13 +10,10 @@
 #include <gtest/gtest.h>
 
 // isce::core
-#include <isce/core/LUT1d.h>
+#include <isce/core/LUT2d.h>
 
 // isce::io
 #include <isce/io/IH5.h>
-
-// isce::radar
-#include <isce/radar/Radar.h>
 
 // isce::product
 #include <isce/product/Serialization.h>
@@ -31,38 +28,13 @@ TEST(MetadataTest, FromHDF5) {
     isce::product::Metadata meta;
 
     // Open metadata group
-    isce::io::IGroup metaGroup = file.openGroup("/science/metadata");
+    isce::io::IGroup metaGroup = file.openGroup("/science/LSAR/SLC/metadata");
 
     // Deserialize the Metadata
     isce::product::loadFromH5(metaGroup, meta);
 
-    // Get the radar instrument
-    isce::radar::Radar instrument = meta.instrument();
-
-    // Check values for content Doppler
-    isce::core::LUT1d<double> content = instrument.contentDoppler();
-    const size_t n = content.size();
-    ASSERT_NEAR(content.values()[0], 301.353069063192, 1.0e-10);
-    ASSERT_NEAR(content.values()[n-1], 278.74190662325805, 1.0e-12);
-
-    // Check values for skew Doppler
-    isce::core::LUT1d<double> skew = instrument.skewDoppler();
-    ASSERT_NEAR(skew.values()[0], 301.353069063192, 1.0e-10);
-    ASSERT_NEAR(skew.values()[n-1], 278.74190662325805, 1.0e-12);
-
-    // Check range coordinates
-    ASSERT_NEAR(content.coords()[0], 826988.6900674499, 1.0e-6);
-    ASSERT_NEAR(content.coords()[n-1], 830882.8729292531, 1.0e-6);
-
-    // Get the Identification
-    isce::product::Identification id = meta.identification();
-
-    // Check ellipsoid values
-    ASSERT_NEAR(id.ellipsoid().a(), 6378137.0, 1.0e-9);
-    ASSERT_NEAR(id.ellipsoid().e2(), 0.0066943799, 1.0e-9);
-
-    // Get the POE orbit
-    isce::core::Orbit orbit = meta.orbitPOE();
+    // Get the orbit
+    const isce::core::Orbit & orbit = meta.orbit();
 
     // Copy isce::core::Orbit unit test code here
     // Check we have the right number of state vectors
@@ -77,6 +49,45 @@ TEST(MetadataTest, FromHDF5) {
     ASSERT_NEAR(orbit.velocity[5*3+0], -3252.930393, 1.0e-6);
     ASSERT_NEAR(orbit.velocity[5*3+1], -3129.103767, 1.0e-6);
     ASSERT_NEAR(orbit.velocity[5*3+2], -6055.488170, 1.0e-6);
+
+    // Get the attitude
+    const isce::core::EulerAngles & euler = meta.attitude();
+
+    // Check we have the right number of state vectors
+    ASSERT_EQ(euler.nVectors(), 11);
+
+    // Check the values of the attitude angles
+    const double rad = M_PI / 180.0;
+    ASSERT_NEAR(euler.yaw()[5], rad*5.0, 1.0e-10);
+    ASSERT_NEAR(euler.pitch()[5], rad*5.0, 1.0e-10);
+    ASSERT_NEAR(euler.roll()[5], rad*5.0, 1.0e-10);
+
+    // Check date of middle vector
+    isce::core::DateTime dtime = euler.refEpoch() + euler.time()[5];
+    ASSERT_EQ(dtime.isoformat(), "2003-02-26T17:55:28.000000000");
+
+    // Check the ProcessingInformation
+    const isce::product::ProcessingInformation & proc = meta.procInfo();
+    ASSERT_NEAR(proc.slantRange()[0], 826000.0, 1.0e-10);
+    ASSERT_NEAR(proc.zeroDopplerTime()[0], 237326.0, 1.0e-10);
+
+    // Check effective velocity LUT    
+    const isce::core::LUT2d<double> & veff = proc.effectiveVelocity();
+    ASSERT_EQ(veff.width(), 60);
+    ASSERT_EQ(veff.length(), 20);
+    ASSERT_NEAR(veff.xStart(), 826000.0, 1.0e-10);
+    ASSERT_NEAR(veff.yStart(), 237326.0, 1.0e-10);
+    ASSERT_NEAR(veff.xSpacing(), 100.0, 1.0e-10);
+    ASSERT_NEAR(veff.ySpacing(), 0.5, 1.0e-10);
+    ASSERT_NEAR(veff.data()(10, 35), 7111.793588226628, 1.0e-6);
+
+    // Check Doppler centroid
+    const isce::core::LUT2d<double> & dopp = proc.dopplerCentroid('A');
+    ASSERT_NEAR(dopp.data()(10, 35), 286.65483242698343, 1.0e-6);
+
+    // Check azimuth FM rate
+    const isce::core::LUT2d<double> & fmrate = proc.azimuthFMRate('A');
+    ASSERT_NEAR(fmrate.data()(10, 35), 2168.5040177256215, 1.0e-6);
 }
 
 int main(int argc, char * argv[]) {

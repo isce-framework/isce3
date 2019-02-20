@@ -79,10 +79,18 @@ class isce::image::ResampSlc {
         // Poly2d and LUT getters
         inline isce::core::Poly2d rgCarrier() const;
         inline isce::core::Poly2d azCarrier() const;
-        inline isce::core::LUT2d<double> doppler() const;
+
         // Poly2d and LUT setters
         inline void rgCarrier(const isce::core::Poly2d &);
         inline void azCarrier(const isce::core::Poly2d &);
+
+        /** Get read-only reference to Doppler LUT2d */
+        inline const isce::core::LUT2d<double> & doppler() const;
+
+        /** Get reference to Doppler LUT2d */
+        inline isce::core::LUT2d<double> & doppler();
+
+        /** Set Doppler LUT2d */
         inline void doppler(const isce::core::LUT2d<double> &);
 
         // Set reference product for flattening
@@ -99,13 +107,13 @@ class isce::image::ResampSlc {
         // Generic resamp entry point from externally created rasters
         void resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
                     isce::io::Raster & rgOffsetRaster, isce::io::Raster & azOffsetRaster,
-                    int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40,
+                    int inputBand=1, bool flatten=false, bool isComplex=true, int rowBuffer=40,
                     int chipSize=isce::core::SINC_ONE);
 
         // Generic resamp entry point: use filenames to create rasters
         void resamp(const std::string & inputFilename, const std::string & outputFilename,
                     const std::string & rgOffsetFilename, const std::string & azOffsetFilename,
-                    int inputBand, bool flatten=false, bool isComplex=true, int rowBuffer=40,
+                    int inputBand=1, bool flatten=false, bool isComplex=true, int rowBuffer=40,
                     int chipSize=isce::core::SINC_ONE);
         
     // Data members

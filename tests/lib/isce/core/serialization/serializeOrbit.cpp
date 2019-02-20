@@ -25,11 +25,11 @@ TEST(OrbitTest, CheckArchive) {
     isce::io::IH5File file(h5file);
 
     // Open group containing orbit
-    isce::io::IGroup group = file.openGroup("/science/metadata/orbit");
+    isce::io::IGroup group = file.openGroup("/science/LSAR/SLC/metadata/orbit");
 
     // Deserialize the orbit
     isce::core::DateTime epoch;
-    isce::core::loadFromH5(group, orbit, "POE", epoch);
+    isce::core::loadFromH5(group, orbit);
 
     // Check we have the right number of state vectors
     ASSERT_EQ(orbit.nVectors, 11);

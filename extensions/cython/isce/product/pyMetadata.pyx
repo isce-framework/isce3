@@ -1,7 +1,7 @@
 #cython: language_level=3
 # 
 # Author: Bryan V. Riel
-# Copyright 2017-2018
+# Copyright 2017-2019
 #
 
 from Metadata cimport Metadata
@@ -17,72 +17,92 @@ cdef class pyMetadata:
         None
     """
     # C++ class
-    cdef Metadata c_metadata
+    cdef Metadata * c_metadata
+    cdef bool __owner
+
+    # Cython class members
+    cdef pyOrbit py_orbit
+    cdef pyEulerAngles py_attitude
+    cdef pyProcessingInformation py_procInfo
     
     def __cinit__(self):
         """
         Constructor instantiates a C++ object and saves to python.
         """
-        self.c_metadata = Metadata()
+        # Create the C++ Metadata class
+        self.c_metadata = new Metadata()
+        self.__owner = True
+
+        # Bind the C++ Orbit class to the Cython pyOrbit instance
+        self.py_orbit.c_orbit = &self.c_metadata.orbit()
+        self.py_orbit.__owner = False
+
+        # Bind the C++ EulerAngles class to the Cython pyEulerAngles instance
+        self.py_attitude.c_eulerangles = &self.c_metadata.attitude()
+        self.py_attitude.__owner = False
+
+        # Bind the C++ ProcessingInformation class to the Cython pyProcessingInformation instance
+        self.py_procInfo.c_procinfo = &self.c_metadata.procInfo()
+        self.py_procInfo.__owner = False
+
+    def __dealloc__(self):
+        if self.__owner:
+            del self.c_metadata
+
+    @staticmethod
+    def bind(pyMetadata meta):
+        """
+        Creates a new pyMetadata instance with C++ Metadata attribute shallow copied from
+        another C++ Metadata attribute contained in a separate instance.
+
+        Args:
+            meta (pyMetadata): External pyMetadata instance to get C++ Metadata from.
+
+        Returns:
+            new_meta (pyMetadata): New pyMetadata instance with a shallow copy of C++ Metadata.
+        """
+        new_meta = pyMetadata()
+        del new_meta.c_metadata
+        new_meta.c_metadata = meta.c_metadata
+        new_meta.__owner = False
+        return new_meta
 
     @property
-    def orbitNOE(self):
+    def orbit(self):
         """
-        Get NOE orbit.
+        Get orbit.
         """
-        orbit = pyOrbit.cbind(self.c_metadata.orbitNOE())
-        return orbit
+        new_orbit = pyOrbit.bind(self.py_orbit)
+        return new_orbit
 
-    @orbitNOE.setter
-    def orbitNOE(self, pyOrbit orbit):
+    @orbit.setter
+    def orbit(self, pyOrbit orb):
         """
-        Set NOE orbit.
+        Set orbit.
         """
-        self.c_metadata.orbitNOE(deref(orbit.c_orbit))
-
-    @property
-    def orbitPOE(self):
-        """
-        Get POE orbit.
-        """
-        orbit = pyOrbit.cbind(self.c_metadata.orbitPOE())
-        return orbit
-
-    @orbitPOE.setter
-    def orbitPOE(self, pyOrbit orbit):
-        """
-        Set POE orbit.
-        """
-        self.c_metadata.orbitPOE(deref(orbit.c_orbit))
+        self.c_metadata.orbit(deref(orb.c_orbit))
 
     @property
-    def instrument(self):
+    def attitude(self):
         """
-        Get radar instrument.
+        Get Euler angles attitude.
         """
-        radar = pyRadar.cbind(self.c_metadata.instrument())
-        return radar
+        new_attitude = pyEulerAngles.bind(self.py_attitude)
+        return new_attitude
 
-    @instrument.setter
-    def instrument(self, pyRadar instrument):
+    @attitude.setter
+    def attitude(self, pyEulerAngles euler):
         """
-        Set radar instrument.
+        Set Euler angles attitude.
         """
-        self.c_metadata.instrument(deref(instrument.c_radar))
+        self.c_metadata.attitude(deref(euler.c_eulerangles))
 
     @property
-    def identification(self):
+    def procInfo(self):
         """
-        Get identification object.
+        Get processing information.
         """
-        pyID = pyIdentification.cbind(self.c_metadata.identification())
-        return pyID
-
-    @identification.setter
-    def identification(self, pyIdentification pyID):
-        """
-        Set identification data.
-        """
-        self.c_metadata.identification(pyID.c_identification)
+        new_proc = pyProcessingInformation.bind(self.py_procInfo)
+        return new_proc
    
 # end of file 

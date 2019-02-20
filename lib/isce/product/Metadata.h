@@ -31,13 +31,21 @@ class isce::product::Metadata {
         /** Copy constructor */
         inline Metadata(const Metadata &);
 
-        /** Get read-only attitude */
+        /** Get read-only reference to attitude */
         inline const isce::core::EulerAngles & attitude() const { return _attitude; }
+    
+        /** Get reference to attitude */
+        inline isce::core::EulerAngles & attitude() { return _attitude; }
+
         /** Set attitude */
         inline void attitude(const isce::core::EulerAngles & att) { _attitude = att; }
 
-        /** Get read-only orbit */
+        /** Get read-only reference to orbit */
         inline const isce::core::Orbit & orbit() const { return _orbit; };
+
+        /** Get reference to orbit */
+        inline isce::core::Orbit & orbit() { return _orbit; }
+
         /** Set orbit */
         inline void orbit(const isce::core::Orbit & orb) { _orbit = orb; };
 

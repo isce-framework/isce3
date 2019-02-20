@@ -40,13 +40,6 @@ TEST(ResampSlcTest, Resamp) {
     // Instantiate a ResampSLC object
     isce::image::ResampSlc resamp(product);
 
-    // Use same product as a reference
-    resamp.referenceProduct(product);
-    
-    // Check values
-    ASSERT_NEAR(resamp.imageMode().startingRange(), 826988.6900674499, 1.0e-10);
-    ASSERT_NEAR(resamp.doppler().values()[0], 301.353069063192, 1.0e-8);
-
     // Perform resampling with default lines per tile
     resamp.resamp("warped.slc", "hh",
                   "../../data/offsets/range.off", "../../data/offsets/azimuth.off");

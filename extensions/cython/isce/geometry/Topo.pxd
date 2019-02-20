@@ -35,7 +35,6 @@ cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
                   Raster &, Raster &, Raster &, Raster &, Raster &)
 
         # Setting processing options
-        void initialized(bool)
         void threshold(double)
         void numiter(int)
         void extraiter(int)

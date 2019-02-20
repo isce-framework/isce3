@@ -14,9 +14,13 @@ TEST(TestRTC, RunRTC) {
 
     // Open DEM raster
     isce::io::Raster dem("../../data/srtm_cropped.tif");
-    isce::product::ImageMode mode = product.complexImagery().primaryMode();
-    isce::io::Raster out_raster("./rtc.bin", mode.width(), mode.length(), 1, GDT_Float32, "ENVI");
 
+    // Create output raster
+    isce::product::Swath & swath = product.swath('A');
+    isce::io::Raster out_raster("./rtc.bin", swath.samples(), swath.lines(), 1,
+                                GDT_Float32, "ENVI");
+
+    // Call RTC
     isce::geometry::facetRTC(product, dem, out_raster);
 }
 

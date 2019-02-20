@@ -1,12 +1,12 @@
 #cython: language_level=3
 #
 # Author: Bryan V. Riel
-# Copyright 2017-2018
+# Copyright 2017-2019
 #
 
+from EulerAngles cimport EulerAngles
 from Orbit cimport Orbit
-from Radar cimport Radar
-from Identification cimport Identification
+from ProcessingInformation cimport ProcessingInformation
 
 cdef extern from "isce/product/Metadata.h" namespace "isce::product":
 
@@ -16,21 +16,16 @@ cdef extern from "isce/product/Metadata.h" namespace "isce::product":
         # Constructors
         Metadata() except +
 
-        # The NOE orbit
-        Orbit orbitNOE()
-        void orbitNOE(const Orbit &)
+        # Attitude
+        EulerAngles & attitude()
+        void attitude(const EulerAngles &)
 
-        # The POE orbit
-        Orbit orbitPOE()
-        void orbitPOE(const Orbit &)
+        # Orbit
+        Orbit & orbit()
+        void orbit(const Orbit &)
 
-        # The radar instrument
-        Radar instrument()
-        void instrument(const Radar &)
-
-        # The identification
-        Identification identification()
-        void identification(const Identification &)
-
+        # ProcessingInformation
+        ProcessingInformation & procInfo()
+        void procInfo(const ProcessingInformation &)
 
 # end of file

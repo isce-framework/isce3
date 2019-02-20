@@ -84,6 +84,10 @@ namespace isce {
             isce::io::loadFromH5(group, "zeroDopplerTime", array);
             swath.zeroDopplerTime(array);
 
+            // Get reference epoch
+            isce::core::DateTime refEpoch = isce::io::getRefEpoch(group, "zeroDopplerTime");
+            swath.refEpoch(refEpoch);
+
             // Load other parameters
             double value;
             isce::io::loadFromH5(fgroup, "acquiredCenterFrequency", value);
@@ -101,8 +105,8 @@ namespace isce {
             isce::io::loadFromH5(fgroup, "nominalAcquisitionPRF", value);
             swath.nominalAcquisitionPRF(value);
 
-            isce::io::loadFromH5(fgroup, "nominalAlongTrackSpacing", value);
-            swath.nominalAlongTrackSpacing(value);
+            isce::io::loadFromH5(fgroup, "sceneCenterGroundRangeSpacing", value);
+            swath.sceneCenterGroundRangeSpacing(value);
 
             isce::io::loadFromH5(fgroup, "processedAzimuthBandwidth", value);
             swath.processedAzimuthBandwidth(value);

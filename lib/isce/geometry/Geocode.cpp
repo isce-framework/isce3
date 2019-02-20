@@ -94,7 +94,7 @@ geocode(isce::io::Raster & inputRaster,
 
                 // get the row and column index in the radar grid
                 double rdrX, rdrY;
-                rdrY = (aztime - _azimuthStartTime.secondsSinceEpoch(_refEpoch))/
+                rdrY = (aztime - _azimuthStartTime)/
                                 _azimuthTimeInterval;
 		
                 rdrX = (srange - _startingRange)/_rangeSpacing;		
@@ -270,12 +270,12 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
 
     // the first azimuth line
     azimuthFirstLine = (azimuthTime.min() - 
-                            _azimuthStartTime.secondsSinceEpoch(_refEpoch))/
+                            _azimuthStartTime)/
                                 _azimuthTimeInterval;
 
     // the last azimuth line
     azimuthLastLine = (azimuthTime.max() - 
-                            _azimuthStartTime.secondsSinceEpoch(_refEpoch))/
+                            _azimuthStartTime)/
                                 _azimuthTimeInterval;
 
     // the first and last range pixels 

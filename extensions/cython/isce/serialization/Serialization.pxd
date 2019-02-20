@@ -8,17 +8,13 @@ from libcpp.string cimport string
 from DateTime cimport DateTime
 from Orbit cimport Orbit
 from Ellipsoid cimport Ellipsoid
+from EulerAngles cimport EulerAngles
 from Metadata cimport Metadata
 from Poly2d cimport Poly2d
 from LUT1d cimport LUT1d
 from IH5 cimport IH5File, IGroup
 
-from Radar cimport Radar
-
-from ImageMode cimport ImageMode
 from Metadata cimport Metadata
-from Identification cimport Identification
-from ComplexImagery cimport ComplexImagery
 
 # Wrapper around isce::core serialization defined in <isce/core/Serialization.h
 cdef extern from "isce/core/Serialization.h" namespace "isce::core":
@@ -31,7 +27,10 @@ cdef extern from "isce/core/Serialization.h" namespace "isce::core":
     void loadFromH5(IGroup & group, Ellipsoid & ellps)
 
     # Load orbit data
-    void loadFromH5(IGroup & group, Orbit & orbit, string orbit_type, DateTime & refEpoch)
+    void loadFromH5(IGroup & group, Orbit & orbit)
+
+    # Load attitude data
+    void loadFromH5(IGroup & group, EulerAngles & euler)
 
     # Load Poly2d
     void loadFromH5(IGroup & group, Poly2d & poly, string dtype)
@@ -48,25 +47,10 @@ cdef extern from "isce/geometry/Serialization.h" namespace "isce::geometry":
     # XML loading
     void load_archive[T](string metadata, char * objTag, T * obj)
 
-# Wrapper around isce::radar serialization defined in <isce/radar/Serialization.h
-cdef extern from "isce/radar/Serialization.h" namespace "isce::radar":
-
-    # Load radar data
-    void loadFromH5(IGroup & group, Radar & radar)
-
 # Wrapper around isce::product serialization defined in <isce/product/Serialization.h
 cdef extern from "isce/product/Serialization.h" namespace "isce::product":
 
-    # Load image mode data
-    void loadFromH5(IGroup & group, ImageMode & mode, const string &)
-
     # Load metadata
     void loadFromH5(IGroup & group, Metadata & meta)
-
-    # Load identification
-    void loadFromH5(IGroup & group, Identification & ident)
-
-    # Load complex imagery
-    void loadFromH5(IGroup & group, ComplexImagery & cpxImg)
 
 # end of file

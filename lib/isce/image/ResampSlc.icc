@@ -114,10 +114,17 @@ azCarrier(const isce::core::Poly2d & lut) {
     _azCarrier = lut;
 }
 
-// Get Doppler LUT
-isce::core::LUT2d<double>
+// Get read-only reference to Doppler LUT
+const isce::core::LUT2d<double> &
 isce::image::ResampSlc::
 doppler() const {
+    return _dopplerLUT;
+}
+
+// Get reference to Doppler LUT
+isce::core::LUT2d<double> &
+isce::image::ResampSlc::
+doppler() {
     return _dopplerLUT;
 }
 
