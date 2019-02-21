@@ -2,7 +2,6 @@ var searchData=
 [
   ['scale',['scale',['../structisce_1_1core_1_1LinAlg.html#a6c7c3a6db0e5b46841f0fbb2cc0dc9e2',1,'isce::core::LinAlg']]],
   ['schbasis',['SCHbasis',['../structisce_1_1core_1_1Pegtrans.html#ab81b593ac05aa3a09f83a98cc2d4c46b',1,'isce::core::Pegtrans']]],
-  ['searchtable',['SearchTable',['../classisce_1_1unwrap_1_1icu_1_1SearchTable.html',1,'isce::unwrap::icu']]],
   ['seconds',['seconds',['../structisce_1_1core_1_1TimeDelta.html#a72429eea02fdce5aef4d5ff4202a790f',1,'isce::core::TimeDelta']]],
   ['secondsofday',['secondsOfDay',['../structisce_1_1core_1_1DateTime.html#a0502848523b8deedcb6ea5d43711bb9a',1,'isce::core::DateTime']]],
   ['secondssinceepoch',['secondsSinceEpoch',['../structisce_1_1core_1_1DateTime.html#ae81ef930c8a881847c9dfc3e04435dba',1,'isce::core::DateTime::secondsSinceEpoch() const '],['../structisce_1_1core_1_1DateTime.html#a89a6ebd6da9c5d85dcbea254c27db411',1,'isce::core::DateTime::secondsSinceEpoch(const DateTime &amp;) const '],['../structisce_1_1core_1_1DateTime.html#a0f26765765f96ccbc7ad5a1cfeaae0f5',1,'isce::core::DateTime::secondsSinceEpoch(double)']]],
@@ -19,8 +18,8 @@ var searchData=
   ['shape',['shape',['../classisce_1_1core_1_1Matrix.html#a1eee59526142636d5116873f1c65113f',1,'isce::core::Matrix']]],
   ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html',1,'isce::signal']]],
   ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html#afc9c8c9f9cfe1701558205600ab7b1f2',1,'isce::signal::Signal::Signal()'],['../classisce_1_1signal_1_1Signal.html#a759653d297ab23e66963aebec0cdafc0',1,'isce::signal::Signal::Signal(int nthreads)']]],
-  ['sinc2dinterpolator',['Sinc2dInterpolator',['../classisce_1_1core_1_1Sinc2dInterpolator.html#a623e07dc83dd6a14c7b976adfbcda11e',1,'isce::core::Sinc2dInterpolator']]],
   ['sinc2dinterpolator',['Sinc2dInterpolator',['../classisce_1_1core_1_1Sinc2dInterpolator.html',1,'isce::core']]],
+  ['sinc2dinterpolator',['Sinc2dInterpolator',['../classisce_1_1core_1_1Sinc2dInterpolator.html#a623e07dc83dd6a14c7b976adfbcda11e',1,'isce::core::Sinc2dInterpolator']]],
   ['sinc_5feval',['sinc_eval',['../namespaceisce_1_1core.html#abb0055edd764350e6e27aa3cf77c3eb4',1,'isce::core']]],
   ['sinc_5fhalf',['SINC_HALF',['../namespaceisce_1_1core.html#a7257d73b8c42029e99427afae907ec73',1,'isce::core']]],
   ['sinlook',['sinLook',['../classisce_1_1core_1_1Baseline.html#adb423fd3c5e96934feb1457d40e95f50',1,'isce::core::Baseline']]],
