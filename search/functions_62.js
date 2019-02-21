@@ -7,5 +7,6 @@ var searchData=
   ['bicubicinterpolator',['BicubicInterpolator',['../classisce_1_1core_1_1BicubicInterpolator.html#a14ba55881438ccb62445786af38fabab',1,'isce::core::BicubicInterpolator']]],
   ['bilinearinterpolator',['BilinearInterpolator',['../classisce_1_1core_1_1BilinearInterpolator.html#a1ca5c850e4eae19408b470ac55e14a3a',1,'isce::core::BilinearInterpolator']]],
   ['binarysearch',['binarySearch',['../namespaceisce_1_1core.html#aa58e4e7320500f1e24913e17c79b0b09',1,'isce::core']]],
+  ['bsphasevarthr',['bsPhaseVarThr',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#ab3295f73eaded59cb705ced8dba0f85e',1,'isce::unwrap::icu::ICU::bsPhaseVarThr() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a06051db1eed80f3025c475245b7ceecb',1,'isce::unwrap::icu::ICU::bsPhaseVarThr(const float)']]],
   ['byteoffset',['byteoffset',['../classisce_1_1core_1_1Matrix.html#abd3277c139a21ea192ff4c8dd3a2b24e',1,'isce::core::Matrix']]]
 ];
