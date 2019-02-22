@@ -12,7 +12,7 @@ function(add_isce_test TESTNAME)
         # Make CUDA libraries and headers available
         target_link_libraries(${TESTNAME} PUBLIC ${LCUDAISCE})
         target_include_directories(${TESTNAME} PUBLIC ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/cuda)
-        # CUDA doesn't support C++17 yet, so fall back to C++11
+        # CUDA doesn't support C++17 yet, so fall back to C++14
         get_target_property(MYPROPS ${TESTNAME} COMPILE_OPTIONS)
         string(REPLACE "c++17" "c++14" MYPROPS ${MYPROPS})
         set_target_properties(${TESTNAME} PROPERTIES COMPILE_OPTIONS ${MYPROPS})
