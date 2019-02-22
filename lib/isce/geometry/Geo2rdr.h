@@ -38,7 +38,7 @@ namespace isce {
 /** Transformer from map coordinates to radar geometry coordinates.
  *
  * See <a href="overview_geometry.html#inversegeom">geometry overview</a> for description of the algorithm. */
-class isce::geometry::Geo2rdr : protected isce::product::RadarGridParameters {
+class isce::geometry::Geo2rdr {
 
     public:
         /** Constructor from product */
@@ -85,6 +85,11 @@ class isce::geometry::Geo2rdr : protected isce::product::RadarGridParameters {
         /** Get Doppler model used for processing */
         inline const isce::core::LUT2d<double> & doppler() const { return _doppler; }
 
+        /** Get read-only reference to RadarGridParameters */
+        inline const isce::product::RadarGridParameters & radarGridParameters() const {
+            return _radarGridParameters;
+        }
+
         // Get geo2rdr processing options
         /** Return the azimuth time convergence threshold used for processing */
         inline double threshold() const { return _threshold; }
@@ -108,6 +113,9 @@ class isce::geometry::Geo2rdr : protected isce::product::RadarGridParameters {
         isce::core::Ellipsoid _ellipsoid;
         isce::core::Orbit _orbit;
         isce::core::LUT2d<double> _doppler;
+
+        // RadarGridParameters
+        isce::product::RadarGridParameters _radarGridParameters;
         
         // Projection related data
         isce::core::ProjectionBase * _projTopo;

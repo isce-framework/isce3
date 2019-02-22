@@ -22,7 +22,7 @@ Topo(isce::product::Product & product,
      bool nativeDoppler,
      size_t numberAzimuthLooks,
      size_t numberRangeLooks) : 
-     RadarGridParameters(product, frequency, numberAzimuthLooks, numberRangeLooks) {
+     _radarGridParameters(product, frequency, numberAzimuthLooks, numberRangeLooks) {
    
     // Copy orbit and doppler
     _orbit = product.metadata().orbit();
@@ -36,7 +36,7 @@ Topo(isce::product::Product & product,
     _lookSide = product.lookSide();
 
     // Adjust block length based in input SLC length
-    _linesPerBlock = std::min(_rlength, _linesPerBlock);
+    _linesPerBlock = std::min(_radarGridParameters.length(), _linesPerBlock);
 }
 
 /** @param[in] ellipsoid Ellipsoid object
@@ -52,14 +52,14 @@ isce::geometry::Topo::
 Topo(const isce::core::Ellipsoid & ellipsoid, const isce::core::Orbit & orbit,
      const isce::core::LUT2d<double> & doppler, const isce::core::Metadata & meta,
      size_t numberAzimuthLooks, size_t numberRangeLooks) :
-     RadarGridParameters(meta, orbit.refEpoch, numberAzimuthLooks, numberRangeLooks),
+     _radarGridParameters(meta, orbit.refEpoch, numberAzimuthLooks, numberRangeLooks),
      _orbit(orbit), _ellipsoid(ellipsoid), _doppler(doppler) {
 
     // Other data
     _lookSide = meta.lookSide;
 
     // Adjust block length based in input SLC length
-    _linesPerBlock = std::min(_rlength, _linesPerBlock);
+    _linesPerBlock = std::min(_radarGridParameters.length(), _linesPerBlock);
 }
 
 /** @param[in] t Distance threshold to flag convergence of iterations */

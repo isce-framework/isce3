@@ -54,7 +54,8 @@ topo(Raster & demRaster,
     TopoLayers layers;
 
     // Create rasters for individual layers (provide output raster sizes)
-    layers.initRasters(outdir, _rwidth, _rlength, _computeMask);
+    layers.initRasters(outdir, _radarGridParameters.width(), _radarGridParameters.length(),
+                       _computeMask);
 
     // Call topo with layers
     topo(demRaster, layers);
@@ -163,13 +164,14 @@ topo(Raster & demRaster, TopoLayers & layers) {
     DEMInterpolator demInterp(-500.0, _demMethod);
 
     // Compute number of blocks needed to process image
-    size_t nBlocks = _rlength / _linesPerBlock;
-    if ((_rlength % _linesPerBlock) != 0)
+    size_t nBlocks = _radarGridParameters.length() / _linesPerBlock;
+    if ((_radarGridParameters.length() % _linesPerBlock) != 0)
         nBlocks += 1;
 
     // Cache range bounds for diagnostics
-    const double endingRange = _startingRange + _rangePixelSpacing * (_rwidth - 1.0);
-    const double midRange = 0.5 * (_startingRange + endingRange);
+    const double startingRange = _radarGridParameters.startingRange();
+    const double endingRange = _radarGridParameters.endingRange();
+    const double midRange = _radarGridParameters.midRange();
 
     // Loop over blocks
     size_t totalconv = 0;
@@ -179,18 +181,18 @@ topo(Raster & demRaster, TopoLayers & layers) {
         size_t lineStart, blockLength;
         lineStart = block * _linesPerBlock;
         if (block == (nBlocks - 1)) {
-            blockLength = _rlength - lineStart;
+            blockLength = _radarGridParameters.length() - lineStart;
         } else {
             blockLength = _linesPerBlock;
         }
 
         // Diagnostics
-        const double tblock = _sensingStart + lineStart / _prf;
+        const double tblock = _radarGridParameters.sensingTime(lineStart);
         info << "Processing block: " << block << " " << pyre::journal::newline
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
-             << _doppler.eval(tblock, _startingRange) << " "
+             << _doppler.eval(tblock, startingRange) << " "
              << _doppler.eval(tblock, midRange) << " " 
              << _doppler.eval(tblock, endingRange) << " "
              << pyre::journal::endl;
@@ -205,7 +207,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
         demInterp.refHeight(dem_avg);
 
         // Set output block sizes in layers
-        layers.setBlockSize(blockLength, _rwidth);
+        layers.setBlockSize(blockLength, _radarGridParameters.width());
 
         // Allocate vector for storing satellite position for each line
         std::vector<cartesian_t> satPosition(blockLength);
@@ -228,13 +230,13 @@ topo(Raster & demRaster, TopoLayers & layers) {
 
             // For each slant range bin
             #pragma omp parallel for reduction(+:totalconv)
-            for (size_t rbin = 0; rbin < _rwidth; ++rbin) {
+            for (size_t rbin = 0; rbin < _radarGridParameters.width(); ++rbin) {
 
                 // Get current slant range
-                const double rng = _startingRange + _numberRangeLooks * rbin * _rangePixelSpacing;
+                const double rng = _radarGridParameters.slantRange(rbin);
 
                 // Get current Doppler value
-                const double dopfact = (0.5 * _wavelength
+                const double dopfact = (0.5 * _radarGridParameters.wavelength()
                                      * (_doppler.eval(tline, rng) / satVmag)) * rng;
 
                 // Store slant range bin data in Pixel
@@ -268,7 +270,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
 
     // Print out convergence statistics
     info << "Total convergence: " << totalconv << " out of "
-         << (_rwidth * _rlength) << pyre::journal::endl;
+         << _radarGridParameters.size() << pyre::journal::endl;
 
     // Print out timing information and reset
     auto timerEnd = std::chrono::steady_clock::now();
@@ -287,7 +289,7 @@ void isce::geometry::Topo::
 _initAzimuthLine(size_t line, double & tline, StateVector & state, Basis & TCNbasis) {
 
     // Get satellite azimuth time
-    tline = _sensingStart + _numberAzimuthLooks * (line / _prf);
+    tline = _radarGridParameters.sensingTime(line);
 
     // Get state vector
     cartesian_t xyzsat, velsat;
@@ -327,13 +329,13 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
 
     // Skip factors along azimuth and range
     const int askip = std::max((int) blockLength / 10, 1);
-    const int rskip = _rwidth / 10;
+    const int rskip = _radarGridParameters.width() / 10;
 
     // Construct vectors of range/azimuth indices traversing the perimeter of the radar frame
 
     // Top edge
     std::vector<int> azInd, rgInd;
-    for (int j = 0; j < _rwidth; j += rskip) {
+    for (int j = 0; j < _radarGridParameters.width(); j += rskip) {
         azInd.push_back(0);
         rgInd.push_back(j);
     }
@@ -341,11 +343,11 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
     // Right edge
     for (int i = 0; i < blockLength; i += askip) {
         azInd.push_back(i);
-        rgInd.push_back(_rwidth);
+        rgInd.push_back(_radarGridParameters.width());
     }
 
     // Bottom edge
-    for (int j = _rwidth; j > 0; j -= rskip) {
+    for (int j = _radarGridParameters.width(); j > 0; j -= rskip) {
         azInd.push_back(blockLength - 1);
         rgInd.push_back(j);
     }
@@ -361,7 +363,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
     for (size_t i = 0; i < rgInd.size(); ++i) {
 
         // Convert az index to absolute line index
-        size_t lineIndex = lineOffset + azInd[i] * _numberAzimuthLooks;
+        size_t lineIndex = lineOffset + azInd[i] * _radarGridParameters.numberAzimuthLooks();
 
          // Initialize orbit data for this azimuth line
         StateVector state;
@@ -375,8 +377,8 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
 
         // Get proper slant range and Doppler factor
         const size_t rbin = rgInd[i];
-        double rng = _startingRange + rbin * _rangePixelSpacing;
-        double dopfact = (0.5 * _wavelength * (_doppler.eval(tline, rng)
+        double rng = _radarGridParameters.slantRange(rbin);
+        double dopfact = (0.5 * _radarGridParameters.wavelength() * (_doppler.eval(tline, rng)
                         / satVmag)) * rng;
         // Store in Pixel object
         Pixel pixel(rng, dopfact, rbin);
@@ -533,7 +535,7 @@ setLayoverShadow(TopoLayers & layers, DEMInterpolator & demInterp,
 
     // Pre-compute slantRange grid used for all lines
     for (int i = 0; i < width; ++i) {
-        slantRange[i] = _startingRange + i * _rangePixelSpacing;
+        slantRange[i] = _radarGridParameters.slantRange(i);
     }
    
     // Initialize mask to zero for this block 

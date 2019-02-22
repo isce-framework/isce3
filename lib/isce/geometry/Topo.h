@@ -36,7 +36,7 @@ namespace isce {
 /** Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude
  *
  * See <a href="overview_geometry.html#forwardgeom">geometry overview</a> for a description of the algorithm*/
-class isce::geometry::Topo : protected isce::product::RadarGridParameters {
+class isce::geometry::Topo {
 
     public:
         /** Constructor using a product*/
@@ -69,7 +69,7 @@ class isce::geometry::Topo : protected isce::product::RadarGridParameters {
         /** Set mask computation flag */
         inline void computeMask(bool);
 
-        //Get topo processing options
+        // Get topo processing options
         /** Get lookSide used for processing */
         inline int lookSide() const { return _lookSide; }
         /** Get distance convergence threshold used for processing */
@@ -84,6 +84,11 @@ class isce::geometry::Topo : protected isce::product::RadarGridParameters {
         inline isce::core::dataInterpMethod demMethod() const { return _demMethod; }
         /** Get mask computation flag */
         inline bool computeMask() const { return _computeMask; }
+
+        /** Get read-only reference to RadarGridParameters */
+        inline const isce::product::RadarGridParameters & radarGridParameters() const {
+            return _radarGridParameters;
+        }
 
         // Get DEM bounds using first/last azimuth line and slant range bin
         void computeDEMBounds(isce::io::Raster &,
@@ -145,6 +150,9 @@ class isce::geometry::Topo : protected isce::product::RadarGridParameters {
         isce::core::Orbit _orbit;
         isce::core::Ellipsoid _ellipsoid;
         isce::core::LUT2d<double> _doppler;
+
+        // RadarGridParameters
+        isce::product::RadarGridParameters _radarGridParameters;
         
         // Optimization options
         double _threshold = 1.0e-8;

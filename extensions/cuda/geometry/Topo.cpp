@@ -15,6 +15,7 @@ using isce::core::Orbit;
 using isce::core::LUT1d;
 using isce::core::cartesian_t;
 using isce::io::Raster;
+using isce::product::RadarGridParameters;
 using isce::geometry::DEMInterpolator;
 using isce::geometry::TopoLayers;
 
@@ -44,7 +45,8 @@ topo(Raster & demRaster,
     TopoLayers layers;
 
     // Create rasters for individual layers (provide output raster sizes)
-    layers.initRasters(outdir, this->mode().width(), this->mode().length(),
+    const RadarGridParameters & rgparam = this->radarGridParameters();
+    layers.initRasters(outdir, rgparam.width(), rgparam.length(),
                        this->computeMask());
 
     // Call topo with layers
@@ -152,9 +154,10 @@ topo(Raster & demRaster, TopoLayers & layers) {
     checkInitialization(info); 
 
     // Cache ISCE objects (use public interface of parent isce::geometry::Topo class)
-    Ellipsoid ellipsoid = this->ellipsoid();
-    Orbit orbit = this->orbit();
-    LUT1d<double> doppler = this->doppler();
+    const Ellipsoid & ellipsoid = this->ellipsoid();
+    const Orbit & orbit = this->orbit();
+    const LUT1d<double> doppler(this->doppler());
+    const RadarGridParameters & rgparam = this->radarGridParameters();
 
     // Create and start a timer
     auto timerStart = std::chrono::steady_clock::now();
@@ -166,8 +169,8 @@ topo(Raster & demRaster, TopoLayers & layers) {
     computeLinesPerBlock(demRaster);
 
     // Compute number of blocks needed to process image
-    size_t nBlocks = mode.length() / _linesPerBlock;
-    if ((mode.length() % _linesPerBlock) != 0)
+    size_t nBlocks = rgparam.length() / _linesPerBlock;
+    if ((rgparam.length() % _linesPerBlock) != 0)
         nBlocks += 1;
 
     // Loop over blocks
@@ -178,7 +181,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
         size_t lineStart, blockLength;
         lineStart = block * _linesPerBlock;
         if (block == (nBlocks - 1)) {
-            blockLength = mode.length() - lineStart;
+            blockLength = rgparam.length() - lineStart;
         } else {
             blockLength = _linesPerBlock;
         }
@@ -203,12 +206,14 @@ topo(Raster & demRaster, TopoLayers & layers) {
         demInterp.refHeight(dem_avg);
 
         // Set output block sizes in layers
-        layers.setBlockSize(blockLength, mode.width());
+        layers.setBlockSize(blockLength, rgparam.width());
 
         // Run Topo on the GPU for this block
         isce::cuda::geometry::runGPUTopo(
-            ellipsoid, orbit, doppler, mode, demInterp, layers, lineStart, this->lookSide(),
-            this->epsgOut(), this->threshold(), this->numiter(), this->extraiter(),
+            ellipsoid, orbit, doppler, demInterp, layers, lineStart, this->lookSide(),
+            this->epsgOut(), rgparam.numberAzimuthLooks(), rgparam.sensingStart(),
+            rgparam.wavelength(), rgparam.prf(), rgparam.startingRange(),
+            rgparam.rangePixelSpacing(), this->threshold(), this->numiter(), this->extraiter(),
             totalconv
         );
 
@@ -224,7 +229,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
 
     // Print out convergence statistics
     info << "Total convergence: " << totalconv << " out of "
-         << (mode.width() * mode.length()) << pyre::journal::endl;
+         << (rgparam.size()) << pyre::journal::endl;
 
     // Print out timing information and reset
     auto timerEnd = std::chrono::steady_clock::now();
@@ -260,7 +265,7 @@ computeLinesPerBlock(isce::io::Raster & demRaster) {
     pixelsPerBlock = (pixelsPerBlock / 10000000) * 10000000;
 
     // Compute number of lines per block
-    _linesPerBlock = pixelsPerBlock / this->mode().width();
+    _linesPerBlock = pixelsPerBlock / this->radarGridParameters().width();
     // Round down to nearest 500 lines
     _linesPerBlock = (_linesPerBlock / 500) * 500;
 }
@@ -271,17 +276,13 @@ _setLayoverShadowWithOrbit(isce::core::Orbit & orbit,
                            TopoLayers & layers,
                            DEMInterpolator & demInterp,
                            size_t lineStart) {
-
-    // As with orbits, set reference epoch 2 days prior
-    isce::core::DateTime refEpoch = mode.startAzTime() - 86400*2;
-
+    
     // Create vector of satellite positions for each line in block
     std::vector<cartesian_t> satPosition(layers.length());
     for (size_t i = 0; i < layers.length(); ++i) {
 
         // Get satellite azimuth time
-        const double tline = mode.startAzTime().secondsSinceEpoch(refEpoch)
-                          + (mode.numberAzimuthLooks() * ((i + lineStart) / mode.prf()));
+        const double tline = this->radarGridParameters().sensingTime(i + lineStart);
 
         // Get state vector
         cartesian_t xyzsat, velsat;
