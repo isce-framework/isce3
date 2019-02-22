@@ -39,7 +39,7 @@ std::array<double, 3> computePlaneNormal(std::array<double, 3> & x1,
 }
 
 double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp,
-                               const isce::product::ConfigParameters & param,
+                               const isce::product::RadarGridParameters & param,
                                const isce::core::Ellipsoid& ellps) {
     // Create a projection object from the DEM interpolator
     isce::core::ProjectionBase * proj = isce::core::createProj(dem_interp.epsgCode());
@@ -92,7 +92,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
                                 isce::core::EarthEccentricitySquared);
     isce::core::Orbit orbit = product.metadata().orbit();
     isce::core::LUT2d<double> dop = product.metadata().procInfo().dopplerCentroid(frequency);
-    isce::product::ConfigParameters param(product, frequency);
+    isce::product::RadarGridParameters param(product, frequency);
     isce::geometry::Topo topo(product);
     topo.orbitMethod(isce::core::orbitInterpMethod::HERMITE_METHOD);
     int lookSide = product.lookSide();

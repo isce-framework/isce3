@@ -1,8 +1,8 @@
 //-*- C++ -*-
 //-*- coding: utf-8 -*-
 
-#ifndef ISCE_PREDICT_CONFIGPARAMETERS_H
-#define ISCE_PREDICT_CONFIGPARAMETERS_H
+#ifndef ISCE_PRODUCT_CONFIGPARAMETERS_H
+#define ISCE_PRODUCT_CONFIGPARAMETERS_H
 
 // isce::core
 #include <isce/core/Metadata.h>
@@ -12,29 +12,29 @@
 
 namespace isce {
     namespace product {
-        class ConfigParameters; 
+        class RadarGridParameters; 
     }
 }
 
-class isce::product::ConfigParameters {
+class isce::product::RadarGridParameters {
 
     public:
         /** Constructor with a product and number of looks. */
-        inline ConfigParameters(const isce::product::Product & product,
-                                char frequency = 'A',
-                                size_t numberAzimuthLooks = 1,
-                                size_t numberRangeLooks = 1);
+        inline RadarGridParameters(const isce::product::Product & product,
+                                   char frequency = 'A',
+                                   size_t numberAzimuthLooks = 1,
+                                   size_t numberRangeLooks = 1);
 
         /** Constructor with a swath. */
-        inline ConfigParameters(const isce::product::Swath & swath,
-                                size_t numberAzimuthLooks = 1,
-                                size_t numberRangeLooks = 1);
+        inline RadarGridParameters(const isce::product::Swath & swath,
+                                   size_t numberAzimuthLooks = 1,
+                                   size_t numberRangeLooks = 1);
 
         /** Constructor from an isce::core::Metadata object. */
-        inline ConfigParameters(const isce::core::Metadata & meta,
-                                const isce::core::DateTime & refEpoch,
-                                size_t numberAzimuthLooks = 1,
-                                size_t numberRangeLooks = 1);
+        inline RadarGridParameters(const isce::core::Metadata & meta,
+                                   const isce::core::DateTime & refEpoch,
+                                   size_t numberAzimuthLooks = 1,
+                                   size_t numberRangeLooks = 1);
 
         // Get data member values
         inline size_t numberAzimuthLooks() const { return _numberAzimuthLooks; }
@@ -67,10 +67,10 @@ class isce::product::ConfigParameters {
 /** @param[in] swath Input swath
   * @param[in] numberAzimuthLooks Number of azimuth looks in input geometry
   * @param[in] numberRangeLooks Number of range looks in input geometry */
-isce::product::ConfigParameters::
-ConfigParameters(const isce::product::Swath & swath,
-                 size_t numberAzimuthLooks,
-                 size_t numberRangeLooks) :
+isce::product::RadarGridParameters::
+RadarGridParameters(const isce::product::Swath & swath,
+                    size_t numberAzimuthLooks,
+                    size_t numberRangeLooks) :
     _numberAzimuthLooks(numberAzimuthLooks),
     _numberRangeLooks(numberRangeLooks),
     _sensingStart(swath.zeroDopplerTime()[0]),
@@ -86,23 +86,23 @@ ConfigParameters(const isce::product::Swath & swath,
   * @param[in] frequency Frequency designation
   * @param[in] numberAzimuthLooks Number of azimuth looks of input product
   * @param[in] numberRangeLooks Number of range looks of input product */
-isce::product::ConfigParameters::
-ConfigParameters(const isce::product::Product & product,
-                 char frequency,
-                 size_t numberAzimuthLooks,
-                 size_t numberRangeLooks) :
-    ConfigParameters(product.swath(frequency), numberAzimuthLooks, numberRangeLooks) {}
+isce::product::RadarGridParameters::
+RadarGridParameters(const isce::product::Product & product,
+                    char frequency,
+                    size_t numberAzimuthLooks,
+                    size_t numberRangeLooks) :
+    RadarGridParameters(product.swath(frequency), numberAzimuthLooks, numberRangeLooks) {}
 
 // Constructor from an isce::core::Metadata object.
 /** @param[in] meta isce::core::Metadata object
   * @param[in] refEpoch Reference epoch date
   * @param[in] numberAzimuthLooks Number of azimuth looks in input geometry
   * @param[in] numberRangeLooks Number of range looks in input geometry */
-isce::product::ConfigParameters::
-ConfigParameters(const isce::core::Metadata & meta,
-                 const isce::core::DateTime & refEpoch,
-                 size_t numberAzimuthLooks,
-                 size_t numberRangeLooks) :
+isce::product::RadarGridParameters::
+RadarGridParameters(const isce::core::Metadata & meta,
+                    const isce::core::DateTime & refEpoch,
+                    size_t numberAzimuthLooks,
+                    size_t numberRangeLooks) :
     _numberAzimuthLooks(numberAzimuthLooks),
     _numberRangeLooks(numberRangeLooks),
     _sensingStart((meta.sensingStart - refEpoch).getTotalSeconds()),
@@ -111,8 +111,7 @@ ConfigParameters(const isce::core::Metadata & meta,
     _startingRange(meta.rangeFirstSample),
     _rangePixelSpacing(meta.slantRangePixelSpacing),
     _rlength(meta.length),
-    _rwidth(meta.width) {
-}
+    _rwidth(meta.width) {}
 
 #endif
 

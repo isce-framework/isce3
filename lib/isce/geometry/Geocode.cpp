@@ -269,18 +269,14 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
     }
 
     // the first azimuth line
-    azimuthFirstLine = (azimuthTime.min() - 
-                            _azimuthStartTime)/
-                                _azimuthTimeInterval;
+    azimuthFirstLine = (azimuthTime.min() - _azimuthStartTime) / _azimuthTimeInterval;
 
     // the last azimuth line
-    azimuthLastLine = (azimuthTime.max() - 
-                            _azimuthStartTime)/
-                                _azimuthTimeInterval;
+    azimuthLastLine = (azimuthTime.max() - _azimuthStartTime) / _azimuthTimeInterval;
 
     // the first and last range pixels 
-    rangeFirstPixel = (slantRange.min() - _startingRange)/_rangeSpacing;
-    rangeLastPixel = (slantRange.max() - _startingRange)/_rangeSpacing;
+    rangeFirstPixel = (slantRange.min() - _startingRange) / _rangeSpacing;
+    rangeLastPixel = (slantRange.max() - _startingRange) / _rangeSpacing;
 
     // extending the radar bounding box by the extra margin
     azimuthFirstLine -= margin;

@@ -35,6 +35,7 @@ cdef class pyProcessingInformation:
         if self.__owner:
             del self.c_procinfo
 
+    @staticmethod
     def bind(pyProcessingInformation proc):
         """
         Creates a new pyProcessingInformation instance with C++ ProcessingInformation
@@ -84,7 +85,8 @@ cdef class pyProcessingInformation:
         """
         Get look-up-table for azimuth FM rate for a given center frequency.
         """
-        cdef LUT2d[double] lut = self.c_procinfo.azimuthFMRate(pyStringToBytes(freq))
+        cdef string freq_str = pyStringToBytes(freq)
+        cdef LUT2d[double] lut = self.c_procinfo.azimuthFMRate(freq_str[0])
         py_lut = pyLUT2d.cbind(lut)
         return py_lut
 
@@ -92,7 +94,8 @@ cdef class pyProcessingInformation:
         """
         Get look-up-table for Doppler centroid for a given center frequency.
         """
-        cdef LUT2d[double] lut = self.c_procinfo.dopplerCentroid(pyStringToBytes(freq))
+        cdef string freq_str = pyStringToBytes(freq)
+        cdef LUT2d[double] lut = self.c_procinfo.dopplerCentroid(freq_str[0])
         py_lut = pyLUT2d.cbind(lut)
         return py_lut
 

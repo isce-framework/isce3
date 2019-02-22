@@ -4,6 +4,7 @@
 # Copyright 2017-2018
 #
 
+from libcpp.string cimport string
 from Product cimport Product
 
 cdef class pyProduct:
@@ -24,7 +25,7 @@ cdef class pyProduct:
     cdef pySwath py_swathA
     cdef pyMetadata py_metadata
     
-    def __cinit__(self, pyIH5File h5file):
+    def __cinit__(self, pyIH5File h5file, freq='A'):
         """
         Constructor that creates a C++ isce::product::Product objects and binds it to
         python instance.
@@ -34,11 +35,16 @@ cdef class pyProduct:
         self.__owner = True 
 
         # Bind the C++ Metadata class to the Cython pyMetadata instance
+        self.py_metadata = pyMetadata()
+        del self.py_metadata.c_metadata
         self.py_metadata.c_metadata = &self.c_product.metadata()
         self.py_metadata.__owner = False
 
         # Bind the C++ Swath class to the Cython pySwath instance
-        self.py_swathA.c_swath = &self.c_product.swath(pyStringToBytes('A'))
+        cdef string freq_str = pyStringToBytes(freq)
+        self.py_swathA = pySwath()
+        del self.py_swathA.c_swath
+        self.py_swathA.c_swath = &self.c_product.swath(freq_str[0])
         self.py_swathA.__owner = False
 
     def __dealloc__(self):

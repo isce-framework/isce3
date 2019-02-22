@@ -52,14 +52,14 @@ namespace isce {
             // Load azimuth FM rate for each frequency
             isce::core::loadCalGrid(group, "frequencyA/azimuthFMRate", lut);
             proc.azimuthFMRate(lut, 'A');
-            isce::core::loadCalGrid(group, "frequencyB/azimuthFMRate", lut);
-            proc.azimuthFMRate(lut, 'B');
+            //isce::core::loadCalGrid(group, "frequencyB/azimuthFMRate", lut);
+            //proc.azimuthFMRate(lut, 'B');
 
             // Load Doppler centroid for each frequency
             isce::core::loadCalGrid(group, "frequencyA/dopplerCentroid", lut);
             proc.dopplerCentroid(lut, 'A');
-            isce::core::loadCalGrid(group, "frequencyB/dopplerCentroid", lut);
-            proc.dopplerCentroid(lut, 'B');
+            //isce::core::loadCalGrid(group, "frequencyB/dopplerCentroid", lut);
+            //proc.dopplerCentroid(lut, 'B');
 
         }
 
@@ -118,7 +118,7 @@ namespace isce {
           * @param[in] swaths           Map of Swaths to be configured. */
         inline void loadFromH5(isce::io::IGroup & group, std::map<char, Swath> & swaths) {
             loadFromH5(group, swaths['A'], 'A');
-            loadFromH5(group, swaths['B'], 'B');
+            //loadFromH5(group, swaths['B'], 'B');
         }
 
         /** Load Metadata parameters from HDF5.

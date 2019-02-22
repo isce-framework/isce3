@@ -5,7 +5,7 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS
-    ConfigParameters.h
+    RadarGridParameters.h
     Metadata.h
     ProcessingInformation.h
     Product.h

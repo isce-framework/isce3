@@ -107,9 +107,10 @@ namespace isce {
 
             // Parse it
             std::string dummy1, dummy2, datestr, timestr;
-            std::stringstream ss;
+            std::istringstream ss(unitAttr);
             ss >> dummy1 >> dummy2 >> datestr >> timestr;
-            isce::core::DateTime epoch(datestr + " " + timestr);
+            std::string inputstr = datestr + "T" + timestr + ".00";
+            isce::core::DateTime epoch(inputstr);
 
             // Done
             return epoch;

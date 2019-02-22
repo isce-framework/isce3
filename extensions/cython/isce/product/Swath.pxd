@@ -51,6 +51,10 @@ cdef extern from "isce/product/Swath.h" namespace "isce::product":
         double nominalAcquisitionPRF() const
         void nominalAcquisitionPRF(double)
 
+        # Scene center along track spacing
+        double sceneCenterAlongTrackSpacing() const
+        void sceneCenterAlongTrackSpacing(double)
+
         # Scene center ground range spacing
         double sceneCenterGroundRangeSpacing() const
         void sceneCenterGroundRangeSpacing(double)

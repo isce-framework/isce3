@@ -4,6 +4,7 @@
 // Author: Bryan Riel
 // Copyright 2017
 
+#include <algorithm>
 #include <complex>
 #include "LUT2d.h"
 
@@ -16,11 +17,11 @@
 template <typename T>
 isce::core::LUT2d<T>::
 LUT2d(double xstart, double ystart, double dx, double dy, const isce::core::Matrix<T> & data,
-      isce::core::dataInterpMethod method) : _haveData(true), _refValue(data(0,0)),
-      _xstart(xstart), _ystart(ystart), _dx(dx), _dy(dy), _data(data) {
+      isce::core::dataInterpMethod method, bool boundsError) : 
+          _haveData(true), _boundsError(boundsError), _refValue(data(0,0)),
+          _xstart(xstart), _ystart(ystart), _dx(dx), _dy(dy), _data(data) {
     _setInterpolator(method);
 }
-
 
 // Constructor with valarrays of X and Y coordinates
 /** @param[in] xcoord X-coordinates
@@ -30,8 +31,9 @@ LUT2d(double xstart, double ystart, double dx, double dy, const isce::core::Matr
 template <typename T>
 isce::core::LUT2d<T>::
 LUT2d(const std::valarray<double> & xcoord, const std::valarray<double> & ycoord,
-      const isce::core::Matrix<T> & data, isce::core::dataInterpMethod method) :
-      _haveData(true), _refValue(data(0,0)) {
+      const isce::core::Matrix<T> & data, isce::core::dataInterpMethod method,
+      bool boundsError) :
+          _haveData(true), _boundsError(boundsError), _refValue(data(0,0)) {
     // Set the data
     setFromData(xcoord, ycoord, data);
     // Save interpolation data 
@@ -96,8 +98,8 @@ setFromData(const std::valarray<double> & xcoord, const std::valarray<double> & 
 } 
 
 // Evaluate LUT at coordinate
-/** @param[in] x X-coordinate for evaluation
-  * @param[in] y Y-coordinate for evaluation
+/** @param[in] y Y-coordinate for evaluation
+  * @param[in] x X-coordinate for evaluation
   * @param[out] value Interpolated value */
 template <typename T>
 T isce::core::LUT2d<T>::
@@ -113,8 +115,19 @@ eval(double y, double x) const {
     }
 
     // Get matrix indices corresponding to requested coordinates
-    const double x_idx = (x - _xstart) / _dx;
-    const double y_idx = (y - _ystart) / _dy;
+    double x_idx = (x - _xstart) / _dx;
+    double y_idx = (y - _ystart) / _dy;
+
+    // Check bounds or clamp indices to valid values
+    if (_boundsError) {
+        if (x_idx < 0.0 || y_idx < 0.0 || x_idx >= _data.width() || y_idx >= _data.length()) {
+            pyre::journal::error_t errorChannel("isce.core.LUT2d");
+            errorChannel << "Out of bounds LUT2d evaluation." << pyre::journal::endl;
+        }
+    } else {
+        x_idx = std::clamp(x_idx, 0.0, _data.width() - 1.0);
+        y_idx = std::clamp(y_idx, 0.0, _data.length() - 1.0);
+    } 
 
     // Call interpolator
     value = _interp->interpolate(x_idx, y_idx, _data);

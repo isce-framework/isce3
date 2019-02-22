@@ -76,7 +76,9 @@ struct isce::core::Orbit {
      * @param[in] o isce::core::Orbit object to copy*/
     Orbit(const Orbit &o) : nVectors(o.nVectors), epochs(o.epochs),
                             UTCtime(o.UTCtime), position(o.position), velocity(o.velocity),
-                            stateVectors(o.stateVectors) {}
+                            stateVectors(o.stateVectors), refEpoch(o.refEpoch) {
+        std::cout << "in copy" << std::endl;
+    }
 
     /** Assignment operator*/
     inline Orbit& operator=(const Orbit &o);
@@ -136,6 +138,7 @@ operator=(const Orbit &rhs) {
     position = rhs.position;
     velocity = rhs.velocity;
     stateVectors = rhs.stateVectors;
+    refEpoch = rhs.refEpoch;
     return *this;
 }
 

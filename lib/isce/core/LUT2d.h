@@ -30,14 +30,19 @@ class isce::core::LUT2d {
         inline LUT2d(isce::core::dataInterpMethod method);
         LUT2d(double xstart, double ystart, double dx, double dy,
               const isce::core::Matrix<T> & data,
-              isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD);
+              isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD,
+              bool boundsError = true);
         LUT2d(const std::valarray<double> & xcoord,
               const std::valarray<double> & ycoord,
               const isce::core::Matrix<T> & data,
-              isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD);
+              isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD,
+              bool boundsError = true);
 
         // Deep copy constructor
         inline LUT2d(const LUT2d<T> & lut);
+
+        // Deep assignment operator
+        inline LUT2d & operator=(const LUT2d<T> & lut);
 
         // Set data from external data
         void setFromData(const std::valarray<double> & xcoord,
@@ -47,6 +52,11 @@ class isce::core::LUT2d {
         // Get interpolator method
         inline isce::core::dataInterpMethod interpMethod() const {
             return _interp->method();
+        }
+    
+        // Set interpolator method
+        inline void interpMethod(isce::core::dataInterpMethod method) {
+            _setInterpolator(method);
         }
 
         // Get starting X-coordinate
@@ -61,15 +71,22 @@ class isce::core::LUT2d {
         inline size_t length() const { return _data.length(); }
         // Get LUT width (number of samples)
         inline size_t width() const { return _data.width(); }
+        // Get the reference value
+        inline T refValue() const { return _refValue; }
+        // Get bounds error flag
+        inline bool boundsError() const { return _boundsError; }
         // Get read-only reference to data
         inline const isce::core::Matrix<T> & data() const { return _data; }
+
+        // Set bounds error floag
+        inline void boundsError(bool flag) { _boundsError = flag; }
               
         // Evaluate LUT    
-        T eval(double, double) const;
+        T eval(double y, double x) const;
 
     private:
         // Flags
-        bool _haveData;
+        bool _haveData, _boundsError;
         T _refValue;
         // Data
         double _xstart, _ystart, _dx, _dy;
@@ -84,25 +101,44 @@ class isce::core::LUT2d {
 // Default constructor using bilinear interpolator
 template <typename T>
 isce::core::LUT2d<T>::
-LUT2d() : _haveData(false), _refValue(0.0) {
+LUT2d() : _haveData(false), _boundsError(true), _refValue(0.0) {
     _setInterpolator(isce::core::BILINEAR_METHOD);
 }
 
 // Constructor with specified interpolator
 template <typename T>
 isce::core::LUT2d<T>::
-LUT2d(isce::core::dataInterpMethod method) : _haveData(false), _refValue(0.0) {
+LUT2d(isce::core::dataInterpMethod method) : _haveData(false), _boundsError(true),
+                                             _refValue(0.0) {
     _setInterpolator(method);
 }
 
 // Deep copy constructor
 template <typename T>
 isce::core::LUT2d<T>::
-LUT2d(const isce::core::LUT2d<T> & lut) : _haveData(true), _refValue(lut.data()(0,0)),
+LUT2d(const isce::core::LUT2d<T> & lut) : _haveData(true), _boundsError(lut.boundsError()),
+                                          _refValue(lut.refValue()),
                                           _xstart(lut.xStart()), _ystart(lut.yStart()),
                                           _dx(lut.xSpacing()), _dy(lut.ySpacing()),
                                           _data(lut.data()) {
     _setInterpolator(lut.interpMethod());
+}
+
+// Deep assignment operator
+template <typename T>
+isce::core::LUT2d<T> &
+isce::core::LUT2d<T>::
+operator=(const LUT2d<T> & lut) {
+    _refValue = lut.refValue();
+    _xstart = lut.xStart();
+    _ystart = lut.yStart();
+    _dx = lut.xSpacing();
+    _dy = lut.ySpacing();
+    _data = lut.data();
+    _haveData = true;
+    _boundsError = lut.boundsError();
+    _setInterpolator(lut.interpMethod());
+    return *this;
 }
 
 // Set interpolator method

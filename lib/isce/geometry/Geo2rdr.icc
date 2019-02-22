@@ -10,18 +10,24 @@
 
 /** @param[in] product Input Product
   * @param[in] frequency Frequency designation
+  * @param[in] nativeDoppler Flag for using native Doppler frequencies instead of zero-Doppler
   * @param[in] numberAzimuthLooks Number of azimuth looks of input product
   * @param[in] numberRangeLooks Number of range looks of input product
   *
   * Primary constructor of Geo2rdr object. */
 isce::geometry::Geo2rdr::
-Geo2rdr(const isce::product::Product & product, char frequency,
-        size_t numberAzimuthLooks, size_t numberRangeLooks) :
-        ConfigParameters(product, frequency, numberAzimuthLooks, numberRangeLooks) {
+Geo2rdr(const isce::product::Product & product,
+        char frequency,
+        bool nativeDoppler,
+        size_t numberAzimuthLooks,
+        size_t numberRangeLooks) :
+        RadarGridParameters(product, frequency, numberAzimuthLooks, numberRangeLooks) {
 
     // Copy orbit and doppler
     _orbit = product.metadata().orbit();
-    _doppler = product.metadata().procInfo().dopplerCentroid(frequency);
+    if (nativeDoppler) {
+        _doppler = product.metadata().procInfo().dopplerCentroid(frequency);
+    }
 
     // Make an ellipsoid manually
     _ellipsoid = isce::core::Ellipsoid(isce::core::EarthSemiMajorAxis,
@@ -41,7 +47,7 @@ isce::geometry::Geo2rdr::
 Geo2rdr(const isce::core::Ellipsoid & ellipsoid, const isce::core::Orbit & orbit,
         const isce::core::LUT2d<double> & doppler, const isce::core::Metadata & meta,
         size_t numberAzimuthLooks, size_t numberRangeLooks) :
-        ConfigParameters(meta, orbit.refEpoch, numberAzimuthLooks, numberRangeLooks),
+        RadarGridParameters(meta, orbit.refEpoch, numberAzimuthLooks, numberRangeLooks),
         _ellipsoid(ellipsoid), _orbit(orbit), _doppler(doppler) {}
 
 /**@param[in] t Azimuth time convergence threshold in seconds*/

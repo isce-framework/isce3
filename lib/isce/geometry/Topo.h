@@ -19,7 +19,7 @@
 
 // isce::product
 #include <isce/product/Product.h>
-#include <isce/product/ConfigParameters.h>
+#include <isce/product/RadarGridParameters.h>
 
 // isce::geometry
 #include "geometry.h"
@@ -36,12 +36,15 @@ namespace isce {
 /** Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude
  *
  * See <a href="overview_geometry.html#forwardgeom">geometry overview</a> for a description of the algorithm*/
-class isce::geometry::Topo : protected isce::product::ConfigParameters {
+class isce::geometry::Topo : protected isce::product::RadarGridParameters {
 
     public:
         /** Constructor using a product*/
-        inline Topo(isce::product::Product &, char frequency = 'A',
-                    size_t numberAzimuthLooks = 1, size_t numberRangeLooks = 1);
+        inline Topo(isce::product::Product &,
+                    char frequency = 'A',
+                    bool nativeDoppler = false,
+                    size_t numberAzimuthLooks = 1,
+                    size_t numberRangeLooks = 1);
 
         /** Constructor using core objects*/
         inline Topo(const isce::core::Ellipsoid &,

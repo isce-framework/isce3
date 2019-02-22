@@ -25,7 +25,7 @@
 
 // isce::product
 #include <isce/product/Product.h>
-#include <isce/product/ConfigParameters.h>
+#include <isce/product/RadarGridParameters.h>
 
 // Declaration
 namespace isce {
@@ -38,12 +38,15 @@ namespace isce {
 /** Transformer from map coordinates to radar geometry coordinates.
  *
  * See <a href="overview_geometry.html#inversegeom">geometry overview</a> for description of the algorithm. */
-class isce::geometry::Geo2rdr : protected isce::product::ConfigParameters {
+class isce::geometry::Geo2rdr : protected isce::product::RadarGridParameters {
 
     public:
         /** Constructor from product */
-        inline Geo2rdr(const isce::product::Product &, char frequency = 'A',
-                       size_t numberAzimuthLooks = 1, size_t numberRangeLooks = 1);
+        inline Geo2rdr(const isce::product::Product &,
+                       char frequency = 'A',
+                       bool nativeDoppler = false,
+                       size_t numberAzimuthLooks = 1,
+                       size_t numberRangeLooks = 1);
 
         /** Constructor from core objects */
         inline Geo2rdr(const isce::core::Ellipsoid &,

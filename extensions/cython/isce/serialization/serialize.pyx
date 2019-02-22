@@ -35,6 +35,9 @@ def deserialize(pyIGroup group, isceobj, **kwargs):
     elif isinstance(isceobj, pyLUT1d):
         loadLUT1d(group, isceobj, **kwargs)
 
+    elif isinstance(isceobj, pyMetadata):
+        loadMetadata(group, isceobj, **kwargs)
+
     else:
         raise NotImplementedError('No suitable deserialization method found.')
 
@@ -110,6 +113,23 @@ def loadLUT1d(pyIGroup group, pyLUT1d lut, name_coords='r0', name_values='skewdc
     """
     loadFromH5(group.c_igroup, deref(lut.c_lut), <string> pyStringToBytes(name_coords),
                <string> pyStringToBytes(name_values))
+
+# --------------------------------------------------------------------------------
+# Serialization functions for isce::product objects
+# --------------------------------------------------------------------------------
+
+def loadMetadata(pyIGroup group, pyMetadata meta):
+    """
+    Load Metadata parameters from HDF5 file.
+
+    Args:
+        group (pyIGroup):                       IH5File for product.
+        meta (pyMetadata):                      pyMetadata instance.
+
+    Return:
+        None
+    """
+    loadFromH5(group.c_igroup, deref(meta.c_metadata))
 
 # --------------------------------------------------------------------------------
 # Serialization functions for isce::geometry objects

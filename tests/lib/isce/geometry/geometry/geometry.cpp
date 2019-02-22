@@ -65,6 +65,9 @@ struct GeometryTest : public ::testing::Test {
             lookSide = product.lookSide();
             ellipsoid.a(isce::core::EarthSemiMajorAxis);
             ellipsoid.e2(isce::core::EarthEccentricitySquared);
+
+            // For this test, use biquintic interpolation for Doppler LUT
+            doppler.interpMethod(isce::core::BIQUINTIC_METHOD);
         }
 };
 
@@ -75,18 +78,13 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit) {
     std::vector<double> ranges, heights, ref_data, ref_zerodop;
     loadTestData(aztimes, ranges, heights, ref_data, ref_zerodop);
 
-    // Create reference epoch
-    isce::core::DateTime azDate(aztimes[0]);
-    isce::core::DateTime refEpoch = azDate - 86400*2;
-    orbit.updateUTCTimes(refEpoch);
-
     // Loop over test data
     const double degrees = 180.0 / M_PI;
     for (size_t i = 0; i < aztimes.size(); ++i) {
 
-        // Make azimuth date
-        azDate = aztimes[i]; 
-        const double azTime = azDate.secondsSinceEpoch(refEpoch);
+        // Make azimuth time in seconds
+        isce::core::DateTime azDate = aztimes[i]; 
+        const double azTime = (azDate - orbit.refEpoch).getTotalSeconds();
 
         // Evaluate Doppler
         const double dopval = doppler.eval(azTime, ranges[i]);
@@ -95,7 +93,7 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit) {
         isce::geometry::DEMInterpolator dem(heights[i]);
 
         // Initialize guess
-        isce::core::cartesian_t targetLLH = {0.0, 0.0, dem.interpolateLonLat(0.0, 0.0)};
+        isce::core::cartesian_t targetLLH = {0.0, 0.0, heights[i]};
 
         // Run rdr2geo
         int stat = isce::geometry::rdr2geo(azTime, ranges[i], dopval,
@@ -124,10 +122,6 @@ TEST_F(GeometryTest, RdrToGeoWithOrbit) {
 
 TEST_F(GeometryTest, GeoToRdr) {
 
-    // Make a reference epoch for numerical precision
-    isce::core::DateTime refEpoch(2003, 2, 25);
-    orbit.updateUTCTimes(refEpoch);
-    
     // Make a test LLH
     const double radians = M_PI / 180.0;
     isce::core::cartesian_t llh = {
@@ -141,7 +135,7 @@ TEST_F(GeometryTest, GeoToRdr) {
     int stat = isce::geometry::geo2rdr(llh, ellipsoid, orbit, doppler,
         aztime, slantRange, swath.processedWavelength(), 1.0e-10, 50, 10.0);
     // Convert azimuth time to a date
-    isce::core::DateTime azdate = refEpoch + aztime;
+    isce::core::DateTime azdate = orbit.refEpoch + aztime;
 
     ASSERT_EQ(stat, 1);
     ASSERT_EQ(azdate.isoformat(), "2003-02-26T17:55:33.993088889");
@@ -151,7 +145,7 @@ TEST_F(GeometryTest, GeoToRdr) {
     isce::core::LUT2d<double> zeroDoppler;
     stat = isce::geometry::geo2rdr(llh, ellipsoid, orbit, zeroDoppler,
         aztime, slantRange, swath.processedWavelength(), 1.0e-10, 50, 10.0);
-    azdate = refEpoch + aztime;
+    azdate = orbit.refEpoch + aztime;
 
     ASSERT_EQ(stat, 1);
     ASSERT_EQ(azdate.isoformat(), "2003-02-26T17:55:34.122893704");

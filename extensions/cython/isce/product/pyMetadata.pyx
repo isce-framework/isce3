@@ -34,14 +34,20 @@ cdef class pyMetadata:
         self.__owner = True
 
         # Bind the C++ Orbit class to the Cython pyOrbit instance
+        self.py_orbit = pyOrbit()
+        del self.py_orbit.c_orbit
         self.py_orbit.c_orbit = &self.c_metadata.orbit()
         self.py_orbit.__owner = False
 
         # Bind the C++ EulerAngles class to the Cython pyEulerAngles instance
+        self.py_attitude = pyEulerAngles()
+        del self.py_attitude.c_eulerangles
         self.py_attitude.c_eulerangles = &self.c_metadata.attitude()
         self.py_attitude.__owner = False
 
         # Bind the C++ ProcessingInformation class to the Cython pyProcessingInformation instance
+        self.py_procInfo = pyProcessingInformation()
+        del self.py_procInfo.c_procinfo
         self.py_procInfo.c_procinfo = &self.c_metadata.procInfo()
         self.py_procInfo.__owner = False
 
@@ -61,10 +67,24 @@ cdef class pyMetadata:
         Returns:
             new_meta (pyMetadata): New pyMetadata instance with a shallow copy of C++ Metadata.
         """
+        # Bind metadata
         new_meta = pyMetadata()
         del new_meta.c_metadata
         new_meta.c_metadata = meta.c_metadata
         new_meta.__owner = False
+
+        # Bind orbit
+        new_meta.py_orbit.c_orbit = &meta.c_metadata.orbit()
+        new_meta.py_orbit.__owner = False
+
+        # Bind attitude
+        new_meta.py_attitude.c_eulerangles = &meta.c_metadata.attitude()
+        new_meta.py_attitude.__owner = False
+    
+        # Bind processing info
+        new_meta.py_procInfo.c_procinfo = &meta.c_metadata.procInfo()
+        new_meta.py_procInfo.__owner = False
+
         return new_meta
 
     @property

@@ -31,7 +31,8 @@
 TEST(ResampSlcTest, Resamp) {
 
     // Open the HDF5 product
-    std::string h5file("../../data/envisat.h5");
+    const std::string filename = "../../data/envisat.h5";
+    std::string h5file(filename);
     isce::io::IH5File file(h5file);
 
     // Create product
@@ -40,14 +41,18 @@ TEST(ResampSlcTest, Resamp) {
     // Instantiate a ResampSLC object
     isce::image::ResampSlc resamp(product);
 
+    // The HDF5 path to the input image
+    const std::string & input_data = "HDF5:\"" + filename + 
+        "\"://science/LSAR/SLC/swaths/frequencyA/HH";
+
     // Perform resampling with default lines per tile
-    resamp.resamp("warped.slc", "hh",
+    resamp.resamp(input_data, "warped.slc",
                   "../../data/offsets/range.off", "../../data/offsets/azimuth.off");
     
     // Set lines per tile to be a weird multiple of the number of output lines
     resamp.linesPerTile(249);
     // Re-run resamp
-    resamp.resamp("warped.slc", "hh",
+    resamp.resamp(input_data, "warped.slc",
                   "../../data/offsets/range.off", "../../data/offsets/azimuth.off");
 }
 

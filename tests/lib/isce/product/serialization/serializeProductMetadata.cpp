@@ -69,25 +69,25 @@ TEST(MetadataTest, FromHDF5) {
     // Check the ProcessingInformation
     const isce::product::ProcessingInformation & proc = meta.procInfo();
     ASSERT_NEAR(proc.slantRange()[0], 826000.0, 1.0e-10);
-    ASSERT_NEAR(proc.zeroDopplerTime()[0], 237326.0, 1.0e-10);
+    ASSERT_NEAR(proc.zeroDopplerTime()[0], 237321.0, 1.0e-10);
 
     // Check effective velocity LUT    
     const isce::core::LUT2d<double> & veff = proc.effectiveVelocity();
-    ASSERT_EQ(veff.width(), 60);
-    ASSERT_EQ(veff.length(), 20);
+    ASSERT_EQ(veff.width(), 240);
+    ASSERT_EQ(veff.length(), 80);
     ASSERT_NEAR(veff.xStart(), 826000.0, 1.0e-10);
-    ASSERT_NEAR(veff.yStart(), 237326.0, 1.0e-10);
-    ASSERT_NEAR(veff.xSpacing(), 100.0, 1.0e-10);
-    ASSERT_NEAR(veff.ySpacing(), 0.5, 1.0e-10);
-    ASSERT_NEAR(veff.data()(10, 35), 7111.793588226628, 1.0e-6);
+    ASSERT_NEAR(veff.yStart(), 237321.0, 1.0e-10);
+    ASSERT_NEAR(veff.xSpacing(), 25.0, 1.0e-10);
+    ASSERT_NEAR(veff.ySpacing(), 0.25, 1.0e-10);
+    ASSERT_NEAR(veff.data()(10, 35), 7112.3142687909785, 1.0e-6);
 
     // Check Doppler centroid
     const isce::core::LUT2d<double> & dopp = proc.dopplerCentroid('A');
-    ASSERT_NEAR(dopp.data()(10, 35), 286.65483242698343, 1.0e-6);
+    ASSERT_NEAR(dopp.data()(10, 35), 302.0284944801832, 1.0e-6);
 
     // Check azimuth FM rate
     const isce::core::LUT2d<double> & fmrate = proc.azimuthFMRate('A');
-    ASSERT_NEAR(fmrate.data()(10, 35), 2168.5040177256215, 1.0e-6);
+    ASSERT_NEAR(fmrate.data()(10, 35), 2175.7067054603435, 1.0e-6);
 }
 
 int main(int argc, char * argv[]) {

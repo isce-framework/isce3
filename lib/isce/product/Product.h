@@ -77,9 +77,9 @@ Product(isce::io::IH5File & file) {
     // Configure metadata
     loadFromH5(metaGroup, _metadata);
     // Get look direction
-    isce::core::FixedString lookDir;
-    isce::io::loadFromH5(file, "/science/LSAR/identification", lookDir);
-    lookSide(std::string(lookDir.str));
+    std::string lookDir;
+    isce::io::loadFromH5(file, "/science/LSAR/identification/lookDirection", lookDir);
+    lookSide(lookDir);
     // Save the filename
     _filename = file.filename();
 }

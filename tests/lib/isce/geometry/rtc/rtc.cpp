@@ -21,7 +21,7 @@ TEST(TestRTC, RunRTC) {
                                 GDT_Float32, "ENVI");
 
     // Call RTC
-    isce::geometry::facetRTC(product, dem, out_raster);
+    isce::geometry::facetRTC(product, dem, out_raster, 'A');
 }
 
 TEST(TestRTC, CheckResults) {

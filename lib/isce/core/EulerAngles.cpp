@@ -58,6 +58,20 @@ EulerAngles(const EulerAngles & euler) : Attitude(EULERANGLES_T),
     }
 }
 
+// Assignment operator
+/** @param[in] euler EulerAngles object */
+isce::core::EulerAngles &
+isce::core::EulerAngles::
+operator=(const EulerAngles & euler) {
+    _time = euler.time();
+    _yaw = euler.yaw();
+    _pitch = euler.pitch();
+    _roll = euler.roll();
+    _refEpoch = euler.refEpoch();
+    yawOrientation(euler.yawOrientation());
+    return *this;
+}
+
 // Set data after construction
 /** @param[in] time Vector of observation times in seconds since reference epoch
   * @param[in] yaw Vector of yaw angles

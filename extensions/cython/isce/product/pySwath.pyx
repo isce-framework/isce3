@@ -115,6 +115,14 @@ cdef class pySwath:
         return d
 
     @property
+    def sceneCenterAlongTrackSpacing(self):
+        """
+        Get scene center along-track spacing.
+        """
+        cdef double d = self.c_swath.sceneCenterAlongTrackSpacing()
+        return d
+
+    @property
     def sceneCenterGroundRangeSpacing(self):
         """
         Get scene center ground range spacing.

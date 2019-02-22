@@ -59,7 +59,7 @@ class isce::product::Swath {
 
         /** Get processed wavelength */
         inline double processedWavelength() const {
-            return _processedCenterFrequency / isce::core::SPEED_OF_LIGHT;
+            return isce::core::SPEED_OF_LIGHT / _processedCenterFrequency;
         }
 
         /** Get acquired range bandwidth */
@@ -76,6 +76,15 @@ class isce::product::Swath {
         inline double nominalAcquisitionPRF() const { return _nominalAcquisitionPRF; }
         /** Set nominal acquisition PRF */
         inline void nominalAcquisitionPRF(double f) { _nominalAcquisitionPRF = f; }
+
+        /** Get scene center along track spacing */
+        inline double sceneCenterAlongTrackSpacing() const {
+            return _sceneCenterAlongTrackSpacing;
+        }
+        /** Set scene center along track spacing */
+        inline void sceneCenterAlongTrackSpacing(double s) {
+            _sceneCenterAlongTrackSpacing = s;
+        }
 
         /** Get scene center ground range spacing */
         inline double sceneCenterGroundRangeSpacing() const {
@@ -115,6 +124,7 @@ class isce::product::Swath {
         double _acquiredRangeBandwidth;
         double _processedRangeBandwidth;
         double _nominalAcquisitionPRF;
+        double _sceneCenterAlongTrackSpacing;
         double _sceneCenterGroundRangeSpacing;
         double _processedAzimuthBandwidth;
         size_t _validStart;

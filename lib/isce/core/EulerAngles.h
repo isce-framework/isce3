@@ -30,6 +30,9 @@ class isce::core::EulerAngles : public isce::core::Attitude {
         /** Copy constructor */
         EulerAngles(const EulerAngles &);
 
+        /** Assignment operator */
+        EulerAngles & operator=(const EulerAngles &);
+
         /** Set data after construction */
         void data(const std::vector<double> & time,
                   const std::vector<double> & yaw,

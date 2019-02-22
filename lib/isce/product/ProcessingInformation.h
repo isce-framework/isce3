@@ -53,6 +53,11 @@ class isce::product::ProcessingInformation {
             _effectiveVelocity = lut;
         }
 
+        /** Get read-only map for azimuth FM rate tables */
+        inline const std::map<char, isce::core::LUT2d<double>> & azimuthFMRateMap() const {
+            return _azimuthFMRate;
+        }
+
         /** Get read-only look-up-table for azimuth FM rate */
         inline const isce::core::LUT2d<double> & azimuthFMRate(char freq) const {
             return _azimuthFMRate.at(freq);
@@ -60,6 +65,11 @@ class isce::product::ProcessingInformation {
         /** Set look-up-table for azimuth FM rate */
         inline void azimuthFMRate(const isce::core::LUT2d<double> & lut, char freq) {
             _azimuthFMRate[freq] = lut;
+        }
+
+        /** Get read-only map for Doppler centroid tables */
+        inline const std::map<char, isce::core::LUT2d<double>> & dopplerCentroidMap() const {
+            return _dopplerCentroid;
         }
 
         /** Get read-only look-up-table for Doppler centroid */
@@ -90,10 +100,12 @@ class isce::product::ProcessingInformation {
 isce::product::ProcessingInformation::
 ProcessingInformation(const isce::product::ProcessingInformation & proc) :
                       _slantRange(proc.slantRange()), _zeroDopplerTime(proc.zeroDopplerTime()) {
-    _azimuthFMRate['A'] = proc.azimuthFMRate('A');
-    _azimuthFMRate['B'] = proc.azimuthFMRate('B');
-    _dopplerCentroid['A'] = proc.dopplerCentroid('A');
-    _dopplerCentroid['B'] = proc.dopplerCentroid('B');
+    for (auto const & pair : proc.azimuthFMRateMap()) {
+        _azimuthFMRate[pair.first] = pair.second;
+    }
+    for (auto const & pair: proc.dopplerCentroidMap()) {
+        _dopplerCentroid[pair.first] = pair.second;
+    }
 }
 
 // Deep assignment operator
@@ -104,10 +116,12 @@ operator=(const isce::product::ProcessingInformation & proc) {
     _slantRange = proc.slantRange();
     _zeroDopplerTime = proc.zeroDopplerTime();
     _effectiveVelocity = proc.effectiveVelocity();
-    _azimuthFMRate['A'] = proc.azimuthFMRate('A');
-    _azimuthFMRate['B'] = proc.azimuthFMRate('B');
-    _dopplerCentroid['A'] = proc.dopplerCentroid('A');
-    _dopplerCentroid['B'] = proc.dopplerCentroid('B');
+    for (auto const & pair : proc.azimuthFMRateMap()) {
+        _azimuthFMRate[pair.first] = pair.second;
+    }
+    for (auto const & pair: proc.dopplerCentroidMap()) {
+        _dopplerCentroid[pair.first] = pair.second;
+    }
     return *this;
 }
 

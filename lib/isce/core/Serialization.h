@@ -132,7 +132,7 @@ namespace isce {
 
             // Convert UTC seconds since epoch to timestamp
             orbit.nVectors = orbit.UTCtime.size();
-            orbit.UTCtime.resize(orbit.nVectors);
+            orbit.epochs.resize(orbit.nVectors);
             for (size_t i = 0; i < orbit.nVectors; ++i) {
                 DateTime date = orbit.refEpoch;
                 date += orbit.UTCtime[i];
@@ -166,6 +166,9 @@ namespace isce {
 
             // Unpack the angles
             const double rad = M_PI / 180.0;
+            yaw.resize(time.size());
+            pitch.resize(time.size());
+            roll.resize(time.size());
             for (size_t i = 0; i < time.size(); ++i) {
                 yaw[i] = rad * angles[i*3 + 0];
                 pitch[i] = rad * angles[i*3 + 1];
@@ -219,50 +222,6 @@ namespace isce {
                     cereal::make_nvp("antennaLength", meta.antennaLength),
                     cereal::make_nvp("sensingStart", sensingStart));
             meta.sensingStart = sensingStart;
-        }
-
-        /** \brief Load radar metadata from HDF5 product.
-         *
-         * @param[in] file          HDF5 file object.
-         * @param[in] meta          Metadata to be configured.
-         * @param[in] mode          Imagery mode (aux, primary). */
-        inline void loadFromH5(isce::io::IH5File & file, Metadata & meta,
-                               std::string mode="primary") {
-
-            double pri, bandwidth, centerFrequency;
-            std::string sensingStart, lookDir;
-
-            // Get group for image mode
-            std::string path = "/science/complex_imagery/" + mode + "_mode";
-            isce::io::IGroup imGroup = file.openGroup(path);
-
-            // Get dimension of imagery
-            std::vector<int> dims = isce::io::getImageDims(imGroup, "hh");
-            meta.length = dims[0];
-            meta.width = dims[1];
-
-            // Load values
-            isce::io::loadFromH5(imGroup, "slant_range_start", meta.rangeFirstSample);
-            isce::io::loadFromH5(imGroup, "slant_range_spacing", meta.slantRangePixelSpacing);
-            isce::io::loadFromH5(imGroup, "az_time_interval", pri);
-            isce::io::loadFromH5(imGroup, "bandwidth", bandwidth);
-            isce::io::loadFromH5(imGroup, "freq_center", centerFrequency);
-            isce::io::loadFromH5(imGroup, "zero_doppler_start_az_time", sensingStart);
-            isce::io::loadFromH5(file, "/science/metadata/identification/look_direction", lookDir);
-
-            // Fields not currently defined in HDF5 product
-            meta.numberRangeLooks = 1;
-            meta.numberAzimuthLooks = 1;
-
-            // Finalize rest of metadata items
-            meta.prf = 1.0 / pri;
-            meta.radarWavelength = SPEED_OF_LIGHT / centerFrequency;
-            meta.sensingStart = sensingStart;
-            if (lookDir.compare("right") == 0) {
-                meta.lookSide = -1;
-            } else if (lookDir.compare("left") == 0) {
-                meta.lookSide = 1;
-            }
         }
 
         // ------------------------------------------------------------------------

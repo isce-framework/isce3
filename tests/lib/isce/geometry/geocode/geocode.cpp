@@ -251,8 +251,8 @@ void createTestData() {
     // Load the product
     isce::product::Product product(file);
 
-    // Create topo instance
-    isce::geometry::Topo topo(product);
+    // Create topo instance with native Doppler
+    isce::geometry::Topo topo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
     std::ifstream xmlfid("../../data/topo.xml", std::ios::in);

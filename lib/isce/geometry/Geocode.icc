@@ -97,6 +97,8 @@ radarGrid(isce::core::LUT2d<double> doppler,
 
     _rangeSpacing = rangeSpacing;
 
+    _wavelength = wavelength;
+
     _radarGridWidth = radarGridWidth;
 
 }
