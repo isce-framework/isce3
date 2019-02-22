@@ -1,7 +1,5 @@
-
 set(PACKAGENAME geometry)
 string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
-set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 set(ISCE_CUDA_${PACKAGENAME}_HEADERS
         gpuDEMInterpolator.h

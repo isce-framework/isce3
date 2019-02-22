@@ -1,7 +1,5 @@
-
 set(PACKAGENAME core)
 string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
-set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 set(ISCE_CUDA_${PACKAGENAME}_HEADERS
         gpuBasis.h
@@ -31,6 +29,8 @@ set(LOCAL_SRCS
         gpuProjections.cu 
         gpuSinc2dInterpolator.cu 
         gpuSpline2dInterpolator.cu )
+
+function(add_isce_gpulib PACKAGENAME SRCS HEADERS)
 
 # Append current path to every source file
 set(ISCE_CUDA_${PACKAGENAME}_SRCS "")
