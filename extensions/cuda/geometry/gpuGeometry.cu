@@ -158,9 +158,9 @@ rdr2geo(const isce::cuda::core::gpuPixel & pixel,
  * @param[in] ellipsoid gpuEllipsoid object
  * @param[in] orbit gpuOrbit object
  * @param[in] doppler gpuLUT1d Doppler model
- * @param[in] mode  gpuImageMode object
  * @param[out] aztime azimuth time of inputLLH w.r.t reference epoch of the orbit
  * @param[out] slantRange slant range to inputLLH
+ * @param[in] wavelength Radar wavelength
  * @param[in] threshold azimuth time convergence threshold in seconds
  * @param[in] maxIter Maximum number of Newton-Raphson iterations
  * @param[in] deltaRange step size used for computing derivative of doppler
@@ -172,9 +172,8 @@ geo2rdr(double * inputLLH,
         const isce::cuda::core::gpuEllipsoid & ellipsoid,
         const isce::cuda::core::gpuOrbit & orbit,
         const isce::cuda::core::gpuLUT1d<double> & doppler,
-        const isce::cuda::product::gpuImageMode & mode,
         double * aztime_result, double * slantRange_result,
-        double threshold, int maxIter, double deltaRange) {
+        double wavelength, double threshold, int maxIter, double deltaRange) {
 
     // Cartesian type local variables
     double inputXYZ[3], satpos[3], satvel[3], dr[3];
@@ -185,7 +184,7 @@ geo2rdr(double * inputLLH,
     ellipsoid.lonLatToXyz(inputLLH, inputXYZ);
 
     // Pre-compute scale factor for doppler
-    const double dopscale = 0.5 * mode.wavelength();
+    const double dopscale = 0.5 * wavelength;
 
     // Use mid-orbit epoch as initial guess
     aztime = orbit.UTCtime[orbit.nVectors / 2];
@@ -331,14 +330,13 @@ void geo2rdr_d(double * llh,
                isce::cuda::core::gpuEllipsoid ellps,
                isce::cuda::core::gpuOrbit orbit,
                isce::cuda::core::gpuLUT1d<double> doppler,
-               isce::cuda::product::gpuImageMode mode,
                double * aztime, double * slantRange,
-               double threshold, int maxIter, double deltaRange,
+               double wavelength, double threshold, int maxIter, double deltaRange,
                int *resultcode) {
 
     // Call device function
     *resultcode = isce::cuda::geometry::geo2rdr(
-        llh, ellps, orbit, doppler, mode, aztime, slantRange, threshold,
+        llh, ellps, orbit, doppler, aztime, slantRange, wavelength, threshold,
         maxIter, deltaRange
     );
                           
@@ -351,15 +349,13 @@ geo2rdr_h(const cartesian_t & llh,
           const isce::core::Ellipsoid & ellps,
           const isce::core::Orbit & orbit,
           const isce::core::LUT1d<double> & doppler,
-          const isce::product::ImageMode & mode,
           double & aztime, double & slantRange,
-          double threshold, int maxIter, double deltaRange) {
+          double wavelength, double threshold, int maxIter, double deltaRange) {
 
     // Make GPU objects
     isce::cuda::core::gpuEllipsoid gpu_ellps(ellps);
     isce::cuda::core::gpuOrbit gpu_orbit(orbit);
     isce::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
-    isce::cuda::product::gpuImageMode gpu_mode(mode);
 
     // Allocate necessary device memory
     double *llh_d, *aztime_d, *slantRange_d;
@@ -374,9 +370,8 @@ geo2rdr_h(const cartesian_t & llh,
 
     // Run geo2rdr on the GPU
     dim3 grid(1), block(1);
-    geo2rdr_d<<<grid, block>>>(llh_d, gpu_ellps, gpu_orbit, gpu_doppler, gpu_mode,
-                               aztime_d, slantRange_d, threshold, maxIter, deltaRange,
-                               resultcode_d);
+    geo2rdr_d<<<grid, block>>>(llh_d, gpu_ellps, gpu_orbit, gpu_doppler, aztime_d, slantRange_d,
+                               wavelength, threshold, maxIter, deltaRange, resultcode_d);
 
     // Copy results to CPU and return any error code
     int resultcode;

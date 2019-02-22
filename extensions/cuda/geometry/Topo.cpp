@@ -14,7 +14,6 @@ using isce::core::Ellipsoid;
 using isce::core::Orbit;
 using isce::core::LUT1d;
 using isce::core::cartesian_t;
-using isce::product::ImageMode;
 using isce::io::Raster;
 using isce::geometry::DEMInterpolator;
 using isce::geometry::TopoLayers;
@@ -153,7 +152,6 @@ topo(Raster & demRaster, TopoLayers & layers) {
     checkInitialization(info); 
 
     // Cache ISCE objects (use public interface of parent isce::geometry::Topo class)
-    ImageMode mode = this->mode();
     Ellipsoid ellipsoid = this->ellipsoid();
     Orbit orbit = this->orbit();
     LUT1d<double> doppler = this->doppler();
@@ -216,7 +214,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
 
         // Compute layover/shadow masks for the block
         if (this->computeMask()) {
-            _setLayoverShadowWithOrbit(orbit, mode, layers, demInterp, lineStart);
+            _setLayoverShadowWithOrbit(orbit, layers, demInterp, lineStart);
         }
 
         // Write out block of data for all topo layers
@@ -269,8 +267,10 @@ computeLinesPerBlock(isce::io::Raster & demRaster) {
 
 // Compute layover and shadow masks
 void isce::cuda::geometry::Topo::
-_setLayoverShadowWithOrbit(isce::core::Orbit & orbit, isce::product::ImageMode & mode,
-                           TopoLayers & layers, DEMInterpolator & demInterp, size_t lineStart) {
+_setLayoverShadowWithOrbit(isce::core::Orbit & orbit,
+                           TopoLayers & layers,
+                           DEMInterpolator & demInterp,
+                           size_t lineStart) {
 
     // As with orbits, set reference epoch 2 days prior
     isce::core::DateTime refEpoch = mode.startAzTime() - 86400*2;

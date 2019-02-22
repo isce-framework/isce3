@@ -67,7 +67,6 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
 
         // Generate layover/shadow masks using an orbit
         void _setLayoverShadowWithOrbit(isce::core::Orbit & orbit,
-                                        isce::product::ImageMode & mode,
                                         isce::geometry::TopoLayers & layers,
                                         isce::geometry::DEMInterpolator & demInterp,
                                         size_t lineStart);

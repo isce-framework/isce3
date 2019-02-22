@@ -364,6 +364,12 @@ namespace isce { namespace core {
         return index;
     }
 
+    /** Clip a number between an upper and lower range (implements std::clamp for older GCC) */
+    template<class T>
+    inline const T & clamp(const T & x, const T & lower, const T & upper) {
+        return std::min(upper, std::max(x, lower));
+    }
+
 }}
 
 #endif

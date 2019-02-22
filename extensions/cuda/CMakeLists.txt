@@ -4,7 +4,6 @@ set (LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 # Pull in the source files
 include(core/CMakeLists.txt)
-include(product/CMakeLists.txt)
 include(geometry/CMakeLists.txt)
 include(image/CMakeLists.txt)
 

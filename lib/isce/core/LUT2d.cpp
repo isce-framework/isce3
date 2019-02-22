@@ -4,8 +4,9 @@
 // Author: Bryan Riel
 // Copyright 2017
 
-#include <algorithm>
 #include <complex>
+
+#include "isce/core/Utilities.h"
 #include "LUT2d.h"
 
 // Constructor with coordinate starting values and spacing
@@ -125,8 +126,8 @@ eval(double y, double x) const {
             errorChannel << "Out of bounds LUT2d evaluation." << pyre::journal::endl;
         }
     } else {
-        x_idx = std::clamp(x_idx, 0.0, _data.width() - 1.0);
-        y_idx = std::clamp(y_idx, 0.0, _data.length() - 1.0);
+        x_idx = isce::core::clamp(x_idx, 0.0, _data.width() - 1.0);
+        y_idx = isce::core::clamp(y_idx, 0.0, _data.length() - 1.0);
     } 
 
     // Call interpolator
