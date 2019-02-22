@@ -1,66 +1,18 @@
 #include "shiftSignal.h"
 
-template<typename T>
+template<typename T, typename U>
 void isce::signal::
 shiftSignal(std::valarray<T> & data,
             std::valarray<T> & dataShifted,
-            std::valarray<std::complex<T>> & spectrum,
+            std::valarray<std::complex<U>> & spectrum,
             size_t ncols, size_t nrows,
             const double shiftX, const double shiftY,
-            isce::signal::Signal<T> & sigObj)
+            isce::signal::Signal<U> & sigObj)
 {
 
+    //std::valarray<T> x(1);
     size_t nfft = 1;
-    std::valarray<std::complex<T>> phaseRamp(ncols*nrows);
-    if (shiftX != 0.0) {
-        // buffer for the frequency domain phase ramp introduced by
-        // the constant shift in time domain
-    
-        // compute the frequency domain phase ramp
-        frequencyResponseRange(ncols, nrows, shiftX, phaseRamp);
-        nfft = ncols;
-    }
-
-    if (shiftY != 0.0) {
-        // buffer for the frequency domain phase ramp introduced by
-        // the constant shift in time domain
-        std::valarray<std::complex<T>> phaseRampY(ncols * nrows);
-
-        // compute the frequency domain phase ramp
-        frequencyResponseAzimuth(ncols, nrows, shiftY, phaseRampY);
-
-        nfft *=nrows;
-
-        if (shiftX != 0.0) 
-            phaseRamp *= phaseRampY;
-        else 
-            phaseRamp = phaseRampY;
-    }
-
-    if (shiftX != 0.0 || shiftY != 0.0) {
-
-        shiftSignal(data, dataShifted,
-                spectrum, phaseRamp,
-                sigObj);
-
-
-        dataShifted /= nfft;
-
-    } else { 
-        dataShifted = data;
-    }
-}
-
-template<typename T>
-void shiftSignal(std::valarray<std::complex<T>> & data,
-            std::valarray<std::complex<T>> & dataShifted,
-            std::valarray<std::complex<T>> & spectrum,
-            size_t ncols, size_t nrows,
-            const double shiftX, const double shiftY,
-            isce::signal::Signal<T> & sigObj)
-{
-    size_t nfft = 1;
-    std::valarray<std::complex<T>> phaseRamp(ncols*nrows);
+    std::valarray<std::complex<U>> phaseRamp(ncols*nrows);
     if (shiftX != 0.0) {
         // buffer for the frequency domain phase ramp introduced by
         // the constant shift in time domain
@@ -71,9 +23,10 @@ void shiftSignal(std::valarray<std::complex<T>> & data,
     }
 
     if (shiftY != 0.0) {
+
         // buffer for the frequency domain phase ramp introduced by
         // the constant shift in time domain
-        std::valarray<std::complex<T>> phaseRampY(ncols * nrows);
+        std::valarray<std::complex<U>> phaseRampY(ncols * nrows);
 
         // compute the frequency domain phase ramp
         frequencyResponseAzimuth(ncols, nrows, shiftY, phaseRampY);
@@ -88,76 +41,27 @@ void shiftSignal(std::valarray<std::complex<T>> & data,
 
     if (shiftX != 0.0 || shiftY != 0.0) {
 
+
         shiftSignal(data, dataShifted,
                 spectrum, phaseRamp,
                 sigObj);
+         
 
         dataShifted /= nfft;
 
     } else {
-
         dataShifted = data;
-
     }
- 
+
 }
 
-template<typename T>
+template<typename T, typename U>
 void isce::signal::
 shiftSignal(std::valarray<T> & data,
             std::valarray<T> & dataShifted,
-            std::valarray<std::complex<T>> & spectrum,
-            size_t ncols, size_t nrows,
-            const double shift, isce::signal::Signal<T> & sigObj)
-{
-
-    // buffer for the frequency domain phase ramp introduced by 
-    // the constant shift in time domain
-    std::valarray<std::complex<T>> phaseRamp(ncols * nrows);
-
-    // compute the frequency domain phase ramp
-    frequencyResponseRange(ncols, nrows, shift, phaseRamp);
-
-    
-    shiftSignal(data, dataShifted, 
-                spectrum, phaseRamp,
-                sigObj);
-
-    dataShifted /= ncols;
-}
-
-template<typename T>
-void isce::signal::
-shiftSignal(std::valarray<std::complex<T>> & data,
-                std::valarray<std::complex<T>> & dataShifted,
-                std::valarray<std::complex<T>> & spectrum,
-                size_t ncols, size_t nrows,
-                const double shift, isce::signal::Signal<T> & sigObj)
-{
-
-    // buffer for the frequency domain phase ramp introduced by
-    // the constant shift in time domain
-    std::valarray<std::complex<T>> phaseRamp(ncols * nrows);
-
-    // compute the frequency domain phase ramp
-    frequencyResponseRange(ncols, nrows, shift, phaseRamp);
-
-
-    shiftSignal(data, dataShifted,
-                spectrum, phaseRamp,
-                sigObj);
-
-    dataShifted /= ncols;
-
-}
-
-template<typename T>
-void isce::signal::
-shiftSignal(std::valarray<T> & data,
-            std::valarray<T> & dataShifted,
-            std::valarray<std::complex<T>> & spectrum,
-            std::valarray<std::complex<T>> & phaseRamp,
-            isce::signal::Signal<T> & sigObj) {
+            std::valarray<std::complex<U>> & spectrum,
+            std::valarray<std::complex<U>> & phaseRamp,
+            isce::signal::Signal<U> & sigObj) {
 
     sigObj.forward(data, spectrum);
 
@@ -166,23 +70,6 @@ shiftSignal(std::valarray<T> & data,
     sigObj.inverse(spectrum, dataShifted);
 
 }
-
-template<typename T>
-void isce::signal::
-shiftSignal(std::valarray<std::complex<T>> & data,
-                std::valarray<std::complex<T>> & dataShifted,
-                std::valarray<std::complex<T>> & spectrum,
-                std::valarray<std::complex<T>> & phaseRamp,
-                isce::signal::Signal<T> & sigObj) {
-
-    sigObj.forward(data, spectrum);
-
-    spectrum *= phaseRamp;
-
-    sigObj.inverse(spectrum, dataShifted);
-
-}
-
 
 template<typename T>
 void isce::signal::
@@ -190,7 +77,7 @@ frequencyResponseRange(size_t ncols, size_t nrows, const double shift,
         std::valarray<std::complex<T>> & shiftImpact)
 {
     // range frequencies given nfft and oversampling factor
-    
+
     std::valarray<double> rangeFrequencies(ncols);
 
     // sampling interval in range
@@ -247,33 +134,34 @@ frequencyResponseAzimuth(size_t ncols, size_t nrows, const double shift,
     }
 }
 
+
 template void isce::signal::
 shiftSignal(std::valarray<float> & data,
             std::valarray<float> & dataShifted,
             std::valarray<std::complex<float>> & spectrum,
             size_t ncols, size_t nrows,
-            const double shift, isce::signal::Signal<float> & sigObj);
-
+            const double shiftX, const double shiftY,
+            isce::signal::Signal<float> & sigObj);
 
 template void isce::signal::
 shiftSignal(std::valarray<double> & data,
             std::valarray<double> & dataShifted,
             std::valarray<std::complex<double>> & spectrum,
             size_t ncols, size_t nrows,
-            const double shift, isce::signal::Signal<double> & sigObj);
+            const double shiftX, const double shiftY,
+            isce::signal::Signal<double> & sigObj);
 
 template void isce::signal::
-shiftSignal(std::valarray<float> & data,
-            std::valarray<float> & dataShifted,
+shiftSignal(std::valarray<std::complex<float>> & data,
+            std::valarray<std::complex<float>> & dataShifted,
             std::valarray<std::complex<float>> & spectrum,
             size_t ncols, size_t nrows,
-            const double shiftX, const double shiftY, 
+            const double shiftX, const double shiftY,
             isce::signal::Signal<float> & sigObj);
 
-
 template void isce::signal::
-shiftSignal(std::valarray<double> & data,
-            std::valarray<double> & dataShifted,
+shiftSignal(std::valarray<std::complex<double>> & data,
+            std::valarray<std::complex<double>> & dataShifted,
             std::valarray<std::complex<double>> & spectrum,
             size_t ncols, size_t nrows,
             const double shiftX, const double shiftY,
@@ -297,21 +185,6 @@ template void isce::signal::
 shiftSignal(std::valarray<std::complex<float>> & data,
             std::valarray<std::complex<float>> & dataShifted,
             std::valarray<std::complex<float>> & spectrum,
-            size_t ncols, size_t nrows,
-            const double shift, isce::signal::Signal<float> & sigObj);
-
-
-template void isce::signal::
-shiftSignal(std::valarray<std::complex<double>> & data,
-            std::valarray<std::complex<double>> & dataShifted,
-            std::valarray<std::complex<double>> & spectrum,
-            size_t ncols, size_t nrows,
-            const double shift, isce::signal::Signal<double> & sigObj);
-
-template void isce::signal::
-shiftSignal(std::valarray<std::complex<float>> & data,
-            std::valarray<std::complex<float>> & dataShifted,
-            std::valarray<std::complex<float>> & spectrum,
             std::valarray<std::complex<float>> & phaseRamp,
             isce::signal::Signal<float> & sigObj);
 
@@ -323,7 +196,7 @@ shiftSignal(std::valarray<std::complex<double>> & data,
             isce::signal::Signal<double> & sigObj);
 
 template void isce::signal::
-            frequencyResponseRange(size_t nfft, size_t blockRows, 
+            frequencyResponseRange(size_t nfft, size_t blockRows,
             const double shift,
             std::valarray<std::complex<float>> & shiftImpact);
 
