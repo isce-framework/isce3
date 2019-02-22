@@ -1,9 +1,6 @@
 set(PACKAGENAME image)
 string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 
-set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
-set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
-
 add_executable(gpuResampSlc gpuResampSlc.cpp)
 
 target_link_libraries(gpuResampSlc PUBLIC ${LISCE} ${LCUDAISCE} gtest)

@@ -1,9 +1,6 @@
 set(PACKAGENAME rtc)
 string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 
-set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
-set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
-
 add_executable(gpuRTC gpuRTC.cpp)
 
 target_link_libraries(gpuRTC PUBLIC ${LISCE} ${LCUDAISCE} gtest)

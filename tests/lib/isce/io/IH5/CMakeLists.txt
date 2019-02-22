@@ -1,7 +1,6 @@
 #Find pyre and journal libraries
 find_library(LPYRE pyre HINTS ${PYRE_LIB_DIR})
 find_library(LJOURNAL journal HINTS ${PYRE_LIB_DIR})
-set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 foreach (TESTNAME ih5)
     add_executable(${TESTNAME} ${TESTNAME}.cpp)
