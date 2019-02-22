@@ -28,13 +28,6 @@ foreach(HFILE ${ISCE_CUDA_${PACKAGENAME}_HEADERS})
     list(APPEND ${PACKAGENAME}_BUILD_HEADERS ${DESTFILE})
 endforeach()
 
-# Add headers of dependencies
-include_directories(${LCUDAISCE} PUBLIC
-                    ${CEREAL_SRC_INCLUDEDIR}
-                    ${ISCE_BUILDINCLUDEDIR}
-                    ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
-                    ${GDAL_INCLUDE_DIR})
-
 # Install headers into final installation directory
 install(FILES ${${PACKAGENAME}_BUILD_HEADERS}
         DESTINATION ${ISCE_INCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}

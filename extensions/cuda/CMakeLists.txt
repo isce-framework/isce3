@@ -25,6 +25,11 @@ set_target_properties(${LCUDAISCE} PROPERTIES CUDA_HOST_COMPILATION_CPP ON)
 
 # Add library dependencies
 target_link_libraries(${LCUDAISCE} ${LISCE})
+include_directories(${CEREAL_SRC_INCLUDEDIR}
+                    ${ISCE_BUILDINCLUDEDIR}
+                    ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
+                    ${PYRE_INCLUDE_DIR}
+                    ${GDAL_INCLUDE_DIR})
 
 # Install CUDA helper header files
 set(HELPER_HEADERS "")
