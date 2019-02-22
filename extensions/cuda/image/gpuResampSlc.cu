@@ -14,7 +14,6 @@
 
 // isce::cuda::image
 #include "gpuResampSlc.h"
-#include "gpuImageMode.h"
 
 #include "../helper_cuda.h"
 #include <fstream>
@@ -24,7 +23,6 @@ using isce::cuda::core::gpuPoly2d;
 using isce::cuda::core::gpuInterpolator;
 using isce::cuda::core::gpuLUT1d;
 using isce::cuda::core::gpuSinc2dInterpolator;
-using isce::cuda::image::gpuImageMode;
 
 #define THRD_PER_BLOCK 512// Number of threads per block (should always %32==0)
 
@@ -37,14 +35,19 @@ void transformTile(const gpuComplex<float> *tile,
                    const gpuPoly2d rgCarrier,
                    const gpuPoly2d azCarrier,
                    const gpuLUT1d<double> dopplerLUT,
-                   gpuImageMode mode,       // image mode for image to be resampled
-                   gpuImageMode refMode,    // image mode for reference master image
                    gpuSinc2dInterpolator<gpuComplex<float>> interp,
                    bool flatten,
                    int outWidth,
                    int outLength,
                    int inWidth,
                    int inLength,
+                   double startingRange,
+                   double rangePixelSpacing,
+                   double prf,
+                   double wavelength,
+                   double refStartingRange,
+                   double refRangePixelSpacing,
+                   double refWavelength,
                    int chipSize,
                    int rowOffset, 
                    int rowStart) {
@@ -74,8 +77,8 @@ void transformTile(const gpuComplex<float> *tile,
 
         if (intAzInBounds && intRgInBounds) {
             // evaluate Doppler polynomial
-            const double rng = mode.startingRange + j * mode.rangePixelSpacing;
-            const double dop = dopplerLUT.eval(rng) * 2 * M_PI / mode.prf;
+            const double rng = startingRange + j * rangePixelSpacing;
+            const double dop = dopplerLUT.eval(rng) * 2 * M_PI / prf;
 
             // Doppler to be added back. Simultaneously evaluate carrier that needs to
             // be added back after interpolation
@@ -84,13 +87,13 @@ void transformTile(const gpuComplex<float> *tile,
                 + azCarrier.eval(i + azOff, j + rgOff);
 
             // Flatten the carrier phase if requested
-            if (flatten && refMode.isRefMode) {
-                phase += ((4. * (M_PI / mode.wavelength)) * 
-                    ((mode.startingRange - refMode.startingRange) 
-                    + (j * (mode.rangePixelSpacing - refMode.rangePixelSpacing)) 
-                    + (rgOff * mode.rangePixelSpacing))) + ((4.0 * M_PI 
-                    * (refMode.startingRange + (j * refMode.rangePixelSpacing))) 
-                    * ((1.0 / refMode.wavelength) - (1.0 / mode.wavelength)));
+            if (flatten) {
+                phase += ((4. * (M_PI / wavelength)) * 
+                    ((startingRange - refStartingRange) 
+                    + (j * (rangePixelSpacing - refRangePixelSpacing)) 
+                    + (rgOff * rangePixelSpacing))) + ((4.0 * M_PI 
+                    * (refStartingRange + (j * refRangePixelSpacing))) 
+                    * ((1.0 / refWavelength) - (1.0 / wavelength)));
             }
             
             // Modulate by 2*PI
@@ -132,11 +135,11 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
                const isce::core::Poly2d & rgCarrier,
                const isce::core::Poly2d & azCarrier,
                const isce::core::LUT1d<double> & dopplerLUT,
-               isce::product::ImageMode mode,       // image mode for image to be resampled
-               isce::product::ImageMode refMode,    // image mode for reference master image
-               bool haveRefMode,
                isce::cuda::core::gpuSinc2dInterpolator<gpuComplex<float>> interp,
-               int inWidth, int inLength, bool flatten, int chipSize) {
+               int inWidth, int inLength, double startingRange, double rangePixelSpacing,
+               double prf, double wavelength, double refStartingRange,
+               double refRangePixelSpacing, double refWavelength, 
+               bool flatten, int chipSize) {
 
     // Cache geometry values
     const int outWidth = azOffTile.width();
@@ -154,10 +157,6 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
     float *d_rgOffTile, *d_azOffTile;
     gpuPoly2d d_rgCarrier(rgCarrier);
     gpuPoly2d d_azCarrier(azCarrier);
-    gpuImageMode d_mode(mode);
-    gpuImageMode d_refMode;             // empty by default
-    if (haveRefMode)
-        gpuImageMode d_mode(refMode);   // populate from CPU version if provided
     gpuLUT1d<double> d_dopplerLUT(dopplerLUT);
 
     // determine sizes
@@ -191,14 +190,19 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
                                    d_rgCarrier, 
                                    d_azCarrier, 
                                    d_dopplerLUT, 
-                                   d_mode, 
-                                   d_refMode,
                                    interp,
                                    flatten,
                                    outWidth,
                                    outLength,
                                    inWidth,
                                    inLength,
+                                   startingRange,
+                                   rangePixelSpacing,
+                                   prf,
+                                   wavelength,
+                                   refStartingRange,
+                                   refRangePixelSpacing,
+                                   refWavelength,             
                                    chipSize,
                                    tile.rowStart()-tile.firstImageRow(),// needed to keep az in bounds in subtiles
                                    tile.rowStart());                    // needed to match az components on CPU

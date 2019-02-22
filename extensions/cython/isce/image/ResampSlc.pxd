@@ -51,7 +51,7 @@ cdef extern from "isce/image/ResampSlc.h" namespace "isce::image":
         void doppler(const LUT2d[double] & lut)
 
         # Set reference product
-        void referenceProduct(const Product & refProduct, char)
+        void referenceProduct(const Product & refProduct, char freq)
         
         # Get/set number of lines per processing tile
         size_t linesPerTile()

@@ -42,7 +42,7 @@ TEST(GPUTopoTest, RunTopo) {
     isce::product::Product product(file);
 
     // Create topo instance
-    isce::cuda::geometry::Topo topo(product);
+    isce::cuda::geometry::Topo topo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
     std::ifstream xmlfid("../../../../../lib/isce/data/topo.xml", std::ios::in);

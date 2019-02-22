@@ -17,7 +17,7 @@
   *
   * Primary constructor of Topo object. */
 isce::geometry::Topo::
-Topo(isce::product::Product & product,
+Topo(const isce::product::Product & product,
      char frequency,
      bool nativeDoppler,
      size_t numberAzimuthLooks,

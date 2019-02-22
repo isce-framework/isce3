@@ -150,9 +150,6 @@ topo(Raster & demRaster, TopoLayers & layers) {
     pyre::journal::warning_t warning("isce.cuda.geometry.Topo");
     pyre::journal::info_t info("isce.cuda.geometry.Topo");
 
-    // First check that variables have been initialized
-    checkInitialization(info); 
-
     // Cache ISCE objects (use public interface of parent isce::geometry::Topo class)
     const Ellipsoid & ellipsoid = this->ellipsoid();
     const Orbit & orbit = this->orbit();
@@ -272,7 +269,7 @@ computeLinesPerBlock(isce::io::Raster & demRaster) {
 
 // Compute layover and shadow masks
 void isce::cuda::geometry::Topo::
-_setLayoverShadowWithOrbit(isce::core::Orbit & orbit,
+_setLayoverShadowWithOrbit(const isce::core::Orbit & orbit,
                            TopoLayers & layers,
                            DEMInterpolator & demInterp,
                            size_t lineStart) {

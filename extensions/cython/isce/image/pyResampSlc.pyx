@@ -41,6 +41,8 @@ cdef class pyResampSlc:
         self.__owner = True
 
         # Bind the C++ LUT2d class to the Cython pyLUT2d instance
+        self.py_doppler = pyLUT2d()
+        del self.py_doppler.c_lut
         self.py_doppler.c_lut = &self.c_resamp.doppler()
         self.py_doppler.__owner = False
 
@@ -54,8 +56,8 @@ cdef class pyResampSlc:
         """
         Set a reference product for flattening.
         """
-        self.c_resamp.referenceProduct(deref(refProduct.c_product),
-                                       pyStringToBytes(freq))
+        cdef string freq_str = pyStringToBytes(freq)
+        self.c_resamp.referenceProduct(deref(refProduct.c_product), freq_str[0])
 
     @property
     def doppler(self):
@@ -71,6 +73,8 @@ cdef class pyResampSlc:
         Override the content Doppler LUT from a pyLUT1d instance.
         """
         self.c_resamp.doppler(deref(dop.c_lut))
+        del self.py_doppler.c_lut
+        self.py_doppler.c_lut = &self.c_resamp.doppler()
 
     @property
     def linesPerTile(self):

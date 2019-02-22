@@ -19,6 +19,9 @@ namespace isce {
 class isce::product::RadarGridParameters {
 
     public:
+        /** Default constructor */
+        inline RadarGridParameters() {}
+
         /** Constructor with a product and number of looks. */
         inline RadarGridParameters(const isce::product::Product & product,
                                    char frequency = 'A',
@@ -35,6 +38,12 @@ class isce::product::RadarGridParameters {
                                    const isce::core::DateTime & refEpoch,
                                    size_t numberAzimuthLooks = 1,
                                    size_t numberRangeLooks = 1);
+
+        /** Copy constructor */
+        inline RadarGridParameters(const RadarGridParameters & rgparam);
+
+        /** Assignment operator */
+        inline RadarGridParameters & operator=(const RadarGridParameters & rgparam);
 
         /** Get number of azimuth looks */
         inline size_t numberAzimuthLooks() const { return _numberAzimuthLooks; }
@@ -158,6 +167,36 @@ RadarGridParameters(const isce::core::Metadata & meta,
     _rangePixelSpacing(meta.slantRangePixelSpacing),
     _rlength(meta.length),
     _rwidth(meta.width) {}
+
+// Copy constructors
+/** @param[in] rgparam RadarGridParameters object */
+isce::product::RadarGridParameters::
+RadarGridParameters(const RadarGridParameters & rgparams) :
+    _numberAzimuthLooks(rgparams.numberAzimuthLooks()),
+    _numberRangeLooks(rgparams.numberRangeLooks()),
+    _sensingStart(rgparams.sensingStart()),
+    _wavelength(rgparams.wavelength()),
+    _prf(rgparams.prf()),
+    _startingRange(rgparams.startingRange()),
+    _rangePixelSpacing(rgparams.rangePixelSpacing()),
+    _rlength(rgparams.length()),
+    _rwidth(rgparams.width()) {}
+
+// Assignment operator
+/** @param[in] rgparam RadarGridParameters object */
+isce::product::RadarGridParameters &
+isce::product::RadarGridParameters::
+operator=(const RadarGridParameters & rgparams) {
+    _numberAzimuthLooks = rgparams.numberAzimuthLooks();
+    _numberRangeLooks = rgparams.numberRangeLooks();
+    _sensingStart = rgparams.sensingStart();
+    _wavelength = rgparams.wavelength();
+    _prf = rgparams.prf();
+    _startingRange = rgparams.startingRange();
+    _rangePixelSpacing = rgparams.rangePixelSpacing();
+    _rlength = rgparams.length();
+    _rwidth = rgparams.width();
+}
 
 #endif
 

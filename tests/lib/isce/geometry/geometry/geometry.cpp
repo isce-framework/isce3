@@ -20,7 +20,6 @@
 #include "isce/core/DateTime.h"
 #include "isce/core/Ellipsoid.h"
 #include "isce/core/Orbit.h"
-#include "isce/core/LUT1d.h"
 #include "isce/core/Serialization.h"
 
 // isce::product

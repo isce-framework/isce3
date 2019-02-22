@@ -31,7 +31,8 @@
 TEST(ResampSlcTest, Resamp) {
 
     // Open the HDF5 product
-    std::string h5file("../../../../../lib/isce/data/envisat.h5");
+    const std::string filename = "../../../../../lib/isce/data/envisat.h5";
+    std::string h5file(filename);
     isce::io::IH5File file(h5file);
 
     // Create product
@@ -40,21 +41,21 @@ TEST(ResampSlcTest, Resamp) {
     // Instantiate a ResampSLC object
     isce::cuda::image::ResampSlc gpu_resamp(product);
 
-    // Use same product as a reference
-    gpu_resamp.referenceProduct(product);
+    // The HDF5 path to the input image
+    const std::string & input_data = "HDF5:\"" + filename +
+        "\"://science/LSAR/SLC/swaths/frequencyA/HH";
     
-    // Check values
-    ASSERT_NEAR(gpu_resamp.imageMode().startingRange(), 826988.6900674499, 1.0e-10);
-    ASSERT_NEAR(gpu_resamp.doppler().values()[0], 301.35306906319204, 1.0e-8);
     // Perform gpu_resampling with default lines per tile
-    gpu_resamp.resamp("warped_1000.slc", "hh",
-                  "../../../../../lib/isce/data/offsets/range.off", "../../../../../lib/isce/data/offsets/azimuth.off");
+    gpu_resamp.resamp(input_data, "warped_1000.slc",
+                      "../../../../../lib/isce/data/offsets/range.off",
+                      "../../../../../lib/isce/data/offsets/azimuth.off");
     
     // Set lines per tile to be a weird multiple of the number of output lines
     gpu_resamp.linesPerTile(249);
     // Re-run gpu_resamp
-    gpu_resamp.resamp("warped.slc", "hh",
-                  "../../../../../lib/isce/data/offsets/range.off", "../../../../../lib/isce/data/offsets/azimuth.off");
+    gpu_resamp.resamp(input_data, "warped.slc",
+                      "../../../../../lib/isce/data/offsets/range.off",
+                      "../../../../../lib/isce/data/offsets/azimuth.off");
 }
 
 // Compute sum of difference between reference image and warped image

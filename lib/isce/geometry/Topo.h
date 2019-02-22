@@ -40,7 +40,7 @@ class isce::geometry::Topo {
 
     public:
         /** Constructor using a product*/
-        inline Topo(isce::product::Product &,
+        inline Topo(const isce::product::Product &,
                     char frequency = 'A',
                     bool nativeDoppler = false,
                     size_t numberAzimuthLooks = 1,

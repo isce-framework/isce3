@@ -76,6 +76,16 @@ class isce::image::ResampSlc {
         /** Destructor */
         inline ~ResampSlc() {};
 
+        /** Get parameters related to radar grids */
+        inline double startingRange() const { return _startingRange; }
+        inline double rangePixelSpacing() const { return _rangePixelSpacing; }
+        inline double sensingStart() const { return _sensingStart; }
+        inline double prf() const { return _prf; }
+        inline double wavelength() const { return _wavelength; }
+        inline double refStartingRange() const { return _refStartingRange; }
+        inline double refRangePixelSpacing() const { return _refRangePixelSpacing; }
+        inline double refWavelength() const { return _refWavelength; }
+
         // Poly2d and LUT getters
         inline isce::core::Poly2d rgCarrier() const;
         inline isce::core::Poly2d azCarrier() const;
@@ -100,6 +110,9 @@ class isce::image::ResampSlc {
         // Get/set number of lines per processing tile
         inline size_t linesPerTile() const;
         inline void linesPerTile(size_t);
+
+        /** Get flag for reference data */
+        inline bool haveRefData() const { return _haveRefData; }
                 
         // Convenience functions
         inline void declare(int, int, int, int) const;

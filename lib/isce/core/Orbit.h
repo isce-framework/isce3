@@ -77,7 +77,6 @@ struct isce::core::Orbit {
     Orbit(const Orbit &o) : nVectors(o.nVectors), epochs(o.epochs),
                             UTCtime(o.UTCtime), position(o.position), velocity(o.velocity),
                             stateVectors(o.stateVectors), refEpoch(o.refEpoch) {
-        std::cout << "in copy" << std::endl;
     }
 
     /** Assignment operator*/
