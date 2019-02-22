@@ -80,15 +80,6 @@ foreach(HFILE ${${PACKAGENAME}_EXPORT_HEADERS})
     list(APPEND ${PACKAGENAME}_BUILD_HEADERS ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/${HFILE})
 endforeach()
 
-#Pyre stuff is needed for logging
-include_directories(${${PACKAGENAME}_DLL}
-    PUBLIC
-        ${PYRE_INCLUDE_DIR}
-        ${GDAL_INCLUDE_DIR}
-        ${ISCE_BUILDINCLUDEDIR}
-        ${CEREAL_SRC_INCLUDEDIR}
-) 
-
 #Install headers as files
 ###This may be changed in future to install from build/include
 install(FILES ${${PACKAGENAME}_BUILD_HEADERS}
