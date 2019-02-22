@@ -1,20 +1,2 @@
-set(PACKAGENAME core)
-string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
-
-add_executable(gpuSinc2dInterpolator gpuSinc2dInterpolator.cpp)
-
-target_link_libraries(gpuSinc2dInterpolator PUBLIC ${LISCE} ${LCUDAISCE} gtest)
-
-target_include_directories(gpuSinc2dInterpolator PUBLIC 
-                           ${ISCE_BUILDINCLUDEDIR} 
-                           ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/cuda 
-                           ${PYRE_INCLUDE_DIR}
-                           ${GDAL_INCLUDE_DIR})
-
-message(STATUS ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/cuda)
-
-add_test(NAME gpuSinc2dInterpolator COMMAND gpuSinc2dInterpolator)
-
+add_isce_test(gpuSinc2dInterpolator)
 file(COPY chip.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
-include(CTest)

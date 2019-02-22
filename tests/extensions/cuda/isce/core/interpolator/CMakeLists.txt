@@ -1,20 +1,2 @@
-set(PACKAGENAME core)
-string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
-
-add_executable(gpuInterpolator gpuInterpolator.cpp)
-
-target_link_libraries(gpuInterpolator PUBLIC ${LISCE} ${LCUDAISCE} gtest)
-
-target_include_directories(gpuInterpolator PUBLIC 
-                           ${ISCE_BUILDINCLUDEDIR} 
-                           ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/cuda 
-                           ${PYRE_INCLUDE_DIR}
-                           ${GDAL_INCLUDE_DIR})
-
-message(STATUS ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/cuda)
-
-add_test(NAME gpuInterpolator COMMAND gpuInterpolator)
-
+add_isce_test(gpuInterpolator)
 file(COPY data.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
-include(CTest)

@@ -1,12 +1,1 @@
-foreach (TESTNAME interpolator)
-    add_executable(${TESTNAME} ${TESTNAME}.cpp)
-    target_link_libraries(${TESTNAME} PUBLIC ${LISCE} gtest)
-    target_include_directories(${TESTNAME} PUBLIC
-        ${ISCE_BUILDINCLUDEDIR}
-        ${GDAL_INCLUDE_DIR}
-        ${PYRE_INCLUDE_DIR})
-    add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
-    file(COPY data.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-endforeach ()
-
-include(CTest)
+add_isce_test(interpolator)
