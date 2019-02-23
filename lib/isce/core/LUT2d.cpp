@@ -123,7 +123,12 @@ eval(double y, double x) const {
     if (_boundsError) {
         if (x_idx < 0.0 || y_idx < 0.0 || x_idx >= _data.width() || y_idx >= _data.length()) {
             pyre::journal::error_t errorChannel("isce.core.LUT2d");
-            errorChannel << "Out of bounds LUT2d evaluation." << pyre::journal::endl;
+            errorChannel 
+                << "Out of bounds LUT2d evaluation at " << y << " " << x
+                << pyre::journal::newline
+                << " - bounds are " << _ystart << " " << _ystart + _dy*_data.length() << " "
+                << _xstart << " " << _xstart + _dx*_data.width()
+                << pyre::journal::endl;
         }
     } else {
         x_idx = isce::core::clamp(x_idx, 0.0, _data.width() - 1.0);

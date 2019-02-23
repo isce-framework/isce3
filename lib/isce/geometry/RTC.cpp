@@ -91,11 +91,14 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     isce::core::Ellipsoid ellps(isce::core::EarthSemiMajorAxis,
                                 isce::core::EarthEccentricitySquared);
     isce::core::Orbit orbit = product.metadata().orbit();
-    isce::core::LUT2d<double> dop = product.metadata().procInfo().dopplerCentroid(frequency);
-    isce::product::RadarGridParameters param(product, frequency);
-    isce::geometry::Topo topo(product);
+    isce::product::RadarGridParameters param(product, frequency, 1, 1);
+    isce::geometry::Topo topo(product, frequency, true);
     topo.orbitMethod(isce::core::orbitInterpMethod::HERMITE_METHOD);
     int lookSide = product.lookSide();
+
+    // Get a copy of the Doppler LUT; allow for out-of-bounds extrapolation
+    isce::core::LUT2d<double> dop = product.metadata().procInfo().dopplerCentroid(frequency);
+    dop.boundsError(false);
 
     const double start = param.sensingStart();
     const double   end = param.sensingStop();
@@ -161,7 +164,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             double a, r;
             isce::core::cartesian_t inputLLH{lon_mid*RAD, lat_mid*RAD,
                 dem_interp.interpolateXY(lon_mid, lat_mid)};
-            isce::geometry::geo2rdr(inputLLH, ellps, orbit, dop,
+            int geostat = isce::geometry::geo2rdr(inputLLH, ellps, orbit, dop,
                     a, r, param.wavelength(), 1e-4, 100, 1e-4);
             const float azpix = (a - start) / pixazm;
             const float ranpix = (r - r0) / dr;

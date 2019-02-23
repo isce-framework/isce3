@@ -196,6 +196,7 @@ operator=(const RadarGridParameters & rgparams) {
     _rangePixelSpacing = rgparams.rangePixelSpacing();
     _rlength = rgparams.length();
     _rwidth = rgparams.width();
+    return *this;
 }
 
 #endif

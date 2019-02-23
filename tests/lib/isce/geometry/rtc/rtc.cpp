@@ -56,8 +56,8 @@ TEST(TestRTC, CheckResults) {
                 continue;
             }
             error += std::abs(test[j] - ref[j]);
-            if (std::abs(test[j] - ref[j]) > 1e-2)
-                printf("%d, %d => %g ( |%g - %g| )\n", j, i, std::abs(test[j] - ref[j]), test[j], ref[j]);
+            if (std::abs(test[j] - ref[j]) > 5e-2)
+                printf("%zu, %zu => %g ( |%g - %g| )\n", j, i, std::abs(test[j] - ref[j]), test[j], ref[j]);
         }
     }
     // Compute average over entire image
@@ -68,7 +68,7 @@ TEST(TestRTC, CheckResults) {
     printf("nneg = %d\n", nneg);
 
     // Enforce bound on average pixel-error
-    ASSERT_TRUE(error < 1e-3);
+    ASSERT_TRUE(error < 1.5e-3);
     // Enforce bound on number of ignored pixels
     ASSERT_TRUE(nnan < 1e-4 * refRaster.width() * refRaster.length());
     ASSERT_TRUE(nneg < 1e-4 * refRaster.width() * refRaster.length());
