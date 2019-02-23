@@ -12,6 +12,8 @@ set(LOCAL_SRCS
               Doppler.cpp
               Ellipsoid.cpp
               EulerAngles.cpp
+              Kernels.cpp
+              Interp1d.cpp
               Interpolator.cpp
               LUT2d.cpp
               LinAlg.cpp
@@ -44,6 +46,8 @@ set(${PACKAGENAME}_EXPORT_HEADERS   Attitude.h
                                     Doppler.h
                                     Ellipsoid.h
                                     EulerAngles.h
+                                    Kernels.h
+                                    Interp1d.h
                                     Interpolator.h
                                     LUT1d.h
                                     LUT1d.icc
