@@ -14,7 +14,7 @@
 #include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/Poly2d.h>
-#include <isce/core/LUT1d.h>
+#include <isce/core/LUT2d.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Projections.h>
 #include <isce/core/Interpolator.h>
@@ -22,6 +22,7 @@
 
 // isce::product
 #include <isce/product/Product.h>
+#include <isce/product/RadarGridParameters.h>
 
 // isce::io
 #include <isce/io/Raster.h>
@@ -121,12 +122,13 @@ class isce::signal::Covariance {
                 int width, int length, int epsgcode);
         
         /** Set the input radar grid. */
-        inline void radarGrid(isce::core::LUT1d<double> doppler,
-                    isce::core::DateTime azimuthStartTime,
+        inline void radarGrid(isce::core::LUT2d<double> doppler,
+                    double azimuthStartTime,
                     double azimuthTimeInterval,
                     int radarGridLength,
                     double startingRange,
                     double rangeSpacing,
+                    double wavelength,
                     int radarGridWidth);
 
         /** Set number of looks in range direction for covariance estimation */
@@ -139,7 +141,7 @@ class isce::signal::Covariance {
         inline void prf(double p);
 
         /** Set Doppler */
-        inline void doppler(isce::core::LUT1d<double> dop);
+        inline void doppler(isce::core::LUT2d<double> dop);
 
         /** Set range sampling frequency */
         inline void rangeSamplingFrequency(double rngSamplingFreq);
@@ -157,16 +159,13 @@ class isce::signal::Covariance {
         inline void interpolator(isce::core::dataInterpMethod method);
 
         /** Set platform's orbit*/
-        inline void orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch);
+        inline void orbit(isce::core::Orbit& orbit);
 
         /** Set orbit interploation method*/
         inline void orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod);
 
         /** Set ellipsoid */
         inline void ellipsoid(isce::core::Ellipsoid& ellipsoid);
-
-        /** Set image mode*/
-        inline void mode(isce::product::ImageMode& mode);
 
         /** Set the projection object*/
         inline void projection(isce::core::ProjectionBase * proj);
@@ -284,9 +283,6 @@ class isce::signal::Covariance {
         isce::core::Orbit _orbit;
         isce::core::Ellipsoid _ellipsoid;
 
-        // isce::product objects
-        isce::product::ImageMode _mode;
-    
         // Optimization options
         double _threshold;
         int _numiter;
@@ -294,14 +290,9 @@ class isce::signal::Covariance {
         isce::core::orbitInterpMethod _orbitMethod;
 
         // radar grids parameters
-        isce::core::LUT1d<double> _doppler;
-        isce::core::DateTime _azimuthStartTime, _refEpoch;
-        double _azimuthTimeInterval;
-        double _startingRange;
-        double _rangeSpacing;
-        int _radarGridLength;
-        int _radarGridWidth;
-
+        isce::core::LUT2d<double> _doppler;
+        isce::product::RadarGridParameters _radarGrid;
+        
         // start X position for the output geocoded grid
         double _geoGridStartX;
 

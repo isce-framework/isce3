@@ -25,6 +25,7 @@
 
 // isce::product
 #include <isce/product/Product.h>
+#include <isce/product/RadarGridParameters.h>
 
 // isce::geometry
 #include "geometry.h"
@@ -146,13 +147,7 @@ class isce::geometry::Geocode {
 
         // radar grids parameters
         isce::core::LUT2d<double> _doppler;
-        double _azimuthStartTime;
-        double _azimuthTimeInterval;
-        double _startingRange;
-        double _rangeSpacing;
-        double _wavelength;
-        int _radarGridLength;
-        int _radarGridWidth;
+        isce::product::RadarGridParameters _radarGrid;
 
         // start X position for the output geocoded grid
         double _geoGridStartX;

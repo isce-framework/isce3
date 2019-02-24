@@ -39,6 +39,17 @@ class isce::product::RadarGridParameters {
                                    size_t numberAzimuthLooks = 1,
                                    size_t numberRangeLooks = 1);
 
+        /** Constructor from individual components and values. */
+        inline RadarGridParameters(size_t numberAzimuthLooks,
+                                   size_t numberRangeLooks,
+                                   double sensingStart,
+                                   double wavelength,
+                                   double prf,
+                                   double startingRange,
+                                   double rangePixelSpacing,
+                                   size_t length,
+                                   size_t width);
+
         /** Copy constructor */
         inline RadarGridParameters(const RadarGridParameters & rgparam);
 
@@ -116,6 +127,7 @@ class isce::product::RadarGridParameters {
         double _rangePixelSpacing;
         size_t _rlength;
         size_t _rwidth;
+        isce::core::DateTime _refEpoch;
 };
 
 // Constructor with a swath.
@@ -198,6 +210,27 @@ operator=(const RadarGridParameters & rgparams) {
     _rwidth = rgparams.width();
     return *this;
 }
+
+// Constructor from individual components and values
+isce::product::RadarGridParameters::
+RadarGridParameters(size_t numberAzimuthLooks,
+                    size_t numberRangeLooks,
+                    double sensingStart,
+                    double wavelength,
+                    double prf,
+                    double startingRange,
+                    double rangePixelSpacing,
+                    size_t length,
+                    size_t width) :
+    _numberAzimuthLooks(numberAzimuthLooks),
+    _numberRangeLooks(numberRangeLooks),
+    _sensingStart(sensingStart),
+    _wavelength(wavelength),
+    _prf(prf),
+    _startingRange(startingRange),
+    _rangePixelSpacing(rangePixelSpacing),
+    _rlength(length),
+    _rwidth(width) {}
 
 #endif
 
