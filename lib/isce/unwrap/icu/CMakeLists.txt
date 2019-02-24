@@ -1,14 +1,15 @@
 #Mimicking mm behaviour
-set(PACKAGENAME signal)
+set(PACKAGENAME unwrap/icu)
 string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 
 ####List the source files
 set(LOCAL_SRCS 
-    Signal.cpp
-    Crossmul.cpp
-    Filter.cpp
-    Looks.cpp
-    Covariance.cpp)
+    Grass.cpp
+    Neutron.cpp
+    PhaseGrad.cpp
+    Residue.cpp
+    Tree.cpp
+    Unwrap.cpp)
 
 ####Append current path to every source file
 set(${PACKAGENAME}_SRCS "")
@@ -18,22 +19,16 @@ endforeach()
 
 #####Library headers
 set(${PACKAGENAME}_EXPORT_HEADERS
-    Signal.h
-    Signal.icc
-    fftw3cxx.h
-    Crossmul.h
-    Crossmul.icc
-    Filter.h
-    Looks.h
-    Looks.icc
-    Covariance.h
-    Covariance.icc)
+    ICU.h
+    ICU.icc
+    LabelMap.h
+    LabelMap.icc)
 
 ###Install headers into build/include
 ###This is where regex can be used on the header files if needed
 set(${PACKAGENAME}_BUILD_HEADERS "")
 foreach(HFILE ${${PACKAGENAME}_EXPORT_HEADERS})
-#    message(STATUS "${HFILE} : to : ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/${HFILE}")
+    #    message(STATUS "${HFILE} : to : ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/${HFILE}")
     configure_file(
         ${CMAKE_CURRENT_LIST_DIR}/${HFILE}
         ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/${HFILE}
@@ -44,12 +39,11 @@ endforeach()
 
 #Pyre stuff is needed for logging
 #Gdal is needed for Raster IO 
-include_directories(${${PACKAGENAME}_DLL}
-    PUBLIC
+include_directories(${${PACKAGENAME}_DLL} PUBLIC
     ${PYRE_INCLUDE_DIR}
     ${ISCE_BUILDINCLUDEDIR}
     ${GDAL_INCLUDE_DIR}
-    ${CEREAL_SRC_INCLUDEDIR}
+    ${HDF5_INCLUDE_DIR}
 ) 
 
 #Install headers as files

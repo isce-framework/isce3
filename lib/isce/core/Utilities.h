@@ -108,7 +108,7 @@ namespace isce { namespace core {
     /** Function to fill a Matlab/Python style linspace vector 
       * @param[in] low Starting value of vector
       * @param[in] high Ending value of vector (inclusive)
-      * @param[in] data Vector to fill in */
+      * @param[out] data Vector to fill in */
     template <typename T>
     inline void linspace(T low, T high, std::vector<T> & data) {
         // Compute the increment
@@ -127,7 +127,6 @@ namespace isce { namespace core {
             data[i] = low + i * increment;
         }
         // done
-        return data;
     }
 
     /** Function to fill a Matlab/Python style linspace valarray

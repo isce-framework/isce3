@@ -180,7 +180,7 @@ class isce::geometry::Geocode {
         int _epsgOut;
 
         // projection object
-        isce::core::ProjectionBase * _proj;        
+        isce::core::ProjectionBase * _proj = nullptr; 
 
         // margin around a computed bounding box for DEM (in degrees)
         double _demBlockMargin;

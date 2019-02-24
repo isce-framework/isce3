@@ -23,6 +23,31 @@ Crossmul(const isce::product::Product& referenceSlcProduct,
          isce::product::Product& outputInterferogramProduct)
 */
 
+/**
+* @param[in] referenceSLC Raster object of refernce SLC
+* @param[in] secondarySLC Raster object of secondary SLC
+* @param[out] interferogram Raster object of output interferogram
+*/
+void isce::signal::Crossmul::
+crossmul(isce::io::Raster& referenceSLC,
+        isce::io::Raster& secondarySLC,
+        isce::io::Raster& interferogram)
+{
+
+    _computeCoherence = false;
+    _doCommonRangebandFilter = false;
+
+    isce::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_Float32, "ENVI");
+    isce::io::Raster coherence("/vsimem/dummyCoh", 1, 1, 1, GDT_Float32, "ENVI");
+
+    crossmul(referenceSLC,
+            secondarySLC,
+            rngOffsetRaster,
+            interferogram,
+            coherence);
+
+}
+
 
 /**
 * @param[in] referenceSLC Raster object of refernce SLC
@@ -245,7 +270,7 @@ crossmul(isce::io::Raster& referenceSLC,
         }
 
         // common range band-pass filtering
-        if (_doCommonRangebandFilter){
+        if (_doCommonRangebandFilter) {
 
             // Read range offsets
             std::valarray<double> offsetLine(ncols);
@@ -317,18 +342,19 @@ crossmul(isce::io::Raster& referenceSLC,
 
             looksObj.ncols(ncols);
             looksObj.multilook(ifgram, ifgramMultiLooked);
+            interferogram.setBlock(ifgramMultiLooked, 0, rowStart/_azimuthLooks,
+                        ncols/_rangeLooks, blockRowsData/_azimuthLooks);
 
-            #pragma omp parallel for
-            for (size_t i = 0; i< ifgramMultiLooked.size(); ++i){
-                coherence[i] = std::abs(ifgramMultiLooked[i])/
+            if (_computeCoherence) {
+                #pragma omp parallel for
+                for (size_t i = 0; i< ifgramMultiLooked.size(); ++i){
+                    coherence[i] = std::abs(ifgramMultiLooked[i])/
                             std::sqrt(refAmplitudeLooked[i]*secAmplitudeLooked[i]);
+                }
+
+                coherenceRaster.setBlock(coherence, 0, rowStart/_azimuthLooks,
+                        ncols/_rangeLooks, blockRowsData/_azimuthLooks);
             }
-
-            interferogram.setBlock(ifgramMultiLooked, 0, rowStart/_azimuthLooks, 
-                        ncols/_rangeLooks, blockRowsData/_azimuthLooks);
-
-            coherenceRaster.setBlock(coherence, 0, rowStart/_azimuthLooks,
-                        ncols/_rangeLooks, blockRowsData/_azimuthLooks);
         } else {
             // set the block of interferogram
             interferogram.setBlock(ifgram, 0, rowStart, ncols, blockRowsData);

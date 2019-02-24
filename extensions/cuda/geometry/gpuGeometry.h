@@ -51,8 +51,7 @@ namespace geometry {
                          const isce::cuda::core::gpuEllipsoid &,
                          const gpuDEMInterpolator &,
                          double *,
-                         double, int, double, int, int,
-                         isce::core::orbitInterpMethod);
+                         double, int, double, int, int);
 
     /** Radar geometry coordinates to map coordinates transformer*/
     CUDA_DEV int rdr2geo(const isce::cuda::core::gpuPixel &,
