@@ -125,6 +125,7 @@ TEST(GeocodeTest, RunGeocode) {
     geoObj.interpolator(method);
 
     geoObj.radarGrid(doppler,
+                      orbit.refEpoch,
                       swath.zeroDopplerTime()[0],
                       azimuthTimeInterval,
                       radarGridLength,

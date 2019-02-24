@@ -123,6 +123,7 @@ class isce::signal::Covariance {
         
         /** Set the input radar grid. */
         inline void radarGrid(isce::core::LUT2d<double> doppler,
+                    isce::core::DateTime refEpoch,
                     double azimuthStartTime,
                     double azimuthTimeInterval,
                     int radarGridLength,

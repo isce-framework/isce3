@@ -77,6 +77,7 @@ geoGrid(double geoGridStartX, double geoGridStartY,
 template<class T>
 void isce::geometry::Geocode<T>::
 radarGrid(isce::core::LUT2d<double> doppler,
+          isce::core::DateTime refEpoch,
           double azimuthStartTime,
           double azimuthTimeInterval,
           int radarGridLength,
@@ -87,7 +88,7 @@ radarGrid(isce::core::LUT2d<double> doppler,
     _doppler = doppler;
     _radarGrid = isce::product::RadarGridParameters(
         1, 1, azimuthStartTime, wavelength, 1.0/azimuthTimeInterval, startingRange,
-        rangeSpacing, radarGridLength, radarGridWidth
+        rangeSpacing, radarGridLength, radarGridWidth, refEpoch
     );
 }
 

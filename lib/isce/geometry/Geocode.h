@@ -74,13 +74,14 @@ class isce::geometry::Geocode {
 
         // Set the input radar grid 
         inline void radarGrid(isce::core::LUT2d<double> doppler,
-                                double azimuthStartTime,
-                                double azimuthTimeInterval,
-                                int radarGridLength,
-                                double startingRange,
-                                double rangeSpacing,
-                                double wavelength,
-                                int radarGridWidth);
+                              isce::core::DateTime refEpoch,
+                              double azimuthStartTime,
+                              double azimuthTimeInterval,
+                              int radarGridLength,
+                              double startingRange,
+                              double rangeSpacing,
+                              double wavelength,
+                              int radarGridWidth);
 
         // Set interpolator 
         inline void interpolator(isce::core::dataInterpMethod method);

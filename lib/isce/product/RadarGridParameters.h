@@ -6,6 +6,7 @@
 
 // isce::core
 #include <isce/core/Metadata.h>
+#include <isce/core/DateTime.h>
 
 // isce::product
 #include <isce/product/Product.h>
@@ -48,7 +49,8 @@ class isce::product::RadarGridParameters {
                                    double startingRange,
                                    double rangePixelSpacing,
                                    size_t length,
-                                   size_t width);
+                                   size_t width,
+                                   isce::core::DateTime refEpoch);
 
         /** Copy constructor */
         inline RadarGridParameters(const RadarGridParameters & rgparam);
@@ -61,6 +63,9 @@ class isce::product::RadarGridParameters {
 
         /** Get number of range looks */
         inline size_t numberRangeLooks() const { return _numberRangeLooks; }
+
+        /** Get reference epoch */
+        inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
 
         /** Get sensing start time in seconds */
         inline double sensingStart() const { return _sensingStart; }
@@ -99,6 +104,11 @@ class isce::product::RadarGridParameters {
         /** Get sensing time for a given line (row) */
         inline double sensingTime(size_t line) const {
             return _sensingStart + line * _numberAzimuthLooks / _prf;
+        }
+
+        /** Get a sensing DateTime for a given line (row) */
+        inline isce::core::DateTime sensingDateTime(size_t line) const {
+            return _refEpoch + sensingTime(line);
         }
 
         /** Get ending slant range */
@@ -146,7 +156,8 @@ RadarGridParameters(const isce::product::Swath & swath,
     _startingRange(swath.slantRange()[0]),
     _rangePixelSpacing(swath.rangePixelSpacing()),
     _rlength(swath.lines()),
-    _rwidth(swath.samples()) {}
+    _rwidth(swath.samples()),
+    _refEpoch(swath.refEpoch()) {}
 
 // Constructor with a product
 /** @param[in] product Input Product
@@ -178,7 +189,8 @@ RadarGridParameters(const isce::core::Metadata & meta,
     _startingRange(meta.rangeFirstSample),
     _rangePixelSpacing(meta.slantRangePixelSpacing),
     _rlength(meta.length),
-    _rwidth(meta.width) {}
+    _rwidth(meta.width),
+    _refEpoch(refEpoch) {}
 
 // Copy constructors
 /** @param[in] rgparam RadarGridParameters object */
@@ -192,7 +204,8 @@ RadarGridParameters(const RadarGridParameters & rgparams) :
     _startingRange(rgparams.startingRange()),
     _rangePixelSpacing(rgparams.rangePixelSpacing()),
     _rlength(rgparams.length()),
-    _rwidth(rgparams.width()) {}
+    _rwidth(rgparams.width()),
+    _refEpoch(rgparams.refEpoch()) {}
 
 // Assignment operator
 /** @param[in] rgparam RadarGridParameters object */
@@ -208,6 +221,7 @@ operator=(const RadarGridParameters & rgparams) {
     _rangePixelSpacing = rgparams.rangePixelSpacing();
     _rlength = rgparams.length();
     _rwidth = rgparams.width();
+    _refEpoch = rgparams.refEpoch();
     return *this;
 }
 
@@ -221,7 +235,8 @@ RadarGridParameters(size_t numberAzimuthLooks,
                     double startingRange,
                     double rangePixelSpacing,
                     size_t length,
-                    size_t width) :
+                    size_t width,
+                    isce::core::DateTime refEpoch) :
     _numberAzimuthLooks(numberAzimuthLooks),
     _numberRangeLooks(numberRangeLooks),
     _sensingStart(sensingStart),
@@ -230,7 +245,8 @@ RadarGridParameters(size_t numberAzimuthLooks,
     _startingRange(startingRange),
     _rangePixelSpacing(rangePixelSpacing),
     _rlength(length),
-    _rwidth(width) {}
+    _rwidth(width),
+    _refEpoch(refEpoch) {}
 
 #endif
 
