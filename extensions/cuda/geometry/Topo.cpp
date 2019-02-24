@@ -45,8 +45,8 @@ topo(Raster & demRaster,
     TopoLayers layers;
 
     // Create rasters for individual layers (provide output raster sizes)
-    const RadarGridParameters & rgparam = this->radarGridParameters();
-    layers.initRasters(outdir, rgparam.width(), rgparam.length(),
+    const RadarGridParameters & radarGrid = this->radarGridParameters();
+    layers.initRasters(outdir, radarGrid.width(), radarGrid.length(),
                        this->computeMask());
 
     // Call topo with layers
@@ -154,7 +154,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
     const Ellipsoid & ellipsoid = this->ellipsoid();
     const Orbit & orbit = this->orbit();
     const LUT1d<double> doppler(this->doppler());
-    const RadarGridParameters & rgparam = this->radarGridParameters();
+    const RadarGridParameters & radarGrid = this->radarGridParameters();
 
     // Create and start a timer
     auto timerStart = std::chrono::steady_clock::now();
@@ -166,8 +166,8 @@ topo(Raster & demRaster, TopoLayers & layers) {
     computeLinesPerBlock(demRaster);
 
     // Compute number of blocks needed to process image
-    size_t nBlocks = rgparam.length() / _linesPerBlock;
-    if ((rgparam.length() % _linesPerBlock) != 0)
+    size_t nBlocks = radarGrid.length() / _linesPerBlock;
+    if ((radarGrid.length() % _linesPerBlock) != 0)
         nBlocks += 1;
 
     // Loop over blocks
@@ -178,7 +178,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
         size_t lineStart, blockLength;
         lineStart = block * _linesPerBlock;
         if (block == (nBlocks - 1)) {
-            blockLength = rgparam.length() - lineStart;
+            blockLength = radarGrid.length() - lineStart;
         } else {
             blockLength = _linesPerBlock;
         }
@@ -203,14 +203,14 @@ topo(Raster & demRaster, TopoLayers & layers) {
         demInterp.refHeight(dem_avg);
 
         // Set output block sizes in layers
-        layers.setBlockSize(blockLength, rgparam.width());
+        layers.setBlockSize(blockLength, radarGrid.width());
 
         // Run Topo on the GPU for this block
         isce::cuda::geometry::runGPUTopo(
             ellipsoid, orbit, doppler, demInterp, layers, lineStart, this->lookSide(),
-            this->epsgOut(), rgparam.numberAzimuthLooks(), rgparam.sensingStart(),
-            rgparam.wavelength(), rgparam.prf(), rgparam.startingRange(),
-            rgparam.rangePixelSpacing(), this->threshold(), this->numiter(), this->extraiter(),
+            this->epsgOut(), radarGrid.numberAzimuthLooks(), radarGrid.sensingStart(),
+            radarGrid.wavelength(), radarGrid.prf(), radarGrid.startingRange(),
+            radarGrid.rangePixelSpacing(), this->threshold(), this->numiter(), this->extraiter(),
             totalconv
         );
 
@@ -226,7 +226,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
 
     // Print out convergence statistics
     info << "Total convergence: " << totalconv << " out of "
-         << (rgparam.size()) << pyre::journal::endl;
+         << (radarGrid.size()) << pyre::journal::endl;
 
     // Print out timing information and reset
     auto timerEnd = std::chrono::steady_clock::now();

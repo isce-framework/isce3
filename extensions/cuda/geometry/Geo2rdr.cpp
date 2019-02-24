@@ -75,26 +75,26 @@ geo2rdr(isce::io::Raster & topoRaster,
     const Ellipsoid & ellipsoid = this->ellipsoid();
     const Orbit & orbit = this->orbit();
     const LUT1d<double> doppler(this->doppler());
-    const RadarGridParameters & rgparam = this->radarGridParameters();
+    const RadarGridParameters & radarGrid = this->radarGridParameters();
 
     // Cache sensing start in seconds since reference epoch
-    double t0 = rgparam.sensingStart();
+    double t0 = radarGrid.sensingStart();
     // Adjust for const azimuth shift
-    t0 -= (azshift - 0.5 * (rgparam.numberAzimuthLooks() - 1)) / rgparam.prf();
+    t0 -= (azshift - 0.5 * (radarGrid.numberAzimuthLooks() - 1)) / radarGrid.prf();
 
     // Cache starting range
-    double r0 = rgparam.startingRange();
+    double r0 = radarGrid.startingRange();
     // Adjust for constant range shift
-    r0 -= (rgshift - 0.5 * (rgparam.numberRangeLooks() - 1)) * rgparam.rangePixelSpacing();
+    r0 -= (rgshift - 0.5 * (radarGrid.numberRangeLooks() - 1)) * radarGrid.rangePixelSpacing();
 
     // Compute azimuth time extents
-    double dtaz = rgparam.numberAzimuthLooks() / rgparam.prf();
-    const double tend = t0 + ((rgparam.length() - 1) * dtaz);
+    double dtaz = radarGrid.numberAzimuthLooks() / radarGrid.prf();
+    const double tend = t0 + ((radarGrid.length() - 1) * dtaz);
     const double tmid = 0.5 * (t0 + tend);
 
     // Compute range extents
-    const double dmrg = rgparam.numberRangeLooks() * rgparam.rangePixelSpacing();
-    const double rngend = r0 + ((rgparam.width() - 1) * dmrg);
+    const double dmrg = radarGrid.numberRangeLooks() * radarGrid.rangePixelSpacing();
+    const double rngend = r0 + ((radarGrid.width() - 1) * dmrg);
 
     // Print out extents
     _printExtents(info, t0, tend, dtaz, r0, rngend, dmrg, demWidth, demLength);
@@ -147,9 +147,9 @@ geo2rdr(isce::io::Raster & topoRaster,
         // Process block on GPU
         isce::cuda::geometry::runGPUGeo2rdr(
             ellipsoid, orbit, doppler, x, y, hgt, azoff, rgoff, topoEPSG,
-            lineStart, demWidth, t0, r0, rgparam.numberAzimuthLooks(),
-            rgparam.numberRangeLooks(), rgparam.length(), rgparam.width(), rgparam.prf(),
-            rgparam.rangePixelSpacing(), rgparam.wavelength(), this->threshold(),
+            lineStart, demWidth, t0, r0, radarGrid.numberAzimuthLooks(),
+            radarGrid.numberRangeLooks(), radarGrid.length(), radarGrid.width(), radarGrid.prf(),
+            radarGrid.rangePixelSpacing(), radarGrid.wavelength(), this->threshold(),
             this->numiter(), totalconv
         );
 

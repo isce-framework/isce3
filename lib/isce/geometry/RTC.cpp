@@ -39,7 +39,7 @@ std::array<double, 3> computePlaneNormal(std::array<double, 3> & x1,
 }
 
 double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp,
-                               const isce::product::RadarGridParameters & param,
+                               const isce::product::RadarGridParameters & radarGrid,
                                const isce::core::Ellipsoid& ellps) {
     // Create a projection object from the DEM interpolator
     isce::core::ProjectionBase * proj = isce::core::createProj(dem_interp.epsgCode());
@@ -75,7 +75,7 @@ double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp
     const double demArea = dx * dy;
 
     // Compute area of radar pixel (for now, just use spacing in range direction)
-    const double radarArea = param.rangePixelSpacing() * param.rangePixelSpacing();
+    const double radarArea = radarGrid.rangePixelSpacing() * radarGrid.rangePixelSpacing();
 
     // Upsampling factor is the ratio
     return std::sqrt(demArea / radarArea);
@@ -91,7 +91,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     isce::core::Ellipsoid ellps(isce::core::EarthSemiMajorAxis,
                                 isce::core::EarthEccentricitySquared);
     isce::core::Orbit orbit = product.metadata().orbit();
-    isce::product::RadarGridParameters param(product, frequency, 1, 1);
+    isce::product::RadarGridParameters radarGrid(product, frequency, 1, 1);
     isce::geometry::Topo topo(product, frequency, true);
     topo.orbitMethod(isce::core::orbitInterpMethod::HERMITE_METHOD);
     int lookSide = product.lookSide();
@@ -100,12 +100,12 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     isce::core::LUT2d<double> dop = product.metadata().procInfo().dopplerCentroid(frequency);
     dop.boundsError(false);
 
-    const double start = param.sensingStart();
-    const double   end = param.sensingStop();
-    const double pixazm = (end - start) / param.length(); // azimuth difference per pixel
+    const double start = radarGrid.sensingStart();
+    const double   end = radarGrid.sensingStop();
+    const double pixazm = (end - start) / radarGrid.length(); // azimuth difference per pixel
 
-    const double r0 = param.startingRange();
-    const double dr = param.rangePixelSpacing();
+    const double r0 = radarGrid.startingRange();
+    const double dr = radarGrid.rangePixelSpacing();
 
     // Initialize other ISCE objects
     isce::core::Peg peg;
@@ -113,11 +113,11 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     ptm.radarToXYZ(ellps, peg);
 
     // Bounds for valid RDC coordinates
-    double xbound = param.width()  - 1.0;
-    double ybound = param.length() - 1.0;
+    double xbound = radarGrid.width()  - 1.0;
+    double ybound = radarGrid.length() - 1.0;
 
     // Output raster
-    float* out = new float[param.length() * param.width()]();
+    float* out = new float[radarGrid.length() * radarGrid.width()]();
 
     // ------------------------------------------------------------------------
     // Main code: decompose DEM into facets, compute RDC coordinates
@@ -126,12 +126,12 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     isce::geometry::DEMInterpolator dem_interp(0, isce::core::dataInterpMethod::BIQUINTIC_METHOD);
 
     // Determine DEM bounds
-    topo.computeDEMBounds(dem, dem_interp, 0, param.length());
+    topo.computeDEMBounds(dem, dem_interp, 0, radarGrid.length());
 
     // Enter loop to read in SLC range/azimuth coordinates and compute area
     std::cout << std::endl;
 
-    const float upsample_factor = computeUpsamplingFactor(dem_interp, param, ellps);
+    const float upsample_factor = computeUpsamplingFactor(dem_interp, radarGrid, ellps);
 
     const size_t imax = dem_interp.length() * upsample_factor;
     const size_t jmax = dem_interp.width()  * upsample_factor;
@@ -165,7 +165,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             isce::core::cartesian_t inputLLH{lon_mid*RAD, lat_mid*RAD,
                 dem_interp.interpolateXY(lon_mid, lat_mid)};
             int geostat = isce::geometry::geo2rdr(inputLLH, ellps, orbit, dop,
-                    a, r, param.wavelength(), 1e-4, 100, 1e-4);
+                    a, r, radarGrid.wavelength(), 1e-4, 100, 1e-4);
             const float azpix = (a - start) / pixazm;
             const float ranpix = (r - r0) / dr;
 
@@ -264,13 +264,13 @@ void isce::geometry::facetRTC(isce::product::Product& product,
 
             // Use bilinear weighting to distribute area
             #pragma omp atomic
-            out[param.width() * iy1 + ix1] += area * Wrc * Wac;
+            out[radarGrid.width() * iy1 + ix1] += area * Wrc * Wac;
             #pragma omp atomic
-            out[param.width() * iy1 + ix2] += area * Wr * Wac;
+            out[radarGrid.width() * iy1 + ix2] += area * Wr * Wac;
             #pragma omp atomic
-            out[param.width() * iy2 + ix1] += area * Wrc * Wa;
+            out[radarGrid.width() * iy2 + ix1] += area * Wrc * Wa;
             #pragma omp atomic
-            out[param.width() * iy2 + ix2] += area * Wr * Wa;
+            out[radarGrid.width() * iy2 + ix2] += area * Wr * Wa;
         }
     }
 
@@ -281,8 +281,8 @@ void isce::geometry::facetRTC(isce::product::Product& product,
 
     // Compute the flat earth incidence angle correction applied by UAVSAR processing
     #pragma omp parallel for schedule(dynamic) collapse(2)
-    for (size_t i = 0; i < param.length(); ++i) {
-        for (size_t j = 0; j < param.width(); ++j) {
+    for (size_t i = 0; i < radarGrid.length(); ++i) {
+        for (size_t j = 0; j < radarGrid.width(); ++j) {
 
             isce::core::cartesian_t xyz_plat, vel;
             orbit.interpolateWGS84Orbit(start + i * pixazm, xyz_plat, vel);
@@ -294,7 +294,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             isce::core::cartesian_t targetLLH, targetXYZ;
             targetLLH[2] = avg_hgt; // initialize first guess
             isce::geometry::rdr2geo(start + i * pixazm, slt_range, 0, orbit, ellps,
-                    flat_interp, targetLLH, param.wavelength(), lookSide,
+                    flat_interp, targetLLH, radarGrid.wavelength(), lookSide,
                     1e-4, 20, 20, isce::core::HERMITE_METHOD);
 
             // Computation of ENU coordinates around ground target
@@ -310,11 +310,11 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             const double costheta = std::abs(enu[2]) / LinAlg::norm(enu);
             const double sintheta = std::sqrt(1. - costheta*costheta);
 
-            out[param.width() * i + j] *= sintheta;
+            out[radarGrid.width() * i + j] *= sintheta;
         }
     }
     std::cout << std::endl;
 
-    out_raster.setBlock(out, 0, 0, param.width(), param.length());
+    out_raster.setBlock(out, 0, 0, radarGrid.width(), radarGrid.length());
     delete[] out;
 }

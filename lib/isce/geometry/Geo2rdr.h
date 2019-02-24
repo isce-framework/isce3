@@ -87,7 +87,7 @@ class isce::geometry::Geo2rdr {
 
         /** Get read-only reference to RadarGridParameters */
         inline const isce::product::RadarGridParameters & radarGridParameters() const {
-            return _radarGridParameters;
+            return _radarGrid;
         }
 
         // Get geo2rdr processing options
@@ -115,7 +115,7 @@ class isce::geometry::Geo2rdr {
         isce::core::LUT2d<double> _doppler;
 
         // RadarGridParameters
-        isce::product::RadarGridParameters _radarGridParameters;
+        isce::product::RadarGridParameters _radarGrid;
         
         // Projection related data
         isce::core::ProjectionBase * _projTopo;

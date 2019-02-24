@@ -87,7 +87,7 @@ class isce::geometry::Topo {
 
         /** Get read-only reference to RadarGridParameters */
         inline const isce::product::RadarGridParameters & radarGridParameters() const {
-            return _radarGridParameters;
+            return _radarGrid;
         }
 
         // Get DEM bounds using first/last azimuth line and slant range bin
@@ -152,7 +152,7 @@ class isce::geometry::Topo {
         isce::core::LUT2d<double> _doppler;
 
         // RadarGridParameters
-        isce::product::RadarGridParameters _radarGridParameters;
+        isce::product::RadarGridParameters _radarGrid;
         
         // Optimization options
         double _threshold = 1.0e-8;

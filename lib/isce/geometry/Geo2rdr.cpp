@@ -80,26 +80,26 @@ geo2rdr(isce::io::Raster & topoRaster,
     _projTopo = isce::core::createProj(topoRaster.getEPSG());
 
     // Cache sensing start
-    double t0 = _radarGridParameters.sensingStart();
+    double t0 = _radarGrid.sensingStart();
     // Adjust for const azimuth shift
-    t0 -= (azshift - 0.5 * (_radarGridParameters.numberAzimuthLooks() - 1)) /
-           _radarGridParameters.prf();
+    t0 -= (azshift - 0.5 * (_radarGrid.numberAzimuthLooks() - 1)) /
+           _radarGrid.prf();
 
     // Cache starting range
-    double r0 = _radarGridParameters.startingRange();
+    double r0 = _radarGrid.startingRange();
     // Adjust for constant range shift
-    r0 -= (rgshift - 0.5 * (_radarGridParameters.numberRangeLooks() - 1)) *
-           _radarGridParameters.rangePixelSpacing();
+    r0 -= (rgshift - 0.5 * (_radarGrid.numberRangeLooks() - 1)) *
+           _radarGrid.rangePixelSpacing();
 
     // Compute azimuth time extents
-    double dtaz = _radarGridParameters.numberAzimuthLooks() / _radarGridParameters.prf();
-    const double tend = t0 + ((_radarGridParameters.length() - 1) * dtaz);
+    double dtaz = _radarGrid.numberAzimuthLooks() / _radarGrid.prf();
+    const double tend = t0 + ((_radarGrid.length() - 1) * dtaz);
     const double tmid = 0.5 * (t0 + tend);
 
     // Compute range extents
-    const double dmrg = _radarGridParameters.numberRangeLooks() *
-                        _radarGridParameters.rangePixelSpacing();
-    const double rngend = r0 + ((_radarGridParameters.width() - 1) * dmrg);
+    const double dmrg = _radarGrid.numberRangeLooks() *
+                        _radarGrid.rangePixelSpacing();
+    const double rngend = r0 + ((_radarGrid.width() - 1) * dmrg);
 
     // Print out extents
     _printExtents(info, t0, tend, dtaz, r0, rngend, dmrg, demWidth, demLength);
@@ -130,7 +130,7 @@ geo2rdr(isce::io::Raster & topoRaster,
         size_t blockSize = blockLength * demWidth;
 
         // Diagnostics
-        const double tblock = _radarGridParameters.sensingTime(lineStart);
+        const double tblock = _radarGrid.sensingTime(lineStart);
         info << "Processing block: " << block << " " << pyre::journal::newline
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
@@ -170,7 +170,7 @@ geo2rdr(isce::io::Raster & topoRaster,
                 double aztime, slantRange;
                 int geostat = isce::geometry::geo2rdr(
                     llh, _ellipsoid, _orbit, _doppler,  aztime, slantRange,
-                    _radarGridParameters.wavelength(), _threshold, _numiter, 1.0e-8
+                    _radarGrid.wavelength(), _threshold, _numiter, 1.0e-8
                 );
 
                 // Check if solution is out of bounds
@@ -214,8 +214,8 @@ _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
          << "Azimuth line spacing in seconds: " << dtaz << pyre::journal::newline
          << "Near range (m): " << r0 << pyre::journal::newline
          << "Far range (m): " << rngend << pyre::journal::newline
-         << "Radar image length: " << _radarGridParameters.length() << pyre::journal::newline
-         << "Radar image width: " << _radarGridParameters.width() << pyre::journal::newline
+         << "Radar image length: " << _radarGrid.length() << pyre::journal::newline
+         << "Radar image width: " << _radarGrid.width() << pyre::journal::newline
          << "Geocoded lines: " << demLength << pyre::journal::newline
          << "Geocoded samples: " << demWidth << pyre::journal::newline;
 }
