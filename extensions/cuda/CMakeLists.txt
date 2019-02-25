@@ -1,17 +1,15 @@
 # Get name of ISCE CUDA library
 include(IsceCuda)
+include(IsceHelper)
+
+# Create library target
+add_library(${LISCECUDA} SHARED)
 
 # Pull in the source files
-include(core/CMakeLists.txt)
-include(product/CMakeLists.txt)
-include(geometry/CMakeLists.txt)
-include(image/CMakeLists.txt)
-
-# Set the output library
-add_library(${LISCECUDA} SHARED
-            ${ISCE_CUDA_core_SRCS}
-            ${ISCE_CUDA_geometry_SRCS}
-            ${ISCE_CUDA_image_SRCS})
+add_subdirectory(core)
+add_subdirectory(product)
+add_subdirectory(geometry)
+add_subdirectory(image)
 
 # Force nvcc to compile with c++14
 get_target_property(MYPROPS ${LISCECUDA} COMPILE_OPTIONS)
@@ -31,16 +29,7 @@ include_directories(${CEREAL_SRC_INCLUDEDIR}
                     ${GDAL_INCLUDE_DIR})
 
 # Install CUDA helper header files
-set(HELPER_HEADERS "")
-foreach(HFILE helper_cuda.h helper_string.h)
-    set(DESTFILE ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${HFILE})
-    configure_file(${CMAKE_CURRENT_LIST_DIR}/${HFILE} ${DESTFILE} COPYONLY)
-    list(APPEND ${HELPER_HEADERS} ${DESTFILE})
-endforeach()
-
-install(FILES ${HELPER_HEADERS}
-        DESTINATION ${ISCE_INCLUDEDIR}/${LOCALPROJ}/cuda
-        COMPONENT ISCE_CUDA)
+add_isce_libdir("." "" "helper_cuda.h;helper_string.h")
 
 # Install shared library
 install(TARGETS ${LISCECUDA}

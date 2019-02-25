@@ -1,7 +1,4 @@
-set(PACKAGENAME geometry)
-string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
-
-set(ISCE_CUDA_${PACKAGENAME}_HEADERS
+set(HEADERS
         gpuDEMInterpolator.h
         gpuGeometry.h
         gpuRTC.h
@@ -10,7 +7,7 @@ set(ISCE_CUDA_${PACKAGENAME}_HEADERS
         Topo.h
         Geo2rdr.h)
 
-set(LOCAL_SRCS
+set(SRCS
         gpuDEMInterpolator.cu
         gpuGeometry.cu
         gpuRTC.cu
@@ -21,25 +18,5 @@ set(LOCAL_SRCS
         Topo.cpp
         Geo2rdr.cpp)
 
-# Append current path to every source file
-set(ISCE_CUDA_${PACKAGENAME}_SRCS "")
-foreach(CUFILE ${LOCAL_SRCS})
-    list(APPEND ISCE_CUDA_${PACKAGENAME}_SRCS ${CMAKE_CURRENT_LIST_DIR}/${CUFILE})
-endforeach()
-
-# Install headers into build/include
-set(${PACKAGENAME}_BUILD_HEADERS "")
-foreach(HFILE ${ISCE_CUDA_${PACKAGENAME}_HEADERS})
-    set(DESTFILE ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}/${HFILE})
-    configure_file(${CMAKE_CURRENT_LIST_DIR}/${HFILE}
-                   ${DESTFILE}
-                   COPYONLY)
-    list(APPEND ${PACKAGENAME}_BUILD_HEADERS ${DESTFILE})
-endforeach()
-
-# Install headers into final installation directory
-install(FILES ${${PACKAGENAME}_BUILD_HEADERS}
-        DESTINATION ${ISCE_INCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
-        COMPONENT ISCE_CUDA)
-
 # end of file
+add_isce_libdir(geometry "${SRCS}" "${HEADERS}")

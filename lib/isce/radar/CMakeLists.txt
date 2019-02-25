@@ -2,7 +2,6 @@
 set(HEADERS
     Radar.h
     Radar.icc
-    Serialization.h
-)
+    Serialization.h)
 
-add_isce_libdir(radar "${SRCS}" "${HEADERS}")
+add_isce_libdir(radar "" "${HEADERS}")

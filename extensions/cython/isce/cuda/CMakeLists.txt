@@ -42,6 +42,7 @@ target_include_directories(
 )
 
 # Add necessary library links
+include(IsceCuda)
 target_link_libraries(iscecudaextension ${LISCECUDA} ${LISCE} m)
 
 # Install

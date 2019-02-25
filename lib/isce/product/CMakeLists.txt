@@ -9,7 +9,6 @@ set(HEADERS
     Metadata.icc
     Product.h
     Product.icc
-    Serialization.h
-)
+    Serialization.h)
 
 add_isce_libdir(product "${SRCS}" "${HEADERS}")

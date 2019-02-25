@@ -37,22 +37,27 @@ function(add_isce_libdir PKGNAME CPPS HEADERS)
         list(APPEND SRCS ${CMAKE_CURRENT_LIST_DIR}/${CPP})
     endforeach()
 
-    # Add sources to library build requirements(
-    target_sources(${LISCE} PRIVATE ${SRCS})
+    # Add sources to library build requirements
+    unset(SUBDIR)
+    if(DEFINED LISCECUDA)
+        set(SUBDIR "cuda")
+        target_sources(${LISCECUDA} PRIVATE ${SRCS})
+    else()
+        target_sources(${LISCE} PRIVATE ${SRCS})
+    endif()
 
     # Install headers to build/include
     # This is where regex can be used on headers if needed
     unset(BUILD_HEADERS)
     foreach(HFILE ${HEADERS})
-        configure_file(${CMAKE_CURRENT_LIST_DIR}/${HFILE}
-            "${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PKGNAME}/${HFILE}" COPYONLY)
-        list(APPEND BUILD_HEADERS
-            "${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PKGNAME}/${HFILE}")
+        set(DEST "${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${SUBDIR}/${PKGNAME}/${HFILE}")
+        configure_file(${CMAKE_CURRENT_LIST_DIR}/${HFILE} "${DEST}" COPYONLY)
+        list(APPEND BUILD_HEADERS "${DEST}")
     endforeach()
 
     # Install headers as files
     # May be changed in the future to install from build/include
     install(FILES ${BUILD_HEADERS}
-            DESTINATION ${ISCE_INCLUDEDIR}/${LOCALPROJ}
+            DESTINATION ${ISCE_INCLUDEDIR}/${LOCALPROJ}/${SUBDIR}/${PKGNAME}
             COMPONENT isce_headers)
 endfunction()
