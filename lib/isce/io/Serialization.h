@@ -22,6 +22,25 @@ namespace isce {
     //! The isce::io namespace
     namespace io {
 
+        /** Check existence of a dataset or group
+         *
+         * @param[in] h5obj         HDF5 file or group object.
+         * @param[in] name          H5 path of dataset relative to h5obj. 
+         * @param[in] start         Relative path from current group/file to start search from. 
+         * @param[in] type          Type of object to search for. Default: BOTH */
+        template <typename H5obj>
+        inline bool exists(H5obj & h5obj, const std::string & name,
+                           const std::string start = ".", const std::string type = "BOTH") {
+            // Search for objects
+            std::vector<std::string> objs = h5obj.find(name, start, type, "FULL");
+            // Check size of vector
+            if (objs.size() > 0) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
         /** Load scalar dataset from HDF5 file.
          *
          * @param[in] h5obj         HDF5 file or group object.
