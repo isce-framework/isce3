@@ -46,13 +46,9 @@ namespace isce {
      inline unsigned int mapFileAccessMode(const char mode) {
         switch (mode) {
            case 'r': return H5F_ACC_RDONLY;
-                     break;
            case 'w': return H5F_ACC_RDWR;
-                     break;
            case 'x': return H5F_ACC_TRUNC;
-                     break;
            case 'a': return H5F_ACC_EXCL;
-                     break;
            default:  std::cout << "Invalid HDF5 file opening mode" << std::endl;
                      return 100; // Will throw within HDF5 API
        }
