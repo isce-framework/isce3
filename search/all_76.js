@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['validsamples',['validSamples',['../classisce_1_1product_1_1Swath.html#a711eab146b8c2fede44c082ddab10ca3',1,'isce::product::Swath::validSamples() const '],['../classisce_1_1product_1_1Swath.html#ac7991a10d17f123e76ff1a6e675a3d0f',1,'isce::product::Swath::validSamples(const std::array&lt; size_t, 2 &gt; &amp;valid)']]],
   ['values',['values',['../classisce_1_1core_1_1LUT1d.html#aff2d43e30e47a177eaac9da4de67eb82',1,'isce::core::LUT1d::values()'],['../classisce_1_1core_1_1LUT1d.html#a0c0d71ed6021417d0d9fee57d57ca9ec',1,'isce::core::LUT1d::values() const '],['../classisce_1_1core_1_1LUT1d.html#af8a8652be7b0b3588b3e6ea67a08dff7',1,'isce::core::LUT1d::values(const std::valarray&lt; T &gt; &amp;v)']]],
   ['vectortostring',['vectorToString',['../namespaceisce_1_1core.html#ab3ab15086fc03cd08e41914466ef5f1c',1,'isce::core']]],
   ['velocity',['velocity',['../structisce_1_1core_1_1Orbit.html#aae98e9b679333884e9d4a7e475fa1de0',1,'isce::core::Orbit::velocity()'],['../classisce_1_1core_1_1StateVector.html#a993b92b4440fcbb3c60aff31c2ccd891',1,'isce::core::StateVector::velocity() const '],['../classisce_1_1core_1_1StateVector.html#a55a70dedd050aa628f0dfc52b4d52e18',1,'isce::core::StateVector::velocity(cartesian_t &amp;v)']]],
