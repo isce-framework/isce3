@@ -1,5 +1,4 @@
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
-include(IsceTest)
 
 add_subdirectory(data)
 add_subdirectory(core)

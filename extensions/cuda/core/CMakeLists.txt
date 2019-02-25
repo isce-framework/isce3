@@ -30,8 +30,6 @@ set(LOCAL_SRCS
         gpuSinc2dInterpolator.cu 
         gpuSpline2dInterpolator.cu )
 
-function(add_isce_gpulib PACKAGENAME SRCS HEADERS)
-
 # Append current path to every source file
 set(ISCE_CUDA_${PACKAGENAME}_SRCS "")
 foreach(CUFILE ${LOCAL_SRCS})

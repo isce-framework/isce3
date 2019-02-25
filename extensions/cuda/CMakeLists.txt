@@ -1,6 +1,5 @@
-
-set (LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
-set (LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
+# Get name of ISCE CUDA library
+include(IsceCuda)
 
 # Pull in the source files
 include(core/CMakeLists.txt)
@@ -9,22 +8,22 @@ include(geometry/CMakeLists.txt)
 include(image/CMakeLists.txt)
 
 # Set the output library
-add_library(${LCUDAISCE} SHARED
+add_library(${LISCECUDA} SHARED
             ${ISCE_CUDA_core_SRCS}
             ${ISCE_CUDA_geometry_SRCS}
             ${ISCE_CUDA_image_SRCS})
 
 # Force nvcc to compile with c++14
-get_target_property(MYPROPS ${LCUDAISCE} COMPILE_OPTIONS)
+get_target_property(MYPROPS ${LISCECUDA} COMPILE_OPTIONS)
 string(REPLACE "c++17" "c++14" MYPROPS ${MYPROPS})
-set_target_properties(${LCUDAISCE} PROPERTIES COMPILE_OPTIONS ${MYPROPS})
+set_target_properties(${LISCECUDA} PROPERTIES COMPILE_OPTIONS ${MYPROPS})
 
 # Allow for separable compilation and device code linking (-dc flag to nvcc)
-set_target_properties(${LCUDAISCE} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-set_target_properties(${LCUDAISCE} PROPERTIES CUDA_HOST_COMPILATION_CPP ON)
+set_target_properties(${LISCECUDA} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+set_target_properties(${LISCECUDA} PROPERTIES CUDA_HOST_COMPILATION_CPP ON)
 
 # Add library dependencies
-target_link_libraries(${LCUDAISCE} ${LISCE})
+target_link_libraries(${LISCECUDA} ${LISCE})
 include_directories(${CEREAL_SRC_INCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
@@ -44,6 +43,6 @@ install(FILES ${HELPER_HEADERS}
         COMPONENT ISCE_CUDA)
 
 # Install shared library
-install(TARGETS ${LCUDAISCE}
+install(TARGETS ${LISCECUDA}
         DESTINATION ${ISCE_LIBDIR}
         COMPONENT ISCE_CUDA)

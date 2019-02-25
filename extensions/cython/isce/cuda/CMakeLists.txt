@@ -5,10 +5,6 @@
 # Find Numpy
 find_package(Numpy REQUIRED)
 
-# Set the name for the ISCE C++ libraries
-set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
-set(LISCECUDA iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
-
 # Set file properties
 set_source_files_properties(
     iscecudaextension.pyx

@@ -3,7 +3,7 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 
 set(ISCE_CUDA_${PACKAGENAME}_HEADERS
         gpuDEMInterpolator.h
-        gpuGeometry.h 
+        gpuGeometry.h
         gpuRTC.h
         gpuTopoLayers.h
         gpuGeo2rdr.h
@@ -12,7 +12,7 @@ set(ISCE_CUDA_${PACKAGENAME}_HEADERS
 
 set(LOCAL_SRCS
         gpuDEMInterpolator.cu
-        gpuGeometry.cu 
+        gpuGeometry.cu
         gpuRTC.cu
         gpuTopo.cu
         gpuTopoLayers.cu

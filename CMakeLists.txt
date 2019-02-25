@@ -24,6 +24,9 @@ else ()
 	        LANGUAGES C CXX)
 endif()
 
+# Set the name for the ISCE C++ library
+set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
+
 ###Options for documentation
 option(WITH_DOC
     "Set ON|OFF (default=OFF) to build documentation" OFF)
@@ -52,9 +55,6 @@ CheckPyre()
 
 ##Check for Cython
 include(useCython)
-
-##Check for CUDA
-#CheckCUDA()
 
 ##Check for OpenMP
 CheckOpenMP()
