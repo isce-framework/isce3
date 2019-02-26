@@ -4,6 +4,8 @@ set (INPUT_SRCS envisat.h5
                 warped_envisat.slc.vrt
                 topo.xml
                 srtm_cropped.tif
+                icu/tree
+                icu/tree.hdr
                 offsets/range.off
                 offsets/range.off.xml
                 offsets/azimuth.off

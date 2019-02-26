@@ -1,0 +1,45 @@
+#if !defined(ISCE_UNWRAP_ICU_LABELMAP_ICC)
+#error "LabelMap.icc is an implementation detail of class LabelMap"
+#endif
+
+#include <cstdint> // UINT8_MAX
+#include <exception> // std::overflow_error
+
+namespace isce { namespace unwrap { namespace icu {
+
+inline
+LabelMap::LabelMap()
+{
+    // Init with a single unused element so the first label used is 1 (0 is not 
+    // a valid label).
+    _labels.resize(1);
+}
+
+inline
+uint8_t LabelMap::nextlabel()
+{
+    if (_labels.size() > UINT8_MAX)
+    {
+        throw std::overflow_error("exceeded max connected components\n");
+    }
+
+    uint8_t newlabel = _labels.size();
+    _labels.push_back(newlabel);
+    return newlabel;
+}
+
+inline uint8_t LabelMap::getlabel(const uint8_t l) const { return _labels[l]; }
+
+inline
+void LabelMap::setlabel(const uint8_t oldlabel, const uint8_t newlabel)
+{
+    for (size_t l = 1; l < _labels.size(); ++l)
+    {
+        if (_labels[l] == oldlabel) { _labels[l] = newlabel; }
+    }
+}
+
+inline size_t LabelMap::size() const { return _labels.size(); }
+
+} } }
+

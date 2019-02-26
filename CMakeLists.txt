@@ -13,15 +13,13 @@ if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
 
+project(ISCE VERSION 3.0
+        LANGUAGES CXX)
+
 option(WITH_CUDA "Set ON|OFF (default=ON) to build CUDA library" OFF)
 if (WITH_CUDA)
-    project(ISCE
-            VERSION 3.0
-	        LANGUAGES C CXX CUDA)
-else ()
-    project(ISCE
-            VERSION 3.0
-	        LANGUAGES C CXX)
+    set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
+    enable_language(CUDA)
 endif()
 
 # Set the name for the ISCE C++ library
@@ -44,7 +42,7 @@ include(ConfigISCE)
 ###Explicit check to prevent in-source builds
 AssureOutOfSourceBuilds()
 
-####Check CXX Version and Standard to C++14
+####Check CXX Version and Standard to C++17
 CheckCXX()
 
 ###Check if an appropriate python is installed

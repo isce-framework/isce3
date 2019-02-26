@@ -10,6 +10,7 @@ add_subdirectory(io)
 add_subdirectory(product)
 add_subdirectory(radar)
 add_subdirectory(signal)
+add_subdirectory(unwrap)
 
 # Add library dependencies
 target_link_libraries(${LISCE} ${GDAL_LIBRARY} ${HDF5_LIBRARY} ${PYRE_LIBRARY}

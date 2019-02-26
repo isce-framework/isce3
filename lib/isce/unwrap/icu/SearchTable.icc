@@ -1,0 +1,99 @@
+#if !defined(ISCE_UNWRAP_ICU_SEARCHTABLE_ICC)
+#error "SearchTable.icc is an implementation detail of class SearchTable."
+#endif
+
+namespace isce { namespace unwrap { namespace icu {
+
+inline
+SearchTable::SearchTable(
+    const int maxdist, 
+    const float ratioDxDy)
+{
+    // Width of square bounding circle with max radius
+    const int w = 2 * maxdist + 1;
+
+    _searchpts = new offset2_t[w*w];
+    _npts = new size_t[maxdist+1];
+
+    // Get ratio squared (must be >1).
+    float ratioSqx, ratioSqy;
+    if (ratioDxDy > 1.f)
+    {
+        ratioSqx = ratioDxDy * ratioDxDy;
+        ratioSqy = 1.f;
+    }
+    else
+    {
+        ratioSqx = 1.f;
+        ratioSqy = 1.f / (ratioDxDy * ratioDxDy);
+    }
+
+    // Calculate squared distance to each point within the square. Distance 
+    // contours are elliptical depending on the relative pixel spacing in x & y.
+    auto distSq = new float[w*w];
+    for (int y = -maxdist; y <= maxdist; ++y)
+    {
+        for (int x = -maxdist; x <= maxdist; ++x)
+        {
+            size_t i = (y + maxdist) * w + (x + maxdist);
+            distSq[i] = ratioSqy * float(y*y) + ratioSqx * float(x*x);
+        }
+    }
+
+    // Init mask of visited points (all unvisited except center pixel).
+    auto visited = new bool[w*w];
+    for (size_t i = 0; i < w*w; ++i) { visited[i] = false; }
+    visited[maxdist * w + maxdist] = true;
+
+    // Populate the search table by finding points within the annulus of each 
+    // successive search radius.
+    _npts[0] = 0;
+    size_t n = 0;
+    for (int d = 1; d <= maxdist; ++d)
+    {
+        float dSq = float(d*d);
+
+        for (int y = -d; y <= d; ++y)
+        {
+            for (int x = -d; x <= d; ++x)
+            {
+                size_t i = (y + maxdist) * w + (x + maxdist);
+                if (distSq[i] <= dSq && !visited[i])
+                {
+                    _searchpts[n] = {x, y};
+                    visited[i] = true;
+                    ++n;
+                }
+            }
+        }
+
+        _npts[d] = n;
+    }
+
+    delete[] distSq;
+    delete[] visited;
+}
+
+inline
+SearchTable::~SearchTable()
+{
+    delete[] _searchpts;
+    delete[] _npts;
+}
+
+inline
+offset2_t & SearchTable::operator[](
+    const size_t pos) const
+{
+    return _searchpts[pos];
+}
+
+inline
+size_t SearchTable::numPtsInEllipse(
+    const int a) const
+{
+    return _npts[a];
+}
+
+} } }
+

@@ -21,7 +21,11 @@ function(CheckCXX)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
     message(FATAL_ERROR "Insufficient GCC version. Version 5.0 or greater is required.")
   endif()
-
+  # get sysroot from host compiler
+  #execute_process(COMMAND ${CMAKE_CXX_COMPILER} --print-sysroot
+                  #OUTPUT_VARIABLE CXX_SYSROOT)
+  #string(REGEX REPLACE "\n$" "" CXX_SYSROOT "${CXX_SYSROOT}") # remove trailing newline
+  #set(CMAKE_SYSROOT "${CXX_SYSROOT}" CACHE STRING "CMake sysroot used for compilation")
 endfunction()
 
 
@@ -67,26 +71,6 @@ function(CheckHDF5)
     message(STATUS "Found HDF5: ${HDF5_VERSION} ${HDF5_CXX_LIBRARIES}")
     if (HDF5_VERSION VERSION_LESS "1.10.2")
         message(FATAL_ERROR "Did not find HDF5 version >= 1.10.2")
-    endif()
-
-    # Use old glibc++ ABI when necessary for compatibility with HDF5 libs
-    if (CMAKE_COMPILER_IS_GNUCXX AND
-            CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "5.1.0")
-        # get the file path of the hdf5_cpp shared object
-        set(hdf5_cpp ${HDF5_CXX_LIBRARIES})
-        list(FILTER hdf5_cpp INCLUDE REGEX "hdf5_cpp")
-
-        # look for GCC version comment
-        file(STRINGS "${hdf5_cpp}" gcc_comment REGEX "GCC:")
-        if (gcc_comment)
-            string(REGEX REPLACE "\\(([^\\(]*)\\)" "" gcc_comment ${gcc_comment})
-            string(REGEX MATCH "([0-9]|\\.)+" hdf5_gcc_version ${gcc_comment})
-            if (hdf5_gcc_version AND hdf5_gcc_version VERSION_LESS "5.1.0")
-                message(WARNING "Using old glibc++ ABI "
-                    "(found HDF5 compiled with GCC ${hdf5_gcc_version})")
-                add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-            endif()
-        endif()
     endif()
 
     # Use more standard names to propagate variables
