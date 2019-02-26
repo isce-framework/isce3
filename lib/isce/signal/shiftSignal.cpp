@@ -29,7 +29,7 @@ shiftSignal(std::valarray<T> & data,
     // variable for the total length of the signal used in FFT computation
     size_t nfft = 1;
     std::valarray<std::complex<U>> phaseRamp(ncols*nrows);
-    if (shiftX != 0.0) {
+    if (not isce::core::compareFloatingPoint(shiftX, 0.0d)) {
         // buffer for the frequency domain phase ramp introduced by
         // the constant shift in time domain
 
@@ -40,7 +40,7 @@ shiftSignal(std::valarray<T> & data,
         nfft = ncols;
     }
 
-    if (shiftY != 0.0) {
+    if (not isce::core::compareFloatingPoint(shiftY, 0.0d)) {
 
         // buffer for the frequency domain phase ramp introduced by
         // the constant shift in time domain
@@ -52,8 +52,7 @@ shiftSignal(std::valarray<T> & data,
         // taking into account nrows for the fft length 
         nfft *=nrows;
 
-        
-        if (shiftX != 0.0)
+        if (not isce::core::compareFloatingPoint(shiftX, 0.0d))
             // if there was a Shift in X, the impact in frequency domain
             // is multiplied by the impact in Y direction
             // F(X,Y) <--> f(x,y)
@@ -65,7 +64,8 @@ shiftSignal(std::valarray<T> & data,
 
     }
 
-    if (shiftX != 0.0 || shiftY != 0.0) {
+    if (not isce::core::compareFloatingPoint(shiftX, 0.0d) || 
+            not isce::core::compareFloatingPoint(shiftY, 0.0d)) {
 
         // if any shift requested at all
         shiftSignal(data, dataShifted,

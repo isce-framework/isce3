@@ -11,6 +11,8 @@
 #include <valarray>
 #include "Signal.h"
 #include "Filter.h"
+#include <isce/core/Utilities.h>
+
 
 namespace isce {
     namespace signal {
