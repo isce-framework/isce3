@@ -145,20 +145,20 @@ Example 2: SLC resampling with carrier phase and flattening</h1>
 <div class="line">    doppler.coeffs = {301.35306906319204, -0.04633312447837377, 2.044436266418998e-06};</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Create an ImageMode for the input image using Envisat parameters</span></div>
-<div class="line">    <a class="code" href="classisce_1_1product_1_1ImageMode.html">isce::product::ImageMode</a> mode;</div>
+<div class="line">    isce::product::ImageMode mode;</div>
 <div class="line">    <span class="comment">// Set relevant parameters</span></div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#aa8c040933c05171f9adc7f3f54b00dff">wavelength</a>(0.056);</div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a45d93fae03d138dd8af4646145a2b9df">startingRange</a>(826988.69);</div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a7012643b6ec1faf37bb070c88ad88826">rangePixelSpacing</a>(7.80);</div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a8ebb1918ab076ab0a93a9c397271ac0b">prf</a>(1652.416);</div>
+<div class="line">    mode.wavelength(0.056);</div>
+<div class="line">    mode.startingRange(826988.69);</div>
+<div class="line">    mode.rangePixelSpacing(7.80);</div>
+<div class="line">    mode.prf(1652.416);</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Create an ImageMode for the reference master image</span></div>
-<div class="line">    <a class="code" href="classisce_1_1product_1_1ImageMode.html">isce::product::ImageMode</a> modeRef;</div>
+<div class="line">    isce::product::ImageMode modeRef;</div>
 <div class="line">    <span class="comment">// Set relevant parameters for reference</span></div>
-<div class="line">    modeRef.<a class="code" href="classisce_1_1product_1_1ImageMode.html#aa8c040933c05171f9adc7f3f54b00dff">wavelength</a>(0.057);</div>
-<div class="line">    modeRef.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a45d93fae03d138dd8af4646145a2b9df">startingRange</a>(826991.0);</div>
-<div class="line">    modeRef.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a7012643b6ec1faf37bb070c88ad88826">rangePixelSpacing</a>(7.80);</div>
-<div class="line">    modeRef.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a8ebb1918ab076ab0a93a9c397271ac0b">prf</a>(1652.416);</div>
+<div class="line">    modeRef.wavelength(0.057);</div>
+<div class="line">    modeRef.startingRange(826991.0);</div>
+<div class="line">    modeRef.rangePixelSpacing(7.80);</div>
+<div class="line">    modeRef.prf(1652.416);</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">// Instantiate a ResampSlc object</span></div>
 <div class="line">    <a class="code" href="classisce_1_1image_1_1ResampSlc.html">isce::image::ResampSlc</a> resamp(doppler, mode);</div>

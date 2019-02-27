@@ -273,20 +273,20 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line">    <span class="keywordtype">int</span> side = -1; <span class="comment">//Right-looking</span></div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//We will create a fake product with relevant metadata for use</span></div>
-<div class="line">    <a class="code" href="classisce_1_1product_1_1ImageMode.html">isce::product::ImageMode</a> mode;</div>
+<div class="line">    isce::product::ImageMode mode;</div>
 <div class="line">    std::array&lt;size_t,2&gt; dims{{1500,1000}};</div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#acfdb57ceafbbfa2c96edbdfa96c9b51c">dataDimensions</a>(dims); <span class="comment">//1500 lines x 1000 pixels</span></div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a8ebb1918ab076ab0a93a9c397271ac0b">prf</a>(1000.);</div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a4969b578dd7aa117539a13532a83767f">rangeBandwidth</a>(20.0e6);       <span class="comment">//Dummy</span></div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#aa8c040933c05171f9adc7f3f54b00dff">wavelength</a>(0.06); </div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a45d93fae03d138dd8af4646145a2b9df">startingRange</a>(8.0e5);</div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a7012643b6ec1faf37bb070c88ad88826">rangePixelSpacing</a>(10.);</div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#abc0e5e9b40a65705b286c15142d6cd81">numberAzimuthLooks</a>(10);</div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a433f3b5f53b9cc756ed791df019139d5">numberRangeLooks</a>(10);</div>
+<div class="line">    mode.dataDimensions(dims); <span class="comment">//1500 lines x 1000 pixels</span></div>
+<div class="line">    mode.prf(1000.);</div>
+<div class="line">    mode.rangeBandwidth(20.0e6);       <span class="comment">//Dummy</span></div>
+<div class="line">    mode.wavelength(0.06); </div>
+<div class="line">    mode.startingRange(8.0e5);</div>
+<div class="line">    mode.rangePixelSpacing(10.);</div>
+<div class="line">    mode.numberAzimuthLooks(10);</div>
+<div class="line">    mode.numberRangeLooks(10);</div>
 <div class="line">    <a class="code" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> t0(<span class="stringliteral">&quot;2016-04-08T09:13:55.454821&quot;</span>);</div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a796cfdeec539edb438c5ea28a4494033">startAzTime</a>(t0);</div>
+<div class="line">    mode.startAzTime(t0);</div>
 <div class="line">    <a class="code" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> t1(<span class="stringliteral">&quot;2016-04-08T09:14:10.454821&quot;</span>);</div>
-<div class="line">    mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a95111a6f0698c0cc9419dc40a172bac1">endAzTime</a>(t1);</div>
+<div class="line">    mode.endAzTime(t1);</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Create Doppler polynomial - Zero Doppler for now</span></div>
 <div class="line">    <a class="code" href="structisce_1_1core_1_1Poly2d.html">isce::core::Poly2d</a> dop(0,0,0.,0.,1.,1.);</div>
@@ -315,8 +315,8 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line">                                 1.0e-8);</div>
 <div class="line"></div>
 <div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Target at: &quot;</span> &lt;&lt; targets[tt][0] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; targets[tt][1] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; targets[tt][2] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Estimated line number: &quot;</span> &lt;&lt; (aztime - mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a796cfdeec539edb438c5ea28a4494033">startAzTime</a>().<a class="code" href="structisce_1_1core_1_1DateTime.html#ae81ef930c8a881847c9dfc3e04435dba">secondsSinceEpoch</a>(orbit.<a class="code" href="structisce_1_1core_1_1Orbit.html#a8332fb47800e74433493014f3c0e76b9">refEpoch</a>)) * mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a8ebb1918ab076ab0a93a9c397271ac0b">prf</a>() /   mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#abc0e5e9b40a65705b286c15142d6cd81">numberAzimuthLooks</a>() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Estimated pixel number: &quot;</span> &lt;&lt; (rng - mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a45d93fae03d138dd8af4646145a2b9df">startingRange</a>())/mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a7012643b6ec1faf37bb070c88ad88826">rangePixelSpacing</a>() / mode.<a class="code" href="classisce_1_1product_1_1ImageMode.html#a433f3b5f53b9cc756ed791df019139d5">numberRangeLooks</a>() &lt;&lt; <span class="stringliteral">&quot;\n\n&quot;</span>; </div>
+<div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Estimated line number: &quot;</span> &lt;&lt; (aztime - mode.startAzTime().secondsSinceEpoch(orbit.<a class="code" href="structisce_1_1core_1_1Orbit.html#a8332fb47800e74433493014f3c0e76b9">refEpoch</a>)) * mode.prf() /   mode.numberAzimuthLooks() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Estimated pixel number: &quot;</span> &lt;&lt; (rng - mode.startingRange())/mode.rangePixelSpacing() / mode.numberRangeLooks() &lt;&lt; <span class="stringliteral">&quot;\n\n&quot;</span>; </div>
 <div class="line">    }</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
