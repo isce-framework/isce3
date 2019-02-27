@@ -128,9 +128,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a152fa7b8136bd26a16069b60b6c70fa4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a152fa7b8136bd26a16069b60b6c70fa4">geoGrid</a> (double geoGridStartX, double geoGridStartY, double geoGridSpacingX, double geoGridSpacingY, int width, int length, int epsgcode)</td></tr>
 <tr class="memdesc:a152fa7b8136bd26a16069b60b6c70fa4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set geocoded grid.  <a href="#a152fa7b8136bd26a16069b60b6c70fa4">More...</a><br/></td></tr>
 <tr class="separator:a152fa7b8136bd26a16069b60b6c70fa4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa7a660ebb8aa509f5e8128155aa6f61c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#aa7a660ebb8aa509f5e8128155aa6f61c">radarGrid</a> (<a class="el" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d</a>&lt; double &gt; <a class="el" href="classisce_1_1signal_1_1Covariance.html#a60c59f262141122a34b72c4478c9d448">doppler</a>, <a class="el" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> azimuthStartTime, double azimuthTimeInterval, int radarGridLength, double startingRange, double rangeSpacing, int radarGridWidth)</td></tr>
-<tr class="memdesc:aa7a660ebb8aa509f5e8128155aa6f61c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the input radar grid.  <a href="#aa7a660ebb8aa509f5e8128155aa6f61c">More...</a><br/></td></tr>
-<tr class="separator:aa7a660ebb8aa509f5e8128155aa6f61c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30534783033c9845b6ee122591e68dc7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a30534783033c9845b6ee122591e68dc7">radarGrid</a> (<a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; <a class="el" href="classisce_1_1signal_1_1Covariance.html#a8905ab3830d8e3b1aad021b7f59aaa00">doppler</a>, <a class="el" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> refEpoch, double azimuthStartTime, double azimuthTimeInterval, int radarGridLength, double startingRange, double rangeSpacing, double <a class="el" href="classisce_1_1signal_1_1Covariance.html#aa2a6cf1b5b9b2b721e52e10347deb311">wavelength</a>, int radarGridWidth)</td></tr>
+<tr class="memdesc:a30534783033c9845b6ee122591e68dc7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the input radar grid.  <a href="#a30534783033c9845b6ee122591e68dc7">More...</a><br/></td></tr>
+<tr class="separator:a30534783033c9845b6ee122591e68dc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aacfc1f37352d8a2b8a0c0e9f0b148110"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#aacfc1f37352d8a2b8a0c0e9f0b148110">numberOfRangeLooks</a> (int rngLooks)</td></tr>
 <tr class="memdesc:aacfc1f37352d8a2b8a0c0e9f0b148110"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set number of looks in range direction for covariance estimation.  <a href="#aacfc1f37352d8a2b8a0c0e9f0b148110">More...</a><br/></td></tr>
 <tr class="separator:aacfc1f37352d8a2b8a0c0e9f0b148110"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -140,9 +140,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1fd01f44ecd78cc0714432d6b53f0f02"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a1fd01f44ecd78cc0714432d6b53f0f02">prf</a> (double p)</td></tr>
 <tr class="memdesc:a1fd01f44ecd78cc0714432d6b53f0f02"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set pulse repetition frequency (PRF).  <a href="#a1fd01f44ecd78cc0714432d6b53f0f02">More...</a><br/></td></tr>
 <tr class="separator:a1fd01f44ecd78cc0714432d6b53f0f02"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a60c59f262141122a34b72c4478c9d448"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a60c59f262141122a34b72c4478c9d448">doppler</a> (<a class="el" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d</a>&lt; double &gt; dop)</td></tr>
-<tr class="memdesc:a60c59f262141122a34b72c4478c9d448"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set Doppler.  <a href="#a60c59f262141122a34b72c4478c9d448">More...</a><br/></td></tr>
-<tr class="separator:a60c59f262141122a34b72c4478c9d448"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8905ab3830d8e3b1aad021b7f59aaa00"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a8905ab3830d8e3b1aad021b7f59aaa00">doppler</a> (<a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; dop)</td></tr>
+<tr class="memdesc:a8905ab3830d8e3b1aad021b7f59aaa00"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set Doppler.  <a href="#a8905ab3830d8e3b1aad021b7f59aaa00">More...</a><br/></td></tr>
+<tr class="separator:a8905ab3830d8e3b1aad021b7f59aaa00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2aa568b036dc34d0e88cd4f14d287ab6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a2aa568b036dc34d0e88cd4f14d287ab6">rangeSamplingFrequency</a> (double rngSamplingFreq)</td></tr>
 <tr class="memdesc:a2aa568b036dc34d0e88cd4f14d287ab6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set range sampling frequency.  <a href="#a2aa568b036dc34d0e88cd4f14d287ab6">More...</a><br/></td></tr>
 <tr class="separator:a2aa568b036dc34d0e88cd4f14d287ab6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -158,18 +158,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a130000bab46400484aa608431524fd97"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a130000bab46400484aa608431524fd97">interpolator</a> (<a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> method)</td></tr>
 <tr class="memdesc:a130000bab46400484aa608431524fd97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set interpolator method for geocoding.  <a href="#a130000bab46400484aa608431524fd97">More...</a><br/></td></tr>
 <tr class="separator:a130000bab46400484aa608431524fd97"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab3300952f9785817bb951da592690e49"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#ab3300952f9785817bb951da592690e49">orbit</a> (<a class="el" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, <a class="el" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> refEpoch)</td></tr>
-<tr class="memdesc:ab3300952f9785817bb951da592690e49"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set platform's orbit.  <a href="#ab3300952f9785817bb951da592690e49">More...</a><br/></td></tr>
-<tr class="separator:ab3300952f9785817bb951da592690e49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74e8e7078440e155510472864630af90"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a74e8e7078440e155510472864630af90">orbit</a> (<a class="el" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit)</td></tr>
+<tr class="memdesc:a74e8e7078440e155510472864630af90"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set platform's orbit.  <a href="#a74e8e7078440e155510472864630af90">More...</a><br/></td></tr>
+<tr class="separator:a74e8e7078440e155510472864630af90"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a2897929aa5e22d5df337a607fbeac8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a4a2897929aa5e22d5df337a607fbeac8">orbitInterploationMethod</a> (<a class="el" href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a> orbitMethod)</td></tr>
 <tr class="memdesc:a4a2897929aa5e22d5df337a607fbeac8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set orbit interploation method.  <a href="#a4a2897929aa5e22d5df337a607fbeac8">More...</a><br/></td></tr>
 <tr class="separator:a4a2897929aa5e22d5df337a607fbeac8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acb45ab69277095ede71ef5e74b7a180f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#acb45ab69277095ede71ef5e74b7a180f">ellipsoid</a> (<a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;ellipsoid)</td></tr>
 <tr class="memdesc:acb45ab69277095ede71ef5e74b7a180f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set ellipsoid.  <a href="#acb45ab69277095ede71ef5e74b7a180f">More...</a><br/></td></tr>
 <tr class="separator:acb45ab69277095ede71ef5e74b7a180f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a12acbe21cabf311efe1d0c113c20d79d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a12acbe21cabf311efe1d0c113c20d79d">mode</a> (<a class="el" href="classisce_1_1product_1_1ImageMode.html">isce::product::ImageMode</a> &amp;mode)</td></tr>
-<tr class="memdesc:a12acbe21cabf311efe1d0c113c20d79d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set image mode.  <a href="#a12acbe21cabf311efe1d0c113c20d79d">More...</a><br/></td></tr>
-<tr class="separator:a12acbe21cabf311efe1d0c113c20d79d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac028088629145be6ec3309c5496647a5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#ac028088629145be6ec3309c5496647a5">projection</a> (<a class="el" href="structisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> *proj)</td></tr>
 <tr class="memdesc:ac028088629145be6ec3309c5496647a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the projection object.  <a href="#ac028088629145be6ec3309c5496647a5">More...</a><br/></td></tr>
 <tr class="separator:ac028088629145be6ec3309c5496647a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -269,7 +266,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a60c59f262141122a34b72c4478c9d448"></a>
+<a class="anchor" id="a8905ab3830d8e3b1aad021b7f59aaa00"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -281,7 +278,7 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Covariance.html">isce::signal::Covariance</a>&lt; T &gt;::doppler </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d</a>&lt; double &gt;&#160;</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt;&#160;</td>
           <td class="paramname"><em>dop</em></td><td>)</td>
           <td></td>
         </tr>
@@ -805,40 +802,6 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a12acbe21cabf311efe1d0c113c20d79d"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Covariance.html">isce::signal::Covariance</a>&lt; T &gt;::mode </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classisce_1_1product_1_1ImageMode.html">isce::product::ImageMode</a> &amp;&#160;</td>
-          <td class="paramname"><em>mode</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Set image mode. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">mode</td><td>image mode object </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a class="anchor" id="ada11a555b7ccf164a369b1e462626ea2"></a>
 <div class="memitem">
 <div class="memproto">
@@ -931,7 +894,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ab3300952f9785817bb951da592690e49"></a>
+<a class="anchor" id="a74e8e7078440e155510472864630af90"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -944,18 +907,8 @@ template&lt;class T &gt; </div>
           <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Covariance.html">isce::signal::Covariance</a>&lt; T &gt;::orbit </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;&#160;</td>
-          <td class="paramname"><em>orbit</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramname"><em>orbit</em></td><td>)</td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a>&#160;</td>
-          <td class="paramname"><em>refEpoch</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -969,7 +922,6 @@ template&lt;class T &gt; </div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">orbit</td><td>platform's orbit object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">refEpoch</td><td>reference epoch of the orbit state vectors </td></tr>
   </table>
   </dd>
 </dl>
@@ -1159,7 +1111,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="aa7a660ebb8aa509f5e8128155aa6f61c"></a>
+<a class="anchor" id="a30534783033c9845b6ee122591e68dc7"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -1171,13 +1123,19 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Covariance.html">isce::signal::Covariance</a>&lt; T &gt;::radarGrid </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d</a>&lt; double &gt;&#160;</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt;&#160;</td>
           <td class="paramname"><em>doppler</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a>&#160;</td>
+          <td class="paramname"><em>refEpoch</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>azimuthStartTime</em>, </td>
         </tr>
         <tr>
@@ -1203,6 +1161,12 @@ template&lt;class T &gt; </div>
           <td></td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>rangeSpacing</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>wavelength</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

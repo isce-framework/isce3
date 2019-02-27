@@ -107,7 +107,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;isce/core/Metadata.h&gt;</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;isce/core/Orbit.h&gt;</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;isce/core/Poly2d.h&gt;</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;isce/core/LUT1d.h&gt;</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;isce/core/LUT2d.h&gt;</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &lt;isce/core/Ellipsoid.h&gt;</span></div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &lt;isce/core/Projections.h&gt;</span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &lt;isce/core/Interpolator.h&gt;</span></div>
@@ -115,125 +115,126 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="comment">// isce::product</span></div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#include &lt;isce/product/Product.h&gt;</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="comment">// isce::io</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#include &lt;isce/io/Raster.h&gt;</span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="comment">// isce::geometry</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="geometry_8h.html">isce/geometry/geometry.h</a>&gt;</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#include &lt;isce/geometry/DEMInterpolator.h&gt;</span></div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#include &quot;Signal.h&quot;</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">#include &quot;Looks.h&quot;</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#include &quot;Crossmul.h&quot;</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="keyword">namespace </span>isce {</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keyword">namespace </span>signal {</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="classisce_1_1signal_1_1Covariance.html">   41</a></span>&#160;        <span class="keyword">class </span><a class="code" href="classisce_1_1signal_1_1Covariance.html">Covariance</a>;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    }</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;}</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">class </span><a class="code" href="classisce_1_1signal_1_1Covariance.html">isce::signal::Covariance</a> {</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        <span class="comment">// constructor</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        Covariance() {};</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        <span class="comment">// destructor</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        ~Covariance() {</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        </div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;            <span class="keywordflow">if</span> (_interp) {</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;                <span class="keyword">delete</span> _interp;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;            }</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;            <span class="keywordflow">if</span> (_proj) {</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                <span class="keyword">delete</span> _proj;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            }</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        };</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        </div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#aac52152d4b3261942477a8f9f5af9c10">covariance</a>(std::map&lt;std::string, isce::io::Raster&gt; &amp; slc,</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;                    std::map&lt;std::pair&lt;std::string, std::string&gt;, <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&gt; &amp; cov);</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a354549ebbbaa7ff5d717000396cc3e88">faradayRotation</a>(std::map&lt;std::string, isce::io::Raster&gt; &amp; slc,</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; faradayAngleRaster,</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                    <span class="keywordtype">size_t</span> rangeLooks, <span class="keywordtype">size_t</span> azimuthLooks);</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        </div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        <span class="comment">/*</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="comment">        void correctFaradayRotation(std::map&lt;std::string, isce::io::Raster&gt; &amp; slc,</span></div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="comment">                    isce::core::LUT2d &amp; faradayAngle,</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="comment">                    std::map&lt;std::string, isce::io::Raster&gt; &amp; correctedSlc);</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="comment">        */</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#af2c4e1fc5581183952ca96364d2e6885">orientationAngle</a>(<a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; azimuthSlopeRaster,</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; rangeSlopeRaster,</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; lookAngleRaster,</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; tau);</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a25a04ff2ce32b968bf6aecbdab7f4e44">geocodeCovariance</a>(</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; rdrCov,</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; geoCov,</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; demRaster);</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a25a04ff2ce32b968bf6aecbdab7f4e44">geocodeCovariance</a>(</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; rdrCov,</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; geoCov,</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; demRaster,</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; rtc);</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a25a04ff2ce32b968bf6aecbdab7f4e44">geocodeCovariance</a>(</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; rdrCov,</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; geoCov,</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; demRaster,</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; rtc,</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; <a class="code" href="classisce_1_1signal_1_1Covariance.html#af2c4e1fc5581183952ca96364d2e6885">orientationAngle</a>);</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a3efd68f009496c5ee6ce18bcabdeab59">geoGrid</a>(<span class="keywordtype">double</span> geoGridStartX, <span class="keywordtype">double</span> geoGridStartY,</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;                <span class="keywordtype">double</span> geoGridSpacingX, <span class="keywordtype">double</span> geoGridSpacingY,</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;                <span class="keywordtype">double</span> geoGridEndX, <span class="keywordtype">double</span> geoGridEndY,</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;                <span class="keywordtype">int</span> epsgcode);</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a3efd68f009496c5ee6ce18bcabdeab59">geoGrid</a>(<span class="keywordtype">double</span> geoGridStartX, <span class="keywordtype">double</span> geoGridStartY, </div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;                <span class="keywordtype">double</span> geoGridSpacingX, <span class="keywordtype">double</span> geoGridSpacingY,</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;                <span class="keywordtype">int</span> width, <span class="keywordtype">int</span> length, <span class="keywordtype">int</span> epsgcode);</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;        </div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#aa7a660ebb8aa509f5e8128155aa6f61c">radarGrid</a>(<a class="code" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d&lt;double&gt;</a> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a60c59f262141122a34b72c4478c9d448">doppler</a>,</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;                    <a class="code" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> azimuthStartTime,</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;                    <span class="keywordtype">double</span> azimuthTimeInterval,</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;                    <span class="keywordtype">int</span> radarGridLength,</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;                    <span class="keywordtype">double</span> startingRange,</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;                    <span class="keywordtype">double</span> rangeSpacing,</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;                    <span class="keywordtype">int</span> radarGridWidth);</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#aacfc1f37352d8a2b8a0c0e9f0b148110">numberOfRangeLooks</a>(<span class="keywordtype">int</span> rngLooks);</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#include &lt;isce/product/RadarGridParameters.h&gt;</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="comment">// isce::io</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#include &lt;isce/io/Raster.h&gt;</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="comment">// isce::geometry</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="geometry_8h.html">isce/geometry/geometry.h</a>&gt;</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#include &lt;isce/geometry/DEMInterpolator.h&gt;</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">#include &quot;Signal.h&quot;</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#include &quot;Looks.h&quot;</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#include &quot;Crossmul.h&quot;</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="keyword">namespace </span>isce {</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="keyword">namespace </span>signal {</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="classisce_1_1signal_1_1Covariance.html">   42</a></span>&#160;        <span class="keyword">class </span><a class="code" href="classisce_1_1signal_1_1Covariance.html">Covariance</a>;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    }</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;}</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">class </span><a class="code" href="classisce_1_1signal_1_1Covariance.html">isce::signal::Covariance</a> {</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        </div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        <span class="comment">// constructor</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;        Covariance() {};</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        <span class="comment">// destructor</span></div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        ~Covariance() {</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        </div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;            <span class="keywordflow">if</span> (_interp) {</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                <span class="keyword">delete</span> _interp;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;            }</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;            <span class="keywordflow">if</span> (_proj) {</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;                <span class="keyword">delete</span> _proj;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;            }</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        };</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        </div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#aac52152d4b3261942477a8f9f5af9c10">covariance</a>(std::map&lt;std::string, isce::io::Raster&gt; &amp; slc,</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;                    std::map&lt;std::pair&lt;std::string, std::string&gt;, <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&gt; &amp; cov);</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a354549ebbbaa7ff5d717000396cc3e88">faradayRotation</a>(std::map&lt;std::string, isce::io::Raster&gt; &amp; slc,</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; faradayAngleRaster,</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;                    <span class="keywordtype">size_t</span> rangeLooks, <span class="keywordtype">size_t</span> azimuthLooks);</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        </div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        <span class="comment">/*</span></div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="comment">        void correctFaradayRotation(std::map&lt;std::string, isce::io::Raster&gt; &amp; slc,</span></div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="comment">                    isce::core::LUT2d &amp; faradayAngle,</span></div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="comment">                    std::map&lt;std::string, isce::io::Raster&gt; &amp; correctedSlc);</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="comment">        */</span></div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#af2c4e1fc5581183952ca96364d2e6885">orientationAngle</a>(<a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; azimuthSlopeRaster,</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; rangeSlopeRaster,</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; lookAngleRaster,</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; tau);</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a25a04ff2ce32b968bf6aecbdab7f4e44">geocodeCovariance</a>(</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; rdrCov,</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; geoCov,</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; demRaster);</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a25a04ff2ce32b968bf6aecbdab7f4e44">geocodeCovariance</a>(</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; rdrCov,</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; geoCov,</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; demRaster,</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; rtc);</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a25a04ff2ce32b968bf6aecbdab7f4e44">geocodeCovariance</a>(</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; rdrCov,</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; geoCov,</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; demRaster,</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; rtc,</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;                    <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; <a class="code" href="classisce_1_1signal_1_1Covariance.html#af2c4e1fc5581183952ca96364d2e6885">orientationAngle</a>);</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a3efd68f009496c5ee6ce18bcabdeab59">geoGrid</a>(<span class="keywordtype">double</span> geoGridStartX, <span class="keywordtype">double</span> geoGridStartY,</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;                <span class="keywordtype">double</span> geoGridSpacingX, <span class="keywordtype">double</span> geoGridSpacingY,</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;                <span class="keywordtype">double</span> geoGridEndX, <span class="keywordtype">double</span> geoGridEndY,</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;                <span class="keywordtype">int</span> epsgcode);</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a3efd68f009496c5ee6ce18bcabdeab59">geoGrid</a>(<span class="keywordtype">double</span> geoGridStartX, <span class="keywordtype">double</span> geoGridStartY, </div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;                <span class="keywordtype">double</span> geoGridSpacingX, <span class="keywordtype">double</span> geoGridSpacingY,</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;                <span class="keywordtype">int</span> width, <span class="keywordtype">int</span> length, <span class="keywordtype">int</span> epsgcode);</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;        </div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a30534783033c9845b6ee122591e68dc7">radarGrid</a>(<a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;double&gt;</a> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a8905ab3830d8e3b1aad021b7f59aaa00">doppler</a>,</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;                    <a class="code" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> refEpoch,</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;                    <span class="keywordtype">double</span> azimuthStartTime,</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;                    <span class="keywordtype">double</span> azimuthTimeInterval,</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;                    <span class="keywordtype">int</span> radarGridLength,</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;                    <span class="keywordtype">double</span> startingRange,</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;                    <span class="keywordtype">double</span> rangeSpacing,</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;                    <span class="keywordtype">double</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#aa2a6cf1b5b9b2b721e52e10347deb311">wavelength</a>,</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;                    <span class="keywordtype">int</span> radarGridWidth);</div>
 <div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#ada11a555b7ccf164a369b1e462626ea2">numberOfAzimuthLooks</a>(<span class="keywordtype">int</span> azimuthLooks);</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#aacfc1f37352d8a2b8a0c0e9f0b148110">numberOfRangeLooks</a>(<span class="keywordtype">int</span> rngLooks);</div>
 <div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a1fd01f44ecd78cc0714432d6b53f0f02">prf</a>(<span class="keywordtype">double</span> p);</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#ada11a555b7ccf164a369b1e462626ea2">numberOfAzimuthLooks</a>(<span class="keywordtype">int</span> azimuthLooks);</div>
 <div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a60c59f262141122a34b72c4478c9d448">doppler</a>(<a class="code" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d&lt;double&gt;</a> dop);</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a1fd01f44ecd78cc0714432d6b53f0f02">prf</a>(<span class="keywordtype">double</span> p);</div>
 <div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a2aa568b036dc34d0e88cd4f14d287ab6">rangeSamplingFrequency</a>(<span class="keywordtype">double</span> rngSamplingFreq);</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a8905ab3830d8e3b1aad021b7f59aaa00">doppler</a>(<a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;double&gt;</a> dop);</div>
 <div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a6a073da0678c8400075a30b77fd6f1af">rangeBandwidth</a>(<span class="keywordtype">double</span> rngBandwidth);</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;        </div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a526786795b1304ec1a867b1e328f5203">rangePixelSpacing</a>(<span class="keywordtype">double</span> rngPixelSpacing);</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#aa2a6cf1b5b9b2b721e52e10347deb311">wavelength</a>(<span class="keywordtype">double</span> wvl);</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;        </div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a130000bab46400484aa608431524fd97">interpolator</a>(<a class="code" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> method);</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#ab3300952f9785817bb951da592690e49">orbit</a>(<a class="code" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a>&amp; <a class="code" href="classisce_1_1signal_1_1Covariance.html#ab3300952f9785817bb951da592690e49">orbit</a>, <a class="code" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> refEpoch);</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a2aa568b036dc34d0e88cd4f14d287ab6">rangeSamplingFrequency</a>(<span class="keywordtype">double</span> rngSamplingFreq);</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a6a073da0678c8400075a30b77fd6f1af">rangeBandwidth</a>(<span class="keywordtype">double</span> rngBandwidth);</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;        </div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a526786795b1304ec1a867b1e328f5203">rangePixelSpacing</a>(<span class="keywordtype">double</span> rngPixelSpacing);</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#aa2a6cf1b5b9b2b721e52e10347deb311">wavelength</a>(<span class="keywordtype">double</span> wvl);</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;        </div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a130000bab46400484aa608431524fd97">interpolator</a>(<a class="code" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> method);</div>
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a4a2897929aa5e22d5df337a607fbeac8">orbitInterploationMethod</a>(<a class="code" href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a> orbitMethod);</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a74e8e7078440e155510472864630af90">orbit</a>(<a class="code" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a>&amp; <a class="code" href="classisce_1_1signal_1_1Covariance.html#a74e8e7078440e155510472864630af90">orbit</a>);</div>
 <div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#acb45ab69277095ede71ef5e74b7a180f">ellipsoid</a>(<a class="code" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a>&amp; <a class="code" href="classisce_1_1signal_1_1Covariance.html#acb45ab69277095ede71ef5e74b7a180f">ellipsoid</a>);</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a4a2897929aa5e22d5df337a607fbeac8">orbitInterploationMethod</a>(<a class="code" href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a> orbitMethod);</div>
 <div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#a12acbe21cabf311efe1d0c113c20d79d">mode</a>(<a class="code" href="classisce_1_1product_1_1ImageMode.html">isce::product::ImageMode</a>&amp; <a class="code" href="classisce_1_1signal_1_1Covariance.html#a12acbe21cabf311efe1d0c113c20d79d">mode</a>);</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#acb45ab69277095ede71ef5e74b7a180f">ellipsoid</a>(<a class="code" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a>&amp; <a class="code" href="classisce_1_1signal_1_1Covariance.html#acb45ab69277095ede71ef5e74b7a180f">ellipsoid</a>);</div>
 <div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;</div>
 <div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1signal_1_1Covariance.html#ac028088629145be6ec3309c5496647a5">projection</a>(<a class="code" href="structisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> * proj);</div>
 <div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;</div>
@@ -288,7 +289,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;                    <span class="keywordtype">size_t</span> width, <span class="keywordtype">size_t</span> length,</div>
 <div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;                    <span class="keywordtype">size_t</span> rngLooks, <span class="keywordtype">size_t</span> azLooks);</div>
 <div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;        <span class="keywordtype">void</span> _correctFaradayRotation(<a class="code" href="structisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;double&gt;</a>&amp; faradayAngle,</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;        <span class="keywordtype">void</span> _correctFaradayRotation(<a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;double&gt;</a>&amp; faradayAngle,</div>
 <div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;                    std::valarray&lt;std::complex&lt;float&gt;&gt;&amp; Shh,</div>
 <div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;                    std::valarray&lt;std::complex&lt;float&gt;&gt;&amp; Shv,</div>
 <div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;                    std::valarray&lt;std::complex&lt;float&gt;&gt;&amp; Svh,</div>
@@ -344,113 +345,105 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;        <a class="code" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> _orbit;</div>
 <div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;        <a class="code" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> _ellipsoid;</div>
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;        <span class="comment">// isce::product objects</span></div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        <a class="code" href="classisce_1_1product_1_1ImageMode.html">isce::product::ImageMode</a> _mode;</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    </div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;        <span class="comment">// Optimization options</span></div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;        <span class="keywordtype">double</span> _threshold;</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;        <span class="keywordtype">int</span> _numiter;</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;        <span class="keywordtype">size_t</span> _linesPerBlock = 2000;</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;        <a class="code" href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a> _orbitMethod;</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;        <span class="comment">// radar grids parameters</span></div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;        <a class="code" href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d&lt;double&gt;</a> _doppler;</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;        <a class="code" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> _azimuthStartTime, _refEpoch;</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;        <span class="keywordtype">double</span> _azimuthTimeInterval;</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;        <span class="keywordtype">double</span> _startingRange;</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;        <span class="keywordtype">double</span> _rangeSpacing;</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;        <span class="keywordtype">int</span> _radarGridLength;</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;        <span class="keywordtype">int</span> _radarGridWidth;</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;        <span class="comment">// start X position for the output geocoded grid</span></div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;        <span class="keywordtype">double</span> _geoGridStartX;</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;        <span class="comment">// start Y position for the output geocoded grid</span></div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;        <span class="keywordtype">double</span> _geoGridStartY;</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;        <span class="comment">// X spacing for the output geocoded grid</span></div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;        <span class="keywordtype">double</span> _geoGridSpacingX;</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;        <span class="comment">// Y spacing for the output geocoded grid</span></div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;        <span class="keywordtype">double</span> _geoGridSpacingY;</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;        <span class="comment">// number of pixels in east-west direction (X direction)</span></div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;        <span class="keywordtype">size_t</span> _geoGridWidth;</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;        <span class="comment">// number of lines in north-south direction (Y direction)</span></div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;        <span class="keywordtype">size_t</span> _geoGridLength;</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;</div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;        <span class="comment">// geoTransform array (gdal style)</span></div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;        <span class="keywordtype">double</span> * _geoTrans;</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;        <span class="comment">// epsg code for the output geocoded grid</span></div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;        <span class="keywordtype">int</span> _epsgOut;</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;        <span class="comment">// projection object</span></div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;        <a class="code" href="structisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> * _proj = <span class="keyword">nullptr</span>; </div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;        <span class="comment">// margin around a computed bounding box for DEM (in degrees)</span></div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;        <span class="keywordtype">double</span> _demBlockMargin;</div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;</div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;        <span class="comment">// margin around the computed bounding box for radar dara (integer number of lines/pixels)</span></div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;        <span class="keywordtype">int</span> _radarBlockMargin;</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;</div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;        <span class="comment">// interpolator </span></div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;        <a class="code" href="classisce_1_1core_1_1Interpolator.html">isce::core::Interpolator&lt;T&gt;</a> * _interp = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;        <span class="comment">// RTC correction flag for geocoded covariance</span></div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;        <span class="keywordtype">bool</span> _correctRtcFlag = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;</div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;        <span class="comment">// Polarimetric orientation correction flag for geocoded covariance</span></div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;        <span class="keywordtype">bool</span> _correctOrientationFlag = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;        <span class="comment">// Optimization options</span></div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        <span class="keywordtype">double</span> _threshold;</div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;        <span class="keywordtype">int</span> _numiter;</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;        <span class="keywordtype">size_t</span> _linesPerBlock = 2000;</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;        <a class="code" href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a> _orbitMethod;</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;        <span class="comment">// radar grids parameters</span></div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;        <a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;double&gt;</a> _doppler;</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;        <a class="code" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> _radarGrid;</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;        </div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;        <span class="comment">// start X position for the output geocoded grid</span></div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;        <span class="keywordtype">double</span> _geoGridStartX;</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;        <span class="comment">// start Y position for the output geocoded grid</span></div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;        <span class="keywordtype">double</span> _geoGridStartY;</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;        <span class="comment">// X spacing for the output geocoded grid</span></div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;        <span class="keywordtype">double</span> _geoGridSpacingX;</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;        <span class="comment">// Y spacing for the output geocoded grid</span></div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;        <span class="keywordtype">double</span> _geoGridSpacingY;</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;        <span class="comment">// number of pixels in east-west direction (X direction)</span></div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;        <span class="keywordtype">size_t</span> _geoGridWidth;</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;        <span class="comment">// number of lines in north-south direction (Y direction)</span></div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;        <span class="keywordtype">size_t</span> _geoGridLength;</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;        <span class="comment">// geoTransform array (gdal style)</span></div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;        <span class="keywordtype">double</span> * _geoTrans;</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;        <span class="comment">// epsg code for the output geocoded grid</span></div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;        <span class="keywordtype">int</span> _epsgOut;</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;        <span class="comment">// projection object</span></div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;        <a class="code" href="structisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> * _proj = <span class="keyword">nullptr</span>; </div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;        <span class="comment">// margin around a computed bounding box for DEM (in degrees)</span></div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;        <span class="keywordtype">double</span> _demBlockMargin;</div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;        <span class="comment">// margin around the computed bounding box for radar dara (integer number of lines/pixels)</span></div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;        <span class="keywordtype">int</span> _radarBlockMargin;</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;        <span class="comment">// interpolator </span></div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;        <a class="code" href="classisce_1_1core_1_1Interpolator.html">isce::core::Interpolator&lt;T&gt;</a> * _interp = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;        <span class="comment">// RTC correction flag for geocoded covariance</span></div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;        <span class="keywordtype">bool</span> _correctRtcFlag = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;        <span class="comment">// Polarimetric orientation correction flag for geocoded covariance</span></div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;        <span class="keywordtype">bool</span> _correctOrientationFlag = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;        <span class="comment">// dualPol or Quadpol flags</span></div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;        <span class="keywordtype">bool</span> _dualPol = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;        <span class="keywordtype">bool</span> _quadPol = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;        <span class="comment">// coPol and crossPol names (used only for dual-pol)</span></div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;        std::string _coPol;</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;        std::string _crossPol;</div>
 <div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;</div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;        <span class="comment">// dualPol or Quadpol flags</span></div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;        <span class="keywordtype">bool</span> _dualPol = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;        <span class="keywordtype">bool</span> _quadPol = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;        <span class="comment">// coPol and crossPol names (used only for dual-pol)</span></div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;        std::string _coPol;</div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;        std::string _crossPol;</div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;</div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;</div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;};</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;</div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;<span class="comment">// Get inline implementations for Geocode</span></div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;<span class="preprocessor">#define ISCE_SIGNAL_COVARIANCE_ICC</span></div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;Covariance.icc&quot;</span></div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;<span class="preprocessor">#undef ISCE_SIGNAL_COVARIANCE_ICC</span></div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;</div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;};</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;<span class="comment">// Get inline implementations for Geocode</span></div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;<span class="preprocessor">#define ISCE_SIGNAL_COVARIANCE_ICC</span></div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;Covariance.icc&quot;</span></div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;<span class="preprocessor">#undef ISCE_SIGNAL_COVARIANCE_ICC</span></div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;<span class="preprocessor"></span></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a74f57f02b397d5b2b908e10186847422"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a74f57f02b397d5b2b908e10186847422">isce::signal::Covariance::numiterGeo2rdr</a></div><div class="ttdeci">void numiterGeo2rdr(int numiter)</div><div class="ttdoc">Set number of iterations Geo2rdr computation. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:270</div></div>
-<div class="ttc" id="classisce_1_1product_1_1ImageMode_html"><div class="ttname"><a href="classisce_1_1product_1_1ImageMode.html">isce::product::ImageMode</a></div><div class="ttdef"><b>Definition:</b> ImageMode.h:33</div></div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;<span class="preprocessor"></span></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a74f57f02b397d5b2b908e10186847422"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a74f57f02b397d5b2b908e10186847422">isce::signal::Covariance::numiterGeo2rdr</a></div><div class="ttdeci">void numiterGeo2rdr(int numiter)</div><div class="ttdoc">Set number of iterations Geo2rdr computation. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:248</div></div>
 <div class="ttc" id="classisce_1_1io_1_1Raster_html"><div class="ttname"><a href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a></div><div class="ttdoc">Data structure meant to handle Raster I/O operations. </div><div class="ttdef"><b>Definition:</b> Raster.h:36</div></div>
 <div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a526786795b1304ec1a867b1e328f5203"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a526786795b1304ec1a867b1e328f5203">isce::signal::Covariance::rangePixelSpacing</a></div><div class="ttdeci">void rangePixelSpacing(double rngPixelSpacing)</div><div class="ttdoc">Set range pixel spacing. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:73</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a60c59f262141122a34b72c4478c9d448"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a60c59f262141122a34b72c4478c9d448">isce::signal::Covariance::doppler</a></div><div class="ttdeci">void doppler(isce::core::LUT1d&lt; double &gt; dop)</div><div class="ttdoc">Set Doppler. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:42</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a12acbe21cabf311efe1d0c113c20d79d"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a12acbe21cabf311efe1d0c113c20d79d">isce::signal::Covariance::mode</a></div><div class="ttdeci">void mode(isce::product::ImageMode &amp;mode)</div><div class="ttdoc">Set image mode. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:243</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_ae3033b6adc2be1f7043c4b4b6a8d325c"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#ae3033b6adc2be1f7043c4b4b6a8d325c">isce::signal::Covariance::demBlockMargin</a></div><div class="ttdeci">void demBlockMargin(double demBlockMargin)</div><div class="ttdoc">Set DEM block margin. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:288</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a840771dd76f5192c9550736639471909"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a840771dd76f5192c9550736639471909">isce::signal::Covariance::linesPerBlock</a></div><div class="ttdeci">void linesPerBlock(size_t linesPerBlock)</div><div class="ttdoc">Set lines per block. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:279</div></div>
+<div class="ttc" id="classisce_1_1product_1_1RadarGridParameters_html"><div class="ttname"><a href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a></div><div class="ttdef"><b>Definition:</b> RadarGridParameters.h:20</div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a74e8e7078440e155510472864630af90"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a74e8e7078440e155510472864630af90">isce::signal::Covariance::orbit</a></div><div class="ttdeci">void orbit(isce::core::Orbit &amp;orbit)</div><div class="ttdoc">Set platform&amp;#39;s orbit. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:203</div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_ae3033b6adc2be1f7043c4b4b6a8d325c"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#ae3033b6adc2be1f7043c4b4b6a8d325c">isce::signal::Covariance::demBlockMargin</a></div><div class="ttdeci">void demBlockMargin(double demBlockMargin)</div><div class="ttdoc">Set DEM block margin. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:266</div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a840771dd76f5192c9550736639471909"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a840771dd76f5192c9550736639471909">isce::signal::Covariance::linesPerBlock</a></div><div class="ttdeci">void linesPerBlock(size_t linesPerBlock)</div><div class="ttdoc">Set lines per block. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:257</div></div>
+<div class="ttc" id="classisce_1_1core_1_1LUT2d_html"><div class="ttname"><a href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt; double &gt;</a></div></div>
 <div class="ttc" id="classisce_1_1signal_1_1Covariance_html_aacfc1f37352d8a2b8a0c0e9f0b148110"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#aacfc1f37352d8a2b8a0c0e9f0b148110">isce::signal::Covariance::numberOfRangeLooks</a></div><div class="ttdeci">void numberOfRangeLooks(int rngLooks)</div><div class="ttdoc">Set number of looks in range direction for covariance estimation. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:14</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_ac028088629145be6ec3309c5496647a5"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#ac028088629145be6ec3309c5496647a5">isce::signal::Covariance::projection</a></div><div class="ttdeci">void projection(isce::core::ProjectionBase *proj)</div><div class="ttdoc">Set the projection object. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:252</div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_ac028088629145be6ec3309c5496647a5"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#ac028088629145be6ec3309c5496647a5">isce::signal::Covariance::projection</a></div><div class="ttdeci">void projection(isce::core::ProjectionBase *proj)</div><div class="ttdoc">Set the projection object. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:230</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Interpolator_html"><div class="ttname"><a href="classisce_1_1core_1_1Interpolator.html">isce::core::Interpolator&lt; T &gt;</a></div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a30534783033c9845b6ee122591e68dc7"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a30534783033c9845b6ee122591e68dc7">isce::signal::Covariance::radarGrid</a></div><div class="ttdeci">void radarGrid(isce::core::LUT2d&lt; double &gt; doppler, isce::core::DateTime refEpoch, double azimuthStartTime, double azimuthTimeInterval, int radarGridLength, double startingRange, double rangeSpacing, double wavelength, int radarGridWidth)</div><div class="ttdoc">Set the input radar grid. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:183</div></div>
 <div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a25a04ff2ce32b968bf6aecbdab7f4e44"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a25a04ff2ce32b968bf6aecbdab7f4e44">isce::signal::Covariance::geocodeCovariance</a></div><div class="ttdeci">void geocodeCovariance(isce::io::Raster &amp;rdrCov, isce::io::Raster &amp;geoCov, isce::io::Raster &amp;demRaster)</div><div class="ttdoc">Geocode covariance components. </div><div class="ttdef"><b>Definition:</b> Covariance.cpp:100</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Ellipsoid_html"><div class="ttname"><a href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a></div><div class="ttdoc">Data structure to store Ellipsoid information. </div><div class="ttdef"><b>Definition:</b> Ellipsoid.h:26</div></div>
-<div class="ttc" id="classisce_1_1core_1_1LUT1d_html"><div class="ttname"><a href="classisce_1_1core_1_1LUT1d.html">isce::core::LUT1d&lt; double &gt;</a></div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a354549ebbbaa7ff5d717000396cc3e88"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a354549ebbbaa7ff5d717000396cc3e88">isce::signal::Covariance::faradayRotation</a></div><div class="ttdeci">void faradayRotation(std::map&lt; std::string, isce::io::Raster &gt; &amp;slc, isce::io::Raster &amp;faradayAngleRaster, size_t rangeLooks, size_t azimuthLooks)</div><div class="ttdoc">Estimate the Faraday rotation angle from quad-pol data. </div><div class="ttdef"><b>Definition:</b> Covariance.cpp:363</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a130000bab46400484aa608431524fd97"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a130000bab46400484aa608431524fd97">isce::signal::Covariance::interpolator</a></div><div class="ttdeci">void interpolator(isce::core::dataInterpMethod method)</div><div class="ttdoc">Set interpolator method for geocoding. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:315</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Ellipsoid_html"><div class="ttname"><a href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a></div><div class="ttdoc">Data structure to store Ellipsoid information. </div><div class="ttdef"><b>Definition:</b> Ellipsoid.h:27</div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a354549ebbbaa7ff5d717000396cc3e88"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a354549ebbbaa7ff5d717000396cc3e88">isce::signal::Covariance::faradayRotation</a></div><div class="ttdeci">void faradayRotation(std::map&lt; std::string, isce::io::Raster &gt; &amp;slc, isce::io::Raster &amp;faradayAngleRaster, size_t rangeLooks, size_t azimuthLooks)</div><div class="ttdoc">Estimate the Faraday rotation angle from quad-pol data. </div><div class="ttdef"><b>Definition:</b> Covariance.cpp:362</div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a130000bab46400484aa608431524fd97"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a130000bab46400484aa608431524fd97">isce::signal::Covariance::interpolator</a></div><div class="ttdeci">void interpolator(isce::core::dataInterpMethod method)</div><div class="ttdoc">Set interpolator method for geocoding. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:293</div></div>
 <div class="ttc" id="structisce_1_1core_1_1Orbit_html"><div class="ttname"><a href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a></div><div class="ttdoc">Data structure to represent ECEF state vectors of imaging platform. </div><div class="ttdef"><b>Definition:</b> Orbit.h:35</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html">isce::signal::Covariance</a></div><div class="ttdoc">Covariance estimation from dual-polarization or quad-polarization data. </div><div class="ttdef"><b>Definition:</b> Covariance.h:41</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_af2c4e1fc5581183952ca96364d2e6885"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#af2c4e1fc5581183952ca96364d2e6885">isce::signal::Covariance::orientationAngle</a></div><div class="ttdeci">void orientationAngle(isce::io::Raster &amp;azimuthSlopeRaster, isce::io::Raster &amp;rangeSlopeRaster, isce::io::Raster &amp;lookAngleRaster, isce::io::Raster &amp;tau)</div><div class="ttdoc">Correct Faraday rotation for quad-pol data. </div><div class="ttdef"><b>Definition:</b> Covariance.cpp:538</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a4a2897929aa5e22d5df337a607fbeac8"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a4a2897929aa5e22d5df337a607fbeac8">isce::signal::Covariance::orbitInterploationMethod</a></div><div class="ttdeci">void orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod)</div><div class="ttdoc">Set orbit interploation method. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:225</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a3858998afda258116a7b8e35744d500c"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a3858998afda258116a7b8e35744d500c">isce::signal::Covariance::thresholdGeo2rdr</a></div><div class="ttdeci">void thresholdGeo2rdr(double threshold)</div><div class="ttdoc">Set the threshold for Geo2rdr computation. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:261</div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html">isce::signal::Covariance</a></div><div class="ttdoc">Covariance estimation from dual-polarization or quad-polarization data. </div><div class="ttdef"><b>Definition:</b> Covariance.h:42</div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_af2c4e1fc5581183952ca96364d2e6885"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#af2c4e1fc5581183952ca96364d2e6885">isce::signal::Covariance::orientationAngle</a></div><div class="ttdeci">void orientationAngle(isce::io::Raster &amp;azimuthSlopeRaster, isce::io::Raster &amp;rangeSlopeRaster, isce::io::Raster &amp;lookAngleRaster, isce::io::Raster &amp;tau)</div><div class="ttdoc">Correct Faraday rotation for quad-pol data. </div><div class="ttdef"><b>Definition:</b> Covariance.cpp:537</div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a8905ab3830d8e3b1aad021b7f59aaa00"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a8905ab3830d8e3b1aad021b7f59aaa00">isce::signal::Covariance::doppler</a></div><div class="ttdeci">void doppler(isce::core::LUT2d&lt; double &gt; dop)</div><div class="ttdoc">Set Doppler. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:42</div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a4a2897929aa5e22d5df337a607fbeac8"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a4a2897929aa5e22d5df337a607fbeac8">isce::signal::Covariance::orbitInterploationMethod</a></div><div class="ttdeci">void orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod)</div><div class="ttdoc">Set orbit interploation method. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:212</div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a3858998afda258116a7b8e35744d500c"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a3858998afda258116a7b8e35744d500c">isce::signal::Covariance::thresholdGeo2rdr</a></div><div class="ttdeci">void thresholdGeo2rdr(double threshold)</div><div class="ttdoc">Set the threshold for Geo2rdr computation. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:239</div></div>
 <div class="ttc" id="classisce_1_1signal_1_1Covariance_html_ada11a555b7ccf164a369b1e462626ea2"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#ada11a555b7ccf164a369b1e462626ea2">isce::signal::Covariance::numberOfAzimuthLooks</a></div><div class="ttdeci">void numberOfAzimuthLooks(int azimuthLooks)</div><div class="ttdoc">Set number of looks in azimuth direction for covariance estimation. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:23</div></div>
 <div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a2aa568b036dc34d0e88cd4f14d287ab6"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a2aa568b036dc34d0e88cd4f14d287ab6">isce::signal::Covariance::rangeSamplingFrequency</a></div><div class="ttdeci">void rangeSamplingFrequency(double rngSamplingFreq)</div><div class="ttdoc">Set range sampling frequency. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:54</div></div>
 <div class="ttc" id="classisce_1_1signal_1_1Covariance_html_aac52152d4b3261942477a8f9f5af9c10"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#aac52152d4b3261942477a8f9f5af9c10">isce::signal::Covariance::covariance</a></div><div class="ttdeci">void covariance(std::map&lt; std::string, isce::io::Raster &gt; &amp;slc, std::map&lt; std::pair&lt; std::string, std::string &gt;, isce::io::Raster &gt; &amp;cov)</div><div class="ttdoc">Covariance estimation. </div><div class="ttdef"><b>Definition:</b> Covariance.cpp:16</div></div>
 <div class="ttc" id="structisce_1_1core_1_1ProjectionBase_html"><div class="ttname"><a href="structisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a></div><div class="ttdoc">Abstract base class for individual projections. </div><div class="ttdef"><b>Definition:</b> Projections.h:22</div></div>
 <div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a1fd01f44ecd78cc0714432d6b53f0f02"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a1fd01f44ecd78cc0714432d6b53f0f02">isce::signal::Covariance::prf</a></div><div class="ttdeci">void prf(double p)</div><div class="ttdoc">Set pulse repetition frequency (PRF). </div><div class="ttdef"><b>Definition:</b> Covariance.icc:32</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_ab3300952f9785817bb951da592690e49"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#ab3300952f9785817bb951da592690e49">isce::signal::Covariance::orbit</a></div><div class="ttdeci">void orbit(isce::core::Orbit &amp;orbit, isce::core::DateTime refEpoch)</div><div class="ttdoc">Set platform&amp;#39;s orbit. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:212</div></div>
 <div class="ttc" id="namespaceisce_1_1core_html_ac8c4ed7d6044fe311697bb08d76de33e"><div class="ttname"><a href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a></div><div class="ttdeci">dataInterpMethod</div><div class="ttdoc">Enumeration type to indicate interpolation method. </div><div class="ttdef"><b>Definition:</b> core/Constants.h:53</div></div>
 <div class="ttc" id="classisce_1_1geometry_1_1DEMInterpolator_html"><div class="ttname"><a href="classisce_1_1geometry_1_1DEMInterpolator.html">isce::geometry::DEMInterpolator</a></div><div class="ttdef"><b>Definition:</b> DEMInterpolator.h:30</div></div>
 <div class="ttc" id="structisce_1_1core_1_1DateTime_html"><div class="ttname"><a href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a></div><div class="ttdoc">Data structure to store date time to nano-sec precision. </div><div class="ttdef"><b>Definition:</b> DateTime.h:24</div></div>
@@ -458,11 +451,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="namespaceisce_1_1core_html_a3459742f8165c7ea52d9730a675a2822"><div class="ttname"><a href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a></div><div class="ttdeci">orbitInterpMethod</div><div class="ttdoc">Enumeration type to indicate method to use for orbit interpolation. </div><div class="ttdef"><b>Definition:</b> core/Constants.h:46</div></div>
 <div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a3efd68f009496c5ee6ce18bcabdeab59"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a3efd68f009496c5ee6ce18bcabdeab59">isce::signal::Covariance::geoGrid</a></div><div class="ttdeci">void geoGrid(double geoGridStartX, double geoGridStartY, double geoGridSpacingX, double geoGridSpacingY, double geoGridEndX, double geoGridEndY, int epsgcode)</div><div class="ttdoc">Set geocoded grid. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:99</div></div>
 <div class="ttc" id="geometry_8h_html"><div class="ttname"><a href="geometry_8h.html">geometry.h</a></div><div class="ttdoc">Collection of simple commonly used geometry functions. </div></div>
-<div class="ttc" id="structisce_1_1core_1_1LUT2d_html"><div class="ttname"><a href="structisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a></div><div class="ttdef"><b>Definition:</b> LUT2d.h:17</div></div>
 <div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a6a073da0678c8400075a30b77fd6f1af"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a6a073da0678c8400075a30b77fd6f1af">isce::signal::Covariance::rangeBandwidth</a></div><div class="ttdeci">void rangeBandwidth(double rngBandwidth)</div><div class="ttdoc">Set range bandwidth. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:63</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_acb45ab69277095ede71ef5e74b7a180f"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#acb45ab69277095ede71ef5e74b7a180f">isce::signal::Covariance::ellipsoid</a></div><div class="ttdeci">void ellipsoid(isce::core::Ellipsoid &amp;ellipsoid)</div><div class="ttdoc">Set ellipsoid. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:234</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_aa7a660ebb8aa509f5e8128155aa6f61c"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#aa7a660ebb8aa509f5e8128155aa6f61c">isce::signal::Covariance::radarGrid</a></div><div class="ttdeci">void radarGrid(isce::core::LUT1d&lt; double &gt; doppler, isce::core::DateTime azimuthStartTime, double azimuthTimeInterval, int radarGridLength, double startingRange, double rangeSpacing, int radarGridWidth)</div><div class="ttdoc">Set the input radar grid. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:183</div></div>
-<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a12043d096d868fca49d415319627ac46"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a12043d096d868fca49d415319627ac46">isce::signal::Covariance::radarBlockMargin</a></div><div class="ttdeci">void radarBlockMargin(int radarBlockMargin)</div><div class="ttdoc">Set radar block margin. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:297</div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_acb45ab69277095ede71ef5e74b7a180f"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#acb45ab69277095ede71ef5e74b7a180f">isce::signal::Covariance::ellipsoid</a></div><div class="ttdeci">void ellipsoid(isce::core::Ellipsoid &amp;ellipsoid)</div><div class="ttdoc">Set ellipsoid. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:221</div></div>
+<div class="ttc" id="classisce_1_1signal_1_1Covariance_html_a12043d096d868fca49d415319627ac46"><div class="ttname"><a href="classisce_1_1signal_1_1Covariance.html#a12043d096d868fca49d415319627ac46">isce::signal::Covariance::radarBlockMargin</a></div><div class="ttdeci">void radarBlockMargin(int radarBlockMargin)</div><div class="ttdoc">Set radar block margin. </div><div class="ttdef"><b>Definition:</b> Covariance.icc:275</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
