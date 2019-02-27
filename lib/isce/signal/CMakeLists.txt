@@ -4,7 +4,8 @@ set(SRCS
     Crossmul.cpp
     Filter.cpp
     Looks.cpp
-    Covariance.cpp)
+    Covariance.cpp
+    shiftSignal.cpp)
 
 ####Append current path to every source file
 #####Library headers
@@ -18,6 +19,7 @@ set(HEADERS
     Looks.h
     Looks.icc
     Covariance.h
-    Covariance.icc)
+    Covariance.icc
+    shiftSignal.h)
 
 add_isce_libdir(signal "${SRCS}" "${HEADERS}")
