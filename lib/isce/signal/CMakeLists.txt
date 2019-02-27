@@ -8,7 +8,8 @@ set(LOCAL_SRCS
     Crossmul.cpp
     Filter.cpp
     Looks.cpp
-    Covariance.cpp)
+    Covariance.cpp
+    shiftSignal.cpp)
 
 ####Append current path to every source file
 set(${PACKAGENAME}_SRCS "")
@@ -27,7 +28,8 @@ set(${PACKAGENAME}_EXPORT_HEADERS
     Looks.h
     Looks.icc
     Covariance.h
-    Covariance.icc)
+    Covariance.icc
+    shiftSignal.h)
 
 ###Install headers into build/include
 ###This is where regex can be used on the header files if needed
