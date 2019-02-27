@@ -18,14 +18,9 @@ function(CheckCXX)
   set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   add_compile_options(-std=c++17)
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
-    message(FATAL_ERROR "Insufficient GCC version. Version 5.0 or greater is required.")
+  if (CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
+    message(FATAL_ERROR "Insufficient GCC version. Version 6.0 or greater is required.")
   endif()
-  # get sysroot from host compiler
-  #execute_process(COMMAND ${CMAKE_CXX_COMPILER} --print-sysroot
-                  #OUTPUT_VARIABLE CXX_SYSROOT)
-  #string(REGEX REPLACE "\n$" "" CXX_SYSROOT "${CXX_SYSROOT}") # remove trailing newline
-  #set(CMAKE_SYSROOT "${CXX_SYSROOT}" CACHE STRING "CMake sysroot used for compilation")
 endfunction()
 
 
