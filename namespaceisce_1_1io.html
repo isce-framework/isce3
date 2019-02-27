@@ -138,10 +138,6 @@ Functions</h2></td></tr>
 <tr class="memitem:a149fe3b422513f4be11b46ca902f567d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a149fe3b422513f4be11b46ca902f567d"></a>
 unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>mapFileAccessMode</b> (const char mode)</td></tr>
 <tr class="separator:a149fe3b422513f4be11b46ca902f567d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1494fc37a747626d8a44976b72146b92"><td class="memTemplParams" colspan="2">template&lt;typename H5obj &gt; </td></tr>
-<tr class="memitem:a1494fc37a747626d8a44976b72146b92"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">exists</a> (H5obj &amp;h5obj, const std::string &amp;name, const std::string start=&quot;.&quot;, const std::string type=&quot;BOTH&quot;)</td></tr>
-<tr class="memdesc:a1494fc37a747626d8a44976b72146b92"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check existence of a dataset or group.  <a href="#a1494fc37a747626d8a44976b72146b92">More...</a><br/></td></tr>
-<tr class="separator:a1494fc37a747626d8a44976b72146b92"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae96538b781df97ffbcda47c4d92ffbb6"><td class="memTemplParams" colspan="2">template&lt;typename H5obj , typename T &gt; </td></tr>
 <tr class="memitem:ae96538b781df97ffbcda47c4d92ffbb6"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">loadFromH5</a> (H5obj &amp;h5obj, const std::string &amp;datasetPath, T &amp;v)</td></tr>
 <tr class="memdesc:ae96538b781df97ffbcda47c4d92ffbb6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load scalar dataset from HDF5 file.  <a href="#ae96538b781df97ffbcda47c4d92ffbb6">More...</a><br/></td></tr>
@@ -154,18 +150,10 @@ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>mapFileAccess
 <tr class="memitem:a942a3392af55e6091a1461f8283ac12f"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#a942a3392af55e6091a1461f8283ac12f">loadFromH5</a> (H5obj &amp;h5obj, const std::string &amp;datasetPath, std::valarray&lt; T &gt; &amp;v)</td></tr>
 <tr class="memdesc:a942a3392af55e6091a1461f8283ac12f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load valarray dataset from HDF5 file.  <a href="#a942a3392af55e6091a1461f8283ac12f">More...</a><br/></td></tr>
 <tr class="separator:a942a3392af55e6091a1461f8283ac12f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2d9ef7ae78eeae4fb2c60ee55dc65b98"><td class="memTemplParams" colspan="2">template&lt;typename H5obj , typename T &gt; </td></tr>
-<tr class="memitem:a2d9ef7ae78eeae4fb2c60ee55dc65b98"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#a2d9ef7ae78eeae4fb2c60ee55dc65b98">loadFromH5</a> (H5obj &amp;h5obj, const std::string &amp;datasetPath, <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; T &gt; &amp;m)</td></tr>
-<tr class="memdesc:a2d9ef7ae78eeae4fb2c60ee55dc65b98"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load Matrix dataset from HDF5 file.  <a href="#a2d9ef7ae78eeae4fb2c60ee55dc65b98">More...</a><br/></td></tr>
-<tr class="separator:a2d9ef7ae78eeae4fb2c60ee55dc65b98"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab499ddb417f6ddf7c48f2100bf1f2cf"><td class="memTemplParams" colspan="2">template&lt;typename H5obj &gt; </td></tr>
 <tr class="memitem:aab499ddb417f6ddf7c48f2100bf1f2cf"><td class="memTemplItemLeft" align="right" valign="top">std::vector&lt; int &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#aab499ddb417f6ddf7c48f2100bf1f2cf">getImageDims</a> (H5obj &amp;h5obj, const std::string &amp;datasetPath)</td></tr>
 <tr class="memdesc:aab499ddb417f6ddf7c48f2100bf1f2cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get dimensions of complex imagery from HDF5 file.  <a href="#aab499ddb417f6ddf7c48f2100bf1f2cf">More...</a><br/></td></tr>
 <tr class="separator:aab499ddb417f6ddf7c48f2100bf1f2cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac3028775734d38721d27c2cd0ad96034"><td class="memTemplParams" colspan="2">template&lt;typename H5obj &gt; </td></tr>
-<tr class="memitem:ac3028775734d38721d27c2cd0ad96034"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#ac3028775734d38721d27c2cd0ad96034">getRefEpoch</a> (H5obj &amp;h5obj, const std::string &amp;datasetPath)</td></tr>
-<tr class="memdesc:ac3028775734d38721d27c2cd0ad96034"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse time units in a dataset attribute to get a reference epoch.  <a href="#ac3028775734d38721d27c2cd0ad96034">More...</a><br/></td></tr>
-<tr class="separator:ac3028775734d38721d27c2cd0ad96034"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
@@ -194,65 +182,6 @@ const int&#160;</td><td class="memItemRight" valign="bottom"><b>STRLENGTH</b> = 
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The <a class="el" href="namespaceisce_1_1io.html" title="The isce::io namespace. ">isce::io</a> namespace. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a1494fc37a747626d8a44976b72146b92"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename H5obj &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool isce::io::exists </td>
-          <td>(</td>
-          <td class="paramtype">H5obj &amp;&#160;</td>
-          <td class="paramname"><em>h5obj</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>name</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string&#160;</td>
-          <td class="paramname"><em>start</em> = <code>&quot;.&quot;</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string&#160;</td>
-          <td class="paramname"><em>type</em> = <code>&quot;BOTH&quot;</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Check existence of a dataset or group. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">h5obj</td><td>HDF5 file or group object. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>H5 path of dataset relative to h5obj. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">start</td><td>Relative path from current group/file to start search from. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>Type of object to search for. Default: BOTH </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a class="anchor" id="aab499ddb417f6ddf7c48f2100bf1f2cf"></a>
 <div class="memitem">
 <div class="memproto">
@@ -292,52 +221,6 @@ template&lt;typename H5obj &gt; </div>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of image dataset relative to h5obj. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="ac3028775734d38721d27c2cd0ad96034"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename H5obj &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> isce::io::getRefEpoch </td>
-          <td>(</td>
-          <td class="paramtype">H5obj &amp;&#160;</td>
-          <td class="paramname"><em>h5obj</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>datasetPath</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Parse time units in a dataset attribute to get a reference epoch. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">epoch</td><td><a class="el" href="structisce_1_1core_1_1DateTime.html" title="Data structure to store date time to nano-sec precision. ">isce::core::DateTime</a> of reference epoch. </td></tr>
   </table>
   </dd>
 </dl>
@@ -494,58 +377,6 @@ template&lt;typename H5obj , typename T &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>Valarray to store dataset. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="a2d9ef7ae78eeae4fb2c60ee55dc65b98"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename H5obj , typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void isce::io::loadFromH5 </td>
-          <td>(</td>
-          <td class="paramtype">H5obj &amp;&#160;</td>
-          <td class="paramname"><em>h5obj</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>datasetPath</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; T &gt; &amp;&#160;</td>
-          <td class="paramname"><em>m</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Load Matrix dataset from HDF5 file. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">m</td><td>Matrix to store dataset. </td></tr>
   </table>
   </dd>
 </dl>

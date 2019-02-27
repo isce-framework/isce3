@@ -152,40 +152,41 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;            topo.orbitMethod(orbitMethod);</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;            topo.demMethod(demMethod);</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;            topo.epsgOut(epsgOut);</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        }</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <span class="comment">// ----------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        <span class="comment">// Serialization for Geo2rdr</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        <span class="comment">// ----------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        <span class="comment">// Geo2rdr save does nothing</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> Archive&gt;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="keywordtype">void</span> save(Archive &amp; archive, <span class="keyword">const</span> Geo2rdr &amp; geo) {}</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        <span class="comment">// Geo2rdr load</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> Archive&gt;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        <span class="keywordtype">void</span> load(Archive &amp; archive, Geo2rdr &amp; geo) {</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;            <span class="comment">// Deserialize scalar values</span></div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;            <span class="keywordtype">double</span> threshold;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;            <span class="keywordtype">size_t</span> numiter;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;            <a class="code" href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a> orbitMethod;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;            archive(cereal::make_nvp(<span class="stringliteral">&quot;threshold&quot;</span>, threshold),</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;numIterations&quot;</span>, numiter),</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;orbitMethod&quot;</span>, orbitMethod));</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;            <span class="comment">// Send to Geo2rdr setters</span></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;            geo.threshold(threshold);</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;            geo.numiter(numiter);</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;            geo.orbitMethod(orbitMethod);</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        }</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    }</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;}</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="comment">// end of file</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;            topo.initialized(<span class="keyword">true</span>);</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        }</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        <span class="comment">// ----------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        <span class="comment">// Serialization for Geo2rdr</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        <span class="comment">// ----------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        <span class="comment">// Geo2rdr save does nothing</span></div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> Archive&gt;</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="keywordtype">void</span> save(Archive &amp; archive, <span class="keyword">const</span> Geo2rdr &amp; geo) {}</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="comment">// Geo2rdr load</span></div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> Archive&gt;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        <span class="keywordtype">void</span> load(Archive &amp; archive, Geo2rdr &amp; geo) {</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;            <span class="comment">// Deserialize scalar values</span></div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;            <span class="keywordtype">double</span> threshold;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;            <span class="keywordtype">size_t</span> numiter;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;            <a class="code" href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a> orbitMethod;</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;            archive(cereal::make_nvp(<span class="stringliteral">&quot;threshold&quot;</span>, threshold),</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;numIterations&quot;</span>, numiter),</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;orbitMethod&quot;</span>, orbitMethod));</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;            <span class="comment">// Send to Geo2rdr setters</span></div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;            geo.threshold(threshold);</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;            geo.numiter(numiter);</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;            geo.orbitMethod(orbitMethod);</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;        }</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    }</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;}</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="comment">// end of file</span></div>
 <div class="ttc" id="namespaceisce_1_1core_html_ac8c4ed7d6044fe311697bb08d76de33e"><div class="ttname"><a href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a></div><div class="ttdeci">dataInterpMethod</div><div class="ttdoc">Enumeration type to indicate interpolation method. </div><div class="ttdef"><b>Definition:</b> core/Constants.h:53</div></div>
 <div class="ttc" id="namespaceisce_1_1core_html_a3459742f8165c7ea52d9730a675a2822"><div class="ttname"><a href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a></div><div class="ttdeci">orbitInterpMethod</div><div class="ttdoc">Enumeration type to indicate method to use for orbit interpolation. </div><div class="ttdef"><b>Definition:</b> core/Constants.h:46</div></div>
 </div><!-- fragment --></div><!-- contents -->
