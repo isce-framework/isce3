@@ -3,12 +3,15 @@ set(PACKAGENAME signal)
 string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
-# hold below for eventual gpuSignal.h
 set(ISCE_CUDA_${PACKAGENAME}_HEADERS
-        gpuSignal.h)
+        gpuSignal.h
+        gpuFilter.h
+        gpuLooks.h)
 
 set(LOCAL_SRCS
-        gpuSignal.cu)
+        gpuSignal.cu
+        gpuFilter.cu
+        gpuLooks.cu)
 
 # Append current path to every source file
 set(ISCE_CUDA_${PACKAGENAME}_SRCS "")
