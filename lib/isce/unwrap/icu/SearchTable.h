@@ -5,7 +5,8 @@
 
 #include "ICU.h" // offset2_t
 
-namespace isce { namespace unwrap { namespace icu {
+namespace isce::unwrap::icu
+{
 
 // \brief Lookup table of points to search for residues or neutrons
 //
@@ -30,7 +31,7 @@ private:
     size_t * _npts;
 };
 
-} } }
+}
 
 // Get inline implementations.
 #define ISCE_UNWRAP_ICU_SEARCHTABLE_ICC
@@ -38,3 +39,4 @@ private:
 #undef ISCE_UNWRAP_ICU_SEARCHTABLE_ICC
 
 #endif /* ISCE_UNWRAP_ICU_SEARCHTABLE_H */
+

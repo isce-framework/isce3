@@ -2,7 +2,8 @@
 
 #include "PhaseGrad.h" // calcPhaseGrad
 
-namespace isce { namespace unwrap { namespace icu {
+namespace isce::unwrap::icu
+{
 
 template<int WINSIZE>
 void _calcPhaseGrad(
@@ -166,5 +167,5 @@ void calcPhaseGrad(
     }
 }
 
-} } }
+}
 

@@ -5,7 +5,8 @@
 #include <cstdint> // UINT8_MAX
 #include <exception> // std::overflow_error
 
-namespace isce { namespace unwrap { namespace icu {
+namespace isce::unwrap::icu
+{
 
 inline
 LabelMap::LabelMap()
@@ -41,5 +42,5 @@ void LabelMap::setlabel(const uint8_t oldlabel, const uint8_t newlabel)
 
 inline size_t LabelMap::size() const { return _labels.size(); }
 
-} } }
+}
 

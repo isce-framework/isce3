@@ -4,7 +4,8 @@
 
 #include <exception> // std::domain_error
 
-namespace isce { namespace unwrap { namespace icu {
+namespace isce::unwrap::icu
+{
 
 inline size_t ICU::numBufLines() const { return _NumBufLines; }
 inline void ICU::numBufLines(const size_t numBufLines) 
@@ -176,5 +177,5 @@ inline void ICU::bsPhaseVarThr(const float bsPhaseVarThr)
     _BsPhaseVarThr = bsPhaseVarThr; 
 }
 
-} } }
+}
 

@@ -4,7 +4,8 @@
 #include <complex> // std::complex
 #include <cstddef> // size_t
 
-namespace isce { namespace unwrap { namespace icu {
+namespace isce::unwrap::icu
+{
 
 // \brief Compute phase slope in x & y, smoothed by Gaussian kernel.
 //
@@ -25,7 +26,7 @@ void calcPhaseGrad(
     const size_t width,
     const int winsize);
 
-} } }
+}
 
 #endif /* ISCE_UNWRAP_ICU_PHASEGRAD_H */
 

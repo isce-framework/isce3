@@ -5,7 +5,8 @@
 
 #include "ICU.h" // ICU, LabelMap, idx2_t, offset2_t
 
-namespace isce { namespace unwrap { namespace icu {
+namespace isce::unwrap::icu
+{
 
 void growConnComp(
     float * unw, 
@@ -354,4 +355,5 @@ template void ICU::growGrass<false>(
     LabelMap & labelmap, const float * phase, const bool * tree, 
     const float * corr, float corrthr, const size_t length, const size_t width);
 
-} } }
+}
+

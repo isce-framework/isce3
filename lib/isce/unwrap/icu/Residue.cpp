@@ -2,7 +2,8 @@
 
 #include "ICU.h" // ICU
 
-namespace isce { namespace unwrap { namespace icu {
+namespace isce::unwrap::icu
+{
 
 void ICU::getResidues(
     signed char * charge, 
@@ -35,4 +36,5 @@ void ICU::getResidues(
     for (size_t j = 0; j < length; ++j) { charge[j * width + (width-1)] = 0; }
 }
 
-} } }
+}
+

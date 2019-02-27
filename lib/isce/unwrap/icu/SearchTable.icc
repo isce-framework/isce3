@@ -2,7 +2,8 @@
 #error "SearchTable.icc is an implementation detail of class SearchTable."
 #endif
 
-namespace isce { namespace unwrap { namespace icu {
+namespace isce::unwrap::icu
+{
 
 inline
 SearchTable::SearchTable(
@@ -95,5 +96,5 @@ size_t SearchTable::numPtsInEllipse(
     return _npts[a];
 }
 
-} } }
+}
 

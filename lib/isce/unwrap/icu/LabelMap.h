@@ -5,7 +5,8 @@
 #include <cstdint> // uint8_t
 #include <vector> // std::vector
 
-namespace isce { namespace unwrap { namespace icu {
+namespace isce::unwrap::icu
+{
 
 // \brief Table of connected component label equivalences
 //
@@ -30,7 +31,7 @@ private:
     std::vector<uint8_t> _labels;
 };
 
-} } }
+}
 
 // Get inline implementations.
 #define ISCE_UNWRAP_ICU_LABELMAP_ICC

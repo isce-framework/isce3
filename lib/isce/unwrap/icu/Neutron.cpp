@@ -5,7 +5,8 @@
 #include "ICU.h" // ICU
 #include "PhaseGrad.h" // calcPhaseGrad
 
-namespace isce { namespace unwrap { namespace icu {
+namespace isce::unwrap::icu
+{
 
 void ICU::genNeutrons(
     bool * neut,
@@ -88,5 +89,5 @@ void ICU::genNeutrons(
     }
 }
 
-} } }
+}
 

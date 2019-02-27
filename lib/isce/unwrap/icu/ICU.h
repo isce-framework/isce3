@@ -10,7 +10,8 @@
 
 #include "LabelMap.h" // LabelMap
 
-namespace isce { namespace unwrap { namespace icu {
+namespace isce::unwrap::icu
+{
 
 // 2-D index type
 typedef std::array<size_t, 2> idx2_t;
@@ -195,7 +196,7 @@ private:
     float _BsPhaseVarThr = 8.f;
 };
 
-} } }
+}
 
 // Get inline implementations.
 #define ISCE_UNWRAP_ICU_ICU_ICC
@@ -203,3 +204,4 @@ private:
 #undef ISCE_UNWRAP_ICU_ICU_ICC
 
 #endif /* ISCE_UNWRAP_ICU_ICU_H */
+

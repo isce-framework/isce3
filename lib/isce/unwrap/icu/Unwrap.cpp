@@ -4,7 +4,8 @@
 
 #include "ICU.h" // ICU, isce::io::Raster, size_t, uint8_t
 
-namespace isce { namespace unwrap { namespace icu {
+namespace isce::unwrap::icu
+{
 
 void ICU::unwrap(
     isce::io::Raster & unw,
@@ -163,5 +164,5 @@ void ICU::unwrap(
     delete[] bslabels;
 }
 
-} } }
+}
 
