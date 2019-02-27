@@ -51,14 +51,8 @@ endfunction()
 
 ##Check for GDAL installation
 function(CheckGDAL)
-    FIND_PACKAGE(GDAL REQUIRED)
-    execute_process( COMMAND gdal-config --version
-                    OUTPUT_VARIABLE GDAL_VERSION)
-
+    find_package(GDAL 2.3 REQUIRED)
     message(STATUS "Found GDAL: ${GDAL_VERSION}")
-    if (GDAL_VERSION VERSION_LESS 2.3)
-        message (FATAL_ERROR "Did not find GDAL version >= 2.3")
-    endif()
 endfunction()
 
 ##Check for HDF5 installation
