@@ -12,6 +12,7 @@
 #define ISCE_IO_SERIALIZATION_H
 
 #include <iostream>
+#include <sstream>
 
 // isce::io
 #include <isce/io/IH5.h>
@@ -20,6 +21,25 @@
 namespace isce {
     //! The isce::io namespace
     namespace io {
+
+        /** Check existence of a dataset or group
+         *
+         * @param[in] h5obj         HDF5 file or group object.
+         * @param[in] name          H5 path of dataset relative to h5obj. 
+         * @param[in] start         Relative path from current group/file to start search from. 
+         * @param[in] type          Type of object to search for. Default: BOTH */
+        template <typename H5obj>
+        inline bool exists(H5obj & h5obj, const std::string & name,
+                           const std::string start = ".", const std::string type = "BOTH") {
+            // Search for objects
+            std::vector<std::string> objs = h5obj.find(name, start, type, "FULL");
+            // Check size of vector
+            if (objs.size() > 0) {
+                return true;
+            } else {
+                return false;
+            }
+        }
 
         /** Load scalar dataset from HDF5 file.
          *
@@ -58,8 +78,22 @@ namespace isce {
                                std::valarray<T> & v) {
             // Open dataset
             isce::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
-            // Read the vector dataset
+            // Read the valarray dataset
             dataset.read(v);
+        }
+
+        /** Load Matrix dataset from HDF5 file.
+          *
+          * @param[in] file          HDF5 file or group object.
+          * @param[in] datasetPath   H5 path of dataset relative to h5obj.
+          * @param[in] m             Matrix to store dataset. */
+        template <typename H5obj, typename T>
+        inline void loadFromH5(H5obj & h5obj, const std::string & datasetPath,
+                               isce::core::Matrix<T> & m) {
+            // Open dataset
+            isce::io::IDataSet dataset = h5obj.openDataSet(datasetPath);
+            // Read the Matrix dataset using raw pointer interface
+            dataset.read(m.data());
         }
 
         /** Get dimensions of complex imagery from HDF5 file.
@@ -74,6 +108,33 @@ namespace isce {
             return dataset.getDimensions();
         }
 
+        /** Parse time units in a dataset attribute to get a reference epoch
+          *
+          * @param[in] file         HDF5 file or group object.
+          * @param[in] datasetPath  H5 path of dataset relative to h5obj.
+          * @param[out] epoch       isce::core::DateTime of reference epoch. */
+        template <typename H5obj>
+        inline isce::core::DateTime getRefEpoch(H5obj & h5obj, const std::string & datasetPath) {
+
+            // Open the dataset
+            isce::io::IDataSet dset = h5obj.openDataSet(datasetPath);
+
+            // Get the attribute
+            std::string unitAttr;
+            std::string attribute("units");
+            dset.read(unitAttr, attribute);
+
+            // Parse it
+            std::string dummy1, dummy2, datestr, timestr;
+            std::istringstream ss(unitAttr);
+            ss >> dummy1 >> dummy2 >> datestr >> timestr;
+            std::string inputstr = datestr + "T" + timestr + ".00";
+            isce::core::DateTime epoch(inputstr);
+
+            // Done
+            return epoch;
+        }
+            
     }
 }
 

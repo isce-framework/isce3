@@ -14,10 +14,14 @@ TEST(TestRTC, RunRTC) {
 
     // Open DEM raster
     isce::io::Raster dem("../../../../../lib/isce/data/srtm_cropped.tif");
-    isce::product::ImageMode mode = product.complexImagery().primaryMode();
-    isce::io::Raster out_raster("./rtc.bin", mode.width(), mode.length(), 1, GDT_Float32, "ENVI");
 
-    isce::cuda::geometry::facetRTC(product, dem, out_raster);
+    // Create output raster
+    isce::product::Swath & swath = product.swath('A');
+    isce::io::Raster out_raster("./rtc.bin", swath.samples(), swath.lines(), 1,
+                                GDT_Float32, "ENVI");
+ 
+    // Call RTC
+    isce::cuda::geometry::facetRTC(product, dem, out_raster, 'A');
 }
 
 TEST(TestRTC, CheckResults) {
@@ -64,7 +68,7 @@ TEST(TestRTC, CheckResults) {
     printf("nneg = %d\n", nneg);
 
     // Enforce bound on average pixel-error
-    ASSERT_TRUE(error < 1e-3);
+    ASSERT_TRUE(error < 1.5e-3);
     // Enforce bound on number of ignored pixels
     ASSERT_TRUE(nnan < 1e-4 * refRaster.width() * refRaster.length());
     ASSERT_TRUE(nneg < 1e-4 * refRaster.width() * refRaster.length());

@@ -13,4 +13,6 @@ foreach (TESTNAME lut1d lut2d)
     add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
 endforeach ()
 
+file(COPY ../interpolator/data.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 include(CTest)

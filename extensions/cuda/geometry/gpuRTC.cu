@@ -24,7 +24,6 @@
 #include "isce/cuda/core/gpuOrbit.h"
 #include "isce/cuda/geometry/gpuGeometry.h"
 #include "isce/cuda/geometry/gpuDEMInterpolator.h"
-#include "isce/cuda/product/gpuImageMode.h"
 
 __constant__ double start, r0, pixazm, dr;
 __constant__ float xbound, ybound;
@@ -52,7 +51,8 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
         isce::cuda::core::gpuEllipsoid ellps,
         isce::cuda::core::gpuOrbit orbit,
         isce::cuda::core::gpuLUT1d<double> dop,
-        isce::cuda::product::gpuImageMode mode
+        size_t width,
+        double wavelength
         ) {
 
     const double RAD = M_PI / 180.;
@@ -76,8 +76,8 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     double inputLLH[3] = {lon_mid*RAD, lat_mid*RAD,
         dem_interp.interpolateXY(lon_mid, lat_mid)};
 
-    isce::cuda::geometry::geo2rdr(&inputLLH[0], ellps, orbit, dop, mode,
-            &a, &r, 1e-4, 100, 1e-4);
+    isce::cuda::geometry::geo2rdr(&inputLLH[0], ellps, orbit, dop,
+            &a, &r, wavelength, 1e-4, 100, 1e-4);
 
     const float azpix = (a - start) / pixazm;
     const float ranpix = (r - r0) / dr;
@@ -178,10 +178,10 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     const float Wac = 1. - Wa;
 
     // Use bilinear weighting to distribute area
-    atomicAdd(&out[mode.width() * iy1 + ix1], area * Wrc * Wac);
-    atomicAdd(&out[mode.width() * iy1 + ix2], area * Wr  * Wac);
-    atomicAdd(&out[mode.width() * iy2 + ix1], area * Wrc * Wa);
-    atomicAdd(&out[mode.width() * iy2 + ix2], area * Wr  * Wa);
+    atomicAdd(&out[width * iy1 + ix1], area * Wrc * Wac);
+    atomicAdd(&out[width * iy1 + ix2], area * Wr  * Wac);
+    atomicAdd(&out[width * iy2 + ix1], area * Wrc * Wa);
+    atomicAdd(&out[width * iy2 + ix2], area * Wr  * Wa);
 }
 
 // Compute the flat earth incidence angle correction applied by UAVSAR processing
@@ -189,14 +189,16 @@ __global__ void flatearth(float* out,
         const isce::cuda::geometry::gpuDEMInterpolator flat_interp,
         const isce::cuda::core::gpuOrbit orbit,
         const isce::cuda::core::gpuEllipsoid ellps,
-        const isce::cuda::product::gpuImageMode mode,
+        size_t length,
+        size_t width,
+        double wavelength,
         float lookDir,
         float avg_hgt
         ) {
     size_t j = threadIdx.x + blockIdx.x * blockDim.x;
     size_t i = threadIdx.y + blockIdx.y * blockDim.y;
 
-    if (j >= mode.width() or i >= mode.length())
+    if (j >= width or i >= length)
         return;
 
     double xyz_plat[3];
@@ -211,7 +213,7 @@ __global__ void flatearth(float* out,
     double targetXYZ[3];
     targetLLH[2] = avg_hgt; // initialize first guess
     isce::cuda::geometry::rdr2geo(start + i * pixazm, slt_range, 0, orbit, ellps,
-            flat_interp, targetLLH, mode.wavelength(), 1,
+            flat_interp, targetLLH, wavelength, 1,
             1e-4, 20, 20);
 
     // Computation of ENU coordinates around ground target
@@ -229,12 +231,12 @@ __global__ void flatearth(float* out,
     const double costheta = fabs(enu[2]) / gpuLinAlg::norm(enu);
     const double sintheta = sqrt(1. - costheta*costheta);
 
-    out[mode.width() * i + j] *= sintheta;
+    out[width * i + j] *= sintheta;
 }
 
 double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp,
-                               const isce::product::ImageMode& mode,
-                               const isce::core::Ellipsoid& ellps) {
+                               const isce::core::Ellipsoid& ellps,
+                               double rangePixelSpacing) {
     // Create a projection object from the DEM interpolator
     isce::core::ProjectionBase * proj = isce::core::createProj(dem_interp.epsgCode());
 
@@ -269,7 +271,7 @@ double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp
     const double demArea = dx * dy;
 
     // Compute area of radar pixel (for now, just use spacing in range direction)
-    const double radarArea = mode.rangePixelSpacing() * mode.rangePixelSpacing();
+    const double radarArea = rangePixelSpacing * rangePixelSpacing;
 
     // Upsampling factor is the ratio
     return std::sqrt(demArea / radarArea);
@@ -301,26 +303,28 @@ namespace isce { namespace cuda {
 
         void facetRTC(isce::product::Product& product,
                       isce::io::Raster& dem,
-                      isce::io::Raster& out_raster) {
-
-            isce::core::Ellipsoid ellps_h = product.metadata().identification().ellipsoid();
-            isce::core::Orbit orbit_h(product.metadata().orbitPOE());
-            isce::product::ImageMode mode_h = product.complexImagery().primaryMode();
-            isce::geometry::Topo topo_h(product);
+                      isce::io::Raster& out_raster,
+                      char frequency) {
+                      
+            isce::core::Ellipsoid ellps_h;
+            isce::core::Orbit orbit_h(product.metadata().orbit());
+            isce::product::RadarGridParameters radarGrid(product, frequency, 1, 1);
+            isce::geometry::Topo topo_h(product, frequency, true);
             topo_h.orbitMethod(isce::core::orbitInterpMethod::HERMITE_METHOD);
+            const int lookDirection = product.lookSide();
 
             // Initialize other ISCE objects
             isce::core::Peg peg;
             isce::core::Pegtrans ptm;
             ptm.radarToXYZ(ellps_h, peg);
 
-            const double start_h = mode_h.startAzTime().secondsSinceEpoch();
-            const double   end   = mode_h.  endAzTime().secondsSinceEpoch();
-            const double pixazm_h = (end - start_h) / mode_h.length(); // azimuth difference per pixel
-            const double r0_h = mode_h.startingRange();
-            const double dr_h = mode_h.rangePixelSpacing();
-            const float xbound_h = mode_h.width()  - 1.;
-            const float ybound_h = mode_h.length() - 1.;
+            const double start_h = radarGrid.sensingStart();
+            const double   end   = radarGrid.sensingStop();
+            const double pixazm_h = (end - start_h) / radarGrid.length(); // azimuth difference per pixel
+            const double r0_h = radarGrid.startingRange();
+            const double dr_h = radarGrid.rangePixelSpacing();
+            const float xbound_h = radarGrid.width()  - 1.;
+            const float ybound_h = radarGrid.length() - 1.;
             checkCudaErrors(cudaMemcpyToSymbol(start,  &start_h, sizeof(start_h)));
             checkCudaErrors(cudaMemcpyToSymbol(pixazm, &pixazm_h, sizeof(pixazm_h)));
             checkCudaErrors(cudaMemcpyToSymbol(r0, &r0_h, sizeof(r0_h)));
@@ -329,9 +333,9 @@ namespace isce { namespace cuda {
             checkCudaErrors(cudaMemcpyToSymbol(ybound, &ybound_h, sizeof(ybound_h)));
 
             // Output raster
-            auto out = std::make_unique<float[]>(mode_h.length() * mode_h.width());
+            auto out = std::make_unique<float[]>(radarGrid.size());
             float* out_d;
-            checkCudaErrors(cudaMalloc(&out_d, mode_h.length() * mode_h.width() * sizeof(float)));
+            checkCudaErrors(cudaMalloc(&out_d, radarGrid.size() * sizeof(float)));
 
             // ------------------------------------------------------------------------
             // Main code: decompose DEM into facets, compute RDC coordinates
@@ -339,9 +343,9 @@ namespace isce { namespace cuda {
 
             // Create CPU-only  objects
             isce::geometry::DEMInterpolator dem_interp_h(0, isce::core::dataInterpMethod::BIQUINTIC_METHOD);
-            topo_h.computeDEMBounds(dem, dem_interp_h, 0, mode_h.length()); // determine DEM bounds
+            topo_h.computeDEMBounds(dem, dem_interp_h, 0, radarGrid.length()); // determine DEM bounds
 
-            const float upsample_factor = computeUpsamplingFactor(dem_interp_h, mode_h, ellps_h);
+            const float upsample_factor = computeUpsamplingFactor(dem_interp_h, ellps_h, radarGrid.rangePixelSpacing());
 
             float max_hgt, avg_hgt;
             pyre::journal::info_t info("gpuRTC");
@@ -352,8 +356,10 @@ namespace isce { namespace cuda {
             isce::cuda::geometry::gpuDEMInterpolator dem_interp(dem_interp_h);
             isce::cuda::core::gpuEllipsoid ellps(ellps_h);
             isce::cuda::core::gpuOrbit orbit(orbit_h);
-            isce::cuda::core::gpuLUT1d<double> dop(product.metadata().instrument().skewDoppler());
-            isce::cuda::product::gpuImageMode mode(mode_h);
+
+            // Convert LUT2d doppler to LUT1d
+            isce::core::LUT1d<double> dop_h(product.metadata().procInfo().dopplerCentroid(frequency));
+            isce::cuda::core::gpuLUT1d<double> dop(dop_h);
 
             const size_t xmax = dem_interp.width()  * upsample_factor;
             const size_t ymax = dem_interp.length() * upsample_factor;
@@ -370,24 +376,26 @@ namespace isce { namespace cuda {
                 dim3 grid(xmax / BLOCK_X + 1,
                           ymax / BLOCK_Y + 1);
                 facet<<<grid, block>>>(out_d, xmax, ymax, upsample_factor,
-                                       dem_interp, ellps, orbit, dop, mode);
+                                       dem_interp, ellps, orbit, dop, radarGrid.width(),
+                                       radarGrid.wavelength());
                 checkCudaErrors(cudaPeekAtLastError());
                 checkCudaErrors(cudaDeviceSynchronize());
             }
 
             {
                 dim3 block(BLOCK_X, BLOCK_Y);
-                dim3 grid(mode.width() / BLOCK_X + 1,
-                          mode.width() / BLOCK_Y + 1);
-                flatearth<<<grid, block>>>(out_d, flat_interp, orbit, ellps, mode,
-                        product.metadata().identification().lookDirection(), avg_hgt);
+                dim3 grid(radarGrid.width() / BLOCK_X + 1,
+                          radarGrid.width() / BLOCK_Y + 1);
+                flatearth<<<grid, block>>>(out_d, flat_interp, orbit, ellps,
+                        radarGrid.length(), radarGrid.width(), radarGrid.wavelength(),
+                        lookDirection, avg_hgt);
                 checkCudaErrors(cudaPeekAtLastError());
                 checkCudaErrors(cudaDeviceSynchronize());
             }
 
-            checkCudaErrors(cudaMemcpy(&out[0], out_d, mode.width() * mode.length() * sizeof(float),
+            checkCudaErrors(cudaMemcpy(&out[0], out_d, radarGrid.size() * sizeof(float),
                                        cudaMemcpyDeviceToHost));
-            out_raster.setBlock(&out[0], 0, 0, mode.width(), mode.length());
+            out_raster.setBlock(&out[0], 0, 0, radarGrid.width(), radarGrid.length());
         }
     };
 

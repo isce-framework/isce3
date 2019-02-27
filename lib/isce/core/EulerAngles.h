@@ -27,6 +27,12 @@ class isce::core::EulerAngles : public isce::core::Attitude {
                     const std::vector<double> & roll,
                     const std::string yaw_orientation="normal");
 
+        /** Copy constructor */
+        EulerAngles(const EulerAngles &);
+
+        /** Assignment operator */
+        EulerAngles & operator=(const EulerAngles &);
+
         /** Set data after construction */
         void data(const std::vector<double> & time,
                   const std::vector<double> & yaw,
@@ -71,6 +77,11 @@ class isce::core::EulerAngles : public isce::core::Attitude {
         /** Utility method to convert rotation matrix to Euler angles */
         static cartesian_t rotmat2ypr(const cartmat_t &);
 
+        /** Get reference epoch */
+        inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
+        /** Set reference epoch */
+        inline void refEpoch(const isce::core::DateTime & epoch) { _refEpoch = epoch; }
+
         /** Return number of epochs */
         inline size_t nVectors() const { return _yaw.size(); }
 
@@ -82,6 +93,8 @@ class isce::core::EulerAngles : public isce::core::Attitude {
         std::vector<double> _pitch;
         std::vector<double> _roll;
 
+        // Reference epoch
+        isce::core::DateTime _refEpoch;
 };
 
 #endif

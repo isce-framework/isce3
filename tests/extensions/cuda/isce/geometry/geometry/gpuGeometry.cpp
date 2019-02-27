@@ -29,6 +29,7 @@
 
 // isce::product
 #include "isce/product/Product.h"
+#include "isce/product/RadarGridParameters.h"
 
 // isce::geometry
 #include "isce/geometry/geometry.h"
@@ -47,12 +48,11 @@ struct GpuGeometryTest : public ::testing::Test {
 
     // isce::core objects
     isce::core::Ellipsoid ellipsoid;
-    isce::core::LUT1d<double> skewDoppler;
+    isce::core::LUT2d<double> doppler;
     isce::core::Orbit orbit;
-    // isce::product objects
-    isce::product::ImageMode mode;
 
-    double wvl;
+    // isce::product objects
+    isce::product::RadarGridParameters rgparam;
     int lookSide;
 
     // Constructor
@@ -66,12 +66,15 @@ struct GpuGeometryTest : public ::testing::Test {
             isce::product::Product product(file);
 
             // Extract core and product objects
-            ellipsoid = product.metadata().identification().ellipsoid();
-            orbit = product.metadata().orbitPOE();
-            skewDoppler = product.metadata().instrument().skewDoppler();
-            mode = product.complexImagery().primaryMode();
-            lookSide = product.metadata().identification().lookDirection();
-            wvl = mode.wavelength();
+            orbit = product.metadata().orbit();
+            rgparam = isce::product::RadarGridParameters(product, 'A');
+            doppler = product.metadata().procInfo().dopplerCentroid('A');
+            lookSide = product.lookSide();
+            ellipsoid.a(isce::core::EarthSemiMajorAxis);
+            ellipsoid.e2(isce::core::EarthEccentricitySquared);
+
+            // For this test, use biquintic interpolation for Doppler LUT
+            doppler.interpMethod(isce::core::BIQUINTIC_METHOD);
         }
 };
 
@@ -89,10 +92,10 @@ TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
         for (size_t j = 10; j < 500; j += 40) {
 
             // Get azimutha and range info
-            const double azTime = mode.startAzTime().secondsSinceEpoch() + i / mode.prf();
+            const double azTime = rgparam.sensingTime(i);
             const double rbin = j;
-            const double range = mode.startingRange() + j * mode.rangePixelSpacing();
-            const double doppler = skewDoppler.eval(range);
+            const double range = rgparam.slantRange(j);
+            const double dopval = doppler.eval(azTime, range);
 
             // Initialize guess
             isce::core::cartesian_t targetLLH = {0.0, 0.0, 1000.0};
@@ -108,7 +111,7 @@ TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
             // Compute satellite velocity magnitude
             const double vmag = LinAlg::norm(state.velocity());
             // Compute Doppler factor
-            const double dopfact = 0.5 * wvl * doppler * range / vmag;
+            const double dopfact = 0.5 * rgparam.wavelength() * dopval * range / vmag;
 
             // Wrap range and Doppler factor in a Pixel object
             isce::core::Pixel pixel(range, dopfact, 0);
@@ -152,8 +155,8 @@ TEST_F(GpuGeometryTest, GeoToRdr) {
     
     // Run geo2rdr on gpu
     double aztime, slantRange;
-    int stat = isce::cuda::geometry::geo2rdr_h(llh, ellipsoid, orbit, skewDoppler,
-        mode, aztime, slantRange, 1.0e-10, 50, 10.0);
+    int stat = isce::cuda::geometry::geo2rdr_h(llh, ellipsoid, orbit, doppler,
+        aztime, slantRange, rgparam.wavelength(), 1.0e-10, 50, 10.0);
     // Convert azimuth time to a date
     isce::core::DateTime azdate = refEpoch + aztime;
 
@@ -164,7 +167,7 @@ TEST_F(GpuGeometryTest, GeoToRdr) {
     // Run geo2rdr again with zero doppler
     isce::core::LUT1d<double> zeroDoppler;
     stat = isce::cuda::geometry::geo2rdr_h(llh, ellipsoid, orbit, zeroDoppler,
-        mode, aztime, slantRange, 1.0e-10, 50, 10.0);
+        aztime, slantRange, rgparam.wavelength(), 1.0e-10, 50, 10.0);
     azdate = refEpoch + aztime;
 
     ASSERT_EQ(stat, 1);

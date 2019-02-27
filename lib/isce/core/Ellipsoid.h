@@ -11,7 +11,8 @@
 #include <cstdio>
 #include <cmath>
 #include <array>
-#include "Basis.h"
+#include "isce/core/Constants.h"
+#include "isce/core/Basis.h"
 
 // Declaration
 namespace isce {
@@ -33,8 +34,8 @@ class isce::core::Ellipsoid {
         Ellipsoid(double maj, double ecc) : _a(maj), _e2(ecc) {}
 
         /// @cond
-        /* Empty constructor - not recommended */ 
-        Ellipsoid() : Ellipsoid(0.0, 0.0) {}
+        /* Empty constructor - default to Earth WGS-84 ellipsoid */ 
+        Ellipsoid() : Ellipsoid(EarthSemiMajorAxis, EarthEccentricitySquared) {}
         /// @endcond
 
         /** Copy constructor*/

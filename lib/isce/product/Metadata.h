@@ -2,20 +2,17 @@
 // -*- coding: utf-8 -*-
 //
 // Source Author: Bryan Riel
-// Copyright 2017-2018
+// Copyright 2017-2019
 
 #ifndef ISCE_PRODUCT_METADATA_H
 #define ISCE_PRODUCT_METADATA_H
 
 // isce::core
-#include "isce/core/Attitude.h"
-#include "isce/core/Orbit.h"
-
-// isce::radar
-#include "isce/radar/Radar.h"
+#include <isce/core/EulerAngles.h>
+#include <isce/core/Orbit.h>
 
 // isce::product
-#include "isce/product/Identification.h"
+#include <isce/product/ProcessingInformation.h>
 
 // Declarations
 namespace isce {
@@ -31,43 +28,47 @@ class isce::product::Metadata {
         /** Default constructor */
         inline Metadata() {}
 
-        /** Get NOE orbit */
-        inline isce::core::Orbit orbitNOE() const;
-        /** Set NOE orbit */
-        inline void orbitNOE(const isce::core::Orbit &);
+        /** Copy constructor */
+        inline Metadata(const Metadata &);
 
-        /** Get POE orbit */
-        inline isce::core::Orbit orbitPOE() const;
-        /** Set POE orbit */
-        inline void orbitPOE(const isce::core::Orbit &);
+        /** Get read-only reference to attitude */
+        inline const isce::core::EulerAngles & attitude() const { return _attitude; }
+    
+        /** Get reference to attitude */
+        inline isce::core::EulerAngles & attitude() { return _attitude; }
 
-        /** Get radar instrument */
-        inline isce::radar::Radar instrument() const;
-        /** Set instrument */
-        inline void instrument(const isce::radar::Radar &);
+        /** Set attitude */
+        inline void attitude(const isce::core::EulerAngles & att) { _attitude = att; }
 
-        /** Get identification */
-        inline Identification identification() const;
-        /** Set identification */
-        inline void identification(const Identification &);
+        /** Get read-only reference to orbit */
+        inline const isce::core::Orbit & orbit() const { return _orbit; };
 
+        /** Get reference to orbit */
+        inline isce::core::Orbit & orbit() { return _orbit; }
+
+        /** Set orbit */
+        inline void orbit(const isce::core::Orbit & orb) { _orbit = orb; };
+
+        /** Get read-only reference to ProcessingInformation */
+        inline const ProcessingInformation & procInfo() const { return _procInfo; }
+
+        /** Get reference to ProcessingInformation */
+        inline ProcessingInformation & procInfo() { return _procInfo; }
+        
     private:
-        // Orbits
-        isce::core::Orbit _orbitMOE;
-        isce::core::Orbit _orbitNOE;
-        isce::core::Orbit _orbitPOE;
-
-        // Radar instrument
-        isce::radar::Radar _instrument;
-
-        // Identification
-        Identification _id;
+        // Attitude
+        isce::core::EulerAngles _attitude;
+        // Orbit
+        isce::core::Orbit _orbit;
+        // ProcessingInformation
+        isce::product::ProcessingInformation _procInfo;
 };
 
-// Get inline implementations for Metadata
-#define ISCE_PRODUCT_METADATA_ICC
-#include "Metadata.icc"
-#undef ISCE_PRODUCT_METADATA_ICC
+// Copy constructor
+/** @param[in] meta Metadata object */
+isce::product::Metadata::
+Metadata(const Metadata & meta) : _attitude(meta.attitude()), _orbit(meta.orbit()),
+                                  _procInfo(meta.procInfo()) {}
 
 #endif
 

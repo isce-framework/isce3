@@ -9,8 +9,8 @@ from geometry cimport *
 from Orbit cimport orbitInterpMethod
 
 
-def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyLUT1d doppler,
-			   pyImageMode mode, double threshold = 0.05, int maxiter = 50,
+def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyLUT2d doppler,
+			   double wvl, double threshold = 0.05, int maxiter = 50,
 			   double dR = 1.0e-8):
 
 	# Transfer llh to a cartesian_t
@@ -26,8 +26,7 @@ def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyLUT1d doppler,
 			deref(ellps.c_ellipsoid),
 			deref(orbit.c_orbit),
 			deref(doppler.c_lut),
-			deref(mode.c_imagemode),
-			azimuthTime, slantRange, threshold, maxiter, dR)
+			azimuthTime, slantRange, wvl, threshold, maxiter, dR)
 
 	# All done
 	return azimuthTime, slantRange

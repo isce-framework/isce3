@@ -14,6 +14,9 @@
 // pyre
 #include <pyre/journal.h>
 
+// isce::core
+#include <isce/core/LUT2d.h>
+
 // Declaration
 namespace isce {
     namespace core {
@@ -61,6 +64,12 @@ class isce::core::LUT1d {
             _extrapolate = lut.extrapolate();
             return *this;
         }
+
+        /** Constructor from an LUT2d (values averaged in y-direction) */
+        inline LUT1d(const LUT2d<T> & lut2d);
+
+        /** Assignment operator from an LUT2d (values averaged in y-direction) */
+        inline LUT1d & operator=(const LUT2d<T> & lut2d);
 
         /** Get a reference to the coordinates
           * @param[out] coords Reference to valarray for coordinates */

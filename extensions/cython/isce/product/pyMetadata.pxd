@@ -7,6 +7,14 @@
 from Metadata cimport Metadata
 
 cdef class pyMetadata:
-    cdef Metadata c_metadata
+
+    # C++ class
+    cdef Metadata * c_metadata
+    cdef bool __owner
+
+    # Cython class members
+    cdef pyOrbit py_orbit
+    cdef pyEulerAngles py_attitude
+    cdef pyProcessingInformation py_procInfo
    
 # end of file 

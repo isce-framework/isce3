@@ -14,7 +14,7 @@
 #include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/Poly2d.h>
-#include <isce/core/LUT1d.h>
+#include <isce/core/LUT2d.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Projections.h>
 #include <isce/core/Interpolator.h>
@@ -25,6 +25,7 @@
 
 // isce::product
 #include <isce/product/Product.h>
+#include <isce/product/RadarGridParameters.h>
 
 // isce::geometry
 #include "geometry.h"
@@ -72,24 +73,24 @@ class isce::geometry::Geocode {
                 int width, int length, int epsgcode);
 
         // Set the input radar grid 
-        inline void radarGrid(isce::core::LUT1d<double> doppler,
-                                isce::core::DateTime azimuthStartTime,
-                                double azimuthTimeInterval,
-                                int radarGridLength,
-                                double startingRange,
-                                double rangeSpacing,
-                                int radarGridWidth);
+        inline void radarGrid(isce::core::LUT2d<double> doppler,
+                              isce::core::DateTime refEpoch,
+                              double azimuthStartTime,
+                              double azimuthTimeInterval,
+                              int radarGridLength,
+                              double startingRange,
+                              double rangeSpacing,
+                              double wavelength,
+                              int radarGridWidth);
 
         // Set interpolator 
         inline void interpolator(isce::core::dataInterpMethod method);
 
-        inline void orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch);
+        inline void orbit(isce::core::Orbit& orbit);
 
         inline void orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod);
 
         inline void ellipsoid(isce::core::Ellipsoid& ellipsoid);
-
-        inline void mode(isce::product::ImageMode& mode);
 
         inline void projection(isce::core::ProjectionBase * proj);
 
@@ -139,9 +140,6 @@ class isce::geometry::Geocode {
         isce::core::Orbit _orbit;
         isce::core::Ellipsoid _ellipsoid;
 
-        // isce::product objects
-        isce::product::ImageMode _mode;
-    
         // Optimization options
         double _threshold;
         int _numiter;
@@ -149,13 +147,8 @@ class isce::geometry::Geocode {
         isce::core::orbitInterpMethod _orbitMethod;
 
         // radar grids parameters
-        isce::core::LUT1d<double> _doppler;
-        isce::core::DateTime _azimuthStartTime, _refEpoch;
-        double _azimuthTimeInterval;
-        double _startingRange;
-        double _rangeSpacing;
-        int _radarGridLength;
-        int _radarGridWidth;
+        isce::core::LUT2d<double> _doppler;
+        isce::product::RadarGridParameters _radarGrid;
 
         // start X position for the output geocoded grid
         double _geoGridStartX;

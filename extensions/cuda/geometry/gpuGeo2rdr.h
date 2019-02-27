@@ -10,8 +10,6 @@
 #include "isce/core/Ellipsoid.h"
 #include "isce/core/Orbit.h"
 #include "isce/core/LUT1d.h"
-// isce::product
-#include  "isce/product/ImageMode.h"
 
 namespace isce {
     namespace cuda {
@@ -20,16 +18,16 @@ namespace isce {
             void runGPUGeo2rdr(const isce::core::Ellipsoid & ellipsoid,
                                const isce::core::Orbit & orbit,
                                const isce::core::LUT1d<double> & doppler,
-                               const isce::product::ImageMode & mode,
                                const std::valarray<double> & x,
                                const std::valarray<double> & y,
                                const std::valarray<double> & hgt,
                                std::valarray<float> & azoff,
                                std::valarray<float> & rgoff,
                                int topoEPSG, size_t lineStart, size_t blockWidth,
-                               double t0, double r0,
-                               double threshold, double numiter,
-                               unsigned int & totalconv); 
+                               double t0, double r0, size_t numberAzimuthLooks,
+                               size_t numberRangeLooks, size_t length, size_t width,
+                               double prf, double rangePixelSpacing, double wavelength,
+                               double threshold, double numiter, unsigned int & totalconv);
         }
     }
 }

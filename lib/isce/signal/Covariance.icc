@@ -39,7 +39,7 @@ prf(double p) {
 */
 template<class T>
 void isce::signal::Covariance<T>::
-doppler(isce::core::LUT1d<double> dop)
+doppler(isce::core::LUT2d<double> dop)
 {
     
     _doppler = dop;
@@ -180,41 +180,28 @@ geoGrid(double geoGridStartX, double geoGridStartY,
 */
 template<class T>
 void isce::signal::Covariance<T>::
-radarGrid(isce::core::LUT1d<double> doppler,
-            isce::core::DateTime azimuthStartTime,
-            double azimuthTimeInterval,
-            int radarGridLength,
-            double startingRange,
-            double rangeSpacing,
-            int radarGridWidth){
-
+radarGrid(isce::core::LUT2d<double> doppler,
+          isce::core::DateTime refEpoch,
+          double azimuthStartTime,
+          double azimuthTimeInterval,
+          int radarGridLength,
+          double startingRange,
+          double rangeSpacing,
+          double wavelength,
+          int radarGridWidth) {
     _doppler = doppler;
-
-    _azimuthStartTime = azimuthStartTime;
-
-    _azimuthTimeInterval = azimuthTimeInterval;
-
-    _radarGridLength = radarGridLength;
-
-    _startingRange = startingRange;
-
-    _rangeSpacing = rangeSpacing;
-
-    _radarGridWidth = radarGridWidth;
-
+    _radarGrid = isce::product::RadarGridParameters(
+        1, 1, azimuthStartTime, wavelength, 1.0/azimuthTimeInterval, startingRange,
+        rangeSpacing, radarGridLength, radarGridWidth, refEpoch
+    );
 }
 
 /** 
- * @param[in] orbit platform's orbit object
- * @param[in] refEpoch reference epoch of the orbit state vectors*/
+ * @param[in] orbit platform's orbit object */
 template<class T>
 void isce::signal::Covariance<T>::
-orbit(isce::core::Orbit& orbit, isce::core::DateTime refEpoch) {
-
+orbit(isce::core::Orbit& orbit) {
     _orbit = orbit;
-
-    _orbit.updateUTCTimes(_refEpoch);
-
 }
 
 /**
@@ -234,15 +221,6 @@ void isce::signal::Covariance<T>::
 ellipsoid(isce::core::Ellipsoid& ellipsoid) {
 
     _ellipsoid = ellipsoid;
-
-}
-
-/**@param[in] mode image mode object*/
-template<class T>
-void isce::signal::Covariance<T>::
-mode(isce::product::ImageMode& mode) {
-
-    _mode = mode;
 
 }
 

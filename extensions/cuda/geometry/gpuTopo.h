@@ -10,8 +10,7 @@
 #include "isce/core/Ellipsoid.h"
 #include "isce/core/Orbit.h"
 #include "isce/core/LUT1d.h"
-// isce::product
-#include  "isce/product/ImageMode.h"
+
 // isce::geometry
 #include "isce/geometry/DEMInterpolator.h"
 #include "isce/geometry/TopoLayers.h"
@@ -23,10 +22,17 @@ namespace isce {
             void runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
                             const isce::core::Orbit & orbit,
                             const isce::core::LUT1d<double> & doppler,
-                            const isce::product::ImageMode & mode,
                             isce::geometry::DEMInterpolator & demInterp,
                             isce::geometry::TopoLayers & layers,
-                            size_t lineStart, int lookSide, int epsgOut,
+                            size_t lineStart,
+                            int lookSide,
+                            int epsgOut,
+                            size_t numberAzimuthLooks,
+                            double startAzUTCTime,
+                            double wavelength,
+                            double prf,
+                            double startingRange,
+                            double rangePixelSpacing,
                             double threshold, int numiter, int extraiter,
                             unsigned int & totalconv);
         }

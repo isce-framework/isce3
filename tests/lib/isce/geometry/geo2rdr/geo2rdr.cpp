@@ -36,7 +36,7 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     isce::product::Product product(file);
 
     // Create geo2rdr instance
-    isce::geometry::Geo2rdr geo(product);
+    isce::geometry::Geo2rdr geo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
     std::ifstream xmlfid("../../data/topo.xml", std::ios::in);

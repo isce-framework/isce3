@@ -25,6 +25,7 @@
 
 // isce::product
 #include <isce/product/Product.h>
+#include <isce/product/RadarGridParameters.h>
 
 // Declaration
 namespace isce {
@@ -41,12 +42,19 @@ class isce::geometry::Geo2rdr {
 
     public:
         /** Constructor from product */
-        inline Geo2rdr(isce::product::Product &);
-        /** Constructor from core objects*/
+        inline Geo2rdr(const isce::product::Product &,
+                       char frequency = 'A',
+                       bool nativeDoppler = false,
+                       size_t numberAzimuthLooks = 1,
+                       size_t numberRangeLooks = 1);
+
+        /** Constructor from core objects */
         inline Geo2rdr(const isce::core::Ellipsoid &,
                        const isce::core::Orbit &,
-                       const isce::core::LUT1d<double> &,
-                       const isce::core::Metadata &);
+                       const isce::core::LUT2d<double> &,
+                       const isce::core::Metadata &,
+                       size_t numberAzimuthLooks = 1,
+                       size_t numberRangeLooks = 1);
 
         /** Set convergence threshold*/
         inline void threshold(double);
@@ -75,13 +83,12 @@ class isce::geometry::Geo2rdr {
         /** Get Ellipsoid object used for processing */
         inline const isce::core::Ellipsoid & ellipsoid() const { return _ellipsoid; }
         /** Get Doppler model used for processing */
-        inline const isce::core::LUT1d<double> & doppler() const { return _doppler; }
-        /** Get sensingStart used for processing */
-        inline const isce::core::DateTime & sensingStart() const { return _sensingStart; }
-        /** Get reference epoch of the orbit used for processing */
-        inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
-        /** Get imageMode object used for processing */
-        inline const isce::product::ImageMode & mode() const { return _mode; }
+        inline const isce::core::LUT2d<double> & doppler() const { return _doppler; }
+
+        /** Get read-only reference to RadarGridParameters */
+        inline const isce::product::RadarGridParameters & radarGridParameters() const {
+            return _radarGrid;
+        }
 
         // Get geo2rdr processing options
         /** Return the azimuth time convergence threshold used for processing */
@@ -105,13 +112,11 @@ class isce::geometry::Geo2rdr {
         // isce::core objects
         isce::core::Ellipsoid _ellipsoid;
         isce::core::Orbit _orbit;
-        isce::core::LUT1d<double> _doppler;
-        isce::core::DateTime _refEpoch;
-        isce::core::DateTime _sensingStart;
+        isce::core::LUT2d<double> _doppler;
 
-        // isce::product objects
-        isce::product::ImageMode _mode;
-
+        // RadarGridParameters
+        isce::product::RadarGridParameters _radarGrid;
+        
         // Projection related data
         isce::core::ProjectionBase * _projTopo;
 
