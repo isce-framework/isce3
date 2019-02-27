@@ -103,7 +103,7 @@ class isce::signal::Filter {
 
         void writeFilter(size_t ncols, size_t nrows);
 
-    private:
+    protected:
         isce::signal::Signal<T> _signal;
         std::valarray<std::complex<T>> _filter;
 
