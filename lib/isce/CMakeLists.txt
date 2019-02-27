@@ -8,7 +8,6 @@ add_subdirectory(geometry)
 add_subdirectory(image)
 add_subdirectory(io)
 add_subdirectory(product)
-add_subdirectory(radar)
 add_subdirectory(signal)
 add_subdirectory(unwrap)
 

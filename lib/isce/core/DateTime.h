@@ -112,7 +112,7 @@ struct isce::core::DateTime {
     std::string isoformat() const;
 
     /**Parse a given string in ISO-8601 format*/
-    void strptime(const std::string &);
+    void strptime(const std::string &, const std::string & sep = "T");
 };
 
 // Some constants

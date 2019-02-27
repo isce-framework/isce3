@@ -22,84 +22,59 @@ cdef class pyResampSlc:
     # C++ class pointer
     cdef ResampSlc * c_resamp
     cdef bool __owner
+
+    # Cython class objects
+    cdef pyLUT2d py_doppler
     
-    def __cinit__(self, product=None, doppler=None, mode=None):
+    def __cinit__(self, pyProduct product, pyProduct refProduct=None, freq='A'):
         """
         Initialize C++ objects.
         """
-        cdef pyProduct c_product
-        cdef pyLUT1d c_doppler
-        cdef pyImageMode c_mode
-        
         if product is not None:
-            c_product = <pyProduct> product
-            self.c_resamp = new ResampSlc(deref(c_product.c_product))
+            self.c_resamp = new ResampSlc(deref(product.c_product),
+                                          pyStringToBytes(freq))
 
-        elif doppler is not None and mode is not None:
-            c_doppler = <pyLUT1d> doppler
-            c_mode = <pyImageMode> mode
-            self.c_resamp = new ResampSlc(deref(c_doppler.c_lut), deref(c_mode.c_imagemode))
-
-        else:
-            self.c_resamp = new ResampSlc()
-
+        elif product is not None and refProduct is not None:
+            self.c_resamp = new ResampSlc(deref(product.c_product),
+                                          deref(refProduct.c_product),
+                                          pyStringToBytes(freq))
         self.__owner = True
+
+        # Bind the C++ LUT2d class to the Cython pyLUT2d instance
+        self.py_doppler = pyLUT2d()
+        del self.py_doppler.c_lut
+        self.py_doppler.c_lut = &self.c_resamp.doppler()
+        self.py_doppler.__owner = False
+
         return
 
     def __dealloc__(self):
         if self.__owner:
             del self.c_resamp
 
-    def setReferenceProduct(self, pyProduct refProduct):
+    def setReferenceProduct(self, pyProduct refProduct, freq='A'):
         """
         Set a reference product for flattening.
         """
-        self.c_resamp.referenceProduct(deref(refProduct.c_product))
+        cdef string freq_str = pyStringToBytes(freq)
+        self.c_resamp.referenceProduct(deref(refProduct.c_product), freq_str[0])
 
     @property
     def doppler(self):
         """
         Get the content Doppler LUT for the product to be resampled.
         """
-        lut = pyLUT1d.cbind(self.c_resamp.doppler())
+        lut = pyLUT2d.bind(self.py_doppler)
         return self.lut
 
     @doppler.setter
-    def doppler(self, pyLUT1d dop):
+    def doppler(self, pyLUT2d dop):
         """
         Override the content Doppler LUT from a pyLUT1d instance.
         """
         self.c_resamp.doppler(deref(dop.c_lut))
-
-    @property
-    def imageMode(self):
-        """
-        Get the image mode for the product.
-        """
-        mode = pyImageMode.cbind(self.c_resamp.imageMode())
-        return mode
-
-    @imageMode.setter 
-    def imageMode(self, pyImageMode mode):
-        """
-        Override the image mode for the product.
-        """
-        self.c_resamp.imageMode(deref(mode.c_imagemode))
-
-    @property
-    def refImageMode(self):
-        """
-        Get the reference image mode for the product.
-        """
-        mode = pyImageMode.cbind(self.c_resamp.refImageMode())
-        return mode
-
-    @refImageMode.setter 
-    def refImageMode(self, pyImageMode mode):
-        """
-        Override the reference image mode for the product.
-        """
-        self.c_resamp.refImageMode(deref(mode.c_imagemode))
+        del self.py_doppler.c_lut
+        self.py_doppler.c_lut = &self.c_resamp.doppler()
 
     @property
     def linesPerTile(self):
@@ -114,7 +89,6 @@ cdef class pyResampSlc:
         Set the number of lines per processing tile.
         """
         self.c_resamp.linesPerTile(lines)
-
 
     def resamp(self, pyRaster inSlc=None, pyRaster outSlc=None,
                pyRaster rgoffRaster=None, pyRaster azoffRaster=None,

@@ -69,7 +69,6 @@ cdef class pyTopo:
         self.c_topo.orbitMethod(self.orbitInterpMethods[orbitMethod])
         self.c_topo.demMethod(self.demInterpMethods[demMethod])
         self.c_topo.epsgOut(epsgOut)
-        self.c_topo.initialized(True)
         self.c_topo.computeMask(computeMask)
 
     def __dealloc__(self):

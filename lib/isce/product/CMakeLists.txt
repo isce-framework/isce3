@@ -1,14 +1,10 @@
 #####Library headers
 set(HEADERS
-    ComplexImagery.h
-    Identification.h
-    Identification.icc
-    ImageMode.h
-    ImageMode.icc
+    RadarGridParameters.h
     Metadata.h
-    Metadata.icc
+    ProcessingInformation.h
     Product.h
-    Product.icc
-    Serialization.h)
+    Serialization.h
+    Swath.h)
 
 add_isce_libdir(product "${SRCS}" "${HEADERS}")

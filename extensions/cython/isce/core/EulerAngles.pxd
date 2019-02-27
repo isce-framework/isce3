@@ -21,7 +21,8 @@ cdef extern from "isce/core/EulerAngles.h" namespace "isce::core":
         const vector[double] roll()
         # Interpolate for all Euler angles at a given time
         void ypr(double t, double & yaw, double & pitch, double & roll)
-        # Constructor 
+        # Constructors
+        EulerAngles(string) except +
         EulerAngles(const vector[double] & time,
                     const vector[double] & yaw,
                     const vector[double] & pitch,

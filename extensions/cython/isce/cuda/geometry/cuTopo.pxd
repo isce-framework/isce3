@@ -31,7 +31,6 @@ cdef extern from "isce/cuda/geometry/Topo.h" namespace "isce::cuda::geometry":
                   Raster &, Raster &, Raster &, Raster &, Raster &)
 
         # Setting processing options
-        void initialized(bool)
         void threshold(double)
         void numiter(int)
         void extraiter(int)

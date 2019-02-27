@@ -28,15 +28,23 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
 
     public:
         /** Constructor from Product */
-        inline Topo(isce::product::Product & product) :
-            isce::geometry::Topo(product) {}
+        inline Topo(const isce::product::Product & product,
+                    char frequency = 'A',
+                    bool nativeDoppler = false,
+                    size_t numberAzimuthLooks = 1,
+                    size_t numberRangeLooks = 1) :
+            isce::geometry::Topo(product, frequency, nativeDoppler,
+                                 numberAzimuthLooks, numberRangeLooks) {}
 
         /** Constructor from isce::core objects */
         inline Topo(const isce::core::Ellipsoid & ellps,
                     const isce::core::Orbit & orbit,
-                    const isce::core::LUT1d<double> & doppler,
-                    const isce::core::Metadata & meta) :
-            isce::geometry::Topo(ellps, orbit, doppler, meta) {}
+                    const isce::core::LUT2d<double> & doppler,
+                    const isce::core::Metadata & meta,
+                    size_t numberAzimuthLooks = 1,
+                    size_t numberRangeLooks = 1) :
+            isce::geometry::Topo(ellps, orbit, doppler, meta,
+                                 numberAzimuthLooks, numberRangeLooks) {}
 
         /** Run topo - main entrypoint; internal creation of topo rasters */
         void topo(isce::io::Raster &, const std::string);
@@ -66,8 +74,7 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
         void computeLinesPerBlock(isce::io::Raster &);
 
         // Generate layover/shadow masks using an orbit
-        void _setLayoverShadowWithOrbit(isce::core::Orbit & orbit,
-                                        isce::product::ImageMode & mode,
+        void _setLayoverShadowWithOrbit(const isce::core::Orbit & orbit,
                                         isce::geometry::TopoLayers & layers,
                                         isce::geometry::DEMInterpolator & demInterp,
                                         size_t lineStart);

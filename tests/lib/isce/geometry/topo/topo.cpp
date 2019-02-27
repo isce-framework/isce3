@@ -40,7 +40,7 @@ TEST(TopoTest, RunTopo) {
     isce::product::Product product(file);
 
     // Create topo instance
-    isce::geometry::Topo topo(product);
+    isce::geometry::Topo topo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
     std::ifstream xmlfid("../../data/topo.xml", std::ios::in);

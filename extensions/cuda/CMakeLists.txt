@@ -7,7 +7,6 @@ add_library(${LISCECUDA} SHARED)
 
 # Pull in the source files
 add_subdirectory(core)
-add_subdirectory(product)
 add_subdirectory(geometry)
 add_subdirectory(image)
 

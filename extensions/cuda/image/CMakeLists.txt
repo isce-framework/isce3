@@ -1,5 +1,4 @@
 set(HEADERS
-        gpuImageMode.h
         gpuResampSlc.h
         ResampSlc.h)
 
