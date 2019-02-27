@@ -18,7 +18,6 @@ project(ISCE VERSION 3.0
 
 option(WITH_CUDA "Set ON|OFF (default=ON) to build CUDA library" OFF)
 if (WITH_CUDA)
-    set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
     enable_language(CUDA)
 endif()
 
