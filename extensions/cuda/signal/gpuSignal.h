@@ -192,6 +192,13 @@ CUDA_GLOBAL void rangeShiftImpactMult_g(gpuComplex<T> *data_lo_res, gpuComplex<T
         gpuComplex<T> *impact_shift, 
         int n_rows, int n_cols_lo, int n_cols_hi);
 
+template<class T>
+void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
+        isce::cuda::signal::gpuSignal<T> &inv,
+        T *input,
+        T *output,
+        std::valarray<std::complex<T>> &shiftImpact);
+
 void upsampleC2C(isce::cuda::signal::gpuSignal<float> &fwd,
                  isce::cuda::signal::gpuSignal<float> &inv,
                  std::valarray<std::complex<float>> &shiftImpact);
