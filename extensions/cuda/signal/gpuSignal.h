@@ -96,7 +96,7 @@ class isce::cuda::signal::gpuSignal {
         void forwardZ2Z();
         void forward();
 
-        /** forward transforms with intermediate return */
+        /** forward transforms */
         void forwardC2C(std::complex<T> *input, std::complex<T> *output);
         void forwardC2C(std::valarray<std::complex<T>> &input,
                         std::valarray<std::complex<T>> &output);
@@ -108,6 +108,9 @@ class isce::cuda::signal::gpuSignal {
         void forward(std::complex<T> *input, std::complex<T> *output);
         void forward(std::valarray<std::complex<T>> &input,
                      std::valarray<std::complex<T>> &output);
+
+        void forwardDevMem(T *input, T *output);
+        void forwardDevMem(T *dataInPlace);
 
         /** inverse transforms using existing device memory **/
         void inverseC2C();
@@ -126,6 +129,9 @@ class isce::cuda::signal::gpuSignal {
         void inverse(std::complex<T> *input, std::complex<T> *output);
         void inverse(std::valarray<std::complex<T>> &input,
                      std::valarray<std::complex<T>> &output);
+
+        void inverseDevMem(T *input, T *output);
+        void inverseDevMem(T *dataInPlace);
 
         /** upsample **/
         void upsample(std::valarray<std::complex<T>> &input,

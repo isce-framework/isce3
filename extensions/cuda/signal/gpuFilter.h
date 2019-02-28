@@ -99,6 +99,12 @@ class isce::cuda::signal::gpuFilter : public Filter<T>{
         void filter(std::valarray<std::complex<T>> &signal,
                 std::valarray<std::complex<T>> &spectrum);
 
+        /** Filter a signal in place on device */
+        void filter(gpuSignal<T> &signal);
+
+        /** Filter a signal in place on device */
+        void filter(gpuComplex<T> *data);
+
         void writeFilter(size_t ncols, size_t nrows);
 
         void cpFilterToDevice();

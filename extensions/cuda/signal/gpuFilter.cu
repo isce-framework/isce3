@@ -17,10 +17,12 @@ using isce::signal::Filter;
 template<class T>
 gpuFilter<T>::~gpuFilter()
 {
-    if (_d_filter_set)
+    if (_d_filter_set) {
         cudaFree(_d_filter);
-    if (_d_input_set)
+    }
+    if (_d_input_set) {
         cudaFree(_d_input);
+    }
 }
 
 template<class T>
@@ -137,8 +139,43 @@ template<class T>
 __global__ void filter_g(gpuComplex<T> *signal, gpuComplex<T> *filter, int n_elements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
-    if (i < n_elements)
+    if (i < n_elements) {
         signal[i] *= filter[i];
+    }
+}
+
+
+// keep everything in place on device
+template<class T>
+void gpuFilter<T>::
+filter(gpuSignal<T> &signal)
+{
+    signal.forward();
+
+    // determine block layout
+    dim3 block(THRD_PER_BLOCK);
+    dim3 grid((signal.size()+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
+
+    filter_g<<<grid, block>>>(signal.getDevicePtr(), &_d_filter, signal.size());
+
+    signal.inverse();
+}
+
+
+// keep everything in place on device
+template<class T>
+void gpuFilter<T>::
+filter(gpuComplex<T> *data)
+{
+    _signal.forward(data);
+
+    // determine block layout
+    dim3 block(THRD_PER_BLOCK);
+    dim3 grid((_signal.size()+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
+
+    filter_g<<<grid, block>>>(data, &_d_filter, _signal.size());
+
+    _signal.inverse(data);
 }
 
 

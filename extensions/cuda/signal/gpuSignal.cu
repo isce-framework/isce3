@@ -89,8 +89,9 @@ void gpuSignal<T>::
 FFT2D(int ncolumns, int nrows)
 {
     _n_elements = nrows * ncolumns;
-    if (_plan_set)
+    if (_plan_set) {
         cufftDestroy(_plan);
+    }
 
     checkCudaErrors(cufftCreate(&_plan));
     size_t worksize;
@@ -114,8 +115,9 @@ fftPlan(int rank, int *n, int howmany,
         int *inembed, int istride, int idist,
         int *onembed, int ostride, int odist)
 {
-    if (_plan_set)
+    if (_plan_set) {
         cufftDestroy(_plan);
+    }
 
     checkCudaErrors(cufftCreate(&_plan));
     _plan_set = true;
@@ -299,6 +301,36 @@ void gpuSignal<double>::
 forward()
 {
     forwardZ2Z();
+}
+
+
+/** unnormalized forward transform
+*/
+template<>
+void gpuSignal<float>::
+forwardDevMem(float *input, float *output)
+{
+    // transform
+    checkCudaErrors(cufftExecC2C(_plan, reinterpret_cast<cufftComplex *>(input),
+                reinterpret_cast<cufftComplex *>(output),
+                CUFFT_FORWARD));
+}
+
+/** unnormalized forward transform
+*/
+template<>
+void gpuSignal<double>::
+forwardDevMem(double *input, double *output)
+{
+    checkCudaErrors(cufftExecZ2Z(_plan, reinterpret_cast<cufftDoubleComplex *>(input),
+                reinterpret_cast<cufftDoubleComplex *>(output),
+                CUFFT_FORWARD));
+}
+
+template<class T>
+void gpuSignal<T>::
+forwardDevMem(T *dataInPlace) {
+    forwardDevMem(dataInPlace, dataInPlace);
 }
 
 /** unnormalized forward transform
@@ -526,6 +558,35 @@ void gpuSignal<double>::
 inverse()
 {
     inverseZ2Z();
+}
+
+/** unnormalized inverse transform
+*/
+template<>
+void gpuSignal<float>::
+inverseDevMem(float *input, float *output)
+{
+    // transform
+    checkCudaErrors(cufftExecC2C(_plan, reinterpret_cast<cufftComplex *>(input),
+                reinterpret_cast<cufftComplex *>(output),
+                CUFFT_INVERSE));
+}
+
+/** unnormalized inverse transform
+*/
+template<>
+void gpuSignal<double>::
+inverseDevMem(double *input, double *output)
+{
+    checkCudaErrors(cufftExecZ2Z(_plan, reinterpret_cast<cufftDoubleComplex *>(input),
+                reinterpret_cast<cufftDoubleComplex *>(output),
+                CUFFT_INVERSE));
+}
+
+template<class T>
+void gpuSignal<T>::
+inverseDevMem(T *dataInPlace) {
+    inverseDevMem(dataInPlace, dataInPlace);
 }
 
 /** unnormalized forward transform
