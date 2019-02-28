@@ -127,7 +127,7 @@ __global__ void multilooks_g(T *lo_res, T *hi_res, int rows_lo, int row_resize, 
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i % rows_lo;
+        int i_lo_row = i / rows_lo;
         int i_lo_col = i % rows_lo;
         int blk_sz = row_resize * col_resize;
 
@@ -167,7 +167,7 @@ __global__ void multilooks_no_data_g(T *lo_res, T *hi_res, T no_data_value, int 
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i % rows_lo;
+        int i_lo_row = i / rows_lo;
         int i_lo_col = i % rows_lo;
         int blk_sz = row_resize * col_resize;
 
@@ -214,7 +214,7 @@ __global__ void multilooks_weighted_g(T *lo_res, T *hi_res, T* weights, int rows
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i % rows_lo;
+        int i_lo_row = i / rows_lo;
         int i_lo_col = i % rows_lo;
         int blk_sz = row_resize * col_resize;
 
@@ -260,7 +260,7 @@ __global__ void multilooks_power_g(T *lo_res, gpuComplex<T> *hi_res, int power, 
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i % rows_lo;
+        int i_lo_row = i / rows_lo;
         int i_lo_col = i % rows_lo;
         int blk_sz = row_resize * col_resize;
 
