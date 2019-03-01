@@ -73,6 +73,8 @@ class isce::core::LUT2d {
         inline size_t width() const { return _data.width(); }
         // Get the reference value
         inline T refValue() const { return _refValue; }
+        // Get flag for having data
+        inline bool haveData() const { return _haveData; }
         // Get bounds error flag
         inline bool boundsError() const { return _boundsError; }
         // Get read-only reference to data

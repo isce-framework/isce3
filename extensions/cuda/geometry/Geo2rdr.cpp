@@ -110,6 +110,11 @@ geo2rdr(isce::io::Raster & topoRaster,
     if ((demLength % _linesPerBlock) != 0)
         nBlocks += 1;
 
+    // Cache near, mid, far ranges for diagnostics on Doppler
+    const double nearRange = radarGrid.startingRange();
+    const double farRange = radarGrid.endingRange();
+    const double midRange = radarGrid.midRange();
+
     // Loop over blocks
     unsigned int totalconv = 0;
     for (size_t block = 0; block < nBlocks; ++block) {
@@ -129,9 +134,9 @@ geo2rdr(isce::io::Raster & topoRaster,
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
-             << doppler.values()[0] << " "
-             << doppler.values()[doppler.size() / 2] << " "
-             << doppler.values()[doppler.size() - 1] << " "
+             << doppler.eval(nearRange) << " "
+             << doppler.eval(midRange) << " "
+             << doppler.eval(farRange) << " "
              << pyre::journal::endl;
 
         // Valarrays to hold input block from topo rasters

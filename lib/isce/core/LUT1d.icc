@@ -15,6 +15,13 @@ template <typename T>
 isce::core::LUT1d<T>::
 LUT1d(const isce::core::LUT2d<T> & lut2d) {
 
+    // Check if LUT2d has actual data; if not, just store reference value
+    if (!lut2d.haveData()) {
+        _haveData = false;
+        _refValue = lut2d.refValue();
+        return;
+    }
+
     // Get a reference to the LUT2d data
     const isce::core::Matrix<T> & data = lut2d.data();
 
@@ -51,6 +58,13 @@ isce::core::LUT1d<T> &
 isce::core::LUT1d<T>::
 operator=(const LUT2d<T> & lut2d) {
 
+    // Check if LUT2d has actual data; if not, just store reference value
+    if (!lut2d.haveData()) {
+        _haveData = false;
+        _refValue = lut2d.refValue();
+        return *this;
+    }
+
     // Get a reference to the LUT2d data 
     const isce::core::Matrix<T> & data = lut2d.data();
     
@@ -86,6 +100,12 @@ operator=(const LUT2d<T> & lut2d) {
 template <typename T>
 T isce::core::LUT1d<T>::
 eval(double x) const {
+
+    // Check if data are available; if not, return ref value
+    T value = _refValue;
+    if (!_haveData) {
+        return value;
+    }
 
     // Check bounds to see if we need to perform linear extrapolation
     const int n = _coords.size();
