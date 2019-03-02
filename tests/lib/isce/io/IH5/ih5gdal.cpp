@@ -35,7 +35,7 @@ struct IH5Test : public ::testing::Test {
 TEST_F(IH5Test, dataSetOpen) {
 
     isce::io::IH5File file(rFileName);
-    std::string datasetName("/science/complex_imagery/primary_mode/hh");
+    std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
 
     isce::io::IDataSet dset = file.openDataSet(datasetName);
     auto dims = dset.getDimensions();
@@ -61,7 +61,7 @@ TEST_F(IH5Test, dataSetOpen) {
 
 TEST_F(IH5Test, dataSet3D) {
     isce::io::IH5File file(rFileName);
-    std::string datasetName("/science/metadata/geolocation_grid/incidence_angle");
+    std::string datasetName("/science/LSAR/SLC/metadata/geolocationGrid/incidenceAngle");
 
     isce::io::IDataSet dset = file.openDataSet(datasetName);
     auto dims = dset.getDimensions();
