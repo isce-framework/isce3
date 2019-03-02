@@ -105,19 +105,40 @@ class isce::cuda::signal::gpuFilter : public Filter<T>{
         /** Filter a signal in place on device */
         void filter(gpuComplex<T> *data);
 
+        /** carry over from parent class. eliminate and use parent? */
         void writeFilter(size_t ncols, size_t nrows);
 
-        void cpFilterToDevice();
+        void cpuFilterHostToDevice();
+
+        // vvv eventually make part of derived range filter class vvv
+        void filterCommonRangeBand(T *d_refSlc, T *secSlc, T *range);
+
+        size_t rangeFrequencyShiftMaxIdx(gpuComplex<T> *spectrum,
+                double *rangeFrequencies,
+                int n_elements);
+
+        void getPeakIndex(std::valarray<float> data, size_t &peakIndex);
 
     private:
         // device memory pointer
         T *_d_filter;
-        bool _d_filter_set;
-        T *_d_input;
-        bool _d_input_set;
+        bool _filter_set;
         gpuSignal<T> _signal;
+
+        // vvv eventually make part of derived range filter class vvv
+        double _wavelength;
+        double _rangePixelSpacing;
+        double _freqShift;
+        double _rangeBandWidth;
+        double _rangeSamplingFrequency;
+        double _rangeBandwidth;
+        T *_d_spectrumSum;
+        bool _spectrumSum_set;
+        std::valarray<std::complex<T>> _spectrumSum;
 };
 
+template<class T>
+__global__ void phaseShift_g(gpuComplex<T> *slc, T *range, T pxlSpace, T conj, T wavelength, T wave_div, int n_elements);
 
 template<class T>
 __global__ void filter_g(gpuComplex<T> *signal, gpuComplex<T> *filter, int n_elements);

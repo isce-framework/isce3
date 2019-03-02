@@ -136,10 +136,10 @@ class isce::cuda::signal::gpuSignal {
         /** upsample **/
         void upsample(std::valarray<std::complex<T>> &input,
                       std::valarray<std::complex<T>> &output,
-                      int row, int nfft, int upsampleFactor);
+                      int row, int ncols, int upsampleFactor);
         void upsample(std::valarray<std::complex<T>> &input,
                       std::valarray<std::complex<T>> &output,
-                      int row, int nfft, int upsampleFactor,
+                      int row, int ncols, int upsampleFactor,
                       std::valarray<std::complex<T>> &shiftImpact);
 
         int getRows() {return _rows;};
@@ -176,8 +176,8 @@ class isce::cuda::signal::gpuSignal {
 
 template<class T>
 void shift(std::valarray<std::complex<T>> &input,
-           std::valarray<std::complex<T>> &output,
-           int rows, int nfft, int columns);
+        std::valarray<std::complex<T>> &output,
+        int rows, int nfft, int columns);
 
 /** FFT shift on device
  */
@@ -196,40 +196,46 @@ template<class T>
 void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
         isce::cuda::signal::gpuSignal<T> &inv,
         T *input,
+        T *output);
+
+template<class T>
+void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
+        isce::cuda::signal::gpuSignal<T> &inv,
+        T *input,
         T *output,
-        std::valarray<std::complex<T>> &shiftImpact);
+        T *shiftImpact);
 
 void upsampleC2C(isce::cuda::signal::gpuSignal<float> &fwd,
-                 isce::cuda::signal::gpuSignal<float> &inv,
-                 std::valarray<std::complex<float>> &shiftImpact);
+        isce::cuda::signal::gpuSignal<float> &inv,
+        std::valarray<std::complex<float>> &shiftImpact);
 
 void upsampleC2C(isce::cuda::signal::gpuSignal<float> &fwd,
-                 isce::cuda::signal::gpuSignal<float> &inv,
-                 std::valarray<std::complex<float>> &input,
-                 std::valarray<std::complex<float>> &output,
-                 std::valarray<std::complex<float>> &shiftImpact);
+        isce::cuda::signal::gpuSignal<float> &inv,
+        std::valarray<std::complex<float>> &input,
+        std::valarray<std::complex<float>> &output,
+        std::valarray<std::complex<float>> &shiftImpact);
 
 void upsampleC2C(isce::cuda::signal::gpuSignal<float> &fwd,
-                 isce::cuda::signal::gpuSignal<float> &inv,
-                 float *input,
-                 float *output,
-                 float *shiftImpact);
+        isce::cuda::signal::gpuSignal<float> &inv,
+        float *input,
+        float *output,
+        float *shiftImpact);
 
 void upsampleZ2Z(isce::cuda::signal::gpuSignal<double> &fwd,
-                 isce::cuda::signal::gpuSignal<double> &inv,
-                 std::valarray<std::complex<double>> &shiftImpact);
+        isce::cuda::signal::gpuSignal<double> &inv,
+        std::valarray<std::complex<double>> &shiftImpact);
 
 void upsampleZ2Z(isce::cuda::signal::gpuSignal<double> &fwd,
-                 isce::cuda::signal::gpuSignal<double> &inv,
-                 std::valarray<std::complex<double>> &input,
-                 std::valarray<std::complex<double>> &output,
-                 std::valarray<std::complex<double>> &shiftImpact);
+        isce::cuda::signal::gpuSignal<double> &inv,
+        std::valarray<std::complex<double>> &input,
+        std::valarray<std::complex<double>> &output,
+        std::valarray<std::complex<double>> &shiftImpact);
 
 void upsampleZ2Z(isce::cuda::signal::gpuSignal<double> &fwd,
-                 isce::cuda::signal::gpuSignal<double> &inv,
-                 double *input,
-                 double *output,
-                 double *shiftImpact);
+        isce::cuda::signal::gpuSignal<double> &inv,
+        double *input,
+        double *output,
+        double *shiftImpact);
 
 #endif
 

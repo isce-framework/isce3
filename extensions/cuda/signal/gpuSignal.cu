@@ -961,30 +961,40 @@ template<class T>
 void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
         isce::cuda::signal::gpuSignal<T> &inv,
         T *input,
-        T *output,
-        std::valarray<std::complex<T>> &shiftImpact)
+        T *output)
 {
     fwd.forward(input);
 
     // shift data prior to upsampling transform
     int num_blocks = max(fwd.getNumElements() / 1024, 1);
-    auto lo_res_ptr = reinterpret_cast<gpuComplex<T> *>(fwd.getDevicePtr());
-    auto hi_res_ptr = reinterpret_cast<gpuComplex<T> *>(inv.getDevicePtr());
-    if (shiftImpact.size() == fwd.getNumElements()) {
-        gpuComplex<T> *d_shift_impact;
-        size_t shift_size = shiftImpact.size()*sizeof(T)*2;
-        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_shift_impact), shift_size));
-        checkCudaErrors(cudaMemcpy(d_shift_impact, &shiftImpact[0], shift_size, cudaMemcpyHostToDevice));
-        rangeShiftImpactMult_g<T><<<num_blocks, 1024>>>(
-                reinterpret_cast<gpuComplex<T> *>(lo_res_ptr), reinterpret_cast<gpuComplex<T> *>(hi_res_ptr), 
-                reinterpret_cast<gpuComplex<T> *>(d_shift_impact),
-                fwd.getRows(), fwd.getColumns(), inv.getColumns());
-        cudaFree(d_shift_impact);
-    }
-    else
-        rangeShift_g<T><<<num_blocks, 1024>>>(
-                reinterpret_cast<gpuComplex<T> *>(lo_res_ptr), reinterpret_cast<gpuComplex<T> *>(hi_res_ptr), 
-                fwd.getRows(), fwd.getColumns(), inv.getColumns());
+    auto lo_res_ptr = reinterpret_cast<gpuComplex<T> *>(input);
+    auto hi_res_ptr = reinterpret_cast<gpuComplex<T> *>(output);
+    rangeShift_g<T><<<num_blocks, 1024>>>(
+            reinterpret_cast<gpuComplex<T> *>(lo_res_ptr), 
+            reinterpret_cast<gpuComplex<T> *>(hi_res_ptr), 
+            fwd.getRows(), fwd.getColumns(), inv.getColumns());
+
+    inv.inverse(output);
+}
+
+template<class T>
+void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
+        isce::cuda::signal::gpuSignal<T> &inv,
+        T *input,
+        T *output,
+        T *shiftImpact)
+{
+    fwd.forward(input);
+
+    // shift data prior to upsampling transform
+    int num_blocks = max(fwd.getNumElements() / 1024, 1);
+    auto lo_res_ptr = reinterpret_cast<gpuComplex<T> *>(input);
+    auto hi_res_ptr = reinterpret_cast<gpuComplex<T> *>(output);
+    rangeShiftImpactMult_g<T><<<num_blocks, 1024>>>(
+            reinterpret_cast<gpuComplex<T> *>(lo_res_ptr), 
+            reinterpret_cast<gpuComplex<T> *>(hi_res_ptr), 
+            reinterpret_cast<gpuComplex<T> *>(shiftImpact),
+            fwd.getRows(), fwd.getColumns(), inv.getColumns());
 
     inv.inverse(output);
 }
