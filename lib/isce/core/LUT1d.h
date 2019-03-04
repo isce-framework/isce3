@@ -61,16 +61,20 @@ class isce::core::LUT1d {
         /** Copy constructor. 
           * @param[in] lut LUT1d object to copy from */
         inline LUT1d(const LUT1d<T> & lut) :
-            _coords(lut.coords()), _values(lut.values()), _extrapolate(lut.extrapolate()) {}
+            _haveData(lut.haveData()),
+            _refValue(lut.refValue()),
+            _coords(lut.coords()),
+            _values(lut.values()),
+            _extrapolate(lut.extrapolate()) {}
 
         /** Assignment operator. 
           * @param[in] lut LUT1d object to assign from */
         inline LUT1d & operator=(const LUT1d<T> & lut) {
+            _haveData = lut.haveData();
+            _refValue = lut.refValue();
             _coords = lut.coords();
             _values = lut.values();
             _extrapolate = lut.extrapolate();
-            _haveData = true;
-            _refValue = lut.refValue();
             return *this;
         }
 

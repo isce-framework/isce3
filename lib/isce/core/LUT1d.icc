@@ -49,6 +49,8 @@ LUT1d(const isce::core::LUT2d<T> & lut2d) {
     _coords = coords;
     _values = values;
     _extrapolate = true;
+    _haveData = true;
+    _refValue = lut2d.refValue();
 }
 
 // Assignment operator from an LUT2d (values averaged in y-direction)
