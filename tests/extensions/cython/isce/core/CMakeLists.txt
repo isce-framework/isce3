@@ -5,5 +5,3 @@ foreach (TESTNAME testdatetime.py ellipsoid.py poly1d.py attitude.py orbit.py)
         LD_LIBRARY_PATH=${PYTEST_LD_LIBRARY_PATH}
         PYTHONPATH=${PYTEST_PYTHONPATH})
 endforeach ()
-
-include(CTest)

@@ -1,7 +1,7 @@
 ###CMake builder for ISCE 3.0
 
 ###Minimum version of cmake and boiler plate
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
 if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
@@ -13,16 +13,16 @@ if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
 
+project(ISCE VERSION 3.0
+        LANGUAGES CXX)
+
 option(WITH_CUDA "Set ON|OFF (default=ON) to build CUDA library" OFF)
 if (WITH_CUDA)
-    project(ISCE
-            VERSION 3.0
-	        LANGUAGES C CXX CUDA)
-else ()
-    project(ISCE
-            VERSION 3.0
-	        LANGUAGES C CXX)
+    enable_language(CUDA)
 endif()
+
+# Set the name for the ISCE C++ library
+set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
 ###Options for documentation
 option(WITH_DOC
@@ -41,7 +41,7 @@ include(ConfigISCE)
 ###Explicit check to prevent in-source builds
 AssureOutOfSourceBuilds()
 
-####Check CXX Version and Standard to C++14
+####Check CXX Version and Standard to C++17
 CheckCXX()
 
 ###Check if an appropriate python is installed
@@ -52,9 +52,6 @@ CheckPyre()
 
 ##Check for Cython
 include(useCython)
-
-##Check for CUDA
-#CheckCUDA()
 
 ##Check for OpenMP
 CheckOpenMP()
