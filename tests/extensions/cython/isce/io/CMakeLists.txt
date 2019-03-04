@@ -5,5 +5,3 @@ foreach (TESTNAME raster.py)
         LD_LIBRARY_PATH=${PYTEST_LD_LIBRARY_PATH}
         PYTHONPATH=${PYTEST_PYTHONPATH})
 endforeach ()
-
-include(CTest)

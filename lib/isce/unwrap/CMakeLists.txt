@@ -1,3 +1,1 @@
-include(unwrap/icu/CMakeLists.txt)
-
-# end of file
+add_subdirectory(icu)
