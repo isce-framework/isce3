@@ -1,8 +1,7 @@
 var searchData=
 [
   ['icu',['ICU',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#ae3df7b9a0679df6825be70a2d948b19a',1,'isce::unwrap::icu::ICU']]],
-  ['idataset',['IDataSet',['../classisce_1_1io_1_1IDataSet.html#ade8592305817e060af087668bb224e6d',1,'isce::io::IDataSet::IDataSet()'],['../classisce_1_1io_1_1IDataSet.html#acf88f09eef5b7c0165fb63b2bf54fbbc',1,'isce::io::IDataSet::IDataSet(H5::DataSet &amp;dset)'],['../classisce_1_1io_1_1IDataSet.html#a3f68cc9b72b0dfce042cde9bc333271f',1,'isce::io::IDataSet::IDataSet(const hid_t id)']]],
-  ['ih5dataset',['IH5Dataset',['../classIH5Dataset.html#a00bdf049a27e9a6d1f8cd493c5b48eb1',1,'IH5Dataset']]],
+  ['idataset',['IDataSet',['../classisce_1_1io_1_1IDataSet.html#ade8592305817e060af087668bb224e6d',1,'isce::io::IDataSet::IDataSet()'],['../classisce_1_1io_1_1IDataSet.html#acf88f09eef5b7c0165fb63b2bf54fbbc',1,'isce::io::IDataSet::IDataSet(H5::DataSet &amp;dset)']]],
   ['ih5file',['IH5File',['../classisce_1_1io_1_1IH5File.html#ac322c456433b12fb971a03db517fde15',1,'isce::io::IH5File']]],
   ['indexoffrequency',['indexOfFrequency',['../classisce_1_1signal_1_1Filter.html#aa5cea79bfe6e39ef9c120eb3705201cf',1,'isce::signal::Filter']]],
   ['initcorrthr',['initCorrThr',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a56ded77037a99355937955c7b34f2bc9',1,'isce::unwrap::icu::ICU::initCorrThr() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a65960c9501417e3a89e54d041d003999',1,'isce::unwrap::icu::ICU::initCorrThr(const float)']]],
