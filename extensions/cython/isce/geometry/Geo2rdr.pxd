@@ -4,6 +4,7 @@
 # Copyright 2017-2018
 #
 
+from libcpp cimport bool
 from libcpp.string cimport string
 
 # Cython declarations for isce::core objects
@@ -21,7 +22,8 @@ cdef extern from "isce/geometry/Geo2rdr.h" namespace "isce::geometry":
     cdef cppclass Geo2rdr:
 
         # Constructor
-        Geo2rdr(Product) except +
+        Geo2rdr(Product & product, char frequency, bool nativeDoppler,
+                size_t numberAzimuthLooks, size_t numberRangeLooks) except +
 
         # Set options
         void threshold(double)
