@@ -115,6 +115,10 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#acf88f09eef5b7c0165fb63b2bf54fbbc">IDataSet</a> (H5::DataSet &amp;dset)</td></tr>
 <tr class="memdesc:acf88f09eef5b7c0165fb63b2bf54fbbc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor. <br/></td></tr>
 <tr class="separator:acf88f09eef5b7c0165fb63b2bf54fbbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f68cc9b72b0dfce042cde9bc333271f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3f68cc9b72b0dfce042cde9bc333271f"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a3f68cc9b72b0dfce042cde9bc333271f">IDataSet</a> (const hid_t id)</td></tr>
+<tr class="memdesc:a3f68cc9b72b0dfce042cde9bc333271f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from ID. <br/></td></tr>
+<tr class="separator:a3f68cc9b72b0dfce042cde9bc333271f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34866e34d337ad79d7eb266569c263f2"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a34866e34d337ad79d7eb266569c263f2">getAttrs</a> ()</td></tr>
 <tr class="memdesc:a34866e34d337ad79d7eb266569c263f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a list of attributes attached to dataset.  <a href="#a34866e34d337ad79d7eb266569c263f2">More...</a><br/></td></tr>
 <tr class="separator:a34866e34d337ad79d7eb266569c263f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -140,6 +144,9 @@ H5::DataSpace&#160;</td><td class="memItemRight" valign="bottom"><a class="el" h
 <tr class="memitem:afa4a30e7561b664a4af9295a34f7d22d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#afa4a30e7561b664a4af9295a34f7d22d">getNumBits</a> (const std::string &amp;v=&quot;&quot;)</td></tr>
 <tr class="memdesc:afa4a30e7561b664a4af9295a34f7d22d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the number of bit used to store each dataset element.  <a href="#afa4a30e7561b664a4af9295a34f7d22d">More...</a><br/></td></tr>
 <tr class="separator:afa4a30e7561b664a4af9295a34f7d22d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaad1c180b93090189d93cc856349187d"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#aaad1c180b93090189d93cc856349187d">toGDAL</a> ()</td></tr>
+<tr class="memdesc:aaad1c180b93090189d93cc856349187d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate GDALDataset Representation.  <a href="#aaad1c180b93090189d93cc856349187d">More...</a><br/></td></tr>
+<tr class="separator:aaad1c180b93090189d93cc856349187d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a27ba34b0b4a61befeb6841f8cb572904"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a27ba34b0b4a61befeb6841f8cb572904"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">read</a> (T &amp;v, const std::string &amp;att=&quot;&quot;)</td></tr>
 <tr class="memdesc:a27ba34b0b4a61befeb6841f8cb572904"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reading scalar (non string) dataset or attributes.  <a href="#a27ba34b0b4a61befeb6841f8cb572904">More...</a><br/></td></tr>
@@ -278,6 +285,22 @@ H5::DataSpace&#160;</td><td class="memItemRight" valign="bottom"><a class="el" h
 <tr class="memitem:a25dcc697832e26b022692de9749a22bd"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a25dcc697832e26b022692de9749a22bd">createAttribute</a> (const std::string &amp;name, const std::array&lt; T2, S &gt; &amp;dims, const T *buffer)</td></tr>
 <tr class="memdesc:a25dcc697832e26b022692de9749a22bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a raw pointer with dimensions (std::array) to data as an attribute.  <a href="#a25dcc697832e26b022692de9749a22bd">More...</a><br/></td></tr>
 <tr class="separator:a25dcc697832e26b022692de9749a22bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40c90e72003108972d87a513df095dc0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a40c90e72003108972d87a513df095dc0"></a>
+H5::DataSpace&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a40c90e72003108972d87a513df095dc0">getDataSpace</a> (const int *startIn, const int *countIn, const int *strideIn)</td></tr>
+<tr class="memdesc:a40c90e72003108972d87a513df095dc0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get DataSpace corresponding to slice defined by start, count and stride. <br/></td></tr>
+<tr class="separator:a40c90e72003108972d87a513df095dc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88f03cc1669156528caa484175debcf0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a88f03cc1669156528caa484175debcf0"></a>
+H5::DataSpace&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a88f03cc1669156528caa484175debcf0">getDataSpace</a> (const std::vector&lt; std::slice &gt; *sliceIn)</td></tr>
+<tr class="memdesc:a88f03cc1669156528caa484175debcf0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get DataSpace corresponding to slice defined by a vector of slices. <br/></td></tr>
+<tr class="separator:a88f03cc1669156528caa484175debcf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4263a26376d02beca3ac678211f65a1e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4263a26376d02beca3ac678211f65a1e"></a>
+H5::DataSpace&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a4263a26376d02beca3ac678211f65a1e">getDataSpace</a> (const std::gslice *gsliceIn)</td></tr>
+<tr class="memdesc:a4263a26376d02beca3ac678211f65a1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get DataSpace corresponding to a gslice. <br/></td></tr>
+<tr class="separator:a4263a26376d02beca3ac678211f65a1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf1cede01f33b5137b0c3fa7acf94383"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adf1cede01f33b5137b0c3fa7acf94383"></a>
+H5::DataSpace&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#adf1cede01f33b5137b0c3fa7acf94383">getDataSpace</a> (const size_t xidx, const size_t yidx, const size_t iowidth, const size_t iolength, const size_t band)</td></tr>
+<tr class="memdesc:adf1cede01f33b5137b0c3fa7acf94383"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get DataSpace with a GDAL RasterIO-like interface. <br/></td></tr>
+<tr class="separator:adf1cede01f33b5137b0c3fa7acf94383"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="a2e69f2d6be9554846dc9aabe885dbbba"></a>
@@ -1525,6 +1548,30 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 <p>If the output container is undersized compared to the data to read the function will size it accordingly. If the container is larger than the data to be read, its size is unchanged. In both case the data read is stored at the beginning of the container. </p>
+
+</div>
+</div>
+<a class="anchor" id="aaad1c180b93090189d93cc856349187d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string isce::io::IDataSet::toGDAL </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Generate GDALDataset Representation. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">str</td><td>String representation for GDAL's <a class="el" href="classIH5Dataset.html">IH5Dataset</a> driver</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Returns IH5:::ID=string </p>
 
 </div>
 </div>
