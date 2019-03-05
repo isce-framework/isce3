@@ -10,11 +10,6 @@ add_subdirectory(core)
 add_subdirectory(geometry)
 add_subdirectory(image)
 
-# Force nvcc to compile with c++14
-get_target_property(MYPROPS ${LISCECUDA} COMPILE_OPTIONS)
-string(REPLACE "c++17" "c++14" MYPROPS ${MYPROPS})
-set_target_properties(${LISCECUDA} PROPERTIES COMPILE_OPTIONS ${MYPROPS})
-
 # Allow for separable compilation and device code linking (-dc flag to nvcc)
 set_target_properties(${LISCECUDA} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 set_target_properties(${LISCECUDA} PROPERTIES CUDA_HOST_COMPILATION_CPP ON)
