@@ -119,13 +119,6 @@ crossmul(isce::io::Raster& referenceSLC,
     size_t nrows = referenceSLC.length();
     size_t ncols = referenceSLC.width();
 
-    //signal object for refSlc
-    isce::cuda::signal::gpuSignal<float> signalNoUpsample(CUFFT_C2C);
-    isce::cuda::signal::gpuSignal<float> signalUpsample(CUFFT_C2C);
-
-    // instantiate Looks used for multi-looking the interferogram
-    isce::cuda::signal::gpuLooks<float> looksObj;
-
     // setting the parameters of the multi-looking oject
     if (_doMultiLook) {
         // Making sure that the number of rows in each block (blockRows) 
@@ -135,12 +128,6 @@ crossmul(isce::io::Raster& referenceSLC,
 
     size_t blockRowsMultiLooked = blockRows/_azimuthLooks;
     size_t ncolsMultiLooked = ncols/_rangeLooks;
-    looksObj.nrows(blockRows);
-    looksObj.ncols(ncols);
-    looksObj.rowsLooks(_azimuthLooks);
-    looksObj.colsLooks(_rangeLooks);
-    looksObj.nrowsLooked(blockRowsMultiLooked);
-    looksObj.ncolsLooked(ncolsMultiLooked);
 
     // number of blocks to process
     size_t nblocks = nrows / blockRows;
@@ -149,6 +136,10 @@ crossmul(isce::io::Raster& referenceSLC,
     } else if (nrows % (nblocks * blockRows) != 0) {
         nblocks += 1;
     }
+
+    //signal object for refSlc
+    isce::cuda::signal::gpuSignal<float> signalNoUpsample(CUFFT_C2C);
+    isce::cuda::signal::gpuSignal<float> signalUpsample(CUFFT_C2C);
     
     // Compute FFT size (power of 2)
     size_t nfft;
@@ -158,14 +149,17 @@ crossmul(isce::io::Raster& referenceSLC,
     signalNoUpsample.rangeFFT(nfft, blockRows);
     signalUpsample.rangeFFT(nfft*oversample, blockRows);
 
+    // set not upsampled parameters
+    auto n_slc = nfft*blockRows;
+    auto slc_size = n_slc * sizeof(gpuComplex<float>);
+
     // storage for a block of reference SLC data
-    std::valarray<std::complex<float>> refSlc(nfft*blockRows);
+    std::valarray<std::complex<float>> refSlc(n_slc);
     gpuComplex<float> *d_refSlc;
-    auto slc_size = refSlc.size()*sizeof(float)*2;
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_refSlc), slc_size));
 
     // storage for a block of secondary SLC data
-    std::valarray<std::complex<float>> secSlc(nfft*blockRows);
+    std::valarray<std::complex<float>> secSlc(n_slc);
     gpuComplex<float> *d_secSlc;
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_secSlc), slc_size));
 
@@ -194,9 +188,12 @@ crossmul(isce::io::Raster& referenceSLC,
     checkCudaErrors(cudaMemcpy(d_shiftImpact, &shiftImpact[0], slcUpsampled_size, cudaMemcpyHostToDevice));
 
     // interferogram
-    std::valarray<std::complex<float>> ifgram(ncols*blockRows);
+    auto n_ifgram = ncols * blockRows;
+    auto ifgram_size = n_ifgram * sizeof(gpuComplex<float>);
+    std::cout << "n_ifgram: " << n_ifgram << std::endl;       
+    std::cout << "ifgram_size: " << ifgram_size << std::endl;       
+    std::valarray<std::complex<float>> ifgram(n_ifgram);
     gpuComplex<float> *d_ifgram;
-    auto ifgram_size = ncols*nrows*sizeof(float)*2;     // 2* because imageinary
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_ifgram), ifgram_size));
 
     // range offset
@@ -252,6 +249,7 @@ crossmul(isce::io::Raster& referenceSLC,
     
     // loop over all blocks
     std::cout << "nblocks : " << nblocks << std::endl;
+    std::cout << "oversample : " << oversample << std::endl;
 
     for (size_t block = 0; block < nblocks; ++block) {
         std::cout << "block: " << block << std::endl;       
@@ -386,7 +384,7 @@ crossmul(isce::io::Raster& referenceSLC,
 
         } else {
             // get data to HOST
-            checkCudaErrors(cudaMemcpy(&ifgram[0], d_ifgram, ifgram.size()*sizeof(float)*2, cudaMemcpyDeviceToHost));
+            checkCudaErrors(cudaMemcpy(&ifgram[0], d_ifgram, ifgram_size, cudaMemcpyDeviceToHost));
 
             // set the block of interferogram
             interferogram.setBlock(ifgram, 0, rowStart, ncols, blockRowsData);
