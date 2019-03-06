@@ -165,7 +165,7 @@ crossmul(isce::io::Raster& referenceSLC,
     // shift impact
     std::valarray<std::complex<float>> shiftImpact(oversample*nfft*blockRows);
     gpuComplex<float> *d_shiftImpact;
-    calculateLookdownShiftImpact(oversample,
+    lookdownShiftImpact(oversample,
             nfft,
             blockRows,
             shiftImpact);

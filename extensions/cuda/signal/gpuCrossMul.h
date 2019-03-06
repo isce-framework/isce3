@@ -45,11 +45,6 @@ class isce::cuda::signal::gpuCrossmul {
         gpuCrossmul() {};
         ~gpuCrossmul() {};
 
-        void calculateLookdownShiftImpact(size_t oversample, 
-                size_t nfft, 
-                size_t blockRows, 
-                std::valarray<std::complex<float>> &shiftImpact);
-
         void crossmul(isce::io::Raster& referenceSLC,
                 isce::io::Raster& secondarySLC,
                 isce::io::Raster& interferogram,
@@ -146,6 +141,11 @@ class isce::cuda::signal::gpuCrossmul {
         // upsampling factor
         size_t oversample = 1;
 };
+
+void lookdownShiftImpact(size_t oversample, 
+        size_t nfft, 
+        size_t blockRows, 
+        std::valarray<std::complex<float>> &shiftImpact);
 
 template <class T>
 CUDA_GLOBAL void interferogram_g(gpuComplex<T> *ifgram, 
