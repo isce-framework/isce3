@@ -33,7 +33,13 @@ void isce::cuda::signal::gpuLooks<T>::multilook(std::valarray<T> &lo_res,
     dim3 grid((lo_res_size+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
     // run kernels
-    multlooks_no_data_g<<<grid, block>>>(d_lo_res, d_hi_res, noDataValue, _nrowsLooked, _rowsLooks, _colsLooks, _nrowsLooked*_ncolsLooked);
+    multilooks_no_data_g<<<grid, block>>>(d_lo_res, 
+            d_hi_res, 
+            noDataValue, 
+            _nrowsLooked, 
+            _rowsLooks, 
+            _colsLooks, 
+            _nrowsLooked*_ncolsLooked);
 
     // copy from device lo res output
     checkCudaErrors(cudaMemcpy(&lo_res[0], d_lo_res, lo_res_size, cudaMemcpyDeviceToHost));
@@ -48,12 +54,12 @@ void isce::cuda::signal::gpuLooks<T>::multilook(std::valarray<T> &lo_res,
 {
     // allocate lo res output on device
     T *d_lo_res;
-    size_t lo_res_size = _nrowsLooked*_ncolsLooked*sizeof(T)*2;
+    size_t lo_res_size = _nrowsLooked*_ncolsLooked*sizeof(T);
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_lo_res), lo_res_size));
 
     // allocate and copy to device hi res input
     T *d_hi_res;
-    size_t hi_res_size = _nrows*_ncols*sizeof(T)*2;
+    size_t hi_res_size = _nrows*_ncols*sizeof(T);
     // allocate input
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_hi_res), hi_res_size));
     // copy hi_res
@@ -64,7 +70,50 @@ void isce::cuda::signal::gpuLooks<T>::multilook(std::valarray<T> &lo_res,
     dim3 grid((lo_res_size+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
     // run kernels
-    multlooks_g<<<grid, block>>>(d_lo_res, d_hi_res, _nrowsLooked, _rowsLooks, _colsLooks, _nrowsLooked*_ncolsLooked);
+    multilooks_g<<<grid, block>>>(d_lo_res, 
+            d_hi_res, 
+            _nrowsLooked, 
+            _rowsLooks, 
+            _colsLooks, 
+            _nrowsLooked*_ncolsLooked,
+            T(_rowsLooks*_colsLooks));
+
+    // copy from device lo res output
+    checkCudaErrors(cudaMemcpy(&lo_res[0], d_lo_res, lo_res_size, cudaMemcpyDeviceToHost));
+
+    checkCudaErrors(cudaFree(d_lo_res));
+    checkCudaErrors(cudaFree(d_hi_res));
+}
+
+template <typename T>
+void isce::cuda::signal::gpuLooks<T>::multilook(std::valarray<gpuComplex<T>> &lo_res, 
+                                                std::valarray<gpuComplex<T>> &hi_res) 
+{
+    // allocate lo res output on device
+    T *d_lo_res;
+    size_t lo_res_size = _nrowsLooked*_ncolsLooked*sizeof(gpuComplex<T>);
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_lo_res), lo_res_size));
+
+    // allocate and copy to device hi res input
+    T *d_hi_res;
+    size_t hi_res_size = _nrows*_ncols*sizeof(gpuComplex<T>);
+    // allocate input
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_hi_res), hi_res_size));
+    // copy hi_res
+    checkCudaErrors(cudaMemcpy(d_hi_res, &hi_res[0], hi_res_size, cudaMemcpyHostToDevice));
+
+    // determine block layout
+    dim3 block(THRD_PER_BLOCK);
+    dim3 grid((lo_res_size+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
+
+    // run kernels
+    multilooks_g<<<grid, block>>>(d_lo_res, 
+            d_hi_res, 
+            _nrowsLooked, 
+            _rowsLooks, 
+            _colsLooks, 
+            _nrowsLooked*_ncolsLooked,
+            T(_rowsLooks*_colsLooks));
 
     // copy from device lo res output
     checkCudaErrors(cudaMemcpy(&lo_res[0], d_lo_res, lo_res_size, cudaMemcpyDeviceToHost));
@@ -100,7 +149,7 @@ void isce::cuda::signal::gpuLooks<T>::multilook(std::valarray<T> &lo_res,
     dim3 grid((lo_res_size+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
     // run kernels
-    multlooks_weighted_g<<<grid, block>>>(d_lo_res, d_hi_res, d_weights, _nrowsLooked, _rowsLooks, _colsLooks, _nrowsLooked*_ncolsLooked);
+    multilooks_weighted_g<<<grid, block>>>(d_lo_res, d_hi_res, d_weights, _nrowsLooked, _rowsLooks, _colsLooks, _nrowsLooked*_ncolsLooked);
 
     // copy from device lo res output
     checkCudaErrors(cudaMemcpy(&lo_res[0], d_lo_res, lo_res_size, cudaMemcpyDeviceToHost));
@@ -123,13 +172,50 @@ input:
    sz_lo number of elements in lo res
  */
 template <typename T>
-__global__ void multilooks_g(T *lo_res, T *hi_res, int rows_lo, int row_resize, int col_resize, int sz_lo) 
+__global__ void multilooks_g(T *lo_res, 
+        T *hi_res, 
+        int rows_lo, 
+        int row_resize, 
+        int col_resize, 
+        int sz_lo, 
+        T blk_sz) 
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < sz_lo) {
         int i_lo_row = i / rows_lo;
         int i_lo_col = i % rows_lo;
-        int blk_sz = row_resize * col_resize;
+
+        // loop over contributing lo_res rows
+        for (int i_blk_row = 0; i_blk_row < row_resize; ++i_blk_row) {
+            // get lo_res row index
+            int i_hi_row = i_blk_row + i_lo_row*row_resize;
+            // loop over contributing lo_res columns
+            for (int i_blk_col = 0; i_blk_col < col_resize; ++i_blk_col) {
+                // get lo_res col index
+                int i_hi_col = i_blk_col + i_lo_col*col_resize;
+                // combine lo_res row and col index to hi_res index
+                int i_hi = i_hi_row*rows_lo*row_resize + i_hi_col;
+                // accumulate lo_res into lo_res
+                lo_res[i] += hi_res[i_hi];
+            }
+        }
+        lo_res[i] /= blk_sz;
+    }
+}
+
+template <typename T>
+__global__ void multilooks_g(gpuComplex<T> *lo_res, 
+        gpuComplex<T> *hi_res, 
+        int rows_lo, 
+        int row_resize, 
+        int col_resize, 
+        int sz_lo, 
+        T blk_sz) 
+{
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    if (i < sz_lo) {
+        int i_lo_row = i / rows_lo;
+        int i_lo_col = i % rows_lo;
 
         // loop over contributing lo_res rows
         for (int i_blk_row = 0; i_blk_row < row_resize; ++i_blk_row) {
@@ -163,7 +249,13 @@ input:
    sz_lo number of elements in lo res
  */
 template <typename T>
-__global__ void multilooks_no_data_g(T *lo_res, T *hi_res, T no_data_value, int rows_lo, int row_resize, int col_resize, int sz_lo) 
+__global__ void multilooks_no_data_g(T *lo_res, 
+        T *hi_res, 
+        T no_data_value, 
+        int rows_lo, 
+        int row_resize, 
+        int col_resize, 
+        int sz_lo) 
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < sz_lo) {
@@ -216,7 +308,6 @@ __global__ void multilooks_weighted_g(T *lo_res, T *hi_res, T* weights, int rows
     if (i < sz_lo) {
         int i_lo_row = i / rows_lo;
         int i_lo_col = i % rows_lo;
-        int blk_sz = row_resize * col_resize;
 
         T sum_weight = 0;
         // loop over contributing hi_res rows
@@ -238,7 +329,7 @@ __global__ void multilooks_weighted_g(T *lo_res, T *hi_res, T* weights, int rows
         if (sum_weight > 0) {
             lo_res[i] /= weights[i];
         } else {
-            lo_res[i] == 0;
+            lo_res[i] = 0.;
         }
     }
 }
@@ -281,3 +372,30 @@ __global__ void multilooks_power_g(T *lo_res, gpuComplex<T> *hi_res, int power, 
         lo_res[i] /= blk_sz;
     }
 }
+
+/*
+   declarations!
+*/
+template class isce::cuda::signal::gpuLooks<float>;
+
+template __global__ void
+multilooks_g<float>(gpuComplex<float> *lo_res, 
+        gpuComplex<float> *hi_res, 
+        int rows_lo, 
+        int row_resize, 
+        int col_resize, 
+        int sz_lo,
+        float blk_sz);
+
+template __global__ void
+multilooks_no_data_g<float>(float *lo_res, 
+        float *hi_res, 
+        float no_data_value, 
+        int rows_lo, 
+        int row_resize, 
+        int col_resize, 
+        int sz_lo);
+
+template __global__ void
+multilooks_power_g<float>(float *lo_res, gpuComplex<float> *hi_res, int power, int rows_lo, int row_resize, int col_resize, int sz_lo);
+
