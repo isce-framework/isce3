@@ -6,12 +6,14 @@ set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 set(ISCE_CUDA_${PACKAGENAME}_HEADERS
         gpuSignal.h
         gpuFilter.h
-        gpuLooks.h)
+        gpuLooks.h
+        gpuCrossMul.h)
 
 set(LOCAL_SRCS
         gpuSignal.cu
         gpuFilter.cu
-        gpuLooks.cu)
+        gpuLooks.cu
+        gpuCrossMul.cu)
 
 # Append current path to every source file
 set(ISCE_CUDA_${PACKAGENAME}_SRCS "")
