@@ -982,7 +982,7 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
         gpuComplex<T> *output,
         gpuComplex<T> *shiftImpact)
 {
-    fwd.forwardDevMem(reinterpret_cast<T *>(&input));
+    fwd.forwardDevMem(reinterpret_cast<T *>(input));
 
     // shift data prior to upsampling transform
     int num_blocks = max(fwd.getNumElements() / 1024, 1);
@@ -992,7 +992,7 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
             shiftImpact,
             fwd.getRows(), fwd.getColumns(), inv.getColumns());
 
-    inv.inverseDevMem(reinterpret_cast<T *>(&output));
+    inv.inverseDevMem(reinterpret_cast<T *>(output));
 }
 
 void upsampleC2C(isce::cuda::signal::gpuSignal<float> &fwd,
