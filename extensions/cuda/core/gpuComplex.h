@@ -1,3 +1,10 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// Author: Liang Yu
+// Copyright 2018-2019
+//
+
 #ifndef __ISCE_CUDA_CORE_GPUCOMPLEX_H__
 #define __ISCE_CUDA_CORE_GPUCOMPLEX_H__
 
@@ -222,11 +229,11 @@ CUDA_HOSTDEV gpuComplex<U> operator /(double x, gpuComplex<U> y) {
 }
 
 // magnitude
-template <class U>
-CUDA_HOSTDEV U abs(gpuComplex<U> x) {
-    U v, w, t;
-    U a = fabsf(x.r);
-    U b = fabsf(x.i);
+template <class T>
+CUDA_HOSTDEV T abs(gpuComplex<T> x) {
+    T v, w, t;
+    T a = fabsf(x.r);
+    T b = fabsf(x.i);
     if (a > b) {
         v = a;
         w = b;
@@ -242,6 +249,27 @@ CUDA_HOSTDEV U abs(gpuComplex<U> x) {
     }
     return t;
 }
-
+/*
+template <>
+CUDA_HOSTDEV double abs(gpuComplex<double> x) {
+    double v, w, t;
+    double a = fabs(x.r);
+    double b = fabs(x.i);
+    if (a > b) {
+        v = a;
+        w = b;
+    } else {
+        v = b;
+        w = a;
+    }
+    t = w / v;
+    t = 1.0f + t * t;
+    t = v * sqrt(t);
+    if ((v == 0.0f) || (v > 3.402823466e38f) || (w > 3.402823466e38f)) {
+        t = v + w;
+    }
+    return t;
+}
+*/
 }}}
 #endif
