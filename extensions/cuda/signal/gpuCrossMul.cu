@@ -154,6 +154,10 @@ crossmul(isce::io::Raster& referenceSLC,
     size_t nfft;
     signalNoUpsample.nextPowerOfTwo(ncols, nfft);
 
+    // set upsampling FFT plans
+    signalNoUpsample.rangeFFT(nfft, blockRows);
+    signalUpsample.rangeFFT(nfft*oversample, blockRows);
+
     // storage for a block of reference SLC data
     std::valarray<std::complex<float>> refSlc(nfft*blockRows);
     gpuComplex<float> *d_refSlc;
