@@ -143,11 +143,15 @@ filter(gpuSignal<T> &signal)
 {
     signal.forward();
 
+    auto n_signal_elements = signal.getNumElements();
+
     // determine block layout
     dim3 block(THRD_PER_BLOCK);
-    dim3 grid((signal.size()+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
+    dim3 grid((n_signal_elements+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
-    filter_g<<<grid, block>>>(signal.getDevicePtr(), _d_filter, signal.size());
+    filter_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(signal.getDevicePtr()), 
+            reinterpret_cast<gpuComplex<T> *>(&_d_filter), 
+            n_signal_elements);
 
     signal.inverse();
 }
@@ -158,15 +162,19 @@ template<class T>
 void gpuFilter<T>::
 filter(gpuComplex<T> *data)
 {
-    _signal.forward(data);
+    _signal.forwardDevMem(reinterpret_cast<T *>(&data));
+
+    auto n_signal_elements = _signal.getNumElements();
 
     // determine block layout
     dim3 block(THRD_PER_BLOCK);
-    dim3 grid((_signal.size()+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
+    dim3 grid((n_signal_elements+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
-    filter_g<<<grid, block>>>(data, _d_filter, _signal.size());
+    filter_g<<<grid, block>>>(data, 
+            reinterpret_cast<gpuComplex<T> *>(&_d_filter), 
+            n_signal_elements);
 
-    _signal.inverse(data);
+    _signal.inverseDevMem(reinterpret_cast<T *>(&data));
 }
 
 
@@ -178,11 +186,16 @@ filter(std::valarray<std::complex<T>> &signal,
     _signal.dataToDevice(signal);
     _signal.forward();
 
+    // save spectrum
+    _signal.dataToHost(spectrum);
+
     // determine block layout
     dim3 block(THRD_PER_BLOCK);
     dim3 grid((signal.size()+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
-    filter_g<<<grid, block>>>(_signal.getDevicePtr(), _d_filter, signal.size());
+    filter_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(_signal.getDevicePtr()), 
+            reinterpret_cast<gpuComplex<T> *>(&_d_filter), 
+            signal.size());
 
     _signal.inverse();
 
@@ -205,8 +218,20 @@ filterCommonRangeBand(T *d_refSlc, T *d_secSlc, T *range)
     dim3 grid((n_elements+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
     // apply full phase correction to both signals
-    phaseShift_g<<<grid, block>>>(d_refSlc, range, _rangePixelSpacing, T(1.), _wavelength, T(1.), n_elements);
-    phaseShift_g<<<grid, block>>>(d_secSlc, range, _rangePixelSpacing, T(-1.), _wavelength, T(1.), n_elements);
+    phaseShift_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(&d_refSlc), 
+            range, 
+            _rangePixelSpacing, 
+            T(1.), 
+            _wavelength, 
+            T(1.), 
+            n_elements);
+    phaseShift_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(&d_secSlc), 
+            range, 
+            _rangePixelSpacing, 
+            T(-1.), 
+            _wavelength, 
+            T(1.), 
+            n_elements);
 
     auto ncols = _signal.getColumns();
     auto nrows = _signal.getRows();
@@ -214,8 +239,8 @@ filterCommonRangeBand(T *d_refSlc, T *d_secSlc, T *range)
     Filter<T>::fftfreq(ncols, 1.0/_rangeSamplingFrequency, rangeFrequencies);
 
     // calculate frequency shift
-    size_t refIdx = rangeFrequencyShiftMaxIdx(d_refSlc);
-    size_t secIdx = rangeFrequencyShiftMaxIdx(d_secSlc);
+    size_t refIdx = rangeFrequencyShiftMaxIdx(reinterpret_cast<gpuComplex<T> *>(&d_refSlc), nrows, ncols);
+    size_t secIdx = rangeFrequencyShiftMaxIdx(reinterpret_cast<gpuComplex<T> *>(&d_secSlc), nrows, ncols);
     double frequencyShift = rangeFrequencies[refIdx] - rangeFrequencies[secIdx];
 
     std::valarray<double> filterCenterFrequency{0.0};
@@ -231,30 +256,44 @@ filterCommonRangeBand(T *d_refSlc, T *d_secSlc, T *range)
             filterType);
 
     //
-    filter(d_refSlc);
-    filter(d_secSlc);
+    filter(reinterpret_cast<gpuComplex<T> *>(&d_refSlc));
+    filter(reinterpret_cast<gpuComplex<T> *>(&d_secSlc));
 
     // apply half phase correction
-    phaseShift_g<<<grid, block>>>(d_refSlc, range, _rangePixelSpacing, T(-1.), _wavelength, T(2.), n_elements);
-    phaseShift_g<<<grid, block>>>(d_secSlc, range, _rangePixelSpacing, T(1.), _wavelength, T(2.), n_elements);
+    phaseShift_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(&d_refSlc), 
+            range, 
+            _rangePixelSpacing, 
+            T(-1.), 
+            _wavelength, 
+            T(2.), 
+            n_elements);
+    phaseShift_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(&d_secSlc), 
+            range, 
+            _rangePixelSpacing, 
+            T(1.), 
+            _wavelength, 
+            T(2.), 
+            n_elements);
 }
 
 
 template<class T>
 size_t gpuFilter<T>::
 rangeFrequencyShiftMaxIdx(gpuComplex<T> *spectrum,
-        double *rangeFrequencies,
-        int n_elements)
+        int n_rows,
+        int n_cols)
 {
+    int n_elements = n_rows * n_cols;
+
     // determine block layout
     dim3 block(THRD_PER_BLOCK);
     dim3 grid((n_elements+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
     // sum spectrum along columns
-    sumSpectrum_g<<<grid, block>>>(spectrum, _d_spectrumSum, n_elements);
+    sumSpectrum_g<<<grid, block>>>(spectrum, _d_spectrumSum, n_rows, n_cols);
 
     // copy to signal sums and find index of max value
-    checkCudaErrors(cudaMemcpy(&_spectrumSum[0], _d_spectrumSum, n_elements*sizeof(T)*2, cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(&_spectrumSum[0], _d_spectrumSum, n_elements*sizeof(T), cudaMemcpyDeviceToHost));
     size_t idx = 0;
     getPeakIndex(_spectrumSum, idx);
     return idx;
@@ -293,7 +332,7 @@ cpuFilterHostToDevice()
 
 
 template<class T>
-__global__ void phaseShift_g(gpuComplex<T> *slc, T *range, T pxlSpace, T conj, T wavelength, T wave_div, int n_elements)
+__global__ void phaseShift_g(gpuComplex<T> *slc, T *range, double pxlSpace, T conj, double wavelength, T wave_div, int n_elements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < n_elements) {
@@ -303,7 +342,7 @@ __global__ void phaseShift_g(gpuComplex<T> *slc, T *range, T pxlSpace, T conj, T
     }
 }
 template<>
-__global__ void phaseShift_g<float>(gpuComplex<float> *slc, float *range, float pxlSpace, float conj, float wavelength, float wave_div, int n_elements)
+__global__ void phaseShift_g<float>(gpuComplex<float> *slc, float *range, double pxlSpace, float conj, double wavelength, float wave_div, int n_elements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < n_elements) {
@@ -332,3 +371,26 @@ __global__ void filter_g(gpuComplex<T> *signal, gpuComplex<T> *filter, int n_ele
         signal[i] *= filter[i];
     }
 }
+
+template<class T>
+__global__ void sumSpectrum_g(gpuComplex<T> *spectrum, T *spectrum_sum, int n_rows, int n_cols)
+{
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    if (i < n_cols) {
+        for (int i_row = 0; i_row < n_rows; ++i_row) {
+            spectrum_sum[i] += abs(spectrum[i_row*n_cols + i]);
+        }
+    }
+}
+
+/*
+   declarations!
+*/
+
+template class gpuFilter<float>;
+
+template __global__ void
+sumSpectrum_g<float>(gpuComplex<float> *spectrum, float *spectrum_sum, int n_rows, int n_cols);
+
+template __global__ void
+sumSpectrum_g<double>(gpuComplex<double> *spectrum, double *spectrum_sum, int n_rows, int n_cols);

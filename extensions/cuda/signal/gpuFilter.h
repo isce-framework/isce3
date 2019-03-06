@@ -114,8 +114,8 @@ class isce::cuda::signal::gpuFilter : public Filter<T>{
         void filterCommonRangeBand(T *d_refSlc, T *secSlc, T *range);
 
         size_t rangeFrequencyShiftMaxIdx(gpuComplex<T> *spectrum,
-                double *rangeFrequencies,
-                int n_elements);
+                int n_rows, 
+                int n_cols);
 
         void getPeakIndex(std::valarray<float> data, size_t &peakIndex);
 
@@ -134,14 +134,17 @@ class isce::cuda::signal::gpuFilter : public Filter<T>{
         double _rangeBandwidth;
         T *_d_spectrumSum;
         bool _spectrumSum_set;
-        std::valarray<std::complex<T>> _spectrumSum;
+        std::valarray<T> _spectrumSum;
 };
 
 template<class T>
-__global__ void phaseShift_g(gpuComplex<T> *slc, T *range, T pxlSpace, T conj, T wavelength, T wave_div, int n_elements);
+__global__ void phaseShift_g(gpuComplex<T> *slc, T *range, double pxlSpace, T conj, double wavelength, T wave_div, int n_elements);
 
 template<class T>
 __global__ void filter_g(gpuComplex<T> *signal, gpuComplex<T> *filter, int n_elements);
+
+template<class T>
+__global__ void sumSpectrum_g(gpuComplex<T> *spectrum, T *spectrum_sum, int n_rows, int n_cols);
 
 #endif
 
