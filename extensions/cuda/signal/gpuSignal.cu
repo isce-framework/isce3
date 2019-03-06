@@ -930,13 +930,14 @@ template<class T>
 __global__ void rangeShift_g(gpuComplex<T> *data_lo_res, gpuComplex<T> *data_hi_res, int n_rows, int n_cols_lo, int n_cols_hi)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
+    int i_row = i / n_cols_lo;
     int i_col = i % n_cols_lo;
 
     if (i < n_cols_lo * n_rows) {
         if (i_col < n_cols_lo / 2)
-            data_hi_res[i*n_cols_hi + i_col] = data_lo_res[i]; 
+            data_hi_res[i_row*n_cols_hi + i_col] = data_lo_res[i]; 
         else
-            data_hi_res[(i+1) * n_cols_hi - (n_cols_lo-i_col)] = data_lo_res[i];
+            data_hi_res[(i_row+1) * n_cols_hi - (n_cols_lo-i_col)] = data_lo_res[i];
     }
 }
 
@@ -944,16 +945,22 @@ __global__ void rangeShift_g(gpuComplex<T> *data_lo_res, gpuComplex<T> *data_hi_
     recast inputs to either cufftComplex or cufftDoubleComplex
 */
 template<class T>
-__global__ void rangeShiftImpactMult_g(gpuComplex<T> *data_lo_res, gpuComplex<T> *data_hi_res, gpuComplex<T> *shiftImpact, int n_rows, int n_cols_lo, int n_cols_hi)
+__global__ void rangeShiftImpactMult_g(gpuComplex<T> *data_lo_res, 
+        gpuComplex<T> *data_hi_res, 
+        gpuComplex<T> *shiftImpact, 
+        int n_rows, 
+        int n_cols_lo, 
+        int n_cols_hi)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
+    int i_row = i / n_cols_lo;
     int i_col = i % n_cols_lo;
 
     if (i < n_cols_lo * n_rows) {
         if (i_col < n_cols_lo / 2)
-            data_hi_res[i*n_cols_hi + i_col] = data_lo_res[i] * shiftImpact[i]; 
+            data_hi_res[i_row*n_cols_hi + i_col] = data_lo_res[i] * shiftImpact[i]; 
         else
-            data_hi_res[(i+1) * n_cols_hi - (n_cols_lo-i_col)] = data_lo_res[i] * shiftImpact[i];
+            data_hi_res[(i_row+1) * n_cols_hi - (n_cols_lo-i_col)] = data_lo_res[i] * shiftImpact[i];
     }
 }
 
@@ -963,16 +970,20 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
         gpuComplex<T> *input,
         gpuComplex<T> *output)
 {
-    fwd.forward(input);
+    fwd.forwardDevMem(reinterpret_cast<T *>(input));
+
+    // determine block layout
+    auto input_size = fwd.getNumElements();
+    dim3 block(THRD_PER_BLOCK);
+    dim3 grid((input_size+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
     // shift data prior to upsampling transform
-    int num_blocks = max(fwd.getNumElements() / 1024, 1);
-    rangeShift_g<T><<<num_blocks, 1024>>>(
+    rangeShift_g<T><<<grid, block>>>(
             input, 
             output, 
             fwd.getRows(), fwd.getColumns(), inv.getColumns());
 
-    inv.inverse(output);
+    inv.inverseDevMem(reinterpret_cast<T *>(output));
 }
 
 template<class T>
@@ -984,13 +995,19 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
 {
     fwd.forwardDevMem(reinterpret_cast<T *>(input));
 
+    // determine block layout
+    auto input_size = fwd.getNumElements();
+    dim3 block(THRD_PER_BLOCK);
+    dim3 grid((input_size+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
+
     // shift data prior to upsampling transform
-    int num_blocks = max(fwd.getNumElements() / 1024, 1);
-    rangeShiftImpactMult_g<T><<<num_blocks, 1024>>>(
+    rangeShiftImpactMult_g<T><<<grid, block>>>(
             input, 
             output, 
             shiftImpact,
-            fwd.getRows(), fwd.getColumns(), inv.getColumns());
+            fwd.getRows(), 
+            fwd.getColumns(), 
+            inv.getColumns());
 
     inv.inverseDevMem(reinterpret_cast<T *>(output));
 }
