@@ -13,10 +13,13 @@ function(AssureOutOfSourceBuilds)
 endfunction()
 
 
-##Check that GCC supports C++17
+# Check that compiler supports C++17
+# (Only checks GCC and Clang currently)
 function(CheckCXX)
     if (CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
         message(FATAL_ERROR "Insufficient GCC version. Version 6.0 or greater is required.")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
+        message(FATAL_ERROR "Insufficient Clang version. Version 5 or greater is required.")
     endif()
     # Require C++17 (no extensions) for host code
     set(CMAKE_CXX_STANDARD            17 PARENT_SCOPE)
