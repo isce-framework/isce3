@@ -23,7 +23,7 @@ using isce::cuda::signal::gpuSignal;
 TEST(gpuSignal, ForwardBackwardRangeFloatNoCp)
 {
     // take a block of data, perform range FFT and then iverse FFT and compare with original data   
-    isce::io::Raster inputSlc("../../../../../lib/isce/data/warped_envisat.slc.vrt");
+    isce::io::Raster inputSlc("../../../../lib/isce/data/warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
     int length = inputSlc.length();
@@ -148,7 +148,7 @@ TEST(gpuSignal, upsampleDoubleNoCp)
 TEST(gpuSignal, ForwardBackwardRangeFloat)
 {
     // take a block of data, perform range FFT and then iverse FFT and compare with original data   
-    isce::io::Raster inputSlc("../../../../../lib/isce/data/warped_envisat.slc.vrt");
+    isce::io::Raster inputSlc("../../../../lib/isce/data/warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
     int length = inputSlc.length();
@@ -200,7 +200,7 @@ TEST(gpuSignal, ForwardBackwardRangeFloat)
 TEST(gpuSignal, ForwardBackwardAzimuthFloat)
 {
     // take a block of data, perform range FFT and then iverse FFT and compare with original data   
-    isce::io::Raster inputSlc("../../../../../lib/isce/data/warped_envisat.slc.vrt");
+    isce::io::Raster inputSlc("../../../../lib/isce/data/warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
     int length = inputSlc.length();
@@ -254,7 +254,7 @@ TEST(gpuSignal, ForwardBackwardAzimuthFloat)
 TEST(gpuSignal, nfft)
 {
     // This test is same as the previous test but with nfft used for FFT computation instead of number of columns
-    isce::io::Raster inputSlc("../../../../../lib/isce/data/warped_envisat.slc.vrt");
+    isce::io::Raster inputSlc("../../../../lib/isce/data/warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
     int length = inputSlc.length();
