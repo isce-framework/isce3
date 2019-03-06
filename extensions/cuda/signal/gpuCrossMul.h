@@ -57,8 +57,8 @@ class isce::cuda::signal::gpuCrossmul {
                 isce::io::Raster& coherenceRaster);
 
        /** Set doppler LUTs for reference and secondary SLCs*/
-        inline void doppler(isce::core::LUT1d<double>, 
-                            isce::core::LUT1d<double>);
+        void doppler(isce::core::LUT1d<double>, 
+                isce::core::LUT1d<double>);
 
         /** Set pulse repetition frequency (PRF) */
         inline void prf(double p_r_f) {_prf = p_r_f;};

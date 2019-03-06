@@ -84,6 +84,15 @@ __global__ void calculate_coherence_g<double>(double *ref_amp,
 
 
 void isce::cuda::signal::gpuCrossmul::
+doppler(isce::core::LUT1d<double> refDoppler, 
+        isce::core::LUT1d<double> secDoppler)
+{
+    _refDoppler = refDoppler;
+    _secDoppler = secDoppler;
+}
+
+
+void isce::cuda::signal::gpuCrossmul::
 crossmul(isce::io::Raster& referenceSLC, 
         isce::io::Raster& secondarySLC,
         isce::io::Raster& interferogram,
@@ -156,26 +165,29 @@ crossmul(isce::io::Raster& referenceSLC,
     gpuComplex<float> *d_secSlc;
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_secSlc), slc_size));
 
+    // set upsampled parameters
+    auto n_slcUpsampled = oversample * nfft * blockRows;
+    auto slcUpsampled_size = n_slcUpsampled * sizeof(gpuComplex<float>);
+
     // upsampled block of reference SLC 
-    std::valarray<std::complex<float>> refSlcUpsampled(oversample*nfft*blockRows);
+    std::valarray<std::complex<float>> refSlcUpsampled(n_slcUpsampled);
     gpuComplex<float> *d_refSlcUpsampled;
-    auto slcUpsampled_size = slc_size * oversample;
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_refSlcUpsampled), slcUpsampled_size));
 
+    // upsampled block of secondary SLC
+    std::valarray<std::complex<float>> secSlcUpsampled(n_slcUpsampled);
+    gpuComplex<float> *d_secSlcUpsampled;
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_secSlcUpsampled), slcUpsampled_size));
+
     // shift impact
-    std::valarray<std::complex<float>> shiftImpact(oversample*nfft*blockRows);
+    std::valarray<std::complex<float>> shiftImpact(n_slcUpsampled);
     gpuComplex<float> *d_shiftImpact;
     lookdownShiftImpact(oversample,
             nfft,
             blockRows,
             shiftImpact);
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_shiftImpact), slcUpsampled_size));
-    checkCudaErrors(cudaMemcpy(reinterpret_cast<void **>(&d_shiftImpact), &shiftImpact[0], slcUpsampled_size, cudaMemcpyHostToDevice));
-
-    // upsampled block of secondary SLC
-    std::valarray<std::complex<float>> secSlcUpsampled(oversample*nfft*blockRows);
-    gpuComplex<float> *d_secSlcUpsampled;
-    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_secSlcUpsampled), slcUpsampled_size));
+    checkCudaErrors(cudaMemcpy(d_shiftImpact, &shiftImpact[0], slcUpsampled_size, cudaMemcpyHostToDevice));
 
     // interferogram
     std::valarray<std::complex<float>> ifgram(ncols*blockRows);
