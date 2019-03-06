@@ -195,15 +195,15 @@ CUDA_GLOBAL void rangeShiftImpactMult_g(gpuComplex<T> *data_lo_res, gpuComplex<T
 template<class T>
 void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
         isce::cuda::signal::gpuSignal<T> &inv,
-        T *input,
-        T *output);
+        gpuComplex<T> *input,
+        gpuComplex<T> *output);
 
 template<class T>
 void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
         isce::cuda::signal::gpuSignal<T> &inv,
-        T *input,
-        T *output,
-        T *shiftImpact);
+        gpuComplex<T> *input,
+        gpuComplex<T> *output,
+        gpuComplex<T> *shiftImpact);
 
 void upsampleC2C(isce::cuda::signal::gpuSignal<float> &fwd,
         isce::cuda::signal::gpuSignal<float> &inv,

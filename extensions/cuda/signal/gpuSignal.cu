@@ -960,18 +960,16 @@ __global__ void rangeShiftImpactMult_g(gpuComplex<T> *data_lo_res, gpuComplex<T>
 template<class T>
 void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
         isce::cuda::signal::gpuSignal<T> &inv,
-        T *input,
-        T *output)
+        gpuComplex<T> *input,
+        gpuComplex<T> *output)
 {
     fwd.forward(input);
 
     // shift data prior to upsampling transform
     int num_blocks = max(fwd.getNumElements() / 1024, 1);
-    auto lo_res_ptr = reinterpret_cast<gpuComplex<T> *>(input);
-    auto hi_res_ptr = reinterpret_cast<gpuComplex<T> *>(output);
     rangeShift_g<T><<<num_blocks, 1024>>>(
-            reinterpret_cast<gpuComplex<T> *>(lo_res_ptr), 
-            reinterpret_cast<gpuComplex<T> *>(hi_res_ptr), 
+            input, 
+            output, 
             fwd.getRows(), fwd.getColumns(), inv.getColumns());
 
     inv.inverse(output);
@@ -980,23 +978,21 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
 template<class T>
 void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
         isce::cuda::signal::gpuSignal<T> &inv,
-        T *input,
-        T *output,
-        T *shiftImpact)
+        gpuComplex<T> *input,
+        gpuComplex<T> *output,
+        gpuComplex<T> *shiftImpact)
 {
-    fwd.forward(input);
+    fwd.forwardDevMem(reinterpret_cast<T *>(&input));
 
     // shift data prior to upsampling transform
     int num_blocks = max(fwd.getNumElements() / 1024, 1);
-    auto lo_res_ptr = reinterpret_cast<gpuComplex<T> *>(input);
-    auto hi_res_ptr = reinterpret_cast<gpuComplex<T> *>(output);
     rangeShiftImpactMult_g<T><<<num_blocks, 1024>>>(
-            reinterpret_cast<gpuComplex<T> *>(lo_res_ptr), 
-            reinterpret_cast<gpuComplex<T> *>(hi_res_ptr), 
-            reinterpret_cast<gpuComplex<T> *>(shiftImpact),
+            input, 
+            output, 
+            shiftImpact,
             fwd.getRows(), fwd.getColumns(), inv.getColumns());
 
-    inv.inverse(output);
+    inv.inverseDevMem(reinterpret_cast<T *>(&output));
 }
 
 void upsampleC2C(isce::cuda::signal::gpuSignal<float> &fwd,
@@ -1139,3 +1135,15 @@ template __global__ void
 rangeShiftImpactMult_g<double>(gpuComplex<double> *data_lo_res, gpuComplex<double> *data_hi_res, 
         gpuComplex<double> *impact_shift, 
         int n_rows, int n_cols_lo, int n_cols_hi);
+
+template void upsample<float>(isce::cuda::signal::gpuSignal<float> &fwd,
+        isce::cuda::signal::gpuSignal<float> &inv,
+        gpuComplex<float> *input,
+        gpuComplex<float> *output,
+        gpuComplex<float> *shiftImpact);
+
+template void upsample<double>(isce::cuda::signal::gpuSignal<double> &fwd,
+        isce::cuda::signal::gpuSignal<double> &inv,
+        gpuComplex<double> *input,
+        gpuComplex<double> *output,
+        gpuComplex<double> *shiftImpact);
