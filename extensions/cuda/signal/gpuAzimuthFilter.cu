@@ -50,8 +50,6 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
         size_t ncols,
         size_t nrows)
 {
-    std::valarray<std::complex<T>> host_filter(ncols*nrows);
-
     // Pedestal-dependent frequency offset for transition region
     const double df = 0.5 * bandwidth * beta;
     // Compute normalization factor for preserving average power between input
@@ -61,14 +59,16 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
     const double norm = 1.0;
 
     // we probably need to give next power of 2 ???
-    size_t nfft = 0;
-    this->_signal.nextPowerOfTwo(ncols, nfft);
+    //size_t nfft = 0;
+    //this->_signal.nextPowerOfTwo(ncols, nfft);
 
     // Construct vector of frequencies
-    std::valarray<double> frequency(nfft);
+    std::valarray<double> frequency(ncols);
     
-    isce::signal::Filter<float>::fftfreq(nfft, 1.0/prf, frequency);
+    isce::signal::Filter<float>::fftfreq(ncols, 1.0/prf, frequency);
     
+    std::valarray<std::complex<T>> host_filter(ncols*nrows);
+
     // Loop over range bins
     for (int j = 0; j < ncols; ++j) {
         // Compute center frequency of common band
@@ -99,7 +99,7 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
 
     this->cpFilterHostToDevice(host_filter);
 
-    this->_signal.rangeFFT(ncols, nrows);
+    this->_signal.azimuthFFT(ncols, nrows);
 }
 
 // DECLARATIONS
