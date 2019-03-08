@@ -1,22 +1,32 @@
-// -*- C++ -*-
-// -*- coding: utf-8 -*-
 //
-// Source Author: Liang Yu
+// Author: Liang Yu
 // Copyright 2019
+//
 
-#ifndef ISCE_CUDA_SIGNAL_FILTER_H
-#define ISCE_CUDA_SIGNAL_FILTER_H
+#ifndef __ISCE_CUDA_SIGNAL_GPUFILTER_H__
+#define __ISCE_CUDA_SIGNAL_GPUFILTER_H__
+
+#ifdef __CUDACC__
+#define CUDA_HOSTDEV __host__ __device__
+#define CUDA_DEV __device__
+#define CUDA_HOST __host__
+#define CUDA_GLOBAL __global__
+#else
+#define CUDA_HOSTDEV
+#define CUDA_DEV
+#define CUDA_HOST
+#define CUDA_GLOBAL
+#endif
 
 #include <complex>
 #include <valarray>
 
-#include "isce/signal/Filter.h"
 #include "gpuSignal.h"
 #include "isce/cuda/core/gpuComplex.h"
+#include <isce/core/LUT1d.h>
 
-using isce::signal::Filter;
-using isce::cuda::core::gpuComplex;
 using isce::cuda::signal::gpuSignal;
+using isce::cuda::core::gpuComplex;
 
 // Declaration
 namespace isce {
@@ -28,72 +38,36 @@ namespace isce {
     }
 }
 
-// Definition
-template<class T>
-class isce::cuda::signal::gpuFilter : public Filter<T>{
+// Declaration
+namespace isce {
+    namespace cuda {
+        namespace signal {
+            template<class T>
+            class gpuAzimuthFilter;
+        }
+    }
+}
 
+// Declaration
+namespace isce {
+    namespace cuda {
+        namespace signal {
+            template<class T>
+            class gpuRangeFilter;
+        }
+    }
+}
+
+using isce::cuda::signal::gpuFilter;
+using isce::cuda::signal::gpuAzimuthFilter;
+using isce::cuda::signal::gpuRangeFilter;
+
+// Definition of base class
+template<class T>
+class gpuFilter {
     public:
-        // Default constructor
         gpuFilter() {};
         ~gpuFilter();
-
-        // same name wrappers for filter init and construction functions with HostToDevice cp
-        /** constructs forward abd backward FFT plans for filtering a block of data in range direction. */
-        void initiateRangeFilter(std::valarray<std::complex<T>> &signal,
-                                std::valarray<std::complex<T>> &spectrum,
-                                size_t ncols,
-                                size_t nrows);
-
-        /** constructs forward abd backward FFT plans for filtering a block of data in azimuth direction. */
-        void initiateAzimuthFilter(std::valarray<std::complex<T>> &signal,
-                                std::valarray<std::complex<T>> &spectrum,
-                                size_t ncols,
-                                size_t nrows);
-
-        /** Sets an existing filter to be used by the filter object*/
-        //void setFilter(std::valarray<std::complex<T>>);
-
-        /** Construct range band-pass filter*/
-        void constructRangeBandpassFilter(double rangeSamplingFrequency,
-                                        std::valarray<double> subBandCenterFrequencies,
-                                        std::valarray<double> subBandBandwidths,
-                                        std::valarray<std::complex<T>> &signal,
-                                        std::valarray<std::complex<T>> &spectrum,
-                                        size_t ncols,
-                                        size_t nrows,
-                                        std::string filterType);
-
-        void constructRangeBandpassFilter(double rangeSamplingFrequency,
-                                        std::valarray<double> subBandCenterFrequencies,
-                                        std::valarray<double> subBandBandwidths,
-                                        size_t ncols,
-                                        size_t nrows,
-                                        std::string filterType);
-
-        /** Construct a box car range band-pass filter for multiple bands*/
-        void constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
-                                       std::valarray<double> subBandBandwidths,
-                                       double dt,
-                                       int nfft,
-                                       std::valarray<std::complex<T>> &_filter1D);
-
-        void constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
-                             std::valarray<double> subBandBandwidths,
-                             double dt,
-                             std::valarray<double>& frequency,
-                             double beta,
-                             std::valarray<std::complex<T>>& _filter1D);
-
-        /** Construct azimuth common band filter*/
-        void constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
-                                const isce::core::LUT1d<double> & secDoppler,
-                                double bandwidth,
-                                double prf,
-                                double beta,
-                                std::valarray<std::complex<T>> &signal,
-                                std::valarray<std::complex<T>> &spectrum,
-                                size_t ncols,
-                                size_t nrows);
 
         /** Filter a signal in frequency domain*/
         void filter(std::valarray<std::complex<T>> &signal,
@@ -107,11 +81,88 @@ class isce::cuda::signal::gpuFilter : public Filter<T>{
 
         /** carry over from parent class. eliminate and use parent? */
         void writeFilter(size_t ncols, size_t nrows);
+        
+        void cpFilterHostToDevice(std::valarray<std::complex<T>> &host_filter);
 
-        void cpuFilterHostToDevice();
+    protected:
+        
+        T *_d_filter;               // device memory pointer
+        bool _filter_set = false;
+        gpuSignal<T> _signal;
+        bool _signal_set = false;
+};
 
-        // vvv eventually make part of derived range filter class vvv
-        void filterCommonRangeBand(T *d_refSlc, T *secSlc, T *range);
+// Azimuth filter class derived from base class
+template <class T>
+class gpuAzimuthFilter : public gpuFilter<T> {
+    public:
+        //gpuAzimuthFilter() : _d_filter(0x0), _filter_set(false), _signal(), _signal_set(false) {};
+        gpuAzimuthFilter();
+        ~gpuAzimuthFilter();
+
+        /** constructs forward abd backward FFT plans for filtering a block of data in azimuth direction. */
+        void initiateAzimuthFilter(std::valarray<std::complex<T>> &signal,
+                std::valarray<std::complex<T>> &spectrum,
+                size_t ncols,
+                size_t nrows);
+
+        void constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
+                const isce::core::LUT1d<double> & secDoppler,
+                double bandwidth,
+                double prf,
+                double beta,
+                std::valarray<std::complex<T>> &signal,
+                std::valarray<std::complex<T>> &spectrum,
+                size_t ncols,
+                size_t nrows);
+};
+
+// Range filter class derived from base class
+template <class T>
+class gpuRangeFilter : public gpuFilter<T> {
+    public:
+        gpuRangeFilter();
+        ~gpuRangeFilter();
+
+        // same name wrappers for filter init and construction functions with HostToDevice cp
+        /** constructs forward abd backward FFT plans for filtering a block of data in range direction. */
+        void initiateRangeFilter(std::valarray<std::complex<T>> &signal,
+                std::valarray<std::complex<T>> &spectrum,
+                size_t ncols,
+                size_t nrows);
+
+        /** Construct range band-pass filter*/
+        void constructRangeBandpassFilter(double rangeSamplingFrequency,
+                std::valarray<double> subBandCenterFrequencies,
+                std::valarray<double> subBandBandwidths,
+                std::valarray<std::complex<T>> &signal,
+                std::valarray<std::complex<T>> &spectrum,
+                size_t ncols,
+                size_t nrows,
+                std::string filterType);
+
+        void constructRangeBandpassFilter(double rangeSamplingFrequency,
+                std::valarray<double> subBandCenterFrequencies,
+                std::valarray<double> subBandBandwidths,
+                size_t ncols,
+                size_t nrows,
+                std::string filterType);
+
+        /** Construct a box car range band-pass filter for multiple bands*/
+        void constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
+                std::valarray<double> subBandBandwidths,
+                double dt,
+                int nfft,
+                std::valarray<std::complex<T>> &_filter1D);
+
+        void constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
+                std::valarray<double> subBandBandwidths,
+                double dt,
+                std::valarray<double>& frequency,
+                double beta,
+                std::valarray<std::complex<T>>& _filter1D);
+
+        void filterCommonRangeBand(T *d_refSlc, T *d_secSlc, T *range);
 
         size_t rangeFrequencyShiftMaxIdx(gpuComplex<T> *spectrum,
                 int n_rows, 
@@ -120,12 +171,6 @@ class isce::cuda::signal::gpuFilter : public Filter<T>{
         void getPeakIndex(std::valarray<float> data, size_t &peakIndex);
 
     private:
-        // device memory pointer
-        T *_d_filter;
-        bool _filter_set;
-        gpuSignal<T> _signal;
-
-        // vvv eventually make part of derived range filter class vvv
         double _wavelength;
         double _rangePixelSpacing;
         double _freqShift;
@@ -133,8 +178,9 @@ class isce::cuda::signal::gpuFilter : public Filter<T>{
         double _rangeSamplingFrequency;
         double _rangeBandwidth;
         T *_d_spectrumSum;
-        bool _spectrumSum_set;
+        bool _spectrumSum_set = false;
         std::valarray<T> _spectrumSum;
+        std::valarray<std::complex<T>> _filter;
 };
 
 template<class T>
@@ -147,5 +193,3 @@ template<class T>
 __global__ void sumSpectrum_g(gpuComplex<T> *spectrum, T *spectrum_sum, int n_rows, int n_cols);
 
 #endif
-
-// end of file

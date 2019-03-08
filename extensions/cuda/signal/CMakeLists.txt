@@ -12,6 +12,8 @@ set(ISCE_CUDA_${PACKAGENAME}_HEADERS
 set(LOCAL_SRCS
         gpuSignal.cu
         gpuFilter.cu
+        gpuAzimuthFilter.cu
+        gpuRangeFilter.cu
         gpuLooks.cu
         gpuCrossMul.cu)
 

@@ -4,7 +4,7 @@
 // Source Author: Liang Yu
 // Copyright 2019
 
-#include "gpuFilter.h"
+#include <gpuFilter.h>
 
 #include "isce/cuda/helper_cuda.h"
 #include "isce/cuda/helper_functions.h"
@@ -12,7 +12,6 @@
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 
 using isce::cuda::signal::gpuFilter;
-using isce::signal::Filter;
 
 template<class T>
 gpuFilter<T>::~gpuFilter()
@@ -20,123 +19,9 @@ gpuFilter<T>::~gpuFilter()
     if (_filter_set) {
         cudaFree(_d_filter);
     }
-    if (_spectrumSum_set) {
-        cudaFree(_d_spectrumSum);
-    }
 }
 
-template<class T>
-void gpuFilter<T>::
-initiateRangeFilter(std::valarray<std::complex<T>> &input,
-                        std::valarray<std::complex<T>> &spectrum,
-                        size_t ncols,
-                        size_t nrows) 
-{
-    // malloc device memory for eventual max frequency search
-    if (!_spectrumSum_set) {
-        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&_d_spectrumSum), ncols*sizeof(T)*2));
-        _spectrumSum_set = true;
-    }
-
-    // set FFT parameters
-    cufftType fft_type = (sizeof(T) == 8) ? CUFFT_Z2Z : CUFFT_C2C;
-    gpuSignal<T> _signal(fft_type);
-    _signal.rangeFFT(ncols, nrows);
-}
-
-template<class T>
-void gpuFilter<T>::
-initiateAzimuthFilter(std::valarray<std::complex<T>> &input,
-                           std::valarray<std::complex<T>> &spectrum,
-                           size_t ncols,
-                           size_t nrows) 
-{
-    // set FFT parameters
-    cufftType fft_type = (sizeof(T) == 8) ? CUFFT_Z2Z : CUFFT_C2C;
-    gpuSignal<T> _signal(fft_type);
-    _signal.azimuthFFT(ncols, nrows);
-}
-
-template<class T>
-void gpuFilter<T>::
-constructRangeBandpassFilter(double rangeSamplingFrequency,
-                            std::valarray<double> subBandCenterFrequencies,
-                            std::valarray<double> subBandBandwidths,
-                            std::valarray<std::complex<T>> &signal,
-                            std::valarray<std::complex<T>> &spectrum,
-                            size_t ncols,
-                            size_t nrows,
-                            std::string filterType)
-
-{
-    constructRangeBandpassFilter(rangeSamplingFrequency,
-                                subBandCenterFrequencies,
-                                subBandBandwidths,
-                                ncols,
-                                nrows,
-                                filterType);
-
-    cufftType fft_type = (sizeof(T) == 8) ? CUFFT_Z2Z : CUFFT_C2C;
-    gpuSignal<T> _signal(fft_type);
-    _signal.rangeFFT(ncols, nrows);
-}
-
-// construct filter on host then copy to device
-template<class T>
-void gpuFilter<T>::
-constructRangeBandpassFilter(double rangeSamplingFrequency,
-                            std::valarray<double> subBandCenterFrequencies,
-                            std::valarray<double> subBandBandwidths,
-                            size_t ncols,
-                            size_t nrows,
-                            std::string filterType)
-{
-    // TODO move filter construction to GPU?
-    Filter<T>::constructRangeBandpassFilter(rangeSamplingFrequency,
-                                            subBandCenterFrequencies,
-                                            subBandBandwidths,
-                                            ncols,
-                                            nrows,
-                                            filterType);
-
-    cpuFilterHostToDevice();
-
-    cufftType fft_type = (sizeof(T) == 8) ? CUFFT_Z2Z : CUFFT_C2C;
-    gpuSignal<T> _signal(fft_type);
-    _signal.rangeFFT(ncols, nrows);
-}
-
-// construct filter on host then copy to device
-template<class T>
-void gpuFilter<T>::
-constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
-                                const isce::core::LUT1d<double> & secDoppler,
-                                double bandwidth,
-                                double prf,
-                                double beta,
-                                std::valarray<std::complex<T>> &signal,
-                                std::valarray<std::complex<T>> &spectrum,
-                                size_t ncols,
-                                size_t nrows)
-{
-    Filter<T>::constructAzimuthCommonbandFilter(refDoppler,
-                                            secDoppler,
-                                            bandwidth,
-                                            prf,
-                                            beta,
-                                            signal,
-                                            spectrum,
-                                            ncols,
-                                            nrows);
-    cpuFilterHostToDevice();
-
-    cufftType fft_type = (sizeof(T) == 8) ? CUFFT_Z2Z : CUFFT_C2C;
-    gpuSignal<T> _signal(fft_type);
-    _signal.rangeFFT(ncols, nrows);
-}
-
-
-// keep everything in place on device
+// do all calculations in place with data stored on device within signal
 template<class T>
 void gpuFilter<T>::
 filter(gpuSignal<T> &signal)
@@ -157,7 +42,7 @@ filter(gpuSignal<T> &signal)
 }
 
 
-// keep everything in place on device
+// pass in device pointer to filter on
 template<class T>
 void gpuFilter<T>::
 filter(gpuComplex<T> *data)
@@ -178,6 +63,8 @@ filter(gpuComplex<T> *data)
 }
 
 
+// pass in host memory to copy to device to be filtered
+// interim spectrum is saved as well
 template<class T>
 void gpuFilter<T>::
 filter(std::valarray<std::complex<T>> &signal,
@@ -203,133 +90,19 @@ filter(std::valarray<std::complex<T>> &signal,
     _signal.dataToHost(signal);
 }
 
-
-/** range filters 2 signals in preparation for interferometry calculation
-  calculates frequency shift to be applied 
-  applies prerequisite phase shifts */
 template<class T>
 void gpuFilter<T>::
-filterCommonRangeBand(T *d_refSlc, T *d_secSlc, T *range)
-{
-    auto n_elements = _signal.getNumElements();
-
-    // determine block layout; set these in constructor since they're based on n_elements?
-    dim3 block(THRD_PER_BLOCK);
-    dim3 grid((n_elements+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
-
-    // apply full phase correction to both signals
-    phaseShift_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(&d_refSlc), 
-            range, 
-            _rangePixelSpacing, 
-            T(1.), 
-            _wavelength, 
-            T(1.), 
-            n_elements);
-    phaseShift_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(&d_secSlc), 
-            range, 
-            _rangePixelSpacing, 
-            T(-1.), 
-            _wavelength, 
-            T(1.), 
-            n_elements);
-
-    auto ncols = _signal.getColumns();
-    auto nrows = _signal.getRows();
-    std::valarray<double> rangeFrequencies(ncols);
-    Filter<T>::fftfreq(ncols, 1.0/_rangeSamplingFrequency, rangeFrequencies);
-
-    // calculate frequency shift
-    size_t refIdx = rangeFrequencyShiftMaxIdx(reinterpret_cast<gpuComplex<T> *>(&d_refSlc), nrows, ncols);
-    size_t secIdx = rangeFrequencyShiftMaxIdx(reinterpret_cast<gpuComplex<T> *>(&d_secSlc), nrows, ncols);
-    double frequencyShift = rangeFrequencies[refIdx] - rangeFrequencies[secIdx];
-
-    std::valarray<double> filterCenterFrequency{0.0};
-    std::valarray<double> filterBandwidth{_rangeBandwidth - frequencyShift};
-    std::string filterType = "cosine";
-
-    // TODO do this on GPU?
-    constructRangeBandpassFilter(_rangeSamplingFrequency,
-            filterCenterFrequency,
-            filterBandwidth,
-            ncols,
-            nrows,
-            filterType);
-
-    //
-    filter(reinterpret_cast<gpuComplex<T> *>(&d_refSlc));
-    filter(reinterpret_cast<gpuComplex<T> *>(&d_secSlc));
-
-    // apply half phase correction
-    phaseShift_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(&d_refSlc), 
-            range, 
-            _rangePixelSpacing, 
-            T(-1.), 
-            _wavelength, 
-            T(2.), 
-            n_elements);
-    phaseShift_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(&d_secSlc), 
-            range, 
-            _rangePixelSpacing, 
-            T(1.), 
-            _wavelength, 
-            T(2.), 
-            n_elements);
-}
-
-
-template<class T>
-size_t gpuFilter<T>::
-rangeFrequencyShiftMaxIdx(gpuComplex<T> *spectrum,
-        int n_rows,
-        int n_cols)
-{
-    int n_elements = n_rows * n_cols;
-
-    // determine block layout
-    dim3 block(THRD_PER_BLOCK);
-    dim3 grid((n_elements+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
-
-    // sum spectrum along columns
-    sumSpectrum_g<<<grid, block>>>(spectrum, _d_spectrumSum, n_rows, n_cols);
-
-    // copy to signal sums and find index of max value
-    checkCudaErrors(cudaMemcpy(&_spectrumSum[0], _d_spectrumSum, n_elements*sizeof(T), cudaMemcpyDeviceToHost));
-    size_t idx = 0;
-    getPeakIndex(_spectrumSum, idx);
-    return idx;
-}
-
-
-template<class T>
-void gpuFilter<T>::
-getPeakIndex(std::valarray<float> data, size_t &peakIndex)
-{
-    size_t dataLength = data.size();
-    peakIndex = 0;
-    double peak = data[peakIndex];
-    for (size_t i = 1; i< dataLength;  ++i){
-        if (std::abs(data[i]) > peak){
-            peak = data[i];
-            peakIndex = i;
-        }
-    }
-}
-
-
-template<class T>
-void gpuFilter<T>::
-cpuFilterHostToDevice()
+cpFilterHostToDevice(std::valarray<std::complex<T>> &host_filter)
 {
     if (!_filter_set) {
-        size_t sz_filter = Filter<T>::_filter.size()*sizeof(T)*2;
+        size_t sz_filter = host_filter.size()*sizeof(gpuComplex<T>);
         // allocate input
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&_d_filter), sz_filter));
         // copy input
-        checkCudaErrors(cudaMemcpy(_d_filter, &Filter<T>::_filter[0], sz_filter, cudaMemcpyHostToDevice));
+        checkCudaErrors(cudaMemcpy(_d_filter, &host_filter[0], sz_filter, cudaMemcpyHostToDevice));
         _filter_set = true;
     }
 }
-
 
 template<class T>
 __global__ void phaseShift_g(gpuComplex<T> *slc, T *range, double pxlSpace, T conj, double wavelength, T wave_div, int n_elements)
@@ -341,6 +114,7 @@ __global__ void phaseShift_g(gpuComplex<T> *slc, T *range, double pxlSpace, T co
         slc[i] *= complex_phase;
     }
 }
+
 template<>
 __global__ void phaseShift_g<float>(gpuComplex<float> *slc, float *range, double pxlSpace, float conj, double wavelength, float wave_div, int n_elements)
 {
@@ -348,17 +122,6 @@ __global__ void phaseShift_g<float>(gpuComplex<float> *slc, float *range, double
     if (i < n_elements) {
         float phase = 4.0*M_PI*pxlSpace*range[i]/wavelength;
         gpuComplex<float> complex_phase(cosf(phase/wave_div), conj*sinf(phase/wave_div));
-        slc[i] *= complex_phase;
-    }
-}
-
-template<>
-__global__ void phaseShift_g<double>(gpuComplex<double> *slc, double *range, double pxlSpace, double conj, double wavelength, double wave_div, int n_elements)
-{
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
-    if (i < n_elements) {
-        double phase = 4.0*M_PI*pxlSpace*range[i]/wavelength;
-        gpuComplex<double> complex_phase(cos(phase/wave_div), conj*sin(phase/wave_div));
         slc[i] *= complex_phase;
     }
 }
@@ -383,14 +146,8 @@ __global__ void sumSpectrum_g(gpuComplex<T> *spectrum, T *spectrum_sum, int n_ro
     }
 }
 
-/*
-   declarations!
-*/
-
+// DECLARATIONS
 template class gpuFilter<float>;
 
 template __global__ void
 sumSpectrum_g<float>(gpuComplex<float> *spectrum, float *spectrum_sum, int n_rows, int n_cols);
-
-template __global__ void
-sumSpectrum_g<double>(gpuComplex<double> *spectrum, double *spectrum_sum, int n_rows, int n_cols);
