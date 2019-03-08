@@ -138,7 +138,7 @@ crossmul(isce::io::Raster& referenceSLC,
         nblocks += 1;
     }
 
-    //signal object for refSlc
+    // signal object for upsampling
     isce::cuda::signal::gpuSignal<float> signalNoUpsample(CUFFT_C2C);
     isce::cuda::signal::gpuSignal<float> signalUpsample(CUFFT_C2C);
     
@@ -191,8 +191,6 @@ crossmul(isce::io::Raster& referenceSLC,
     // interferogram
     auto n_ifgram = ncols * blockRows;
     auto ifgram_size = n_ifgram * sizeof(gpuComplex<float>);
-    std::cout << "n_ifgram: " << n_ifgram << std::endl;       
-    std::cout << "ifgram_size: " << ifgram_size << std::endl;       
     std::valarray<std::complex<float>> ifgram(n_ifgram);
     gpuComplex<float> *d_ifgram;
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_ifgram), ifgram_size));
@@ -249,9 +247,6 @@ crossmul(isce::io::Raster& referenceSLC,
     }
     
     // loop over all blocks
-    std::cout << "nblocks : " << nblocks << std::endl;
-    std::cout << "oversample : " << oversample << std::endl;
-
     for (size_t i_block = 0; i_block < nblocks; ++i_block) {
         std::cout << "i_block: " << i_block << std::endl;       
         // start row for this block
@@ -288,6 +283,8 @@ crossmul(isce::io::Raster& referenceSLC,
             secondarySLC.getLine(dataLine, rowStart + line);
             secSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
         }
+        checkCudaErrors(cudaMemcpy(d_refSlc, &refSlc[0], slc_size, cudaMemcpyHostToDevice));
+        checkCudaErrors(cudaMemcpy(d_secSlc, &secSlc[0], slc_size, cudaMemcpyHostToDevice));
 
         // apply azimuth filter (do inplace)
         if (_doCommonAzimuthBandFilter) {
