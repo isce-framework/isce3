@@ -146,15 +146,18 @@ _configureRangeFFT(int ncolumns, int nrows)
 {
     _rank = 1;
     _n[0] = ncolumns;
+    _n[1] = 0;
 
     _howmany = nrows;
     
     _inembed[0] = ncolumns;
+    _inembed[0] = 0;
 
     _istride = 1;
     _idist = ncolumns;
     
     _onembed[0] = ncolumns;
+    _onembed[1] = 0;
 
     _ostride = 1;
     _odist = ncolumns;
@@ -174,15 +177,18 @@ _configureAzimuthFFT(int ncolumns, int nrows)
 {
     _rank = 1;
     _n[0] = nrows;
+    _n[1] = 0;
 
     _howmany = ncolumns;
 
     _inembed[0] = nrows;
+    _inembed[1] = 0;
 
     _istride = ncolumns;
     _idist = 1;
 
     _onembed[0] = nrows;
+    _onembed[1] = 0;
 
     _ostride = ncolumns;
     _odist = 1;
