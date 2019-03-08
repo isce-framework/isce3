@@ -252,11 +252,11 @@ crossmul(isce::io::Raster& referenceSLC,
     std::cout << "nblocks : " << nblocks << std::endl;
     std::cout << "oversample : " << oversample << std::endl;
 
-    for (size_t block = 0; block < nblocks; ++block) {
-        std::cout << "block: " << block << std::endl;       
+    for (size_t i_block = 0; i_block < nblocks; ++i_block) {
+        std::cout << "i_block: " << i_block << std::endl;       
         // start row for this block
         size_t rowStart;
-        rowStart = block * blockRows;
+        rowStart = i_block * blockRows;
         
         //number of lines of data in this block. blockRowsData<= blockRows
         //Note that blockRows is fixed number of lines
@@ -295,7 +295,7 @@ crossmul(isce::io::Raster& referenceSLC,
             azimuthFilter.filter(d_secSlc);
         }
 
-        // TODO apply range filter (do inplace)
+        // apply range filter (do inplace)
         if (_doCommonRangeBandFilter) {
             // Read range offsets
             std::valarray<double> offsetLine(ncols);
@@ -305,7 +305,6 @@ crossmul(isce::io::Raster& referenceSLC,
             }
             checkCudaErrors(cudaMemcpy(d_rngOffset, &rngOffset[0], rngOffset_size, cudaMemcpyHostToDevice));
 
-            // TODO set cufft params in refSignal and secSignal for rng
             rangeFilter.filterCommonRangeBand(
                     reinterpret_cast<float *>(&d_refSlc), 
                     reinterpret_cast<float *>(&d_secSlc), 
