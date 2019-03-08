@@ -29,25 +29,19 @@ gpuSignal(cufftType _type) {
     _plan_set = false;
     _d_data = NULL;
     _d_data_set = false;
-
-    _n = new int[2];
-    _inembed = new int[2];
-    _onembed = new int[2];
 }
 
 /** Destructor **/
 template<class T>
 gpuSignal<T>::
 ~gpuSignal() {
-    if (_plan_set)
+    if (_plan_set) {
         cufftDestroy(_plan);
+    }
 
-    if (_d_data_set)
+    if (_d_data_set) {
         cudaFree(_d_data);
-
-    delete[] _n;
-    delete[] _inembed;
-    delete[] _onembed;
+    }
 }
 
 /**

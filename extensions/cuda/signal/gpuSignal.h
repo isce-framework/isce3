@@ -157,12 +157,12 @@ class gpuSignal {
 
         // FFT plan parameters
         int _rank;
-        int* _n;
+        int _n[2];
         int _howmany;
-        int* _inembed;
+        int _inembed[2];
         int _istride;
         int _idist;
-        int* _onembed;
+        int _onembed[2];
         int _ostride;
         int _odist;
         int _n_elements;
