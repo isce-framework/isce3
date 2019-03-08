@@ -47,7 +47,7 @@ template<class T>
 void gpuFilter<T>::
 filter(gpuComplex<T> *data)
 {
-    _signal.forwardDevMem(reinterpret_cast<T *>(&data));
+    _signal.forwardDevMem(reinterpret_cast<T *>(data));
 
     auto n_signal_elements = _signal.getNumElements();
 
@@ -56,10 +56,10 @@ filter(gpuComplex<T> *data)
     dim3 grid((n_signal_elements+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
     filter_g<<<grid, block>>>(data, 
-            reinterpret_cast<gpuComplex<T> *>(&_d_filter), 
+            reinterpret_cast<gpuComplex<T> *>(_d_filter), 
             n_signal_elements);
 
-    _signal.inverseDevMem(reinterpret_cast<T *>(&data));
+    _signal.inverseDevMem(reinterpret_cast<T *>(data));
 }
 
 
