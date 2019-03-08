@@ -96,7 +96,6 @@ TEST(Crossmul, RunCrossmul)
     crsmul.crossmul(referenceSlc, referenceSlc, interferogram, coherence);
 
     // an array for the computed interferogram
-    /*
     std::valarray<std::complex<float>> data(width*length);
 
     // get a block of the computed interferogram
@@ -113,7 +112,6 @@ TEST(Crossmul, RunCrossmul)
     }
 
     ASSERT_LT(max_err, 1.0e-9);
-    */
 }
 
 int main(int argc, char * argv[]) {

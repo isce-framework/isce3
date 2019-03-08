@@ -73,6 +73,21 @@ TEST(gpuSignal, ForwardBackwardRangeFloatDevMem)
 
     ASSERT_LT(max_err, 1.0e-4);
 }
+/*
+TEST(gpuSignal, UpsampleDevMem)
+{
+    // take a block of data, perform range FFT and then iverse FFT and compare with original data   
+    isce::io::Raster inputSlc("../../../../lib/isce/data/warped_envisat.slc.vrt");
+
+    int width = inputSlc.width();
+    int blockLength = inputSlc.length();
+    gpuComplex<float> *d_data;
+
+    // reserve memory for a block of data
+    std::valarray<std::complex<float>> data(width*blockLength);
+
+}
+*/
 
 TEST(gpuSignal, ForwardBackwardRangeFloatNoCp)
 {
