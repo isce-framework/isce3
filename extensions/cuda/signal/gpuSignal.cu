@@ -814,6 +814,9 @@ upsample(std::valarray<std::complex<float>> &input,
 
     // copy output
     checkCudaErrors(cudaMemcpy(&output[0], d_output, output_size, cudaMemcpyDeviceToHost));
+    
+    cudaFree(d_input);
+    cudaFree(d_output);
 }
 
 
@@ -886,6 +889,9 @@ upsample(std::valarray<std::complex<double>> &input,
 
     // copy output
     checkCudaErrors(cudaMemcpy(&output[0], d_output, output_size, cudaMemcpyDeviceToHost));
+    
+    cudaFree(d_input);
+    cudaFree(d_output);
 }
 */
 

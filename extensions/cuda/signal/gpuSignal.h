@@ -151,8 +151,6 @@ class isce::cuda::signal::gpuSignal {
     private:
         cufftHandle _plan;
         bool _plan_set;
-        cufftHandle _upsamp_plan;
-        bool _upsamp_plan_set;
         cufftType _cufft_type;
 
         // FFT plan parameters
