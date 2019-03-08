@@ -9,6 +9,7 @@
 #include "gpuSignal.h"
 #include "gpuLooks.h"
 #include "isce/signal/Signal.h"
+#include "isce/signal/Filter.h"
 #include "isce/cuda/helper_cuda.h"
 #include "isce/cuda/helper_functions.h"
 
@@ -225,8 +226,8 @@ crossmul(isce::io::Raster& referenceSLC,
     }
 
     // filter objects
-    isce::cuda::signal::gpuFilter<float> azimuthFilter;
-    isce::cuda::signal::gpuFilter<float> rangeFilter;
+    isce::cuda::signal::gpuAzimuthFilter<float> azimuthFilter;
+    isce::cuda::signal::gpuRangeFilter<float> rangeFilter;
 
     // determine block layout
     dim3 block(THRD_PER_BLOCK);
@@ -393,18 +394,19 @@ crossmul(isce::io::Raster& referenceSLC,
     }
 
     // liberate all device memory
-    cudaFree(d_refSlc);
-    cudaFree(d_secSlc);
-    cudaFree(d_refSlcUpsampled);
-    cudaFree(d_secSlcUpsampled);
-    cudaFree(d_ifgram);
+    checkCudaErrors(cudaFree(d_refSlc));
+    checkCudaErrors(cudaFree(d_secSlc));
+    checkCudaErrors(cudaFree(d_refSlcUpsampled));
+    checkCudaErrors(cudaFree(d_secSlcUpsampled));
+    checkCudaErrors(cudaFree(d_shiftImpact));
+    checkCudaErrors(cudaFree(d_ifgram));
     if (_doCommonRangeBandFilter) {
-        cudaFree(d_rngOffset);
+        checkCudaErrors(cudaFree(d_rngOffset));
     }
     if (_doMultiLook) {
-        cudaFree(d_ifgram_mlook);
-        cudaFree(d_ref_amp_mlook);
-        cudaFree(d_sec_amp_mlook);
+        checkCudaErrors(cudaFree(d_ifgram_mlook));
+        checkCudaErrors(cudaFree(d_ref_amp_mlook));
+        checkCudaErrors(cudaFree(d_sec_amp_mlook));
     }
 
 }
@@ -429,8 +431,8 @@ void lookdownShiftImpact(size_t oversample,
 
     // get the vector of range frequencies
     //filter object
-    isce::signal::Filter<float> tempFilter;
-    tempFilter.fftfreq(oversample*nfft, dt, rangeFrequencies);
+    isce::signal::Filter<float>::fftfreq(oversample*nfft, dt, rangeFrequencies);
+    
 
     // in the process of upsampling the SLCs, creating upsampled interferogram
     // and then looking down the upsampled interferogram to the original size of
@@ -460,3 +462,17 @@ void lookdownShiftImpact(size_t oversample,
             shiftImpact[std::slice(line*nfft*oversample, nfft*oversample, 1)] = shiftImpactLine;
     }
 }
+
+/*
+   declarations!
+   */
+template __global__
+void interferogram_g<float>(gpuComplex<float> *ifgram, 
+        gpuComplex<float> *refSlcUp, 
+        gpuComplex<float> *secSlcUp, 
+        int n_rows, 
+        int n_cols, 
+        int n_fft, 
+        int oversample_i,
+        float oversample_f);
+
