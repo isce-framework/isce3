@@ -35,6 +35,32 @@ cdef class pyGeocodeBase:
     cdef LUT2d[double] * c_doppler
     cdef DateTime * c_refepoch
 
+    # Processing options
+    cdef double threshold
+    cdef int numiter
+    cdef int linesPerBlock
+    cdef double demBlockMargin
+    cdef int radarBlockMargin
+    cdef dataInterpMethod interpMethod
+
+    # Radar grid parameters
+    cdef double azimuthStartTime
+    cdef double azimuthTimeInterval
+    cdef int radarGridLength
+    cdef double startingRange
+    cdef double rangeSpacing
+    cdef double wavelength
+    cdef int radarGridWidth
+
+    # Geographic grid parameters
+    cdef double geoGridStartX
+    cdef double geoGridStartY
+    cdef double geoGridSpacingX
+    cdef double geoGridSpacingY
+    cdef int width
+    cdef int length
+    cdef int epsgcode
+
     # DEM interpolation methods
     demInterpMethods = {
         'sinc': dataInterpMethod.SINC_METHOD,
@@ -52,7 +78,7 @@ cdef class pyGeocodeBase:
                   int linesPerBlock=1000,
                   double demBlockMargin=0.1,
                   int radarBlockMargin=10,
-                  interpMethod='biquinitic'):
+                  interpMethod='biquintic'):
 
         # Save pointers to ISCE objects
         self.c_orbit = orbit.c_orbit
@@ -64,7 +90,7 @@ cdef class pyGeocodeBase:
         self.linesPerBlock = linesPerBlock
         self.demBlockMargin = demBlockMargin
         self.radarBlockMargin = radarBlockMargin
-        self.interpMethod = interpMethod
+        self.interpMethod = self.demInterpMethods[interpMethod]
         
         return
     
@@ -134,7 +160,7 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
         c_geocode.linesPerBlock(self.linesPerBlock)
         c_geocode.demBlockMargin(self.demBlockMargin)
         c_geocode.radarBlockMargin(self.radarBlockMargin)
-        c_geocode.interpolator(self.demInterpMethods[self.interpMethod])
+        c_geocode.interpolator(self.interpMethod)
 
         # Set radar grid
         c_geocode.radarGrid(deref(self.c_doppler), deref(self.c_refepoch),
@@ -174,7 +200,7 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
         c_geocode.linesPerBlock(self.linesPerBlock)
         c_geocode.demBlockMargin(self.demBlockMargin)
         c_geocode.radarBlockMargin(self.radarBlockMargin)
-        c_geocode.interpolator(self.demInterpMethods[self.interpMethod])
+        c_geocode.interpolator(self.interpMethod)
 
         # Set radar grid
         c_geocode.radarGrid(deref(self.c_doppler), deref(self.c_refepoch),

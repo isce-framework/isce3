@@ -40,6 +40,7 @@ include "core/pyPoly2d.pyx"
 # Include the product extensions
 include "product/pyProcessingInformation.pyx"
 include "product/pySwath.pyx"
+include "product/pyRadarGridParameters.pyx"
 include "product/pyMetadata.pyx"
 include "product/pyProduct.pyx"
 
