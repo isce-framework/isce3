@@ -13,6 +13,11 @@
 #include "isce/cuda/helper_cuda.h"
 #include "isce/cuda/helper_functions.h"
 
+// debug includes
+#include <fstream>
+#include <iostream>
+#include <stdio.h>
+
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 
 /*
@@ -319,7 +324,7 @@ crossmul(isce::io::Raster& referenceSLC,
                 d_secSlc, 
                 d_secSlcUpsampled,
                 d_shiftImpact);
-
+        
         // run kernels to compute oversampled interforgram
         // refSignal overwritten with upsampled interferogram
         // reduce from nfft*oversample*blockRows to ncols*blockRows
@@ -352,7 +357,8 @@ crossmul(isce::io::Raster& referenceSLC,
                     nrows,                          // lo res rows
                     oversample,                     // row resize factor of hi to lo
                     1,                              // col resize factor of hi to lo
-                    nrows*ncols);                   // number of lo res elements
+                    nrows*ncols,                    // number of lo res elements
+                    n_mlook);
 
             multilooks_power_g<<<grid_lo, block>>>(
                     d_sec_amp_mlook,
@@ -361,7 +367,8 @@ crossmul(isce::io::Raster& referenceSLC,
                     nrows,                          // lo res rows
                     oversample,                     // row resize factor of hi to lo
                     1,                              // col resize factor of hi to lo
-                    nrows*ncols);                   // number of lo res elements
+                    nrows*ncols,                    // number of lo res elements
+                    n_mlook);
 
             // perform coherence calculation in place overwriting d_ifgram_mlook
             calculate_coherence_g<<<grid_lo, block>>>(d_ref_amp_mlook, 
@@ -382,7 +389,7 @@ crossmul(isce::io::Raster& referenceSLC,
         } else {
             // get data to HOST
             checkCudaErrors(cudaMemcpy(&ifgram[0], d_ifgram, ifgram_size, cudaMemcpyDeviceToHost));
-
+        
             // set the block of interferogram
             interferogram.setBlock(ifgram, 0, rowStart, ncols, blockRowsData);
         }
