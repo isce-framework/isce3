@@ -4,7 +4,7 @@ string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 set(LCUDAISCE iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
-foreach (TESTNAME gpuSignal gpuCrossMul)
+foreach (TESTNAME gpuSignal gpuCrossMul gpuLooks)
     add_executable(${TESTNAME} ${TESTNAME}.cpp)
 
     target_link_libraries(${TESTNAME} PUBLIC ${LISCE} ${LCUDAISCE} gtest)
