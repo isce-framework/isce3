@@ -19,6 +19,7 @@ set(ISCE_CUDA_${PACKAGENAME}_HEADERS
         gpuStateVector.h )
 
 set(LOCAL_SRCS 
+        gpuComplex.cu
         gpuEllipsoid.cu
         gpuBilinearInterpolator.cu
         gpuBicubicInterpolator.cu
