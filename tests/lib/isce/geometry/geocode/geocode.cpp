@@ -63,7 +63,6 @@ TEST(GeocodeTest, RunGeocode) {
     isce::core::Orbit orbit = product.metadata().orbit();
     isce::core::Ellipsoid ellipsoid;
     isce::core::LUT2d<double> doppler = product.metadata().procInfo().dopplerCentroid('A');
-    isce::core::ProjectionBase * proj;
 
     double threshold = 1.0e-9 ;
     int numiter = 25;
@@ -109,8 +108,6 @@ TEST(GeocodeTest, RunGeocode) {
     geoObj.orbit(orbit);
 
     geoObj.ellipsoid(ellipsoid);
-
-    geoObj.projection(proj);
 
     geoObj.thresholdGeo2rdr(threshold);
 

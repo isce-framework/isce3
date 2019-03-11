@@ -53,6 +53,7 @@ include "signal/pyCrossmul.pyx"
 include "geometry/pygeometry.pyx"
 include "geometry/pyTopo.pyx"
 include "geometry/pyGeo2rdr.pyx"
+include "geometry/pyGeocode.pyx"
 
 # The separate serialization routines
 include "serialization/serialize.pyx"

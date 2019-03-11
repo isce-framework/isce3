@@ -17,7 +17,7 @@ geocode(isce::io::Raster & inputRaster,
     size_t nbands = inputRaster.numBands();
 
     // create projection based on _epsg code
-    _proj = isce::core::createProj(_epsgOut);
+    isce::core::ProjectionBase * proj = isce::core::createProj(_epsgOut);
 
     // instantiate the DEMInterpolator 
     isce::geometry::DEMInterpolator demInterp;
@@ -48,7 +48,7 @@ geocode(isce::io::Raster & inputRaster,
         int rangeFirstPixel, rangeLastPixel;
 
         // load a block of DEM for the current geocoded grid
-        _loadDEM(demRaster, demInterp, _proj,
+        _loadDEM(demRaster, demInterp, proj,
                 lineStart, geoBlockLength, _geoGridWidth, 
                 _demBlockMargin);
 
@@ -58,7 +58,7 @@ geocode(isce::io::Raster & inputRaster,
         //values to the geocoded block
         _computeRangeAzimuthBoundingBox(lineStart, 
                         geoBlockLength, _geoGridWidth,
-                        _radarBlockMargin, demInterp,
+                        _radarBlockMargin, demInterp, proj,
                         azimuthFirstLine, azimuthLastLine,
                         rangeFirstPixel, rangeLastPixel);
 
@@ -90,7 +90,7 @@ geocode(isce::io::Raster & inputRaster,
                 // compute the azimuth time and slant range for the 
                 // x,y coordinates in the output grid
                 double aztime, srange;
-                _geo2rdr(x, y, aztime, srange, demInterp);
+                _geo2rdr(x, y, aztime, srange, demInterp, proj);
 
                 // get the row and column index in the radar grid
                 double rdrX, rdrY;
@@ -181,7 +181,7 @@ template<class T>
 void isce::geometry::Geocode<T>::
 _loadDEM(isce::io::Raster demRaster,
         isce::geometry::DEMInterpolator & demInterp,
-        isce::core::ProjectionBase * _proj, 
+        isce::core::ProjectionBase * proj, 
         int lineStart, int blockLength, 
         int blockWidth, double demMargin)
 {
@@ -197,7 +197,7 @@ _loadDEM(isce::io::Raster demRaster,
     // top left corner of the box
     xyz[0] = minX;
     xyz[1] = maxY;
-    _proj->inverse(xyz, llh);
+    proj->inverse(xyz, llh);
 
     double minLon = llh[0];
     double maxLat = llh[1];
@@ -205,7 +205,7 @@ _loadDEM(isce::io::Raster demRaster,
     // lower right corner of the box
     xyz[0] = maxX;
     xyz[1] = minY;
-    _proj->inverse(xyz, llh);
+    proj->inverse(xyz, llh);
 
     double maxLon = llh[0];
     double minLat = llh[1];
@@ -234,6 +234,7 @@ template<class T>
 void isce::geometry::Geocode<T>::
 _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
                         int margin, isce::geometry::DEMInterpolator & demInterp,
+                        isce::core::ProjectionBase * proj,
                         int & azimuthFirstLine, int & azimuthLastLine,
                         int & rangeFirstPixel, int & rangeLastPixel)
 {
@@ -264,7 +265,7 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
 
     // compute geo2rdr for the 4 corners
     for (size_t i = 0; i<4; ++i){
-        _geo2rdr(X[i], Y[i], azimuthTime[i], slantRange[i], demInterp); 
+        _geo2rdr(X[i], Y[i], azimuthTime[i], slantRange[i], demInterp, proj); 
     }
 
     // the first azimuth line
@@ -304,7 +305,8 @@ template<class T>
 void isce::geometry::Geocode<T>::
 _geo2rdr(double x, double y, 
         double & azimuthTime, double & slantRange,
-        isce::geometry::DEMInterpolator & demInterp)
+        isce::geometry::DEMInterpolator & demInterp,
+        isce::core::ProjectionBase * proj)
 {
     // coordinate in the output projection system
     isce::core::cartesian_t xyz{x, y, 0.0};
@@ -313,7 +315,7 @@ _geo2rdr(double x, double y,
     isce::core::cartesian_t llh;
 
     // transform the xyz in the output projection system to llh
-    _proj->inverse(xyz, llh);
+    proj->inverse(xyz, llh);
 
     // interpolate the height from the DEM for this pixel
     llh[2] = demInterp.interpolateLonLat(llh[0], llh[1]);
