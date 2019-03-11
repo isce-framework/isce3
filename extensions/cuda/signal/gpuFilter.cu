@@ -4,7 +4,8 @@
 // Source Author: Liang Yu
 // Copyright 2019
 
-#include <gpuFilter.h>
+#include "gpuFilter.h"
+#include "isce/io/Raster.h"
 
 #include "isce/cuda/helper_cuda.h"
 #include "isce/cuda/helper_functions.h"
@@ -105,7 +106,23 @@ cpFilterHostToDevice(std::valarray<std::complex<T>> &host_filter)
 }
 
 template<class T>
-__global__ void phaseShift_g(gpuComplex<T> *slc, T *range, double pxlSpace, T conj, double wavelength, T wave_div, int n_elements)
+void gpuFilter<T>::
+writeFilter(size_t ncols, size_t nrows)
+{
+    std::valarray<std::complex<T>> filter;
+    cpFilterHostToDevice(filter);
+    isce::io::Raster filterRaster("filter.bin", ncols, nrows, 1, GDT_CFloat32, "ENVI");
+    filterRaster.setBlock(filter, 0, 0, ncols, nrows);
+}
+
+template<class T>
+__global__ void phaseShift_g(gpuComplex<T> *slc, 
+        T *range, 
+        double pxlSpace, 
+        T conj, 
+        double wavelength, 
+        T wave_div, 
+        int n_elements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < n_elements) {
@@ -116,7 +133,13 @@ __global__ void phaseShift_g(gpuComplex<T> *slc, T *range, double pxlSpace, T co
 }
 
 template<>
-__global__ void phaseShift_g<float>(gpuComplex<float> *slc, float *range, double pxlSpace, float conj, double wavelength, float wave_div, int n_elements)
+__global__ void phaseShift_g<float>(gpuComplex<float> *slc, 
+        float *range, 
+        double pxlSpace, 
+        float conj, 
+        double wavelength, 
+        float wave_div, 
+        int n_elements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < n_elements) {
