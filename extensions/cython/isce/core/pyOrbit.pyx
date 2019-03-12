@@ -73,7 +73,10 @@ cdef class pyOrbit:
         Args:
             instr (str): ISO-8601 DateTime representation of reference epoch
         '''
+        # Set it first
         self.c_orbit.refEpoch.strptime(pyStringToBytes(epoch.isoformat()))
+        # Update UTC times
+        self.c_orbit.updateUTCTimes(self.c_orbit.refEpoch)
 
 
     @property

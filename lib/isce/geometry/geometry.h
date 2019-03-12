@@ -29,6 +29,9 @@
 #include <isce/core/LUT2d.h>
 #include <isce/core/StateVector.h>
 
+// isce::product
+#include <isce/product/RadarGridParameters.h>
+
 // isce::geometry
 #include "DEMInterpolator.h"
 
@@ -67,6 +70,7 @@ namespace isce {
                     double, double, double, size_t,
                     double, int, double);
 
+        /** Map coordinates to radar geometry coordinates transformer */
         int geo2rdr(const cartesian_t &,
                     const isce::core::Ellipsoid &,
                     const isce::core::Orbit &,
@@ -74,9 +78,25 @@ namespace isce {
                     double &, double &,
                     double, double, int, double);
 
-        // Utility function to compute geocentric TCN basis from state vector
+        /** Utility function to compute geocentric TCN basis from state vector */
         void geocentricTCN(isce::core::StateVector &,
-                           isce::core::Basis &);    
+                           isce::core::Basis &);
+
+        /** Utility function to compute geographic bounds for a radar grid */
+        void computeDEMBounds(const isce::core::Orbit & orbit,
+                              const isce::core::Ellipsoid & ellipsoid,
+                              const isce::core::LUT2d<double> & doppler,
+                              int lookSide,
+                              const isce::product::RadarGridParameters & radarGrid,
+                              size_t xoff,
+                              size_t yoff,
+                              size_t xsize,
+                              size_t ysize,
+                              double margin,
+                              double & min_lon,
+                              double & min_lat,
+                              double & max_lon,
+                              double & max_lat);
 
     }
 }
