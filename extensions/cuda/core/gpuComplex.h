@@ -21,6 +21,7 @@
 #endif
 
 #include <complex>
+#include <stdio.h>
 
 namespace isce { namespace cuda { namespace core {
 template <class U>
@@ -221,7 +222,25 @@ CUDA_HOSTDEV gpuComplex<U> operator !=(V x, gpuComplex<U> y) {
 
 // magnitude
 template <class T>
-CUDA_HOSTDEV T abs(gpuComplex<T> x) {}
+CUDA_HOSTDEV T abs(gpuComplex<T> x) {
+    T v, w, t;
+    T a = fabsf(x.r);
+    T b = fabsf(x.i);
+    if (a > b) {
+        v = a;
+        w = b;
+    } else {
+        v = b;
+        w = a;
+    }
+    t = w / v;
+    t = 1.0f + t * t;
+    t = v * sqrtf(t);
+    if ((v == 0.0f) || (v > 3.402823466e38f) || (w > 3.402823466e38f)) {
+        t = v + w;
+    }
+    return t;
+}
 
 }}}
 #endif

@@ -19,7 +19,6 @@ set(SRCS
         gpuEllipsoid.cu
         gpuBilinearInterpolator.cu
         gpuBicubicInterpolator.cu
-        gpuComplex.cu
         gpuLinAlg.cu
         gpuLUT1d.cu
         gpuOrbit.cu
