@@ -67,6 +67,14 @@ cdef class pyProduct:
         swath = pySwath.bind(self.py_swathA)
         return swath
 
+    @property
+    def lookSide(self):
+        """
+        Get integer for look direction (+1 for left-looking, -1 for right-looking)
+        """
+        cdef int side = self.c_product.lookSide()
+        return side
+
     def radarGridParameters(self,
                             freq='A',
                             numberAzimuthLooks=1,
