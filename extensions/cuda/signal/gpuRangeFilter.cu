@@ -82,7 +82,7 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
     size_t nfft = 0;
     this->_signal.nextPowerOfTwo(ncols, nfft);
 
-    _filter.resize(nfft*nrows);
+    this->_filter.resize(nfft*nrows);
     std::valarray<std::complex<T>> _filter1D(nfft); //
     _filter1D = std::complex<T>(0.0,0.0);
 
@@ -115,7 +115,7 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
     //construct a block of the filter
     for (size_t line = 0; line < nrows; line++ ){
         for (size_t col = 0; col < nfft; col++ ){
-            _filter[line*nfft+col] = _filter1D[col];
+            this->_filter[line*nfft+col] = _filter1D[col];
         }
     }
 

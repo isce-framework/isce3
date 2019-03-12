@@ -59,6 +59,7 @@ TEST(Filter, constructAzimuthCommonbandFilter)
             beta,
             refSlc, refSpectrum,
             ncols, blockRows);
+
     az_filter.writeFilter(ncols, blockRows);
 
 }
@@ -74,7 +75,7 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
     std::valarray<std::complex<float>> refSlc(ncols*blockRows);
     std::valarray<std::complex<float>> refSpectrum(ncols*blockRows);
 
-    std::string h5file("../data/envisat.h5");
+    std::string h5file("../../../../lib/isce/data/envisat.h5");
     isce::io::IH5File file(h5file);
 
     // Create a product and swath

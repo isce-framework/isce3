@@ -90,6 +90,7 @@ class gpuFilter {
         bool _filter_set = false;
         gpuSignal<T> _signal;
         bool _signal_set = false;
+        std::valarray<std::complex<T>> _filter;
 };
 
 // Azimuth filter class derived from base class
@@ -180,7 +181,6 @@ class gpuRangeFilter : public gpuFilter<T> {
         T *_d_spectrumSum;
         bool _spectrumSum_set = false;
         std::valarray<T> _spectrumSum;
-        std::valarray<std::complex<T>> _filter;
 };
 
 template<class T>

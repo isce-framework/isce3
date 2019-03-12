@@ -58,16 +58,12 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
     //const double norm = std::sqrt(input_BW / BW);
     const double norm = 1.0;
 
-    // we probably need to give next power of 2 ???
-    //size_t nfft = 0;
-    //this->_signal.nextPowerOfTwo(ncols, nfft);
-
     // Construct vector of frequencies
     std::valarray<double> frequency(ncols);
     
     isce::signal::Filter<float>::fftfreq(ncols, 1.0/prf, frequency);
     
-    std::valarray<std::complex<T>> host_filter(ncols*nrows);
+    this->_filter.resize(ncols*nrows);
 
     // Loop over range bins
     for (int j = 0; j < ncols; ++j) {
@@ -82,22 +78,22 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
 
             // Passband
             if (freq <= (0.5 * bandwidth - df)) {
-                host_filter[i*ncols+j] = std::complex<T>(norm, 0.0);
+                this->_filter[i*ncols+j] = std::complex<T>(norm, 0.0);
 
             // Transition region
             } else if (freq > (0.5 * bandwidth - df) && freq <= (0.5 * bandwidth + df)) {
-                host_filter[i*ncols+j] = std::complex<T>(norm * 0.5 * 
+                this->_filter[i*ncols+j] = std::complex<T>(norm * 0.5 * 
                         (1.0 + std::cos(M_PI / (bandwidth*beta) * 
                         (freq - 0.5 * (1.0 - beta) * bandwidth))), 0.0);
 
             // Stop band
             } else {
-                host_filter[i*ncols+j] = std::complex<T>(0.0, 0.0);
+                this->_filter[i*ncols+j] = std::complex<T>(0.0, 0.0);
             }
         }
     }
 
-    this->cpFilterHostToDevice(host_filter);
+    this->cpFilterHostToDevice(this->_filter);
 
     this->_signal.azimuthFFT(ncols, nrows);
 }

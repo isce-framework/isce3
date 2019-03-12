@@ -109,10 +109,8 @@ template<class T>
 void gpuFilter<T>::
 writeFilter(size_t ncols, size_t nrows)
 {
-    std::valarray<std::complex<T>> filter;
-    cpFilterHostToDevice(filter);
     isce::io::Raster filterRaster("filter.bin", ncols, nrows, 1, GDT_CFloat32, "ENVI");
-    filterRaster.setBlock(filter, 0, 0, ncols, nrows);
+    filterRaster.setBlock(_filter, 0, 0, ncols, nrows);
 }
 
 template<class T>
