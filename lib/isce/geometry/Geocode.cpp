@@ -66,7 +66,7 @@ geocode(isce::io::Raster & inputRaster,
         size_t rdrBlockLength = azimuthLastLine - azimuthFirstLine + 1;
         size_t rdrBlockWidth = rangeLastPixel - rangeFirstPixel + 1;
         size_t rdrBlockSize = rdrBlockLength * rdrBlockWidth;
-
+        
         // X and Y indices (in the radar coordinates) for the 
         // geocoded pixels (after geo2rdr computation)
         std::valarray<double> radarX(blockSize);
@@ -86,6 +86,8 @@ geocode(isce::io::Raster & inputRaster,
                 
                 // x in the output geocoded Grid
                 double x = _geoGridStartX + _geoGridSpacingX*pixel;
+
+                // Consistency check
                 
                 // compute the azimuth time and slant range for the 
                 // x,y coordinates in the output grid
@@ -117,7 +119,6 @@ geocode(isce::io::Raster & inputRaster,
         // fill both matrices with zero
         rdrDataBlock.zeros();
         geoDataBlock.zeros();
-        
          
         //for each band in the input:
         for (size_t band = 0; band < nbands; ++band){
@@ -325,6 +326,30 @@ _geo2rdr(double x, double y,
                     llh, _ellipsoid, _orbit, _doppler,
                     azimuthTime, slantRange, _radarGrid.wavelength(), _threshold,
                     _numiter, 1.0e-8);
+
+    // Check convergence
+    if (geostat == 0) {
+        azimuthTime = 0.0;
+        slantRange = -1.0e-16;
+        return;
+    }
+
+    // Compute TCN basis for geo2rdr solution for checking side consistency
+    isce::core::cartesian_t xyzsat, velsat, targxyz, deltaxyz;
+    int orbstat = _orbit.interpolate(azimuthTime, xyzsat, velsat, isce::core::HERMITE_METHOD);
+    isce::core::Basis tcn;
+    _ellipsoid.TCNbasis(xyzsat, velsat, tcn);
+
+    // Check the side of the C-component of the look vector to the ground point
+    _ellipsoid.lonLatToXyz(llh, targxyz);
+    isce::core::LinAlg::linComb(1.0, targxyz, -1.0, xyzsat, deltaxyz);
+    const double targ_c = isce::core::LinAlg::dot(deltaxyz, tcn.x1());
+
+    // Positive values are invalid
+    if ((targ_c * _lookSide > 0.0)) {
+        azimuthTime = 0.0;
+        slantRange = -1.0e-16;
+    }
 
 }
 

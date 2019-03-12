@@ -33,7 +33,7 @@ cdef class pyGeocodeBase:
     cdef Orbit * c_orbit
     cdef Ellipsoid * c_ellipsoid
     cdef LUT2d[double] * c_doppler
-    cdef DateTime * c_refepoch
+    cdef string refepoch_string
 
     # Processing options
     cdef double threshold
@@ -51,6 +51,7 @@ cdef class pyGeocodeBase:
     cdef double rangeSpacing
     cdef double wavelength
     cdef int radarGridWidth
+    cdef int lookSide
 
     # Geographic grid parameters
     cdef double geoGridStartX
@@ -103,12 +104,13 @@ cdef class pyGeocodeBase:
                   double startingRange,
                   double rangeSpacing,
                   double wavelength,
-                  int radarGridWidth):
+                  int radarGridWidth,
+                  int lookSide):
         """
         Save parameters for radar grid bounds and Doppler representation.
         """
         self.c_doppler = doppler.c_lut
-        self.c_refepoch = refEpoch.c_datetime
+        self.refepoch_string = refEpoch.c_datetime.isoformat()
         self.azimuthStartTime = azimuthStartTime
         self.azimuthTimeInterval = azimuthTimeInterval
         self.radarGridLength = radarGridLength
@@ -116,6 +118,7 @@ cdef class pyGeocodeBase:
         self.rangeSpacing = rangeSpacing
         self.wavelength = wavelength
         self.radarGridWidth = radarGridWidth
+        self.lookSide = lookSide
         return
 
     def geoGrid(self,
@@ -163,10 +166,11 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
         c_geocode.interpolator(self.interpMethod)
 
         # Set radar grid
-        c_geocode.radarGrid(deref(self.c_doppler), deref(self.c_refepoch),
+        cdef DateTime refEpoch = self.refepoch_string
+        c_geocode.radarGrid(deref(self.c_doppler), refEpoch,
                             self.azimuthStartTime, self.azimuthTimeInterval,
                             self.radarGridLength, self.startingRange, self.rangeSpacing,
-                            self.wavelength, self.radarGridWidth)
+                            self.wavelength, self.radarGridWidth, self.lookSide)
 
         # Set geo grid
         c_geocode.geoGrid(self.geoGridStartX, self.geoGridStartY, self.geoGridSpacingX,
@@ -203,10 +207,11 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
         c_geocode.interpolator(self.interpMethod)
 
         # Set radar grid
-        c_geocode.radarGrid(deref(self.c_doppler), deref(self.c_refepoch),
+        cdef DateTime refEpoch = self.refepoch_string
+        c_geocode.radarGrid(deref(self.c_doppler), refEpoch,
                             self.azimuthStartTime, self.azimuthTimeInterval,
                             self.radarGridLength, self.startingRange, self.rangeSpacing,
-                            self.wavelength, self.radarGridWidth)
+                            self.wavelength, self.radarGridWidth, self.lookSide)
 
         # Set geo grid
         c_geocode.geoGrid(self.geoGridStartX, self.geoGridStartY, self.geoGridSpacingX,

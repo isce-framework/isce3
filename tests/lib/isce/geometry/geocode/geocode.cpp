@@ -63,6 +63,7 @@ TEST(GeocodeTest, RunGeocode) {
     isce::core::Orbit orbit = product.metadata().orbit();
     isce::core::Ellipsoid ellipsoid;
     isce::core::LUT2d<double> doppler = product.metadata().procInfo().dopplerCentroid('A');
+    const int lookSide = product.lookSide();
 
     double threshold = 1.0e-9 ;
     int numiter = 25;
@@ -129,7 +130,8 @@ TEST(GeocodeTest, RunGeocode) {
                       swath.slantRange()[0],
                       swath.rangePixelSpacing(),
                       swath.processedWavelength(),
-                      radarGridWidth);
+                      radarGridWidth,
+                      lookSide);
 
     geoObj.geoGrid(geoGridStartX, geoGridStartY,
                   geoGridSpacingX, geoGridSpacingY,

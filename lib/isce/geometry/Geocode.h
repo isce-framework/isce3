@@ -71,7 +71,8 @@ class isce::geometry::Geocode {
 
         // Set the input radar grid from Doppler and RadarGridParameters objects
         inline void radarGrid(isce::core::LUT2d<double> doppler,
-                              isce::product::RadarGridParameters rgparam);
+                              isce::product::RadarGridParameters rgparam,
+                              int lookSide);
 
         // Set the input radar grid from individual parameters
         inline void radarGrid(isce::core::LUT2d<double> doppler,
@@ -82,7 +83,8 @@ class isce::geometry::Geocode {
                               double startingRange,
                               double rangeSpacing,
                               double wavelength,
-                              int radarGridWidth);
+                              int radarGridWidth,
+                              int lookSide);
 
         // Set interpolator 
         inline void interpolator(isce::core::dataInterpMethod method);
@@ -152,6 +154,7 @@ class isce::geometry::Geocode {
         // radar grids parameters
         isce::core::LUT2d<double> _doppler;
         isce::product::RadarGridParameters _radarGrid;
+        int _lookSide;
 
         // start X position for the output geocoded grid
         double _geoGridStartX;
