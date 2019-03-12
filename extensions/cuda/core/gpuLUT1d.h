@@ -72,6 +72,12 @@ class isce::cuda::core::gpuLUT1d {
         /** Set extrapolation flag */
         CUDA_HOSTDEV inline void extrapolate(bool flag) { _extrapolate = flag; }
 
+        /** Get flag for having data */
+        CUDA_HOSTDEV inline bool haveData() const { return _haveData; }
+
+        /** Get reference value */
+        CUDA_HOSTDEV inline T refValue() const { return _refValue; }
+
         /** Get size info of LUT */
         CUDA_HOSTDEV inline size_t size() const { return _size; }
 
@@ -86,6 +92,8 @@ class isce::cuda::core::gpuLUT1d {
 
     // Data members
     private:
+        bool _haveData;
+        T _refValue;
         double * _coords;
         T * _values;
         size_t _size;

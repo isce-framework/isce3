@@ -71,7 +71,8 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
         size_t _linesPerBlock = 1000;
 
         // Compute number of lines per block dynamically from GPU memmory
-        void computeLinesPerBlock(isce::io::Raster &);
+        void computeLinesPerBlock(isce::io::Raster &,
+                                  isce::geometry::TopoLayers &);
 
         // Generate layover/shadow masks using an orbit
         void _setLayoverShadowWithOrbit(const isce::core::Orbit & orbit,

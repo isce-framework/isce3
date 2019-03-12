@@ -68,6 +68,31 @@ cdef class pyProduct:
         return swath
 
     @property
+    def lookSide(self):
+        """
+        Get integer for look direction (+1 for left-looking, -1 for right-looking)
+        """
+        cdef int side = self.c_product.lookSide()
+        return side
+
+    def radarGridParameters(self,
+                            freq='A',
+                            numberAzimuthLooks=1,
+                            numberRangeLooks=1):
+        """
+        Get a pyRadarGridParameters instance correpsonding to a given frequency band.
+        """
+        # Get the swath
+        cdef string freq_str = pyStringToBytes(freq)
+        cdef Swath swath = self.c_product.swath(freq_str[0])
+
+        # Create RadarGridParameters object
+        cdef RadarGridParameters radarGrid = RadarGridParameters(
+            swath, numberAzimuthLooks, numberRangeLooks
+        )
+        return pyRadarGridParameters.cbind(radarGrid)
+
+    @property
     def filename(self):
         """
         Get the filename of the HDF5 product file.

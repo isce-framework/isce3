@@ -40,6 +40,7 @@ include "core/pyPoly2d.pyx"
 # Include the product extensions
 include "product/pyProcessingInformation.pyx"
 include "product/pySwath.pyx"
+include "product/pyRadarGridParameters.pyx"
 include "product/pyMetadata.pyx"
 include "product/pyProduct.pyx"
 
@@ -53,6 +54,7 @@ include "signal/pyCrossmul.pyx"
 include "geometry/pygeometry.pyx"
 include "geometry/pyTopo.pyx"
 include "geometry/pyGeo2rdr.pyx"
+include "geometry/pyGeocode.pyx"
 
 # The separate serialization routines
 include "serialization/serialize.pyx"
