@@ -9,9 +9,8 @@
 
 #include "isce/io/Raster.h"
 #include <isce/io/IH5.h>
-#include <isce/radar/Radar.h>
-#include <isce/radar/Serialization.h>
 #include <isce/product/Serialization.h>
+#include <isce/product/Product.h>
 
 #include "isce/cuda/signal/gpuSignal.h"
 #include "isce/cuda/signal/gpuFilter.h"
@@ -34,30 +33,16 @@ TEST(Filter, constructAzimuthCommonbandFilter)
     // an HDF5 object
     isce::io::IH5File file(h5file);
 
-    // a radra object
-    isce::radar::Radar instrument;
-
-    // Open group containing instrument data
-    isce::io::IGroup group = file.openGroup("/science/metadata/instrument_data");
-
-    // Deserialize the radar instrument
-    isce::radar::loadFromH5(group, instrument);
-
-    // Open group for image mode
-    isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
+    // Create a product and swath
+    isce::product::Product product(file);
+    const isce::product::Swath & swath = product.swath('A');
 
     // Get the Doppler polynomial and use it for both refernce and secondary SLCs
-    isce::core::LUT1d<double> dop1 = instrument.contentDoppler();
-    isce::core::LUT1d<double> dop2 = instrument.contentDoppler();
+    isce::core::LUT2d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
+    isce::core::LUT2d<double> dop2 = dop1;
 
-    // Instantiate an ImageMode object
-    isce::product::ImageMode mode;
-   
-    // Deserialize the primary_mode
-    isce::product::loadFromH5(modeGroup, mode, "aux");
- 
     // get pulase repetition frequency (prf)
-    double prf = mode.prf(); 
+    double prf = swath.nominalAcquisitionPRF();
     std::cout << "prf: " << std::setprecision(16)<< prf << std::endl;
 
     // beta parameter for the raised cosine filter used for constructing the common azimuth band filter
@@ -92,18 +77,13 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
     std::string h5file("../data/envisat.h5");
     isce::io::IH5File file(h5file);
 
-    // Open group for image mode
-    isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
-    
-    // Instantiate an ImageMode object
-    isce::product::ImageMode mode;
-
-    // Deserialize the primary_mode
-    isce::product::loadFromH5(modeGroup, mode, "aux");
+    // Create a product and swath
+    isce::product::Product product(file);
+    const isce::product::Swath & swath = product.swath('A');
 
     // get the range bandwidth
-    double BW = mode.rangeBandwidth();
-    
+    double BW = swath.processedRangeBandwidth();
+
     //The bands are specified by two vectors:
     //  1) a vector of center frequencies for each sub-band
     std::valarray<double> subBandCenterFrequencies{-3.0e6, 0.0, 3e6}; 
