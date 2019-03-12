@@ -34,13 +34,22 @@ cdef class pyGeo2rdr:
         'legendre': orbitInterpMethod.LEGENDRE_METHOD
     }
 
-    def __cinit__(self, pyProduct product, threshold=1.0e-5, numIterations=50,
+    def __cinit__(self,
+                  pyProduct product,
+                  frequency='A',
+                  bool nativeDoppler=False,
+                  int numberAzimuthLooks=1,
+                  int numberRangeLooks=1,
+                  double threshold=1.0e-5,
+                  int numIterations=50,
                   orbitMethod='hermite'):
         """
         Constructor takes in a product in order to retrieve relevant radar parameters.
         """
         # Create C++ geo2rdr pointer
-        self.c_geo2rdr = new Geo2rdr(deref(product.c_product))
+        cdef string freqstr = pyStringToBytes(frequency)
+        self.c_geo2rdr = new Geo2rdr(deref(product.c_product), freqstr[0], nativeDoppler,
+                                     numberAzimuthLooks, numberRangeLooks)
         self.__owner = True
 
         # Set processing options

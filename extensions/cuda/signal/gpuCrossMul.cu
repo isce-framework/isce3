@@ -467,8 +467,9 @@ void lookdownShiftImpact(size_t oversample,
 }
 
 /*
-   declarations!
+forced instantiation
    */
+
 template __global__
 void interferogram_g<float>(gpuComplex<float> *ifgram, 
         gpuComplex<float> *refSlcUp, 

@@ -13,6 +13,9 @@ def pyStringToBytes(s):
     else:
         raise ValueError('Input Python string not str or bytes')
 
+# Include the image extensiosn
+include "image/pyResampSlc.pyx"
+
 # Include the geometry extensions
 include "geometry/pyTopo.pyx"
 include "geometry/pyGeo2rdr.pyx"

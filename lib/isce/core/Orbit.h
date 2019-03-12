@@ -76,7 +76,8 @@ struct isce::core::Orbit {
      * @param[in] o isce::core::Orbit object to copy*/
     Orbit(const Orbit &o) : nVectors(o.nVectors), epochs(o.epochs),
                             UTCtime(o.UTCtime), position(o.position), velocity(o.velocity),
-                            stateVectors(o.stateVectors) {}
+                            stateVectors(o.stateVectors), refEpoch(o.refEpoch) {
+    }
 
     /** Assignment operator*/
     inline Orbit& operator=(const Orbit &o);
@@ -114,7 +115,7 @@ struct isce::core::Orbit {
     /** Compute acceleration numerically at given epoch.*/
     int computeAcceleration(double tintp, cartesian_t &acc) const;
 
-    /** Compute Heading (clockwise w.r.t North) in degrees at given epoch*/
+    /** Compute Heading (clockwise w.r.t North) in radians at given epoch*/
     double getENUHeading(double aztime) const;
 
     /** Debug print function */
@@ -136,6 +137,7 @@ operator=(const Orbit &rhs) {
     position = rhs.position;
     velocity = rhs.velocity;
     stateVectors = rhs.stateVectors;
+    refEpoch = rhs.refEpoch;
     return *this;
 }
 

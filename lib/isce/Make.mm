@@ -15,7 +15,6 @@ RECURSE_DIRS = \
 # the ones that are always available
 PACKAGES = \
     io \
-    radar \
     product \
     core \
     image \

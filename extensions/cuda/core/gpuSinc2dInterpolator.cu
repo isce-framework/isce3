@@ -163,26 +163,24 @@ __device__ U gpuSinc2dInterpolator<U>::interpolate(double x, double y, const U* 
     const double frpy = y - iy;
 
     // Check edge conditions
-    bool x_in_bounds = ((ix >= sinc_half) && (ix <= (ny - sinc_half)));
-    bool y_in_bounds = ((iy >= sinc_half) && (iy <= (nx - sinc_half)));
+    bool x_in_bounds = ((ix >= (sinc_half - 1)) && (ix <= (ny - sinc_half - 1)));
+    bool y_in_bounds = ((iy >= (sinc_half - 1)) && (iy <= (nx - sinc_half - 1)));
     if (x_in_bounds && y_in_bounds) {
     
         // Modify integer interpolation coordinates for sinc evaluation
-        const int intpx = ix + sinc_half - 1;
-        const int intpy = iy + sinc_half - 1;
+        const int intpx = ix + sinc_half;
+        const int intpy = iy + sinc_half;
 
-        // Interpolate for valid indices
-        if ((intpx >= (kernel_width-1)) && (intpx < nx) && (intpy >= (kernel_width-1)) && (intpy < ny)) {
-            // Get nearest kernel indices
-            int ifracx = min(max(0, int(frpx*kernel_length)), kernel_length-1);
-            int ifracy = min(max(0, int(frpy*kernel_length)), kernel_length-1);
-            // Compute weighted sum
-            for (int i = 0; i < kernel_width; i++) {
-                for (int j = 0; j < kernel_width; j++) {
-                    interp_val += chip[(intpy-i)*nx + intpx - j]
-                         * kernel[ifracy*kernel_width + i]
-                         * kernel[ifracx*kernel_width + j];
-                }
+        // Get nearest kernel indices
+        int ifracx = min(max(0, int(frpx*kernel_length)), kernel_length-1);
+        int ifracy = min(max(0, int(frpy*kernel_length)), kernel_length-1);
+
+        // Compute weighted sum
+        for (int i = 0; i < kernel_width; i++) {
+            for (int j = 0; j < kernel_width; j++) {
+                interp_val += chip[(intpy-i)*nx + intpx - j]
+                     * kernel[ifracy*kernel_width + i]
+                     * kernel[ifracx*kernel_width + j];
             }
         }
     }

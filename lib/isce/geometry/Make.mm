@@ -10,6 +10,7 @@ PROJ_SRCS = \
     DEMInterpolator.cpp \
     Geo2rdr.cpp \
     geometry.cpp \
+    RTC.cpp \
     Topo.cpp \
 
 # products
@@ -26,6 +27,7 @@ EXPORT_PKG_HEADERS = \
     Geo2rdr.h \
     Geo2rdr.icc \
     geometry.h \
+    RTC.h \
     Topo.h \
     Topo.icc \
     TopoLayers.h \

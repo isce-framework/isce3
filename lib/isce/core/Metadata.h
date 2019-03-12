@@ -26,6 +26,7 @@ struct isce::core::Metadata {
     double rangeFirstSample;
     double slantRangePixelSpacing;
     double chirpSlope;
+    double pulseDuration;
     double antennaLength;
     int lookSide;
     DateTime sensingStart;

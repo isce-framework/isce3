@@ -24,9 +24,8 @@ using isce::core::Orbit;
 using isce::core::Pegtrans;
 using isce::core::Pixel;
 using isce::core::Poly2d;
-using isce::core::LUT1d;
+using isce::core::LUT2d;
 using isce::core::StateVector;
-using isce::product::ImageMode;
 
 /** @param[in] aztime azimuth time corresponding to line of interest
  * @param[in] slantRange slant range corresponding to pixel of interest
@@ -232,9 +231,12 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
  * @param[in] ellipsoid Ellipsoid object
  * @param[in] orbit Orbit object
  * @param[in] doppler   Poly2D Doppler model
- * @param[in] mode  ImageMode object
  * @param[out] aztime azimuth time of inputLLH w.r.t reference epoch of the orbit
  * @param[out] slantRange slant range to inputLLH
+ * @param[in] wavelength Radar wavelength
+ * @param[in] startingRange Starting slant range of reference image
+ * @param[in] rangePixelSpacing Slant range pixel spacing
+ * @param[in] rwidth Width (number of samples) of reference image
  * @param[in] threshold azimuth time convergence threshold in seconds
  * @param[in] maxIter Maximum number of Newton-Raphson iterations
  * @param[in] deltaRange step size used for computing derivative of doppler
@@ -242,7 +244,8 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const StateVector & state,
  * This is the elementary transformation from map geometry to radar geometry. The transformation is applicable for a single lon/lat/h coordinate (i.e., a single point target). For algorithmic details, see \ref overview_geometry "geometry overview".*/
 int isce::geometry::
 geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
-        const Poly2d & doppler, const ImageMode & mode, double & aztime, double & slantRange,
+        const Poly2d & doppler, double & aztime, double & slantRange,
+        double wavelength, double startingRange, double rangePixelSpacing, size_t rwidth,
         double threshold, int maxIter, double deltaRange) {
 
     cartesian_t satpos, satvel, inputXYZ, dr;
@@ -251,11 +254,11 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
     ellipsoid.lonLatToXyz(inputLLH, inputXYZ);
 
     // Pre-compute scale factor for doppler
-    const double dopscale = 0.5 * mode.wavelength();
+    const double dopscale = 0.5 * wavelength;
 
     // Compute minimum and maximum valid range
-    const double rangeMin = mode.startingRange();
-    const double rangeMax = rangeMin + mode.rangePixelSpacing() * (mode.width() - 1);
+    const double rangeMin = startingRange;
+    const double rangeMax = rangeMin + rangePixelSpacing * (rwidth - 1);
 
     // Compute azimuth time spacing for coarse grid search 
     const int NUM_AZTIME_TEST = 15;
@@ -314,7 +317,7 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
         }
 
         // Compute slant range bin
-        const double rbin = (slantRange - mode.startingRange()) / mode.rangePixelSpacing();
+        const double rbin = (slantRange - startingRange) / rangePixelSpacing;
         // Compute doppler
         const double dopfact = LinAlg::dot(dr, satvel);
         const double fdop = doppler.eval(0, rbin) * dopscale;
@@ -335,22 +338,22 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
     return converged;
 }
 
-/** @param[in] inputLLH Lon/Lat/Hae of target of interest
- * @param[in] ellipsoid Ellipsoid object
- * @param[in] orbit Orbit object
- * @param[in] doppler   Poly2D Doppler model
- * @param[in] mode  ImageMode object
- * @param[out] aztime azimuth time of inputLLH w.r.t reference epoch of the orbit
- * @param[out] slantRange slant range to inputLLH
- * @param[in] threshold azimuth time convergence threshold in seconds
- * @param[in] maxIter Maximum number of Newton-Raphson iterations
- * @param[in] deltaRange step size used for computing derivative of doppler
+/** @param[in] inputLLH             Lon/Lat/Hae of target of interest
+ * @param[in] ellipsoid             Ellipsoid object
+ * @param[in] orbit                 Orbit object
+ * @param[in] doppler               LUT2d Doppler model
+ * @param[out] aztime               azimuth time of inputLLH w.r.t reference epoch of the orbit
+ * @param[out] slantRange           slant range to inputLLH
+ * @param[in] wavelength            Radar wavelength
+ * @param[in] threshold             azimuth time convergence threshold in seconds
+ * @param[in] maxIter               Maximum number of Newton-Raphson iterations
+ * @param[in] deltaRange            step size used for computing derivative of doppler
  *
  * This is the elementary transformation from map geometry to radar geometry. The transformation is applicable for a single lon/lat/h coordinate (i.e., a single point target). For algorithmic details, see \ref overview_geometry "geometry overview".*/
 int isce::geometry::
 geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
-        const LUT1d<double> & doppler, const ImageMode & mode, double & aztime,
-        double & slantRange, double threshold, int maxIter, double deltaRange) {
+        const LUT2d<double> & doppler, double & aztime, double & slantRange,
+        double wavelength, double threshold, int maxIter, double deltaRange) {
 
     cartesian_t satpos, satvel, inputXYZ, dr;
 
@@ -358,7 +361,7 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
     ellipsoid.lonLatToXyz(inputLLH, inputXYZ);
 
     // Pre-compute scale factor for doppler
-    const double dopscale = 0.5 * mode.wavelength();
+    const double dopscale = 0.5 * wavelength;
 
     // Use mid-orbit epoch as initial guess
     aztime = orbit.UTCtime[orbit.nVectors / 2];
@@ -384,9 +387,9 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
 
         // Compute doppler
         const double dopfact = LinAlg::dot(dr, satvel);
-        const double fdop = doppler.eval(slantRange) * dopscale; 
+        const double fdop = doppler.eval(aztime, slantRange) * dopscale; 
         // Use forward difference to compute doppler derivative
-        const double fdopder = (doppler.eval(slantRange + deltaRange) * dopscale - fdop)
+        const double fdopder = (doppler.eval(aztime, slantRange + deltaRange) * dopscale - fdop)
                              / deltaRange;
         
         // Evaluate cost function and its derivative

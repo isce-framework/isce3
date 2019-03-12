@@ -105,6 +105,54 @@ namespace isce { namespace core {
         return data;
     }
 
+    /** Function to fill a Matlab/Python style linspace vector 
+      * @param[in] low Starting value of vector
+      * @param[in] high Ending value of vector (inclusive)
+      * @param[out] data Vector to fill in */
+    template <typename T>
+    inline void linspace(T low, T high, std::vector<T> & data) {
+        // Compute the increment
+        int number = data.size();
+        T increment = (high - low) / (number - 1);
+        // Handle cases where number in (0, 1)
+        if (number == 0) {
+            return;
+        }
+        if (number == 1) {
+            data[0] = low;
+            return;
+        }
+        // Loop over the increments and add to vector
+        for (std::size_t i = 0; i < number; ++i) {
+            data[i] = low + i * increment;
+        }
+        // done
+    }
+
+    /** Function to fill a Matlab/Python style linspace valarray
+      * @param[in] low Starting value of vector
+      * @param[in] high Ending value of vector (inclusive)
+      * @param[in] data Vector to fill in */
+    template <typename T>
+    inline void linspace(T low, T high, std::valarray<T> & data) {
+        // Compute the increment
+        int number = data.size();
+        T increment = (high - low) / (number - 1);
+        // Handle cases where number in (0, 1)
+        if (number == 0) {
+            return;
+        }
+        if (number == 1) {
+            data[0] = low;
+            return;
+        }
+        // Loop over the increments and add to vector
+        for (std::size_t i = 0; i < number; ++i) {
+            data[i] = low + i * increment;
+        }
+        // done
+    }
+
     /** Function to return a Matlab/Python style logspace vector 
       * @param[in] first base^first is the starting value of the vector
       * @param[in] last base^last is the ending value of the vector
@@ -254,6 +302,72 @@ namespace isce { namespace core {
         return mask;
     }
 
+    /** Sort arrays a, b, c by the values in array a */
+    inline void insertionSort(std::valarray<double> & a,
+                              std::valarray<double> & b,
+                              std::valarray<double> & c) {
+        for (int i = 1; i < a.size(); ++i) {
+            int j = i - 1;
+            const double tempa = a[i];
+            const double tempb = b[i];
+            const double tempc = c[i];
+            while (j >= 0 && a[j] > tempa) {
+                a[j+1] = a[j];
+                b[j+1] = b[j];
+                c[j+1] = c[j];
+                j = j - 1;
+            }
+            a[j+1] = tempa;
+            b[j+1] = tempb;
+            c[j+1] = tempc;
+        }
+    }
+    
+    /** Sort arrays a and b by the values in array a */
+    inline void insertionSort(std::valarray<double> & a,
+                              std::valarray<double> & b) {
+        for (int i = 1; i < a.size(); ++i) {
+            int j = i - 1;
+            const double tempa = a[i];
+            const double tempb = b[i];
+            while (j >= 0 && a[j] > tempa) {
+                a[j+1] = a[j];
+                b[j+1] = b[j];
+                j = j - 1;
+            }
+            a[j+1] = tempa;
+            b[j+1] = tempb;
+        }
+    }
+    
+    /** Searches array for index closest to provided value */   
+    inline int binarySearch(const std::valarray<double> & array, double value) {
+   
+        // Do the binary search 
+        int left = 0;
+        int right = array.size() - 1;
+        int index;
+        while (left <= right) {
+            const int middle = static_cast<int>(std::round(0.5 * (left + right)));
+            if (left == (right - 1)) {
+                index = left;
+                return index;
+            }
+            if (array[middle] <= value) {
+                left = middle;
+            } else if (array[middle] > value) {
+                right = middle;
+            }
+        }
+        index = left;
+        return index;
+    }
+
+    /** Clip a number between an upper and lower range (implements std::clamp for older GCC) */
+    template<class T>
+    inline const T & clamp(const T & x, const T & lower, const T & upper) {
+        return std::min(upper, std::max(x, lower));
+    }
 
 }}
 

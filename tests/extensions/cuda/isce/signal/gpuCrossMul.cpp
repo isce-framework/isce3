@@ -7,14 +7,12 @@
 #include <complex>
 #include <gtest/gtest.h>
 
-#include "isce/cuda/signal/gpuSignal.h"
-#include "isce/cuda/signal/gpuCrossMul.h"
-
 #include "isce/io/Raster.h"
 #include <isce/io/IH5.h>
-#include <isce/radar/Radar.h>
-#include <isce/radar/Serialization.h>
+#include <isce/product/Product.h>
 #include <isce/product/Serialization.h>
+
+#include "isce/cuda/signal/gpuCrossMul.h"
 
 
 TEST(gpuCrossmul, Crossmul)
@@ -29,44 +27,30 @@ TEST(gpuCrossmul, Crossmul)
     int width = referenceSlc.width();
     int length = referenceSlc.length();
 
-
     // a raster object for the interferogram
     isce::io::Raster interferogram("/vsimem/igram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
     isce::io::Raster coherence("/vsimem/coherence.bin.", width, length, 1, GDT_Float32, "ISCE");
+
     // HDF5 file with required metadata
     std::string h5file("../../../../lib/isce/data/envisat.h5");
     
     //H5 object
     isce::io::IH5File file(h5file);
 
-    // Open group containing instrument data
-    isce::io::IGroup group = file.openGroup("/science/metadata/instrument_data");
-
-    //Radar object and load the h5 file 
-    isce::radar::Radar instrument;
-
-    // Deserialize the radar instrument
-    isce::radar::loadFromH5(group, instrument);
+    // Create a product and swath
+    isce::product::Product product(file);
+    const isce::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
-    isce::core::LUT1d<double> dop1 = instrument.contentDoppler();
+    isce::core::LUT1d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
 
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
-    isce::core::LUT1d<double> dop2 = instrument.contentDoppler();
-
-    // Instantiate an ImageMode object
-    isce::product::ImageMode mode;
-    
-    // Open group for image mode
-    isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
-    
-    // Deserialize the primary_mode
-    isce::product::loadFromH5(modeGroup, mode, "aux");
+    isce::core::LUT1d<double> dop2 = dop1;
 
     // get the pulse repetition frequency (PRF)
-    double prf = mode.prf();
+    double prf = swath.nominalAcquisitionPRF();
 
     //instantiate the Crossmul class  
     isce::cuda::signal::gpuCrossmul crsmul;
@@ -127,7 +111,6 @@ TEST(gpuCrossmul, CrossmulAzimuthFilter)
     int width = referenceSlc.width();
     int length = referenceSlc.length();
 
-
     // a raster object for the interferogram
     isce::io::Raster interferogram("/vsimem/igram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
@@ -139,36 +122,19 @@ TEST(gpuCrossmul, CrossmulAzimuthFilter)
     //H5 object
     isce::io::IH5File file(h5file);
 
-    // Open group containing instrument data
-    isce::io::IGroup group = file.openGroup("/science/metadata/instrument_data");
-
-    //Radar object and load the h5 file
-    isce::radar::Radar instrument;
-
-    // Deserialize the radar instrument
-    isce::radar::loadFromH5(group, instrument);
+    // Create a product and swath
+    isce::product::Product product(file);
+    const isce::product::Swath & swath = product.swath('A');
 
     // get the Doppler polynomial for refernce SLC
-    isce::core::LUT1d<double> dop1 = instrument.contentDoppler();
-           
+    isce::core::LUT1d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
+
     // Since this test careates an interferogram between the refernce SLC and itself,
     // the second Doppler is the same as the first
-    isce::core::LUT1d<double> dop2 = instrument.contentDoppler();
-
-    // Instantiate an ImageMode object
-    isce::product::ImageMode mode;
-
-    // Open group for image mode
-    isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
-
-    // Deserialize the primary_mode
-    isce::product::loadFromH5(modeGroup, mode, "aux");
-    
-
-    //isce::product::load(file, mode, "aux");
+    isce::core::LUT1d<double> dop2 = dop1;
 
     // get the pulse repetition frequency (PRF)
-    double prf = mode.prf();
+    double prf = swath.nominalAcquisitionPRF();
 
     //instantiate the Crossmul class
     isce::cuda::signal::gpuCrossmul crsmul;

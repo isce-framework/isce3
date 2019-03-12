@@ -56,6 +56,11 @@ class isce::signal::Crossmul {
                     isce::io::Raster& interferogram,
                     isce::io::Raster& coherence);
 
+        /** \brief Run crossmul */
+        void crossmul(isce::io::Raster& referenceSLC,
+                    isce::io::Raster& secondarySLC,
+                    isce::io::Raster& interferogram);
+
         /** Compute the frequency response due to a subpixel shift introduced by upsampling and downsampling*/
         void lookdownShiftImpact(size_t oversample, size_t nfft, 
                                 size_t blockRows,
@@ -166,6 +171,9 @@ class isce::signal::Crossmul {
 
         // Flag for common range band filtering
         bool _doCommonRangebandFilter = false;
+
+        // Flag for computing coherence
+        bool _computeCoherence = true;
 
         // number of lines per block
         size_t blockRows = 8192;

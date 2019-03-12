@@ -14,7 +14,7 @@ using isce::core::Ellipsoid;
 using isce::core::Orbit;
 using isce::core::LUT1d;
 using isce::core::DateTime;
-using isce::product::ImageMode;
+using isce::product::RadarGridParameters;
 using isce::io::Raster;
 
 // Run geo2rdr with no offsets; internal creation of offset rasters
@@ -72,30 +72,29 @@ geo2rdr(isce::io::Raster & topoRaster,
     const int topoEPSG = topoRaster.getEPSG();
 
     // Cache ISCE objects (use public interface of parent isce::geometry::Geo2rdr class)
-    ImageMode mode = this->mode();
-    Ellipsoid ellipsoid = this->ellipsoid();
-    Orbit orbit = this->orbit();
-    LUT1d<double> doppler = this->doppler();
-    DateTime sensingStart = this->sensingStart();
+    const Ellipsoid & ellipsoid = this->ellipsoid();
+    const Orbit & orbit = this->orbit();
+    const LUT1d<double> doppler(this->doppler());
+    const RadarGridParameters & radarGrid = this->radarGridParameters();
 
     // Cache sensing start in seconds since reference epoch
-    double t0 = sensingStart.secondsSinceEpoch(this->refEpoch());
+    double t0 = radarGrid.sensingStart();
     // Adjust for const azimuth shift
-    t0 -= (azshift - 0.5 * (mode.numberAzimuthLooks() - 1)) / mode.prf();
+    t0 -= (azshift - 0.5 * (radarGrid.numberAzimuthLooks() - 1)) / radarGrid.prf();
 
     // Cache starting range
-    double r0 = mode.startingRange();
+    double r0 = radarGrid.startingRange();
     // Adjust for constant range shift
-    r0 -= (rgshift - 0.5 * (mode.numberRangeLooks() - 1)) * mode.rangePixelSpacing();
+    r0 -= (rgshift - 0.5 * (radarGrid.numberRangeLooks() - 1)) * radarGrid.rangePixelSpacing();
 
     // Compute azimuth time extents
-    double dtaz = mode.numberAzimuthLooks() / mode.prf();
-    const double tend = t0 + ((mode.length() - 1) * dtaz);
+    double dtaz = radarGrid.numberAzimuthLooks() / radarGrid.prf();
+    const double tend = t0 + ((radarGrid.length() - 1) * dtaz);
     const double tmid = 0.5 * (t0 + tend);
 
     // Compute range extents
-    const double dmrg = mode.numberRangeLooks() * mode.rangePixelSpacing();
-    const double rngend = r0 + ((mode.width() - 1) * dmrg);
+    const double dmrg = radarGrid.numberRangeLooks() * radarGrid.rangePixelSpacing();
+    const double rngend = r0 + ((radarGrid.width() - 1) * dmrg);
 
     // Print out extents
     _printExtents(info, t0, tend, dtaz, r0, rngend, dmrg, demWidth, demLength);
@@ -110,6 +109,11 @@ geo2rdr(isce::io::Raster & topoRaster,
     size_t nBlocks = demLength / _linesPerBlock;
     if ((demLength % _linesPerBlock) != 0)
         nBlocks += 1;
+
+    // Cache near, mid, far ranges for diagnostics on Doppler
+    const double nearRange = radarGrid.startingRange();
+    const double farRange = radarGrid.endingRange();
+    const double midRange = radarGrid.midRange();
 
     // Loop over blocks
     unsigned int totalconv = 0;
@@ -130,9 +134,9 @@ geo2rdr(isce::io::Raster & topoRaster,
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
-             << doppler.values()[0] << " "
-             << doppler.values()[doppler.size() / 2] << " "
-             << doppler.values()[doppler.size() - 1] << " "
+             << doppler.eval(nearRange) << " "
+             << doppler.eval(midRange) << " "
+             << doppler.eval(farRange) << " "
              << pyre::journal::endl;
 
         // Valarrays to hold input block from topo rasters
@@ -147,8 +151,11 @@ geo2rdr(isce::io::Raster & topoRaster,
 
         // Process block on GPU
         isce::cuda::geometry::runGPUGeo2rdr(
-            ellipsoid, orbit, doppler, mode, x, y, hgt, azoff, rgoff, topoEPSG,
-            lineStart, demWidth, t0, r0, this->threshold(), this->numiter(), totalconv
+            ellipsoid, orbit, doppler, x, y, hgt, azoff, rgoff, topoEPSG,
+            lineStart, demWidth, t0, r0, radarGrid.numberAzimuthLooks(),
+            radarGrid.numberRangeLooks(), radarGrid.length(), radarGrid.width(), radarGrid.prf(),
+            radarGrid.rangePixelSpacing(), radarGrid.wavelength(), this->threshold(),
+            this->numiter(), totalconv
         );
 
         // Write block of data
@@ -167,16 +174,17 @@ geo2rdr(isce::io::Raster & topoRaster,
 void isce::cuda::geometry::Geo2rdr::
 _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
               double r0, double rngend, double dmrg, size_t demWidth, size_t demLength) {
-    info << pyre::journal::newline
-         << "Starting acquisition time: " << t0 << pyre::journal::newline
-         << "Stop acquisition time: " << tend << pyre::journal::newline
-         << "Azimuth line spacing in seconds: " << dtaz << pyre::journal::newline
-         << "Near range (m): " << r0 << pyre::journal::newline
-         << "Far range (m): " << rngend << pyre::journal::newline
-         << "Radar image length: " << this->mode().length() << pyre::journal::newline
-         << "Radar image width: " << this->mode().width() << pyre::journal::newline
-         << "Geocoded lines: " << demLength << pyre::journal::newline
-         << "Geocoded samples: " << demWidth << pyre::journal::newline;
+    info 
+        << pyre::journal::newline
+        << "Starting acquisition time: " << t0 << pyre::journal::newline
+        << "Stop acquisition time: " << tend << pyre::journal::newline
+        << "Azimuth line spacing in seconds: " << dtaz << pyre::journal::newline
+        << "Near range (m): " << r0 << pyre::journal::newline
+        << "Far range (m): " << rngend << pyre::journal::newline
+        << "Radar image length: " << this->radarGridParameters().length() << pyre::journal::newline
+        << "Radar image width: " << this->radarGridParameters().width() << pyre::journal::newline
+        << "Geocoded lines: " << demLength << pyre::journal::newline
+        << "Geocoded samples: " << demWidth << pyre::journal::newline;
 }
 
 // Check we can interpolate orbit to middle of DEM
@@ -220,7 +228,7 @@ computeLinesPerBlock() {
     pixelsPerBlock = (pixelsPerBlock / 10000000) * 10000000;
 
     // Compute number of lines per block
-    _linesPerBlock = pixelsPerBlock / this->mode().width();
+    _linesPerBlock = pixelsPerBlock / this->radarGridParameters().width();
     // Round down to nearest 500 lines
     _linesPerBlock = (_linesPerBlock / 500) * 500;
 }

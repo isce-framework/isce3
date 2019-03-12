@@ -10,22 +10,25 @@ from Cartesian cimport cartesian_t, cartmat_t
 
 cdef extern from "isce/core/Attitude.h" namespace "isce::core":
     cdef cppclass Attitude:
-        cartesian_t ypr()
-        cartmat_t rotmat(string)
+        cartesian_t ypr(double t)
+        cartmat_t rotmat(double t, string)
 
 cdef extern from "isce/core/EulerAngles.h" namespace "isce::core":
     cdef cppclass EulerAngles(Attitude):
         # Getter functions for attitude angles
-        double yaw()
-        double pitch()
-        double roll()
-        # Setter functions for attitude angles
-        void yaw(double)
-        void pitch(double)
-        void roll(double)
-        # Constructor 
-        EulerAngles(double, double, double, string) except +
+        const vector[double] yaw()
+        const vector[double] pitch()
+        const vector[double] roll()
+        # Interpolate for all Euler angles at a given time
+        void ypr(double t, double & yaw, double & pitch, double & roll)
+        # Constructors
+        EulerAngles(string) except +
+        EulerAngles(const vector[double] & time,
+                    const vector[double] & yaw,
+                    const vector[double] & pitch,
+                    const vector[double] & roll,
+                    string) except +
         # Convert to quaternion
-        vector[double] toQuaternionElements()
+        vector[double] toQuaternionElements(double t)
 
 # end of file

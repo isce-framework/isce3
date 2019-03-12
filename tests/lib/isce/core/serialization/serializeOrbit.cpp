@@ -25,11 +25,10 @@ TEST(OrbitTest, CheckArchive) {
     isce::io::IH5File file(h5file);
 
     // Open group containing orbit
-    isce::io::IGroup group = file.openGroup("/science/metadata/orbit");
+    isce::io::IGroup group = file.openGroup("/science/LSAR/SLC/metadata/orbit");
 
     // Deserialize the orbit
-    isce::core::DateTime epoch;
-    isce::core::loadFromH5(group, orbit, "POE", epoch);
+    isce::core::loadFromH5(group, orbit);
 
     // Check we have the right number of state vectors
     ASSERT_EQ(orbit.nVectors, 11);
@@ -45,7 +44,7 @@ TEST(OrbitTest, CheckArchive) {
     ASSERT_NEAR(orbit.velocity[5*3+2], -6055.488170, 1.0e-6);
 
     // Check date of middle vector
-    isce::core::DateTime dtime = epoch + orbit.UTCtime[5];
+    isce::core::DateTime dtime = orbit.refEpoch + orbit.UTCtime[5];
     ASSERT_EQ(dtime.isoformat(), "2003-02-26T17:55:28.000000000");
 
 }

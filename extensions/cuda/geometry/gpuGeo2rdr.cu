@@ -7,12 +7,12 @@
 #include "isce/cuda/core/gpuEllipsoid.h"
 #include "isce/cuda/core/gpuOrbit.h"
 #include "isce/cuda/core/gpuLUT1d.h"
-// isce::cuda::product
-#include "isce/cuda/product/gpuImageMode.h"
+
 // isce::cuda::geometry
 #include "gpuGeometry.h"
 #include "gpuGeo2rdr.h"
 using isce::cuda::core::gpuLinAlg;
+#include "../helper_cuda.h"
 
 #define THRD_PER_BLOCK 96 // Number of threads per block (should always %32==0)
 #define NULL_VALUE -1000000.0
@@ -21,13 +21,13 @@ __global__
 void runGeo2rdrBlock(isce::cuda::core::gpuEllipsoid ellps,
                      isce::cuda::core::gpuOrbit orbit,
                      isce::cuda::core::gpuLUT1d<double> doppler,
-                     isce::cuda::product::gpuImageMode mode,
                      double * x, double * y, double * hgt,
                      float * azoff, float * rgoff,
                      isce::cuda::core::ProjectionBase ** projTopo,
                      size_t lineStart, size_t blockLength, size_t blockWidth,
-                     double t0, double r0, double threshold, int numiter,
-                     unsigned int * totalconv) {
+                     double t0, double r0, size_t numberAzimuthLooks, size_t numberRangeLooks,
+                     size_t length, size_t width, double prf, double rangePixelSpacing,
+                     double wavelength, double threshold, int numiter, unsigned int * totalconv) {
 
     // Get the flattened index
     size_t index_flat = blockDim.x * blockIdx.x + threadIdx.x;
@@ -49,17 +49,17 @@ void runGeo2rdrBlock(isce::cuda::core::gpuEllipsoid ellps,
         double aztime, slantRange;
         const double deltaRange = 1.0e-8;
         int geostat = isce::cuda::geometry::geo2rdr(
-            llh, ellps, orbit, doppler, mode, &aztime, &slantRange, threshold,
+            llh, ellps, orbit, doppler, &aztime, &slantRange, wavelength, threshold,
             numiter, deltaRange
         );
         
         // Compute azimuth time extents
-        const double dtaz = mode.numberAzimuthLooks() / mode.prf();
-        const double tend = t0 + ((mode.length() - 1) * dtaz);
+        const double dtaz = numberAzimuthLooks / prf;
+        const double tend = t0 + ((length - 1) * dtaz);
 
         // Compute range extents
-        const double dmrg = mode.numberRangeLooks() * mode.rangePixelSpacing();
-        const double rngend = r0 + ((mode.width() - 1) * dmrg);
+        const double dmrg = numberRangeLooks * rangePixelSpacing;
+        const double rngend = r0 + ((width - 1) * dmrg);
 
         // Check if solution is out of bounds
         bool isOutside = false;
@@ -87,21 +87,20 @@ void isce::cuda::geometry::
 runGPUGeo2rdr(const isce::core::Ellipsoid & ellipsoid,
               const isce::core::Orbit & orbit,
               const isce::core::LUT1d<double> & doppler,
-              const isce::product::ImageMode & mode,
               const std::valarray<double> & x,
               const std::valarray<double> & y,
               const std::valarray<double> & hgt,
               std::valarray<float> & azoff,
               std::valarray<float> & rgoff,
               int topoEPSG, size_t lineStart, size_t blockWidth,
-              double t0, double r0, double threshold, double numiter,
-              unsigned int & totalconv) {
+              double t0, double r0, size_t numberAzimuthLooks, size_t numberRangeLooks,
+              size_t length, size_t width, double prf, double rangePixelSpacing,
+              double wavelength, double threshold, double numiter, unsigned int & totalconv) {
 
     // Create gpu ISCE objects
     isce::cuda::core::gpuEllipsoid gpu_ellipsoid(ellipsoid);
     isce::cuda::core::gpuOrbit gpu_orbit(orbit);
     isce::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
-    isce::cuda::product::gpuImageMode gpu_mode(mode); 
 
     // Allocate memory on device topo data and results
     double *x_d, *y_d, *hgt_d;
@@ -138,10 +137,11 @@ runGPUGeo2rdr(const isce::core::Ellipsoid & ellipsoid,
 
     // Launch kernel
     const size_t blockLength = x.size() / blockWidth;
-    runGeo2rdrBlock<<<grid, block>>>(gpu_ellipsoid, gpu_orbit, gpu_doppler, gpu_mode,
+    runGeo2rdrBlock<<<grid, block>>>(gpu_ellipsoid, gpu_orbit, gpu_doppler,
                                      x_d, y_d, hgt_d, azoff_d, rgoff_d, proj_d, lineStart,
-                                     blockLength, blockWidth, t0, r0, threshold, numiter,
-                                     totalconv_d);
+                                     blockLength, blockWidth, t0, r0, numberAzimuthLooks,
+                                     numberRangeLooks, length, width, prf, rangePixelSpacing, 
+                                     wavelength, threshold, numiter, totalconv_d);
 
     // Check for any kernel errors
     checkCudaErrors(cudaPeekAtLastError());
