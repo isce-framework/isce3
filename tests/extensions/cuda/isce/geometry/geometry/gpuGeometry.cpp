@@ -152,7 +152,7 @@ TEST_F(GpuGeometryTest, GeoToRdr) {
         34.65846532785868 * radians,
         1772.0
     };
-    
+
     // Run geo2rdr on gpu
     double aztime, slantRange;
     int stat = isce::cuda::geometry::geo2rdr_h(llh, ellipsoid, orbit, doppler,

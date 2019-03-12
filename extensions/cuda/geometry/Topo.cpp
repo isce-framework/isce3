@@ -163,12 +163,17 @@ topo(Raster & demRaster, TopoLayers & layers) {
     DEMInterpolator demInterp(-500.0, this->demMethod());
 
     // Compute number of lines per block
-    computeLinesPerBlock(demRaster);
+    computeLinesPerBlock(demRaster, layers);
 
     // Compute number of blocks needed to process image
     size_t nBlocks = radarGrid.length() / _linesPerBlock;
     if ((radarGrid.length() % _linesPerBlock) != 0)
         nBlocks += 1;
+
+    // Cache near, mid, far ranges for diagnostics on Doppler
+    const double nearRange = radarGrid.startingRange();
+    const double farRange = radarGrid.endingRange();
+    const double midRange = radarGrid.midRange();
 
     // Loop over blocks
     unsigned int totalconv = 0;
@@ -188,9 +193,9 @@ topo(Raster & demRaster, TopoLayers & layers) {
              << "  - line start: " << lineStart << pyre::journal::newline
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
-             << doppler.values()[0] << " "
-             << doppler.values()[doppler.size() / 2] << " "
-             << doppler.values()[doppler.size() - 1] << " "
+             << doppler.eval(nearRange) << " "
+             << doppler.eval(midRange) << " "
+             << doppler.eval(farRange) << " "
              << pyre::journal::endl;
 
         // Load DEM subset for SLC image block
@@ -238,7 +243,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
 
 // Compute number of lines per block dynamically from GPU memory
 void isce::cuda::geometry::Topo::
-computeLinesPerBlock(isce::io::Raster & demRaster) {
+computeLinesPerBlock(isce::io::Raster & demRaster, TopoLayers & layers) {
 
     // Compute GPU memory
     const size_t nGPUBytes = getDeviceMem();
@@ -265,6 +270,8 @@ computeLinesPerBlock(isce::io::Raster & demRaster) {
     _linesPerBlock = pixelsPerBlock / this->radarGridParameters().width();
     // Round down to nearest 500 lines
     _linesPerBlock = (_linesPerBlock / 500) * 500;
+    // Make sure we don't exceed number of lines in topo rasters
+    _linesPerBlock = std::min(_linesPerBlock, layers.length());
 }
 
 // Compute layover and shadow masks
