@@ -35,10 +35,18 @@ cdef class pyCrossmul:
         return new_crossmul
 
     # Run crossmul
-    def crossmul(self, pyRaster referenceSLC, pyRaster secondarySLC,
-                 pyRaster interferogram, pyRaster coherence, pyRaster rngOffset=None,
-                 refDoppler=None, secDoppler=None, int rangeLooks=1, int azimuthLooks=1,
-                 double prf=1.0, double azimuthBandwidth=1.0):
+    def crossmul(self,
+                 pyRaster referenceSLC,
+                 pyRaster secondarySLC,
+                 pyRaster interferogram,
+                 pyRaster coherence,
+                 pyRaster rngOffset=None,
+                 refDoppler=None,
+                 secDoppler=None,
+                 int rangeLooks=1,
+                 int azimuthLooks=1,
+                 double prf=1.0,
+                 double azimuthBandwidth=1.0):
         '''
         Run crossmul to generate interferogram and coherence image.
 
@@ -48,14 +56,21 @@ cdef class pyCrossmul:
             None
         '''
         # Check if dopplers are provided for azimuth commonband filtering
-        cdef pyLUT1d c_refdoppler
-        cdef pyLUT1d c_secdoppler
+        cdef pyLUT2d refdoppler2d
+        cdef pyLUT2d secdoppler2d
+        cdef LUT1d[double] c_refdoppler1d
+        cdef LUT1d[double] c_secdoppler1d
+
         if refDoppler is not None and secDoppler is not None:
 
-            # Get the dopplers
-            c_refdoppler = <pyLUT1d> refDoppler
-            c_secdoppler = <pyLUT1d> secDoppler
-            self.c_crossmul.doppler(deref(c_refdoppler.c_lut), deref(c_secdoppler.c_lut))
+            # Convert Dopplers to LUT1d
+            refdoppler = <pyLUT2d> refDoppler
+            secdoppler = <pyLUT2d> secDoppler
+            c_refdoppler1d = LUT1d[double](deref(refdoppler.c_lut))
+            c_secdoppler1d = LUT1d[double](deref(secdoppler.c_lut))
+
+            # Set the Dopplers
+            self.c_crossmul.doppler(c_refdoppler1d, c_secdoppler1d)
             self.c_crossmul.doCommonAzimuthbandFiltering(True)
 
             # Set the PRF
