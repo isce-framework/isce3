@@ -43,6 +43,7 @@ void gpuLooks<T>::multilook(std::valarray<T> &hi_res,
     // run kernels
     multilooks_g<<<grid, block>>>(d_lo_res, 
             d_hi_res, 
+            _ncols,
             _nrowsLooked, 
             _rowsLooks, 
             _colsLooks, 
@@ -87,6 +88,7 @@ void gpuLooks<T>::multilook(std::valarray<std::complex<T>> &hi_res,
     // run kernels
     multilooks_g<<<grid, block>>>(d_lo_res, 
             d_hi_res, 
+            _ncols,
             _nrowsLooked, 
             _rowsLooks, 
             _colsLooks, 
@@ -127,6 +129,7 @@ void gpuLooks<T>::multilook(std::valarray<T> &hi_res,
     multilooks_no_data_g<<<grid, block>>>(d_lo_res, 
             d_hi_res, 
             noDataValue, 
+            _ncols,
             _nrowsLooked, 
             _rowsLooks, 
             _colsLooks, 
@@ -167,6 +170,7 @@ void gpuLooks<T>::multilook(std::valarray<std::complex<T>> &hi_res,
     multilooks_no_data_g<<<grid, block>>>(d_lo_res, 
             d_hi_res, 
             gpuComplex<T>(noDataValue), 
+            _ncols,
             _nrowsLooked, 
             _rowsLooks, 
             _colsLooks, 
@@ -207,7 +211,14 @@ void gpuLooks<T>::multilook(std::valarray<T> &hi_res,
     dim3 grid((n_lo_res_size+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
     // run kernels
-    multilooks_weighted_g<<<grid, block>>>(d_lo_res, d_hi_res, d_weights, _nrowsLooked, _rowsLooks, _colsLooks, _nrowsLooked*_ncolsLooked);
+    multilooks_weighted_g<<<grid, block>>>(d_lo_res,
+         d_hi_res,
+         d_weights,
+         _ncols,
+         _nrowsLooked,
+         _rowsLooks,
+         _colsLooks,
+         _nrowsLooked*_ncolsLooked);
 
     // copy from device lo res output
     checkCudaErrors(cudaMemcpy(&lo_res[0], d_lo_res, lo_res_size, cudaMemcpyDeviceToHost));
@@ -242,6 +253,7 @@ void gpuLooks<T>::multilook(std::valarray<std::complex<T>> &hi_res,
     multilooks_power_g<<<grid, block>>>(d_lo_res, 
             d_hi_res, 
             p, 
+            _ncols,
             _nrowsLooked, 
             _rowsLooks, 
             _colsLooks, 
@@ -269,7 +281,8 @@ input:
 template <typename T>
 __global__ void multilooks_g(T *lo_res, 
         T *hi_res, 
-        int rows_lo, 
+        int n_cols_hi,
+        int n_rows_lo, 
         int row_resize, 
         int col_resize, 
         int sz_lo, 
@@ -277,8 +290,8 @@ __global__ void multilooks_g(T *lo_res,
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i / rows_lo;
-        int i_lo_col = i % rows_lo;
+        int i_lo_row = i / (n_rows_lo-1);
+        int i_lo_col = i % (n_rows_lo-1);
 
         // loop over contributing lo_res rows
         for (int i_blk_row = 0; i_blk_row < row_resize; ++i_blk_row) {
@@ -289,7 +302,7 @@ __global__ void multilooks_g(T *lo_res,
                 // get lo_res col index
                 int i_hi_col = i_blk_col + i_lo_col*col_resize;
                 // combine lo_res row and col index to hi_res index
-                int i_hi = i_hi_row*rows_lo*row_resize + i_hi_col;
+                int i_hi = i_hi_row*n_cols_hi + i_hi_col;
                 // accumulate lo_res into lo_res
                 lo_res[i] += hi_res[i_hi];
             }
@@ -301,7 +314,8 @@ __global__ void multilooks_g(T *lo_res,
 template <typename T>
 __global__ void multilooks_g(gpuComplex<T> *lo_res, 
         gpuComplex<T> *hi_res, 
-        int rows_lo, 
+        int n_cols_hi,
+        int n_rows_lo, 
         int row_resize, 
         int col_resize, 
         int sz_lo, 
@@ -309,8 +323,8 @@ __global__ void multilooks_g(gpuComplex<T> *lo_res,
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i / rows_lo;
-        int i_lo_col = i % rows_lo;
+        int i_lo_row = i / (n_rows_lo-1);
+        int i_lo_col = i % (n_rows_lo-1);
 
         // loop over contributing lo_res rows
         for (int i_blk_row = 0; i_blk_row < row_resize; ++i_blk_row) {
@@ -321,7 +335,7 @@ __global__ void multilooks_g(gpuComplex<T> *lo_res,
                 // get lo_res col index
                 int i_hi_col = i_blk_col + i_lo_col*col_resize;
                 // combine lo_res row and col index to hi_res index
-                int i_hi = i_hi_row*rows_lo*row_resize + i_hi_col;
+                int i_hi = i_hi_row*n_cols_hi + i_hi_col;
                 // accumulate lo_res into lo_res
                 lo_res[i] += hi_res[i_hi];
             }
@@ -347,7 +361,8 @@ template <typename T>
 __global__ void multilooks_no_data_g(T *lo_res, 
         T *hi_res, 
         T no_data_value, 
-        int rows_lo, 
+        int n_cols_hi,
+        int n_rows_lo, 
         int row_resize, 
         int col_resize, 
         int sz_lo,
@@ -355,8 +370,8 @@ __global__ void multilooks_no_data_g(T *lo_res,
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i / rows_lo;
-        int i_lo_col = i % rows_lo;
+        int i_lo_row = i / (n_rows_lo-1);
+        int i_lo_col = i % (n_rows_lo-1);
 
         // 
         int n_no_val = 0;
@@ -370,7 +385,7 @@ __global__ void multilooks_no_data_g(T *lo_res,
                 // get lo_res col index
                 int i_hi_col = i_blk_col + i_lo_col*col_resize;
                 // combine lo_res row and col index to hi_res index
-                int i_hi = i_hi_row*rows_lo*row_resize + i_hi_col;
+                int i_hi = i_hi_row*n_cols_hi + i_hi_col;
                 // accumulate lo_res into lo_res
                 T hi_res_pixel_value = hi_res[i_hi];
                 if (hi_res_pixel_value != no_data_value)
@@ -387,7 +402,8 @@ template <class T>
 __global__ void multilooks_no_data_g(gpuComplex<T> *lo_res, 
         gpuComplex<T> *hi_res, 
         gpuComplex<T> no_data_value, 
-        int rows_lo, 
+        int n_cols_hi,
+        int n_rows_lo, 
         int row_resize, 
         int col_resize, 
         int sz_lo,
@@ -395,8 +411,8 @@ __global__ void multilooks_no_data_g(gpuComplex<T> *lo_res,
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i / rows_lo;
-        int i_lo_col = i % rows_lo;
+        int i_lo_row = i / (n_rows_lo-1);
+        int i_lo_col = i % (n_rows_lo-1);
 
         // 
         int n_no_val = 0;
@@ -410,7 +426,7 @@ __global__ void multilooks_no_data_g(gpuComplex<T> *lo_res,
                 // get lo_res col index
                 int i_hi_col = i_blk_col + i_lo_col*col_resize;
                 // combine lo_res row and col index to hi_res index
-                int i_hi = i_hi_row*rows_lo*row_resize + i_hi_col;
+                int i_hi = i_hi_row*n_cols_hi + i_hi_col;
                 // accumulate lo_res into lo_res
                 gpuComplex<T> hi_res_pixel_value = hi_res[i_hi];
                 if (hi_res_pixel_value.r != no_data_value.r &&
@@ -437,12 +453,19 @@ input:
    sz_lo number of elements in lo res
  */
 template <typename T>
-__global__ void multilooks_weighted_g(T *lo_res, T *hi_res, T* weights, int rows_lo, int row_resize, int col_resize, int sz_lo) 
+__global__ void multilooks_weighted_g(T *lo_res,
+         T *hi_res,
+         T* weights,
+         int n_cols_hi,
+         int n_rows_lo,
+         int row_resize,
+         int col_resize,
+         int sz_lo) 
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i / rows_lo;
-        int i_lo_col = i % rows_lo;
+        int i_lo_row = i / (n_rows_lo-1);
+        int i_lo_col = i % (n_rows_lo-1);
 
         T sum_weight = 0;
         // loop over contributing hi_res rows
@@ -454,7 +477,7 @@ __global__ void multilooks_weighted_g(T *lo_res, T *hi_res, T* weights, int rows
                 // get lo_res col index
                 int i_hi_col = i_blk_col + i_lo_col*col_resize;
                 // combine lo_res row and col index to hi_res index
-                int i_hi = i_hi_row*rows_lo*row_resize + i_hi_col;
+                int i_hi = i_hi_row*n_cols_hi + i_hi_col;
                 // accumulate lo_res into lo_res
                 lo_res[i] += hi_res[i_hi];
                 sum_weight += weights[i_hi];
@@ -485,7 +508,8 @@ template <typename T>
 __global__ void multilooks_power_g(T *lo_res, 
         gpuComplex<T> *hi_res, 
         int power, 
-        int rows_lo, 
+        int n_cols_hi,
+        int n_rows_lo, 
         int row_resize, 
         int col_resize, 
         int sz_lo,
@@ -493,9 +517,8 @@ __global__ void multilooks_power_g(T *lo_res,
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < sz_lo) {
-        int i_lo_row = i / rows_lo;
-        int i_lo_col = i % rows_lo;
-        int blk_sz = row_resize * col_resize;
+        int i_lo_row = i / (n_rows_lo-1);
+        int i_lo_col = i % (n_rows_lo-1);
 
         // loop over contributing lo_res rows
         for (int i_blk_row = 0; i_blk_row < row_resize; ++i_blk_row) {
@@ -506,7 +529,7 @@ __global__ void multilooks_power_g(T *lo_res,
                 // get lo_res col index
                 int i_hi_col = i_blk_col + i_lo_col*col_resize;
                 // combine lo_res row and col index to hi_res index
-                int i_hi = i_hi_row*rows_lo*row_resize + i_hi_col;
+                int i_hi = i_hi_row*n_cols_hi + i_hi_col;
                 // accumulate lo_res into lo_res
                 lo_res[i] += pow(abs(hi_res[i_hi]), power);
             }
@@ -523,7 +546,8 @@ template class gpuLooks<float>;
 template __global__ void
 multilooks_g<float>(float *lo_res, 
         float *hi_res, 
-        int rows_lo, 
+        int n_cols_hi,
+        int n_rows_lo, 
         int row_resize, 
         int col_resize, 
         int sz_lo,
@@ -532,7 +556,8 @@ multilooks_g<float>(float *lo_res,
 template __global__ void
 multilooks_g<float>(gpuComplex<float> *lo_res, 
         gpuComplex<float> *hi_res, 
-        int rows_lo, 
+        int n_cols_hi,
+        int n_rows_lo, 
         int row_resize, 
         int col_resize, 
         int sz_lo,
@@ -542,7 +567,8 @@ template __global__ void
 multilooks_no_data_g<float>(float *lo_res, 
         float *hi_res, 
         float no_data_value, 
-        int rows_lo, 
+        int n_cols_hi,
+        int n_rows_lo, 
         int row_resize, 
         int col_resize, 
         int sz_lo,
@@ -552,7 +578,8 @@ template __global__ void
 multilooks_no_data_g<float>(gpuComplex<float> *lo_res, 
         gpuComplex<float> *hi_res, 
         gpuComplex<float> no_data_value, 
-        int rows_lo, 
+        int n_cols_hi,
+        int n_rows_lo, 
         int row_resize, 
         int col_resize, 
         int sz_lo,
@@ -562,7 +589,8 @@ template __global__ void
 multilooks_power_g<float>(float *lo_res, 
         gpuComplex<float> *hi_res, 
         int power, 
-        int rows_lo, 
+        int n_cols_hi,
+        int n_rows_lo, 
         int row_resize, 
         int col_resize, 
         int sz_lo,

@@ -340,7 +340,8 @@ crossmul(isce::io::Raster& referenceSLC,
             multilooks_g<<<grid_lo, block>>>(
                     d_ifgram_mlook,
                     d_refSlc,
-                    nrows,                          // lo res rows
+                    ncols,
+                    blockRowsMultiLooked,
                     oversample,                     // row resize factor of hi to lo
                     1,                              // col resize factor of hi to lo
                     nrows*ncols,                    // number of lo res elements
@@ -354,7 +355,8 @@ crossmul(isce::io::Raster& referenceSLC,
                     d_ref_amp_mlook,
                     d_refSlc,
                     2,
-                    nrows,                          // lo res rows
+                    ncols,
+                    blockRowsMultiLooked,
                     oversample,                     // row resize factor of hi to lo
                     1,                              // col resize factor of hi to lo
                     nrows*ncols,                    // number of lo res elements
@@ -364,7 +366,8 @@ crossmul(isce::io::Raster& referenceSLC,
                     d_sec_amp_mlook,
                     d_secSlc,
                     2,
-                    nrows,                          // lo res rows
+                    ncols,
+                    blockRowsMultiLooked,
                     oversample,                     // row resize factor of hi to lo
                     1,                              // col resize factor of hi to lo
                     nrows*ncols,                    // number of lo res elements
