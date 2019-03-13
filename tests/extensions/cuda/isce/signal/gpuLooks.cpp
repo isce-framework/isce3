@@ -38,7 +38,6 @@ struct gpuLooksTest : public ::testing::Test {
         // constructor
         gpuLooksTest() {
             // instantiate a looks object
-            isce::cuda::signal::gpuLooks<float> lksObj;
             lksObj.nrows(length);
             lksObj.ncols(width);
             lksObj.nrowsLooked(lengthLooked);
