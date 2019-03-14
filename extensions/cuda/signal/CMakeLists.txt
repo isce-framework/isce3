@@ -13,4 +13,4 @@ set(SRCS
         gpuCrossMul.cu)
 
 
-add_isce_libdir(image "${SRCS}" "${HEADERS}")
+add_isce_libdir(signal "${SRCS}" "${HEADERS}")
