@@ -534,7 +534,6 @@ __global__ void multilooks_power_g(T *lo_res,
                 lo_res[i] += pow(abs(hi_res[i_hi]), power);
             }
         }
-        lo_res[i] /= blk_sz;
     }
 }
 
