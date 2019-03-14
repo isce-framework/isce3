@@ -13,14 +13,22 @@ function(AssureOutOfSourceBuilds)
 endfunction()
 
 
-##Check that C++17 is available and CXX 5 or greated is installed
+# Check that compiler supports C++17
+# (Only checks GCC and Clang currently)
 function(CheckCXX)
-  set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  add_compile_options(-std=c++17)
-  if (CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
-    message(FATAL_ERROR "Insufficient GCC version. Version 6.0 or greater is required.")
-  endif()
+    if (CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
+        message(FATAL_ERROR "Insufficient GCC version. Version 6.0 or greater is required.")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
+        message(FATAL_ERROR "Insufficient Clang version. Version 5 or greater is required.")
+    endif()
+    # Require C++17 (no extensions) for host code
+    set(CMAKE_CXX_STANDARD            17 PARENT_SCOPE)
+    set(CMAKE_CXX_STANDARD_REQUIRED   ON PARENT_SCOPE)
+    set(CMAKE_CXX_EXTENSIONS         OFF PARENT_SCOPE)
+    # Require C++14 (no extensions) for device code
+    set(CMAKE_CUDA_STANDARD           14 PARENT_SCOPE)
+    set(CMAKE_CUDA_STANDARD_REQUIRED  ON PARENT_SCOPE)
+    set(CMAKE_CUDA_EXTENSIONS        OFF PARENT_SCOPE)
 endfunction()
 
 
