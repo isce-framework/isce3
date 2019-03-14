@@ -68,13 +68,13 @@ void gpuLooks<T>::multilook(std::valarray<std::complex<T>> &hi_res,
         std::valarray<std::complex<T>> &lo_res) 
 {
     // allocate lo res output on device
-    T *d_lo_res;
+    gpuComplex<T> *d_lo_res;
     size_t n_lo_res_size = _nrowsLooked*_ncolsLooked;
-    size_t lo_res_size = n_lo_res_size*sizeof(T);
+    size_t lo_res_size = n_lo_res_size*sizeof(gpuComplex<T>);
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_lo_res), lo_res_size));
 
     // allocate and copy to device hi res input
-    T *d_hi_res;
+    gpuComplex<T> *d_hi_res;
     size_t hi_res_size = _nrows*_ncols*sizeof(gpuComplex<T>);
     // allocate input
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_hi_res), hi_res_size));
@@ -115,7 +115,7 @@ void gpuLooks<T>::multilook(std::valarray<T> &hi_res,
 
     // allocate and copy to device hi res input
     T *d_hi_res;
-    size_t hi_res_size = _nrows*_ncols*sizeof(T)*2;
+    size_t hi_res_size = _nrows*_ncols*sizeof(T);
     // allocate input
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_hi_res), hi_res_size));
     // copy hi_res
@@ -151,7 +151,7 @@ void gpuLooks<T>::multilook(std::valarray<std::complex<T>> &hi_res,
     // allocate lo res output on device
     gpuComplex<T> *d_lo_res;
     size_t n_lo_res_size = _nrowsLooked*_ncolsLooked;
-    size_t lo_res_size = n_lo_res_size*sizeof(T);
+    size_t lo_res_size = n_lo_res_size*sizeof(gpuComplex<T>);
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_lo_res), lo_res_size));
 
     // allocate and copy to device hi res input
@@ -197,7 +197,7 @@ void gpuLooks<T>::multilook(std::valarray<T> &hi_res,
 
     // allocate and copy to device hi res input
     T *d_hi_res;
-    size_t hi_res_size = _nrows*_ncols*sizeof(T)*2;
+    size_t hi_res_size = _nrows*_ncols*sizeof(T);
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_hi_res), hi_res_size));
     checkCudaErrors(cudaMemcpy(d_hi_res, &hi_res[0], hi_res_size, cudaMemcpyHostToDevice));
 
@@ -241,7 +241,7 @@ void gpuLooks<T>::multilook(std::valarray<std::complex<T>> &hi_res,
 
     // allocate and copy to device hi res input
     gpuComplex<T> *d_hi_res;
-    size_t hi_res_size = _nrows*_ncols*sizeof(T)*2;
+    size_t hi_res_size = _nrows*_ncols*sizeof(gpuComplex<T>);
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_hi_res), hi_res_size));
     checkCudaErrors(cudaMemcpy(d_hi_res, &hi_res[0], hi_res_size, cudaMemcpyHostToDevice));
 
