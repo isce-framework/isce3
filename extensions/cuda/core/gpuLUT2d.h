@@ -29,7 +29,7 @@ namespace isce {
     }
 }
 
-// gpuLUT1d declaration
+// gpuLUT2d declaration
 template <typename T>
 class isce::cuda::core::gpuLUT2d {
 
