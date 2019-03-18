@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <isce/core/LUT2d.h>
+#include <isce/cuda/core/gpuInterpolator.h>
 
 // Declaration
 namespace isce {
@@ -117,10 +118,6 @@ class isce::cuda::core::gpuLUT2d {
         isce::cuda::core::gpuInterpolator<T> ** _interp;
         // Do I own data?
         bool _owner;
-
-    // Utility functions       
-    private:
-        CUDA_HOSTDEV _setInterpolator(isce::core::dataInterpMethod method); 
 
 };
 
