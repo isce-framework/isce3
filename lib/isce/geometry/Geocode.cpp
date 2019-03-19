@@ -66,6 +66,11 @@ geocode(isce::io::Raster & inputRaster,
         size_t rdrBlockLength = azimuthLastLine - azimuthFirstLine + 1;
         size_t rdrBlockWidth = rangeLastPixel - rangeFirstPixel + 1;
         size_t rdrBlockSize = rdrBlockLength * rdrBlockWidth;
+
+        std::cout << _radarGrid.width() << " " << _radarGrid.length() << std::endl;
+        std::cout << rdrBlockLength << " "
+                  << rdrBlockWidth << " "
+                  << rdrBlockSize << std::endl;
         
         // X and Y indices (in the radar coordinates) for the 
         // geocoded pixels (after geo2rdr computation)
@@ -96,9 +101,11 @@ geocode(isce::io::Raster & inputRaster,
 
                 // get the row and column index in the radar grid
                 double rdrX, rdrY;
-                rdrY = (aztime - _radarGrid.sensingStart()) * _radarGrid.prf();
+                rdrY = (aztime - _radarGrid.sensingStart()) *
+                       (_radarGrid.prf() / _radarGrid.numberAzimuthLooks());
 		
-                rdrX = (srange - _radarGrid.startingRange()) / _radarGrid.rangePixelSpacing();	
+                rdrX = (srange - _radarGrid.startingRange()) /
+                       (_radarGrid.numberRangeLooks() * _radarGrid.rangePixelSpacing());	
 
                 // adjust the row and column indicies for the current block, 
                 // i.e., moving the origin to the top-left of this radar block.
@@ -248,6 +255,14 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
     std::valarray<double> azimuthTime(4);
     std::valarray<double> slantRange(4);
 
+    // Cache the multilooked radar grid length and width
+    const size_t rgLength = _radarGrid.length() / _radarGrid.numberAzimuthLooks();
+    const size_t rgWidth = _radarGrid.width() / _radarGrid.numberRangeLooks();
+
+    // Cache the multilooked radar grid spacing
+    const double dtaz = _radarGrid.numberAzimuthLooks() / _radarGrid.prf();
+    const double dtrg = _radarGrid.numberRangeLooks() * _radarGrid.rangePixelSpacing();
+
     //top left corener on ground
     Y[0] = _geoGridStartY + _geoGridSpacingY*lineStart;
     X[0] = _geoGridStartX;
@@ -270,16 +285,14 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
     }
 
     // the first azimuth line
-    azimuthFirstLine = (azimuthTime.min() - _radarGrid.sensingStart()) * _radarGrid.prf();
+    azimuthFirstLine = (azimuthTime.min() - _radarGrid.sensingStart()) / dtaz;
 
     // the last azimuth line
-    azimuthLastLine = (azimuthTime.max() - _radarGrid.sensingStart()) * _radarGrid.prf();
+    azimuthLastLine = (azimuthTime.max() - _radarGrid.sensingStart()) / dtaz;
 
     // the first and last range pixels 
-    rangeFirstPixel = (slantRange.min() - _radarGrid.startingRange()) / 
-                       _radarGrid.rangePixelSpacing();
-    rangeLastPixel = (slantRange.max() - _radarGrid.startingRange()) / 
-                      _radarGrid.rangePixelSpacing();
+    rangeFirstPixel = (slantRange.min() - _radarGrid.startingRange()) / dtrg;
+    rangeLastPixel = (slantRange.max() - _radarGrid.startingRange()) / dtrg;
 
     // extending the radar bounding box by the extra margin
     azimuthFirstLine -= margin;
@@ -291,14 +304,14 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
     if (azimuthFirstLine < 0)
         azimuthFirstLine = 0;
 
-    if (azimuthLastLine > (_radarGrid.length() - 1))
-        azimuthLastLine = _radarGrid.length() - 1;
+    if (azimuthLastLine > (rgLength - 1))
+        azimuthLastLine = rgLength - 1;
 
     if (rangeFirstPixel < 0)
         rangeFirstPixel = 0;
 
-    if (rangeLastPixel > (_radarGrid.width() - 1))
-        rangeLastPixel = _radarGrid.width() - 1;
+    if (rangeLastPixel > (rgWidth - 1))
+        rangeLastPixel = rgWidth - 1;
 
 }
 

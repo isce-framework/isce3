@@ -57,7 +57,9 @@ cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
                        double rangeSpacing,
                        double wavelength,
                        int radarGridWidth,
-                       int lookSide)
+                       int lookSide,
+                       int numberAzimuthLooks,
+                       int numberRangeLooks)
 
         # Run geocoding
         void geocode(Raster & inputRaster,
