@@ -67,11 +67,6 @@ geocode(isce::io::Raster & inputRaster,
         size_t rdrBlockWidth = rangeLastPixel - rangeFirstPixel + 1;
         size_t rdrBlockSize = rdrBlockLength * rdrBlockWidth;
 
-        std::cout << _radarGrid.width() << " " << _radarGrid.length() << std::endl;
-        std::cout << rdrBlockLength << " "
-                  << rdrBlockWidth << " "
-                  << rdrBlockSize << std::endl;
-        
         // X and Y indices (in the radar coordinates) for the 
         // geocoded pixels (after geo2rdr computation)
         std::valarray<double> radarX(blockSize);
