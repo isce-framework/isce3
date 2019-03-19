@@ -289,6 +289,7 @@ __global__ void multilooks_g(T *lo_res,
         T blk_sz) 
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
+
     if (i < sz_lo) {
         int i_lo_row = i / (n_rows_lo-1);
         int i_lo_col = i % (n_rows_lo-1);
@@ -322,6 +323,7 @@ __global__ void multilooks_g(gpuComplex<T> *lo_res,
         T blk_sz) 
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
+
     if (i < sz_lo) {
         int i_lo_row = i / (n_rows_lo-1);
         int i_lo_col = i % (n_rows_lo-1);
@@ -340,7 +342,6 @@ __global__ void multilooks_g(gpuComplex<T> *lo_res,
                 lo_res[i] += hi_res[i_hi];
             }
         }
-        lo_res[i] /= blk_sz;
     }
 }
 
