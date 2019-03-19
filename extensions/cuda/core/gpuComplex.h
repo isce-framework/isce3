@@ -242,5 +242,11 @@ CUDA_HOSTDEV T abs(gpuComplex<T> x) {
     return t;
 }
 
+// conjugate
+template <class T>
+CUDA_HOSTDEV gpuComplex<T> conj(gpuComplex<T> x) {
+    return gpuComplex<T>(x.r, -x.i);
+}
+
 }}}
 #endif
