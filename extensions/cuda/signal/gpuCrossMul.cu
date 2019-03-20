@@ -48,46 +48,46 @@ __global__ void interferogram_g(gpuComplex<T> *ifgram,
         auto i_row = i / n_cols;
         auto i_col = i % n_cols;
 
+        ifgram[i] = gpuComplex<T>(0.0, 0.0);
         for (int j = 0; j < oversample_i; ++j) {
             auto ref_val = refSlcUp[i_row*oversample_i*n_fft + i_col];
-            auto sec_val_conj = secSlcUp[i_row*oversample_i*n_fft + i_col];
-            auto sec_val = gpuComplex<T>(sec_val_conj.r, -sec_val_conj.i);
+            auto sec_val_conj = conj(secSlcUp[i_row*oversample_i*n_fft + i_col]);
             ifgram[i] += ref_val * sec_val_conj;
+            auto wtf = ref_val * sec_val_conj;
         }
         ifgram[i] /= oversample_f;
     }
 }
 
 
-template <>
-__global__ void calculate_coherence_g<float>(float *ref_amp,
-        float *sec_amp,
-        gpuComplex<float> *ifgram_mlook,
+template <typename T>
+__global__ void calculate_coherence_g<T>(T *ref_amp,
+        T *sec_amp,
+        gpuComplex<T> *coherence,
         int n_elements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
 
     // make sure index within ifgram size bounds
     if (i < n_elements) {
-        ifgram_mlook[i] = abs(ifgram_mlook[i]) / sqrtf(ref_amp[i] * sec_amp[i]);
+        coherence[i] = abs(coherence[i]) / sqrtf(ref_amp[i] * sec_amp[i]);
     }
 }
 
 
-template <>
-__global__ void calculate_coherence_g<double>(double *ref_amp,
-        double *sec_amp,
-        gpuComplex<double> *ifgram_mlook,
-        int n_elements)
-{
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
-
-    // make sure index within ifgram size bounds
-    if (i < n_elements) {
-        ifgram_mlook[i] = abs(ifgram_mlook[i]) / sqrt(ref_amp[i] * sec_amp[i]);
-    }
+/** Set number of range looks */ 
+void isce::cuda::signal::gpuCrossmul::
+rangeLooks(int rngLks) {
+    _rangeLooks = rngLks;
+    _doMultiLook = true;
 }
 
+/** Set number of azimuth looks */
+void isce::cuda::signal::gpuCrossmul::
+azimuthLooks(int azLks) {
+    _azimuthLooks = azLks;
+    _doMultiLook = true;
+}
 
 void isce::cuda::signal::gpuCrossmul::
 doppler(isce::core::LUT1d<double> refDoppler, 
@@ -212,7 +212,8 @@ crossmul(isce::io::Raster& referenceSLC,
     // multilooked products container and parameters
     std::valarray<std::complex<float>> ifgram_mlook(0);
     std::valarray<float> coherence(0);
-    float n_mlook(blockRowsMultiLooked*ncolsMultiLooked);
+    int n_mlook = blockRowsMultiLooked*ncolsMultiLooked;
+    auto mlook_size = n_mlook*sizeof(float);
 
     // CUDA device memory allocation
     gpuComplex<float> *d_ifgram_mlook;
@@ -220,9 +221,8 @@ crossmul(isce::io::Raster& referenceSLC,
     float *d_sec_amp_mlook;
 
     if (_doMultiLook) {
-        std::valarray<std::complex<float>> ifgram_mlook(blockRowsMultiLooked*ncolsMultiLooked);
-        std::valarray<float> coherence(blockRowsMultiLooked*ncolsMultiLooked);
-        auto mlook_size = blockRowsMultiLooked*ncolsMultiLooked*sizeof(float);
+        ifgram_mlook.resize(n_mlook);
+        coherence.resize(n_mlook);
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_ifgram_mlook), 2*mlook_size)); // 2* because imaginary
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_ref_amp_mlook), mlook_size));
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_sec_amp_mlook), mlook_size));
@@ -336,19 +336,23 @@ crossmul(isce::io::Raster& referenceSLC,
                 nrows, ncols, nfft, oversample, oversample_f);
 
         if (_doMultiLook) {
+        
             // reduce ncols*nrow to ncolsMultiLooked*blockRowsMultiLooked
             multilooks_g<<<grid_lo, block>>>(
                     d_ifgram_mlook,
-                    d_refSlc,
+                    d_ifgram,
                     ncols,
                     blockRowsMultiLooked,
-                    oversample,                     // row resize factor of hi to lo
-                    1,                              // col resize factor of hi to lo
-                    nrows*ncols,                    // number of lo res elements
-                    n_mlook);
+                    _azimuthLooks,                  // row resize factor of hi to lo
+                    _rangeLooks,                    // col resize factor of hi to lo
+                    n_mlook,                        // number of lo res elements
+                    float(n_mlook));
 
             // get data to HOST
-            checkCudaErrors(cudaMemcpy(&ifgram_mlook[0], d_ifgram_mlook, ifgram_mlook.size()*sizeof(float)*2, cudaMemcpyDeviceToHost));
+            checkCudaErrors(cudaMemcpy(&ifgram_mlook[0], d_ifgram_mlook, mlook_size*2, cudaMemcpyDeviceToHost));
+
+            interferogram.setBlock(ifgram_mlook, 0, rowStart/_azimuthLooks, 
+                        ncols/_rangeLooks, blockRowsData/_azimuthLooks);
 
             // write reduce+abs and set blocks
             multilooks_power_g<<<grid_lo, block>>>(
@@ -357,10 +361,10 @@ crossmul(isce::io::Raster& referenceSLC,
                     2,
                     ncols,
                     blockRowsMultiLooked,
-                    oversample,                     // row resize factor of hi to lo
-                    1,                              // col resize factor of hi to lo
-                    nrows*ncols,                    // number of lo res elements
-                    n_mlook);
+                    _azimuthLooks,                  // row resize factor of hi to lo
+                    _rangeLooks,                    // col resize factor of hi to lo
+                    n_mlook,                        // number of lo res elements
+                    float(n_mlook));
 
             multilooks_power_g<<<grid_lo, block>>>(
                     d_sec_amp_mlook,
@@ -368,10 +372,10 @@ crossmul(isce::io::Raster& referenceSLC,
                     2,
                     ncols,
                     blockRowsMultiLooked,
-                    oversample,                     // row resize factor of hi to lo
-                    1,                              // col resize factor of hi to lo
-                    nrows*ncols,                    // number of lo res elements
-                    n_mlook);
+                    _azimuthLooks,                  // row resize factor of hi to lo
+                    _rangeLooks,                    // col resize factor of hi to lo
+                    n_mlook,                        // number of lo res elements
+                    float(n_mlook));
 
             // perform coherence calculation in place overwriting d_ifgram_mlook
             calculate_coherence_g<<<grid_lo, block>>>(d_ref_amp_mlook, 
@@ -383,9 +387,6 @@ crossmul(isce::io::Raster& referenceSLC,
             checkCudaErrors(cudaMemcpy(&ifgram_mlook[0], d_ifgram_mlook, ifgram_mlook.size()*sizeof(float)*2, cudaMemcpyDeviceToHost));
 
             // set blocks accordingly
-            interferogram.setBlock(ifgram_mlook, 0, rowStart/_azimuthLooks, 
-                        ncols/_rangeLooks, blockRowsData/_azimuthLooks);
-
             coherenceRaster.setBlock(coherence, 0, rowStart/_azimuthLooks,
                         ncols/_rangeLooks, blockRowsData/_azimuthLooks);
 

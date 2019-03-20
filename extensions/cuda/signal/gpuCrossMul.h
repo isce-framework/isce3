@@ -82,10 +82,10 @@ class isce::cuda::signal::gpuCrossmul {
         inline void beta(double b) {_beta = b;};
 
         /** Set number of range looks */ 
-        inline void rangeLooks(int rngLks) {_rangeLooks = rngLks;};
+        void rangeLooks(int rngLks);
 
         /** Set number of azimuth looks */
-        inline void azimuthLooks(int azLks) {_azimuthLooks = azLks;};
+        void azimuthLooks(int azLks);
 
         /** Set common azimuth band filtering flag */
         inline void doCommonAzimuthBandFiltering(bool doAz) {_doCommonAzimuthBandFilter = doAz;};

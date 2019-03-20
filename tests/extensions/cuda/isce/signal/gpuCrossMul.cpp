@@ -28,9 +28,9 @@ TEST(gpuCrossmul, Crossmul)
     int length = referenceSlc.length();
 
     // a raster object for the interferogram
-    isce::io::Raster interferogram("/vsimem/igram.int", width, length, 1, GDT_CFloat32, "ISCE");
+    isce::io::Raster interferogram("igram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
-    isce::io::Raster coherence("/vsimem/coherence.bin.", width, length, 1, GDT_Float32, "ISCE");
+    isce::io::Raster coherence("coherence.bin", width, length, 1, GDT_Float32, "ISCE");
 
     // HDF5 file with required metadata
     std::string h5file("../../../../lib/isce/data/envisat.h5");
@@ -94,9 +94,10 @@ TEST(gpuCrossmul, Crossmul)
               max_err = std::abs(err);
         }
     }
-
-    ASSERT_LT(max_err, 1.0e-9);
+    
+    ASSERT_LT(max_err, 1.0e-7);
 }
+
 
 TEST(gpuCrossmul, CrossmulAzimuthFilter)
 {
@@ -112,9 +113,9 @@ TEST(gpuCrossmul, CrossmulAzimuthFilter)
     int length = referenceSlc.length();
 
     // a raster object for the interferogram
-    isce::io::Raster interferogram("/vsimem/igram.int", width, length, 1, GDT_CFloat32, "ISCE");
+    isce::io::Raster interferogram("igram.int", width, length, 1, GDT_CFloat32, "ISCE");
 
-    isce::io::Raster coherence("/vsimem/coherence.bin.", width, length, 1, GDT_Float32, "ISCE");
+    isce::io::Raster coherence("coherence.bin", width, length, 1, GDT_Float32, "ISCE");
 
     // HDF5 file with required metadata
     std::string h5file("../../../../lib/isce/data/envisat.h5");
@@ -179,8 +180,9 @@ TEST(gpuCrossmul, CrossmulAzimuthFilter)
         }
     }
 
-    ASSERT_LT(max_err, 1.0e-9);
+    ASSERT_LT(max_err, 1.0e-7);
 }
+
 
 int main(int argc, char * argv[]) {
     testing::InitGoogleTest(&argc, argv);
