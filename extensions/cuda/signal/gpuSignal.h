@@ -91,11 +91,8 @@ class gpuSignal {
         void dataToDevice(std::valarray<std::complex<T>> &input);
         void dataToHost(std::complex<T> *output);
         void dataToHost(std::valarray<std::complex<T>> &output);
-        void zeroDeviceData();
 
         /** forward transforms without intermediate return */
-        void forwardC2C();
-        void forwardZ2Z();
         void forward();
 
         /** forward transforms */
@@ -115,8 +112,6 @@ class gpuSignal {
         void forwardDevMem(T *dataInPlace);
 
         /** inverse transforms using existing device memory **/
-        void inverseC2C();
-        void inverseZ2Z();
         void inverse();
 
         /** inverse transforms */
@@ -138,10 +133,14 @@ class gpuSignal {
         /** upsample **/
         void upsample(std::valarray<std::complex<T>> &input,
                       std::valarray<std::complex<T>> &output,
-                      int row, int ncols, int upsampleFactor);
+                      int row, 
+                      int ncols, 
+                      int upsampleFactor);
         void upsample(std::valarray<std::complex<T>> &input,
                       std::valarray<std::complex<T>> &output,
-                      int row, int ncols, int upsampleFactor,
+                      int row, 
+                      int ncols, 
+                      int upsampleFactor,
                       std::valarray<std::complex<T>> &shiftImpact);
 
         int getRows() {return _rows;};
@@ -174,23 +173,24 @@ class gpuSignal {
         bool _d_data_set;
 };
 
+/** FFT shift on device
+ */
 template<class T>
-void shift(std::valarray<std::complex<T>> &input,
-        std::valarray<std::complex<T>> &output,
-        int rows, int nfft, int columns);
+CUDA_GLOBAL void rangeShift_g(gpuComplex<T> *data_lo_res, 
+        gpuComplex<T> *data_hi_res, 
+        int n_rows, 
+        int n_cols_lo, 
+        int n_cols_hi);
 
 /** FFT shift on device
  */
 template<class T>
-CUDA_GLOBAL void rangeShift_g(gpuComplex<T> *data_lo_res, gpuComplex<T> *data_hi_res, 
-        int n_rows, int n_cols_lo, int n_cols_hi);
-
-/** FFT shift on device
- */
-template<class T>
-CUDA_GLOBAL void rangeShiftImpactMult_g(gpuComplex<T> *data_lo_res, gpuComplex<T> *data_hi_res, 
+CUDA_GLOBAL void rangeShiftImpactMult_g(gpuComplex<T> *data_lo_res, 
+        gpuComplex<T> *data_hi_res, 
         gpuComplex<T> *impact_shift, 
-        int n_rows, int n_cols_lo, int n_cols_hi);
+        int n_rows, 
+        int n_cols_lo, 
+        int n_cols_hi);
 
 template<class T>
 void upsample(gpuSignal<T> &fwd,
@@ -205,6 +205,20 @@ void upsample(gpuSignal<T> &fwd,
         gpuComplex<T> *output,
         gpuComplex<T> *shiftImpact);
 
+template<class T>
+void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
+        isce::cuda::signal::gpuSignal<T> &inv,
+        std::valarray<std::complex<T>> &input,
+        std::valarray<std::complex<T>> &output);
+
+template<class T>
+void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
+        isce::cuda::signal::gpuSignal<T> &inv,
+        std::valarray<std::complex<T>> &input,
+        std::valarray<std::complex<T>> &output,
+        std::valarray<std::complex<T>> &shiftImpact);
+
+/*
 void upsampleC2C(gpuSignal<float> &fwd,
         gpuSignal<float> &inv,
         std::valarray<std::complex<float>> &shiftImpact);
@@ -236,6 +250,16 @@ void upsampleZ2Z(gpuSignal<double> &fwd,
         double *input,
         double *output,
         double *shiftImpact);
+        */
+
+/** normalize in-place on device
+ * TODO use cufft store callback as alternative? requires some gpuCrossMul refactor
+ * https://stackoverflow.com/questions/14441142/scaling-in-inverse-fft-by-cufft
+ */
+template<class T>
+CUDA_GLOBAL void normalize_g(gpuComplex<T> *data, 
+        T normalization,
+        size_t n_elements);
 
 #endif
 
