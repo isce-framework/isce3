@@ -69,9 +69,16 @@ geoGrid(double geoGridStartX, double geoGridStartY,
     // Save the EPSG code
     _epsgOut = epsgcode;
 
-    // Initialize the projection
-    _proj = isce::core::createProj(epsgcode);
+}
 
+template<class T>
+void isce::geometry::Geocode<T>::
+radarGrid(isce::core::LUT2d<double> doppler,
+          isce::product::RadarGridParameters rgparams,
+          int lookSide) {
+    _doppler = doppler;
+    _radarGrid = rgparams;
+    _lookSide = lookSide;
 }
 
 template<class T>
@@ -84,12 +91,14 @@ radarGrid(isce::core::LUT2d<double> doppler,
           double startingRange,
           double rangeSpacing,
           double wavelength,
-          int radarGridWidth) {
+          int radarGridWidth,
+          int lookSide) {
     _doppler = doppler;
     _radarGrid = isce::product::RadarGridParameters(
         1, 1, azimuthStartTime, wavelength, 1.0/azimuthTimeInterval, startingRange,
         rangeSpacing, radarGridLength, radarGridWidth, refEpoch
     );
+    _lookSide = lookSide;
 }
 
 template<class T>
@@ -111,14 +120,6 @@ void isce::geometry::Geocode<T>::
 ellipsoid(isce::core::Ellipsoid& ellipsoid) {
 
     _ellipsoid = ellipsoid;
-
-}
-
-template<class T>
-void isce::geometry::Geocode<T>::
-projection(isce::core::ProjectionBase * proj) {
-
-    _proj = proj;
 
 }
 
