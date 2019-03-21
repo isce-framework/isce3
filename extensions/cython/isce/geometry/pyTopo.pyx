@@ -51,14 +51,26 @@ cdef class pyTopo:
         'biquintic': dataInterpMethod.BIQUINTIC_METHOD
     }
 
-    def __cinit__(self, pyProduct product, threshold=0.05, numIterations=25,
-                  extraIterations=10, orbitMethod='hermite', demMethod='biquintic',
-                  epsgOut=4326):
+    def __cinit__(self,
+                  pyProduct product,
+                  frequency='A',
+                  bool nativeDoppler=False,
+                  int numberAzimuthLooks=1,
+                  int numberRangeLooks=1,
+                  double threshold=0.05,
+                  int numIterations=25,
+                  int extraIterations=10,
+                  orbitMethod='hermite',
+                  demMethod='biquintic',
+                  int epsgOut=4326,
+                  bool computeMask=False):
         """
         Constructor takes in a product in order to retrieve relevant radar parameters.
         """
         # Create C++ topo pointer
-        self.c_topo = new Topo(deref(product.c_product))
+        cdef string freqstr = pyStringToBytes(frequency)
+        self.c_topo = new Topo(deref(product.c_product), freqstr[0], nativeDoppler,
+                               numberAzimuthLooks, numberRangeLooks)
         self.__owner = True
 
         # Set processing options
@@ -68,7 +80,7 @@ cdef class pyTopo:
         self.c_topo.orbitMethod(self.orbitInterpMethods[orbitMethod])
         self.c_topo.demMethod(self.demInterpMethods[demMethod])
         self.c_topo.epsgOut(epsgOut)
-        self.c_topo.initialized(True)
+        self.c_topo.computeMask(computeMask)
 
     def __dealloc__(self):
         if self.__owner:
@@ -77,7 +89,7 @@ cdef class pyTopo:
     def topo(self, pyRaster demRaster, pyRaster xRaster=None, pyRaster yRaster=None,
              pyRaster heightRaster=None, pyRaster incRaster=None, pyRaster hdgRaster=None,
              pyRaster localIncRaster=None, pyRaster localPsiRaster=None,
-             pyRaster simRaster=None, outputDir=None):
+             pyRaster simRaster=None, pyRaster maskRaster=None, outputDir=None):
         """
         Run topo.
         
@@ -91,20 +103,32 @@ cdef class pyTopo:
             localIncRaster (Optional[str]):     Raster for output local incidence angle.
             localPsiRaster (Optional[str]):     Raster for output local projection angle.
             simRaster (Optional[str]):          Raster for output simulated amplitude image.
+            maskRaster (Optional[str]):         Raster for output layover/shadow mask.
             outputDir (Optional[str]):          String for output directory for internal rasters.
 
         Return:
             None
         """
         cdef string outdir
-        
+       
+        # Run topo with pre-created rasters if they exist 
         if xRaster is not None and yRaster is not None and heightRaster is not None:
-            # Run topo directly
-            self.c_topo.topo(deref(demRaster.c_raster), deref(xRaster.c_raster),
-                             deref(yRaster.c_raster), deref(heightRaster.c_raster),
-                             deref(incRaster.c_raster), deref(hdgRaster.c_raster),
-                             deref(localIncRaster.c_raster), deref(localPsiRaster.c_raster),
-                             deref(simRaster.c_raster))
+
+            # Run with mask computation
+            if maskRaster is not None:
+                self.c_topo.topo(deref(demRaster.c_raster), deref(xRaster.c_raster),
+                                 deref(yRaster.c_raster), deref(heightRaster.c_raster),
+                                 deref(incRaster.c_raster), deref(hdgRaster.c_raster),
+                                 deref(localIncRaster.c_raster), deref(localPsiRaster.c_raster),
+                                 deref(simRaster.c_raster), deref(maskRaster.c_raster))
+
+            # Or without mask computation
+            else:
+                self.c_topo.topo(deref(demRaster.c_raster), deref(xRaster.c_raster),
+                                 deref(yRaster.c_raster), deref(heightRaster.c_raster),
+                                 deref(incRaster.c_raster), deref(hdgRaster.c_raster),
+                                 deref(localIncRaster.c_raster), deref(localPsiRaster.c_raster),
+                                 deref(simRaster.c_raster))
 
         elif outputDir is not None:
             # Convert output directory to C++ string

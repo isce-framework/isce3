@@ -31,19 +31,17 @@ include "core/pyPeg.pyx"
 include "core/pyPegtrans.pyx"
 include "core/pyPosition.pyx"
 include "core/pyLinAlg.pyx"
+include "core/pyLUT2d.pyx"
 include "core/pyLUT1d.pyx"
 include "core/pyOrbit.pyx"
 include "core/pyPoly1d.pyx"
 include "core/pyPoly2d.pyx"
 
-# Include the radar extensions
-include "radar/pyRadar.pyx"
-
 # Include the product extensions
-include "product/pyImageMode.pyx"
-include "product/pyIdentification.pyx"
+include "product/pyProcessingInformation.pyx"
+include "product/pySwath.pyx"
+include "product/pyRadarGridParameters.pyx"
 include "product/pyMetadata.pyx"
-include "product/pyComplexImagery.pyx"
 include "product/pyProduct.pyx"
 
 # Include the image extensions
@@ -56,6 +54,7 @@ include "signal/pyCrossmul.pyx"
 include "geometry/pygeometry.pyx"
 include "geometry/pyTopo.pyx"
 include "geometry/pyGeo2rdr.pyx"
+include "geometry/pyGeocode.pyx"
 
 # The separate serialization routines
 include "serialization/serialize.pyx"

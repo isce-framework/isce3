@@ -11,7 +11,8 @@
 #include <cstdio>
 #include <cmath>
 #include <array>
-#include "Basis.h"
+#include "isce/core/Constants.h"
+#include "isce/core/Basis.h"
 
 // Declaration
 namespace isce {
@@ -33,8 +34,8 @@ class isce::core::Ellipsoid {
         Ellipsoid(double maj, double ecc) : _a(maj), _e2(ecc) {}
 
         /// @cond
-        /* Empty constructor - not recommended */ 
-        Ellipsoid() : Ellipsoid(0.0, 0.0) {}
+        /* Empty constructor - default to Earth WGS-84 ellipsoid */ 
+        Ellipsoid() : Ellipsoid(EarthSemiMajorAxis, EarthEccentricitySquared) {}
         /// @endcond
 
         /** Copy constructor*/
@@ -69,7 +70,7 @@ class isce::core::Ellipsoid {
         inline double rNorth(double lat) const;
 
         /** Return directional local radius */
-        inline double rDir(double lat, double hdg) const;
+        inline double rDir(double hdg, double lat) const;
 
         /** Transform WGS84 Lon/Lat/Hgt to ECEF xyz */
         void lonLatToXyz(const cartesian_t &llh, cartesian_t &xyz) const;

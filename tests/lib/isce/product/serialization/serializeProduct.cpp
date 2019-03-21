@@ -14,6 +14,7 @@
 
 // isce::product
 #include <isce/product/Product.h>
+#include <isce/product/Swath.h>
 
 TEST(ProductTest, FromHDF5) {
 
@@ -24,17 +25,18 @@ TEST(ProductTest, FromHDF5) {
     // Instantiate and load a product
     isce::product::Product product(file);
 
-    // Get the ImageMode
-    isce::product::ImageMode mode = product.complexImagery().primaryMode();
+    // Get the swath
+    const isce::product::Swath & swath = product.swath('A');
 
-    // Check values
-    ASSERT_NEAR(mode.rangePixelSpacing(), 7.803973670948287, 1.0e-10);
-    ASSERT_NEAR(mode.startingRange(), 826988.6900674499, 1.0e-10);
-    ASSERT_EQ(mode.startAzTime().isoformat(), "2003-02-26T17:55:30.843491759");
-    ASSERT_NEAR(mode.prf(), 1652.415691672402, 1.0e-10);
-    ASSERT_NEAR(mode.wavelength(), 0.05623564240544047, 1.0e-10);
-    ASSERT_NEAR(mode.rangeBandwidth(), 1.6e7, 0.1);
-
+    // Check its values
+    ASSERT_NEAR(swath.slantRange()[0], 826988.6900674499, 1.0e-5);
+    ASSERT_NEAR(swath.zeroDopplerTime()[0], 237330.843491759, 1.0e-5);
+    ASSERT_NEAR(swath.acquiredCenterFrequency(), 5.331004416e9, 1.0);
+    ASSERT_NEAR(swath.processedCenterFrequency(), 5.331004416e9, 1.0);
+    ASSERT_NEAR(swath.acquiredRangeBandwidth(), 1.6e7, 0.1);
+    ASSERT_NEAR(swath.processedRangeBandwidth(), 1.6e7, 0.1);
+    ASSERT_NEAR(swath.nominalAcquisitionPRF(), 1.0/6.051745968279355e-4, 1.0e-3);
+    ASSERT_NEAR(swath.sceneCenterGroundRangeSpacing(), 23.774273647897644, 1.0e-8);
 }
 
 int main(int argc, char * argv[]) {

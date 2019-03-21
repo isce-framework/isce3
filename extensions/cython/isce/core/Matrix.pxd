@@ -12,6 +12,8 @@ cdef extern from "<valarray>" namespace "std":
         valarray(int)
         # Access element
         T & operator[](int)
+        # Size
+        size_t size()
 
 # Matrix
 cdef extern from "isce/core/Matrix.h" namespace "isce::core":

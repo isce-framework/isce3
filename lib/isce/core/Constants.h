@@ -79,7 +79,16 @@ namespace isce { namespace core {
         char str[50];
     };
 
-    
+    /** Layover and shadow values */
+    const short SHADOW_VALUE = 1;
+    const short LAYOVER_VALUE = 2;
+
+    /** Precision-promotion to double/complex<double>  **/
+    template<typename T> struct double_promote;
+    template<> struct double_promote<float>  { using type = double; };
+    template<> struct double_promote<double> { using type = double; };
+    template<> struct double_promote<std::complex<float>>  { using type = std::complex<double>; };
+    template<> struct double_promote<std::complex<double>> { using type = std::complex<double>; };
   }
 }
 

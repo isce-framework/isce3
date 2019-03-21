@@ -9,11 +9,9 @@
 include "DateTime.pxd"
 include "Ellipsoid.pxd"
 include "LUT1d.pxd"
+include "LUT2d.pxd"
 include "Orbit.pxd"
 include "Poly2d.pxd"
-include "Radar.pxd"
-include "ImageMode.pxd"
-include "Identification.pxd"
 
 # Include the io extensions
 include "pyGDAL.pxd"
@@ -34,19 +32,16 @@ include "pyPegtrans.pxd"
 include "pyPosition.pxd"
 include "pyLinAlg.pxd"
 include "pyLUT1d.pxd"
+include "pyLUT2d.pxd"
 include "pyOrbit.pxd"
 include "pyPoly1d.pxd"
 include "pyPoly2d.pxd"
 
-# Include the radar extensions
-include "pyRadar.pxd"
-
 # Include the product extensions
-include "pyImageMode.pxd"
-include "pyIdentification.pxd"
 include "pyMetadata.pxd"
-include "pyComplexImagery.pxd"
 include "pyProduct.pxd"
+include "pySwath.pxd"
+include "pyProcessingInformation.pxd"
 
 # Include the image extensions
 include "pyResampSlc.pxd"

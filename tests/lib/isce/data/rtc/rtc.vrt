@@ -1,0 +1,9 @@
+<VRTDataset rasterXSize="500" rasterYSize="500">
+  <VRTRasterBand dataType="Float32" band="1" subClass="VRTRawRasterBand">
+    <SourceFilename relativeToVRT="1">./rtc</SourceFilename>
+    <ImageOffset>0</ImageOffset>
+    <PixelOffset>4</PixelOffset>
+    <LineOffset>2000</LineOffset>
+    <ByteOrder>LSB</ByteOrder>
+  </VRTRasterBand>
+</VRTDataset>

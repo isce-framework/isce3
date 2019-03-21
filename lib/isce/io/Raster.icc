@@ -29,6 +29,126 @@ isce::io::Raster::Raster(const std::string & fname,       // filename of new fil
   isce::io::Raster(fname, buffer.size(), length, 1, GDT.at(typeid(T))) {}
 
 
+//Constructor to map a raw stream to a Raster
+inline void isce::io::Raster::initFromPointer(void* ptr,  //Raw pointer
+                        GDALDataType dtype, //GDAL datatype
+                        size_t width,  //width of raster
+                        size_t length, //length of raster
+                        size_t pixeloffset, //pixeloffset in bytes
+                        size_t lineoffset) //lineoffset in bytes
+{
+    //Get mem driver
+    GDALDriver* memDriver = (GDALDriver*) GDALGetDriverByName("MEM");
+
+    //Create an empty dataset of requested size
+    //Update with pyre error logging
+    dataset(memDriver->Create("MEM::::", width, length, 0, dtype, NULL));
+
+    //Add the band information as needed
+    char** memdsOptions = nullptr;
+
+    //Set data pointer
+    {
+        char szTmp[64];
+        memset(szTmp, 0, sizeof(szTmp));
+        CPLPrintPointer(szTmp, ptr, sizeof(szTmp));
+        memdsOptions = CSLSetNameValue(memdsOptions, "DATAPOINTER", szTmp);
+    }
+
+    //Set line offset
+    {
+        char szTmp[64];
+        memset(szTmp, 0, sizeof(szTmp));
+        CPLPrintUIntBig(szTmp, lineoffset, sizeof(szTmp));
+        memdsOptions = CSLSetNameValue(memdsOptions, "LINEOFFSET", szTmp);
+    }
+
+    //Set pixel offset
+    {
+        char szTmp[64];
+        memset(szTmp, 0, sizeof(szTmp));
+        CPLPrintUIntBig(szTmp, pixeloffset, sizeof(szTmp));
+        memdsOptions = CSLSetNameValue(memdsOptions, "PIXELOFFSET", szTmp);
+    }
+
+    dataset()->AddBand(dtype, memdsOptions);
+}
+
+
+// Constructor for a 1 band dataset from isce::core::Matrix<T> 
+template <typename T> 
+isce::io::Raster::Raster(isce::core::Matrix<T> &matrix)
+{
+    auto byteoffset = matrix.byteoffset();
+    initFromPointer(matrix.data(),
+                    isce::io::GDT.at(typeid(T)),
+                    matrix.width(),
+                    matrix.length(),
+                    byteoffset[1],
+                    byteoffset[0]);
+}
+
+
+// Constructor for a 1 band dataset from isce::core::Matrix<T>::grid_type::view_type
+template <typename T>
+isce::io::Raster::Raster(pyre::grid::View<T>& view)
+{
+    //If we add a similar byteoffset method to pyre::grid::View, we could use that
+    //For now, we need to do the math ourselves
+    //Get the layout. Update with pyre error logging.
+    auto layout = view.layout();
+    if (layout.dim() != 2)
+    {
+        std::cout << "Input is not a 2D view \n";
+        return;
+    }
+
+    //Get the packing. Update with pyre error logging.
+    auto packing = view.slice().packing();
+    if ((packing[0] !=  1u) || (packing[1] != 0u))
+    {
+        std::cout << "Input view is not packed in row major order\n";
+        return;
+    }
+
+    //Size of each element
+    size_t bytesperunit = sizeof(typename T::cell_type);
+    //std::cout << "Element size in bytes: " << bytesperunit << "\n";
+
+    //Get shape
+    auto shape = view.slice().shape();
+    //std::cout << "Shape of view: " << shape[0] << " x " << shape[1] << "\n";
+
+    //Address to the first element of the view
+    auto iterator = view.begin();
+    auto startoffset = &(*iterator);
+
+    //Address to the next element in fast direction (assuming Row Major)
+    auto incrementoffset = &(*(++iterator));
+
+    //Address to the last element of the view
+    auto endoffset = &(*view.end());
+
+    //Pointer and offset math
+    size_t pixeloffset = (incrementoffset - startoffset) * bytesperunit;
+    size_t totalbyteoffset = (endoffset - startoffset) * bytesperunit;
+    size_t lineoffset = (totalbyteoffset - shape[1] * pixeloffset) / shape[0];
+
+    //Update with pyre error logging
+    if ((pixeloffset < bytesperunit) || (lineoffset < bytesperunit))
+    {
+        std::cout << "Something looks fishy in the offset estimation \n";
+        return;
+    }
+
+    initFromPointer(startoffset,
+                    isce::io::GDT.at(typeid(typename T::cell_type)),
+                    shape[1],
+                    shape[0],
+                    pixeloffset,
+                    lineoffset);
+}
+
 
 // Copy constructor
 inline isce::io::Raster& isce::io::Raster::operator=(const Raster &rhs) {
@@ -174,7 +294,7 @@ void isce::io::Raster::setValue(T &buffer, size_t xidx, size_t yidx, size_t band
  * @param[in] yidx Line index (0-based)*/
 template<typename T>
 void isce::io::Raster::setValue(T &buffer, size_t xidx, size_t yidx) {
-  setValue(buffer, xidx, yidx, 1, GF_Write);
+  setValue(buffer, xidx, yidx, 1);
 }
 
 
@@ -437,6 +557,18 @@ void isce::io::Raster::getBlock(std::valarray<T> &buffer, size_t xidx, size_t yi
 }
 
 
+// Get a block of data starting from given x/y position in band to Matrix<T>
+template<typename T>
+void isce::io::Raster::getBlock(isce::core::Matrix<T> &mat, size_t xidx, size_t yidx,
+                                  size_t band) {
+    getBlock(mat.data(), xidx, yidx, mat.width(), mat.length(), band);
+}
+
+// Get a block of data starting from given x/y position in band 1 to Matrix<T>
+template<typename T>
+void isce::io::Raster::getBlock(isce::core::Matrix<T> &mat, size_t xidx, size_t yidx) {
+    getBlock(mat.data(), xidx, yidx, mat.width(), mat.length(), 1);
+}
 
 /**
  * @param[in] buffer Raw pointer to buffer
@@ -514,6 +646,121 @@ template<typename T>
 void isce::io::Raster::setBlock(std::valarray<T> &buffer, size_t xidx, size_t yidx,
 				  size_t iowidth, size_t iolength) {
   setBlock(buffer, xidx, yidx, iowidth, iolength, 1);
+}
+
+
+// Set a block of data for given x/y position and band from Matrix<T>
+template<typename T>
+void isce::io::Raster::setBlock(isce::core::Matrix<T>& mat, size_t xidx, size_t yidx,
+                                  size_t band) {
+    setBlock(mat.data(), xidx, yidx, mat.width(), mat.length(), band);
+}
+
+// Set a block of data for given x/y position and band 1 from Matrix<T>
+template<typename T>
+void isce::io::Raster::setBlock(isce::core::Matrix<T>& mat, size_t xidx, size_t yidx) {
+    setBlock(mat.data(), xidx, yidx, mat.width(), mat.length(), 1);
+}
+
+
+// Get/Set a block of data for given x/y position and band from Matrix<T>::view_type
+template<typename T>
+void isce::io::Raster::getSetBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band, GDALRWFlag iodir)
+{
+    //Ensure that the view is 2D and Row major
+    //Unclear if view currently supports numpy-like squeeze 
+    //functionality for higher dimension grids
+    //Might need updates if view supports such features
+    //and we wish to support 2D subset views
+    
+    //Get the layout. Update with pyre error logging.
+    auto layout = view.layout();
+    if (layout.dim() != 2)
+    {
+        std::cout << "Input is not a 2D view \n";
+        return;
+    }
+
+    //Get the packing. Update with pyre error logging.
+    auto packing = view.slice().packing();
+    if ((packing[0] !=  1u) || (packing[1] != 0u))
+    {
+        std::cout << "Input view is not packed in row major order\n";
+        return;
+    }
+
+    //Size of each element
+    size_t bytesperunit = sizeof(typename T::cell_type);
+    //std::cout << "Element size in bytes: " << bytesperunit << "\n";
+
+    //Get shape
+    auto shape = view.slice().shape();
+    //std::cout << "Shape of view: " << shape[0] << " x " << shape[1] << "\n";
+
+    //Address to the first element of the view
+    auto iterator = view.begin();
+    auto startoffset = &(*iterator);
+
+    //Address to the next element in fast direction (assuming Row Major)
+    auto incrementoffset = &(*(++iterator));
+
+    //Address to the last element of the view
+    auto endoffset = &(*view.end());
+
+    //Pointer and offset math
+    size_t pixeloffset = (incrementoffset - startoffset) * bytesperunit;
+    size_t totalbyteoffset = (endoffset - startoffset) * bytesperunit;
+    size_t lineoffset = (totalbyteoffset - shape[1] * pixeloffset) / shape[0];
+
+    //Update with pyre error logging
+    if ((pixeloffset < bytesperunit) || (lineoffset < bytesperunit))
+    {
+        std::cout << "Something looks fishy in the offset estimation \n";
+        return;
+    }
+
+    //std::cout << "Start: " << startoffset << "\n"
+    //          << "Pixel offset: " << pixeloffset << "\n"
+    //          << "Line offset: " << lineoffset << "\n";
+
+  if (isce::io::GDT.count(typeid(typename T::cell_type))) { // buffer type is supported by GDAL
+    auto iostat =  _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, shape[1], shape[0], startoffset, shape[1], shape[0], isce::io::GDT.at(typeid(typename T::cell_type)), pixeloffset, lineoffset);
+
+    if (iostat != CPLE_None) // RasterIO returned errors
+        std::cout << "In isce::io::Raster::get/setValue() - error in RasterIO." << std::endl;
+    }
+    else
+        std::cout << "In isce::io::Raster::get/setBlock() - Buffer datatype " << typeid(typename T::cell_type).name() <<
+      " is not mappable to a GDALDataType." << std::endl;
+
+}
+
+//Get block of data from given band
+template<typename T>
+void isce::io::Raster::getBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band)
+{
+    this->getSetBlock(view, xidx, yidx, band, GF_Read);
+}
+
+//Get block of data from band 1
+template<typename T>
+void isce::io::Raster::getBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx)
+{
+    this->getSetBlock(view, xidx, yidx, 1, GF_Read);
+}
+
+//Set block of data from given band
+template<typename T>
+void isce::io::Raster::setBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx, size_t band)
+{
+    this->getSetBlock(view, xidx, yidx, band, GF_Write);
+}
+
+//Set block of data from given band
+template<typename T>
+void isce::io::Raster::setBlock(pyre::grid::View<T>& view, size_t xidx, size_t yidx)
+{
+    this->getSetBlock(view, xidx, yidx, 1, GF_Write);
 }
 
 /**

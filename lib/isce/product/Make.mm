@@ -18,16 +18,11 @@ PROJ_TMPDIR = $(BLD_TMPDIR)/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)/lib
 EXPORT_LIBS = $(PROJ_DLL)
 # the headers
 EXPORT_PKG_HEADERS = \
-    ComplexImagery.h \
-    Identification.h \
-    Identification.icc \
-    ImageMode.h \
-    ImageMode.icc \
     Metadata.h \
-    Metadata.icc \
+    ProcessingInformation.h \
     Product.h \
-    Product.icc \
     Serialization.h \
+    Swath.h \
 
 # build
 PROJ_CXX_INCLUDES += $(EXPORT_ROOT)/include/$(PROJECT)-$(PROJECT_MAJOR).$(PROJECT_MINOR)

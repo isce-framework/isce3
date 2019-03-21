@@ -104,7 +104,7 @@ TEST(Signal, ForwardBackwardAzimuthFloat)
       sig.inverse(azimuth_spectrum, invertData);
 
       //normalize the result of inverse fft
-      invertData /=width;
+      invertData /=length;
 
       int blockSize = width*blockLength;
       std::complex<float> err(0.0, 0.0);

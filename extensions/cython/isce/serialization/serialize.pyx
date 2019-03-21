@@ -26,26 +26,17 @@ def deserialize(pyIGroup group, isceobj, **kwargs):
     elif isinstance(isceobj, pyOrbit):
         loadOrbit(group, isceobj, **kwargs)
 
+    elif isinstance(isceobj, pyEulerAngles):
+        loadEulerAngles(group, isceobj)
+
     elif isinstance(isceobj, pyPoly2d):
         loadPoly2d(group, isceobj, **kwargs)
 
     elif isinstance(isceobj, pyLUT1d):
         loadLUT1d(group, isceobj, **kwargs)
 
-    elif isinstance(isceobj, pyRadar):
-        loadRadar(group, isceobj)
-
-    elif isinstance(isceobj, pyImageMode):
-        loadImageMode(group, isceobj, **kwargs)
-
     elif isinstance(isceobj, pyMetadata):
-        loadMetadata(group, isceobj)
-
-    elif isinstance(isceobj, pyIdentification):
-        loadIdentification(group, isceobj)
-
-    elif isinstance(isceobj, pyComplexImagery):
-        loadComplexImagery(group, isceobj)
+        loadMetadata(group, isceobj, **kwargs)
 
     else:
         raise NotImplementedError('No suitable deserialization method found.')
@@ -67,22 +58,31 @@ def loadEllipsoid(pyIGroup group, pyEllipsoid ellps):
     """
     loadFromH5(group.c_igroup, deref(ellps.c_ellipsoid))
 
-def loadOrbit(pyIGroup group, pyOrbit orbit, orbit_type='POE',
-              pyDateTime refEpoch=MIN_DATE_TIME):
+def loadOrbit(pyIGroup group, pyOrbit orbit):
     """
     Load Orbit parameters from HDF5 file.
 
     Args:
         group (pyIGroup):                       IH5File for product.
         orbit (pyOrbit):                        pyOrbit instance.
-        orbit_type (Optional[str]):             Orbit type ('MOE', 'NOE', 'POE').
-        refEpoch (Optional[pyDateTime]):        Reference epoch for computing UTC time.
 
     Return:
         None
     """
-    loadFromH5(group.c_igroup, deref(orbit.c_orbit), <string> pyStringToBytes(orbit_type),
-               deref(refEpoch.c_datetime))
+    loadFromH5(group.c_igroup, deref(orbit.c_orbit))
+
+def loadEulerAngles(pyIGroup group, pyEulerAngles euler):
+    """
+    Load Euler angles attitude parameters from HDF5 file.
+
+    Args:
+        group (pyIGroup):                       IH5File for product.
+        euelr (pyEulerAngles):                  pyEulerAngles instance.
+
+    Return:
+        None
+    """
+    loadFromH5(group.c_igroup, deref(euler.c_eulerangles))
 
 def loadPoly2d(pyIGroup group, pyPoly2d poly, poly_name='skew_dcpolynomial'):
     """
@@ -115,44 +115,13 @@ def loadLUT1d(pyIGroup group, pyLUT1d lut, name_coords='r0', name_values='skewdc
                <string> pyStringToBytes(name_values))
 
 # --------------------------------------------------------------------------------
-# Serialization functions for isce::radar objects
-# --------------------------------------------------------------------------------
-
-def loadRadar(pyIGroup group, pyRadar radar):
-    """
-    Load Radar parameters from HDF5 file.
-
-    Args:
-        group (pyIGroup):                       IH5File for product.
-        radar (pyRadar):                        pyRadar instance.
-
-    Return:
-        None
-    """
-    loadFromH5(group.c_igroup, deref(radar.c_radar))
-
-# --------------------------------------------------------------------------------
 # Serialization functions for isce::product objects
 # --------------------------------------------------------------------------------
-
-def loadImageMode(pyIGroup group, pyImageMode imageMode, mode='primary'):
-    """
-    Load ImageMode parameters from HDF5 file.
-
-    Args:
-        group (pyIGroup):                       IH5File for product.
-        imageMode (pyImageMode):                pyImageMode instance.
-        mode (Optional[str]):                   Mode from ('aux', 'primary')
-
-    Return:
-        None
-    """
-    loadFromH5(group.c_igroup, deref(imageMode.c_imagemode), <string> pyStringToBytes(mode))
 
 def loadMetadata(pyIGroup group, pyMetadata meta):
     """
     Load Metadata parameters from HDF5 file.
-    
+
     Args:
         group (pyIGroup):                       IH5File for product.
         meta (pyMetadata):                      pyMetadata instance.
@@ -160,33 +129,7 @@ def loadMetadata(pyIGroup group, pyMetadata meta):
     Return:
         None
     """
-    loadFromH5(group.c_igroup, meta.c_metadata)
-
-def loadIdentification(pyIGroup group, pyIdentification ID):
-    """
-    Load Identification data from HDF5 file.
-
-    Args:
-        group (pyIGroup):                       IH5File for product.
-        ID (pyIdentification):                  pyIdentification instance.
-
-    Return:
-        None
-    """
-    loadFromH5(group.c_igroup, ID.c_identification)
-
-def loadComplexImagery(pyIGroup group, pyComplexImagery cpxImg):
-    """
-    Load ComplexImagery data from HDF5 file.
-
-    Args:
-        group (pyIGroup):                       IH5File for product.
-        cpxImg (pyComplexImagery):              pyComplexImagery instance.
-
-    Return:
-        None
-    """
-    loadFromH5(group.c_igroup, cpxImg.c_compleximagery)
+    loadFromH5(group.c_igroup, deref(meta.c_metadata))
 
 # --------------------------------------------------------------------------------
 # Serialization functions for isce::geometry objects

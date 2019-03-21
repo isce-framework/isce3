@@ -19,6 +19,7 @@
 
 // isce::product
 #include <isce/product/Product.h>
+#include <isce/product/RadarGridParameters.h>
 
 // isce::geometry
 #include "geometry.h"
@@ -39,15 +40,20 @@ class isce::geometry::Topo {
 
     public:
         /** Constructor using a product*/
-        inline Topo(isce::product::Product &);
+        inline Topo(const isce::product::Product &,
+                    char frequency = 'A',
+                    bool nativeDoppler = false,
+                    size_t numberAzimuthLooks = 1,
+                    size_t numberRangeLooks = 1);
+
         /** Constructor using core objects*/
-        inline Topo(isce::core::Ellipsoid,
-                    isce::core::Orbit,
-                    isce::core::LUT1d<double>,
-                    isce::core::Metadata);
+        inline Topo(const isce::core::Ellipsoid &,
+                    const isce::core::Orbit &,
+                    const isce::core::LUT2d<double> &,
+                    const isce::core::Metadata &,
+                    size_t numberAzimuthLooks = 1,
+                    size_t numberRangeLooks = 1);
         
-        /** Set initialization flag*/
-        inline void initialized(bool);
         /** Set convergence threshold */
         inline void threshold(double);
         /** Set number of primary iterations */
@@ -60,8 +66,10 @@ class isce::geometry::Topo {
         inline void demMethod(isce::core::dataInterpMethod);
         /** Set output coordinate system */
         inline void epsgOut(int);
+        /** Set mask computation flag */
+        inline void computeMask(bool);
 
-        //Get topo processing options
+        // Get topo processing options
         /** Get lookSide used for processing */
         inline int lookSide() const { return _lookSide; }
         /** Get distance convergence threshold used for processing */
@@ -74,9 +82,13 @@ class isce::geometry::Topo {
         inline int epsgOut() const { return _epsgOut; }
         /** Get the DEM interpolation method used for processing */
         inline isce::core::dataInterpMethod demMethod() const { return _demMethod; }
+        /** Get mask computation flag */
+        inline bool computeMask() const { return _computeMask; }
 
-        /** Check initialization of processing module*/
-        inline void checkInitialization(pyre::journal::info_t &) const;
+        /** Get read-only reference to RadarGridParameters */
+        inline const isce::product::RadarGridParameters & radarGridParameters() const {
+            return _radarGrid;
+        }
 
         // Get DEM bounds using first/last azimuth line and slant range bin
         void computeDEMBounds(isce::io::Raster &,
@@ -86,30 +98,41 @@ class isce::geometry::Topo {
         /** Main entry point for the module; internal creation of topo rasters */
         void topo(isce::io::Raster &, const std::string);
 
-        /** Run topo with externally created topo rasters */
+        /** Run topo with externally created topo rasters in TopoLayers object */
+        void topo(isce::io::Raster & demRaster, TopoLayers & layers);
+
+        /** Run topo with externally created topo rasters; generate mask */
+        void topo(isce::io::Raster & demRaster, isce::io::Raster & xRaster,
+                  isce::io::Raster & yRaster, isce::io::Raster & heightRaster,
+                  isce::io::Raster & incRaster, isce::io::Raster & hdgRaster,
+                  isce::io::Raster & localIncRaster, isce::io::Raster & localPsiRaster,
+                  isce::io::Raster & simRaster, isce::io::Raster & maskRaster);
+
+        /** Run topo with externally created topo rasters; generate mask */
         void topo(isce::io::Raster & demRaster, isce::io::Raster & xRaster,
                   isce::io::Raster & yRaster, isce::io::Raster & heightRaster,
                   isce::io::Raster & incRaster, isce::io::Raster & hdgRaster,
                   isce::io::Raster & localIncRaster, isce::io::Raster & localPsiRaster,
                   isce::io::Raster & simRaster);
 
-        // Getters for isce objects
+        /** Compute layover/shadow masks */
+        void setLayoverShadow(TopoLayers &,
+                              DEMInterpolator &,
+                              std::vector<isce::core::cartesian_t> &);
 
+        // Getters for isce objects
         /** Get the orbits used for processing */
         inline const isce::core::Orbit & orbit() const { return _orbit; }
         /** Get the ellipsoid used for processing */
         inline const isce::core::Ellipsoid & ellipsoid() const { return _ellipsoid; }
         /** Get the doppler module used for processing */
-        inline const isce::core::LUT1d<double> & doppler() const { return _doppler; }
-        /** Get the sensingStart used for processing */
-        inline const isce::core::DateTime & sensingStart() const { return _sensingStart; }
-        /** Get the imageMode object used for processing */
-        inline const isce::product::ImageMode & mode() const { return _mode; }
+        inline const isce::core::LUT2d<double> & doppler() const { return _doppler; }
 
     private:
 
         /** Initialize TCN basis for given azimuth line */
         void _initAzimuthLine(size_t,
+                              double &,
                               isce::core::StateVector &,
                               isce::core::Basis &);
 
@@ -121,31 +144,29 @@ class isce::geometry::Topo {
                                   isce::core::StateVector &,
                                   isce::core::Basis &,
                                   DEMInterpolator &);
-
+        
     private:
         // isce::core objects
         isce::core::Orbit _orbit;
         isce::core::Ellipsoid _ellipsoid;
-        isce::core::LUT1d<double> _doppler;
-        isce::core::DateTime _sensingStart, _refEpoch;
+        isce::core::LUT2d<double> _doppler;
 
-        // isce::product objects
-        isce::product::ImageMode _mode;
-    
+        // RadarGridParameters
+        isce::product::RadarGridParameters _radarGrid;
+        
         // Optimization options
-        double _threshold;
-        int _numiter, _extraiter;
+        double _threshold = 1.0e-8;
+        int _numiter = 25;
+        int _extraiter = 10;
         int _lookSide;
         size_t _linesPerBlock = 1000;
+        bool _computeMask = true;
         isce::core::orbitInterpMethod _orbitMethod;
         isce::core::dataInterpMethod _demMethod;
 
         // Output options and objects
         int _epsgOut;
         isce::core::ProjectionBase * _proj;
-
-        // Flag to make sure options have been initialized
-        bool _initialized;
 };
 
 // Get inline implementations for Topo

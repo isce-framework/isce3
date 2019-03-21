@@ -9,43 +9,46 @@
 #endif
 
 /** @param[in] product Input Product
- *
- * Primary constructor of Geo2rdr object*/
+  * @param[in] frequency Frequency designation
+  * @param[in] nativeDoppler Flag for using native Doppler frequencies instead of zero-Doppler
+  * @param[in] numberAzimuthLooks Number of azimuth looks of input product
+  * @param[in] numberRangeLooks Number of range looks of input product
+  *
+  * Primary constructor of Geo2rdr object. */
 isce::geometry::Geo2rdr::
-Geo2rdr(isce::product::Product & product) {
+Geo2rdr(const isce::product::Product & product,
+        char frequency,
+        bool nativeDoppler,
+        size_t numberAzimuthLooks,
+        size_t numberRangeLooks) :
+        _radarGrid(product, frequency, numberAzimuthLooks, numberRangeLooks) {
 
-    // Copy mode, orbit, ellipsoid, and doppler
-    _mode = product.complexImagery().primaryMode();
-    _orbit = product.metadata().orbitPOE();
-    _ellipsoid = product.metadata().identification().ellipsoid();
-    _doppler = product.metadata().instrument().skewDoppler();
-       
-    // For numerical precision purposes, set reference epoch 2 days prior
-    _sensingStart = _mode.startAzTime();
-    _refEpoch._init(_sensingStart.year, _sensingStart.months,
-                    _sensingStart.days - 2, 0, 0, 0, 0.0);
-    // Update orbit epochs with new epoch
-    _orbit.updateUTCTimes(_refEpoch);
+    // Copy orbit and doppler
+    _orbit = product.metadata().orbit();
+    if (nativeDoppler) {
+        _doppler = product.metadata().procInfo().dopplerCentroid(frequency);
+    }
+
+    // Make an ellipsoid manually
+    _ellipsoid = isce::core::Ellipsoid(isce::core::EarthSemiMajorAxis,
+                                       isce::core::EarthEccentricitySquared);
+    
 }
 
 /** @param[in] ellipsoid Ellipsoid object
- * @param[in] orbit Orbit object
- * @param[in] doppler LUT1d doppler model
- * @param[in] meta Metadata object
- *
- * Alternative constructor from ellipsoid, orbit, doppler, and metadata.*/
+  * @param[in] orbit Orbit object
+  * @param[in] doppler LUT1d doppler model
+  * @param[in] meta Metadata object
+  * @param[in] numberAzimuthLooks Number of azimuth looks of input product
+  * @param[in] numberRangeLooks Number of range looks of input product
+  *
+  * Alternative constructor from ellipsoid, orbit, doppler, and metadata. */
 isce::geometry::Geo2rdr::
 Geo2rdr(const isce::core::Ellipsoid & ellipsoid, const isce::core::Orbit & orbit,
-        const isce::core::LUT1d<double> & doppler, const isce::core::Metadata & meta) :
-        _ellipsoid(ellipsoid), _orbit(orbit), _doppler(doppler), _mode(meta) {
-
-    // For numerical precision purposes, set reference epoch 2 days prior
-    _sensingStart = _mode.startAzTime();
-    _refEpoch._init(_sensingStart.year, _sensingStart.months,
-                    _sensingStart.days - 2, 0, 0, 0, 0.0);
-    // Update orbit epochs with new epoch
-    _orbit.updateUTCTimes(_refEpoch);
-}
+        const isce::core::LUT2d<double> & doppler, const isce::core::Metadata & meta,
+        size_t numberAzimuthLooks, size_t numberRangeLooks) :
+        _radarGrid(meta, orbit.refEpoch, numberAzimuthLooks, numberRangeLooks),
+        _ellipsoid(ellipsoid), _orbit(orbit), _doppler(doppler) {}
 
 /**@param[in] t Azimuth time convergence threshold in seconds*/
 void isce::geometry::Geo2rdr::

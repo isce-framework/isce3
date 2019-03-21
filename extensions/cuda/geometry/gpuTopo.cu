@@ -10,27 +10,28 @@
 #include "isce/cuda/core/gpuPixel.h"
 #include "isce/cuda/core/gpuBasis.h"
 #include "isce/cuda/core/gpuStateVector.h"
-// isce::cuda::product
-#include "isce/cuda/product/gpuImageMode.h"
+
 // isce::cuda::geometry
 #include "gpuDEMInterpolator.h"
 #include "gpuGeometry.h"
 #include "gpuTopoLayers.h"
 #include "gpuTopo.h"
 using isce::cuda::core::gpuLinAlg;
+#include "../helper_cuda.h"
 
 #define THRD_PER_BLOCK 96 // Number of threads per block (should always %32==0)
 
 __device__
 bool initAzimuthLine(size_t line,
-                     const isce::cuda::product::gpuImageMode & mode,
                      const isce::cuda::core::gpuOrbit & orbit,
+                     double startAzUTCTime,
+                     size_t numberAzimuthLooks,
+                     double prf,
                      isce::cuda::core::gpuStateVector & state,
                      isce::cuda::core::gpuBasis & TCNbasis) {
 
     // Get satellite azimuth time
-    const double tline = mode.startAzUTCTime() + 
-                         mode.numberAzimuthLooks() * line / mode.prf();
+    const double tline = startAzUTCTime + numberAzimuthLooks * line / prf;
 
     // Interpolate orbit (keeping track of validity without interrupting workflow)
     bool valid = (orbit.interpolateWGS84Orbit(tline, state.position, state.velocity) == 0);
@@ -83,6 +84,9 @@ void setOutputTopoLayers(const double * targetLLH,
 
     // Compute vector from satellite to ground point
     gpuLinAlg::linComb(1.0, targetXYZ, -1.0, state.position, satToGround);
+
+    // Compute cross-track range
+    layers.crossTrack(index, -1*lookSide*gpuLinAlg::dot(satToGround, TCNbasis.x1));
 
     // Computation in ENU coordinates around target
     gpuLinAlg::enuBasis(targetLLH[1], targetLLH[0], enumat);
@@ -138,12 +142,19 @@ __global__
 void runTopoBlock(isce::cuda::core::gpuEllipsoid ellipsoid,
                   isce::cuda::core::gpuOrbit orbit,
                   isce::cuda::core::gpuLUT1d<double> doppler,
-                  isce::cuda::product::gpuImageMode mode,
                   isce::cuda::geometry::gpuDEMInterpolator demInterp,
                   isce::cuda::core::ProjectionBase ** projOutput,
                   isce::cuda::geometry::gpuTopoLayers layers,
-                  size_t lineStart, int lookSide, double threshold,
-                  int numiter, int extraiter, unsigned int * totalconv) {
+                  size_t lineStart,
+                  int lookSide,
+                  size_t numberAzimuthLooks,
+                  double startAzUTCTime,
+                  double wavelength,
+                  double prf,
+                  double startingRange,
+                  double rangePixelSpacing,
+                  double threshold, int numiter, int extraiter,
+                  unsigned int * totalconv) {
 
     // Get the flattened index
     size_t index_flat = (blockDim.x * blockIdx.x) + threadIdx.x;
@@ -155,21 +166,22 @@ void runTopoBlock(isce::cuda::core::gpuEllipsoid ellipsoid,
         // Unravel the flattened pixel index
         const size_t line = index_flat / layers.width();
         const size_t rbin = index_flat - line * layers.width();
-        
+
         // Interpolate orbit (keeping track of validity without interrupting workflow)
         isce::cuda::core::gpuStateVector state;
         isce::cuda::core::gpuBasis TCNbasis;
-        bool valid = (initAzimuthLine(line + lineStart, mode, orbit, state, TCNbasis) != 0);
+        bool valid = (initAzimuthLine(line + lineStart, orbit, startAzUTCTime,
+                                      numberAzimuthLooks, prf, state, TCNbasis) != 0);
 
         // Compute magnitude of satellite velocity
         const double satVmag = gpuLinAlg::norm(state.velocity);
 
         // Get current slant range
-        const double rng = mode.startingRange() + rbin * mode.rangePixelSpacing();
+        const double rng = startingRange + rbin * rangePixelSpacing;
         
         // Get current Doppler value and factor
         const double dopval = doppler.eval(rng);
-        const double dopfact = 0.5 * mode.wavelength() * (dopval / satVmag) * rng;
+        const double dopfact = 0.5 * wavelength * (dopval / satVmag) * rng;
 
         // Store slant range bin data in gpuPixel
         isce::cuda::core::gpuPixel pixel(rng, dopfact, rbin);
@@ -198,10 +210,17 @@ void isce::cuda::geometry::
 runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
            const isce::core::Orbit & orbit,
            const isce::core::LUT1d<double> & doppler,
-           const isce::product::ImageMode & mode,
            isce::geometry::DEMInterpolator & demInterp,
            isce::geometry::TopoLayers & layers,
-           size_t lineStart, int lookSide, int epsgOut,
+           size_t lineStart,
+           int lookSide,
+           int epsgOut,
+           size_t numberAzimuthLooks,
+           double startAzUTCTime,
+           double wavelength,
+           double prf,
+           double startingRange,
+           double rangePixelSpacing,
            double threshold, int numiter, int extraiter,
            unsigned int & totalconv) {
 
@@ -209,7 +228,6 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
     isce::cuda::core::gpuEllipsoid gpu_ellipsoid(ellipsoid);
     isce::cuda::core::gpuOrbit gpu_orbit(orbit);
     isce::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
-    isce::cuda::product::gpuImageMode gpu_mode(mode); 
     isce::cuda::geometry::gpuDEMInterpolator gpu_demInterp(demInterp); 
     isce::cuda::geometry::gpuTopoLayers gpu_layers(layers);
     
@@ -234,9 +252,11 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
     dim3 grid(nBlocks);
 
     // Launch kernel
-    runTopoBlock<<<grid, block>>>(gpu_ellipsoid, gpu_orbit, gpu_doppler, gpu_mode,
+    runTopoBlock<<<grid, block>>>(gpu_ellipsoid, gpu_orbit, gpu_doppler,
                                   gpu_demInterp, projOutput_d, gpu_layers,
-                                  lineStart, lookSide, threshold, numiter, extraiter,
+                                  lineStart, lookSide, numberAzimuthLooks,
+                                  startAzUTCTime, wavelength, prf, startingRange,
+                                  rangePixelSpacing, threshold, numiter, extraiter,
                                   totalconv_d);
 
     // Check for any kernel errors

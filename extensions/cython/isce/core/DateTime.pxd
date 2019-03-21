@@ -19,6 +19,7 @@ cdef extern from "isce/core/DateTime.h" namespace "isce::core":
         DateTime(int, int, int, int, int, double) except +
         DateTime(const double) except +
         DateTime(const DateTime &) except +
+        DateTime(const string &) except +
        
         # Comparison operators 
         bool operator==(const DateTime &)

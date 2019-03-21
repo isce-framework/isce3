@@ -1,7 +1,7 @@
 #cython: language_level=3
 #
-# Author: Joshua Cohen
-# Copyright 2017
+# Author: Joshua Cohen, Tamas Gal
+# Copyright 2017-2019
 #
 
 from libcpp cimport bool
@@ -73,7 +73,10 @@ cdef class pyOrbit:
         Args:
             instr (str): ISO-8601 DateTime representation of reference epoch
         '''
+        # Set it first
         self.c_orbit.refEpoch.strptime(pyStringToBytes(epoch.isoformat()))
+        # Update UTC times
+        self.c_orbit.updateUTCTimes(self.c_orbit.refEpoch)
 
 
     @property
@@ -537,6 +540,18 @@ cdef class pyOrbit:
             None
         '''
         self.c_orbit.updateUTCTimes(deref(epoch.c_datetime))
+        
+    def getENUHeading(self, double aztime):
+        '''
+        Computes heading at a given azimuth time using a single state vector
+        
+        Args:
+            aztime (double): Time since reference epoch in seconds
+
+        Returns:
+            double: Heading
+        '''
+        return self.c_orbit.getENUHeading(aztime)
     
     def printOrbit(self):
         '''

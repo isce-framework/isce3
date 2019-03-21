@@ -1,0 +1,181 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Author: Heresh Fattahi
+// Copyright 2019-
+
+#if !defined(ISCE_GEOMETRY_GEOCODE_ICC)
+#error "Geocode.icc is an implementation detail of class Geocode"
+#endif
+
+template<class T>
+void isce::geometry::Geocode<T>::
+geoGrid(double geoGridStartX, double geoGridStartY,
+        double geoGridSpacingX, double geoGridSpacingY,
+        double geoGridEndX, double geoGridEndY,
+        int epsgcode) {
+   
+    int length = 1 + (geoGridEndY - geoGridStartY) /
+                    geoGridSpacingY;
+
+    int width = 1 + (geoGridEndX - geoGridStartX) /
+                    geoGridSpacingX;
+
+    geoGrid(geoGridStartX, geoGridStartY,
+        geoGridSpacingX, geoGridSpacingY,
+        width, length, epsgcode);
+
+}
+
+template<class T>
+void isce::geometry::Geocode<T>::
+geoGrid(double geoGridStartX, double geoGridStartY,
+        double geoGridSpacingX, double geoGridSpacingY,
+        int width, int length, int epsgcode) {
+
+    // populate the geoTransform 
+    // Assumption: origin is the top-left corner of 
+    //               the top-left pixel of the grid
+    _geoTrans = new double[6];
+    _geoTrans[0] = geoGridStartX;
+    _geoTrans[1] = geoGridSpacingX;
+    _geoTrans[2] = 0.0;
+    _geoTrans[3] = geoGridStartY;
+    _geoTrans[4] = 0.0;
+    _geoTrans[5] = geoGridSpacingY;
+    
+
+    // the starting coordinate of the output geocoded grid in X direction.
+    // Since the input is alwayas referring to the top-left corner of the 
+    // top-left pixel, we adjust to the center for internal use only
+    _geoGridStartX = geoGridStartX + geoGridSpacingX/2;
+
+    // the starting coordinate of the output geocoded grid in Y direction.
+    // adjusted to the center of the pixel for internal use only
+    _geoGridStartY = geoGridStartY + geoGridSpacingY/2;
+
+    // spacing of the output geocoded grid in X
+    _geoGridSpacingX = geoGridSpacingX;
+
+    // spacing of the output geocoded grid in Y
+    _geoGridSpacingY = geoGridSpacingY;
+
+    // number of lines (rows) in the geocoded grid (Y direction)
+    _geoGridLength = length;
+
+    // number of columns in the geocoded grid (Y direction)
+    _geoGridWidth = width;
+
+    // Save the EPSG code
+    _epsgOut = epsgcode;
+
+}
+
+template<class T>
+void isce::geometry::Geocode<T>::
+radarGrid(isce::core::LUT2d<double> doppler,
+          isce::product::RadarGridParameters rgparams,
+          int lookSide) {
+    _doppler = doppler;
+    _radarGrid = rgparams;
+    _lookSide = lookSide;
+}
+
+template<class T>
+void isce::geometry::Geocode<T>::
+radarGrid(isce::core::LUT2d<double> doppler,
+          isce::core::DateTime refEpoch,
+          double azimuthStartTime,
+          double azimuthTimeInterval,
+          int radarGridLength,
+          double startingRange,
+          double rangeSpacing,
+          double wavelength,
+          int radarGridWidth,
+          int lookSide) {
+    _doppler = doppler;
+    _radarGrid = isce::product::RadarGridParameters(
+        1, 1, azimuthStartTime, wavelength, 1.0/azimuthTimeInterval, startingRange,
+        rangeSpacing, radarGridLength, radarGridWidth, refEpoch
+    );
+    _lookSide = lookSide;
+}
+
+template<class T>
+void isce::geometry::Geocode<T>::
+orbit(isce::core::Orbit& orbit) {
+    _orbit = orbit;
+}
+
+template<class T>
+void isce::geometry::Geocode<T>::
+orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod) {
+
+    _orbitMethod = orbitMethod;
+
+}
+
+template<class T>
+void isce::geometry::Geocode<T>::
+ellipsoid(isce::core::Ellipsoid& ellipsoid) {
+
+    _ellipsoid = ellipsoid;
+
+}
+
+template<class T>
+void isce::geometry::Geocode<T>::
+thresholdGeo2rdr(double threshold) {
+
+    _threshold = threshold;
+
+}
+
+template<class T>
+void isce::geometry::Geocode<T>::
+numiterGeo2rdr(int numiter) {
+
+    _numiter = numiter;
+
+}
+
+template<class T>
+void isce::geometry::Geocode<T>::
+linesPerBlock(size_t linesPerBlock) {
+
+    _linesPerBlock = linesPerBlock;
+
+}
+
+template<class T>
+void isce::geometry::Geocode<T>::
+demBlockMargin(double demBlockMargin) {
+
+    _demBlockMargin = demBlockMargin;
+
+}
+
+template<class T>
+void isce::geometry::Geocode<T>::
+radarBlockMargin(int radarBlockMargin) {
+
+    _radarBlockMargin = radarBlockMargin;
+
+}
+
+//interpolator
+template<class T>
+void isce::geometry::Geocode<T>::
+interpolator(isce::core::Interpolator<T> * interp) {
+
+    _interp = interp;
+
+}
+
+template<class T>
+void isce::geometry::Geocode<T>::
+interpolator(isce::core::dataInterpMethod method) {
+    
+    _interp = isce::core::createInterpolator<T>(method);
+
+}

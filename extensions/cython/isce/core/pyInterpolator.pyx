@@ -12,6 +12,25 @@ from libcpp.vector cimport vector
 from Interpolator cimport *
 from Matrix cimport Matrix, valarray
 
+cdef valarray[double] numpyToValarray(np.ndarray[double, ndim=1] a):
+    """
+    Utility function to create an std::valarray<double> copy of a numpy array.
+    """
+    cdef int i
+    cdef int n = a.shape[0]
+    cdef valarray[double] v = valarray[double](n)
+    for i in range(n):
+        v[i] = a[i]
+    return v
+
+cdef np.ndarray[double, ndim=1] valarrayToNumpy(valarray[double] & v):
+    cdef int i
+    cdef int n = v.size()
+    cdef np.ndarray[double, ndim=1] v_np = np.zeros(n)
+    for i in range(n):
+        v_np[i] = v[i]
+    return v_np
+
 cdef Matrix[double] numpyToMatrix(np.ndarray[double, ndim=2] a):
     """
     Utility function to create an isce::core::Matrix 'view' of a numpy array.

@@ -1,3 +1,10 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// Author: Liang Yu
+// Copyright 2018-2019
+//
+
 #ifndef __ISCE_CUDA_CORE_GPUCOMPLEX_H__
 #define __ISCE_CUDA_CORE_GPUCOMPLEX_H__
 
@@ -14,6 +21,7 @@
 #endif
 
 #include <complex>
+#include <stdio.h>
 
 namespace isce { namespace cuda { namespace core {
 template <class U>
@@ -112,23 +120,13 @@ CUDA_HOSTDEV gpuComplex<U> operator +(gpuComplex<U> x, gpuComplex<U> y) {
     return gpuComplex<U>(x.r + y.r, x.i + y.i);
 }
 
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator +(gpuComplex<U> x, float y) {
+template <class U, class V>
+CUDA_HOSTDEV gpuComplex<U> operator +(gpuComplex<U> x, V y) {
     return gpuComplex<U>(x.r + y, x.i);
 }
 
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator +(float x, gpuComplex<U> y) {
-    return gpuComplex<U>(x + y.r, y.i);
-}
-
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator +(gpuComplex<U> x, double y) {
-    return gpuComplex<U>(x.r + y, x.i);
-}
-
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator +(double x, gpuComplex<U> y) {
+template <class U, class V>
+CUDA_HOSTDEV gpuComplex<U> operator +(V x, gpuComplex<U> y) {
     return gpuComplex<U>(x + y.r, y.i);
 }
 
@@ -138,23 +136,13 @@ CUDA_HOSTDEV gpuComplex<U> operator -(gpuComplex<U> x, gpuComplex<U> y) {
     return gpuComplex<U>(x.r - y.r, x.i - y.i);
 }
 
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator -(gpuComplex<U> x, float y) {
+template <class U, class V>
+CUDA_HOSTDEV gpuComplex<U> operator -(gpuComplex<U> x, V y) {
     return gpuComplex<U>(x.r - y, x.i);
 }
 
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator -(float x, gpuComplex<U> y) {
-    return gpuComplex<U>(x - y.r, -y.i);
-}
-
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator -(gpuComplex<U> x, double y) {
-    return gpuComplex<U>(x.r - y, x.i);
-}
-
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator -(double x, gpuComplex<U> y) {
+template <class U, class V>
+CUDA_HOSTDEV gpuComplex<U> operator -(V x, gpuComplex<U> y) {
     return gpuComplex<U>(x - y.r, -y.i);
 }
 
@@ -164,23 +152,13 @@ CUDA_HOSTDEV gpuComplex<U> operator *(gpuComplex<U> x, gpuComplex<U> y) {
     return gpuComplex<U>(x.r*y.r - x.i*y.i, x.r*y.i + x.i*y.r);
 }
 
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator *(gpuComplex<U> x, float y) {
+template <class U, class V>
+CUDA_HOSTDEV gpuComplex<U> operator *(gpuComplex<U> x, V y) {
     return gpuComplex<U>(x.r*y, x.i*y);
 }
 
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator *(float x, gpuComplex<U> y) {
-    return gpuComplex<U>(x*y.r, x*y.i);
-}
-
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator *(gpuComplex<U> x, double y) {
-    return gpuComplex<U>(x.r*y, x.i*y);
-}
-
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator *(double x, gpuComplex<U> y) {
+template <class U, class V>
+CUDA_HOSTDEV gpuComplex<U> operator *(V x, gpuComplex<U> y) {
     return gpuComplex<U>(x*y.r, x*y.i);
 }
 
@@ -199,34 +177,55 @@ CUDA_HOSTDEV gpuComplex<U> operator /(gpuComplex<U> x, gpuComplex<U> y) {
                         ((ais * brs) - (ars * bis)) * oos);
 }
 
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator /(gpuComplex<U> x, float y) {
+template <class U, class V>
+CUDA_HOSTDEV gpuComplex<U> operator /(gpuComplex<U> x, V y) {
     return gpuComplex<U>(x.r/y, x.i/y);
 }
 
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator /(gpuComplex<U> x, double y) {
-    return gpuComplex<U>(x.r/y, x.i/y);
-}
-
-template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator /(float x, gpuComplex<U> y) {
+template <class U, class V>
+CUDA_HOSTDEV gpuComplex<U> operator /(V x, gpuComplex<U> y) {
     gpuComplex<U> new_x = gpuComplex<U>(x, 0);
     return new_x / y;
 }
 
+// equality 
 template <class U>
-CUDA_HOSTDEV gpuComplex<U> operator /(double x, gpuComplex<U> y) {
-    gpuComplex<U> new_x = gpuComplex<U>(x, 0);
-    return new_x / y;
+CUDA_HOSTDEV gpuComplex<U> operator ==(gpuComplex<U> x, gpuComplex<U> y) {
+    return (x.r == y.r && x.i == y.i);
+}
+
+template <class U, class V>
+CUDA_HOSTDEV gpuComplex<U> operator ==(gpuComplex<U> x, V y) {
+    return (x.r == y && x.i == 0.);
+}
+
+template <class U, class V>
+CUDA_HOSTDEV gpuComplex<U> operator ==(V x, gpuComplex<U> y) {
+    return (x == y.r && 0. == y.i);
+}
+
+// inequality 
+template <class U>
+CUDA_HOSTDEV gpuComplex<U> operator !=(gpuComplex<U> x, gpuComplex<U> y) {
+    return (x.r != y.r || x.i != y.i);
+}
+
+template <class U, class V>
+CUDA_HOSTDEV gpuComplex<U> operator !=(gpuComplex<U> x, V y) {
+    return (x.r != y || x.i != 0.);
+}
+
+template <class U, class V>
+CUDA_HOSTDEV gpuComplex<U> operator !=(V x, gpuComplex<U> y) {
+    return (x != y.r || 0. != y.i);
 }
 
 // magnitude
-template <class U>
-CUDA_HOSTDEV U abs(gpuComplex<U> x) {
-    U v, w, t;
-    U a = fabsf(x.r);
-    U b = fabsf(x.i);
+template <class T>
+CUDA_HOSTDEV T abs(gpuComplex<T> x) {
+    T v, w, t;
+    T a = fabsf(x.r);
+    T b = fabsf(x.i);
     if (a > b) {
         v = a;
         w = b;
@@ -241,6 +240,12 @@ CUDA_HOSTDEV U abs(gpuComplex<U> x) {
         t = v + w;
     }
     return t;
+}
+
+// conjugate
+template <class T>
+CUDA_HOSTDEV gpuComplex<T> conj(gpuComplex<T> x) {
+    return gpuComplex<T>(x.r, -x.i);
 }
 
 }}}
