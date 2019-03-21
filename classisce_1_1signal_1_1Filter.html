@@ -91,7 +91,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classisce_1_1signal_1_1Filter-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">isce::signal::Filter&lt; T &gt; Class Template Reference</div>  </div>
@@ -123,19 +122,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>constructRangeBandpas
 <tr class="memitem:a077db6bb7d395b5ace61bd6b47b0e167"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#a077db6bb7d395b5ace61bd6b47b0e167">filter</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum)</td></tr>
 <tr class="memdesc:a077db6bb7d395b5ace61bd6b47b0e167"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classisce_1_1signal_1_1Filter.html">Filter</a> a signal in frequency domain.  <a href="#a077db6bb7d395b5ace61bd6b47b0e167">More...</a><br/></td></tr>
 <tr class="separator:a077db6bb7d395b5ace61bd6b47b0e167"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afdb37cbbb3b29fa818dad0cc1e6d25f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#afdb37cbbb3b29fa818dad0cc1e6d25f2">fftfreq</a> (int N, double dt, std::valarray&lt; double &gt; &amp;freq)</td></tr>
+<tr class="memdesc:afdb37cbbb3b29fa818dad0cc1e6d25f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a vector of frequencies.  <a href="#afdb37cbbb3b29fa818dad0cc1e6d25f2">More...</a><br/></td></tr>
+<tr class="separator:afdb37cbbb3b29fa818dad0cc1e6d25f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa5cea79bfe6e39ef9c120eb3705201cf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa5cea79bfe6e39ef9c120eb3705201cf"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#aa5cea79bfe6e39ef9c120eb3705201cf">indexOfFrequency</a> (double dt, int N, double f, int &amp;n)</td></tr>
+<tr class="memdesc:aa5cea79bfe6e39ef9c120eb3705201cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the index of a specific frequency for a signal with a specific sampling rate. <br/></td></tr>
+<tr class="separator:aa5cea79bfe6e39ef9c120eb3705201cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5aef0b3fceb4b579da3b7882784f6c0d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5aef0b3fceb4b579da3b7882784f6c0d"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>writeFilter</b> (size_t ncols, size_t nrows)</td></tr>
 <tr class="separator:a5aef0b3fceb4b579da3b7882784f6c0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:afdb37cbbb3b29fa818dad0cc1e6d25f2"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#afdb37cbbb3b29fa818dad0cc1e6d25f2">fftfreq</a> (int N, double dt, std::valarray&lt; double &gt; &amp;freq)</td></tr>
-<tr class="memdesc:afdb37cbbb3b29fa818dad0cc1e6d25f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a vector of frequencies.  <a href="#afdb37cbbb3b29fa818dad0cc1e6d25f2">More...</a><br/></td></tr>
-<tr class="separator:afdb37cbbb3b29fa818dad0cc1e6d25f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a95c5c343743065b7550c1d585a9ba49d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a95c5c343743065b7550c1d585a9ba49d"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#a95c5c343743065b7550c1d585a9ba49d">indexOfFrequency</a> (double dt, int N, double f, int &amp;n)</td></tr>
-<tr class="memdesc:a95c5c343743065b7550c1d585a9ba49d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Find the index of a specific frequency for a signal with a specific sampling rate. <br/></td></tr>
-<tr class="separator:a95c5c343743065b7550c1d585a9ba49d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="a96a3d4f5a41641e8229f93ff3b7f9535"></a>
@@ -430,9 +426,6 @@ template&lt;class T &gt; </div>
 <div class="memproto">
 <div class="memtemplate">
 template&lt;class T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">void <a class="el" href="classisce_1_1signal_1_1Filter.html">isce::signal::Filter</a>&lt; T &gt;::fftfreq </td>
@@ -458,11 +451,6 @@ template&lt;class T &gt; </div>
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Create a vector of frequencies. </p>
