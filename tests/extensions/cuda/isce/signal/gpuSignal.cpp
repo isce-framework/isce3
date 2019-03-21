@@ -228,64 +228,6 @@ TEST(gpuSignal, ForwardBackwardAzimuthDouble)
     ASSERT_LT(max_err, 1.0e-9);
 }
 
-/*TEST(gpuSignal, ForwardBackwardRangeFloatNoCp)
-{
-    // take a block of data, perform range FFT and then iverse FFT and compare with original data   
-    isce::io::Raster inputSlc("../../../../lib/isce/data/warped_envisat.slc.vrt");
-
-    int width = inputSlc.width();
-    int length = inputSlc.length();
-
-    // 
-    int blockLength = length;
-
-    // reserve memory for a block of data
-    std::valarray<std::complex<float>> data(width*blockLength);
-
-    // reserve memory for the spectrum of the block of data
-    std::valarray<std::complex<float>> range_spectrum(width*blockLength);
-
-    // reserve memory for a block of data computed from inverse FFT
-    std::valarray<std::complex<float>> inverted_data(width*blockLength);
-    
-    // read a block of data
-    inputSlc.getBlock(data, 0, 0, width, blockLength);
-
-    // a signal object
-    gpuSignal<float> sig(CUFFT_C2C);
-
-    // create the plan
-    sig.rangeFFT(width, blockLength);
-
-    // copy data to device
-    sig.dataToDevice(data);
-   
-    // forward fft transform
-    sig.forward();
-
-    // inverse fft transform
-    sig.inverse();
-
-    // copy data to device
-    sig.dataToHost(inverted_data);
-   
-    //normalize the result of inverse fft 
-    inverted_data /=width;
-
-    int blockSize = width*blockLength;
-    std::complex<float> err(0.0, 0.0);
-    bool Test = true;
-    double max_err = 0.0;
-    for ( size_t i = 0; i < blockSize; ++i ) {
-        err = inverted_data[i] - data[i];
-        if (std::abs(err) > max_err){
-            max_err = std::abs(err);
-        }
-    }
-
-    ASSERT_LT(max_err, 1.0e-4);
-}*/
-
 TEST(gpuSignal, upsampleFloat)
 {
     int width = 100;

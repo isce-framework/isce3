@@ -218,40 +218,6 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
         std::valarray<std::complex<T>> &output,
         std::valarray<std::complex<T>> &shiftImpact);
 
-/*
-void upsampleC2C(gpuSignal<float> &fwd,
-        gpuSignal<float> &inv,
-        std::valarray<std::complex<float>> &shiftImpact);
-
-void upsampleC2C(gpuSignal<float> &fwd,
-        gpuSignal<float> &inv,
-        std::valarray<std::complex<float>> &input,
-        std::valarray<std::complex<float>> &output,
-        std::valarray<std::complex<float>> &shiftImpact);
-
-void upsampleC2C(gpuSignal<float> &fwd,
-        gpuSignal<float> &inv,
-        float *input,
-        float *output,
-        float *shiftImpact);
-
-void upsampleZ2Z(gpuSignal<double> &fwd,
-        gpuSignal<double> &inv,
-        std::valarray<std::complex<double>> &shiftImpact);
-
-void upsampleZ2Z(gpuSignal<double> &fwd,
-        gpuSignal<double> &inv,
-        std::valarray<std::complex<double>> &input,
-        std::valarray<std::complex<double>> &output,
-        std::valarray<std::complex<double>> &shiftImpact);
-
-void upsampleZ2Z(gpuSignal<double> &fwd,
-        gpuSignal<double> &inv,
-        double *input,
-        double *output,
-        double *shiftImpact);
-        */
-
 /** normalize in-place on device
  * TODO use cufft store callback as alternative? requires some gpuCrossMul refactor
  * https://stackoverflow.com/questions/14441142/scaling-in-inverse-fft-by-cufft
