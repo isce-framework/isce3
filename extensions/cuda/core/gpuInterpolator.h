@@ -68,7 +68,7 @@ class gpuSinc2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
     public:
         CUDA_HOSTDEV gpuSinc2dInterpolator(){};
         CUDA_HOST gpuSinc2dInterpolator(int sincLen, int sincSub);
-        CUDA_DEV gpuSinc2dInterpolator(const gpuSinc2dInterpolator &i): 
+        CUDA_HOSTDEV gpuSinc2dInterpolator(const gpuSinc2dInterpolator &i):
             kernel(i.kernel), kernel_length(i.kernel_length), kernel_width(i.kernel_width), sinc_half(i.sinc_half),
             intpx(i.intpx), intpy(i.intpy), owner(false) {};
         CUDA_HOSTDEV ~gpuSinc2dInterpolator();
