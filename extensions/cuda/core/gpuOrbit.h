@@ -9,18 +9,9 @@
 #ifndef __ISCE_CUDA_CORE_GPUORBIT_H__
 #define __ISCE_CUDA_CORE_GPUORBIT_H__
 
-#ifdef __CUDACC__
-#define CUDA_HOSTDEV __host__ __device__
-#define CUDA_DEV __device__
-#define CUDA_HOST __host__
-#else
-#define CUDA_HOSTDEV
-#define CUDA_DEV
-#define CUDA_HOST
-#endif
-
 #include <vector>
 #include "isce/core/Orbit.h"
+#include "isce/cuda/core/Common.h"
 
 using isce::core::Orbit;
 using isce::core::cartesian_t;

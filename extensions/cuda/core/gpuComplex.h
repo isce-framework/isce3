@@ -1,19 +1,8 @@
 #ifndef __ISCE_CUDA_CORE_GPUCOMPLEX_H__
 #define __ISCE_CUDA_CORE_GPUCOMPLEX_H__
 
-#ifdef __CUDACC__
-#define CUDA_HOSTDEV __host__ __device__
-#define CUDA_DEV __device__
-#define CUDA_HOST __host__
-#define CUDA_GLOBAL __global__
-#else
-#define CUDA_HOSTDEV
-#define CUDA_DEV
-#define CUDA_HOST
-#define CUDA_GLOBAL
-#endif
-
 #include <complex>
+#include "isce/cuda/core/Common.h"
 
 namespace isce { namespace cuda { namespace core {
 template <class U>

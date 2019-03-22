@@ -6,18 +6,10 @@
 #ifndef ISCE_CUDA_CORE_GPUPIXEL_H
 #define ISCE_CUDA_CORE_GPUPIXEL_H
 
-#ifdef __CUDACC__
-#define CUDA_HOSTDEV __host__ __device__
-#define CUDA_DEV __device__
-#define CUDA_HOST __host__
-#else
-#define CUDA_HOSTDEV
-#define CUDA_DEV
-#define CUDA_HOST
-#endif
-
 // isce::core
 #include "isce/core/Pixel.h"
+
+#include "Common.h"
 
 // Declaration
 namespace isce {
