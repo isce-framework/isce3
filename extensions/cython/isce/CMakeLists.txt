@@ -5,6 +5,15 @@
 # Find Numpy
 find_package(Numpy REQUIRED)
 
+# Add subdirectories for installing pxd files
+add_subdirectory(io)
+add_subdirectory(core)
+add_subdirectory(product)
+add_subdirectory(image)
+add_subdirectory(signal)
+add_subdirectory(geometry)
+add_subdirectory(serialization)
+
 ###Create a function for concatenating pxd files
 function(catpxd IN_FILE OUT_FILE)
     FILE(READ ${IN_FILE} CONTENTS)
