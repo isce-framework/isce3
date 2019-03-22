@@ -16,9 +16,6 @@
 #define ATTRIB_DISABLE(msg) __attribute(( error(msg) ))
 #endif
 
-// Error message for specifiers not linkable against host code
-#define SPEC_MSG(spec) ("cannot call a " spec " from host code")
-
 #ifdef __CUDACC__
 #define CUDA_HOST    __host__
 #define CUDA_HOSTDEV __host__ __device__
@@ -29,6 +26,9 @@
 #define CUDA_HOST
 #define CUDA_HOSTDEV
 // Prevent linking to device-only functions
-#define CUDA_DEV    ATTRIB_DISABLE(SPEC_MSG("__device__ function"))
-#define CUDA_GLOBAL ATTRIB_DISABLE(SPEC_MSG("__global__ function (i.e. kernel)"))
+#define CUDA_DEV    ATTRIB_DISABLE( \
+    "cannot call a __device__ function directly from CPU code")
+#define CUDA_GLOBAL ATTRIB_DISABLE( \
+    "calling a __global__ function (i.e. kernel) " \
+    "is not supported by non-CUDA compilers")
 #endif
