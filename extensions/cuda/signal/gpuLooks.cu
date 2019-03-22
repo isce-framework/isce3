@@ -415,9 +415,6 @@ __global__ void multilooks_no_data_g(gpuComplex<T> *lo_res,
         int i_lo_row = i / (n_rows_lo-1);
         int i_lo_col = i % (n_rows_lo-1);
 
-        // 
-        int n_no_val = 0;
-
         // loop over contributing lo_res rows
         for (int i_blk_row = 0; i_blk_row < row_resize; ++i_blk_row) {
             // get lo_res row index
@@ -431,13 +428,11 @@ __global__ void multilooks_no_data_g(gpuComplex<T> *lo_res,
                 // accumulate lo_res into lo_res
                 gpuComplex<T> hi_res_pixel_value = hi_res[i_hi];
                 if (hi_res_pixel_value.r != no_data_value.r &&
-                        hi_res_pixel_value.i != no_data_value.i)
+                        hi_res_pixel_value.i != no_data_value.i) {
                     lo_res[i] += hi_res_pixel_value;
-                else
-                    ++n_no_val;
+                }
             }
         }
-        lo_res[i] /= (blk_sz - n_no_val);
     }
 }
 
