@@ -1,5 +1,2 @@
-set (PXDS pyCrossmul.pxd
-          Crossmul.pxd)
-
+FILE(GLOB PXDS *.pxd)
 add_isce_cythondir(signal "${PXDS}")
-
