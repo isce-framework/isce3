@@ -418,6 +418,15 @@ int isce::io::IDataSet::getNumBits(const std::string &v) {
     return (int) precision;
 };
 
+/** @param[out] str String representation for GDAL's IH5Dataset driver
+
+  Returns IH5:::ID=string*/
+std::string isce::io::IDataSet::toGDAL()
+{
+    std::string result = "IH5:::ID=" + std::to_string(getId());
+    return result;
+};
+
 /** @param[in] att  Name of the attribute (optional).
  *  @param[out] v Dataset or attribute string value.
  *
@@ -510,7 +519,7 @@ void isce::io::IDataSet::read(std::string * buffer, const H5::DataSpace& dspace)
     hssize_t nbElements = dspace.getSelectNpoints();
     
     // Format the dataspace of the memory to receive the data read from file
-    H5::DataSpace memspace = getReadMemorySpace((hsize_t)nbElements);
+    H5::DataSpace memspace = getMemorySpace((hsize_t)nbElements);
 
     // Read the dataset to memory
     // This is where specifics to std::string are handled
@@ -568,7 +577,7 @@ void isce::io::IDataSet::write(const std::string* buf, const H5::DataSpace& dspa
    // may change in a the future, there is no possibility to subset buf. The 
    // full content of buf is to be selected. Buf dataspace is set to a 1D array 
    // of size equals to the number of elements in the vector.
-   H5::DataSpace mspace = getReadMemorySpace(dspace.getSelectNpoints()); 
+   H5::DataSpace mspace = getMemorySpace(dspace.getSelectNpoints()); 
 
 
    // Get the datatype of the dataset
@@ -656,7 +665,7 @@ void isce::io::IDataSet::createAttribute(
 
 
 
-H5::DataSpace isce::io::IDataSet::getReadDataSpace(const int * startIn, 
+H5::DataSpace isce::io::IDataSet::getDataSpace(const int * startIn, 
                                                    const int * countIn, 
                                                    const int * strideIn) { 
  
@@ -715,7 +724,7 @@ H5::DataSpace isce::io::IDataSet::getReadDataSpace(const int * startIn,
 
 
 
-H5::DataSpace isce::io::IDataSet::getReadDataSpace(const std::vector<std::slice> * slicesIn) { 
+H5::DataSpace isce::io::IDataSet::getDataSpace(const std::vector<std::slice> * slicesIn) { 
  
     // Get information of the file dataspace       
     H5::DataSpace dspace = H5::DataSet::getSpace();	 
@@ -768,7 +777,7 @@ H5::DataSpace isce::io::IDataSet::getReadDataSpace(const std::vector<std::slice>
 
 
 
-H5::DataSpace isce::io::IDataSet::getReadDataSpace(const std::gslice * gsliceIn) { 
+H5::DataSpace isce::io::IDataSet::getDataSpace(const std::gslice * gsliceIn) { 
  
     // Get information of the file dataspace       
     H5::DataSpace dspace = H5::DataSet::getSpace();	 
@@ -845,7 +854,7 @@ H5::DataSpace isce::io::IDataSet::getReadDataSpace(const std::gslice * gsliceIn)
 
 
 
-H5::DataSpace isce::io::IDataSet::getReadDataSpace(const size_t xidx, const size_t yidx, const size_t iowidth, const size_t iolength, const size_t band) { 
+H5::DataSpace isce::io::IDataSet::getDataSpace(const size_t xidx, const size_t yidx, const size_t iowidth, const size_t iolength, const size_t band) { 
 
     int index = 0;
 

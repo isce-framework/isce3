@@ -6,18 +6,6 @@
 #ifndef ISCE_CUDA_GEOMETRY_GPUGEOMETRY_H
 #define ISCE_CUDA_GEOMETRY_GPUGEOMETRY_H
 
-#ifdef __CUDACC__
-#define CUDA_HOSTDEV __host__ __device__
-#define CUDA_DEV __device__
-#define CUDA_HOST __host__
-#define CUDA_GLOBAL __global__
-#else
-#define CUDA_HOSTDEV
-#define CUDA_DEV
-#define CUDA_HOST
-#define CUDA_GLOBAL
-#endif
-
 #include <cmath>
 
 // isce::core
@@ -29,6 +17,7 @@
 #include "isce/geometry/DEMInterpolator.h"
 
 // isce::cuda::core
+#include "isce/cuda/core/Common.h"
 #include "isce/cuda/core/gpuBasis.h"
 #include "isce/cuda/core/gpuEllipsoid.h"
 #include "isce/cuda/core/gpuOrbit.h"

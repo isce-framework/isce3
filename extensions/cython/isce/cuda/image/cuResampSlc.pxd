@@ -12,6 +12,7 @@ from isceextension cimport LUT2d
 from isceextension cimport Poly2d
 from isceextension cimport Product
 from isceextension cimport Raster
+from isceextension cimport Swath
 
 cdef extern from "isce/cuda/image/ResampSlc.h" namespace "isce::cuda::image":
 

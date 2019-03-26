@@ -114,7 +114,7 @@ inline H5::DataType getH5Type() {
 
 
 template<typename T>
-H5::DataSpace getReadMemorySpace(const T nbElements) {
+inline H5::DataSpace getMemorySpace(const T nbElements) {
 
     // Create a memory dataSpace describing the dataspace of the memory buffer
     // that will receive the data. It's set up as a 1D array.
@@ -125,7 +125,7 @@ H5::DataSpace getReadMemorySpace(const T nbElements) {
 
 
 template<typename T, size_t S>
-H5::DataSpace getReadMemorySpace(const std::array<T, S>& dims) {
+inline H5::DataSpace getMemorySpace(const std::array<T, S>& dims) {
 
     // Create a memory dataSpace describing the dataspace of the memory buffer
     int rank = dims.size();
@@ -219,7 +219,7 @@ void isce::io::IDataSet::read(T * buffer, const int * startIn,
                                 const int * strideIn) { 
  
     // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getReadDataSpace(startIn, countIn, strideIn);	 
+    H5::DataSpace dspace = getDataSpace(startIn, countIn, strideIn);	 
 
     // Read dataset subset to memory
     read(buffer, dspace);
@@ -237,7 +237,7 @@ void isce::io::IDataSet::read(T * buffer,
                               const std::vector<std::slice> * slicesIn) { 
  
     // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getReadDataSpace(slicesIn);	 
+    H5::DataSpace dspace = getDataSpace(slicesIn);	 
 
     // Read dataset subset to memory
     read(buffer, dspace);
@@ -253,7 +253,7 @@ template<typename T>
 void isce::io::IDataSet::read(T * buffer, const std::gslice * gsliceIn) { 
  
     // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getReadDataSpace(gsliceIn);	 
+    H5::DataSpace dspace = getDataSpace(gsliceIn);	 
 
     // Read dataset subset to memory
     read(buffer, dspace);
@@ -281,7 +281,7 @@ void isce::io::IDataSet::read(T * buffer, const H5::DataSpace& dspace) {
     hssize_t nbElements = dspace.getSelectNpoints();
     
     // Format the dataspace of the memory to receive the data read from file
-    H5::DataSpace memspace = getReadMemorySpace((hsize_t)nbElements);
+    H5::DataSpace memspace = getMemorySpace((hsize_t)nbElements);
 
     // Read the dataset to memory
     H5::DataSet::read(buffer, getH5Type<T>() , memspace, dspace);
@@ -331,7 +331,7 @@ void isce::io::IDataSet::read(std::vector<T> &buffer, const std::vector<int> * s
  
 
     // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getReadDataSpace((startIn)  ? startIn->data() : nullptr,
+    H5::DataSpace dspace = getDataSpace((startIn)  ? startIn->data() : nullptr,
                                             (countIn)  ? countIn->data() : nullptr,
                                             (strideIn) ? strideIn->data() : nullptr);
 
@@ -359,7 +359,7 @@ void isce::io::IDataSet::read(std::vector<T> &buffer,
                               const std::vector<std::slice> * slicesIn) { 
  
     // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getReadDataSpace(slicesIn);
+    H5::DataSpace dspace = getDataSpace(slicesIn);
 
     // Check that vector is sized correctly. Adjust size if necessary
     if (buffer.size() < dspace.getSelectNpoints())
@@ -385,7 +385,7 @@ void isce::io::IDataSet::read(std::vector<T> &buffer,
                               const std::gslice * gsliceIn) { 
  
     // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getReadDataSpace(gsliceIn);
+    H5::DataSpace dspace = getDataSpace(gsliceIn);
 
     // Check that vector is sized correctly. Adjust size if necessary
     if (buffer.size() < dspace.getSelectNpoints())
@@ -432,7 +432,7 @@ void isce::io::IDataSet::read(std::valarray<T> &buffer, const std::valarray<int>
                                               const std::valarray<int> *strideIn) { 
  
     // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getReadDataSpace((startIn)  ? &(*startIn)[0] : nullptr,
+    H5::DataSpace dspace = getDataSpace((startIn)  ? &(*startIn)[0] : nullptr,
                                             (countIn)  ? &(*countIn)[0] : nullptr,
                                             (strideIn) ? &(*strideIn)[0] : nullptr);
 
@@ -460,7 +460,7 @@ void isce::io::IDataSet::read(std::valarray<T> &buffer,
                               const std::vector<std::slice> *slicesIn) { 
  
     // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getReadDataSpace(slicesIn);
+    H5::DataSpace dspace = getDataSpace(slicesIn);
 
     // Check that vector is sized correctly. Adjust size if necessary
     if (buffer.size() < dspace.getSelectNpoints())
@@ -486,7 +486,7 @@ void isce::io::IDataSet::read(std::valarray<T> &buffer,
                               const std::gslice *gsliceIn) { 
  
     // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getReadDataSpace(gsliceIn);
+    H5::DataSpace dspace = getDataSpace(gsliceIn);
 
     // Check that vector is sized correctly. Adjust size if necessary
     if (buffer.size() < dspace.getSelectNpoints())
@@ -603,7 +603,7 @@ void isce::io::IDataSet::write(const T* buf, const H5::DataSpace& dspace) {
    // may change in a the future, there is no possibility to subset buf. The 
    // full content of buf is to be selected. Buf dataspace is set to a 1D array 
    // of size equals to the number of elements in the vector.
-   H5::DataSpace mspace = getReadMemorySpace(dspace.getSelectNpoints()); 
+   H5::DataSpace mspace = getMemorySpace(dspace.getSelectNpoints()); 
 
 
    // Get the datatype of the memory buffer
@@ -657,7 +657,7 @@ void isce::io::IDataSet::write(const std::vector<T> &buf,
    // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
    // the memory dataspace, specific parts of the file dataset can be selected for writing
    // into.
-   H5::DataSpace dspace = getReadDataSpace(startIn.data(), countIn.data(), strideIn.data());
+   H5::DataSpace dspace = getDataSpace(startIn.data(), countIn.data(), strideIn.data());
 
    write(buf.data(), dspace);
 
@@ -674,7 +674,7 @@ void isce::io::IDataSet::write(const std::vector<T> &buf, const std::vector<std:
    // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
    // the memory dataspace, specific parts of the file dataset can be selected for writing
    // into.
-   H5::DataSpace dspace = getReadDataSpace(slicesIn);
+   H5::DataSpace dspace = getDataSpace(slicesIn);
 
    write(buf.data(), dspace);
 
@@ -691,7 +691,7 @@ void isce::io::IDataSet::write(const std::vector<T> &buf, const std::gslice * gs
    // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
    // the memory dataspace, specific parts of the file dataset can be selected for writing
    // into.
-   H5::DataSpace dspace = getReadDataSpace(gsliceIn);
+   H5::DataSpace dspace = getDataSpace(gsliceIn);
 
    write(buf.data(), dspace);
 
@@ -736,7 +736,7 @@ void isce::io::IDataSet::write(const std::valarray<T> &buf,
    // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
    // the memory dataspace, specific parts of the file dataset can be selected for writing
    // into.
-   H5::DataSpace dspace = getReadDataSpace(startIn.data(), countIn.data(), strideIn.data());
+   H5::DataSpace dspace = getDataSpace(startIn.data(), countIn.data(), strideIn.data());
 
    write(&buf[0], dspace);
 
@@ -753,7 +753,7 @@ void isce::io::IDataSet::write(const std::valarray<T> &buf, const std::vector<st
    // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
    // the memory dataspace, specific parts of the file dataset can be selected for writing
    // into.
-   H5::DataSpace dspace = getReadDataSpace(slicesIn);
+   H5::DataSpace dspace = getDataSpace(slicesIn);
 
    write(&buf[0], dspace);
 
@@ -770,7 +770,7 @@ void isce::io::IDataSet::write(const std::valarray<T> &buf, const std::gslice * 
    // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
    // the memory dataspace, specific parts of the file dataset can be selected for writing
    // into.
-   H5::DataSpace dspace = getReadDataSpace(gsliceIn);
+   H5::DataSpace dspace = getDataSpace(gsliceIn);
 
    write(&buf[0], dspace);
 
@@ -817,7 +817,7 @@ void isce::io::IDataSet::write(const T* buf,
    // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
    // the memory dataspace, specific parts of the file dataset can be selected for writing
    // into.
-   H5::DataSpace dspace = getReadDataSpace(startIn.data(), countIn.data(), strideIn.data());
+   H5::DataSpace dspace = getDataSpace(startIn.data(), countIn.data(), strideIn.data());
 
    write(buf, dspace);
 
@@ -837,7 +837,7 @@ void isce::io::IDataSet::write(const T* buf, const std::vector<std::slice> * sli
    // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
    // the memory dataspace, specific parts of the file dataset can be selected for writing
    // into.
-   H5::DataSpace dspace = getReadDataSpace(slicesIn);
+   H5::DataSpace dspace = getDataSpace(slicesIn);
 
    write(buf, dspace);
 
@@ -857,7 +857,7 @@ void isce::io::IDataSet::write(const T* buf, const std::gslice * gsliceIn) {
    // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
    // the memory dataspace, specific parts of the file dataset can be selected for writing
    // into.
-   H5::DataSpace dspace = getReadDataSpace(gsliceIn);
+   H5::DataSpace dspace = getDataSpace(gsliceIn);
 
    write(buf, dspace);
 
@@ -918,7 +918,7 @@ inline void isce::io::IDataSet::createAttribute(
         const std::array<T2, S>& dims,
         const std::vector<T>& buffer) {
    
-   createAttribute(name, getH5Type<T>(), getReadMemorySpace(dims), buffer.data());
+   createAttribute(name, getH5Type<T>(), getMemorySpace(dims), buffer.data());
 }
 
 
@@ -933,7 +933,7 @@ inline void isce::io::IDataSet::createAttribute(
         const std::array<T2, S>& dims,
         const std::valarray<T>& buffer) {
 
-   createAttribute(name, getH5Type<T>(), getReadMemorySpace(dims), &buffer[0]);
+   createAttribute(name, getH5Type<T>(), getMemorySpace(dims), &buffer[0]);
 }
 
 
@@ -948,7 +948,7 @@ inline void isce::io::IDataSet::createAttribute(
         const std::array<T2, S>& dims,
         const T* buffer) {
 
-   createAttribute(name, getH5Type<T>(), getReadMemorySpace(dims), buffer);
+   createAttribute(name, getH5Type<T>(), getMemorySpace(dims), buffer);
 }
 
 
@@ -1442,7 +1442,7 @@ inline void isce::io::IGroup::createAttribute(
         const std::array<T2, S>& dims,
         const std::vector<T>& buffer) {
 
-   createAttribute(name, getH5Type<T>(), getReadMemorySpace(dims), buffer.data());
+   createAttribute(name, getH5Type<T>(), getMemorySpace(dims), buffer.data());
 }
 
 
@@ -1457,7 +1457,7 @@ inline void isce::io::IGroup::createAttribute(
         const std::array<T2, S>& dims,
         const std::valarray<T>& buffer) {
 
-   createAttribute(name, getH5Type<T>(), getReadMemorySpace(dims), &buffer[0]);
+   createAttribute(name, getH5Type<T>(), getMemorySpace(dims), &buffer[0]);
 }
 
 
@@ -1472,7 +1472,7 @@ inline void isce::io::IGroup::createAttribute(
         const std::array<T2, S>& dims,
         const T* buffer) {
 
-   createAttribute(name, getH5Type<T>(), getReadMemorySpace(dims), buffer);
+   createAttribute(name, getH5Type<T>(), getMemorySpace(dims), buffer);
 }
 
 
