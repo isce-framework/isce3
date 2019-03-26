@@ -5,8 +5,6 @@
 // Copyright 2017
 
 #include <complex>
-
-#include "isce/core/Utilities.h"
 #include "LUT2d.h"
 
 // Constructor with coordinate starting values and spacing

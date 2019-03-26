@@ -17,6 +17,7 @@
 // isce::core
 #include "LinAlg.h"
 #include "EulerAngles.h"
+#include "Utilities.h"
 
 /** @param[in] yaw_orientation Can be "normal" or "center" */
 isce::core::EulerAngles::
@@ -56,6 +57,25 @@ EulerAngles(const EulerAngles & euler) : Attitude(EULERANGLES_T),
         std::cerr << "Unsupported yaw orientation. Must be normal or center." << std::endl;
         throw std::invalid_argument("Unsupported yaw orientation.");
     }
+}
+
+// Comparison operator
+bool isce::core::EulerAngles::
+operator==(const EulerAngles & other) const {
+    // Easy checks first
+    bool equal = this->nVectors() == other.nVectors();
+    equal *= _refEpoch == other.refEpoch();
+    if (!equal) {
+        return false;
+    }
+    // If we pass the easy checks, check the contents
+    for (size_t i = 0; i < this->nVectors(); ++i) {
+        equal *= isce::core::compareFloatingPoint(_time[i], other.time()[i]);
+        equal *= isce::core::compareFloatingPoint(_yaw[i], other.yaw()[i]);
+        equal *= isce::core::compareFloatingPoint(_pitch[i], other.pitch()[i]);
+        equal *= isce::core::compareFloatingPoint(_roll[i], other.roll()[i]);
+    }
+    return equal;
 }
 
 // Assignment operator

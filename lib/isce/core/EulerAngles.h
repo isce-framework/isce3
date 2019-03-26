@@ -30,6 +30,9 @@ class isce::core::EulerAngles : public isce::core::Attitude {
         /** Copy constructor */
         EulerAngles(const EulerAngles &);
 
+        /** Comparison operator */
+        bool operator==(const EulerAngles &) const;
+
         /** Assignment operator */
         EulerAngles & operator=(const EulerAngles &);
 

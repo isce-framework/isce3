@@ -9,9 +9,11 @@
 // std
 #include <complex>
 #include <valarray>
+#include <type_traits>
 
 // isce::core
 #include <isce/core/Interpolator.h>
+#include <isce/core/Utilities.h>
 
 // Declaration
 namespace isce {
@@ -40,7 +42,7 @@ class isce::core::LUT2d {
 
         // Deep copy constructor
         inline LUT2d(const LUT2d<T> & lut);
-
+        
         // Deep assignment operator
         inline LUT2d & operator=(const LUT2d<T> & lut);
 
@@ -98,6 +100,62 @@ class isce::core::LUT2d {
 
     private:
         inline void _setInterpolator(isce::core::dataInterpMethod method);
+
+    // BVR: I'm placing the comparison operator implementations inline here because
+    // it wasn't clear to me how to handle the template arguments out-of-line
+    public:
+
+        // Comparison operator for floating point
+        template <typename U = T, std::enable_if_t<!std::is_compound<U>::value, int> = 0>
+        inline bool operator==(const isce::core::LUT2d<T> & other) const {
+            // Check coordinates and dimensions first
+            bool equal = _data.width() == other.width();
+            equal *= _data.length() == other.length();
+            if (!equal) {
+                return false;
+            }
+            equal *= isce::core::compareFloatingPoint(_xstart, other.xStart());
+            equal *= isce::core::compareFloatingPoint(_ystart, other.yStart());
+            equal *= isce::core::compareFloatingPoint(_dx, other.xSpacing());
+            equal *= isce::core::compareFloatingPoint(_dy, other.ySpacing());
+            if (!equal) {
+                return false;
+            }
+            // If we made it this far, check contents
+            const isce::core::Matrix<T> & otherMat = other.data();
+            for (size_t i = 0; i < _data.length(); ++i) {
+                for (size_t j = 0; j < _data.width(); ++j) {
+                    equal *= isce::core::compareFloatingPoint(_data(i,j), otherMat(i,j));
+                }
+            }
+            return equal;
+        }
+        
+        // Comparison operator for complex
+        template <typename U = T, std::enable_if_t<std::is_compound<U>::value, int> = 0>
+        inline bool operator==(const isce::core::LUT2d<T> & other) const {
+            // Check coordinates and dimensions first
+            bool equal = _data.width() == other.width();
+            equal *= _data.length() == other.length();
+            if (!equal) {
+                return false;
+            }
+            equal *= isce::core::compareFloatingPoint(_xstart, other.xStart());
+            equal *= isce::core::compareFloatingPoint(_ystart, other.yStart());
+            equal *= isce::core::compareFloatingPoint(_dx, other.xSpacing());
+            equal *= isce::core::compareFloatingPoint(_dy, other.ySpacing());
+            if (!equal) {
+                return false;
+            }
+            // If we made it this far, check contents
+            const isce::core::Matrix<T> & otherMat = other.data();
+            for (size_t i = 0; i < _data.length(); ++i) {
+                for (size_t j = 0; j < _data.width(); ++j) {
+                    equal *= isce::core::compareComplex(_data(i,j), otherMat(i,j));
+                }
+            }
+            return equal;
+        }
 };
 
 // Default constructor using bilinear interpolator
