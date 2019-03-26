@@ -6,17 +6,7 @@
 #ifndef ISCE_CUDA_GEOMETRY_GPUDEMINTERPOLATOR_H
 #define ISCE_CUDA_GEOMETRY_GPUDEMINTERPOLATOR_H
 
-#ifdef __CUDACC__
-#define CUDA_HOSTDEV __host__ __device__
-#define CUDA_DEV __device__
-#define CUDA_HOST __host__
-#define CUDA_GLOBAL __global__
-#else
-#define CUDA_HOSTDEV
-#define CUDA_DEV
-#define CUDA_HOST
-#define CUDA_GLOBAL
-#endif
+#include "isce/cuda/core/Common.h"
 
 // isce::geometry
 #include "isce/geometry/DEMInterpolator.h"
@@ -39,7 +29,7 @@ class isce::cuda::geometry::gpuDEMInterpolator {
 
     public:
         /** Default constructor .*/
-        CUDA_HOSTDEV inline gpuDEMInterpolator() : 
+        CUDA_HOSTDEV inline gpuDEMInterpolator() :
             _haveRaster(false), _refHeight(0.0), _interpMethod(isce::core::BILINEAR_METHOD),
             _xstart(0.0), _ystart(0.0), _deltax(1.0), _deltay(1.0), _owner(false) {}
 

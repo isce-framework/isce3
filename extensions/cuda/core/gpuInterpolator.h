@@ -6,22 +6,11 @@
 #ifndef __ISCE_CUDA_CORE_GPUINTERPOLATOR_H__
 #define __ISCE_CUDA_CORE_GPUINTERPOLATOR_H__
 
-#ifdef __CUDACC__
-#define CUDA_HOSTDEV __host__ __device__
-#define CUDA_DEV __device__
-#define CUDA_HOST __host__
-#define CUDA_GLOBAL __global__
-#else
-#define CUDA_HOSTDEV
-#define CUDA_DEV
-#define CUDA_HOST
-#define CUDA_GLOBAL
-#endif
-
 #include <stdio.h>
 #include <complex>
 #include "isce/core/Matrix.h"
 #include "isce/core/Interpolator.h"
+#include "isce/cuda/core/Common.h"
 
 using isce::core::Matrix;
 
@@ -79,7 +68,7 @@ class gpuSinc2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
     public:
         CUDA_HOSTDEV gpuSinc2dInterpolator(){};
         CUDA_HOST gpuSinc2dInterpolator(int sincLen, int sincSub);
-        CUDA_DEV gpuSinc2dInterpolator(const gpuSinc2dInterpolator &i): 
+        CUDA_HOSTDEV gpuSinc2dInterpolator(const gpuSinc2dInterpolator &i):
             kernel(i.kernel), kernel_length(i.kernel_length), kernel_width(i.kernel_width), sinc_half(i.sinc_half),
             intpx(i.intpx), intpy(i.intpy), owner(false) {};
         CUDA_HOSTDEV ~gpuSinc2dInterpolator();

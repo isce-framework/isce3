@@ -6,18 +6,6 @@
 #ifndef __ISCE_CUDA_CORE_PROJECTIONS_H__
 #define __ISCE_CUDA_CORE_PROJECTIONS_H__
 
-#ifdef __CUDACC__
-#define CUDA_HOSTDEV __host__ __device__
-#define CUDA_DEV __device__
-#define CUDA_HOST __host__
-#define CUDA_GLOBAL __global__
-#else
-#define CUDA_HOSTDEV
-#define CUDA_DEV
-#define CUDA_HOST
-#define CUDA_GLOBAL
-#endif
-
 #include <cmath>
 #include <iostream>
 #include <vector>
@@ -27,6 +15,7 @@
 #include "isce/core/Constants.h"
 
 // isce::cuda::core
+#include "Common.h"
 #include "gpuEllipsoid.h"
 
 using isce::core::cartesian_t;
