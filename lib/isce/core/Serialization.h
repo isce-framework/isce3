@@ -277,9 +277,6 @@ namespace isce {
             isce::io::loadFromH5(group, "slantRange", slantRange);
             isce::io::loadFromH5(group, "zeroDopplerTime", zeroDopplerTime);
 
-            // Get reference epoch
-            isce::core::DateTime refEpoch = isce::io::getRefEpoch(group, "zeroDopplerTime");
-
             // Load LUT2d data in matrix
             isce::core::Matrix<T> matrix(zeroDopplerTime.size(), slantRange.size());
             isce::io::loadFromH5(group, dsetName, matrix);

@@ -65,7 +65,6 @@ geocode(isce::io::Raster & inputRaster,
         // shape of the required block of data in the radar coordinates
         size_t rdrBlockLength = azimuthLastLine - azimuthFirstLine + 1;
         size_t rdrBlockWidth = rangeLastPixel - rangeFirstPixel + 1;
-        size_t rdrBlockSize = rdrBlockLength * rdrBlockWidth;
 
         // X and Y indices (in the radar coordinates) for the 
         // geocoded pixels (after geo2rdr computation)

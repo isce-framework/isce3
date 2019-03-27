@@ -82,8 +82,6 @@ TEST_F(gpuSinc2dInterpolatorTest, Sinc2dFloat) {
         indices(i,1) = yindex;
     }
 
-    size_t N_pts = indices.length();
-    double error = 0.0;
     thrust::complex<float> gpu_z[n_instances];
     std::complex<float> cpu_z;
     
