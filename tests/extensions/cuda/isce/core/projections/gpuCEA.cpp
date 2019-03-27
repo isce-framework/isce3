@@ -41,7 +41,7 @@ struct CEATest : public ::testing::Test {
         EXPECT_NEAR(llh[1], ref_llh[1], 1.0e-9);\
         EXPECT_NEAR(llh[2], ref_llh[2], 1.0e-6);\
         fails += ::testing::Test::HasFailure();\
-    }
+    } struct consume_semicolon
 
 
 ceaTest(Point1, {-1.397694375733237e+00,   8.496490909249732e-01,

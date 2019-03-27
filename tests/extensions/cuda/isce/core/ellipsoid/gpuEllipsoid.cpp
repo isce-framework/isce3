@@ -63,7 +63,7 @@ struct GpuEllipsoidTest : public ::testing::Test {
         EXPECT_NEAR(gpu_llh[1], cpu_llh[1], 1.0e-9);\
         EXPECT_NEAR(gpu_llh[2], cpu_llh[2], 1.0e-6);\
         fails += ::testing::Test::HasFailure();\
-    }    
+    } struct consume_semicolon
 
 ellipsoidGpuTest(Origin, {0.,0.,0.}, {a_cpu,0.,0.});
 

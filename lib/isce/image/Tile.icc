@@ -13,7 +13,7 @@
 
 // Default constructor
 template <typename T>
-isce::image::Tile<T>::Tile() {};
+isce::image::Tile<T>::Tile() {}
 
 // Copy constructor
 template <typename T>
