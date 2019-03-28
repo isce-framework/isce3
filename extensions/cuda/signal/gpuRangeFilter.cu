@@ -38,7 +38,7 @@ void gpuRangeFilter<T>::
 initiateRangeFilter(std::valarray<std::complex<T>> &input,
         std::valarray<std::complex<T>> &spectrum,
         size_t ncols,
-        size_t nrows) 
+        size_t nrows)
 {
     // malloc device memory for eventual max frequency search
     if (!_spectrumSum_set) {
@@ -132,8 +132,8 @@ constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
                              int nfft,
                              std::valarray<std::complex<T>>& _filter1D)
 {
-    // construct a boxcar bandpass filter in frequency domian 
-    // which may have several bands defined by centerferquencies and 
+    // construct a boxcar bandpass filter in frequency domian
+    // which may have several bands defined by centerferquencies and
     // subBandBandwidths
     for (size_t i = 0; i<subBandCenterFrequencies.size(); ++i){
         std::cout << "i: " << i << std::endl;
@@ -144,8 +144,8 @@ constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
         double fH = subBandCenterFrequencies[i] + subBandBandwidths[i]/2;
 
         //index of frequencies for fL and fH
-        int indL; 
-        isce::signal::Filter<T>::indexOfFrequency(dt, nfft, fL, indL); 
+        int indL;
+        isce::signal::Filter<T>::indexOfFrequency(dt, nfft, fL, indL);
         int indH;
         isce::signal::Filter<T>::indexOfFrequency(dt, nfft, fH, indH);
         std::cout << "fL: "<< fL << " , fH: " << fH << " indL: " << indL << " , indH: " << indH << std::endl;
@@ -174,8 +174,8 @@ constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
                              double beta,
                              std::valarray<std::complex<T>>& _filter1D)
 {
-    const double norm = 1.0;    
-    
+    const double norm = 1.0;
+
     for (size_t i = 0; i<subBandCenterFrequencies.size(); ++i){
         double fmid = subBandCenterFrequencies[i];
         double bandwidth = subBandBandwidths[i];
@@ -212,19 +212,19 @@ filterCommonRangeBand(T *d_refSlc, T *d_secSlc, T *range)
     dim3 grid((n_elements+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
     // apply full phase correction to both signals
-    phaseShift_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(&d_refSlc), 
-            range, 
-            _rangePixelSpacing, 
-            T(1.), 
-            _wavelength, 
-            T(1.), 
+    phaseShift_g<<<grid, block>>>(reinterpret_cast<thrust::complex<T> *>(&d_refSlc),
+            range,
+            _rangePixelSpacing,
+            T(1.),
+            _wavelength,
+            T(1.),
             n_elements);
-    phaseShift_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(&d_secSlc), 
-            range, 
-            _rangePixelSpacing, 
-            T(-1.), 
-            _wavelength, 
-            T(1.), 
+    phaseShift_g<<<grid, block>>>(reinterpret_cast<thrust::complex<T> *>(&d_secSlc),
+            range,
+            _rangePixelSpacing,
+            T(-1.),
+            _wavelength,
+            T(1.),
             n_elements);
 
     auto ncols = this->_signal.getColumns();
@@ -233,8 +233,8 @@ filterCommonRangeBand(T *d_refSlc, T *d_secSlc, T *range)
     isce::signal::Filter<float>::fftfreq(ncols, 1.0/_rangeSamplingFrequency, rangeFrequencies);
 
     // calculate frequency shift
-    size_t refIdx = rangeFrequencyShiftMaxIdx(reinterpret_cast<gpuComplex<T> *>(&d_refSlc), nrows, ncols);
-    size_t secIdx = rangeFrequencyShiftMaxIdx(reinterpret_cast<gpuComplex<T> *>(&d_secSlc), nrows, ncols);
+    size_t refIdx = rangeFrequencyShiftMaxIdx(reinterpret_cast<thrust::complex<T> *>(&d_refSlc), nrows, ncols);
+    size_t secIdx = rangeFrequencyShiftMaxIdx(reinterpret_cast<thrust::complex<T> *>(&d_secSlc), nrows, ncols);
     double frequencyShift = rangeFrequencies[refIdx] - rangeFrequencies[secIdx];
 
     std::valarray<double> filterCenterFrequency{0.0};
@@ -250,29 +250,29 @@ filterCommonRangeBand(T *d_refSlc, T *d_secSlc, T *range)
             filterType);
 
     //
-    this->filter(reinterpret_cast<gpuComplex<T> *>(&d_refSlc));
-    this->filter(reinterpret_cast<gpuComplex<T> *>(&d_secSlc));
+    this->filter(reinterpret_cast<thrust::complex<T> *>(&d_refSlc));
+    this->filter(reinterpret_cast<thrust::complex<T> *>(&d_secSlc));
 
     // apply half phase correction
-    phaseShift_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(&d_refSlc), 
-            range, 
-            _rangePixelSpacing, 
-            T(-1.), 
-            _wavelength, 
-            T(2.), 
+    phaseShift_g<<<grid, block>>>(reinterpret_cast<thrust::complex<T> *>(&d_refSlc),
+            range,
+            _rangePixelSpacing,
+            T(-1.),
+            _wavelength,
+            T(2.),
             n_elements);
-    phaseShift_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(&d_secSlc), 
-            range, 
-            _rangePixelSpacing, 
-            T(1.), 
-            _wavelength, 
-            T(2.), 
+    phaseShift_g<<<grid, block>>>(reinterpret_cast<thrust::complex<T> *>(&d_secSlc),
+            range,
+            _rangePixelSpacing,
+            T(1.),
+            _wavelength,
+            T(2.),
             n_elements);
 }
 
 template<class T>
 size_t gpuRangeFilter<T>::
-rangeFrequencyShiftMaxIdx(gpuComplex<T> *spectrum,
+rangeFrequencyShiftMaxIdx(thrust::complex<T> *spectrum,
         int n_rows,
         int n_cols)
 {

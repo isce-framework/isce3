@@ -7,13 +7,12 @@
 #include <stdio.h>
 #include <valarray>
 #include <cuda_runtime.h>
+#include <thrust/complex.h>
 #include "gpuInterpolator.h"
-#include "gpuComplex.h"
 #include "../helper_cuda.h"
 
 using isce::cuda::core::gpuInterpolator;
 using isce::cuda::core::gpuSinc2dInterpolator;
-using isce::cuda::core::gpuComplex;
 
 
 /*
@@ -179,8 +178,8 @@ __device__ U gpuSinc2dInterpolator<U>::interpolate(double x, double y, const U* 
         for (int i = 0; i < kernel_width; i++) {
             for (int j = 0; j < kernel_width; j++) {
                 interp_val += chip[(intpy-i)*nx + intpx - j]
-                     * kernel[ifracy*kernel_width + i]
-                     * kernel[ifracx*kernel_width + j];
+                     * U(kernel[ifracy*kernel_width + i])
+                     * U(kernel[ifracx*kernel_width + j]);
             }
         }
     }
@@ -201,15 +200,15 @@ __host__ __device__ gpuSinc2dInterpolator<U>::~gpuSinc2dInterpolator() {
  each template parameter needs it's own declaration here
  */
 template class gpuSinc2dInterpolator<double>;
-template class gpuSinc2dInterpolator<gpuComplex<double>>;
-template class gpuSinc2dInterpolator<gpuComplex<float>>;
+template class gpuSinc2dInterpolator<thrust::complex<double>>;
+template class gpuSinc2dInterpolator<thrust::complex<float>>;
 
 template __global__ void
 gpuInterpolator_g<double>(gpuSinc2dInterpolator<double> interp, double *x, double *y,
                                   const double *z, double *value, size_t nx, size_t ny);
 template __global__ void
-gpuInterpolator_g<gpuComplex<double>>(gpuSinc2dInterpolator<gpuComplex<double>> interp, double *x, double *y,
-                                  const gpuComplex<double> *z, gpuComplex<double> *value, size_t nx, size_t ny);
+gpuInterpolator_g<thrust::complex<double>>(gpuSinc2dInterpolator<thrust::complex<double>> interp, double *x, double *y,
+                                  const thrust::complex<double> *z, thrust::complex<double> *value, size_t nx, size_t ny);
 template __global__ void
-gpuInterpolator_g<gpuComplex<float>>(gpuSinc2dInterpolator<gpuComplex<float>> interp, double *x, double *y,
-                                  const gpuComplex<float> *z, gpuComplex<float> *value, size_t nx, size_t ny);
+gpuInterpolator_g<thrust::complex<float>>(gpuSinc2dInterpolator<thrust::complex<float>> interp, double *x, double *y,
+                                  const thrust::complex<float> *z, thrust::complex<float> *value, size_t nx, size_t ny);

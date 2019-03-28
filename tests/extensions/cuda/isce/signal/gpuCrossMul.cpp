@@ -17,9 +17,9 @@
 
 TEST(gpuCrossmul, Crossmul)
 {
-    //This test creates an interferogram between an SLC and itself and checks if the 
+    //This test creates an interferogram between an SLC and itself and checks if the
     //interferometric phase is zero.
-    
+
     //a raster object for the reference SLC
     isce::io::Raster referenceSlc("../../../../lib/isce/data/warped_envisat.slc.vrt");
 
@@ -34,7 +34,7 @@ TEST(gpuCrossmul, Crossmul)
 
     // HDF5 file with required metadata
     std::string h5file("../../../../lib/isce/data/envisat.h5");
-    
+
     //H5 object
     isce::io::IH5File file(h5file);
 
@@ -52,7 +52,7 @@ TEST(gpuCrossmul, Crossmul)
     // get the pulse repetition frequency (PRF)
     double prf = swath.nominalAcquisitionPRF();
 
-    //instantiate the Crossmul class  
+    //instantiate the Crossmul class
     isce::cuda::signal::gpuCrossmul crsmul;
 
     // set Doppler polynomials for refernce and secondary SLCs
@@ -63,7 +63,7 @@ TEST(gpuCrossmul, Crossmul)
 
     // set commonAzimuthBandwidth
     crsmul.commonAzimuthBandwidth(2000.0);
-    
+
     // set beta parameter for cosine filter in commonAzimuthBandwidth filter
     crsmul.beta(0.25);
 
@@ -86,7 +86,7 @@ TEST(gpuCrossmul, Crossmul)
     interferogram.getBlock(data, 0, 0, width, length);
 
     // check if the interferometric phase is zero
-    double err = 0.0;   
+    double err = 0.0;
     double max_err = 0.0;
     for ( size_t i = 0; i < data.size(); ++i ) {
           err = std::arg(data[i]);
@@ -94,7 +94,7 @@ TEST(gpuCrossmul, Crossmul)
               max_err = std::abs(err);
         }
     }
-    
+
     ASSERT_LT(max_err, 1.0e-7);
 }
 

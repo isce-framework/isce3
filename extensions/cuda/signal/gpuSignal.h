@@ -11,10 +11,9 @@
 #include <valarray>
 
 #include <cufft.h>
-#include "isce/cuda/core/Common.h"
-#include "isce/cuda/core/gpuComplex.h"
+#include <thrust/complex.h>
 
-using isce::cuda::core::gpuComplex;
+#include "isce/cuda/core/Common.h"
 
 // Declaration
 namespace isce {
@@ -38,23 +37,23 @@ class gpuSignal {
         gpuSignal(cufftType _type);
         ~gpuSignal();
 
-        /** \brief initiate plan for FFT in range direction 
+        /** \brief initiate plan for FFT in range direction
          * for a block of complex data.
-         * azimuth direction is assumed to be in the direction of the 
+         * azimuth direction is assumed to be in the direction of the
          * columns of the array.
          */
         void azimuthFFT(int ncolumns, int nrows);
 
-        /** \brief initiate plan for FFT in azimuth direction 
+        /** \brief initiate plan for FFT in azimuth direction
          * for a block of complex data.
-         * range direction is assumed to be in the direction of the 
+         * range direction is assumed to be in the direction of the
          * columns of the array.
          */
         void rangeFFT(int ncolumns, int nrows);
 
-        /** \brief initiate plan for FFT in azimuth direction 
+        /** \brief initiate plan for FFT in azimuth direction
          * for a block of complex data.
-         * range direction is assumed to be in the direction of the 
+         * range direction is assumed to be in the direction of the
          * columns of the array.
          */
         void FFT2D(int ncolumns, int nrows);
@@ -62,7 +61,7 @@ class gpuSignal {
         /** \brief initiate cuFFT plan for a block of complex data
          *  input parameters cuFFT interface for fftw_plan_many_dft
          */
-        void fftPlan(int rank, int* n, int howmany,                   
+        void fftPlan(int rank, int* n, int howmany,
                     int* inembed, int istride, int idist,
                     int* onembed, int ostride, int odist);
 
@@ -122,13 +121,13 @@ class gpuSignal {
         /** upsample **/
         void upsample(std::valarray<std::complex<T>> &input,
                       std::valarray<std::complex<T>> &output,
-                      int row, 
-                      int ncols, 
+                      int row,
+                      int ncols,
                       int upsampleFactor);
         void upsample(std::valarray<std::complex<T>> &input,
                       std::valarray<std::complex<T>> &output,
-                      int row, 
-                      int ncols, 
+                      int row,
+                      int ncols,
                       int upsampleFactor,
                       std::valarray<std::complex<T>> &shiftImpact);
 
@@ -165,34 +164,34 @@ class gpuSignal {
 /** FFT shift on device
  */
 template<class T>
-CUDA_GLOBAL void rangeShift_g(gpuComplex<T> *data_lo_res, 
-        gpuComplex<T> *data_hi_res, 
-        int n_rows, 
-        int n_cols_lo, 
+CUDA_GLOBAL void rangeShift_g(thrust::complex<T> *data_lo_res,
+        thrust::complex<T> *data_hi_res,
+        int n_rows,
+        int n_cols_lo,
         int n_cols_hi);
 
 /** FFT shift on device
  */
 template<class T>
-CUDA_GLOBAL void rangeShiftImpactMult_g(gpuComplex<T> *data_lo_res, 
-        gpuComplex<T> *data_hi_res, 
-        gpuComplex<T> *impact_shift, 
-        int n_rows, 
-        int n_cols_lo, 
+CUDA_GLOBAL void rangeShiftImpactMult_g(thrust::complex<T> *data_lo_res,
+        thrust::complex<T> *data_hi_res,
+        thrust::complex<T> *impact_shift,
+        int n_rows,
+        int n_cols_lo,
         int n_cols_hi);
 
 template<class T>
 void upsample(gpuSignal<T> &fwd,
         gpuSignal<T> &inv,
-        gpuComplex<T> *input,
-        gpuComplex<T> *output);
+        thrust::complex<T> *input,
+        thrust::complex<T> *output);
 
 template<class T>
 void upsample(gpuSignal<T> &fwd,
         gpuSignal<T> &inv,
-        gpuComplex<T> *input,
-        gpuComplex<T> *output,
-        gpuComplex<T> *shiftImpact);
+        thrust::complex<T> *input,
+        thrust::complex<T> *output,
+        thrust::complex<T> *shiftImpact);
 
 template<class T>
 void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
@@ -212,7 +211,7 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
  * https://stackoverflow.com/questions/14441142/scaling-in-inverse-fft-by-cufft
  */
 template<class T>
-CUDA_GLOBAL void normalize_g(gpuComplex<T> *data, 
+CUDA_GLOBAL void normalize_g(thrust::complex<T> *data,
         T normalization,
         size_t n_elements);
 

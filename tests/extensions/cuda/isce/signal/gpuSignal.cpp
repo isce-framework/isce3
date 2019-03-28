@@ -8,21 +8,19 @@
 #include <complex>
 #include <cufft.h>
 #include <cufftXt.h>
+#include <thrust/complex.h>
 #include <gtest/gtest.h>
 
 #include "isce/signal/Signal.h"
 #include "isce/io/Raster.h"
 
 #include "isce/cuda/signal/gpuSignal.h"
-#include "isce/cuda/core/gpuComplex.h"
-
 
 using isce::cuda::signal::gpuSignal;
-using isce::cuda::core::gpuComplex;
 
 TEST(gpuSignal, ForwardBackwardRangeFloat)
 {
-    // take a block of data, perform range FFT and then iverse FFT and compare with original data   
+    // take a block of data, perform range FFT and then iverse FFT and compare with original data
     isce::io::Raster inputSlc("../../../../lib/isce/data/warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
@@ -34,13 +32,13 @@ TEST(gpuSignal, ForwardBackwardRangeFloat)
 
     // reserve memory for a block of data computed from inverse FFT
     std::valarray<std::complex<float>> inverted_data(width*blockLength);
-    
+
     // read a block of data
     inputSlc.getBlock(data, 0, 0, width, blockLength);
 
     // copy data to device
     cudaError_t oops;
-    size_t data_sz = width * blockLength * sizeof(gpuComplex<float>);
+    size_t data_sz = width * blockLength * sizeof(thrust::complex<float>);
     oops = cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz);
     oops = cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice);
 
@@ -54,8 +52,8 @@ TEST(gpuSignal, ForwardBackwardRangeFloat)
     sig.inverseDevMem(d_data);
 
     cudaMemcpy(&inverted_data[0], d_data, data_sz, cudaMemcpyDeviceToHost);
-   
-    //normalize the result of inverse fft 
+
+    //normalize the result of inverse fft
     inverted_data /=width;
 
     int blockSize = width*blockLength;
@@ -74,7 +72,7 @@ TEST(gpuSignal, ForwardBackwardRangeFloat)
 
 TEST(gpuSignal, ForwardBackwardRangeDouble)
 {
-    // take a block of data, perform range FFT and then iverse FFT and compare with original data   
+    // take a block of data, perform range FFT and then iverse FFT and compare with original data
     isce::io::Raster inputSlc("../../../../lib/isce/data/warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
@@ -86,13 +84,13 @@ TEST(gpuSignal, ForwardBackwardRangeDouble)
 
     // reserve memory for a block of data computed from inverse FFT
     std::valarray<std::complex<double>> inverted_data(width*blockLength);
-    
+
     // read a block of data
     inputSlc.getBlock(data, 0, 0, width, blockLength);
 
     // copy data to device
     cudaError_t oops;
-    size_t data_sz = width * blockLength * sizeof(gpuComplex<double>);
+    size_t data_sz = width * blockLength * sizeof(thrust::complex<double>);
     oops = cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz);
     oops = cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice);
 
@@ -106,8 +104,8 @@ TEST(gpuSignal, ForwardBackwardRangeDouble)
     sig.inverseDevMem(d_data);
 
     cudaMemcpy(&inverted_data[0], d_data, data_sz, cudaMemcpyDeviceToHost);
-   
-    //normalize the result of inverse fft 
+
+    //normalize the result of inverse fft
     inverted_data /=width;
 
     int blockSize = width*blockLength;
@@ -126,7 +124,7 @@ TEST(gpuSignal, ForwardBackwardRangeDouble)
 
 TEST(gpuSignal, ForwardBackwardAzimuthFloat)
 {
-    // take a block of data, perform range FFT and then iverse FFT and compare with original data   
+    // take a block of data, perform range FFT and then iverse FFT and compare with original data
     isce::io::Raster inputSlc("../../../../lib/isce/data/warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
@@ -138,13 +136,13 @@ TEST(gpuSignal, ForwardBackwardAzimuthFloat)
 
     // reserve memory for a block of data computed from inverse FFT
     std::valarray<std::complex<float>> inverted_data(width*blockLength);
-    
+
     // read a block of data
     inputSlc.getBlock(data, 0, 0, width, blockLength);
 
     // copy data to device
     cudaError_t oops;
-    size_t data_sz = width * blockLength * sizeof(gpuComplex<float>);
+    size_t data_sz = width * blockLength * sizeof(thrust::complex<float>);
     oops = cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz);
     oops = cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice);
 
@@ -158,8 +156,8 @@ TEST(gpuSignal, ForwardBackwardAzimuthFloat)
     sig.inverseDevMem(d_data);
 
     cudaMemcpy(&inverted_data[0], d_data, data_sz, cudaMemcpyDeviceToHost);
-   
-    //normalize the result of inverse fft 
+
+    //normalize the result of inverse fft
     inverted_data /=width;
 
     int blockSize = width*blockLength;
@@ -178,7 +176,7 @@ TEST(gpuSignal, ForwardBackwardAzimuthFloat)
 
 TEST(gpuSignal, ForwardBackwardAzimuthDouble)
 {
-    // take a block of data, perform range FFT and then iverse FFT and compare with original data   
+    // take a block of data, perform range FFT and then iverse FFT and compare with original data
     isce::io::Raster inputSlc("../../../../lib/isce/data/warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
@@ -190,13 +188,13 @@ TEST(gpuSignal, ForwardBackwardAzimuthDouble)
 
     // reserve memory for a block of data computed from inverse FFT
     std::valarray<std::complex<double>> inverted_data(width*blockLength);
-    
+
     // read a block of data
     inputSlc.getBlock(data, 0, 0, width, blockLength);
 
     // copy data to device
     cudaError_t oops;
-    size_t data_sz = width * blockLength * sizeof(gpuComplex<double>);
+    size_t data_sz = width * blockLength * sizeof(thrust::complex<double>);
     oops = cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz);
     oops = cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice);
 
@@ -210,8 +208,8 @@ TEST(gpuSignal, ForwardBackwardAzimuthDouble)
     sig.inverseDevMem(d_data);
 
     cudaMemcpy(&inverted_data[0], d_data, data_sz, cudaMemcpyDeviceToHost);
-   
-    //normalize the result of inverse fft 
+
+    //normalize the result of inverse fft
     inverted_data /=width;
 
     int blockSize = width*blockLength;
@@ -258,12 +256,12 @@ TEST(gpuSignal, upsampleFloat)
     // create plans
     sig_lo_res.rangeFFT(nfft, 1);
     sig_hi_res.rangeFFT(oversample*nfft, 1);
- 
-    upsample(sig_lo_res, 
-            sig_hi_res, 
+
+    upsample(sig_lo_res,
+            sig_hi_res,
             slc,
             slcU);
-    
+
     // Check if the original smaples have the same phase in the signal before and after upsampling
     float max_err = 0.0;
     float err = 0.0;
@@ -286,7 +284,7 @@ TEST(gpuSignal, upsampleFloat)
         if (std::abs(err_u) > max_err_u){
               max_err_u = std::abs(err_u);
         }
-    }    
+    }
 
     ASSERT_LT(max_err, 1.0e-6);
     ASSERT_LT(max_err_u, 1.0e-6);
@@ -322,12 +320,12 @@ TEST(gpuSignal, upsampleDouble)
     // create plans
     sig_lo_res.rangeFFT(nfft, 1);
     sig_hi_res.rangeFFT(oversample*nfft, 1);
- 
-    upsample(sig_lo_res, 
-            sig_hi_res, 
+
+    upsample(sig_lo_res,
+            sig_hi_res,
             slc,
             slcU);
-    
+
     // Check if the original smaples have the same phase in the signal before and after upsampling
     double max_err = 0.0;
     double err = 0.0;
@@ -350,7 +348,7 @@ TEST(gpuSignal, upsampleDouble)
         if (std::abs(err_u) > max_err_u){
               max_err_u = std::abs(err_u);
         }
-    }    
+    }
 
     ASSERT_LT(max_err, 1.0e-14);
     ASSERT_LT(max_err_u, 1.0e-9);
@@ -382,7 +380,7 @@ TEST(gpuSignal, FFT2D)
 
     // copy data to device
     cudaError_t oops;
-    size_t data_sz = width * blockLength * sizeof(gpuComplex<double>);
+    size_t data_sz = width * blockLength * sizeof(thrust::complex<double>);
     oops = cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz);
     oops = cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice);
 
@@ -391,14 +389,14 @@ TEST(gpuSignal, FFT2D)
 
     // create plan
     sig.FFT2D(width, blockLength);
-  
+
     sig.forwardDevMem(d_data);
     sig.inverseDevMem(d_data);
 
     cudaMemcpy(&invertData[0], d_data, data_sz, cudaMemcpyDeviceToHost);
-    
+
     invertData /= width*length;
-   
+
     double max_err = 0.0;
     double err = 0.0;
     for (size_t i = 0; i< length; ++i){
@@ -430,7 +428,7 @@ TEST(gpuSignal, realDoubleDataFFT)
 
     for (size_t i = 0; i< length; ++i){
         for (size_t j = 0; j< width; ++j){
-            data[i*width + j] = i+j; 
+            data[i*width + j] = i+j;
         }
     }
 
@@ -448,7 +446,7 @@ TEST(gpuSignal, realDoubleDataFFT)
 
     for (size_t i = 0; i< length; ++i){
         for (size_t j = 0; j< width; ++j){
-            invertData[i*width + j] = i+j; 
+            invertData[i*width + j] = i+j;
         }
     }
 
@@ -465,7 +463,7 @@ TEST(gpuSignal, realDoubleDataFFT)
     ASSERT_LT(max_err_2DFFT, 1.0e-12);
 }
 
-int main(int argc, char * argv[]) 
+int main(int argc, char * argv[])
 {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
