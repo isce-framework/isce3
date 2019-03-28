@@ -14,6 +14,9 @@
 #include <iostream>
 #include <sstream>
 
+// isce::core
+#include <isce/core/DateTime.h>
+
 // isce::io
 #include <isce/io/IH5.h>
 
