@@ -36,7 +36,7 @@ void initInterpKernel(isce::cuda::core::gpuInterpolator<T> ** interp,
 template <typename T>
 __host__
 void isce::cuda::core::gpuLUT2d<T>::
-initInterp() {
+_initInterp() {
     // Allocate interpolator pointer on device
     checkCudaErrors(cudaMalloc(&_interp, sizeof(isce::cuda::core::gpuInterpolator<T> **)));
 
@@ -61,7 +61,7 @@ void finalizeInterpKernel(isce::cuda::core::gpuInterpolator<T> ** interp) {
 template <typename T>
 __host__
 void isce::cuda::core::gpuLUT2d<T>::
-finalizeInterp() {
+_finalizeInterp() {
     // Call finalization kernel
     finalizeInterpKernel<<<1, 1>>>(_interp);
 
@@ -103,7 +103,7 @@ gpuLUT2d(const isce::core::LUT2d<T> & lut) :
     checkCudaErrors(cudaMemcpy(_data, lutData.data(), N * sizeof(T), cudaMemcpyHostToDevice));
 
     // Create interpolator
-    initInterp();
+    _initInterp();
     _owner = true;
 }
 
@@ -155,7 +155,7 @@ isce::cuda::core::gpuLUT2d<T>::
     // Only owner of memory clears it
     if (_owner && _haveData) {
         checkCudaErrors(cudaFree(_data));
-        finalizeInterp();
+        _finalizeInterp();
     }
 }
 

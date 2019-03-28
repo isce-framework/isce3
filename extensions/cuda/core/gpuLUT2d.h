@@ -39,13 +39,7 @@ class isce::cuda::core::gpuLUT2d {
 
         /** Destructor */
         ~gpuLUT2d();
-
-        /** Initialize interpolation object on device. */
-        CUDA_HOST void initInterp();
-
-        /** Finalize/delete interpolation object on device. */
-        CUDA_HOST void finalizeInterp();
-
+ 
         /** Get starting X-coordinate */
         CUDA_HOSTDEV inline double xStart() const { return _xstart; }
 
@@ -110,8 +104,14 @@ class isce::cuda::core::gpuLUT2d {
         // Do I own data?
         bool _owner;
 
-};
+    // Interpolation pointer handlers
+    private:
+        /** Initialize interpolation object on device. */
+        CUDA_HOST void _initInterp();
 
+        /** Finalize/delete interpolation object on device. */
+        CUDA_HOST void _finalizeInterp();
+};
 
 #endif
 
