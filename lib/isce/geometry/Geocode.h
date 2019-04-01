@@ -84,7 +84,9 @@ class isce::geometry::Geocode {
                               double rangeSpacing,
                               double wavelength,
                               int radarGridWidth,
-                              int lookSide);
+                              int lookSide,
+                              int numberAzimuthLooks = 1,
+                              int numberRangeLooks = 1);
 
         // Set interpolator 
         inline void interpolator(isce::core::dataInterpMethod method);

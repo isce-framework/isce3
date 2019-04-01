@@ -7,20 +7,16 @@
 #include <cstdio>
 #include <string>
 
-#include "gpuSignal.h"
-#include "isce/cuda/core/gpuComplex.h"
-
 #include <cuda_runtime.h>
 #include <cufftXt.h>
+
+#include "gpuSignal.h"
 #include "isce/cuda/helper_cuda.h"
 #include "isce/cuda/helper_functions.h"
-
 
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 
 using isce::cuda::signal::gpuSignal;
-using isce::cuda::core::gpuComplex;
-
 
 /** Constructor **/
 template<class T>
@@ -56,7 +52,7 @@ void gpuSignal<T>::
 rangeFFT(int ncolumns, int nrows)
 {
     _configureRangeFFT(ncolumns, nrows);
-    
+
     fftPlan(_rank, _n, _howmany,
             _inembed, _istride, _idist,
             _onembed, _ostride, _odist);
@@ -72,7 +68,7 @@ void gpuSignal<T>::
 azimuthFFT(int ncolumns, int nrows)
 {
     _configureAzimuthFFT(ncolumns, nrows);
-    
+
     fftPlan(_rank, _n, _howmany,
             _inembed, _istride, _idist,
             _onembed, _ostride, _odist);
@@ -123,16 +119,16 @@ fftPlan(int rank, int *n, int howmany,
     checkCudaErrors(cufftCreate(&_plan));
     _plan_set = true;
     size_t worksize;
-    checkCudaErrors(cufftMakePlanMany(_plan, rank, n, 
-                                      inembed, istride, idist, 
-                                      onembed, ostride, odist, 
+    checkCudaErrors(cufftMakePlanMany(_plan, rank, n,
+                                      inembed, istride, idist,
+                                      onembed, ostride, odist,
                                       _cufft_type, _howmany, &worksize));
 }
 
 
 /** finds next power of 2 >= given size
 *   @param[in] N the actual length of a signal
-*   @param[in] fftLength next power of two 
+*   @param[in] fftLength next power of two
 */
 template <class T>
 void gpuSignal<T>::
@@ -147,7 +143,7 @@ nextPowerOfTwo(size_t N, size_t &fftLength)
 }
 
 
-/** sets range specific FFT parameters 
+/** sets range specific FFT parameters
 *   @param[in] ncolumns number of columns
 *   @param[in] nrows number of rows
 */
@@ -160,13 +156,13 @@ _configureRangeFFT(int ncolumns, int nrows)
     _n[1] = 0;
 
     _howmany = nrows;
-    
+
     _inembed[0] = ncolumns;
     _inembed[0] = 0;
 
     _istride = 1;
     _idist = ncolumns;
-    
+
     _onembed[0] = ncolumns;
     _onembed[1] = 0;
 
@@ -213,7 +209,7 @@ _configureAzimuthFFT(int ncolumns, int nrows)
 }
 
 
-/** copies data from host to device 
+/** copies data from host to device
 *   @param[in] pointer to host data
 */
 template<class T>
@@ -231,7 +227,7 @@ dataToDevice(std::complex<T> *input)
 }
 
 
-/** copies data from host to device 
+/** copies data from host to device
 *   @param[in] valarray on host data
 */
 template<class T>
@@ -254,7 +250,7 @@ dataToHost(std::complex<T> *output)
 {
     if (_d_data_set) {
         size_t output_size = _n_elements*sizeof(T)*2;
-        // copy output 
+        // copy output
         checkCudaErrors(cudaMemcpy(output, _d_data, output_size, cudaMemcpyDeviceToHost));
     }
 }
@@ -265,7 +261,7 @@ dataToHost(std::valarray<std::complex<T>> &output)
 {
     if (_d_data_set) {
         size_t output_size = _n_elements*sizeof(T)*2;
-        // copy output 
+        // copy output
         checkCudaErrors(cudaMemcpy(&output[0], _d_data, output_size, cudaMemcpyDeviceToHost));
     }
 }
@@ -326,7 +322,7 @@ forwardDevMem(T *dataInPlace) {
 }
 
 
-/** unnormalized forward complex float transform 
+/** unnormalized forward complex float transform
 *  @param[in] pointer to input block of data
 *  @param[in] pointer to output block of spectrum
 */
@@ -338,7 +334,7 @@ forwardC2C(std::complex<T> *input, std::complex<T> *output)
         size_t input_size = _n_elements*sizeof(T)*2;
         size_t output_size = _n_elements*sizeof(T)*2;
 
-        // allocate device memory 
+        // allocate device memory
         T *d_input;
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
         T *d_output;
@@ -354,14 +350,14 @@ forwardC2C(std::complex<T> *input, std::complex<T> *output)
 
         // copy output
         checkCudaErrors(cudaMemcpy(output, d_input, input_size, cudaMemcpyDeviceToHost));
-        
+
         cudaFree(d_input);
         cudaFree(d_output);
     }
 }
 
 
-/** unnormalized forward complex float transform 
+/** unnormalized forward complex float transform
 *  @param[in] valarray containing input block of data
 *  @param[in] valarray containing output block of spectrum
 */
@@ -373,7 +369,7 @@ forwardC2C(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>>
         size_t input_size = input.size()*sizeof(T)*2;
         size_t output_size = output.size()*sizeof(T)*2;
 
-        // allocate device memory 
+        // allocate device memory
         T *d_input;
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
         T *d_output;
@@ -389,14 +385,14 @@ forwardC2C(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>>
 
         // copy output
         checkCudaErrors(cudaMemcpy(&output[0], d_input, input_size, cudaMemcpyDeviceToHost));
-        
+
         cudaFree(d_input);
         cudaFree(d_output);
     }
 }
 
 
-/** unnormalized forward complex double transform 
+/** unnormalized forward complex double transform
 *  @param[in] pointer to input block of data
 *  @param[in] pointer to output block of spectrum
 */
@@ -408,7 +404,7 @@ forwardZ2Z(std::complex<T> *input, std::complex<T> *output)
         size_t input_size = _n_elements*sizeof(T)*2;
         size_t output_size = _n_elements*sizeof(T)*2;
 
-        // allocate device memory 
+        // allocate device memory
         T *d_input;
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
         T *d_output;
@@ -424,14 +420,14 @@ forwardZ2Z(std::complex<T> *input, std::complex<T> *output)
 
         // copy output
         checkCudaErrors(cudaMemcpy(output, d_input, input_size, cudaMemcpyDeviceToHost));
-        
+
         cudaFree(d_input);
         cudaFree(d_output);
     }
 }
 
 
-/** unnormalized forward complex double transform 
+/** unnormalized forward complex double transform
 *  @param[in] valarray containing input block of data
 *  @param[in] valarray containing output block of spectrum
 */
@@ -443,7 +439,7 @@ forwardZ2Z(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>>
         size_t input_size = input.size()*sizeof(T)*2;
         size_t output_size = output.size()*sizeof(T)*2;
 
-        // allocate device memory 
+        // allocate device memory
         T *d_input;
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
         T *d_output;
@@ -459,7 +455,7 @@ forwardZ2Z(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>>
 
         // copy output
         checkCudaErrors(cudaMemcpy(&output[0], d_input, input_size, cudaMemcpyDeviceToHost));
-        
+
         cudaFree(d_input);
         cudaFree(d_output);
     }
@@ -478,7 +474,7 @@ forwardD2Z(T *input, std::complex<T> *output)
         size_t input_size = _n_elements*sizeof(T);
         size_t output_size = _n_elements*sizeof(T)*2;
 
-        // allocate device memory 
+        // allocate device memory
         T *d_input;
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
         T *d_output;
@@ -493,14 +489,14 @@ forwardD2Z(T *input, std::complex<T> *output)
 
         // copy output
         checkCudaErrors(cudaMemcpy(output, d_output, output_size, cudaMemcpyDeviceToHost));
-        
+
         cudaFree(d_input);
         cudaFree(d_output);
     }
 }
 
 
-/** unnormalized forward complex float transform 
+/** unnormalized forward complex float transform
 *  @param[in] pointer to input block of data
 *  @param[in] pointer to output block of spectrum
 */
@@ -512,7 +508,7 @@ forward(std::complex<float> *input, std::complex<float> *output)
 }
 
 
-/** unnormalized forward complex double transform 
+/** unnormalized forward complex double transform
 *  @param[in] pointer to input block of data
 *  @param[in] pointer to output block of spectrum
 */
@@ -524,7 +520,7 @@ forward(std::complex<double> *input, std::complex<double> *output)
 }
 
 
-/** unnormalized forward complex float transform 
+/** unnormalized forward complex float transform
 *  @param[in] valarray containing input block of data
 *  @param[in] valarray containing output block of spectrum
 */
@@ -536,7 +532,7 @@ forward(std::valarray<std::complex<float>> &input, std::valarray<std::complex<fl
 }
 
 
-/** unnormalized forward complex double transform 
+/** unnormalized forward complex double transform
 *  @param[in] valarray containing input block of data
 *  @param[in] valarray containing output block of spectrum
 */
@@ -603,7 +599,7 @@ inverseDevMem(T *dataInPlace) {
 }
 
 
-/** unnormalized inverse complex float transform 
+/** unnormalized inverse complex float transform
 *  @param[in] pointer to input block of spectrum
 *  @param[in] pointer to output block of data
 */
@@ -615,7 +611,7 @@ inverseC2C(std::complex<T> *input, std::complex<T> *output)
         size_t input_size = _n_elements*sizeof(T)*2;
         size_t output_size = _n_elements*sizeof(T)*2;
 
-        // allocate device memory 
+        // allocate device memory
         T *d_input;
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
         T *d_output;
@@ -631,7 +627,7 @@ inverseC2C(std::complex<T> *input, std::complex<T> *output)
 
         // copy output
         checkCudaErrors(cudaMemcpy(output, d_input, input_size, cudaMemcpyDeviceToHost));
-        
+
         cudaFree(d_input);
         cudaFree(d_output);
     }
@@ -639,7 +635,7 @@ inverseC2C(std::complex<T> *input, std::complex<T> *output)
 }
 
 
-/** unnormalized inverse complex float transform 
+/** unnormalized inverse complex float transform
 *  @param[in] valarray containing input block of spectrum
 *  @param[in] valarray containing output block of data
 */
@@ -651,7 +647,7 @@ inverseC2C(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>>
         size_t input_size = input.size()*sizeof(T)*2;
         size_t output_size = output.size()*sizeof(T)*2;
 
-        // allocate device memory 
+        // allocate device memory
         T *d_input;
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
         T *d_output;
@@ -667,14 +663,14 @@ inverseC2C(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>>
 
         // copy output
         checkCudaErrors(cudaMemcpy(&output[0], d_input, input_size, cudaMemcpyDeviceToHost));
-        
+
         cudaFree(d_input);
         cudaFree(d_output);
     }
 }
 
 
-/** unnormalized inverse complex double transform 
+/** unnormalized inverse complex double transform
 *  @param[in] pointer to input block of spectrum
 *  @param[in] pointer to output block of data
 */
@@ -686,7 +682,7 @@ inverseZ2Z(std::complex<T> *input, std::complex<T> *output)
         size_t input_size = _n_elements*sizeof(T)*2;
         size_t output_size = _n_elements*sizeof(T)*2;
 
-        // allocate device memory 
+        // allocate device memory
         T *d_input;
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
         T *d_output;
@@ -702,14 +698,14 @@ inverseZ2Z(std::complex<T> *input, std::complex<T> *output)
 
         // copy output
         checkCudaErrors(cudaMemcpy(output, d_input, input_size, cudaMemcpyDeviceToHost));
-        
+
         cudaFree(d_input);
         cudaFree(d_output);
     }
 }
 
 
-/** unnormalized inverse complex double transform 
+/** unnormalized inverse complex double transform
 *  @param[in] valarray containing input block of spectrum
 *  @param[in] valarray containing output block of data
 */
@@ -721,7 +717,7 @@ inverseZ2Z(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>>
         size_t input_size = input.size()*sizeof(T)*2;
         size_t output_size = output.size()*sizeof(T)*2;
 
-        // allocate device memory 
+        // allocate device memory
         T *d_input;
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
         T *d_output;
@@ -737,7 +733,7 @@ inverseZ2Z(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>>
 
         // copy output
         checkCudaErrors(cudaMemcpy(&output[0], d_input, input_size, cudaMemcpyDeviceToHost));
-        
+
         cudaFree(d_input);
         cudaFree(d_output);
     }
@@ -756,7 +752,7 @@ inverseZ2D(std::complex<T> *input, T *output)
         size_t input_size = _n_elements*sizeof(T)*2;
         size_t output_size = _n_elements*sizeof(T);
 
-        // allocate device memory 
+        // allocate device memory
         T *d_input;
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
         T *d_output;
@@ -771,14 +767,14 @@ inverseZ2D(std::complex<T> *input, T *output)
 
         // copy output
         checkCudaErrors(cudaMemcpy(output, d_output, output_size, cudaMemcpyDeviceToHost));
-        
+
         cudaFree(d_input);
         cudaFree(d_output);
     }
 }
 
 
-/** unnormalized inverse complex float transform 
+/** unnormalized inverse complex float transform
 *  @param[in] pointer to input block of spectrum
 *  @param[in] pointer to output block of data
 */
@@ -790,7 +786,7 @@ inverse(std::complex<float> *input, std::complex<float> *output)
 }
 
 
-/** unnormalized inverse complex double transform 
+/** unnormalized inverse complex double transform
 *  @param[in] pointer to input block of spectrum
 *  @param[in] pointer to output block of data
 */
@@ -802,7 +798,7 @@ inverse(std::complex<double> *input, std::complex<double> *output)
 }
 
 
-/** unnormalized inverse complex float transform 
+/** unnormalized inverse complex float transform
 *  @param[in] valarray containing input block of spectrum
 *  @param[in] valarray containing output block of data
 */
@@ -814,7 +810,7 @@ inverse(std::valarray<std::complex<float>> &input, std::valarray<std::complex<fl
 }
 
 
-/** unnormalized inverse complex double transform 
+/** unnormalized inverse complex double transform
 *  @param[in] valarray containing input block of spectrum
 *  @param[in] valarray containing output block of data
 */
@@ -838,8 +834,8 @@ template<class T>
 void gpuSignal<T>::
 upsample(std::valarray<std::complex<T>> &input,
           std::valarray<std::complex<T>> &output,
-          int row, 
-          int col, 
+          int row,
+          int col,
           int upsampleFactor,
           std::valarray<std::complex<T>> &shiftImpact)
 {
@@ -847,7 +843,7 @@ upsample(std::valarray<std::complex<T>> &input,
         size_t input_size = _n_elements*sizeof(T)*2;
         size_t output_size = upsampleFactor * _n_elements*sizeof(T)*2;
 
-        // allocate device memory 
+        // allocate device memory
         T *d_input;
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
         T *d_output;
@@ -870,16 +866,16 @@ upsample(std::valarray<std::complex<T>> &input,
             checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_shift_impact), shift_size));
             checkCudaErrors(cudaMemcpy(d_shift_impact, &shiftImpact[0], shift_size, cudaMemcpyHostToDevice));
             rangeShiftImpactMult_g<<<grid, block>>>(
-                    reinterpret_cast<gpuComplex<T> *>(d_input), 
-                    reinterpret_cast<gpuComplex<T> *>(d_output), 
-                    reinterpret_cast<gpuComplex<T> *>(d_shift_impact),
+                    reinterpret_cast<thrust::complex<T> *>(d_input),
+                    reinterpret_cast<thrust::complex<T> *>(d_output),
+                    reinterpret_cast<thrust::complex<T> *>(d_shift_impact),
                     _rows, _columns, upsampleFactor*_columns);
             cudaFree(d_shift_impact);
         }
         else
             rangeShift_g<<<grid, block>>>(
-                    reinterpret_cast<gpuComplex<T> *>(d_input), 
-                    reinterpret_cast<gpuComplex<T> *>(d_output), 
+                    reinterpret_cast<thrust::complex<T> *>(d_input),
+                    reinterpret_cast<thrust::complex<T> *>(d_output),
                     _rows, _columns, upsampleFactor*_columns);
 
         // set inverse transform
@@ -890,13 +886,13 @@ upsample(std::valarray<std::complex<T>> &input,
 
         // normalize
         normalize_g<<<grid, block>>>(
-                reinterpret_cast<gpuComplex<T> *>(d_output),
+                reinterpret_cast<thrust::complex<T> *>(d_output),
                 static_cast<T>(_columns),
                 _n_elements);
 
         // copy output
         checkCudaErrors(cudaMemcpy(&output[0], d_output, output_size, cudaMemcpyDeviceToHost));
-        
+
         cudaFree(d_input);
         cudaFree(d_output);
     }
@@ -914,15 +910,15 @@ template<class T>
 void gpuSignal<T>::
 upsample(std::valarray<std::complex<T>> &input,
           std::valarray<std::complex<T>> &output,
-          int row, 
-          int nfft, 
+          int row,
+          int nfft,
           int upsampleFactor)
 {
     std::valarray<std::complex<T>> shiftImpact(0);
 
     upsample(input, output,
-            row, 
-            nfft, 
+            row,
+            nfft,
             upsampleFactor,
             shiftImpact);
 }
@@ -936,8 +932,8 @@ upsample(std::valarray<std::complex<T>> &input,
 *  @param[in] number of hi res columns
 */
 template<class T>
-__global__ void rangeShift_g(gpuComplex<T> *data_lo_res,
-        gpuComplex<T> *data_hi_res,
+__global__ void rangeShift_g(thrust::complex<T> *data_lo_res,
+        thrust::complex<T> *data_hi_res,
         int n_rows,
         int n_cols_lo,
         int n_cols_hi)
@@ -948,7 +944,7 @@ __global__ void rangeShift_g(gpuComplex<T> *data_lo_res,
 
     if (i < n_cols_lo * n_rows) {
         if (i_col < n_cols_lo / 2)
-            data_hi_res[i_row*n_cols_hi + i_col] = data_lo_res[i]; 
+            data_hi_res[i_row*n_cols_hi + i_col] = data_lo_res[i];
         else
             data_hi_res[(i_row+1) * n_cols_hi - (n_cols_lo-i_col)] = data_lo_res[i];
     }
@@ -964,11 +960,11 @@ __global__ void rangeShift_g(gpuComplex<T> *data_lo_res,
 *  @param[in] number of hi res columns
 */
 template<class T>
-__global__ void rangeShiftImpactMult_g(gpuComplex<T> *data_lo_res, 
-        gpuComplex<T> *data_hi_res, 
-        gpuComplex<T> *shiftImpact, 
-        int n_rows, 
-        int n_cols_lo, 
+__global__ void rangeShiftImpactMult_g(thrust::complex<T> *data_lo_res,
+        thrust::complex<T> *data_hi_res,
+        thrust::complex<T> *shiftImpact,
+        int n_rows,
+        int n_cols_lo,
         int n_cols_hi)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
@@ -977,7 +973,7 @@ __global__ void rangeShiftImpactMult_g(gpuComplex<T> *data_lo_res,
 
     if (i < n_cols_lo * n_rows) {
         if (i_col < n_cols_lo / 2)
-            data_hi_res[i_row*n_cols_hi + i_col] = data_lo_res[i] * shiftImpact[i]; 
+            data_hi_res[i_row*n_cols_hi + i_col] = data_lo_res[i] * shiftImpact[i];
         else
             data_hi_res[(i_row+1) * n_cols_hi - (n_cols_lo-i_col)] = data_lo_res[i] * shiftImpact[i];
     }
@@ -990,7 +986,7 @@ __global__ void rangeShiftImpactMult_g(gpuComplex<T> *data_lo_res,
 *  @param[in] number of total elements to be normalized
 */
 template<class T>
-__global__ void normalize_g(gpuComplex<T> *data,
+__global__ void normalize_g(thrust::complex<T> *data,
         T normalization,
         size_t n_elements)
 {
@@ -1011,8 +1007,8 @@ __global__ void normalize_g(gpuComplex<T> *data,
 template<class T>
 void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
         isce::cuda::signal::gpuSignal<T> &inv,
-        gpuComplex<T> *input,
-        gpuComplex<T> *output)
+        thrust::complex<T> *input,
+        thrust::complex<T> *output)
 {
     fwd.forwardDevMem(reinterpret_cast<T *>(input));
 
@@ -1023,8 +1019,8 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
 
     // shift data prior to upsampling transform
     rangeShift_g<<<grid, block>>>(
-            input, 
-            output, 
+            input,
+            output,
             fwd.getRows(),
             fwd.getColumns(),
             inv.getColumns());
@@ -1049,9 +1045,9 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
 template<class T>
 void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
         isce::cuda::signal::gpuSignal<T> &inv,
-        gpuComplex<T> *input,
-        gpuComplex<T> *output,
-        gpuComplex<T> *shiftImpact)
+        thrust::complex<T> *input,
+        thrust::complex<T> *output,
+        thrust::complex<T> *shiftImpact)
 {
     fwd.forwardDevMem(reinterpret_cast<T *>(input));
 
@@ -1062,11 +1058,11 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
 
     // shift data prior to upsampling transform
     rangeShiftImpactMult_g<T><<<grid, block>>>(
-            input, 
-            output, 
+            input,
+            output,
             shiftImpact,
-            fwd.getRows(), 
-            fwd.getColumns(), 
+            fwd.getRows(),
+            fwd.getColumns(),
             inv.getColumns());
 
     inv.inverseDevMem(reinterpret_cast<T *>(output));
@@ -1115,19 +1111,19 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
         std::valarray<std::complex<T>> &output,
         std::valarray<std::complex<T>> &shiftImpact)
 {
-    auto input_size = input.size()*sizeof(gpuComplex<T>);
-    gpuComplex<T> *d_input;
+    auto input_size = input.size()*sizeof(thrust::complex<T>);
+    thrust::complex<T> *d_input;
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_input), input_size));
     checkCudaErrors(cudaMemcpy(d_input, &input[0], input_size, cudaMemcpyHostToDevice));
 
-    auto output_size = output.size()*sizeof(gpuComplex<T>);
-    gpuComplex<T> *d_output;
+    auto output_size = output.size()*sizeof(thrust::complex<T>);
+    thrust::complex<T> *d_output;
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_output), output_size));
     checkCudaErrors(cudaMemcpy(d_output, &output[0], output_size, cudaMemcpyHostToDevice));
 
     if (shiftImpact.size() > 0) {
-        auto shiftImpact_size = shiftImpact.size()*sizeof(gpuComplex<T>);
-        gpuComplex<T> *d_shiftImpact;
+        auto shiftImpact_size = shiftImpact.size()*sizeof(thrust::complex<T>);
+        thrust::complex<T> *d_shiftImpact;
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_shiftImpact), shiftImpact_size));
         checkCudaErrors(cudaMemcpy(d_shiftImpact, &shiftImpact[0], shiftImpact_size, cudaMemcpyHostToDevice));
         upsample(fwd,
@@ -1153,7 +1149,7 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
 
 
 /*
-explicit instantiations 
+explicit instantiations
  */
 template class gpuSignal<float>;
 template class gpuSignal<double>;
@@ -1176,42 +1172,42 @@ void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
         std::valarray<std::complex<T>> &input,
         std::valarray<std::complex<T>> &output);
 
-template __global__ void 
-rangeShift_g<float>(gpuComplex<float> *data_lo_res, gpuComplex<float> *data_hi_res, 
+template __global__ void
+rangeShift_g<float>(thrust::complex<float> *data_lo_res, thrust::complex<float> *data_hi_res,
         int n_rows, int n_cols_lo, int n_cols_hi);
 
-template __global__ void 
-rangeShift_g<double>(gpuComplex<double> *data_lo_res, gpuComplex<double> *data_hi_res, 
+template __global__ void
+rangeShift_g<double>(thrust::complex<double> *data_lo_res, thrust::complex<double> *data_hi_res,
         int n_rows, int n_cols_lo, int n_cols_hi);
 
-template __global__ void 
-rangeShiftImpactMult_g<float>(gpuComplex<float> *data_lo_res, gpuComplex<float> *data_hi_res, 
-        gpuComplex<float> *impact_shift, 
+template __global__ void
+rangeShiftImpactMult_g<float>(thrust::complex<float> *data_lo_res, thrust::complex<float> *data_hi_res,
+        thrust::complex<float> *impact_shift,
         int n_rows, int n_cols_lo, int n_cols_hi);
 
-template __global__ void 
-rangeShiftImpactMult_g<double>(gpuComplex<double> *data_lo_res, gpuComplex<double> *data_hi_res, 
-        gpuComplex<double> *impact_shift, 
+template __global__ void
+rangeShiftImpactMult_g<double>(thrust::complex<double> *data_lo_res, thrust::complex<double> *data_hi_res,
+        thrust::complex<double> *impact_shift,
         int n_rows, int n_cols_lo, int n_cols_hi);
 
 template void upsample<float>(isce::cuda::signal::gpuSignal<float> &fwd,
         isce::cuda::signal::gpuSignal<float> &inv,
-        gpuComplex<float> *input,
-        gpuComplex<float> *output,
-        gpuComplex<float> *shiftImpact);
+        thrust::complex<float> *input,
+        thrust::complex<float> *output,
+        thrust::complex<float> *shiftImpact);
 
 template void upsample<double>(isce::cuda::signal::gpuSignal<double> &fwd,
         isce::cuda::signal::gpuSignal<double> &inv,
-        gpuComplex<double> *input,
-        gpuComplex<double> *output,
-        gpuComplex<double> *shiftImpact);
+        thrust::complex<double> *input,
+        thrust::complex<double> *output,
+        thrust::complex<double> *shiftImpact);
 
 template
-__global__ void normalize_g<float>(gpuComplex<float> *data,
+__global__ void normalize_g<float>(thrust::complex<float> *data,
         float normalization,
         size_t n_elements);
 
 template
-__global__ void normalize_g<double>(gpuComplex<double> *data,
+__global__ void normalize_g<double>(thrust::complex<double> *data,
         double normalization,
         size_t n_elements);

@@ -18,7 +18,7 @@
 #include "../helper_cuda.h"
 #include <fstream>
 #include <string>
-using isce::cuda::core::gpuComplex;
+
 using isce::cuda::core::gpuPoly2d;
 using isce::cuda::core::gpuInterpolator;
 using isce::cuda::core::gpuLUT1d;
@@ -27,15 +27,15 @@ using isce::cuda::core::gpuSinc2dInterpolator;
 #define THRD_PER_BLOCK 512// Number of threads per block (should always %32==0)
 
 __global__
-void transformTile(const gpuComplex<float> *tile,
-                   gpuComplex<float> *chip,
-                   gpuComplex<float> *imgOut,
+void transformTile(const thrust::complex<float> *tile,
+                   thrust::complex<float> *chip,
+                   thrust::complex<float> *imgOut,
                    const float *rgOffTile,
                    const float *azOffTile,
                    const gpuPoly2d rgCarrier,
                    const gpuPoly2d azCarrier,
                    const gpuLUT1d<double> dopplerLUT,
-                   gpuSinc2dInterpolator<gpuComplex<float>> interp,
+                   gpuSinc2dInterpolator<thrust::complex<float>> interp,
                    bool flatten,
                    int outWidth,
                    int outLength,
@@ -59,7 +59,7 @@ void transformTile(const gpuComplex<float> *tile,
     if (iTileOut < outWidth*outLength) {
         int i = iTileOut / outWidth;
         int j = iTileOut % outWidth;
-        imgOut[iTileOut] = gpuComplex<float>(0., 0.);
+        imgOut[iTileOut] = thrust::complex<float>(0., 0.);
 
         // Unpack offsets
         const float azOff = azOffTile[iTileOut];
@@ -105,7 +105,7 @@ void transformTile(const gpuComplex<float> *tile,
                 const int chipRow = intAz + ii - chipHalf + rowOffset - rowStart;
                 // Carrier phase
                 const double phase = dop * (ii - 4.0);
-                const gpuComplex<float> cval(cos(phase), -sin(phase));
+                const thrust::complex<float> cval(cos(phase), -sin(phase));
                 // Set the data values after removing doppler in azimuth
                 for (int jj = 0; jj < chipSize; ++jj) {
                     // Column to read from
@@ -115,12 +115,12 @@ void transformTile(const gpuComplex<float> *tile,
             }
 
             // Interpolate chip
-            const gpuComplex<float> cval = interp.interpolate(
+            const thrust::complex<float> cval = interp.interpolate(
                 chipHalf + fracRg, chipHalf + fracAz, &chip[iChip], chipSize, chipSize
             );
 
             // Add doppler to interpolated value and save
-            imgOut[iTileOut] = cval * gpuComplex<float>(cos(phase), sin(phase));
+            imgOut[iTileOut] = cval * thrust::complex<float>(cos(phase), sin(phase));
         }
     }
 }
@@ -135,7 +135,7 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
                const isce::core::Poly2d & rgCarrier,
                const isce::core::Poly2d & azCarrier,
                const isce::core::LUT1d<double> & dopplerLUT,
-               isce::cuda::core::gpuSinc2dInterpolator<gpuComplex<float>> interp,
+               isce::cuda::core::gpuSinc2dInterpolator<thrust::complex<float>> interp,
                int inWidth, int inLength, double startingRange, double rangePixelSpacing,
                double prf, double wavelength, double refStartingRange,
                double refRangePixelSpacing, double refWavelength, 
@@ -151,9 +151,9 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
     imgOut = std::complex<float>(0.0, 0.0);
 
     // declare equivalent objects in device memory
-    gpuComplex<float> *d_tile;
-    gpuComplex<float> *d_chip;
-    gpuComplex<float> *d_imgOut;
+    thrust::complex<float> *d_tile;
+    thrust::complex<float> *d_chip;
+    thrust::complex<float> *d_imgOut;
     float *d_rgOffTile, *d_azOffTile;
     gpuPoly2d d_rgCarrier(rgCarrier);
     gpuPoly2d d_azCarrier(azCarrier);
@@ -162,18 +162,18 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
     // determine sizes
     size_t nInPixels = (tile.lastImageRow() - tile.firstImageRow() + 1) * outWidth;
     size_t nOutPixels = imgOut.size();
-    size_t nOutBytes = nOutPixels * sizeof(gpuComplex<float>);
+    size_t nOutBytes = nOutPixels * sizeof(thrust::complex<float>);
     size_t nChipBytes = nOutBytes * chipSize * chipSize;
 
     // allocate equivalent objects in device memory
-    checkCudaErrors(cudaMalloc(&d_tile, nInPixels*sizeof(gpuComplex<float>)));
+    checkCudaErrors(cudaMalloc(&d_tile, nInPixels*sizeof(thrust::complex<float>)));
     checkCudaErrors(cudaMalloc(&d_chip, nChipBytes));
     checkCudaErrors(cudaMalloc(&d_imgOut, nOutBytes));
     checkCudaErrors(cudaMalloc(&d_azOffTile, nOutPixels*sizeof(float)));
     checkCudaErrors(cudaMalloc(&d_rgOffTile, nOutPixels*sizeof(float)));
 
     // copy objects to device memory
-    checkCudaErrors(cudaMemcpy(d_tile, &tile[0], nInPixels*sizeof(gpuComplex<float>), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_tile, &tile[0], nInPixels*sizeof(thrust::complex<float>), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(d_azOffTile, &azOffTile[0], nOutPixels*sizeof(float), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(d_rgOffTile, &rgOffTile[0], nOutPixels*sizeof(float), cudaMemcpyHostToDevice));
 

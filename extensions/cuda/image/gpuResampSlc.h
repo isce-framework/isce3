@@ -7,6 +7,7 @@
 #define ISCE_CUDA_GEOMETRY_GPURESAMPSLC_H
 
 #include <complex>
+#include <thrust/complex.h>
 
 // isce::core
 #include "isce/core/Poly2d.h"
@@ -19,11 +20,9 @@
 #include "isce/image/Tile.h"
 
 // isce::cuda::core
-#include "isce/cuda/core/gpuComplex.h"
 #include "isce/cuda/core/gpuInterpolator.h"
 
 using isce::cuda::core::gpuSinc2dInterpolator;
-using isce::cuda::core::gpuComplex;
 
 namespace isce {
     namespace cuda {
@@ -38,7 +37,7 @@ namespace isce {
                const isce::core::Poly2d & rgCarrier,
                const isce::core::Poly2d & azCarrier,
                const isce::core::LUT1d<double> & dopplerLUT,
-               isce::cuda::core::gpuSinc2dInterpolator<gpuComplex<float>> interp,
+               isce::cuda::core::gpuSinc2dInterpolator<thrust::complex<float>> interp,
                int inWidth, int inLength, double startingRange, double rangePixelSpacing,
                double prf, double wavelength, double refStartingRange,
                double refRangePixelSpacing, double refWavelength,

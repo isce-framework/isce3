@@ -62,6 +62,8 @@ cdef class pyGeocodeBase:
     cdef int width
     cdef int length
     cdef int epsgcode
+    cdef int numberAzimuthLooks
+    cdef int numberRangeLooks
 
     # DEM interpolation methods
     demInterpMethods = {
@@ -106,7 +108,9 @@ cdef class pyGeocodeBase:
                   double rangeSpacing,
                   double wavelength,
                   int radarGridWidth,
-                  int lookSide):
+                  int lookSide,
+                  int numberAzimuthLooks=1,
+                  int numberRangeLooks=1):
         """
         Save parameters for radar grid bounds and Doppler representation.
         """
@@ -120,6 +124,8 @@ cdef class pyGeocodeBase:
         self.wavelength = wavelength
         self.radarGridWidth = radarGridWidth
         self.lookSide = lookSide
+        self.numberAzimuthLooks = numberAzimuthLooks
+        self.numberRangeLooks = numberRangeLooks
         return
 
     def geoGrid(self,
@@ -171,7 +177,8 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
         c_geocode.radarGrid(deref(self.c_doppler), refEpoch,
                             self.azimuthStartTime, self.azimuthTimeInterval,
                             self.radarGridLength, self.startingRange, self.rangeSpacing,
-                            self.wavelength, self.radarGridWidth, self.lookSide)
+                            self.wavelength, self.radarGridWidth, self.lookSide,
+                            self.numberAzimuthLooks, self.numberRangeLooks)
 
         # Set geo grid
         c_geocode.geoGrid(self.geoGridStartX, self.geoGridStartY, self.geoGridSpacingX,
@@ -212,7 +219,8 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
         c_geocode.radarGrid(deref(self.c_doppler), refEpoch,
                             self.azimuthStartTime, self.azimuthTimeInterval,
                             self.radarGridLength, self.startingRange, self.rangeSpacing,
-                            self.wavelength, self.radarGridWidth, self.lookSide)
+                            self.wavelength, self.radarGridWidth, self.lookSide,
+                            self.numberAzimuthLooks, self.numberRangeLooks)
 
         # Set geo grid
         c_geocode.geoGrid(self.geoGridStartX, self.geoGridStartY, self.geoGridSpacingX,

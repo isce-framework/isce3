@@ -8,14 +8,13 @@
 
 #include <complex>
 #include <valarray>
+#include <thrust/complex.h>
 
 #include "gpuSignal.h"
 #include "isce/cuda/core/Common.h"
-#include "isce/cuda/core/gpuComplex.h"
 #include <isce/core/LUT1d.h>
 
 using isce::cuda::signal::gpuSignal;
-using isce::cuda::core::gpuComplex;
 
 // Declaration
 namespace isce {
@@ -66,15 +65,15 @@ class gpuFilter {
         void filter(gpuSignal<T> &signal);
 
         /** Filter a signal in place on device */
-        void filter(gpuComplex<T> *data);
+        void filter(thrust::complex<T> *data);
 
         /** carry over from parent class. eliminate and use parent? */
         void writeFilter(size_t ncols, size_t nrows);
-        
+
         void cpFilterHostToDevice(std::valarray<std::complex<T>> &host_filter);
 
     protected:
-        
+
         T *_d_filter;               // device memory pointer
         bool _filter_set = false;
         gpuSignal<T> _signal;
@@ -154,8 +153,8 @@ class gpuRangeFilter : public gpuFilter<T> {
 
         void filterCommonRangeBand(T *d_refSlc, T *d_secSlc, T *range);
 
-        size_t rangeFrequencyShiftMaxIdx(gpuComplex<T> *spectrum,
-                int n_rows, 
+        size_t rangeFrequencyShiftMaxIdx(thrust::complex<T> *spectrum,
+                int n_rows,
                 int n_cols);
 
         void getPeakIndex(std::valarray<float> data, size_t &peakIndex);
@@ -173,12 +172,12 @@ class gpuRangeFilter : public gpuFilter<T> {
 };
 
 template<class T>
-__global__ void phaseShift_g(gpuComplex<T> *slc, T *range, double pxlSpace, T conj, double wavelength, T wave_div, int n_elements);
+__global__ void phaseShift_g(thrust::complex<T> *slc, T *range, double pxlSpace, T conj, double wavelength, T wave_div, int n_elements);
 
 template<class T>
-__global__ void filter_g(gpuComplex<T> *signal, gpuComplex<T> *filter, int n_elements);
+__global__ void filter_g(thrust::complex<T> *signal, thrust::complex<T> *filter, int n_elements);
 
 template<class T>
-__global__ void sumSpectrum_g(gpuComplex<T> *spectrum, T *spectrum_sum, int n_rows, int n_cols);
+__global__ void sumSpectrum_g(thrust::complex<T> *spectrum, T *spectrum_sum, int n_rows, int n_cols);
 
 #endif

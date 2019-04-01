@@ -8,16 +8,16 @@
 #ifndef ISCE_CUDA_SIGNAL_CROSSMUL_H
 #define ISCE_CUDA_SIGNAL_CROSSMUL_H
 
+#include <thrust/complex.h>
+
 #include <isce/io/Raster.h>
 #include <isce/core/LUT1d.h>
 #include "isce/cuda/core/Common.h"
 #include "isce/cuda/core/gpuLUT1d.h"
-#include "isce/cuda/core/gpuComplex.h"
 #include "gpuSignal.h"
 #include "gpuFilter.h"
 #include "gpuLooks.h"
 
-using isce::cuda::core::gpuComplex;
 
 // Declaration
 namespace isce {
@@ -46,7 +46,7 @@ class isce::cuda::signal::gpuCrossmul {
                 isce::io::Raster& coherenceRaster);
 
        /** Set doppler LUTs for reference and secondary SLCs*/
-        void doppler(isce::core::LUT1d<double>, 
+        void doppler(isce::core::LUT1d<double>,
                 isce::core::LUT1d<double>);
 
         /** Set pulse repetition frequency (PRF) */
@@ -70,7 +70,7 @@ class isce::cuda::signal::gpuCrossmul {
         /** Set beta parameter for the azimuth common band filter */
         inline void beta(double b) {_beta = b;};
 
-        /** Set number of range looks */ 
+        /** Set number of range looks */
         void rangeLooks(int rngLks);
 
         /** Set number of azimuth looks */
@@ -97,7 +97,7 @@ class isce::cuda::signal::gpuCrossmul {
 
         // range signal bandwidth
         double _rangeBandwidth;
-        
+
         // range pixel spacing
         double _rangePixelSpacing;
 
@@ -131,24 +131,24 @@ class isce::cuda::signal::gpuCrossmul {
         size_t oversample = 1;
 };
 
-void lookdownShiftImpact(size_t oversample, 
-        size_t nfft, 
-        size_t blockRows, 
+void lookdownShiftImpact(size_t oversample,
+        size_t nfft,
+        size_t blockRows,
         std::valarray<std::complex<float>> &shiftImpact);
 
 template <class T>
-CUDA_GLOBAL void interferogram_g(gpuComplex<T> *ifgram, 
-        gpuComplex<T> *refSlcUp, 
-        gpuComplex<T> *secSlcUp, 
-        int n_rows, 
-        int n_cols, 
-        int n_fft, 
+CUDA_GLOBAL void interferogram_g(thrust::complex<T> *ifgram,
+        thrust::complex<T> *refSlcUp,
+        thrust::complex<T> *secSlcUp,
+        int n_rows,
+        int n_cols,
+        int n_fft,
         int oversample_i,
         T oversample_f);
 
 template <class T>
 CUDA_GLOBAL void calculate_coherence_g(T *ref_amp,
         T *sec_amp,
-        gpuComplex<T> *ifgram_mlook,
+        thrust::complex<T> *ifgram_mlook,
         int n_elements);
 #endif

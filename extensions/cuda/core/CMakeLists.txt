@@ -3,7 +3,6 @@ set(PACKAGENAME core)
 set(HEADERS
         Common.h
         gpuBasis.h
-        gpuComplex.h
         gpuEllipsoid.h
         gpuInterpolator.h
         gpuLinAlg.h
