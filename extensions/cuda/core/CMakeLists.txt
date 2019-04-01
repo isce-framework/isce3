@@ -8,6 +8,7 @@ set(HEADERS
         gpuInterpolator.h
         gpuLinAlg.h
         gpuLUT1d.h
+        gpuLUT2d.h
         gpuOrbit.h
         gpuPeg.h
         gpuPegtrans.h
@@ -22,6 +23,7 @@ set(SRCS
         gpuBicubicInterpolator.cu
         gpuLinAlg.cu
         gpuLUT1d.cu
+        gpuLUT2d.cu
         gpuOrbit.cu
         gpuPeg.cu
         gpuPegtrans.cu
