@@ -261,7 +261,8 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
         c_geocode.radarGrid(deref(self.c_doppler), refEpoch,
                             self.azimuthStartTime, self.azimuthTimeInterval,
                             self.radarGridLength, self.startingRange, self.rangeSpacing,
-                            self.wavelength, self.radarGridWidth, self.lookSide)
+                            self.wavelength, self.radarGridWidth, self.lookSide,
+                            self.numberAzimuthLooks, self.numberRangeLooks)
 
         # Set geo grid
         c_geocode.geoGrid(self.geoGridStartX, self.geoGridStartY, self.geoGridSpacingX,
