@@ -9,14 +9,14 @@
 #include "isce/cuda/signal/gpuLooks.h"
 
 struct gpuLooksTest : public ::testing::Test {
-    // Note: this test is designed based on the following 
-    // parameters (shape and number of looks). Changing these 
-    // parameters requires subsequent changes to the code 
-    // where the results are evaluated. 
-    
+    // Note: this test is designed based on the following
+    // parameters (shape and number of looks). Changing these
+    // parameters requires subsequent changes to the code
+    // where the results are evaluated.
+
     //shape of the array before multi-looking
     size_t width = 20;
-    size_t length = 21; 
+    size_t length = 21;
 
     // number of looks in range and azimuth (must not change for this unit test)
     size_t rngLooks = 3;
@@ -74,16 +74,16 @@ TEST_F(gpuLooksTest, MultilookReal)
         dataLookedExp[line*widthLooked] = 1.0 + 3*line;
         float increment = 3*(1+line*3);
         for (size_t col = 1; col < widthLooked; ++col){
-            
+
             dataLookedExp[line*widthLooked + col] = dataLookedExp[line*widthLooked]
-                                            + col * increment; 
+                                            + col * increment;
         }
     }
 
     float max_err = 0;
     float err = 0;
     for (size_t i = 0; i< widthLooked*lengthLooked; ++i){
-        err = std::abs(dataLookedExp[i] - dataLooked[i]); 
+        err = std::abs(dataLookedExp[i] - dataLooked[i]);
         if (err > max_err)
             max_err = err;
     }
@@ -98,11 +98,11 @@ TEST_F(gpuLooksTest, MultilookNoDataReal)
     std::valarray<float> dataLookednoData(widthLooked*lengthLooked);
 
     // multilook the real data while excluding pixels with zero value.
-    // This first creates a boolean mask and then creates a weight, 
+    // This first creates a boolean mask and then creates a weight,
     // which is 0 and 1.
     float noData = 0.0;
     lksObj.multilook(data, dataLookednoData, noData);
- 
+
     // check the multi-looked real data when accounted for no data values
     // first element
     ASSERT_NEAR(dataLookednoData[0], 2.25, 1.0e-6);

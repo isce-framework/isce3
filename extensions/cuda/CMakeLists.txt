@@ -25,7 +25,8 @@ include_directories(${CEREAL_SRC_INCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
                     ${PYRE_INCLUDE_DIR}
-                    ${GDAL_INCLUDE_DIR})
+                    ${GDAL_INCLUDE_DIR}
+                    ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 # Install CUDA helper header files
 add_isce_libdir("." "" "helper_cuda.h;helper_functions.h;helper_image.h;helper_string.h;helper_timer.h;exception.h;")

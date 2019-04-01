@@ -8,10 +8,8 @@
 #define ISCE_CUDA_SIGNAL_LOOKS_H
 
 #include <valarray>
+#include <thrust/complex.h>
 #include "isce/cuda/core/Common.h"
-#include "isce/cuda/core/gpuComplex.h"
-
-using isce::cuda::core::gpuComplex;
 
 // Declaration
 namespace isce {
@@ -42,7 +40,7 @@ class isce::cuda::signal::gpuLooks {
                         std::valarray<T> &output,
                         std::valarray<T> &weights);
 
-        /** Multi-looking an array of real data (excluding noData values) */     
+        /** Multi-looking an array of real data (excluding noData values) */
         void multilook(std::valarray<T> &input,
                         std::valarray<T> &output,
                         T noDataValue);
@@ -52,7 +50,7 @@ class isce::cuda::signal::gpuLooks {
 
         /** POWER! */
         void multilook(std::valarray<std::complex<T>> &input,
-                        std::valarray<T> &output, 
+                        std::valarray<T> &output,
                         int p);
 
         void nrows(size_t n) { _nrows = n; };
@@ -67,7 +65,7 @@ class isce::cuda::signal::gpuLooks {
         size_t ncolsLooked() { return _ncolsLooked; };
         size_t rowsLooks() { return _rowsLooks; };
         size_t colsLooks() { return _colsLooks; };
-        
+
     private:
         // number of rows before multilooking/downsampling
         size_t _nrows;
@@ -90,65 +88,65 @@ class isce::cuda::signal::gpuLooks {
 };
 
 template<class T>
-CUDA_GLOBAL void multilooks_g(T *lo_res, 
-        T *hi_res, 
+CUDA_GLOBAL void multilooks_g(T *lo_res,
+        T *hi_res,
         int n_cols_hi,
-        int n_rows_lo, 
-        int row_resize, 
-        int col_resize, 
+        int n_rows_lo,
+        int row_resize,
+        int col_resize,
         int sz_lo,
         T blk_sz);
 
 template<class T>
-CUDA_GLOBAL void multilooks_g(gpuComplex<T> *lo_res, 
-        gpuComplex<T> *hi_res, 
+CUDA_GLOBAL void multilooks_g(thrust::complex<T> *lo_res,
+        thrust::complex<T> *hi_res,
         int n_cols_hi,
-        int n_rows_lo, 
-        int row_resize, 
-        int col_resize, 
+        int n_rows_lo,
+        int row_resize,
+        int col_resize,
         int sz_lo,
         T blk_sz);
 
 template<class T>
-CUDA_GLOBAL void multilooks_no_data_g(T *lo_res, 
-        T *hi_res, 
-        T no_data_value, 
+CUDA_GLOBAL void multilooks_no_data_g(T *lo_res,
+        T *hi_res,
+        T no_data_value,
         int n_cols_hi,
-        int n_rows_lo, 
-        int row_resize, 
-        int col_resize, 
+        int n_rows_lo,
+        int row_resize,
+        int col_resize,
         int sz_lo,
         T blk_sz);
 
 template<class T>
-CUDA_GLOBAL void multilooks_no_data_g(gpuComplex<T> *lo_res, 
-        gpuComplex<T> *hi_res, 
-        gpuComplex<T> no_data_value, 
+CUDA_GLOBAL void multilooks_no_data_g(thrust::complex<T> *lo_res,
+        thrust::complex<T> *hi_res,
+        thrust::complex<T> no_data_value,
         int n_cols_hi,
-        int n_rows_lo, 
-        int row_resize, 
-        int col_resize, 
+        int n_rows_lo,
+        int row_resize,
+        int col_resize,
         int sz_lo,
         T blk_sz);
 
 template<class T>
-CUDA_GLOBAL void multilooks_weighted_g(T *lo_res, 
-        T *hi_res, 
-        T* weights, 
+CUDA_GLOBAL void multilooks_weighted_g(T *lo_res,
+        T *hi_res,
+        T* weights,
         int n_cols_hi,
-        int n_rows_lo, 
-        int row_resize, 
-        int col_resize, 
+        int n_rows_lo,
+        int row_resize,
+        int col_resize,
         int sz_lo);
 
 template<class T>
-CUDA_GLOBAL void multilooks_power_g(T *lo_res, 
-        gpuComplex<T> *hi_res, 
-        int power, 
+CUDA_GLOBAL void multilooks_power_g(T *lo_res,
+        thrust::complex<T> *hi_res,
+        int power,
         int n_cols_hi,
-        int n_rows_lo, 
-        int row_resize, 
-        int col_resize, 
+        int n_rows_lo,
+        int row_resize,
+        int col_resize,
         int sz_lo,
         T blk_sz);
 

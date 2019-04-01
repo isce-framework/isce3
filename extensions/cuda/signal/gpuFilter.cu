@@ -35,8 +35,8 @@ filter(gpuSignal<T> &signal)
     dim3 block(THRD_PER_BLOCK);
     dim3 grid((n_signal_elements+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
-    filter_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(signal.getDevicePtr()), 
-            reinterpret_cast<gpuComplex<T> *>(&_d_filter), 
+    filter_g<<<grid, block>>>(reinterpret_cast<thrust::complex<T> *>(signal.getDevicePtr()),
+            reinterpret_cast<thrust::complex<T> *>(&_d_filter),
             n_signal_elements);
 
     signal.inverse();
@@ -46,7 +46,7 @@ filter(gpuSignal<T> &signal)
 // pass in device pointer to filter on
 template<class T>
 void gpuFilter<T>::
-filter(gpuComplex<T> *data)
+filter(thrust::complex<T> *data)
 {
     _signal.forwardDevMem(reinterpret_cast<T *>(data));
 
@@ -56,8 +56,8 @@ filter(gpuComplex<T> *data)
     dim3 block(THRD_PER_BLOCK);
     dim3 grid((n_signal_elements+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
-    filter_g<<<grid, block>>>(data, 
-            reinterpret_cast<gpuComplex<T> *>(_d_filter), 
+    filter_g<<<grid, block>>>(data,
+            reinterpret_cast<thrust::complex<T> *>(_d_filter),
             n_signal_elements);
 
     _signal.inverseDevMem(reinterpret_cast<T *>(data));
@@ -81,8 +81,8 @@ filter(std::valarray<std::complex<T>> &signal,
     dim3 block(THRD_PER_BLOCK);
     dim3 grid((signal.size()+(THRD_PER_BLOCK-1))/THRD_PER_BLOCK);
 
-    filter_g<<<grid, block>>>(reinterpret_cast<gpuComplex<T> *>(_signal.getDevicePtr()), 
-            reinterpret_cast<gpuComplex<T> *>(&_d_filter), 
+    filter_g<<<grid, block>>>(reinterpret_cast<thrust::complex<T> *>(_signal.getDevicePtr()),
+            reinterpret_cast<thrust::complex<T> *>(&_d_filter),
             signal.size());
 
     _signal.inverse();
@@ -96,7 +96,7 @@ void gpuFilter<T>::
 cpFilterHostToDevice(std::valarray<std::complex<T>> &host_filter)
 {
     if (!_filter_set) {
-        size_t sz_filter = host_filter.size()*sizeof(gpuComplex<T>);
+        size_t sz_filter = host_filter.size()*sizeof(thrust::complex<T>);
         // allocate input
         checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&_d_filter), sz_filter));
         // copy input
@@ -114,41 +114,41 @@ writeFilter(size_t ncols, size_t nrows)
 }
 
 template<class T>
-__global__ void phaseShift_g(gpuComplex<T> *slc, 
-        T *range, 
-        double pxlSpace, 
-        T conj, 
-        double wavelength, 
-        T wave_div, 
+__global__ void phaseShift_g(thrust::complex<T> *slc,
+        T *range,
+        double pxlSpace,
+        T conj,
+        double wavelength,
+        T wave_div,
         int n_elements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < n_elements) {
         T phase = 4.0*M_PI*pxlSpace*range[i]/wavelength;
-        gpuComplex<T> complex_phase(cos(phase/wave_div), conj*sin(phase/wave_div));
+        thrust::complex<T> complex_phase(cos(phase/wave_div), conj*sin(phase/wave_div));
         slc[i] *= complex_phase;
     }
 }
 
 template<>
-__global__ void phaseShift_g<float>(gpuComplex<float> *slc, 
-        float *range, 
-        double pxlSpace, 
-        float conj, 
-        double wavelength, 
-        float wave_div, 
+__global__ void phaseShift_g<float>(thrust::complex<float> *slc,
+        float *range,
+        double pxlSpace,
+        float conj,
+        double wavelength,
+        float wave_div,
         int n_elements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < n_elements) {
         float phase = 4.0*M_PI*pxlSpace*range[i]/wavelength;
-        gpuComplex<float> complex_phase(cosf(phase/wave_div), conj*sinf(phase/wave_div));
+        thrust::complex<float> complex_phase(cosf(phase/wave_div), conj*sinf(phase/wave_div));
         slc[i] *= complex_phase;
     }
 }
 
 template<class T>
-__global__ void filter_g(gpuComplex<T> *signal, gpuComplex<T> *filter, int n_elements)
+__global__ void filter_g(thrust::complex<T> *signal, thrust::complex<T> *filter, int n_elements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < n_elements) {
@@ -157,7 +157,7 @@ __global__ void filter_g(gpuComplex<T> *signal, gpuComplex<T> *filter, int n_ele
 }
 
 template<class T>
-__global__ void sumSpectrum_g(gpuComplex<T> *spectrum, T *spectrum_sum, int n_rows, int n_cols)
+__global__ void sumSpectrum_g(thrust::complex<T> *spectrum, T *spectrum_sum, int n_rows, int n_cols)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i < n_cols) {
@@ -171,4 +171,4 @@ __global__ void sumSpectrum_g(gpuComplex<T> *spectrum, T *spectrum_sum, int n_ro
 template class gpuFilter<float>;
 
 template __global__ void
-sumSpectrum_g<float>(gpuComplex<float> *spectrum, float *spectrum_sum, int n_rows, int n_cols);
+sumSpectrum_g<float>(thrust::complex<float> *spectrum, float *spectrum_sum, int n_rows, int n_cols);

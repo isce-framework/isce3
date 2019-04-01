@@ -87,7 +87,7 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
 
     //The bands are specified by two vectors:
     //  1) a vector of center frequencies for each sub-band
-    std::valarray<double> subBandCenterFrequencies{-3.0e6, 0.0, 3e6}; 
+    std::valarray<double> subBandCenterFrequencies{-3.0e6, 0.0, 3e6};
     //  2) a vector of bandwidth of each sub-band
     std::valarray<double> subBandBandwidths{2.0e6, 2.0e6, 2.0e6};
 
@@ -119,7 +119,7 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
                                   filterType);
 
     //filter.writeFilter(ncols, blockRows);
-    
+
 }
 
 

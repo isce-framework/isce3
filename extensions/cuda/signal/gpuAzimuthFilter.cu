@@ -31,7 +31,7 @@ void gpuAzimuthFilter<T>::
 initiateAzimuthFilter(std::valarray<std::complex<T>> &input,
         std::valarray<std::complex<T>> &spectrum,
         size_t ncols,
-        size_t nrows) 
+        size_t nrows)
 {
     // set FFT parameters
     this->_signal.azimuthFFT(ncols, nrows);
@@ -60,9 +60,9 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
 
     // Construct vector of frequencies
     std::valarray<double> frequency(ncols);
-    
+
     isce::signal::Filter<float>::fftfreq(ncols, 1.0/prf, frequency);
-    
+
     this->_filter.resize(ncols*nrows);
 
     // Loop over range bins
@@ -82,8 +82,8 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
 
             // Transition region
             } else if (freq > (0.5 * bandwidth - df) && freq <= (0.5 * bandwidth + df)) {
-                this->_filter[i*ncols+j] = std::complex<T>(norm * 0.5 * 
-                        (1.0 + std::cos(M_PI / (bandwidth*beta) * 
+                this->_filter[i*ncols+j] = std::complex<T>(norm * 0.5 *
+                        (1.0 + std::cos(M_PI / (bandwidth*beta) *
                         (freq - 0.5 * (1.0 - beta) * bandwidth))), 0.0);
 
             // Stop band
