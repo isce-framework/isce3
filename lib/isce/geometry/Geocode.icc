@@ -92,11 +92,14 @@ radarGrid(isce::core::LUT2d<double> doppler,
           double rangeSpacing,
           double wavelength,
           int radarGridWidth,
-          int lookSide) {
+          int lookSide,
+          int numberAzimuthLooks,
+          int numberRangeLooks) {
     _doppler = doppler;
     _radarGrid = isce::product::RadarGridParameters(
-        1, 1, azimuthStartTime, wavelength, 1.0/azimuthTimeInterval, startingRange,
-        rangeSpacing, radarGridLength, radarGridWidth, refEpoch
+        numberAzimuthLooks, numberRangeLooks, azimuthStartTime, wavelength,
+        1.0/azimuthTimeInterval, startingRange, rangeSpacing, radarGridLength,
+        radarGridWidth, refEpoch
     );
     _lookSide = lookSide;
 }
