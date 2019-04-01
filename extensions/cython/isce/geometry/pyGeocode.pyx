@@ -6,6 +6,7 @@
 
 from libcpp cimport bool
 from libcpp.string cimport string
+from libcpp.complex cimport complex as complex_t
 from cython.operator cimport dereference as deref
 cimport cython
 
@@ -195,6 +196,47 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
         """
         # Create Geocoding object
         cdef Geocode[double] c_geocode = Geocode[double]()
+
+        # Set properties
+        c_geocode.orbit(deref(self.c_orbit))
+        c_geocode.ellipsoid(deref(self.c_ellipsoid))
+        c_geocode.thresholdGeo2rdr(self.threshold)
+        c_geocode.numiterGeo2rdr(self.numiter)
+        c_geocode.linesPerBlock(self.linesPerBlock)
+        c_geocode.demBlockMargin(self.demBlockMargin)
+        c_geocode.radarBlockMargin(self.radarBlockMargin)
+        c_geocode.interpolator(self.interpMethod)
+
+        # Set radar grid
+        cdef DateTime refEpoch = self.refepoch_string
+        c_geocode.radarGrid(deref(self.c_doppler), refEpoch,
+                            self.azimuthStartTime, self.azimuthTimeInterval,
+                            self.radarGridLength, self.startingRange, self.rangeSpacing,
+                            self.wavelength, self.radarGridWidth, self.lookSide)
+
+        # Set geo grid
+        c_geocode.geoGrid(self.geoGridStartX, self.geoGridStartY, self.geoGridSpacingX,
+                          self.geoGridSpacingY, self.width, self.length, self.epsgcode)
+
+        # Run geocoding
+        c_geocode.geocode(deref(inputRaster.c_raster), deref(outputRaster.c_raster),
+                          deref(demRaster.c_raster))
+        
+        return
+
+
+cdef class pyGeocodeComplexFloat(pyGeocodeBase):
+
+    def geocode(self,
+                pyRaster inputRaster,
+                pyRaster outputRaster,
+                pyRaster demRaster,
+                int inputBand=1):
+        """
+        Run geocoding.
+        """
+        # Create Geocoding object
+        cdef Geocode[complex_t[float]] c_geocode = Geocode[complex_t[float]]()
 
         # Set properties
         c_geocode.orbit(deref(self.c_orbit))
