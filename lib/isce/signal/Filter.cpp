@@ -120,10 +120,11 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
         std::cout << filterType << " filter has not been implemented" << std::endl;
     }
 
-    //construct a block of the filter
+    //construct a block of the filter with normalization
+    const std::complex<T> norm(nfft, nfft);
     for (size_t line = 0; line < nrows; line++ ){
         for (size_t col = 0; col < nfft; col++ ){
-            _filter[line*nfft+col] = _filter1D[col];
+            _filter[line*nfft+col] = _filter1D[col] / norm;
         }
     }
 
@@ -291,6 +292,14 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
             } else {
                 _filter[i*ncols+j] = std::complex<T>(0.0, 0.0);
             }
+        }
+    }
+
+    // Normalize the filter
+    const std::complex<T> filtNorm(nfft, nfft);
+    for (int j = 0; j < ncols; ++j) {
+        for (size_t i = 0; i < frequency.size(); ++i) {
+            _filter[i*ncols+j] /= filtNorm;
         }
     }
 
