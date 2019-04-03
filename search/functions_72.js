@@ -26,7 +26,7 @@ var searchData=
   ['rhat',['rhat',['../classisce_1_1core_1_1Baseline.html#a7bd989a3a9fbf66391a907e775d923fe',1,'isce::core::Baseline']]],
   ['rnorth',['rNorth',['../classisce_1_1core_1_1Ellipsoid.html#a6d3368a3c544ddbc6e3ed754112c8cca',1,'isce::core::Ellipsoid']]],
   ['roll',['roll',['../classisce_1_1core_1_1EulerAngles.html#ab939e305c9f644b0d5116f1dbb899e1c',1,'isce::core::EulerAngles']]],
-  ['rotmat',['rotmat',['../classisce_1_1core_1_1Attitude.html#a35c9a12b3d2a4b0be9c6bbb8ea5eddf4',1,'isce::core::Attitude::rotmat()'],['../classisce_1_1core_1_1EulerAngles.html#a654e7f8c43e4ef0416303a4ac2e4f4cf',1,'isce::core::EulerAngles::rotmat()'],['../classisce_1_1core_1_1Quaternion.html#afd6d277ab70beb17039e5a5956a263da',1,'isce::core::Quaternion::rotmat()']]],
+  ['rotmat',['rotmat',['../classisce_1_1core_1_1Attitude.html#afb877dd4f199a49b139867fd04fe13e8',1,'isce::core::Attitude::rotmat()'],['../classisce_1_1core_1_1EulerAngles.html#a2fa0af7f781cd8d9750a7b8982857163',1,'isce::core::EulerAngles::rotmat()'],['../classisce_1_1core_1_1Quaternion.html#a94a09bdf5b4f3ae57ae6ff8f9076fb5a',1,'isce::core::Quaternion::rotmat()']]],
   ['rotmat2ypr',['rotmat2ypr',['../classisce_1_1core_1_1EulerAngles.html#a17cfdc94a76faec9187680d93b417777',1,'isce::core::EulerAngles']]],
   ['rowptr',['rowptr',['../classisce_1_1core_1_1Matrix.html#ac6f6c05aa6cd6aa0883aebe977803cad',1,'isce::core::Matrix::rowptr(size_t row)'],['../classisce_1_1core_1_1Matrix.html#a2421517130eb2e7b3af92f26e849e643',1,'isce::core::Matrix::rowptr(size_t row) const ']]],
   ['rowslooks',['rowsLooks',['../classisce_1_1signal_1_1Looks.html#a03644cb5c9d8842c520461f3ffa320dc',1,'isce::signal::Looks']]]
