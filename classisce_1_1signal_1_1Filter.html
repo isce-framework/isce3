@@ -106,12 +106,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a3636862e2e86cf73c53b958a7ac3441e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#a3636862e2e86cf73c53b958a7ac3441e">initiateAzimuthFilter</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, size_t ncols, size_t nrows)</td></tr>
 <tr class="memdesc:a3636862e2e86cf73c53b958a7ac3441e"><td class="mdescLeft">&#160;</td><td class="mdescRight">constructs forward abd backward FFT plans for filtering a block of data in azimuth direction.  <a href="#a3636862e2e86cf73c53b958a7ac3441e">More...</a><br/></td></tr>
 <tr class="separator:a3636862e2e86cf73c53b958a7ac3441e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44ec67a9682966ca2dd295770d9d3430"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#a44ec67a9682966ca2dd295770d9d3430">constructRangeBandpassFilter</a> (double rangeSamplingFrequency, std::valarray&lt; double &gt; subBandCenterFrequencies, std::valarray&lt; double &gt; subBandBandwidths, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, size_t ncols, size_t nrows, std::string &amp;filterType)</td></tr>
-<tr class="memdesc:a44ec67a9682966ca2dd295770d9d3430"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets an existing filter to be used by the filter object.  <a href="#a44ec67a9682966ca2dd295770d9d3430">More...</a><br/></td></tr>
-<tr class="separator:a44ec67a9682966ca2dd295770d9d3430"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a510f05819754e8c68a36862876343cb2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a510f05819754e8c68a36862876343cb2"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>constructRangeBandpassFilter</b> (double rangeSamplingFrequency, std::valarray&lt; double &gt; subBandCenterFrequencies, std::valarray&lt; double &gt; subBandBandwidths, size_t ncols, size_t nrows, std::string &amp;filterType)</td></tr>
-<tr class="separator:a510f05819754e8c68a36862876343cb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a089e0953caf0115d409426cd6f143d7b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#a089e0953caf0115d409426cd6f143d7b">constructRangeBandpassFilter</a> (double rangeSamplingFrequency, std::valarray&lt; double &gt; subBandCenterFrequencies, std::valarray&lt; double &gt; subBandBandwidths, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;signal, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;spectrum, size_t ncols, size_t nrows, std::string filterType)</td></tr>
+<tr class="memdesc:a089e0953caf0115d409426cd6f143d7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets an existing filter to be used by the filter object.  <a href="#a089e0953caf0115d409426cd6f143d7b">More...</a><br/></td></tr>
+<tr class="separator:a089e0953caf0115d409426cd6f143d7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afea730ac8af38930195aac230ff7e6df"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afea730ac8af38930195aac230ff7e6df"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>constructRangeBandpassFilter</b> (double rangeSamplingFrequency, std::valarray&lt; double &gt; subBandCenterFrequencies, std::valarray&lt; double &gt; subBandBandwidths, size_t ncols, size_t nrows, std::string filterType)</td></tr>
+<tr class="separator:afea730ac8af38930195aac230ff7e6df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a061110822c43d2e2dbfda0448d96e67a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Filter.html#a061110822c43d2e2dbfda0448d96e67a">constructRangeBandpassBoxcar</a> (std::valarray&lt; double &gt; subBandCenterFrequencies, std::valarray&lt; double &gt; subBandBandwidths, double dt, int nfft, std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;_filter1D)</td></tr>
 <tr class="memdesc:a061110822c43d2e2dbfda0448d96e67a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a box car range band-pass filter for multiple bands.  <a href="#a061110822c43d2e2dbfda0448d96e67a">More...</a><br/></td></tr>
 <tr class="separator:a061110822c43d2e2dbfda0448d96e67a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -345,7 +345,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a44ec67a9682966ca2dd295770d9d3430"></a>
+<a class="anchor" id="a089e0953caf0115d409426cd6f143d7b"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -396,7 +396,7 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::string &amp;&#160;</td>
+          <td class="paramtype">std::string&#160;</td>
           <td class="paramname"><em>filterType</em>&#160;</td>
         </tr>
         <tr>
