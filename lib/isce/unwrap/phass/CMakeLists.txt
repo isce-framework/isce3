@@ -26,6 +26,7 @@ set(HEADERS
     RegionMap.h
     constants.h
     sort.h
-    Phass.h)
+    Phass.h
+    Phass.icc)
 
 add_isce_libdir(unwrap/phass "${SRCS}" "${HEADERS}")

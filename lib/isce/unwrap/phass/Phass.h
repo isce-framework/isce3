@@ -17,10 +17,21 @@ class Phass
 {
 public:
     /** Constructor */
-    Phass() = default;
+    Phass() {
+        _correlationThreshold = 0.2;
+        _goodCorrelation = 0.7;
+        _minPixelsPerRegion = 200.0;
+        _usePower = true;
+    };
 
     /** Destructor */
     ~Phass() = default;
+
+    void unwrap(
+        isce::io::Raster & phaseRaster,
+        isce::io::Raster & corrRaster,
+        isce::io::Raster & unwRaster,
+        isce::io::Raster & labelRaster);
 
     void unwrap(
         isce::io::Raster & phaseRaster,
@@ -29,14 +40,39 @@ public:
         isce::io::Raster & unwRaster,
         isce::io::Raster & labelRaster);
 
+    /** Get correlation threshold increment. */
+    double correlationThreshold() const;
+
+    /** Set correlation threshold increment. */
+    void correlationThreshold(double);
+
+    /** Get good correlation threshold. */
+    double goodCorrelation() const;
+
+    /** Set good correlation threshold. */
+    void goodCorrelation(double);
+
+    /** Get minimum size of a region to be unwrapped. */
+    int minPixelsPerRegion() const;
+
+    /** Set minimum size of a region to be unwrapped. */
+    void minPixelsPerRegion(int);
+
+
     private:
-        double _corr_th = 0.2;
-        double _good_corr = 0.7; 
-        int _min_pixels_per_region = 20.0;
+        double _correlationThreshold = 0.2;
+        double _goodCorrelation = 0.7; 
+        int _minPixelsPerRegion = 200.0;
+        bool _usePower = true;
 
 };
 
 }
+
+// Get inline implementations.
+#define ISCE_UNWRAP_PHASS_PHASS_ICC
+#include "Phass.icc"
+#undef ISCE_UNWRAP_PHASS_PHASS_ICC
 
 #endif /* ISCE_UNWRAP_PHASS_PHASS_H */
 

@@ -1,0 +1,35 @@
+#if !defined(ISCE_UNWRAP_PHASS_PHASS_ICC)
+#error "Phass.icc is an implementation detail of class Phass."
+#endif
+
+namespace isce::unwrap::phass
+{
+    inline void Phass::correlationThreshold(double corrThr) 
+    {
+        _correlationThreshold = corrThr;
+    }
+
+    inline double Phass::correlationThreshold() const { 
+        return _correlationThreshold;
+    }
+
+    inline void Phass::goodCorrelation(double goodCor)
+    {
+        _goodCorrelation = goodCor;        
+    }
+
+    inline double Phass::goodCorrelation() const {
+        return _goodCorrelation;
+    }
+
+    inline void Phass::minPixelsPerRegion(int minPixelsPerRegion)
+    {
+        _minPixelsPerRegion = minPixelsPerRegion; 
+    }
+
+    inline int Phass::minPixelsPerRegion() const {
+        return _minPixelsPerRegion;
+    }
+
+}
+
