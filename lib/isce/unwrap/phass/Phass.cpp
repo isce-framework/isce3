@@ -1,5 +1,17 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// Author: Heresh Fattahi
+// Copyright 2019-
+
 #include "Phass.h"
 
+/**
+ * @param[in] phaseRaster wrapped phase
+ * @param[in] corrRaster correlation
+ * @param[out] unwRaster unwrapped phase
+ * @param[out] labelRaster connected component labels
+ */
 void isce::unwrap::phass::Phass::
 unwrap(isce::io::Raster & phaseRaster,
         isce::io::Raster & corrRaster,
@@ -17,6 +29,13 @@ unwrap(isce::io::Raster & phaseRaster,
         labelRaster);
 }
 
+/**
+* @param[in] phaseRaster wrapped phase
+* @param[in] powerRaster power of the interferogram
+* @param[in] corrRaster correlation
+* @param[out] unwRaster unwrapped phase
+* @param[out] labelRaster connected component labels
+*/
 void isce::unwrap::phass::Phass::
 unwrap(isce::io::Raster & phaseRaster,
         isce::io::Raster & powerRaster,
@@ -27,8 +46,6 @@ unwrap(isce::io::Raster & phaseRaster,
 
     int nrows = phaseRaster.length();
     int ncols = phaseRaster.width();
-
-    std::cout << "1D pointer arrays reading" << std::endl;
 
     float *phase_data_1D = new float[nrows*ncols];
     float *corr_data_1D = new float[nrows*ncols];
@@ -92,7 +109,7 @@ unwrap(isce::io::Raster & phaseRaster,
         delete[] corr_data[line];
         delete[] power_data[line];
         delete[] region_map[line];
-    } */
+    }*/ 
 
     delete[] labels_1D;
     delete[] phase_data_1D;

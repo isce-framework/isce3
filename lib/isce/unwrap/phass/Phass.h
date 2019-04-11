@@ -1,3 +1,9 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+// 
+// Author: Heresh Fattahi
+// Copyright 2019-
+
 #ifndef ISCE_UNWRAP_PHASS_PHASS_H
 #define ISCE_UNWRAP_PHASS_PHASS_H
 
@@ -27,12 +33,14 @@ public:
     /** Destructor */
     ~Phass() = default;
 
+    /** Unwrap the interferometric wrapped phase. */
     void unwrap(
         isce::io::Raster & phaseRaster,
         isce::io::Raster & corrRaster,
         isce::io::Raster & unwRaster,
         isce::io::Raster & labelRaster);
 
+    /** Unwrap the interferometric wrapped phase. */
     void unwrap(
         isce::io::Raster & phaseRaster,
         isce::io::Raster & powerRaster,
@@ -44,19 +52,19 @@ public:
     double correlationThreshold() const;
 
     /** Set correlation threshold increment. */
-    void correlationThreshold(double);
+    void correlationThreshold(const double);
 
     /** Get good correlation threshold. */
     double goodCorrelation() const;
 
     /** Set good correlation threshold. */
-    void goodCorrelation(double);
+    void goodCorrelation(const double);
 
     /** Get minimum size of a region to be unwrapped. */
     int minPixelsPerRegion() const;
 
     /** Set minimum size of a region to be unwrapped. */
-    void minPixelsPerRegion(int);
+    void minPixelsPerRegion(const int);
 
 
     private:

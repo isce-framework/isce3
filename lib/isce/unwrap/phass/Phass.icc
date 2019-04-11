@@ -1,19 +1,27 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+// 
+// Author: Heresh Fattahi
+// Copyright 2019-
+
 #if !defined(ISCE_UNWRAP_PHASS_PHASS_ICC)
 #error "Phass.icc is an implementation detail of class Phass."
 #endif
 
 namespace isce::unwrap::phass
 {
-    inline void Phass::correlationThreshold(double corrThr) 
+    /** @param[in] corrThr correlation threshold*/
+    inline void Phass::correlationThreshold(const double corrThr) 
     {
         _correlationThreshold = corrThr;
     }
-
+    
     inline double Phass::correlationThreshold() const { 
         return _correlationThreshold;
     }
 
-    inline void Phass::goodCorrelation(double goodCor)
+    /** @param[in] goodCor good correlation threshold. */
+    inline void Phass::goodCorrelation(const double goodCor)
     {
         _goodCorrelation = goodCor;        
     }
@@ -22,7 +30,8 @@ namespace isce::unwrap::phass
         return _goodCorrelation;
     }
 
-    inline void Phass::minPixelsPerRegion(int minPixelsPerRegion)
+    /** @param[in] minPixelsPerRegion minimum pixels per region to unwrap*/
+    inline void Phass::minPixelsPerRegion(const int minPixelsPerRegion)
     {
         _minPixelsPerRegion = minPixelsPerRegion; 
     }
@@ -30,6 +39,5 @@ namespace isce::unwrap::phass
     inline int Phass::minPixelsPerRegion() const {
         return _minPixelsPerRegion;
     }
-
 }
 
