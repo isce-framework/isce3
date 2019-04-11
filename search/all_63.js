@@ -1,10 +1,12 @@
 var searchData=
 [
+  ['cannyedgedetector',['CannyEdgeDetector',['../classCannyEdgeDetector.html',1,'']]],
   ['cartesian_5ft',['cartesian_t',['../namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2',1,'isce::core']]],
   ['cartmat_5ft',['cartmat_t',['../namespaceisce_1_1core.html#a783159df295136bea1129473a383c16a',1,'isce::core']]],
   ['cea',['CEA',['../structisce_1_1core_1_1CEA.html',1,'isce::core']]],
   ['centroid',['centroid',['../structisce_1_1core_1_1Doppler.html#a28be69c3e0388edbdc3fdea4856d6cec',1,'isce::core::Doppler']]],
   ['centroidderivs',['centroidDerivs',['../structisce_1_1core_1_1Doppler.html#ac213146f89eab0dc93920346e0d29e8b',1,'isce::core::Doppler']]],
+  ['changedetector',['ChangeDetector',['../classChangeDetector.html',1,'']]],
   ['chat',['chat',['../classisce_1_1core_1_1Baseline.html#a007ab04c95e9930dbfcf001e0ae49a07',1,'isce::core::Baseline']]],
   ['checkveclendebug',['checkVecLenDebug',['../namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e',1,'isce::core']]],
   ['clamp',['clamp',['../namespaceisce_1_1core.html#a65c88b1efd8564d22e60f47f68417e64',1,'isce::core']]],
@@ -26,6 +28,7 @@ var searchData=
   ['convertxyzdottoschdot',['convertXYZdotToSCHdot',['../structisce_1_1core_1_1Pegtrans.html#ae61f12876d02beb53c57a8f88deaa419',1,'isce::core::Pegtrans']]],
   ['convertxyztosch',['convertXYZtoSCH',['../structisce_1_1core_1_1Pegtrans.html#a86392f3397654af844f1fb9b648d687b',1,'isce::core::Pegtrans']]],
   ['coords',['coords',['../classisce_1_1core_1_1LUT1d.html#a5ada628b052167028a9f4b2686bc5a6b',1,'isce::core::LUT1d::coords()'],['../classisce_1_1core_1_1LUT1d.html#a592a517aaea21a9a2f6e496b6aa025b6',1,'isce::core::LUT1d::coords() const '],['../classisce_1_1core_1_1LUT1d.html#a9a1bae239368ccb6db8f1b98c6896282',1,'isce::core::LUT1d::coords(const std::valarray&lt; double &gt; &amp;c)']]],
+  ['correlationthreshold',['correlationThreshold',['../classisce_1_1unwrap_1_1phass_1_1Phass.html#a7feaadec27daf99d3f57636ea8243ef3',1,'isce::unwrap::phass::Phass::correlationThreshold() const '],['../classisce_1_1unwrap_1_1phass_1_1Phass.html#a39b9e912cb751c4be189c079271bc67b',1,'isce::unwrap::phass::Phass::correlationThreshold(const double)']]],
   ['corrthrinc',['corrThrInc',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a2f661d236a9a840325ac6226c2404227',1,'isce::unwrap::icu::ICU::corrThrInc() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a7f5fd8e9d9b9090b9a80daa4f88fc6ba',1,'isce::unwrap::icu::ICU::corrThrInc(const float)']]],
   ['coslook',['cosLook',['../classisce_1_1core_1_1Baseline.html#aa16f15e573e22e88f08f2c961537abed',1,'isce::core::Baseline']]],
   ['covariance',['Covariance',['../classisce_1_1signal_1_1Covariance.html',1,'isce::signal']]],
@@ -35,6 +38,6 @@ var searchData=
   ['creategroup',['createGroup',['../classisce_1_1io_1_1IGroup.html#a0ee63a8db38d9bcc9e58e10a542da9ad',1,'isce::io::IGroup::createGroup()'],['../classisce_1_1io_1_1IH5File.html#ad523e45f20730127d0c19ecb6473e442',1,'isce::io::IH5File::createGroup()']]],
   ['createinterpolator',['createInterpolator',['../namespaceisce_1_1core.html#a7f4801e070f925a20979d55288a471d9',1,'isce::core']]],
   ['cross',['cross',['../structisce_1_1core_1_1LinAlg.html#aa93865d560d663bd3575189f8da8220e',1,'isce::core::LinAlg']]],
-  ['crossmul',['crossmul',['../classisce_1_1signal_1_1Crossmul.html#a5de800d1b41b9c98e176462887a4d95d',1,'isce::signal::Crossmul::crossmul(isce::io::Raster &amp;referenceSLC, isce::io::Raster &amp;secondarySLC, isce::io::Raster &amp;rngOffset, isce::io::Raster &amp;interferogram, isce::io::Raster &amp;coherence)'],['../classisce_1_1signal_1_1Crossmul.html#af838cd9ab2ba16016c0c4f8ee4203218',1,'isce::signal::Crossmul::crossmul(isce::io::Raster &amp;referenceSLC, isce::io::Raster &amp;secondarySLC, isce::io::Raster &amp;interferogram, isce::io::Raster &amp;coherence)'],['../classisce_1_1signal_1_1Crossmul.html#ab5e452da1d373f99e3f5f7ee0255651d',1,'isce::signal::Crossmul::crossmul(isce::io::Raster &amp;referenceSLC, isce::io::Raster &amp;secondarySLC, isce::io::Raster &amp;interferogram)']]],
-  ['crossmul',['Crossmul',['../classisce_1_1signal_1_1Crossmul.html',1,'isce::signal']]]
+  ['crossmul',['Crossmul',['../classisce_1_1signal_1_1Crossmul.html',1,'isce::signal']]],
+  ['crossmul',['crossmul',['../classisce_1_1signal_1_1Crossmul.html#a5de800d1b41b9c98e176462887a4d95d',1,'isce::signal::Crossmul::crossmul(isce::io::Raster &amp;referenceSLC, isce::io::Raster &amp;secondarySLC, isce::io::Raster &amp;rngOffset, isce::io::Raster &amp;interferogram, isce::io::Raster &amp;coherence)'],['../classisce_1_1signal_1_1Crossmul.html#af838cd9ab2ba16016c0c4f8ee4203218',1,'isce::signal::Crossmul::crossmul(isce::io::Raster &amp;referenceSLC, isce::io::Raster &amp;secondarySLC, isce::io::Raster &amp;interferogram, isce::io::Raster &amp;coherence)'],['../classisce_1_1signal_1_1Crossmul.html#ab5e452da1d373f99e3f5f7ee0255651d',1,'isce::signal::Crossmul::crossmul(isce::io::Raster &amp;referenceSLC, isce::io::Raster &amp;secondarySLC, isce::io::Raster &amp;interferogram)']]]
 ];
