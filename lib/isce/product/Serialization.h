@@ -77,13 +77,14 @@ namespace isce {
             isce::io::IGroup fgroup = group.openGroup(freqString);
 
             // Load slant range
-            std::valarray<double> array;
-            isce::io::loadFromH5(fgroup, "slantRange", array);
-            swath.slantRange(array);
+            std::valarray<double> s_array;
+            isce::io::loadFromH5(fgroup, "slantRange", s_array);
+            swath.slantRange(s_array);
 
             // Load zero Doppler time
-            isce::io::loadFromH5(group, "zeroDopplerTime", array);
-            swath.zeroDopplerTime(array);
+            std::valarray<double> t_array;
+            isce::io::loadFromH5(group, "zeroDopplerTime", t_array);
+            swath.zeroDopplerTime(t_array);
 
             // Get reference epoch
             isce::core::DateTime refEpoch = isce::io::getRefEpoch(group, "zeroDopplerTime");

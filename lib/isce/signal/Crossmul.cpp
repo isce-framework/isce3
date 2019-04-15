@@ -272,6 +272,10 @@ crossmul(isce::io::Raster& referenceSLC,
         // common range band-pass filtering
         if (_doCommonRangebandFilter) {
 
+            // Some diagnostic messages to make sure everything has been configured
+            std::cout << " - range pixel spacing: " << _rangePixelSpacing << std::endl;
+            std::cout << " - wavelength: " << _wavelength << std::endl;
+
             // Read range offsets
             std::valarray<double> offsetLine(ncols);
             for (size_t line = 0; line < blockRowsData; ++line){
@@ -290,6 +294,7 @@ crossmul(isce::io::Raster& referenceSLC,
                 }
             }
 
+            // Forward FFT to compute topo-dependent spectrum
             refSignal.forward(geometryIfgramConj, refSpectrum);
             refSignal.forward(geometryIfgram, secSpectrum);
 
@@ -460,6 +465,7 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
                         frequencyShift);
 
     std::cout << "frequencyShift : "<< frequencyShift << std::endl;
+    std::cout << "range bandwidth: " << _rangeBandwidth << std::endl;
 
     // Since the spectrum of the ref and sec SLCs are already aligned,
     // we design the low-pass filter as a band-apss at zero frequency with
@@ -489,11 +495,8 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
         // from refernce and secondary antennas to the target (i.e., range offset derived from
         // geometrical coregistration)
         double halfPhase = std::arg(geometryIfgram[i])/2.0;
-        // refSLc = refSlc*exp(1J*halfPhase)
-        refSlc[i] = refSlc[i] * std::complex<float> (std::cos(halfPhase), std::sin(halfPhase));
-
-        // refSLc = secSlc*exp(-1J*halfPhase)
-        secSlc[i] = secSlc[i] * std::complex<float> (std::cos(halfPhase), -1*std::sin(halfPhase));
+        refSlc[i] *= std::complex<float> (std::cos(halfPhase), std::sin(halfPhase));
+        secSlc[i] *= std::complex<float> (std::cos(halfPhase), -1*std::sin(halfPhase));
 
     }
 }

@@ -46,7 +46,10 @@ cdef class pyCrossmul:
                  int rangeLooks=1,
                  int azimuthLooks=1,
                  double prf=1.0,
-                 double azimuthBandwidth=1.0):
+                 double azimuthBandwidth=1.0,
+                 double rangeBandwidth=1.0,
+                 double wavelength=0.24,
+                 double rangePixelSpacing=1.0):
         '''
         Run crossmul to generate interferogram and coherence image.
 
@@ -61,6 +64,7 @@ cdef class pyCrossmul:
         cdef LUT1d[double] c_refdoppler1d
         cdef LUT1d[double] c_secdoppler1d
 
+        # Set parameters for azimuth filtering
         if refDoppler is not None and secDoppler is not None:
 
             # Convert Dopplers to LUT1d
@@ -78,6 +82,18 @@ cdef class pyCrossmul:
 
             # Set the azimuth bandwidth
             self.c_crossmul.commonAzimuthBandwidth(azimuthBandwidth)
+
+        # Set parameters for range filtering
+        if rngOffset is not None:
+
+            # Set the range bandwidth
+            self.c_crossmul.rangeBandwidth(rangeBandwidth)
+            
+            # Set the wavelength
+            self.c_crossmul.wavelength(wavelength)
+
+            # Set the range pixel spacing
+            self.c_crossmul.rangePixelSpacing(rangePixelSpacing)
 
         # Set the number of looks
         if rangeLooks > 1:

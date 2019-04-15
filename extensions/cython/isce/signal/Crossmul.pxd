@@ -19,6 +19,7 @@ cdef extern from "isce/signal/Crossmul.h" namespace "isce::signal":
         # Setters
         void prf(double)
         void rangeBandwidth(double)
+        void rangePixelSpacing(double)
         void wavelength(double)
         void commonAzimuthBandwidth(double)
         void beta(double)
