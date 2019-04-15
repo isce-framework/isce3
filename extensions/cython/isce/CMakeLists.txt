@@ -5,11 +5,14 @@
 # Find Numpy
 find_package(Numpy REQUIRED)
 
-###Create a function for concatenating pxd files
-function(catpxd IN_FILE OUT_FILE)
-    FILE(READ ${IN_FILE} CONTENTS)
-    FILE(APPEND ${OUT_FILE} "${CONTENTS}")
-endfunction()
+# Add subdirectories for installing pxd files
+add_subdirectory(io)
+add_subdirectory(core)
+add_subdirectory(product)
+add_subdirectory(image)
+add_subdirectory(signal)
+add_subdirectory(geometry)
+add_subdirectory(serialization)
 
 # Set the name for the ISCE C++ library
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})

@@ -5,6 +5,10 @@
 # Find Numpy
 find_package(Numpy REQUIRED)
 
+# Add subdirectories for installing pxd files
+add_subdirectory(image)
+add_subdirectory(geometry)
+
 # Set file properties
 set_source_files_properties(
     iscecudaextension.pyx

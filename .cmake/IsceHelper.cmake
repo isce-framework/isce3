@@ -62,3 +62,12 @@ function(add_isce_libdir PKGNAME CPPS HEADERS)
             DESTINATION ${ISCE_INCLUDEDIR}/${LOCALPROJ}/${SUBDIR}/${PKGNAME}
             COMPONENT isce_headers)
 endfunction()
+
+# Add a Cython source directory for exporting pxd (header) files
+function(add_isce_cythondir PKGNAME PXDS)
+    # Install headers as files
+    # May be changed in the future to install from build/include
+    install(FILES ${PXDS}
+            DESTINATION ${ISCE_PACKAGESDIR}/isce3/include/${PKGNAME}
+            COMPONENT isce_headers)
+endfunction()
