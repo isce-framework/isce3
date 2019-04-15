@@ -14,6 +14,9 @@
 #include <iostream>
 #include <sstream>
 
+// isce::core
+#include <isce/core/DateTime.h>
+
 // isce::io
 #include <isce/io/IH5.h>
 
@@ -96,6 +99,115 @@ namespace isce {
             dataset.read(m.data());
         }
 
+        /** Write vector dataset to HDF5 file.
+         *
+         * @param[in] file          HDF5 file or group object.
+         * @param[in] datasetPath   H5 path of dataset relative to h5obj.
+         * @param[in] v             Vector to write.
+         * @param[in] units         Units of dataset. */
+        template <typename H5obj, typename T>
+        inline void saveToH5(H5obj & h5obj, const std::string & datasetPath,
+                             const std::vector<T> & v, const std::string & units = "") {
+            // Check for existence of dataset
+            if (exists(h5obj, datasetPath)) {
+                return;
+            }
+            // Create dataset
+            isce::io::IDataSet dset = h5obj.createDataSet(datasetPath, v);
+            // Update units attribute if long enough
+            if (units.length() > 0) {
+                dset.createAttribute("units", units);
+            }
+        }
+
+        /** Write valarray dataset to HDF5 file.
+         *
+         * @param[in] file          HDF5 file or group object.
+         * @param[in] datasetPath   H5 path of dataset relative to h5obj.
+         * @param[in] v             Valarray to write.
+         * @param[in] units         Units of dataset. */
+        template <typename H5obj, typename T>
+        inline void saveToH5(H5obj & h5obj, const std::string & datasetPath,
+                             const std::valarray<T> & v, const std::string & units = "") {
+            // Check for existence of dataset
+            if (exists(h5obj, datasetPath)) {
+                return;
+            }
+            // Create dataset
+            isce::io::IDataSet dset = h5obj.createDataSet(datasetPath, v);
+            // Update units attribute if long enough
+            if (units.length() > 0) {
+                dset.createAttribute("units", units);
+            }
+        }
+
+        /** Write vector dataset with dimensions to HDF5 file.
+         *
+         * @param[in] file          HDF5 file or group object.
+         * @param[in] datasetPath   H5 path of dataset relative to h5obj.
+         * @param[in] v             Vector to write.
+         * @param[in] units         Units of dataset. */
+        template <typename H5obj, typename T, size_t S>
+        inline void saveToH5(H5obj & h5obj, const std::string & datasetPath,
+                             const std::vector<T> & v, std::array<size_t, S> dims,
+                             const std::string & units = "") {
+            // Check for existence of dataset
+            if (exists(h5obj, datasetPath)) {
+                return;
+            }
+            // Create dataset
+            isce::io::IDataSet dset = h5obj.createDataSet(datasetPath, v, dims);
+            // Update units attribute if long enough
+            if (units.length() > 0) {
+                dset.createAttribute("units", units);
+            }
+        }
+
+        /** Write valarray dataset with dimensions to HDF5 file.
+         *
+         * @param[in] file          HDF5 file or group object.
+         * @param[in] datasetPath   H5 path of dataset relative to h5obj.
+         * @param[in] v             Valarray to write.
+         * @param[in] units         Units of dataset. */
+        template <typename H5obj, typename T, size_t S>
+        inline void saveToH5(H5obj & h5obj, const std::string & datasetPath,
+                             const std::valarray<T> & v, std::array<size_t, S> dims,
+                             const std::string & units = "") {
+            // Check for existence of dataset
+            if (exists(h5obj, datasetPath)) {
+                return;
+            }
+            // Create dataset
+            isce::io::IDataSet dset = h5obj.createDataSet(datasetPath, v, dims);
+            // Update units attribute if long enough
+            if (units.length() > 0) {
+                dset.createAttribute("units", units);
+            }
+        }
+
+        /** Write Matrix dataset to HDF5 file.
+         *
+         * @param[in] file          HDF5 file or group object.
+         * @param[in] datasetPath   H5 path of dataset relative to h5obj.
+         * @param[in] mat           Matrix to write.
+         * @param[in] units         Units of dataset. */
+        template <typename H5obj, typename T>
+        inline void saveToH5(H5obj & h5obj, const std::string & datasetPath,
+                             const isce::core::Matrix<T> & mat, 
+                             const std::string & units = "") {
+            // Check for existence of dataset
+            if (exists(h5obj, datasetPath)) {
+                return;
+            }
+            // Create dataset
+            std::array<size_t, 2> dims{mat.length(), mat.width()};
+            isce::io::IDataSet dset = h5obj.createDataSet(datasetPath, mat.data(), dims);
+            // Update units attribute if long enough
+            if (units.length() > 0) {
+                dset.createAttribute("units", units);
+            }
+        }
+
         /** Get dimensions of complex imagery from HDF5 file.
          *
          * @param[in] file          HDF5 file or group object.
@@ -134,7 +246,35 @@ namespace isce {
             // Done
             return epoch;
         }
+
+        /** Save reference epoch DateTime as an attribute.
+          *
+          * @param[in] file         HDF5 file or group object.
+          * @param[in] datasetPath  H5 path of dataset relative to h5obj.
+          * @param[in] epoch        isce::core::DateTime of reference epoch. */
+        template <typename H5obj>
+        inline void setRefEpoch(H5obj & h5obj, const std::string & datasetPath,
+                                const isce::core::DateTime & refEpoch) {
+
+            // Open the dataset
+            isce::io::IDataSet dset = h5obj.openDataSet(datasetPath);
             
+            // Need to create string representation of DateTime manually
+            char buffer[40];
+            sprintf(buffer,
+                    "seconds since %04d-%02d-%02d %02d:%02d:%02d",
+                    refEpoch.year,
+                    refEpoch.months,
+                    refEpoch.days,
+                    refEpoch.hours,
+                    refEpoch.minutes,
+                    refEpoch.seconds);
+            std::string unitsAttr{buffer};
+
+            // Save buffer to attribute
+            dset.createAttribute("units", unitsAttr);
+        }
+
     }
 }
 

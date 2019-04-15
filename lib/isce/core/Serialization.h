@@ -138,7 +138,24 @@ namespace isce {
                 date += orbit.UTCtime[i];
                 orbit.epochs[i] = date;
             }
+        }
+
+        /** \brief Save orbit data to HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] orbit         Orbit object to be saved. */
+        inline void saveToH5(isce::io::IGroup & group, const Orbit & orbit) {
             
+            // Save position
+            std::array<size_t, 2> dims = {static_cast<size_t>(orbit.nVectors), 3};
+            isce::io::saveToH5(group, "position", orbit.position, dims, "meters");
+
+            // Save velocity
+            isce::io::saveToH5(group, "velocity", orbit.velocity, dims, "meters per second");
+
+            // Save time and reference epoch attribute
+            isce::io::saveToH5(group, "time", orbit.UTCtime);
+            isce::io::setRefEpoch(group, "time", orbit.refEpoch);
         }
 
         // ------------------------------------------------------------------------
@@ -148,7 +165,7 @@ namespace isce {
         /** \brief Load Euler angle data from HDF5 product.
          *
          * @param[in] group         HDF5 group object.
-         * @param[in] euler         Orbit object to be configured. */
+         * @param[in] euler         EulerAngles object to be configured. */
         inline void loadFromH5(isce::io::IGroup & group, EulerAngles & euler) {
 
             // Create temporary data
@@ -180,6 +197,30 @@ namespace isce {
             euler.refEpoch(refEpoch);
         }
 
+        /** \brief Save Euler angle data to HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] euler         EulerAngles object to be save. */
+        inline void saveToH5(isce::io::IGroup & group, const EulerAngles & euler) {
+
+            // Create vector to store all data (convert angles to degrees)
+            const double deg = 180.0 / M_PI;
+            std::vector<double> angles(euler.nVectors() * 3);
+            for (size_t i = 0; i < euler.nVectors(); ++i) {
+                angles[i*3 + 0] = deg * euler.yaw()[i];
+                angles[i*3 + 1] = deg * euler.pitch()[i];
+                angles[i*3 + 2] = deg * euler.roll()[i];
+            }
+            
+            // Save angles
+            std::array<size_t, 2> dims = {euler.nVectors(), 3};
+            isce::io::saveToH5(group, "eulerAngles", angles, dims, "degrees");
+
+            // Save time and reference epoch attribute
+            isce::io::saveToH5(group, "time", euler.time());
+            isce::io::setRefEpoch(group, "time", euler.refEpoch());
+        }
+  
         // ------------------------------------------------------------------------
         // Serialization for Metadata
         // ------------------------------------------------------------------------
@@ -286,6 +327,38 @@ namespace isce {
 
             // Set in lut
             lut.setFromData(slantRange, zeroDopplerTime, matrix);
+        }
+
+        /** \brief Save LUT2d data to HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] dsetName      Dataset name within group
+         * @param[in] lut           LUT2d to be saved.
+         * @param[in] units         Units of LUT2d data. */
+        template <typename T>
+        inline void saveCalGrid(isce::io::IGroup & group,
+                                const std::string & dsetName,
+                                const isce::core::LUT2d<T> & lut,
+                                const isce::core::DateTime & refEpoch,
+                                const std::string & units = "") {
+
+            // Generate uniformly spaced X (slant range) coordinates
+            const double x0 = lut.xStart();
+            const double x1 = x0 + lut.xSpacing() * (lut.width() - 1.0);
+            const std::vector<double> x = isce::core::linspace(x0, x1, lut.width());
+
+            // Generate uniformly spaced Y (zero Doppler time) coordinates
+            const double y0 = lut.yStart();
+            const double y1 = y0 + lut.ySpacing() * (lut.length() - 1.0);
+            const std::vector<double> y = isce::core::linspace(y0, y1, lut.length());
+
+            // Save coordinates
+            isce::io::saveToH5(group, "slantRange", x, "meters");
+            isce::io::saveToH5(group, "zeroDopplerTime", y);
+            isce::io::setRefEpoch(group, "zeroDopplerTime", refEpoch);
+
+            // Save LUT2d data
+            isce::io::saveToH5(group, dsetName, lut.data(), units);
         }
 
         // ------------------------------------------------------------------------
