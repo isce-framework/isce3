@@ -71,27 +71,11 @@ TEST(ICU, RunPhass)
     //unwrap the interferogram
     phassObj.unwrap(wrappedPhaseRaster, corrRaster, unwRaster, labelsRaster);
 
-}
-
-
-TEST(Phass, CheckUnwrappedPhase)
-{
-    // Read interferogram from prior test.
-    isce::io::Raster intfRaster("./intf");
-    const size_t l = intfRaster.length();
-    const size_t w = intfRaster.width();
-    std::valarray<float> phase(l*w);
-    intfRaster.getBlock(phase, 0, 0, w, l);
-
-    // Get wrapped phase.
-    //std::valarray<float> phase(l*w);
-    //for (size_t i = 0; i < l*w; ++i) { phase[i] = std::arg(intf[i]); }
-
     // Read unwrapped phase from prior test.
-    isce::io::Raster unwRaster("./unw");
-    ASSERT_TRUE(unwRaster.length() == l && unwRaster.width() == w);
+    isce::io::Raster outputUnwRaster("./unw");
+    ASSERT_TRUE(outputUnwRaster.length() == l && outputUnwRaster.width() == w);
     std::valarray<float> unw(l*w);
-    unwRaster.getBlock(unw, 0, 0, w, l);
+    outputUnwRaster.getBlock(unw, 0, 0, w, l);
 
     // Read connected component labels from prior test.
     isce::io::Raster cclRaster("./labels");
