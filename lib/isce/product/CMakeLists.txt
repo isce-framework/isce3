@@ -7,4 +7,6 @@ set(HEADERS
     Serialization.h
     Swath.h)
 
+set(SRCS Product.cpp)
+
 add_isce_libdir(product "${SRCS}" "${HEADERS}")
