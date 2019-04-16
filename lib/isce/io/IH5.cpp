@@ -170,7 +170,7 @@ int isce::io::IDataSet::getRank(const std::string &v) {
     dspace.close();
 
     return rank;    
-};
+}
 
 
 /** @param[in] v Name of the attribute (optional).
@@ -231,7 +231,7 @@ std::vector<int> isce::io::IDataSet::getDimensions(const std::string &v) {
     dspace.close();
 
     return outDims;
-};
+}
 
 
 /** @param[in] v Name of the attribute (optional).
@@ -416,7 +416,7 @@ int isce::io::IDataSet::getNumBits(const std::string &v) {
     H5Tclose(dt);
 
     return (int) precision;
-};
+}
 
 /** @param[out] str String representation for GDAL's IH5Dataset driver
 
@@ -425,7 +425,7 @@ std::string isce::io::IDataSet::toGDAL()
 {
     std::string result = "IH5:::ID=" + std::to_string(getId());
     return result;
-};
+}
 
 /** @param[in] att  Name of the attribute (optional).
  *  @param[out] v Dataset or attribute string value.
@@ -1041,7 +1041,7 @@ isce::io::IDataSet isce::io::IGroup::openDataSet(const H5std_string &name) {
     H5::DataSet dset = H5::Group::openDataSet(name);
     return IDataSet(dset);
 
-};
+}
 
 
 /** @param[in] name Name of the group to open.
@@ -1053,7 +1053,7 @@ isce::io::IGroup isce::io::IGroup::openGroup(const H5std_string &name) {
     H5::Group group = H5::Group::openGroup(name);
     return IGroup(group);
 
-};
+}
 
 
 /** @param[in] att  Name of the attribute 
@@ -1150,7 +1150,7 @@ isce::io::IGroup isce::io::IGroup::createGroup(const H5std_string &name) {
     H5Pclose(gcpl);
 
     return IGroup(group);
-};
+}
 
 
 
@@ -1256,7 +1256,7 @@ isce::io::IDataSet isce::io::IH5File::openDataSet(const H5std_string &name) {
     H5::DataSet dset = H5::H5File::openDataSet(name);
     return IDataSet(dset);
 
-};
+}
 
 
 
@@ -1269,7 +1269,7 @@ isce::io::IGroup isce::io::IH5File::openGroup(const H5std_string &name) {
     H5::Group group = H5::H5File::openGroup(name);
     return IGroup(group);
 
-};
+}
 
 
 /** @param[in] name Name of the group to create.
@@ -1289,7 +1289,7 @@ isce::io::IGroup isce::io::IH5File::createGroup(const H5std_string &name) {
     //H5::Group group2 = H5::Group(group);
     //return IGroup(group2);
     return IGroup(group);
-};
+}
 
 
 /** @param[in] name Regular Expression to search for.

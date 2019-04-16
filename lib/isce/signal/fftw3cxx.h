@@ -94,7 +94,7 @@ extern "C" {
     FFTW3CXX_DEFINE_FFTW335_NEW_API(FFTW_MANGLE_DOUBLE, double, fftw_complex)
     FFTW3CXX_DEFINE_FFTW335_NEW_API(FFTW_MANGLE_FLOAT, float, fftwf_complex)
     FFTW3CXX_DEFINE_FFTW335_NEW_API(FFTW_MANGLE_LONG_DOUBLE, long double, fftwl_complex)
-};
+}
 
 namespace isce{
 namespace fftw3cxx {

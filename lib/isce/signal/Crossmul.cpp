@@ -335,7 +335,7 @@ crossmul(isce::io::Raster& referenceSLC,
         #pragma omp parallel for
         for (size_t line = 0; line < blockRowsData; line++){
             for (size_t col = 0; col < ncols; col++){
-                std::complex<float> sum =(0,0);
+                std::complex<float> sum = 0;
                 for (size_t j=0; j< oversample; j++)
                     sum += ifgramUpsampled[line*(ncols*oversample) + j + col*oversample];
                 ifgram[line*ncols + col] = sum/ov;            

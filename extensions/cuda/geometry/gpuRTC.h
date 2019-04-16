@@ -8,4 +8,4 @@ namespace isce { namespace cuda { namespace geometry {
                   isce::io::Raster& dem,
                   isce::io::Raster& out_raster,
                   char frequency);
-};};};
+} } }

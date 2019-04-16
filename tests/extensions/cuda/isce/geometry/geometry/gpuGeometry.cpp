@@ -93,7 +93,6 @@ TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
 
             // Get azimutha and range info
             const double azTime = rgparam.sensingTime(i);
-            const double rbin = j;
             const double range = rgparam.slantRange(j);
             const double dopval = doppler.eval(azTime, range);
 

@@ -99,7 +99,6 @@ struct InterpolatorTest : public ::testing::Test {
 // Test nearest neighbor interpolation
 TEST_F(InterpolatorTest, Nearest) {
     size_t N_pts = true_values.length();
-    double error = 0.0;
     // Create interpolator
     isce::core::NearestNeighborInterpolator<double> interp;
     // Loop over test points
@@ -232,7 +231,6 @@ TEST_F(InterpolatorTest, Sinc2d) {
 // Test nearest neighbor interpolation
 TEST_F(InterpolatorTest, NearestComplex) {
     size_t N_pts = true_values.length();
-    double error = 0.0;
     // Create interpolator
     isce::core::NearestNeighborInterpolator<std::complex<double>> interp;
     // Loop over test points
@@ -389,11 +387,7 @@ TEST_F(InterpolatorTest, SimpleRampTest) {
         }
     }
 
-    double interp_val = 0.0;
-    double interp_val2 = 0.0;
-
     double err = 0.0; //interp_val - x;
-    double err2 = 0.0;
       
     isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD;
     isce::core::Interpolator<double> * interp = nullptr;

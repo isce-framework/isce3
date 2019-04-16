@@ -208,7 +208,6 @@ geocodeCovariance(isce::io::Raster& rdrCov,
         // shape of the required block of data in the radar coordinates
         size_t rdrBlockLength = azimuthLastLine - azimuthFirstLine + 1;
         size_t rdrBlockWidth = rangeLastPixel - rangeFirstPixel + 1;
-        size_t rdrBlockSize = rdrBlockLength * rdrBlockWidth;
 
         // X and Y indices (in the radar coordinates) for the 
         // geocoded pixels (after geo2rdr computation)
@@ -499,8 +498,6 @@ _correctFaradayRotation(isce::core::LUT2d<double>& faradayAngle,
                     size_t lineStart)
 
 {
-    size_t sizeData = Shh.size();  
-
     #pragma omp parallel for
     for (size_t kk = 0; kk < length*width; ++kk) {
         size_t line = kk/width;

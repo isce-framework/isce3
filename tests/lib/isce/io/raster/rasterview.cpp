@@ -127,7 +127,6 @@ TEST_F(RasterTest, getSetBlockView) {
 
   //Create a larger matrix
   isce::core::Matrix<int> matrix(nl, nc);
-  float a;
    
   for(uint ii=0; ii < margin; ++ii)
       for(uint jj=0; jj < margin; ++jj)

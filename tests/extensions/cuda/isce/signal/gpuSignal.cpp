@@ -58,7 +58,6 @@ TEST(gpuSignal, ForwardBackwardRangeFloat)
 
     int blockSize = width*blockLength;
     std::complex<float> err(0.0, 0.0);
-    bool Test = true;
     double max_err = 0.0;
     for ( size_t i = 0; i < blockSize; ++i ) {
         err = inverted_data[i] - data[i];
@@ -110,7 +109,6 @@ TEST(gpuSignal, ForwardBackwardRangeDouble)
 
     int blockSize = width*blockLength;
     std::complex<double> err(0.0, 0.0);
-    bool Test = true;
     double max_err = 0.0;
     for ( size_t i = 0; i < blockSize; ++i ) {
         err = inverted_data[i] - data[i];
@@ -162,7 +160,6 @@ TEST(gpuSignal, ForwardBackwardAzimuthFloat)
 
     int blockSize = width*blockLength;
     std::complex<float> err(0.0, 0.0);
-    bool Test = true;
     double max_err = 0.0;
     for ( size_t i = 0; i < blockSize; ++i ) {
         err = inverted_data[i] - data[i];
@@ -214,7 +211,6 @@ TEST(gpuSignal, ForwardBackwardAzimuthDouble)
 
     int blockSize = width*blockLength;
     std::complex<double> err(0.0, 0.0);
-    bool Test = true;
     double max_err = 0.0;
     for ( size_t i = 0; i < blockSize; ++i ) {
         err = inverted_data[i] - data[i];
@@ -229,8 +225,6 @@ TEST(gpuSignal, ForwardBackwardAzimuthDouble)
 TEST(gpuSignal, upsampleFloat)
 {
     int width = 100;
-    int length = 1;
-    int blockLength = length;
 
     // fft length for FFT computations
     size_t nfft;
@@ -293,8 +287,6 @@ TEST(gpuSignal, upsampleFloat)
 TEST(gpuSignal, upsampleDouble)
 {
     int width = 100;
-    int length = 1;
-    int blockLength = length;
 
     // fft length for FFT computations
     size_t nfft;

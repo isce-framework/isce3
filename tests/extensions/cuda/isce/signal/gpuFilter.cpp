@@ -22,7 +22,6 @@ TEST(Filter, constructAzimuthCommonbandFilter)
     int ncols = 500;
     int blockRows = 500;
     int nfft = ncols;
-    int oversample = 2;
 
     std::valarray<std::complex<float>> refSlc(ncols*blockRows);
     std::valarray<std::complex<float>> refSpectrum(nfft*blockRows);

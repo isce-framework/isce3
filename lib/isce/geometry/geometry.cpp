@@ -497,7 +497,6 @@ computeDEMBounds(const Orbit & orbit,
     }
 
     // Loop over the indices
-    double tline;
     for (size_t i = 0; i < rgInd.size(); ++i) {
 
         // Compute satellite azimuth time

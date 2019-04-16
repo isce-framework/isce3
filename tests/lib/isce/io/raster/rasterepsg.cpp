@@ -66,7 +66,7 @@ struct ProjTest : public ::testing::Test {
 //Macro for name of the test
 #define epsgTestName(ind) ind ## _EPSG
 #define epsgTest(x) \
-    projTest(x, epsgTestName(x));
+    projTest(x, epsgTestName(x)) struct consume_semicolon
 
 //Test each of the UTM north zones
 epsgTest(32601);

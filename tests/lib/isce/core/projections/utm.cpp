@@ -42,13 +42,13 @@ struct UTMTest : public ::testing::Test {
         EXPECT_NEAR(llh[1], ref_llh[1], 1.0e-9);\
         EXPECT_NEAR(llh[2], ref_llh[2], 1.0e-6);\
         fails += ::testing::Test::HasFailure();\
-    }
+    } struct consume_semicolon
 
 
 //Test origins for various northern systems
 #define utmOriginNorthName(ind)  ind ## _NOrigin 
 #define utmOriginNorthTest(x)\
-    utmTest(32600+x, utmOriginNorthName(x), {(-177.0+(x-1)*6.0) * M_PI / 180.0, 0., 0.}, {500000., 0., 0.});
+    utmTest(32600+x, utmOriginNorthName(x), {(-177.0+(x-1)*6.0) * M_PI / 180.0, 0., 0.}, {500000., 0., 0.})
 
 utmOriginNorthTest(1);
 utmOriginNorthTest(2);
@@ -114,7 +114,7 @@ utmOriginNorthTest(60);
 
 #define utmOriginSouthName(ind)  ind ## _SOrigin 
 #define utmOriginSouthTest(x)\
-    utmTest(32700+x, utmOriginSouthName(x), {(-177.0+(x-1)*6.0) * M_PI / 180.0, 0., 0.}, {500000., 10000000., 0.});
+    utmTest(32700+x, utmOriginSouthName(x), {(-177.0+(x-1)*6.0) * M_PI / 180.0, 0., 0.}, {500000., 10000000., 0.})
 
 utmOriginSouthTest(1);
 utmOriginSouthTest(2);
@@ -180,7 +180,7 @@ utmOriginSouthTest(60);
 
 #define utmNorthName(ind)  ind ## _North
 #define utmNorthTest(code,p,q,r,x,y,z)\
-    utmTest(32600+code, utmNorthName(code), p, q, r, x, y, z);
+    utmTest(32600+code, utmNorthName(code), p, q, r, x, y, z)
 
 
 utmNorthTest(1, {-3.090970668593823e+00,   3.623975597550786e-02, 1.744676256950977e+03},
@@ -367,7 +367,7 @@ utmNorthTest(60, {  3.139969074874963e+00,   1.090397747278831e+00, 4.2214671806
 
 #define utmSouthName(ind)  ind ## _South
 #define utmSouthTest(code,p,q,r,x,y,z)\
-    utmTest(32700+code, utmSouthName(code), p, q, r, x, y, z);
+    utmTest(32700+code, utmSouthName(code), p, q, r, x, y, z)
 
 utmSouthTest(1, {-3.093927794291543e+00,  -1.067144322057127e+00, 4.748737687030280e+01},
         {  4.855160732325171e+05,   3.221269661690438e+06, 4.748737687030280e+01});
