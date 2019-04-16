@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>ISCE: RTC.h Source File</title>
+<title>ISCE: isce::except::SrcInfo Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -40,8 +40,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="namespaces.html"><span>Namespaces</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
-      <li class="current"><a href="files.html"><span>Files</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Classes</span></a></li>
+      <li><a href="files.html"><span>Files</span></a></li>
       <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
       <li><a href="https://github-fn.jpl.nasa.gov/ericmg/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li>
@@ -64,7 +64,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
-      <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
+      <li><a href="hierarchy.html"><span>Class&#160;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -83,30 +85,34 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_404e96cc334514cbeb4d3a6830fc20a4.html">isce</a></li><li class="navelem"><a class="el" href="dir_b9854a22a90df239c3a61bd682dc9db5.html">lib</a></li><li class="navelem"><a class="el" href="dir_13a15a912f4c112db0f23523c4d5026e.html">isce</a></li><li class="navelem"><a class="el" href="dir_e80bbb3081db8e225915e78af7d9f413.html">geometry</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespaceisce.html">isce</a></li><li class="navelem"><b>except</b></li><li class="navelem"><a class="el" href="structisce_1_1except_1_1SrcInfo.html">SrcInfo</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
+  <div class="summary">
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="structisce_1_1except_1_1SrcInfo-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">RTC.h</div>  </div>
+<div class="title">isce::except::SrcInfo Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;isce/product/Product.h&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;isce/io/Raster.h&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;</div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="keyword">namespace </span>isce {</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;    <span class="keyword">namespace </span>geometry {</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;        <span class="keywordtype">void</span> facetRTC(<a class="code" href="classisce_1_1product_1_1Product.html">isce::product::Product</a>&amp; product,</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;                      <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; dem,</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;                      <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; out_raster,</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;                      <span class="keywordtype">char</span> frequency = <span class="charliteral">&#39;A&#39;</span>);</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    }</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;}</div>
-<div class="ttc" id="classisce_1_1io_1_1Raster_html"><div class="ttname"><a href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a></div><div class="ttdoc">Data structure meant to handle Raster I/O operations. </div><div class="ttdef"><b>Definition:</b> Raster.h:39</div></div>
-<div class="ttc" id="classisce_1_1product_1_1Product_html"><div class="ttname"><a href="classisce_1_1product_1_1Product.html">isce::product::Product</a></div><div class="ttdef"><b>Definition:</b> Product.h:29</div></div>
-</div><!-- fragment --></div><!-- contents -->
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:a488b3f3cdee7cd9d00acec8e11829363"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a488b3f3cdee7cd9d00acec8e11829363"></a>
+const char *&#160;</td><td class="memItemRight" valign="bottom"><b>file</b></td></tr>
+<tr class="separator:a488b3f3cdee7cd9d00acec8e11829363"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a039b7841edfb0ad8ba9730600c84755c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a039b7841edfb0ad8ba9730600c84755c"></a>
+const int&#160;</td><td class="memItemRight" valign="bottom"><b>line</b></td></tr>
+<tr class="separator:a039b7841edfb0ad8ba9730600c84755c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef161a22704bf6c09a912c7d6af43b39"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aef161a22704bf6c09a912c7d6af43b39"></a>
+const char *&#160;</td><td class="memItemRight" valign="bottom"><b>func</b></td></tr>
+<tr class="separator:aef161a22704bf6c09a912c7d6af43b39"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<hr/>The documentation for this struct was generated from the following file:<ul>
+<li><a class="el" href="Error_8h_source.html">Error.h</a></li>
+</ul>
+</div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
 <a href="http://www.doxygen.org/index.html"><img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.8.5.

@@ -137,7 +137,7 @@ Default raster driver</h2>
 <h1><a class="anchor" id="rasterpixel"></a>
 Reading/Writing Single Pixel</h1>
 <p>Note that all pixels are indexed by the Top-Left corner (see <a href="overview_raster.html">Raster Overview</a>). One can read the data into a buffer of a type different from the storage format, as GDAL will handle the type translation.</p>
-<p>We use <a class="el" href="classisce_1_1io_1_1Raster.html#a3ad71fad36f0bef7ce4dee2241db8fdb" title="Get single value for given band. ">isce::io::Raster::getValue</a> to read a pixel value from Band 2 of the raster image in this example. If band number is not provided, it is assumed to be 1.</p>
+<p>We use <a class="el" href="classisce_1_1io_1_1Raster.html#a6533d3603c8205e7c7a7d2ce74f413d6">isce::io::Raster::getValue</a> to read a pixel value from Band 2 of the raster image in this example. If band number is not provided, it is assumed to be 1.</p>
 <div class="fragment"><div class="line"><span class="comment">//Open existing tiff file</span></div>
 <div class="line"><a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> raster(<span class="stringliteral">&quot;test.tif&quot;</span>);</div>
 <div class="line"><span class="keywordtype">double</span> val;</div>
@@ -147,7 +147,7 @@ Reading/Writing Single Pixel</h1>
 <div class="line"></div>
 <div class="line">std::cout &lt;&lt; <span class="stringliteral">&quot;Image dimensions: &quot;</span> &lt;&lt; raster.width() &lt;&lt; <span class="stringliteral">&quot; x &quot;</span> &lt;&lt; raster.length() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">std::cout &lt;&lt; <span class="stringliteral">&quot;Value at 5P, 10L = &quot;</span> &lt;&lt; val &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span></div>
-</div><!-- fragment --><p>Similarly, <a class="el" href="classisce_1_1io_1_1Raster.html#a41f423d3af812651f9c528261acbf3df" title="Set single value for given band. ">isce::io::Raster::setValue</a> can be used to set a pixel value.</p>
+</div><!-- fragment --><p>Similarly, <a class="el" href="classisce_1_1io_1_1Raster.html#a291622cc0ce5cb441a959ea55ae746d2">isce::io::Raster::setValue</a> can be used to set a pixel value.</p>
 <div class="fragment"><div class="line"><span class="comment">//Create a Float32 raster of 100 pixels by 200 lines</span></div>
 <div class="line"><a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> raster(<span class="stringliteral">&quot;test.tif&quot;</span>, 100, 200,1, GDT_Float32, <span class="stringliteral">&quot;GTiff&quot;</span>); </div>
 <div class="line"></div>
@@ -156,7 +156,7 @@ Reading/Writing Single Pixel</h1>
 <div class="line">raster.setValue(val, 5,10);</div>
 </div><!-- fragment --><h1><a class="anchor" id="rasterline"></a>
 Reading/Writing Single line</h1>
-<p>ISCE Raster object can currently interact with 3 types of containers - a raw buffer (no size checks), std::vector and std::valarray. One can use any of the 3 interfaces with the <a class="el" href="classisce_1_1io_1_1Raster.html#aaa3d44ae9d76bad2d09ce14c20a55fe1" title="Read one line of data from given band to buffer. ">isce::io::Raster::getLine</a> and <a class="el" href="classisce_1_1io_1_1Raster.html#ac86a49f4d7c7cd4e6fc2c89612712217" title="Write one line of data from buffer to given band. ">isce::io::Raster::setLine</a> methods.</p>
+<p>ISCE Raster object can currently interact with 3 types of containers - a raw buffer (no size checks), std::vector and std::valarray. One can use any of the 3 interfaces with the <a class="el" href="classisce_1_1io_1_1Raster.html#a7b803f4981fed76e94ba254649069bd5" title="Read one line of data from given band to buffer, vector, or valarray. ">isce::io::Raster::getLine</a> and <a class="el" href="classisce_1_1io_1_1Raster.html#a5de4555b46e3abb100744fafdb12efd9" title="Write one line of data from buffer, vector, or valarray to given band. ">isce::io::Raster::setLine</a> methods.</p>
 <div class="fragment"><div class="line"><span class="comment">//Create a Float32 raster of 100 pixels by 200 lines</span></div>
 <div class="line"><a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> raster(<span class="stringliteral">&quot;test.vrt&quot;</span>, 100, 200);</div>
 <div class="line"></div>
@@ -174,7 +174,7 @@ Reading/Writing Single line</h1>
 <div class="line">raster.getLine(output, 10);</div>
 </div><!-- fragment --><h1><a class="anchor" id="rasterblock"></a>
 Reading/Writing Single block</h1>
-<p>Like single line I/O, one can use any of the 3 interfaces (pointer, vector, valarray) with the <a class="el" href="classisce_1_1io_1_1Raster.html#a052e2c7358812821a97fc59863899ce4" title="Read block of data from given band to buffer. ">isce::io::Raster::getBlock</a> and <a class="el" href="classisce_1_1io_1_1Raster.html#aa67bedfc99213fdd02747d677d5a2a31" title="Write block of data to given band from buffer. ">isce::io::Raster::setBlock</a> methods. Note that all data is read in from or to a contiguous bufferin row major order. Currently, there is no interface to read/write from a blocked interface. If one wishes to do this see the section on advanced usage below to work with the GDAL Dataset pointer directly.</p>
+<p>Like single line I/O, one can use any of the 3 interfaces (pointer, vector, valarray) with the <a class="el" href="classisce_1_1io_1_1Raster.html#acb7498b4e70813221710f6eaa5775121" title="Read block of data from given band to buffer, vector, or valarray. ">isce::io::Raster::getBlock</a> and <a class="el" href="classisce_1_1io_1_1Raster.html#ae0aab108897828b0748eebe258564e93" title="Write block of data to given band from buffer, vector, or valarray. ">isce::io::Raster::setBlock</a> methods. Note that all data is read in from or to a contiguous bufferin row major order. Currently, there is no interface to read/write from a blocked interface. If one wishes to do this see the section on advanced usage below to work with the GDAL Dataset pointer directly.</p>
 <div class="fragment"><div class="line"><span class="comment">//Create a Float32 raster of 100 pixels by 200 lines</span></div>
 <div class="line"><a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> raster(<span class="stringliteral">&quot;test.vrt&quot;</span>, 100, 200);</div>
 <div class="line"></div>
