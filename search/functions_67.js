@@ -30,5 +30,6 @@ var searchData=
   ['gettotalminutes',['getTotalMinutes',['../structisce_1_1core_1_1TimeDelta.html#a9530398cf109741416f90cdbab1b20d2',1,'isce::core::TimeDelta']]],
   ['gettotalseconds',['getTotalSeconds',['../structisce_1_1core_1_1TimeDelta.html#a5581e0cab2161d370d46183b919fadf4',1,'isce::core::TimeDelta']]],
   ['gettypeclassstr',['getTypeClassStr',['../classisce_1_1io_1_1IDataSet.html#a797670bac4502cdf60da238ad2749659',1,'isce::io::IDataSet']]],
-  ['getvalue',['getValue',['../classisce_1_1io_1_1Raster.html#a3ad71fad36f0bef7ce4dee2241db8fdb',1,'isce::io::Raster::getValue(T &amp;buffer, size_t xidx, size_t yidx, size_t band)'],['../classisce_1_1io_1_1Raster.html#a2f3b4a8f1bd938b047b104ac3c41c740',1,'isce::io::Raster::getValue(T &amp;buffer, size_t xidx, size_t yidx)']]]
+  ['getvalue',['getValue',['../classisce_1_1io_1_1Raster.html#a3ad71fad36f0bef7ce4dee2241db8fdb',1,'isce::io::Raster::getValue(T &amp;buffer, size_t xidx, size_t yidx, size_t band)'],['../classisce_1_1io_1_1Raster.html#a2f3b4a8f1bd938b047b104ac3c41c740',1,'isce::io::Raster::getValue(T &amp;buffer, size_t xidx, size_t yidx)']]],
+  ['goodcorrelation',['goodCorrelation',['../classisce_1_1unwrap_1_1phass_1_1Phass.html#a564e158d5ea7d0a18de1a281b09eaef1',1,'isce::unwrap::phass::Phass::goodCorrelation() const '],['../classisce_1_1unwrap_1_1phass_1_1Phass.html#a9d959362abb13b8f0ba22d9a449c5296',1,'isce::unwrap::phass::Phass::goodCorrelation(const double)']]]
 ];

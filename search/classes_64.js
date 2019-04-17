@@ -1,5 +1,10 @@
 var searchData=
 [
+  ['d2point',['D2point',['../classD2point.html',1,'']]],
+  ['d3point',['D3point',['../classD3point.html',1,'']]],
+  ['datapatch',['DataPatch',['../classDataPatch.html',1,'']]],
+  ['datapatch_3c_20float_20_3e',['DataPatch&lt; float &gt;',['../classDataPatch.html',1,'']]],
+  ['datapatch_3c_20unsigned_20char_20_3e',['DataPatch&lt; unsigned char &gt;',['../classDataPatch.html',1,'']]],
   ['datetime',['DateTime',['../structisce_1_1core_1_1DateTime.html',1,'isce::core']]],
   ['deminterpolator',['DEMInterpolator',['../classisce_1_1geometry_1_1DEMInterpolator.html',1,'isce::geometry']]],
   ['doppler',['Doppler',['../structisce_1_1core_1_1Doppler.html',1,'isce::core']]],
