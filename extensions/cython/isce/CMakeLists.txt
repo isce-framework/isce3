@@ -56,8 +56,8 @@ target_include_directories(
         ${PYRE_INCLUDE_DIR}
 )
 
-# Add necessary library links
-target_link_libraries(isceextension ${LISCE} m)
+add_subdirectory(except)
+target_link_libraries(isceextension ${LISCE} m cyerror)
 
 # Install
 install(
@@ -69,6 +69,5 @@ install(
 # Install cuda cython extensions if cuda available
 if (WITH_CUDA)
     add_subdirectory(cuda)
+    target_include_directories(iscecudaextension PRIVATE ${CMAKE_CURRENT_LIST_DIR}/except)
 endif(WITH_CUDA)
-
-# end of file

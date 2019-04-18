@@ -11,8 +11,7 @@
 #include <cufftXt.h>
 
 #include "gpuSignal.h"
-#include "isce/cuda/helper_cuda.h"
-#include "isce/cuda/helper_functions.h"
+#include <isce/cuda/except/Error.h>
 
 #define THRD_PER_BLOCK 1024 // Number of threads per block (should always %32==0)
 

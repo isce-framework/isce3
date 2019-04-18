@@ -10,13 +10,15 @@ from libcpp.vector cimport vector
 
 from GDAL cimport *
 
+from Error cimport *
+
 cdef extern from "isce/io/Raster.h" namespace "isce::io":
-   
+
     # Raster class
     cdef cppclass Raster:
 
         # Constructors
-        Raster(const string &) except +
+        Raster(const string &) except +error
         Raster(const string &, GDALAccess) except +
         Raster(const string &, size_t, size_t, size_t, GDALDataType, const string &) except +
         Raster(const string &, size_t, size_t, size_t, GDALDataType) except +
@@ -41,7 +43,7 @@ cdef extern from "isce/io/Raster.h" namespace "isce::io":
         GDALDataset* dataset()
 
         # Setters
-        void addRasterToVRT(const Raster &)
+        void addRasterToVRT(const Raster &) except +error
         void setEPSG(int)
 
-# end of file 
+# end of file

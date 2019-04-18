@@ -5,8 +5,8 @@
 //
 
 #include <isce/core/Matrix.h>
+#include <isce/cuda/except/Error.h>
 #include "gpuLUT2d.h"
-#include "../helper_cuda.h"
 
 __device__
 double clamp(double d, double min, double max) {

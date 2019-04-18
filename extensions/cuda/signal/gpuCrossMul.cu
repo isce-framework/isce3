@@ -10,8 +10,7 @@
 #include "gpuLooks.h"
 #include "isce/signal/Signal.h"
 #include "isce/signal/Filter.h"
-#include "isce/cuda/helper_cuda.h"
-#include "isce/cuda/helper_functions.h"
+#include <isce/cuda/except/Error.h>
 
 // debug includes
 #include <fstream>

@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <cuda_runtime.h>
 #include "gpuInterpolator.h"
-#include "../helper_cuda.h"
+#include <isce/cuda/except/Error.h>
 
 #define MAX_ORDER 20
 

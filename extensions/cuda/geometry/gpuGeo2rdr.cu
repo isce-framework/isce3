@@ -12,7 +12,8 @@
 #include "gpuGeometry.h"
 #include "gpuGeo2rdr.h"
 using isce::cuda::core::gpuLinAlg;
-#include "../helper_cuda.h"
+
+#include <isce/cuda/except/Error.h>
 
 #define THRD_PER_BLOCK 96 // Number of threads per block (should always %32==0)
 #define NULL_VALUE -1000000.0

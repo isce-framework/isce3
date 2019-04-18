@@ -4,6 +4,7 @@ include(IsceHelper)
 add_library(${LISCE} SHARED)
 
 add_subdirectory(core)
+add_subdirectory(except)
 add_subdirectory(geometry)
 add_subdirectory(image)
 add_subdirectory(io)

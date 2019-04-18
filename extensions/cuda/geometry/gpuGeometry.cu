@@ -4,8 +4,8 @@
 //
 
 #include "gpuGeometry.h"
-#include "../helper_cuda.h"
-#include "isce/cuda/core/gpuPixel.h"
+#include <isce/cuda/core/gpuPixel.h>
+#include <isce/cuda/except/Error.h>
 
 using isce::cuda::core::gpuLinAlg;
 

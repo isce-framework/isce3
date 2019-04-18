@@ -7,6 +7,7 @@ add_library(${LISCECUDA} SHARED)
 
 # Pull in the source files
 add_subdirectory(core)
+add_subdirectory(except)
 add_subdirectory(geometry)
 add_subdirectory(image)
 add_subdirectory(signal)
@@ -27,9 +28,6 @@ include_directories(${CEREAL_SRC_INCLUDEDIR}
                     ${PYRE_INCLUDE_DIR}
                     ${GDAL_INCLUDE_DIR}
                     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
-
-# Install CUDA helper header files
-add_isce_libdir("." "" "helper_cuda.h;helper_functions.h;helper_image.h;helper_string.h;helper_timer.h;exception.h;")
 
 # Install shared library
 install(TARGETS ${LISCECUDA}

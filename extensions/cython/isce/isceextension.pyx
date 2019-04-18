@@ -13,6 +13,8 @@ def pyStringToBytes(s):
     else:
         raise ValueError('Input Python string not str or bytes')
 
+include "except/pyError.pyx"
+
 # Include the io extensions
 include "io/pyGDAL.pyx"
 include "io/pyRaster.pyx"

@@ -1,0 +1,8 @@
+# Create library to hold exception handling stubs
+add_library(cyerror SHARED "CyError.cpp")
+
+# Must link to ISCE error objects
+target_include_directories(cyerror PRIVATE ${ISCE_BUILDINCLUDEDIR})
+
+# Also, the cython extension needs access to the stub definitions
+target_include_directories(isceextension PUBLIC ${CMAKE_CURRENT_LIST_DIR})
