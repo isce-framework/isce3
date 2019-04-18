@@ -13,8 +13,6 @@
 
 #include <isce/core/Constants.h>
 
-#include "fftw3cxx.h"
-
 // Declaration
 namespace isce {
     namespace signal {
@@ -29,10 +27,10 @@ template<class T>
 class isce::signal::Signal {
     public:
         /** Default constructor. */ 
-        Signal() {};
+        Signal();
 
         /** Constructor with number of threads. This uses the Multi-threaded FFTW */
-        Signal(int nthreads) {fftw3cxx::init_threads<T>(); fftw3cxx::plan_with_nthreads<T>(nthreads);};
+        Signal(int nthreads);
 
         ~Signal() {};
 
@@ -339,9 +337,6 @@ class isce::signal::Signal {
         inline void _configure2DFFT(int ncolumns, int nrows);
 
     private:
-        isce::fftw3cxx::plan<T> _plan_fwd;
-        isce::fftw3cxx::plan<T> _plan_inv;
-
         int _rank;
         int* _n;
         int _howmany;
@@ -352,6 +347,8 @@ class isce::signal::Signal {
         int _ostride;
         int _odist;
 
+        struct impl;
+        std::unique_ptr<impl, void(*)(impl*)> pimpl;
 };
 
 #define ISCE_SIGNAL_SIGNAL_ICC

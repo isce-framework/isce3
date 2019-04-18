@@ -12,8 +12,6 @@
 #include "isce/signal/Signal.h"
 #include "isce/io/Raster.h"
 
-#include "isce/signal/fftw3cxx.h"
-
 TEST(Signal, ForwardBackwardRangeFloat)
 {
     // take a block of data, perform range FFT and then iverse FFT and compare with original data   

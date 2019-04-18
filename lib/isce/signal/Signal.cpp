@@ -7,6 +7,24 @@
 
 #include "Signal.h"
 #include <iostream>
+#include "fftw3cxx.h"
+
+template<class T>
+struct isce::signal::Signal<T>::impl {
+    isce::fftw3cxx::plan<T> _plan_fwd;
+    isce::fftw3cxx::plan<T> _plan_inv;
+};
+
+template <class T>
+isce::signal::Signal<T>::
+Signal() : pimpl(new impl, [](impl* p) { delete p; }) {}
+
+template <class T>
+isce::signal::Signal<T>::
+Signal(int nthreads) : pimpl(new impl, [](impl* p) { delete p; }) {
+    fftw3cxx::init_threads<T>();
+    fftw3cxx::plan_with_nthreads<T>(nthreads);
+}
 
 /**
 *  @param[in] input block of data
@@ -61,7 +79,7 @@ fftPlanForward(std::complex<T> *input, std::complex<T> *output,
             int *onembed, int ostride, int odist, int sign)
 {
 
-    _plan_fwd = fftw3cxx::plan<T>::plan_many_dft(rank, n, howmany,
+    pimpl->_plan_fwd = fftw3cxx::plan<T>::plan_many_dft(rank, n, howmany,
                                             input, inembed, istride, idist,
                                             output, onembed, ostride, odist,
                                             sign, FFTW_ESTIMATE);
@@ -117,7 +135,7 @@ fftPlanForward(T *input, std::complex<T> *output,
             int *onembed, int ostride, int odist)
 {
 
-    _plan_fwd = fftw3cxx::plan<T>::plan_many_dft_r2c(rank, n, howmany,
+    pimpl->_plan_fwd = fftw3cxx::plan<T>::plan_many_dft_r2c(rank, n, howmany,
                                             input, inembed, istride, idist,
                                             output, onembed, ostride, odist,
                                             FFTW_ESTIMATE);
@@ -179,7 +197,7 @@ fftPlanBackward(std::complex<T> *input, std::complex<T> *output,
             int *onembed, int ostride, int odist, int sign)
 {
 
-    _plan_inv = fftw3cxx::plan<T>::plan_many_dft(rank, n, howmany,
+    pimpl->_plan_inv = fftw3cxx::plan<T>::plan_many_dft(rank, n, howmany,
                                             input, inembed, istride, idist,
                                             output, onembed, ostride, odist,
                                             sign, FFTW_ESTIMATE);
@@ -237,7 +255,7 @@ fftPlanBackward(std::complex<T> *input, T *output,
             int *onembed, int ostride, int odist)
 {
 
-    _plan_inv = fftw3cxx::plan<T>::plan_many_dft_c2r(rank, n, howmany,
+    pimpl->_plan_inv = fftw3cxx::plan<T>::plan_many_dft_c2r(rank, n, howmany,
                                             input, inembed, istride, idist,
                                             output, onembed, ostride, odist,
                                             FFTW_ESTIMATE);
@@ -253,7 +271,7 @@ void
 isce::signal::Signal<T>::
 forward(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
 {
-    _plan_fwd.execute_dft(&input[0], &output[0]);
+    pimpl->_plan_fwd.execute_dft(&input[0], &output[0]);
 }
 
 /** unnormalized forward transform
@@ -265,7 +283,7 @@ void
 isce::signal::Signal<T>::
 forward(std::complex<T> *input, std::complex<T> *output)
 {
-    _plan_fwd.execute_dft(input, output);
+    pimpl->_plan_fwd.execute_dft(input, output);
 }
 
 /** unnormalized forward transform
@@ -277,7 +295,7 @@ void
 isce::signal::Signal<T>::
 forward(std::valarray<T> &input, std::valarray<std::complex<T>> &output)
 {
-    _plan_fwd.execute_dft_r2c(&input[0], &output[0]);
+    pimpl->_plan_fwd.execute_dft_r2c(&input[0], &output[0]);
 }
 
 /** unnormalized forward transform
@@ -289,7 +307,7 @@ void
 isce::signal::Signal<T>::
 forward(T *input, std::complex<T> *output)
 {
-    _plan_fwd.execute_dft_r2c(input, output);
+    pimpl->_plan_fwd.execute_dft_r2c(input, output);
 }
 
 
@@ -306,7 +324,7 @@ void
 isce::signal::Signal<T>::
 inverse(std::valarray<std::complex<T>> &input, std::valarray<std::complex<T>> &output)
 {
-    _plan_inv.execute_dft(&input[0], &output[0]);
+    pimpl->_plan_inv.execute_dft(&input[0], &output[0]);
 }
 
 /** unnormalized inverse transform.*/
@@ -315,7 +333,7 @@ void
 isce::signal::Signal<T>::
 inverse(std::complex<T> *input, std::complex<T> *output)
 {
-    _plan_inv.execute_dft(input, output);
+    pimpl->_plan_inv.execute_dft(input, output);
 }
 
 /** unnormalized inverse transform.*/
@@ -324,7 +342,7 @@ void
 isce::signal::Signal<T>::
 inverse(std::valarray<std::complex<T>> &input, std::valarray<T> &output)
 {
-    _plan_inv.execute_dft_c2r(&input[0], &output[0]);
+    pimpl->_plan_inv.execute_dft_c2r(&input[0], &output[0]);
 }
 
 /** unnormalized inverse transform.*/
@@ -333,7 +351,7 @@ void
 isce::signal::Signal<T>::
 inverse(std::complex<T> *input, T *output)
 {
-    _plan_inv.execute_dft_c2r(input, output);
+    pimpl->_plan_inv.execute_dft_c2r(input, output);
 }
 
 /**
@@ -853,7 +871,7 @@ upsample(std::valarray<std::complex<T>> &signal,
     spectrumShifted = std::complex<T> (0.0,0.0);
 
     // forward fft in range
-    _plan_fwd.execute_dft(&signal[0], &spectrum[0]);
+    pimpl->_plan_fwd.execute_dft(&signal[0], &spectrum[0]);
 
     //spectrum /=nfft;
     //shift the spectrum
@@ -883,13 +901,12 @@ upsample(std::valarray<std::complex<T>> &signal,
         spectrumShifted *= shiftImpact;
 
     // inverse fft to get the upsampled signal
-    _plan_inv.execute_dft(&spectrumShifted[0], &signalUpsampled[0]);
+    pimpl->_plan_inv.execute_dft(&spectrumShifted[0], &signalUpsampled[0]);
 
     // Normalize
     signalUpsampled /=nfft;
 
 }
-
 
 // We currently allow float and double. If at any time "long double" is needed, 
 // declaration should be added here. 
