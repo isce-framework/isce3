@@ -1,0 +1,213 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Geometry Tutorial &#8212; ISCE  documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="radar-geometry-tutorial">
+<h1>Radar Geometry Tutorial<a class="headerlink" href="#radar-geometry-tutorial" title="Permalink to this headline">¶</a></h1>
+<p>This tutorial is organized in 3 sections.</p>
+<ol class="arabic simple">
+<li><a class="reference internal" href="#usingpyorbit"><span class="std std-ref">Working with pyOrbit</span></a></li>
+<li><a class="reference internal" href="#forwardmap"><span class="std std-ref">Forward mapping example - determining bounding boxes</span></a></li>
+<li><a class="reference internal" href="#invmap"><span class="std std-ref">Inverse mapping example - locating corner reflectors</span></a></li>
+</ol>
+<div class="section" id="working-with-pyorbit">
+<span id="usingpyorbit"></span><h2>Working with pyOrbit<a class="headerlink" href="#working-with-pyorbit" title="Permalink to this headline">¶</a></h2>
+<p>pyOrbit is at the heart of geometric manipulation from the python level in ISCE. This is just a time-tagged collection of state vectors. In this example, we will walk through an example of constructing a pyOrbit object with a list of state vectors. The input state vectors are provided in a simple 7-column text file as shown below:</p>
+<p><code class="docutils literal notranslate"><span class="pre">2016-04-08T09:13:13.000000</span> <span class="pre">-3752316.976337</span> <span class="pre">4925051.878499</span> <span class="pre">3417259.473609</span> <span class="pre">3505.330104</span> <span class="pre">-1842.136554</span> <span class="pre">6482.122476</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">2016-04-08T09:13:23.000000</span> <span class="pre">-3717067.52658</span> <span class="pre">4906329.056304</span> <span class="pre">3481886.455117</span> <span class="pre">3544.479224</span> <span class="pre">-1902.402281</span> <span class="pre">6443.152265</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">........</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">loadOrbit</span><span class="p">(</span><span class="n">infilename</span><span class="p">):</span>
+   <span class="kn">from</span> <span class="nn">isceextension</span> <span class="kn">import</span> <span class="n">pyOrbit</span><span class="p">,</span> <span class="n">pyDateTime</span>
+
+   <span class="c1">#Create object</span>
+   <span class="n">orbit</span> <span class="o">=</span> <span class="n">pyOrbit</span><span class="p">()</span>
+
+   <span class="c1">#Open file with state vectors for reading</span>
+   <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">infilename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fid</span><span class="p">:</span>
+      <span class="n">linecount</span> <span class="o">=</span> <span class="mi">0</span>
+
+      <span class="c1">#For each line in file</span>
+      <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fid</span><span class="p">:</span>
+         <span class="n">vals</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+         <span class="c1">#Use first time tag as reference</span>
+         <span class="k">if</span> <span class="n">linecount</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">refEpoch</span> <span class="o">=</span> <span class="n">pyDateTime</span><span class="p">(</span><span class="n">vals</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">orbit</span><span class="o">.</span><span class="n">refEpoch</span> <span class="o">=</span> <span class="n">refEpoch</span>
+
+         <span class="c1">#Create pyDateTime. Can also be Python datetime</span>
+         <span class="n">tstamp</span> <span class="o">=</span> <span class="n">pyDateTime</span><span class="p">(</span><span class="n">vals</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+         <span class="c1">#Compute time difference w.r.t reference</span>
+         <span class="n">tstampFromRef</span> <span class="o">=</span> <span class="p">(</span><span class="n">tstamp</span><span class="o">-</span><span class="n">refEpoch</span><span class="p">)</span><span class="o">.</span><span class="n">getTotalSeconds</span><span class="p">()</span>
+
+         <span class="c1">#Set the state vector</span>
+         <span class="n">orbit</span><span class="o">.</span><span class="n">addStateVector</span><span class="p">(</span><span class="n">tstampFromRef</span><span class="p">,</span>
+                         <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]],</span>
+                         <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">7</span><span class="p">]])</span>
+
+         <span class="c1">#Increment line counter</span>
+         <span class="n">linecount</span> <span class="o">+=</span> <span class="mi">1</span>
+
+   <span class="k">return</span> <span class="n">orbit</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="forward-mapping-example-determining-bounding-boxes">
+<span id="forwardmap"></span><h2>Forward mapping example - determining bounding boxes<a class="headerlink" href="#forward-mapping-example-determining-bounding-boxes" title="Permalink to this headline">¶</a></h2>
+<p>In this example, we will demonstrate the forward mapping algorithm by using it to determine approximate bounding boxes on the ground.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">isceextension</span> <span class="kn">import</span> <span class="n">pyDateTime</span><span class="p">,</span> <span class="n">pyOrbit</span>
+<span class="s2">&quot;coming soon&quot;</span>
+<span class="s2">&quot;...&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="inverse-mapping-example-locating-corner-reflectors">
+<span id="invmap"></span><h2>Inverse mapping example - locating corner reflectors<a class="headerlink" href="#inverse-mapping-example-locating-corner-reflectors" title="Permalink to this headline">¶</a></h2>
+<p>In this example, we will demonstrate the inverse mapping algorithm by using it to determine the location of a known target in a radar image.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">isceextension</span> <span class="kn">import</span> <span class="p">(</span><span class="n">pyOrbit</span><span class="p">,</span> <span class="n">pyDateTime</span><span class="p">,</span>
+                          <span class="n">pyEllipsoid</span><span class="p">,</span> <span class="n">pyImageMode</span><span class="p">,</span>
+                          <span class="n">pyPoly2d</span><span class="p">,</span> <span class="n">py_geo2rdr</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c1">##Load orbit</span>
+<span class="n">orbit</span> <span class="o">=</span> <span class="n">loadOrbit</span><span class="p">(</span><span class="s1">&#39;input_orbit.txt&#39;</span><span class="p">)</span>
+
+<span class="c1">## Targets to locate in radar image</span>
+<span class="n">targets</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">131.55</span><span class="p">,</span> <span class="mf">32.85</span><span class="p">,</span> <span class="mf">475.</span><span class="p">],</span>
+           <span class="p">[</span><span class="mf">131.65</span><span class="p">,</span> <span class="mf">32.95</span><span class="p">,</span> <span class="mf">150.</span><span class="p">]]</span>
+
+<span class="c1">#Radar wavelength</span>
+<span class="n">wvl</span> <span class="o">=</span> <span class="mf">0.06</span>
+
+<span class="c1">#Right looking</span>
+<span class="n">side</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+<span class="c1">##Fake product with relevant metadata</span>
+<span class="n">mode</span> <span class="o">=</span> <span class="n">pyImageMode</span><span class="p">()</span>
+<span class="n">mode</span><span class="o">.</span><span class="n">setDimensions</span><span class="p">([</span><span class="mi">1500</span><span class="p">,</span><span class="mi">1000</span><span class="p">])</span>
+<span class="n">mode</span><span class="o">.</span><span class="n">prf</span> <span class="o">=</span> <span class="mf">1000.</span>
+<span class="n">mode</span><span class="o">.</span><span class="n">rangeBandwidth</span> <span class="o">=</span> <span class="mf">20.0e6</span>
+<span class="n">mode</span><span class="o">.</span><span class="n">wavelength</span> <span class="o">=</span> <span class="n">wvl</span>
+<span class="n">mode</span><span class="o">.</span><span class="n">startingRange</span> <span class="o">=</span> <span class="mf">8.0e5</span>
+<span class="n">mode</span><span class="o">.</span><span class="n">rangePixelSpacing</span> <span class="o">=</span> <span class="mf">10.</span>
+<span class="n">mode</span><span class="o">.</span><span class="n">numberAzimuthLooks</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">mode</span><span class="o">.</span><span class="n">numberRangeLooks</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">mode</span><span class="o">.</span><span class="n">startAzTime</span> <span class="o">=</span> <span class="n">pyDateTime</span><span class="p">(</span><span class="s2">&quot;2016-04-08T09:13:55.454821&quot;</span><span class="p">)</span>
+<span class="n">mode</span><span class="o">.</span><span class="n">endAzTime</span> <span class="o">=</span> <span class="n">pyDateTime</span><span class="p">(</span><span class="s2">&quot;2016-04-08T09:14:10.454821&quot;</span><span class="p">)</span>
+
+<span class="n">t0</span> <span class="o">=</span> <span class="p">(</span><span class="n">mode</span><span class="o">.</span><span class="n">startAzTime</span> <span class="o">-</span> <span class="n">orbit</span><span class="o">.</span><span class="n">refEpoch</span><span class="p">)</span><span class="o">.</span><span class="n">getTotalSeconds</span><span class="p">()</span>
+
+<span class="c1">##Create doppler polynomial - zero doppler for now</span>
+<span class="n">doppler</span> <span class="o">=</span> <span class="n">pyPoly2d</span><span class="p">(</span><span class="n">azimuthOrder</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rangeOrder</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">azimuthMean</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">rangeMean</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span>
+                <span class="n">azimuthNorm</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">rangeNorm</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">)</span>
+<span class="n">doppler</span><span class="o">.</span><span class="n">coeffs</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">]</span>
+
+<span class="c1">##Create ellipsoid - WGS84 by default</span>
+<span class="n">ellps</span> <span class="o">=</span> <span class="n">pyEllipsoid</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">targ</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+   <span class="c1">#Convert from degrees to radians</span>
+   <span class="n">llh</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">targ</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">targ</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">targ</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+
+   <span class="c1">#Estimate target position</span>
+   <span class="n">taz</span><span class="p">,</span> <span class="n">rng</span> <span class="o">=</span> <span class="n">py_geo2rdr</span><span class="p">(</span><span class="n">llh</span><span class="p">,</span> <span class="n">ellps</span><span class="p">,</span> <span class="n">orbit</span><span class="p">,</span> <span class="n">doppler</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span>
+                           <span class="n">threshold</span><span class="o">=</span><span class="mf">1.0e-8</span><span class="p">,</span>
+                           <span class="n">maxiter</span><span class="o">=</span><span class="mi">51</span><span class="p">,</span>
+                           <span class="n">dR</span><span class="o">=</span><span class="mf">1.0e-8</span><span class="p">)</span>
+
+   <span class="c1">#Line number</span>
+   <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Target at: {0} {1} {2}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">targ</span><span class="p">))</span>
+   <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Estimated line number: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">taz</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="n">mode</span><span class="o">.</span><span class="n">prf</span><span class="o">/</span><span class="n">mode</span><span class="o">.</span><span class="n">numberAzimuthLooks</span><span class="p">))</span>
+   <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Estimated pixel number: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">rng</span> <span class="o">-</span> <span class="n">mode</span><span class="o">.</span><span class="n">startingRange</span><span class="p">)</span><span class="o">/</span><span class="n">mode</span><span class="o">.</span><span class="n">rangePixelSpacing</span> <span class="o">/</span> <span class="n">mode</span><span class="o">.</span><span class="n">numberRangeLooks</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Radar Geometry Tutorial</a><ul>
+<li><a class="reference internal" href="#working-with-pyorbit">Working with pyOrbit</a></li>
+<li><a class="reference internal" href="#forward-mapping-example-determining-bounding-boxes">Forward mapping example - determining bounding boxes</a></li>
+<li><a class="reference internal" href="#inverse-mapping-example-locating-corner-reflectors">Inverse mapping example - locating corner reflectors</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/tutorial/geometry.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, JPL/Caltech.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>
