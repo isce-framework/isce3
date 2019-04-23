@@ -12,7 +12,6 @@ set(SRCS
 set(HEADERS
     Signal.h
     Signal.icc
-    fftw3cxx.h
     Crossmul.h
     Crossmul.icc
     Filter.h
