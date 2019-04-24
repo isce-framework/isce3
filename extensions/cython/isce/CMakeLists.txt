@@ -26,10 +26,10 @@ set_source_files_properties(
 # Initialize build directory for extension module to mimic install directory
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/isce3/extensions)
 
-###Put together all the pxd files into one giant pxd
-FILE(GLOB PXD_LIST ${CMAKE_CURRENT_LIST_DIR}/*/*.pxd) 
-foreach(HFILE ${PXD_LIST})
-    GET_FILENAME_COMPONENT(HFILEBASE  ${HFILE} NAME)
+# Put all the pxd files and headers into the build include directory
+file(GLOB PXD_LIST ${CMAKE_CURRENT_LIST_DIR}/*/*.pxd)
+foreach(HFILE ${PXD_LIST} except/CyError.h)
+    get_filename_component(HFILEBASE ${HFILE} NAME)
     configure_file(${HFILE} ${ISCE_BUILDCYINCLUDEDIR}/${HFILEBASE} COPYONLY)
 endforeach()
 

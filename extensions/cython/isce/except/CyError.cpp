@@ -1,7 +1,7 @@
+#include "CyError.h"
 #include <Python.h>
-#include <isce/except/Error.h>
 
-extern PyObject* errobj;
+#include <isce/except/Error.h>
 
 template<typename T>
 void buildError(isce::except::Error<T> err) {
@@ -10,10 +10,10 @@ void buildError(isce::except::Error<T> err) {
                              err.info.line,
                              err.info.func,
                              err.what());
-    PyErr_SetObject(errobj, tmp);
+    PyErr_SetObject(PyExc_RuntimeError, tmp);
 }
 
-void error() {
+void raisePyError() {
     using namespace isce::except;
     try {
         throw;
