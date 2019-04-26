@@ -7,8 +7,8 @@
 from libcpp.string cimport string
 from IH5 cimport IH5File
 
-from ComplexImagery cimport ComplexImagery
 from Metadata cimport Metadata
+from Swath cimport Swath
 
 cdef extern from "isce/product/Product.h" namespace "isce::product":
 
@@ -18,11 +18,14 @@ cdef extern from "isce/product/Product.h" namespace "isce::product":
         # Constructors
         Product(IH5File &) except +
 
-        # Complex imagery
-        ComplexImagery & complexImagery()
-    
         # Metadata
         Metadata & metadata()
+
+        # Swath
+        Swath & swath(char)
+
+        # Look side
+        int lookSide()
 
         # The filename of the HDF5 file
         string filename()

@@ -407,5 +407,5 @@ int projTransform(ProjectionBase &in, ProjectionBase &out, const cartesian_t &in
         if (out.forward(temp, outpts) != 0) return 2;
     }
     return 0;
-};
+}
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

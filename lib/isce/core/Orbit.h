@@ -10,8 +10,11 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "Constants.h"
-#include "StateVector.h"
+
+// isce::core
+#include <isce/core/Constants.h>
+#include <isce/core/Utilities.h>
+#include <isce/core/StateVector.h>
 
 // Declaration
 namespace isce {
@@ -76,7 +79,11 @@ struct isce::core::Orbit {
      * @param[in] o isce::core::Orbit object to copy*/
     Orbit(const Orbit &o) : nVectors(o.nVectors), epochs(o.epochs),
                             UTCtime(o.UTCtime), position(o.position), velocity(o.velocity),
-                            stateVectors(o.stateVectors) {}
+                            stateVectors(o.stateVectors), refEpoch(o.refEpoch) {
+    }
+
+    /** Comparison operator */
+    inline bool operator==(const Orbit &o) const;
 
     /** Assignment operator*/
     inline Orbit& operator=(const Orbit &o);
@@ -128,6 +135,26 @@ struct isce::core::Orbit {
 
 };
 
+// Comparison operator
+bool isce::core::Orbit::
+operator==(const Orbit & rhs) const {
+    // Some easy checks first
+    bool equal = nVectors == rhs.nVectors;
+    equal *= refEpoch == rhs.refEpoch;
+    if (!equal) {
+        return false;
+    }
+    // If we pass the easy checks, check the orbit contents
+    for (size_t i = 0; i < nVectors; ++i) {
+        equal *= isce::core::compareFloatingPoint(UTCtime[i], rhs.UTCtime[i]);
+        for (size_t j = 0; j < 3; ++j) {
+            equal *= isce::core::compareFloatingPoint(position[3*i+j], rhs.position[3*i+j]);
+            equal *= isce::core::compareFloatingPoint(velocity[3*i+j], rhs.velocity[3*i+j]);
+        }
+    }
+    return equal;
+}
+
 isce::core::Orbit & isce::core::Orbit::
 operator=(const Orbit &rhs) {
     nVectors = rhs.nVectors;
@@ -136,6 +163,7 @@ operator=(const Orbit &rhs) {
     position = rhs.position;
     velocity = rhs.velocity;
     stateVectors = rhs.stateVectors;
+    refEpoch = rhs.refEpoch;
     return *this;
 }
 

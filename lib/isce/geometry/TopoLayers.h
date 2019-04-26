@@ -104,6 +104,10 @@ class isce::geometry::TopoLayers {
                 _maskRaster = nullptr;
             }
 
+            // Update sizes
+            _width = width;
+            _length = length;
+
             // Indicate that we have initialized rasters
             _haveRasters = true;
         }

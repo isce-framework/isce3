@@ -46,18 +46,13 @@ namespace isce {
      inline unsigned int mapFileAccessMode(const char mode) {
         switch (mode) {
            case 'r': return H5F_ACC_RDONLY;
-                     break;
            case 'w': return H5F_ACC_RDWR;
-                     break;
            case 'x': return H5F_ACC_TRUNC;
-                     break;
            case 'a': return H5F_ACC_EXCL;
-                     break;
            default:  std::cout << "Invalid HDF5 file opening mode" << std::endl;
                      return 100; // Will throw within HDF5 API
        }
      }
-
 
 
 
@@ -81,9 +76,8 @@ namespace isce {
            /** Constructor */
            IDataSet(H5::DataSet &dset): H5::DataSet(dset){};
 
-
-
-
+           /** Constructor from ID */
+           IDataSet(const hid_t id): H5::DataSet(id){};
 
            // Metadata query
 
@@ -111,7 +105,8 @@ namespace isce {
            /** Get the number of bit used to store each dataset element */
            int getNumBits(const std::string &v ="");
 
-
+            /** Generate GDALDataset Representation */
+            std::string toGDAL();
 
 
 
@@ -318,7 +313,23 @@ namespace isce {
            inline void createAttribute(const std::string& name, const std::array<T2, S>& dims, const T* buffer);
 
 
+           /** Get DataSpace corresponding to slice defined by start, count and stride */
+           H5::DataSpace getDataSpace(const int * startIn, 
+                                      const int * countIn,
+                                      const int * strideIn);
 
+           /** Get DataSpace corresponding to slice defined by a vector of slices */
+           H5::DataSpace getDataSpace(const std::vector<std::slice> * sliceIn);
+
+           /** Get DataSpace corresponding to a gslice */
+           H5::DataSpace getDataSpace(const std::gslice * gsliceIn);
+
+           /** Get DataSpace with a GDAL RasterIO-like interface */
+           H5::DataSpace getDataSpace(const size_t xidx, 
+                                      const size_t yidx, 
+                                      const size_t iowidth, 
+                                      const size_t iolength, 
+                                      const size_t band);
 
 
         private:
@@ -329,16 +340,9 @@ namespace isce {
            void read(std::string * buffer, const H5::DataSpace& dspace); 
            void read(std::string * buf, const std::string &att); 
 
-           H5::DataSpace getReadDataSpace(const int * startIn, 
-                                          const int * countIn,
-                                          const int * strideIn);
-           H5::DataSpace getReadDataSpace(const std::vector<std::slice> * sliceIn);
-           H5::DataSpace getReadDataSpace(const std::gslice * gsliceIn);
-           H5::DataSpace getReadDataSpace(const size_t xidx, 
-                                          const size_t yidx, 
-                                          const size_t iowidth, 
-                                          const size_t iolength, 
-                                          const size_t band);
+
+
+
 
 
            template<typename T>

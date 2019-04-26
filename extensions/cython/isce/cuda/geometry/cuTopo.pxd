@@ -17,7 +17,8 @@ cdef extern from "isce/cuda/geometry/Topo.h" namespace "isce::cuda::geometry":
     cdef cppclass Topo:
 
         # Constructor
-        Topo(Product &) except +
+        Topo(Product & product, char frequency, bool nativeDoppler,
+             size_t numberAzimuthLooks, size_t numberRangeLooks) except +
         
         # Main topo entrypoint; internal construction of topo rasters
         void topo(Raster &, const string)
@@ -31,7 +32,6 @@ cdef extern from "isce/cuda/geometry/Topo.h" namespace "isce::cuda::geometry":
                   Raster &, Raster &, Raster &, Raster &, Raster &)
 
         # Setting processing options
-        void initialized(bool)
         void threshold(double)
         void numiter(int)
         void extraiter(int)

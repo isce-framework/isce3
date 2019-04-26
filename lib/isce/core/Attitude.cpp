@@ -8,6 +8,6 @@
 #include "Attitude.h"
 
 // Define the virtual destructor to do nothing
-isce::core::Attitude::~Attitude() {};
+isce::core::Attitude::~Attitude() {}
 
 // end of file

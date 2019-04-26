@@ -1,5 +1,5 @@
-#include "isce/cuda/geometry/gpuTopoLayers.h"
-#include "../helper_cuda.h"
+#include "gpuTopoLayers.h"
+#include <isce/cuda/except/Error.h>
 
 namespace isce { namespace cuda { namespace geometry {
     CUDA_HOST gpuTopoLayers::gpuTopoLayers(const isce::geometry::TopoLayers & layers) :

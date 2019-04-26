@@ -29,34 +29,63 @@ cdef class pyEulerAngles:
     cdef bool __owner
 
     def __cinit__(self,
-                  np.ndarray[np.float64_t, ndim=1] time,
-                  np.ndarray[np.float64_t, ndim=1] yaw,
-                  np.ndarray[np.float64_t, ndim=1] pitch,
-                  np.ndarray[np.float64_t, ndim=1] roll,
+                  np.ndarray[np.float64_t, ndim=1] time=None,
+                  np.ndarray[np.float64_t, ndim=1] yaw=None,
+                  np.ndarray[np.float64_t, ndim=1] pitch=None,
+                  np.ndarray[np.float64_t, ndim=1] roll=None,
                   yaw_orientation='normal'):
 
         # Copy data to vectors manually (only doing this once, so hopefully
         # performance hit isn't too big of an issue)
-        cdef i
-        cdef int n = yaw.shape[0]
-        cdef vector[double] vtime = vector[double](n)
-        cdef vector[double] vyaw = vector[double](n)
-        cdef vector[double] vpitch = vector[double](n)
-        cdef vector[double] vroll = vector[double](n)
-        for i in range(n):
-            vtime[i] = time[i]
-            vyaw[i] = yaw[i]
-            vpitch[i] = pitch[i]
-            vroll[i] = roll[i]
+        cdef int i
+        cdef int n 
+        cdef vector[double] vtime
+        cdef vector[double] vyaw
+        cdef vector[double] vpitch
+        cdef vector[double] vroll
+
+        if time is not None and yaw is not None and pitch is not None and roll is not None:
+            n = yaw.shape[0]
+            vtime = vector[double](n)
+            vyaw = vector[double](n)
+            vpitch = vector[double](n)
+            vroll = vector[double](n)
+            for i in range(n):
+                vtime[i] = time[i]
+                vyaw[i] = yaw[i]
+                vpitch[i] = pitch[i]
+                vroll[i] = roll[i]
         
-        # Instantiate EulerAngles object
-        self.c_eulerangles = new EulerAngles(vtime, vyaw, vpitch, vroll,
-            pyStringToBytes(yaw_orientation))
+            # Instantiate EulerAngles object
+            self.c_eulerangles = new EulerAngles(vtime, vyaw, vpitch, vroll,
+                pyStringToBytes(yaw_orientation))
+
+        else:
+            self.c_eulerangles = new EulerAngles(pyStringToBytes(yaw_orientation))
         self.__owner = True
         
     def __dealloc__(self):
         if self.__owner: 
             del self.c_eulerangles
+
+    @staticmethod
+    def bind(pyEulerAngles euler):
+        """
+        Creates a new pyEulerAngles instance with C++ EulerAngles attribute shallow copied from
+        another C++ EulerAngles attribute contained in a separate instance.
+
+        Args:
+            euler (pyEulerAngles): External pyEulerAngles instance to get C++ EulerAngles from.
+
+        Returns:
+            new_euler (pyEulerAngles): New pyEulerAngles instance with a shallow copy of 
+                                       C++ EulerAngles.
+        """
+        new_euler = pyEulerAngles()
+        del new_euler.c_eulerangles
+        new_euler.c_eulerangles = euler.c_eulerangles
+        new_euler.__owner = False
+        return new_euler
 
     def ypr(self, double t):
         '''

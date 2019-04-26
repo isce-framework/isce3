@@ -14,6 +14,9 @@
 // pyre
 #include <pyre/journal.h>
 
+// isce::core
+#include <isce/core/LUT2d.h>
+
 // Declaration
 namespace isce {
     namespace core {
@@ -27,15 +30,18 @@ class isce::core::LUT1d {
 
     public:
         /** Default constructor */
-        inline LUT1d() : _extrapolate{true} {
+        inline LUT1d() : _haveData(false), _refValue(0.0), _extrapolate{true} {
             std::valarray<double> x{0.0, 1.0};
             std::valarray<double> y{0.0, 0.0};
             _coords = x;
             _values = y;
         } 
 
+        /** Constructor with a constant reference value */
+        inline LUT1d(T refValue) : _haveData(false), _refValue(refValue), _extrapolate{true} {}
+
         /** Constructor with size */
-        inline LUT1d(size_t size) : _extrapolate{true} {
+        inline LUT1d(size_t size) : _haveData(false), _refValue(0.0), _extrapolate{true} {
             _coords.resize(size);
             _values.resize(size);
         }
@@ -45,22 +51,38 @@ class isce::core::LUT1d {
           * @param[in] values Valarray for values of LUT
           * @param[in] extrapolate Flag for allowing extrapolation beyond bounds */
         inline LUT1d(const std::valarray<double> & coords, const std::valarray<T> & values,
-                     bool extrapolate = false) : _coords(coords), _values(values),
+                     bool extrapolate = false) : 
+                     _haveData(true),
+                     _refValue(values[0]),
+                     _coords(coords),
+                     _values(values),
                      _extrapolate{extrapolate} {}
 
         /** Copy constructor. 
           * @param[in] lut LUT1d object to copy from */
         inline LUT1d(const LUT1d<T> & lut) :
-            _coords(lut.coords()), _values(lut.values()), _extrapolate(lut.extrapolate()) {}
+            _haveData(lut.haveData()),
+            _refValue(lut.refValue()),
+            _coords(lut.coords()),
+            _values(lut.values()),
+            _extrapolate(lut.extrapolate()) {}
 
         /** Assignment operator. 
           * @param[in] lut LUT1d object to assign from */
         inline LUT1d & operator=(const LUT1d<T> & lut) {
+            _haveData = lut.haveData();
+            _refValue = lut.refValue();
             _coords = lut.coords();
             _values = lut.values();
             _extrapolate = lut.extrapolate();
             return *this;
         }
+
+        /** Constructor from an LUT2d (values averaged in y-direction) */
+        inline LUT1d(const LUT2d<T> & lut2d);
+
+        /** Assignment operator from an LUT2d (values averaged in y-direction) */
+        inline LUT1d & operator=(const LUT2d<T> & lut2d);
 
         /** Get a reference to the coordinates
           * @param[out] coords Reference to valarray for coordinates */
@@ -94,6 +116,12 @@ class isce::core::LUT1d {
           * @param[in] flag Extrapolation flag */
         inline void extrapolate(bool flag) { _extrapolate = flag; }
 
+        /** Get flag for having data */
+        inline bool haveData() const { return _haveData; }
+
+        /** Get reference value */
+        inline T refValue() const { return _refValue; }
+
         /** Get size of LUT 
           * @param[out] size Size (number of coordinates) of LUT */
         inline size_t size() const { return _coords.size(); }
@@ -103,6 +131,8 @@ class isce::core::LUT1d {
 
     // Data members
     private:
+        bool _haveData;
+        T _refValue;
         std::valarray<double> _coords;
         std::valarray<T> _values;
         bool _extrapolate;

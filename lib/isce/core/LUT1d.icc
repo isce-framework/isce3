@@ -9,11 +9,105 @@
 #error "LUT1d.icc is an implementation detail of class LUT1d"
 #endif
 
+// Constructor from an LUT2d (values averaged in y-direction)
+/** @param[in] lut2d LUT2d to copy data from */
+template <typename T>
+isce::core::LUT1d<T>::
+LUT1d(const isce::core::LUT2d<T> & lut2d) {
+
+    // Check if LUT2d has actual data; if not, just store reference value
+    if (!lut2d.haveData()) {
+        _haveData = false;
+        _refValue = lut2d.refValue();
+        return;
+    }
+
+    // Get a reference to the LUT2d data
+    const isce::core::Matrix<T> & data = lut2d.data();
+
+    // Initialize working valarrays for computing mean along y-direction
+    std::valarray<double> values(lut2d.width()), count(lut2d.width());
+    values = 0.0;
+    count = 0.0;
+
+    // Compute sum along columns (y-direction)
+    for (size_t i = 0; i < lut2d.length(); ++i) {
+        for (size_t j = 0; j < lut2d.width(); ++j) {
+            values[j] += data(i,j);
+            count[j] += 1.0;
+        }
+    }
+
+    // Compute final coordinates and values
+    std::valarray<double> coords(lut2d.width());
+    for (size_t j = 0; j < lut2d.width(); ++j) {
+        coords[j] = lut2d.xStart() + j * lut2d.xSpacing();
+        values[j] /= count[j];
+    }
+
+    // Save results
+    _coords = coords;
+    _values = values;
+    _extrapolate = true;
+    _haveData = true;
+    _refValue = lut2d.refValue();
+}
+
+// Assignment operator from an LUT2d (values averaged in y-direction)
+/** @param[in] lut2d LUT2d to copy data from */
+template <typename T>
+isce::core::LUT1d<T> &
+isce::core::LUT1d<T>::
+operator=(const LUT2d<T> & lut2d) {
+
+    // Check if LUT2d has actual data; if not, just store reference value
+    if (!lut2d.haveData()) {
+        _haveData = false;
+        _refValue = lut2d.refValue();
+        return *this;
+    }
+
+    // Get a reference to the LUT2d data 
+    const isce::core::Matrix<T> & data = lut2d.data();
+    
+    // Initialize working valarrays for computing mean along y-direction
+    std::valarray<double> values(lut2d.width()), count(lut2d.width());
+    values = 0.0;
+    count = 0.0;
+    
+    // Compute sum along columns (y-direction)
+    for (size_t i = 0; i < lut2d.length(); ++i) {
+        for (size_t j = 0; j < lut2d.width(); ++j) {
+            values[j] += data(i,j);
+            count[j] += 1.0;
+        }
+    }
+    
+    // Compute final coordinates and values
+    std::valarray<double> coords(lut2d.width());
+    for (size_t j = 0; j < lut2d.width(); ++j) {
+        coords[j] = lut2d.xStart() + j * lut2d.xSpacing();
+        values[j] /= count[j];
+    }
+    
+    // Save results
+    _coords = coords;
+    _values = values;
+    _extrapolate = true;
+    return *this;
+}
+
 /** @param[in] x Point to evaluate the LUT
   * @param[out] result Interpolated value */
 template <typename T>
 T isce::core::LUT1d<T>::
 eval(double x) const {
+
+    // Check if data are available; if not, return ref value
+    T value = _refValue;
+    if (!_haveData) {
+        return value;
+    }
 
     // Check bounds to see if we need to perform linear extrapolation
     const int n = _coords.size();

@@ -18,24 +18,6 @@
 
 using isce::io::Raster;
 
-// Main product-based resamp entry point
-void isce::cuda::image::ResampSlc::
-resamp(const std::string & outputFilename,
-       const std::string & polarization,
-       const std::string & rgOffsetFilename,
-       const std::string & azOffsetFilename,
-       bool flatten, bool isComplex, int rowBuffer,
-       int chipSize) {
-
-    // Form the GDAL-compatible path for the HDF5 dataset
-    const std::string dataPath = _mode.dataPath(polarization);
-    const std::string h5path = "HDF5:\"" + _filename + "\":/" + dataPath;
-
-    // Call alternative resmap entry point using filenames
-    resamp(h5path, outputFilename, rgOffsetFilename, azOffsetFilename, 1,
-           flatten, isComplex, rowBuffer, chipSize);
-}
-
 // Alternative generic resamp entry point: use filenames to internally create rasters
 void isce::cuda::image::ResampSlc::
 resamp(const std::string & inputFilename,          // filename of input SLC
@@ -81,8 +63,13 @@ resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
     const int outLength = rgOffsetRaster.length();
     const int outWidth = rgOffsetRaster.width();
 
+    // Check if reference data is available
+    if (!this->haveRefData()) {
+        flatten = false;
+    }
+
     // initialize interpolator
-    isce::cuda::core::gpuSinc2dInterpolator<gpuComplex<float>> interp(chipSize-1, isce::core::SINC_SUB);
+    isce::cuda::core::gpuSinc2dInterpolator<thrust::complex<float>> interp(chipSize-1, isce::core::SINC_SUB);
 
     // Determine number of tiles needed to process image
     const int nTiles = _computeNumberOfTiles(outLength, _linesPerTile);
@@ -118,7 +105,11 @@ resamp(isce::io::Raster & inputSlc, isce::io::Raster & outputSlc,
         // Perform interpolation
         std::cout << "Interpolating tile " << tileCount << std::endl;
         gpuTransformTile(tile, outputSlc, rgOffTile, azOffTile, _rgCarrier, _azCarrier, 
-                _dopplerLUT, _mode, _refMode, _haveRefMode, interp, inWidth, inLength, flatten, chipSize);
+                _dopplerLUT, interp, inWidth, inLength, this->startingRange(),
+                this->rangePixelSpacing(), this->prf(), this->wavelength(),
+                this->refStartingRange(), this->refRangePixelSpacing(),
+                this->refWavelength(), flatten, chipSize);
+
     }
 
     // Print out timing information and reset

@@ -26,15 +26,23 @@ class isce::cuda::geometry::Geo2rdr : public isce::geometry::Geo2rdr {
 
     public:
         /** Constructor from Product */
-        inline Geo2rdr(isce::product::Product & product) :
-            isce::geometry::Geo2rdr(product) {}
+        inline Geo2rdr(const isce::product::Product & product,
+                       char frequency = 'A',
+                       bool nativeDoppler = false,
+                       size_t numberAzimuthLooks = 1,
+                       size_t numberRangeLooks = 1) :
+            isce::geometry::Geo2rdr(product, frequency, nativeDoppler,
+                                    numberAzimuthLooks, numberRangeLooks) {}
 
         /** Constructor from isce::core objects */
         inline Geo2rdr(const isce::core::Ellipsoid & ellps,
                        const isce::core::Orbit & orbit,
-                       const isce::core::LUT1d<double> & doppler,
-                       const isce::core::Metadata & meta) :
-            isce::geometry::Geo2rdr(ellps, orbit, doppler, meta) {}
+                       const isce::core::LUT2d<double> & doppler,
+                       const isce::core::Metadata & meta,
+                       size_t numberAzimuthLooks = 1,
+                       size_t numberRangeLooks = 1) :
+            isce::geometry::Geo2rdr(ellps, orbit, doppler, meta,
+                                    numberAzimuthLooks, numberRangeLooks) {}
 
         /** Run geo2rdr with offsets and externally created offset rasters */
         void geo2rdr(isce::io::Raster & topoRaster,

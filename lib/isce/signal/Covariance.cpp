@@ -208,7 +208,6 @@ geocodeCovariance(isce::io::Raster& rdrCov,
         // shape of the required block of data in the radar coordinates
         size_t rdrBlockLength = azimuthLastLine - azimuthFirstLine + 1;
         size_t rdrBlockWidth = rangeLastPixel - rangeFirstPixel + 1;
-        size_t rdrBlockSize = rdrBlockLength * rdrBlockWidth;
 
         // X and Y indices (in the radar coordinates) for the 
         // geocoded pixels (after geo2rdr computation)
@@ -237,10 +236,9 @@ geocodeCovariance(isce::io::Raster& rdrCov,
 
                 // get the row and column index in the radar grid
                 double rdrX, rdrY;
-                rdrY = (aztime - _azimuthStartTime.secondsSinceEpoch(_refEpoch))/
-                                _azimuthTimeInterval;
+                rdrY = (aztime - _radarGrid.sensingStart()) * _radarGrid.prf();
         
-                rdrX = (srange - _startingRange)/_rangeSpacing;        
+                rdrX = (srange - _radarGrid.startingRange()) / _radarGrid.rangePixelSpacing(); 
 
                 // adjust the row and column indicies for the current block, 
                 // i.e., moving the origin to the top-left of this radar block.
@@ -500,8 +498,6 @@ _correctFaradayRotation(isce::core::LUT2d<double>& faradayAngle,
                     size_t lineStart)
 
 {
-    size_t sizeData = Shh.size();  
-
     #pragma omp parallel for
     for (size_t kk = 0; kk < length*width; ++kk) {
         size_t line = kk/width;
@@ -854,18 +850,16 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
     }
 
     // the first azimuth line
-    azimuthFirstLine = (azimuthTime.min() - 
-                            _azimuthStartTime.secondsSinceEpoch(_refEpoch))/
-                                _azimuthTimeInterval;
+    azimuthFirstLine = (azimuthTime.min() - _radarGrid.sensingStart()) * _radarGrid.prf();
 
     // the last azimuth line
-    azimuthLastLine = (azimuthTime.max() - 
-                            _azimuthStartTime.secondsSinceEpoch(_refEpoch))/
-                                _azimuthTimeInterval;
+    azimuthLastLine = (azimuthTime.max() - _radarGrid.sensingStart()) * _radarGrid.prf();
 
     // the first and last range pixels 
-    rangeFirstPixel = (slantRange.min() - _startingRange)/_rangeSpacing;
-    rangeLastPixel = (slantRange.max() - _startingRange)/_rangeSpacing;
+    rangeFirstPixel = (slantRange.min() - _radarGrid.startingRange()) /
+                       _radarGrid.rangePixelSpacing();
+    rangeLastPixel = (slantRange.max() - _radarGrid.startingRange()) /
+                      _radarGrid.rangePixelSpacing();
 
     // extending the radar bounding box by the extra margin
     azimuthFirstLine -= margin;
@@ -877,14 +871,14 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
     if (azimuthFirstLine < 0)
         azimuthFirstLine = 0;
 
-    if (azimuthLastLine > (_radarGridLength - 1))
-        azimuthLastLine = _radarGridLength - 1;
+    if (azimuthLastLine > (_radarGrid.length() - 1))
+        azimuthLastLine = _radarGrid.length() - 1;
 
     if (rangeFirstPixel < 0)
         rangeFirstPixel = 0;
 
-    if (rangeLastPixel > (_radarGridWidth - 1))
-        rangeLastPixel = _radarGridWidth - 1;
+    if (rangeLastPixel > (_radarGrid.width() - 1))
+        rangeLastPixel = _radarGrid.width() - 1;
 
 }
 
@@ -908,9 +902,8 @@ _geo2rdr(double x, double y,
 
     // Perform geo->rdr iterations
     int geostat = isce::geometry::geo2rdr(
-                    llh, _ellipsoid, _orbit, _doppler, _mode, 
-                    azimuthTime, slantRange, _threshold,
-                    _numiter, 1.0e-8);
+                    llh, _ellipsoid, _orbit, _doppler, azimuthTime, slantRange,
+                    _radarGrid.wavelength(), _threshold, _numiter, 1.0e-8);
 
 }
 

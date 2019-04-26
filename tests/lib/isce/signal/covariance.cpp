@@ -133,10 +133,6 @@ void createTestData() {
 
     size_t width = 10;
     size_t length = 10;
-    size_t rngLooks = 1;
-    size_t azLooks = 1;
-    size_t widthLooked = width/rngLooks;
-    size_t lengthLooked = length/azLooks;
 
     // make rasters for two SLC polarizations
     isce::io::Raster slcHH("hh.vrt", width, length, 1, GDT_CFloat32, "VRT");

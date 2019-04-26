@@ -22,11 +22,13 @@
 
 // isce::core
 #include <isce/core/DateTime.h>
+#include <isce/core/EulerAngles.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/Poly2d.h>
 #include <isce/core/LUT1d.h>
+#include <isce/core/LUT2d.h>
 #include <isce/core/StateVector.h>
 
 // isce::io
@@ -108,48 +110,117 @@ namespace isce {
         /** \brief Load orbit data from HDF5 product.
          *
          * @param[in] group         HDF5 group object.
-         * @param[in] orbit         Orbit object to be configured.
-         * @param[in] orbit_type    orbit type (NOE, MOE, POE).
-         * @param[in] refEpoch      DateTime reference epoch. */
-        inline void loadFromH5(isce::io::IGroup & group,
-                               Orbit & orbit,
-                               std::string orbit_type="POE",
-                               DateTime refEpoch=MIN_DATE_TIME) {
+         * @param[in] orbit         Orbit object to be configured. */
+        inline void loadFromH5(isce::io::IGroup & group, Orbit & orbit) {
             // Reset orbit data
             orbit.position.clear(); 
             orbit.velocity.clear(); 
             orbit.UTCtime.clear();
             orbit.epochs.clear();
 
-            // Save the reference epoch
-            orbit.refEpoch = refEpoch;
-
-            // Open subgroup based on the orbit type
-            isce::io::IGroup orbGroup = group.openGroup(orbit_type);
-
             // Load position
-            isce::io::loadFromH5(orbGroup, "position", orbit.position);
+            isce::io::loadFromH5(group, "position", orbit.position);
 
             // Load velocity
-            isce::io::loadFromH5(orbGroup, "velocity", orbit.velocity);
+            isce::io::loadFromH5(group, "velocity", orbit.velocity);
 
-            // Load timestamp
-            std::vector<isce::core::FixedString> timestamps;
-            isce::io::loadFromH5(orbGroup, "timestamp", timestamps);
-            orbit.nVectors = timestamps.size();
-            orbit.UTCtime.resize(orbit.nVectors);
+            // Load time
+            isce::io::loadFromH5(group, "time", orbit.UTCtime);
+
+            // Get the reference epoch
+            orbit.refEpoch = isce::io::getRefEpoch(group, "time");
+
+            // Convert UTC seconds since epoch to timestamp
+            orbit.nVectors = orbit.UTCtime.size();
             orbit.epochs.resize(orbit.nVectors);
-
-            // Finally, convert timestamps seconds
-            for (int i = 0; i < orbit.nVectors; ++i) {
-                // Make a DateTime and save it
-                DateTime date(std::string(timestamps[i].str));
+            for (size_t i = 0; i < orbit.nVectors; ++i) {
+                DateTime date = orbit.refEpoch;
+                date += orbit.UTCtime[i];
                 orbit.epochs[i] = date;
-                // Convert to seconds since epoch
-                orbit.UTCtime[i] = date.secondsSinceEpoch(refEpoch);
             }
         }
 
+        /** \brief Save orbit data to HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] orbit         Orbit object to be saved. */
+        inline void saveToH5(isce::io::IGroup & group, const Orbit & orbit) {
+            
+            // Save position
+            std::array<size_t, 2> dims = {static_cast<size_t>(orbit.nVectors), 3};
+            isce::io::saveToH5(group, "position", orbit.position, dims, "meters");
+
+            // Save velocity
+            isce::io::saveToH5(group, "velocity", orbit.velocity, dims, "meters per second");
+
+            // Save time and reference epoch attribute
+            isce::io::saveToH5(group, "time", orbit.UTCtime);
+            isce::io::setRefEpoch(group, "time", orbit.refEpoch);
+        }
+
+        // ------------------------------------------------------------------------
+        // Serialization for EulerAngles
+        // ------------------------------------------------------------------------
+
+        /** \brief Load Euler angle data from HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] euler         EulerAngles object to be configured. */
+        inline void loadFromH5(isce::io::IGroup & group, EulerAngles & euler) {
+
+            // Create temporary data
+            std::vector<double> time, angles, yaw, pitch, roll;
+            isce::core::DateTime refEpoch;
+            
+            // Load angles
+            isce::io::loadFromH5(group, "eulerAngles", angles);
+
+            // Load time
+            isce::io::loadFromH5(group, "time", time);
+
+            // Get the reference epoch
+            refEpoch = isce::io::getRefEpoch(group, "time");
+
+            // Unpack the angles
+            const double rad = M_PI / 180.0;
+            yaw.resize(time.size());
+            pitch.resize(time.size());
+            roll.resize(time.size());
+            for (size_t i = 0; i < time.size(); ++i) {
+                yaw[i] = rad * angles[i*3 + 0];
+                pitch[i] = rad * angles[i*3 + 1];
+                roll[i] = rad * angles[i*3 + 2];
+            }
+
+            // Save to EulerAngles object
+            euler.data(time, yaw, pitch, roll);
+            euler.refEpoch(refEpoch);
+        }
+
+        /** \brief Save Euler angle data to HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] euler         EulerAngles object to be save. */
+        inline void saveToH5(isce::io::IGroup & group, const EulerAngles & euler) {
+
+            // Create vector to store all data (convert angles to degrees)
+            const double deg = 180.0 / M_PI;
+            std::vector<double> angles(euler.nVectors() * 3);
+            for (size_t i = 0; i < euler.nVectors(); ++i) {
+                angles[i*3 + 0] = deg * euler.yaw()[i];
+                angles[i*3 + 1] = deg * euler.pitch()[i];
+                angles[i*3 + 2] = deg * euler.roll()[i];
+            }
+            
+            // Save angles
+            std::array<size_t, 2> dims = {euler.nVectors(), 3};
+            isce::io::saveToH5(group, "eulerAngles", angles, dims, "degrees");
+
+            // Save time and reference epoch attribute
+            isce::io::saveToH5(group, "time", euler.time());
+            isce::io::setRefEpoch(group, "time", euler.refEpoch());
+        }
+  
         // ------------------------------------------------------------------------
         // Serialization for Metadata
         // ------------------------------------------------------------------------
@@ -194,50 +265,6 @@ namespace isce {
             meta.sensingStart = sensingStart;
         }
 
-        /** \brief Load radar metadata from HDF5 product.
-         *
-         * @param[in] file          HDF5 file object.
-         * @param[in] meta          Metadata to be configured.
-         * @param[in] mode          Imagery mode (aux, primary). */
-        inline void loadFromH5(isce::io::IH5File & file, Metadata & meta,
-                               std::string mode="primary") {
-
-            double pri, bandwidth, centerFrequency;
-            std::string sensingStart, lookDir;
-
-            // Get group for image mode
-            std::string path = "/science/complex_imagery/" + mode + "_mode";
-            isce::io::IGroup imGroup = file.openGroup(path);
-
-            // Get dimension of imagery
-            std::vector<int> dims = isce::io::getImageDims(imGroup, "hh");
-            meta.length = dims[0];
-            meta.width = dims[1];
-
-            // Load values
-            isce::io::loadFromH5(imGroup, "slant_range_start", meta.rangeFirstSample);
-            isce::io::loadFromH5(imGroup, "slant_range_spacing", meta.slantRangePixelSpacing);
-            isce::io::loadFromH5(imGroup, "az_time_interval", pri);
-            isce::io::loadFromH5(imGroup, "bandwidth", bandwidth);
-            isce::io::loadFromH5(imGroup, "freq_center", centerFrequency);
-            isce::io::loadFromH5(imGroup, "zero_doppler_start_az_time", sensingStart);
-            isce::io::loadFromH5(file, "/science/metadata/identification/look_direction", lookDir);
-
-            // Fields not currently defined in HDF5 product
-            meta.numberRangeLooks = 1;
-            meta.numberAzimuthLooks = 1;
-
-            // Finalize rest of metadata items
-            meta.prf = 1.0 / pri;
-            meta.radarWavelength = SPEED_OF_LIGHT / centerFrequency;
-            meta.sensingStart = sensingStart;
-            if (lookDir.compare("right") == 0) {
-                meta.lookSide = -1;
-            } else if (lookDir.compare("left") == 0) {
-                meta.lookSide = 1;
-            }
-        }
-
         // ------------------------------------------------------------------------
         // Serialization for Poly2d
         // ------------------------------------------------------------------------
@@ -271,6 +298,64 @@ namespace isce {
             poly.azimuthMean = 0.0;
             poly.rangeNorm = 1.0;
             poly.azimuthNorm = 1.0;
+        }
+
+        // ------------------------------------------------------------------------
+        // Serialization for LUT2d (specifically for calibration grids)
+        // ------------------------------------------------------------------------
+
+         /** \brief Load LUT2d data from HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] dsetName      Dataset name within group
+         * @param[in] lut           LUT2d to be configured. */
+        template <typename T>
+        inline void loadCalGrid(isce::io::IGroup & group, const std::string & dsetName,
+                                isce::core::LUT2d<T> & lut) {
+
+            // Load coordinates
+            std::valarray<double> slantRange, zeroDopplerTime;
+            isce::io::loadFromH5(group, "slantRange", slantRange);
+            isce::io::loadFromH5(group, "zeroDopplerTime", zeroDopplerTime);
+
+            // Load LUT2d data in matrix
+            isce::core::Matrix<T> matrix(zeroDopplerTime.size(), slantRange.size());
+            isce::io::loadFromH5(group, dsetName, matrix);
+
+            // Set in lut
+            lut.setFromData(slantRange, zeroDopplerTime, matrix);
+        }
+
+        /** \brief Save LUT2d data to HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] dsetName      Dataset name within group
+         * @param[in] lut           LUT2d to be saved.
+         * @param[in] units         Units of LUT2d data. */
+        template <typename T>
+        inline void saveCalGrid(isce::io::IGroup & group,
+                                const std::string & dsetName,
+                                const isce::core::LUT2d<T> & lut,
+                                const isce::core::DateTime & refEpoch,
+                                const std::string & units = "") {
+
+            // Generate uniformly spaced X (slant range) coordinates
+            const double x0 = lut.xStart();
+            const double x1 = x0 + lut.xSpacing() * (lut.width() - 1.0);
+            const std::vector<double> x = isce::core::linspace(x0, x1, lut.width());
+
+            // Generate uniformly spaced Y (zero Doppler time) coordinates
+            const double y0 = lut.yStart();
+            const double y1 = y0 + lut.ySpacing() * (lut.length() - 1.0);
+            const std::vector<double> y = isce::core::linspace(y0, y1, lut.length());
+
+            // Save coordinates
+            isce::io::saveToH5(group, "slantRange", x, "meters");
+            isce::io::saveToH5(group, "zeroDopplerTime", y);
+            isce::io::setRefEpoch(group, "zeroDopplerTime", refEpoch);
+
+            // Save LUT2d data
+            isce::io::saveToH5(group, dsetName, lut.data(), units);
         }
 
         // ------------------------------------------------------------------------

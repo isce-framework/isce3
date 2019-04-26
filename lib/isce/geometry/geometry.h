@@ -26,11 +26,11 @@
 #include <isce/core/Pegtrans.h>
 #include <isce/core/Pixel.h>
 #include <isce/core/Poly2d.h>
-#include <isce/core/LUT1d.h>
+#include <isce/core/LUT2d.h>
 #include <isce/core/StateVector.h>
 
 // isce::product
-#include <isce/product/ImageMode.h>
+#include <isce/product/RadarGridParameters.h>
 
 // isce::geometry
 #include "DEMInterpolator.h"
@@ -66,21 +66,37 @@ namespace isce {
                     const isce::core::Ellipsoid &,
                     const isce::core::Orbit &,
                     const isce::core::Poly2d &,
-                    const isce::product::ImageMode &,
                     double &, double &,
+                    double, double, double, size_t,
                     double, int, double);
 
+        /** Map coordinates to radar geometry coordinates transformer */
         int geo2rdr(const cartesian_t &,
                     const isce::core::Ellipsoid &,
                     const isce::core::Orbit &,
-                    const isce::core::LUT1d<double> &,
-                    const isce::product::ImageMode &,
+                    const isce::core::LUT2d<double> &,
                     double &, double &,
-                    double, int, double);
+                    double, double, int, double);
 
-        // Utility function to compute geocentric TCN basis from state vector
+        /** Utility function to compute geocentric TCN basis from state vector */
         void geocentricTCN(isce::core::StateVector &,
-                           isce::core::Basis &);    
+                           isce::core::Basis &);
+
+        /** Utility function to compute geographic bounds for a radar grid */
+        void computeDEMBounds(const isce::core::Orbit & orbit,
+                              const isce::core::Ellipsoid & ellipsoid,
+                              const isce::core::LUT2d<double> & doppler,
+                              int lookSide,
+                              const isce::product::RadarGridParameters & radarGrid,
+                              size_t xoff,
+                              size_t yoff,
+                              size_t xsize,
+                              size_t ysize,
+                              double margin,
+                              double & min_lon,
+                              double & min_lat,
+                              double & max_lon,
+                              double & max_lat);
 
     }
 }

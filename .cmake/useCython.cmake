@@ -290,6 +290,8 @@ function( cython_add_module _name )
   else()
     target_link_libraries( ${_name} ${PYTHON_LIBRARIES} )
   endif()
+  # ignore Numpy deprecated API warning
+  target_compile_options( ${_name} PRIVATE "-Wno-cpp" )
 endfunction()
 
 include( CMakeParseArguments )

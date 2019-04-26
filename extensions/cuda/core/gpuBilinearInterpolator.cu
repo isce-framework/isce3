@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <cuda_runtime.h>
 #include "gpuInterpolator.h"
-#include "../helper_cuda.h"
+#include <isce/cuda/except/Error.h>
 
 using isce::cuda::core::gpuInterpolator;
 using isce::cuda::core::gpuBilinearInterpolator;
@@ -84,6 +84,7 @@ __device__ U isce::cuda::core::gpuBilinearInterpolator<U>::interpolate(double x,
     U q12 = z[y2*nx + x1];
     U q21 = z[y1*nx + x2];
     U q22 = z[y2*nx + x2];
+
     if ((y1 == y2) && (x1 == x2)) {
         return q11;
     } else if (y1 == y2) {

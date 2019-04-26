@@ -12,8 +12,6 @@
 #include "isce/signal/Signal.h"
 #include "isce/io/Raster.h"
 
-#include "isce/signal/fftw3cxx.h"
-
 TEST(Signal, ForwardBackwardRangeFloat)
 {
     // take a block of data, perform range FFT and then iverse FFT and compare with original data   
@@ -55,7 +53,6 @@ TEST(Signal, ForwardBackwardRangeFloat)
 
     int blockSize = width*blockLength;
     std::complex<float> err(0.0, 0.0);
-    bool Test = true;
     double max_err = 0.0;
     for ( size_t i = 0; i < blockSize; ++i ) {
         err = invertData[i] - data[i];
@@ -108,7 +105,6 @@ TEST(Signal, ForwardBackwardAzimuthFloat)
 
       int blockSize = width*blockLength;
       std::complex<float> err(0.0, 0.0);
-      bool Test = true;
       double max_err = 0.0;
       for ( size_t i = 0; i < blockSize; ++i ) {
           err = invertData[i] - data[i];
@@ -177,9 +173,7 @@ TEST(Signal, nfft)
     outputSlc.setBlock(invertData, 0 ,0 , nfft, length);
     */ 
 
-    int blockSize = width*blockLength;
     std::complex<float> err(0.0, 0.0);
-    bool Test = true;
     double max_err = 0.0;
     
     for (size_t line = 0; line<blockLength; line++){
@@ -230,7 +224,6 @@ TEST(Signal, nfftDouble)
     dataInv /=nfft; 
 
     std::complex<double> err(0.0, 0.0);
-    bool Test = true;
     double max_err = 0.0;
 
     for (size_t line = 0; line<blockLength; line++){
@@ -279,7 +272,6 @@ TEST(Signal, nfftFloat)
       dataInv /=nfft;
 
       std::complex<float> err(0.0, 0.0);
-      bool Test = true;
       double max_err = 0.0;
 
       for (size_t line = 0; line<blockLength; line++){
@@ -313,8 +305,6 @@ TEST(Signal, nfftFloat)
 TEST(Signal, upsample)
 {
     int width = 100; //16;
-    int length = 1;
-    int blockLength = length;
 
     // fft length for FFT computations
     size_t nfft;

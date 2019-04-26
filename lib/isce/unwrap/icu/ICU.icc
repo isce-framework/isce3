@@ -1,0 +1,181 @@
+#if !defined(ISCE_UNWRAP_ICU_ICU_ICC)
+#error "ICU.icc is an implementation detail of class ICU."
+#endif
+
+#include <exception> // std::domain_error
+
+namespace isce::unwrap::icu
+{
+
+inline size_t ICU::numBufLines() const { return _NumBufLines; }
+inline void ICU::numBufLines(const size_t numBufLines) 
+{ 
+    if (numBufLines == 0) 
+    { 
+        throw std::domain_error("number of buffer lines must be greater than zero");
+    }
+    _NumBufLines = numBufLines; 
+}
+
+inline size_t ICU::numOverlapLines() const { return _NumOverlapLines; }
+inline void ICU::numOverlapLines(const size_t numOverlapLines) 
+{ 
+    if (numOverlapLines == 0) 
+    { 
+        throw std::domain_error("number of overlap lines must be greater than zero");
+    }
+    _NumOverlapLines = numOverlapLines; 
+}
+
+inline bool ICU::usePhaseGradNeut() const { return _UsePhaseGradNeut; }
+inline void ICU::usePhaseGradNeut(const bool usePhaseGradNeut) { _UsePhaseGradNeut = usePhaseGradNeut; }
+
+inline bool ICU::useIntensityNeut() const { return _UseIntensityNeut; }
+inline void ICU::useIntensityNeut(const bool useIntensityNeut) { _UseIntensityNeut = useIntensityNeut; }
+
+inline int ICU::phaseGradWinSize() const { return _PhaseGradWinSize; }
+inline void ICU::phaseGradWinSize(const int phaseGradWinSize) 
+{ 
+    if (phaseGradWinSize < 1)
+    {
+        throw std::domain_error("phase gradient window size must be greater than zero");
+    }
+    else if (phaseGradWinSize % 2 == 0)
+    {
+        throw std::domain_error("phase gradient window size must be odd-valued");
+    }
+    _PhaseGradWinSize = phaseGradWinSize; 
+}
+
+inline float ICU::neutPhaseGradThr() const { return _NeutPhaseGradThr; }
+inline void ICU::neutPhaseGradThr(const float neutPhaseGradThr) 
+{ 
+    if (neutPhaseGradThr <= 0.f)
+    {
+        throw std::domain_error("neutron phase gradient threshold must be greater than zero");
+    }
+    _NeutPhaseGradThr = neutPhaseGradThr; 
+}
+
+inline float ICU::neutIntensityThr() const { return _NeutIntensityThr; }
+inline void ICU::neutIntensityThr(const float neutIntensityThr) 
+{ 
+    if (neutIntensityThr <= 0.f)
+    {
+        throw std::domain_error("neutron intensity threshold must be greater than zero");
+    }
+    _NeutIntensityThr = neutIntensityThr; 
+}
+
+inline float ICU::neutCorrThr() const { return _NeutCorrThr; }
+inline void ICU::neutCorrThr(const float neutCorrThr) 
+{ 
+    if (neutCorrThr <= 0.f)
+    {
+        throw std::domain_error("neutron correlation threshold must be greater than zero");
+    }
+    _NeutCorrThr = neutCorrThr; 
+}
+
+inline int ICU::numTrees() const { return _NumTrees; }
+inline void ICU::numTrees(const int numTrees) 
+{ 
+    if (numTrees < 1)
+    {
+        throw std::domain_error("number of trees must be greater than zero");
+    }
+    _NumTrees = numTrees; 
+}
+
+inline int ICU::maxBranchLen() const { return _MaxBranchLen; }
+inline void ICU::maxBranchLen(const int maxBranchLen) 
+{ 
+    if (maxBranchLen < 1)
+    {
+        throw std::domain_error("max branch length must be greater than zero");
+    }
+    _MaxBranchLen = maxBranchLen; 
+}
+
+inline float ICU::ratioDxDy() const { return _RatioDxDy; }
+inline void ICU::ratioDxDy(const float ratioDxDy) 
+{ 
+    if (ratioDxDy <= 0.f)
+    {
+        throw std::domain_error("x:y pixel spacing ratio must be greater than zero");
+    }
+    _RatioDxDy = ratioDxDy; 
+}
+
+inline float ICU::initCorrThr() const { return _InitCorrThr; }
+inline void ICU::initCorrThr(const float initCorrThr) 
+{ 
+    if (initCorrThr < 0.f || initCorrThr > 1.f)
+    {
+        throw std::domain_error("initial correlation threshold must be between 0 and 1");
+    }
+    _InitCorrThr = initCorrThr; 
+}
+
+inline float ICU::maxCorrThr() const { return _MaxCorrThr; }
+inline void ICU::maxCorrThr(const float maxCorrThr) 
+{ 
+    if (maxCorrThr < 0.f || maxCorrThr > 1.f)
+    {
+        throw std::domain_error("max correlation threshold must be between 0 and 1");
+    }
+    _MaxCorrThr = maxCorrThr; 
+}
+
+inline float ICU::corrThrInc() const { return _CorrThrInc; }
+inline void ICU::corrThrInc(const float corrThrInc) 
+{ 
+    if (corrThrInc <= 0.f)
+    {
+        throw std::domain_error("correlation threshold increment must be greater than zero");
+    }
+    _CorrThrInc = corrThrInc; 
+}
+
+inline float ICU::minCCAreaFrac() const { return _MinCCAreaFrac; }
+inline void ICU::minCCAreaFrac(const float minCCAreaFrac) 
+{ 
+    if (minCCAreaFrac <= 0.f || minCCAreaFrac > 1.f)
+    {
+        throw std::domain_error("min connected component size fraction of tile area must be between 0 and 1");
+    }
+    _MinCCAreaFrac = minCCAreaFrac; 
+}
+
+inline size_t ICU::numBsLines() const { return _NumBsLines; }
+inline void ICU::numBsLines(const size_t numBsLines) 
+{ 
+    if (numBsLines == 0) 
+    { 
+        throw std::domain_error("number of bootstrap lines must be greater than zero");
+    }
+    _NumBsLines = numBsLines; 
+}
+
+inline size_t ICU::minBsPts() const { return _MinBsPts; }
+inline void ICU::minBsPts(const size_t minBsPts) 
+{ 
+    if (minBsPts == 0) 
+    { 
+        throw std::domain_error("min bootstrap overlap area must be greater than zero");
+    }
+    _MinBsPts = minBsPts; 
+}
+
+inline float ICU::bsPhaseVarThr() const { return _BsPhaseVarThr; }
+inline void ICU::bsPhaseVarThr(const float bsPhaseVarThr) 
+{ 
+    if (bsPhaseVarThr <= 0.f)
+    {
+        throw std::domain_error("bootstrap phase variance threshold must be greater than zero");
+    }
+    _BsPhaseVarThr = bsPhaseVarThr; 
+}
+
+}
+

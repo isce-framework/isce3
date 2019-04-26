@@ -5,11 +5,14 @@
 # Find Numpy
 find_package(Numpy REQUIRED)
 
-###Create a function for concatenating pxd files
-function(catpxd IN_FILE OUT_FILE)
-    FILE(READ ${IN_FILE} CONTENTS)
-    FILE(APPEND ${OUT_FILE} "${CONTENTS}")
-endfunction()
+# Add subdirectories for installing pxd files
+add_subdirectory(io)
+add_subdirectory(core)
+add_subdirectory(product)
+add_subdirectory(image)
+add_subdirectory(signal)
+add_subdirectory(geometry)
+add_subdirectory(serialization)
 
 # Set the name for the ISCE C++ library
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
@@ -33,6 +36,9 @@ endforeach()
 # Add Cython module
 cython_add_module(isceextension isceextension.pyx)
 
+FILE(GLOB PYX_LIST ${CMAKE_CURRENT_LIST_DIR}/*/*.pyx)
+target_sources(isceextension PRIVATE ${PYX_LIST})
+
 # Override output shared object name to place in desired location
 set_target_properties(
     isceextension
@@ -50,8 +56,8 @@ target_include_directories(
         ${PYRE_INCLUDE_DIR}
 )
 
-# Add necessary library links
-target_link_libraries(isceextension ${LISCE} m)
+add_subdirectory(except)
+target_link_libraries(isceextension ${LISCE} m cyerror)
 
 # Install
 install(
@@ -63,6 +69,5 @@ install(
 # Install cuda cython extensions if cuda available
 if (WITH_CUDA)
     add_subdirectory(cuda)
+    target_include_directories(iscecudaextension PRIVATE ${CMAKE_CURRENT_LIST_DIR}/except)
 endif(WITH_CUDA)
-
-# end of file

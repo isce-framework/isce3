@@ -17,6 +17,7 @@
 // isce::core
 #include "LinAlg.h"
 #include "EulerAngles.h"
+#include "Utilities.h"
 
 /** @param[in] yaw_orientation Can be "normal" or "center" */
 isce::core::EulerAngles::
@@ -41,6 +42,54 @@ EulerAngles(const std::vector<double> & time, const std::vector<double> & yaw,
             const std::string yaw_orientation) : EulerAngles(yaw_orientation) {
     // Call setter for data
     this->data(time, yaw, pitch, roll);
+}
+
+// Copy constructor
+/** @param[in] euler EulerAngles object */
+isce::core::EulerAngles::
+EulerAngles(const EulerAngles & euler) : Attitude(EULERANGLES_T),
+                                         _time(euler.time()), _yaw(euler.yaw()),
+                                         _pitch(euler.pitch()), _roll(euler.roll()) {
+    const std::string yaw_orientation = euler.yawOrientation();
+    if (yaw_orientation.compare("normal") == 0 || yaw_orientation.compare("center") == 0) {
+        yawOrientation(yaw_orientation);
+    } else {
+        std::cerr << "Unsupported yaw orientation. Must be normal or center." << std::endl;
+        throw std::invalid_argument("Unsupported yaw orientation.");
+    }
+}
+
+// Comparison operator
+bool isce::core::EulerAngles::
+operator==(const EulerAngles & other) const {
+    // Easy checks first
+    bool equal = this->nVectors() == other.nVectors();
+    equal *= _refEpoch == other.refEpoch();
+    if (!equal) {
+        return false;
+    }
+    // If we pass the easy checks, check the contents
+    for (size_t i = 0; i < this->nVectors(); ++i) {
+        equal *= isce::core::compareFloatingPoint(_time[i], other.time()[i]);
+        equal *= isce::core::compareFloatingPoint(_yaw[i], other.yaw()[i]);
+        equal *= isce::core::compareFloatingPoint(_pitch[i], other.pitch()[i]);
+        equal *= isce::core::compareFloatingPoint(_roll[i], other.roll()[i]);
+    }
+    return equal;
+}
+
+// Assignment operator
+/** @param[in] euler EulerAngles object */
+isce::core::EulerAngles &
+isce::core::EulerAngles::
+operator=(const EulerAngles & euler) {
+    _time = euler.time();
+    _yaw = euler.yaw();
+    _pitch = euler.pitch();
+    _roll = euler.roll();
+    _refEpoch = euler.refEpoch();
+    yawOrientation(euler.yawOrientation());
+    return *this;
 }
 
 // Set data after construction

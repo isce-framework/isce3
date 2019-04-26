@@ -1,4 +1,6 @@
-add_subdirectory(complex)
+set(PACKAGENAME core)
+string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
+
 add_subdirectory(ellipsoid)
 add_subdirectory(interpolator)
 add_subdirectory(lut)

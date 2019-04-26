@@ -6,18 +6,6 @@
 #ifndef ISCE_CUDA_GEOMETRY_GPUGEOMETRY_H
 #define ISCE_CUDA_GEOMETRY_GPUGEOMETRY_H
 
-#ifdef __CUDACC__
-#define CUDA_HOSTDEV __host__ __device__
-#define CUDA_DEV __device__
-#define CUDA_HOST __host__
-#define CUDA_GLOBAL __global__
-#else
-#define CUDA_HOSTDEV
-#define CUDA_DEV
-#define CUDA_HOST
-#define CUDA_GLOBAL
-#endif
-
 #include <cmath>
 
 // isce::core
@@ -25,13 +13,11 @@
 #include "isce/core/Orbit.h"
 #include "isce/core/LUT1d.h"
 
-// isce::product
-#include "isce/product/ImageMode.h"
-
 // isce::geometry
 #include "isce/geometry/DEMInterpolator.h"
 
 // isce::cuda::core
+#include "isce/cuda/core/Common.h"
 #include "isce/cuda/core/gpuBasis.h"
 #include "isce/cuda/core/gpuEllipsoid.h"
 #include "isce/cuda/core/gpuOrbit.h"
@@ -39,9 +25,6 @@
 #include "isce/cuda/core/gpuLUT1d.h"
 #include "isce/cuda/core/gpuLinAlg.h"
 #include "isce/cuda/core/gpuStateVector.h"
-
-// isce::cuda::product
-#include "isce/cuda/product/gpuImageMode.h"
 
 // isce::cuda::geometry
 #include "isce/cuda/geometry/gpuDEMInterpolator.h"
@@ -73,9 +56,8 @@ namespace geometry {
                          const isce::cuda::core::gpuEllipsoid &,
                          const isce::cuda::core::gpuOrbit &,
                          const isce::cuda::core::gpuLUT1d<double> &,
-                         const isce::cuda::product::gpuImageMode &,
                          double *, double *,
-                         double, int, double);
+                         double, double, int, double);
 
     /** Radar geometry coordinates to map coordinates transformer (host testing) */
     CUDA_HOST int rdr2geo_h(const isce::core::Pixel &,
@@ -91,9 +73,8 @@ namespace geometry {
                             const isce::core::Ellipsoid &,
                             const isce::core::Orbit &,
                             const isce::core::LUT1d<double> &,
-                            const isce::product::ImageMode &,
                             double &, double &,
-                            double, int, double);
+                            double, double, int, double);
 
 } // namespace geometry
 } // namespace cuda

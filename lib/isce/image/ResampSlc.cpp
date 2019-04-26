@@ -21,24 +21,6 @@
 
 using isce::io::Raster;
 
-// Main product-based resamp entry point
-void isce::image::ResampSlc::
-resamp(const std::string & outputFilename,
-       const std::string & polarization,
-       const std::string & rgOffsetFilename,
-       const std::string & azOffsetFilename,
-       bool flatten, bool isComplex, int rowBuffer,
-       int chipSize) {
-
-    // Form the GDAL-compatible path for the HDF5 dataset
-    const std::string dataPath = _mode.dataPath(polarization);
-    const std::string h5path = "HDF5:\"" + _filename + "\":/" + dataPath;
-
-    // Call alternative resmap entry point using filenames
-    resamp(h5path, outputFilename, rgOffsetFilename, azOffsetFilename, 1,
-           flatten, isComplex, rowBuffer, chipSize);
-}
-
 // Alternative generic resamp entry point: use filenames to internally create rasters
 void isce::image::ResampSlc::
 resamp(const std::string & inputFilename,          // filename of input SLC
@@ -260,9 +242,9 @@ _transformTile(Tile_t & tile,
     const int outWidth = azOffTile.width();
     const int outLength = azOffTile.length();
     int chipHalf = chipSize / 2;
-    const double R0 = _mode.startingRange();
-    const double dR = _mode.rangePixelSpacing();
-    const double az0 = _mode.startAzTime().secondsSinceEpoch();
+    const double R0 = _startingRange;
+    const double dR = _rangePixelSpacing;
+    const double az0 = _sensingStart;
 
     // Allocate valarray for output image block
     std::valarray<std::complex<float>> imgOut(outLength * outWidth);
@@ -282,7 +264,7 @@ _transformTile(Tile_t & tile,
     for (int i = tile.rowStart(); i < tile.rowEnd(); ++i) {
 
         // Compute current azimuth time
-        const double az = az0 + i / _mode.prf();
+        const double az = az0 + i / _prf;
 
         // Loop over width
         #pragma omp for
@@ -306,7 +288,7 @@ _transformTile(Tile_t & tile,
 
             // Evaluate Doppler polynomial
             const double rng = R0 + j * dR;
-            const double dop = _dopplerLUT.eval(rng) * 2*M_PI / _mode.prf();
+            const double dop = _dopplerLUT.eval(az, rng) * 2*M_PI / _prf;
 
             // Doppler to be added back. Simultaneously evaluate carrier that needs to
             // be added back after interpolation
@@ -315,13 +297,13 @@ _transformTile(Tile_t & tile,
                 + _azCarrier.eval(i + azOff, j + rgOff);
 
             // Flatten the carrier phase if requested
-            if (flatten && _haveRefMode) {
-                phase += ((4. * (M_PI / _mode.wavelength())) * 
-                    ((_mode.startingRange() - _refMode.startingRange()) 
-                    + (j * (_mode.rangePixelSpacing() - _refMode.rangePixelSpacing())) 
-                    + (rgOff * _mode.rangePixelSpacing()))) + ((4.0 * M_PI 
-                    * (_refMode.startingRange() + (j * _refMode.rangePixelSpacing()))) 
-                    * ((1.0 / _refMode.wavelength()) - (1.0 / _mode.wavelength())));
+            if (flatten && _haveRefData) {
+                phase += ((4. * (M_PI / _wavelength)) * 
+                    ((_startingRange - _refStartingRange) 
+                    + (j * (_rangePixelSpacing - _refRangePixelSpacing)) 
+                    + (rgOff * _rangePixelSpacing))) + ((4.0 * M_PI 
+                    * (_refStartingRange + (j * _refRangePixelSpacing))) 
+                    * ((1.0 / _refWavelength) - (1.0 / _wavelength)));
             }
             // Modulate by 2*PI
             phase = modulo_f(phase, 2.0*M_PI);

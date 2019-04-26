@@ -11,9 +11,8 @@
 #include "isce/io/Raster.h"
 #include "isce/signal/Crossmul.h"
 #include <isce/io/IH5.h>
-#include <isce/radar/Radar.h>
-#include <isce/radar/Serialization.h>
 #include <isce/product/Serialization.h>
+#include <isce/product/Product.h>
 
 TEST(Filter, constructAzimuthCommonbandFilter)
 {
@@ -22,42 +21,26 @@ TEST(Filter, constructAzimuthCommonbandFilter)
     int ncols = 500;
     int blockRows = 500;
     int nfft = ncols;
-    int oversample = 2;
 
     std::valarray<std::complex<float>> refSlc(ncols*blockRows);
     std::valarray<std::complex<float>> refSpectrum(nfft*blockRows);
 
     // Get some metadata from an existing HDF5 file
-    //std::string h5file("/Users/fattahi/tools/ISCE3_forked/src/isce/tests/lib/isce/data/envisat.h5");
     std::string h5file("../data/envisat.h5");
 
     // an HDF5 object
     isce::io::IH5File file(h5file);
 
-    // a radra object
-    isce::radar::Radar instrument;
-
-    // Open group containing instrument data
-    isce::io::IGroup group = file.openGroup("/science/metadata/instrument_data");
-
-    // Deserialize the radar instrument
-    isce::radar::loadFromH5(group, instrument);
-
-    // Open group for image mode
-    isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
+    // Create a product and swath
+    isce::product::Product product(file);
+    const isce::product::Swath & swath = product.swath('A');
 
     // Get the Doppler polynomial and use it for both refernce and secondary SLCs
-    isce::core::LUT1d<double> dop1 = instrument.contentDoppler();
-    isce::core::LUT1d<double> dop2 = instrument.contentDoppler();
+    isce::core::LUT2d<double> dop1 = product.metadata().procInfo().dopplerCentroid('A');
+    isce::core::LUT2d<double> dop2 = dop1;
 
-    // Instantiate an ImageMode object
-    isce::product::ImageMode mode;
-   
-    // Deserialize the primary_mode
-    isce::product::loadFromH5(modeGroup, mode, "aux");
- 
     // get pulase repetition frequency (prf)
-    double prf = mode.prf(); 
+    double prf = swath.nominalAcquisitionPRF();
     std::cout << "prf: " << std::setprecision(16)<< prf << std::endl;
 
     // beta parameter for the raised cosine filter used for constructing the common azimuth band filter
@@ -91,17 +74,12 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
     std::string h5file("../data/envisat.h5");
     isce::io::IH5File file(h5file);
 
-    // Open group for image mode
-    isce::io::IGroup modeGroup = file.openGroup("/science/complex_imagery");
-    
-    // Instantiate an ImageMode object
-    isce::product::ImageMode mode;
-
-    // Deserialize the primary_mode
-    isce::product::loadFromH5(modeGroup, mode, "aux");
+    // Create a product and swath
+    isce::product::Product product(file);
+    const isce::product::Swath & swath = product.swath('A');
 
     // get the range bandwidth
-    double BW = mode.rangeBandwidth();
+    double BW = swath.processedRangeBandwidth();
     
     //The bands are specified by two vectors:
     //  1) a vector of center frequencies for each sub-band

@@ -44,6 +44,8 @@ cdef class pyLUT1d:
             # Instantiate default LUT1d
             self.c_lut = new LUT1d[double]()
 
+        self.__owner = True
+
         return
 
     def __dealloc__(self):

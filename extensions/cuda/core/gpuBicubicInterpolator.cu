@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <cuda_runtime.h>
 #include "gpuInterpolator.h"
-#include "../helper_cuda.h"
+#include <isce/cuda/except/Error.h>
 
 using isce::cuda::core::gpuInterpolator;
 using isce::cuda::core::gpuBicubicInterpolator;

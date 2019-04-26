@@ -41,9 +41,9 @@ struct IH5Test : public ::testing::Test {
 TEST_F(IH5Test, findInFile) {
 
     // Name to search for in the file
-    std::string searchedName("hh");
+    std::string searchedName("HH");
     // Location where to start a search
-    std::string startName("/science/metadata/calibration_info");
+    std::string startName("/science/LSAR/SLC/metadata/calibrationInformation");
     // Root character
     char root = '/';
 
@@ -52,7 +52,7 @@ TEST_F(IH5Test, findInFile) {
     // - Group and Dataset
     // - return absolute path
     std::vector<std::string> list = file.find(searchedName);
-    ASSERT_EQ(list.size(), 25);
+    ASSERT_EQ(list.size(), 4);
     for (auto i:list)
        ASSERT_TRUE(i[0] == root);
 
@@ -65,7 +65,7 @@ TEST_F(IH5Test, findInFile) {
     // - Group and Dataset
     // - return ABSOLUTE path
     list = file.find(searchedName, startName);
-    ASSERT_EQ(list.size(), 14);
+    ASSERT_EQ(list.size(), 3);
     for (auto i:list)
        ASSERT_TRUE(i[0] == root);
 
@@ -77,7 +77,7 @@ TEST_F(IH5Test, findInFile) {
     // - Group and Dataset
     // - return RELATIVE path
     list = file.find(searchedName, startName, "BOTH", "RELATIVE");
-    ASSERT_EQ(list.size(), 14);
+    ASSERT_EQ(list.size(), 3);
     for (auto i:list)
        ASSERT_FALSE(i[0] == root);
 
@@ -89,7 +89,7 @@ TEST_F(IH5Test, findInFile) {
     // - Dataset only
     // - return relative path
     list = file.find(searchedName, startName, "DATASET", "RELATIVE");
-    ASSERT_EQ(list.size(), 12);
+    ASSERT_EQ(list.size(), 2);
     for (auto i:list)
        ASSERT_FALSE(i[0] == root);
 
@@ -103,7 +103,7 @@ TEST_F(IH5Test, findInFile) {
     // - Group only
     // - return full path
     list = file.find(searchedName, startName, "GROUP", "FULL");
-    ASSERT_EQ(list.size(), 2);
+    ASSERT_EQ(list.size(), 1);
     for (auto i:list)
        ASSERT_TRUE(i[0] == root);
     for (auto i:list) {
@@ -120,11 +120,11 @@ TEST_F(IH5Test, findInFile) {
 TEST_F(IH5Test, findInGroup) {
 
     // Group name
-    std::string groupName("/science/metadata");
+    std::string groupName("/science/LSAR/SLC/metadata");
     // Name to search for in the group
-    std::string searchedName("hh");
+    std::string searchedName("HH");
     // Location in the group where to start the search
-    std::string startName("calibration_info");
+    std::string startName("calibrationInformation");
 
 
     // Open group
@@ -136,7 +136,7 @@ TEST_F(IH5Test, findInGroup) {
     // - Group and Dataset
     // - return absolute path from Group location
     std::vector<std::string> list = group.find(searchedName);
-    ASSERT_EQ(list.size(), 18);
+    ASSERT_EQ(list.size(), 3);
     for (auto i:list)
        ASSERT_TRUE(i[0] == 'c' || i[0] == 'n');
 
@@ -148,7 +148,7 @@ TEST_F(IH5Test, findInGroup) {
     // - Group and Dataset
     // - return ABSOLUTE path (i.e., from group root, not file root "/")
     list = group.find(searchedName, startName);
-    ASSERT_EQ(list.size(), 14);
+    ASSERT_EQ(list.size(), 3);
     for (auto i:list)
        ASSERT_TRUE(i[0] == 'c');
 
@@ -160,9 +160,9 @@ TEST_F(IH5Test, findInGroup) {
     // - Group and Dataset
     // - return RELATIVE path (i.e., from startName, not from group root)
     list = group.find(searchedName, startName, "BOTH", "RELATIVE");
-    ASSERT_EQ(list.size(), 14);
+    ASSERT_EQ(list.size(), 3);
     for (auto i:list)
-       ASSERT_TRUE(i[0] == 'a' || i[0] == 'c');
+       ASSERT_TRUE(i[0] == 'f');
 
     // Clear list
     list.clear();
@@ -172,9 +172,9 @@ TEST_F(IH5Test, findInGroup) {
     // - Dataset only
     // - return relative path
     list = group.find(searchedName, startName, "DATASET", "RELATIVE");
-    ASSERT_EQ(list.size(), 12);
+    ASSERT_EQ(list.size(), 2);
     for (auto i:list)
-       ASSERT_TRUE(i[0] == 'c' || i[0] == 'a');
+       ASSERT_TRUE(i[0] == 'f');
 //    for (auto i:list) {
 //        isce::io::IDataSet dset = group.openDataSet(i);   
 //        ASSERT_EQ(dset.getId(), H5I_DATASET);
@@ -189,7 +189,7 @@ TEST_F(IH5Test, findInGroup) {
     // - Group only
     // - return full path
     list = group.find(searchedName, startName, "GROUP", "FULL");
-    ASSERT_EQ(list.size(), 2);
+    ASSERT_EQ(list.size(), 1);
     for (auto i:list)
        ASSERT_TRUE(i[0] == 'c' || i[0] == 'a');
     for (auto i:list) {
@@ -211,14 +211,14 @@ TEST_F(IH5Test, findInGroup) {
 TEST_F(IH5Test, findRegularExpression) {
 
     // Regular expression to search for in the file
-    std::string searchedName(".*mode.*(hh$|hv$|rh$|rv$|vh$|vv$)");
+    std::string searchedName(".*calibrationInformation.*(HH$|HV$|RH$|RV$|VH$|VV$)");
 
     // Run the default find function, i.e.:
     // - search from root ("/")
     // - Group and Dataset
     // - return absolute path
     std::vector<std::string> list = file.find(searchedName);
-    ASSERT_EQ(list.size(), 26);
+    ASSERT_EQ(list.size(), 6);
     for (auto i:list)
        ASSERT_TRUE(i[0] == '/');
 
@@ -230,7 +230,7 @@ TEST_F(IH5Test, findRegularExpression) {
 
 TEST_F(IH5Test, dataSetOpen) {
 
-    std::string datasetName("/science/complex_imagery/primary_mode/hh");
+    std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
 
     isce::io::IDataSet dset = file.openDataSet(datasetName);
 
@@ -244,7 +244,7 @@ TEST_F(IH5Test, dataSetOpen) {
 
 TEST_F(IH5Test, dataSetMetaData) {
 
-    std::string datasetName("/science/complex_imagery/primary_mode/hh");
+    std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
 
     isce::io::IDataSet dset = file.openDataSet(datasetName);
 
@@ -263,14 +263,12 @@ TEST_F(IH5Test, dataSetMetaData) {
     ASSERT_EQ(dset.getTypeClassStr(), "H5T_COMPOUND");
 
     // Dataset number of attributes
-    ASSERT_EQ(dset.getNumAttrs(), 3);
+    ASSERT_EQ(dset.getNumAttrs(), 1);
 
     //Get attributes names
     std::vector<std::string> attnames = dset.getAttrs();
-    ASSERT_EQ(attnames.size(), 3);
-    ASSERT_EQ(attnames[0], "description");
-    ASSERT_EQ(attnames[1], "spacing");
-    ASSERT_EQ(attnames[2], "units");
+    ASSERT_EQ(attnames.size(), 1);
+    ASSERT_EQ(attnames[0], "units");
 
     dset.close();
 }
@@ -279,8 +277,8 @@ TEST_F(IH5Test, dataSetMetaData) {
 // Check for attribute metadata reading
 TEST_F(IH5Test, attributeMetaData) {
 
-    std::string datasetName("/science/complex_imagery/primary_mode/hh");
-    std::string attributeName("description");
+    std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
+    std::string attributeName("units");
 
     isce::io::IDataSet dset = file.openDataSet(datasetName);
 
@@ -295,15 +293,15 @@ TEST_F(IH5Test, attributeMetaData) {
 //Testing reading string variable length in a std::string
 TEST_F(IH5Test, readVariableLengthString) {
 
-    std::string datasetName("/science/complex_imagery/primary_mode/hh");
-    std::string attribute("description");
+    std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
+    std::string attribute("units");
     isce::io::IDataSet dset = file.openDataSet(datasetName);
     
 
     std::string strVal;
     dset.read(strVal, attribute);
 
-    ASSERT_EQ(strVal, "Complex backscatter for primary mode (HH pol). Focused SLC image. All channels are registered");
+    ASSERT_EQ(strVal, "DN");
 
     dset.close();
 }
@@ -330,16 +328,16 @@ TEST_F(IH5Test, readVariableLengthString2) {
 
 
 
-//Testing reading string fixed length
-TEST_F(IH5Test, readFixedLengthString) {
+//Testing reading string variable length
+TEST_F(IH5Test, readVariableLengthString2) {
 
-    std::string datasetName("/science/complex_imagery/aux_mode/zero_doppler_start_az_time");
+    std::string datasetName("/science/LSAR/identification/boundingPolygon");
     isce::io::IDataSet dset = file.openDataSet(datasetName);
     
     std::string strVal;
     dset.read(strVal);
 
-    ASSERT_EQ(strVal, "2003-02-26T17:55:30.843491759");
+    ASSERT_EQ(strVal, "POLYGON ((-115.507 34.822, -115.634 34.845, -115.639 34.827, -115.512 34.805, -115.507 34.822))");
 
     dset.close();
 }
@@ -351,7 +349,7 @@ TEST_F(IH5Test, readFixedLengthString) {
 //Testing reading dataset with raw pointer
 TEST_F(IH5Test, datasetReadComplexWithRawPointer) {
 
-    std::string datasetName("/science/complex_imagery/primary_mode/hh");
+    std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
     isce::io::IDataSet dset = file.openDataSet(datasetName);
 
     // Dataset is a 500x500 floating complex image
@@ -437,7 +435,7 @@ TEST_F(IH5Test, datasetReadComplexWithRawPointer) {
 //Testing reading dataset with std::vector
 TEST_F(IH5Test, datasetReadComplexWithVector) {
 
-    std::string datasetName("/science/complex_imagery/primary_mode/hh");
+    std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
     isce::io::IDataSet dset = file.openDataSet(datasetName);
 
     // Dataset is a 500x500 floating complex image
@@ -514,7 +512,7 @@ TEST_F(IH5Test, datasetReadComplexWithVector) {
 //Testing reading dataset with std::valarray
 TEST_F(IH5Test, datasetReadComplexWithValarray) {
 
-    std::string datasetName("/science/complex_imagery/primary_mode/hh");
+    std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/HH");
     isce::io::IDataSet dset = file.openDataSet(datasetName);
 
     // Dataset is a 500x500 floating complex image
@@ -581,16 +579,17 @@ TEST_F(IH5Test, datasetReadComplexWithValarray) {
 
 
 
-//Testing reading 8-bit unsigned integer dataset with raw pointer
+//Testing reading 16-bit unsigned integer dataset with raw pointer
 //TODO: Empty fields in dataset at time of writing. Assertion uncertain
-TEST_F(IH5Test, datasetReadU8WithRawPointer) {
+TEST_F(IH5Test, datasetReadU16WithRawPointer) {
 
-    std::string datasetName("/science/image_quality_flags/missinglines");
+    std::string datasetName("/science/LSAR/SLC/swaths/frequencyA/validSamples");
     isce::io::IDataSet dset = file.openDataSet(datasetName);
 
-    std::vector<unsigned char> dval;
+    std::vector<unsigned int> dval;
     dset.read(dval);
     ASSERT_EQ(dval[0], 0);
+    ASSERT_EQ(dval[1], 500);
 
     dset.close();
 
@@ -601,7 +600,7 @@ TEST_F(IH5Test, datasetReadU8WithRawPointer) {
 //TODO: Empty fields in dataset at time of writing. Assertion uncertain
 TEST_F(IH5Test, datasetReadFloatWithVector) {
 
-    std::string datasetName("/science/metadata/attitude/predict/angular_velocity");
+    std::string datasetName("/science/LSAR/SLC/metadata/attitude/angularVelocity");
     isce::io::IDataSet dset = file.openDataSet(datasetName);
 
     std::vector<float> dval;

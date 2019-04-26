@@ -5,9 +5,9 @@
 # Find Numpy
 find_package(Numpy REQUIRED)
 
-# Set the name for the ISCE C++ libraries
-set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
-set(LISCECUDA iscecuda.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
+# Add subdirectories for installing pxd files
+add_subdirectory(image)
+add_subdirectory(geometry)
 
 # Set file properties
 set_source_files_properties(
@@ -46,6 +46,7 @@ target_include_directories(
 )
 
 # Add necessary library links
+include(IsceCuda)
 target_link_libraries(iscecudaextension ${LISCECUDA} ${LISCE} m)
 
 # Install

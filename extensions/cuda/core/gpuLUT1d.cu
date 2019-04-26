@@ -5,7 +5,7 @@
 //
 
 #include "gpuLUT1d.h"
-#include "../helper_cuda.h"
+#include <isce/cuda/except/Error.h>
 
 // Deep copy constructor from CPU LUT1d
 /** @param[in] lut LUT1d<T> object */
@@ -14,6 +14,13 @@ __host__
 isce::cuda::core::gpuLUT1d<T>::
 gpuLUT1d(const isce::core::LUT1d<T> & lut) :
     _extrapolate(lut.extrapolate()), _size(lut.size()), _owner(true) {
+
+    // Check if LUT1d has data
+    if (!lut.haveData()) {
+        _haveData = false;
+        _refValue = lut.refValue();
+        return;
+    }
 
     // Allocate memory on device for LUT data
     size_t N = lut.size();
@@ -25,6 +32,10 @@ gpuLUT1d(const isce::core::LUT1d<T> & lut) :
                                cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(_values, &lut.values()[0], N*sizeof(double),
                                cudaMemcpyHostToDevice));
+
+    // Set flags if everything has been successful
+    _haveData = true;
+    _refValue = lut.values()[0];
 }
 
 // Shallow copy constructor on device
@@ -33,6 +44,7 @@ template <typename T>
 __host__ __device__
 isce::cuda::core::gpuLUT1d<T>::
 gpuLUT1d(isce::cuda::core::gpuLUT1d<T> & lut) :
+    _haveData(lut.haveData()), _refValue(lut.refValue()),
     _coords(lut.coords()), _values(lut.values()),
     _size(lut.size()), _extrapolate(lut.extrapolate()),
     _owner(false) {}
@@ -44,6 +56,8 @@ __host__ __device__
 isce::cuda::core::gpuLUT1d<T> &
 isce::cuda::core::gpuLUT1d<T>::
 operator=(isce::cuda::core::gpuLUT1d<T> & lut) {
+    _haveData = lut.haveData();
+    _refValue = lut.refValue();
     _coords = lut.coords();
     _values = lut.values();
     _size = lut.size();
@@ -57,7 +71,7 @@ template <typename T>
 isce::cuda::core::gpuLUT1d<T>::
 ~gpuLUT1d() {
     // Only owner of memory clears it
-    if (_owner) {
+    if (_owner && _haveData) {
         checkCudaErrors(cudaFree(_coords));
         checkCudaErrors(cudaFree(_values));
     }
@@ -71,9 +85,11 @@ __device__
 T isce::cuda::core::gpuLUT1d<T>::
 eval(double x) const {
 
-    // For now, use a default return value of -1000.0 until we have
-    // better error handling in CUDA
-    T result = -1000.0;
+    // Check if data are available; if not, return ref value
+    T result = _refValue;
+    if (!_haveData) {
+        return result;
+    }
 
     // Check bounds to see if we need to perform linear extrapolation
     const int n = _size;

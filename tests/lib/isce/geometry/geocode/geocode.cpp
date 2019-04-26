@@ -14,8 +14,6 @@
 
 #include "isce/io/Raster.h"
 #include <isce/io/IH5.h>
-#include <isce/radar/Radar.h>
-#include <isce/radar/Serialization.h>
 #include <isce/product/Serialization.h>
 
 #include <isce/core/Metadata.h>
@@ -61,21 +59,11 @@ TEST(GeocodeTest, RunGeocode) {
     // Load the product
     isce::product::Product product(file);
     
-    isce::core::DateTime refEpoch;
-
-    isce::product::ImageMode mode = product.complexImagery().primaryMode();
-    isce::core::Orbit orbit = product.metadata().orbitPOE();
-    isce::core::Ellipsoid ellipsoid = product.metadata().identification().ellipsoid();
-    isce::core::LUT1d<double> doppler = product.metadata().instrument().skewDoppler();
-
-    // For numerical precision purposes, set reference epoch 2 days prior
-    isce::core::DateTime azimuthStartTime = mode.startAzTime();
-    refEpoch._init(azimuthStartTime.year, azimuthStartTime.months,
-                      azimuthStartTime.days - 2, 0, 0, 0, 0.0);
-    // Update orbit epochs with new epoch
-    orbit.updateUTCTimes(refEpoch);
-
-    isce::core::ProjectionBase * proj;
+    const isce::product::Swath & swath = product.swath('A');
+    isce::core::Orbit orbit = product.metadata().orbit();
+    isce::core::Ellipsoid ellipsoid;
+    isce::core::LUT2d<double> doppler = product.metadata().procInfo().dopplerCentroid('A');
+    const int lookSide = product.lookSide();
 
     double threshold = 1.0e-9 ;
     int numiter = 25;
@@ -83,7 +71,7 @@ TEST(GeocodeTest, RunGeocode) {
     double demBlockMargin = 0.1;
     int radarBlockMargin = 10;
 
-    double azimuthTimeInterval = 1.0/mode.prf();
+    double azimuthTimeInterval = 1.0/swath.nominalAcquisitionPRF();
 
     // output geocoded grid (can be different from DEM)
     double geoGridStartX = -115.65;
@@ -118,13 +106,9 @@ TEST(GeocodeTest, RunGeocode) {
 
     // manually configure geoObj
     
-    geoObj.orbit(orbit, refEpoch);
+    geoObj.orbit(orbit);
 
     geoObj.ellipsoid(ellipsoid);
-
-    geoObj.mode(mode);
-
-    geoObj.projection(proj);
 
     geoObj.thresholdGeo2rdr(threshold);
 
@@ -139,12 +123,15 @@ TEST(GeocodeTest, RunGeocode) {
     geoObj.interpolator(method);
 
     geoObj.radarGrid(doppler,
-                      azimuthStartTime,
+                      orbit.refEpoch,
+                      swath.zeroDopplerTime()[0],
                       azimuthTimeInterval,
                       radarGridLength,
-                      mode.startingRange(),
-                      mode.rangePixelSpacing(),
-                      radarGridWidth);
+                      swath.slantRange()[0],
+                      swath.rangePixelSpacing(),
+                      swath.processedWavelength(),
+                      radarGridWidth,
+                      lookSide);
 
     geoObj.geoGrid(geoGridStartX, geoGridStartY,
                   geoGridSpacingX, geoGridSpacingY,
@@ -264,8 +251,8 @@ void createTestData() {
     // Load the product
     isce::product::Product product(file);
 
-    // Create topo instance
-    isce::geometry::Topo topo(product);
+    // Create topo instance with native Doppler
+    isce::geometry::Topo topo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
     std::ifstream xmlfid("../../data/topo.xml", std::ios::in);

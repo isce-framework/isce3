@@ -14,16 +14,15 @@
 #include <vector>
 #include <complex>
 #include <cstdlib>
+#include <thrust/complex.h>
 #include "gtest/gtest.h"
 
 #include "isce/core/Constants.h"
 #include "isce/core/Interpolator.h"
 #include "isce/cuda/core/gpuInterpolator.h"
-#include "isce/cuda/core/gpuComplex.h"
 
 using isce::core::Matrix;
 using isce::core::Sinc2dInterpolator;
-using isce::cuda::core::gpuComplex;
 using isce::cuda::core::gpuInterpolator;
 using isce::cuda::core::gpuSinc2dInterpolator;
 
@@ -83,22 +82,20 @@ TEST_F(gpuSinc2dInterpolatorTest, Sinc2dFloat) {
         indices(i,1) = yindex;
     }
 
-    size_t N_pts = indices.length();
-    double error = 0.0;
-    gpuComplex<float> gpu_z[n_instances];
+    thrust::complex<float> gpu_z[n_instances];
     std::complex<float> cpu_z;
     
     // instantiate GPU and CPU class
-    gpuSinc2dInterpolator<gpuComplex<float>> gpuSinc2d(
+    gpuSinc2dInterpolator<thrust::complex<float>> gpuSinc2d(
                   isce::core::SINC_LEN, isce::core::SINC_SUB);
     Sinc2dInterpolator<std::complex<float>> cpuSinc2d(
                   isce::core::SINC_LEN, isce::core::SINC_SUB);
 
     // Perform interpolation
-    isce::core::Matrix<gpuComplex<float>> gpu_chip(chip.length(), chip.width());
+    isce::core::Matrix<thrust::complex<float>> gpu_chip(chip.length(), chip.width());
     for (int i = 0; i < chip.length(); ++i) {
         for (int j = 0; j < chip.width(); ++j)
-            gpu_chip(i,j) = gpuComplex<float>(std::real(chip(i,j)), std::imag(chip(i,j)));
+            gpu_chip(i,j) = thrust::complex<float>(std::real(chip(i,j)), std::imag(chip(i,j)));
     }
         
     // Perform interpolation
@@ -106,8 +103,8 @@ TEST_F(gpuSinc2dInterpolatorTest, Sinc2dFloat) {
     gpuSinc2d.interpolate_h(indices, gpu_chip, start, delta, gpu_z);
 
     for (int i=0; i<n_instances; ++i) {
-        ASSERT_NEAR(gpu_z[i].r, std::real(cpu_z), 1.0e-8);
-        ASSERT_NEAR(gpu_z[i].i, std::imag(cpu_z), 1.0e-8);
+        ASSERT_NEAR(gpu_z[i].real(), std::real(cpu_z), 1.0e-8);
+        ASSERT_NEAR(gpu_z[i].imag(), std::imag(cpu_z), 1.0e-8);
     }
 }
 

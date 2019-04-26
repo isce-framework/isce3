@@ -6,20 +6,12 @@
 #ifndef ISCE_CUDA_GEOMETRY_GPUTOPOLAYERS_H
 #define ISCE_CUDA_GEOMETRY_GPUTOPOLAYERS_H
 
-#ifdef __CUDACC__
-#define CUDA_HOSTDEV __host__ __device__
-#define CUDA_DEV __device__
-#define CUDA_HOST __host__
-#else
-#define CUDA_HOSTDEV
-#define CUDA_DEV
-#define CUDA_HOST
-#endif
-
 #include <iostream>
 
 // isce::geometry
 #include "isce/geometry/TopoLayers.h"
+
+#include "isce/cuda/core/Common.h"
 
 // Declaration
 namespace isce {
