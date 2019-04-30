@@ -1,5 +1,6 @@
 # Create library to hold exception handling stubs
-add_library(cyerror SHARED "CyError.cpp")
+add_library(cyerror STATIC "CyError.cpp")
+set_property(TARGET cyerror PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # Must link to ISCE error objects
 target_include_directories(cyerror PRIVATE ${ISCE_BUILDINCLUDEDIR})
