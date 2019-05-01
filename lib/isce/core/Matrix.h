@@ -19,7 +19,7 @@ namespace isce {
     }
 }
 
-// isce::core::Matrix definition
+/** Data structure for a 2D row-major matrix*/
 template <typename cell_t>
 class isce::core::Matrix {
 

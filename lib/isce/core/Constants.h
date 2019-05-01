@@ -85,9 +85,17 @@ namespace isce { namespace core {
 
     /** Precision-promotion to double/complex<double>  **/
     template<typename T> struct double_promote;
+
+    /** Template specialization for float */
     template<> struct double_promote<float>  { using type = double; };
+
+    /** Template specialization for double */
     template<> struct double_promote<double> { using type = double; };
+
+    /** Template specialization for complex<float> */
     template<> struct double_promote<std::complex<float>>  { using type = std::complex<double>; };
+
+    /** Template specialization for complex <double> */
     template<> struct double_promote<std::complex<double>> { using type = std::complex<double>; };
   }
 }

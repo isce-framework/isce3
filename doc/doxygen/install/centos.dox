@@ -17,7 +17,7 @@ ISCE has the following dependencies
 Centos 7.5 is the operational OS for the NISAR processing system and this is probably the most tested set of instructions. The instructions for Centos 7.5 / Ubuntu 18.04 are more or less the same except for the parts specific to using the standard package managers to install compilers and some basic packages. Our overall strategy for directory layouts is as follows:
 
 <table>
-<caption id="multi_row">Assumed directory structure for installation</caption>
+<caption id="directory_structure">Assumed directory structure for installation</caption>
 <tr><th>Path<th>Description
 <tr><td>${HOME}/python/miniconda3<td>Miniconda3 installation directory
 <tr><td>${HOME}/src<td>Directory for downloading pyre and ISCE source
@@ -291,7 +291,7 @@ export CUDACXX=/usr/local/cuda/bin/nvcc
 
 Other optional arguments can be added to the cmake line
 <table>
-    <caption id="multi_row">Additional cmake options</caption>
+    <caption id="cmake_options">Additional cmake options</caption>
     <tr><th>Option <th>Description
     <tr><td>-DWITH_CUDA=ON  <td>Build with CUDA support (will need CUDA libraries installed)
     <tr><td>-DWITH_DOC=ON   <td>Build documentation from code using doxygen and sphinx. These need to be installed.
@@ -328,7 +328,7 @@ Other optional arguments can be added to the cmake line
 <li> Setup the environment variables. Note that these need to be done in addition to the settings needed for scl (Centos), conda and pyre.
 
 <table>
-    <caption id="multi_row">Environment variables to set after installing ISCE</caption>
+    <caption id="env_vars">Environment variables to set after installing ISCE</caption>
     <tr><th>Variable<th>Setting<th>Description
     <tr><td>PATH<td>$PATH:${HOME}/tools/isce/bin<td>For executables installed by ISCE
     <tr><td>PYTHONPATH<td>$PYTHONPATH:${HOME}/tools/isce/packages<td>ISCE python package

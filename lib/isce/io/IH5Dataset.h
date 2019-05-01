@@ -19,6 +19,8 @@
 /************************************************************************/
 class IH5RasterBand;
 
+/** IH5 interface to GDAL Dataset to allow 
+ *  read/write to HDF5 datasets from ISCE*/
 class IH5Dataset final: public GDALDataset
 {
     CPL_DISALLOW_COPY_ASSIGN(IH5Dataset)
@@ -74,6 +76,7 @@ class IH5Dataset final: public GDALDataset
 /*                            IH5RasterBand                             */
 /************************************************************************/
 
+/** Raster band of an IH5 Dataset derived from GDALPamRasterBand */
 class IH5RasterBand : public GDALPamRasterBand
 {
     protected:

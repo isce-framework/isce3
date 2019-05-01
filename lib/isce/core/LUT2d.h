@@ -22,7 +22,8 @@ namespace isce {
     }
 }
 
-// LUT2d declaration
+/** Data structure to store 2D Lookup table.
+ *  Suitable for storing data of the form z = f(x,y)*/
 template <typename T>
 class isce::core::LUT2d {
 

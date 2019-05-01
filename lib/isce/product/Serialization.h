@@ -4,7 +4,7 @@
 // Author: Bryan V. Riel
 // Copyright 2017-2019
 
-/** \file Serialization.h
+/** \file product/Serialization.h
  *
  * Serialization functions for isce::product objects. */
 

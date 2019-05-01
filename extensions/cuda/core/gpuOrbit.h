@@ -16,7 +16,10 @@
 using isce::core::Orbit;
 using isce::core::cartesian_t;
 
-namespace isce { namespace cuda { namespace core {
+namespace isce { 
+    //! The isce::cuda namespace
+    namespace cuda { 
+        namespace core {
     struct gpuOrbit {
         int nVectors;
         double *UTCtime;

@@ -24,7 +24,8 @@ namespace isce {
     }
 }
 
-// LUT1d declaration
+/** Data structure to hold a 1D Lookup table.
+ *  Suitable for storing data of the form y = f(x)*/
 template <typename T>
 class isce::core::LUT1d {
 

@@ -60,7 +60,7 @@ We write the instructions assuming that we are using gcc7 and python36. Changes 
 In this set of instructions, we will install pyre from source using its custom build system - "mm".
 The directory structure that we assume for installing pyre is as follows:
 <table>
-    <caption id="multi_row">Directory structure for installing pyre</caption>
+    <caption id="pyre_dir">Directory structure for installing pyre</caption>
     <tr><th>Folder<th>Description
     <tr><td>/Users/username/tools/pyre/config<td>Directory containing mm
     <tr><td>/Users/username/tools/pyre/src<td>Directory which will contain source for pyre
@@ -140,7 +140,7 @@ export MM_LIBPATH=/Users/username/tools/pyre/install/lib
 In this section we will walk through the directory setup and build system instructions for installing ISCE. ISCE can be built with 2 different build systems - <a href="https://github.com/aivazis/config">mm</a> and <a href="https://cmake.org/">cmake</a>. In this set of instructions, we focus on cmake as it is already available via standard package managers. We assume the following directory structure in this tutorial
 
 <table>
-    <caption id="multi_row">Assumed directory structure for installing ISCE</caption>
+    <caption id="isce_dir">Assumed directory structure for installing ISCE</caption>
     <tr><th>Location<th>Description
     <tr><td>/Users/username/tools/pyre/install <td> Pyre install location
     <tr><td>/Users/username/tools/isce/src <td> git checkout location/ unpacked tarball location of ISCE source
@@ -208,7 +208,7 @@ export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
 
 Other optional arguments can be added to the cmake line
 <table>
-    <caption id="multi_row">Additional cmake options</caption>
+    <caption id="cmake_flags">Additional cmake options</caption>
     <tr><th>Option<th>Description
     <tr><td>-DWITH_DOC=ON <td>Build documentation from code using doxygen and sphinx. These need to be installed
     <tr><td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --dsymutil=yes --track-origins=yes" -DCMAKE_BUILD_TYPE=Debug<td>  
@@ -243,7 +243,7 @@ Other optional arguments can be added to the cmake line
 <li> Setup the environment variables. Note that these need to be done in addition to the settings needed for pyre.
 
 <table>
-    <caption id="multi_row">Environment variables to set after installing ISCE</caption>
+    <caption id="env_vars_osx">Environment variables to set after installing ISCE</caption>
     <tr><th>Variable<th>Setting<th>Description
     <tr><td>PATH<td>$PATH:/Users/username/tools/isce/install/bin<td>For executables installed by ISCE
     <tr><td>PYTHONPATH<td>$PYTHONPATH:/Users/username/tools/isce/install/packages<td>ISCE python package
