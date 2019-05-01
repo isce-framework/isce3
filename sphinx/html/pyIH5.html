@@ -35,6 +35,58 @@
   <div class="section" id="pyih5file">
 <h1>pyIH5File<a class="headerlink" href="#pyih5file" title="Permalink to this headline">¶</a></h1>
 <p>pyIH5File provides opening of HDF5 files and loading of datasets and groups compatible with ISCE routines.</p>
+<dl class="class">
+<dt id="isceextension.pyIH5File">
+<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyIH5File</code><a class="headerlink" href="#isceextension.pyIH5File" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cython wrapper for isce::io::IH5File.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>py_filename</strong> (<em>str</em>) – Name of H5 file.</p></li>
+<li><p><strong>access</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Access mode.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="isceextension.pyIH5File.find">
+<code class="descname">find</code><span class="sig-paren">(</span><em>self</em>, <em>name</em>, <em>start</em>, <em>dtype=u'BOTH'</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyIH5File.find" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of datasets with a given name relative to a starting path in HDF5 file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Dataset name to search for.</p></li>
+<li><p><strong>start</strong> (<em>str</em>) – Starting path.</p></li>
+<li><p><strong>dtype</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Specify to return ‘DATASET’, ‘GROUP’, or ‘BOTH’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of datasets found.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>datasets (list)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyIH5File.openGroup">
+<code class="descname">openGroup</code><span class="sig-paren">(</span><em>self</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyIH5File.openGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open an HDF5 group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Group name to search for.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>pyIGroup.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>group (pyIGroup)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 

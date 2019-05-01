@@ -86,7 +86,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <ul><li class="level1"><a href="#rasterinclude">Include headers</a></li>
 <li class="level1"><a href="#rasterconstruct">Constructors</a><ul><li class="level2"><a href="#rasterreadonly">Read-Only Mode</a></li>
 <li class="level2"><a href="#rasterupdate">Update Mode</a></li>
-<li class="level2"><a href="#rastercreate">Create new rasters</a></li>
+<li class="level2"><a href="#rastercreatetut">Create new rasters</a></li>
 <li class="level2"><a href="#rastercreatedefault">Default raster driver</a></li>
 </ul>
 </li>
@@ -117,7 +117,7 @@ Update Mode</h2>
 <p>An existing GDAL-compatible raster can be opened in Update mode in ISCE as follows </p>
 <div class="fragment"><div class="line"><span class="comment">//Will need to include gdal.h for definition of GA_Update</span></div>
 <div class="line"><a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> raster(inputFilename, GA_Update)</div>
-</div><!-- fragment --><h2><a class="anchor" id="rastercreate"></a>
+</div><!-- fragment --><h2><a class="anchor" id="rastercreatetut"></a>
 Create new rasters</h2>
 <p>The most general interface to creation of rasters is exposed via <a class="el" href="classisce_1_1io_1_1Raster.html" title="Data structure meant to handle Raster I/O operations. ">isce::io::Raster(const std::string&amp; fname, size_t width, size_t length, size_t numBands, GDALDataType dtype, const std::string&amp; driverName)</a>.</p>
 <ol>

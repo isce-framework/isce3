@@ -30,8 +30,6 @@ Product Datastructures
 
 * :doc:`pyProduct <./pyProduct>`
 * :doc:`pyMetadata <./pyMetadata>`
-* :doc:`pyComplexImagery <./pyComplexImagery>`
-* :doc:`pyImageMode <./pyImageMode>`
 
 Image Datastructures
 --------------------
