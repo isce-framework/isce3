@@ -224,4 +224,83 @@ int main(int argc, char * argv[]) {
     return RUN_ALL_TESTS();
 }
 
+/*
+# Description
+-------------
+
+This unit tests compares output of geometry algorithms against analytic solutions
+derived for a satellite flying at constant velocity and height over the equator.
+
+The target is assumed to lie on the reference Ellipsoid.
+
+
+## Geodetic LLH to ECEF XYZ
+---------
+
+Radius along the East-West direction ($R_e$) is given by:
+
+$$R_e \left(\theta \right) = \frac{a}{\sqrt{1 - e^2 \cdot \sin^2 \left(\theta \right)}}$$
+
+
+Using the East-West radius, a given target at Geodetic Latitude ($\theta$), Longitude ($\psi$)
+and Height ($h$) can be transformed to Caresian ECEF coordinates as follows:
+
+$$X = \left( R_e\left( \theta \right) + h \right) \cdot \cos \theta \cdot \cos \psi$$
+$$Y = \left( R_e\left( \theta \right) + h \right) \cdot \cos \theta \cdot \sin \psi$$
+$$Z = \left( R_e\left( \theta \right) \cdot \left( 1 - e^2 \right) +h \right) \cdot \sin \theta $$
+
+
+## Parametric form of Ellipsoid with Geocentric Latitude
+-----------
+
+A point $\vec{T}$ on the reference ellipsoid characterized by Geocentric Latitude ($\lambda$),
+Longitude ($\psi$) can be expressed in Cartesian ECEF coordinates as follows:
+
+$$ X = a \cdot \cos \lambda \cos \psi $$
+$$ Y = a \cdot \cos \lambda \sin \psi $$
+$$ Z = b \cdot \sin \lambda $$
+
+
+## Target on same longitude as satellite is on Zero-Doppler contour
+------------
+
+onsider a target ($\vec{T}$) located on the same longitude as the satellite. Let the location of target ($\vec{T}$) be represented by geocentric latitude $\lambda$, longitude $\psi$ and zero height .
+
+$$X_t = a \cdot \cos \lambda \cdot \cos \psi$$
+$$Y_t = a \cdot \cos \lambda \cdot \sin \psi$$
+$$Z_t = b \cdot \sin \lambda $$
+
+
+Using the above expressions, it can be shown that 
+
+$$\left( \vec{R_{s}} - \vec{T} \right) \cdot \vec{V_{s}} = 0$$
+
+Hence, it is sufficient to solve for Target latitude ($\lambda$) when estimating target on reference surface of ellipsoid ($h_t$) for a given slant range for forward geometry operations.
+
+
+## Zero Doppler, Target on Ellipsoid
+--------------
+
+For a given slant range ($R$), we can write out
+
+$$ \left( \left( R_e\left( \theta_s \right) + h_s \right) \cdot \cos \theta_s  -   a \cdot \cos \lambda \right)^2$$
+$$ + \left( \left( R_e\left( \theta_s \right) \cdot \left( 1 - e^2 \right) +h_s \right) \cdot \sin \theta_s -b \cdot \sin \lambda \right)^2 = R^2$$
+
+## Zero Doppler, Orbit along Equator, Target on Ellipsoid
+--------------
+
+For $\theta_s = $, the above expression simplifies to
+
+$$ \left( \left( a + h_s \right) - a \cdot \cos \lambda \right)^2 + \left( b \cdot \sin \lambda \right)^2 = R^2$$
+
+Further simplification leads to the quadratic equation in $\cos \lambda$
+
+$$ a^2 \cdot e^2 \cdot \cos^2 \lambda - 2 \cdot \left( a + h_s \right) \cdot a \cdot \cos \lambda + \left( a+ h_s\right)^2 + b^2 - R^2 = 0$$
+
+The geocentric latitude of desired point on ground is given by $L \cdot \mbox{sgn}\left( \omega \right) \cdot \lambda_{pos}$ where
+
+   - $L=1$ for left looking geometry and $L=-1$ for right looking geometry.
+   - $\lambda_{pos}$ is the $\arccos$ of the positive root for above quadratic equation.
+*/
+
 // end of file
