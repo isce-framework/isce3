@@ -55,29 +55,31 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
         double wavelength
         ) {
 
-    const double RAD = M_PI / 180.;
-
     size_t xidx = threadIdx.x + blockIdx.x * blockDim.x;
     size_t yidx = threadIdx.y + blockIdx.y * blockDim.y;
 
-    // Current latitude
-    const double lat0 = dem_interp.yStart() + yidx * dem_interp.deltaY() / upsample_factor;
-    const double lat1 = lat0 + dem_interp.deltaY() / upsample_factor;
-    const double lat_mid = dem_interp.yStart() + (0.5 + yidx) * dem_interp.deltaY() / upsample_factor;
+    // Current y-coord in DEM
+    const double dem_y0 = dem_interp.yStart() + yidx * dem_interp.deltaY() / upsample_factor;
+    const double dem_y1 = dem_y0 + dem_interp.deltaY() / upsample_factor;
+    const double dem_ymid = dem_interp.yStart() + (0.5 + yidx) * dem_interp.deltaY() / upsample_factor;
 
     using cartesian_t = double[3];
     cartesian_t xyz00, xyz01, xyz10, xyz11, xyz_mid,
                 P00_01, P00_10, P10_01, P11_01, P11_10,
                 lookXYZ, normalFacet1, normalFacet2;
 
-    const double lon_mid = dem_interp.xStart() + dem_interp.deltaX() * (xidx + 0.5) / upsample_factor;
+    const double dem_xmid = dem_interp.xStart() + dem_interp.deltaX() * (xidx + 0.5) / upsample_factor;
 
     double a, r;
-    double inputLLH[3] = {lon_mid*RAD, lat_mid*RAD,
-        dem_interp.interpolateXY(lon_mid, lat_mid)};
+    double inputLLH[3];
+
+    double inputDEM[] = { dem_xmid, dem_ymid,
+                          dem_interp.interpolateXY(dem_xmid, dem_ymid) };
+    int epsgcode = dem_interp.epsgCode();
+    isce::cuda::core::projInverse(epsgcode, inputDEM, inputLLH);
 
     isce::cuda::geometry::geo2rdr(&inputLLH[0], ellps, orbit, dop,
-            &a, &r, wavelength, 1e-4, 100, 1e-4);
+            &a, &r, wavelength, 1e-4, 20, 1e-4);
 
     const float azpix = (a - start) / pixazm;
     const float ranpix = (r - r0) / dr;
@@ -92,19 +94,28 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     if (ranpix < 0.0 or x2 > xbound or azpix < 0.0 or y2 > ybound)
         return;
 
-    // Current longitude
-    const double lon0 = dem_interp.xStart() + dem_interp.deltaX() * xidx / upsample_factor;
-    const double lon1 = lon0 + dem_interp.deltaX() / upsample_factor;
+    // Current x-coord in DEM
+    const double dem_x0 = dem_interp.xStart() + dem_interp.deltaX() * xidx / upsample_factor;
+    const double dem_x1 = dem_x0 + dem_interp.deltaX() / upsample_factor;
 
-    // Set LLH vectors
-    double llh00[] = {RAD*lon0, RAD*lat0,
-        dem_interp.interpolateXY(lon0, lat0)};
-    double llh01[] = {RAD*lon0, RAD*lat1,
-        dem_interp.interpolateXY(lon0, lat1)};
-    double llh10[] = {RAD*lon1, RAD*lat0,
-        dem_interp.interpolateXY(lon1, lat0)};
-    double llh11[] = {RAD*lon1, RAD*lat1,
-        dem_interp.interpolateXY(lon1, lat1)};
+    // Set DEM-coordinate corner vectors
+    const double dem00[] = {dem_x0, dem_y0,
+        dem_interp.interpolateXY(dem_x0, dem_y0)};
+    const double dem01[] = {dem_x0, dem_y1,
+        dem_interp.interpolateXY(dem_x0, dem_y1)};
+    const double dem10[] = {dem_x1, dem_y0,
+        dem_interp.interpolateXY(dem_x1, dem_y0)};
+    const double dem11[] = {dem_x1, dem_y1,
+        dem_interp.interpolateXY(dem_x1, dem_y1)};
+
+    using cartesian_t = double[3];
+
+    // Get LLH corner vectors
+    cartesian_t llh00, llh01, llh10, llh11;
+    isce::cuda::core::projInverse(epsgcode, dem00, llh00);
+    isce::cuda::core::projInverse(epsgcode, dem01, llh01);
+    isce::cuda::core::projInverse(epsgcode, dem10, llh10);
+    isce::cuda::core::projInverse(epsgcode, dem11, llh11);
 
     // Convert to XYZ
     ellps.lonLatToXyz(&llh00[0], xyz00);
@@ -297,7 +308,7 @@ namespace isce { namespace cuda {
 
     namespace core {
         using cartesian_t = double[3];
-    };
+    }
 
     namespace geometry {
 
@@ -305,7 +316,7 @@ namespace isce { namespace cuda {
                       isce::io::Raster& dem,
                       isce::io::Raster& out_raster,
                       char frequency) {
-                      
+
             isce::core::Ellipsoid ellps_h;
             isce::core::Orbit orbit_h(product.metadata().orbit());
             isce::product::RadarGridParameters radarGrid(product, frequency, 1, 1);
@@ -397,6 +408,5 @@ namespace isce { namespace cuda {
                                        cudaMemcpyDeviceToHost));
             out_raster.setBlock(&out[0], 0, 0, radarGrid.width(), radarGrid.length());
         }
-    };
-
-}; };
+    }
+}}

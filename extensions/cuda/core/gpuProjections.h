@@ -151,6 +151,8 @@ namespace isce { namespace cuda { namespace core {
 
     //Projection Factory using EPSG code
     CUDA_HOSTDEV ProjectionBase* createProj(int epsg);
+
+    CUDA_DEV int projInverse(int code, const double* in, double* out_llh);
 }}}
 
 #endif
