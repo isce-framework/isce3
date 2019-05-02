@@ -35,69 +35,6 @@
   <div class="section" id="pyresampslc">
 <h1>pyResampSlc<a class="headerlink" href="#pyresampslc" title="Permalink to this headline">¶</a></h1>
 <p>pyResampSlc provides a wrapper for the isce::image::ResampSlc class which is responsible for rubber-sheet transformation of SLC rasters.</p>
-<dl class="class">
-<dt id="isceextension.pyResampSlc">
-<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyResampSlc</code><a class="headerlink" href="#isceextension.pyResampSlc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Cython wrapper for isce::image::ResampSlc.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>product</strong> (<a class="reference internal" href="pyProduct.html#isceextension.pyProduct" title="isceextension.pyProduct"><em>pyProduct</em></a>) – Product to be resampled.</p></li>
-<li><p><strong>refProduct</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="pyProduct.html#isceextension.pyProduct" title="isceextension.pyProduct"><em>pyProduct</em></a><em>]</em>) – Reference product for flattening.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None.</p>
-</dd>
-</dl>
-<dl class="attribute">
-<dt id="isceextension.pyResampSlc.doppler">
-<code class="descname">doppler</code><a class="headerlink" href="#isceextension.pyResampSlc.doppler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the content Doppler LUT for the product to be resampled.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="isceextension.pyResampSlc.linesPerTile">
-<code class="descname">linesPerTile</code><a class="headerlink" href="#isceextension.pyResampSlc.linesPerTile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the number of lines per processing tile.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="isceextension.pyResampSlc.resamp">
-<code class="descname">resamp</code><span class="sig-paren">(</span><em>self</em>, <em>pyRaster inSlc=None</em>, <em>pyRaster outSlc=None</em>, <em>pyRaster rgoffRaster=None</em>, <em>pyRaster azoffRaster=None</em>, <em>infile=None</em>, <em>outfile=None</em>, <em>rgfile=None</em>, <em>azfile=None</em>, <em>int inputBand=1</em>, <em>bool flatten=True</em>, <em>bool isComplex=True</em>, <em>int rowBuffer=40</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyResampSlc.resamp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run resamp on complex image data stored in HDF5 product or specified
-as an external file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>inSlc</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="pyRaster.html#isceextension.pyRaster" title="isceextension.pyRaster"><em>pyRaster</em></a><em>]</em>) – Input SLC raster.</p></li>
-<li><p><strong>outSlc</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="pyRaster.html#isceextension.pyRaster" title="isceextension.pyRaster"><em>pyRaster</em></a><em>]</em>) – Output SLC raster.</p></li>
-<li><p><strong>rgoffRaster</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="pyRaster.html#isceextension.pyRaster" title="isceextension.pyRaster"><em>pyRaster</em></a><em>]</em>) – Input range offset raster.</p></li>
-<li><p><strong>azoffRaster</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="pyRaster.html#isceextension.pyRaster" title="isceextension.pyRaster"><em>pyRaster</em></a><em>]</em>) – Input azimuth offset raster.</p></li>
-<li><p><strong>infile</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Filename for input SLC raster.</p></li>
-<li><p><strong>outfile</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Filename for output resampled image.</p></li>
-<li><p><strong>rgfile</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Filename for range offset raster.</p></li>
-<li><p><strong>azfile</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Filename for azimuth offset raster.</p></li>
-<li><p><strong>inputBand</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Band number for external file.</p></li>
-<li><p><strong>flatten</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – Flatten the resampled image.</p></li>
-<li><p><strong>isComplex</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – Input image is complex.</p></li>
-<li><p><strong>rowBuffer</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Row padding for reading image tiles.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="isceextension.pyResampSlc.setReferenceProduct">
-<code class="descname">setReferenceProduct</code><span class="sig-paren">(</span><em>self</em>, <em>pyProduct refProduct</em>, <em>freq=u'A'</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyResampSlc.setReferenceProduct" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set a reference product for flattening.</p>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 
 

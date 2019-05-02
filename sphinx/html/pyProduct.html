@@ -35,50 +35,6 @@
   <div class="section" id="pyproduct">
 <h1>pyProduct<a class="headerlink" href="#pyproduct" title="Permalink to this headline">¶</a></h1>
 <p>pyProduct provides a light wrapper for the isce::product::Product class instantiated from a pyIH5File object, which is the highest level representation of an ISCE radar product.</p>
-<dl class="class">
-<dt id="isceextension.pyProduct">
-<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyProduct</code><a class="headerlink" href="#isceextension.pyProduct" title="Permalink to this definition">¶</a></dt>
-<dd><p>Cython wrapper for isce::product::Product.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>h5file</strong> (<a class="reference internal" href="pyIH5.html#isceextension.pyIH5File" title="isceextension.pyIH5File"><em>pyIH5File</em></a>) – IH5File for product.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-<dl class="attribute">
-<dt id="isceextension.pyProduct.filename">
-<code class="descname">filename</code><a class="headerlink" href="#isceextension.pyProduct.filename" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the filename of the HDF5 product file.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="isceextension.pyProduct.lookSide">
-<code class="descname">lookSide</code><a class="headerlink" href="#isceextension.pyProduct.lookSide" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get integer for look direction (+1 for left-looking, -1 for right-looking)</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="isceextension.pyProduct.metadata">
-<code class="descname">metadata</code><a class="headerlink" href="#isceextension.pyProduct.metadata" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get pyMetadata reference.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="isceextension.pyProduct.radarGridParameters">
-<code class="descname">radarGridParameters</code><span class="sig-paren">(</span><em>self</em>, <em>freq=u'A'</em>, <em>numberAzimuthLooks=1</em>, <em>numberRangeLooks=1</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyProduct.radarGridParameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a pyRadarGridParameters instance correpsonding to a given frequency band.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="isceextension.pyProduct.swathA">
-<code class="descname">swathA</code><a class="headerlink" href="#isceextension.pyProduct.swathA" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get pySwath reference.</p>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 
 

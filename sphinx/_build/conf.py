@@ -14,7 +14,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath("/home/conda/build/extensions/cython/isce/isce3/extensions"))
+sys.path.insert(0, os.path.abspath("/home/conda/build/extensions/cython/isce"))
 
 
 # -- Project information -----------------------------------------------------

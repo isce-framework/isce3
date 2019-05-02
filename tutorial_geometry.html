@@ -211,7 +211,7 @@ Forward mapping - determining bounding boxes</h1>
 <div class="line">                <a class="code" href="classisce_1_1geometry_1_1DEMInterpolator.html">isce::geometry::DEMInterpolator</a> constDEM(zrange[zz]);</div>
 <div class="line"></div>
 <div class="line">                <span class="comment">//Map target to DEM assuming Zero Doppler geometry</span></div>
-<div class="line">                <span class="keywordtype">int</span> status = <a class="code" href="namespaceisce_1_1geometry.html#a5f446689e36b737f2e21ae5341d769e0">isce::geometry::rdr2geo</a>(tintp,  <span class="comment">//aztime</span></div>
+<div class="line">                <span class="keywordtype">int</span> status = isce::geometry::rdr2geo(tintp,  <span class="comment">//aztime</span></div>
 <div class="line">                                        rng,    <span class="comment">//slant range</span></div>
 <div class="line">                                        0.,     <span class="comment">//doppler</span></div>
 <div class="line">                                        orbit, </div>
@@ -303,7 +303,7 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line">        llh[1] = targets[tt][1] * M_PI / 180.0;</div>
 <div class="line">        llh[2] = targets[tt][2];</div>
 <div class="line"></div>
-<div class="line">        <a class="code" href="namespaceisce_1_1geometry.html#aa7a78c7229abbfda76f4525db1fcd50f">isce::geometry::geo2rdr</a>( llh,       <span class="comment">//Target location</span></div>
+<div class="line">        isce::geometry::geo2rdr( llh,       <span class="comment">//Target location</span></div>
 <div class="line">                                 ellipse,   <span class="comment">//Ellipsoid</span></div>
 <div class="line">                                 orbit,     <span class="comment">//Orbit</span></div>
 <div class="line">                                 dop,       <span class="comment">//Doppler</span></div>

@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>ISCE: /home/conda/isce/lib/isce/core/Matrix.h Source File</title>
+<title>ISCE: Matrix.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -83,7 +83,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_58f4997a0606e8afbe9d7eb91f442043.html">isce</a></li><li class="navelem"><a class="el" href="dir_60e423c05e81a63f8dd9073c44b1ea18.html">lib</a></li><li class="navelem"><a class="el" href="dir_3183497ebe3ce774c9a7583e7c2a1bf6.html">isce</a></li><li class="navelem"><a class="el" href="dir_2f8375380481da2f83a6010de4386bea.html">core</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_404e96cc334514cbeb4d3a6830fc20a4.html">isce</a></li><li class="navelem"><a class="el" href="dir_b9854a22a90df239c3a61bd682dc9db5.html">lib</a></li><li class="navelem"><a class="el" href="dir_13a15a912f4c112db0f23523c4d5026e.html">isce</a></li><li class="navelem"><a class="el" href="dir_ae524bb2ec5fa4eecceab3316f0148b7.html">core</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -112,6 +112,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    }</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;}</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="comment">// isce::core::Matrix definition</span></div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> cell_t&gt;</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">class </span><a class="code" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a> {</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;</div>
@@ -224,7 +225,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="classisce_1_1core_1_1Matrix_html_a249ed1a5a898f6fda604c899fe56de02"><div class="ttname"><a href="classisce_1_1core_1_1Matrix.html#a249ed1a5a898f6fda604c899fe56de02">isce::core::Matrix::data</a></div><div class="ttdeci">cell_t * data()</div><div class="ttdoc">Access to data buffer. </div><div class="ttdef"><b>Definition:</b> Matrix.icc:219</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Matrix_html_af2e1319454d7930f73ef665da70bc927"><div class="ttname"><a href="classisce_1_1core_1_1Matrix.html#af2e1319454d7930f73ef665da70bc927">isce::core::Matrix::~Matrix</a></div><div class="ttdeci">~Matrix()</div><div class="ttdoc">Destructor. </div><div class="ttdef"><b>Definition:</b> Matrix.icc:107</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Matrix_html_a1eee59526142636d5116873f1c65113f"><div class="ttname"><a href="classisce_1_1core_1_1Matrix.html#a1eee59526142636d5116873f1c65113f">isce::core::Matrix::shape</a></div><div class="ttdeci">shape_t shape() const </div><div class="ttdoc">Get shape information as grid::shape_type. </div><div class="ttdef"><b>Definition:</b> Matrix.icc:341</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Matrix_html"><div class="ttname"><a href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a></div><div class="ttdoc">Data structure for a 2D row-major matrix. </div><div class="ttdef"><b>Definition:</b> Matrix.h:18</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Matrix_html"><div class="ttname"><a href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.h:18</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Matrix_html_a75d7751271ac4e7a9a969fd7bccee68d"><div class="ttname"><a href="classisce_1_1core_1_1Matrix.html#a75d7751271ac4e7a9a969fd7bccee68d">isce::core::Matrix::submat</a></div><div class="ttdeci">const view_t submat(size_t row, size_t col, size_t rowspan, size_t colspan)</div><div class="ttdoc">Extract copy of sub-matrix given starting indices and span. </div><div class="ttdef"><b>Definition:</b> Matrix.icc:198</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Matrix_html_ac95fe34309d81581929c33ee4764184c"><div class="ttname"><a href="classisce_1_1core_1_1Matrix.html#ac95fe34309d81581929c33ee4764184c">isce::core::Matrix::operator=</a></div><div class="ttdeci">Matrix&lt; cell_t &gt; &amp; operator=(const Matrix&lt; cell_t &gt; &amp;m)</div><div class="ttdoc">Deep assignment operator - allocates memory and copies values. </div><div class="ttdef"><b>Definition:</b> Matrix.icc:123</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Matrix_html_a2da0cd91435c7e829f5e01260e86800c"><div class="ttname"><a href="classisce_1_1core_1_1Matrix.html#a2da0cd91435c7e829f5e01260e86800c">isce::core::Matrix::operator()</a></div><div class="ttdeci">cell_t &amp; operator()(size_t row, size_t col)</div><div class="ttdoc">Access matrix value for a given row and column. </div><div class="ttdef"><b>Definition:</b> Matrix.icc:259</div></div>
