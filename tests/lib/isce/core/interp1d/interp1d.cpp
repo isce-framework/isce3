@@ -1,0 +1,305 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Author: Brian Hawkins
+// Copyright 2019
+//
+
+#include <cassert>
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <complex>
+#include <vector>
+#include <random>
+#include "gtest/gtest.h"
+
+// isce::core
+#include "isce/core/Interp1d.h"
+
+double
+rad2deg(double x)
+{
+    return x * 180.0 / M_PI;
+}
+
+// TODO figure out good place to put this function definition
+template <typename T>
+T
+_sinc(T t)
+{
+    static T const eps1 = sqrt(std::numeric_limits<T>::epsilon());
+    static T const eps2 = sqrt(eps1);
+    T x = M_PI * fabs(t);
+    if (x >= eps2) {
+        return sin(x) / x;
+    } else {
+        T out = static_cast<T>(1);
+        if (x > eps1) {
+            out -= x * x / 6;
+        }
+        return out;
+    }
+}
+
+double
+_correlation(std::vector<std::complex<double>> &x,
+             std::vector<std::complex<double>> &y)
+{
+    double xy=0.0, xx=0.0, yy=0.0;
+    size_t n = std::min(x.size(), y.size());
+    for (size_t i=0; i<n; ++i) {
+        auto xi = x[i];
+        auto yi = y[i];
+        xy += std::abs(xi * std::conj(yi));
+        xx += std::real(xi * std::conj(xi));
+        yy += std::real(yi * std::conj(yi));
+    }
+    return xy / std::sqrt(xx * yy);
+}
+
+double
+_mean(std::vector<double> &v)
+{
+    double sum = std::accumulate(std::begin(v), std::end(v), 0.0);
+    return sum / v.size();
+}
+
+double
+_stdev(std::vector<double> &v)
+{
+    double m = _mean(v);
+    double accum = 0.0;
+    std::for_each (std::begin(v), std::end(v), [&](const double d) {
+        accum += (d - m) * (d - m);
+    });
+    return std::sqrt(accum / (v.size() - 1.0));
+}
+
+double
+_phase_stdev(std::vector<std::complex<double>> &x,
+             std::vector<std::complex<double>> &y)
+{
+    auto n = std::min(x.size(), y.size());
+    std::vector<double> phase(n);
+    // assume we don't have to worry about wrapping
+    for (size_t i=0; i<n; ++i) {
+        phase[i] = std::arg(x[i] * std::conj(y[i]));
+    }
+    return _stdev(phase);
+}
+
+double
+dB(double x)
+{
+    return 10.0 * std::log10(std::abs(x));
+}
+
+void
+power_bias_stdev(double &bias, double &stdev, double minval,
+                 std::vector<std::complex<double>> &a,
+                 std::vector<std::complex<double>> &b)
+{
+    std::vector<double> ratio(0);
+    auto n = std::min(a.size(), b.size());
+    for (size_t i=0; i<n; ++i) {
+        auto aa = std::abs(a[i]);
+        auto ab = std::abs(b[i]);
+        if ((aa >= minval) && (ab >= minval)) {
+            ratio.push_back(aa / ab);
+        }
+    }
+    n = ratio.size();
+    std::vector<double> dbr(n);
+    for (size_t i=0; i<n; ++i) {
+        dbr[i] = 2 * dB(ratio[i]);
+    }
+    bias = 2 * dB(_mean(ratio));
+    stdev = _stdev(dbr);
+}
+
+/* Adapted from julia code at
+ * https://github.jpl.nasa.gov/bhawkins/FIRInterp.jl/blob/master/test/common.jl
+ */
+class TestSignal {
+public:
+    TestSignal(size_t n, double bw, int seed);
+    std::complex<double> eval(double t);
+private:
+    size_t _n;
+    double _bw;
+    std::vector<double> _t;
+    std::vector<std::complex<double>> _w;
+};
+
+TestSignal::TestSignal(size_t n, double bw, int seed)
+{
+    assert((0.0 <= bw) && (bw < 1.0));
+
+    _n = n;
+    _bw = bw;
+
+    size_t nt = 8 * _n;
+    _t.resize(nt);
+    _w.resize(nt);
+
+    std::mt19937 rng(seed);
+    std::normal_distribution<double> normal(0.0, 1.0 * n / nt);
+    std::uniform_real_distribution<double> uniform(0.0, n-1.0);
+
+    for (int i=0; i<nt; ++i) {
+        // targets at uniform locations in [0,n-1]
+        _t[i] = uniform(rng);
+        // circular normal distributed weights.
+        std::complex<double> z(normal(rng), normal(rng));
+        _w[i] = z;
+    }
+}
+
+std::complex<double>
+TestSignal::eval(double t)
+{
+    std::complex<double> sum(0.0, 0.0);
+    auto n = _w.size();
+    for (size_t i=0; i<n; ++i) {
+        sum += _w[i] * _sinc(_bw * (t - _t[i]));
+    }
+    return sum;
+}
+
+struct Interp1dTest : public ::testing::Test
+{
+    // Length of input signal.
+    const size_t n = 1024;
+    // Randon number generator seed so that results are repeatable.
+    const int seed = 1234;
+    // signal bandwidth as a fraction of sample rate.
+    const double bw = 0.8;
+    // Trick to get apples-to-apples comparisons even for different kernel
+    // widths.  See assertions for acceptable range of values.
+    const size_t pad = 8;
+    // Amplitude mask for backscatter.
+    const double minval = 1e-6;
+
+    TestSignal ts;
+    // std::vector<std::complex<double>> signal;
+    std::valarray<std::complex<double>> signal;
+
+    protected:
+        // Constructor
+        Interp1dTest() : ts(n, bw, seed) {
+            assert((0 <= pad) && (2*pad < n));
+            // Generate signal at integer sample times.
+            signal.resize(n);
+            for (int i=0; i<n; ++i) {
+                double t = (double)i;
+                signal[i] = ts.eval(t);
+            }
+        }
+
+        void
+        check_interp(double min_cor, double max_phs, double max_bias,
+                     double max_spread, std::vector<double> times,
+                     isce::core::Interp1d<std::complex<double>,double> itp)
+        {
+            // interpolate at all offsets in [pad:-pad]
+            std::vector<std::complex<double>> ref(0), out(0);
+            auto nt = times.size();
+            for (size_t i=0; i<nt; ++i) {
+                double t = times[i];
+                if ((pad <= t) && (t <= n-1-pad)) {
+                    ref.push_back(ts.eval(t));
+                    out.push_back(itp.interp(signal, t));
+                }
+            }
+            auto cor = _correlation(ref, out);
+            auto dphase = _phase_stdev(ref, out);
+            double bias, spread;
+            power_bias_stdev(bias, spread, minval, ref, out);
+
+            EXPECT_GE(cor, min_cor);
+            EXPECT_LE(rad2deg(dphase), max_phs);
+            EXPECT_LE(bias, max_bias);
+            EXPECT_LE(spread, max_spread);
+            printf("min_cor    %9.6f cor    %9.6f\n", min_cor, cor, min_cor);
+            printf("max_phs    %9.6f phs    %9.6f\n", max_phs, rad2deg(dphase));
+            printf("max_bias   %9.6f bias   %9.6f\n", max_bias, bias);
+            printf("max_spread %9.6f spread %9.6f\n", max_spread, spread);
+            printf("\n");
+        }
+
+        void
+        test_rand_offsets(double min_cor, double max_phs, double max_bias,
+                          double max_spread,
+                          isce::core::Interp1d<std::complex<double>,double> itp)
+        {
+            printf("Testing random offsets.\n");
+            std::mt19937 rng(2 * seed);
+            std::uniform_real_distribution<double> uniform(-0.5, 0.5);
+            std::vector<double> times(n);
+            for (size_t i=0; i<n; ++i) {
+                times[i] = i + uniform(rng);
+            }
+            check_interp(min_cor, max_phs, max_bias, max_spread, times, itp);
+        }
+
+        void
+        test_fixed_offset(double min_cor, double max_phs, double max_bias,
+                         double max_spread,
+                         isce::core::Interp1d<std::complex<double>,double> itp,
+                         double off)
+        {
+            printf("Testing fixed offset=%g\n", off);
+            std::vector<double> times(n);
+            for (size_t i=0; i<n; ++i) {
+                times[i] = i + off;
+            }
+            check_interp(min_cor, max_phs, max_bias, max_spread, times, itp);
+        }
+};
+
+TEST_F(Interp1dTest, Linear) {
+    isce::core::Interp1d itp
+        = isce::core::Interp1d<std::complex<double>,double>::Linear();
+    // offset=0 should give back original data for this kernel.
+    test_fixed_offset(0.999999, 0.001, 0.001, 0.001, itp,  0.0);
+    test_fixed_offset(0.95, 30.0, 5.0, 5.0, itp, -0.3);
+    test_fixed_offset(0.95, 30.0, 5.0, 5.0, itp,  0.3);
+    test_fixed_offset(0.95, 30.0, 5.0, 5.0, itp, -0.5);
+    test_fixed_offset(0.95, 30.0, 5.0, 5.0, itp,  0.5);
+    test_rand_offsets(0.95, 30.0, 3.0, 3.0, itp);
+    /*
+    std::complex<double> tmp[] = {0, 0, 0, 0, 1, 0, 0, 0, 0};
+    std::valarray<std::complex<double>> data(tmp, 9);
+    int n=21;
+    double t0=3, t1=5;
+    for (int i=0; i<n; ++i) {
+        double t = t0 + i * (t1-t0)/(n-1);
+        std::complex<double> v = itp.interp(data, t);
+        printf("%5.2f %.3f %.3f\n", t-4, std::real(v), std::imag(v));
+    }
+    */
+}
+
+TEST_F(Interp1dTest, Knab) {
+    isce::core::Interp1d itp
+        = isce::core::Interp1d<std::complex<double>,double>::Knab(8.0, 0.8);
+    // offset=0 should give back original data for this kernel.
+    test_fixed_offset(0.999999, 0.001, 0.001, 0.001, itp,  0.0);
+    test_fixed_offset(0.998, 5.0, 1.0, 1.0, itp, -0.3);
+    test_fixed_offset(0.998, 5.0, 1.0, 1.0, itp,  0.3);
+    test_fixed_offset(0.998, 5.0, 1.0, 1.0, itp, -0.5);
+    test_fixed_offset(0.998, 5.0, 1.0, 1.0, itp,  0.5);
+    test_rand_offsets(0.998, 5.0, 0.5, 0.5, itp);
+}
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+
+// end of file
