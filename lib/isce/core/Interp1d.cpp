@@ -11,7 +11,7 @@ isce::core::Interp1d<TD,TK>::
 Linear()
 {
     std::shared_ptr<isce::core::BartlettKernel<TK>>
-        p = std::make_shared<isce::core::BartlettKernel<TK>>(1.0);
+        p = std::make_shared<isce::core::BartlettKernel<TK>>(2.0);
     return isce::core::Interp1d<TD,TK>(p);
 }
 
