@@ -185,8 +185,9 @@ struct Interp1dTest : public ::testing::Test
     // Amplitude mask for backscatter.
     const double minval = 1e-6;
 
+    // Generator of bandlimited test signal at arbitrary time samples.
     TestSignal ts;
-    // std::vector<std::complex<double>> signal;
+    // Realization of signal at integer time steps.
     std::valarray<std::complex<double>> signal;
 
     protected:
