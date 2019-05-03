@@ -20,6 +20,9 @@ namespace isce { namespace cuda { namespace except {
     template<>
     CudaError<cudaError_t>::CudaError(const SrcInfo& info, const cudaError_t err);
 
+    template<>
+    CudaError<cufftResult>::CudaError(const SrcInfo& info, const cufftResult err);
+
     template<class T>
     CudaError<T>::CudaError(const SrcInfo& info, const T err) :
             err(err),
