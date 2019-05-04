@@ -273,17 +273,6 @@ TEST_F(Interp1dTest, Linear) {
     test_fixed_offset(0.95, 30.0, 5.0, 5.0, itp, -0.5);
     test_fixed_offset(0.95, 30.0, 5.0, 5.0, itp,  0.5);
     test_rand_offsets(0.95, 30.0, 3.0, 3.0, itp);
-    /*
-    std::complex<double> tmp[] = {0, 0, 0, 0, 1, 0, 0, 0, 0};
-    std::valarray<std::complex<double>> data(tmp, 9);
-    int n=21;
-    double t0=3, t1=5;
-    for (int i=0; i<n; ++i) {
-        double t = t0 + i * (t1-t0)/(n-1);
-        std::complex<double> v = itp.interp(data, t);
-        printf("%5.2f %.3f %.3f\n", t-4, std::real(v), std::imag(v));
-    }
-    */
 }
 
 TEST_F(Interp1dTest, Knab) {
