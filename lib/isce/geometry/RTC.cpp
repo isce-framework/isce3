@@ -86,7 +86,6 @@ void isce::geometry::facetRTC(isce::product::Product& product,
                               isce::io::Raster& out_raster,
                               char frequency) {
     using isce::core::LinAlg;
-    const double RAD = M_PI / 180.;
 
     isce::core::Ellipsoid ellps(isce::core::EarthSemiMajorAxis,
                                 isce::core::EarthEccentricitySquared);
@@ -152,18 +151,22 @@ void isce::geometry::facetRTC(isce::product::Product& product,
                 printf("\rRTC progress: %d%%", (int) (numdone * 1e2 / (imax * jmax))),
                     fflush(stdout);
 
-            isce::core::cartesian_t llh00, llh01, llh10, llh11,
+            isce::core::cartesian_t dem00, dem01, dem10, dem11,
+                                    llh00, llh01, llh10, llh11, inputLLH,
                                     xyz00, xyz01, xyz10, xyz11, xyz_mid,
                                     P00_01, P00_10, P10_01, P11_01, P11_10,
                                     lookXYZ, normalFacet1, normalFacet2;
 
-            // Central latitude/longitude of facets
-            const double lat_mid = dem_interp.yStart() + dem_interp.deltaY() * (ii + 0.5) / upsample_factor;
-            const double lon_mid = dem_interp.xStart() + dem_interp.deltaX() * (jj + 0.5) / upsample_factor;
+            // Central DEM coordinates of facets
+            const double dem_ymid = dem_interp.yStart() + dem_interp.deltaY() * (ii + 0.5) / upsample_factor;
+            const double dem_xmid = dem_interp.xStart() + dem_interp.deltaX() * (jj + 0.5) / upsample_factor;
 
             double a, r;
-            isce::core::cartesian_t inputLLH{lon_mid*RAD, lat_mid*RAD,
-                dem_interp.interpolateXY(lon_mid, lat_mid)};
+            isce::core::ProjectionBase* proj = isce::core::createProj(dem_interp.epsgCode());
+            isce::core::cartesian_t inputDEM{dem_xmid, dem_ymid,
+                dem_interp.interpolateXY(dem_xmid, dem_ymid)};
+            // Compute facet-central LLH vector
+            proj->inverse(inputDEM, inputLLH);
             int geostat = isce::geometry::geo2rdr(inputLLH, ellps, orbit, dop,
                     a, r, radarGrid.wavelength(), 1e-4, 100, 1e-4);
             const float azpix = (a - start) / pixazm;
@@ -179,21 +182,27 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             if (ranpix < 0.0 or x2 > xbound or azpix < 0.0 or y2 > ybound)
                 continue;
 
-            // Corner latitude/longitude
-            const double lat0 = dem_interp.yStart() + ii * dem_interp.deltaY() / upsample_factor;
-            const double lat1 = lat0 + dem_interp.deltaY() / upsample_factor;
-            const double lon0 = dem_interp.xStart() + dem_interp.deltaX() * jj / upsample_factor;
-            const double lon1 = lon0 + dem_interp.deltaX() / upsample_factor;
+            // Current x/y-coords in DEM
+            const double dem_y0 = dem_interp.yStart() + ii * dem_interp.deltaY() / upsample_factor;
+            const double dem_y1 = dem_y0 + dem_interp.deltaY() / upsample_factor;
+            const double dem_x0 = dem_interp.xStart() + dem_interp.deltaX() * jj / upsample_factor;
+            const double dem_x1 = dem_x0 + dem_interp.deltaX() / upsample_factor;
 
-            // Set LLH vectors
-            llh00 = {RAD*lon0, RAD*lat0,
-                dem_interp.interpolateXY(lon0, lat0)};
-            llh01 = {RAD*lon0, RAD*lat1,
-                dem_interp.interpolateXY(lon0, lat1)};
-            llh10 = {RAD*lon1, RAD*lat0,
-                dem_interp.interpolateXY(lon1, lat0)};
-            llh11 = {RAD*lon1, RAD*lat1,
-                dem_interp.interpolateXY(lon1, lat1)};
+            // Set DEM-coordinate corner vectors
+            dem00 = {dem_x0, dem_y0,
+                dem_interp.interpolateXY(dem_x0, dem_y0)};
+            dem01 = {dem_x0, dem_y1,
+                dem_interp.interpolateXY(dem_x0, dem_y1)};
+            dem10 = {dem_x1, dem_y0,
+                dem_interp.interpolateXY(dem_x1, dem_y0)};
+            dem11 = {dem_x1, dem_y1,
+                dem_interp.interpolateXY(dem_x1, dem_y1)};
+
+            // Get LLH corner vectors
+            proj->inverse(dem00, llh00);
+            proj->inverse(dem01, llh01);
+            proj->inverse(dem10, llh10);
+            proj->inverse(dem11, llh11);
 
             // Convert to XYZ
             ellps.lonLatToXyz(llh00, xyz00);

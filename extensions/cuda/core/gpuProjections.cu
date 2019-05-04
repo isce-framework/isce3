@@ -10,17 +10,8 @@
 #include <vector>
 #include <iostream>
 #include "gpuProjections.h"
+#include <isce/cuda/except/Error.h>
 using isce::core::cartesian_t;
-
-#define gpuErrChk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
-{
-   if (code != cudaSuccess)
-   {
-       std::cerr<< "GPUassert: " << cudaGetErrorString(code) << " " << file << "  " << line << "\n";
-      if (abort) exit(code);
-   }
-}
 
 namespace isce { namespace cuda { namespace core {
 
@@ -64,24 +55,24 @@ __host__ int ProjectionBase::forward_h(const cartesian_t &llh, cartesian_t &xyz)
     int *flag_d;
     ProjectionBase **base_d;
 
-    gpuErrChk( cudaMalloc((int**)&flag_d, 1*sizeof(int)));
-    gpuErrChk( cudaMalloc((double**)&llh_d,3*sizeof(double)));
-    gpuErrChk( cudaMalloc((double**)&xyz_d,3*sizeof(double)));
-    gpuErrChk( cudaMalloc(&base_d, sizeof(ProjectionBase**)));
-    gpuErrChk( cudaMemcpy(llh_d, llh.data(), 3*sizeof(double), cudaMemcpyHostToDevice));
+    checkCudaErrors( cudaMalloc((int**)&flag_d, 1*sizeof(int)));
+    checkCudaErrors( cudaMalloc((double**)&llh_d,3*sizeof(double)));
+    checkCudaErrors( cudaMalloc((double**)&xyz_d,3*sizeof(double)));
+    checkCudaErrors( cudaMalloc(&base_d, sizeof(ProjectionBase**)));
+    checkCudaErrors( cudaMemcpy(llh_d, llh.data(), 3*sizeof(double), cudaMemcpyHostToDevice));
 
     //Call the global function with a single thread
     forward_g<<<1,1>>>(_epsgcode, base_d, llh_d, xyz_d, flag_d);
-    gpuErrChk(cudaDeviceSynchronize());
-    gpuErrChk( cudaMemcpy(xyz.data(), xyz_d, 3*sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaDeviceSynchronize());
+    checkCudaErrors( cudaMemcpy(xyz.data(), xyz_d, 3*sizeof(double), cudaMemcpyDeviceToHost));
     int status;
-    gpuErrChk( cudaMemcpy(&status, flag_d, sizeof(int), cudaMemcpyDeviceToHost));
+    checkCudaErrors( cudaMemcpy(&status, flag_d, sizeof(int), cudaMemcpyDeviceToHost));
 
     //Clean up
-    gpuErrChk( cudaFree(llh_d));
-    gpuErrChk( cudaFree(xyz_d));
-    gpuErrChk( cudaFree(flag_d));
-    gpuErrChk( cudaFree(base_d));
+    checkCudaErrors( cudaFree(llh_d));
+    checkCudaErrors( cudaFree(xyz_d));
+    checkCudaErrors( cudaFree(flag_d));
+    checkCudaErrors( cudaFree(base_d));
     return status;
 }
 
@@ -93,24 +84,24 @@ __host__ int ProjectionBase::inverse_h(const cartesian_t &xyz, cartesian_t &llh)
     double *llh_d, *xyz_d;
     int *flag_d;
     ProjectionBase **base_d;
-    gpuErrChk( cudaMalloc((int**)&flag_d, sizeof(int)));
-    gpuErrChk( cudaMalloc((double**)&llh_d,3*sizeof(double)));
-    gpuErrChk( cudaMalloc((double**)&xyz_d,3*sizeof(double)));
-    gpuErrChk( cudaMalloc(&base_d, sizeof(ProjectionBase**)));
-    gpuErrChk( cudaMemcpy(xyz_d, xyz.data(), 3*sizeof(double), cudaMemcpyHostToDevice));
+    checkCudaErrors( cudaMalloc((int**)&flag_d, sizeof(int)));
+    checkCudaErrors( cudaMalloc((double**)&llh_d,3*sizeof(double)));
+    checkCudaErrors( cudaMalloc((double**)&xyz_d,3*sizeof(double)));
+    checkCudaErrors( cudaMalloc(&base_d, sizeof(ProjectionBase**)));
+    checkCudaErrors( cudaMemcpy(xyz_d, xyz.data(), 3*sizeof(double), cudaMemcpyHostToDevice));
 
     //Call the global function with a single thread
     inverse_g<<<1,1>>>(_epsgcode*1, base_d, xyz_d, llh_d, flag_d);
-    gpuErrChk( cudaDeviceSynchronize());
-    gpuErrChk( cudaMemcpy(llh.data(), llh_d, 3*sizeof(double), cudaMemcpyDeviceToHost));
+    checkCudaErrors( cudaDeviceSynchronize());
+    checkCudaErrors( cudaMemcpy(llh.data(), llh_d, 3*sizeof(double), cudaMemcpyDeviceToHost));
     int status;
-    gpuErrChk( cudaMemcpy(&status, flag_d, sizeof(int), cudaMemcpyDeviceToHost));
+    checkCudaErrors( cudaMemcpy(&status, flag_d, sizeof(int), cudaMemcpyDeviceToHost));
 
     //Clean up
-    gpuErrChk( cudaFree(llh_d));
-    gpuErrChk( cudaFree(xyz_d));
-    gpuErrChk( cudaFree(flag_d));
-    gpuErrChk( cudaFree(base_d));
+    checkCudaErrors( cudaFree(llh_d));
+    checkCudaErrors( cudaFree(xyz_d));
+    checkCudaErrors( cudaFree(flag_d));
+    checkCudaErrors( cudaFree(base_d));
     return status;
 }
 
@@ -144,7 +135,7 @@ CUDA_DEV int Geocent::forward(const double* in, double* out) const
     ellipse.lonLatToXyz(in, out);
     return 0;
 }
-        
+
 CUDA_DEV int Geocent::inverse(const double* in, double* out) const
 {
     /*
@@ -374,7 +365,7 @@ CUDA_DEV int PolarStereo::forward(const double *llh, double *out)  const{
      * Host / Device forward projection function.
      * Must use double* instead of cartesian_t, because cartesian_t (std::array)
      * is not available for __device__ functions.
-     */	
+     */
     double lam = llh[0] - lon0;
     double phi = llh[1] * (isnorth ? 1. : -1.);
     double temp = akm1 * pj_tsfn(phi, sin(phi), e);
@@ -391,7 +382,7 @@ CUDA_DEV int PolarStereo::inverse(const double *ups, double *llh) const {
     * Host / Device inverse projection function.
     * Must use double* instead of cartesian_t, because cartesian_t (std::array)
     * is not available for __device__ functions.
-    */	
+    */
     double tp = -hypot(ups[0], ups[1])/akm1;
     double fact = (isnorth)?1:-1;
     double phi_l = (.5*M_PI) - (2. * atan(tp));
@@ -409,9 +400,7 @@ CUDA_DEV int PolarStereo::inverse(const double *ups, double *llh) const {
         }
     }
     return 1;
-
 }
-
 
 CUDA_HOSTDEV double pj_qsfn(double sinphi, double e, double one_es) {
     /*
@@ -507,7 +496,17 @@ CUDA_DEV int projTransform(const ProjectionBase *in,
     }
     return 0;
 };
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-        }
+
+__device__ int projInverse(int code, const double* in, double* out) {
+    if (code == 4326) {
+        LonLat proj;
+        return proj.inverse(in, out);
+    } else if (code == 3031 or code == 3413) {
+        PolarStereo proj(code);
+        return proj.inverse(in, out);
+    } else {
+        return 1; // failure
     }
 }
+
+}}}
