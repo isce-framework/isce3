@@ -42,8 +42,8 @@ template <typename T>
 T
 _sinc(T t)
 {
-    static T const eps1 = sqrt(std::numeric_limits<T>::epsilon());
-    static T const eps2 = sqrt(eps1);
+    static T constexpr eps1 = sqrt(std::numeric_limits<T>::epsilon());
+    static T constexpr eps2 = sqrt(eps1);
     T x = M_PI * fabs(t);
     if (x >= eps2) {
         return sin(x) / x;

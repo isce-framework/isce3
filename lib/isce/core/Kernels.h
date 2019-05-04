@@ -49,7 +49,7 @@ class isce::core::BartlettKernel : public isce::core::Kernel<T> {
     public:
         /** Linear kernel, aka Bartlett or triangle function. */
         BartlettKernel(double width);
-        T operator()(double x);
+        T operator()(double x) override;
 };
 
 template <typename T>
@@ -64,7 +64,7 @@ class isce::core::KnabKernel : public isce::core::Kernel<T> {
          */
         KnabKernel(double width, double bandwidth);
 
-        T operator()(double x);
+        T operator()(double x) override;
 
         /** Get bandwidth of kernel. */
         double bandwidth() {return _bandwidth;}
