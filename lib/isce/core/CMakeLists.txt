@@ -11,7 +11,6 @@ set(CPPS Attitude.cpp
          Doppler.cpp
          Ellipsoid.cpp
          EulerAngles.cpp
-         Interp1d.cpp
          Interpolator.cpp
          Kernels.cpp
          LUT2d.cpp
@@ -40,6 +39,7 @@ set(HEADERS Attitude.h
             Ellipsoid.h
             EulerAngles.h
             Interp1d.h
+            Interp1d.icc
             Interpolator.h
             Kernels.h
             LUT1d.h

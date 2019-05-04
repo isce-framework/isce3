@@ -15,15 +15,12 @@
 // Declaration
 namespace isce {
     namespace core {
-        // The kernel classes
-        template <typename TD, typename TK> class Interp1d;
+        template <typename TK> class Interp1d;
     }
 }
 
-// Class for 1D interpolation.
-// Template parameters TD: element type of data, TK: element type of kernel.
-// Typically TD is complex<TK> or just TK
-template <typename TD, typename TK>
+/** Class for 1D interpolation of uniformly sampled data. */
+template <typename TK>
 class isce::core::Interp1d {
 
     // Public interface
@@ -32,15 +29,14 @@ class isce::core::Interp1d {
          *
          * @param[in] kernel Arbitrary kernel function.
          */
-        Interp1d(const std::shared_ptr<isce::core::Kernel<TK>>& kernel) : _kernel(kernel) {
+        Interp1d(const std::shared_ptr<isce::core::Kernel<TK>> &kernel) : _kernel(kernel) {
             // XXX Throw error if kernel->width() is not an integer?
             _width = (unsigned) ceil(kernel->width());
         };
 
         // Factories
-
         /** Linear 1D interpolator. */
-        static Interp1d Linear();
+        static Interp1d<TK> Linear();
 
         /** 1D interpolation with Knab pulse.
          *
@@ -48,7 +44,7 @@ class isce::core::Interp1d {
          * @param[in] bandwidth Bandwidth of signal to be interpolated, as a
          *                      fraction of the sample rate (0 < bandwidth < 1).
          */
-        static Interp1d Knab(double width, double bandwidth);
+        static Interp1d<TK> Knab(double width, double bandwidth);
 
         /** Interpolate sequence x at point t
          *
@@ -56,7 +52,8 @@ class isce::core::Interp1d {
          * @param[in] t Desired time sample (0 <= t <= x.size()-1).
          * @returns Interpolated value or 0 if kernel would run off array.
          */
-        TD interp(std::valarray<TD> &x, double t);
+        template<typename TD>
+        TD interp(const std::valarray<TD> &x, double t);
 
         /** Get width of kernel. */
         unsigned width() {return _width;}
@@ -66,5 +63,10 @@ class isce::core::Interp1d {
         unsigned _width;
         std::shared_ptr<isce::core::Kernel<TK>> _kernel;
 };
+
+// Get inline implementations
+#define ISCE_CORE_INTERP1D_ICC
+#include "Interp1d.icc"
+#undef ISCE_CORE_INTERP1D_ICC
 
 #endif

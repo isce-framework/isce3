@@ -1,0 +1,58 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Author: Brian Hawkins
+// Copyright 2019
+//
+
+#if !defined(ISCE_CORE_INTERP1D_ICC)
+#error "Interp1d.icc is an implementation detail of class Interp1d"
+#endif
+
+template <typename T>
+inline
+isce::core::Interp1d<T>
+isce::core::Interp1d<T>::
+Linear()
+{
+    auto p = std::make_shared<isce::core::BartlettKernel<T>>(2.0);
+    return Interp1d<T>(p);
+}
+
+template <typename T>
+inline
+isce::core::Interp1d<T>
+isce::core::Interp1d<T>::
+Knab(double width, double bandwidth)
+{
+    auto p = std::make_shared<isce::core::KnabKernel<T>>(width, bandwidth);
+    return Interp1d<T>(p);
+}
+
+template <typename TK>
+template <typename TD>
+inline
+TD
+isce::core::Interp1d<TK>::
+interp(const std::valarray<TD> &x, double t)
+{
+    long i0 = 0;
+    if (_width % 2 == 0) {
+        i0 = (long) ceil(t);
+    } else {
+        i0 = (long) round(t);
+    }
+    long low = i0 - _width/2;  // integer division implicit floor()
+    long high = low + _width;
+    typename std::common_type<TD,TK>::type sum = 0;
+    if ((low < 0) || (high >= x.size())) {
+        // XXX log/throw error?
+        return sum;
+    }
+    for (long i=low; i<high; i++) {
+        double ti = i - t;
+        TK w = (*_kernel)(ti);
+        sum += w * x[i];
+    }
+    return sum;
+}

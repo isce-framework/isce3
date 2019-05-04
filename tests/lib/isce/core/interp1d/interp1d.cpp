@@ -205,7 +205,7 @@ struct Interp1dTest : public ::testing::Test
         void
         check_interp(double min_cor, double max_phs, double max_bias,
                      double max_spread, std::vector<double> times,
-                     isce::core::Interp1d<std::complex<double>,double> itp)
+                     isce::core::Interp1d<double> itp)
         {
             // interpolate at all offsets in [pad:-pad]
             std::vector<std::complex<double>> ref(0), out(0);
@@ -214,7 +214,7 @@ struct Interp1dTest : public ::testing::Test
                 double t = times[i];
                 if ((pad <= t) && (t <= n-1-pad)) {
                     ref.push_back(ts.eval(t));
-                    out.push_back(itp.interp(signal, t));
+                    out.push_back(itp.interp<std::complex<double>>(signal, t));
                 }
             }
             auto cor = _correlation(ref, out);
@@ -236,7 +236,7 @@ struct Interp1dTest : public ::testing::Test
         void
         test_rand_offsets(double min_cor, double max_phs, double max_bias,
                           double max_spread,
-                          isce::core::Interp1d<std::complex<double>,double> itp)
+                          isce::core::Interp1d<double> itp)
         {
             printf("Testing random offsets.\n");
             std::mt19937 rng(2 * seed);
@@ -251,7 +251,7 @@ struct Interp1dTest : public ::testing::Test
         void
         test_fixed_offset(double min_cor, double max_phs, double max_bias,
                          double max_spread,
-                         isce::core::Interp1d<std::complex<double>,double> itp,
+                         isce::core::Interp1d<double> itp,
                          double off)
         {
             printf("Testing fixed offset=%g\n", off);
@@ -265,7 +265,7 @@ struct Interp1dTest : public ::testing::Test
 
 TEST_F(Interp1dTest, Linear) {
     isce::core::Interp1d itp
-        = isce::core::Interp1d<std::complex<double>,double>::Linear();
+        = isce::core::Interp1d<double>::Linear();
     // offset=0 should give back original data for this kernel.
     test_fixed_offset(0.999999, 0.001, 0.001, 0.001, itp,  0.0);
     test_fixed_offset(0.95, 30.0, 5.0, 5.0, itp, -0.3);
@@ -288,7 +288,7 @@ TEST_F(Interp1dTest, Linear) {
 
 TEST_F(Interp1dTest, Knab) {
     isce::core::Interp1d itp
-        = isce::core::Interp1d<std::complex<double>,double>::Knab(8.0, 0.8);
+        = isce::core::Interp1d<double>::Knab(8.0, 0.8);
     // offset=0 should give back original data for this kernel.
     test_fixed_offset(0.999999, 0.001, 0.001, 0.001, itp,  0.0);
     test_fixed_offset(0.998, 5.0, 1.0, 1.0, itp, -0.3);
