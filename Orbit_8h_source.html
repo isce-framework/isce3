@@ -220,7 +220,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; rhs.<a class="code" href="structisce_1_1core_1_1Orbit.html#a104a4f97edfaef422045ba2d203dcf4d">nVectors</a>; i++) {</div>
 <div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> j = 0; j &lt; 3; ++j) {</div>
 <div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;            t_pos[j] = rhs.<a class="code" href="structisce_1_1core_1_1Orbit.html#a7c7c4d64a2914129f11fb3840c76123a">position</a>[i*3+j];</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;            t_vel[j] = rhs.<a class="code" href="structisce_1_1core_1_1Orbit.html#a7c7c4d64a2914129f11fb3840c76123a">position</a>[i*3+j];</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;            t_vel[j] = rhs.<a class="code" href="structisce_1_1core_1_1Orbit.html#aae98e9b679333884e9d4a7e475fa1de0">velocity</a>[i*3+j];</div>
 <div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;        }</div>
 <div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;        addStateVector(rhs.<a class="code" href="structisce_1_1core_1_1Orbit.html#af6f325472d3c3f0489ee5ac88e7cae74">UTCtime</a>[i], t_pos, t_vel);</div>
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    }</div>
