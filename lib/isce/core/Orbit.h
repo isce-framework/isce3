@@ -173,7 +173,7 @@ operator+=(const Orbit &rhs) {
     for (int i = 0; i < rhs.nVectors; i++) {
         for (int j = 0; j < 3; ++j) {
             t_pos[j] = rhs.position[i*3+j];
-            t_vel[j] = rhs.position[i*3+j];
+            t_vel[j] = rhs.velocity[i*3+j];
         }
         addStateVector(rhs.UTCtime[i], t_pos, t_vel);
     }
