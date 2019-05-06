@@ -97,7 +97,8 @@ extern "C" {
 }
 
 namespace isce{
-namespace fftw3cxx {
+    //! The isce::fftw3cxx namespace
+    namespace fftw3cxx {
 
 //---
 // Alias the fftw public API with a C++ templated-type style.

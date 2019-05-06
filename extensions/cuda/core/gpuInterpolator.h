@@ -14,7 +14,7 @@
 
 using isce::core::Matrix;
 
-// base interpolator is an abstract base class
+/** base interpolator is an abstract base class */
 namespace isce{ namespace cuda{ namespace core{
 template <class U>
     class gpuInterpolator {
@@ -24,7 +24,7 @@ template <class U>
     };
 
 
-// gpuBilinearInterpolator class derived from abstract gpuInterpolator class
+/** gpuBilinearInterpolator class derived from abstract gpuInterpolator class */
 template <class U>
 class gpuBilinearInterpolator : public isce::cuda::core::gpuInterpolator<U> {
     public:
@@ -34,7 +34,7 @@ class gpuBilinearInterpolator : public isce::cuda::core::gpuInterpolator<U> {
 };
 
 
-// gpuBicubicInterpolator class derived from abstract gpuInterpolator class
+/** gpuBicubicInterpolator class derived from abstract gpuInterpolator class */
 template <class U>
 class gpuBicubicInterpolator : public isce::cuda::core::gpuInterpolator<U> {
     public:
@@ -44,7 +44,7 @@ class gpuBicubicInterpolator : public isce::cuda::core::gpuInterpolator<U> {
 };
 
 
-// gpuSpline2dInterpolator class derived from abstract gpuInterpolator class
+/** gpuSpline2dInterpolator class derived from abstract gpuInterpolator class */
 template <class U>
 class gpuSpline2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
     protected:
@@ -56,7 +56,7 @@ class gpuSpline2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
 };
 
 
-// gpuSinc2dInterpolator class derived from abstract gpuInterpolator class
+/** gpuSinc2dInterpolator class derived from abstract gpuInterpolator class */
 template <class U>
 class gpuSinc2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
     protected:

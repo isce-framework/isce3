@@ -123,7 +123,7 @@ Band 1 Block=1201x1 Type=Int16, ColorInterp=Undefined
 While GDAL is used to handle rasters within ISCE, ISCE only handles a small subset of projection systems that are supported by GDAL. ISCE exclusively uses <a href="http://www.epsg.org/">EPSG</a> codes for coordinate projection. A CUDA implementation of projection transformations has also been implemented for GPU-based processing. Note that all ISCE supported projections are defined on a WGS84 ellipsoid.
 
 <table>
-    <caption id="multi_row">Table of supported projections in ISCE</caption>
+    <caption id="projections">Table of supported projections in ISCE</caption>
     <tr><th>EPSG code<th>PROJ.4 string<th>Common name
     <tr><td><a href="https://epsg.io/4326">4326</a><td>+proj=longlat +datum=WGS84 +no_defs<td>WGS84 Lon/Lat
     <tr><td><a href="https://epsg.io/3031">3031</a><td>+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1<td>Antarctic Polar Stereographic
@@ -139,7 +139,7 @@ While GDAL is used to handle rasters within ISCE, ISCE only handles a small subs
 Internally, ISCE needs all DEM heights to be referenced w.r.t WGS84 ellipsoid. However, it can delegate vertical datum transformation for a small subset of geoids to GDAL (gdalwarp with vertical datum). The set of supported geoids are 
 
 <table>
-    <caption id="multi_row">Table of supported geoids in ISCE</caption>
+    <caption id="geoids">Table of supported geoids in ISCE</caption>
     <tr><th>EPSG code<th>Name of Geoid<th>URL
     <tr><td>5773<td>EGM 96<td><a href="https://en.wikipedia.org/wiki/EGM96">https://en.wikipedia.org/wiki/EGM96</a>
     <tr><td>3885<td>EGM 08<td><a href="http://earth-info.nga.mil/GandG/wgs84/gravitymod/egm2008/egm08_wgs84.html">http://earth-info.nga.mil/GandG/wgs84/gravitymod/egm2008/egm08_wgs84.html</a> 

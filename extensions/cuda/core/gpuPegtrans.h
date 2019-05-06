@@ -10,6 +10,7 @@
 #include "gpuPeg.h"
 
 namespace isce { namespace cuda { namespace core {
+    /** Data structure to hold information related to SCH peg point transformation */
     struct gpuPegtrans {
         double mat[3][3];
         double matinv[3][3];

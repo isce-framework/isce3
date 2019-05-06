@@ -63,7 +63,7 @@ namespace isce {
      */
 
 
-
+     /** Our derived dataset structure that includes utility functions */
      class IDataSet: public H5::DataSet {
             
         public:

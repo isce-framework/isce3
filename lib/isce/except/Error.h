@@ -3,7 +3,9 @@
 #include <stdexcept>
 #include <string>
 
-namespace isce { namespace except {
+namespace isce { 
+    //! The isce::except namespace
+    namespace except {
 
     struct SrcInfo {
         const char* file;

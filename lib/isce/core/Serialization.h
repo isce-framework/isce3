@@ -4,7 +4,7 @@
 // Author: Bryan V. Riel
 // Copyright 2017-2018
 
-/** \file Serialization.h
+/** \file core/Serialization.h
  *
  * Serialization functions for isce::core objects. */
 

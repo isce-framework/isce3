@@ -17,7 +17,6 @@ set(CPPS Attitude.cpp
          Pegtrans.cpp
          Poly1d.cpp
          Poly2d.cpp
-         Position.cpp
          Projections.cpp
          Quaternion.cpp
          Sinc2dInterpolator.cpp
@@ -47,7 +46,6 @@ set(HEADERS Attitude.h
             Pixel.h
             Poly1d.h
             Poly2d.h
-            Position.h
             Projections.h
             Quaternion.h
             Serialization.h

@@ -18,6 +18,7 @@ namespace isce {
     }
 }
 
+/** Data structure for storing basic radar geometry image metadata */
 struct isce::core::Metadata {
 
     // Acquisition related parameters

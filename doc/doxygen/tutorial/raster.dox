@@ -43,7 +43,7 @@ isce::io::Raster raster(inputFilename, GA_Update)
 \endcode
 
 
-\subsection rastercreate Create new rasters
+\subsection rastercreatetut Create new rasters
 
 The most general interface to creation of rasters is exposed via isce::io::Raster(const std::string& fname, size_t width, size_t length, size_t numBands, GDALDataType dtype, const std::string& driverName).
 

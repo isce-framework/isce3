@@ -6,8 +6,8 @@ namespace isce { namespace cuda { namespace except {
 
     using namespace isce::except;
 
-    // CudaError provide the same information as BaseError,
-    // and also retains the original error code.
+    /** CudaError provide the same information as BaseError,
+     *  and also retains the original error code.*/
     template<class T>
     struct CudaError : RuntimeError {
         const T err;

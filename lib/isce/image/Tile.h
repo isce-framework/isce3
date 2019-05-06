@@ -16,6 +16,7 @@
 
 // Declarations
 namespace isce {
+    //! The isce::image namespace
     namespace image {
         template <typename T> class Tile;
     }

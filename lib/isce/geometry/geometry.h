@@ -37,6 +37,7 @@
 
 // Declaration
 namespace isce {
+    //! The isce::geometry namespace
     namespace geometry {
 
         // Some useful typedefs from isce::core

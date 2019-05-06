@@ -26,7 +26,7 @@ namespace isce {
     }
 }
 
-// Definition of parent Interpolator
+/** Definition of parent Interpolator */
 template <typename U>
 class isce::core::Interpolator {
 
@@ -54,7 +54,7 @@ class isce::core::Interpolator {
         isce::core::dataInterpMethod _method;
 };
 
-// Definition of BilinearInterpolator
+/** Definition of BilinearInterpolator */
 template <typename U>
 class isce::core::BilinearInterpolator : public isce::core::Interpolator<U> {
 
@@ -79,7 +79,7 @@ class isce::core::BilinearInterpolator : public isce::core::Interpolator<U> {
         }
 };
 
-// Definition of BicubicInterpolator
+/** Definition of BicubicInterpolator */
 template <typename U>
 class isce::core::BicubicInterpolator : public isce::core::Interpolator<U> {
 
@@ -109,7 +109,7 @@ class isce::core::BicubicInterpolator : public isce::core::Interpolator<U> {
         isce::core::Matrix<double> _Y;
 };
 
-// Definition of NearestNeighborInterpolator
+/** Definition of NearestNeighborInterpolator */
 template <typename U>
 class isce::core::NearestNeighborInterpolator : public isce::core::Interpolator<U> {
 
@@ -134,7 +134,7 @@ class isce::core::NearestNeighborInterpolator : public isce::core::Interpolator<
         }
 };
 
-// Definition of Spline2dInterpolator
+/** Definition of Spline2dInterpolator */
 template <typename U>
 class isce::core::Spline2dInterpolator : public isce::core::Interpolator<U> {
 
@@ -177,7 +177,7 @@ class isce::core::Spline2dInterpolator : public isce::core::Interpolator<U> {
                   const std::valarray<U> &);
 };
 
-// Definition of Sinc2dInterpolator
+/** Definition of Sinc2dInterpolator */
 template <typename U>
 class isce::core::Sinc2dInterpolator : public isce::core::Interpolator<U> {
 

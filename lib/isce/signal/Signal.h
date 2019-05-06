@@ -15,6 +15,7 @@
 
 // Declaration
 namespace isce {
+    //! The isce::signal namespace
     namespace signal {
         template<class T>
         class Signal;
