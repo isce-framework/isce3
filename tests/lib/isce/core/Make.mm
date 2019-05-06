@@ -21,6 +21,7 @@ PACKAGES = \
     interpolator \
     lut \
     matrix \
+    cube \
     orbit \
     poly \
     projections \
