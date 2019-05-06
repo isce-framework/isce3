@@ -83,7 +83,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="toc"><h3>Table of Contents</h3>
-<ul><li class="level1"><a href="#gdal">Raster Data Model</a><ul><li class="level2"><a href="#rastercreate">Create new rasters</a></li>
+<ul><li class="level1"><a href="#gdal">Raster Data Model</a><ul><li class="level2"><a href="#rastercreate">Raster creation</a></li>
 <li class="level2"><a href="#rasterread">Reading Rasters</a></li>
 <li class="level2"><a href="#drivers">Special drivers</a><ul><li class="level3"><a href="#rastervrt">Virtual Raster Table (VRT) driver</a></li>
 <li class="level3"><a href="#rasterhdf5">HDF5 driver</a></li>
@@ -104,7 +104,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 Raster Data Model</h1>
 <p>ISCE delegates raster data handling to the Geospatial Data Abstraction Library (<a href="https://www.gdal.org">GDAL</a>). Hence, it uses all the conventions defined by the <a href="http://www.gdal.org/gdal_datamodel.html">GDAL data model</a> to simplify the interface. You will find detailed documentation of all the methods available here: <a class="el" href="classisce_1_1io_1_1Raster.html" title="Data structure meant to handle Raster I/O operations. ">isce::io::Raster</a>.</p>
 <h2><a class="anchor" id="rastercreate"></a>
-Create new rasters</h2>
+Raster creation</h2>
 <p>ISCE exposes access to GDAL's raster generation capabilities via it's most general constructor interface</p>
 <p><a class="el" href="classisce_1_1io_1_1Raster.html" title="Data structure meant to handle Raster I/O operations. ">isce::io::Raster(const std::string&amp; fname, size_t width, size_t length, size_t numBands, GDALDataType dtype, const std::string&amp; driverName)</a></p>
 <p>This method provides direct access to GDALGetDriverManager()-&gt;GetDriverByName()-&gt;Create() methods in C++. This provides users with the capability to generate raster imagery in any format with write-support in GDAL. See this <a href="https://www.gdal.org/formats_list.html">table</a> for list of formats supported by GDAL.</p>
@@ -186,7 +186,7 @@ Band 1 Block=1201x1 Type=Int16, ColorInterp=Undefined
 Projections</h1>
 <p>While GDAL is used to handle rasters within ISCE, ISCE only handles a small subset of projection systems that are supported by GDAL. ISCE exclusively uses <a href="http://www.epsg.org/">EPSG</a> codes for coordinate projection. A CUDA implementation of projection transformations has also been implemented for GPU-based processing. Note that all ISCE supported projections are defined on a WGS84 ellipsoid.</p>
 <table class="doxtable">
-<caption id="multi_row" align="bottom">Table of supported projections in ISCE</caption>
+<caption id="projections" align="bottom">Table of supported projections in ISCE</caption>
 <tr>
 <th>EPSG code</th><th>PROJ.4 string</th><th>Common name </th></tr>
 <tr>
@@ -206,7 +206,7 @@ Projections</h1>
 Vertical Datum</h2>
 <p>Internally, ISCE needs all DEM heights to be referenced w.r.t WGS84 ellipsoid. However, it can delegate vertical datum transformation for a small subset of geoids to GDAL (gdalwarp with vertical datum). The set of supported geoids are</p>
 <table class="doxtable">
-<caption id="multi_row" align="bottom">Table of supported geoids in ISCE</caption>
+<caption id="geoids" align="bottom">Table of supported geoids in ISCE</caption>
 <tr>
 <th>EPSG code</th><th>Name of Geoid</th><th>URL </th></tr>
 <tr>

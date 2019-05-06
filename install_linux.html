@@ -126,7 +126,7 @@ CUDA 9.0 or above (for GPU-based processing) </li>
 </ol>
 <p>Centos 7.5 is the operational OS for the NISAR processing system and this is probably the most tested set of instructions. The instructions for Centos 7.5 / Ubuntu 18.04 are more or less the same except for the parts specific to using the standard package managers to install compilers and some basic packages. Our overall strategy for directory layouts is as follows:</p>
 <table class="doxtable">
-<caption id="multi_row" align="bottom">Assumed directory structure for installation</caption>
+<caption id="directory_structure" align="bottom">Assumed directory structure for installation</caption>
 <tr>
 <th>Path</th><th>Description </th></tr>
 <tr>
@@ -376,7 +376,7 @@ Step 2: Build the software</h2>
 <div class="fragment"><div class="line">&gt; CC=gcc CXX=g++ cmake -DCMAKE_INSTALL_PREFIX=${HOME}/tools/isce ${HOME}/src/isce</div>
 </div><!-- fragment --><p>Other optional arguments can be added to the cmake line </p>
 <table class="doxtable">
-<caption id="multi_row" align="bottom">Additional cmake options</caption>
+<caption id="cmake_options" align="bottom">Additional cmake options</caption>
 <tr>
 <th>Option </th><th>Description </th></tr>
 <tr>
@@ -419,7 +419,7 @@ Step 3: Install and set environment variables</h2>
 <li>
 <p class="startli">Setup the environment variables. Note that these need to be done in addition to the settings needed for scl (Centos), conda and pyre.</p>
 <table class="doxtable">
-<caption id="multi_row" align="bottom">Environment variables to set after installing ISCE</caption>
+<caption id="env_vars" align="bottom">Environment variables to set after installing ISCE</caption>
 <tr>
 <th>Variable</th><th>Setting</th><th>Description </th></tr>
 <tr>
