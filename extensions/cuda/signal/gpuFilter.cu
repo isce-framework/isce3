@@ -16,7 +16,7 @@ template<class T>
 gpuFilter<T>::~gpuFilter()
 {
     if (_filter_set) {
-        cudaFree(_d_filter);
+        checkCudaErrors(cudaFree(_d_filter));
     }
 }
 
@@ -36,6 +36,8 @@ filter(gpuSignal<T> &signal)
     filter_g<<<grid, block>>>(reinterpret_cast<thrust::complex<T> *>(signal.getDevicePtr()),
             reinterpret_cast<thrust::complex<T> *>(&_d_filter),
             n_signal_elements);
+
+    checkCudaErrors(cudaDeviceSynchronize());
 
     signal.inverse();
 }
@@ -57,6 +59,8 @@ filter(thrust::complex<T> *data)
     filter_g<<<grid, block>>>(data,
             reinterpret_cast<thrust::complex<T> *>(_d_filter),
             n_signal_elements);
+
+    checkCudaErrors(cudaDeviceSynchronize());
 
     _signal.inverseDevMem(reinterpret_cast<T *>(data));
 }
@@ -83,6 +87,8 @@ filter(std::valarray<std::complex<T>> &signal,
             reinterpret_cast<thrust::complex<T> *>(&_d_filter),
             signal.size());
 
+    checkCudaErrors(cudaDeviceSynchronize());
+
     _signal.inverse();
 
     // copy signal to host
@@ -91,24 +97,9 @@ filter(std::valarray<std::complex<T>> &signal,
 
 template<class T>
 void gpuFilter<T>::
-cpFilterHostToDevice(std::valarray<std::complex<T>> &host_filter)
-{
-    if (!_filter_set) {
-        size_t sz_filter = host_filter.size()*sizeof(thrust::complex<T>);
-        // allocate input
-        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&_d_filter), sz_filter));
-        // copy input
-        checkCudaErrors(cudaMemcpy(_d_filter, &host_filter[0], sz_filter, cudaMemcpyHostToDevice));
-        _filter_set = true;
-    }
-}
-
-template<class T>
-void gpuFilter<T>::
 writeFilter(size_t ncols, size_t nrows)
 {
     isce::io::Raster filterRaster("filter.bin", ncols, nrows, 1, GDT_CFloat32, "ENVI");
-    filterRaster.setBlock(_filter, 0, 0, ncols, nrows);
 }
 
 template<class T>

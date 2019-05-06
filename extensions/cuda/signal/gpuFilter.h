@@ -70,24 +70,19 @@ class gpuFilter {
         /** carry over from parent class. eliminate and use parent? */
         void writeFilter(size_t ncols, size_t nrows);
 
-        void cpFilterHostToDevice(std::valarray<std::complex<T>> &host_filter);
-
     protected:
 
-        T *_d_filter;               // device memory pointer
+        thrust::complex<T> *_d_filter;               // device unified memory pointer
         bool _filter_set = false;
         gpuSignal<T> _signal;
-        bool _signal_set = false;
-        std::valarray<std::complex<T>> _filter;
 };
 
 // Azimuth filter class derived from base class
 template <class T>
 class gpuAzimuthFilter : public gpuFilter<T> {
     public:
-        //gpuAzimuthFilter() : _d_filter(0x0), _filter_set(false), _signal(), _signal_set(false) {};
         gpuAzimuthFilter();
-        ~gpuAzimuthFilter();
+        ~gpuAzimuthFilter() {};
 
         /** constructs forward abd backward FFT plans for filtering a block of data in azimuth direction. */
         void initiateAzimuthFilter(std::valarray<std::complex<T>> &signal,
@@ -100,8 +95,7 @@ class gpuAzimuthFilter : public gpuFilter<T> {
                 double bandwidth,
                 double prf,
                 double beta,
-                std::valarray<std::complex<T>> &signal,
-                std::valarray<std::complex<T>> &spectrum,
+                //std::valarray<std::complex<T>> &signal,
                 size_t ncols,
                 size_t nrows);
 };
@@ -157,7 +151,7 @@ class gpuRangeFilter : public gpuFilter<T> {
                 int n_rows,
                 int n_cols);
 
-        void getPeakIndex(std::valarray<float> data, size_t &peakIndex);
+        void getPeakIndex(T *data, int data_lenth, size_t &peakIndex);
 
     private:
         double _wavelength;
@@ -168,7 +162,6 @@ class gpuRangeFilter : public gpuFilter<T> {
         double _rangeBandwidth;
         T *_d_spectrumSum;
         bool _spectrumSum_set = false;
-        std::valarray<T> _spectrumSum;
 };
 
 template<class T>

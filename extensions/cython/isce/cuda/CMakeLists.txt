@@ -43,6 +43,7 @@ target_include_directories(
         ${GDAL_INCLUDE_DIR}
         ${CMAKE_SOURCE_DIR}/contrib/cereal/include
         ${PYRE_INCLUDE_DIR}
+        ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )
 
 # Add necessary library links

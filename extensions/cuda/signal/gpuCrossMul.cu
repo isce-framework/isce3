@@ -103,7 +103,6 @@ crossmul(isce::io::Raster& referenceSLC,
         isce::io::Raster& interferogram,
         isce::io::Raster& coherence)
 {
-
     _doCommonRangeBandFilter = false;
     isce::io::Raster rngOffsetRaster("/vsimem/dummy", 1, 1, 1, GDT_CFloat32, "ENVI");
     crossmul(referenceSLC,
@@ -239,15 +238,14 @@ crossmul(isce::io::Raster& referenceSLC,
 
     // configure azimuth filter
     if (_doCommonAzimuthBandFilter) {
-        std::valarray<std::complex<float>> refAzimuthSpectrum(nfft*blockRows);
         azimuthFilter.constructAzimuthCommonbandFilter(
                 _refDoppler,
                 _secDoppler,
                 _commonAzimuthBandwidth,
                 _prf,
                 _beta,
-                refSlc, refAzimuthSpectrum,
-                nfft, blockRows);
+                nfft, 
+                blockRows);
     }
 
     // loop over all blocks
@@ -340,12 +338,12 @@ crossmul(isce::io::Raster& referenceSLC,
             multilooks_g<<<grid_lo, block>>>(
                     d_ifgram_mlook,
                     d_ifgram,
-                    ncols,
-                    blockRowsMultiLooked,
-                    _azimuthLooks,                  // row resize factor of hi to lo
+                    ncols,                          // n columns hi res
+                    ncolsMultiLooked,               // n cols lo res
+                    _azimuthLooks,                  // col resize factor of hi to lo
                     _rangeLooks,                    // col resize factor of hi to lo
                     n_mlook,                        // number of lo res elements
-                    float(n_mlook));
+                    float(_azimuthLooks*_rangeLooks));
 
             // get data to HOST
             checkCudaErrors(cudaMemcpy(&ifgram_mlook[0], d_ifgram_mlook, mlook_size*2, cudaMemcpyDeviceToHost));
@@ -359,22 +357,22 @@ crossmul(isce::io::Raster& referenceSLC,
                     d_refSlc,
                     2,
                     ncols,
-                    blockRowsMultiLooked,
+                    ncolsMultiLooked,
                     _azimuthLooks,                  // row resize factor of hi to lo
                     _rangeLooks,                    // col resize factor of hi to lo
                     n_mlook,                        // number of lo res elements
-                    float(n_mlook));
+                    float(_azimuthLooks*_rangeLooks));
 
             multilooks_power_g<<<grid_lo, block>>>(
                     d_sec_amp_mlook,
                     d_secSlc,
                     2,
                     ncols,
-                    blockRowsMultiLooked,
+                    ncolsMultiLooked,
                     _azimuthLooks,                  // row resize factor of hi to lo
                     _rangeLooks,                    // col resize factor of hi to lo
                     n_mlook,                        // number of lo res elements
-                    float(n_mlook));
+                    float(_azimuthLooks*_rangeLooks));
 
             // perform coherence calculation in place overwriting d_ifgram_mlook
             calculate_coherence_g<<<grid_lo, block>>>(d_ref_amp_mlook,
@@ -436,8 +434,7 @@ void lookdownShiftImpact(size_t oversample,
     double dt = 1.0/oversample;
 
     // get the vector of range frequencies
-    //filter object
-    isce::signal::Filter<float>::fftfreq(oversample*nfft, dt, rangeFrequencies);
+    isce::signal::Filter<float>::fftfreq(dt, rangeFrequencies);
 
 
     // in the process of upsampling the SLCs, creating upsampled interferogram

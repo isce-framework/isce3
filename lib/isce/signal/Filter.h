@@ -96,7 +96,7 @@ class isce::signal::Filter {
                 std::valarray<std::complex<T>> &spectrum);
 
         /** Create a vector of frequencies*/
-        static void fftfreq(int N, double dt, std::valarray<double> &freq);
+        static void fftfreq(double dt, std::valarray<double> &freq);
 
         /** Find the index of a specific frequency for a signal with a specific sampling rate*/
         static void indexOfFrequency(double dt, int N, double f, int& n);

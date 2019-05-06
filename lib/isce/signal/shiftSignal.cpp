@@ -129,7 +129,7 @@ frequencyResponseRange(size_t ncols, size_t nrows, const double shift,
     // get the vector of range frequencies
     //filter object
     isce::signal::Filter<T> tempFilter;
-    tempFilter.fftfreq(ncols, dt, rangeFrequencies);
+    tempFilter.fftfreq(dt, rangeFrequencies);
 
     // compute the impact of the shift in the frequency domain
     std::valarray<std::complex<T>> shiftImpactLine(ncols);
@@ -165,7 +165,7 @@ frequencyResponseAzimuth(size_t ncols, size_t nrows, const double shift,
     // get the vector of range frequencies
     //filter object
     isce::signal::Filter<T> tempFilter;
-    tempFilter.fftfreq(nrows, dt, frequencies);
+    tempFilter.fftfreq(dt, frequencies);
 
     // compute the impact of the azimuth shift in frequency domain
     std::valarray<std::complex<T>> shiftImpactLine(nrows);
