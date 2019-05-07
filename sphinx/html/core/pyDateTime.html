@@ -5,23 +5,23 @@
   <head>
     <meta charset="utf-8" />
     <title>pyDateTime &#8212; ISCE  documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -34,8 +34,8 @@
 <h1>pyDateTime<a class="headerlink" href="#pydatetime" title="Permalink to this headline">¶</a></h1>
 <p>pyDateTime is meant to represent a date time tag with double precision sub-second accuracy.</p>
 <dl class="class">
-<dt id="isceextension.pyDateTime">
-<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyDateTime</code><span class="sig-paren">(</span><em>inobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime" title="Permalink to this definition">¶</a></dt>
+<dt>
+<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyDateTime</code><span class="sig-paren">(</span><em>inobj=None</em><span class="sig-paren">)</span></dt>
 <dd><p>Python wrapper for isce::core::DateTime.
 Includes support for comparison and subtraction operators.</p>
 <dl class="field-list simple">
@@ -43,20 +43,40 @@ Includes support for comparison and subtraction operators.</p>
 <dd class="field-odd"><p><strong>inobj</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime.datetime</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – Input python datetime object or iso-8601 string</p>
 </dd>
 </dl>
+<dl class="attribute">
+<dt>
+<code class="descname">__sub__</code></dt>
+<dd><p>Time difference operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dt1</strong> (<a class="reference internal" href="../pyDateTime.html#isceextension.pyDateTime" title="isceextension.pyDateTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyDateTime</span></code></a>) – Time tag 1</p></li>
+<li><p><strong>dt2</strong> (<a class="reference internal" href="../pyDateTime.html#isceextension.pyDateTime" title="isceextension.pyDateTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyDateTime</span></code></a>) – Time tag 2</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Time difference between two pyDateTime tags.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="pyTimeDelta.html#isceextension.pyTimeDelta" title="isceextension.pyTimeDelta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyTimeDelta</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="staticmethod">
-<dt id="isceextension.pyDateTime.bind">
-<em class="property">static </em><code class="descname">bind</code><span class="sig-paren">(</span><em>pyDateTime dt</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime.bind" title="Permalink to this definition">¶</a></dt>
+<dt>
+<em class="property">static </em><code class="descname">bind</code><span class="sig-paren">(</span><em>pyDateTime dt</em><span class="sig-paren">)</span></dt>
 <dd><p>Binds the current pyEllipsoid instance to another C++ DateTime pointer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dt</strong> (<a class="reference internal" href="#isceextension.pyDateTime" title="isceextension.pyDateTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyDateTime</span></code></a>) – Source of C++ DateTime pointer.</p>
+<dd class="field-odd"><p><strong>dt</strong> (<a class="reference internal" href="../pyDateTime.html#isceextension.pyDateTime" title="isceextension.pyDateTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyDateTime</span></code></a>) – Source of C++ DateTime pointer.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyDateTime.isoformat">
-<code class="descname">isoformat</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime.isoformat" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descname">isoformat</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span></dt>
 <dd><p>Return a string in ISO-8601 format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -69,8 +89,8 @@ Includes support for comparison and subtraction operators.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyDateTime.set">
-<code class="descname">set</code><span class="sig-paren">(</span><em>self</em>, <em>inobj</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime.set" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descname">set</code><span class="sig-paren">(</span><em>self</em>, <em>inobj</em><span class="sig-paren">)</span></dt>
 <dd><p>Set pyDateTime using datetime.datetime or str object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -80,8 +100,8 @@ Includes support for comparison and subtraction operators.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyDateTime.strptime">
-<code class="descname">strptime</code><span class="sig-paren">(</span><em>self</em>, <em>pydatestr</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime.strptime" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descname">strptime</code><span class="sig-paren">(</span><em>self</em>, <em>pydatestr</em><span class="sig-paren">)</span></dt>
 <dd><p>Sets underlying C++ DateTime object using time tag in ISO-8601 format</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -103,14 +123,14 @@ Includes support for comparison and subtraction operators.</p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/pyDateTime.rst.txt"
+      <li><a href="../_sources/core/pyDateTime.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
+    <form class="search" action="../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
     </form>
@@ -125,9 +145,9 @@ Includes support for comparison and subtraction operators.</p>
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

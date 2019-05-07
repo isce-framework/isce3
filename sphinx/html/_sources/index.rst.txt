@@ -6,37 +6,16 @@
 Welcome to ISCE's python documentation!
 =======================================
 
-Python bindings for ISCE are available via the module named "isceextension". The following classes are available at the Python level:
+ISCE's Python interface is built as two separate layers:
+
+1. Pyre interface for user-facing workflows
+2. Cython interface for interaction with C++ code
 
 
-Core Datastructures
---------------------
+The Pyre interface uses the Cython interface to control the behavior of underlying C++ modules as part of coordinated workflows
 
-* :doc:`pyDateTime <./pyDateTime>` / :doc:`pyTimeDelta <./pyTimeDelta>`
-* :doc:`pyEllipsoid <./pyEllipsoid>`
-* :doc:`pyPoly1d <./pyPoly1d>`
-* :doc:`pyPoly2d <./pyPoly2d>`
-* :doc:`pyLUT1d <./pyLUT1d>`
-* :doc:`pyOrbit <./pyOrbit>`
 
-I/O Datastructures
-------------------
+Cython Interface
+----------------
 
-* :doc:`pyIH5File <./pyIH5>`
-* :doc:`pyRaster <./pyRaster>`
-
-Product Datastructures
-----------------------
-
-* :doc:`pyProduct <./pyProduct>`
-* :doc:`pyMetadata <./pyMetadata>`
-
-Image Datastructures
---------------------
-
-* :doc:`pyResampSlc <./pyResampSlc>`
-
-Geometry Datastructures
------------------------
-* :doc:`pyTopo <./pyTopo>`
-* :doc:`pyGeo2rdr <./pyGeo2rdr>`
+:doc:`Cython Interface <./cython>`

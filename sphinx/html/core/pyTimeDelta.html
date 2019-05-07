@@ -5,25 +5,23 @@
   <head>
     <meta charset="utf-8" />
     <title>pyTimeDelta &#8212; ISCE  documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -41,31 +39,63 @@
 <dd><p>Python wrapper for isce::core::TimeDelta</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>inobj</strong> (<em>Optional</em><em>[</em><em>datetime.timedelta</em><em> or </em><em>float</em><em>]</em>) – Input python timedelta object or double precision floating point number</p>
+<dd class="field-odd"><p><strong>inobj</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime.timedelta</span></code> or float, optional) – Input python timedelta object or double precision floating point number</p>
 </dd>
 </dl>
 <dl class="method">
 <dt id="isceextension.pyTimeDelta.getTotalDays">
 <code class="descname">getTotalDays</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyTimeDelta.getTotalDays" title="Permalink to this definition">¶</a></dt>
-<dd><p>float: Equivalent in number of days</p>
+<dd><p>Equivalent number of days.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Equivalent in number of days</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="isceextension.pyTimeDelta.getTotalHours">
 <code class="descname">getTotalHours</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyTimeDelta.getTotalHours" title="Permalink to this definition">¶</a></dt>
-<dd><p>float: Equivalent in number of hours</p>
+<dd><p>Equivalent number of hours.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Equivalent in number of hours</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="isceextension.pyTimeDelta.getTotalMinutes">
 <code class="descname">getTotalMinutes</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyTimeDelta.getTotalMinutes" title="Permalink to this definition">¶</a></dt>
-<dd><p>float: Equivalent in number of minutes</p>
+<dd><p>Equivalent number of minutes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Equivalent in number of minutes</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="isceextension.pyTimeDelta.getTotalSeconds">
 <code class="descname">getTotalSeconds</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyTimeDelta.getTotalSeconds" title="Permalink to this definition">¶</a></dt>
-<dd><p>float: Equivalent in number of seconds.</p>
+<dd><p>Equivalent number of seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Equivalent in number of seconds.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -74,7 +104,7 @@
 <dd><p>Set the value using datetime.timedelta or float</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>[</strong><strong>datetime.timedelta</strong><strong> or </strong><strong>float</strong><strong>]</strong> (<em>inobj</em>) – Input object</p>
+<dd class="field-odd"><p><strong>inobj</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime.timedelta</span></code> or float) – Input object</p>
 </dd>
 </dl>
 </dd></dl>
@@ -92,14 +122,14 @@
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/pyTimeDelta.rst.txt"
+      <li><a href="../_sources/core/pyTimeDelta.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
+    <form class="search" action="../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
     </form>
@@ -114,9 +144,9 @@
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
