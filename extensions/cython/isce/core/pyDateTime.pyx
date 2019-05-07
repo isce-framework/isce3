@@ -12,10 +12,11 @@ from DateTime cimport DateTime
 
 cdef class pyDateTime:
     '''
-    Python wrapper for isce::core::DateTime
+    Python wrapper for isce::core::DateTime.
+    Includes support for comparison and subtraction operators.
 
     Args:
-        inobj (Optional[datetime or str]): Input python datetime object or iso-8601 string
+        inobj (:obj:`datetime.datetime` or :obj:`str`, optional): Input python datetime object or iso-8601 string
     '''
     cdef DateTime * c_datetime
     cdef bool __owner
@@ -40,7 +41,7 @@ cdef class pyDateTime:
         Set pyDateTime using datetime.datetime or str object.
 
         Args:
-            inobj [datetime.datetime or str]: Input object.
+            inobj (:obj:`datetime.datetime` or :obj:`str`): Input object.
         '''
         import datetime
         if isinstance(inobj, str):
@@ -61,7 +62,7 @@ cdef class pyDateTime:
         Binds the current pyEllipsoid instance to another C++ DateTime pointer.
 
         Args:
-            dt (pyDateTime): Source of C++ DateTime pointer.
+            dt (:obj:`pyDateTime`): Source of C++ DateTime pointer.
         '''
         new_dt = pyDateTime()
         del new_dt.c_datetime
@@ -85,7 +86,11 @@ cdef class pyDateTime:
 
     def __richcmp__(self, pyDateTime dt, int comp):
         '''
-        Rich comparison operator
+        Rich comparison operator.
+        
+        Args:
+            dt (:obj:`pyDateTime`): Time tag to compare against
+            comp (int): Type of comparison
         '''
         if (comp == 0):
             # <
@@ -108,7 +113,14 @@ cdef class pyDateTime:
 
     def __sub__(pyDateTime dt1, pyDateTime dt2):
         '''
-        pyTimeDelta: Difference operator.
+        Time difference operator.
+        
+        Args:
+            dt1 (:obj:`pyDateTime`): Time tag 1
+            dt2 (:obj:`pyDateTime`): Time tag 2
+
+        Returns:
+            :obj:`pyTimeDelta`: Time difference between two pyDateTime tags.
         '''
         tdelta = pyTimeDelta()
         tdelta.c_timedelta = deref(dt1.c_datetime) - deref(dt2.c_datetime)
@@ -116,7 +128,10 @@ cdef class pyDateTime:
 
     def isoformat(self):
         '''
-        str: Date time in ISO-8601 format
+        Return a string in ISO-8601 format.
+
+        Returns:
+            :obj:`str`: Date time in ISO-8601 format
         '''
         return self.c_datetime.isoformat().decode('UTF-8')
 
@@ -125,7 +140,7 @@ cdef class pyDateTime:
         Sets underlying C++ DateTime object using time tag in ISO-8601 format
 
         Args:
-            pydatestr (str): Time tag in ISO-8601 format
+            pydatestr (:obj:`str`): Time tag in ISO-8601 format
         '''
         self.c_datetime.strptime(pyStringToBytes(pydatestr))
 
