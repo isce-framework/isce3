@@ -6,6 +6,7 @@
 
 from libcpp cimport bool
 from cython.operator cimport dereference as deref
+from cpython.object cimport Py_LT, Py_LE, Py_EQ, Py_NE, Py_GT, Py_GE
 from libcpp.string cimport string
 from TimeDelta cimport TimeDelta
 from DateTime cimport DateTime
@@ -92,24 +93,26 @@ cdef class pyDateTime:
             dt (:obj:`pyDateTime`): Time tag to compare against
             comp (int): Type of comparison
         '''
-        if (comp == 0):
+        if (comp == Py_LT):
             # <
-            return self.c_datetime < dt.c_datetime
-        elif (comp == 1):
+            return deref(self.c_datetime) < deref(dt.c_datetime)
+        elif (comp == Py_LE):
             # <=
-            return self.c_datetime <= dt.c_datetime
-        elif (comp == 2):
+            return deref(self.c_datetime) <= deref(dt.c_datetime)
+        elif (comp == Py_EQ):
             # ==
-            return self.c_datetime == dt.c_datetime
-        elif (comp == 3):
+            return deref(self.c_datetime) == deref(dt.c_datetime)
+        elif (comp == Py_NE):
             # !=
-            return self.c_datetime != dt.c_datetime
-        elif (comp == 4):
+            return deref(self.c_datetime) != deref(dt.c_datetime)
+        elif (comp == Py_GT):
             # >
-            return self.c_datetime > dt.c_datetime
-        elif (comp == 5):
+            return deref(self.c_datetime) > deref(dt.c_datetime)
+        elif (comp == Py_GE):
             # >=
-            return self.c_datetime >= dt.c_datetime
+            return deref(self.c_datetime) >= deref(dt.c_datetime)
+        else:
+            assert False
 
     def __sub__(pyDateTime dt1, pyDateTime dt2):
         '''
@@ -125,6 +128,19 @@ cdef class pyDateTime:
         tdelta = pyTimeDelta()
         tdelta.c_timedelta = deref(dt1.c_datetime) - deref(dt2.c_datetime)
         return tdelta
+
+    def __add__(pyDateTime dt1, pyTimeDelta delta):
+        '''
+        Addition operator.
+
+        Args:
+            dt1 (:obj:`pyDateTime`): Time tag
+            delta (:obj:`pyDateTime`): Time difference to add
+
+        Returns:
+            :obj:`pyDateTime`: Resulting time tag
+        '''
+        return pyDateTime.cbind( deref(dt1.c_datetime) + delta.c_timedelta) 
 
     def isoformat(self):
         '''

@@ -28,9 +28,7 @@ cdef class pyTimeDelta:
     def __init__(self, inobj=None):
         import datetime
 
-        if isinstance(inobj, (int,float)):
-            self.set(inobj)
-        elif isinstance(inobj, datetime.timedelta):
+        if isinstance(inobj, (int,float,datetime.timedelta)):
             self.set(inobj)
         elif inobj is not None:
             raise ValueError('pyTimeDelta can only be initilized using datetime.timedelta or float')
