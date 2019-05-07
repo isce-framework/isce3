@@ -8,11 +8,10 @@ Welcome to ISCE's python documentation!
 
 ISCE's Python interface is built as two separate layers:
 
-1. Pyre interface for user-facing workflows
-2. Cython interface for interaction with C++ code
+1. Cython interface for interacing with C++ code
+2. Pyre interface for user-facing workflows
 
-
-The Pyre interface uses the Cython interface to control the behavior of underlying C++ modules as part of coordinated workflows
+The Pyre interface uses the Cython interface to control the behavior of underlying C++ modules for coordinating behavior of different modules in workflows.
 
 
 Cython Interface
