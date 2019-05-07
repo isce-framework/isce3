@@ -25,11 +25,8 @@ gpuRangeFilter<T>::gpuRangeFilter()
 template<class T>
 gpuRangeFilter<T>::~gpuRangeFilter()
 {
-    if (this->_filter_set) {
-        cudaFree(this->_d_filter);
-    }
     if (_spectrumSum_set) {
-        cudaFree(_d_spectrumSum);
+        checkCudaErrors(cudaFree(_d_spectrumSum));
     }
 }
 
@@ -42,7 +39,7 @@ initiateRangeFilter(std::valarray<std::complex<T>> &input,
 {
     // malloc device memory for eventual max frequency search
     if (!_spectrumSum_set) {
-        checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&_d_spectrumSum), ncols*sizeof(T)*2));
+        checkCudaErrors(cudaMalloc(&_d_spectrumSum, ncols*sizeof(T)));
         _spectrumSum_set = true;
     }
 
@@ -82,14 +79,16 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
     size_t nfft = 0;
     this->_signal.nextPowerOfTwo(ncols, nfft);
 
-    this->_filter.resize(nfft*nrows);
+    checkCudaErrors(cudaMallocManaged(&this->_d_filter, ncols*nfft*sizeof(thrust::complex<T>)));
+    this->_filter_set = true;
+
     std::valarray<std::complex<T>> _filter1D(nfft); //
     _filter1D = std::complex<T>(0.0,0.0);
 
     std::valarray<double> frequency(nfft);
     isce::signal::Filter<float> tempFilter;
     double dt = 1.0/rangeSamplingFrequency;
-    isce::signal::Filter<float>::fftfreq(nfft, dt, frequency);
+    isce::signal::Filter<float>::fftfreq(dt, frequency);
 
     if (filterType=="boxcar"){
         constructRangeBandpassBoxcar(
@@ -115,11 +114,9 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
     //construct a block of the filter
     for (size_t line = 0; line < nrows; line++ ){
         for (size_t col = 0; col < nfft; col++ ){
-            this->_filter[line*nfft+col] = _filter1D[col];
+            this->_d_filter[line*nfft+col] = _filter1D[col];
         }
     }
-
-    this->cpFilterHostToDevice(this->_filter);
 
     this->_signal.rangeFFT(ncols, nrows);
 }
@@ -230,7 +227,7 @@ filterCommonRangeBand(T *d_refSlc, T *d_secSlc, T *range)
     auto ncols = this->_signal.getColumns();
     auto nrows = this->_signal.getRows();
     std::valarray<double> rangeFrequencies(ncols);
-    isce::signal::Filter<float>::fftfreq(ncols, 1.0/_rangeSamplingFrequency, rangeFrequencies);
+    isce::signal::Filter<float>::fftfreq(1.0/_rangeSamplingFrequency, rangeFrequencies);
 
     // calculate frequency shift
     size_t refIdx = rangeFrequencyShiftMaxIdx(reinterpret_cast<thrust::complex<T> *>(&d_refSlc), nrows, ncols);
@@ -285,22 +282,20 @@ rangeFrequencyShiftMaxIdx(thrust::complex<T> *spectrum,
     // sum spectrum along columns
     sumSpectrum_g<<<grid, block>>>(spectrum, _d_spectrumSum, n_rows, n_cols);
 
-    // copy to signal sums and find index of max value
-    checkCudaErrors(cudaMemcpy(&_spectrumSum[0], _d_spectrumSum, n_elements*sizeof(T), cudaMemcpyDeviceToHost));
+    // find index of max value
     size_t idx = 0;
-    getPeakIndex(_spectrumSum, idx);
+    getPeakIndex(_d_spectrumSum, n_cols, idx);
     return idx;
 }
 
 
 template<class T>
 void gpuRangeFilter<T>::
-getPeakIndex(std::valarray<float> data, size_t &peakIndex)
+getPeakIndex(T *data, int data_length, size_t &peakIndex)
 {
-    size_t dataLength = data.size();
     peakIndex = 0;
     double peak = data[peakIndex];
-    for (size_t i = 1; i< dataLength;  ++i){
+    for (size_t i = 1; i< data_length;  ++i){
         if (std::abs(data[i]) > peak){
             peak = data[i];
             peakIndex = i;

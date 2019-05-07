@@ -1,7 +1,7 @@
 #cython: language_level=3
 #
 # Author: Bryan V. Riel, Joshua Cohen
-# Copyright 2017
+# Copyright 2017-2019
 #
 
 # Define a helper function to convert Python strings/bytes to bytes
@@ -20,5 +20,7 @@ include "image/pyResampSlc.pyx"
 include "geometry/pyTopo.pyx"
 include "geometry/pyGeo2rdr.pyx"
 
+# Include the signal extensions 
+include "signal/pyCrossmul.pyx"
 
 # end of file

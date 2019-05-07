@@ -9,6 +9,8 @@
 
 #include "isce/signal/Filter.h"
 
+#include <isce/cuda/except/Error.h>
+
 using isce::cuda::signal::gpuAzimuthFilter;
 
 template<class T>
@@ -16,14 +18,6 @@ gpuAzimuthFilter<T>::gpuAzimuthFilter()
 {
     cufftType fft_type = (sizeof(T) == 8) ? CUFFT_Z2Z : CUFFT_C2C;
     this->_signal= gpuSignal<T>(fft_type);
-}
-
-template<class T>
-gpuAzimuthFilter<T>::~gpuAzimuthFilter()
-{
-    if (this->_filter_set) {
-        cudaFree(this->_d_filter);
-    }
 }
 
 template<class T>
@@ -45,8 +39,6 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
         double bandwidth,
         double prf,
         double beta,
-        std::valarray<std::complex<T>> &signal,
-        std::valarray<std::complex<T>> &spectrum,
         size_t ncols,
         size_t nrows)
 {
@@ -59,11 +51,15 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
     const double norm = 1.0;
 
     // Construct vector of frequencies
-    std::valarray<double> frequency(ncols);
+    std::valarray<double> frequency(nrows);
+    isce::signal::Filter<double>::fftfreq(1.0/prf, frequency);
 
-    isce::signal::Filter<float>::fftfreq(ncols, 1.0/prf, frequency);
-
-    this->_filter.resize(ncols*nrows);
+    if (this->_filter_set) {
+        checkCudaErrors(cudaFree(this->_d_filter));
+        this->_filter_set = false;
+    }
+    checkCudaErrors(cudaMallocManaged(&this->_d_filter, ncols*nrows*sizeof(thrust::complex<T>)));
+    this->_filter_set = true;
 
     // Loop over range bins
     for (int j = 0; j < ncols; ++j) {
@@ -78,22 +74,20 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
 
             // Passband
             if (freq <= (0.5 * bandwidth - df)) {
-                this->_filter[i*ncols+j] = std::complex<T>(norm, 0.0);
-
+                this->_d_filter[i*ncols+j] = std::complex<T>(norm, 0.0);
             // Transition region
-            } else if (freq > (0.5 * bandwidth - df) && freq <= (0.5 * bandwidth + df)) {
-                this->_filter[i*ncols+j] = std::complex<T>(norm * 0.5 *
+            }
+            else if (freq > (0.5 * bandwidth - df) && freq <= (0.5 * bandwidth + df)) {
+                this->_d_filter[i*ncols+j] = std::complex<T>(norm * 0.5 *
                         (1.0 + std::cos(M_PI / (bandwidth*beta) *
                         (freq - 0.5 * (1.0 - beta) * bandwidth))), 0.0);
-
             // Stop band
-            } else {
-                this->_filter[i*ncols+j] = std::complex<T>(0.0, 0.0);
+            }
+            else {
+                this->_d_filter[i*ncols+j] = std::complex<T>(0.0, 0.0);
             }
         }
     }
-
-    this->cpFilterHostToDevice(this->_filter);
 
     this->_signal.azimuthFFT(ncols, nrows);
 }
