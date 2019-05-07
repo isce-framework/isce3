@@ -13,6 +13,6 @@ var searchData=
   ['binarysearch',['binarySearch',['../namespaceisce_1_1core.html#aa58e4e7320500f1e24913e17c79b0b09',1,'isce::core']]],
   ['boundserror',['boundsError',['../classisce_1_1cuda_1_1core_1_1gpuLUT2d.html#abe79c505b17d68cd7a942bd3a2a397f4',1,'isce::cuda::core::gpuLUT2d']]],
   ['bsphasevarthr',['bsPhaseVarThr',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#ab3295f73eaded59cb705ced8dba0f85e',1,'isce::unwrap::icu::ICU::bsPhaseVarThr() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a06051db1eed80f3025c475245b7ceecb',1,'isce::unwrap::icu::ICU::bsPhaseVarThr(const float)']]],
-  ['byteoffset',['byteoffset',['../classisce_1_1core_1_1Matrix.html#abd3277c139a21ea192ff4c8dd3a2b24e',1,'isce::core::Matrix']]],
+  ['byteoffset',['byteoffset',['../classisce_1_1core_1_1Cube.html#ad02937e017237c371e3a4a1df412f7f8',1,'isce::core::Cube::byteoffset()'],['../classisce_1_1core_1_1Matrix.html#abd3277c139a21ea192ff4c8dd3a2b24e',1,'isce::core::Matrix::byteoffset()']]],
   ['bibliographic_20references',['Bibliographic References',['../citelist.html',1,'']]]
 ];
