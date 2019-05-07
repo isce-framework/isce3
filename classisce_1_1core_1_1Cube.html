@@ -163,7 +163,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a9cccfb39ce1997508470de59a1530099"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resize memory for a given number of slices, rows and columns.  <a href="#a9cccfb39ce1997508470de59a1530099">More...</a><br/></td></tr>
 <tr class="separator:a9cccfb39ce1997508470de59a1530099"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb10437976e2dbcf06ca16bc7ec3d414"><td class="memItemLeft" align="right" valign="top">const view_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Cube.html#adb10437976e2dbcf06ca16bc7ec3d414">subcube</a> (size_t slice, size_t row, size_t col, size_t slicespan, size_t rowspan, size_t colspan)</td></tr>
-<tr class="memdesc:adb10437976e2dbcf06ca16bc7ec3d414"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract copy of sub-cube3d given starting indices and span.  <a href="#adb10437976e2dbcf06ca16bc7ec3d414">More...</a><br/></td></tr>
+<tr class="memdesc:adb10437976e2dbcf06ca16bc7ec3d414"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract copy of sub-cube given starting indices and span.  <a href="#adb10437976e2dbcf06ca16bc7ec3d414">More...</a><br/></td></tr>
 <tr class="separator:adb10437976e2dbcf06ca16bc7ec3d414"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4e2f63f893b852382dd2785e3ef6998d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e2f63f893b852382dd2785e3ef6998d"></a>
 cell_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Cube.html#a4e2f63f893b852382dd2785e3ef6998d">data</a> ()</td></tr>
@@ -209,14 +209,17 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 shape_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Cube.html#ac51ca91e3a66062ba76d9be93fbdff3f">shape</a> () const </td></tr>
 <tr class="memdesc:ac51ca91e3a66062ba76d9be93fbdff3f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get shape information as grid::shape_type. <br/></td></tr>
 <tr class="separator:ac51ca91e3a66062ba76d9be93fbdff3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a41e37d36ad0079da424d3720aa32d298"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Cube.html#a41e37d36ad0079da424d3720aa32d298">width</a> () const </td></tr>
-<tr class="memdesc:a41e37d36ad0079da424d3720aa32d298"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get cube3d width.  <a href="#a41e37d36ad0079da424d3720aa32d298">More...</a><br/></td></tr>
+<tr class="memitem:a41e37d36ad0079da424d3720aa32d298"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a41e37d36ad0079da424d3720aa32d298"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Cube.html#a41e37d36ad0079da424d3720aa32d298">width</a> () const </td></tr>
+<tr class="memdesc:a41e37d36ad0079da424d3720aa32d298"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get cube width. <br/></td></tr>
 <tr class="separator:a41e37d36ad0079da424d3720aa32d298"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae362dafe1b01e96828fe573da6082f7a"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Cube.html#ae362dafe1b01e96828fe573da6082f7a">length</a> () const </td></tr>
-<tr class="memdesc:ae362dafe1b01e96828fe573da6082f7a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get cube3d length.  <a href="#ae362dafe1b01e96828fe573da6082f7a">More...</a><br/></td></tr>
+<tr class="memitem:ae362dafe1b01e96828fe573da6082f7a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae362dafe1b01e96828fe573da6082f7a"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Cube.html#ae362dafe1b01e96828fe573da6082f7a">length</a> () const </td></tr>
+<tr class="memdesc:ae362dafe1b01e96828fe573da6082f7a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get cube length. <br/></td></tr>
 <tr class="separator:ae362dafe1b01e96828fe573da6082f7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13e9365f2468f7f4a5fa68f15b5e5bf6"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Cube.html#a13e9365f2468f7f4a5fa68f15b5e5bf6">height</a> () const </td></tr>
-<tr class="memdesc:a13e9365f2468f7f4a5fa68f15b5e5bf6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get cube3d height.  <a href="#a13e9365f2468f7f4a5fa68f15b5e5bf6">More...</a><br/></td></tr>
+<tr class="memitem:a13e9365f2468f7f4a5fa68f15b5e5bf6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a13e9365f2468f7f4a5fa68f15b5e5bf6"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Cube.html#a13e9365f2468f7f4a5fa68f15b5e5bf6">height</a> () const </td></tr>
+<tr class="memdesc:a13e9365f2468f7f4a5fa68f15b5e5bf6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get cube height. <br/></td></tr>
 <tr class="separator:a13e9365f2468f7f4a5fa68f15b5e5bf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad02937e017237c371e3a4a1df412f7f8"><td class="memItemLeft" align="right" valign="top">shape_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Cube.html#ad02937e017237c371e3a4a1df412f7f8">byteoffset</a> () const </td></tr>
 <tr class="memdesc:ad02937e017237c371e3a4a1df412f7f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get byteoffset for row and column for reading flat binary buffer.  <a href="#ad02937e017237c371e3a4a1df412f7f8">More...</a><br/></td></tr>
@@ -532,62 +535,6 @@ template&lt;typename cell_t &gt; </div>
 
 <p>Get byteoffset for row and column for reading flat binary buffer. </p>
 <p>Get matrix byte offset for slice, row and column for raw binary buffer. </p>
-
-</div>
-</div>
-<a class="anchor" id="a13e9365f2468f7f4a5fa68f15b5e5bf6"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename cell_t &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">size_t <a class="el" href="classisce_1_1core_1_1Cube.html">isce::core::Cube</a>&lt; cell_t &gt;::height </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Get cube3d height. </p>
-<p>Get cube height. </p>
-
-</div>
-</div>
-<a class="anchor" id="ae362dafe1b01e96828fe573da6082f7a"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename cell_t &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">size_t <a class="el" href="classisce_1_1core_1_1Cube.html">isce::core::Cube</a>&lt; cell_t &gt;::length </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Get cube3d length. </p>
-<p>Get cube length. </p>
 
 </div>
 </div>
@@ -1067,7 +1014,7 @@ template&lt;typename cell_t &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Extract copy of sub-cube3d given starting indices and span. </p>
+<p>Extract copy of sub-cube given starting indices and span. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">slice</td><td>Starting slice of subcube </td></tr>
@@ -1079,34 +1026,6 @@ template&lt;typename cell_t &gt; </div>
   </table>
   </dd>
 </dl>
-
-</div>
-</div>
-<a class="anchor" id="a41e37d36ad0079da424d3720aa32d298"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename cell_t &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">size_t <a class="el" href="classisce_1_1core_1_1Cube.html">isce::core::Cube</a>&lt; cell_t &gt;::width </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Get cube3d width. </p>
-<p>Get cube width. </p>
 
 </div>
 </div>
