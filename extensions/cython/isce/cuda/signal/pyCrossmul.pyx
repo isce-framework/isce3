@@ -1,25 +1,28 @@
 #cython: language_level=3
 #
-# Author: Bryan Riel, Heresh Fattahi
+# Author: Bryan Riel, Heresh Fattahi, Liang Yu
 # Copyright 2017-2019
 #
 
 from libcpp cimport bool
-from Crossmul cimport Crossmul
+from cython.operator cimport dereference as deref
+
 from LUT1d cimport LUT1d
+
+from cuCrossmul cimport gpuCrossmul
 
 cdef class pyCrossmul:
     '''
-    Python wrapper for isce::signal::Crossmul
+    Python wrapper for isce::signal::cuda::gpuCrossmul
 
     Args:
 
     '''
-    cdef Crossmul * c_crossmul
+    cdef gpuCrossmul * c_crossmul
     cdef bool __owner
 
     def __cinit__(self):
-        self.c_crossmul = new Crossmul()
+        self.c_crossmul = new gpuCrossmul()
         self.__owner = True
 
     def __dealloc__(self):
@@ -63,8 +66,7 @@ cdef class pyCrossmul:
         cdef pyLUT2d secdoppler2d
         cdef LUT1d[double] c_refdoppler1d
         cdef LUT1d[double] c_secdoppler1d
-
-        # Set parameters for azimuth filtering
+        
         if refDoppler is not None and secDoppler is not None:
 
             # Convert Dopplers to LUT1d
@@ -73,9 +75,9 @@ cdef class pyCrossmul:
             c_refdoppler1d = LUT1d[double](deref(refdoppler.c_lut))
             c_secdoppler1d = LUT1d[double](deref(secdoppler.c_lut))
 
-            # Set the Dopplers
+            # Set the dopplers
             self.c_crossmul.doppler(c_refdoppler1d, c_secdoppler1d)
-            self.c_crossmul.doCommonAzimuthbandFiltering(True)
+            self.c_crossmul.doCommonAzimuthBandFiltering(True)
 
             # Set the PRF
             self.c_crossmul.prf(prf)
@@ -103,7 +105,7 @@ cdef class pyCrossmul:
 
         # If range offset raster provided, run crossmul with range commonband filtering
         if rngOffset is not None:
-            self.c_crossmul.doCommonRangebandFiltering(True)
+            self.c_crossmul.doCommonRangeBandFiltering(True)
             self.c_crossmul.crossmul(
                 deref(referenceSLC.c_raster),
                 deref(secondarySLC.c_raster),

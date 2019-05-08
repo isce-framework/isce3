@@ -1,17 +1,18 @@
 #cython: language_level=3
 #
-# Author: Bryan Riel, Heresh Fattahi
+# Author: Bryan Riel, Heresh Fattahi, Liang Yu
 # Copyright 2017-2019
 #
 
 from libcpp cimport bool
-from LUT1d cimport LUT1d
-from Raster cimport Raster
 
-cdef extern from "isce/signal/Crossmul.h" namespace "isce::signal":
+from isceextension cimport LUT1d
+from isceextension cimport Raster
+
+cdef extern from "isce/cuda/signal/gpuCrossMul.h" namespace "isce::cuda::signal":
 
     # Class definition
-    cdef cppclass Crossmul:
+    cdef cppclass gpuCrossmul:
 
         # Constructor
         Crossmul() except +
@@ -25,8 +26,8 @@ cdef extern from "isce/signal/Crossmul.h" namespace "isce::signal":
         void beta(double)
         void rangeLooks(int)
         void azimuthLooks(int)
-        void doCommonAzimuthbandFiltering(bool)
-        void doCommonRangebandFiltering(bool)
+        void doCommonAzimuthBandFiltering(bool)
+        void doCommonRangeBandFiltering(bool)
 
         # Set Doppler profiles from LUT1d objects
         void doppler(LUT1d[double] refDoppler, LUT1d[double] secDoppler)
