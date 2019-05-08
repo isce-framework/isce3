@@ -52,7 +52,7 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
 
     // Construct vector of frequencies
     std::valarray<double> frequency(nrows);
-    isce::signal::Filter<double>::fftfreq(1.0/prf, frequency);
+    isce::signal::fftfreq(1.0/prf, frequency);
 
     if (this->_filter_set) {
         checkCudaErrors(cudaFree(this->_d_filter));

@@ -434,7 +434,7 @@ void lookdownShiftImpact(size_t oversample,
     double dt = 1.0/oversample;
 
     // get the vector of range frequencies
-    isce::signal::Filter<float>::fftfreq(dt, rangeFrequencies);
+    isce::signal::fftfreq(dt, rangeFrequencies);
 
 
     // in the process of upsampling the SLCs, creating upsampled interferogram

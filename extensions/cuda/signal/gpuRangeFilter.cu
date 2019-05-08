@@ -88,7 +88,7 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
     std::valarray<double> frequency(nfft);
     isce::signal::Filter<float> tempFilter;
     double dt = 1.0/rangeSamplingFrequency;
-    isce::signal::Filter<float>::fftfreq(dt, frequency);
+    isce::signal::fftfreq(dt, frequency);
 
     if (filterType=="boxcar"){
         constructRangeBandpassBoxcar(
@@ -227,7 +227,7 @@ filterCommonRangeBand(T *d_refSlc, T *d_secSlc, T *range)
     auto ncols = this->_signal.getColumns();
     auto nrows = this->_signal.getRows();
     std::valarray<double> rangeFrequencies(ncols);
-    isce::signal::Filter<float>::fftfreq(1.0/_rangeSamplingFrequency, rangeFrequencies);
+    isce::signal::fftfreq(1.0/_rangeSamplingFrequency, rangeFrequencies);
 
     // calculate frequency shift
     size_t refIdx = rangeFrequencyShiftMaxIdx(reinterpret_cast<thrust::complex<T> *>(&d_refSlc), nrows, ncols);
