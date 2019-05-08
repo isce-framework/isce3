@@ -144,4 +144,9 @@ def test_createNumpyDataset():
     dset = None
     del raster
 
-
+if __name__ == '__main__':
+    test_createGeoTiffFloat()
+    test_createVRTDouble_setGetValue()
+    test_createTwoBandEnvi()
+    test_createMultiBandVRT()
+    test_createNumpyDataset()

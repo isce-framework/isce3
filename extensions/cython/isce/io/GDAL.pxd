@@ -48,4 +48,8 @@ cdef extern from "gdal.h":
     cdef cppclass GDALDatasetH
     GDALDatasetH GDALOpen(const char *, GDALAccess)
 
+cdef extern from "isce/io/IH5Dataset.h" namespace "isce::io":
+    # Register ISCE's IH5 Driver
+    void GDALRegister_IH5()
+
 # end of file

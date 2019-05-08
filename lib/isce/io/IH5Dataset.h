@@ -14,6 +14,9 @@
 #include "IH5.h"
 
 
+namespace isce {
+namespace io {
+
 /************************************************************************/
 /*                            IH5Dataset                                */
 /************************************************************************/
@@ -100,5 +103,7 @@ class IH5RasterBand : public GDALPamRasterBand
 /** Function to register driver with GDAL */
 void GDALRegister_IH5();
 
+}
+}
 
 #endif /*  __ISCE_IO_IH5DATASET_H__ */
