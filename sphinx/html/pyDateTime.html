@@ -5,13 +5,15 @@
   <head>
     <meta charset="utf-8" />
     <title>pyDateTime &#8212; ISCE  documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
   </head><body>
@@ -36,11 +38,10 @@
 <dl class="class">
 <dt id="isceextension.pyDateTime">
 <em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyDateTime</code><span class="sig-paren">(</span><em>inobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime" title="Permalink to this definition">¶</a></dt>
-<dd><p>Python wrapper for isce::core::DateTime.
-Includes support for comparison and subtraction operators.</p>
+<dd><p>Python wrapper for isce::core::DateTime</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>inobj</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime.datetime</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – Input python datetime object or iso-8601 string</p>
+<dd class="field-odd"><p><strong>inobj</strong> (<em>Optional</em><em>[</em><em>datetime</em><em> or </em><em>str</em><em>]</em>) – Input python datetime object or iso-8601 string</p>
 </dd>
 </dl>
 <dl class="staticmethod">
@@ -49,7 +50,7 @@ Includes support for comparison and subtraction operators.</p>
 <dd><p>Binds the current pyEllipsoid instance to another C++ DateTime pointer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dt</strong> (<a class="reference internal" href="#isceextension.pyDateTime" title="isceextension.pyDateTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyDateTime</span></code></a>) – Source of C++ DateTime pointer.</p>
+<dd class="field-odd"><p><strong>dt</strong> (<a class="reference internal" href="#isceextension.pyDateTime" title="isceextension.pyDateTime"><em>pyDateTime</em></a>) – Source of C++ DateTime pointer.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -57,15 +58,7 @@ Includes support for comparison and subtraction operators.</p>
 <dl class="method">
 <dt id="isceextension.pyDateTime.isoformat">
 <code class="descname">isoformat</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime.isoformat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a string in ISO-8601 format.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Date time in ISO-8601 format</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code></p>
-</dd>
-</dl>
+<dd><p>str: Date time in ISO-8601 format</p>
 </dd></dl>
 
 <dl class="method">
@@ -74,7 +67,7 @@ Includes support for comparison and subtraction operators.</p>
 <dd><p>Set pyDateTime using datetime.datetime or str object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>inobj</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime.datetime</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>) – Input object.</p>
+<dd class="field-odd"><p><strong>[</strong><strong>datetime.datetime</strong><strong> or </strong><strong>str</strong><strong>]</strong> (<em>inobj</em>) – Input object.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -85,7 +78,7 @@ Includes support for comparison and subtraction operators.</p>
 <dd><p>Sets underlying C++ DateTime object using time tag in ISO-8601 format</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>pydatestr</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>) – Time tag in ISO-8601 format</p>
+<dd class="field-odd"><p><strong>pydatestr</strong> (<em>str</em>) – Time tag in ISO-8601 format</p>
 </dd>
 </dl>
 </dd></dl>
