@@ -5,13 +5,15 @@
   <head>
     <meta charset="utf-8" />
     <title>Welcome to ISCE’s python documentation! &#8212; ISCE  documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
   </head><body>
@@ -32,15 +34,44 @@
             
   <div class="section" id="welcome-to-isce-s-python-documentation">
 <h1>Welcome to ISCE’s python documentation!<a class="headerlink" href="#welcome-to-isce-s-python-documentation" title="Permalink to this headline">¶</a></h1>
-<p>ISCE’s Python interface is built as two separate layers:</p>
-<ol class="arabic simple">
-<li><p>Cython interface for interacing with C++ code</p></li>
-<li><p>Pyre interface for user-facing workflows</p></li>
-</ol>
-<p>The Pyre interface uses the Cython interface to control the behavior of underlying C++ modules for coordinating behavior of different modules in workflows.</p>
-<div class="section" id="cython-interface">
-<h2>Cython Interface<a class="headerlink" href="#cython-interface" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="cython.html"><span class="doc">Cython Interface</span></a></p>
+<p>Python bindings for ISCE are available via the module named “isceextension”. The following classes are available at the Python level:</p>
+<div class="section" id="core-datastructures">
+<h2>Core Datastructures<a class="headerlink" href="#core-datastructures" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="pyDateTime.html"><span class="doc">pyDateTime</span></a> / <a class="reference internal" href="pyTimeDelta.html"><span class="doc">pyTimeDelta</span></a></p></li>
+<li><p><a class="reference internal" href="pyEllipsoid.html"><span class="doc">pyEllipsoid</span></a></p></li>
+<li><p><a class="reference internal" href="pyPoly1d.html"><span class="doc">pyPoly1d</span></a></p></li>
+<li><p><a class="reference internal" href="pyPoly2d.html"><span class="doc">pyPoly2d</span></a></p></li>
+<li><p><a class="reference internal" href="pyLUT1d.html"><span class="doc">pyLUT1d</span></a></p></li>
+<li><p><a class="reference internal" href="pyOrbit.html"><span class="doc">pyOrbit</span></a></p></li>
+</ul>
+</div>
+<div class="section" id="i-o-datastructures">
+<h2>I/O Datastructures<a class="headerlink" href="#i-o-datastructures" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="pyIH5.html"><span class="doc">pyIH5File</span></a></p></li>
+<li><p><a class="reference internal" href="pyRaster.html"><span class="doc">pyRaster</span></a></p></li>
+</ul>
+</div>
+<div class="section" id="product-datastructures">
+<h2>Product Datastructures<a class="headerlink" href="#product-datastructures" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="pyProduct.html"><span class="doc">pyProduct</span></a></p></li>
+<li><p><a class="reference internal" href="pyMetadata.html"><span class="doc">pyMetadata</span></a></p></li>
+</ul>
+</div>
+<div class="section" id="image-datastructures">
+<h2>Image Datastructures<a class="headerlink" href="#image-datastructures" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="pyResampSlc.html"><span class="doc">pyResampSlc</span></a></p></li>
+</ul>
+</div>
+<div class="section" id="geometry-datastructures">
+<h2>Geometry Datastructures<a class="headerlink" href="#geometry-datastructures" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="pyTopo.html"><span class="doc">pyTopo</span></a></p></li>
+<li><p><a class="reference internal" href="pyGeo2rdr.html"><span class="doc">pyGeo2rdr</span></a></p></li>
+</ul>
 </div>
 </div>
 
@@ -53,7 +84,11 @@
   <h3><a href="#">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Welcome to ISCE’s python documentation!</a><ul>
-<li><a class="reference internal" href="#cython-interface">Cython Interface</a></li>
+<li><a class="reference internal" href="#core-datastructures">Core Datastructures</a></li>
+<li><a class="reference internal" href="#i-o-datastructures">I/O Datastructures</a></li>
+<li><a class="reference internal" href="#product-datastructures">Product Datastructures</a></li>
+<li><a class="reference internal" href="#image-datastructures">Image Datastructures</a></li>
+<li><a class="reference internal" href="#geometry-datastructures">Geometry Datastructures</a></li>
 </ul>
 </li>
 </ul>

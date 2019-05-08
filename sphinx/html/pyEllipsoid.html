@@ -5,23 +5,25 @@
   <head>
     <meta charset="utf-8" />
     <title>pyEllipsoid &#8212; ISCE  documentation</title>
-    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
-    <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
+          <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -36,13 +38,12 @@
 <dl class="class">
 <dt id="isceextension.pyEllipsoid">
 <em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyEllipsoid</code><span class="sig-paren">(</span><em>a=6378137.</em>, <em>e2=.0066943799901</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Python wrapper for isce::core::Ellipsoid.
-By default returns a WGS84 Ellipsoid.</p>
+<dd><p>Python wrapper for isce::core::Ellipsoid</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>a</strong> (<em>float</em><em>, </em><em>optional</em>) – Semi-major axis of Ellipsoid in m.</p></li>
-<li><p><strong>e2</strong> (<em>float</em><em>, </em><em>optional</em>) – Eccentricity-squared.</p></li>
+<li><p><strong>a</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Semi-major axis of Ellipsoid in m.</p></li>
+<li><p><strong>e2</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Eccentricity-squared.</p></li>
 </ul>
 </dd>
 </dl>
@@ -53,16 +54,16 @@ By default returns a WGS84 Ellipsoid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>pos</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – triplet of floats representing ECEF position in meters</p></li>
-<li><p><strong>vel</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – triplet of floats representing ECEF velocity in meters / sec</p></li>
+<li><p><strong>pos</strong> (<em>list</em><em> or </em><em>np.array</em><em>[</em><em>3</em><em>]</em>) – triplet of floats representing ECEF position in meters</p></li>
+<li><p><strong>vel</strong> (<em>list</em><em> or </em><em>np.array</em><em>[</em><em>3</em><em>]</em>) – triplet of floats representing ECEF velocity in meters / sec</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>tuple containing:</dt><dd><ul class="simple">
-<li><p>that (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>): Tangential unit vector.</p></li>
-<li><p>chat (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>): Cross track unit vector.</p></li>
-<li><p>nhat (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>): Normal unit vector pointing downwards.</p></li>
+<li><p>that (np.array[3]) - Tangential unit vector</p></li>
+<li><p>chat (np.array[3]) - Cross track unit vector</p></li>
+<li><p>nhat (np.array[3]) - Normal unit vector pointing downwards</p></li>
 </ul>
 </dd>
 </dl>
@@ -77,13 +78,10 @@ By default returns a WGS84 Ellipsoid.</p>
 <dl class="attribute">
 <dt id="isceextension.pyEllipsoid.a">
 <code class="descname">a</code><a class="headerlink" href="#isceextension.pyEllipsoid.a" title="Permalink to this definition">¶</a></dt>
-<dd><p>Semi-major axis of ellipsoid.</p>
+<dd><p>Semi-major axis of ellipsoid in meters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Semi-major axis of ellipsoid in meters.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>float</p>
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -91,13 +89,10 @@ By default returns a WGS84 Ellipsoid.</p>
 <dl class="attribute">
 <dt id="isceextension.pyEllipsoid.b">
 <code class="descname">b</code><a class="headerlink" href="#isceextension.pyEllipsoid.b" title="Permalink to this definition">¶</a></dt>
-<dd><p>Semi-minor axis of ellipsoid.</p>
+<dd><p>Semi-minor axis of ellipsoid in meters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Semi-minor axis of ellipsoid in meters.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>float</p>
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -108,7 +103,7 @@ By default returns a WGS84 Ellipsoid.</p>
 <dd><p>Binds the current pyEllipsoid instance to another C++ Ellipsoid pointer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>elp</strong> (<a class="reference internal" href="#isceextension.pyEllipsoid" title="isceextension.pyEllipsoid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyEllipsoid</span></code></a>) – Source of C++ Ellipsoid pointer.</p>
+<dd class="field-odd"><p><strong>elp</strong> (<a class="reference internal" href="#isceextension.pyEllipsoid" title="isceextension.pyEllipsoid"><em>pyEllipsoid</em></a>) – Source of C++ Ellipsoid pointer.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -132,11 +127,8 @@ By default returns a WGS84 Ellipsoid.</p>
 <code class="descname">e2</code><a class="headerlink" href="#isceextension.pyEllipsoid.e2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Eccentricity-squared of ellipsoid.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Eccentricity-squared of ellipsoid.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>float</p>
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -148,9 +140,9 @@ By default returns a WGS84 Ellipsoid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>pos</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – triplet of floats representing platform position in ECEF coordinates (m)</p></li>
-<li><p><strong>vel</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – triplet of floats representing platform veloctity in ECEF coodinates (m/s)</p></li>
-<li><p><strong>los</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – triplet of floats representing line-of-sight vector in ECEF coordiantes (m)</p></li>
+<li><p><strong>pos</strong> (<em>list</em><em> or </em><em>np.array</em><em>[</em><em>3</em><em>]</em>) – triplet of floats representing platform position in ECEF coordinates (m)</p></li>
+<li><p><strong>vel</strong> (<em>list</em><em> or </em><em>np.array</em><em>[</em><em>3</em><em>]</em>) – triplet of floats representing platform veloctity in ECEF coodinates (m/s)</p></li>
+<li><p><strong>los</strong> (<em>list</em><em> or </em><em>np.array</em><em>[</em><em>3</em><em>]</em>) – triplet of floats representing line-of-sight vector in ECEF coordiantes (m)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -175,14 +167,13 @@ By default returns a WGS84 Ellipsoid.</p>
 <dd><p>Transform Lon/Lat/Hgt position to ECEF xyz coordinates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>llh</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – triplet of floats representing Lon (rad), Lat (rad) and hgt (m).
-Can be of shape (3,) or (n,3).</p>
+<dd class="field-odd"><p><strong>llh</strong> (<em>np.array</em><em>[</em><em>3</em><em> or </em><em>nx3</em><em>]</em>) – triplet of floats representing Lon (rad), Lat (rad) and hgt (m)</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>triplet of floats representing ECEF coordinates in meters</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></p>
+<dd class="field-odd"><p>np.array[3 or nx3]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -198,15 +189,15 @@ Can be of shape (3,) or (n,3).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>lat</strong> (float or <code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Latitude in radians. Can be constant or 1D array.</p></li>
-<li><p><strong>hdg</strong> (float or <code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Heading in radians. Measured clockwise from North.</p></li>
+<li><p><strong>lat</strong> (<em>float</em><em> or </em><em>np.array 1D</em>) – Latitude in radians</p></li>
+<li><p><strong>hdg</strong> (<em>float</em><em> or </em><em>np.array 1D</em>) – Heading in radians. Measured clockwise from North.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Directional radius in meters.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float or <code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></p>
+<dd class="field-odd"><p>float or np.array 1D</p>
 </dd>
 </dl>
 </dd></dl>
@@ -217,13 +208,13 @@ Can be of shape (3,) or (n,3).</p>
 <dd><p>Prime Vertical Radius as a function of latitude.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>lat</strong> (float or <code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Latitude in radians. Can be constant or 1D array.</p>
+<dd class="field-odd"><p><strong>lat</strong> (<em>float</em><em> or </em><em>np.array 1D</em>) – Latitude in radians</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Prime Vertical radius in meters</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float or <code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></p>
+<dd class="field-odd"><p>float or np.array 1D</p>
 </dd>
 </dl>
 </dd></dl>
@@ -234,13 +225,13 @@ Can be of shape (3,) or (n,3).</p>
 <dd><p>Meridional radius as a function of latitude.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>lat</strong> (float or <code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – Latitude in radians. Can be constant or 1D array.</p>
+<dd class="field-odd"><p><strong>lat</strong> (<em>float</em><em> or </em><em>np.array 1D</em>) – Latitude in radians</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Meridional radius in meters</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float or <code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></p>
+<dd class="field-odd"><p>float or np.array 1D</p>
 </dd>
 </dl>
 </dd></dl>
@@ -251,14 +242,13 @@ Can be of shape (3,) or (n,3).</p>
 <dd><p>Transform Lon/Lat/Hgt position to ECEF xyz coordinates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>xyz</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>) – triplet of floats representing ECEF coordinates in meters.
-Can be of shape (3,) or (n,3).</p>
+<dd class="field-odd"><p><strong>xyz</strong> (<em>np.array</em><em>[</em><em>3</em><em> or </em><em>nx3</em><em>]</em>) – triplet of floats representing ECEF coordinates in meters</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>triplet of floats representing Lon (rad), Lat (rad) and hgt (m)</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></p>
+<dd class="field-odd"><p>np.array[3 or nx3]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -276,14 +266,14 @@ Can be of shape (3,) or (n,3).</p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/core/pyEllipsoid.rst.txt"
+      <li><a href="_sources/pyEllipsoid.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
+    <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
     </form>
@@ -298,9 +288,9 @@ Can be of shape (3,) or (n,3).</p>
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
+          <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
