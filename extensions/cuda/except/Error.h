@@ -1,6 +1,7 @@
 #pragma once
 
 #include <isce/except/Error.h>
+#include <cufft.h>
 
 namespace isce { namespace cuda { namespace except {
 
@@ -19,6 +20,9 @@ namespace isce { namespace cuda { namespace except {
     template<>
     CudaError<cudaError_t>::CudaError(const SrcInfo& info, const cudaError_t err);
 
+    template<>
+    CudaError<cufftResult>::CudaError(const SrcInfo& info, const cufftResult err);
+
     template<class T>
     CudaError<T>::CudaError(const SrcInfo& info, const T err) :
             err(err),
@@ -30,6 +34,15 @@ template<class T>
 static inline void checkCudaErrorsImpl(const isce::except::SrcInfo& info, T err) {
     if (err)
         throw isce::cuda::except::CudaError<T>(info, err);
+}
+
+/* Explicit instantiation for cufft calls,
+ * since we need to compare against cufftResult */
+template<>
+inline void checkCudaErrorsImpl<cufftResult>(
+        const isce::except::SrcInfo& info, cufftResult err) {
+    if (err != CUFFT_SUCCESS)
+        throw isce::cuda::except::CudaError<cufftResult>(info, err);
 }
 
 
