@@ -327,9 +327,8 @@ filter(std::valarray<std::complex<T>> &signal,
  * @param[in] dt sampling interval of the signal
  * @param[out] freq output vector of the frequencies 
  */
-template <class T>
 void
-isce::signal::Filter<T>::
+isce::signal::
 fftfreq(double dt, std::valarray<double> &freq){
 
     int N = freq.size();

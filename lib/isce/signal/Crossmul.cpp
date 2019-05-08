@@ -204,7 +204,7 @@ crossmul(isce::io::Raster& referenceSLC,
     isce::signal::Filter<float> rangeFilter;
 
     std::valarray<double> rangeFrequencies(nfft);
-    rangeFilter.fftfreq(1.0/_rangeSamplingFrequency, rangeFrequencies);
+    fftfreq(1.0/_rangeSamplingFrequency, rangeFrequencies);
 
     rangeFilter.initiateRangeFilter(refSlc, refSpectrum, nfft, blockRows);
 
@@ -384,9 +384,7 @@ lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows,
     double dt = 1.0/oversample;
 
     // get the vector of range frequencies
-    //filter object
-    isce::signal::Filter<float> tempFilter;
-    tempFilter.fftfreq(dt, rangeFrequencies);
+    fftfreq(dt, rangeFrequencies);
 
     // in the process of upsampling the SLCs, creating upsampled interferogram
     // and then looking down the upsampled interferogram to the original size of

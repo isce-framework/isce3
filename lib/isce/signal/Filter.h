@@ -21,6 +21,9 @@ namespace isce {
     namespace signal {
         template<class T>
         class Filter;
+
+        /** Create a vector of frequencies*/
+        void fftfreq(double dt, std::valarray<double> &freq);
     }
 }
 
@@ -94,9 +97,6 @@ class isce::signal::Filter {
         /** Filter a signal in frequency domain*/
         void filter(std::valarray<std::complex<T>> &signal,
                 std::valarray<std::complex<T>> &spectrum);
-
-        /** Create a vector of frequencies*/
-        static void fftfreq(double dt, std::valarray<double> &freq);
 
         /** Find the index of a specific frequency for a signal with a specific sampling rate*/
         static void indexOfFrequency(double dt, int N, double f, int& n);
