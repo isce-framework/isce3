@@ -74,7 +74,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -124,6 +124,9 @@ CUDA_DEV double&#160;</td><td class="memItemRight" valign="bottom"><b>rDir</b> (
 <tr class="memitem:a167ff1cd8e932f3df288ffcd69c08766"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a167ff1cd8e932f3df288ffcd69c08766"></a>
 CUDA_DEV void&#160;</td><td class="memItemRight" valign="bottom"><b>lonLatToXyz</b> (const double *, double *) const </td></tr>
 <tr class="separator:a167ff1cd8e932f3df288ffcd69c08766"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfef5f1767c7a42f2ab353968d79a1d0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adfef5f1767c7a42f2ab353968d79a1d0"></a>
+CUDA_DEV <a class="el" href="structisce_1_1core_1_1Vector.html">isce::core::Vec3</a>&#160;</td><td class="memItemRight" valign="bottom"><b>lonLatToXyz</b> (const <a class="el" href="structisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;) const </td></tr>
+<tr class="separator:adfef5f1767c7a42f2ab353968d79a1d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af8515453626a6398787938d16291c506"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af8515453626a6398787938d16291c506"></a>
 CUDA_DEV void&#160;</td><td class="memItemRight" valign="bottom"><b>xyzToLonLat</b> (const double *, double *) const </td></tr>
 <tr class="separator:af8515453626a6398787938d16291c506"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -139,10 +142,10 @@ CUDA_HOSTDEV double&#160;</td><td class="memItemRight" valign="bottom"><a class=
 <tr class="memdesc:a27d1973924ebce714e38abfc2bd59bd1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return semi-major axis. <br/></td></tr>
 <tr class="separator:a27d1973924ebce714e38abfc2bd59bd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acdd443219d2aa98d52241ad6b9f137c9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acdd443219d2aa98d52241ad6b9f137c9"></a>
-CUDA_HOST void&#160;</td><td class="memItemRight" valign="bottom"><b>lonLatToXyz_h</b> (cartesian_t &amp;, cartesian_t &amp;)</td></tr>
+CUDA_HOST void&#160;</td><td class="memItemRight" valign="bottom"><b>lonLatToXyz_h</b> (<a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;, <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;)</td></tr>
 <tr class="separator:acdd443219d2aa98d52241ad6b9f137c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af71a7c64c7957e6a0dbf709b52d82ed8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af71a7c64c7957e6a0dbf709b52d82ed8"></a>
-CUDA_HOST void&#160;</td><td class="memItemRight" valign="bottom"><b>xyzToLonLat_h</b> (cartesian_t &amp;, cartesian_t &amp;)</td></tr>
+CUDA_HOST void&#160;</td><td class="memItemRight" valign="bottom"><b>xyzToLonLat_h</b> (<a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;, <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;)</td></tr>
 <tr class="separator:af71a7c64c7957e6a0dbf709b52d82ed8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>

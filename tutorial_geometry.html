@@ -67,7 +67,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -114,7 +114,7 @@ Orbit</h1>
 <div class="line">    {</div>
 <div class="line">        std::stringstream stream;</div>
 <div class="line">        std::string aztime;</div>
-<div class="line">        <a class="code" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">isce::core::cartesian_t</a> pos, vel;</div>
+<div class="line">        <a class="code" href="structisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> pos, vel;</div>
 <div class="line"></div>
 <div class="line">        stream &lt;&lt; line;</div>
 <div class="line">        std::cout &lt;&lt; line &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
@@ -205,7 +205,7 @@ Forward mapping - determining bounding boxes</h1>
 <div class="line">            <span class="keywordflow">for</span>(<span class="keywordtype">int</span> zz=0; zz&lt;zrange.size(); zz++)</div>
 <div class="line">            {</div>
 <div class="line">                <span class="comment">//To store Lon/Lat/Hae of target</span></div>
-<div class="line">                <a class="code" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">isce::core::cartesian_t</a> llh;</div>
+<div class="line">                <a class="code" href="structisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> llh;</div>
 <div class="line"></div>
 <div class="line">                <span class="comment">//Constant height DEM</span></div>
 <div class="line">                <a class="code" href="classisce_1_1geometry_1_1DEMInterpolator.html">isce::geometry::DEMInterpolator</a> constDEM(zrange[zz]);</div>
@@ -263,8 +263,8 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Known targets / corner reflector locations - can be read in from a file</span></div>
 <div class="line">    std::vector&lt;isce::core::cartesian_t&gt; targets;</div>
-<div class="line">    targets.push_back( <a class="code" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">isce::core::cartesian_t</a>{{131.55, 32.85, 475.}});</div>
-<div class="line">    targets.push_back( <a class="code" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">isce::core::cartesian_t</a>{{131.65, 32.95, 150.}});</div>
+<div class="line">    targets.push_back( <a class="code" href="structisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a>{{131.55, 32.85, 475.}});</div>
+<div class="line">    targets.push_back( <a class="code" href="structisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a>{{131.65, 32.95, 150.}});</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Wavelength</span></div>
 <div class="line">    <span class="keywordtype">double</span> wvl = 0.06;</div>
@@ -298,7 +298,7 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line">        <span class="keywordtype">double</span> aztime;</div>
 <div class="line">       </div>
 <div class="line">        <span class="comment">//Convert from degrees to radians</span></div>
-<div class="line">        <a class="code" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">isce::core::cartesian_t</a> llh;</div>
+<div class="line">        <a class="code" href="structisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> llh;</div>
 <div class="line">        llh[0] = targets[tt][0] * M_PI / 180.0;</div>
 <div class="line">        llh[1] = targets[tt][1] * M_PI / 180.0;</div>
 <div class="line">        llh[2] = targets[tt][2];</div>
