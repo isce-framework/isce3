@@ -22,13 +22,15 @@ namespace isce {
     }
 }
 
-// Definition of abstract base class for all kernels.  Basically just a closure
-// around an arbitrary function and a width property.
-// Parameter T defines tupe for coefficients.  Typically float or double.
+/** Abstract base class for all kernels.
+ *
+ * Basically just a closure * around an arbitrary function and a width property.
+ * Template parameter T defines type for coefficients, typically float or
+ * double.
+ */
 template <typename T>
 class isce::core::Kernel {
 
-    // Public interface
     public:
         /** Virtual destructor (allow destruction of base Kernel pointer) */
         virtual ~Kernel() {}
@@ -36,23 +38,27 @@ class isce::core::Kernel {
         /** Evaluate kernel at given location in [-halfwidth, halfwidth] */
         virtual T operator()(double x) = 0;
 
-        /** Get width of kernel. */
+        /** Get width of kernel.
+         *
+         * Units are the same as are used for calls to operator().
+         */
         double width() const {return _halfwidth*2;}
 
-    // Protected constructor and data to be used by derived classes
     protected:
         double _halfwidth;
 };
 
+/** Bartlett kernel (triangle function). */
 template <typename T>
 class isce::core::BartlettKernel : public isce::core::Kernel<T> {
 
     public:
-        /** Linear kernel, aka Bartlett or triangle function. */
+        /** Triangle function constructor. */
         BartlettKernel(double width);
         T operator()(double x) override;
 };
 
+/** Linear kernel, which is just a special case of Bartlett. */
 template <typename T>
 isce::core::BartlettKernel<T>
 isce::core::LinearKernel()
@@ -60,13 +66,19 @@ isce::core::LinearKernel()
     return isce::core::BartlettKernel<T>(2.0);
 }
 
+/** Kernel based on the paper by Knab for interpolating band-limited signals.
+ *
+ * For details see references
+ * @cite knab1983
+ * @cite migliaccio2007
+ */
 template <typename T>
 class isce::core::KnabKernel : public isce::core::Kernel<T> {
 
     public:
-        /** Constructor for kernel corresponding to paper by Knab, 1983.
+        /** Constructor of Knab's kernel.
          *
-         * @param[in] width     Total width (in samples) of kernel.
+         * @param[in] width     Total width of kernel.
          * @param[in] bandwidth Bandwidth of signal to be interpolated, as a
          *                      fraction of the sample rate (0 < bandwidth < 1).
          */
