@@ -5,13 +5,15 @@
   <head>
     <meta charset="utf-8" />
     <title>pyResampSlc &#8212; ISCE  documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
   </head><body>
@@ -62,7 +64,7 @@
 
 <dl class="method">
 <dt id="isceextension.pyResampSlc.resamp">
-<code class="descname">resamp</code><span class="sig-paren">(</span><em>pyRaster inSlc=None</em>, <em>pyRaster outSlc=None</em>, <em>pyRaster rgoffRaster=None</em>, <em>pyRaster azoffRaster=None</em>, <em>infile=None</em>, <em>outfile=None</em>, <em>rgfile=None</em>, <em>azfile=None</em>, <em>int inputBand=1</em>, <em>bool flatten=True</em>, <em>bool isComplex=True</em>, <em>int rowBuffer=40</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyResampSlc.resamp" title="Permalink to this definition">¶</a></dt>
+<code class="descname">resamp</code><span class="sig-paren">(</span><em>self</em>, <em>pyRaster inSlc=None</em>, <em>pyRaster outSlc=None</em>, <em>pyRaster rgoffRaster=None</em>, <em>pyRaster azoffRaster=None</em>, <em>infile=None</em>, <em>outfile=None</em>, <em>rgfile=None</em>, <em>azfile=None</em>, <em>int inputBand=1</em>, <em>bool flatten=True</em>, <em>bool isComplex=True</em>, <em>int rowBuffer=40</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyResampSlc.resamp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run resamp on complex image data stored in HDF5 product or specified
 as an external file.</p>
 <dl class="field-list simple">
@@ -90,7 +92,7 @@ as an external file.</p>
 
 <dl class="method">
 <dt id="isceextension.pyResampSlc.setReferenceProduct">
-<code class="descname">setReferenceProduct</code><span class="sig-paren">(</span><em>pyProduct refProduct</em>, <em>freq=u'A'</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyResampSlc.setReferenceProduct" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setReferenceProduct</code><span class="sig-paren">(</span><em>self</em>, <em>pyProduct refProduct</em>, <em>freq=u'A'</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyResampSlc.setReferenceProduct" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a reference product for flattening.</p>
 </dd></dl>
 

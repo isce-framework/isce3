@@ -5,13 +5,15 @@
   <head>
     <meta charset="utf-8" />
     <title>pyPoly2d &#8212; ISCE  documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
   </head><body>
@@ -473,7 +475,7 @@ pyPoly2d instance.</p>
 
 <dl class="method">
 <dt id="isceextension.pyPoly2d.dPrint">
-<code class="descname">dPrint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.dPrint" title="Permalink to this definition">¶</a></dt>
+<code class="descname">dPrint</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.dPrint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Debug print of underlying C++ structure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -484,7 +486,7 @@ pyPoly2d instance.</p>
 
 <dl class="method">
 <dt id="isceextension.pyPoly2d.eval">
-<code class="descname">eval</code><span class="sig-paren">(</span><em>double azi</em>, <em>double rng</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.eval" title="Permalink to this definition">¶</a></dt>
+<code class="descname">eval</code><span class="sig-paren">(</span><em>self</em>, <em>double azi</em>, <em>double rng</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.eval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate polynomial at given point.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -504,7 +506,7 @@ pyPoly2d instance.</p>
 
 <dl class="method">
 <dt id="isceextension.pyPoly2d.getCoeff">
-<code class="descname">getCoeff</code><span class="sig-paren">(</span><em>int row</em>, <em>int col</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.getCoeff" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getCoeff</code><span class="sig-paren">(</span><em>self</em>, <em>int row</em>, <em>int col</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.getCoeff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get polynomial coefficient using row and col indices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -524,7 +526,7 @@ pyPoly2d instance.</p>
 
 <dl class="method">
 <dt id="isceextension.pyPoly2d.printPoly">
-<code class="descname">printPoly</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.printPoly" title="Permalink to this definition">¶</a></dt>
+<code class="descname">printPoly</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.printPoly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Debug print function of underlying C++ structure.</p>
 </dd></dl>
 
@@ -572,7 +574,7 @@ pyPoly2d instance.</p>
 
 <dl class="method">
 <dt id="isceextension.pyPoly2d.setCoeff">
-<code class="descname">setCoeff</code><span class="sig-paren">(</span><em>int row</em>, <em>int col</em>, <em>double val</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.setCoeff" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setCoeff</code><span class="sig-paren">(</span><em>self</em>, <em>int row</em>, <em>int col</em>, <em>double val</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.setCoeff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set polynomial coefficient using row and col indices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

@@ -5,13 +5,15 @@
   <head>
     <meta charset="utf-8" />
     <title>pyPoly1d &#8212; ISCE  documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
   </head><body>
@@ -297,7 +299,7 @@ Transcript written on math.log.
 
 <dl class="method">
 <dt id="isceextension.pyPoly1d.copy">
-<code class="descname">copy</code><span class="sig-paren">(</span><em>poly</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.copy" title="Permalink to this definition">¶</a></dt>
+<code class="descname">copy</code><span class="sig-paren">(</span><em>self</em>, <em>poly</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Utility method for copying metadata from another python object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -311,7 +313,7 @@ Transcript written on math.log.
 
 <dl class="method">
 <dt id="isceextension.pyPoly1d.eval">
-<code class="descname">eval</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.eval" title="Permalink to this definition">¶</a></dt>
+<code class="descname">eval</code><span class="sig-paren">(</span><em>self</em>, <em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.eval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate function at a given value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -328,13 +330,13 @@ Transcript written on math.log.
 
 <dl class="method">
 <dt id="isceextension.pyPoly1d.evalWithNumpy">
-<code class="descname">evalWithNumpy</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.evalWithNumpy" title="Permalink to this definition">¶</a></dt>
+<code class="descname">evalWithNumpy</code><span class="sig-paren">(</span><em>self</em>, <em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.evalWithNumpy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate using numpy’s polyval method</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="isceextension.pyPoly1d.getCoeff">
-<code class="descname">getCoeff</code><span class="sig-paren">(</span><em>int index</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.getCoeff" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getCoeff</code><span class="sig-paren">(</span><em>self</em>, <em>int index</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.getCoeff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get coefficient at given index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -393,7 +395,7 @@ Transcript written on math.log.
 
 <dl class="method">
 <dt id="isceextension.pyPoly1d.printPoly">
-<code class="descname">printPoly</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.printPoly" title="Permalink to this definition">¶</a></dt>
+<code class="descname">printPoly</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.printPoly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print poly structure at C++ level for debugging.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -404,7 +406,7 @@ Transcript written on math.log.
 
 <dl class="method">
 <dt id="isceextension.pyPoly1d.setCoeff">
-<code class="descname">setCoeff</code><span class="sig-paren">(</span><em>int index</em>, <em>double val</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.setCoeff" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setCoeff</code><span class="sig-paren">(</span><em>self</em>, <em>int index</em>, <em>double val</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.setCoeff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set coefficient at given index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
