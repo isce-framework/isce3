@@ -22,30 +22,12 @@
 #include "isce/core/Interp1d.h"
 
 using isce::core::interp1d;
+using isce::core::sinc;
 
 double
 rad2deg(double x)
 {
     return x * 180.0 / M_PI;
-}
-
-// TODO figure out good place to put this function definition
-template <typename T>
-T
-_sinc(T t)
-{
-    static T const eps1 = sqrt(std::numeric_limits<T>::epsilon());
-    static T const eps2 = sqrt(eps1);
-    T x = M_PI * fabs(t);
-    if (x >= eps2) {
-        return sin(x) / x;
-    } else {
-        T out = static_cast<T>(1);
-        if (x > eps1) {
-            out -= x * x / 6;
-        }
-        return out;
-    }
 }
 
 double
@@ -168,7 +150,7 @@ TestSignal::eval(double t)
     std::complex<double> sum(0.0, 0.0);
     auto n = _w.size();
     for (size_t i=0; i<n; ++i) {
-        sum += _w[i] * _sinc(_bw * (t - _t[i]));
+        sum += _w[i] * sinc<double>(_bw * (t - _t[i]));
     }
     return sum;
 }

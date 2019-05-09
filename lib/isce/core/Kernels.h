@@ -14,6 +14,7 @@
 // Declaration
 namespace isce {
     namespace core {
+        template <typename T> T sinc(T t);
         // The kernel classes
         template <typename T> class Kernel;
         template <typename T> class BartlettKernel;
@@ -92,5 +93,10 @@ class isce::core::KnabKernel : public isce::core::Kernel<T> {
     private:
         double _bandwidth;
 };
+
+/** sinc function defined as \f$ \frac{\sin(\pi x)}{\pi x} \f$ */
+template <typename T>
+T
+isce::core::sinc(T t);
 
 #endif

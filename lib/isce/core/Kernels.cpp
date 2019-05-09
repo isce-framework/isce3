@@ -40,7 +40,7 @@ template class isce::core::BartlettKernel<double>;
  
 template <typename T>
 T
-_sinc(T t)
+isce::core::sinc(T t)
 {
     static T constexpr eps1 = sqrt(std::numeric_limits<T>::epsilon());
     static T constexpr eps2 = sqrt(eps1);
@@ -83,7 +83,8 @@ template <typename T>
 T
 isce::core::KnabKernel<T>::
 operator()(double t) {
-    return _sampling_window(t, this->_halfwidth, this->_bandwidth) * _sinc(t);
+    auto st = isce::core::sinc<T>(t);
+    return _sampling_window(t, this->_halfwidth, this->_bandwidth) * st;
 }
 
 template class isce::core::KnabKernel<float>;
