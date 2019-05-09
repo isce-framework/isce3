@@ -31,7 +31,7 @@ struct IH5Test : public ::testing::Test {
         void SetUp()
         {
             GDALAllRegister();
-            GDALRegister_IH5();
+            isce::io::GDALRegister_IH5();
         }
 
         void TearDown()

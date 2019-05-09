@@ -28,6 +28,9 @@ namespace H5
 }
 
 
+namespace isce{
+namespace io{
+
 /************************************************************************/
 /*                           IH5RasterBand()                            */
 /************************************************************************/
@@ -628,4 +631,7 @@ void GDALRegister_IH5()
     poDriver->pfnIdentify = IH5Dataset::Identify;
 
     GetGDALDriverManager()->RegisterDriver(poDriver);
+}
+
+}
 }
