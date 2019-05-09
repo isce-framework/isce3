@@ -72,7 +72,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -101,63 +101,62 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define ISCE_CORE_DOPPLER_H</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;Cartesian.h&quot;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;Constants.h&quot;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;Orbit.h&quot;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &quot;Pegtrans.h&quot;</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &quot;Ellipsoid.h&quot;</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &quot;Attitude.h&quot;</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">namespace </span>isce {</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">namespace </span>core {</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
-<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="structisce_1_1core_1_1Doppler.html">   22</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structisce_1_1core_1_1Doppler.html">Doppler</a> {</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="comment">// Structs</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <a class="code" href="classisce_1_1core_1_1Ellipsoid.html">Ellipsoid</a> ellipsoid;</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <a class="code" href="structisce_1_1core_1_1Orbit.html">Orbit</a> orbit;</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <a class="code" href="structisce_1_1core_1_1Pegtrans.html">Pegtrans</a> ptm;</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <span class="comment">// Pointer to base Attitude class</span></div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <a class="code" href="classisce_1_1core_1_1Attitude.html">Attitude</a> * attitude;</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="comment">// State vectors</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <a class="code" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> satxyz;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <a class="code" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> satvel;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <a class="code" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> satllh;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="keywordtype">double</span> epoch;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;</div>
-<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="structisce_1_1core_1_1Doppler.html#a98c707eef98710c0a6efc7405565398a">   38</a></span>&#160;    <a class="code" href="structisce_1_1core_1_1Doppler.html#a98c707eef98710c0a6efc7405565398a">Doppler</a>() {};</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    <a class="code" href="structisce_1_1core_1_1Doppler.html#a98c707eef98710c0a6efc7405565398a">Doppler</a>(<a class="code" href="structisce_1_1core_1_1Orbit.html">Orbit</a> &amp;orbit, <a class="code" href="classisce_1_1core_1_1Attitude.html">Attitude</a> *attitude, <a class="code" href="classisce_1_1core_1_1Ellipsoid.html">Ellipsoid</a> &amp;ellipsoid, <span class="keywordtype">double</span> epoch);</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structisce_1_1core_1_1Doppler.html#a28be69c3e0388edbdc3fdea4856d6cec">centroid</a>(<span class="keywordtype">double</span> slantRange, <span class="keywordtype">double</span> wvl, std::string frame,</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;                    <span class="keywordtype">size_t</span> max_iter=10, <span class="keywordtype">int</span> side=-1, <span class="keywordtype">bool</span> precession=<span class="keyword">false</span>);</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    std::vector&lt;double&gt; <a class="code" href="structisce_1_1core_1_1Doppler.html#ac213146f89eab0dc93920346e0d29e8b">centroidDerivs</a>(<span class="keywordtype">double</span> slantRange, <span class="keywordtype">double</span> wvl, std::string frame,</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;                                       <span class="keywordtype">size_t</span> max_iter=10, <span class="keywordtype">int</span> side=-1, <span class="keywordtype">bool</span> precession=<span class="keyword">false</span>,</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                                       <span class="keywordtype">double</span> delta = 1.0e-10);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        <a class="code" href="structisce_1_1core_1_1DenseMatrix.html">cartmat_t</a> _rotmat;</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;};</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;} <span class="comment">// namespace core</span></div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;} <span class="comment">// namespace isce</span></div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="comment">// end of file</span></div>
-<div class="ttc" id="structisce_1_1core_1_1Doppler_html_a98c707eef98710c0a6efc7405565398a"><div class="ttname"><a href="structisce_1_1core_1_1Doppler.html#a98c707eef98710c0a6efc7405565398a">isce::core::Doppler::Doppler</a></div><div class="ttdeci">Doppler()</div><div class="ttdoc">Default empty constructor. </div><div class="ttdef"><b>Definition:</b> Doppler.h:38</div></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;Constants.h&quot;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;Orbit.h&quot;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;Pegtrans.h&quot;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &quot;Ellipsoid.h&quot;</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &quot;Attitude.h&quot;</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keyword">namespace </span>isce {</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">namespace </span>core {</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;</div>
+<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="structisce_1_1core_1_1Doppler.html">   21</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structisce_1_1core_1_1Doppler.html">Doppler</a> {</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="comment">// Structs</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <a class="code" href="classisce_1_1core_1_1Ellipsoid.html">Ellipsoid</a> ellipsoid;</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <a class="code" href="structisce_1_1core_1_1Orbit.html">Orbit</a> orbit;</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <a class="code" href="structisce_1_1core_1_1Pegtrans.html">Pegtrans</a> ptm;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="comment">// Pointer to base Attitude class</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <a class="code" href="classisce_1_1core_1_1Attitude.html">Attitude</a> * attitude;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="comment">// State vectors</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <a class="code" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">cartesian_t</a> satxyz;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <a class="code" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">cartesian_t</a> satvel;</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <a class="code" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">cartesian_t</a> satllh;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <span class="keywordtype">double</span> epoch;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
+<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="structisce_1_1core_1_1Doppler.html#a98c707eef98710c0a6efc7405565398a">   37</a></span>&#160;    <a class="code" href="structisce_1_1core_1_1Doppler.html#a98c707eef98710c0a6efc7405565398a">Doppler</a>() {};</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <a class="code" href="structisce_1_1core_1_1Doppler.html#a98c707eef98710c0a6efc7405565398a">Doppler</a>(<a class="code" href="structisce_1_1core_1_1Orbit.html">Orbit</a> &amp;orbit, <a class="code" href="classisce_1_1core_1_1Attitude.html">Attitude</a> *attitude, <a class="code" href="classisce_1_1core_1_1Ellipsoid.html">Ellipsoid</a> &amp;ellipsoid, <span class="keywordtype">double</span> epoch);</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keywordtype">double</span> <a class="code" href="structisce_1_1core_1_1Doppler.html#a28be69c3e0388edbdc3fdea4856d6cec">centroid</a>(<span class="keywordtype">double</span> slantRange, <span class="keywordtype">double</span> wvl, std::string frame,</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;                    <span class="keywordtype">size_t</span> max_iter=10, <span class="keywordtype">int</span> side=-1, <span class="keywordtype">bool</span> precession=<span class="keyword">false</span>);</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    std::vector&lt;double&gt; <a class="code" href="structisce_1_1core_1_1Doppler.html#ac213146f89eab0dc93920346e0d29e8b">centroidDerivs</a>(<span class="keywordtype">double</span> slantRange, <span class="keywordtype">double</span> wvl, std::string frame,</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;                                       <span class="keywordtype">size_t</span> max_iter=10, <span class="keywordtype">int</span> side=-1, <span class="keywordtype">bool</span> precession=<span class="keyword">false</span>,</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;                                       <span class="keywordtype">double</span> delta = 1.0e-10);</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        <a class="code" href="namespaceisce_1_1core.html#a783159df295136bea1129473a383c16a">cartmat_t</a> _rotmat;</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;};</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;} <span class="comment">// namespace core</span></div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;} <span class="comment">// namespace isce</span></div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="comment">// end of file</span></div>
+<div class="ttc" id="structisce_1_1core_1_1Doppler_html_a98c707eef98710c0a6efc7405565398a"><div class="ttname"><a href="structisce_1_1core_1_1Doppler.html#a98c707eef98710c0a6efc7405565398a">isce::core::Doppler::Doppler</a></div><div class="ttdeci">Doppler()</div><div class="ttdoc">Default empty constructor. </div><div class="ttdef"><b>Definition:</b> Doppler.h:37</div></div>
 <div class="ttc" id="structisce_1_1core_1_1Doppler_html_ac213146f89eab0dc93920346e0d29e8b"><div class="ttname"><a href="structisce_1_1core_1_1Doppler.html#ac213146f89eab0dc93920346e0d29e8b">isce::core::Doppler::centroidDerivs</a></div><div class="ttdeci">std::vector&lt; double &gt; centroidDerivs(double slantRange, double wvl, std::string frame, size_t max_iter=10, int side=-1, bool precession=false, double delta=1.0e-10)</div><div class="ttdoc">Compute Doppler derivatives w.r.t. </div><div class="ttdef"><b>Definition:</b> Doppler.cpp:198</div></div>
-<div class="ttc" id="structisce_1_1core_1_1Doppler_html"><div class="ttname"><a href="structisce_1_1core_1_1Doppler.html">isce::core::Doppler</a></div><div class="ttdoc">Data structure for computing Doppler Centroids from Platform attitude and position. </div><div class="ttdef"><b>Definition:</b> Doppler.h:22</div></div>
+<div class="ttc" id="structisce_1_1core_1_1Doppler_html"><div class="ttname"><a href="structisce_1_1core_1_1Doppler.html">isce::core::Doppler</a></div><div class="ttdoc">Data structure for computing Doppler Centroids from Platform attitude and position. </div><div class="ttdef"><b>Definition:</b> Doppler.h:21</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Attitude_html"><div class="ttname"><a href="classisce_1_1core_1_1Attitude.html">isce::core::Attitude</a></div><div class="ttdoc">Base class for attitude data representation. </div><div class="ttdef"><b>Definition:</b> Attitude.h:30</div></div>
 <div class="ttc" id="structisce_1_1core_1_1Doppler_html_a28be69c3e0388edbdc3fdea4856d6cec"><div class="ttname"><a href="structisce_1_1core_1_1Doppler.html#a28be69c3e0388edbdc3fdea4856d6cec">isce::core::Doppler::centroid</a></div><div class="ttdeci">double centroid(double slantRange, double wvl, std::string frame, size_t max_iter=10, int side=-1, bool precession=false)</div><div class="ttdoc">Compute the Doppler Centroid at given slant range. </div><div class="ttdef"><b>Definition:</b> Doppler.cpp:77</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Ellipsoid_html"><div class="ttname"><a href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a></div><div class="ttdoc">Data structure to store Ellipsoid information. </div><div class="ttdef"><b>Definition:</b> Ellipsoid.h:26</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Ellipsoid_html"><div class="ttname"><a href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a></div><div class="ttdoc">Data structure to store Ellipsoid information. </div><div class="ttdef"><b>Definition:</b> Ellipsoid.h:27</div></div>
 <div class="ttc" id="structisce_1_1core_1_1Orbit_html"><div class="ttname"><a href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a></div><div class="ttdoc">Data structure to represent ECEF state vectors of imaging platform. </div><div class="ttdef"><b>Definition:</b> Orbit.h:38</div></div>
-<div class="ttc" id="structisce_1_1core_1_1DenseMatrix_html"><div class="ttname"><a href="structisce_1_1core_1_1DenseMatrix.html">isce::core::DenseMatrix</a></div><div class="ttdef"><b>Definition:</b> DenseMatrix.h:9</div></div>
-<div class="ttc" id="structisce_1_1core_1_1Vector_html"><div class="ttname"><a href="structisce_1_1core_1_1Vector.html">isce::core::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.h:17</div></div>
-<div class="ttc" id="structisce_1_1core_1_1Pegtrans_html"><div class="ttname"><a href="structisce_1_1core_1_1Pegtrans.html">isce::core::Pegtrans</a></div><div class="ttdoc">Data structure to assist with Peg point transformations. </div><div class="ttdef"><b>Definition:</b> Pegtrans.h:21</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_a783159df295136bea1129473a383c16a"><div class="ttname"><a href="namespaceisce_1_1core.html#a783159df295136bea1129473a383c16a">isce::core::cartmat_t</a></div><div class="ttdeci">std::array&lt; std::array&lt; double, 3 &gt;, 3 &gt; cartmat_t</div><div class="ttdoc">Common datatype for collection of 3 triplets of doubles. </div><div class="ttdef"><b>Definition:</b> Constants.h:37</div></div>
+<div class="ttc" id="structisce_1_1core_1_1Pegtrans_html"><div class="ttname"><a href="structisce_1_1core_1_1Pegtrans.html">isce::core::Pegtrans</a></div><div class="ttdoc">Data structure to assist with Peg point transformations. </div><div class="ttdef"><b>Definition:</b> Pegtrans.h:20</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_af1248fd6851624355b9af9c38decbad2"><div class="ttname"><a href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">isce::core::cartesian_t</a></div><div class="ttdeci">std::array&lt; double, 3 &gt; cartesian_t</div><div class="ttdoc">Common datatype for a triplet of doubles. </div><div class="ttdef"><b>Definition:</b> Constants.h:34</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by

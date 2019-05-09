@@ -5,15 +5,13 @@
   <head>
     <meta charset="utf-8" />
     <title>pyOrbit &#8212; ISCE  documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
-    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
   </head><body>
@@ -68,7 +66,7 @@
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.addStateVector">
-<code class="descname">addStateVector</code><span class="sig-paren">(</span><em>self</em>, <em>double epoch</em>, <em>pos</em>, <em>vel</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.addStateVector" title="Permalink to this definition">¶</a></dt>
+<code class="descname">addStateVector</code><span class="sig-paren">(</span><em>double epoch</em>, <em>pos</em>, <em>vel</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.addStateVector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a state vector. The index for insertion into C++ data structure is automatically determined using the epoch information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -91,7 +89,7 @@
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.computeAcceleration">
-<code class="descname">computeAcceleration</code><span class="sig-paren">(</span><em>self</em>, <em>epoch</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.computeAcceleration" title="Permalink to this definition">¶</a></dt>
+<code class="descname">computeAcceleration</code><span class="sig-paren">(</span><em>epoch</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.computeAcceleration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute accelerations at given epoch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -112,7 +110,7 @@
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.copy">
-<code class="descname">copy</code><span class="sig-paren">(</span><em>self</em>, <em>orb</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.copy" title="Permalink to this definition">¶</a></dt>
+<code class="descname">copy</code><span class="sig-paren">(</span><em>orb</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Copy from a python object compatible with orbit.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -126,7 +124,7 @@
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.dPrint">
-<code class="descname">dPrint</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.dPrint" title="Permalink to this definition">¶</a></dt>
+<code class="descname">dPrint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.dPrint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Debug print of underlying C++ structure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -137,7 +135,7 @@
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.dumpToHDR">
-<code class="descname">dumpToHDR</code><span class="sig-paren">(</span><em>self</em>, <em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.dumpToHDR" title="Permalink to this definition">¶</a></dt>
+<code class="descname">dumpToHDR</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.dumpToHDR" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write orbit to a text file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -151,7 +149,7 @@
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.getENUHeading">
-<code class="descname">getENUHeading</code><span class="sig-paren">(</span><em>self</em>, <em>double aztime</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.getENUHeading" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getENUHeading</code><span class="sig-paren">(</span><em>double aztime</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.getENUHeading" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes heading at a given azimuth time using a single state vector</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -168,7 +166,7 @@
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.getStateVector">
-<code class="descname">getStateVector</code><span class="sig-paren">(</span><em>self</em>, <em>int index</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.getStateVector" title="Permalink to this definition">¶</a></dt>
+<code class="descname">getStateVector</code><span class="sig-paren">(</span><em>int index</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.getStateVector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return state vector based on index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -187,7 +185,7 @@ np.array[3] - velocity</p>
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.interpolate">
-<code class="descname">interpolate</code><span class="sig-paren">(</span><em>self</em>, <em>epoch</em>, <em>method=u'hermite'</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.interpolate" title="Permalink to this definition">¶</a></dt>
+<code class="descname">interpolate</code><span class="sig-paren">(</span><em>epoch</em>, <em>method=u'hermite'</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.interpolate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interpolate orbit at a given epoch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -212,7 +210,7 @@ np.array[3] - velocity</p>
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.interpolateLegendreOrbit">
-<code class="descname">interpolateLegendreOrbit</code><span class="sig-paren">(</span><em>self</em>, <em>epoch</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.interpolateLegendreOrbit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">interpolateLegendreOrbit</code><span class="sig-paren">(</span><em>epoch</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.interpolateLegendreOrbit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interpolate orbit at given epoch using Legendre interpolation method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -237,7 +235,7 @@ np.array[3] - velocity</p>
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.interpolateSCHOrbit">
-<code class="descname">interpolateSCHOrbit</code><span class="sig-paren">(</span><em>self</em>, <em>epoch</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.interpolateSCHOrbit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">interpolateSCHOrbit</code><span class="sig-paren">(</span><em>epoch</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.interpolateSCHOrbit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interpolate orbit at given epoch using SCH interpolation method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -262,7 +260,7 @@ np.array[3] - velocity</p>
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.interpolateWGS84Orbit">
-<code class="descname">interpolateWGS84Orbit</code><span class="sig-paren">(</span><em>self</em>, <em>epoch</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.interpolateWGS84Orbit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">interpolateWGS84Orbit</code><span class="sig-paren">(</span><em>epoch</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.interpolateWGS84Orbit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interpolate orbit at given epoch using WGS84 interpolation method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -287,7 +285,7 @@ np.array[3] - velocity</p>
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.loadFromHDR">
-<code class="descname">loadFromHDR</code><span class="sig-paren">(</span><em>self</em>, <em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.loadFromHDR" title="Permalink to this definition">¶</a></dt>
+<code class="descname">loadFromHDR</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.loadFromHDR" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load Orbit from a text file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -329,7 +327,7 @@ np.array[3] - velocity</p>
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.printOrbit">
-<code class="descname">printOrbit</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.printOrbit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">printOrbit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.printOrbit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Debug printing of underlying C++ structure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -351,7 +349,7 @@ np.array[3] - velocity</p>
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.setStateVector">
-<code class="descname">setStateVector</code><span class="sig-paren">(</span><em>self</em>, <em>int index</em>, <em>double epoch</em>, <em>pos</em>, <em>vel</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.setStateVector" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setStateVector</code><span class="sig-paren">(</span><em>int index</em>, <em>double epoch</em>, <em>pos</em>, <em>vel</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.setStateVector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set state vector with given epoch, position and velocity.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -370,11 +368,11 @@ np.array[3] - velocity</p>
 
 <dl class="method">
 <dt id="isceextension.pyOrbit.updateUTCTimes">
-<code class="descname">updateUTCTimes</code><span class="sig-paren">(</span><em>self</em>, <em>pyDateTime epoch</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.updateUTCTimes" title="Permalink to this definition">¶</a></dt>
+<code class="descname">updateUTCTimes</code><span class="sig-paren">(</span><em>pyDateTime epoch</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyOrbit.updateUTCTimes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update reference time to epoch and update UTC times relative to new epoch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>epoch</strong> (<a class="reference internal" href="pyDateTime.html#isceextension.pyDateTime" title="isceextension.pyDateTime"><em>pyDateTime</em></a>) – Reference epoch.</p>
+<dd class="field-odd"><p><strong>epoch</strong> (<em>pyDateTime</em>) – Reference epoch.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>None</p>

@@ -74,7 +74,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -100,23 +100,14 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ae7d203d741cddd34b7de3fc88ee097d4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae7d203d741cddd34b7de3fc88ee097d4"></a>
-CUDA_HOSTDEV&#160;</td><td class="memItemRight" valign="bottom"><b>gpuStateVector</b> (const <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> pos, const <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> vel)</td></tr>
-<tr class="separator:ae7d203d741cddd34b7de3fc88ee097d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4aaf056d2802ffabcd92a3ee04eb21f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac4aaf056d2802ffabcd92a3ee04eb21f"></a>
 CUDA_HOST&#160;</td><td class="memItemRight" valign="bottom"><b>gpuStateVector</b> (const <a class="el" href="classisce_1_1core_1_1StateVector.html">isce::core::StateVector</a> &amp;state)</td></tr>
 <tr class="separator:ac4aaf056d2802ffabcd92a3ee04eb21f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac86d0656f89cc220585971ccda42cabe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac86d0656f89cc220585971ccda42cabe"></a>
-CUDA_HOSTDEV <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a>&#160;</td><td class="memItemRight" valign="bottom"><b>position</b> () const </td></tr>
-<tr class="separator:ac86d0656f89cc220585971ccda42cabe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b6531c40b0e8eb25161dc6e43ceb697"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7b6531c40b0e8eb25161dc6e43ceb697"></a>
-CUDA_HOSTDEV <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a>&#160;</td><td class="memItemRight" valign="bottom"><b>velocity</b> () const </td></tr>
-<tr class="separator:a7b6531c40b0e8eb25161dc6e43ceb697"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a488ff619346a293c8707ede2f54f827a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a488ff619346a293c8707ede2f54f827a"></a>
-CUDA_HOST void&#160;</td><td class="memItemRight" valign="bottom"><b>position_h</b> (const <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;p)</td></tr>
+CUDA_HOST void&#160;</td><td class="memItemRight" valign="bottom"><b>position_h</b> (const cartesian_t &amp;p)</td></tr>
 <tr class="separator:a488ff619346a293c8707ede2f54f827a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab983f6d4d24f68c7e8304d5c0abb7871"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab983f6d4d24f68c7e8304d5c0abb7871"></a>
-CUDA_HOST void&#160;</td><td class="memItemRight" valign="bottom"><b>velocity_h</b> (const <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;v)</td></tr>
+CUDA_HOST void&#160;</td><td class="memItemRight" valign="bottom"><b>velocity_h</b> (const cartesian_t &amp;v)</td></tr>
 <tr class="separator:ab983f6d4d24f68c7e8304d5c0abb7871"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a63597fc6ccb0283607821a60e86c7489"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a63597fc6ccb0283607821a60e86c7489"></a>
 CUDA_HOST void&#160;</td><td class="memItemRight" valign="bottom"><b>time_h</b> (double t)</td></tr>
@@ -124,12 +115,12 @@ CUDA_HOST void&#160;</td><td class="memItemRight" valign="bottom"><b>time_h</b> 
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a1f9a2c260a28372ce9c648efd872a26b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1f9a2c260a28372ce9c648efd872a26b"></a>
-<a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a>&#160;</td><td class="memItemRight" valign="bottom"><b>_position</b></td></tr>
-<tr class="separator:a1f9a2c260a28372ce9c648efd872a26b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a65313ac9179752b37f8ec9c3f90ec65f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a65313ac9179752b37f8ec9c3f90ec65f"></a>
-<a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a>&#160;</td><td class="memItemRight" valign="bottom"><b>_velocity</b></td></tr>
-<tr class="separator:a65313ac9179752b37f8ec9c3f90ec65f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a592030b149558dd4e89a39d6ce7dae3d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a592030b149558dd4e89a39d6ce7dae3d"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>position</b> [3]</td></tr>
+<tr class="separator:a592030b149558dd4e89a39d6ce7dae3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a488cd9d8969f15343ec6c4e092a96abb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a488cd9d8969f15343ec6c4e092a96abb"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>velocity</b> [3]</td></tr>
+<tr class="separator:a488cd9d8969f15343ec6c4e092a96abb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3554b577d13907d5d8808d52406ead37"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3554b577d13907d5d8808d52406ead37"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>time</b></td></tr>
 <tr class="separator:a3554b577d13907d5d8808d52406ead37"><td class="memSeparator" colspan="2">&#160;</td></tr>

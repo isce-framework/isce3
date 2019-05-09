@@ -67,7 +67,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -114,7 +114,7 @@ C++ Documentation</h1>
 Inline functions</h2>
 <h3><a class="anchor" id="docinlinecppzero"></a>
 Part of data structure declaration with no input arguments</h3>
-<p>These types of functions are typically defined in the struct/class definition itself and serve a simple purpose of returning a computed value. In this case, we will use a simple one line description. For example, <a class="el" href="classisce_1_1core_1_1Ellipsoid.html#a237f43ba751463289faad2801475b38b" title="Return semi-major axis. ">isce::core::Ellipsoid::a()</a></p>
+<p>These types of functions are typically defined in the struct/class definition itself and serve a simple purpose of returning a computed value. In this case, we will use a simple one line description. For example, <a class="el" href="classisce_1_1core_1_1Ellipsoid.html#a648f470f8960eb28f6a11772fc07acb7" title="Return semi-major axis. ">isce::core::Ellipsoid::a()</a></p>
 <div class="fragment"><div class="line"><span class="comment">/** Return semi-major axis */</span></div>
 <div class="line"><span class="keywordtype">double</span> a()<span class="keyword"> const </span>{<span class="keywordflow">return</span> _a;}</div>
 </div><!-- fragment --><h3><a class="anchor" id="docinlinecppone"></a>
@@ -126,7 +126,7 @@ Part of data structure declaration with one input argument</h3>
 <div class="line"><span class="keywordtype">void</span> a(<span class="keywordtype">double</span> val) {_a = val;}</div>
 </div><!-- fragment --><h3><a class="anchor" id="docinlinecppmulti"></a>
 With multiple inputs</h3>
-<p>These types of functions should typically not be defined in the struct/class definition. These are included either in the .h header file or the .icc include file. In this case, a brief one liner is provided as part of the function declaration in the header file followed by a detail description of the parameters just before the function specification in the header file or the .icc file. For example, documentation of function <a class="el" href="classisce_1_1core_1_1Ellipsoid.html#aebc47c9fcd43f745f65040ebe05bad27" title="Return directional local radius. ">isce::core::Ellipsoid::rDir</a> can be found in two places - first in the class declaration as</p>
+<p>These types of functions should typically not be defined in the struct/class definition. These are included either in the .h header file or the .icc include file. In this case, a brief one liner is provided as part of the function declaration in the header file followed by a detail description of the parameters just before the function specification in the header file or the .icc file. For example, documentation of function <a class="el" href="classisce_1_1core_1_1Ellipsoid.html#a804f9187fc54ae52491d87981e04f74a" title="Return directional local radius. ">isce::core::Ellipsoid::rDir</a> can be found in two places - first in the class declaration as</p>
 <div class="fragment"><div class="line"><span class="comment">/**  Return local radius in NS direction */</span></div>
 <div class="line"><span class="keyword">inline</span> <span class="keywordtype">double</span> rDir(<span class="keywordtype">double</span> lat, <span class="keywordtype">double</span> hdg) <span class="keyword">const</span>;</div>
 </div><!-- fragment --><p>and later in the header file, just before the function declaration as</p>
@@ -135,9 +135,9 @@ With multiple inputs</h3>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> *  Heading is measured in clockwise direction from the North direction.</span></div>
 <div class="line"><span class="comment"> *  See &lt;a href=&quot;https://en.wikipedia.org/wiki/Earth_radius#Directional&quot;&gt;Directional Radius&lt;/a&gt; */</span></div>
-<div class="line"><span class="keywordtype">double</span> <a class="code" href="classisce_1_1core_1_1Ellipsoid.html#aebc47c9fcd43f745f65040ebe05bad27">isce::core::Ellipsoid::rDir</a>(<span class="keywordtype">double</span> hdg, <span class="keywordtype">double</span> lat)<span class="keyword"> const </span>{</div>
-<div class="line">    <span class="keyword">auto</span> re = <a class="code" href="classisce_1_1core_1_1Ellipsoid.html#a0dd429837bed6cfe692b20e5402970cf">rEast</a>(lat);</div>
-<div class="line">    <span class="keyword">auto</span> rn = <a class="code" href="classisce_1_1core_1_1Ellipsoid.html#a1ad42d6eadf67dc0ac07d680c59d9507">rNorth</a>(lat);</div>
+<div class="line"><span class="keywordtype">double</span> <a class="code" href="classisce_1_1core_1_1Ellipsoid.html#a804f9187fc54ae52491d87981e04f74a">isce::core::Ellipsoid::rDir</a>(<span class="keywordtype">double</span> hdg, <span class="keywordtype">double</span> lat)<span class="keyword"> const </span>{</div>
+<div class="line">    <span class="keyword">auto</span> re = <a class="code" href="classisce_1_1core_1_1Ellipsoid.html#afe48b575e60b9d5c08da1edb4a738be2">rEast</a>(lat);</div>
+<div class="line">    <span class="keyword">auto</span> rn = <a class="code" href="classisce_1_1core_1_1Ellipsoid.html#a6d3368a3c544ddbc6e3ed754112c8cca">rNorth</a>(lat);</div>
 <div class="line">    <span class="keywordflow">return</span> (re * rn) / ((re * std::pow(std::cos(hdg), 2)) </div>
 <div class="line">         + (rn * std::pow(std::sin(hdg), 2)));</div>
 <div class="line">}</div>
@@ -154,18 +154,18 @@ Within namespaces</h3>
 Regular functions</h2>
 <h3><a class="anchor" id="doccppregheader"></a>
 Brief description in header file</h3>
-<p>For all regular C++ functions that are not inlined, a brief one line description must be provided in the header file irrespective the number of input arguments. For example, class <a class="el" href="classisce_1_1core_1_1Ellipsoid.html#a1c07049428d3c525a772941b34adf3f6" title="Transform ECEC xyz to Lon/Lat/Hgt. ">isce::core::Ellipsoid::xyzToLonLat</a></p>
+<p>For all regular C++ functions that are not inlined, a brief one line description must be provided in the header file irrespective the number of input arguments. For example, class <a class="el" href="classisce_1_1core_1_1Ellipsoid.html#a9081d892f99f5f5d6fff0bf813d2a714" title="Transform ECEC xyz to Lon/Lat/Hgt. ">isce::core::Ellipsoid::xyzToLonLat</a></p>
 <div class="fragment"><div class="line"><span class="comment">/**  Transform ECEC xyz to Lon/Lat/Hgt */</span></div>
-<div class="line"><span class="keywordtype">void</span> xyzToLonLat(<span class="keyword">const</span> <a class="code" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;xyz, <a class="code" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;llh) <span class="keyword">const</span>;</div>
+<div class="line"><span class="keywordtype">void</span> xyzToLonLat(<span class="keyword">const</span> cartesian_t &amp;xyz, cartesian_t &amp;llh) <span class="keyword">const</span>;</div>
 </div><!-- fragment --><h3><a class="anchor" id="doccppregbody"></a>
 Detailed description in function specfication</h3>
-<p>The detailed description of individual parameters must be provided just before the function specification. The detailed description can also include math equations and references to publications or reports. For example, <a class="el" href="classisce_1_1core_1_1Ellipsoid.html#a1c07049428d3c525a772941b34adf3f6" title="Transform ECEC xyz to Lon/Lat/Hgt. ">isce::core::Ellipsoid::xyzToLonLat</a></p>
+<p>The detailed description of individual parameters must be provided just before the function specification. The detailed description can also include math equations and references to publications or reports. For example, <a class="el" href="classisce_1_1core_1_1Ellipsoid.html#a9081d892f99f5f5d6fff0bf813d2a714" title="Transform ECEC xyz to Lon/Lat/Hgt. ">isce::core::Ellipsoid::xyzToLonLat</a></p>
 <div class="fragment"><div class="line"><span class="comment">/**  @param[in] xyz ECEF Cartesian coordinates in meters. </span></div>
 <div class="line"><span class="comment"> *  @param[out] llh Latitude (rad), Longitude(rad), Height (m).</span></div>
 <div class="line"><span class="comment"> *</span></div>
 <div class="line"><span class="comment"> *  Using the approach laid out in Vermeille, 2002 \cite vermeille2002direct */</span></div>
-<div class="line"><span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1Ellipsoid.html#a1c07049428d3c525a772941b34adf3f6">isce::core::Ellipsoid::</a></div>
-<div class="line"><a class="code" href="classisce_1_1core_1_1Ellipsoid.html#a1c07049428d3c525a772941b34adf3f6">xyzToLonLat</a>(<span class="keyword">const</span> <a class="code" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp; xyz, <a class="code" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp; llh)<span class="keyword"> const </span>{</div>
+<div class="line"><span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1Ellipsoid.html#a9081d892f99f5f5d6fff0bf813d2a714">isce::core::Ellipsoid::</a></div>
+<div class="line"><a class="code" href="classisce_1_1core_1_1Ellipsoid.html#a9081d892f99f5f5d6fff0bf813d2a714">xyzToLonLat</a>(<span class="keyword">const</span> cartesian_t &amp; xyz, cartesian_t &amp; llh)<span class="keyword"> const </span>{</div>
 </div><!-- fragment --><h2><a class="anchor" id="CUDA"></a>
 CUDA</h2>
 <p>Doxygen interprets CUDA code in the same manner as C/C++. Use the same style guidelines as regular C++ code for documenting the CUDA code.</p>

@@ -67,7 +67,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -121,10 +121,10 @@ Forward transform</h2>
 <div class="line"><a class="code" href="structisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> *spolar = isce::core::createProj(3031);</div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Pick a point to transform - say south pole</span></div>
-<div class="line"><a class="code" href="structisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> spole = {0., -M_PI/2.0, 0.};</div>
+<div class="line"><a class="code" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">isce::core::cartesian_t</a> spole = {0., -M_PI/2.0, 0.};</div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Transform the point </span></div>
-<div class="line"><a class="code" href="structisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> xyz;</div>
+<div class="line"><a class="code" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">isce::core::cartesian_t</a> xyz;</div>
 <div class="line">spolar-&gt;fwd(llh, xyz);</div>
 <div class="line"></div>
 <div class="line">std::cout &lt;&lt; <span class="stringliteral">&quot;Coordinates in polar coordinates: &quot;</span> &lt;&lt; xyz[0] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; xyz[1] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; xyz[2] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
@@ -135,10 +135,10 @@ Inverse</h2>
 <div class="line"><a class="code" href="structisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> *spolar = isce::core::createProj(3031);</div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Pick a point to transform - say south pole</span></div>
-<div class="line"><a class="code" href="structisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> origin = {0., 0., 0.};</div>
+<div class="line"><a class="code" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">isce::core::cartesian_t</a> origin = {0., 0., 0.};</div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Transform the point </span></div>
-<div class="line"><a class="code" href="structisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> llh;</div>
+<div class="line"><a class="code" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">isce::core::cartesian_t</a> llh;</div>
 <div class="line">spolar-&gt;inv(origin, llh);</div>
 <div class="line"></div>
 <div class="line">std::cout &lt;&lt; <span class="stringliteral">&quot;Coordinates in Lon/Lat/Hae (radians): &quot;</span> &lt;&lt; llh[0] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; llh[1] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; llh[2] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
