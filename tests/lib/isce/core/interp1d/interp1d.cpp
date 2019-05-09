@@ -127,7 +127,7 @@ TestSignal::TestSignal(size_t n, double bw, int seed)
     _n = n;
     _bw = bw;
 
-    size_t nt = 8 * _n;
+    size_t nt = 4 * _n;
     _t.resize(nt);
     _w.resize(nt);
 
@@ -158,7 +158,7 @@ TestSignal::eval(double t)
 struct Interp1dTest : public ::testing::Test
 {
     // Length of input signal.
-    const size_t n = 1024;
+    const size_t n = 512;
     // Randon number generator seed so that results are repeatable.
     const int seed = 1234;
     // signal bandwidth as a fraction of sample rate.
@@ -254,13 +254,13 @@ TEST_F(Interp1dTest, Linear) {
     test_fixed_offset(0.999999, 0.001, 0.001, 0.001, kernel,  0.0);
     test_fixed_offset(0.95, 30.0, 5.0, 5.0, kernel, -0.3);
     test_fixed_offset(0.95, 30.0, 5.0, 5.0, kernel,  0.3);
-    test_fixed_offset(0.95, 30.0, 5.0, 5.0, kernel, -0.5);
-    test_fixed_offset(0.95, 30.0, 5.0, 5.0, kernel,  0.5);
+    test_fixed_offset(0.95, 40.0, 5.0, 5.0, kernel, -0.5);
+    test_fixed_offset(0.95, 40.0, 5.0, 5.0, kernel,  0.5);
     test_rand_offsets(0.95, 30.0, 3.0, 3.0, kernel);
 }
 
 TEST_F(Interp1dTest, Knab) {
-    auto kernel = isce::core::KnabKernel<double>(8.0, 0.8);
+    auto kernel = isce::core::KnabKernel<double>(9.0, 0.8);
     // offset=0 should give back original data for this kernel.
     test_fixed_offset(0.999999, 0.001, 0.001, 0.001, kernel,  0.0);
     test_fixed_offset(0.998, 5.0, 1.0, 1.0, kernel, -0.3);
