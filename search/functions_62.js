@@ -1,6 +1,8 @@
 var searchData=
 [
   ['b',['b',['../classisce_1_1core_1_1Ellipsoid.html#abf4e3634f6464e27a5f08b3ac32038c4',1,'isce::core::Ellipsoid']]],
+  ['bandwidth',['bandwidth',['../classisce_1_1core_1_1KnabKernel.html#a4865503e5fbb832dad2843f33beca722',1,'isce::core::KnabKernel']]],
+  ['bartlettkernel',['BartlettKernel',['../classisce_1_1core_1_1BartlettKernel.html#a6b0e4f30407956426cb0d315a8c53b07',1,'isce::core::BartlettKernel']]],
   ['baseline',['Baseline',['../classisce_1_1core_1_1Baseline.html#a64b6dae4f4ee5a826ab833ca79d1f8a9',1,'isce::core::Baseline::Baseline()'],['../classisce_1_1core_1_1Baseline.html#a1dfb03e3819615d525442e8e6757ebaa',1,'isce::core::Baseline::Baseline(const Baseline &amp;b)']]],
   ['basis',['Basis',['../classisce_1_1core_1_1Basis.html#a61d26157ac702fcfadf1046f2a912cdc',1,'isce::core::Basis::Basis()'],['../classisce_1_1core_1_1Basis.html#a7c343bfeb6b93ab225074ff53ee9df59',1,'isce::core::Basis::Basis(cartesian_t &amp;x0, cartesian_t &amp;x1, cartesian_t &amp;x2)']]],
   ['beta',['beta',['../classisce_1_1signal_1_1Crossmul.html#af251748003cb48812a1e884faee4715e',1,'isce::signal::Crossmul::beta()'],['../classisce_1_1cuda_1_1signal_1_1gpuCrossmul.html#a0d0a2b7ac9390857b064db197aaf6cc2',1,'isce::cuda::signal::gpuCrossmul::beta()']]],

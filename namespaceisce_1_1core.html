@@ -161,6 +161,15 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Sinc2dInterpolator.html">Sinc2dInterpolator</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Definition of <a class="el" href="classisce_1_1core_1_1Sinc2dInterpolator.html" title="Definition of Sinc2dInterpolator. ">Sinc2dInterpolator</a>.  <a href="classisce_1_1core_1_1Sinc2dInterpolator.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Kernel.html">Kernel</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Abstract base class for all kernels.  <a href="classisce_1_1core_1_1Kernel.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1BartlettKernel.html">BartlettKernel</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Bartlett kernel (triangle function).  <a href="classisce_1_1core_1_1BartlettKernel.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1KnabKernel.html">KnabKernel</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classisce_1_1core_1_1Kernel.html" title="Abstract base class for all kernels. ">Kernel</a> based on the paper by Knab for interpolating band-limited signals.  <a href="classisce_1_1core_1_1KnabKernel.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1LinAlg.html">LinAlg</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Simple linear algebra operations for triplets of double precision numbers.  <a href="structisce_1_1core_1_1LinAlg.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -284,6 +293,10 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>_ymd_to_ord</b> (int, 
 <tr class="memitem:a3800e7d8470617f117051afcc5a7614f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3800e7d8470617f117051afcc5a7614f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>_ord_to_ymd</b> (int, int &amp;, int &amp;, int &amp;)</td></tr>
 <tr class="separator:a3800e7d8470617f117051afcc5a7614f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a647151bcee7a99c69b88df67df80fb49"><td class="memTemplParams" colspan="2">template&lt;typename TK , typename TD &gt; </td></tr>
+<tr class="memitem:a647151bcee7a99c69b88df67df80fb49"><td class="memTemplItemLeft" align="right" valign="top">TD&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a647151bcee7a99c69b88df67df80fb49">interp1d</a> (<a class="el" href="classisce_1_1core_1_1Kernel.html">isce::core::Kernel</a>&lt; TK &gt; &amp;kernel, const std::valarray&lt; TD &gt; &amp;x, double t)</td></tr>
+<tr class="memdesc:a647151bcee7a99c69b88df67df80fb49"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate sequence x at point t.  <a href="#a647151bcee7a99c69b88df67df80fb49">More...</a><br/></td></tr>
+<tr class="separator:a647151bcee7a99c69b88df67df80fb49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7f4801e070f925a20979d55288a471d9"><td class="memTemplParams" colspan="2"><a class="anchor" id="a7f4801e070f925a20979d55288a471d9"></a>
 template&lt;typename U &gt; </td></tr>
 <tr class="memitem:a7f4801e070f925a20979d55288a471d9"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classisce_1_1core_1_1Interpolator.html">Interpolator</a>&lt; U &gt; *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a7f4801e070f925a20979d55288a471d9">createInterpolator</a> (<a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> method, size_t order=6, int sincLen=isce::core::SINC_LEN, int sincSub=isce::core::SINC_SUB)</td></tr>
@@ -294,6 +307,15 @@ template&lt;class U , class V &gt; </td></tr>
 <tr class="memitem:abb0055edd764350e6e27aa3cf77c3eb4"><td class="memTemplItemLeft" align="right" valign="top">U&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#abb0055edd764350e6e27aa3cf77c3eb4">sinc_eval</a> (const <a class="el" href="classisce_1_1core_1_1Matrix.html">Matrix</a>&lt; U &gt; &amp;, const <a class="el" href="classisce_1_1core_1_1Matrix.html">Matrix</a>&lt; V &gt; &amp;, int, int, double, int)</td></tr>
 <tr class="memdesc:abb0055edd764350e6e27aa3cf77c3eb4"><td class="mdescLeft">&#160;</td><td class="mdescRight">1-D sinc evaluation <br/></td></tr>
 <tr class="separator:abb0055edd764350e6e27aa3cf77c3eb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae73b56f5a94e197486f4cd9f99fa2be3"><td class="memTemplParams" colspan="2"><a class="anchor" id="ae73b56f5a94e197486f4cd9f99fa2be3"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ae73b56f5a94e197486f4cd9f99fa2be3"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#ae73b56f5a94e197486f4cd9f99fa2be3">sinc</a> (T t)</td></tr>
+<tr class="memdesc:ae73b56f5a94e197486f4cd9f99fa2be3"><td class="mdescLeft">&#160;</td><td class="mdescRight">sinc function defined as <img class="formulaInl" alt="$ \frac{\sin(\pi x)}{\pi x} $" src="form_2.png"/> <br/></td></tr>
+<tr class="separator:ae73b56f5a94e197486f4cd9f99fa2be3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47917824f07f8b8a5ba54ffd77fa7c6c"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a47917824f07f8b8a5ba54ffd77fa7c6c"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classisce_1_1core_1_1BartlettKernel.html">isce::core::BartlettKernel</a>&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a47917824f07f8b8a5ba54ffd77fa7c6c">LinearKernel</a> ()</td></tr>
+<tr class="memdesc:a47917824f07f8b8a5ba54ffd77fa7c6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Linear kernel, which is just a special case of Bartlett.  <a href="#a47917824f07f8b8a5ba54ffd77fa7c6c">More...</a><br/></td></tr>
+<tr class="separator:a47917824f07f8b8a5ba54ffd77fa7c6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a24e9522f13059704a8b6feae7b0435cf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a24e9522f13059704a8b6feae7b0435cf"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>orbitHermite</b> (const std::vector&lt; <a class="el" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">cartesian_t</a> &gt; &amp;, const std::vector&lt; <a class="el" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">cartesian_t</a> &gt; &amp;, const std::vector&lt; double &gt; &amp;, double, <a class="el" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">cartesian_t</a> &amp;, <a class="el" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">cartesian_t</a> &amp;)</td></tr>
 <tr class="separator:a24e9522f13059704a8b6feae7b0435cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -712,6 +734,79 @@ template&lt;typename T &gt; </div>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a class="anchor" id="a647151bcee7a99c69b88df67df80fb49"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename TK , typename TD &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">TD isce::core::interp1d </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1Kernel.html">isce::core::Kernel</a>&lt; TK &gt; &amp;&#160;</td>
+          <td class="paramname"><em>kernel</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::valarray&lt; TD &gt; &amp;&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>t</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Interpolate sequence x at point t. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">kernel</td><td><a class="el" href="classisce_1_1core_1_1Kernel.html" title="Abstract base class for all kernels. ">Kernel</a> function to use for interpolation. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>Sequence to interpolate. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">t</td><td>Desired time sample (0 &lt;= t &lt;= x.size()-1). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Interpolated value or 0 if kernel would run off array.</dd></dl>
+<p>Template parameter TK is kernel element type, TD is data element type. </p>
+
+</div>
+</div>
+<a class="anchor" id="a47917824f07f8b8a5ba54ffd77fa7c6c"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classisce_1_1core_1_1BartlettKernel.html">isce::core::BartlettKernel</a>&lt; T &gt; isce::core::LinearKernel </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Linear kernel, which is just a special case of Bartlett. </p>
 
 </div>
 </div>

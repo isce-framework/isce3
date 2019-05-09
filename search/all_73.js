@@ -35,6 +35,7 @@ var searchData=
   ['shiftsignal',['shiftSignal',['../namespaceisce_1_1signal.html#ae926c0351414cb6b87efb9483df64fc4',1,'isce::signal::shiftSignal(std::valarray&lt; T &gt; &amp;data, std::valarray&lt; T &gt; &amp;dataShifted, std::valarray&lt; std::complex&lt; U &gt;&gt; &amp;spectrum, size_t ncols, size_t nrows, const double shiftX, const double shiftY, isce::signal::Signal&lt; U &gt; &amp;sigObj)'],['../namespaceisce_1_1signal.html#a5c49c7acd3174002a1c111136db5c983',1,'isce::signal::shiftSignal(std::valarray&lt; T &gt; &amp;data, std::valarray&lt; T &gt; &amp;dataShifted, std::valarray&lt; std::complex&lt; U &gt;&gt; &amp;spectrum, std::valarray&lt; std::complex&lt; U &gt;&gt; &amp;phaseRamp, isce::signal::Signal&lt; U &gt; &amp;sigObj)']]],
   ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html#afc9c8c9f9cfe1701558205600ab7b1f2',1,'isce::signal::Signal::Signal()'],['../classisce_1_1signal_1_1Signal.html#a759653d297ab23e66963aebec0cdafc0',1,'isce::signal::Signal::Signal(int nthreads)']]],
   ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html',1,'isce::signal']]],
+  ['sinc',['sinc',['../namespaceisce_1_1core.html#ae73b56f5a94e197486f4cd9f99fa2be3',1,'isce::core']]],
   ['sinc2dinterpolator',['Sinc2dInterpolator',['../classisce_1_1core_1_1Sinc2dInterpolator.html',1,'isce::core']]],
   ['sinc2dinterpolator',['Sinc2dInterpolator',['../classisce_1_1core_1_1Sinc2dInterpolator.html#a623e07dc83dd6a14c7b976adfbcda11e',1,'isce::core::Sinc2dInterpolator']]],
   ['sinc_5feval',['sinc_eval',['../namespaceisce_1_1core.html#abb0055edd764350e6e27aa3cf77c3eb4',1,'isce::core']]],
@@ -47,13 +48,13 @@ var searchData=
   ['spline2dinterpolator',['Spline2dInterpolator',['../classisce_1_1core_1_1Spline2dInterpolator.html#ac667aaa2f1ebdca2394b9c0a9cd121ab',1,'isce::core::Spline2dInterpolator']]],
   ['srcinfo',['SrcInfo',['../structisce_1_1except_1_1SrcInfo.html',1,'isce::except']]],
   ['startingrange',['startingRange',['../classisce_1_1image_1_1ResampSlc.html#a6dcee50ad31a6e822131b1f8759e27fc',1,'isce::image::ResampSlc::startingRange()'],['../classisce_1_1product_1_1RadarGridParameters.html#aec8c72738530e30b569b9b0d38a4776b',1,'isce::product::RadarGridParameters::startingRange()']]],
-  ['statevector',['StateVector',['../classisce_1_1core_1_1StateVector.html#a55efa058115dfa14ec8a7a924b080bb8',1,'isce::core::StateVector']]],
   ['statevector',['StateVector',['../classisce_1_1core_1_1StateVector.html',1,'isce::core']]],
+  ['statevector',['StateVector',['../classisce_1_1core_1_1StateVector.html#a55efa058115dfa14ec8a7a924b080bb8',1,'isce::core::StateVector']]],
   ['statevectors',['stateVectors',['../structisce_1_1core_1_1Orbit.html#a919190f179fb4d5f554e4966e6f59629',1,'isce::core::Orbit']]],
   ['stringfromvrt',['stringFromVRT',['../namespaceisce_1_1core.html#a4123e8e839c6bc00ea12744cf8781f3a',1,'isce::core']]],
   ['stringtovector',['stringToVector',['../namespaceisce_1_1core.html#a22545d2fc4f92173946f1049862d89e9',1,'isce::core']]],
   ['strptime',['strptime',['../structisce_1_1core_1_1DateTime.html#ae666582240a25f37e4ae0e7b2c3186a9',1,'isce::core::DateTime']]],
   ['submat',['submat',['../classisce_1_1core_1_1Matrix.html#a75d7751271ac4e7a9a969fd7bccee68d',1,'isce::core::Matrix']]],
-  ['swath',['swath',['../classisce_1_1product_1_1Product.html#a0d56e2d23e6fef155b0f3c2fc88f2062',1,'isce::product::Product::swath(char freq) const '],['../classisce_1_1product_1_1Product.html#a28de8ff216a8bd92d20a1afbd682f186',1,'isce::product::Product::swath(char freq)'],['../classisce_1_1product_1_1Product.html#ab5f95b31981df1c2b3dfea494b153521',1,'isce::product::Product::swath(const Swath &amp;s, char freq)']]],
-  ['swath',['Swath',['../classisce_1_1product_1_1Swath.html',1,'isce::product']]]
+  ['swath',['Swath',['../classisce_1_1product_1_1Swath.html',1,'isce::product']]],
+  ['swath',['swath',['../classisce_1_1product_1_1Product.html#a0d56e2d23e6fef155b0f3c2fc88f2062',1,'isce::product::Product::swath(char freq) const '],['../classisce_1_1product_1_1Product.html#a28de8ff216a8bd92d20a1afbd682f186',1,'isce::product::Product::swath(char freq)'],['../classisce_1_1product_1_1Product.html#ab5f95b31981df1c2b3dfea494b153521',1,'isce::product::Product::swath(const Swath &amp;s, char freq)']]]
 ];
