@@ -18,6 +18,7 @@ namespace isce {
         template <typename T> class Kernel;
         template <typename T> class BartlettKernel;
         template <typename T> class KnabKernel;
+        template <typename T> isce::core::BartlettKernel<T> LinearKernel();
     }
 }
 
@@ -36,7 +37,7 @@ class isce::core::Kernel {
         virtual T operator()(double x) = 0;
 
         /** Get width of kernel. */
-        double width() {return _halfwidth*2;}
+        double width() const {return _halfwidth*2;}
 
     // Protected constructor and data to be used by derived classes
     protected:
@@ -51,6 +52,13 @@ class isce::core::BartlettKernel : public isce::core::Kernel<T> {
         BartlettKernel(double width);
         T operator()(double x) override;
 };
+
+template <typename T>
+isce::core::BartlettKernel<T>
+isce::core::LinearKernel()
+{
+    return isce::core::BartlettKernel<T>(2.0);
+}
 
 template <typename T>
 class isce::core::KnabKernel : public isce::core::Kernel<T> {

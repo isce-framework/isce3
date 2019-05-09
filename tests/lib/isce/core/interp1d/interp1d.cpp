@@ -21,6 +21,8 @@
 // isce::core
 #include "isce/core/Interp1d.h"
 
+using isce::core::interp1d;
+
 double
 rad2deg(double x)
 {
@@ -205,7 +207,7 @@ struct Interp1dTest : public ::testing::Test
         void
         check_interp(double min_cor, double max_phs, double max_bias,
                      double max_spread, std::vector<double> times,
-                     isce::core::Interp1d<double> itp)
+                     isce::core::Kernel<double> &kernel)
         {
             // interpolate at all offsets in [pad:-pad]
             std::vector<std::complex<double>> ref(0), out(0);
@@ -214,7 +216,8 @@ struct Interp1dTest : public ::testing::Test
                 double t = times[i];
                 if ((pad <= t) && (t <= n-1-pad)) {
                     ref.push_back(ts.eval(t));
-                    out.push_back(itp.interp<std::complex<double>>(signal, t));
+                    auto x = interp1d<double,std::complex<double>>(kernel, signal, t);
+                    out.push_back(x);
                 }
             }
             auto cor = _correlation(ref, out);
@@ -236,7 +239,7 @@ struct Interp1dTest : public ::testing::Test
         void
         test_rand_offsets(double min_cor, double max_phs, double max_bias,
                           double max_spread,
-                          isce::core::Interp1d<double> itp)
+                          isce::core::Kernel<double> &kernel)
         {
             printf("Testing random offsets.\n");
             std::mt19937 rng(2 * seed);
@@ -245,13 +248,13 @@ struct Interp1dTest : public ::testing::Test
             for (size_t i=0; i<n; ++i) {
                 times[i] = i + uniform(rng);
             }
-            check_interp(min_cor, max_phs, max_bias, max_spread, times, itp);
+            check_interp(min_cor, max_phs, max_bias, max_spread, times, kernel);
         }
 
         void
         test_fixed_offset(double min_cor, double max_phs, double max_bias,
                          double max_spread,
-                         isce::core::Interp1d<double> itp,
+                         isce::core::Kernel<double> &kernel,
                          double off)
         {
             printf("Testing fixed offset=%g\n", off);
@@ -259,32 +262,30 @@ struct Interp1dTest : public ::testing::Test
             for (size_t i=0; i<n; ++i) {
                 times[i] = i + off;
             }
-            check_interp(min_cor, max_phs, max_bias, max_spread, times, itp);
+            check_interp(min_cor, max_phs, max_bias, max_spread, times, kernel);
         }
 };
 
 TEST_F(Interp1dTest, Linear) {
-    isce::core::Interp1d itp
-        = isce::core::Interp1d<double>::Linear();
+    auto kernel = isce::core::LinearKernel<double>();
     // offset=0 should give back original data for this kernel.
-    test_fixed_offset(0.999999, 0.001, 0.001, 0.001, itp,  0.0);
-    test_fixed_offset(0.95, 30.0, 5.0, 5.0, itp, -0.3);
-    test_fixed_offset(0.95, 30.0, 5.0, 5.0, itp,  0.3);
-    test_fixed_offset(0.95, 30.0, 5.0, 5.0, itp, -0.5);
-    test_fixed_offset(0.95, 30.0, 5.0, 5.0, itp,  0.5);
-    test_rand_offsets(0.95, 30.0, 3.0, 3.0, itp);
+    test_fixed_offset(0.999999, 0.001, 0.001, 0.001, kernel,  0.0);
+    test_fixed_offset(0.95, 30.0, 5.0, 5.0, kernel, -0.3);
+    test_fixed_offset(0.95, 30.0, 5.0, 5.0, kernel,  0.3);
+    test_fixed_offset(0.95, 30.0, 5.0, 5.0, kernel, -0.5);
+    test_fixed_offset(0.95, 30.0, 5.0, 5.0, kernel,  0.5);
+    test_rand_offsets(0.95, 30.0, 3.0, 3.0, kernel);
 }
 
 TEST_F(Interp1dTest, Knab) {
-    isce::core::Interp1d itp
-        = isce::core::Interp1d<double>::Knab(8.0, 0.8);
+    auto kernel = isce::core::KnabKernel<double>(8.0, 0.8);
     // offset=0 should give back original data for this kernel.
-    test_fixed_offset(0.999999, 0.001, 0.001, 0.001, itp,  0.0);
-    test_fixed_offset(0.998, 5.0, 1.0, 1.0, itp, -0.3);
-    test_fixed_offset(0.998, 5.0, 1.0, 1.0, itp,  0.3);
-    test_fixed_offset(0.998, 5.0, 1.0, 1.0, itp, -0.5);
-    test_fixed_offset(0.998, 5.0, 1.0, 1.0, itp,  0.5);
-    test_rand_offsets(0.998, 5.0, 0.5, 0.5, itp);
+    test_fixed_offset(0.999999, 0.001, 0.001, 0.001, kernel,  0.0);
+    test_fixed_offset(0.998, 5.0, 1.0, 1.0, kernel, -0.3);
+    test_fixed_offset(0.998, 5.0, 1.0, 1.0, kernel,  0.3);
+    test_fixed_offset(0.998, 5.0, 1.0, 1.0, kernel, -0.5);
+    test_fixed_offset(0.998, 5.0, 1.0, 1.0, kernel,  0.5);
+    test_rand_offsets(0.998, 5.0, 0.5, 0.5, kernel);
 }
 
 int main(int argc, char **argv) {

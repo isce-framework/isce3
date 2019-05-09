@@ -9,33 +9,14 @@
 #error "Interp1d.icc is an implementation detail of class Interp1d"
 #endif
 
-template <typename T>
-inline
-isce::core::Interp1d<T>
-isce::core::Interp1d<T>::
-Linear()
-{
-    auto p = std::make_shared<isce::core::BartlettKernel<T>>(2.0);
-    return Interp1d<T>(p);
-}
 
-template <typename T>
-inline
-isce::core::Interp1d<T>
-isce::core::Interp1d<T>::
-Knab(double width, double bandwidth)
-{
-    auto p = std::make_shared<isce::core::KnabKernel<T>>(width, bandwidth);
-    return Interp1d<T>(p);
-}
-
-template <typename TK>
-template <typename TD>
+template <typename TK, typename TD>
 inline
 TD
-isce::core::Interp1d<TK>::
-interp(const std::valarray<TD> &x, double t)
+isce::core::interp1d(isce::core::Kernel<TK> &kernel,
+                     const std::valarray<TD> &x, double t)
 {
+    int _width = int(ceil(kernel.width()));
     long i0 = 0;
     if (_width % 2 == 0) {
         i0 = (long) ceil(t);
@@ -51,7 +32,7 @@ interp(const std::valarray<TD> &x, double t)
     }
     for (long i=low; i<high; i++) {
         double ti = i - t;
-        TK w = (*_kernel)(ti);
+        TK w = kernel(ti);
         sum += w * x[i];
     }
     return sum;
