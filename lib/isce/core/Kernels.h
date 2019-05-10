@@ -18,8 +18,8 @@ namespace isce {
         // The kernel classes
         template <typename T> class Kernel;
         template <typename T> class BartlettKernel;
+        template <typename T> class LinearKernel;
         template <typename T> class KnabKernel;
-        template <typename T> isce::core::BartlettKernel<T> LinearKernel();
     }
 }
 
@@ -61,11 +61,12 @@ class isce::core::BartlettKernel : public isce::core::Kernel<T> {
 
 /** Linear kernel, which is just a special case of Bartlett. */
 template <typename T>
-isce::core::BartlettKernel<T>
-isce::core::LinearKernel()
-{
-    return isce::core::BartlettKernel<T>(2.0);
-}
+class isce::core::LinearKernel : public isce::core::BartlettKernel<T> {
+
+    public:
+        LinearKernel() : isce::core::BartlettKernel<T>(2.0) {}
+};
+
 
 /** Kernel based on the paper by Knab for interpolating band-limited signals.
  *
