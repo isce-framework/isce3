@@ -1,7 +1,7 @@
 var searchData=
 [
   ['b',['b',['../classisce_1_1core_1_1Ellipsoid.html#abf4e3634f6464e27a5f08b3ac32038c4',1,'isce::core::Ellipsoid']]],
-  ['bandwidth',['bandwidth',['../classisce_1_1core_1_1KnabKernel.html#a4865503e5fbb832dad2843f33beca722',1,'isce::core::KnabKernel']]],
+  ['bandwidth',['bandwidth',['../classisce_1_1core_1_1KnabKernel.html#a2a5d839cd5b092f54ec6f225a7e55bb5',1,'isce::core::KnabKernel']]],
   ['bartlettkernel',['BartlettKernel',['../classisce_1_1core_1_1BartlettKernel.html#a6b0e4f30407956426cb0d315a8c53b07',1,'isce::core::BartlettKernel']]],
   ['bartlettkernel',['BartlettKernel',['../classisce_1_1core_1_1BartlettKernel.html',1,'isce::core']]],
   ['baseline',['Baseline',['../classisce_1_1core_1_1Baseline.html',1,'isce::core']]],
