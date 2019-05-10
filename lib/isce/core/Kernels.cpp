@@ -4,9 +4,11 @@
 //
 
 #include "Kernels.h"
-#include <assert.h>
+#include <isce/except/Error.h>
 #include <complex>
 #include <cmath>
+
+using isce::except::RuntimeError;
 
 /* 
  * Bartlett
@@ -60,12 +62,16 @@ template <typename T>
 T
 _sampling_window(T t, T halfwidth, T bandwidth)
 {
-    assert((0.0 < bandwidth) && (bandwidth < 1.0));
+    if (!((0.0 < bandwidth) && (bandwidth < 1.0))) {
+        throw RuntimeError(ISCE_SRCINFO(), "Require 0 < bandwidth < 1");
+    }
     const T c = M_PI * halfwidth * (1.0 - bandwidth);
     const T tf = t / halfwidth;
     std::complex<T> y = sqrt((std::complex<T>)(1.0 - tf*tf));
     T window = real(cosh(c * y) / cosh(c));
-    assert(isfinite(window));
+    if (!isfinite(window)) {
+        throw RuntimeError(ISCE_SRCINFO(), "Invalid window parameters.");
+    }
     return window;
 }
 
