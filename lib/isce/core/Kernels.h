@@ -37,7 +37,7 @@ class isce::core::Kernel {
         virtual ~Kernel() {}
 
         /** Evaluate kernel at given location in [-halfwidth, halfwidth] */
-        virtual T operator()(double x) = 0;
+        virtual T operator()(double x) const = 0;
 
         /** Get width of kernel.
          *
@@ -56,7 +56,7 @@ class isce::core::BartlettKernel : public isce::core::Kernel<T> {
     public:
         /** Triangle function constructor. */
         BartlettKernel(double width);
-        T operator()(double x) override;
+        T operator()(double x) const override;
 };
 
 /** Linear kernel, which is just a special case of Bartlett. */
@@ -86,10 +86,10 @@ class isce::core::KnabKernel : public isce::core::Kernel<T> {
          */
         KnabKernel(double width, double bandwidth);
 
-        T operator()(double x) override;
+        T operator()(double x) const override;
 
         /** Get bandwidth of kernel. */
-        double bandwidth() {return _bandwidth;}
+        double bandwidth() const {return _bandwidth;}
 
     private:
         double _bandwidth;

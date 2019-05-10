@@ -39,8 +39,8 @@ namespace isce {
  */
 template<typename TK, typename TD>
 TD
-isce::core::interp1d(isce::core::Kernel<TK> &kernel, const TD *x, size_t length,
-                     size_t stride, double t);
+isce::core::interp1d(const isce::core::Kernel<TK> &kernel, const TD *x,
+                     size_t length, size_t stride, double t);
 
 /** Interpolate sequence x at point t
  *
@@ -53,8 +53,8 @@ isce::core::interp1d(isce::core::Kernel<TK> &kernel, const TD *x, size_t length,
  */
 template<typename TK, typename TD>
 TD
-isce::core::interp1d(isce::core::Kernel<TK> &kernel, const std::valarray<TD> &x,
-                     double t);
+isce::core::interp1d(const isce::core::Kernel<TK> &kernel,
+                     const std::valarray<TD> &x, double t);
 
 // Get inline implementations
 #define ISCE_CORE_INTERP1D_ICC

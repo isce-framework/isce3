@@ -23,7 +23,7 @@ BartlettKernel(double width) {
 template <typename T>
 T
 isce::core::BartlettKernel<T>::
-operator()(double t) {
+operator()(double t) const {
     double t2 = fabs(t / this->_halfwidth);
     if (t2 > 1.0) {
         return T(0.0);
@@ -81,7 +81,7 @@ KnabKernel(double width, double bandwidth) {
 template <typename T>
 T
 isce::core::KnabKernel<T>::
-operator()(double t) {
+operator()(double t) const {
     auto st = isce::core::sinc<T>(t);
     return _sampling_window(t, this->_halfwidth, this->_bandwidth) * st;
 }
