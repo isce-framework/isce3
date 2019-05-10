@@ -25,7 +25,7 @@ namespace isce {
 
 /** Abstract base class for all kernels.
  *
- * Basically just a closure * around an arbitrary function and a width property.
+ * Basically just a closure around an arbitrary function and a width property.
  * Template parameter T defines type for coefficients, typically float or
  * double.
  */
