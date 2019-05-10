@@ -60,7 +60,6 @@ template <typename T>
 T
 _sampling_window(T t, T halfwidth, T bandwidth)
 {
-    // std::cout << "bandwidth = " << bandwidth << std::endl;
     assert((0.0 < bandwidth) && (bandwidth < 1.0));
     const T c = M_PI * halfwidth * (1.0 - bandwidth);
     const T tf = t / halfwidth;
