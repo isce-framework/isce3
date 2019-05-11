@@ -13,8 +13,8 @@ from DateTime cimport DateTime
 
 cdef class pyDateTime:
     '''
-    Python wrapper for isce::core::DateTime.
-    Includes support for comparison and subtraction operators.
+    Python wrapper for isce::core::DateTime. 
+    By default, returns GPS time reference - 1970-01-01T00:00:00.
 
     Args:
         inobj (:obj:`datetime.datetime` or :obj:`str`, optional): Input python datetime object or iso-8601 string
@@ -135,7 +135,7 @@ cdef class pyDateTime:
 
         Args:
             dt1 (:obj:`pyDateTime`): Time tag
-            delta (:obj:`pyDateTime`): Time difference to add
+            delta (:obj:`pyTimeDelta`): Time difference to add
 
         Returns:
             :obj:`pyDateTime`: Resulting time tag
