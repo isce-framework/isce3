@@ -74,7 +74,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -152,7 +152,7 @@ const std::vector&lt; double &gt; &amp;&#160;</td><td class="memItemRight" valig
 <tr class="memitem:a700ff2d771d890b6c682bd792f463d75"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1EulerAngles.html#a700ff2d771d890b6c682bd792f463d75">ypr</a> (double tintp, double &amp;<a class="el" href="classisce_1_1core_1_1EulerAngles.html#a2a647b44db507899e68145262b268789">yaw</a>, double &amp;<a class="el" href="classisce_1_1core_1_1EulerAngles.html#a33f26d3df15cbf37d155ef7bdda5097a">pitch</a>, double &amp;<a class="el" href="classisce_1_1core_1_1EulerAngles.html#ab939e305c9f644b0d5116f1dbb899e1c">roll</a>)</td></tr>
 <tr class="memdesc:a700ff2d771d890b6c682bd792f463d75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate yaw, pitch and roll at a given time.  <a href="#a700ff2d771d890b6c682bd792f463d75">More...</a><br/></td></tr>
 <tr class="separator:a700ff2d771d890b6c682bd792f463d75"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2fa0af7f781cd8d9750a7b8982857163"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structisce_1_1core_1_1DenseMatrix.html">cartmat_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1EulerAngles.html#a2fa0af7f781cd8d9750a7b8982857163">rotmat</a> (double tintp, const std::string, double dyaw=0.0, double dpitch=0.0, double d2=0.0, double d3=0.0)</td></tr>
+<tr class="memitem:a2fa0af7f781cd8d9750a7b8982857163"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespaceisce_1_1core.html#a783159df295136bea1129473a383c16a">cartmat_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1EulerAngles.html#a2fa0af7f781cd8d9750a7b8982857163">rotmat</a> (double tintp, const std::string, double dyaw=0.0, double dpitch=0.0, double d2=0.0, double d3=0.0)</td></tr>
 <tr class="memdesc:a2fa0af7f781cd8d9750a7b8982857163"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return rotation matrix at a given time with optional angle perturbations.  <a href="#a2fa0af7f781cd8d9750a7b8982857163">More...</a><br/></td></tr>
 <tr class="separator:a2fa0af7f781cd8d9750a7b8982857163"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a479b03a280dbe22af7747a6cafc68fcf"><td class="memItemLeft" align="right" valign="top">std::vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1EulerAngles.html#a479b03a280dbe22af7747a6cafc68fcf">toQuaternionElements</a> (double tintp)</td></tr>
@@ -162,15 +162,15 @@ const std::vector&lt; double &gt; &amp;&#160;</td><td class="memItemRight" valig
 <tr class="memdesc:a13a4fb2e48aa86d0705664cbe2c20384"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return equivalent quaternion data structure.  <a href="#a13a4fb2e48aa86d0705664cbe2c20384">More...</a><br/></td></tr>
 <tr class="separator:a13a4fb2e48aa86d0705664cbe2c20384"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8cd68801e7ddb4ed1ca6158107f299b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa8cd68801e7ddb4ed1ca6158107f299b"></a>
-<a class="el" href="structisce_1_1core_1_1DenseMatrix.html">cartmat_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1EulerAngles.html#aa8cd68801e7ddb4ed1ca6158107f299b">T3</a> (double)</td></tr>
+<a class="el" href="namespaceisce_1_1core.html#a783159df295136bea1129473a383c16a">cartmat_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1EulerAngles.html#aa8cd68801e7ddb4ed1ca6158107f299b">T3</a> (double)</td></tr>
 <tr class="memdesc:aa8cd68801e7ddb4ed1ca6158107f299b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return T3 rotation matrix around Z-axis. <br/></td></tr>
 <tr class="separator:aa8cd68801e7ddb4ed1ca6158107f299b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad56fad3b8c676e0f970d702fcb2572f7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad56fad3b8c676e0f970d702fcb2572f7"></a>
-<a class="el" href="structisce_1_1core_1_1DenseMatrix.html">cartmat_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1EulerAngles.html#ad56fad3b8c676e0f970d702fcb2572f7">T2</a> (double)</td></tr>
+<a class="el" href="namespaceisce_1_1core.html#a783159df295136bea1129473a383c16a">cartmat_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1EulerAngles.html#ad56fad3b8c676e0f970d702fcb2572f7">T2</a> (double)</td></tr>
 <tr class="memdesc:ad56fad3b8c676e0f970d702fcb2572f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return T2 rotation matrix around Y-axis. <br/></td></tr>
 <tr class="separator:ad56fad3b8c676e0f970d702fcb2572f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a523db3a467c91242853fc5050a5519ea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a523db3a467c91242853fc5050a5519ea"></a>
-<a class="el" href="structisce_1_1core_1_1DenseMatrix.html">cartmat_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1EulerAngles.html#a523db3a467c91242853fc5050a5519ea">T1</a> (double)</td></tr>
+<a class="el" href="namespaceisce_1_1core.html#a783159df295136bea1129473a383c16a">cartmat_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1EulerAngles.html#a523db3a467c91242853fc5050a5519ea">T1</a> (double)</td></tr>
 <tr class="memdesc:a523db3a467c91242853fc5050a5519ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return T1 rotation matrix around X-axis. <br/></td></tr>
 <tr class="separator:a523db3a467c91242853fc5050a5519ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a642577c39cbb61ea4bd22e9abd91e947"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a642577c39cbb61ea4bd22e9abd91e947"></a>
@@ -190,10 +190,10 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Attitude.html#a909af97050ff424424be2eed032241bf">Attitude</a> (AttitudeType atype)</td></tr>
 <tr class="memdesc:a909af97050ff424424be2eed032241bf inherit pub_methods_classisce_1_1core_1_1Attitude"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor using time attitude representation type. <br/></td></tr>
 <tr class="separator:a909af97050ff424424be2eed032241bf inherit pub_methods_classisce_1_1core_1_1Attitude"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac256c51f2278c7515691cbceb4d00f29 inherit pub_methods_classisce_1_1core_1_1Attitude"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac256c51f2278c7515691cbceb4d00f29"></a>
-virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Attitude.html#ac256c51f2278c7515691cbceb4d00f29">~Attitude</a> ()</td></tr>
-<tr class="memdesc:ac256c51f2278c7515691cbceb4d00f29 inherit pub_methods_classisce_1_1core_1_1Attitude"><td class="mdescLeft">&#160;</td><td class="mdescRight">Virtual destructor. <br/></td></tr>
-<tr class="separator:ac256c51f2278c7515691cbceb4d00f29 inherit pub_methods_classisce_1_1core_1_1Attitude"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afba2109f949c3db50d741aee0766bdef inherit pub_methods_classisce_1_1core_1_1Attitude"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afba2109f949c3db50d741aee0766bdef"></a>
+virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Attitude.html#afba2109f949c3db50d741aee0766bdef">~Attitude</a> ()=0</td></tr>
+<tr class="memdesc:afba2109f949c3db50d741aee0766bdef inherit pub_methods_classisce_1_1core_1_1Attitude"><td class="mdescLeft">&#160;</td><td class="mdescRight">Virtual destructor. <br/></td></tr>
+<tr class="separator:afba2109f949c3db50d741aee0766bdef inherit pub_methods_classisce_1_1core_1_1Attitude"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2e27081a421039c8d191f8028c2e4068 inherit pub_methods_classisce_1_1core_1_1Attitude"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2e27081a421039c8d191f8028c2e4068"></a>
 AttitudeType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Attitude.html#a2e27081a421039c8d191f8028c2e4068">attitudeType</a> () const </td></tr>
 <tr class="memdesc:a2e27081a421039c8d191f8028c2e4068 inherit pub_methods_classisce_1_1core_1_1Attitude"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return type of attitude representation - quaternion or euler angle. <br/></td></tr>
@@ -210,7 +210,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a17cfdc94a76faec9187680d93b417777"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a17cfdc94a76faec9187680d93b417777"></a>
-static <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1EulerAngles.html#a17cfdc94a76faec9187680d93b417777">rotmat2ypr</a> (const <a class="el" href="structisce_1_1core_1_1DenseMatrix.html">cartmat_t</a> &amp;)</td></tr>
+static <a class="el" href="namespaceisce_1_1core.html#af1248fd6851624355b9af9c38decbad2">cartesian_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1EulerAngles.html#a17cfdc94a76faec9187680d93b417777">rotmat2ypr</a> (const <a class="el" href="namespaceisce_1_1core.html#a783159df295136bea1129473a383c16a">cartmat_t</a> &amp;)</td></tr>
 <tr class="memdesc:a17cfdc94a76faec9187680d93b417777"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility method to convert rotation matrix to Euler angles. <br/></td></tr>
 <tr class="separator:a17cfdc94a76faec9187680d93b417777"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -287,10 +287,10 @@ static <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a>&#1
 <p>Constructor with vectors of time and attitude angles. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">time</td><td><a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a> of observation times in seconds since reference epoch </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">yaw</td><td><a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a> of yaw angles </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pitch</td><td><a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a> of pitch angles </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">roll</td><td><a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a> of roll angles </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">time</td><td>Vector of observation times in seconds since reference epoch </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">yaw</td><td>Vector of yaw angles </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pitch</td><td>Vector of pitch angles </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">roll</td><td>Vector of roll angles </td></tr>
   </table>
   </dd>
 </dl>
@@ -361,10 +361,10 @@ static <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a>&#1
 <p>Set data after construction. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">time</td><td><a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a> of observation times in seconds since reference epoch </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">yaw</td><td><a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a> of yaw angles </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pitch</td><td><a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a> of pitch angles </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">roll</td><td><a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a> of roll angles </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">time</td><td>Vector of observation times in seconds since reference epoch </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">yaw</td><td>Vector of yaw angles </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pitch</td><td>Vector of pitch angles </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">roll</td><td>Vector of roll angles </td></tr>
   </table>
   </dd>
 </dl>
@@ -403,7 +403,7 @@ static <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a>&#1
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structisce_1_1core_1_1DenseMatrix.html">isce::core::cartmat_t</a> isce::core::EulerAngles::rotmat </td>
+          <td class="memname"><a class="el" href="namespaceisce_1_1core.html#a783159df295136bea1129473a383c16a">isce::core::cartmat_t</a> isce::core::EulerAngles::rotmat </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>tintp</em>, </td>
@@ -465,7 +465,7 @@ static <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a>&#1
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classisce_1_1core_1_1Attitude.html#a552528ab614cc3be06bb99597fdee28a">isce::core::Attitude</a>.</p>
+<p>Implements <a class="el" href="classisce_1_1core_1_1Attitude.html#afb877dd4f199a49b139867fd04fe13e8">isce::core::Attitude</a>.</p>
 
 </div>
 </div>
@@ -510,7 +510,7 @@ static <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a>&#1
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">tintp</td><td>Seconds since reference epoch </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">q</td><td><a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a> of quaternion elements </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">q</td><td>Vector of quaternion elements </td></tr>
   </table>
   </dd>
 </dl>
