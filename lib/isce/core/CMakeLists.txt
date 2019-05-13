@@ -1,3 +1,7 @@
+#Mimicking mm behaviour
+set(PACKAGENAME core)
+string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
+
 ####Set the source files
 set(CPPS Attitude.cpp
          Baseline.cpp
@@ -8,6 +12,7 @@ set(CPPS Attitude.cpp
          Ellipsoid.cpp
          EulerAngles.cpp
          Interpolator.cpp
+         Kernels.cpp
          LUT2d.cpp
          LinAlg.cpp
          Metadata.cpp
@@ -32,7 +37,10 @@ set(HEADERS Attitude.h
             Doppler.h
             Ellipsoid.h
             EulerAngles.h
+            Interp1d.h
+            Interp1d.icc
             Interpolator.h
+            Kernels.h
             LUT1d.h
             LUT1d.icc
             LUT2d.h
