@@ -26,7 +26,6 @@ var searchData=
   ['gpuorbit',['gpuOrbit',['../structisce_1_1cuda_1_1core_1_1gpuOrbit.html',1,'isce::cuda::core']]],
   ['gpupeg',['gpuPeg',['../structisce_1_1cuda_1_1core_1_1gpuPeg.html',1,'isce::cuda::core']]],
   ['gpupegtrans',['gpuPegtrans',['../structisce_1_1cuda_1_1core_1_1gpuPegtrans.html',1,'isce::cuda::core']]],
-  ['gpupixel',['gpuPixel',['../classisce_1_1cuda_1_1core_1_1gpuPixel.html',1,'isce::cuda::core']]],
   ['gpupoly2d',['gpuPoly2d',['../structisce_1_1cuda_1_1core_1_1gpuPoly2d.html',1,'isce::cuda::core']]],
   ['gpurangefilter',['gpuRangeFilter',['../classgpuRangeFilter.html',1,'']]],
   ['gpurangefilter',['gpuRangeFilter',['../classisce_1_1cuda_1_1signal_1_1gpuRangeFilter.html',1,'isce::cuda::signal']]],
