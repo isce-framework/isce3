@@ -6,7 +6,7 @@
 #ifndef ISCE_CUDA_CORE_GPULINALG_H
 #define ISCE_CUDA_CORE_GPULINALG_H
 
-#include "isce/cuda/core/Common.h"
+#include <isce/core/Common.h>
 
 // Declaration
 namespace isce {

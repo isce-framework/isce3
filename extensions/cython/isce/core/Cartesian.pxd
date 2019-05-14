@@ -4,16 +4,14 @@
 # Copyright 2017-2018
 #
 
-cdef extern from "<array>" namespace "std" nogil:
+cdef extern from "isce/core/Cartesian.h" namespace "isce::core" nogil:
 
     # Three-element array for representing coordinate vectors
-    cdef cppclass cartesian_t "std::array<double, 3>":
+    cdef cppclass cartesian_t "isce::core::cartesian_t":
         cartesian_t() except +
-        double & operator[](size_t)
+        double& operator[](size_t)
 
     # Three-by-three matrix
-    cdef cppclass cartmat_t "std::array<std::array<double, 3>, 3>":
+    cdef cppclass cartmat_t "isce::core::cartmat_t":
         cartmat_t() except +
-        cartesian_t & operator[](size_t)
-
-# end of file
+        cartesian_t& operator[](size_t)

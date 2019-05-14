@@ -539,7 +539,7 @@ computeDEMBounds(const Orbit & orbit,
         Pixel pixel(rng, dopfact, rbin);
 
         // Run topo for one iteration for two different heights
-        cartesian_t llh = {0, 0, 0};
+        cartesian_t llh {0., 0., 0.};
         std::array<double, 2> testHeights = {-500.0, 1000.0};
         for (int k = 0; k < 2; ++k) {
 

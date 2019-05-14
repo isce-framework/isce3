@@ -11,6 +11,7 @@
 #include <vector>
 #include "Constants.h"
 #include "Ellipsoid.h"
+#include "LinAlg.h"
 
 namespace isce { namespace core {
 
@@ -20,6 +21,9 @@ namespace isce { namespace core {
      * forward - To convert llh (radians) to expected projection system 
      * inverse - To convert expected projection system to llh (radians) */
     struct ProjectionBase {
+
+        using cartesian_t = Vec3;
+
         /** Ellipsoid object for projections - currently only WGS84 */
         Ellipsoid ellipse;
         /** Type of projection system. This can be used to check if projection systems are equal
@@ -178,8 +182,8 @@ namespace isce { namespace core {
     ProjectionBase* createProj(int epsg);
 
     // This is to transform a point from one coordinate system to another
-    int projTransform(ProjectionBase* in, ProjectionBase *out, const cartesian_t &inpts,
-                      cartesian_t &outpts);
+    int projTransform(ProjectionBase* in, ProjectionBase *out, const Vec3& inpts,
+                      Vec3& outpts);
 }}
 
 #endif

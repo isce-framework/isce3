@@ -384,7 +384,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
         Pixel pixel(rng, dopfact, rbin);
 
         // Run topo for one iteration for two different heights
-        cartesian_t llh = {0, 0, 0};
+        cartesian_t llh {0., 0., 0.};
         std::array<double, 2> testHeights = {MIN_H, MAX_H};
         for (int k = 0; k < 2; ++k) {
 

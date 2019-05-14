@@ -9,7 +9,7 @@
 
 #include <valarray>
 #include <thrust/complex.h>
-#include "isce/cuda/core/Common.h"
+#include <isce/core/Common.h>
 
 // Declaration
 namespace isce {

@@ -94,4 +94,4 @@ operator()(double t) const {
 
 template class isce::core::KnabKernel<float>;
 template class isce::core::KnabKernel<double>;
-
+template double isce::core::sinc(double);

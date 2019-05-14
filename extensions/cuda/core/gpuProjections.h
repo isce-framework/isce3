@@ -10,15 +10,8 @@
 #include <iostream>
 #include <vector>
 
-// isce::core
-#include "isce/core/Projections.h"
-#include "isce/core/Constants.h"
-
-// isce::cuda::core
-#include "Common.h"
-#include "gpuEllipsoid.h"
-
-using isce::core::cartesian_t;
+#include <isce/core/Ellipsoid.h>
+#include <isce/core/Projections.h>
 
 namespace isce { namespace cuda { namespace core {
 
@@ -29,8 +22,10 @@ namespace isce { namespace cuda { namespace core {
      * inverse - To convert expected projection system to llh (radians)
      */
     struct ProjectionBase {
+        typedef isce::core::Vec3        Vec3;
+
         /** Ellipsoid object for projections - currently only WGS84 */
-        gpuEllipsoid ellipse;
+        isce::core::Ellipsoid ellipse;
         /** Type of projection system. This can be used to check if projection systems are equal
          * Private member and should not be modified after initialization*/
         int _epsgcode;
@@ -42,46 +37,46 @@ namespace isce { namespace cuda { namespace core {
          * 
          * @param[in] llh Lon/Lat/Height - Lon and Lat are in radians
          * @param[out] xyz Coordinates in specified projection system */
-        CUDA_HOST int forward_h(const cartesian_t& llh, cartesian_t& xyz) const;
+        CUDA_HOST int forward_h(const Vec3& llh, Vec3& xyz) const;
 
         /** \brief Device function for transform from LLH.
          *
          * @param[in] llh Lon/Lat/Height - Lon and Lat are in radians
          * @param[out] xyz Coordinates in specified coordinate system*/
-        CUDA_DEV virtual int forward(const double *llh, double *xyz) const = 0 ;
+        CUDA_DEV virtual int forward(const Vec3& llh, Vec3& xyz) const = 0;
 
         /** Host function for transforming to LLH. This is similar to inv or inv3d in PROJ.4
          *
          * @param[in] xyz Coordinates in specified projection system 
          * @param[out] llh Lon/Lat/Height - Lon and Lat are in radians */
-        CUDA_HOST int inverse_h(const cartesian_t& xyz, cartesian_t& llh) const;
+        CUDA_HOST int inverse_h(const Vec3& xyz, Vec3& llh) const;
 
         /** Device function for tranforming to LLH.
          *
          * @param[in] xyz Coordinates in specified projection system
          * @param[out] llh Lon/Lat/Height - Lon and Lat are in radians */
-        CUDA_DEV virtual int inverse(const double *xyz, double *llh) const = 0 ;
+        CUDA_DEV virtual int inverse(const Vec3& xyz, Vec3& llh) const = 0 ;
     };
 
     /** Geodetic Lon/Lat projection - EPSG:4326 */
     struct LonLat: public ProjectionBase {
         // Value Constructor
-        CUDA_HOSTDEV LonLat():ProjectionBase(4326){};
+        CUDA_HOSTDEV LonLat() : ProjectionBase(4326) {}
         // Radians to Degrees pass through
-        CUDA_DEV int forward(const double*, double*) const;
+        CUDA_DEV int forward(const Vec3&, Vec3&) const;
         // Degrees to Radians pass through
-        CUDA_DEV int inverse(const double*, double*) const;
+        CUDA_DEV int inverse(const Vec3&, Vec3&) const;
     };
 
     /** Standard WGS84 ECEF coordinates - EPSG:4978 */
     struct Geocent: public ProjectionBase {
         // Value Constructor
         CUDA_HOSTDEV Geocent():ProjectionBase(4978){};
-        /** Same as gpuEllipsoid::lonLatToXyz */
-        CUDA_DEV int forward(const double*, double*) const;
+        /** Same as Ellipsoid::lonLatToXyz */
+        CUDA_DEV int forward(const Vec3&, Vec3&) const;
 
-        /** Same as gpuEllipsoid::xyzTolonLat */
-        CUDA_DEV int inverse(const double*, double*) const;
+        /** Same as Ellipsoid::xyzTolonLat */
+        CUDA_DEV int inverse(const Vec3&, Vec3&) const;
     };
 
     /** UTM coordinate extension of ProjectionBase
@@ -101,10 +96,10 @@ namespace isce { namespace cuda { namespace core {
         CUDA_HOSTDEV UTM(int);
 
         /** Transform from llh (rad) to UTM (m)*/
-        CUDA_DEV int forward(const double*, double*) const;
+        CUDA_DEV int forward(const Vec3&, Vec3&) const;
 
         /** Transform from UTM(m) to llh (rad)*/
-        CUDA_DEV int inverse(const double*, double*) const;
+        CUDA_DEV int inverse(const Vec3&, Vec3&) const;
     };
     
     /** Polar stereographic coordinate system
@@ -120,9 +115,9 @@ namespace isce { namespace cuda { namespace core {
         // Value constructor
         CUDA_HOSTDEV PolarStereo(int);
         /** Transfrom from LLH to Polar Stereo */
-        CUDA_DEV int forward(const double*, double*) const;
+        CUDA_DEV int forward(const Vec3&, Vec3&) const;
         /** Transform from Polar Stereo to LLH */
-        CUDA_DEV int inverse(const double*, double*) const;
+        CUDA_DEV int inverse(const Vec3&, Vec3&) const;
     };
 
     /** Equal Area Projection extension of ProjBase
@@ -137,10 +132,10 @@ namespace isce { namespace cuda { namespace core {
         CUDA_HOSTDEV CEA();
 
         /** Transform from llh (rad) to CEA (m)*/
-        CUDA_DEV int forward(const double*, double*) const;
+        CUDA_DEV int forward(const Vec3&, Vec3&) const;
 
         /** Transform from CEA (m) to LLH (rad)*/
-        CUDA_DEV int inverse(const double*, double*) const;
+        CUDA_DEV int inverse(const Vec3&, Vec3&) const;
     };
  
     // This is to transform a point from one coordinate system to another
@@ -153,6 +148,7 @@ namespace isce { namespace cuda { namespace core {
     CUDA_HOSTDEV ProjectionBase* createProj(int epsg);
 
     CUDA_DEV int projInverse(int code, const double* in, double* out_llh);
+    CUDA_DEV int projInverse(int code, const isce::core::Vec3& in, isce::core::Vec3& out_llh);
 }}}
 
 #endif

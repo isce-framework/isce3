@@ -128,8 +128,8 @@ rotmat(double tintp, const std::string dummy, double dq0, double dq1, double dq2
 isce::core::cartesian_t
 isce::core::Quaternion::
 factoredYPR(double tintp,
-            const cartesian_t & satxyz,
-            const cartesian_t & satvel,
+            const cartesian_t& satxyz,
+            const cartesian_t& satvel,
             Ellipsoid * ellipsoid) {
 
     // Compute ECI velocity assuming attitude angles are provided in inertial frame

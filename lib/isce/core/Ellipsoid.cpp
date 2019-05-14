@@ -8,81 +8,9 @@
 #include "Ellipsoid.h"
 #include "LinAlg.h"
 
-/** @param[in] llh Latitude (ras), Longitude (rad), Height (m).
- *  @param[out] xyz ECEF Cartesian coordinates in meters.*/
-void isce::core::Ellipsoid::
-lonLatToXyz(const cartesian_t & llh, cartesian_t & xyz) const {
-    /*
-     * Given a lat, lon, and height, produces a geocentric vector.
-     */
+using isce::core::Vec3;
 
-    // Radius of Earth in East direction
-    auto re = rEast(llh[1]);
-    // Parametric representation of a circle as a function of longitude
-    xyz[0] = (re + llh[2]) * std::cos(llh[1]) * std::cos(llh[0]);
-    xyz[1] = (re + llh[2]) * std::cos(llh[1]) * std::sin(llh[0]);
-    // Parametric representation with the radius adjusted for eccentricity
-    xyz[2] = ((re * (1.0 - _e2)) + llh[2]) * std::sin(llh[1]);
-}
-
-/** @param[in] xyz ECEF Cartesian coordinates in meters. 
- *  @param[out] llh Latitude (rad), Longitude(rad), Height (m).
- *
- *  Using the approach laid out in Vermeille, 2002 \cite vermeille2002direct */
-void isce::core::Ellipsoid::
-xyzToLonLat(const cartesian_t & xyz, cartesian_t & llh) const {
-    /*
-     * Given a geocentric XYZ, produces a lat, lon, and height above the reference ellipsoid.
-     *      VERMEILLE IMPLEMENTATION
-     */
-    // Pre-compute some values
-    const double e4 = _e2 * _e2;
-    const double a2 = _a * _a;
-    // Lateral distance normalized by the major axis
-    double p = (std::pow(xyz[0], 2) + std::pow(xyz[1], 2)) / a2;
-    // Polar distance normalized by the minor axis
-    double q = ((1. - _e2) * std::pow(xyz[2], 2)) / a2;
-    double r = (p + q - e4) / 6.;
-    double s = (e4 * p * q) / (4. * std::pow(r, 3));
-    double t = std::pow(1. + s + std::sqrt(s * (2. + s)), (1./3.));
-    double u = r * (1. + t + (1. / t));
-    double rv = std::sqrt(std::pow(u, 2) + (e4 * q));
-    double w = (_e2 * (u + rv - q)) / (2. * rv);
-    double k = std::sqrt(u + rv + std::pow(w, 2)) - w;
-    // Radius adjusted for eccentricity
-    double d = (k * std::sqrt(std::pow(xyz[0], 2) + std::pow(xyz[1], 2))) / (k + _e2);
-    // Latitude is a function of z and radius
-    llh[1] = std::atan2(xyz[2], d);
-    // Longitude is a function of x and y
-    llh[0] = std::atan2(xyz[1], xyz[0]);
-    // Height is a function of location and radius
-    llh[2] = ((k + _e2 - 1.) * sqrt(std::pow(d, 2) + std::pow(xyz[2], 2))) / k;
-}
-
-/*
-void Ellipsoid::xyzToLonLat(cartesian_t &xyz, cartesian_t &llh) {
-    //
-    // Given a geocentric XYZ, produces a lat, lon, and height above the reference ellipsoid.
-    //      SCOTT HENSLEY IMPLEMENTATION
-    //
-
-    // Error checking to make sure inputs have expected characteristics
-    checkVecLen(llh,3);
-    checkVecLen(xyz,3);
-
-    double b = a * sqrt(1. - _e2);
-    double p = sqrt(std::pow(v[0], 2) + std::pow(v[1], 2));
-    double tant = (v[2] / p) * sqrt(1. / (1. - _e2));
-    double theta = atan(tant);
-    tant = (v[2] + (((1. / (1. - _e2)) - 1.) * b * std::pow(std::sin(theta), 3))) /
-           (p - (_e2 * a * std::pow(std::cos(theta), 3)));
-    llh[1] = atan(tant);
-    llh[0] = atan2(v[1], v[0]);
-    llh[2] = (p / std::cos(llh[1])) - rEast(llh[1]);
-}
-*/
-
-/** @param[in] pos ECEF coordinates of imaging platform in meters 
+/** @param[in] pos ECEF coordinates of imaging platform in meters
  *  @param[in] vel ECEF velocity of imaging platform in meters / sec
  *  @param[in] los Line-of-sight (LOS) vector in ECEF coordinates (meters), pointing from platform to target
  *  @param[out] azi Azimuth angle in radians

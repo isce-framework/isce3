@@ -10,9 +10,9 @@
 
 #include <string>
 #include <vector>
-#include <array>
 #include "Constants.h"
 #include "DateTime.h"
+#include "DenseMatrix.h"
 
 // Declarations
 namespace isce {
@@ -34,21 +34,21 @@ class isce::core::Attitude {
         Attitude(AttitudeType atype) : _attitude_type(atype) {};
 
         /** Virtual destructor*/
-        virtual ~Attitude() = 0;
+        virtual ~Attitude() {}
 
         /** Virtual function to return yaw, pitch, roll */
-        virtual void ypr(double tintp, double & yaw, double & pitch, double & roll) = 0;
+        virtual void ypr(double tintp, double& yaw, double& pitch, double& roll) = 0;
 
         /** Virtual function return rotation matrix with optional perturbations */
-        virtual cartmat_t rotmat(double tintp, const std::string, double d0 = 0.0,
-                                 double d1 = 0.0, double d2 = 0.0, double d3 = 0.0) = 0;
+        virtual Mat3 rotmat(double tintp, const std::string, double d0 = 0,
+                            double d1 = 0, double d2 = 0, double d3 = 0) = 0;
 
         /** Return type of attitude representation - quaternion or euler angle*/
-        inline AttitudeType attitudeType() const {return _attitude_type;}
+        inline AttitudeType attitudeType()  const { return _attitude_type; }
 
         /** Return yaw orientation - central or normal */
-        inline std::string yawOrientation() const {return _yaw_orientation;}
-        
+        inline std::string yawOrientation() const { return _yaw_orientation; }
+
         /** Set yaw orientation - central or normal */
         inline void yawOrientation(const std::string);
 
@@ -56,7 +56,6 @@ class isce::core::Attitude {
     private:
         AttitudeType _attitude_type;
         std::string _yaw_orientation;
-        
 };
 
 // Go ahead and define setYawOrientation here

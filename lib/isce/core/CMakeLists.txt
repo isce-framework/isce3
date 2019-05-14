@@ -3,8 +3,7 @@ set(PACKAGENAME core)
 string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 
 ####Set the source files
-set(CPPS Attitude.cpp
-         Baseline.cpp
+set(CPPS Baseline.cpp
          BilinearInterpolator.cpp
          BicubicInterpolator.cpp
          DateTime.cpp
@@ -14,7 +13,6 @@ set(CPPS Attitude.cpp
          Interpolator.cpp
          Kernels.cpp
          LUT2d.cpp
-         LinAlg.cpp
          Metadata.cpp
          NearestNeighborInterpolator.cpp
          Orbit.cpp
@@ -32,8 +30,12 @@ set(CPPS Attitude.cpp
 set(HEADERS Attitude.h
             Baseline.h
             Basis.h
+            Cartesian.h
+            Common.h
+            Constants.h
             Constants.h
             DateTime.h
+            DenseMatrix.h
             Doppler.h
             Ellipsoid.h
             EulerAngles.h
@@ -60,6 +62,7 @@ set(HEADERS Attitude.h
             Serialization.h
             StateVector.h
             TimeDelta.h
-            Utilities.h)
+            Utilities.h
+            Vector.h)
 
 add_isce_libdir(core "${CPPS}" "${HEADERS}")

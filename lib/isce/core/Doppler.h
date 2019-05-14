@@ -8,6 +8,7 @@
 #define ISCE_CORE_DOPPLER_H
 
 #include <string>
+#include "Cartesian.h"
 #include "Constants.h"
 #include "Orbit.h"
 #include "Pegtrans.h"

@@ -6,8 +6,6 @@
 #ifndef ISCE_CUDA_GEOMETRY_GPUDEMINTERPOLATOR_H
 #define ISCE_CUDA_GEOMETRY_GPUDEMINTERPOLATOR_H
 
-#include "isce/cuda/core/Common.h"
-
 // isce::geometry
 #include "isce/geometry/DEMInterpolator.h"
 
@@ -26,6 +24,8 @@ namespace isce {
 
 // DEMInterpolator declaration
 class isce::cuda::geometry::gpuDEMInterpolator {
+
+    typedef isce::core::Vec3 Vec3;
 
     public:
         /** Default constructor .*/
@@ -58,7 +58,7 @@ class isce::cuda::geometry::gpuDEMInterpolator {
         CUDA_DEV inline double midY() const { return _ystart + 0.5*_length*_deltay; }
 
         /** Middle lat/lon/refHeight. */
-        CUDA_DEV void midLonLat(double *) const; 
+        CUDA_DEV Vec3 midLonLat() const;
 
         /** Get upper left X. */
         CUDA_HOSTDEV inline double xStart() const { return _xstart; }

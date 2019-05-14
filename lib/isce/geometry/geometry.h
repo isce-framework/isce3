@@ -41,7 +41,7 @@ namespace isce {
     namespace geometry {
 
         // Some useful typedefs from isce::core
-        typedef isce::core::cartesian_t cartesian_t;
+        typedef isce::core::Vec3 cartesian_t;
         typedef isce::core::cartmat_t cartmat_t;
 
         /** Radar geometry coordinates to map coordinates transformer*/

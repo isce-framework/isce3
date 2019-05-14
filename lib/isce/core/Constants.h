@@ -19,6 +19,8 @@
 #include <gdal.h>
 #include <gdal_priv.h>
 
+#include "DenseMatrix.h"
+
 // Macro wrapper to check vector lengths (adds calling function and variable name information to the
 // exception)
 #define checkVecLen(v,l) isce::core::checkVecLenDebug(v,l,#v,__PRETTY_FUNCTION__)
@@ -27,14 +29,6 @@
 #define IDX1D(i,j,w) (((i)*(w))+(j))
 
 namespace isce { namespace core {
-    
-    // Useful typedefs for 3-element vectors and 2D matrices
-    // Will be replaced by dedicated array library
-    /**Common datatype for a triplet of doubles*/
-    typedef std::array<double, 3> cartesian_t;
-
-    /**Common datatype for collection of 3 triplets of doubles*/
-    typedef std::array<std::array<double, 3>, 3> cartmat_t;
 
     /**Enumeration type to indicate coordinate system of orbits*/
     enum orbitType {
@@ -48,7 +42,7 @@ namespace isce { namespace core {
         SCH_METHOD,
         LEGENDRE_METHOD
     };
-    
+
     /**Enumeration type to indicate interpolation method*/
     enum dataInterpMethod {
         SINC_METHOD,

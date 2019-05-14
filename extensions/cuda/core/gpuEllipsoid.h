@@ -7,12 +7,8 @@
 #define __ISCE_CUDA_CORE_GPUELLIPSOID_H__
 
 #include <cmath>
-#include "isce/core/Constants.h"
-#include "isce/core/Ellipsoid.h"
-#include "Common.h"
-
-using isce::core::Ellipsoid;
-using isce::core::cartesian_t;
+#include <isce/core/Constants.h>
+#include <isce/core/Ellipsoid.h>
 
 namespace isce { namespace cuda { namespace core {
     struct gpuEllipsoid {
@@ -23,7 +19,7 @@ namespace isce { namespace cuda { namespace core {
         CUDA_HOSTDEV gpuEllipsoid() : gpuEllipsoid(0.,0.) {}
         CUDA_HOSTDEV gpuEllipsoid(const gpuEllipsoid &e) : a(e.a), e2(e.e2) {}
         // Alternate "copy" constructor from Ellipsoid object
-        CUDA_HOST gpuEllipsoid(const Ellipsoid &e) : a(e.a()), e2(e.e2()) {}
+        CUDA_HOST gpuEllipsoid(const isce::core::Ellipsoid &e) : a(e.a()), e2(e.e2()) {}
         CUDA_HOSTDEV inline gpuEllipsoid& operator=(const gpuEllipsoid&);
 
         CUDA_DEV inline double rEast(double) const;
@@ -39,8 +35,8 @@ namespace isce { namespace cuda { namespace core {
         CUDA_HOSTDEV double geta() const {return a;}
 
         // Host functions to test underlying device functions in a single-threaded context
-        CUDA_HOST void lonLatToXyz_h(cartesian_t&,cartesian_t&);
-        CUDA_HOST void xyzToLonLat_h(cartesian_t&,cartesian_t&);
+        CUDA_HOST void lonLatToXyz_h(const isce::core::Vec3&,isce::core::Vec3&);
+        CUDA_HOST void xyzToLonLat_h(const isce::core::Vec3&,isce::core::Vec3&);
     };
 
     CUDA_HOSTDEV inline gpuEllipsoid& gpuEllipsoid::operator=(const gpuEllipsoid &rhs) {

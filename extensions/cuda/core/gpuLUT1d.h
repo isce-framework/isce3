@@ -9,7 +9,7 @@
 #include <cmath>
 #include "isce/core/LUT1d.h"
 
-#include "Common.h"
+#include <isce/core/Common.h>
 
 // Declaration
 namespace isce {

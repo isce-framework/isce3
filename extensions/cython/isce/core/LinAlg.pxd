@@ -4,7 +4,6 @@
 # Copyright 2017
 #
 
-from libcpp.vector cimport vector
 from Cartesian cimport cartesian_t, cartmat_t
 
 cdef extern from "isce/core/LinAlg.h" namespace "isce::core":
