@@ -45,7 +45,7 @@ cdef class pyRaster:
         if h5 is not None:
             assert isinstance(h5, h5py.Dataset), \
                 'h5 must be a h5py.Dataset instance.'
-
+            
             GDALRegister_IH5()
             dsname = pyStringToBytes('IH5:::ID={0}'.format(h5.id.id))
             if (access):
@@ -53,7 +53,7 @@ cdef class pyRaster:
             else:
                 self.c_raster = new Raster(dsname)
 
-            self.__owner = False
+            self.__owner = True
             return
 
 

@@ -31,6 +31,10 @@ cdef extern from "isce/signal/Crossmul.h" namespace "isce::signal":
         # Set Doppler profiles from LUT1d objects
         void doppler(LUT1d[double] refDoppler, LUT1d[double] secDoppler)
 
+        # Run default crossmul without range commonband filtering and without 
+        # output coherence
+        void crossmul(Raster &, Raster &, Raster &)
+
         # Run default crossmul without range commonband filtering
         void crossmul(Raster &, Raster &, Raster &, Raster &)
 
