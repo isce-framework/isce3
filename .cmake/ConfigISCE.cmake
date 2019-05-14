@@ -29,6 +29,7 @@ function(CheckCXX)
     set(CMAKE_CUDA_STANDARD           14 PARENT_SCOPE)
     set(CMAKE_CUDA_STANDARD_REQUIRED  ON PARENT_SCOPE)
     set(CMAKE_CUDA_EXTENSIONS        OFF PARENT_SCOPE)
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wno-sign-compare ${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
 endfunction()
 
 

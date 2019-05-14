@@ -262,8 +262,8 @@ namespace isce { namespace core {
     template <typename T>
     inline bool
     compareComplex(std::complex<T> first, std::complex<T> second) {
-        return compareFloatingPoint(first.real(), second.real()) *
-                compareFloatingPoint(first.imag(), second.imag());
+        return compareFloatingPoint(first.real(), second.real())
+            && compareFloatingPoint(first.imag(), second.imag());
     }
 
     /** making a boolean mask for an array based on noDataValue

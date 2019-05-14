@@ -14,6 +14,7 @@
 #include "isce/signal/Signal.h"
 #include "isce/io/Raster.h"
 
+#include "isce/cuda/except/Error.h"
 #include "isce/cuda/signal/gpuSignal.h"
 
 using isce::cuda::signal::gpuSignal;
@@ -37,10 +38,9 @@ TEST(gpuSignal, ForwardBackwardRangeFloat)
     inputSlc.getBlock(data, 0, 0, width, blockLength);
 
     // copy data to device
-    cudaError_t oops;
     size_t data_sz = width * blockLength * sizeof(thrust::complex<float>);
-    oops = cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz);
-    oops = cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice);
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz));
+    checkCudaErrors(cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice));
 
     // a signal object
     gpuSignal<float> sig(CUFFT_C2C);
@@ -88,10 +88,9 @@ TEST(gpuSignal, ForwardBackwardRangeDouble)
     inputSlc.getBlock(data, 0, 0, width, blockLength);
 
     // copy data to device
-    cudaError_t oops;
     size_t data_sz = width * blockLength * sizeof(thrust::complex<double>);
-    oops = cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz);
-    oops = cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice);
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz));
+    checkCudaErrors(cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice));
 
     // a signal object
     gpuSignal<double> sig(CUFFT_Z2Z);
@@ -139,10 +138,9 @@ TEST(gpuSignal, ForwardBackwardAzimuthFloat)
     inputSlc.getBlock(data, 0, 0, width, blockLength);
 
     // copy data to device
-    cudaError_t oops;
     size_t data_sz = width * blockLength * sizeof(thrust::complex<float>);
-    oops = cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz);
-    oops = cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice);
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz));
+    checkCudaErrors(cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice));
 
     // a signal object
     gpuSignal<float> sig(CUFFT_C2C);
@@ -190,10 +188,9 @@ TEST(gpuSignal, ForwardBackwardAzimuthDouble)
     inputSlc.getBlock(data, 0, 0, width, blockLength);
 
     // copy data to device
-    cudaError_t oops;
     size_t data_sz = width * blockLength * sizeof(thrust::complex<double>);
-    oops = cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz);
-    oops = cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice);
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz));
+    checkCudaErrors(cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice));
 
     // a signal object
     gpuSignal<double> sig(CUFFT_Z2Z);
@@ -371,10 +368,9 @@ TEST(gpuSignal, FFT2D)
     }
 
     // copy data to device
-    cudaError_t oops;
     size_t data_sz = width * blockLength * sizeof(thrust::complex<double>);
-    oops = cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz);
-    oops = cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice);
+    checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_data), data_sz));
+    checkCudaErrors(cudaMemcpy(d_data, &data[0], data_sz, cudaMemcpyHostToDevice));
 
     // a signal object
     gpuSignal<double> sig(CUFFT_Z2Z);
