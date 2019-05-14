@@ -72,7 +72,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -100,79 +100,80 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#ifndef ISCE_UNWRAP_PHASS_PHASS_H</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define ISCE_UNWRAP_PHASS_PHASS_H</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;complex&gt;</span> <span class="comment">// std::complex</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span> <span class="comment">// size_t</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;cstdint&gt;</span> <span class="comment">// uint8_t</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;isce/io/Raster.h&gt;</span> <span class="comment">// isce::io::Raster</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &quot;PhassUnwrapper.h&quot;</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">namespace </span>isce::unwrap::phass</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;{</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
-<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="classisce_1_1unwrap_1_1phass_1_1Phass.html">   21</a></span>&#160;<span class="keyword">class </span><a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html">Phass</a></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;{</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#aa32d49d056f442c5ef00f9991f39e46c">   25</a></span>&#160;    <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#aa32d49d056f442c5ef00f9991f39e46c">Phass</a>() {</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;        _correlationThreshold = 0.2;</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;        _goodCorrelation = 0.7;</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;        _minPixelsPerRegion = 200.0;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;        _usePower = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    };</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#acd0f7f18400135b69e49f339234fd19b">~Phass</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a7da6183fbb0347d2da8e19ab7f9293bc">unwrap</a>(</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; phaseRaster,</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; corrRaster,</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; unwRaster,</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; labelRaster);</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a7da6183fbb0347d2da8e19ab7f9293bc">unwrap</a>(</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; phaseRaster,</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; powerRaster,</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; corrRaster,</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; unwRaster,</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; labelRaster);</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="keywordtype">double</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a7feaadec27daf99d3f57636ea8243ef3">correlationThreshold</a>() <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a7feaadec27daf99d3f57636ea8243ef3">correlationThreshold</a>(<span class="keyword">const</span> <span class="keywordtype">double</span>);</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keywordtype">double</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a564e158d5ea7d0a18de1a281b09eaef1">goodCorrelation</a>() <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a564e158d5ea7d0a18de1a281b09eaef1">goodCorrelation</a>(<span class="keyword">const</span> <span class="keywordtype">double</span>);</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#af68052fa9f57df7eb02712ce1bf5578c">minPixelsPerRegion</a>() <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#af68052fa9f57df7eb02712ce1bf5578c">minPixelsPerRegion</a>(<span class="keyword">const</span> <span class="keywordtype">int</span>);</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;array&gt;</span> <span class="comment">// std::array</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;complex&gt;</span> <span class="comment">// std::complex</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;cstddef&gt;</span> <span class="comment">// size_t</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;cstdint&gt;</span> <span class="comment">// uint8_t</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;isce/io/Raster.h&gt;</span> <span class="comment">// isce::io::Raster</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &quot;PhassUnwrapper.h&quot;</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">namespace </span>isce::unwrap::phass</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;{</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
+<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="classisce_1_1unwrap_1_1phass_1_1Phass.html">   22</a></span>&#160;<span class="keyword">class </span><a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html">Phass</a></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;{</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#aa32d49d056f442c5ef00f9991f39e46c">   26</a></span>&#160;    <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#aa32d49d056f442c5ef00f9991f39e46c">Phass</a>() {</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;        _correlationThreshold = 0.2;</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;        _goodCorrelation = 0.7;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;        _minPixelsPerRegion = 200.0;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;        _usePower = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    };</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#acd0f7f18400135b69e49f339234fd19b">~Phass</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a7da6183fbb0347d2da8e19ab7f9293bc">unwrap</a>(</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; phaseRaster,</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; corrRaster,</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; unwRaster,</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; labelRaster);</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a7da6183fbb0347d2da8e19ab7f9293bc">unwrap</a>(</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; phaseRaster,</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; powerRaster,</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; corrRaster,</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; unwRaster,</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp; labelRaster);</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="keywordtype">double</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a7feaadec27daf99d3f57636ea8243ef3">correlationThreshold</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a7feaadec27daf99d3f57636ea8243ef3">correlationThreshold</a>(<span class="keyword">const</span> <span class="keywordtype">double</span>);</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keywordtype">double</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a564e158d5ea7d0a18de1a281b09eaef1">goodCorrelation</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a564e158d5ea7d0a18de1a281b09eaef1">goodCorrelation</a>(<span class="keyword">const</span> <span class="keywordtype">double</span>);</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#af68052fa9f57df7eb02712ce1bf5578c">minPixelsPerRegion</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classisce_1_1unwrap_1_1phass_1_1Phass.html#af68052fa9f57df7eb02712ce1bf5578c">minPixelsPerRegion</a>(<span class="keyword">const</span> <span class="keywordtype">int</span>);</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="keywordtype">double</span> _correlationThreshold = 0.2;</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="keywordtype">double</span> _goodCorrelation = 0.7; </div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        <span class="keywordtype">int</span> _minPixelsPerRegion = 200.0;</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="keywordtype">bool</span> _usePower = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;};</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;}</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="comment">// Get inline implementations.</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="preprocessor">#define ISCE_UNWRAP_PHASS_PHASS_ICC</span></div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;Phass.icc&quot;</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="preprocessor">#undef ISCE_UNWRAP_PHASS_PHASS_ICC</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* ISCE_UNWRAP_PHASS_PHASS_H */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="keywordtype">double</span> _correlationThreshold = 0.2;</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        <span class="keywordtype">double</span> _goodCorrelation = 0.7; </div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="keywordtype">int</span> _minPixelsPerRegion = 200.0;</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        <span class="keywordtype">bool</span> _usePower = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;};</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;}</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="comment">// Get inline implementations.</span></div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="preprocessor">#define ISCE_UNWRAP_PHASS_PHASS_ICC</span></div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;Phass.icc&quot;</span></div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="preprocessor">#undef ISCE_UNWRAP_PHASS_PHASS_ICC</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* ISCE_UNWRAP_PHASS_PHASS_H */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="preprocessor"></span></div>
 <div class="ttc" id="classisce_1_1io_1_1Raster_html"><div class="ttname"><a href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a></div><div class="ttdoc">Data structure meant to handle Raster I/O operations. </div><div class="ttdef"><b>Definition:</b> Raster.h:39</div></div>
 <div class="ttc" id="classisce_1_1unwrap_1_1phass_1_1Phass_html_a7da6183fbb0347d2da8e19ab7f9293bc"><div class="ttname"><a href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a7da6183fbb0347d2da8e19ab7f9293bc">isce::unwrap::phass::Phass::unwrap</a></div><div class="ttdeci">void unwrap(isce::io::Raster &amp;phaseRaster, isce::io::Raster &amp;corrRaster, isce::io::Raster &amp;unwRaster, isce::io::Raster &amp;labelRaster)</div><div class="ttdoc">Unwrap the interferometric wrapped phase. </div><div class="ttdef"><b>Definition:</b> Phass.cpp:16</div></div>
 <div class="ttc" id="classisce_1_1unwrap_1_1phass_1_1Phass_html_acd0f7f18400135b69e49f339234fd19b"><div class="ttname"><a href="classisce_1_1unwrap_1_1phass_1_1Phass.html#acd0f7f18400135b69e49f339234fd19b">isce::unwrap::phass::Phass::~Phass</a></div><div class="ttdeci">~Phass()=default</div><div class="ttdoc">Destructor. </div></div>
 <div class="ttc" id="classisce_1_1unwrap_1_1phass_1_1Phass_html_af68052fa9f57df7eb02712ce1bf5578c"><div class="ttname"><a href="classisce_1_1unwrap_1_1phass_1_1Phass.html#af68052fa9f57df7eb02712ce1bf5578c">isce::unwrap::phass::Phass::minPixelsPerRegion</a></div><div class="ttdeci">int minPixelsPerRegion() const </div><div class="ttdoc">Get minimum size of a region to be unwrapped. </div><div class="ttdef"><b>Definition:</b> Phass.icc:39</div></div>
-<div class="ttc" id="classisce_1_1unwrap_1_1phass_1_1Phass_html_aa32d49d056f442c5ef00f9991f39e46c"><div class="ttname"><a href="classisce_1_1unwrap_1_1phass_1_1Phass.html#aa32d49d056f442c5ef00f9991f39e46c">isce::unwrap::phass::Phass::Phass</a></div><div class="ttdeci">Phass()</div><div class="ttdoc">Constructor. </div><div class="ttdef"><b>Definition:</b> Phass.h:25</div></div>
+<div class="ttc" id="classisce_1_1unwrap_1_1phass_1_1Phass_html_aa32d49d056f442c5ef00f9991f39e46c"><div class="ttname"><a href="classisce_1_1unwrap_1_1phass_1_1Phass.html#aa32d49d056f442c5ef00f9991f39e46c">isce::unwrap::phass::Phass::Phass</a></div><div class="ttdeci">Phass()</div><div class="ttdoc">Constructor. </div><div class="ttdef"><b>Definition:</b> Phass.h:26</div></div>
 <div class="ttc" id="classisce_1_1unwrap_1_1phass_1_1Phass_html_a564e158d5ea7d0a18de1a281b09eaef1"><div class="ttname"><a href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a564e158d5ea7d0a18de1a281b09eaef1">isce::unwrap::phass::Phass::goodCorrelation</a></div><div class="ttdeci">double goodCorrelation() const </div><div class="ttdoc">Get good correlation threshold. </div><div class="ttdef"><b>Definition:</b> Phass.icc:29</div></div>
-<div class="ttc" id="classisce_1_1unwrap_1_1phass_1_1Phass_html"><div class="ttname"><a href="classisce_1_1unwrap_1_1phass_1_1Phass.html">isce::unwrap::phass::Phass</a></div><div class="ttdef"><b>Definition:</b> Phass.h:21</div></div>
+<div class="ttc" id="classisce_1_1unwrap_1_1phass_1_1Phass_html"><div class="ttname"><a href="classisce_1_1unwrap_1_1phass_1_1Phass.html">isce::unwrap::phass::Phass</a></div><div class="ttdef"><b>Definition:</b> Phass.h:22</div></div>
 <div class="ttc" id="classisce_1_1unwrap_1_1phass_1_1Phass_html_a7feaadec27daf99d3f57636ea8243ef3"><div class="ttname"><a href="classisce_1_1unwrap_1_1phass_1_1Phass.html#a7feaadec27daf99d3f57636ea8243ef3">isce::unwrap::phass::Phass::correlationThreshold</a></div><div class="ttdeci">double correlationThreshold() const </div><div class="ttdoc">Get correlation threshold increment. </div><div class="ttdef"><b>Definition:</b> Phass.icc:19</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <hr>
