@@ -18,6 +18,6 @@ var searchData=
   ['topolayers',['TopoLayers',['../classisce_1_1geometry_1_1TopoLayers.html',1,'isce::geometry']]],
   ['toquaternion',['toQuaternion',['../classisce_1_1core_1_1EulerAngles.html#a13a4fb2e48aa86d0705664cbe2c20384',1,'isce::core::EulerAngles']]],
   ['toquaternionelements',['toQuaternionElements',['../classisce_1_1core_1_1EulerAngles.html#a479b03a280dbe22af7747a6cafc68fcf',1,'isce::core::EulerAngles']]],
-  ['tranmat',['tranMat',['../structisce_1_1core_1_1LinAlg.html#ad93c576d7be29ebd1e02d43b919637a2',1,'isce::core::LinAlg::tranMat()'],['../structisce_1_1cuda_1_1core_1_1gpuLinAlg.html#a19fd60c6c3e777eb065498cca7860d00',1,'isce::cuda::core::gpuLinAlg::tranMat()']]],
+  ['tranmat',['tranMat',['../structisce_1_1core_1_1LinAlg.html#a2f42c2f32031018af88af1b4c70a3ecd',1,'isce::core::LinAlg::tranMat()'],['../structisce_1_1cuda_1_1core_1_1gpuLinAlg.html#a19fd60c6c3e777eb065498cca7860d00',1,'isce::cuda::core::gpuLinAlg::tranMat()']]],
   ['tutorials_20with_20code_20examples',['Tutorials with code examples',['../tutorial_tutorial.html',1,'']]]
 ];
