@@ -33,47 +33,6 @@
   <div class="section" id="pygeo2rdr">
 <h1>pyGeo2rdr<a class="headerlink" href="#pygeo2rdr" title="Permalink to this headline">¶</a></h1>
 <p>Python transformer from map coordinates to radar coordinates.</p>
-<dl class="class">
-<dt id="isceextension.pyGeo2rdr">
-<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyGeo2rdr</code><a class="headerlink" href="#isceextension.pyGeo2rdr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Cython wrapper for isce::geometry::Geo2rdr.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>product</strong> (<a class="reference internal" href="pyProduct.html#isceextension.pyProduct" title="isceextension.pyProduct"><em>pyProduct</em></a>) – Configured Product.</p></li>
-<li><p><strong>threshold</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Threshold for iteration stop for slant range.</p></li>
-<li><p><strong>numIterations</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Max number of normal iterations.</p></li>
-<li><p><strong>orbitMethod</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Orbit interpolation method
-(‘hermite’, ‘sch’, ‘legendre’)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-<dl class="method">
-<dt id="isceextension.pyGeo2rdr.geo2rdr">
-<code class="descname">geo2rdr</code><span class="sig-paren">(</span><em>pyRaster topoRaster</em>, <em>pyRaster rgoffRaster=None</em>, <em>pyRaster azoffRaster=None</em>, <em>outputDir=None</em>, <em>double azshift=0.0</em>, <em>double rgshift=0.0</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyGeo2rdr.geo2rdr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run geo2rdr.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>topoRaster</strong> (<a class="reference internal" href="pyRaster.html#isceextension.pyRaster" title="isceextension.pyRaster"><em>pyRaster</em></a>) – Raster for input topo products.</p></li>
-<li><p><strong>rgoffRaster</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="pyRaster.html#isceextension.pyRaster" title="isceextension.pyRaster"><em>pyRaster</em></a><em>]</em>) – Raster for output range offset.</p></li>
-<li><p><strong>azoffRaster</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="pyRaster.html#isceextension.pyRaster" title="isceextension.pyRaster"><em>pyRaster</em></a><em>]</em>) – Raster for output azimuth offset.</p></li>
-<li><p><strong>outputDir</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – String for output directory.</p></li>
-<li><p><strong>azshift</strong> (<em>Optional</em><em>[</em><em>double</em><em>]</em>) – Constant azimuth offset.</p></li>
-<li><p><strong>rgshift</strong> (<em>Optional</em><em>[</em><em>double</em><em>]</em>) – Constant range offset.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 
 

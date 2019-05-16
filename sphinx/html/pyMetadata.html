@@ -33,56 +33,6 @@
   <div class="section" id="pymetadata">
 <h1>pyMetadata<a class="headerlink" href="#pymetadata" title="Permalink to this headline">¶</a></h1>
 <p>pyMetadata provides a wrapper for the isce::product::Metadata class which encapsulates orbit, ellipsoid, and some instrumentation information.</p>
-<dl class="class">
-<dt id="isceextension.pyMetadata">
-<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyMetadata</code><a class="headerlink" href="#isceextension.pyMetadata" title="Permalink to this definition">¶</a></dt>
-<dd><p>Cython wrapper for isce::product::Metadata.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>None</strong> – </p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-<dl class="attribute">
-<dt id="isceextension.pyMetadata.attitude">
-<code class="descname">attitude</code><a class="headerlink" href="#isceextension.pyMetadata.attitude" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get Euler angles attitude.</p>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="isceextension.pyMetadata.bind">
-<em class="property">static </em><code class="descname">bind</code><span class="sig-paren">(</span><em>pyMetadata meta</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyMetadata.bind" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new pyMetadata instance with C++ Metadata attribute shallow copied from
-another C++ Metadata attribute contained in a separate instance.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>meta</strong> (<a class="reference internal" href="#isceextension.pyMetadata" title="isceextension.pyMetadata"><em>pyMetadata</em></a>) – External pyMetadata instance to get C++ Metadata from.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>New pyMetadata instance with a shallow copy of C++ Metadata.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>new_meta (<a class="reference internal" href="#isceextension.pyMetadata" title="isceextension.pyMetadata">pyMetadata</a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="isceextension.pyMetadata.orbit">
-<code class="descname">orbit</code><a class="headerlink" href="#isceextension.pyMetadata.orbit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get orbit.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="isceextension.pyMetadata.procInfo">
-<code class="descname">procInfo</code><a class="headerlink" href="#isceextension.pyMetadata.procInfo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get processing information.</p>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 
 
