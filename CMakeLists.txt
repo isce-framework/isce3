@@ -79,6 +79,9 @@ add_subdirectory(contrib)
 ###Recurs directories
 add_subdirectory(lib)
 
+###Package directories
+add_subdirectory(packages)
+
 ###Cython lib
 add_subdirectory(extensions)
 
