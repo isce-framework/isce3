@@ -13,7 +13,7 @@ var searchData=
   ['node',['Node',['../structNode.html',1,'']]],
   ['nodeflow',['NodeFlow',['../structNodeFlow.html',1,'']]],
   ['nominalacquisitionprf',['nominalAcquisitionPRF',['../classisce_1_1product_1_1Swath.html#a52f3f71a3c67c292720acbb29bc860c2',1,'isce::product::Swath::nominalAcquisitionPRF() const '],['../classisce_1_1product_1_1Swath.html#a5586a8a0d34076c168dbcebd7a8b4809',1,'isce::product::Swath::nominalAcquisitionPRF(double f)']]],
-  ['norm',['norm',['../structisce_1_1core_1_1Poly1d.html#a123489f472adff67a1712d6d30d6f45c',1,'isce::core::Poly1d::norm()'],['../structisce_1_1core_1_1LinAlg.html#abbf4f1d363888bd2940494293a51d3d0',1,'isce::core::LinAlg::norm()'],['../structisce_1_1cuda_1_1core_1_1gpuLinAlg.html#abf61957fd7691f7717036fe22c0c9416',1,'isce::cuda::core::gpuLinAlg::norm()']]],
+  ['norm',['norm',['../structisce_1_1core_1_1Poly1d.html#a123489f472adff67a1712d6d30d6f45c',1,'isce::core::Poly1d']]],
   ['nrows',['nrows',['../classisce_1_1signal_1_1Looks.html#afb7040577a8fd31e3f50f1169d9ee024',1,'isce::signal::Looks']]],
   ['nrowslooked',['nrowsLooked',['../classisce_1_1signal_1_1Looks.html#ab63330172d249b79af9890eec19a1f9f',1,'isce::signal::Looks']]],
   ['null_5fvalue',['NULL_VALUE',['../classisce_1_1geometry_1_1Geo2rdr.html#a619f025773af42d47a89b1b699872de1',1,'isce::geometry::Geo2rdr']]],
