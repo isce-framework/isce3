@@ -1,0 +1,371 @@
+//-*- C++ -*-
+//-*- coding: utf-8 -*-
+//
+// Author: Piyush Agram
+// Copyright 2017-2018
+
+#if !defined(ISCE_CORE_CUBE_ICC)
+#error "Cube.icc is an implementation detail of class Cube"
+#endif
+
+/** Default constructor */
+template <typename cell_t>
+isce::core::Cube<cell_t>::
+Cube() : _nslices(0), _nrows{0}, _ncols{0}, _owner{false}, _grid{nullptr} {}
+
+// Constructor with number of slices, rows and columns 
+/** @param[in] nslices Number of slices
+  * @param[in] nrows Number of rows 
+  * @param[in] ncols Number of columns */
+template <typename cell_t>
+isce::core::Cube<cell_t>::
+Cube(size_t nslices, size_t nrows, size_t ncols) : 
+    _nslices{nslices},
+    _nrows{nrows}, 
+    _ncols{ncols}, 
+    _buffer{new cell_t[nslices*nrows*ncols]},
+    _owner{true},
+    _grid{nullptr} {}
+
+// Deep copy constructor - allocates memory and copies values 
+/** @param[in] m isce::core::Cube object to copy */
+template <typename cell_t>
+isce::core::Cube<cell_t>::
+Cube(const Cube<cell_t> & m) :
+    _nslices{m.height()},
+    _nrows{m.length()},
+    _ncols{m.width()},
+    _buffer{new cell_t[_nslices*_nrows*_ncols]},
+    _owner{true},
+    _grid{nullptr} {
+    std::copy(m.data(), m.data() + _nslices*_nrows*_ncols, _buffer);
+}
+
+// Shallow copy constructor - does not allocate its own memory 
+/** @param[in] m isce::core::Cube object to copy */
+template <typename cell_t>
+isce::core::Cube<cell_t>::
+Cube(Cube<cell_t> & m) :
+    _nslices{m.height()},
+    _nrows{m.length()},
+    _ncols{m.width()},
+    _buffer{m.data()},
+    _owner{false},
+    _grid{nullptr} {}
+
+// Shallow copy constructor from a raw pointer - does not allocate own memory
+/** @param[in] data raw pointer to buffer containing data
+  * @param[in] nslices Number of slices for data
+  * @param[in] nrows Number of rows for data
+  * @param[in] ncols Number of columns for data (assume row major packing) */
+template <typename cell_t>
+isce::core::Cube<cell_t>::
+Cube(cell_t * data, size_t nslices, size_t nrows, size_t ncols) :
+    _nslices{nslices},
+    _nrows{nrows},
+    _ncols{ncols},
+    _buffer{data},
+    _owner{false},
+    _grid{nullptr} {}
+
+// Shallow copy constructor from an std::valarray - does not allocate own memory
+/** @param[in] data Valarray containing data
+  * @param[in] nrows Number of rows for data 
+  * @param[in] ncols Number of columns for data (assume row major packing) */
+template <typename cell_t>
+isce::core::Cube<cell_t>::
+Cube(std::valarray<cell_t> & data, size_t nrows, size_t ncols) :
+    _nslices{data.size()/(nrows*ncols)},
+    _nrows{nrows},
+    _ncols{ncols},
+    _buffer{&data[0]},
+    _owner{false},
+    _grid{nullptr} {}
+
+// Shallow copy constructor from an std::vector - does not allocate own memory
+/** @param[in] data Vector containing data
+  * @param[in] nrows Number of rows for data
+  * @param[in] ncols Number of columns for data (assume row major packing) */
+template <typename cell_t>
+isce::core::Cube<cell_t>::
+Cube(std::vector<cell_t> & data, size_t nrows, size_t ncols) :
+    _nslices{data.size()/(nrows*ncols)},
+    _nrows{nrows},
+    _ncols{ncols},
+    _buffer{data.data()},
+    _owner{false},
+    _grid{nullptr} {}
+
+/** Destructor */
+template <typename cell_t>
+isce::core::Cube<cell_t>::
+~Cube() {
+    // If I allocated memory myself, delete it
+    if (_owner) {
+        delete [] _buffer;
+    }
+    // If I allocated a grid pointer, delete it
+    if (_grid) {
+        delete _grid;
+    }
+}
+
+// Deep assignment operator - allocates memory and copies values 
+/** @param[in] m isce::core::Cube object to copy */
+template <typename cell_t>
+isce::core::Cube<cell_t> &
+isce::core::Cube<cell_t>::
+operator=(const Cube<cell_t> & m) {
+    // Resize my storage
+    resize(m.height(), m.length(), m.width());
+    // Copy values
+    std::copy(m.data(), m.data() + _nslices*_nrows*_ncols, _buffer);
+    // Reset grid pointer
+    _resetGrid();
+    return *this;
+}
+
+// Shallow assignment operator - does not allocate its own memory 
+/** @param[in] m isce::core::Cube object to copy */
+template <typename cell_t>
+isce::core::Cube<cell_t> &
+isce::core::Cube<cell_t>::
+operator=(Cube<cell_t> & m) {
+    _nslices = m.height();
+    _nrows = m.length();
+    _ncols = m.width();
+    _buffer = m.data();
+    _owner = false;
+    _resetGrid();
+    return *this;
+}
+
+// Resize memory for a given number of slices, rows and columns (no value initialization)
+/** @param[in] nslices Number of slices 
+  * @param[in] nrows Number of rows 
+  * @param[in] ncols Number of columns */
+template <typename cell_t>
+void
+isce::core::Cube<cell_t>::
+resize(size_t nslices, size_t nrows, size_t ncols) {
+
+    // If I have already allocated memory, delete it first
+    if (_owner) {
+        delete [] _buffer;
+    }
+
+    // Allocate new memory and save shape
+    _nslices = nslices;
+    _nrows = nrows;
+    _ncols = ncols;
+    _buffer = new cell_t[_nslices * _nrows * _ncols];
+    _owner = true;
+
+    // Reset grid pointer
+    _resetGrid();
+}
+
+// Extract copy of sub-cube given starting indices and span
+/** @param[in] slice Starting slice of subcube
+  * @param[in] row Starting row of subcube
+  * @param[in] col Starting column of subcube
+  * @param[in] slicespan Number of slices of subcube
+  * @param[in] rowspan Number of rows of subcube
+  * @param[in] colspan Number of columns of subcube */
+template <typename cell_t>
+const typename isce::core::Cube<cell_t>::view_t
+isce::core::Cube<cell_t>::
+subcube(size_t slice, size_t row, size_t col, size_t slicespan, size_t rowspan, size_t colspan) {
+
+    // Allocate grid pointer for my data
+    _resetGrid();
+    const shape_t shape{_nslices, _nrows, _ncols};
+    _grid = new grid_t{{shape}, &_buffer[0]};
+    
+    // Create slice
+    const index_t low = {slice, row, col};
+    const index_t high = {slice + slicespan, row + rowspan, col + colspan};
+    const packing_t packing{2ul, 1ul, 0ul};
+    const slice_t slice3d = {low, high, packing};
+
+    // Return a view
+    return _grid->view(slice3d);
+}
+
+/** Access to data buffer */
+template <typename cell_t>
+cell_t *
+isce::core::Cube<cell_t>::
+data() {
+    return _buffer;
+}
+
+/** Read-only access to data buffer */
+template <typename cell_t>
+const cell_t *
+isce::core::Cube<cell_t>::
+data() const {
+    return _buffer;
+}
+
+/** Access to data buffer at specific slice */
+template <typename cell_t>
+cell_t *
+isce::core::Cube<cell_t>::
+sliceptr(size_t slice) {
+    // Make a view pointing to row
+    auto view = subcube(slice, 0, 0, 1, 1, 1);
+    // Return pointer
+    return &(*view.begin());
+}
+
+/** Read-only access to data buffer at specific slice */
+template <typename cell_t>
+const cell_t *
+isce::core::Cube<cell_t>::
+sliceptr(size_t slicenum) const {
+    // Make a view pointing to row
+    auto view = subcube(slicenum, 0, 0, 1, 1, 1);
+    // Return pointer
+    return &(*view.begin());
+}
+
+// Access matrix value for a given slice, row and column 
+/** @param[in] slice Slice coordinate to access
+  * @param[in] row Row coordinate to access
+  * @param[in] col Column coordinate to access */
+template <typename cell_t>
+cell_t &
+isce::core::Cube<cell_t>::
+operator()(size_t slice, size_t row, size_t col) {
+    return _buffer[(slice*_nrows + row)*_ncols + col];
+}
+
+// Read-only access to cube value for a given slice, row and column
+/** @param[in] slice Slice coordinate to access
+  * @param[in] row Row coordinate to access
+  * @param[in] col Column coordinate to access */
+template <typename cell_t>
+const cell_t &
+isce::core::Cube<cell_t>::
+operator()(size_t slice, size_t row, size_t col) const {
+    return _buffer[(slice*_nrows + row)*_ncols + col];
+}
+
+// Access matrix value for a flattened index
+/** @param[in] index Flattened index to access */
+template <typename cell_t>
+cell_t &
+isce::core::Cube<cell_t>::
+operator()(size_t index) {
+    return _buffer[index];
+}
+
+// Read-only access to cube value for a flattened index
+/** @param[in] index Flattened index to access */
+template <typename cell_t>
+const cell_t &
+isce::core::Cube<cell_t>::
+operator()(size_t index) const {
+    return _buffer[index];
+}
+
+// Access cube value for a given grid::index_type 
+/** @param[in] index pyre::grid_t::index_type for coordinate */
+template <typename cell_t>
+cell_t &
+isce::core::Cube<cell_t>::
+operator[](const index_t & index) {
+    // Create grid for my data
+    shape_t shape{_nslices, _nrows, _ncols};
+    grid_t grid{{shape}, &_buffer[0]};
+    // Pass it an index
+    return grid[index];
+}
+
+// Read-only access to matrix value for a given grid::index_type
+/** @param[in] index pyre::grid_t::index_type for coordinate */
+template <typename cell_t>
+const cell_t &
+isce::core::Cube<cell_t>::
+operator[](const index_t & index) const {
+    // Create grid for my data
+    shape_t shape{_nslices, _nrows, _ncols};
+    grid_t grid{{shape}, &_buffer[0]};
+    // Pass it an index
+    return grid[index];
+}
+
+// Fill with zeros
+template <typename cell_t>
+void
+isce::core::Cube<cell_t>::
+zeros() {
+    for (size_t i = 0; i < _nslices *_nrows * _ncols; ++i) {
+        _buffer[i] = 0.0;
+    }
+}
+
+// Fill with a constant value
+template <typename cell_t>
+void
+isce::core::Cube<cell_t>::
+fill(cell_t value) {
+    for (size_t i = 0; i < _nslices * _nrows * _ncols; ++i) {
+        _buffer[i] = value;
+    }
+}
+
+/** Get shape information as grid::shape_type */
+template <typename cell_t>
+typename isce::core::Cube<cell_t>::shape_t
+isce::core::Cube<cell_t>::
+shape() const {
+    return {_nslices, _nrows, _ncols};
+}
+
+/** Get cube width */
+template <typename cell_t>
+size_t
+isce::core::Cube<cell_t>::
+width() const {
+    return _ncols;
+}
+
+/** Get cube length */
+template <typename cell_t>
+size_t
+isce::core::Cube<cell_t>::
+length() const {
+    return _nrows;
+}
+
+/** Get cube height */
+template <typename cell_t>
+size_t 
+isce::core::Cube<cell_t>::
+height() const {
+    return _nslices;
+}
+
+/** Get matrix byte offset for slice, row and column for raw binary buffer */
+template <typename cell_t>
+typename isce::core::Cube<cell_t>::shape_t
+isce::core::Cube<cell_t>::
+byteoffset() const {
+    size_t unitsize = sizeof(cell_t);
+    return { _nrows * _ncols * unitsize, _ncols * unitsize, unitsize}; 
+}
+
+// Reset grid pointer for matrix views
+template <typename cell_t>
+void 
+isce::core::Cube<cell_t>::
+_resetGrid() {
+    if (_grid) {
+        delete _grid;
+    }
+    _grid = nullptr;
+}
+
+// end of file

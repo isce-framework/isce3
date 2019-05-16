@@ -49,6 +49,8 @@ set(HEADERS Attitude.h
             LinAlg.h
             Matrix.h
             Matrix.icc
+            Cube.h
+            Cube.icc
             Metadata.h
             Orbit.h
             Peg.h
