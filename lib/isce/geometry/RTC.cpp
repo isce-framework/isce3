@@ -103,9 +103,9 @@ void isce::geometry::facetRTC(isce::product::Product& product,
 
 }
 
-void isce::geometry::facetRTC(isce::product::RadarGridParameters& radarGrid,
-                            isce::core::Orbit& orbit,
-                            isce::core::LUT2d<double>& dop,
+void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radarGrid,
+                            const isce::core::Orbit& orbit,
+                            const isce::core::LUT2d<double>& dop,
                             isce::io::Raster& dem,
                             isce::io::Raster& out_raster,
                             const int lookSide) {
