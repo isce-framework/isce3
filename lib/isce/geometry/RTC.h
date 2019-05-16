@@ -11,12 +11,12 @@ namespace isce {
                       isce::io::Raster& out_raster,
                       char frequency = 'A');
 
-        void facetRTC(isce::product::RadarGridParameters radarGrid,
-                              isce::core::Orbit orbit,
-                              isce::core::LUT2d<double> dop,
+        void facetRTC(isce::product::RadarGridParameters& radarGrid,
+                              isce::core::Orbit& orbit,
+                              isce::core::LUT2d<double>& dop,
                               isce::io::Raster& dem,
                               isce::io::Raster& out_raster,
-                              int lookSide);
+                              const int lookSide);
 
     }
 }

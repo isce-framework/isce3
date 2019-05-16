@@ -102,12 +102,13 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             lookSide);
 
 }
-void isce::geometry::facetRTC(isce::product::RadarGridParameters radarGrid,
-                            isce::core::Orbit orbit,
-                            isce::core::LUT2d<double> dop,
+
+void isce::geometry::facetRTC(isce::product::RadarGridParameters& radarGrid,
+                            isce::core::Orbit& orbit,
+                            isce::core::LUT2d<double>& dop,
                             isce::io::Raster& dem,
                             isce::io::Raster& out_raster,
-                            int lookSide) {
+                            const int lookSide) {
 
     using isce::core::LinAlg;
     
