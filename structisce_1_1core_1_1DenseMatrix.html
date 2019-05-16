@@ -91,7 +91,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structisce_1_1core_1_1DenseMatrix-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">isce::core::DenseMatrix&lt; N &gt; Struct Template Reference</div>  </div>
@@ -100,91 +100,22 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a90d929cc8873703626e794b51cd32422"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90d929cc8873703626e794b51cd32422"></a>
-CUDA_HOSTDEV constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>DenseMatrix</b> (std::initializer_list&lt; <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &gt; lst)</td></tr>
-<tr class="separator:a90d929cc8873703626e794b51cd32422"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b4c12ba6ffffc1c1e3c49a84011a077"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4b4c12ba6ffffc1c1e3c49a84011a077"></a>
-CUDA_HOSTDEV constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>DenseMatrix</b> (std::initializer_list&lt; std::initializer_list&lt; double &gt;&gt; lst)</td></tr>
-<tr class="separator:a4b4c12ba6ffffc1c1e3c49a84011a077"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a618db5b45ce7882eee96c0b1922cf51d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a618db5b45ce7882eee96c0b1922cf51d"></a>
-CUDA_HOSTDEV constexpr <br class="typebreak"/>
-<a class="el" href="structisce_1_1core_1_1DenseMatrix.html">DenseMatrix</a>&lt; N &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1DenseMatrix.html#a618db5b45ce7882eee96c0b1922cf51d">transpose</a> () const </td></tr>
-<tr class="memdesc:a618db5b45ce7882eee96c0b1922cf51d"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classisce_1_1core_1_1Matrix.html" title="Data structure for a 2D row-major matrix. ">Matrix</a> transposition. <br/></td></tr>
-<tr class="separator:a618db5b45ce7882eee96c0b1922cf51d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae1e3a25021ac23c7a2f84233b7adc387"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae1e3a25021ac23c7a2f84233b7adc387"></a>
-CUDA_HOSTDEV constexpr&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1DenseMatrix.html#ae1e3a25021ac23c7a2f84233b7adc387">DenseMatrix</a> (const <a class="el" href="structisce_1_1core_1_1DenseMatrix.html">DenseMatrix</a>&lt; N &gt; &amp;a, const <a class="el" href="structisce_1_1core_1_1DenseMatrix.html">DenseMatrix</a>&lt; N &gt; &amp;b)</td></tr>
-<tr class="memdesc:ae1e3a25021ac23c7a2f84233b7adc387"><td class="mdescLeft">&#160;</td><td class="mdescRight">Naive O(n^3) matrix-matrix multiplication. <br/></td></tr>
-<tr class="separator:ae1e3a25021ac23c7a2f84233b7adc387"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa630bb3f4f6b42caa2d6e83dcea006fc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa630bb3f4f6b42caa2d6e83dcea006fc"></a>
-CUDA_HOSTDEV constexpr <br class="typebreak"/>
-<a class="el" href="structisce_1_1core_1_1DenseMatrix.html">DenseMatrix</a>&lt; N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>dot</b> (const <a class="el" href="structisce_1_1core_1_1DenseMatrix.html">DenseMatrix</a>&lt; N &gt; &amp;a) const </td></tr>
-<tr class="separator:aa630bb3f4f6b42caa2d6e83dcea006fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a030e204f28f6f65e4974df82b340869f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a030e204f28f6f65e4974df82b340869f"></a>
-CUDA_HOSTDEV constexpr <a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1DenseMatrix.html#a030e204f28f6f65e4974df82b340869f">dot</a> (const <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;v) const </td></tr>
-<tr class="memdesc:a030e204f28f6f65e4974df82b340869f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Matrix-vector multiplication Calculate a matrix product and return the resulting vector. <br/></td></tr>
-<tr class="separator:a030e204f28f6f65e4974df82b340869f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a024899d729bd048e38e71086304d5f48"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a024899d729bd048e38e71086304d5f48"></a>
-CUDA_HOSTDEV constexpr const <br class="typebreak"/>
-<a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (int i) const </td></tr>
-<tr class="separator:a024899d729bd048e38e71086304d5f48"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b69ecbb6d692d61135aa3fdfccf41da"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4b69ecbb6d692d61135aa3fdfccf41da"></a>
-CUDA_HOSTDEV constexpr <a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a><br class="typebreak"/>
-&lt; N &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (int i)</td></tr>
-<tr class="separator:a4b69ecbb6d692d61135aa3fdfccf41da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a445501abc1a6c778ac1de67207aadf0f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a445501abc1a6c778ac1de67207aadf0f"></a>
+CUDA_HOSTDEV&#160;</td><td class="memItemRight" valign="bottom"><b>DenseMatrix</b> (std::initializer_list&lt; std::initializer_list&lt; double &gt;&gt; lst)</td></tr>
+<tr class="separator:a445501abc1a6c778ac1de67207aadf0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6688cea2f6ca1a350f41a2ba6b30b929"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6688cea2f6ca1a350f41a2ba6b30b929"></a>
+CUDA_HOSTDEV <a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (int i)</td></tr>
+<tr class="separator:a6688cea2f6ca1a350f41a2ba6b30b929"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc11d7fc92368d75aac4f8b66011e46c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adc11d7fc92368d75aac4f8b66011e46c"></a>
+CUDA_HOSTDEV constexpr <a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (int i) const </td></tr>
+<tr class="separator:adc11d7fc92368d75aac4f8b66011e46c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:aa31076c534040d72b3e003e642c6ebe7"><td class="memItemLeft" align="right" valign="top">static CUDA_HOSTDEV <a class="el" href="structisce_1_1core_1_1DenseMatrix.html">Mat3</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1DenseMatrix.html#aa31076c534040d72b3e003e642c6ebe7">xyzToEnu</a> (double lat, double lon)</td></tr>
-<tr class="memdesc:aa31076c534040d72b3e003e642c6ebe7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute ENU basis transformation matrix.  <a href="#aa31076c534040d72b3e003e642c6ebe7">More...</a><br/></td></tr>
-<tr class="separator:aa31076c534040d72b3e003e642c6ebe7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:ae225d1b8ae2f3aa87eb49356b40f5d97"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae225d1b8ae2f3aa87eb49356b40f5d97"></a>
+<a class="el" href="structisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> [N]</td></tr>
+<tr class="separator:ae225d1b8ae2f3aa87eb49356b40f5d97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="aa31076c534040d72b3e003e642c6ebe7"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;int N&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">static CUDA_HOSTDEV <a class="el" href="structisce_1_1core_1_1DenseMatrix.html">Mat3</a> <a class="el" href="structisce_1_1core_1_1DenseMatrix.html">isce::core::DenseMatrix</a>&lt; N &gt;::xyzToEnu </td>
-          <td>(</td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>lat</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>lon</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Compute ENU basis transformation matrix. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">lat</td><td>Latitude in radians </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">lon</td><td>Longitude in radians </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">enumat</td><td><a class="el" href="classisce_1_1core_1_1Matrix.html" title="Data structure for a 2D row-major matrix. ">Matrix</a> with rotation matrix </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>/home/conda/isce/lib/isce/core/<a class="el" href="DenseMatrix_8h_source.html">DenseMatrix.h</a></li>
 </ul>
