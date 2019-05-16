@@ -85,14 +85,9 @@ void isce::geometry::facetRTC(isce::product::Product& product,
                               isce::io::Raster& dem,
                               isce::io::Raster& out_raster,
                               char frequency) {
-    //using isce::core::LinAlg;
 
-    //isce::core::Ellipsoid ellps(isce::core::EarthSemiMajorAxis,
-    //                            isce::core::EarthEccentricitySquared);
     isce::core::Orbit orbit = product.metadata().orbit();
     isce::product::RadarGridParameters radarGrid(product, frequency, 1, 1);
-    //isce::geometry::Topo topo(product, frequency, true);
-    //topo.orbitMethod(isce::core::orbitInterpMethod::HERMITE_METHOD);
     int lookSide = product.lookSide();
 
     // Get a copy of the Doppler LUT; allow for out-of-bounds extrapolation
@@ -119,9 +114,7 @@ void isce::geometry::facetRTC(isce::product::RadarGridParameters radarGrid,
     isce::core::Ellipsoid ellps(isce::core::EarthSemiMajorAxis,
                             isce::core::EarthEccentricitySquared);
 
-    // instantiate Topo from radarGrid
     isce::geometry::Topo topo(radarGrid, orbit, dop, ellps, lookSide);
-
     topo.orbitMethod(isce::core::orbitInterpMethod::HERMITE_METHOD);
 
     const double start = radarGrid.sensingStart();

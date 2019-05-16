@@ -2,6 +2,7 @@
 
 #include "isce/product/Product.h"
 #include "isce/io/Raster.h"
+#include <isce/product/RadarGridParameters.h>
 
 namespace isce {
     namespace geometry {
