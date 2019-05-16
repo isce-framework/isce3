@@ -23,9 +23,6 @@ set_source_files_properties(
     PROPERTIES CYTHON_IS_CXX TRUE
 )
 
-# Initialize build directory for extension module to mimic install directory
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/isce3/extensions)
-
 # Put all the pxd files and headers into the build include directory
 file(GLOB PXD_LIST ${CMAKE_CURRENT_LIST_DIR}/*/*.pxd)
 foreach(HFILE ${PXD_LIST} except/CyError.h)
@@ -43,7 +40,7 @@ target_sources(isceextension PRIVATE ${PYX_LIST})
 set_target_properties(
     isceextension
     PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/isce3/extensions
+    LIBRARY_OUTPUT_DIRECTORY ${ISCE_BUILDPACKAGESDIR}/isce3/extensions
 )
 
 # Add necessary include directories
