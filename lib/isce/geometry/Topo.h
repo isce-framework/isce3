@@ -46,6 +46,12 @@ class isce::geometry::Topo {
                     size_t numberAzimuthLooks = 1,
                     size_t numberRangeLooks = 1);
 
+        inline Topo(const isce::product::RadarGridParameters & radarGrid,
+                    const isce::core::Orbit & orbit,
+                    const isce::core::LUT2d<double> & doppler,
+                    const isce::core::Ellipsoid & ellipsoid,
+                    const int lookSide);
+
         /** Constructor using core objects*/
         inline Topo(const isce::core::Ellipsoid &,
                     const isce::core::Orbit &,
