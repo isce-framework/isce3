@@ -15,7 +15,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('//home/conda/isce/doc/sphinx/sphinxext'))
-sys.path.insert(0, os.path.abspath("/home/conda/build/extensions/cython/isce/isce3/extensions"))
+sys.path.insert(0, os.path.abspath("/home/conda/build/packages/isce3/extensions"))
 
 
 # -- Project information -----------------------------------------------------
