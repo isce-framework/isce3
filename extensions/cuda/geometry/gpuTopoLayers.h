@@ -8,10 +8,8 @@
 
 #include <iostream>
 
-// isce::geometry
-#include "isce/geometry/TopoLayers.h"
-
-#include "isce/cuda/core/Common.h"
+#include <isce/core/Common.h>
+#include <isce/geometry/TopoLayers.h>
 
 // Declaration
 namespace isce {

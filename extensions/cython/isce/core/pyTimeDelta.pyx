@@ -12,7 +12,7 @@ cdef class pyTimeDelta:
     Python wrapper for isce::core::TimeDelta
 
     Args:
-        inobj(Optional[datetime.timedelta or float]): Input python timedelta object or double precision floating point number
+        inobj(:obj:`datetime.timedelta` or float, optional): Input python timedelta object or double precision floating point number
     '''
     cdef TimeDelta c_timedelta
     
@@ -28,9 +28,7 @@ cdef class pyTimeDelta:
     def __init__(self, inobj=None):
         import datetime
 
-        if isinstance(inobj, (int,float)):
-            self.set(inobj)
-        elif isinstance(inobj, datetime.timedelta):
+        if isinstance(inobj, (int,float,datetime.timedelta)):
             self.set(inobj)
         elif inobj is not None:
             raise ValueError('pyTimeDelta can only be initilized using datetime.timedelta or float')
@@ -40,7 +38,7 @@ cdef class pyTimeDelta:
         Set the value using datetime.timedelta or float
 
         Args:
-            inobj [datetime.timedelta or float]: Input object
+            inobj (:obj:`datetime.timedelta` or float): Input object
         '''
         import datetime
         if isinstance(inobj, (int,float)):
@@ -52,25 +50,37 @@ cdef class pyTimeDelta:
 
     def getTotalDays(self):
         '''
-        float: Equivalent in number of days
+        Equivalent number of days.
+
+        Returns:
+            float: Equivalent in number of days
         '''
         return self.c_timedelta.getTotalDays()
 
     def getTotalHours(self):
         '''
-        float: Equivalent in number of hours
+        Equivalent number of hours.
+
+        Returns:
+            float: Equivalent in number of hours
         '''
         return self.c_timedelta.getTotalHours()
 
     def getTotalMinutes(self):
         '''
-        float: Equivalent in number of minutes
+        Equivalent number of minutes.
+
+        Returns:
+            float: Equivalent in number of minutes
         '''
         return self.c_timedelta.getTotalMinutes()
 
     def getTotalSeconds(self):
         '''
-        float: Equivalent in number of seconds.
+        Equivalent number of seconds.
+
+        Returns:
+            float: Equivalent in number of seconds.
         '''
         return self.c_timedelta.getTotalSeconds()
 

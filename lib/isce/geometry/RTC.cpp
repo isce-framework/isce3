@@ -12,31 +12,19 @@
 #include <ctime>
 #include <cstring>
 
-#include "isce/core/Constants.h"
-#include "isce/core/DateTime.h"
-#include "isce/core/Ellipsoid.h"
-#include "isce/core/Peg.h"
-#include "isce/core/Pegtrans.h"
-#include "isce/geometry/geometry.h"
-#include "isce/geometry/RTC.h"
-#include "isce/geometry/Topo.h"
+#include <isce/core/Constants.h>
+#include <isce/core/Cartesian.h>
+#include <isce/core/DateTime.h>
+#include <isce/core/Ellipsoid.h>
+#include <isce/core/LinAlg.h>
+#include <isce/core/Peg.h>
+#include <isce/core/Pegtrans.h>
 
-// Function to compute normal vector to a plane given three points
-std::array<double, 3> computePlaneNormal(std::array<double, 3> & x1,
-    std::array<double, 3> & x2, std::array<double, 3>& x3) {
+#include <isce/geometry/geometry.h>
+#include <isce/geometry/RTC.h>
+#include <isce/geometry/Topo.h>
 
-    std::array<double, 3> x12, x13, n, nhat;
-
-    for (int i = 0; i < 3; i++) {
-        x12[i] = x2[i] - x1[i];
-        x13[i] = x3[i] - x1[i];
-    }
-
-    isce::core::LinAlg::cross(x13, x12, n);
-    isce::core::LinAlg::unitVec(n, nhat);
-
-    return nhat;
-}
+using isce::core::cartesian_t;
 
 double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp,
                                const isce::product::RadarGridParameters & radarGrid,
@@ -230,8 +218,8 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radarGri
             ellps.lonLatToXyz(llh11, xyz11);
 
             // Compute normal vectors for each facet
-            normalFacet1 = computePlaneNormal(xyz00, xyz10, xyz01);
-            normalFacet2 = computePlaneNormal(xyz01, xyz10, xyz11);
+            normalFacet1 = normalPlane(xyz00, xyz10, xyz01);
+            normalFacet2 = normalPlane(xyz01, xyz10, xyz11);
 
             // Compute vectors associated with facet sides
             LinAlg::linComb(1.0, xyz00, -1.0, xyz01, P00_01);

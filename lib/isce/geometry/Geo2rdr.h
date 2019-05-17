@@ -40,6 +40,8 @@ namespace isce {
  * See <a href="overview_geometry.html#inversegeom">geometry overview</a> for description of the algorithm. */
 class isce::geometry::Geo2rdr {
 
+    using cartesian_t = isce::core::Vec3;
+
     public:
         /** Constructor from product */
         inline Geo2rdr(const isce::product::Product &,

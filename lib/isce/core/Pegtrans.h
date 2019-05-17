@@ -9,6 +9,7 @@
 #include <vector>
 #include "Constants.h"
 #include "Ellipsoid.h"
+#include "DenseMatrix.h"
 #include "Peg.h"
 
 namespace isce { namespace core {

@@ -6,9 +6,9 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
-#include "isce/core/Constants.h"
-#include "isce/core/Orbit.h"
-#include "gtest/gtest.h"
+#include <isce/core/Constants.h>
+#include <isce/core/Orbit.h>
+#include <gtest/gtest.h>
 using isce::core::orbitInterpMethod;
 using isce::core::HERMITE_METHOD;
 using isce::core::LEGENDRE_METHOD;

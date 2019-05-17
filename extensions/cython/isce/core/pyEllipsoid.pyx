@@ -14,11 +14,12 @@ cimport numpy as np
 
 cdef class pyEllipsoid:
     '''
-    Python wrapper for isce::core::Ellipsoid
+    Python wrapper for isce::core::Ellipsoid.
+    By default returns a WGS84 Ellipsoid.
 
     Args:
-        a (Optional[float]): Semi-major axis of Ellipsoid in m.
-        e2 (Optional[float]): Eccentricity-squared.
+        a (float, optional): Semi-major axis of Ellipsoid in m.
+        e2 (float, optional): Eccentricity-squared.
     '''
 
     cdef Ellipsoid *c_ellipsoid
@@ -48,7 +49,7 @@ cdef class pyEllipsoid:
         Binds the current pyEllipsoid instance to another C++ Ellipsoid pointer.
         
         Args:
-            elp (pyEllipsoid): Source of C++ Ellipsoid pointer. 
+            elp (:obj:`pyEllipsoid`): Source of C++ Ellipsoid pointer. 
         '''
         new_elp = pyEllipsoid()
         del new_elp.c_ellipsoid
@@ -73,14 +74,20 @@ cdef class pyEllipsoid:
     @property
     def a(self):
         '''
-        float: Semi-major axis of ellipsoid in meters.
+        Semi-major axis of ellipsoid.
+
+        Returns:
+            float: Semi-major axis of ellipsoid in meters.
         '''
         return self.c_ellipsoid.a()
 
     @property
     def b(self):
         '''
-        float: Semi-minor axis of ellipsoid in meters.
+        Semi-minor axis of ellipsoid.
+
+        Returns:
+            float: Semi-minor axis of ellipsoid in meters.
         '''
         return self.c_ellipsoid.b()
 
@@ -90,7 +97,7 @@ cdef class pyEllipsoid:
         Set the semi-major axis of ellipsoid in meters.
 
         Args:
-            a (double) : Value of semi-major axis
+            a (float) : Value of semi-major axis
         '''
         self.c_ellipsoid.a(a)
 
@@ -98,7 +105,10 @@ cdef class pyEllipsoid:
     @property
     def e2(self):
         '''
-        float: Eccentricity-squared of ellipsoid.
+        Eccentricity-squared of ellipsoid.
+
+        Returns:
+            float: Eccentricity-squared of ellipsoid.
         '''
         return self.c_ellipsoid.e2()
 
@@ -107,6 +117,9 @@ cdef class pyEllipsoid:
     def e2(self, double a):
         '''
         Set the eccentricity-squared of ellipsoid.
+
+        Args:
+            a (float): Value to eccentricity-squared
         '''
         self.c_ellipsoid.e2(a)
 
@@ -135,10 +148,10 @@ cdef class pyEllipsoid:
         Prime Vertical Radius as a function of latitude. 
 
         Args:
-            lat (float or np.array 1D): Latitude in radians
+            lat (float or :obj:`numpy.ndarray`): Latitude in radians. Can be constant or 1D array.
 
         Returns:
-            float or np.array 1D: Prime Vertical radius in meters
+            float or :obj:`numpy.ndarray`: Prime Vertical radius in meters
             
         '''
         #Single value
@@ -163,10 +176,10 @@ cdef class pyEllipsoid:
         Meridional radius as a function of latitude.
 
         Args:
-            lat (float or np.array 1D): Latitude in radians
+            lat (float or :obj:`numpy.ndarray`): Latitude in radians. Can be constant or 1D array.
 
         Returns:
-            float or np.array 1D: Meridional radius in meters
+            float or :obj:`numpy.ndarray`: Meridional radius in meters
         '''
         #Single value
         if np.isscalar(lat):
@@ -192,11 +205,11 @@ cdef class pyEllipsoid:
             lat and hdg should be of same size.
 
         Args:
-            lat (float or np.array 1D): Latitude in radians
-            hdg (float or np.array 1D): Heading in radians. Measured clockwise from North.
+            lat (float or :obj:`numpy.ndarray`): Latitude in radians. Can be constant or 1D array.
+            hdg (float or :obj:`numpy.ndarray`): Heading in radians. Measured clockwise from North.
 
         Returns:
-            float or np.array 1D: Directional radius in meters.
+            float or :obj:`numpy.ndarray`: Directional radius in meters.
         '''
 
         if np.isscalar(lat) and np.isscalar(hdg):
@@ -221,10 +234,11 @@ cdef class pyEllipsoid:
         Transform Lon/Lat/Hgt position to ECEF xyz coordinates.
 
         Args:
-            llh (np.array[3 or nx3]): triplet of floats representing Lon (rad), Lat (rad) and hgt (m)
+            llh (:obj:`numpy.ndarray`): triplet of floats representing Lon (rad), Lat (rad) and hgt (m).
+                Can be of shape (3,) or (n,3).
 
         Returns:
-            np.array[3 or nx3]: triplet of floats representing ECEF coordinates in meters
+            :obj:`numpy.ndarray`: triplet of floats representing ECEF coordinates in meters
 
         '''
         llh = np.atleast_2d(llh)
@@ -250,10 +264,11 @@ cdef class pyEllipsoid:
         Transform Lon/Lat/Hgt position to ECEF xyz coordinates.
 
         Args:
-            xyz (np.array[3 or nx3]): triplet of floats representing ECEF coordinates in meters
+            xyz (:obj:`numpy.ndarray`): triplet of floats representing ECEF coordinates in meters.
+                Can be of shape (3,) or (n,3).
 
         Returns:
-            np.array[3 or nx3]: triplet of floats representing Lon (rad), Lat (rad) and hgt (m)
+            :obj:`numpy.ndarray`: triplet of floats representing Lon (rad), Lat (rad) and hgt (m)
 
         '''
         xyz = np.atleast_2d(xyz)
@@ -284,12 +299,12 @@ cdef class pyEllipsoid:
         Compute azimuth angle and look angle at imaging platform.
 
         Args:
-            pos (list or np.array[3]): triplet of floats representing platform position in ECEF coordinates (m)
-            vel (list or np.array[3]): triplet of floats representing platform veloctity in ECEF coodinates (m/s)
-            los (list or np.array[3]): triplet of floats representing line-of-sight vector in ECEF coordiantes (m)
+            pos (:obj:`numpy.ndarray`): triplet of floats representing platform position in ECEF coordinates (m)
+            vel (:obj:`numpy.ndarray`): triplet of floats representing platform veloctity in ECEF coodinates (m/s)
+            los (:obj:`numpy.ndarray`): triplet of floats representing line-of-sight vector in ECEF coordiantes (m)
 
         Returns:
-            (tuple): tuple containing: 
+            (tuple): tuple containing:
                 * azi (float): Azimuth angle in radians. Measured anti-clockwise from North.
                 * look (float): Look angle in radians. Measured w.r.t ellipsoid normal at platform.
         '''
@@ -317,14 +332,14 @@ cdef class pyEllipsoid:
         Compute TCN basis from platform position and velocity.
 
         Args:
-            pos (list or np.array[3]): triplet of floats representing ECEF position in meters
-            vel (list or np.array[3]): triplet of floats representing ECEF velocity in meters / sec
+            pos (:obj:`numpy.ndarray`): triplet of floats representing ECEF position in meters
+            vel (:obj:`numpy.ndarray`): triplet of floats representing ECEF velocity in meters / sec
 
         Returns:
             (tuple): tuple containing:
-                * that (np.array[3]) - Tangential unit vector
-                * chat (np.array[3]) - Cross track unit vector
-                * nhat (np.array[3]) - Normal unit vector pointing downwards
+                * that (:obj:`numpy.ndarray`): Tangential unit vector.
+                * chat (:obj:`numpy.ndarray`): Cross track unit vector.
+                * nhat (:obj:`numpy.ndarray`): Normal unit vector pointing downwards.
         '''
         cdef cartesian_t _pos
         cdef cartesian_t _vel

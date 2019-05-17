@@ -44,8 +44,8 @@ loadDEM(isce::io::Raster & demRaster, double minLon, double maxLon,
     _proj = isce::core::createProj(epsgcode);
 
     // Convert min longitude and latitude to XY coordinates of DEM
-    isce::core::cartesian_t llh{minLon, minLat, 0.0};
-    isce::core::cartesian_t xyz;
+    cartesian_t llh{minLon, minLat, 0.0};
+    cartesian_t xyz;
     _proj->forward(llh, xyz);
     double minX = xyz[0];
     double minY = xyz[1];
@@ -150,15 +150,15 @@ computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & 
 }
 
 // Compute middle latitude and longitude using reference height
-isce::core::cartesian_t
+isce::geometry::DEMInterpolator::cartesian_t
 isce::geometry::DEMInterpolator::
 midLonLat() const {
 
     // Create coordinates for middle X/Y
-    isce::core::cartesian_t xyz{midX(), midY(), _refHeight};
+    cartesian_t xyz{midX(), midY(), _refHeight};
 
     // Call projection inverse
-    isce::core::cartesian_t llh;
+    cartesian_t llh;
     _proj->inverse(xyz, llh);
 
     // Done
@@ -179,8 +179,8 @@ interpolateLonLat(double lon, double lat) const {
     }
 
     // Pass latitude and longitude through projection
-    isce::core::cartesian_t xyz;
-    const isce::core::cartesian_t llh{lon, lat, 0.0};
+    cartesian_t xyz;
+    const cartesian_t llh{lon, lat, 0.0};
     _proj->forward(llh, xyz);
 
     // Interpolate DEM at its native coordinates

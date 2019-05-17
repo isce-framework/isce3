@@ -12,8 +12,8 @@ using isce::cuda::core::Geocent;
 using isce::core::cartesian_t;
 
 Geocent proj;
-const double a = proj.ellipse.geta();
-const double b = a * std::sqrt(1.0 - proj.ellipse.gete2());
+const double a = proj.ellipse.a();
+const double b = a * std::sqrt(1. - proj.ellipse.e2());
 
 
 struct GeocentTest : public ::testing::Test {

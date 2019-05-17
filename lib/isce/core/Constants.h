@@ -19,6 +19,8 @@
 #include <gdal.h>
 #include <gdal_priv.h>
 
+#include "DenseMatrix.h"
+
 // Macro wrapper to check vector lengths (adds calling function and variable name information to the
 // exception)
 #define checkVecLen(v,l) isce::core::checkVecLenDebug(v,l,#v,__PRETTY_FUNCTION__)
@@ -27,14 +29,6 @@
 #define IDX1D(i,j,w) (((i)*(w))+(j))
 
 namespace isce { namespace core {
-    
-    // Useful typedefs for 3-element vectors and 2D matrices
-    // Will be replaced by dedicated array library
-    /**Common datatype for a triplet of doubles*/
-    typedef std::array<double, 3> cartesian_t;
-
-    /**Common datatype for collection of 3 triplets of doubles*/
-    typedef std::array<std::array<double, 3>, 3> cartmat_t;
 
     /**Enumeration type to indicate coordinate system of orbits*/
     enum orbitType {
@@ -48,7 +42,7 @@ namespace isce { namespace core {
         SCH_METHOD,
         LEGENDRE_METHOD
     };
-    
+
     /**Enumeration type to indicate interpolation method*/
     enum dataInterpMethod {
         SINC_METHOD,
@@ -83,7 +77,7 @@ namespace isce { namespace core {
     const short SHADOW_VALUE = 1;
     const short LAYOVER_VALUE = 2;
 
-    /** Precision-promotion to double/complex<double>  **/
+    /** Precision-promotion to double/complex\<double\>  **/
     template<typename T> struct double_promote;
 
     /** Template specialization for float */
@@ -92,10 +86,10 @@ namespace isce { namespace core {
     /** Template specialization for double */
     template<> struct double_promote<double> { using type = double; };
 
-    /** Template specialization for complex<float> */
+    /** Template specialization for complex\<float\> */
     template<> struct double_promote<std::complex<float>>  { using type = std::complex<double>; };
 
-    /** Template specialization for complex <double> */
+    /** Template specialization for complex\<double\> */
     template<> struct double_promote<std::complex<double>> { using type = std::complex<double>; };
   }
 }

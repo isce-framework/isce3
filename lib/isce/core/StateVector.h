@@ -10,6 +10,7 @@
 #include <string>
 
 // isce::core
+#include "Cartesian.h"
 #include "Constants.h"
 #include "DateTime.h"
 
@@ -30,7 +31,7 @@ class isce::core::StateVector {
     public:
         /** Empty constructor*/
         StateVector() {}
-      
+
         /** Return position in m*/
         cartesian_t position() const { return _position; }
 

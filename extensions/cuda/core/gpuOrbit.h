@@ -11,7 +11,6 @@
 
 #include <vector>
 #include "isce/core/Orbit.h"
-#include "isce/cuda/core/Common.h"
 
 using isce::core::Orbit;
 using isce::core::cartesian_t;

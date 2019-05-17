@@ -25,6 +25,8 @@ using isce::io::Raster;
 using isce::core::LUT1d;
 using isce::core::LinAlg;
 
+using cartesian_t = isce::core::Vec3;
+
 // Run geo2rdr with no offsets; internal creation of offset rasters
 /** @param[in] topoRaster outputs of topo -i.e, pixel-by-pixel x,y,h as bands
   * @param[in] outdir directory to write outputs to
@@ -162,8 +164,8 @@ geo2rdr(isce::io::Raster & topoRaster,
 
                 // Convert topo XYZ to LLH
                 const size_t index = blockLine * demWidth + pixel;
-                isce::core::cartesian_t xyz{x[index], y[index], hgt[index]};
-                isce::core::cartesian_t llh;
+                cartesian_t xyz{x[index], y[index], hgt[index]};
+                cartesian_t llh;
                 _projTopo->inverse(xyz, llh);
 
                 // Perform geo->rdr iterations

@@ -102,12 +102,15 @@ function(InitInstallDirLayout)
         set (ISCE_PACKAGESDIR packages CACHE STRING "isce/packages")
     endif(NOT ISCE_PACKAGESDIR)
 
+    ###build/packages
+    if (NOT ISCE_BUILDPACKAGESDIR)
+        set (ISCE_BUILDPACKAGESDIR ${CMAKE_BINARY_DIR}/packages CACHE STRING "build/isce/packages")
+    endif(NOT ISCE_BUILDPACKAGESDIR)
+
     ###install/lib
     if (NOT ISCE_LIBDIR)
         set (ISCE_LIBDIR lib CACHE STRING "isce/lib")
     endif(NOT ISCE_LIBDIR)
-
-    ###build/lib
 
     ###install/include
     if (NOT ISCE_INCLUDEDIR)

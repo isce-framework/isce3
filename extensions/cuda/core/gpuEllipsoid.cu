@@ -56,7 +56,7 @@ CUDA_GLOBAL void lonLatToXyz_d(gpuEllipsoid elp, const double *llh, double *xyz)
     elp.lonLatToXyz(llh, xyz);
 }
 
-CUDA_HOST void gpuEllipsoid::lonLatToXyz_h(cartesian_t &llh, cartesian_t &xyz) {
+CUDA_HOST void gpuEllipsoid::lonLatToXyz_h(const isce::core::Vec3& llh, isce::core::Vec3& xyz) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread. This function
      *  is primarily meant to be used as a consistency check in the test suite, but may be used in
@@ -88,7 +88,7 @@ CUDA_GLOBAL void xyzToLonLat_d(gpuEllipsoid elp, const double *xyz, double *llh)
 }
 
 
-CUDA_HOST void gpuEllipsoid::xyzToLonLat_h(cartesian_t &xyz, cartesian_t &llh) {
+CUDA_HOST void gpuEllipsoid::xyzToLonLat_h(const isce::core::Vec3& xyz, isce::core::Vec3& llh) {
     /*
      *  CPU-side function to call the corresponding GPU function on a single thread. This function
      *  is primarily meant to be used as a consistency check in the test suite, but may be used in

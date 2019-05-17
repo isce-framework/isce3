@@ -10,7 +10,7 @@
 #include <complex>
 #include "isce/core/Matrix.h"
 #include "isce/core/Interpolator.h"
-#include "isce/cuda/core/Common.h"
+#include "isce/core/Common.h"
 
 using isce::core::Matrix;
 

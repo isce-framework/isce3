@@ -371,7 +371,7 @@ getENUHeading(double aztime) const {
     // Computes heading at a given azimuth time using a single state vector
 
     cartesian_t pos, vel, llh, enuvel;
-    cartmat_t enumat, xyz2enu;
+    cartmat_t xyz2enu, enumat;
     isce::core::Ellipsoid refElp(EarthSemiMajorAxis, EarthEccentricitySquared);
 
     // Interpolate orbit to azimuth time

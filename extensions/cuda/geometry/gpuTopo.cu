@@ -3,20 +3,23 @@
 // Author: Bryan V. Riel, Joshua Cohen
 // Copyright: 2017-2018
 
+#include <isce/core/Basis.h>
+#include <isce/core/Ellipsoid.h>
+#include <isce/core/Pixel.h>
+
 // isce::cuda::core
-#include "isce/cuda/core/gpuEllipsoid.h"
-#include "isce/cuda/core/gpuOrbit.h"
-#include "isce/cuda/core/gpuLUT1d.h"
-#include "isce/cuda/core/gpuPixel.h"
-#include "isce/cuda/core/gpuBasis.h"
-#include "isce/cuda/core/gpuStateVector.h"
+#include <isce/cuda/core/gpuOrbit.h>
+#include <isce/cuda/core/gpuLUT1d.h>
+#include <isce/cuda/core/gpuStateVector.h>
 
 // isce::cuda::geometry
 #include "gpuDEMInterpolator.h"
 #include "gpuGeometry.h"
 #include "gpuTopoLayers.h"
 #include "gpuTopo.h"
-using isce::cuda::core::gpuLinAlg;
+
+using isce::core::LinAlg;
+using isce::core::Vec3;
 
 #include <isce/cuda/except/Error.h>
 
@@ -24,53 +27,49 @@ using isce::cuda::core::gpuLinAlg;
 
 __device__
 bool initAzimuthLine(size_t line,
-                     const isce::cuda::core::gpuOrbit & orbit,
+                     const isce::cuda::core::gpuOrbit& orbit,
                      double startAzUTCTime,
                      size_t numberAzimuthLooks,
                      double prf,
-                     isce::cuda::core::gpuStateVector & state,
-                     isce::cuda::core::gpuBasis & TCNbasis) {
+                     isce::cuda::core::gpuStateVector& state,
+                     isce::core::Basis& TCNbasis) {
 
     // Get satellite azimuth time
     const double tline = startAzUTCTime + numberAzimuthLooks * line / prf;
 
     // Interpolate orbit (keeping track of validity without interrupting workflow)
-    bool valid = (orbit.interpolateWGS84Orbit(tline, state.position, state.velocity) == 0);
-
-    // Cache pointers to the TCN basis components
-    double * that = TCNbasis.x0;
-    double * chat = TCNbasis.x1;
-    double * nhat = TCNbasis.x2;
+    Vec3 pos, vel;
+    bool valid = (orbit.interpolateWGS84Orbit(tline, pos.data(), vel.data()) == 0);
+    state._position = pos;
+    state._velocity = vel;
 
     // Compute geocentric TCN basis
-    double temp[3];
-    gpuLinAlg::unitVec(state.position, nhat);
-    gpuLinAlg::scale(nhat, -1.0);
-    gpuLinAlg::cross(nhat, state.velocity, temp);
-    gpuLinAlg::unitVec(temp, chat);
-    gpuLinAlg::cross(chat, nhat, temp);
-    gpuLinAlg::unitVec(temp, that);
+    const Vec3 nhat = -pos.unitVec();
+    const Vec3 chat = nhat.cross(vel ).unitVec();
+    const Vec3 that = chat.cross(nhat).unitVec();
+
+    TCNbasis = isce::core::Basis(that, chat, nhat);
 
     return valid;
 }
 
 __device__
-void setOutputTopoLayers(const double * targetLLH,
+void setOutputTopoLayers(const Vec3& targetLLH,
                          isce::cuda::geometry::gpuTopoLayers & layers,
                          size_t index, int lookSide,
-                         const isce::cuda::core::gpuPixel & pixel,
+                         const isce::core::Pixel & pixel,
                          const isce::cuda::core::gpuStateVector & state,
-                         const isce::cuda::core::gpuBasis & TCNbasis,
+                         const isce::core::Basis& TCNbasis,
                          isce::cuda::core::ProjectionBase ** projOutput,
-                         const isce::cuda::core::gpuEllipsoid & ellipsoid,
+                         const isce::core::Ellipsoid& ellipsoid,
                          const isce::cuda::geometry::gpuDEMInterpolator & demInterp) {
 
-    double targetXYZ[3], satToGround[3], enu[3];
-    double enumat[9], xyz2enu[9];
+    Vec3 targetXYZ, enu;
+    isce::core::cartmat_t enumat, xyz2enu;
     const double degrees = 180.0 / M_PI;
 
     // Convert lat/lon values to output coordinate system
-    double xyzOut[3];
+    Vec3 xyzOut;
     (*projOutput)->forward(targetLLH, xyzOut);
     const double x = xyzOut[0];
     const double y = xyzOut[1];
@@ -84,16 +83,16 @@ void setOutputTopoLayers(const double * targetLLH,
     ellipsoid.lonLatToXyz(targetLLH, targetXYZ);
 
     // Compute vector from satellite to ground point
-    gpuLinAlg::linComb(1.0, targetXYZ, -1.0, state.position, satToGround);
+    const Vec3 satToGround = targetXYZ - state.position();
 
     // Compute cross-track range
-    layers.crossTrack(index, -1*lookSide*gpuLinAlg::dot(satToGround, TCNbasis.x1));
+    layers.crossTrack(index, -lookSide * satToGround.dot(TCNbasis.x1()));
 
     // Computation in ENU coordinates around target
-    gpuLinAlg::enuBasis(targetLLH[1], targetLLH[0], enumat);
-    gpuLinAlg::tranMat(enumat, xyz2enu);
-    gpuLinAlg::matVec(xyz2enu, satToGround, enu);
-    const double cosalpha = std::abs(enu[2]) / gpuLinAlg::norm(enu);
+    LinAlg::enuBasis(targetLLH[1], targetLLH[0], enumat);
+    LinAlg::tranMat(enumat, xyz2enu);
+    LinAlg::matVec(xyz2enu, satToGround, enu);
+    const double cosalpha = std::abs(enu[2]) / LinAlg::norm(enu);
 
     // LOS vectors
     layers.inc(index, std::acos(cosalpha) * degrees);
@@ -111,7 +110,7 @@ void setOutputTopoLayers(const double * targetLLH,
     double beta = ((bb - aa) * degrees) / (2.0 * ellipsoid.rNorth(gamma) * demInterp.deltaY());
 
     // Compute local incidence angle
-    const double enunorm = gpuLinAlg::norm(enu);
+    const double enunorm = LinAlg::norm(enu);
     for (int idx = 0; idx < 3; ++idx) {
         enu[idx] = enu[idx] / enunorm;
     }
@@ -125,22 +124,20 @@ void setOutputTopoLayers(const double * targetLLH,
     layers.sim(index, std::log10(std::abs(0.01 * costheta / (bb * bb * bb))));
 
     // Calculate psi angle between image plane and local slope
-    double n_img[3], n_imghat[3], n_img_enu[3], n_trg_enu[3];
-    gpuLinAlg::cross(satToGround, state.velocity, n_img);
-    gpuLinAlg::unitVec(n_img, n_imghat);
-    gpuLinAlg::scale(n_imghat, -1*lookSide);
-    gpuLinAlg::matVec(xyz2enu, n_imghat, n_img_enu);
+    Vec3 n_img_enu, n_trg_enu;
+    const Vec3 n_imghat = satToGround.cross(state.velocity()).unitVec() * -lookSide;
+    LinAlg::matVec(xyz2enu, n_imghat, n_img_enu);
     n_trg_enu[0] = -alpha;
     n_trg_enu[1] = -beta;
     n_trg_enu[2] = 1.0;
 
-    const double cospsi = gpuLinAlg::dot(n_trg_enu, n_img_enu) /
-                         (gpuLinAlg::norm(n_trg_enu) * gpuLinAlg::norm(n_img_enu));
+    const double cospsi = LinAlg::dot(n_trg_enu, n_img_enu) /
+                         (LinAlg::norm(n_trg_enu) * LinAlg::norm(n_img_enu));
     layers.localPsi(index, std::acos(cospsi) * degrees);
 }
 
 __global__
-void runTopoBlock(isce::cuda::core::gpuEllipsoid ellipsoid,
+void runTopoBlock(isce::core::Ellipsoid ellipsoid,
                   isce::cuda::core::gpuOrbit orbit,
                   isce::cuda::core::gpuLUT1d<double> doppler,
                   isce::cuda::geometry::gpuDEMInterpolator demInterp,
@@ -170,32 +167,30 @@ void runTopoBlock(isce::cuda::core::gpuEllipsoid ellipsoid,
 
         // Interpolate orbit (keeping track of validity without interrupting workflow)
         isce::cuda::core::gpuStateVector state;
-        isce::cuda::core::gpuBasis TCNbasis;
+        isce::core::Basis TCNbasis;
         bool valid = (initAzimuthLine(line + lineStart, orbit, startAzUTCTime,
                                       numberAzimuthLooks, prf, state, TCNbasis) != 0);
 
         // Compute magnitude of satellite velocity
-        const double satVmag = gpuLinAlg::norm(state.velocity);
+        const double satVmag = state.velocity().norm();
 
         // Get current slant range
         const double rng = startingRange + rbin * rangePixelSpacing;
-        
+
         // Get current Doppler value and factor
         const double dopval = doppler.eval(rng);
         const double dopfact = 0.5 * wavelength * (dopval / satVmag) * rng;
 
-        // Store slant range bin data in gpuPixel
-        isce::cuda::core::gpuPixel pixel(rng, dopfact, rbin);
-        
+        // Store slant range bin data in Pixel
+        isce::core::Pixel pixel(rng, dopfact, rbin);
+
         // Initialize LLH to middle of input DEM and average height
-        double llh[3];
-        demInterp.midLonLat(llh);
-        
+        Vec3 llh = demInterp.midLonLat();
+
         // Perform rdr->geo iterations
         int geostat = isce::cuda::geometry::rdr2geo(
             pixel, TCNbasis, state, ellipsoid, demInterp, llh, lookSide,
-            threshold, numiter, extraiter
-        );
+            threshold, numiter, extraiter);
 
         // Save data in output arrays
         setOutputTopoLayers(llh, layers, index_flat, lookSide, pixel, state, TCNbasis,
@@ -226,7 +221,6 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
            unsigned int & totalconv) {
 
     // Create gpu ISCE objects
-    isce::cuda::core::gpuEllipsoid gpu_ellipsoid(ellipsoid);
     isce::cuda::core::gpuOrbit gpu_orbit(orbit);
     isce::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
     isce::cuda::geometry::gpuDEMInterpolator gpu_demInterp(demInterp); 
@@ -253,7 +247,7 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
     dim3 grid(nBlocks);
 
     // Launch kernel
-    runTopoBlock<<<grid, block>>>(gpu_ellipsoid, gpu_orbit, gpu_doppler,
+    runTopoBlock<<<grid, block>>>(ellipsoid, gpu_orbit, gpu_doppler,
                                   gpu_demInterp, projOutput_d, gpu_layers,
                                   lineStart, lookSide, numberAzimuthLooks,
                                   startAzUTCTime, wavelength, prf, startingRange,

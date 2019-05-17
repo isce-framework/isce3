@@ -19,16 +19,16 @@ class isce::core::Pixel {
 
     public:
         // Constructors
-        Pixel() {};
-        Pixel(double r, double d, size_t b) : _range(r), _dopfact(d), _bin(b) {}
+        CUDA_HOSTDEV Pixel() {};
+        CUDA_HOSTDEV Pixel(double r, double d, size_t b) : _range(r), _dopfact(d), _bin(b) {}
         // Getters
-        double range() const { return _range; }
-        double dopfact() const { return _dopfact; }
-        size_t bin() const { return _bin; }
+        CUDA_HOSTDEV double range() const { return _range; }
+        CUDA_HOSTDEV double dopfact() const { return _dopfact; }
+        CUDA_HOSTDEV size_t bin() const { return _bin; }
         // Setters
-        void range(double r) { _range = r; }
-        void dopfact(double d) { _dopfact = d; }
-        void bin(size_t b) { _bin = b; }
+        CUDA_HOSTDEV void range(double r) { _range = r; }
+        CUDA_HOSTDEV void dopfact(double d) { _dopfact = d; }
+        CUDA_HOSTDEV void bin(size_t b) { _bin = b; }
 
     private:
         double _range;

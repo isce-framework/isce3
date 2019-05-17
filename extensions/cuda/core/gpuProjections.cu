@@ -11,7 +11,7 @@
 #include <iostream>
 #include "gpuProjections.h"
 #include <isce/cuda/except/Error.h>
-using isce::core::cartesian_t;
+using isce::core::Vec3;
 
 namespace isce { namespace cuda { namespace core {
 
@@ -25,7 +25,7 @@ __global__ void forward_g(int code,
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
         (*base) = createProj(code);
-        flags[0] = (*base)->forward(inpts, outpts);
+        flags[0] = (*base)->forward(*(Vec3*) inpts, *(Vec3*) outpts);
         delete *base;
     }
 }
@@ -40,12 +40,12 @@ __global__ void inverse_g(int code,
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
         (*base) = createProj(code);
-        flags[0] = (*base)->inverse(inpts, outpts);
+        flags[0] = (*base)->inverse(*(Vec3*) inpts, *(Vec3*) outpts);
         delete *base;
     }
 }
 
-__host__ int ProjectionBase::forward_h(const cartesian_t &llh, cartesian_t &xyz) const
+__host__ int ProjectionBase::forward_h(const Vec3& llh, Vec3& xyz) const
 {
     /*
      * This is to transfrom from LLH to requested projection system on the host.
@@ -76,7 +76,7 @@ __host__ int ProjectionBase::forward_h(const cartesian_t &llh, cartesian_t &xyz)
     return status;
 }
 
-__host__ int ProjectionBase::inverse_h(const cartesian_t &xyz, cartesian_t &llh) const
+__host__ int ProjectionBase::inverse_h(const Vec3& xyz, Vec3& llh) const
 {
     /*
      * This is to transfrom from requested projection system to LLH on the host.
@@ -105,7 +105,7 @@ __host__ int ProjectionBase::inverse_h(const cartesian_t &xyz, cartesian_t &llh)
     return status;
 }
 
-CUDA_DEV int LonLat::forward(const double *in, double *out) const
+CUDA_DEV int LonLat::forward(const Vec3& in, Vec3& out) const
 {
     /*
      * Transforms Lon/Lat from radians to degrees.
@@ -116,7 +116,7 @@ CUDA_DEV int LonLat::forward(const double *in, double *out) const
     return 0;
 }
 
-CUDA_DEV int LonLat::inverse(const double *in, double *out) const
+CUDA_DEV int LonLat::inverse(const Vec3& in, Vec3& out) const
 {
     /*
      * Transforms Lon/Lat from degrees to radians.
@@ -127,25 +127,25 @@ CUDA_DEV int LonLat::inverse(const double *in, double *out) const
     return 0;
 }
 
-CUDA_DEV int Geocent::forward(const double* in, double* out) const
+CUDA_DEV int Geocent::forward(const Vec3& in, Vec3& out) const
 {
     /*
-     * Same as gpuEllipsoid::lonLatToXyz.
+     * Same as Ellipsoid::lonLatToXyz.
      */
     ellipse.lonLatToXyz(in, out);
     return 0;
 }
 
-CUDA_DEV int Geocent::inverse(const double* in, double* out) const
+CUDA_DEV int Geocent::inverse(const Vec3& in, Vec3& out) const
 {
     /*
-     * Same as gpuEllipsoid::xyzToLonLat
+     * Same as Ellipsoid::xyzToLonLat
      */
     ellipse.xyzToLonLat(in, out);
     return 0;
 }
 
-CUDA_HOSTDEV double clens(const double *a, int size, double real) {
+CUDA_HOSTDEV double clens(const double* a, int size, double real) {
     /*
      * Local function - Compute the real clenshaw summation. Also computes Gaussian latitude for
      * some B as clens(a, len(a), 2*B) + B.
@@ -210,7 +210,7 @@ CUDA_HOSTDEV UTM::UTM(int code) : ProjectionBase(code) {
     lon0 = ((zone - 0.5) * (M_PI / 30.)) - M_PI;
 
     // Ellipsoid flattening
-    double f = ellipse.e2 / (1. + sqrt(1 - ellipse.e2));
+    double f = ellipse.e2() / (1. + sqrt(1 - ellipse.e2()));
     // Third flattening
     double n = f / (2. - f);
 
@@ -264,7 +264,7 @@ CUDA_HOSTDEV UTM::UTM(int code) : ProjectionBase(code) {
     Zb = -Qn * (Z + clens(gtu, 6, 2*Z));
 }
 
-CUDA_DEV int UTM::forward(const double *llh, double *utm) const {
+CUDA_DEV int UTM::forward(const Vec3& llh, Vec3& utm) const {
     /*
      * Transform from LLH to UTM.
      */
@@ -284,8 +284,8 @@ CUDA_DEV int UTM::forward(const double *llh, double *utm) const {
     Ce += dCe;
 
     if (fabs(Ce) <= 2.623395162778) {
-        utm[0] = (Qn * Ce * ellipse.geta()) + 500000.;
-        utm[1] = (((Qn * Cn) + Zb) * ellipse.geta()) + (isnorth ? 0. : 10000000.);
+        utm[0] = (Qn * Ce * ellipse.a()) + 500000.;
+        utm[1] = (((Qn * Cn) + Zb) * ellipse.a()) + (isnorth ? 0. : 10000000.);
         // UTM is lateral projection only, height is pass through.
         utm[2] = llh[2];
         return 0;
@@ -295,12 +295,12 @@ CUDA_DEV int UTM::forward(const double *llh, double *utm) const {
 }
 
 
-CUDA_DEV int UTM::inverse(const double *utm, double *llh) const {
+CUDA_DEV int UTM::inverse(const Vec3& utm, Vec3& llh) const {
     /*
      * Transform from UTM to LLH.
      */
-    double Cn = (utm[1] - (isnorth ? 0. : 10000000.)) /  ellipse.geta();
-    double Ce = (utm[0] - 500000.) /  ellipse.geta();
+    double Cn = (utm[1] - (isnorth ? 0. : 10000000.)) /  ellipse.a();
+    double Ce = (utm[0] - 500000.) /  ellipse.a();
 
     //Normalize N,E to Spherical N,E
     Cn = (Cn - Zb) / Qn;
@@ -355,16 +355,14 @@ CUDA_HOSTDEV PolarStereo::PolarStereo(int code) : ProjectionBase(code) {
             //Need to figure out a way to throw error on device
             //Currently, delegated to CPU side
     }
-    e = sqrt(ellipse.gete2());
+    e = sqrt(ellipse.e2());
     akm1 = cos(lat_ts) / pj_tsfn(lat_ts, sin(lat_ts), e);
-    akm1 *= ellipse.geta() / sqrt(1. - (pow(e,2) * pow(sin(lat_ts),2)));
+    akm1 *= ellipse.a() / sqrt(1. - (pow(e,2) * pow(sin(lat_ts),2)));
 }
 
-CUDA_DEV int PolarStereo::forward(const double *llh, double *out)  const{
+CUDA_DEV int PolarStereo::forward(const Vec3& llh, Vec3& out)  const{
     /**
      * Host / Device forward projection function.
-     * Must use double* instead of cartesian_t, because cartesian_t (std::array)
-     * is not available for __device__ functions.
      */
     double lam = llh[0] - lon0;
     double phi = llh[1] * (isnorth ? 1. : -1.);
@@ -377,11 +375,9 @@ CUDA_DEV int PolarStereo::forward(const double *llh, double *out)  const{
     return 0;
 }
 
-CUDA_DEV int PolarStereo::inverse(const double *ups, double *llh) const {
+CUDA_DEV int PolarStereo::inverse(const Vec3& ups, Vec3& llh) const {
     /**
     * Host / Device inverse projection function.
-    * Must use double* instead of cartesian_t, because cartesian_t (std::array)
-    * is not available for __device__ functions.
     */
     double tp = -hypot(ups[0], ups[1])/akm1;
     double fact = (isnorth)?1:-1;
@@ -415,31 +411,31 @@ CUDA_HOSTDEV CEA::CEA() : ProjectionBase(6933) {
      * Set up parameters for equal area projection.
      */
     lat_ts = M_PI / 6.;
-    k0 = cos(lat_ts) / sqrt(1. - (ellipse.e2 * pow(sin(lat_ts),2)));
-    e = sqrt(ellipse.e2);
-    one_es = 1. - ellipse.e2;
-    apa[0] = ellipse.e2 * ((1./3.) + (ellipse.e2 * ((31./180.) + (ellipse.e2 * (517./5040.)))));
-    apa[1] = pow(ellipse.e2,2) * ((23./360.) + (ellipse.e2 * (251./3780.)));
-    apa[2] = pow(ellipse.e2,3) * (761./45360.);
+    k0 = cos(lat_ts) / sqrt(1. - (ellipse.e2() * pow(sin(lat_ts),2)));
+    e = sqrt(ellipse.e2());
+    one_es = 1. - ellipse.e2();
+    apa[0] = ellipse.e2() * ((1./3.) + (ellipse.e2() * ((31./180.) + (ellipse.e2() * (517./5040.)))));
+    apa[1] = pow(ellipse.e2(),2) * ((23./360.) + (ellipse.e2() * (251./3780.)));
+    apa[2] = pow(ellipse.e2(),3) * (761./45360.);
     qp = pj_qsfn(1., e, one_es);
 }
 
-CUDA_DEV int CEA::forward(const double *llh, double* enu) const {
+CUDA_DEV int CEA::forward(const Vec3& llh, Vec3& enu) const {
     /*
      * Transform from LLH to CEA.
      */
-    enu[0] = k0 * llh[0] * ellipse.a;
-    enu[1] = (.5 * ellipse.a * pj_qsfn(sin(llh[1]), e, one_es)) / k0;
+    enu[0] = k0 * llh[0] * ellipse.a();
+    enu[1] = (.5 * ellipse.a() * pj_qsfn(sin(llh[1]), e, one_es)) / k0;
     enu[2] = llh[2];
     return 0;
 }
 
-CUDA_DEV int CEA::inverse(const double *enu, double *llh) const {
+CUDA_DEV int CEA::inverse(const Vec3& enu, Vec3& llh) const {
     /*
      * Transform from LLH to CEA.
      */
-    llh[0] = enu[0] / (k0 * ellipse.a);
-    double beta = asin((2. * enu[1] * k0) / (ellipse.a * qp));
+    llh[0] = enu[0] / (k0 * ellipse.a());
+    double beta = asin((2. * enu[1] * k0) / (ellipse.a() * qp));
     llh[1] = beta + (apa[0] * sin(2. * beta)) + (apa[1] * sin(4. * beta)) + (apa[2] * sin(6. * beta));
     llh[2] = enu[2];
     return 0;
@@ -480,24 +476,24 @@ CUDA_HOSTDEV ProjectionBase* createProj(int epsgcode)
     }
 }
 
-CUDA_DEV int projTransform(const ProjectionBase *in, 
-                               const ProjectionBase *out,
-                               const double *inpts,
-                               double *outpts) {
+CUDA_DEV int projTransform(const ProjectionBase *in,
+                           const ProjectionBase *out,
+                           const Vec3& inpts,
+                           Vec3& outpts) {
     if (in->_epsgcode == out->_epsgcode) {
         // If input/output projections are the same don't even bother processing
         for (int ii=0; ii<3;ii++)
             outpts[ii] = inpts[ii];
         return 0;
     } else {
-        double temp[3];
-        if (in->inverse(inpts, temp) != 0) return -2;
-        if (out->forward(temp, outpts) != 0) return 2;
+        Vec3 temp;
+        if (in->inverse(inpts, temp)   != 0) return -2;
+        if (out->forward(temp, outpts) != 0) return  2;
     }
     return 0;
 };
 
-__device__ int projInverse(int code, const double* in, double* out) {
+__device__ int projInverse(int code, const Vec3& in, Vec3& out) {
     if (code == 4326) {
         LonLat proj;
         return proj.inverse(in, out);
