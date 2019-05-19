@@ -1,0 +1,14 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// parasim
+// (c) 1998-2019 all rights reserved
+//
+
+// code guard
+#if !defined(ampcor_libampcor_dom_raster_icc)
+#error This header file contains implementation details of class ampcor::dom::Raster
+#endif
+
+// end of file
