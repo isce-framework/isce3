@@ -310,8 +310,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
 <div class="line"><a name="l00264"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#af5eda98731f7f62fce5c7f428f0e61a5">  264</a></span>&#160;    <a class="code" href="namespaceisce_1_1core.html#af5eda98731f7f62fce5c7f428f0e61a5">compareComplex</a>(std::complex&lt;T&gt; first, std::complex&lt;T&gt; second) {</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">compareFloatingPoint</a>(first.real(), second.real())</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;            &amp;&amp; <a class="code" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">compareFloatingPoint</a>(first.imag(), second.imag());</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">compareFloatingPoint</a>(first.real(), second.real()) *</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;                <a class="code" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">compareFloatingPoint</a>(first.imag(), second.imag());</div>
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    }</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;</div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
