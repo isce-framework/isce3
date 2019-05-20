@@ -1,4 +1,6 @@
 #-*- coding: utf-8 -*-
+# Heresh Fattahi
+# Copyright 2019-
 
 # The extensions
 import isce3.extensions.isceextension as isceextension
@@ -9,11 +11,11 @@ class Rdr2geo(isceextension.pyTopo):
     """
     pass
 
-def rdr2geo(azimuthTime, 
-            slantRange,
-            ellipsoid,
-            orbit,
-            side,
+def radar2geoCoordinates(azimuthTime=None, 
+            slantRange=None,
+            ellipsoid=None,
+            orbit=None,
+            side=None,
             doppler = 0,
             wvl = 0.24,
             threshold = 0.05,

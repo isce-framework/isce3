@@ -21,7 +21,7 @@ cdef class pyRaster:
     All parameters like dimensions, data types etc must be known at the time of creation.
 
     Args:
-        filename (str): Filename on disk to create or to read
+        str_filename (str): str_filename on disk to create or to read
         access (Optional[int]): gdal.GA_ReadOnly or gdal.GA_Update
         dtype (Optional[int]): gdal.GDT_* for creating new raster
         width (Optional[int]): width of new raster to be created
@@ -33,9 +33,9 @@ cdef class pyRaster:
     cdef Raster * c_raster
     cdef bool __owner
 
-    def __cinit__(self, py_filename, int access=0, int dtype=0, int width=0,
-                  int length=0, int numBands=0, driver='', collection=[], 
-                  dataset=None, h5=None):
+    def __cinit__(self, filename=None, int access=0, int dtype=0, 
+                int width=0, int length=0, int numBands=0, driver='', 
+                collection=[], dataset=None, h5=None):
 
         # If a gdal.Dataset is passed in as a keyword argument, intercept that here
         # and create a Raster
@@ -69,8 +69,8 @@ cdef class pyRaster:
             self.__owner = False
             return
         
-        # Convert the filename to a C++ string representation
-        cdef string filename = pyStringToBytes(py_filename)
+        # Convert the str_filename to a C++ string representation
+        cdef string str_filename = pyStringToBytes(filename)
         cdef string drivername = pyStringToBytes(driver)
         
         # Convert datatypes
@@ -105,27 +105,27 @@ cdef class pyRaster:
             for inobj in collection:
                 rasterlist.push_back( (<pyRaster>inobj).c_raster[0] )
 
-            self.c_raster = new Raster(filename, rasterlist)
+            self.c_raster = new Raster(str_filename, rasterlist)
             return
         
         # Read-only
         if access == 0:
-            self.c_raster = new Raster(filename)
+            self.c_raster = new Raster(str_filename)
 
         # New file
         else:
             if drivername.empty():
                 if gdtype == GDT.GDT_Unknown and width != 0 and length != 0:
-                    self.c_raster = new Raster(filename, width, length)
+                    self.c_raster = new Raster(str_filename, width, length)
         
                 elif gdtype == GDT.GDT_Unknown and width != 0 and length != 0 and numBands != 0:
-                    self.c_raster = new Raster(filename, width, length, numBands)
+                    self.c_raster = new Raster(str_filename, width, length, numBands)
 
                 elif gdtype != GDT.GDT_Unknown and width != 0 and length != 0:
-                    self.c_raster = new Raster(filename, width, length, gdtype)
+                    self.c_raster = new Raster(str_filename, width, length, gdtype)
 
                 elif gdtype != GDT.GDT_Unknown and width != 0 and length != 0 and numBands != 0:
-                    self.c_raster = new Raster(filename, width, length, numBands, gdtype)
+                    self.c_raster = new Raster(str_filename, width, length, numBands, gdtype)
 
                 else:
                     raise NotImplementedError('Unsupported Raster creation')
@@ -134,7 +134,7 @@ cdef class pyRaster:
                 if gdtype == GDT.GDT_Unknown:
                     raise ValueError('Cannot create raster with unknown data type')
                 else:
-                    self.c_raster = new Raster(filename, width, length, numBands,
+                    self.c_raster = new Raster(str_filename, width, length, numBands,
                                             gdtype, drivername)
 
         self.__owner = True

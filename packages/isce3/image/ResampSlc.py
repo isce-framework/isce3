@@ -6,10 +6,9 @@
 # The extension
 import isce3.extensions.isceextension as isceextension
 
-class Raster(isceextension.pyRaster):
+class ResampSlc(isceextension.pyResampSlc):
     """
-    Wrapper for pyRaster.
+    Wrapper for pyResample
     """
-
     pass
 

@@ -4,9 +4,28 @@
 import isce3.extensions.isceextension as isceextension
 
 # Import the wrappers
-from .Rdr2geo import Rdr2geo, rdr2geo
-from .Geo2rdr import Geo2rdr, geo2rdr
+from .Rdr2geo import radar2geoCoordinates
+from .Geo2rdr import geo2radarCoordinates
 from .geometry import getBoundsOnGround
+
+def rdr2geo(**kwds):
+
+    from .Rdr2geo import Rdr2geo
+
+    return Rdr2geo(**kwds)
+
+
+def geo2rdr(**kwds):
+
+    from .Geo2rdr import Geo2rdr
+
+    return Geo2rdr(**kwds)
+
+def geocode(**kwds):
+
+    from .Geocode import Geocode
+
+    return Geocode(**kwds)
 
 
 # end of file

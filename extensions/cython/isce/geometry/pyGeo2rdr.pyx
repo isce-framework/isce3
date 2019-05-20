@@ -35,7 +35,7 @@ cdef class pyGeo2rdr:
     }
 
     def __cinit__(self,
-                  pyProduct product,
+                  pyProduct product=None,
                   frequency='A',
                   bool nativeDoppler=False,
                   int numberAzimuthLooks=1,

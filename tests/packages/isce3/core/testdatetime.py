@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+import isce3
 
 def testConstruction():
     import datetime
-    from isce3.extensions.isceextension import pyDateTime
+    #from isce3.core import DateTime
 
     #Reference datetime
     refobjs = [datetime.datetime(2017,5,12,1,12,30,141592),
@@ -12,30 +13,29 @@ def testConstruction():
    
     for refobj in refobjs:
         #Create using string
-        pyobj = pyDateTime(refobj.isoformat())
+        pyobj = isce3.core.dateTime(inobj=refobj.isoformat())
 
-        #Create datetime from pyDateTime
+        #Create datetime from DateTime
         reconsobj = datetime.datetime.strptime(pyobj.isoformat()[:-3], "%Y-%m-%dT%H:%M:%S.%f")
-        print(abs((reconsobj - refobj).total_seconds()))    
         assert abs((reconsobj - refobj).total_seconds()) < 1.0e-6
 
         #Create using datetime
-        pyobj = pyDateTime(refobj)
+        pyobj = isce3.core.dateTime(inobj=refobj)
 
-        #Create datetime from pyDateTime
+        #Create datetime from DateTime
         reconsobj = datetime.datetime.strptime(pyobj.isoformat()[:-3], "%Y-%m-%dT%H:%M:%S.%f")
 
         assert abs((reconsobj - refobj).total_seconds()) < 1.0e-6
 
 
 def testComparison():
-    from isce3.extensions.isceextension import pyDateTime
+    from isce3.core import DateTime
 
-    dtime1 = pyDateTime("2017-05-12T01:12:30.141592")
-    dtime2 = pyDateTime("2017-05-13T02:12:33.241592")
+    dtime1 = isce3.core.dateTime(inobj="2017-05-12T01:12:30.141592")
+    dtime2 = isce3.core.dateTime(inobj="2017-05-13T02:12:33.241592")
    
     ###Copy from dtime1
-    dtime3 = pyDateTime()
+    dtime3 = isce3.core.dateTime()
     dtime3.set(dtime1.isoformat())
 
     assert (dtime1 < dtime2)
@@ -47,32 +47,32 @@ def testComparison():
 
 
 def testTimeDelta():
-    from isce3.extensions.isceextension import pyDateTime, pyTimeDelta
 
-    dtime1 = pyDateTime("2017-05-12T01:12:30.141592")
-    dtime2 = pyDateTime("2017-05-13T02:12:33.241592")
+    dtime1 = isce3.core.dateTime(inobj="2017-05-12T01:12:30.141592")
+    dtime2 = isce3.core.dateTime(inobj="2017-05-13T02:12:33.241592")
     delta = dtime2 - dtime1
 
     assert abs(delta.getTotalSeconds() - 90003.1) < 1.0e-8
 
 def testAddition():
-    from isce3.extensions.isceextension import pyDateTime, pyTimeDelta
-
-    dtime1 = pyDateTime("2017-05-12T01:12:30.141592")
-    delta = pyTimeDelta(3.0)
+    from isce3.core.DateTime import DateTime 
+    from isce3.core.TimeDelta import TimeDelta
+    print("test addition")
+    dtime1 = DateTime(inobj="2017-05-12T01:12:30.141592")
+    delta = TimeDelta(inobj=3.0)
 
     dtime2 = dtime1 + delta
     assert(dtime2.isoformat() == "2017-05-12T01:12:33.141592000")
 
-    delta = pyTimeDelta(-4.0)
+    delta = TimeDelta(-4.0)
     dtime2 = dtime1 + delta
     assert(dtime2.isoformat() == "2017-05-12T01:12:26.141592000")
 
 def testUnits():
-    from isce3.extensions.isceextension import pyTimeDelta
+    #from isce3.core import TimeDelta
 
     for value in [90456.767775688, -8956.245252, 1000, -4000]:
-        delta = pyTimeDelta(value)
+        delta = isce3.core.timeDelta(inobj=value)
 
         assert( delta.getTotalSeconds() == value)
         assert( delta.getTotalMinutes() == (value / 60.))
@@ -84,3 +84,6 @@ if __name__ == '__main__':
     testTimeDelta()
     testComparison()
     testAddition()
+    testTimeDelta()
+    testUnits()
+

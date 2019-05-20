@@ -4,8 +4,9 @@
 import isce3.extensions.isceextension as isceextension
 
 # Import the wrappers
-from . import signal
-from . import io
-from . import product
+from . import core
 from . import geometry
+from . import image
+from . import io
+from . import signal
 # end of file

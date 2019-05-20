@@ -3,13 +3,11 @@
 # Heresh Fattahi
 # Copyright 2019-
 
-# The extension
 import isce3.extensions.isceextension as isceextension
 
-class Raster(isceextension.pyRaster):
+class TimeDelta(isceextension.pyTimeDelta):
     """
-    Wrapper for pyRaster.
+    Wrapper for pyTimeDelta.
     """
-
     pass
 

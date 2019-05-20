@@ -75,8 +75,8 @@ cdef class pyGeocodeBase:
     }
 
     def __cinit__(self,
-                  pyOrbit orbit,
-                  pyEllipsoid ellps,
+                  pyOrbit orbit=None,
+                  pyEllipsoid ellps=None,
                   double threshold=1.0e-8,
                   int numiter=25,
                   int linesPerBlock=1000,

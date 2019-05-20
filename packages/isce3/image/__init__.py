@@ -4,10 +4,10 @@
 import isce3.extensions.isceextension as isceextension
 
 # Import the wrappers
-def crossmul(**kwds):
+def resampSlc(**kwds):
 
-    from .Crossmul import Crossmul
+    from .ResampSlc import ResampSlc
 
-    return Crossmul(**kwds)
+    return ResampSlc(**kwds)
 
 # end of file

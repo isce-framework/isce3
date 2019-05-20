@@ -1,5 +1,7 @@
 #-*- coding: utf-8 -*-
-#import numpy as np
+#
+# Heresh Fattahi, Bryan Riel
+# Copyright 2019-
 
 # The extensions
 import isce3.extensions.isceextension as isceextension
@@ -10,10 +12,10 @@ class Geo2rdr(isceextension.pyGeo2rdr):
     """
     pass
 
-def geo2rdr(llh,
-            ellipsoid,
-            orbit,
-            doppler,
+def geo2radarCoordinates(lonlatheight=None,
+            ellipsoid=None,
+            orbit=None,
+            doppler=None,
             wavelength=0.24,
             threshold=0.05,
             maxiter=50,
@@ -23,7 +25,10 @@ def geo2rdr(llh,
     Wrapper for py_geo2rdr standalone function.
     """
     azimuthTime, slantRange = isceextension.py_geo2rdr(
-        llh, ellipsoid, orbit, doppler, wvl, threshold=threshold,
+        lonlatheight, ellipsoid, orbit, doppler, 
+        wavelength, threshold=threshold,
         maxiter=maxiter, dR=dR
     )
     return azimuthTime, slantRange
+
+

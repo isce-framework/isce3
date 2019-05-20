@@ -1,14 +1,18 @@
 #-*- coding: utf-8 -*-
+#
+# Heresh Fattahi, Bryan Riel
+# Copyright 2019-
+
 import numpy as np
 
 # The extensions
 import isce3.extensions.isceextension as isceextension
 
-def getBoundsOnGround(orbit,
-                     ellipsoid,
-                     doppler,
-                     lookSide,
-                     radarGrid,
+def getBoundsOnGround(orbit=None,
+                     ellipsoid=None,
+                     doppler=None,
+                     lookSide=None,
+                     radarGrid=None,
                      xoff=0,
                      yoff=0,
                      xsize=None,

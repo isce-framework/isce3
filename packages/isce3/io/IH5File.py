@@ -6,9 +6,9 @@
 # The extension
 import isce3.extensions.isceextension as isceextension
 
-class Raster(isceextension.pyRaster):
+class IH5File(isceextension.pyIH5File):
     """
-    Wrapper for pyRaster.
+    Wrapper for pyIH5File.
     """
 
     pass
