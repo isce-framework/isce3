@@ -104,77 +104,68 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">// isce::cuda::core</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;isce/cuda/core/Common.h&quot;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &quot;isce/cuda/core/gpuLinAlg.h&quot;</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment">// Declaration</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keyword">namespace </span>isce {</div>
-<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="namespaceisce_1_1cuda.html">   18</a></span>&#160;    <span class="keyword">namespace </span>cuda {</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;        <span class="keyword">namespace </span>core {</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;            <span class="keyword">class </span>gpuBasis;</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;        }</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    }</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;}</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
-<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html">   26</a></span>&#160;<span class="keyword">class </span><a class="code" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html">isce::cuda::core::gpuBasis</a> {</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#a6175b3eaff9e65e95822e69b9a8bb087">   30</a></span>&#160;        CUDA_HOSTDEV <span class="keyword">inline</span> <a class="code" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#a6175b3eaff9e65e95822e69b9a8bb087">gpuBasis</a>() {</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 3; ++i) {</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;                x0[i] = 0.0;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;                x1[i] = 0.0;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;                x2[i] = 0.0;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;            }</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;        }</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
-<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#ae2252a7bccc3971bcf3a09890321a0fd">   39</a></span>&#160;        CUDA_HOSTDEV <span class="keyword">inline</span> <a class="code" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#ae2252a7bccc3971bcf3a09890321a0fd">gpuBasis</a>(<span class="keywordtype">double</span> * x0, <span class="keywordtype">double</span> * x1, <span class="keywordtype">double</span> * x2) {</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 3; ++i) {</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;                this-&gt;x0[i] = x0[i];</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                this-&gt;x1[i] = x1[i];</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                this-&gt;x2[i] = x2[i];</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;            }</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        }</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
-<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#acae008eb165ef3b730f064ad3c2107cf">   48</a></span>&#160;        CUDA_HOST <span class="keyword">inline</span> <a class="code" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#acae008eb165ef3b730f064ad3c2107cf">gpuBasis</a>(<span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Basis.html">isce::core::Basis</a> &amp; basis) {</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 3; ++i) {</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                x0[i] = basis.<a class="code" href="classisce_1_1core_1_1Basis.html#a0c3a31918d934e6a759e302fdb4ed7a9">x0</a>()[i];</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;                x1[i] = basis.<a class="code" href="classisce_1_1core_1_1Basis.html#af3b64e933212ca241151571d80670e38">x1</a>()[i];</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;                x2[i] = basis.<a class="code" href="classisce_1_1core_1_1Basis.html#a1c07ea7048dabdf818cf6d70f339b351">x2</a>()[i];</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;            }</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        }</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
-<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#a79033105869d5b4ef3476f610299533c">   64</a></span>&#160;        CUDA_DEV <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#a79033105869d5b4ef3476f610299533c">project</a>(<span class="keywordtype">double</span> * vec, <span class="keywordtype">double</span> * res) {</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;            res[0] = <a class="code" href="structisce_1_1cuda_1_1core_1_1gpuLinAlg.html#a937326c87f596d685bdeb2376118fd50">isce::cuda::core::gpuLinAlg::dot</a>(x0, vec);</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;            res[1] = <a class="code" href="structisce_1_1cuda_1_1core_1_1gpuLinAlg.html#a937326c87f596d685bdeb2376118fd50">isce::cuda::core::gpuLinAlg::dot</a>(x1, vec);</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;            res[2] = <a class="code" href="structisce_1_1cuda_1_1core_1_1gpuLinAlg.html#a937326c87f596d685bdeb2376118fd50">isce::cuda::core::gpuLinAlg::dot</a>(x2, vec);</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        };</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
-<div class="line"><a name="l00078"></a><span class="lineno"><a class="line" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#abaf0a2235bf95f00b6e050f580467938">   78</a></span>&#160;        CUDA_DEV <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#abaf0a2235bf95f00b6e050f580467938">combine</a>(<span class="keywordtype">double</span> * vec, <span class="keywordtype">double</span> * res) {</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> ii = 0; ii &lt; 3; ++ii) {</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                res[ii] = vec[0] * x0[ii] + vec[1] * x1[ii] + vec[2] * x2[ii];</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;            }</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;        };</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;        <span class="comment">// Make data public to simplify access and to reduce use of temp variables</span></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        <span class="comment">// in device code</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        <span class="keywordtype">double</span> x0[3];</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        <span class="keywordtype">double</span> x1[3];</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        <span class="keywordtype">double</span> x2[3];</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;};</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="comment">// end of file</span></div>
-<div class="ttc" id="classisce_1_1cuda_1_1core_1_1gpuBasis_html_ae2252a7bccc3971bcf3a09890321a0fd"><div class="ttname"><a href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#ae2252a7bccc3971bcf3a09890321a0fd">isce::cuda::core::gpuBasis::gpuBasis</a></div><div class="ttdeci">CUDA_HOSTDEV gpuBasis(double *x0, double *x1, double *x2)</div><div class="ttdoc">Constructor with basis vectors. </div><div class="ttdef"><b>Definition:</b> gpuBasis.h:39</div></div>
-<div class="ttc" id="classisce_1_1cuda_1_1core_1_1gpuBasis_html_abaf0a2235bf95f00b6e050f580467938"><div class="ttname"><a href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#abaf0a2235bf95f00b6e050f580467938">isce::cuda::core::gpuBasis::combine</a></div><div class="ttdeci">CUDA_DEV void combine(double *vec, double *res)</div><div class="ttdoc">Combine the basis with given weights. </div><div class="ttdef"><b>Definition:</b> gpuBasis.h:78</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Basis_html_a0c3a31918d934e6a759e302fdb4ed7a9"><div class="ttname"><a href="classisce_1_1core_1_1Basis.html#a0c3a31918d934e6a759e302fdb4ed7a9">isce::core::Basis::x0</a></div><div class="ttdeci">CUDA_HOSTDEV cartesian_t x0() const </div><div class="ttdoc">Return first basis vector. </div><div class="ttdef"><b>Definition:</b> Basis.h:37</div></div>
-<div class="ttc" id="classisce_1_1cuda_1_1core_1_1gpuBasis_html_a79033105869d5b4ef3476f610299533c"><div class="ttname"><a href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#a79033105869d5b4ef3476f610299533c">isce::cuda::core::gpuBasis::project</a></div><div class="ttdeci">CUDA_DEV void project(double *vec, double *res)</div><div class="ttdoc">Project a given vector onto basis. </div><div class="ttdef"><b>Definition:</b> gpuBasis.h:64</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Basis_html"><div class="ttname"><a href="classisce_1_1core_1_1Basis.html">isce::core::Basis</a></div><div class="ttdoc">Simple class to store three-dimensional basis vectors. </div><div class="ttdef"><b>Definition:</b> Basis.h:23</div></div>
-<div class="ttc" id="structisce_1_1cuda_1_1core_1_1gpuLinAlg_html_a937326c87f596d685bdeb2376118fd50"><div class="ttname"><a href="structisce_1_1cuda_1_1core_1_1gpuLinAlg.html#a937326c87f596d685bdeb2376118fd50">isce::cuda::core::gpuLinAlg::dot</a></div><div class="ttdeci">static CUDA_DEV double dot(const double *, const double *)</div><div class="ttdoc">Dot product. </div></div>
-<div class="ttc" id="classisce_1_1cuda_1_1core_1_1gpuBasis_html_a6175b3eaff9e65e95822e69b9a8bb087"><div class="ttname"><a href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#a6175b3eaff9e65e95822e69b9a8bb087">isce::cuda::core::gpuBasis::gpuBasis</a></div><div class="ttdeci">CUDA_HOSTDEV gpuBasis()</div><div class="ttdoc">Default constructor. </div><div class="ttdef"><b>Definition:</b> gpuBasis.h:30</div></div>
-<div class="ttc" id="classisce_1_1cuda_1_1core_1_1gpuBasis_html"><div class="ttname"><a href="classisce_1_1cuda_1_1core_1_1gpuBasis.html">isce::cuda::core::gpuBasis</a></div><div class="ttdoc">Simple class to store three-dimensional basis vectors. </div><div class="ttdef"><b>Definition:</b> gpuBasis.h:26</div></div>
-<div class="ttc" id="classisce_1_1cuda_1_1core_1_1gpuBasis_html_acae008eb165ef3b730f064ad3c2107cf"><div class="ttname"><a href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#acae008eb165ef3b730f064ad3c2107cf">isce::cuda::core::gpuBasis::gpuBasis</a></div><div class="ttdeci">CUDA_HOST gpuBasis(const isce::core::Basis &amp;basis)</div><div class="ttdoc">Constructor from CPU Basis. </div><div class="ttdef"><b>Definition:</b> gpuBasis.h:48</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Basis_html_af3b64e933212ca241151571d80670e38"><div class="ttname"><a href="classisce_1_1core_1_1Basis.html#af3b64e933212ca241151571d80670e38">isce::core::Basis::x1</a></div><div class="ttdeci">CUDA_HOSTDEV cartesian_t x1() const </div><div class="ttdoc">Return second basis vector. </div><div class="ttdef"><b>Definition:</b> Basis.h:41</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Basis_html_a1c07ea7048dabdf818cf6d70f339b351"><div class="ttname"><a href="classisce_1_1core_1_1Basis.html#a1c07ea7048dabdf818cf6d70f339b351">isce::core::Basis::x2</a></div><div class="ttdeci">CUDA_HOSTDEV cartesian_t x2() const </div><div class="ttdoc">Return third basis vector. </div><div class="ttdef"><b>Definition:</b> Basis.h:45</div></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">// Declaration</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">namespace </span>isce {</div>
+<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="namespaceisce_1_1cuda.html">   17</a></span>&#160;    <span class="keyword">namespace </span>cuda {</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;        <span class="keyword">namespace </span>core {</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;            <span class="keyword">class </span>gpuBasis;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;        }</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    }</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;}</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html">   25</a></span>&#160;<span class="keyword">class </span><a class="code" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html">isce::cuda::core::gpuBasis</a> {</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#a6175b3eaff9e65e95822e69b9a8bb087">   29</a></span>&#160;        CUDA_HOSTDEV <span class="keyword">inline</span> <a class="code" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#a6175b3eaff9e65e95822e69b9a8bb087">gpuBasis</a>() {</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 3; ++i) {</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;                x0[i] = 0.0;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;                x1[i] = 0.0;</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;                x2[i] = 0.0;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;            }</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        }</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;</div>
+<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#ae2252a7bccc3971bcf3a09890321a0fd">   38</a></span>&#160;        CUDA_HOSTDEV <span class="keyword">inline</span> <a class="code" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#ae2252a7bccc3971bcf3a09890321a0fd">gpuBasis</a>(<span class="keywordtype">double</span> * x0, <span class="keywordtype">double</span> * x1, <span class="keywordtype">double</span> * x2) {</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 3; ++i) {</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;                this-&gt;x0[i] = x0[i];</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;                this-&gt;x1[i] = x1[i];</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                this-&gt;x2[i] = x2[i];</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;            }</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        }</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
+<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#acae008eb165ef3b730f064ad3c2107cf">   47</a></span>&#160;        CUDA_HOST <span class="keyword">inline</span> <a class="code" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#acae008eb165ef3b730f064ad3c2107cf">gpuBasis</a>(<span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Basis.html">isce::core::Basis</a> &amp; basis) {</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 3; ++i) {</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;                x0[i] = basis.<a class="code" href="classisce_1_1core_1_1Basis.html#a8e797b5f93e72749fb048ec09284b729">x0</a>()[i];</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                x1[i] = basis.<a class="code" href="classisce_1_1core_1_1Basis.html#ab93866502601f2866b5cd9f4be1d6164">x1</a>()[i];</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;                x2[i] = basis.<a class="code" href="classisce_1_1core_1_1Basis.html#a0c98fce86e66909e315f2839cda997ef">x2</a>()[i];</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;            }</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        }</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
+<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#abaf0a2235bf95f00b6e050f580467938">   63</a></span>&#160;        CUDA_DEV <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#abaf0a2235bf95f00b6e050f580467938">combine</a>(<span class="keywordtype">double</span> * vec, <span class="keywordtype">double</span> * res) {</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> ii = 0; ii &lt; 3; ++ii) {</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;                res[ii] = vec[0] * x0[ii] + vec[1] * x1[ii] + vec[2] * x2[ii];</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;            }</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        };</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        <span class="comment">// Make data public to simplify access and to reduce use of temp variables</span></div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="comment">// in device code</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="keywordtype">double</span> x0[3];</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        <span class="keywordtype">double</span> x1[3];</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="keywordtype">double</span> x2[3];</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;};</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="comment">// end of file</span></div>
+<div class="ttc" id="classisce_1_1cuda_1_1core_1_1gpuBasis_html_ae2252a7bccc3971bcf3a09890321a0fd"><div class="ttname"><a href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#ae2252a7bccc3971bcf3a09890321a0fd">isce::cuda::core::gpuBasis::gpuBasis</a></div><div class="ttdeci">CUDA_HOSTDEV gpuBasis(double *x0, double *x1, double *x2)</div><div class="ttdoc">Constructor with basis vectors. </div><div class="ttdef"><b>Definition:</b> gpuBasis.h:38</div></div>
+<div class="ttc" id="classisce_1_1cuda_1_1core_1_1gpuBasis_html_abaf0a2235bf95f00b6e050f580467938"><div class="ttname"><a href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#abaf0a2235bf95f00b6e050f580467938">isce::cuda::core::gpuBasis::combine</a></div><div class="ttdeci">CUDA_DEV void combine(double *vec, double *res)</div><div class="ttdoc">Combine the basis with given weights. </div><div class="ttdef"><b>Definition:</b> gpuBasis.h:63</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Basis_html_ab93866502601f2866b5cd9f4be1d6164"><div class="ttname"><a href="classisce_1_1core_1_1Basis.html#ab93866502601f2866b5cd9f4be1d6164">isce::core::Basis::x1</a></div><div class="ttdeci">CUDA_HOSTDEV const Vec3 &amp; x1() const </div><div class="ttdoc">Return second basis vector. </div><div class="ttdef"><b>Definition:</b> Basis.h:50</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Basis_html_a8e797b5f93e72749fb048ec09284b729"><div class="ttname"><a href="classisce_1_1core_1_1Basis.html#a8e797b5f93e72749fb048ec09284b729">isce::core::Basis::x0</a></div><div class="ttdeci">CUDA_HOSTDEV const Vec3 &amp; x0() const </div><div class="ttdoc">Return first basis vector. </div><div class="ttdef"><b>Definition:</b> Basis.h:47</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Basis_html"><div class="ttname"><a href="classisce_1_1core_1_1Basis.html">isce::core::Basis</a></div><div class="ttdoc">Simple class to store three-dimensional basis vectors. </div><div class="ttdef"><b>Definition:</b> Basis.h:22</div></div>
+<div class="ttc" id="classisce_1_1cuda_1_1core_1_1gpuBasis_html_a6175b3eaff9e65e95822e69b9a8bb087"><div class="ttname"><a href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#a6175b3eaff9e65e95822e69b9a8bb087">isce::cuda::core::gpuBasis::gpuBasis</a></div><div class="ttdeci">CUDA_HOSTDEV gpuBasis()</div><div class="ttdoc">Default constructor. </div><div class="ttdef"><b>Definition:</b> gpuBasis.h:29</div></div>
+<div class="ttc" id="classisce_1_1cuda_1_1core_1_1gpuBasis_html"><div class="ttname"><a href="classisce_1_1cuda_1_1core_1_1gpuBasis.html">isce::cuda::core::gpuBasis</a></div><div class="ttdoc">Simple class to store three-dimensional basis vectors. </div><div class="ttdef"><b>Definition:</b> gpuBasis.h:25</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Basis_html_a0c98fce86e66909e315f2839cda997ef"><div class="ttname"><a href="classisce_1_1core_1_1Basis.html#a0c98fce86e66909e315f2839cda997ef">isce::core::Basis::x2</a></div><div class="ttdeci">CUDA_HOSTDEV const Vec3 &amp; x2() const </div><div class="ttdoc">Return third basis vector. </div><div class="ttdef"><b>Definition:</b> Basis.h:53</div></div>
+<div class="ttc" id="classisce_1_1cuda_1_1core_1_1gpuBasis_html_acae008eb165ef3b730f064ad3c2107cf"><div class="ttname"><a href="classisce_1_1cuda_1_1core_1_1gpuBasis.html#acae008eb165ef3b730f064ad3c2107cf">isce::cuda::core::gpuBasis::gpuBasis</a></div><div class="ttdeci">CUDA_HOST gpuBasis(const isce::core::Basis &amp;basis)</div><div class="ttdoc">Constructor from CPU Basis. </div><div class="ttdef"><b>Definition:</b> gpuBasis.h:47</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
