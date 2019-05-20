@@ -9,7 +9,6 @@
 
 // isce::core
 #include <isce/core/StateVector.h>
-#include <isce/core/LinAlg.h>
 
 // Declaration
 namespace isce {

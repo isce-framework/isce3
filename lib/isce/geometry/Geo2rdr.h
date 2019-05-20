@@ -17,7 +17,6 @@
 #include <isce/core/LUT1d.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Peg.h>
-#include <isce/core/Pegtrans.h>
 #include <isce/core/Projections.h>
 
 // isce::io

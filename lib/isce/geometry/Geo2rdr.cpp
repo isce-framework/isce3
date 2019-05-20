@@ -12,20 +12,14 @@
 #include <valarray>
 #include <algorithm>
 
-// isce::core
 #include <isce/core/Constants.h>
-#include <isce/core/LinAlg.h>
-
-// isce::geometry
 #include "geometry.h"
 #include "Geo2rdr.h"
 
 // pull in some isce::core namespaces
 using isce::io::Raster;
 using isce::core::LUT1d;
-using isce::core::LinAlg;
-
-using cartesian_t = isce::core::Vec3;
+using isce::core::Vec3;
 
 // Run geo2rdr with no offsets; internal creation of offset rasters
 /** @param[in] topoRaster outputs of topo -i.e, pixel-by-pixel x,y,h as bands
@@ -164,9 +158,8 @@ geo2rdr(isce::io::Raster & topoRaster,
 
                 // Convert topo XYZ to LLH
                 const size_t index = blockLine * demWidth + pixel;
-                cartesian_t xyz{x[index], y[index], hgt[index]};
-                cartesian_t llh;
-                _projTopo->inverse(xyz, llh);
+                Vec3 xyz{x[index], y[index], hgt[index]};
+                Vec3 llh = _projTopo->inverse(xyz);
 
                 // Perform geo->rdr iterations
                 double aztime, slantRange;
@@ -181,7 +174,7 @@ geo2rdr(isce::io::Raster & topoRaster,
                     isOutside = true;
                 if ((slantRange < r0) || (slantRange > rngend))
                     isOutside = true;
-                
+
                 // Save result if valid
                 if (!isOutside) {
                     rgoff[index] = ((slantRange - r0) / dmrg) - float(pixel);
@@ -225,8 +218,8 @@ _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
 // Check we can interpolate orbit to middle of DEM
 void isce::geometry::Geo2rdr::
 _checkOrbitInterpolation(double aztime) {
-    cartesian_t satxyz, satvel;
-    int stat = _orbit.interpolate(aztime, satxyz, satvel, _orbitMethod);
+    Vec3 pos, vel;
+    int stat = _orbit.interpolate(aztime, pos, vel, _orbitMethod);
     if (stat != 0) {
         pyre::journal::error_t error("isce.core.Geo2rdr");
         error

@@ -7,11 +7,15 @@
 cdef extern from "isce/core/Cartesian.h" namespace "isce::core" nogil:
 
     # Three-element array for representing coordinate vectors
-    cdef cppclass cartesian_t "isce::core::cartesian_t":
-        cartesian_t() except +
+    cdef cppclass Vec3 "isce::core::Vec3":
+        Vec3() except +
         double& operator[](size_t)
 
+    ctypedef Vec3 cartesian_t
+
     # Three-by-three matrix
-    cdef cppclass cartmat_t "isce::core::cartmat_t":
-        cartmat_t() except +
-        cartesian_t& operator[](size_t)
+    cdef cppclass Mat3 "isce::core::Mat3":
+        Mat3() except +
+        Vec3& operator[](size_t)
+
+    ctypedef Mat3 cartmat_t

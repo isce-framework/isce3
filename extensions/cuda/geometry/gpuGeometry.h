@@ -13,7 +13,6 @@
 #include <isce/core/Orbit.h>
 #include <isce/core/Pixel.h>
 #include <isce/core/LUT1d.h>
-#include <isce/core/LinAlg.h>
 
 // isce::geometry
 #include <isce/geometry/DEMInterpolator.h>
@@ -21,7 +20,6 @@
 // isce::cuda::core
 #include <isce/cuda/core/gpuOrbit.h>
 #include <isce/cuda/core/gpuLUT1d.h>
-#include <isce/cuda/core/gpuStateVector.h>
 
 // isce::cuda::geometry
 #include <isce/cuda/geometry/gpuDEMInterpolator.h>
@@ -41,7 +39,8 @@ namespace geometry {
     /** Radar geometry coordinates to map coordinates transformer*/
     CUDA_DEV int rdr2geo(const isce::core::Pixel &,
                          const isce::core::Basis &,
-                         const isce::cuda::core::gpuStateVector &,
+                         const isce::core::Vec3& pos,
+                         const isce::core::Vec3& vel,
                          const isce::core::Ellipsoid &,
                          const gpuDEMInterpolator &,
                          isce::core::Vec3&, int, double, int, int);
@@ -57,7 +56,8 @@ namespace geometry {
     /** Radar geometry coordinates to map coordinates transformer (host testing) */
     CUDA_HOST int rdr2geo_h(const isce::core::Pixel &,
                             const isce::core::Basis &,
-                            const isce::cuda::core::gpuStateVector &,
+                            const isce::core::Vec3& pos,
+                            const isce::core::Vec3& vel,
                             const isce::core::Ellipsoid &,
                             isce::geometry::DEMInterpolator &,
                             cartesian_t &,

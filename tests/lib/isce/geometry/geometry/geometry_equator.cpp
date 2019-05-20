@@ -18,7 +18,6 @@
 #include "isce/core/Ellipsoid.h"
 #include "isce/core/Orbit.h"
 #include "isce/core/LUT1d.h"
-#include "isce/core/LinAlg.h"
 
 // isce::geometry
 #include "isce/geometry/geometry.h"
@@ -198,11 +197,10 @@ TEST_F(GeometryTest, GeoToRdrEquator) {
                                             (ellipsoid.a() + hsat) * std::sin(expectedLon),
                                             0.};
 
-        isce::core::cartesian_t los;
-        isce::core::LinAlg::linComb(1.0, sat_xyz, -1.0, targ_xyz, los);
+        const isce::core::cartesian_t los = sat_xyz - targ_xyz;
 
         //Expected slant range
-        double expRange = isce::core::LinAlg::norm(los);
+        double expRange = los.norm();
 
         // Run geo2rdr
         double aztime, slantRange;

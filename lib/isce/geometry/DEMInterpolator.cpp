@@ -153,16 +153,11 @@ computeHeightStats(float & maxValue, float & meanValue, pyre::journal::info_t & 
 isce::geometry::DEMInterpolator::cartesian_t
 isce::geometry::DEMInterpolator::
 midLonLat() const {
-
     // Create coordinates for middle X/Y
     cartesian_t xyz{midX(), midY(), _refHeight};
 
     // Call projection inverse
-    cartesian_t llh;
-    _proj->inverse(xyz, llh);
-
-    // Done
-    return llh;
+    return _proj->inverse(xyz);
 }
 
 /** @param[in] lon Longitude of interpolation point.

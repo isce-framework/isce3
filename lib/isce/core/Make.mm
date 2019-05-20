@@ -12,12 +12,10 @@ PROJ_SRCS = \
     BilinearInterpolator.cpp \
     BicubicInterpolator.cpp \
     DateTime.cpp \
-    Doppler.cpp \
     Ellipsoid.cpp \
     EulerAngles.cpp \
     Interpolator.cpp \
     LUT2d.cpp \
-    LinAlg.cpp \
     Metadata.cpp \
     Orbit.cpp \
     Peg.cpp \
@@ -46,12 +44,10 @@ EXPORT_PKG_HEADERS = \
     Basis.h \
     Constants.h \
     DateTime.h \
-    Doppler.h \
     Ellipsoid.h \
     EulerAngles.h \
     Interpolator.h \
     LUT2d.h \
-    LinAlg.h \
     Matrix.h \
     Matrix.icc \
     Cube.h \

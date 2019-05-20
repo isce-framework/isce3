@@ -137,17 +137,17 @@ class isce::geometry::Topo {
     private:
 
         /** Initialize TCN basis for given azimuth line */
-        void _initAzimuthLine(size_t,
-                              double &,
-                              isce::core::StateVector &,
-                              isce::core::Basis &);
+        void _initAzimuthLine(size_t, double&,
+                              isce::core::Vec3& pos, isce::core::Vec3& vel,
+                              isce::core::Basis&);
 
         /** Write to output layers */
         void _setOutputTopoLayers(cartesian_t &,
                                   TopoLayers &,
                                   size_t,
                                   isce::core::Pixel &,
-                                  isce::core::StateVector &,
+                                  isce::core::Vec3& pos,
+                                  isce::core::Vec3& vel,
                                   isce::core::Basis &,
                                   DEMInterpolator &);
         

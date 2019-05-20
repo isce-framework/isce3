@@ -21,9 +21,9 @@ Topo(const isce::product::Product & product,
      char frequency,
      bool nativeDoppler,
      size_t numberAzimuthLooks,
-     size_t numberRangeLooks) : 
+     size_t numberRangeLooks) :
      _radarGrid(product, frequency, numberAzimuthLooks, numberRangeLooks) {
-   
+
     // Copy orbit and doppler
     _orbit = product.metadata().orbit();
     if (nativeDoppler) {

@@ -1,7 +1,6 @@
 add_subdirectory(attitude)
 add_subdirectory(datetime)
 add_subdirectory(ellipsoid)
-add_subdirectory(doppler)
 add_subdirectory(interp1d)
 add_subdirectory(interpolator)
 add_subdirectory(matrix)

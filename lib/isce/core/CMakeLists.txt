@@ -7,7 +7,6 @@ set(CPPS Baseline.cpp
          BilinearInterpolator.cpp
          BicubicInterpolator.cpp
          DateTime.cpp
-         Doppler.cpp
          Ellipsoid.cpp
          EulerAngles.cpp
          Interpolator.cpp
@@ -36,7 +35,6 @@ set(HEADERS Attitude.h
             Constants.h
             DateTime.h
             DenseMatrix.h
-            Doppler.h
             Ellipsoid.h
             EulerAngles.h
             Interp1d.h
@@ -46,7 +44,6 @@ set(HEADERS Attitude.h
             LUT1d.h
             LUT1d.icc
             LUT2d.h
-            LinAlg.h
             Matrix.h
             Matrix.icc
             Cube.h

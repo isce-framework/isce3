@@ -15,7 +15,6 @@
 #include <pyre/journal.h>
 
 // isce::core
-#include "LinAlg.h"
 #include "EulerAngles.h"
 #include "Utilities.h"
 
@@ -209,7 +208,7 @@ rotmat(double tintp, const std::string sequence, double dyaw, double dpitch,
     // Interpolate to get YPR angles
     double yaw, pitch, roll;
     this->ypr(tintp, yaw, pitch, roll);
-    
+
     // Construct map for Euler angles to elementary rotation matrices
     std::map<const char, cartmat_t> R_map;
     R_map['y'] = T3(yaw + dyaw);
@@ -217,11 +216,9 @@ rotmat(double tintp, const std::string sequence, double dyaw, double dpitch,
     R_map['r'] = T1(roll);
 
     // Build composite matrix
-    cartmat_t R, R_tmp;
-    LinAlg::matMat(R_map[sequence[1]], R_map[sequence[2]], R_tmp);
-    LinAlg::matMat(R_map[sequence[0]], R_tmp, R);
-
-    return R;
+    return R_map[sequence[0]].dot(
+            R_map[sequence[1]].dot(R_map[sequence[2]])
+           );
 }
 
 // Rotation around Z-axis
@@ -229,12 +226,11 @@ isce::core::cartmat_t
 isce::core::EulerAngles::T3(double angle) {
     const double cos = std::cos(angle);
     const double sin = std::sin(angle);
-    cartmat_t T{{
+    return cartmat_t {{
         {cos, -sin, 0.0},
         {sin, cos, 0.0},
         {0.0, 0.0, 1.0}
     }};
-    return T;
 }
 
 // Rotation around Y-axis
@@ -242,12 +238,11 @@ isce::core::cartmat_t
 isce::core::EulerAngles::T2(double angle) {
     const double cos = std::cos(angle);
     const double sin = std::sin(angle);
-    cartmat_t T{{
+    return cartmat_t {{
         {cos, 0.0, sin},
         {0.0, 1.0, 0.0},
         {-sin, 0.0, cos}
     }};
-    return T;
 }
 
 // Rotation around X-axis

@@ -18,7 +18,6 @@
 #include "isce/core/Ellipsoid.h"
 #include "isce/core/Orbit.h"
 #include "isce/core/LUT1d.h"
-#include "isce/core/LinAlg.h"
 
 // isce::geometry
 #include "isce/geometry/geometry.h"
@@ -213,9 +212,9 @@ TEST_F(GeometryTest, GeoToRdrLat) {
 
             //Convert geocentric coords to xyz
             isce::core::cartesian_t targ_xyz = { ellipsoid.a() * std::cos(geocentricLat) * std::cos(expectedLon),
-                                                 ellipsoid.a() * std::cos(geocentricLat) * std::sin(expectedLon), 
+                                                 ellipsoid.a() * std::cos(geocentricLat) * std::sin(expectedLon),
                                                  ellipsoid.a() * std::sin(geocentricLat)};
-            
+
             //Transform to geodetic LLH
             isce::core::cartesian_t targ_LLH;
             ellipsoid.xyzToLonLat(targ_xyz, targ_LLH);
@@ -225,11 +224,10 @@ TEST_F(GeometryTest, GeoToRdrLat) {
                                                 (ellipsoid.a() + hsat) * std::sin(expectedLon) * std::cos(lat0),
                                                 (ellipsoid.a() + hsat) * std::sin(lat0)};
 
-            isce::core::cartesian_t los;
-            isce::core::LinAlg::linComb(1.0, sat_xyz, -1.0, targ_xyz, los);
+            const isce::core::cartesian_t los = sat_xyz - targ_xyz;
 
             //Expected slant range
-            double expRange = isce::core::LinAlg::norm(los);
+            double expRange = los.norm();
 
             // Run geo2rdr
             double aztime, slantRange;
@@ -252,7 +250,7 @@ int main(int argc, char * argv[]) {
 }
 
 
-/* 
+/*
 
 # Description
 -------------

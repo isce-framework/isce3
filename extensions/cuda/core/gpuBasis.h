@@ -11,7 +11,6 @@
 
 // isce::cuda::core
 #include "isce/cuda/core/Common.h"
-#include "isce/cuda/core/gpuLinAlg.h"
 
 // Declaration
 namespace isce {
@@ -52,20 +51,6 @@ class isce::cuda::core::gpuBasis {
                 x2[i] = basis.x2()[i];
             }
         }
-
-        /** \brief Project a given vector onto basis
-         *
-         * @param[in] vec 3D vector to project
-         * @param[out] res 3D vector output 
-         *
-         * \f[
-         *      res_i = (x_i \cdot vec)
-         *  \f] */
-        CUDA_DEV inline void project(double * vec, double * res) {
-            res[0] = isce::cuda::core::gpuLinAlg::dot(x0, vec);
-            res[1] = isce::cuda::core::gpuLinAlg::dot(x1, vec);
-            res[2] = isce::cuda::core::gpuLinAlg::dot(x2, vec);
-        };
 
         /** \brief Combine the basis with given weights
          *

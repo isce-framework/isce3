@@ -93,6 +93,9 @@ public:
             result[i] = vdata[i] / d;
         return result;
     }
+    CUDA_HOSTDEV Vector<N>& operator/=(const double d) {
+        return *this = *this / d;
+    }
 
     /*
      *  Calculate the magnitude of vector

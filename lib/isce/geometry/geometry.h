@@ -7,8 +7,8 @@
 /** \file geometry.h
  * Collection of simple commonly used geometry functions
  *
- * There are no classes defined in this file. Its a collection of functions 
- * that are meant to be light weight versions of isce::geometry::Topo and 
+ * There are no classes defined in this file. Its a collection of functions
+ * that are meant to be light weight versions of isce::geometry::Topo and
  * isce::geometry::Geo2rdr.*/
 #ifndef ISCE_CORE_GEOMETRY_H
 #define ISCE_CORE_GEOMETRY_H
@@ -23,11 +23,9 @@
 #include <isce/core/Orbit.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Metadata.h>
-#include <isce/core/Pegtrans.h>
 #include <isce/core/Pixel.h>
 #include <isce/core/Poly2d.h>
 #include <isce/core/LUT2d.h>
-#include <isce/core/StateVector.h>
 
 // isce::product
 #include <isce/product/RadarGridParameters.h>
@@ -51,12 +49,13 @@ namespace isce {
                     const DEMInterpolator &,
                     cartesian_t &,
                     double, int, double, int, int,
-                    isce::core::orbitInterpMethod); 
-       
+                    isce::core::orbitInterpMethod);
+
         /** Radar geometry coordinates to map coordinates transformer*/
         int rdr2geo(const isce::core::Pixel &,
                     const isce::core::Basis &,
-                    const isce::core::StateVector &,
+                    const isce::core::Vec3& pos,
+                    const isce::core::Vec3& vel,
                     const isce::core::Ellipsoid &,
                     const DEMInterpolator &,
                     cartesian_t &,
@@ -78,10 +77,6 @@ namespace isce {
                     const isce::core::LUT2d<double> &,
                     double &, double &,
                     double, double, int, double);
-
-        /** Utility function to compute geocentric TCN basis from state vector */
-        void geocentricTCN(isce::core::StateVector &,
-                           isce::core::Basis &);
 
         /** Utility function to compute geographic bounds for a radar grid */
         void computeDEMBounds(const isce::core::Orbit & orbit,

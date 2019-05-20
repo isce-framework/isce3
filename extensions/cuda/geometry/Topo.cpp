@@ -280,7 +280,7 @@ _setLayoverShadowWithOrbit(const isce::core::Orbit & orbit,
                            TopoLayers & layers,
                            DEMInterpolator & demInterp,
                            size_t lineStart) {
-    
+
     // Create vector of satellite positions for each line in block
     std::vector<cartesian_t> satPosition(layers.length());
     for (size_t i = 0; i < layers.length(); ++i) {
@@ -293,7 +293,7 @@ _setLayoverShadowWithOrbit(const isce::core::Orbit & orbit,
         orbit.interpolateWGS84Orbit(tline, xyzsat, velsat);
         satPosition[i] = xyzsat;
     }
-        
+
     // Call standard layover/shadow mask generation function
     this->setLayoverShadow(layers, demInterp, satPosition);
 }

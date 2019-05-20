@@ -31,23 +31,17 @@ namespace isce { namespace core {
 
         /** Radius of curvature of local sphere*/
         double radcur;
-   
-        //Dummy
-        Pegtrans(double rd) {}
 
         /** Empty constructor */
-        Pegtrans() : Pegtrans(0.) {}
+        Pegtrans() {}
 
         /** Copy constructor */
         Pegtrans(const Pegtrans &p) : mat(p.mat), matinv(p.matinv), ov(p.ov), radcur(p.radcur) {}
 
-        /** Assignment operator */
-        inline Pegtrans& operator=(const Pegtrans&);
-       
         /** Compute transformation matrices for a given Peg point
          *
          * @param[in] elp Ellipsoid object
-         * @param[in] p Peg object*/ 
+         * @param[in] p Peg object*/
         void radarToXYZ(const Ellipsoid &elp, const Peg &p);
 
         /** Transform ECEF coordinates to SCH
@@ -81,14 +75,6 @@ namespace isce { namespace core {
         /** Compute the transform matrix from ECEF to local SCH frame*/ 
         void SCHbasis(const cartesian_t &,cartmat_t&,cartmat_t&) const;
     };
-
-    inline Pegtrans& Pegtrans::operator=(const Pegtrans &rhs) {
-        mat = rhs.mat;
-        matinv = rhs.matinv;
-        ov = rhs.ov;
-        radcur = rhs.radcur;
-        return *this;
-    }
 }}
 
 #endif

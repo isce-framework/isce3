@@ -14,7 +14,6 @@
 #include <vector>
 #include "Constants.h"
 #include "Orbit.h"
-#include "LinAlg.h"
 #include "Ellipsoid.h"
 
 //Reformat using MIN_DATE_TIME
@@ -364,28 +363,23 @@ computeAcceleration(double tintp, cartesian_t &acc) const {
     return 0;
 }
 
-/**
+/** Computes heading at a given azimuth time using a single state vector
  * @param[in] aztime Time since reference epoch in seconds*/
 double isce::core::Orbit::
 getENUHeading(double aztime) const {
-    // Computes heading at a given azimuth time using a single state vector
-
-    cartesian_t pos, vel, llh, enuvel;
-    cartmat_t xyz2enu, enumat;
-    isce::core::Ellipsoid refElp(EarthSemiMajorAxis, EarthEccentricitySquared);
+    const isce::core::Ellipsoid refElp(EarthSemiMajorAxis, EarthEccentricitySquared);
 
     // Interpolate orbit to azimuth time
+    cartesian_t pos, vel;
     interpolateWGS84Orbit(aztime, pos, vel);
     // Convert platform position to LLH
-    refElp.xyzToLonLat(pos, llh);
+    const Vec3 llh = refElp.xyzToLonLat(pos);
     // Get ENU transformation matrix
-    LinAlg::enuBasis(llh[1], llh[0], enumat);
+    const Mat3 xyz2enu = Mat3::xyzToEnu(llh[1], llh[0]);
     // Compute velocity in ENU
-    LinAlg::tranMat(enumat, xyz2enu);
-    LinAlg::matVec(xyz2enu, vel, enuvel);
+    const Vec3 enuvel = xyz2enu.dot(vel);
     // Get heading from velocity
     return std::atan2(enuvel[0], enuvel[1]);
-
 }
 
 void isce::core::Orbit::

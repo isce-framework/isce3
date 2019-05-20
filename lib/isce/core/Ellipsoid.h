@@ -10,8 +10,8 @@
 
 #include <cstdio>
 #include <cmath>
-#include "isce/core/Constants.h"
-#include "isce/core/Basis.h"
+#include <isce/core/Constants.h>
+#include <isce/core/Basis.h>
 
 // Declaration
 namespace isce {
@@ -82,14 +82,30 @@ class isce::core::Ellipsoid {
         /** Transform WGS84 Lon/Lat/Hgt to ECEF xyz */
         CUDA_HOSTDEV
         void lonLatToXyz(const cartesian_t &llh, cartesian_t &xyz) const;
+        CUDA_HOSTDEV Vec3 lonLatToXyz(const Vec3& llh) const {
+            Vec3 xyz;
+            lonLatToXyz(llh, xyz);
+            return xyz;
+        }
 
         /** Transform ECEC xyz to Lon/Lat/Hgt */
         CUDA_HOSTDEV
         void xyzToLonLat(const cartesian_t &xyz, cartesian_t &llh) const;
+        CUDA_HOSTDEV Vec3 xyzToLonLat(const Vec3& xyz) const {
+            Vec3 llh;
+            xyzToLonLat(xyz, llh);
+            return llh;
+        }
 
         /** Return normal to the ellipsoid at given lon, lat */
         CUDA_HOSTDEV
         inline void nVector(double lon, double lat, cartesian_t &vec) const;
+        CUDA_HOSTDEV
+        inline Vec3 nVector(double lon, double lat) const {
+            Vec3 result;
+            nVector(lon, lat, result);
+            return result;
+        }
 
         /** Return ECEF coordinates of point on ellipse */
         CUDA_HOSTDEV
@@ -98,13 +114,6 @@ class isce::core::Ellipsoid {
         /** Estimate azimuth angle and look angle for a given LOS vector*/
         void getImagingAnglesAtPlatform(const cartesian_t &pos,const cartesian_t &vel,
                      const cartesian_t &los, double &azi, double &look) const;
-
-        /** Estimate local TCN basis */
-        void TCNbasis(const cartesian_t &pos, const cartesian_t &vel, cartesian_t &t,
-                      cartesian_t &c, cartesian_t &n) const;
-
-        /**Estimate local TCN basis */
-        void TCNbasis(const cartesian_t &pos, const cartesian_t &vel, Basis &tcn) const;
 
     private:
         double _a;

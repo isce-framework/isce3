@@ -38,7 +38,7 @@
 // isce::cuda::geometry
 #include "isce/cuda/geometry/gpuGeometry.h"
 
-using isce::core::LinAlg;
+using isce::core::Vec3;
 using isce::geometry::DEMInterpolator;
 
 // Declaration for function to load DEM
@@ -100,23 +100,22 @@ TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
             isce::core::cartesian_t targetLLH = {0.0, 0.0, 1000.0};
 
             // Interpolate orbit to get state vector
-            isce::core::StateVector state;
-            int stat = orbit.interpolate(azTime, state, isce::core::HERMITE_METHOD);
+            Vec3 pos, vel;
+            int stat = orbit.interpolate(azTime, pos, vel, isce::core::HERMITE_METHOD);
 
             // Setup geocentric TCN basis
-            isce::core::Basis TCNbasis;
-            isce::geometry::geocentricTCN(state, TCNbasis);
+            isce::core::Basis TCNbasis(pos, vel);
 
             // Compute satellite velocity magnitude
-            const double vmag = LinAlg::norm(state.velocity());
+            const double vmag = vel.norm();
             // Compute Doppler factor
             const double dopfact = 0.5 * rgparam.wavelength() * dopval * range / vmag;
 
             // Wrap range and Doppler factor in a Pixel object
             isce::core::Pixel pixel(range, dopfact, 0);
-                    
+
             // Run rdr2geo on CPU
-            int stat_cpu = isce::geometry::rdr2geo(pixel, TCNbasis, state,
+            int stat_cpu = isce::geometry::rdr2geo(pixel, TCNbasis, pos, vel,
                 ellipsoid, dem, targetLLH, lookSide, 1.0e-4, maxiter, extraiter);
             // Cache results
             const double reflon = degrees * targetLLH[0];
@@ -127,7 +126,7 @@ TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
             targetLLH = {0.0, 0.0, 1000.0};
 
             // Run rdr2geo on GPU
-            int stat_gpu = isce::cuda::geometry::rdr2geo_h(pixel, TCNbasis, state,
+            int stat_gpu = isce::cuda::geometry::rdr2geo_h(pixel, TCNbasis, pos, vel,
                 ellipsoid, dem, targetLLH, lookSide, 1.0e-4, maxiter, extraiter);
 
             // Check
