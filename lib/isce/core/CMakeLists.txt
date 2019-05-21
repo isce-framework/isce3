@@ -41,6 +41,8 @@ set(HEADERS Attitude.h
             Interp1d.icc
             Interpolator.h
             Kernels.h
+            Linspace.h
+            Linspace.icc
             LUT1d.h
             LUT1d.icc
             LUT2d.h

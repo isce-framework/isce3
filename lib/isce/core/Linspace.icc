@@ -1,0 +1,143 @@
+#ifndef ISCE_CORE_LINSPACE_ICC
+#error "Linspace.icc is an implementation detail of Linspace.h"
+#endif
+
+namespace isce { namespace core {
+
+template<typename T>
+CUDA_HOSTDEV
+inline
+Linspace<T>
+Linspace<T>::from_interval(T first, T last, size_t size)
+{
+    T spacing = (last - first) / (size - 1);
+    return {first, spacing, size};
+}
+
+template<typename T>
+CUDA_HOSTDEV
+constexpr
+Linspace<T>::Linspace(T first, T spacing, size_t size)
+:
+    _first {first},
+    _spacing {spacing},
+    _size {size}
+{}
+
+template<typename T>
+template<typename U>
+CUDA_HOSTDEV
+inline
+Linspace<T>::Linspace(const Linspace<U> & x)
+:
+    _first {x.first()},
+    _spacing {x.spacing()},
+    _size {x.size()}
+{}
+
+template<typename T>
+template<typename U>
+CUDA_HOSTDEV
+inline
+Linspace<T> &
+Linspace<T>::operator=(const Linspace<U> & other)
+{
+    _first = other.first();
+    _spacing = other.spacing();
+    _size = other.size();
+    return *this;
+}
+
+template<typename T>
+CUDA_HOSTDEV
+constexpr
+T Linspace<T>::operator[](size_t pos) const
+{
+    return _first + pos * _spacing;
+}
+
+template<typename T>
+CUDA_HOSTDEV
+constexpr
+T Linspace<T>::first() const
+{
+    return _first;
+}
+
+template<typename T>
+CUDA_HOSTDEV
+constexpr
+T Linspace<T>::last() const
+{
+    return operator[](_size - 1);
+}
+
+template<typename T>
+CUDA_HOSTDEV
+constexpr
+T Linspace<T>::spacing() const
+{
+    return _spacing;
+}
+
+template<typename T>
+CUDA_HOSTDEV
+constexpr
+size_t Linspace<T>::size() const
+{
+    return _size;
+}
+
+template<typename T>
+CUDA_HOSTDEV
+inline
+Linspace<T>
+Linspace<T>::subinterval(size_t start, size_t stop) const
+{
+    return {operator[](start), _spacing, stop - start};
+}
+
+template<typename T>
+CUDA_HOSTDEV
+constexpr
+bool Linspace<T>::empty() const
+{
+    return _size == 0;
+}
+
+template<typename T, typename U>
+CUDA_HOSTDEV
+inline
+bool operator==(const Linspace<T> & lhs, const Linspace<U> & rhs)
+{
+    return lhs.first() == rhs.first() &&
+           lhs.spacing() == rhs.spacing() &&
+           lhs.size() == rhs.size();
+}
+
+template<typename T, typename U>
+CUDA_HOSTDEV
+inline
+bool operator!=(const Linspace<T> & lhs, const Linspace<U> & rhs)
+{
+    return !(lhs == rhs);
+}
+
+template<typename T, typename U>
+CUDA_HOSTDEV
+size_t where(const Linspace<T> & x, U val)
+{
+    if (x.spacing() >= 0) {
+        if (val < x.first()) { return 0; }
+        if (val > x.last())  { return x.size(); }
+    }
+    else {
+        if (val > x.first()) { return 0; }
+        if (val < x.last())  { return x.size(); }
+    }
+
+    return (val - x.first()) / x.spacing() + 1;
+}
+
+}}
+
