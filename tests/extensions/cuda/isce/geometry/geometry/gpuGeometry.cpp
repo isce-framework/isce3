@@ -25,7 +25,6 @@
 #include "isce/core/Pixel.h"
 #include "isce/core/LUT1d.h"
 #include "isce/core/Serialization.h"
-#include "isce/core/StateVector.h"
 
 // isce::product
 #include "isce/product/Product.h"
@@ -194,7 +193,7 @@ void loadDEM(DEMInterpolator & demInterp) {
     max_lat *= M_PI / 180.0;
 
     // Open DEM raster
-    isce::io::Raster demRaster("../../../../../lib/isce/data/srtm_cropped.tif"); 
+    isce::io::Raster demRaster("../../../../../lib/isce/data/srtm_cropped.tif");
 
     // Extract DEM subset
     demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat, demRaster.getEPSG());

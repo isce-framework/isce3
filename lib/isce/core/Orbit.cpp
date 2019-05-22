@@ -32,11 +32,11 @@ reformatOrbit(const DateTime & epoch) {
 
     // Get the number of state vectors
     nVectors = stateVectors.size();
-   
+
     // Clear vectors
     position.clear();
     velocity.clear();
-    UTCtime.clear(); 
+    UTCtime.clear();
     // Re-size
     position.resize(3*nVectors);
     velocity.resize(3*nVectors);
@@ -48,14 +48,14 @@ reformatOrbit(const DateTime & epoch) {
         // Get the statevector
         StateVector sv = stateVectors[i];
         // Save epoch
-        epochs[i] = sv.date();
+        epochs[i] = sv.datetime;
         // Place in correct spot in vectors
         for (size_t j = 0; j < 3; ++j) {
-            position[(3*i) + j] = sv.position()[j];
-            velocity[(3*i) + j] = sv.velocity()[j];
+            position[(3*i) + j] = sv.position[j];
+            velocity[(3*i) + j] = sv.velocity[j];
         }
         // Get UTCtime (implicit conversion to double)
-        UTCtime[i] = sv.date().secondsSinceEpoch(epoch);
+        UTCtime[i] = sv.datetime.secondsSinceEpoch(epoch);
     }
 
     // Store the reference epoch
@@ -80,15 +80,15 @@ updateUTCTimes(const DateTime & epoch) {
 int isce::core::Orbit::
 interpolate(double tintp, StateVector & state, orbitInterpMethod intp_type) const {
     /*
-    Convenience wrapper for interpolation to place results directly into a 
+    Convenience wrapper for interpolation to place results directly into a
     StateVector object.
     */
     // Call interpolation
     cartesian_t position, velocity;
     int orbitStat = interpolate(tintp, position, velocity, intp_type);
     // Set results
-    state.position(position);
-    state.velocity(velocity);
+    state.position = position;
+    state.velocity = velocity;
     return orbitStat;
 }
 
@@ -343,7 +343,7 @@ interpolateSCHOrbit(double tintp, cartesian_t & opos, cartesian_t & ovel) const 
  * @param[in] tintp Time since reference epoch in seconds
  * @param[out] acc Acceleration in m/s^2
  *
- * An interval of +/- 0.01 seconds is used for numerical computations*/ 
+ * An interval of +/- 0.01 seconds is used for numerical computations*/
 int isce::core::Orbit::
 computeAcceleration(double tintp, cartesian_t &acc) const {
     /*

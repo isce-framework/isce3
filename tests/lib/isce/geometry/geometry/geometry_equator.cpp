@@ -33,9 +33,9 @@ struct GeometryTest : public ::testing::Test {
     // Constructor
     GeometryTest(){}
 
-    void Setup(double lon0, double omega, int Nvec) 
+    void Setup(double lon0, double omega, int Nvec)
     {
-        //WGS84 ellipsoid 
+        //WGS84 ellipsoid
         ellipsoid = isce::core::Ellipsoid(6378137.,.0066943799901);
 
         //Satellite height
@@ -47,7 +47,7 @@ struct GeometryTest : public ::testing::Test {
         {
             double deltat = ii * 10.0;
             double lon = lon0 + omega * deltat;
-            isce::core::cartesian_t pos, vel;
+            isce::core::Vec3 pos, vel;
 
             pos[0] = (ellipsoid.a() + hsat) * std::cos(lon);
             pos[1] = (ellipsoid.a() + hsat) * std::sin(lon);
@@ -60,9 +60,9 @@ struct GeometryTest : public ::testing::Test {
             isce::core::DateTime epoch = t0 + deltat;
 
             isce::core::StateVector sv;
-            sv.date(epoch.isoformat());
-            sv.position(pos);
-            sv.velocity(vel);
+            sv.datetime = epoch.isoformat();
+            sv.position = pos;
+            sv.velocity = vel;
 
             orbit.stateVectors.push_back(sv);
         }
@@ -92,7 +92,7 @@ struct GeometryTest : public ::testing::Test {
 };
 
 TEST_F(GeometryTest, RdrToGeoEquator) {
-    
+
     // Loop over test data
     const double degrees = 180.0 / M_PI;
 
@@ -106,12 +106,12 @@ TEST_F(GeometryTest, RdrToGeoEquator) {
     isce::geometry::DEMInterpolator dem(0.);
 
     //Test over 20 points
-    for (size_t ii = 0; ii < 20; ++ii) 
+    for (size_t ii = 0; ii < 20; ++ii)
     {
         //Azimuth time
         double tinp = 5.0 + ii * 2.0;
-       
-        
+
+
         //Slant range
         double rng = 800000. + 10.0 * ii;
 
@@ -153,11 +153,11 @@ TEST_F(GeometryTest, RdrToGeoEquator) {
         ASSERT_NEAR(targetLLH[1], -expLLH[1], 1.0e-8);
         ASSERT_NEAR(targetLLH[2], 0.0, 1.0e-8);
     }
-   
+
 }
 
 TEST_F(GeometryTest, GeoToRdrEquator) {
-    
+
     // Loop over test data
     const double degrees = 180.0 / M_PI;
 
@@ -174,11 +174,11 @@ TEST_F(GeometryTest, GeoToRdrEquator) {
     const double wavelength = 0.24;
 
     //Test over 20 points
-    for (size_t ii = 0; ii < 20; ++ii) 
+    for (size_t ii = 0; ii < 20; ++ii)
     {
         //Azimuth time
         double tinp = 5.0 + ii * 2.0;
-       
+
         //Start with geocentric lat
         double geocentricLat = (2.0 + ii * 0.1)/degrees ;
 
@@ -187,7 +187,7 @@ TEST_F(GeometryTest, GeoToRdrEquator) {
 
         //Convert geocentric coords to xyz
         isce::core::cartesian_t targ_xyz = { ellipsoid.a() * std::cos(geocentricLat) * std::cos(expectedLon),
-                                             ellipsoid.a() * std::cos(geocentricLat) * std::sin(expectedLon), 
+                                             ellipsoid.a() * std::cos(geocentricLat) * std::sin(expectedLon),
                                              ellipsoid.b() * std::sin(geocentricLat)};
         isce::core::cartesian_t targ_LLH;
         ellipsoid.xyzToLonLat(targ_xyz, targ_LLH);
@@ -214,7 +214,7 @@ TEST_F(GeometryTest, GeoToRdrEquator) {
         ASSERT_NEAR(aztime, tinp, 1.0e-6);
         ASSERT_NEAR(slantRange, expRange, 1.0e-8);
     }
-   
+
 }
 
 int main(int argc, char * argv[]) {
@@ -269,7 +269,7 @@ $$Y_t = a \cdot \cos \lambda \cdot \sin \psi$$
 $$Z_t = b \cdot \sin \lambda $$
 
 
-Using the above expressions, it can be shown that 
+Using the above expressions, it can be shown that
 
 $$\left( \vec{R_{s}} - \vec{T} \right) \cdot \vec{V_{s}} = 0$$
 

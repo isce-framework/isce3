@@ -36,10 +36,10 @@ struct GeometryTest : public ::testing::Test {
     // Constructor
     GeometryTest(){}
 
-    //Setup the orbit 
-    void Setup(double lat0, double lon0, double omega, int Nvec) 
+    //Setup the orbit
+    void Setup(double lat0, double lon0, double omega, int Nvec)
     {
-        //WGS84 ellipsoid 
+        //WGS84 ellipsoid
         ellipsoid = isce::core::Ellipsoid(6378137.,.0066943799901);
 
         //Satellite height
@@ -58,7 +58,7 @@ struct GeometryTest : public ::testing::Test {
         {
             double deltat = ii * 10.0;
             double lon = lon0 + omega * deltat;
-            isce::core::cartesian_t pos, vel;
+            isce::core::Vec3 pos, vel;
 
             pos[0] = sath * clat * std::cos(lon);
             pos[1] = sath * clat * std::sin(lon);
@@ -71,9 +71,9 @@ struct GeometryTest : public ::testing::Test {
             isce::core::DateTime epoch = t0 + deltat;
 
             isce::core::StateVector sv;
-            sv.date(epoch.isoformat());
-            sv.position(pos);
-            sv.velocity(vel);
+            sv.datetime = epoch.isoformat();
+            sv.position = pos;
+            sv.velocity = vel;
 
             orbit.stateVectors.push_back(sv);
         }
@@ -106,7 +106,7 @@ struct GeometryTest : public ::testing::Test {
 };
 
 TEST_F(GeometryTest, RdrToGeoLat) {
-    
+
     // Loop over test data
     const double degrees = 180.0 / M_PI;
 
@@ -121,11 +121,11 @@ TEST_F(GeometryTest, RdrToGeoLat) {
     Setup(lat0, lon0, omega, Nvec);
 
     //Test over 20 points
-    for (size_t ii = 0; ii < 20; ++ii) 
+    for (size_t ii = 0; ii < 20; ++ii)
     {
         //Azimuth time
         double tinp = 5.0 + ii * 2.0;
-        
+
         //Slant range
         double rng = 800000. + 10.0 * ii;
 
@@ -165,12 +165,12 @@ TEST_F(GeometryTest, RdrToGeoLat) {
             ASSERT_NEAR(targetLLH[2], expLLH[2], 1.0e-3);
         }
     }
-   
+
 }
 
 
 TEST_F(GeometryTest, GeoToRdrLat) {
-    
+
 
     // Loop over test data
     const double degrees = 180.0 / M_PI;
@@ -184,7 +184,7 @@ TEST_F(GeometryTest, GeoToRdrLat) {
 
     //Set up orbit
     Setup(lat0, lon0, omega, Nvec);
-    
+
     //Constant zero Doppler
     isce::core::LUT2d<double> zeroDoppler;
 
@@ -192,7 +192,7 @@ TEST_F(GeometryTest, GeoToRdrLat) {
     const double wavelength = 0.24;
 
     //Test over 20 points
-    for (size_t ii = 0; ii < 20; ++ii) 
+    for (size_t ii = 0; ii < 20; ++ii)
     {
         //Azimuth time
         double tinp = 25.0 + ii * 2.0;
@@ -255,8 +255,8 @@ int main(int argc, char * argv[]) {
 # Description
 -------------
 
-This unit test compares output of geometry algorithms against analytic solutions 
-derived for a satellite flying at constant velocity and radius over a line of constant 
+This unit test compares output of geometry algorithms against analytic solutions
+derived for a satellite flying at constant velocity and radius over a line of constant
 latitude.
 
 The target is assumed to lie on a sphere with radius equal to Ellipsoid's major axis.
@@ -292,7 +292,7 @@ $$ Z = \left( a + h \right) \cdot \sin \lambda $$
 ## Target on same longitude as satellite is on Zero Doppler Countour
 ----------
 
-Consider a target ($\vec{T}$) located on the same longitude as the satellite. 
+Consider a target ($\vec{T}$) located on the same longitude as the satellite.
 Let the location of target ($\vec{T}$) be represented by geocentric latitude $\lambda$,
 longitude $\psi$ and zero height .
 
@@ -301,12 +301,12 @@ $$Y_t = a \cdot \cos \lambda \cdot \sin \psi$$
 $$Z_t = a \cdot \sin \lambda $$
 
 
-Using the above expressions, it can be shown that 
+Using the above expressions, it can be shown that
 
 $$\left( \vec{R_{s}} - \vec{T} \right) \cdot \vec{V_{s}} = 0$$
 
 Hence, it is sufficient to solve for Target latitude ($\lambda$) when estimating target
-on reference surface of ellipsoid ($h_t$) for a given slant range for forward 
+on reference surface of ellipsoid ($h_t$) for a given slant range for forward
 geometry operations.
 
 
@@ -318,9 +318,9 @@ For a given slant range ($R$), we can write out
 $$ \left( \left( a + h_s \right) \cdot \cos \lambda_s  -   a \cdot \cos \lambda \right)^2$$
 $$ + \left( \left( a +h_s \right) \cdot \sin \lambda_s - a \cdot \sin \lambda \right)^2 = R^2$$
 
-Leading to 
+Leading to
 
-$$\cos \left( \lambda - \lambda_s \right) = \frac{1}{2} \cdot \left[ \frac{a+h_s}{a} + \frac{a}{a+h_s} - \frac{R}{a} \cdot \frac{R}{a+h_s} \right] $$ 
+$$\cos \left( \lambda - \lambda_s \right) = \frac{1}{2} \cdot \left[ \frac{a+h_s}{a} + \frac{a}{a+h_s} - \frac{R}{a} \cdot \frac{R}{a+h_s} \right] $$
 
 */
 
