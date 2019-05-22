@@ -109,21 +109,21 @@ Orbit</h1>
 <div class="line"></div>
 <div class="line">    std::ifstream ifid(<span class="stringliteral">&quot;input_orbit.txt&quot;</span>);</div>
 <div class="line">    std::string line;</div>
-<div class="line"></div>
+<div class="line">    </div>
 <div class="line">    <span class="keywordflow">while</span>(std::getline(ifid, line))</div>
 <div class="line">    {</div>
 <div class="line">        std::stringstream stream;</div>
 <div class="line">        std::string aztime;</div>
-<div class="line">        <a class="code" href="structisce_1_1core_1_1Vector.html">isce::core::Vec3</a> pos, vel;</div>
+<div class="line">        <a class="code" href="structisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> pos, vel;</div>
 <div class="line"></div>
 <div class="line">        stream &lt;&lt; line;</div>
 <div class="line">        std::cout &lt;&lt; line &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">        stream &gt;&gt; aztime &gt;&gt; pos[0] &gt;&gt; pos[1] &gt;&gt; pos[2] &gt;&gt; vel[0] &gt;&gt; vel[1] &gt;&gt; vel[2];</div>
 <div class="line">        <span class="comment">//Create StateVector Object</span></div>
-<div class="line">        <a class="code" href="structisce_1_1core_1_1StateVector.html">isce::core::StateVector</a> sv;</div>
-<div class="line">        sv.datetime = aztime;    <span class="comment">//ISO-8601 format</span></div>
-<div class="line">        sv.position = pos;</div>
-<div class="line">        sv.velocity = vel;</div>
+<div class="line">        <a class="code" href="classisce_1_1core_1_1StateVector.html">isce::core::StateVector</a> sv;</div>
+<div class="line">        sv.<a class="code" href="classisce_1_1core_1_1StateVector.html#a90dd624247b12c76919593bd6b59acaa">date</a>(aztime);    <span class="comment">//ISO-8601 format</span></div>
+<div class="line">        sv.<a class="code" href="classisce_1_1core_1_1StateVector.html#af90ff6435f5a9295f1db6ba67479a75a">position</a>(pos);</div>
+<div class="line">        sv.<a class="code" href="classisce_1_1core_1_1StateVector.html#a993b92b4440fcbb3c60aff31c2ccd891">velocity</a>(vel);</div>
 <div class="line"></div>
 <div class="line">        <span class="comment">//Add state vector to orbit</span></div>
 <div class="line">        orbit.<a class="code" href="structisce_1_1core_1_1Orbit.html#a919190f179fb4d5f554e4966e6f59629">stateVectors</a>.push_back(sv);</div>
@@ -194,13 +194,13 @@ Forward mapping - determining bounding boxes</h1>
 <div class="line">    {</div>
 <div class="line">        <span class="comment">//Azimuth time to interpolate w.r.t reference epoch of orbit</span></div>
 <div class="line">        <span class="keywordtype">double</span> tintp = timetags[tt].secondsSinceEpoch(orbit.<a class="code" href="structisce_1_1core_1_1Orbit.html#a8332fb47800e74433493014f3c0e76b9">refEpoch</a>);</div>
-<div class="line"></div>
+<div class="line">        </div>
 <div class="line">        <span class="comment">//For each slant range</span></div>
 <div class="line">        <span class="keywordflow">for</span>(<span class="keywordtype">int</span> rr=0; rr&lt;ranges.size(); rr++)</div>
 <div class="line">        {</div>
 <div class="line">            <span class="comment">//Slant range to pixel</span></div>
 <div class="line">            <span class="keywordtype">double</span> rng = ranges[rr];</div>
-<div class="line"></div>
+<div class="line">            </div>
 <div class="line">            <span class="comment">//For each height</span></div>
 <div class="line">            <span class="keywordflow">for</span>(<span class="keywordtype">int</span> zz=0; zz&lt;zrange.size(); zz++)</div>
 <div class="line">            {</div>
@@ -214,9 +214,9 @@ Forward mapping - determining bounding boxes</h1>
 <div class="line">                <span class="keywordtype">int</span> status = <a class="code" href="namespaceisce_1_1geometry.html#a5f446689e36b737f2e21ae5341d769e0">isce::geometry::rdr2geo</a>(tintp,  <span class="comment">//aztime</span></div>
 <div class="line">                                        rng,    <span class="comment">//slant range</span></div>
 <div class="line">                                        0.,     <span class="comment">//doppler</span></div>
-<div class="line">                                        orbit,</div>
-<div class="line">                                        ellipse,</div>
-<div class="line">                                        constDEM,</div>
+<div class="line">                                        orbit, </div>
+<div class="line">                                        ellipse, </div>
+<div class="line">                                        constDEM, </div>
 <div class="line">                                        llh,    <span class="comment">//output LLH</span></div>
 <div class="line">                                        wvl,    <span class="comment">//wavelength</span></div>
 <div class="line">                                        side,   <span class="comment">//lookside</span></div>
@@ -225,7 +225,7 @@ Forward mapping - determining bounding boxes</h1>
 <div class="line">                                        0,     <span class="comment">//secondary iterations,</span></div>
 <div class="line">                                        isce::core::HERMITE_METHOD);</div>
 <div class="line"></div>
-<div class="line">                <span class="comment">//Convert to degrees</span></div>
+<div class="line">                <span class="comment">//Convert to degrees </span></div>
 <div class="line">                lons.push_back(llh[0] * 180.0/M_PI);</div>
 <div class="line">                lats.push_back(llh[1] * 180.0/M_PI);</div>
 <div class="line">            }</div>
@@ -239,7 +239,7 @@ Forward mapping - determining bounding boxes</h1>
 <div class="line">    <span class="keyword">auto</span> latresult = std::minmax_element(lats.begin(), lats.end());</div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Lat limits (deg): &quot;</span> &lt;&lt; lats[latresult.first - lats.begin()] &lt;&lt; <span class="stringliteral">&quot;  &quot;</span></div>
 <div class="line">                                &lt;&lt; lats[latresult.second - lats.begin()] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"></div>
+<div class="line">                </div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><h1><a class="anchor" id="geominv"></a>
@@ -278,7 +278,7 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line">    mode.dataDimensions(dims); <span class="comment">//1500 lines x 1000 pixels</span></div>
 <div class="line">    mode.prf(1000.);</div>
 <div class="line">    mode.rangeBandwidth(20.0e6);       <span class="comment">//Dummy</span></div>
-<div class="line">    mode.wavelength(0.06);</div>
+<div class="line">    mode.wavelength(0.06); </div>
 <div class="line">    mode.startingRange(8.0e5);</div>
 <div class="line">    mode.rangePixelSpacing(10.);</div>
 <div class="line">    mode.numberAzimuthLooks(10);</div>
@@ -296,7 +296,7 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line">    {</div>
 <div class="line">        <span class="keywordtype">double</span> rng;</div>
 <div class="line">        <span class="keywordtype">double</span> aztime;</div>
-<div class="line"></div>
+<div class="line">       </div>
 <div class="line">        <span class="comment">//Convert from degrees to radians</span></div>
 <div class="line">        <a class="code" href="structisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> llh;</div>
 <div class="line">        llh[0] = targets[tt][0] * M_PI / 180.0;</div>
@@ -316,7 +316,7 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line"></div>
 <div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Target at: &quot;</span> &lt;&lt; targets[tt][0] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; targets[tt][1] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; targets[tt][2] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Estimated line number: &quot;</span> &lt;&lt; (aztime - mode.startAzTime().secondsSinceEpoch(orbit.<a class="code" href="structisce_1_1core_1_1Orbit.html#a8332fb47800e74433493014f3c0e76b9">refEpoch</a>)) * mode.prf() /   mode.numberAzimuthLooks() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Estimated pixel number: &quot;</span> &lt;&lt; (rng - mode.startingRange())/mode.rangePixelSpacing() / mode.numberRangeLooks() &lt;&lt; <span class="stringliteral">&quot;\n\n&quot;</span>;</div>
+<div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Estimated pixel number: &quot;</span> &lt;&lt; (rng - mode.startingRange())/mode.rangePixelSpacing() / mode.numberRangeLooks() &lt;&lt; <span class="stringliteral">&quot;\n\n&quot;</span>; </div>
 <div class="line">    }</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>

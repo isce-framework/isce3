@@ -102,7 +102,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <code>#include &lt;cereal/types/memory.hpp&gt;</code><br/>
 <code>#include &lt;cereal/types/vector.hpp&gt;</code><br/>
 <code>#include &lt;cereal/archives/xml.hpp&gt;</code><br/>
-<code>#include &lt;sstream&gt;</code><br/>
 <code>#include &lt;pyre/journal.h&gt;</code><br/>
 <code>#include &lt;isce/core/DateTime.h&gt;</code><br/>
 <code>#include &lt;isce/core/EulerAngles.h&gt;</code><br/>
@@ -203,10 +202,10 @@ template&lt;class Archive , typename T &gt; </td></tr>
 <tr class="memitem:a5cc4818bb295a2e9b217a0475eaea01d"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a5cc4818bb295a2e9b217a0475eaea01d">isce::core::loadFromH5</a> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, LUT1d&lt; T &gt; &amp;lut, std::string name_coords, std::string name_values)</td></tr>
 <tr class="memdesc:a5cc4818bb295a2e9b217a0475eaea01d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load polynomial coefficients from HDF5 product.  <a href="#a5cc4818bb295a2e9b217a0475eaea01d">More...</a><br/></td></tr>
 <tr class="separator:a5cc4818bb295a2e9b217a0475eaea01d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a02370da1dce02e4d0b5a4135d9253ae9"><td class="memTemplParams" colspan="2"><a class="anchor" id="a02370da1dce02e4d0b5a4135d9253ae9"></a>
+<tr class="memitem:ac20b1fadd409972ec076c05afae28807"><td class="memTemplParams" colspan="2"><a class="anchor" id="ac20b1fadd409972ec076c05afae28807"></a>
 template&lt;class Archive &gt; </td></tr>
-<tr class="memitem:a02370da1dce02e4d0b5a4135d9253ae9"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>isce::core::save</b> (Archive &amp;archive, const StateVector &amp;sv)</td></tr>
-<tr class="separator:a02370da1dce02e4d0b5a4135d9253ae9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac20b1fadd409972ec076c05afae28807"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>isce::core::save</b> (Archive &amp;archive, StateVector const &amp;sv)</td></tr>
+<tr class="separator:ac20b1fadd409972ec076c05afae28807"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a64f7a62d3a62643842e694e52a745f7e"><td class="memTemplParams" colspan="2"><a class="anchor" id="a64f7a62d3a62643842e694e52a745f7e"></a>
 template&lt;class Archive &gt; </td></tr>
 <tr class="memitem:a64f7a62d3a62643842e694e52a745f7e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>isce::core::load</b> (Archive &amp;archive, StateVector &amp;sv)</td></tr>

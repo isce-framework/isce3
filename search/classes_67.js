@@ -6,8 +6,8 @@ var searchData=
   ['geocent',['Geocent',['../structisce_1_1core_1_1Geocent.html',1,'isce::core']]],
   ['geocode',['Geocode',['../classisce_1_1geometry_1_1Geocode.html',1,'isce::geometry']]],
   ['geopoint',['Geopoint',['../classGeopoint.html',1,'']]],
-  ['gpuazimuthfilter',['gpuAzimuthFilter',['../classisce_1_1cuda_1_1signal_1_1gpuAzimuthFilter.html',1,'isce::cuda::signal']]],
   ['gpuazimuthfilter',['gpuAzimuthFilter',['../classgpuAzimuthFilter.html',1,'']]],
+  ['gpuazimuthfilter',['gpuAzimuthFilter',['../classisce_1_1cuda_1_1signal_1_1gpuAzimuthFilter.html',1,'isce::cuda::signal']]],
   ['gpubasis',['gpuBasis',['../classisce_1_1cuda_1_1core_1_1gpuBasis.html',1,'isce::cuda::core']]],
   ['gpubicubicinterpolator',['gpuBicubicInterpolator',['../classisce_1_1cuda_1_1core_1_1gpuBicubicInterpolator.html',1,'isce::cuda::core']]],
   ['gpubilinearinterpolator',['gpuBilinearInterpolator',['../classisce_1_1cuda_1_1core_1_1gpuBilinearInterpolator.html',1,'isce::cuda::core']]],
@@ -29,5 +29,6 @@ var searchData=
   ['gpusignal',['gpuSignal',['../classgpuSignal.html',1,'']]],
   ['gpusinc2dinterpolator',['gpuSinc2dInterpolator',['../classisce_1_1cuda_1_1core_1_1gpuSinc2dInterpolator.html',1,'isce::cuda::core']]],
   ['gpuspline2dinterpolator',['gpuSpline2dInterpolator',['../classisce_1_1cuda_1_1core_1_1gpuSpline2dInterpolator.html',1,'isce::cuda::core']]],
+  ['gpustatevector',['gpuStateVector',['../classisce_1_1cuda_1_1core_1_1gpuStateVector.html',1,'isce::cuda::core']]],
   ['gputopolayers',['gpuTopoLayers',['../classisce_1_1cuda_1_1geometry_1_1gpuTopoLayers.html',1,'isce::cuda::geometry']]]
 ];

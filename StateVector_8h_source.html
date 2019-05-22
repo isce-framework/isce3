@@ -91,28 +91,105 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">StateVector.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#ifndef ISCE_CORE_STATEVECTOR_H</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define ISCE_CORE_STATEVECTOR_H</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;DateTime.h&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;Vector.h&quot;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">namespace </span>isce { <span class="keyword">namespace </span>core {</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;</div>
-<div class="line"><a name="l00010"></a><span class="lineno"><a class="line" href="structisce_1_1core_1_1StateVector.html">   10</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structisce_1_1core_1_1StateVector.html">StateVector</a> {</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;    <a class="code" href="structisce_1_1core_1_1DateTime.html">DateTime</a> datetime;</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    <a class="code" href="structisce_1_1core_1_1Vector.html">Vec3</a> position;</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;    <a class="code" href="structisce_1_1core_1_1Vector.html">Vec3</a> velocity;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;};</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;}}</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor"></span></div>
-<div class="ttc" id="structisce_1_1core_1_1StateVector_html"><div class="ttname"><a href="structisce_1_1core_1_1StateVector.html">isce::core::StateVector</a></div><div class="ttdef"><b>Definition:</b> StateVector.h:10</div></div>
-<div class="ttc" id="structisce_1_1core_1_1Vector_html"><div class="ttname"><a href="structisce_1_1core_1_1Vector.html">isce::core::Vector&lt; 3 &gt;</a></div></div>
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">//-*- C++ -*-</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">//-*- coding: utf-8 -*-</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">//</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Author: Bryan V. Riel</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">// Copyright 2017-2018</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#ifndef ISCE_CORE_STATEVECTOR_H</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define ISCE_CORE_STATEVECTOR_H</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">// isce::core</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;Cartesian.h&quot;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &quot;Constants.h&quot;</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &quot;DateTime.h&quot;</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment">// Declaration</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">namespace </span>isce {</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keyword">namespace </span>core {</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;        <span class="keyword">class </span>StateVector;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    }</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;}</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1StateVector.html">   29</a></span>&#160;<span class="keyword">class </span><a class="code" href="classisce_1_1core_1_1StateVector.html">isce::core::StateVector</a> {</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1StateVector.html#a55efa058115dfa14ec8a7a924b080bb8">   33</a></span>&#160;        <a class="code" href="classisce_1_1core_1_1StateVector.html#a55efa058115dfa14ec8a7a924b080bb8">StateVector</a>() {}</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;</div>
+<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1StateVector.html#af90ff6435f5a9295f1db6ba67479a75a">   36</a></span>&#160;        <a class="code" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> <a class="code" href="classisce_1_1core_1_1StateVector.html#af90ff6435f5a9295f1db6ba67479a75a">position</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> _position; }</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
+<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1StateVector.html#a993b92b4440fcbb3c60aff31c2ccd891">   39</a></span>&#160;        <a class="code" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> <a class="code" href="classisce_1_1core_1_1StateVector.html#a993b92b4440fcbb3c60aff31c2ccd891">velocity</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> _velocity; }</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;</div>
+<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1StateVector.html#a90dd624247b12c76919593bd6b59acaa">   42</a></span>&#160;        <a class="code" href="structisce_1_1core_1_1DateTime.html">DateTime</a> <a class="code" href="classisce_1_1core_1_1StateVector.html#a90dd624247b12c76919593bd6b59acaa">date</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> _date; }</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;</div>
+<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1StateVector.html#a0c0542d2b3ef6f601e4e19c09f91dcaa">   47</a></span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1StateVector.html#a0c0542d2b3ef6f601e4e19c09f91dcaa">position</a>(<a class="code" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp; p) { _position = p; }</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;</div>
+<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1StateVector.html#a55a70dedd050aa628f0dfc52b4d52e18">   52</a></span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1StateVector.html#a55a70dedd050aa628f0dfc52b4d52e18">velocity</a>(<a class="code" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp; v) { _velocity = v; }</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;</div>
+<div class="line"><a name="l00057"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1StateVector.html#af69097e7e74b1954828af13222c331cd">   57</a></span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1StateVector.html#af69097e7e74b1954828af13222c331cd">date</a>(<span class="keyword">const</span> std::string &amp; dstr) { _date = dstr; }</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;        <span class="keyword">inline</span> std::string <a class="code" href="classisce_1_1core_1_1StateVector.html#a843331a5d9ea74d417f4485b8c508717">positionToString</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        <span class="keyword">inline</span> std::string <a class="code" href="classisce_1_1core_1_1StateVector.html#aad7587477ea76235875332b4123e88a8">velocityToString</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1StateVector.html#ade774a569cc3a6b798ad94fbcf50db85">fromString</a>(<span class="keyword">const</span> std::string &amp;, <span class="keyword">const</span> std::string &amp;);</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <a class="code" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> _position;</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <a class="code" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> _velocity;</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;        <a class="code" href="structisce_1_1core_1_1DateTime.html">DateTime</a> _date;</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;};</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="comment">// String formatted output for position</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;std::string <a class="code" href="classisce_1_1core_1_1StateVector.html#a843331a5d9ea74d417f4485b8c508717">isce::core::StateVector::</a></div>
+<div class="line"><a name="l00081"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1StateVector.html#a843331a5d9ea74d417f4485b8c508717">   81</a></span>&#160;<a class="code" href="classisce_1_1core_1_1StateVector.html#a843331a5d9ea74d417f4485b8c508717">positionToString</a>()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    std::stringstream output;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    output &lt;&lt; _position[0] &lt;&lt; <span class="stringliteral">&quot; &quot;</span></div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;           &lt;&lt; _position[1] &lt;&lt; <span class="stringliteral">&quot; &quot;</span></div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;           &lt;&lt; _position[2];</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="keywordflow">return</span> output.str();</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;}</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="comment">// String formatted output for velocity</span></div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;std::string <a class="code" href="classisce_1_1core_1_1StateVector.html#aad7587477ea76235875332b4123e88a8">isce::core::StateVector::</a></div>
+<div class="line"><a name="l00091"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1StateVector.html#aad7587477ea76235875332b4123e88a8">   91</a></span>&#160;<a class="code" href="classisce_1_1core_1_1StateVector.html#aad7587477ea76235875332b4123e88a8">velocityToString</a>()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    std::stringstream output;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    output &lt;&lt; _velocity[0] &lt;&lt; <span class="stringliteral">&quot; &quot;</span></div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;           &lt;&lt; _velocity[1] &lt;&lt; <span class="stringliteral">&quot; &quot;</span></div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;           &lt;&lt; _velocity[2];</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    <span class="keywordflow">return</span> output.str();</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;}</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="comment">// Parse formatted string to save position/velocity components</span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1StateVector.html#ade774a569cc3a6b798ad94fbcf50db85">isce::core::StateVector::</a></div>
+<div class="line"><a name="l00101"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1StateVector.html#ade774a569cc3a6b798ad94fbcf50db85">  101</a></span>&#160;<a class="code" href="classisce_1_1core_1_1StateVector.html#ade774a569cc3a6b798ad94fbcf50db85">fromString</a>(<span class="keyword">const</span> std::string &amp; posString, <span class="keyword">const</span> std::string &amp; velString) {</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    std::stringstream posStream(posString);</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    std::stringstream velStream(velString);</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    posStream &gt;&gt; _position[0] &gt;&gt; _position[1] &gt;&gt; _position[2];</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    velStream &gt;&gt; _velocity[0] &gt;&gt; _velocity[1] &gt;&gt; _velocity[2];</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;}</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="comment">// end of file</span></div>
+<div class="ttc" id="classisce_1_1core_1_1StateVector_html_af69097e7e74b1954828af13222c331cd"><div class="ttname"><a href="classisce_1_1core_1_1StateVector.html#af69097e7e74b1954828af13222c331cd">isce::core::StateVector::date</a></div><div class="ttdeci">void date(const std::string &amp;dstr)</div><div class="ttdoc">Set time tag. </div><div class="ttdef"><b>Definition:</b> StateVector.h:57</div></div>
+<div class="ttc" id="classisce_1_1core_1_1StateVector_html_af90ff6435f5a9295f1db6ba67479a75a"><div class="ttname"><a href="classisce_1_1core_1_1StateVector.html#af90ff6435f5a9295f1db6ba67479a75a">isce::core::StateVector::position</a></div><div class="ttdeci">cartesian_t position() const </div><div class="ttdoc">Return position in m. </div><div class="ttdef"><b>Definition:</b> StateVector.h:36</div></div>
+<div class="ttc" id="structisce_1_1core_1_1Vector_html"><div class="ttname"><a href="structisce_1_1core_1_1Vector.html">isce::core::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.h:13</div></div>
+<div class="ttc" id="classisce_1_1core_1_1StateVector_html_a90dd624247b12c76919593bd6b59acaa"><div class="ttname"><a href="classisce_1_1core_1_1StateVector.html#a90dd624247b12c76919593bd6b59acaa">isce::core::StateVector::date</a></div><div class="ttdeci">DateTime date() const </div><div class="ttdoc">Return DateTime. </div><div class="ttdef"><b>Definition:</b> StateVector.h:42</div></div>
+<div class="ttc" id="classisce_1_1core_1_1StateVector_html_ade774a569cc3a6b798ad94fbcf50db85"><div class="ttname"><a href="classisce_1_1core_1_1StateVector.html#ade774a569cc3a6b798ad94fbcf50db85">isce::core::StateVector::fromString</a></div><div class="ttdeci">void fromString(const std::string &amp;, const std::string &amp;)</div><div class="ttdoc">Parse formatted string to save position and velocity. </div><div class="ttdef"><b>Definition:</b> StateVector.h:101</div></div>
+<div class="ttc" id="classisce_1_1core_1_1StateVector_html_a55a70dedd050aa628f0dfc52b4d52e18"><div class="ttname"><a href="classisce_1_1core_1_1StateVector.html#a55a70dedd050aa628f0dfc52b4d52e18">isce::core::StateVector::velocity</a></div><div class="ttdeci">void velocity(cartesian_t &amp;v)</div><div class="ttdoc">Set velocity. </div><div class="ttdef"><b>Definition:</b> StateVector.h:52</div></div>
+<div class="ttc" id="classisce_1_1core_1_1StateVector_html_a55efa058115dfa14ec8a7a924b080bb8"><div class="ttname"><a href="classisce_1_1core_1_1StateVector.html#a55efa058115dfa14ec8a7a924b080bb8">isce::core::StateVector::StateVector</a></div><div class="ttdeci">StateVector()</div><div class="ttdoc">Empty constructor. </div><div class="ttdef"><b>Definition:</b> StateVector.h:33</div></div>
+<div class="ttc" id="classisce_1_1core_1_1StateVector_html"><div class="ttname"><a href="classisce_1_1core_1_1StateVector.html">isce::core::StateVector</a></div><div class="ttdoc">Building block data structure for serializing Orbit. </div><div class="ttdef"><b>Definition:</b> StateVector.h:29</div></div>
 <div class="ttc" id="structisce_1_1core_1_1DateTime_html"><div class="ttname"><a href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a></div><div class="ttdoc">Data structure to store date time to nano-sec precision. </div><div class="ttdef"><b>Definition:</b> DateTime.h:24</div></div>
+<div class="ttc" id="classisce_1_1core_1_1StateVector_html_aad7587477ea76235875332b4123e88a8"><div class="ttname"><a href="classisce_1_1core_1_1StateVector.html#aad7587477ea76235875332b4123e88a8">isce::core::StateVector::velocityToString</a></div><div class="ttdeci">std::string velocityToString() const </div><div class="ttdoc">Serialize velocity to string. </div><div class="ttdef"><b>Definition:</b> StateVector.h:91</div></div>
+<div class="ttc" id="classisce_1_1core_1_1StateVector_html_a993b92b4440fcbb3c60aff31c2ccd891"><div class="ttname"><a href="classisce_1_1core_1_1StateVector.html#a993b92b4440fcbb3c60aff31c2ccd891">isce::core::StateVector::velocity</a></div><div class="ttdeci">cartesian_t velocity() const </div><div class="ttdoc">Return velocity in m/s. </div><div class="ttdef"><b>Definition:</b> StateVector.h:39</div></div>
+<div class="ttc" id="classisce_1_1core_1_1StateVector_html_a843331a5d9ea74d417f4485b8c508717"><div class="ttname"><a href="classisce_1_1core_1_1StateVector.html#a843331a5d9ea74d417f4485b8c508717">isce::core::StateVector::positionToString</a></div><div class="ttdeci">std::string positionToString() const </div><div class="ttdoc">Serialize position to string. </div><div class="ttdef"><b>Definition:</b> StateVector.h:81</div></div>
+<div class="ttc" id="classisce_1_1core_1_1StateVector_html_a0c0542d2b3ef6f601e4e19c09f91dcaa"><div class="ttname"><a href="classisce_1_1core_1_1StateVector.html#a0c0542d2b3ef6f601e4e19c09f91dcaa">isce::core::StateVector::position</a></div><div class="ttdeci">void position(cartesian_t &amp;p)</div><div class="ttdoc">Set position. </div><div class="ttdef"><b>Definition:</b> StateVector.h:47</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
