@@ -29,6 +29,5 @@ var searchData=
   ['gpusignal',['gpuSignal',['../classgpuSignal.html',1,'']]],
   ['gpusinc2dinterpolator',['gpuSinc2dInterpolator',['../classisce_1_1cuda_1_1core_1_1gpuSinc2dInterpolator.html',1,'isce::cuda::core']]],
   ['gpuspline2dinterpolator',['gpuSpline2dInterpolator',['../classisce_1_1cuda_1_1core_1_1gpuSpline2dInterpolator.html',1,'isce::cuda::core']]],
-  ['gpustatevector',['gpuStateVector',['../classisce_1_1cuda_1_1core_1_1gpuStateVector.html',1,'isce::cuda::core']]],
   ['gputopolayers',['gpuTopoLayers',['../classisce_1_1cuda_1_1geometry_1_1gpuTopoLayers.html',1,'isce::cuda::geometry']]]
 ];

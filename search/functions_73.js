@@ -35,7 +35,6 @@ var searchData=
   ['sliceptr',['sliceptr',['../classisce_1_1core_1_1Cube.html#ac59c835a7edc316101313c2d7001466c',1,'isce::core::Cube::sliceptr(size_t slice)'],['../classisce_1_1core_1_1Cube.html#a5fc63dac5301c8362c8bd5f386116bb5',1,'isce::core::Cube::sliceptr(size_t slice) const ']]],
   ['spline2dinterpolator',['Spline2dInterpolator',['../classisce_1_1core_1_1Spline2dInterpolator.html#ac667aaa2f1ebdca2394b9c0a9cd121ab',1,'isce::core::Spline2dInterpolator']]],
   ['startingrange',['startingRange',['../classisce_1_1image_1_1ResampSlc.html#a6dcee50ad31a6e822131b1f8759e27fc',1,'isce::image::ResampSlc::startingRange()'],['../classisce_1_1product_1_1RadarGridParameters.html#aec8c72738530e30b569b9b0d38a4776b',1,'isce::product::RadarGridParameters::startingRange()']]],
-  ['statevector',['StateVector',['../classisce_1_1core_1_1StateVector.html#a55efa058115dfa14ec8a7a924b080bb8',1,'isce::core::StateVector']]],
   ['stringfromvrt',['stringFromVRT',['../namespaceisce_1_1core.html#a4123e8e839c6bc00ea12744cf8781f3a',1,'isce::core']]],
   ['stringtovector',['stringToVector',['../namespaceisce_1_1core.html#a22545d2fc4f92173946f1049862d89e9',1,'isce::core']]],
   ['strptime',['strptime',['../structisce_1_1core_1_1DateTime.html#ae666582240a25f37e4ae0e7b2c3186a9',1,'isce::core::DateTime']]],
