@@ -7,24 +7,16 @@
 
 #include <cmath>
 #include <iostream>
-#include <vector>
-#include "isce/core/Constants.h"
-#include "isce/core/Ellipsoid.h"
-#include "isce/cuda/core/gpuEllipsoid.h"
+#include <isce/core/Ellipsoid.h>
 #include "gtest/gtest.h"
 
 using isce::core::Ellipsoid;
-using isce::cuda::core::gpuEllipsoid;
 using std::endl;
-using std::vector;
 
 //Some commonly used values
-Ellipsoid wgs84_cpu(6378137.0, 0.0066943799901);
-const double a_cpu = wgs84_cpu.a();
-const double b_cpu = a_cpu * std::sqrt(1.0 - wgs84_cpu.e2());
-gpuEllipsoid wgs84_gpu(6378137.0, 0.0066943799901);
-const double a_gpu = wgs84_gpu.a;
-const double b_gpu = a_gpu * std::sqrt(1.0 - wgs84_gpu.e2);
+Ellipsoid wgs84(6378137.0, 0.0066943799901);
+const double a = wgs84.a();
+const double b = a * std::sqrt(1.0 - wgs84.e2());
 
 struct GpuEllipsoidTest : public ::testing::Test {
     virtual void SetUp() {
@@ -38,6 +30,44 @@ struct GpuEllipsoidTest : public ::testing::Test {
     unsigned fails;
 };
 
+/* Helper class for passing single values to kernels */
+template<class T>
+class CudaUniquePtr {
+private:
+    T* ptr;
+public:
+    CudaUniquePtr() { cudaMalloc(&ptr, sizeof(T)); }
+    ~CudaUniquePtr() { cudaFree(ptr); }
+    T* get() { return ptr; }
+    T operator*() {
+        T val;
+        cudaMemcpy(&val, ptr, sizeof(T), cudaMemcpyDeviceToHost);
+        return val;
+    }
+};
+
+using isce::core::Ellipsoid;
+using isce::core::Vec3;
+
+__global__ void lonLatToXyz_g(Ellipsoid e, const Vec3 llh, Vec3* xyz) {
+    *xyz = e.lonLatToXyz(llh);
+}
+__global__ void xyzToLonLat_g(Ellipsoid e, const Vec3 xyz, Vec3* llh) {
+    *llh = e.xyzToLonLat(xyz);
+}
+
+void lonLatToXyz_h(isce::core::Ellipsoid e, const Vec3& llh, Vec3& xyz) {
+    CudaUniquePtr<Vec3> gpu_xyz;
+    lonLatToXyz_g<<<1, 1>>>(e, llh, gpu_xyz.get());
+    xyz = *gpu_xyz;
+}
+
+void xyzToLonLat_h(isce::core::Ellipsoid e, const Vec3& xyz, Vec3& llh) {
+    CudaUniquePtr<Vec3> gpu_llh;
+    xyzToLonLat_g<<<1, 1>>>(e, xyz, gpu_llh.get());
+    llh = *gpu_llh;
+}
+
 #define ellipsoidGpuTest(name,p,q,r,x,y,z)       \
     TEST_F(GpuEllipsoidTest, name) {       \
         isce::core::cartesian_t ref_llh{p,q,r};    \
@@ -45,8 +75,8 @@ struct GpuEllipsoidTest : public ::testing::Test {
         isce::core::cartesian_t xyz, gpu_xyz, cpu_xyz; \
         isce::core::cartesian_t llh, gpu_llh, cpu_llh; \
         llh = ref_llh;                  \
-        wgs84_gpu.lonLatToXyz_h(llh, gpu_xyz);    \
-        wgs84_cpu.lonLatToXyz(llh, cpu_xyz);    \
+        lonLatToXyz_h(wgs84, llh, gpu_xyz); \
+        wgs84.lonLatToXyz(llh, cpu_xyz); \
         EXPECT_NEAR(gpu_xyz[0], ref_xyz[0], 1.0e-6);\
         EXPECT_NEAR(gpu_xyz[1], ref_xyz[1], 1.0e-6);\
         EXPECT_NEAR(gpu_xyz[2], ref_xyz[2], 1.0e-6);\
@@ -54,8 +84,8 @@ struct GpuEllipsoidTest : public ::testing::Test {
         EXPECT_NEAR(gpu_xyz[1], cpu_xyz[1], 1.0e-6);\
         EXPECT_NEAR(gpu_xyz[2], cpu_xyz[2], 1.0e-6);\
         xyz = ref_xyz;                  \
-        wgs84_gpu.xyzToLonLat_h(xyz, gpu_llh);    \
-        wgs84_cpu.xyzToLonLat(xyz, cpu_llh);    \
+        xyzToLonLat_h(wgs84, xyz, gpu_llh); \
+        wgs84.xyzToLonLat(xyz, cpu_llh); \
         EXPECT_NEAR(gpu_llh[0], ref_llh[0], 1.0e-9);\
         EXPECT_NEAR(gpu_llh[1], ref_llh[1], 1.0e-9);\
         EXPECT_NEAR(gpu_llh[2], ref_llh[2], 1.0e-6);\
@@ -65,17 +95,17 @@ struct GpuEllipsoidTest : public ::testing::Test {
         fails += ::testing::Test::HasFailure();\
     } struct consume_semicolon
 
-ellipsoidGpuTest(Origin, {0.,0.,0.}, {a_cpu,0.,0.});
+ellipsoidGpuTest(Origin, {0.,0.,0.}, {wgs84.a(),0.,0.});
 
-ellipsoidGpuTest(Equator90E, {0.5*M_PI, 0., 0.}, {0.,a_cpu,0.});
+ellipsoidGpuTest(Equator90E, {0.5*M_PI, 0., 0.}, {0.,wgs84.a(),0.});
 
-ellipsoidGpuTest(Equator90W,{-0.5*M_PI,0.,0.}, {0.,-a_cpu,0.});
+ellipsoidGpuTest(Equator90W,{-0.5*M_PI,0.,0.}, {0.,-wgs84.a(),0.});
 
-ellipsoidGpuTest(EquatorDateline, {M_PI,0.,0.}, {-a_cpu,0.,0.});
+ellipsoidGpuTest(EquatorDateline, {M_PI,0.,0.}, {-wgs84.a(),0.,0.});
 
-ellipsoidGpuTest(NorthPole, {0.,0.5*M_PI,0.}, {0.,0.,b_cpu});
+ellipsoidGpuTest(NorthPole, {0.,0.5*M_PI,0.}, {0.,0.,wgs84.b()});
 
-ellipsoidGpuTest(SouthPole, {0.,-0.5*M_PI,0.}, {0.,0.,-b_cpu});
+ellipsoidGpuTest(SouthPole, {0.,-0.5*M_PI,0.}, {0.,0.,-b});
 
 
 ellipsoidGpuTest(Point1, {1.134431523585921e+00,-1.180097204507889e+00,7.552767636707697e+03},
