@@ -174,9 +174,6 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1KnabKernel.html">KnabKernel</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classisce_1_1core_1_1Kernel.html" title="Abstract base class for all kernels. ">Kernel</a> based on the paper by Knab for interpolating band-limited signals.  <a href="classisce_1_1core_1_1KnabKernel.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Linspace.html">Linspace</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A uniformly-spaced sequence of values over some interval.  <a href="classisce_1_1core_1_1Linspace.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1LUT1d.html">LUT1d</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Data structure to hold a 1D Lookup table.  <a href="classisce_1_1core_1_1LUT1d.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -228,8 +225,7 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Quaternion.html">Quaternion</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classisce_1_1core_1_1Quaternion.html" title="Quaternion representation of attitude information. ">Quaternion</a> representation of attitude information.  <a href="classisce_1_1core_1_1Quaternion.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1StateVector.html">StateVector</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Building block data structure for serializing <a class="el" href="structisce_1_1core_1_1Orbit.html" title="Data structure to represent ECEF state vectors of imaging platform. ">Orbit</a>.  <a href="classisce_1_1core_1_1StateVector.html#details">More...</a><br/></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1StateVector.html">StateVector</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1TimeDelta.html">TimeDelta</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Data structure to store <a class="el" href="structisce_1_1core_1_1TimeDelta.html" title="Data structure to store TimeDelta to double precision seconds. ">TimeDelta</a> to double precision seconds.  <a href="structisce_1_1core_1_1TimeDelta.html#details">More...</a><br/></td></tr>
@@ -325,19 +321,6 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memitem:ae73b56f5a94e197486f4cd9f99fa2be3"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#ae73b56f5a94e197486f4cd9f99fa2be3">sinc</a> (T t)</td></tr>
 <tr class="memdesc:ae73b56f5a94e197486f4cd9f99fa2be3"><td class="mdescLeft">&#160;</td><td class="mdescRight">sinc function defined as <img class="formulaInl" alt="$ \frac{\sin(\pi x)}{\pi x} $" src="form_2.png"/> <br/></td></tr>
 <tr class="separator:ae73b56f5a94e197486f4cd9f99fa2be3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a932994100be7c3f973e87ee5796ba5c9"><td class="memTemplParams" colspan="2"><a class="anchor" id="a932994100be7c3f973e87ee5796ba5c9"></a>
-template&lt;typename T , typename U &gt; </td></tr>
-<tr class="memitem:a932994100be7c3f973e87ee5796ba5c9"><td class="memTemplItemLeft" align="right" valign="top">CUDA_HOSTDEV bool&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="classisce_1_1core_1_1Linspace.html">Linspace</a>&lt; T &gt; &amp;, const <a class="el" href="classisce_1_1core_1_1Linspace.html">Linspace</a>&lt; U &gt; &amp;)</td></tr>
-<tr class="separator:a932994100be7c3f973e87ee5796ba5c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43f7bb4ec9a8200a2d08938af1cb4388"><td class="memTemplParams" colspan="2"><a class="anchor" id="a43f7bb4ec9a8200a2d08938af1cb4388"></a>
-template&lt;typename T , typename U &gt; </td></tr>
-<tr class="memitem:a43f7bb4ec9a8200a2d08938af1cb4388"><td class="memTemplItemLeft" align="right" valign="top">CUDA_HOSTDEV bool&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator!=</b> (const <a class="el" href="classisce_1_1core_1_1Linspace.html">Linspace</a>&lt; T &gt; &amp;, const <a class="el" href="classisce_1_1core_1_1Linspace.html">Linspace</a>&lt; U &gt; &amp;)</td></tr>
-<tr class="separator:a43f7bb4ec9a8200a2d08938af1cb4388"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a818e73de71a689bdcc27bf1cb176c6b8"><td class="memTemplParams" colspan="2"><a class="anchor" id="a818e73de71a689bdcc27bf1cb176c6b8"></a>
-template&lt;typename T , typename U &gt; </td></tr>
-<tr class="memitem:a818e73de71a689bdcc27bf1cb176c6b8"><td class="memTemplItemLeft" align="right" valign="top">CUDA_HOSTDEV int&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a818e73de71a689bdcc27bf1cb176c6b8">where</a> (const <a class="el" href="classisce_1_1core_1_1Linspace.html">Linspace</a>&lt; T &gt; &amp;x, U val)</td></tr>
-<tr class="memdesc:a818e73de71a689bdcc27bf1cb176c6b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the position where the specified value would be inserted in the sequence in order to maintain sorted order. <br/></td></tr>
-<tr class="separator:a818e73de71a689bdcc27bf1cb176c6b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a24e9522f13059704a8b6feae7b0435cf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a24e9522f13059704a8b6feae7b0435cf"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>orbitHermite</b> (const std::vector&lt; <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &gt; &amp;, const std::vector&lt; <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &gt; &amp;, const std::vector&lt; double &gt; &amp;, double, <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;, <a class="el" href="structisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;)</td></tr>
 <tr class="separator:a24e9522f13059704a8b6feae7b0435cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -421,13 +404,13 @@ template&lt;class Archive , typename T &gt; </td></tr>
 <tr class="memitem:a5cc4818bb295a2e9b217a0475eaea01d"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a5cc4818bb295a2e9b217a0475eaea01d">loadFromH5</a> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, <a class="el" href="classisce_1_1core_1_1LUT1d.html">LUT1d</a>&lt; T &gt; &amp;lut, std::string name_coords, std::string name_values)</td></tr>
 <tr class="memdesc:a5cc4818bb295a2e9b217a0475eaea01d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load polynomial coefficients from HDF5 product.  <a href="#a5cc4818bb295a2e9b217a0475eaea01d">More...</a><br/></td></tr>
 <tr class="separator:a5cc4818bb295a2e9b217a0475eaea01d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac20b1fadd409972ec076c05afae28807"><td class="memTemplParams" colspan="2"><a class="anchor" id="ac20b1fadd409972ec076c05afae28807"></a>
+<tr class="memitem:a02370da1dce02e4d0b5a4135d9253ae9"><td class="memTemplParams" colspan="2"><a class="anchor" id="a02370da1dce02e4d0b5a4135d9253ae9"></a>
 template&lt;class Archive &gt; </td></tr>
-<tr class="memitem:ac20b1fadd409972ec076c05afae28807"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>save</b> (Archive &amp;archive, <a class="el" href="classisce_1_1core_1_1StateVector.html">StateVector</a> const &amp;sv)</td></tr>
-<tr class="separator:ac20b1fadd409972ec076c05afae28807"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02370da1dce02e4d0b5a4135d9253ae9"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>save</b> (Archive &amp;archive, const <a class="el" href="structisce_1_1core_1_1StateVector.html">StateVector</a> &amp;sv)</td></tr>
+<tr class="separator:a02370da1dce02e4d0b5a4135d9253ae9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a64f7a62d3a62643842e694e52a745f7e"><td class="memTemplParams" colspan="2"><a class="anchor" id="a64f7a62d3a62643842e694e52a745f7e"></a>
 template&lt;class Archive &gt; </td></tr>
-<tr class="memitem:a64f7a62d3a62643842e694e52a745f7e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>load</b> (Archive &amp;archive, <a class="el" href="classisce_1_1core_1_1StateVector.html">StateVector</a> &amp;sv)</td></tr>
+<tr class="memitem:a64f7a62d3a62643842e694e52a745f7e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>load</b> (Archive &amp;archive, <a class="el" href="structisce_1_1core_1_1StateVector.html">StateVector</a> &amp;sv)</td></tr>
 <tr class="separator:a64f7a62d3a62643842e694e52a745f7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a94fb25766eab8d9a67a8bd7fe5045d3e"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a94fb25766eab8d9a67a8bd7fe5045d3e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e">checkVecLenDebug</a> (const std::vector&lt; T &gt; &amp;vec, size_t len, const char *vec_name, const char *parent_func)</td></tr>
