@@ -453,9 +453,6 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
     // Compute cross-track range
     layers.crossTrack(line, bin, -_lookSide * satToGround.dot(TCNbasis.x1()));
 
-    // Compute unit velocity vector
-    const Vec3 vhat = vel.unitVec();
-
     // Computation in ENU coordinates around target
     const Mat3 xyz2enu = Mat3::xyzToEnu(targetLLH[1], targetLLH[0]);
     const Vec3 enu = xyz2enu.dot(satToGround);

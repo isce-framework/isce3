@@ -17,7 +17,6 @@ private:
 public:
 
     CUDA_HOSTDEV constexpr Vector<N>(const std::array<double, N>& other) {
-        #pragma unroll
         for (int i = 0; i < N; i++)
             vdata[i] = other[i];
     }
@@ -27,7 +26,6 @@ public:
         vdata { std::move(vals) ... } {}
 
     CUDA_HOSTDEV constexpr Vector<N>(const Vector<N>& other) {
-        #pragma unroll
         for (int i = 0; i < N; i++)
             vdata[i] = other[i];
     }
@@ -40,7 +38,6 @@ public:
      */
     CUDA_HOSTDEV constexpr Vector<N> operator+(const Vector<N>& v) const {
         Vector<N> result {};
-        #pragma unroll
         for (int i = 0; i < N; i++)
             result[i] = vdata[i] + v[i];
         return result;
@@ -51,7 +48,6 @@ public:
      */
     CUDA_HOSTDEV constexpr Vector<N> operator-(const Vector<N>& v) const {
         Vector<N> result {};
-        #pragma unroll
         for (int i = 0; i < N; i++)
             result[i] = vdata[i] - v[i];
         return result;
@@ -62,7 +58,6 @@ public:
      */
     CUDA_HOSTDEV constexpr Vector<N> operator-() const {
         Vector<N> result {};
-        #pragma unroll
         for (int i = 0; i < N; i++)
             result[i] = -vdata[i];
         return result;
@@ -73,7 +68,6 @@ public:
      */
     CUDA_HOSTDEV constexpr Vector<N> operator*(const double f) const {
         Vector<N> result {};
-        #pragma unroll
         for (int i = 0; i < N; i++)
             result[i] = vdata[i] * f;
         return result;
@@ -88,7 +82,6 @@ public:
      */
     CUDA_HOSTDEV constexpr Vector<N> operator/(const double d) const {
         Vector<N> result {};
-        #pragma unroll
         for (int i = 0; i < N; i++)
             result[i] = vdata[i] / d;
         return result;
@@ -102,7 +95,6 @@ public:
      */
     CUDA_HOSTDEV constexpr double norm() const {
         double sum_sq = 0;
-        #pragma unroll
         for (int i = 0; i < N; i++)
             sum_sq += vdata[i]*vdata[i];
         return std::sqrt(sum_sq);
@@ -110,7 +102,6 @@ public:
 
     CUDA_HOSTDEV constexpr double dot(const Vector<N>& v) const {
         double result = 0;
-        #pragma unroll
         for (int i = 0; i < N; i++)
             result += vdata[i] * v[i];
         return result;

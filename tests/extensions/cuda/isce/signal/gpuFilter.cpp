@@ -21,7 +21,6 @@ TEST(Filter, constructAzimuthCommonbandFilter)
 
     int ncols = 500;
     int blockRows = 500;
-    int nfft = ncols;
 
     std::valarray<std::complex<float>> refSlc(ncols*blockRows);
 

@@ -45,12 +45,11 @@ static const char* cufftGetErrorString(const cufftResult err) {
 
 template<>
 CudaError<cudaError_t>::CudaError(const SrcInfo& info, const cudaError_t err) :
-        err(err),
         Error(info, std::string("cudaError " +
                                 std::to_string(err) + " (" +
-                                cudaGetErrorString(err) + ")")) {}
+                                cudaGetErrorString(err) + ")")), err(err) {}
 
 template<>
 CudaError<cufftResult>::CudaError(const SrcInfo& info, const cufftResult err) :
-        err(err),
-        Error(info, std::string("cufftResult ") + cufftGetErrorString(err)) {}
+        Error(info, std::string("cufftResult ") + cufftGetErrorString(err)),
+        err(err) {}

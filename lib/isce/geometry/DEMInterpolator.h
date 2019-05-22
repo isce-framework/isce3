@@ -135,6 +135,9 @@ class isce::geometry::DEMInterpolator {
         bool _haveRaster;
         // Constant value if no raster is provided
         float _refHeight;
+        // Statistics
+        float _meanValue;
+        float _maxValue;
         // Pointer to a ProjectionBase
         int _epsgcode;
         isce::core::ProjectionBase * _proj = nullptr;
@@ -145,9 +148,6 @@ class isce::geometry::DEMInterpolator {
         isce::core::Matrix<float> _dem;
         // Starting x/y for DEM subset and spacing
         double _xstart, _ystart, _deltax, _deltay;
-        // Statistics
-        float _maxValue;
-        float _meanValue;
 };
 
 #endif

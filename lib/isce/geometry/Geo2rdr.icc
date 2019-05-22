@@ -47,8 +47,8 @@ isce::geometry::Geo2rdr::
 Geo2rdr(const isce::core::Ellipsoid & ellipsoid, const isce::core::Orbit & orbit,
         const isce::core::LUT2d<double> & doppler, const isce::core::Metadata & meta,
         size_t numberAzimuthLooks, size_t numberRangeLooks) :
-        _radarGrid(meta, orbit.refEpoch, numberAzimuthLooks, numberRangeLooks),
-        _ellipsoid(ellipsoid), _orbit(orbit), _doppler(doppler) {}
+        _ellipsoid(ellipsoid), _orbit(orbit), _doppler(doppler),
+        _radarGrid(meta, orbit.refEpoch, numberAzimuthLooks, numberRangeLooks) {}
 
 /**@param[in] t Azimuth time convergence threshold in seconds*/
 void isce::geometry::Geo2rdr::

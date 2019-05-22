@@ -211,7 +211,7 @@ struct Interp1dTest : public ::testing::Test
             EXPECT_LE(rad2deg(dphase), max_phs);
             EXPECT_LE(bias, max_bias);
             EXPECT_LE(spread, max_spread);
-            printf("min_cor    %9.6f cor    %9.6f\n", min_cor, cor, min_cor);
+            printf("min_cor    %9.6f cor    %9.6f\n", min_cor, cor);
             printf("max_phs    %9.6f phs    %9.6f\n", max_phs, rad2deg(dphase));
             printf("max_bias   %9.6f bias   %9.6f\n", max_bias, bias);
             printf("max_spread %9.6f spread %9.6f\n", max_spread, spread);
