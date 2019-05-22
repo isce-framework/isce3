@@ -2,6 +2,8 @@
 #ifndef ISCE_CORE_DENSEMATRIX_H
 #define ISCE_CORE_DENSEMATRIX_H
 
+#include <cmath>
+
 #include "Vector.h"
 
 namespace isce { namespace core {
@@ -83,8 +85,10 @@ public:
      *  @param[in] lon Longitude in radians
      *  @param[out] enumat Matrix with rotation matrix */
     CUDA_HOSTDEV static Mat3 xyzToEnu(double lat, double lon) {
+#ifndef __CUDA_ARCH__
         using std::cos;
         using std::sin;
+#endif
         return Mat3 {{{         -sin(lon),           cos(lon),       0.},
                       {-sin(lat)*cos(lon), -sin(lat)*sin(lon), cos(lat)},
                       { cos(lat)*cos(lon),  cos(lat)*sin(lon), sin(lat)}}};
