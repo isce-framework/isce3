@@ -23,7 +23,7 @@ public:
      */
     CUDA_HOSTDEV
     static
-    Linspace<T> from_interval(T first, T last, size_t size);
+    Linspace<T> from_interval(T first, T last, int size);
 
     Linspace() = default;
 
@@ -36,7 +36,7 @@ public:
      */
     CUDA_HOSTDEV
     constexpr
-    Linspace(T first, T spacing, size_t size);
+    Linspace(T first, T spacing, int size);
 
     /** Copy constructor */
     template<typename U>
@@ -55,7 +55,7 @@ public:
      */
     CUDA_HOSTDEV
     constexpr
-    T operator[](size_t pos) const;
+    T operator[](int pos) const;
 
     /** First sample */
     CUDA_HOSTDEV
@@ -75,7 +75,7 @@ public:
     /** Number of samples */
     CUDA_HOSTDEV
     constexpr
-    size_t size() const;
+    int size() const;
 
     /**
      * Return a sub-Linspace over the half-open interval [start, stop).
@@ -88,7 +88,7 @@ public:
      * @param[in] stop end position (not included in interval)
      */
     CUDA_HOSTDEV
-    Linspace<T> subinterval(size_t start, size_t stop) const;
+    Linspace<T> subinterval(int start, int stop) const;
 
     /** Check if the sequence contains no samples. */
     CUDA_HOSTDEV
@@ -98,7 +98,7 @@ public:
 private:
     T _first;
     T _spacing;
-    size_t _size;
+    int _size;
 };
 
 template<typename T, typename U>
@@ -115,7 +115,7 @@ bool operator!=(const Linspace<T> &, const Linspace<U> &);
  */
 template<typename T, typename U>
 CUDA_HOSTDEV
-size_t where(const Linspace<T> & x, U val);
+int where(const Linspace<T> & x, U val);
 
 }}
 

@@ -5,7 +5,7 @@ TEST(LinspaceTest, BasicConstructor)
 {
     int first = 0;
     int spacing = 1;
-    size_t size = 10;
+    int size = 10;
 
     isce::core::Linspace<int> x (first, spacing, size);
 
@@ -18,7 +18,7 @@ TEST(LinspaceTest, FromInterval)
 {
     int first = 0;
     int spacing = 1;
-    size_t size = 10;
+    int size = 10;
 
     int last = first + spacing * (size - 1);
 
@@ -36,7 +36,7 @@ TEST(LinspaceTest, CopyConstructor)
 {
     float first = 0.;
     float spacing = 1.;
-    size_t size = 10;
+    int size = 10;
 
     isce::core::Linspace<float> x1 (first, spacing, size);
     isce::core::Linspace<double> x2 (x1);
@@ -50,7 +50,7 @@ TEST(LinspaceTest, Assignment)
 {
     float first = 0.;
     float spacing = 1.;
-    size_t size = 10;
+    int size = 10;
 
     isce::core::Linspace<float> x1 (first, spacing, size);
     isce::core::Linspace<double> x2;
@@ -65,7 +65,7 @@ TEST(LinspaceTest, Accessor)
 {
     int first = 0;
     int spacing = 1;
-    size_t size = 10;
+    int size = 10;
 
     isce::core::Linspace<int> x (first, spacing, size);
 
@@ -78,12 +78,12 @@ TEST(LinspaceTest, SubInterval)
 {
     int first = 0;
     int spacing = 1;
-    size_t size = 10;
+    int size = 10;
 
     isce::core::Linspace<int> x1 (first, spacing, size);
 
-    size_t start = 3;
-    size_t stop = 8;
+    int start = 3;
+    int stop = 8;
 
     isce::core::Linspace<int> x2 = x1.subinterval(start, stop);
 
@@ -109,7 +109,7 @@ TEST(LinspaceTest, Comparison)
 {
     int first = 0;
     int spacing = 1;
-    size_t size = 10;
+    int size = 10;
 
     isce::core::Linspace<int> x1 (first, spacing, size);
     isce::core::Linspace<int> x2 (first, spacing, size);
@@ -125,7 +125,7 @@ TEST(LinspaceTest, Where)
     {
         int first = 0;
         int spacing = 1;
-        size_t size = 10;
+        int size = 10;
 
         isce::core::Linspace<int> x (first, spacing, size);
 
@@ -138,7 +138,7 @@ TEST(LinspaceTest, Where)
     {
         int first = 0;
         int spacing = -1;
-        size_t size = 10;
+        int size = 10;
 
         isce::core::Linspace<int> x (first, spacing, size);
 
