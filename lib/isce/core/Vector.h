@@ -99,10 +99,7 @@ public:
         double sum_sq = 0;
         for (int i = 0; i < N; i++)
             sum_sq += vdata[i]*vdata[i];
-#ifndef __CUDA_ARCH__
-        using std::sqrt;
-#endif
-        return sqrt(sum_sq);
+        return std::sqrt(sum_sq);
     }
 
     CUDA_HOSTDEV constexpr double dot(const Vector<N>& v) const {
