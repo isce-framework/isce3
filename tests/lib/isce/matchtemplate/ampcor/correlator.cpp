@@ -30,30 +30,30 @@ using correlator_t = ampcor::correlators::correlator_t<ampcor::dom::slc_t>;
 int main() {
 
     // the name of the reference data file
-    uri_t refName { "../../data/20061231.slc" };
+    uri_t refName { "../../data/warped_envisat.slc" };
     // its shape
-    shape_t refShape { 36864ul, 10344ul };
+    shape_t refShape { 500ul, 500ul };
     // make a raster
     slc_t reference(refName, refShape);
 
     // the chip shape in the reference window
-    slc_t::index_type chip {128ul, 128ul};
+    slc_t::index_type chip {32ul, 32ul};
 
     // define a tile in the reference image
-    slc_t::index_type refBegin {100ul, 100ul};
+    slc_t::index_type refBegin {10ul, 10ul};
     slc_t::index_type refEnd = refBegin + chip;
     // make a slice
     auto refSlice = reference.layout().slice(refBegin, refEnd);
 
     // the name of the target data file
-    uri_t tgtName { "../../data/20061231.slc" };
+    uri_t tgtName { "../../data/warped_envisat.slc" };
     // its shape
-    shape_t tgtShape { 36864ul, 10344ul };
+    shape_t tgtShape { 500ul, 500ul };
     // make a raster
     slc_t target(tgtName, tgtShape);
 
     // the spread of the chip that forms the target search window
-    slc_t::index_type spread = {32ul, 32ul};
+    slc_t::index_type spread = {8ul, 8ul};
     // define a tile
     slc_t::index_type tgtBegin = refBegin - spread;
     slc_t::index_type tgtEnd  = refEnd + spread;
@@ -91,8 +91,8 @@ int main() {
 
     // make a correlator
     correlator_t ampcor { refView, tgtView };
-    // form the correlation grid
-    const auto & corr = ampcor.correlate();
+    // get the correlation grid
+    const auto & corr = ampcor.correlation();
 
     // show me
     channel

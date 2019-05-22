@@ -2,8 +2,7 @@
 set(SRCS
     correlators/Sequential.cc
     dom/Raster.cc
-    dom/SLC.cc
-    meta/version.cc)
+    dom/SLC.cc)
 
 set(HEADERS
     correlators.h
@@ -19,7 +18,6 @@ set(HEADERS
     dom/Raster.icc
     dom/SLC.h
     dom/SLC.icc
-    dom/public.h
-    meta/version.h)
+    dom/public.h)
 
 add_isce_libdir(matchtemplate/ampcor "${SRCS}" "${HEADERS}")
