@@ -27,7 +27,6 @@ cdef class pyLUT2d:
         'bilinear': dataInterpMethod.BILINEAR_METHOD,
         'bicubic': dataInterpMethod.BICUBIC_METHOD,
         'nearest': dataInterpMethod.NEAREST_METHOD,
-        'akima': dataInterpMethod.AKIMA_METHOD,
         'biquintic': dataInterpMethod.BIQUINTIC_METHOD
     }
 

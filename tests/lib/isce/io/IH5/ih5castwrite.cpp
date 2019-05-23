@@ -116,7 +116,7 @@ TYPED_TEST(IH5Test, nochunk) {
     std::array<int,2> shp={length, width};
     isce::io::IDataSet dset = grp.createDataSet<SecondParam>(std::string("data"), shp); 
     {
-        isce::io::Raster img(dset.toGDAL()); 
+        isce::io::Raster img(dset.toGDAL(), GA_Update); 
         img.setBlock(_inmatrix, 0, 0, 1);
 
         //Check contents of the HDF5 file
@@ -177,7 +177,7 @@ TYPED_TEST(IH5Test, chunk) {
     std::array<int,2> shp={length, width};
     isce::io::IDataSet dset = grp.createDataSet<SecondParam>(std::string("data"), shp, 1);
     {
-        isce::io::Raster img(dset.toGDAL());
+        isce::io::Raster img(dset.toGDAL(), GA_Update);
         img.setBlock(_inmatrix, 0, 0, 1);
 
         //Check contents of the HDF5 file

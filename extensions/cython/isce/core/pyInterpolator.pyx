@@ -111,9 +111,4 @@ cdef class pyInterpolator:
     #        y_array[i] = y[i]
     #    return self.c_interp.quadInterpolate(x_array, y_array, xintp)
 
-    #def akima(self, double x, double y, np.ndarray[np.float32_t, ndim=2] c):
-    #    cdef Matrix[float] cmat = Matrix[float](c.shape[0], c.shape[1])
-    #    numpyToMatrixFloat(c, cmat)
-    #    return self.c_interp.akima(x, y, cmat)
-
 # end of file

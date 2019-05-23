@@ -50,7 +50,6 @@ namespace isce { namespace core {
         BILINEAR_METHOD,
         BICUBIC_METHOD,
         NEAREST_METHOD,
-        AKIMA_METHOD,
         BIQUINTIC_METHOD
     };
 

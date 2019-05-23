@@ -33,6 +33,9 @@ namespace isce { namespace core {
         /** Virtual destructor */
         virtual ~ProjectionBase() {}
 
+        /** Return EPSG code */
+        int code() const { return _epsgcode; }
+
         /** Print function for debugging */
         virtual void print() const = 0;
 

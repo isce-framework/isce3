@@ -25,7 +25,7 @@ cdef class pyTopo:
                                                  ('hermite', 'sch', 'legendre')
         demMethod (Optional[int]):           DEM interpolation method
                                                  ('sinc', 'bilinear', 'bicubic', 'nearest',
-                                                  'akima', 'biquintic')
+                                                  'biquintic')
         epsgOut (Optional[int]):             EPSG code for output topo layers.
 
     Return:
@@ -48,7 +48,6 @@ cdef class pyTopo:
         'bilinear': dataInterpMethod.BILINEAR_METHOD,
         'bicubic': dataInterpMethod.BICUBIC_METHOD,
         'nearest': dataInterpMethod.NEAREST_METHOD,
-        'akima': dataInterpMethod.AKIMA_METHOD,
         'biquintic': dataInterpMethod.BIQUINTIC_METHOD
     }
 

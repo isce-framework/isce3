@@ -82,7 +82,7 @@ class IH5Dataset final: public GDALDataset
         }
 
         CPLErr _SetGCPs(int nGCPCount, const GDAL_GCP *pasGCPList, const char *pszGCPProjection) override;
-        using GDALPamDataset::SetGCPs;
+        using GDALDataset::SetGCPs;
         CPLErr SetGCPs( int nGCPCount, const GDAL_GCP *pasGCPList,
                     const OGRSpatialReference* poSRS ) override {
             return OldSetGCPsFromNew(nGCPCount, pasGCPList, poSRS);

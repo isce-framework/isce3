@@ -189,39 +189,95 @@ _loadDEM(isce::io::Raster demRaster,
         int lineStart, int blockLength, 
         int blockWidth, double demMargin)
 {
-    // convert the corner of the current geocoded grid to lon lat
-    double maxY = _geoGridStartY + _geoGridSpacingY*lineStart;
-    double minY = _geoGridStartY + _geoGridSpacingY*(lineStart + blockLength - 1);
-    double minX = _geoGridStartX;
-    double maxX = _geoGridStartX + _geoGridSpacingX*(blockWidth - 1);
 
-    // top left corner of the box
-    Vec3 xyz { minX, maxY, 0. };
-    Vec3 llh = proj->inverse(xyz);
+    //Create projection for DEM
+    int epsgcode = demRaster.getEPSG();
+    
+    //Initialize bounds
+    double minX = -1.0e64;
+    double maxX = 1.0e64;
+    double minY = -1.0e64;
+    double maxY = 1.0e64;
 
-    double minLon = llh[0];
-    double maxLat = llh[1];
+    //Projection systems are different
+    if (epsgcode != proj->code())
+    {
+        
+        //Create transformer to match the DEM 
+        isce::core::ProjectionBase *demproj = isce::core::createProj(epsgcode);
 
-    // lower right corner of the box
-    xyz[0] = maxX;
-    xyz[1] = minY;
-    llh = proj->inverse(xyz);
+        //Skip factors
+        const int askip = std::max((int) (blockLength / 10.), 1);
+        const int rskip = std::max((int) (blockWidth / 10.), 1);
 
-    double maxLon = llh[0];
-    double minLat = llh[1];
 
-    // convert the margin to radians
-    demMargin *= (M_PI/180.0);
+        //Construct vectors of line/pixel indices to traverse perimeter
+        std::vector<int> lineInd, pixInd;
+   
+        // Top edge
+        for (int j = 0; j < blockWidth; j += rskip) {
+            lineInd.push_back(0);
+            pixInd.push_back(j);
+        }
+
+        // Right edge
+        for (int i = 0; i < blockLength; i += askip) {
+            lineInd.push_back(i);
+            pixInd.push_back(blockWidth);
+        }
+
+        // Bottom edge
+        for (int j = blockWidth; j > 0; j -= rskip) {
+            lineInd.push_back(blockLength - 1);
+            pixInd.push_back(j);
+        }
+
+        // Left edge
+        for (int i = blockLength; i > 0; i -= askip) {
+            lineInd.push_back(i);
+            pixInd.push_back(0);
+        }
+
+        //Loop over the indices
+        for (size_t i = 0; i < lineInd.size(); i++)
+        {
+            Vec3 outpt = { _geoGridStartX + _geoGridSpacingX * pixInd[i],
+                           _geoGridStartY + _geoGridSpacingY * lineInd[i],
+                           0.0};
+
+            Vec3 dempt;
+            if (!projTransform(proj, demproj, outpt, dempt))
+            {
+                minX = std::min(minX, dempt[0]);
+                maxX = std::max(maxX, dempt[0]);
+                minY = std::min(minY, dempt[1]);
+                maxY = std::max(maxY, dempt[1]);
+            }
+        }
+    }
+    else
+    {
+        // Use the corners directly as the projection system is the same
+        maxY = _geoGridStartY + _geoGridSpacingY*lineStart;
+        minY = _geoGridStartY + _geoGridSpacingY*(lineStart + blockLength - 1);
+        minX = _geoGridStartX;
+        maxX = _geoGridStartX + _geoGridSpacingX*(blockWidth - 1);
+    }
+
+    //If not LonLat, scale to meters
+    if (epsgcode != 4326)
+    {
+        demMargin *= (M_PI/180.0) * 6.37e6;
+    }
 
     // Account for margins
-    minLon -= demMargin;
-    maxLon += demMargin;
-    minLat -= demMargin;
-    maxLat += demMargin;
+    minX -= demMargin;
+    maxX += demMargin;
+    minY -= demMargin;
+    maxY += demMargin;
 
     // load the DEM for this bounding box
-    demInterp.loadDEM(demRaster, minLon, maxLon, minLat, maxLat,
-                                    demRaster.getEPSG());
+    demInterp.loadDEM(demRaster, minX, maxX, minY, maxY);
 
     if (demInterp.width() == 0 || demInterp.length() == 0)
         std::cout << "warning there are not enough DEM coverage in the bounding box. " << std::endl;

@@ -13,12 +13,11 @@
   * @param[in] maxLon Longitude of eastern edge of bounding box
   * @param[in] minLat Latitude of southern edge of bounding box
   * @param[in] maxLat Latitude of northern edge of bounding box
-  * @param[in] epsgcode EPSG code of DEM raster
   *
   * Loads a DEM subset given the extents of a bounding box */
 void isce::geometry::DEMInterpolator::
-loadDEM(isce::io::Raster & demRaster, double minLon, double maxLon,
-        double minLat, double maxLat, int epsgcode) {
+loadDEM(isce::io::Raster & demRaster, double minX, double maxX,
+        double minY, double maxY) {
 
     // Initialize journal
     pyre::journal::warning_t warning("isce.core.Geometry");
@@ -35,26 +34,10 @@ loadDEM(isce::io::Raster & demRaster, double minLon, double maxLon,
     const double lastY = firstY + (demRaster.length() - 2) * deltaY;
     const double lastX = firstX + (demRaster.width() - 2) * deltaX;
 
-    // Check EPSG code; if -9999, assume 4326
-    if (epsgcode == -9999) {
-        epsgcode = 4326;
-    }
-    // Initialize projection
+    //Initialize projection
+    int epsgcode = demRaster.getEPSG();
     _epsgcode = epsgcode;
     _proj = isce::core::createProj(epsgcode);
-
-    // Convert min longitude and latitude to XY coordinates of DEM
-    cartesian_t llh{minLon, minLat, 0.0};
-    cartesian_t xyz;
-    _proj->forward(llh, xyz);
-    double minX = xyz[0];
-    double minY = xyz[1];
-
-    // Convert max longitude and latitude to XY coordinates of DEM
-    llh = {maxLon, maxLat, 0.0};
-    _proj->forward(llh, xyz);
-    double maxX = xyz[0];
-    double maxY = xyz[1];
 
     // Validate requested geographic bounds with input DEM raster
     if (minX < firstX) {
@@ -83,7 +66,7 @@ loadDEM(isce::io::Raster & demRaster, double minLon, double maxLon,
     int xend = int((maxX - firstX) / deltaX + 0.5);
     int ystart = int((maxY - firstY) / deltaY);
     int yend = int((minY - firstY) / deltaY - 0.5);
-    
+
     // Store actual starting lat/lon for raster subset
     _xstart = firstX + xstart * deltaX;
     _ystart = firstY + ystart * deltaY;
@@ -104,6 +87,56 @@ loadDEM(isce::io::Raster & demRaster, double minLon, double maxLon,
     // Indicate we have loaded a valid raster
     _haveRaster = true;
 }
+
+
+// Load DEM into memory
+/** @param[in] demRaster input DEM raster to subset
+  *
+  * Loads the entire DEM */
+void isce::geometry::DEMInterpolator::
+loadDEM(isce::io::Raster & demRaster) {
+
+    // Initialize journal
+    pyre::journal::warning_t warning("isce.core.Geometry");
+
+    //Get the dimensions of the raster
+    int width = demRaster.width();
+    int length = demRaster.length();
+
+
+    // Get original GeoTransform using raster
+    double geoTransform[6];
+    demRaster.getGeoTransform(geoTransform);
+    const double deltaY = geoTransform[5];
+    const double deltaX = geoTransform[1];
+    // Use center of pixel as starting coordinate
+    const double firstY = geoTransform[3] + 0.5 * deltaY;
+    const double firstX = geoTransform[0] + 0.5 * deltaX;
+
+    //Initialize projection
+    int epsgcode = demRaster.getEPSG();
+    _epsgcode = epsgcode;
+    _proj = isce::core::createProj(epsgcode);
+
+    // Store actual starting lat/lon for raster subset
+    _xstart = firstX;
+    _ystart = firstY;
+    _deltax = deltaX;
+    _deltay = deltaY;
+
+    // Resize memory
+    _dem.resize(length, width);
+
+    // Read in the DEM
+    demRaster.getBlock(_dem.data(), 0, 0, width, length);
+
+    // Initialize internal interpolator
+    _interp = isce::core::createInterpolator<float>(_interpMethod);
+
+    // Indicate we have loaded a valid raster
+    _haveRaster = true;
+}
+
 
 // Debugging output
 void isce::geometry::DEMInterpolator::

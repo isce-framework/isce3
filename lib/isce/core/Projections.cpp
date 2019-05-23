@@ -394,16 +394,16 @@ ProjectionBase* isce::core::createProj(int epsgcode)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* * * * * * * * * * * * * * * * * * * Projection Transformer * * * * * * * * * * * * * * * * * * */
-int projTransform(ProjectionBase &in, ProjectionBase &out, const isce::core::Vec3 &inpts,
+int isce::core::projTransform(ProjectionBase *in, ProjectionBase *out, const isce::core::Vec3 &inpts,
                   isce::core::Vec3 &outpts) {
-    if (in._epsgcode == out._epsgcode) {
+    if (in->_epsgcode == out->_epsgcode) {
         // If input/output projections are the same don't even bother processing
         outpts = inpts;
         return 0;
     } else {
         isce::core::Vec3 temp;
-        if (in.inverse(inpts, temp) != 0) return -2;
-        if (out.forward(temp, outpts) != 0) return 2;
+        if (in->inverse(inpts, temp) != 0) return -2;
+        if (out->forward(temp, outpts) != 0) return 2;
     }
     return 0;
 }

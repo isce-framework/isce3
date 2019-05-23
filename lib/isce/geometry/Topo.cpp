@@ -315,14 +315,20 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
     pyre::journal::warning_t warning("isce.core.Topo");
 
     // Initialize geographic bounds
-    double min_lat = 10000.0;
-    double max_lat = -10000.0;
-    double min_lon = 10000.0;
-    double max_lon = -10000.0;
+    double minX = 1.0e64;
+    double maxX = -1.0e64;
+    double minY = 1.0e64;
+    double maxY = -1.0e64;
 
     // Skip factors along azimuth and range
     const int askip = std::max((int) blockLength / 10, 1);
     const int rskip = _radarGrid.width() / 10;
+
+
+    //Construct projection base with DEM's epsg code
+    int epsgcode = demRaster.getEPSG();
+
+    isce::core::ProjectionBase * proj = isce::core::createProj(epsgcode);
 
     // Construct vectors of range/azimuth indices traversing the perimeter of the radar frame
 
@@ -377,6 +383,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
 
         // Run topo for one iteration for two different heights
         cartesian_t llh {0., 0., 0.};
+
         std::array<double, 2> testHeights = {MIN_H, MAX_H};
         for (int k = 0; k < 2; ++k) {
 
@@ -394,23 +401,27 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
                         _lookSide, _threshold, 1, 0);
             }
 
+            Vec3 enu = {0., 0., 0.};
+            proj->forward(llh, enu);
+
             // Update bounds
-            min_lat = std::min(min_lat, llh[1]);
-            max_lat = std::max(max_lat, llh[1]);
-            min_lon = std::min(min_lon, llh[0]);
-            max_lon = std::max(max_lon, llh[0]);
+            minY = std::min(minY, enu[1]);
+            maxY = std::max(maxY, enu[1]);
+            minX = std::min(minX, enu[0]);
+            maxX = std::max(maxX, enu[0]);
         }
     }
 
+    double margin = (epsgcode == 4326)? MARGIN: (M_PI/180.0)*6.37e6*MARGIN;
     // Account for margins
-    min_lon -= MARGIN;
-    max_lon += MARGIN;
-    min_lat -= MARGIN;
-    max_lat += MARGIN;
+    minX -= margin;
+    maxX += margin;
+    minY -= margin;
+    maxY += margin;
 
     // Extract DEM subset
-    demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat,
-                      demRaster.getEPSG());
+    demInterp.loadDEM(demRaster, minX, maxX, minY, maxY);
+    
     demInterp.declare();
 }
 

@@ -181,8 +181,8 @@ class isce::geometry::Topo {
 #undef ISCE_GEOMETRY_TOPO_ICC
 
 const double MIN_H = -500.0;
-const double MAX_H = -1000.0;
-const double MARGIN = 0.15 * M_PI / 180.0;
+const double MAX_H = 9000.0;
+const double MARGIN = 0.15; //In degrees
 
 #endif
 

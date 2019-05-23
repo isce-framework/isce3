@@ -186,17 +186,11 @@ void loadDEM(DEMInterpolator & demInterp) {
     double max_lon = -115.32;
     double max_lat = 35.0;
 
-    // Convert to radians
-    min_lon *= M_PI / 180.0;
-    min_lat *= M_PI / 180.0;
-    max_lon *= M_PI / 180.0;
-    max_lat *= M_PI / 180.0;
-
     // Open DEM raster
     isce::io::Raster demRaster("../../../../../lib/isce/data/srtm_cropped.tif");
 
     // Extract DEM subset
-    demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat, demRaster.getEPSG());
+    demInterp.loadDEM(demRaster, min_lon, max_lon, min_lat, max_lat);
 }
 
 // end of file

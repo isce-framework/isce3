@@ -773,37 +773,18 @@ _loadDEM(isce::io::Raster demRaster,
     double minX = _geoGridStartX;
     double maxX = _geoGridStartX + _geoGridSpacingX*(blockWidth - 1);
 
-    isce::core::cartesian_t xyz;
-    isce::core::cartesian_t llh;
-
-    // top left corner of the box
-    xyz[0] = minX;
-    xyz[1] = maxY;
-    _proj->inverse(xyz, llh);
-
-    double minLon = llh[0];
-    double maxLat = llh[1];
-
-    // lower right corner of the box
-    xyz[0] = maxX;
-    xyz[1] = minY;
-    _proj->inverse(xyz, llh);
-
-    double maxLon = llh[0];
-    double minLat = llh[1];
-
-    // convert the margin to radians
-    demMargin *= (M_PI/180.0);
+    // If not lonlat, scale to meters
+    if (_proj->code() != 4326)
+        demMargin *= (M_PI/180.0) * 6.37e6;
 
     // Account for margins
-    minLon -= demMargin;
-    maxLon += demMargin;
-    minLat -= demMargin;
-    maxLat += demMargin;
+    minX -= demMargin;
+    maxX += demMargin;
+    minY -= demMargin;
+    maxY += demMargin;
 
     // load the DEM for this bounding box
-    demInterp.loadDEM(demRaster, minLon, maxLon, minLat, maxLat,
-                                    demRaster.getEPSG());
+    demInterp.loadDEM(demRaster, minX, maxX, minY, maxY);
 
     if (demInterp.width() == 0 || demInterp.length() == 0)
         std::cout << "warning there are not enough DEM coverage in the bounding box. " << std::endl;
