@@ -1,0 +1,130 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// parasim
+// (c) 1998-2019 all rights reserved
+//
+
+// code guard
+#if !defined(ampcor_libampcor_dom_slc_icc)
+#error This header file contains implementation details of class ampcor::dom::SLC
+#endif
+
+
+// interface
+// the memory footprint of individual SLC pixels
+constexpr auto
+ampcor::dom::SLC::
+pixelSize() {
+    // easy enough
+    return sizeof(pixel_type);
+}
+
+
+// my layout
+auto
+ampcor::dom::SLC::
+layout() const {
+    // ask my grid
+    return _grid.layout();
+}
+
+
+// the number of pixels
+auto
+ampcor::dom::SLC::
+pixels() const {
+    // my grid layout knows the answer
+    return _grid.layout().size();
+}
+
+
+// the memory footprint of the raster data
+auto
+ampcor::dom::SLC::
+size() const {
+    // ask my grid for its number of cells a
+    return pixels() * pixelSize();
+}
+
+
+// the location of the data buffer
+auto
+ampcor::dom::SLC::
+data() const {
+    // ask my grid for its number of cells a
+    return _grid.data();
+}
+
+
+// pixel access
+// by index
+const auto &
+ampcor::dom::SLC::
+operator[] (const index_type & index) const {
+    // ask my grid for its number of cells a
+    return _grid[index];
+}
+
+
+// by offset
+const auto &
+ampcor::dom::SLC::
+operator[] (size_type offset) const {
+    // ask my grid for its number of cells a
+    return _grid[offset];
+}
+
+
+// iteration support
+auto
+ampcor::dom::SLC::
+view() {
+    // ask my grid
+    return _grid.view();
+}
+
+
+auto
+ampcor::dom::SLC::
+view(const slice_type & slice) {
+    // ask my grid
+    return _grid.view(slice);
+}
+
+
+auto
+ampcor::dom::SLC::
+view() const {
+    // ask my grid
+    return _grid.view();
+}
+
+
+auto
+ampcor::dom::SLC::
+view(const slice_type & slice) const {
+    // ask my grid
+    return _grid.view(slice);
+}
+
+
+auto
+ampcor::dom::SLC::
+constview(const slice_type & slice) const {
+    // ask my grid
+    return _grid.constview(slice);
+}
+
+
+// constructor
+ampcor::dom::SLC::
+SLC(uri_type filename, shape_type shape) :
+    // the caller provides the {shape}
+    // specify the {layout} explicitly, just in case the default changes...
+    _grid { filename, {shape, {1ul, 0ul}} }
+{}
+
+
+// end of file
