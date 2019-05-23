@@ -19,6 +19,9 @@ project(ISCE VERSION 3.0
 option(WITH_CUDA "Set ON|OFF (default=ON) to build CUDA library" OFF)
 if (WITH_CUDA)
     enable_language(CUDA)
+    if (CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 9)
+        message(FATAL_ERROR "CUDA version must be atleast 9. Detected ${CMAKE_CUDA_COMPILER_VERSION}")
+    endif()
 endif()
 
 # Set the name for the ISCE C++ library
