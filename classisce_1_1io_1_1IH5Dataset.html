@@ -123,24 +123,11 @@ Public Member Functions</h2></td></tr>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IH5Dataset.html#acd21b6ad09a1f730de785ec05eb5fd8a">~IH5Dataset</a> ()</td></tr>
 <tr class="memdesc:acd21b6ad09a1f730de785ec05eb5fd8a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor. <br/></td></tr>
 <tr class="separator:acd21b6ad09a1f730de785ec05eb5fd8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab143fa9a373da0c56b99eb21f3d13d00"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab143fa9a373da0c56b99eb21f3d13d00"></a>
-virtual const char *&#160;</td><td class="memItemRight" valign="bottom"><b>GetProjectionRef</b> () override</td></tr>
-<tr class="separator:ab143fa9a373da0c56b99eb21f3d13d00"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adaa024cc2271f032877c73d1a2a50066"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adaa024cc2271f032877c73d1a2a50066"></a>
-virtual CPLErr&#160;</td><td class="memItemRight" valign="bottom"><b>SetProjection</b> (const char *) override</td></tr>
-<tr class="separator:adaa024cc2271f032877c73d1a2a50066"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62f92b44491c8000b2789f4270ab9c9f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a62f92b44491c8000b2789f4270ab9c9f"></a>
 virtual int&#160;</td><td class="memItemRight" valign="bottom"><b>GetGCPCount</b> () override</td></tr>
 <tr class="separator:a62f92b44491c8000b2789f4270ab9c9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acb1d1f621cad0436a9747e78b1e6b5e1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acb1d1f621cad0436a9747e78b1e6b5e1"></a>
-virtual const char *&#160;</td><td class="memItemRight" valign="bottom"><b>GetGCPProjection</b> () override</td></tr>
-<tr class="separator:acb1d1f621cad0436a9747e78b1e6b5e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a102695075e9987b4259c03b646486b1b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a102695075e9987b4259c03b646486b1b"></a>
-virtual const GDAL_GCP *&#160;</td><td class="memItemRight" valign="bottom"><b>GetGCPs</b> () override</td></tr>
+<tr class="memitem:a102695075e9987b4259c03b646486b1b"><td class="memItemLeft" align="right" valign="top">virtual const GDAL_GCP *&#160;</td><td class="memItemRight" valign="bottom"><b>GetGCPs</b> () override</td></tr>
 <tr class="separator:a102695075e9987b4259c03b646486b1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adbc19728d2d2423f32e7fb02d723fee6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adbc19728d2d2423f32e7fb02d723fee6"></a>
-virtual CPLErr&#160;</td><td class="memItemRight" valign="bottom"><b>SetGCPs</b> (int nGCPCount, const GDAL_GCP *pasGCPList, const char *pszGCPProjection) override</td></tr>
-<tr class="separator:adbc19728d2d2423f32e7fb02d723fee6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a91852b3ebf134d26b31b7a78ebb1449e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a91852b3ebf134d26b31b7a78ebb1449e"></a>
 void *&#160;</td><td class="memItemRight" valign="bottom"><b>GetInternalHandle</b> (const char *) override</td></tr>
 <tr class="separator:a91852b3ebf134d26b31b7a78ebb1449e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -174,7 +161,33 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>IH5RasterBand</b></t
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>IH5 interface to GDAL Dataset to allow read/write to HDF5 datasets from ISCE. </p>
-</div><hr/>The documentation for this class was generated from the following files:<ul>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a102695075e9987b4259c03b646486b1b"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const GDAL_GCP * isce::io::IH5Dataset::GetGCPs </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">{</div>
+<div class="line">    <span class="keywordflow">return</span> pszGCPProjection</div>
+</div><!-- fragment -->
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>/home/conda/isce/lib/isce/io/<a class="el" href="IH5Dataset_8h_source.html">IH5Dataset.h</a></li>
 <li>/home/conda/isce/lib/isce/io/IH5Dataset.cpp</li>
 </ul>
