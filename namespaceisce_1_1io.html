@@ -145,9 +145,6 @@ Functions</h2></td></tr>
 <tr class="memitem:a149fe3b422513f4be11b46ca902f567d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a149fe3b422513f4be11b46ca902f567d"></a>
 unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>mapFileAccessMode</b> (const char mode)</td></tr>
 <tr class="separator:a149fe3b422513f4be11b46ca902f567d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3b7bc6ef4eb371dbb2f030eee87bea4e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3b7bc6ef4eb371dbb2f030eee87bea4e"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>CPLFree</b> (pasGCPList)</td></tr>
-<tr class="separator:a3b7bc6ef4eb371dbb2f030eee87bea4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae74e2acf42e754db4111aa8c0dc4920b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae74e2acf42e754db4111aa8c0dc4920b"></a>
 H5::DataType&#160;</td><td class="memItemRight" valign="bottom"><b>IH5GetNativeType</b> (H5::DataType &amp;intype)</td></tr>
 <tr class="separator:ae74e2acf42e754db4111aa8c0dc4920b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -231,20 +228,6 @@ const hsize_t&#160;</td><td class="memItemRight" valign="bottom"><b>chunkSizeY</
 <tr class="memitem:ac4b83f53848b1146f19bb62395ae9006"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac4b83f53848b1146f19bb62395ae9006"></a>
 const int&#160;</td><td class="memItemRight" valign="bottom"><b>STRLENGTH</b> = 50</td></tr>
 <tr class="separator:ac4b83f53848b1146f19bb62395ae9006"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf8bc95398dd1ac5335ed578160f4263"><td class="memItemLeft" align="right" valign="top">return&#160;</td><td class="memItemRight" valign="bottom"><b>pszProjection</b></td></tr>
-<tr class="separator:acf8bc95398dd1ac5335ed578160f4263"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae65b439ec4be1b552b894550ba4cbe11"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae65b439ec4be1b552b894550ba4cbe11"></a>
-return&#160;</td><td class="memItemRight" valign="bottom"><b>CE_None</b></td></tr>
-<tr class="separator:ae65b439ec4be1b552b894550ba4cbe11"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac21dc47e29f7b9ca6c4453d204ff8585"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac21dc47e29f7b9ca6c4453d204ff8585"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>pszGCPProjection</b> = CPLStrdup(&quot;&quot;)</td></tr>
-<tr class="separator:ac21dc47e29f7b9ca6c4453d204ff8585"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56f4a6afd0e3be34077c9cab08bb2442"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a56f4a6afd0e3be34077c9cab08bb2442"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>nGCPCount</b> = nNewCount</td></tr>
-<tr class="separator:a56f4a6afd0e3be34077c9cab08bb2442"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5333cd85f2f82a1e4db7089c52a0975e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5333cd85f2f82a1e4db7089c52a0975e"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>pasGCPList</b> = GDALDuplicateGCPs( nGCPCount, pasNewGCPList )</td></tr>
-<tr class="separator:a5333cd85f2f82a1e4db7089c52a0975e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The <a class="el" href="namespaceisce_1_1io.html" title="The isce::io namespace. ">isce::io</a> namespace. </p>
@@ -988,21 +971,6 @@ template&lt;typename H5obj &gt; </div>
 <div class="line">           {<span class="keyword">typeid</span>(std::complex&lt;int32_t&gt;), GDT_CInt32},</div>
 <div class="line">           {<span class="keyword">typeid</span>(std::complex&lt;float&gt;),   GDT_CFloat32},</div>
 <div class="line">           {<span class="keyword">typeid</span>(std::complex&lt;double&gt;),  GDT_CFloat64}}</div>
-</div><!-- fragment -->
-</div>
-</div>
-<a class="anchor" id="acf8bc95398dd1ac5335ed578160f4263"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">isce::io::pszProjection</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">{</div>
-<div class="line"></div>
-<div class="line">        <span class="keywordflow">return</span> <span class="stringliteral">&quot;&quot;</span></div>
 </div><!-- fragment -->
 </div>
 </div>
