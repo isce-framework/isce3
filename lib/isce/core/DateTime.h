@@ -107,7 +107,7 @@ struct isce::core::DateTime {
 
     /**Return time elapsed since given ordinal epoch*/
     void secondsSinceEpoch(double);
-  
+
     /**Return date formatted as ISO-8601 string*/
     std::string isoformat() const;
 
@@ -137,7 +137,6 @@ namespace isce {
         static const int DAYSPER400  = 146097;
         static const int DAYSPER4    = 1461;
         static const int MAXORDINAL  = 3652059;
-        static const double TOL_SECONDS = 1.0e-11;
 
         // Handful of utility functions
         bool _is_leap(int);

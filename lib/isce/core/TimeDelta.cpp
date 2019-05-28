@@ -129,7 +129,7 @@ operator<(const TimeDelta &ts) const
 bool isce::core::TimeDelta::
 operator<(double ts) const
 {
-    return getTotalSeconds() < ts;
+    return ts - getTotalSeconds() > TOL_SECONDS;
 }
 
 
@@ -142,7 +142,7 @@ operator>(const TimeDelta &ts) const
 bool isce::core::TimeDelta::
 operator>(double ts) const
 {
-    return getTotalSeconds() > ts;
+    return getTotalSeconds() - ts > TOL_SECONDS;
 }
 
 bool isce::core::TimeDelta::
@@ -178,7 +178,7 @@ operator==(const TimeDelta &ts) const
 bool isce::core::TimeDelta::
 operator==(double ts) const
 {
-    return getTotalSeconds() == ts;
+    return std::abs(getTotalSeconds() - ts) < TOL_SECONDS;
 }
 
 bool isce::core::TimeDelta::
@@ -216,7 +216,7 @@ isce::core::TimeDelta
 isce::core::TimeDelta::
 operator+(const TimeDelta &ts) const
 {
-    return TimeDelta(days+ts.days, hours + ts.hours, 
+    return TimeDelta(days+ts.days, hours + ts.hours,
             minutes + ts.minutes, seconds + ts.seconds,
             frac + ts.frac);
 }
@@ -247,7 +247,7 @@ operator-(const double& s) const
 
 isce::core::TimeDelta &
 isce::core::TimeDelta::
-operator+=(const TimeDelta& ts) 
+operator+=(const TimeDelta& ts)
 {
     days += ts.days;
     hours += ts.hours;

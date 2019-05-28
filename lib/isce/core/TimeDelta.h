@@ -112,6 +112,8 @@ namespace isce {
         const int DAY_TO_SEC=86400;
         const int DAY_TO_MIN=1440;
         const int DAY_TO_HOUR=24;
+
+        static const double TOL_SECONDS = 1.0e-10;
     }
 }
 
