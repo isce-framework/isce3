@@ -16,11 +16,11 @@
 namespace isce {
     namespace core {
         template<typename TK, typename TD>
-        TD interp1d(isce::core::Kernel<TK> &kernel,
+        TD interp1d(const isce::core::Kernel<TK> &kernel,
                     const std::valarray<TD> &x, double t);
 
         template<typename TK, typename TD>
-        TD interp1d(isce::core::Kernel<TK> &kernel, const TD *x,
+        TD interp1d(const isce::core::Kernel<TK> &kernel, const TD *x,
                              size_t length, size_t stride, double t);
     }
 }

@@ -13,7 +13,7 @@
 template <typename TK, typename TD>
 inline
 TD
-isce::core::interp1d(isce::core::Kernel<TK> &kernel,
+isce::core::interp1d(const isce::core::Kernel<TK> &kernel,
                      const TD *x, size_t length, size_t stride, double t)
 {
     int _width = int(ceil(kernel.width()));
@@ -41,7 +41,7 @@ isce::core::interp1d(isce::core::Kernel<TK> &kernel,
 template <typename TK, typename TD>
 inline
 TD
-isce::core::interp1d(isce::core::Kernel<TK> &kernel,
+isce::core::interp1d(const isce::core::Kernel<TK> &kernel,
                      const std::valarray<TD> &x, double t)
 {
     return isce::core::interp1d(kernel, &x[0], x.size(), 1, t);
