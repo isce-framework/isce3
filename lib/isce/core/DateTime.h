@@ -87,6 +87,15 @@ struct isce::core::DateTime {
 
     TimeDelta operator-(const DateTime& ts) const;
 
+    /** Check whether two DateTimes are equivalent to within TOL_SECONDS. */
+    bool isClose(const DateTime& ts) const;
+
+    /**
+     * Check whether two DateTimes are equivalent to within the
+     * specified error tolerance.
+     */
+    bool isClose(const DateTime& ts, const TimeDelta& errtol) const;
+
     /** Return day of year*/
     int dayOfYear() const;
 
@@ -137,6 +146,8 @@ namespace isce {
         static const int DAYSPER400  = 146097;
         static const int DAYSPER4    = 1461;
         static const int MAXORDINAL  = 3652059;
+
+        static const double TOL_SECONDS = 1e-10;
 
         // Handful of utility functions
         bool _is_leap(int);

@@ -271,13 +271,13 @@ operator=(const std::string & datestr) {
 bool isce::core::DateTime::
 operator<(const DateTime &ts) const
 {
-    return ((*this) - ts) < -1 * TOL_SECONDS;
+    return ((*this) - ts) < 0.0;
 }
 
 bool isce::core::DateTime::
 operator>(const DateTime &ts) const
 {
-    return ((*this) - ts) > TOL_SECONDS;
+    return ((*this) - ts) > 0.0;
 }
 
 bool isce::core::DateTime::
@@ -295,13 +295,13 @@ operator>=(const DateTime &ts) const
 bool isce::core::DateTime::
 operator==(const DateTime &ts) const
 {
-    return (*this) - ts == 0.;
+    return (*this) - ts == 0.0;
 }
 
 bool isce::core::DateTime::
 operator!=(const DateTime &ts) const
 {
-    return !(*this == ts);
+    return ((*this) - ts) != 0.0;
 }
 
 // Math operators
@@ -395,6 +395,20 @@ operator-(const DateTime& ts) const
                    - _ymd_to_ord(ts.year, ts.months, ts.days);
     return TimeDelta(delta_days, hours-ts.hours, minutes-ts.minutes,
             seconds-ts.seconds, frac-ts.frac);
+}
+
+bool isce::core::DateTime::
+isClose(const DateTime& ts) const
+{
+    TimeDelta dt = (*this) - ts;
+    return std::abs(dt.getTotalSeconds()) < TOL_SECONDS;
+}
+
+bool isce::core::DateTime::
+isClose(const DateTime& ts, const TimeDelta& errtol) const
+{
+    TimeDelta dt = (*this) - ts;
+    return std::abs(dt.getTotalSeconds()) < errtol.getTotalSeconds();
 }
 
 // Get seconds of day

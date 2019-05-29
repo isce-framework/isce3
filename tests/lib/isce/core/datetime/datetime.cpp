@@ -135,6 +135,14 @@ TEST(DateTimeTest, Comparison) {
     ASSERT_TRUE(dtime1 <= dtime3);
 }
 
+TEST(DateTimeTest, IsClose) {
+    isce::core::DateTime dtime1(2017, 5, 12, 1, 12, 30.141592);
+    isce::core::DateTime dtime2 = dtime1 + isce::core::TimeDelta(1e-11);
+    ASSERT_TRUE(dtime1.isClose(dtime2));
+    isce::core::TimeDelta errtol(1e-12);
+    ASSERT_FALSE(dtime1.isClose(dtime2, errtol));
+}
+
 TEST(DateTimeTest, TimeDeltaComparison) {
     isce::core::TimeDelta dt1(0.5);
     isce::core::TimeDelta dt2(0.5);
