@@ -5,21 +5,14 @@
 
 #include <cmath>
 #include <stdexcept>
-#include <string>
-#include <vector>
 #include "Constants.h"
 #include "Ellipsoid.h"
-#include "LinAlg.h"
 #include "Peg.h"
 #include "Pegtrans.h"
 using isce::core::Ellipsoid;
-using isce::core::LinAlg;
 using isce::core::Peg;
 using isce::core::Pegtrans;
 using std::invalid_argument;
-using std::string;
-using std::to_string;
-using std::vector;
 
 
 void Pegtrans::radarToXYZ(const Ellipsoid &elp, const Peg &peg) {
@@ -38,7 +31,7 @@ void Pegtrans::radarToXYZ(const Ellipsoid &elp, const Peg &peg) {
     mat[2][1] = cos(peg.lat) * cos(peg.hdg);
     mat[2][2] = cos(peg.lat) * sin(peg.hdg);
 
-    LinAlg::tranMat(mat, matinv);
+    matinv = mat.transpose();
 
     radcur = elp.rDir(peg.hdg, peg.lat);
 
@@ -46,7 +39,7 @@ void Pegtrans::radarToXYZ(const Ellipsoid &elp, const Peg &peg) {
     cartesian_t p;
     elp.lonLatToXyz(llh, p);
     cartesian_t up = {cos(peg.lat) * cos(peg.lon), cos(peg.lat) * sin(peg.lon), sin(peg.lat)};
-    LinAlg::linComb(1., p, -radcur, up, ov);
+    ov = p - radcur * up;
 }
 
 void Pegtrans::convertXYZtoSCH(const cartesian_t & xyzv, cartesian_t & schv) const {
@@ -58,8 +51,8 @@ void Pegtrans::convertXYZtoSCH(const cartesian_t & xyzv, cartesian_t & schv) con
     // Create reference sphere
     Ellipsoid sph(radcur,0.);
     // Perform conversion
-    LinAlg::linComb(1., xyzv, -1., ov, schvt);
-    LinAlg::matVec(matinv, schvt, schv);
+    schvt = xyzv - ov;
+    schv = matinv.dot(schvt);
     sph.xyzToLonLat(schv, llh);
     schv = {radcur*llh[0], radcur*llh[1], llh[2]};
 }
@@ -75,8 +68,8 @@ void Pegtrans::convertSCHtoXYZ(const cartesian_t & schv, cartesian_t & xyzv) con
     // Perform conversion
     llh = {schv[0]/radcur, schv[1]/radcur, schv[2]};
     sph.lonLatToXyz(llh, schvt);
-    LinAlg::matVec(mat, schvt, xyzv);
-    LinAlg::linComb(1., xyzv, 1., ov, xyzv);
+    xyzv = mat.dot(schvt);
+    xyzv = xyzv + ov;
 }
 
 void Pegtrans::convertXYZdotToSCHdot(const cartesian_t & sch, const cartesian_t & xyzdot,
@@ -87,7 +80,7 @@ void Pegtrans::convertXYZdotToSCHdot(const cartesian_t & sch, const cartesian_t 
     */
     cartmat_t schxyzmat, xyzschmat;
     SCHbasis(sch, xyzschmat, schxyzmat);
-    LinAlg::matVec(xyzschmat, xyzdot, schdot);
+    schdot = xyzschmat.dot(xyzdot);
 }
 
 void Pegtrans::convertSCHdotToXYZdot(const cartesian_t & sch, const cartesian_t & schdot,
@@ -98,7 +91,7 @@ void Pegtrans::convertSCHdotToXYZdot(const cartesian_t & sch, const cartesian_t 
     */
     cartmat_t schxyzmat, xyzschmat;
     SCHbasis(sch, xyzschmat, schxyzmat);
-    LinAlg::matVec(schxyzmat, schdot, xyzdot);
+    xyzdot = schxyzmat.dot(schdot);
 }
 
 void Pegtrans::SCHbasis(const cartesian_t &sch, cartmat_t & xyzschmat,
@@ -115,6 +108,5 @@ void Pegtrans::SCHbasis(const cartesian_t &sch, cartmat_t & xyzschmat,
                             {0.,
                              cos(sch[1]/radcur),
                              sin(sch[1]/radcur)}}};
-    LinAlg::matMat(mat, matschxyzp, schxyzmat);
-    LinAlg::tranMat(schxyzmat, xyzschmat);
+    schxyzmat = mat.dot(matschxyzp).transpose();
 }

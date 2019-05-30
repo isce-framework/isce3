@@ -7,7 +7,6 @@
 #ifndef ISCE_UNWRAP_PHASS_PHASS_H
 #define ISCE_UNWRAP_PHASS_PHASS_H
 
-#include <array> // std::array
 #include <complex> // std::complex
 #include <cstddef> // size_t
 #include <cstdint> // uint8_t

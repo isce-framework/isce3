@@ -20,6 +20,9 @@ namespace isce { namespace core {
      * forward - To convert llh (radians) to expected projection system 
      * inverse - To convert expected projection system to llh (radians) */
     struct ProjectionBase {
+
+        using cartesian_t = Vec3;
+
         /** Ellipsoid object for projections - currently only WGS84 */
         Ellipsoid ellipse;
         /** Type of projection system. This can be used to check if projection systems are equal
@@ -46,13 +49,18 @@ namespace isce { namespace core {
          * @param[in] xyz Coordinates in specified projection system 
          * @param[out] llh Lat/Lon/Height - Lon and Lat are in radians */
         virtual int inverse(const cartesian_t& xyz, cartesian_t& llh) const = 0 ;
+        inline Vec3 inverse(const Vec3& native) const {
+            Vec3 llh;
+            inverse(native, llh);
+            return llh;
+        }
     };
 
     /** Standard WGS84 Lon/Lat Projection extension of ProjBase - EPSG:4326 */
     struct LonLat : public ProjectionBase {
         // Value constructor
         LonLat() : ProjectionBase(4326) {}
-        
+
         inline void print() const;
         // This will be a pass through for Lat/Lon
         inline int forward(const cartesian_t&, cartesian_t&) const;
@@ -178,8 +186,8 @@ namespace isce { namespace core {
     ProjectionBase* createProj(int epsg);
 
     // This is to transform a point from one coordinate system to another
-    int projTransform(ProjectionBase* in, ProjectionBase *out, const cartesian_t &inpts,
-                      cartesian_t &outpts);
+    int projTransform(ProjectionBase* in, ProjectionBase *out, const Vec3& inpts,
+                      Vec3& outpts);
 }}
 
 #endif

@@ -8,15 +8,14 @@
 #ifndef ISCE_CUDA_SIGNAL_CROSSMUL_H
 #define ISCE_CUDA_SIGNAL_CROSSMUL_H
 
-#include <thrust/complex.h>
-
 #include <isce/io/Raster.h>
 #include <isce/core/LUT1d.h>
-#include "isce/cuda/core/Common.h"
-#include "isce/cuda/core/gpuLUT1d.h"
+#include <isce/core/Common.h>
+#include <isce/cuda/core/gpuLUT1d.h>
 #include "gpuSignal.h"
 #include "gpuFilter.h"
 #include "gpuLooks.h"
+#include <thrust/complex.h>
 
 
 // Declaration

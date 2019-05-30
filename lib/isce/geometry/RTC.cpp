@@ -12,31 +12,18 @@
 #include <ctime>
 #include <cstring>
 
-#include "isce/core/Constants.h"
-#include "isce/core/DateTime.h"
-#include "isce/core/Ellipsoid.h"
-#include "isce/core/Peg.h"
-#include "isce/core/Pegtrans.h"
-#include "isce/geometry/geometry.h"
-#include "isce/geometry/RTC.h"
-#include "isce/geometry/Topo.h"
+#include <isce/core/Constants.h>
+#include <isce/core/Cartesian.h>
+#include <isce/core/DateTime.h>
+#include <isce/core/Ellipsoid.h>
 
-// Function to compute normal vector to a plane given three points
-std::array<double, 3> computePlaneNormal(std::array<double, 3> & x1,
-    std::array<double, 3> & x2, std::array<double, 3>& x3) {
+#include <isce/geometry/geometry.h>
+#include <isce/geometry/RTC.h>
+#include <isce/geometry/Topo.h>
 
-    std::array<double, 3> x12, x13, n, nhat;
-
-    for (int i = 0; i < 3; i++) {
-        x12[i] = x2[i] - x1[i];
-        x13[i] = x3[i] - x1[i];
-    }
-
-    isce::core::LinAlg::cross(x13, x12, n);
-    isce::core::LinAlg::unitVec(n, nhat);
-
-    return nhat;
-}
+using isce::core::cartesian_t;
+using isce::core::Mat3;
+using isce::core::Vec3;
 
 double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp,
                                const isce::product::RadarGridParameters & radarGrid,
@@ -45,31 +32,22 @@ double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp
     isce::core::ProjectionBase * proj = isce::core::createProj(dem_interp.epsgCode());
 
     // Get middle XY coordinate in DEM coords, lat/lon, and ECEF XYZ
-    isce::core::cartesian_t demXY{dem_interp.midX(), dem_interp.midY(), 0.0}, llh;
-    proj->inverse(demXY, llh);
-    isce::core::cartesian_t xyz0;
-    ellps.lonLatToXyz(llh, xyz0);
+    Vec3 demXY{dem_interp.midX(), dem_interp.midY(), 0.0};
+    const Vec3 xyz0 = ellps.lonLatToXyz(proj->inverse(demXY));
 
     // Repeat for middle coordinate + deltaX
     demXY[0] += dem_interp.deltaX();
-    proj->inverse(demXY, llh);
-    isce::core::cartesian_t xyz1;
-    ellps.lonLatToXyz(llh, xyz1);
+    const Vec3 xyz1 = ellps.lonLatToXyz(proj->inverse(demXY));
 
     // Repeat for middle coordinate + deltaX + deltaY
     demXY[1] += dem_interp.deltaY();
-    proj->inverse(demXY, llh);
-    isce::core::cartesian_t xyz2;
-    ellps.lonLatToXyz(llh, xyz2);
+    const Vec3 xyz2 = ellps.lonLatToXyz(proj->inverse(demXY));
 
-    // Estimate width of DEM pixel
-    isce::core::cartesian_t delta;
-    isce::core::LinAlg::linComb(1., xyz1, -1., xyz0, delta);
-    const double dx = isce::core::LinAlg::norm(delta);
+    delete proj;
 
-    // Estimate length of DEM pixel
-    isce::core::LinAlg::linComb(1., xyz2, -1., xyz1, delta);
-    const double dy = isce::core::LinAlg::norm(delta);
+    // Estimate width/length of DEM pixel
+    const double dx = (xyz1 - xyz0).norm();
+    const double dy = (xyz2 - xyz1).norm();
 
     // Compute area of DEM pixel
     const double demArea = dx * dy;
@@ -85,19 +63,36 @@ void isce::geometry::facetRTC(isce::product::Product& product,
                               isce::io::Raster& dem,
                               isce::io::Raster& out_raster,
                               char frequency) {
-    using isce::core::LinAlg;
 
-    isce::core::Ellipsoid ellps(isce::core::EarthSemiMajorAxis,
-                                isce::core::EarthEccentricitySquared);
     isce::core::Orbit orbit = product.metadata().orbit();
     isce::product::RadarGridParameters radarGrid(product, frequency, 1, 1);
-    isce::geometry::Topo topo(product, frequency, true);
-    topo.orbitMethod(isce::core::orbitInterpMethod::HERMITE_METHOD);
     int lookSide = product.lookSide();
 
     // Get a copy of the Doppler LUT; allow for out-of-bounds extrapolation
     isce::core::LUT2d<double> dop = product.metadata().procInfo().dopplerCentroid(frequency);
     dop.boundsError(false);
+
+    facetRTC(radarGrid,
+            orbit,
+            dop,
+            dem,
+            out_raster,
+            lookSide);
+
+}
+
+void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radarGrid,
+                            const isce::core::Orbit& orbit,
+                            const isce::core::LUT2d<double>& dop,
+                            isce::io::Raster& dem,
+                            isce::io::Raster& out_raster,
+                            const int lookSide) {
+
+    isce::core::Ellipsoid ellps(isce::core::EarthSemiMajorAxis,
+                            isce::core::EarthEccentricitySquared);
+
+    isce::geometry::Topo topo(radarGrid, orbit, dop, ellps, lookSide);
+    topo.orbitMethod(isce::core::orbitInterpMethod::HERMITE_METHOD);
 
     const double start = radarGrid.sensingStart();
     const double   end = radarGrid.sensingStop();
@@ -105,11 +100,6 @@ void isce::geometry::facetRTC(isce::product::Product& product,
 
     const double r0 = radarGrid.startingRange();
     const double dr = radarGrid.rangePixelSpacing();
-
-    // Initialize other ISCE objects
-    isce::core::Peg peg;
-    isce::core::Pegtrans ptm;
-    ptm.radarToXYZ(ellps, peg);
 
     // Bounds for valid RDC coordinates
     double xbound = radarGrid.width()  - 1.0;
@@ -138,6 +128,8 @@ void isce::geometry::facetRTC(isce::product::Product& product,
     const size_t progress_block = imax*jmax/100;
     size_t numdone = 0;
 
+    const isce::core::ProjectionBase* proj = isce::core::createProj(dem_interp.epsgCode());
+
     // Loop over DEM facets
     #pragma omp parallel for schedule(dynamic) collapse(2)
     for (size_t ii = 0; ii < imax; ++ii) {
@@ -151,22 +143,15 @@ void isce::geometry::facetRTC(isce::product::Product& product,
                 printf("\rRTC progress: %d%%", (int) (numdone * 1e2 / (imax * jmax))),
                     fflush(stdout);
 
-            isce::core::cartesian_t dem00, dem01, dem10, dem11,
-                                    llh00, llh01, llh10, llh11, inputLLH,
-                                    xyz00, xyz01, xyz10, xyz11, xyz_mid,
-                                    P00_01, P00_10, P10_01, P11_01, P11_10,
-                                    lookXYZ, normalFacet1, normalFacet2;
-
             // Central DEM coordinates of facets
             const double dem_ymid = dem_interp.yStart() + dem_interp.deltaY() * (ii + 0.5) / upsample_factor;
             const double dem_xmid = dem_interp.xStart() + dem_interp.deltaX() * (jj + 0.5) / upsample_factor;
 
             double a, r;
-            isce::core::ProjectionBase* proj = isce::core::createProj(dem_interp.epsgCode());
-            isce::core::cartesian_t inputDEM{dem_xmid, dem_ymid,
+            const Vec3 inputDEM{dem_xmid, dem_ymid,
                 dem_interp.interpolateXY(dem_xmid, dem_ymid)};
             // Compute facet-central LLH vector
-            proj->inverse(inputDEM, inputLLH);
+            const Vec3 inputLLH = proj->inverse(inputDEM);
             int geostat = isce::geometry::geo2rdr(inputLLH, ellps, orbit, dop,
                     a, r, radarGrid.wavelength(), 1e-4, 100, 1e-4);
             const float azpix = (a - start) / pixazm;
@@ -189,44 +174,31 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             const double dem_x1 = dem_x0 + dem_interp.deltaX() / upsample_factor;
 
             // Set DEM-coordinate corner vectors
-            dem00 = {dem_x0, dem_y0,
+            const Vec3 dem00 = {dem_x0, dem_y0,
                 dem_interp.interpolateXY(dem_x0, dem_y0)};
-            dem01 = {dem_x0, dem_y1,
+            const Vec3 dem01 = {dem_x0, dem_y1,
                 dem_interp.interpolateXY(dem_x0, dem_y1)};
-            dem10 = {dem_x1, dem_y0,
+            const Vec3 dem10 = {dem_x1, dem_y0,
                 dem_interp.interpolateXY(dem_x1, dem_y0)};
-            dem11 = {dem_x1, dem_y1,
+            const Vec3 dem11 = {dem_x1, dem_y1,
                 dem_interp.interpolateXY(dem_x1, dem_y1)};
 
-            // Get LLH corner vectors
-            proj->inverse(dem00, llh00);
-            proj->inverse(dem01, llh01);
-            proj->inverse(dem10, llh10);
-            proj->inverse(dem11, llh11);
-
             // Convert to XYZ
-            ellps.lonLatToXyz(llh00, xyz00);
-            ellps.lonLatToXyz(llh01, xyz01);
-            ellps.lonLatToXyz(llh10, xyz10);
-            ellps.lonLatToXyz(llh11, xyz11);
+            const Vec3 xyz00 = ellps.lonLatToXyz(proj->inverse(dem00));
+            const Vec3 xyz01 = ellps.lonLatToXyz(proj->inverse(dem01));
+            const Vec3 xyz10 = ellps.lonLatToXyz(proj->inverse(dem10));
+            const Vec3 xyz11 = ellps.lonLatToXyz(proj->inverse(dem11));
 
             // Compute normal vectors for each facet
-            normalFacet1 = computePlaneNormal(xyz00, xyz10, xyz01);
-            normalFacet2 = computePlaneNormal(xyz01, xyz10, xyz11);
-
-            // Compute vectors associated with facet sides
-            LinAlg::linComb(1.0, xyz00, -1.0, xyz01, P00_01);
-            LinAlg::linComb(1.0, xyz00, -1.0, xyz10, P00_10);
-            LinAlg::linComb(1.0, xyz10, -1.0, xyz01, P10_01);
-            LinAlg::linComb(1.0, xyz11, -1.0, xyz01, P11_01);
-            LinAlg::linComb(1.0, xyz11, -1.0, xyz10, P11_10);
+            const Vec3 normalFacet1 = normalPlane(xyz00, xyz10, xyz01);
+            const Vec3 normalFacet2 = normalPlane(xyz01, xyz10, xyz11);
 
             // Side lengths
-            const double p00_01 = LinAlg::norm(P00_01);
-            const double p00_10 = LinAlg::norm(P00_10);
-            const double p10_01 = LinAlg::norm(P10_01);
-            const double p11_01 = LinAlg::norm(P11_01);
-            const double p11_10 = LinAlg::norm(P11_10);
+            const double p00_01 = (xyz00 - xyz01).norm();
+            const double p00_10 = (xyz00 - xyz10).norm();
+            const double p10_01 = (xyz10 - xyz01).norm();
+            const double p11_01 = (xyz11 - xyz01).norm();
+            const double p11_10 = (xyz11 - xyz10).norm();
 
             // Semi-perimeters
             const float h1 = 0.5 * (p00_01 + p00_10 + p10_01);
@@ -237,20 +209,14 @@ void isce::geometry::facetRTC(isce::product::Product& product,
             const float AP2 = std::sqrt(h2 * (h2 - p11_01) * (h2 - p11_10) * (h2 - p10_01));
 
             // Compute look angle from sensor to ground
-            ellps.lonLatToXyz(inputLLH, xyz_mid);
+            const Vec3 xyz_mid = ellps.lonLatToXyz(inputLLH);
             isce::core::cartesian_t xyz_plat, vel;
             orbit.interpolateWGS84Orbit(a, xyz_plat, vel);
-            lookXYZ = {xyz_plat[0] - xyz_mid[0],
-                       xyz_plat[1] - xyz_mid[1],
-                       xyz_plat[2] - xyz_mid[2]};
-            double norm = LinAlg::norm(lookXYZ);
-            lookXYZ[0] /= norm;
-            lookXYZ[1] /= norm;
-            lookXYZ[2] /= norm;
+            const Vec3 lookXYZ = (xyz_plat - xyz_mid).unitVec();
 
             // Compute dot product between each facet and look vector
-            const double cosIncFacet1 = LinAlg::dot(lookXYZ, normalFacet1);
-            const double cosIncFacet2 = LinAlg::dot(lookXYZ, normalFacet2);
+            const double cosIncFacet1 = lookXYZ.dot(normalFacet1);
+            const double cosIncFacet2 = lookXYZ.dot(normalFacet2);
             // If facets are not illuminated by radar, skip
             if (cosIncFacet1 < 0. or cosIncFacet2 < 0.) {
                 continue;
@@ -283,6 +249,8 @@ void isce::geometry::facetRTC(isce::product::Product& product,
         }
     }
 
+    delete proj;
+
     float max_hgt, avg_hgt;
     pyre::journal::info_t info("facet_calib");
     dem_interp.computeHeightStats(max_hgt, avg_hgt, info);
@@ -307,16 +275,13 @@ void isce::geometry::facetRTC(isce::product::Product& product,
                     1e-4, 20, 20, isce::core::HERMITE_METHOD);
 
             // Computation of ENU coordinates around ground target
-            isce::core::cartesian_t satToGround, enu;
-            isce::core::cartmat_t enumat, xyz2enu;
             ellps.lonLatToXyz(targetLLH, targetXYZ);
-            LinAlg::linComb(1.0, targetXYZ, -1.0, xyz_plat, satToGround);
-            LinAlg::enuBasis(targetLLH[1], targetLLH[0], enumat);
-            LinAlg::tranMat(enumat, xyz2enu);
-            LinAlg::matVec(xyz2enu, satToGround, enu);
+            const Vec3 satToGround = targetXYZ - xyz_plat;
+            const Mat3 xyz2enu = Mat3::xyzToEnu(targetLLH[1], targetLLH[0]);
+            const Vec3 enu = xyz2enu.dot(satToGround);
 
             // Compute incidence angle components
-            const double costheta = std::abs(enu[2]) / LinAlg::norm(enu);
+            const double costheta = std::abs(enu[2]) / enu.norm();
             const double sintheta = std::sqrt(1. - costheta*costheta);
 
             out[radarGrid.width() * i + j] *= sintheta;

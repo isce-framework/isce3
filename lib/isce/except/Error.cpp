@@ -16,13 +16,11 @@ std::string errmsg(const SrcInfo& info, std::string msg) {
 
 template<typename T>
 Error<T>::Error(const SrcInfo& info) :
-    info(info),
-    T(errmsg(info)) {}
+    T(errmsg(info)), info(info) {}
 
 template<typename T>
 Error<T>::Error(const SrcInfo& info, std::string msg) :
-    info(info),
-    T(errmsg(info, msg)) {}
+    T(errmsg(info, msg)), info(info) {}
 
-template class Error<std::length_error>;
-template class Error<std::runtime_error>;
+template class isce::except::Error<std::length_error>;
+template class isce::except::Error<std::runtime_error>;

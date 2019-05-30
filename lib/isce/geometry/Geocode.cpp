@@ -6,6 +6,8 @@
 
 #include "Geocode.h"
 
+using isce::core::Vec3;
+
 template<class T>
 void isce::geometry::Geocode<T>::
 geocode(isce::io::Raster & inputRaster,
@@ -193,13 +195,9 @@ _loadDEM(isce::io::Raster demRaster,
     double minX = _geoGridStartX;
     double maxX = _geoGridStartX + _geoGridSpacingX*(blockWidth - 1);
 
-    isce::core::cartesian_t xyz;
-    isce::core::cartesian_t llh;
-
     // top left corner of the box
-    xyz[0] = minX;
-    xyz[1] = maxY;
-    proj->inverse(xyz, llh);
+    Vec3 xyz { minX, maxY, 0. };
+    Vec3 llh = proj->inverse(xyz);
 
     double minLon = llh[0];
     double maxLat = llh[1];
@@ -207,7 +205,7 @@ _loadDEM(isce::io::Raster demRaster,
     // lower right corner of the box
     xyz[0] = maxX;
     xyz[1] = minY;
-    proj->inverse(xyz, llh);
+    llh = proj->inverse(xyz);
 
     double maxLon = llh[0];
     double minLat = llh[1];
@@ -317,13 +315,10 @@ _geo2rdr(double x, double y,
         isce::core::ProjectionBase * proj)
 {
     // coordinate in the output projection system
-    isce::core::cartesian_t xyz{x, y, 0.0};
-
-    // coordinate in lon lat height
-    isce::core::cartesian_t llh;
+    const Vec3 xyz{x, y, 0.0};
 
     // transform the xyz in the output projection system to llh
-    proj->inverse(xyz, llh);
+    Vec3 llh = proj->inverse(xyz);
 
     // interpolate the height from the DEM for this pixel
     llh[2] = demInterp.interpolateLonLat(llh[0], llh[1]);
@@ -342,15 +337,14 @@ _geo2rdr(double x, double y,
     }
 
     // Compute TCN basis for geo2rdr solution for checking side consistency
-    isce::core::cartesian_t xyzsat, velsat, targxyz, deltaxyz;
+    Vec3 xyzsat, velsat;
     int orbstat = _orbit.interpolate(azimuthTime, xyzsat, velsat, isce::core::HERMITE_METHOD);
-    isce::core::Basis tcn;
-    _ellipsoid.TCNbasis(xyzsat, velsat, tcn);
+    const isce::core::Basis tcn(xyzsat, velsat);
 
     // Check the side of the C-component of the look vector to the ground point
-    _ellipsoid.lonLatToXyz(llh, targxyz);
-    isce::core::LinAlg::linComb(1.0, targxyz, -1.0, xyzsat, deltaxyz);
-    const double targ_c = isce::core::LinAlg::dot(deltaxyz, tcn.x1());
+    const Vec3 targxyz = _ellipsoid.lonLatToXyz(llh);
+    const Vec3 deltaxyz = targxyz - xyzsat;
+    const double targ_c = deltaxyz.dot(tcn.x1());
 
     // Positive values are invalid
     if ((targ_c * _lookSide > 0.0)) {

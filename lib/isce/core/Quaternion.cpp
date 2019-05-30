@@ -10,7 +10,6 @@
 #include <cmath>
 #include <map>
 
-#include "LinAlg.h"
 #include "Quaternion.h"
 #include "EulerAngles.h"
 
@@ -128,25 +127,19 @@ rotmat(double tintp, const std::string dummy, double dq0, double dq1, double dq2
 isce::core::cartesian_t
 isce::core::Quaternion::
 factoredYPR(double tintp,
-            const cartesian_t & satxyz,
-            const cartesian_t & satvel,
+            const cartesian_t& satxyz,
+            const cartesian_t& satvel,
             Ellipsoid * ellipsoid) {
 
     // Compute ECI velocity assuming attitude angles are provided in inertial frame
-    cartesian_t Va;
     cartesian_t w{0.0, 0.0, 0.00007292115833};
-    LinAlg::cross(w, satxyz, Va);
-    for (size_t i = 0; i < 3; ++i)
-        Va[i] += satvel[i];
+    const Vec3 Va = w.cross(satxyz) + satvel;
 
     // Compute vectors for TCN-like basis
-    cartesian_t q, c, b, a, temp;
-    temp = {satxyz[0], satxyz[1], satxyz[2] / (1 - ellipsoid->e2())};
-    LinAlg::unitVec(temp, q);
-    c = {-q[0], -q[1], -q[2]};
-    LinAlg::cross(c, Va, temp);
-    LinAlg::unitVec(temp, b);
-    LinAlg::cross(b, c, a);
+    const Vec3 temp = {satxyz[0], satxyz[1], satxyz[2] / (1 - ellipsoid->e2())};
+    const Vec3 c = -temp.unitVec();
+    const Vec3 b = c.cross(Va).unitVec();
+    const Vec3 a = b.cross(c);
 
     // Stack basis vectors to get transposed orbit matrix
     cartmat_t L0;
@@ -157,11 +150,10 @@ factoredYPR(double tintp,
     }
 
     // Get total rotation matrix
-    cartmat_t R = rotmat(tintp, "");
+    const cartmat_t R = rotmat(tintp, "");
 
     // Multiply by transpose to get pure attitude matrix
-    cartmat_t L;
-    LinAlg::matMat(L0, R, L);
+    const cartmat_t L = L0.dot(R);
 
     // Extract Euler angles from rotation matrix
     cartesian_t angles = EulerAngles::rotmat2ypr(L);

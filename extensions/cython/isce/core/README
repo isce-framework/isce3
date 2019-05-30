@@ -90,7 +90,7 @@ as const char*) and do not throw errors.
 
 Additionally, the directory structure was altered to have an additional directory (pyx/) sitting in 
 the top of LibraryCpp that contains all of the .pyx files, since they do not need to be relatively-
-pathed to their corresponding objects in the library. These files (Geometry.pyx, LinAlg.pyx, 
+pathed to their corresponding objects in the library. These files (Geometry.pyx,
 Orbit.pyx, Poly1d.pyx, and Poly2d.pyx) have a "meta" .pyx file called libCombinedLibCpp.pyx that 
 simply includes the other .pyx files. This allows for SConscript to simply Cythonize this one file 
 and it will build in the others automatically. The naming is awkward, however due to some 
@@ -108,7 +108,7 @@ clean and similar to how other ISCE scripts and programs import building blocks.
 To manually build the LibraryCpp library, the process is somewhat simpler than below (but letting 
 scons handle it automatically is the simplest option currently). To build, the steps are:
 
-  1. In each of Geometry/src, LinAlg/src, Orbit/src, Poly1d/src, Poly2d/src, build each .cpp object 
+  1. In each of Geometry/src, Orbit/src, Poly1d/src, Poly2d/src, build each .cpp object
      into a shared object in the same directory (cleaner) [recommended flags: -shared -fPIC -O3], 
      including headers as needed
 
@@ -187,18 +187,14 @@ consistency sake with the C++ structs.
 Building the library is fairly simple, and requires no special additions other than a single line to 
 call the cython builder on the .pyx file. To build everything into the Geometry library:
 
-// In LibraryCpp/LinAlg -
-g++ -shared -fPIC -O3 -Iinclude/ -c src/LinAlg.cpp
-
 // In LibraryCpp/Geometry -
 cython Geometry.pyx --cplus
 g++ -shared -fPIC -O3 -Iinclude/ -I[path-to-Python.h] -c Geometry.cpp
-g++ -shared -fPIC -O3 -Iinclude/ -I../LinAlg/include/ -c src/Ellipsoid.cpp -o src/Ellipsoid.o
-g++ -shared -fPIC -O3 -Iinclude/ -I../LinAlg/include/ -c src/Peg.cpp -o src/Peg.o
-g++ -shared -fPIC -O3 -Iinclude/ -I../LinAlg/include/ -c src/Pegtrans.cpp -o src/Pegtrans.o
-g++ -shared -fPIC -O3 -Iinclude/ -I../LinAlg/include/ -c src/Position.cpp -o src/Position.o
-g++ -shared -fPIC -O3 -Iinclude/ -I../LinAlg/include/ -I[path-to-Python.h] -o Geometry.abi3.so \
-    src/*.o Geometry.o ../LinAlg/LinAlg.o
+g++ -shared -fPIC -O3 -Iinclude/ -c src/Ellipsoid.cpp -o src/Ellipsoid.o
+g++ -shared -fPIC -O3 -Iinclude/ -c src/Peg.cpp -o src/Peg.o
+g++ -shared -fPIC -O3 -Iinclude/ -c src/Pegtrans.cpp -o src/Pegtrans.o
+g++ -shared -fPIC -O3 -Iinclude/ -c src/Position.cpp -o src/Position.o
+g++ -shared -fPIC -O3 -Iinclude/ -I[path-to-Python.h] -o Geometry.abi3.so src/*.o Geometry.o
 
 For safety's sake, there's an 'ext/' folder in Geometry/ that I'd highly recommend calling:
 

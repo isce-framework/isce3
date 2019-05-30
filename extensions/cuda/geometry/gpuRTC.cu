@@ -17,8 +17,6 @@
 #include <isce/geometry/RTC.h>
 #include <isce/geometry/Topo.h>
 
-#include <isce/cuda/core/gpuEllipsoid.h>
-#include <isce/cuda/core/gpuLinAlg.h>
 #include <isce/cuda/core/gpuLUT1d.h>
 #include <isce/cuda/core/gpuOrbit.h>
 #include <isce/cuda/except/Error.h>
@@ -28,27 +26,12 @@
 __constant__ double start, r0, pixazm, dr;
 __constant__ float xbound, ybound;
 
-// Function to compute normal vector to a plane given three points
-__device__
-void computePlaneNormal(double* nhat, const double* p1,
-                                      const double* p2,
-                                      const double* p3) {
-    double p12[3];
-    double p13[3];
-    double n[3];
-
-    for (int i = 0; i < 3; i++) {
-        p12[i] = p2[i] - p1[i];
-        p13[i] = p3[i] - p1[i];
-    }
-
-    isce::cuda::core::gpuLinAlg::cross(&p13[0], &p12[0], &n[0]);
-    isce::cuda::core::gpuLinAlg::unitVec(&n[0], &nhat[0]);
-}
+using isce::core::Vec3;
+using isce::core::Mat3;
 
 __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_factor,
         isce::cuda::geometry::gpuDEMInterpolator dem_interp,
-        isce::cuda::core::gpuEllipsoid ellps,
+        isce::core::Ellipsoid ellps,
         isce::cuda::core::gpuOrbit orbit,
         isce::cuda::core::gpuLUT1d<double> dop,
         size_t width,
@@ -63,23 +46,19 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     const double dem_y1 = dem_y0 + dem_interp.deltaY() / upsample_factor;
     const double dem_ymid = dem_interp.yStart() + (0.5 + yidx) * dem_interp.deltaY() / upsample_factor;
 
-    using cartesian_t = double[3];
-    cartesian_t xyz00, xyz01, xyz10, xyz11, xyz_mid,
-                P00_01, P00_10, P10_01, P11_01, P11_10,
-                lookXYZ, normalFacet1, normalFacet2;
+    cartesian_t lookXYZ;
 
     const double dem_xmid = dem_interp.xStart() + dem_interp.deltaX() * (xidx + 0.5) / upsample_factor;
 
     double a, r;
-    double inputLLH[3];
-
-    double inputDEM[] = { dem_xmid, dem_ymid,
+    Vec3 inputLLH;
+    const Vec3 inputDEM { dem_xmid, dem_ymid,
                           dem_interp.interpolateXY(dem_xmid, dem_ymid) };
     int epsgcode = dem_interp.epsgCode();
     isce::cuda::core::projInverse(epsgcode, inputDEM, inputLLH);
 
-    isce::cuda::geometry::geo2rdr(&inputLLH[0], ellps, orbit, dop,
-            &a, &r, wavelength, 1e-4, 20, 1e-4);
+    isce::cuda::geometry::geo2rdr(inputLLH, ellps, orbit, dop,
+                                  &a, &r, wavelength, 1e-4, 20, 1e-4);
 
     const float azpix = (a - start) / pixazm;
     const float ranpix = (r - r0) / dr;
@@ -99,16 +78,14 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     const double dem_x1 = dem_x0 + dem_interp.deltaX() / upsample_factor;
 
     // Set DEM-coordinate corner vectors
-    const double dem00[] = {dem_x0, dem_y0,
+    const Vec3 dem00 {dem_x0, dem_y0,
         dem_interp.interpolateXY(dem_x0, dem_y0)};
-    const double dem01[] = {dem_x0, dem_y1,
+    const Vec3 dem01 {dem_x0, dem_y1,
         dem_interp.interpolateXY(dem_x0, dem_y1)};
-    const double dem10[] = {dem_x1, dem_y0,
+    const Vec3 dem10 {dem_x1, dem_y0,
         dem_interp.interpolateXY(dem_x1, dem_y0)};
-    const double dem11[] = {dem_x1, dem_y1,
+    const Vec3 dem11 {dem_x1, dem_y1,
         dem_interp.interpolateXY(dem_x1, dem_y1)};
-
-    using cartesian_t = double[3];
 
     // Get LLH corner vectors
     cartesian_t llh00, llh01, llh10, llh11;
@@ -118,30 +95,21 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     isce::cuda::core::projInverse(epsgcode, dem11, llh11);
 
     // Convert to XYZ
-    ellps.lonLatToXyz(&llh00[0], xyz00);
-    ellps.lonLatToXyz(&llh01[0], xyz01);
-    ellps.lonLatToXyz(&llh10[0], xyz10);
-    ellps.lonLatToXyz(&llh11[0], xyz11);
+    const Vec3 xyz00 = ellps.lonLatToXyz(llh00);
+    const Vec3 xyz01 = ellps.lonLatToXyz(llh01);
+    const Vec3 xyz10 = ellps.lonLatToXyz(llh10);
+    const Vec3 xyz11 = ellps.lonLatToXyz(llh11);
 
     // Compute normal vectors for each facet
-    computePlaneNormal(normalFacet1, xyz00, xyz10, xyz01);
-    computePlaneNormal(normalFacet2, xyz01, xyz10, xyz11);
-
-    using isce::cuda::core::gpuLinAlg;
-
-    // Compute vectors associated with facet sides
-    gpuLinAlg::linComb(1., xyz00, -1., xyz01, P00_01);
-    gpuLinAlg::linComb(1., xyz00, -1., xyz10, P00_10);
-    gpuLinAlg::linComb(1., xyz10, -1., xyz01, P10_01);
-    gpuLinAlg::linComb(1., xyz11, -1., xyz01, P11_01);
-    gpuLinAlg::linComb(1., xyz11, -1., xyz10, P11_10);
+    const Vec3 normalFacet1 = normalPlane(xyz00, xyz10, xyz01);
+    const Vec3 normalFacet2 = normalPlane(xyz01, xyz10, xyz11);
 
     // Side lengths
-    const double p00_01 = gpuLinAlg::norm(P00_01);
-    const double p00_10 = gpuLinAlg::norm(P00_10);
-    const double p10_01 = gpuLinAlg::norm(P10_01);
-    const double p11_01 = gpuLinAlg::norm(P11_01);
-    const double p11_10 = gpuLinAlg::norm(P11_10);
+    const double p00_01 = (xyz00 - xyz01).norm();
+    const double p00_10 = (xyz00 - xyz10).norm();
+    const double p10_01 = (xyz10 - xyz01).norm();
+    const double p11_01 = (xyz11 - xyz01).norm();
+    const double p11_10 = (xyz11 - xyz10).norm();
 
     // Semi-perimeters
     const float h1 = 0.5 * (p00_01 + p00_10 + p10_01);
@@ -152,22 +120,17 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     const float AP2 = std::sqrt(h2 * (h2 - p11_01) * (h2 - p11_10) * (h2 - p10_01));
 
     // Compute look angle from sensor to ground
-    ellps.lonLatToXyz(inputLLH, xyz_mid);
-    double xyz_plat[3];
-    double vel[3];
-    orbit.interpolateWGS84Orbit(a, &xyz_plat[0], &vel[0]);
-    lookXYZ[0] = xyz_plat[0] - xyz_mid[0];
-    lookXYZ[1] = xyz_plat[1] - xyz_mid[1];
-    lookXYZ[2] = xyz_plat[2] - xyz_mid[2];
-
-    double norm = gpuLinAlg::norm(lookXYZ);
-    lookXYZ[0] /= norm;
-    lookXYZ[1] /= norm;
-    lookXYZ[2] /= norm;
+    const Vec3 xyz_mid = ellps.lonLatToXyz(inputLLH);
+    Vec3 xyz_plat;
+    {
+        Vec3 vel;
+        orbit.interpolateWGS84Orbit(a, xyz_plat.data(), vel.data());
+    }
+    lookXYZ = (xyz_plat - xyz_mid).unitVec();
 
     // Compute dot product between each facet and look vector
-    const double cosIncFacet1 = gpuLinAlg::dot(lookXYZ, normalFacet1);
-    const double cosIncFacet2 = gpuLinAlg::dot(lookXYZ, normalFacet2);
+    const double cosIncFacet1 = lookXYZ.dot(normalFacet1);
+    const double cosIncFacet2 = lookXYZ.dot(normalFacet2);
 
     // If facets are not illuminated by radar, skip
     if (cosIncFacet1 < 0. or cosIncFacet2 < 0.)
@@ -199,7 +162,7 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
 __global__ void flatearth(float* out,
         const isce::cuda::geometry::gpuDEMInterpolator flat_interp,
         const isce::cuda::core::gpuOrbit orbit,
-        const isce::cuda::core::gpuEllipsoid ellps,
+        const isce::core::Ellipsoid ellps,
         size_t length,
         size_t width,
         double wavelength,
@@ -212,34 +175,28 @@ __global__ void flatearth(float* out,
     if (j >= width or i >= length)
         return;
 
-    double xyz_plat[3];
-    double vel[3];
+    Vec3 xyz_plat, vel;
     orbit.interpolateWGS84Orbit(start + i * pixazm, &xyz_plat[0], &vel[0]);
 
     // Slant range for current pixel
     const double slt_range = r0 + j * dr;
 
     // Get LLH and XYZ coordinates for this azimuth/range
-    double targetLLH[3];
-    double targetXYZ[3];
+    Vec3 targetLLH;
     targetLLH[2] = avg_hgt; // initialize first guess
     isce::cuda::geometry::rdr2geo(start + i * pixazm, slt_range, 0, orbit, ellps,
             flat_interp, targetLLH, wavelength, 1,
             1e-4, 20, 20);
 
     // Computation of ENU coordinates around ground target
-    double satToGround[3];
-    double enu[3];
-    double enumat[9], xyz2enu[9];
-    ellps.lonLatToXyz(targetLLH, targetXYZ);
-    using isce::cuda::core::gpuLinAlg;
-    gpuLinAlg::linComb(1., targetXYZ, -1., xyz_plat, satToGround);
-    gpuLinAlg::enuBasis(targetLLH[1], targetLLH[0], enumat);
-    gpuLinAlg::tranMat(enumat, xyz2enu);
-    gpuLinAlg::matVec(xyz2enu, satToGround, enu);
+    const Vec3 targetXYZ = ellps.lonLatToXyz(targetLLH);
+    const Vec3 satToGround = targetXYZ - xyz_plat;
+
+    const Mat3 xyz2enu = Mat3::xyzToEnu(targetLLH[1], targetLLH[0]);
+    const Vec3 enu = xyz2enu.dot(satToGround);
 
     // Compute incidence angle components
-    const double costheta = fabs(enu[2]) / gpuLinAlg::norm(enu);
+    const double costheta = fabs(enu[2]) / enu.norm();
     const double sintheta = sqrt(1. - costheta*costheta);
 
     out[width * i + j] *= sintheta;
@@ -270,13 +227,12 @@ double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp
     ellps.lonLatToXyz(llh, xyz2);
 
     // Estimate width of DEM pixel
-    isce::core::cartesian_t delta;
-    isce::core::LinAlg::linComb(1., xyz1, -1., xyz0, delta);
-    const double dx = isce::core::LinAlg::norm(delta);
+    isce::core::cartesian_t delta = xyz1 - xyz0;
+    const double dx = delta.norm();
 
     // Estimate length of DEM pixel
-    isce::core::LinAlg::linComb(1., xyz2, -1., xyz1, delta);
-    const double dy = isce::core::LinAlg::norm(delta);
+    delta = xyz2 - xyz1;
+    const double dy = delta.norm();
 
     // Compute area of DEM pixel
     const double demArea = dx * dy;
@@ -365,7 +321,7 @@ namespace isce { namespace cuda {
 
             // Create hostside device objects
             isce::cuda::geometry::gpuDEMInterpolator dem_interp(dem_interp_h);
-            isce::cuda::core::gpuEllipsoid ellps(ellps_h);
+            isce::core::Ellipsoid ellps(ellps_h);
             isce::cuda::core::gpuOrbit orbit(orbit_h);
 
             // Convert LUT2d doppler to LUT1d

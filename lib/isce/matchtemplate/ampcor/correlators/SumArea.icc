@@ -1,0 +1,183 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// parasim
+// (c) 1998-2019 all rights reserved
+//
+
+// code guard
+#if !defined(ampcor_libampcor_correlators_sumarea_icc)
+#error This header file contains implementation details of class ampcor::correlators::SumArea
+#endif
+
+
+// interface
+template <typename rasterT>
+const auto &
+ampcor::correlators::SumArea<rasterT>::
+layout() const {
+    // easy enough...
+    return _grid.layout();
+}
+
+
+// pixel access
+// by index
+template <typename rasterT>
+const auto &
+ampcor::correlators::SumArea<rasterT>::
+operator[] (const index_type & index) const {
+    // ask my grid for its number of cells a
+    return _grid[index];
+}
+
+
+// by offset
+template <typename rasterT>
+const auto &
+ampcor::correlators::SumArea<rasterT>::
+operator[] (size_type offset) const {
+    // ask my grid for its number of cells a
+    return _grid[offset];
+}
+
+
+// by index
+template <typename rasterT>
+auto &
+ampcor::correlators::SumArea<rasterT>::
+operator[] (const index_type & index) {
+    // ask my grid for its number of cells a
+    return _grid[index];
+}
+
+
+// by offset
+template <typename rasterT>
+auto &
+ampcor::correlators::SumArea<rasterT>::
+operator[] (size_type offset) {
+    // ask my grid for its number of cells a
+    return _grid[offset];
+}
+
+
+// compute the sum within a window
+template <typename rasterT>
+auto
+ampcor::correlators::SumArea<rasterT>::
+sum(const slice_type & slice) const {
+    // directional offsets
+    index_type h {0ul, 1ul}; // horizontal movement
+    index_type v {1ul, 0ul}; // vertical movement
+    index_type d {1ul, 1ul}; // diagonal movement
+
+    // unpack the slice and convert to indices within the window
+    auto low = slice.low();
+    auto high = slice.high();
+
+    // form the four corners
+    index_type tl { low[0], low[1] };
+    index_type tr { low[0], high[1] - 1 };
+    index_type bl { high[0] - 1, low[1] };
+    index_type br { high[0] - 1, high[1] - 1 };
+
+    pyre::journal::debug_t channel("ampcor.correlators");
+    channel
+        << pyre::journal::at(__HERE__)
+        << "SumArea::sum:" << pyre::journal::newline
+        << " -- slice:" << pyre::journal::newline
+        << "    low = " << low << pyre::journal::newline
+        << "    high = " << high << pyre::journal::newline
+        << " -- derived window:" << pyre::journal::newline
+        << "    top left = " << tl << pyre::journal::newline
+        << "    top right = " << tr << pyre::journal::newline
+        << "    bottom left = " << bl << pyre::journal::newline
+        << "    bottom right = " << br << pyre::journal::newline;
+
+    // initialize the sum
+    pixel_type sum = _grid[br];
+    // show me
+    channel
+        << " -- adding br: grid[" << (br) << "] = " << _grid[br]
+        << pyre::journal::newline;
+    // if the slice is not on the top row of the grid
+    if (low[0] > 0) {
+        // show me
+        channel
+            << " -- subtracting tr: grid[" << (tr-v) << "] = " << _grid[tr-v]
+            << pyre::journal::newline;
+        // subtract its contribution to the sum
+        sum -= _grid[tr - v];
+    }
+    // if the slice is not on the left most column of the grid
+    if (low[1] > 0) {
+        // show me
+        channel
+            << " -- subtracting bl: grid[" << (bl-h) << "] = " << _grid[bl-h]
+            << pyre::journal::newline;
+        // subtract its contribution to the sum
+        sum -= _grid[bl - h];
+    }
+    // if the top left corner of the slice is not the top left corner of the grid
+    if (low[0] > 0 &&  low[1] > 0) {
+        // show me
+        channel
+            << " -- adding tl: grid[" << (tl-d) << "] = " << _grid[tl-d]
+            << pyre::journal::newline;
+        // restore its contribution to the sum
+        sum += _grid[tl - d];
+    }
+
+    // show me
+    channel
+        << " ++ sum = " << sum
+        << pyre::journal::endl;
+
+    // all done
+    return sum;
+}
+
+
+// constructor
+template <typename rasterT>
+ampcor::correlators::SumArea<rasterT>::
+SumArea(const raster_type & raster) :
+    _grid{ raster.layout() }
+{
+    // directional offsets
+    index_type h {0ul, 1ul}; // horizontal movement
+    index_type v {1ul, 0ul}; // vertical movement
+    index_type d {1ul, 1ul}; // diagonal movement
+
+    // unpack the shape of the grids
+    auto low = _grid.layout().low();
+    auto high = _grid.layout().high();
+    // form the other two corners
+    index_type tr { low[0], high[1] };
+    index_type bl { high[0], low[1] };
+
+    // initialize the low corner
+    _grid[low] = raster[low];
+
+    // initialize the top row; skip {0,0} that's done already
+    for (auto idx : _grid.layout().slice(low + h, tr)) {
+        // fill the slot
+        _grid[idx] = raster[idx] + _grid[idx - h];
+    }
+    // initialize the left column; skip {0,0} that's done already
+    for (auto idx : _grid.layout().slice(low + v, bl)) {
+        // fill the slot
+        _grid[idx] = raster[idx] + _grid[idx - v];
+    }
+    // initialize the interior
+    for (auto idx : _grid.layout().slice(low+d, high)) {
+        // fill the slot
+        _grid[idx] = raster[idx] + _grid[idx - h] + _grid[idx - v] - _grid[idx - d];
+    }
+
+}
+
+
+// end of file

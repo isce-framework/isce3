@@ -29,6 +29,8 @@ namespace isce {
 // DEMInterpolator declaration
 class isce::geometry::DEMInterpolator {
 
+    using cartesian_t = isce::core::Vec3;
+
     public:
         /** Default constructor with reference height of 0, bilinear interpolation */
         inline DEMInterpolator() : 
@@ -96,7 +98,7 @@ class isce::geometry::DEMInterpolator {
         /** Get mid Y coordinate */
         double midY() const { return _ystart + 0.5*_dem.length()*_deltay; }
         /** Get mid longitude and latitude */
-        isce::core::cartesian_t midLonLat() const;
+        cartesian_t midLonLat() const;
 
         /** Flag indicating whether a DEM raster has been loaded */
         bool haveRaster() const { return _haveRaster; }
@@ -133,6 +135,9 @@ class isce::geometry::DEMInterpolator {
         bool _haveRaster;
         // Constant value if no raster is provided
         float _refHeight;
+        // Statistics
+        float _meanValue;
+        float _maxValue;
         // Pointer to a ProjectionBase
         int _epsgcode;
         isce::core::ProjectionBase * _proj = nullptr;
@@ -143,9 +148,6 @@ class isce::geometry::DEMInterpolator {
         isce::core::Matrix<float> _dem;
         // Starting x/y for DEM subset and spacing
         double _xstart, _ystart, _deltax, _deltay;
-        // Statistics
-        float _maxValue;
-        float _meanValue;
 };
 
 #endif

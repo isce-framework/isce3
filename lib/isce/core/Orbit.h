@@ -12,9 +12,10 @@
 #include <vector>
 
 // isce::core
-#include <isce/core/Constants.h>
-#include <isce/core/Utilities.h>
-#include <isce/core/StateVector.h>
+#include "Cartesian.h"
+#include "Constants.h"
+#include "Utilities.h"
+#include "StateVector.h"
 
 // Declaration
 namespace isce {
@@ -29,9 +30,9 @@ namespace isce {
 /** Data structure to represent ECEF state vectors of imaging platform
  *
  *  There are two representations of the orbit information that are currently
- *  carried by this data structure. A vector of isce::core::StateVector for a 
- *  serializable representation and vectors of time-stamps, positions and 
- *  velocities to speed up computations. 
+ *  carried by this data structure. A vector of isce::core::StateVector for a
+ *  serializable representation and vectors of time-stamps, positions and
+ *  velocities to speed up computations.
  *  All Time stamps are assumed to be UTC.
  *  All positions are in meters and in ECEF coordinates w.r.t WGS84 ellipsoid
  *  All velocities are in meters/sec and in ECEF coordinates w.r.t WGS84 Ellipsoid */
@@ -117,7 +118,7 @@ struct isce::core::Orbit {
 
     /** Interpolate orbit using Linear weights.*/
     int interpolateSCHOrbit(double tintp, cartesian_t &opos, cartesian_t &ovel) const;
-    
+
     /** Compute acceleration numerically at given epoch.*/
     int computeAcceleration(double tintp, cartesian_t &acc) const;
 
@@ -187,7 +188,7 @@ operator+(const Orbit &rhs) const {
 
 
 
-     
+
 /** @param[in] ind Index of the state vector to return
  * @param[out] t Time since the reference epoch in seconds
  * @param[out] pos Position (m) of the state vector
@@ -218,7 +219,7 @@ getStateVector(int idx, double &t, cartesian_t &pos, cartesian_t &vel) const {
 void isce::core::Orbit::
 setStateVector(int idx, double t, const cartesian_t & pos, const cartesian_t & vel) {
     if ((idx < 0) || (idx >= nVectors)) {
-        std::string errstr = "Orbit::setStateVector - Trying to access vector " + 
+        std::string errstr = "Orbit::setStateVector - Trying to access vector " +
                              std::to_string(idx+1) + " out of " + std::to_string(nVectors) +
                              " possible vectors";
         throw std::out_of_range(errstr);
@@ -236,7 +237,7 @@ setStateVector(int idx, double t, const cartesian_t & pos, const cartesian_t & v
  * @param[in] pos Position (m) of the state vector
  * @param[in] vel Velocity (m/s) of the state vector
  *
- * Sets values in linearized vectors and not stateVectors. Index to insert is determined 
+ * Sets values in linearized vectors and not stateVectors. Index to insert is determined
  * using the "t" value. Internally, linearized vectors are sorted by time. */
 void isce::core::Orbit::
 addStateVector(double t, const cartesian_t & pos, const cartesian_t & vel) {

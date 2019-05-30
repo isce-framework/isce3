@@ -9,8 +9,6 @@
 #include <cmath>
 #include "isce/core/Poly2d.h"
 
-#include "isce/cuda/core/Common.h"
-
 using isce::core::Poly2d;
 
 namespace isce { namespace cuda { namespace core {

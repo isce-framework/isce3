@@ -7,6 +7,7 @@
 #ifndef ISCE_CORE_BASELINE_H
 #define ISCE_CORE_BASELINE_H
 
+#include "Cartesian.h"
 #include "Constants.h"
 #include "Ellipsoid.h"
 #include "Metadata.h"

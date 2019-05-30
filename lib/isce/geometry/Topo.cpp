@@ -16,7 +16,6 @@
 
 // isce::core
 #include <isce/core/Constants.h>
-#include <isce/core/LinAlg.h>
 #include <isce/core/Utilities.h>
 
 // isce::geometry
@@ -24,9 +23,9 @@
 
 // pull in some isce::core namespaces
 using isce::core::Basis;
+using isce::core::Mat3;
 using isce::core::Pixel;
-using isce::core::LinAlg;
-using isce::core::StateVector;
+using isce::core::Vec3;
 using isce::io::Raster;
 
 // Main topo driver; internally create topo rasters
@@ -193,7 +192,7 @@ topo(Raster & demRaster, TopoLayers & layers) {
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
              << _doppler.eval(tblock, startingRange) << " "
-             << _doppler.eval(tblock, midRange) << " " 
+             << _doppler.eval(tblock, midRange) << " "
              << _doppler.eval(tblock, endingRange) << " "
              << pyre::journal::endl;
 
@@ -221,12 +220,12 @@ topo(Raster & demRaster, TopoLayers & layers) {
 
             // Initialize orbital data for this azimuth line
             Basis TCNbasis;
-            StateVector state;
-            _initAzimuthLine(line, tline, state, TCNbasis);
-            satPosition[blockLine] = state.position();
+            Vec3 pos, vel;
+            _initAzimuthLine(line, tline, pos, vel, TCNbasis);
+            satPosition[blockLine] = pos;
 
             // Compute velocity magnitude
-            const double satVmag = LinAlg::norm(state.velocity());
+            const double satVmag = vel.norm();
 
             // For each slant range bin
             #pragma omp parallel for reduction(+:totalconv)
@@ -247,13 +246,12 @@ topo(Raster & demRaster, TopoLayers & layers) {
 
                 // Perform rdr->geo iterations
                 int geostat = rdr2geo(
-                    pixel, TCNbasis, state, _ellipsoid, demInterp, llh, _lookSide,
-                    _threshold, _numiter, _extraiter
-                );
+                    pixel, TCNbasis, pos, vel, _ellipsoid, demInterp, llh,
+                    _lookSide, _threshold, _numiter, _extraiter);
                 totalconv += geostat;
 
                 // Save data in output arrays
-                _setOutputTopoLayers(llh, layers, blockLine, pixel, state, TCNbasis, demInterp);
+                _setOutputTopoLayers(llh, layers, blockLine, pixel, pos, vel, TCNbasis, demInterp);
 
             } // end OMP for loop pixels in block
         } // end for loop lines in block
@@ -281,19 +279,18 @@ topo(Raster & demRaster, TopoLayers & layers) {
 }
 
 /** @param[in] line line number of input radar geometry product
- * @param[out] state store state variables needed for processing the line
+ * @param[out] pos/vel state variables needed for processing the line
  * @param[out] TCNbasis TCN basis corresponding to the state
  *
  * The module is optimized to work with range doppler coordinates. This section would need to be changed to work with data in PFA coordinates (not currently supported). */
 void isce::geometry::Topo::
-_initAzimuthLine(size_t line, double & tline, StateVector & state, Basis & TCNbasis) {
+_initAzimuthLine(size_t line, double& tline, Vec3& pos, Vec3& vel, Basis& TCNbasis) {
 
     // Get satellite azimuth time
     tline = _radarGrid.sensingTime(line);
 
     // Get state vector
-    cartesian_t xyzsat, velsat;
-    int stat = _orbit.interpolate(tline, xyzsat, velsat, _orbitMethod);
+    int stat = _orbit.interpolate(tline, pos, vel, _orbitMethod);
     if (stat != 0) {
         pyre::journal::error_t error("isce.geometry.Topo._initAzimuthLine");
         error
@@ -304,13 +301,9 @@ _initAzimuthLine(size_t line, double & tline, StateVector & state, Basis & TCNba
             << " - bounds: " << _orbit.UTCtime[0] << " -> " << _orbit.UTCtime[_orbit.nVectors-1]
             << pyre::journal::endl;
     }
-    // Save state vector
-    state.position(xyzsat);
-    state.velocity(velsat);
 
     // Get geocentric TCN basis using satellite basis
-    geocentricTCN(state, TCNbasis);
-    
+    TCNbasis = Basis(pos, vel);
 }
 
 // Get DEM bounds using first/last azimuth line and slant range bin
@@ -366,14 +359,13 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
         size_t lineIndex = lineOffset + azInd[i] * _radarGrid.numberAzimuthLooks();
 
          // Initialize orbit data for this azimuth line
-        StateVector state;
+        Vec3 pos, vel;
         Basis TCNbasis;
-        _initAzimuthLine(lineIndex, tline, state, TCNbasis);
+        _initAzimuthLine(lineIndex, tline, pos, vel, TCNbasis);
 
         // Compute satellite velocity and height
-        cartesian_t satLLH;
-        const double satVmag = LinAlg::norm(state.velocity());
-        _ellipsoid.xyzToLonLat(state.position(), satLLH);
+        const double satVmag = vel.norm();
+        const Vec3 satLLH = _ellipsoid.xyzToLonLat(pos);
 
         // Get proper slant range and Doppler factor
         const size_t rbin = rgInd[i];
@@ -384,7 +376,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
         Pixel pixel(rng, dopfact, rbin);
 
         // Run topo for one iteration for two different heights
-        cartesian_t llh = {0, 0, 0};
+        cartesian_t llh {0., 0., 0.};
         std::array<double, 2> testHeights = {MIN_H, MAX_H};
         for (int k = 0; k < 2; ++k) {
 
@@ -398,7 +390,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
                 // Create dummy DEM interpolator with constant height
                 DEMInterpolator constDEM(testHeights[k]);
                 // Run radar->geo for 1 iteration
-                rdr2geo(pixel, TCNbasis, state, _ellipsoid, constDEM, llh,
+                rdr2geo(pixel, TCNbasis, pos, vel, _ellipsoid, constDEM, llh,
                         _lookSide, _threshold, 1, 0);
             }
 
@@ -426,18 +418,16 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
  * @param[in] layers Object containing output layers
  * @param[in] line line number to write to output
  * @param[in] pixel pixel number to write to output
- * @param[in] state state for the line under consideration
+ * @param[in] pos/vel state for the line under consideration
  * @param[in] TCNbasis basis for the line under consideration
  * @param[in] demInterp DEM interpolator object used to compute local slope
  *
  * Currently, local slopes are computed by simple numerical differencing. In the future, we should accommodate possibility of reading in this as an external layer*/
 void isce::geometry::Topo::
 _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
-                     Pixel & pixel, StateVector & state, Basis & TCNbasis,
+                     Pixel & pixel, Vec3& pos, Vec3& vel, Basis & TCNbasis,
                      DEMInterpolator & demInterp) {
 
-    cartesian_t targetXYZ, satToGround, enu, vhat;
-    cartmat_t enumat, xyz2enu;
     const double degrees = 180.0 / M_PI;
 
     // Unpack the range pixel data
@@ -455,23 +445,19 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
     layers.z(line, bin, targetLLH[2]);
 
     // Convert llh->xyz for ground point
-    _ellipsoid.lonLatToXyz(targetLLH, targetXYZ);
+    const Vec3 targetXYZ = _ellipsoid.lonLatToXyz(targetLLH);
 
     // Compute vector from satellite to ground point
-    LinAlg::linComb(1.0, targetXYZ, -1.0, state.position(), satToGround);
+    const Vec3 satToGround = targetXYZ - pos;
 
     // Compute cross-track range
-    layers.crossTrack(line, bin, -1.0 * _lookSide * LinAlg::dot(satToGround, TCNbasis.x1()));
-
-    // Compute unit velocity vector
-    LinAlg::unitVec(state.velocity(), vhat);
+    layers.crossTrack(line, bin, -_lookSide * satToGround.dot(TCNbasis.x1()));
 
     // Computation in ENU coordinates around target
-    LinAlg::enuBasis(targetLLH[1], targetLLH[0], enumat);
-    LinAlg::tranMat(enumat, xyz2enu);
-    LinAlg::matVec(xyz2enu, satToGround, enu);
-    const double cosalpha = std::abs(enu[2]) / LinAlg::norm(enu);
-    
+    const Mat3 xyz2enu = Mat3::xyzToEnu(targetLLH[1], targetLLH[0]);
+    const Vec3 enu = xyz2enu.dot(satToGround);
+    const double cosalpha = std::abs(enu[2]) / enu.norm();
+
     // LOS vectors
     layers.inc(line, bin, std::acos(cosalpha) * degrees);
     layers.hdg(line, bin, (std::atan2(-enu[1], -enu[0]) - (0.5*M_PI)) * degrees);
@@ -488,12 +474,9 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
     double beta = ((bb - aa) * degrees) / (2.0 * _ellipsoid.rNorth(gamma) * demInterp.deltaY());
 
     // Compute local incidence angle
-    const double enunorm = LinAlg::norm(enu);
-    for (int idx = 0; idx < 3; ++idx) {
-        enu[idx] = enu[idx] / enunorm;
-    }
-    double costheta = ((enu[0] * alpha) + (enu[1] * beta) - enu[2])
-                     / std::sqrt(1.0 + (alpha * alpha) + (beta * beta));
+    const Vec3 enunorm = enu.unitVec();
+    const Vec3 slopevec {alpha, beta, -1.};
+    const double costheta = enunorm.dot(slopevec) / slopevec.norm();
     layers.localInc(line, bin, std::acos(costheta)*degrees);
 
     // Compute amplitude simulation
@@ -502,14 +485,11 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
     layers.sim(line, bin, std::log10(std::abs(0.01 * costheta / (bb * bb * bb))));
 
     // Calculate psi angle between image plane and local slope
-    cartesian_t n_img, n_imghat, n_img_enu;
-    LinAlg::cross(satToGround, state.velocity(), n_img);
-    LinAlg::unitVec(n_img, n_imghat);
-    LinAlg::scale(n_imghat, -1*_lookSide);
-    LinAlg::matVec(xyz2enu, n_imghat, n_img_enu);
-    cartesian_t n_trg_enu = {-alpha, -beta, 1.0};
-    const double cospsi = LinAlg::dot(n_trg_enu, n_img_enu)
-          / (LinAlg::norm(n_trg_enu) * LinAlg::norm(n_img_enu));
+    const Vec3 n_imghat = -_lookSide * satToGround.cross(vel).unitVec();
+    Vec3 n_img_enu = xyz2enu.dot(n_imghat);
+    const Vec3 n_trg_enu = -slopevec;
+    const double cospsi = n_trg_enu.dot(n_img_enu)
+          / (n_trg_enu.norm() * n_img_enu.norm());
     layers.localPsi(line, bin, std::acos(cospsi) * degrees);
 }
 
@@ -520,8 +500,8 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
  *  Compute layer and shadow mask following the logic from ISCE 2
  */
 void isce::geometry::Topo::
-setLayoverShadow(TopoLayers & layers, DEMInterpolator & demInterp,
-                 std::vector<cartesian_t> & satPosition) {
+setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
+                 std::vector<Vec3>& satPosition) {
 
     // Cache the width of the block
     const int width = layers.width();
@@ -547,7 +527,7 @@ setLayoverShadow(TopoLayers & layers, DEMInterpolator & demInterp,
     for (size_t line = 0; line < layers.length(); ++line) {
 
         // Cache satellite position for this line
-        const cartesian_t xyzsat = satPosition[line];
+        const Vec3& xyzsat = satPosition[line];
 
         // Copy cross-track, x, and y values for the line
         for (int i = 0; i < width; ++i) {
@@ -555,10 +535,10 @@ setLayoverShadow(TopoLayers & layers, DEMInterpolator & demInterp,
             x[i] = layers.x(line, i);
             y[i] = layers.y(line, i);
         }
- 
+
         // Sort ctrack, x, and y by values in ctrack
         isce::core::insertionSort(ctrack, x, y);
-         
+
         // Create regular grid for cross-track values
         const double cmin = ctrack.min();// - demInterp.maxHeight();
         const double cmax = ctrack.max();// + demInterp.maxHeight();
@@ -595,10 +575,10 @@ setLayoverShadow(TopoLayers & layers, DEMInterpolator & demInterp,
             _ellipsoid.lonLatToXyz(llh, xyz);
 
             // Compute and save slant range
-            LinAlg::linComb(1.0, xyz, -1.0, xyzsat, satToGround);
-            slantRangeGrid[i] = LinAlg::norm(satToGround);
+            satToGround = xyz - xyzsat;
+            slantRangeGrid[i] = satToGround.norm();
         }
-        
+
         // Now sort cross-track grid in terms of slant range grid
         isce::core::insertionSort(slantRangeGrid, ctrackGrid);
 

@@ -4,15 +4,15 @@
 //
 
 #include "gpuGeometry.h"
-#include <isce/cuda/core/gpuPixel.h>
 #include <isce/cuda/except/Error.h>
 
-using isce::cuda::core::gpuLinAlg;
+using isce::core::Basis;
+using isce::core::Vec3;
 
-/** @param[in] pixel gpuPixel object
+/** @param[in] pixel Pixel object
  * @param[in] TCNbasis Geocentric TCN basis corresponding to pixel
- * @param[in] state gpuStateVector object
- * @param[in] ellipsoid gpuEllipsoid object
+ * @param[in] pos/vel state vector position/velocity vectors
+ * @param[in] ellipsoid Ellipsoid object
  * @param[in] demInterp gpuDEMInterpolator object
  * @param[out] targetLLH output Lon/Lat/Hae corresponding to pixel
  * @param[in] side +1 for left and -1 for right
@@ -20,43 +20,42 @@ using isce::cuda::core::gpuLinAlg;
  * @param[in] maxIter Number of primary iterations
  * @param[in] extraIter Number of secondary iterations
  *
- * This is the elementary device-side transformation from radar geometry to map geometry. The transformation is applicable for a single slant range and azimuth time. The slant range and Doppler information are encapsulated in the Pixel object, so this function can work for both zero and native Doppler geometries. The azimuth time information is encapsulated in the TCNbasis and StateVector of the platform. For algorithmic details, see \ref overview_geometry "geometry overview".*/
+ * This is the elementary device-side transformation from radar geometry to map geometry. The transformation is applicable for a single slant range and azimuth time. The slant range and Doppler information are encapsulated in the Pixel object, so this function can work for both zero and native Doppler geometries. The azimuth time information is encapsulated in the TCNbasis of the platform. For algorithmic details, see \ref overview_geometry "geometry overview".*/
 CUDA_DEV
 int isce::cuda::geometry::
-rdr2geo(const isce::cuda::core::gpuPixel & pixel,
-        const isce::cuda::core::gpuBasis & TCNbasis,
-        const isce::cuda::core::gpuStateVector & state,
-        const isce::cuda::core::gpuEllipsoid & ellipsoid,
+rdr2geo(const isce::core::Pixel & pixel,
+        const Basis& TCNbasis,
+        const Vec3& pos, const Vec3& vel,
+        const isce::core::Ellipsoid& ellipsoid,
         const gpuDEMInterpolator & demInterp,
-        double * targetLLH,
+        Vec3& targetLLH,
         int side, double threshold, int maxIter, int extraIter) {
 
     // Initialization
-    double targetVec[3], targetLLH_old[3], targetVec_old[3],
-           lookVec[3], delta[3], delta_temp[3], vhat[3];
+    Vec3 targetLLH_old, targetVec_old, lookVec;
 
     // Compute normalized velocity
-    gpuLinAlg::unitVec(state.velocity, vhat);
+    const Vec3 vhat = vel.unitVec();
 
     // Unpack TCN basis vectors to pointers
-    const double * that = TCNbasis.x0;
-    const double * chat = TCNbasis.x1;
-    const double * nhat = TCNbasis.x2;
+    const auto& that = TCNbasis.x0();
+    const auto& chat = TCNbasis.x1();
+    const auto& nhat = TCNbasis.x2();
 
     // Pre-compute TCN vector products
-    const double ndotv = nhat[0]*vhat[0] + nhat[1]*vhat[1] + nhat[2]*vhat[2];
-    const double vdott = vhat[0]*that[0] + vhat[1]*that[1] + vhat[2]*that[2];
+    const double ndotv = nhat.dot(vhat);
+    const double vdott = vhat.dot(that);
 
     // Compute major and minor axes of ellipsoid
-    const double major = ellipsoid.a;
-    const double minor = major * std::sqrt(1.0 - ellipsoid.e2);
+    const double major = ellipsoid.a();
+    const double minor = major * std::sqrt(1.0 - ellipsoid.e2());
 
     // Set up orthonormal system right below satellite
-    const double satDist = gpuLinAlg::norm(state.position);
+    const double satDist = pos.norm();
     const double eta = 1.0 / std::sqrt(
-        std::pow(state.position[0] / major, 2) +
-        std::pow(state.position[1] / major, 2) +
-        std::pow(state.position[2] / minor, 2)
+        std::pow(pos[0] / major, 2) +
+        std::pow(pos[1] / major, 2) +
+        std::pow(pos[2] / minor, 2)
     );
     const double radius = eta * satDist;
     const double hgt = (1.0 - eta) * satDist;
@@ -88,11 +87,10 @@ rdr2geo(const isce::cuda::core::gpuPixel & pixel,
         const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
                                             * std::pow(sintheta, 2)
                                             - std::pow(alpha, 2));
-    
+
         // Compute vector from satellite to ground
-        gpuLinAlg::linComb(alpha, that, beta, chat, delta_temp);
-        gpuLinAlg::linComb(1.0, delta_temp, gamma, nhat, delta);
-        gpuLinAlg::linComb(1.0, state.position, 1.0, delta, targetVec);
+        const Vec3 delta = alpha * that + beta * chat + gamma * nhat;
+        Vec3 targetVec = pos + delta;
 
         // Compute LLH of ground point
         ellipsoid.xyzToLonLat(targetVec, targetLLH);
@@ -103,11 +101,11 @@ rdr2geo(const isce::cuda::core::gpuPixel & pixel,
         // Convert back to XYZ with interpolated height
         ellipsoid.lonLatToXyz(targetLLH, targetVec);
         // Compute updated target height
-        zrdr = gpuLinAlg::norm(targetVec) - radius;
+        zrdr = targetVec.norm() - radius;
 
         // Check convergence
-        gpuLinAlg::linComb(1.0, state.position, -1.0, targetVec, lookVec);
-        const double rdiff = pixel.range() - gpuLinAlg::norm(lookVec);
+        lookVec = pos - targetVec;
+        const double rdiff = pixel.range() - lookVec.norm();
         if (std::abs(rdiff) < threshold) {
             converged = 1;
             break;
@@ -121,7 +119,7 @@ rdr2geo(const isce::cuda::core::gpuPixel & pixel,
             // Repopulate lat, lon, z
             ellipsoid.xyzToLonLat(targetVec, targetLLH);
             // Compute updated target height
-            zrdr = gpuLinAlg::norm(targetVec) - radius;
+            zrdr = targetVec.norm() - radius;
         }
     }
 
@@ -142,35 +140,14 @@ rdr2geo(const isce::cuda::core::gpuPixel & pixel,
                                         - std::pow(alpha, 2));
 
     // Compute vector from satellite to ground
-    gpuLinAlg::linComb(alpha, that, beta, chat, delta_temp);
-    gpuLinAlg::linComb(1.0, delta_temp, gamma, nhat, delta);
-    gpuLinAlg::linComb(1.0, state.position, 1.0, delta, targetVec);
+    const Vec3 delta = alpha * that + beta * chat + gamma * nhat;
+    const Vec3 targetVec = pos + delta;
 
     // Compute LLH of ground point
-    ellipsoid.xyzToLonLat(targetVec, targetLLH);
+    targetLLH = ellipsoid.xyzToLonLat(targetVec);
 
     // Return convergence flag
     return converged;
-}
-
-// Utility function to compute geocentric tcn basis from state vector
-__device__ void geocentricTCN(const double* pos, const double* vel,
-                              isce::cuda::core::gpuBasis& basis) {
-    double t_hat[3], c_hat[3], n_hat[3], temp[3];
-    using isce::cuda::core::gpuLinAlg;
-    // Compute basis vectors
-    gpuLinAlg::unitVec(pos, n_hat);
-    gpuLinAlg::scale(n_hat, -1.);
-    gpuLinAlg::cross(n_hat, vel, temp);
-    gpuLinAlg::unitVec(temp, c_hat);
-    gpuLinAlg::cross(c_hat, n_hat, temp);
-    gpuLinAlg::unitVec(temp, t_hat);
-    // Store in basis object
-    for (int i = 0; i < 3; i++) {
-        basis.x0[i] = t_hat[i];
-        basis.x1[i] = c_hat[i];
-        basis.x2[i] = n_hat[i];
-    }
 }
 
 /*
@@ -181,9 +158,9 @@ __device__ void geocentricTCN(const double* pos, const double* vel,
 __device__ int isce::cuda::geometry::rdr2geo(
         double aztime, double slant_range, double doppler,
         const isce::cuda::core::gpuOrbit& orbit,
-        const isce::cuda::core::gpuEllipsoid& ellipsoid,
+        const isce::core::Ellipsoid& ellipsoid,
         const isce::cuda::geometry::gpuDEMInterpolator& dem_interp,
-        double* target_llh, double wvl, int side, double threshold,
+        Vec3& target_llh, double wvl, int side, double threshold,
         int max_iter, int extra_iter) {
 
     /*
@@ -192,35 +169,28 @@ __device__ int isce::cuda::geometry::rdr2geo(
      */
 
     // Interpolate orbit to get state vector
-    double pos[3], vel[3];
-    orbit.interpolateWGS84Orbit(aztime, pos, vel);
+    Vec3 pos, vel;
+    orbit.interpolateWGS84Orbit(aztime, pos.data(), vel.data());
 
     // Set up geocentric TCN basis
-    isce::cuda::core::gpuBasis tcn_basis;
-    geocentricTCN(pos, vel, tcn_basis);
+    const Basis tcn_basis(pos, vel);
 
     // Compute satellite velocity magnitude
-    const double vmag = isce::cuda::core::gpuLinAlg::norm(vel);
+    const double vmag = vel.norm();
 
     // Compute Doppler factor
     const double dopfact = 0.5 * wvl * doppler * slant_range / vmag;
 
     // Wrap range and Doppler factor in a Pixel object
-    isce::cuda::core::gpuPixel pixel(slant_range, dopfact, 0);
-
-    isce::cuda::core::gpuStateVector state;
-    for (int i = 0; i < 3; i++) {
-        state.position[i] = pos[i];
-        state.velocity[i] = vel[i];
-    }
+    isce::core::Pixel pixel(slant_range, dopfact, 0);
 
     // Finally, call rdr2geo
-    return rdr2geo(pixel, tcn_basis, state, ellipsoid, dem_interp,
+    return rdr2geo(pixel, tcn_basis, pos, vel, ellipsoid, dem_interp,
                    target_llh, side, threshold, max_iter, extra_iter);
 }
 
 /** @param[in] inputLLH Lon/Lat/Hae of target of interest
- * @param[in] ellipsoid gpuEllipsoid object
+ * @param[in] ellipsoid Ellipsoid object
  * @param[in] orbit gpuOrbit object
  * @param[in] doppler gpuLUT1d Doppler model
  * @param[out] aztime azimuth time of inputLLH w.r.t reference epoch of the orbit
@@ -233,38 +203,38 @@ __device__ int isce::cuda::geometry::rdr2geo(
  * This is the elementary device-side transformation from map geometry to radar geometry. The transformation is applicable for a single lon/lat/h coordinate (i.e., a single point target). For algorithmic details, see \ref overview_geometry "geometry overview".*/
 CUDA_DEV
 int isce::cuda::geometry::
-geo2rdr(double * inputLLH,
-        const isce::cuda::core::gpuEllipsoid & ellipsoid,
-        const isce::cuda::core::gpuOrbit & orbit,
+geo2rdr(const Vec3& inputLLH,
+        const isce::core::Ellipsoid& ellipsoid,
+        const isce::cuda::core::gpuOrbit& orbit,
         const isce::cuda::core::gpuLUT1d<double> & doppler,
         double * aztime_result, double * slantRange_result,
         double wavelength, double threshold, int maxIter, double deltaRange) {
 
     // Cartesian type local variables
-    double inputXYZ[3], satpos[3], satvel[3], dr[3];
     // Temp local variables for results
     double aztime, slantRange;
 
     // Convert LLH to XYZ
-    ellipsoid.lonLatToXyz(inputLLH, inputXYZ);
+    const Vec3 inputXYZ = ellipsoid.lonLatToXyz(inputLLH);
 
     // Pre-compute scale factor for doppler
     const double dopscale = 0.5 * wavelength;
 
     // Use mid-orbit epoch as initial guess
     aztime = orbit.UTCtime[orbit.nVectors / 2];
-    
+
     // Begin iterations
     int converged = 0;
     double slantRange_old = 0.0;
     for (int i = 0; i < maxIter; ++i) {
 
         // Interpolate the orbit to current estimate of azimuth time
-        orbit.interpolateWGS84Orbit(aztime, satpos, satvel);
+        Vec3 pos, vel;
+        orbit.interpolateWGS84Orbit(aztime, &pos[0], &vel[0]);
 
         // Compute slant range from satellite to ground point
-        gpuLinAlg::linComb(1.0, inputXYZ, -1.0, satpos, dr);
-        slantRange = gpuLinAlg::norm(dr);
+        const Vec3 dr = inputXYZ - pos;
+        slantRange = dr.norm();
         // Check convergence
         if (std::abs(slantRange - slantRange_old) < threshold) {
             converged = 1;
@@ -276,7 +246,7 @@ geo2rdr(double * inputLLH,
         }
 
         // Compute doppler
-        const double dopfact = gpuLinAlg::dot(dr, satvel);
+        const double dopfact = dr.dot(vel);
         const double fdop = doppler.eval(slantRange) * dopscale;
         // Use forward difference to compute doppler derivative
         const double fdopder = (doppler.eval(slantRange + deltaRange) * dopscale - fdop)
@@ -284,7 +254,7 @@ geo2rdr(double * inputLLH,
 
         // Evaluate cost function and its derivative
         const double fn = dopfact - fdop * slantRange;
-        const double c1 = -1.0 * gpuLinAlg::dot(satvel, satvel);
+        const double c1 = -vel.dot(vel);
         const double c2 = (fdop / slantRange) + fdopder;
         const double fnprime = c1 + c2 * dopfact;
 
@@ -317,20 +287,19 @@ deleteProjection(isce::cuda::core::ProjectionBase ** proj) {
 
 // Helper kernel to call device-side rdr2geo
 __global__
-void rdr2geo_d(const isce::cuda::core::gpuPixel pixel,
-               const isce::cuda::core::gpuBasis TCNbasis,
-               const isce::cuda::core::gpuStateVector state,
-               const isce::cuda::core::gpuEllipsoid ellipsoid,
+void rdr2geo_d(const isce::core::Pixel pixel,
+               const Basis TCNbasis,
+               const Vec3 pos, const Vec3 vel,
+               const isce::core::Ellipsoid ellipsoid,
                isce::cuda::geometry::gpuDEMInterpolator demInterp,
-               double * targetLLH,
+               Vec3* targetLLH,
                int side, double threshold, int maxIter, int extraIter,
                int *resultcode) {
 
     // Call device function
     *resultcode = isce::cuda::geometry::rdr2geo(
-        pixel, TCNbasis, state, ellipsoid, demInterp, targetLLH, side,
-        threshold, maxIter, extraIter
-    );
+        pixel, TCNbasis, pos, vel, ellipsoid, demInterp, *targetLLH, side,
+        threshold, maxIter, extraIter);
 
 }
 
@@ -338,22 +307,18 @@ void rdr2geo_d(const isce::cuda::core::gpuPixel pixel,
 CUDA_HOST
 int isce::cuda::geometry::
 rdr2geo_h(const isce::core::Pixel & pixel,
-          const isce::core::Basis & basis,
-          const isce::core::StateVector & state,
+          const Basis& basis,
+          const Vec3& pos, const Vec3& vel,
           const isce::core::Ellipsoid & ellipsoid,
           isce::geometry::DEMInterpolator & demInterp,
-          cartesian_t & llh,
+          Vec3& llh,
           int side, double threshold, int maxIter, int extraIter) {
 
     // Make GPU objects
-    isce::cuda::core::gpuPixel gpu_pixel(pixel);
-    isce::cuda::core::gpuBasis gpu_basis(basis);
-    isce::cuda::core::gpuStateVector gpu_state(state);
-    isce::cuda::core::gpuEllipsoid gpu_ellps(ellipsoid);
     isce::cuda::geometry::gpuDEMInterpolator gpu_demInterp(demInterp);
-        
+
     // Allocate device memory
-    double * llh_d;
+    Vec3* llh_d;
     int * resultcode_d;
     cudaMalloc((double **) &llh_d, 3*sizeof(double));
     cudaMalloc((int **) &resultcode_d, sizeof(int));
@@ -363,10 +328,10 @@ rdr2geo_h(const isce::core::Pixel & pixel,
 
     // DEM interpolator initializes its projection and interpolator
     gpu_demInterp.initProjInterp();
-    
+
     // Run the rdr2geo on the GPU
     dim3 grid(1), block(1);
-    rdr2geo_d<<<grid, block>>>(gpu_pixel, gpu_basis, gpu_state, gpu_ellps,
+    rdr2geo_d<<<grid, block>>>(pixel, basis, pos, vel, ellipsoid,
                                gpu_demInterp, llh_d, side, threshold, maxIter,
                                extraIter, resultcode_d);
 
@@ -391,8 +356,8 @@ rdr2geo_h(const isce::core::Pixel & pixel,
 
 // Helper kernel to call device-side geo2rdr
 __global__
-void geo2rdr_d(double * llh,
-               isce::cuda::core::gpuEllipsoid ellps,
+void geo2rdr_d(const Vec3 llh,
+               isce::core::Ellipsoid ellps,
                isce::cuda::core::gpuOrbit orbit,
                isce::cuda::core::gpuLUT1d<double> doppler,
                double * aztime, double * slantRange,
@@ -402,15 +367,13 @@ void geo2rdr_d(double * llh,
     // Call device function
     *resultcode = isce::cuda::geometry::geo2rdr(
         llh, ellps, orbit, doppler, aztime, slantRange, wavelength, threshold,
-        maxIter, deltaRange
-    );
-                          
+        maxIter, deltaRange);
 }
 
 // Host geo->radar to test underlying functions in a single-threaded context
 CUDA_HOST
 int isce::cuda::geometry::
-geo2rdr_h(const cartesian_t & llh,
+geo2rdr_h(const cartesian_t& llh,
           const isce::core::Ellipsoid & ellps,
           const isce::core::Orbit & orbit,
           const isce::core::LUT1d<double> & doppler,
@@ -418,7 +381,7 @@ geo2rdr_h(const cartesian_t & llh,
           double wavelength, double threshold, int maxIter, double deltaRange) {
 
     // Make GPU objects
-    isce::cuda::core::gpuEllipsoid gpu_ellps(ellps);
+    isce::core::Ellipsoid gpu_ellps(ellps);
     isce::cuda::core::gpuOrbit gpu_orbit(orbit);
     isce::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
 
@@ -435,7 +398,7 @@ geo2rdr_h(const cartesian_t & llh,
 
     // Run geo2rdr on the GPU
     dim3 grid(1), block(1);
-    geo2rdr_d<<<grid, block>>>(llh_d, gpu_ellps, gpu_orbit, gpu_doppler, aztime_d, slantRange_d,
+    geo2rdr_d<<<grid, block>>>(llh, gpu_ellps, gpu_orbit, gpu_doppler, aztime_d, slantRange_d,
                                wavelength, threshold, maxIter, deltaRange, resultcode_d);
 
     // Copy results to CPU and return any error code

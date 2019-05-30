@@ -11,7 +11,6 @@
 #include <thrust/complex.h>
 
 #include "gpuSignal.h"
-#include "isce/cuda/core/Common.h"
 #include <isce/core/LUT1d.h>
 
 using isce::cuda::signal::gpuSignal;
@@ -22,24 +21,10 @@ namespace isce {
         namespace signal {
             template<class T>
             class gpuFilter;
-        }
-    }
-}
 
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace signal {
             template<class T>
             class gpuAzimuthFilter;
-        }
-    }
-}
 
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace signal {
             template<class T>
             class gpuRangeFilter;
         }

@@ -17,7 +17,6 @@
 #include <isce/core/LUT1d.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Peg.h>
-#include <isce/core/Pegtrans.h>
 #include <isce/core/Projections.h>
 
 // isce::io
@@ -39,6 +38,8 @@ namespace isce {
  *
  * See <a href="overview_geometry.html#inversegeom">geometry overview</a> for description of the algorithm. */
 class isce::geometry::Geo2rdr {
+
+    using cartesian_t = isce::core::Vec3;
 
     public:
         /** Constructor from product */

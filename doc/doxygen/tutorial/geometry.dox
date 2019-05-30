@@ -4,7 +4,7 @@
 
 \section geominclude Include headers
 
-In general, one only needs to include the following headerfiles. 
+In general, one only needs to include the following headerfiles.
 \code{.cpp}
 #include "isce/core/Orbit.h"
 #include "isce/geometry/geometry.h"
@@ -29,21 +29,21 @@ int main(int argc, char *argv[])
 
     std::ifstream ifid("input_orbit.txt");
     std::string line;
-    
+
     while(std::getline(ifid, line))
     {
         std::stringstream stream;
         std::string aztime;
-        isce::core::cartesian_t pos, vel;
+        isce::core::Vec3 pos, vel;
 
         stream << line;
         std::cout << line << "\n";
         stream >> aztime >> pos[0] >> pos[1] >> pos[2] >> vel[0] >> vel[1] >> vel[2];
         //Create StateVector Object
         isce::core::StateVector sv;
-        sv.date(aztime);    //ISO-8601 format
-        sv.position(pos);
-        sv.velocity(vel);
+        sv.datetime = aztime;    //ISO-8601 format
+        sv.position = pos;
+        sv.velocity = vel;
 
         //Add state vector to orbit
         orbit.stateVectors.push_back(sv);
@@ -126,13 +126,13 @@ int main(int argc, char *argv[])
     {
         //Azimuth time to interpolate w.r.t reference epoch of orbit
         double tintp = timetags[tt].secondsSinceEpoch(orbit.refEpoch);
-        
+
         //For each slant range
         for(int rr=0; rr<ranges.size(); rr++)
         {
             //Slant range to pixel
             double rng = ranges[rr];
-            
+
             //For each height
             for(int zz=0; zz<zrange.size(); zz++)
             {
@@ -146,9 +146,9 @@ int main(int argc, char *argv[])
                 int status = isce::geometry::rdr2geo(tintp,  //aztime
                                         rng,    //slant range
                                         0.,     //doppler
-                                        orbit, 
-                                        ellipse, 
-                                        constDEM, 
+                                        orbit,
+                                        ellipse,
+                                        constDEM,
                                         llh,    //output LLH
                                         wvl,    //wavelength
                                         side,   //lookside
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
                                         0,     //secondary iterations,
                                         isce::core::HERMITE_METHOD);
 
-                //Convert to degrees 
+                //Convert to degrees
                 lons.push_back(llh[0] * 180.0/M_PI);
                 lats.push_back(llh[1] * 180.0/M_PI);
             }
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
     auto latresult = std::minmax_element(lats.begin(), lats.end());
     std::cout << "Lat limits (deg): " << lats[latresult.first - lats.begin()] << "  "
                                 << lats[latresult.second - lats.begin()] << "\n";
-                
+
     return 0;
 }
 \endcode
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
     mode.dataDimensions(dims); //1500 lines x 1000 pixels
     mode.prf(1000.);
     mode.rangeBandwidth(20.0e6);       //Dummy
-    mode.wavelength(0.06); 
+    mode.wavelength(0.06);
     mode.startingRange(8.0e5);
     mode.rangePixelSpacing(10.);
     mode.numberAzimuthLooks(10);
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
     {
         double rng;
         double aztime;
-       
+
         //Convert from degrees to radians
         isce::core::cartesian_t llh;
         llh[0] = targets[tt][0] * M_PI / 180.0;
@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
 
         std::cout << "Target at: " << targets[tt][0] << " " << targets[tt][1] << " " << targets[tt][2] << "\n";
         std::cout << "Estimated line number: " << (aztime - mode.startAzTime().secondsSinceEpoch(orbit.refEpoch)) * mode.prf() /   mode.numberAzimuthLooks() << "\n";
-        std::cout << "Estimated pixel number: " << (rng - mode.startingRange())/mode.rangePixelSpacing() / mode.numberRangeLooks() << "\n\n"; 
+        std::cout << "Estimated pixel number: " << (rng - mode.startingRange())/mode.rangePixelSpacing() / mode.numberRangeLooks() << "\n\n";
     }
 
     return 0;

@@ -5,17 +5,19 @@ find_library(LJOURNAL journal HINTS ${PYRE_LIB_DIR})
 # Create a new ctest for TESTNAME.cpp
 # Additional include directories can be specified after TESTNAME
 function(add_isce_test TESTNAME)
-    add_executable(${TESTNAME} ${TESTNAME}.cpp)
+    if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/${TESTNAME}.cpp)
+        add_executable(${TESTNAME} ${TESTNAME}.cpp)
+    elseif(EXISTS ${CMAKE_CURRENT_LIST_DIR}/${TESTNAME}.cu)
+        add_executable(${TESTNAME} ${TESTNAME}.cu)
+    else()
+        message(FATAL_ERROR "Could not add isce test for ${TESTNAME}.{cpp,cu}")
+    endif()
     target_link_libraries(${TESTNAME} PUBLIC ${LISCE} ${LPYRE} ${LJOURNAL} gtest)
     # If we're compiling against the CUDA ISCE library...
     if(DEFINED LISCECUDA)
         # Make CUDA libraries and headers available
         target_link_libraries(${TESTNAME} PUBLIC ${LISCECUDA})
         target_include_directories(${TESTNAME} PUBLIC ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/${PACKAGENAME}/cuda)
-        # CUDA doesn't support C++17 yet, so fall back to C++14
-        #get_target_property(MYPROPS ${TESTNAME} COMPILE_OPTIONS)
-        #string(REPLACE "c++17" "c++14" MYPROPS ${MYPROPS})
-        #set_target_properties(${TESTNAME} PROPERTIES COMPILE_OPTIONS ${MYPROPS})
     endif()
 
     target_include_directories(${TESTNAME} PUBLIC

@@ -1,0 +1,118 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// parasim
+// (c) 1998-2019 all rights reserved
+//
+
+// code guard
+#if !defined(ampcor_libampcor_correlators_correlator_icc)
+#error This header file contains implementation details of class ampcor::correlators::Correlator
+#endif
+
+
+// interface
+template <typename rasterT>
+const auto &
+ampcor::correlators::Correlator<rasterT>::
+correlation() {
+    // easy enough
+    return _correlation;
+}
+
+
+template <typename rasterT>
+const auto &
+ampcor::correlators::Correlator<rasterT>::
+correlate() {
+    // make a channel
+    pyre::journal::info_t channel("ampcor.correlators");
+
+    // unpack the shape of the reference tile
+    auto shape = _refAmplitudeSpread.layout().shape();
+    // and compute the number of pixels it contains
+    auto size = _refAmplitudeSpread.layout().size();
+
+    // build the sum area table of the target amplitude grid
+    sat_type sat(_tgtAmplitude.layout());
+
+    // for each spot in the correlation matrix
+    for (auto anchor : _correlation.layout()) {
+        // form a slice of the target image that has the same shape as the reference chip but
+        // is anchored at {anchor}
+        auto slice = _tgtAmplitude.layout().slice(anchor, anchor+shape);
+        // compute the average value of the target slice
+        pixel_type average = sat.sum(slice) / size;
+
+        // initialize the cross term
+        pixel_type cross = 0.0;
+        // initialize the variance of the target tile
+        pixel_type var = 0.0;
+
+        // loop over the reference tile
+        for (auto idx : _refAmplitudeSpread.layout()) {
+            // get the value from the reference tiles
+            auto ref = _refAmplitudeSpread[idx];
+            // get the value from the target tiles and form its spread
+            auto tgt = _tgtAmplitude[anchor+idx] - average;
+            // update the cross term
+            cross += ref * tgt;
+            // update the variance
+            var += tgt * tgt;
+        }
+
+        // compute the correlation term
+        _correlation[anchor] = cross / std::sqrt( _refAmplitudeVariance * var );
+    }
+
+    // all done
+    return _correlation;
+}
+
+
+// constructor
+template <typename rasterT>
+ampcor::correlators::Correlator<rasterT>::
+Correlator(const view_type & refView, const view_type & tgtView) :
+    _correlation{ tgtView.layout().shape() - refView.layout().shape() + index_type::fill(1ul) },
+    _refAmplitudeSpread{ refView.layout() },
+    _refAmplitudeVariance {},
+    _tgtAmplitude{ tgtView.layout() }
+{
+    // first the reference amplitude grid
+    // make a view that covers it
+    auto refAmpView = _refAmplitudeSpread.view();
+    // lambda that computes the magnitudes of complex numbers
+    auto magnitude = []
+        (typename raster_type::pixel_type pxl) -> pixel_type { return std::abs(pxl); };
+    // initialize it
+    std::transform(refView.begin(), refView.end(), refAmpView.begin(), magnitude);
+
+    // compute the sum of the reference amplitudes
+    auto refSum = std::accumulate(refAmpView.begin(), refAmpView.end(), 0.0);
+    // compute the number of pixels
+    auto refCount = _refAmplitudeSpread.layout().size();
+    // compute the average value
+    auto refAverage = refSum / refCount;
+    // build a function that subtracts this average
+    auto rel = [refAverage]
+        (pixel_type pxl) -> pixel_type { return pxl - refAverage; };
+    // subtract this value from all amplitudes
+    std::for_each(refAmpView.begin(), refAmpView.end(), rel);
+
+    // compute the sum of the squares of the reference amplitude spread
+    _refAmplitudeVariance =
+        std::inner_product(refAmpView.begin(), refAmpView.end(), refAmpView.begin(), 0.0);
+
+    // next the target amplitude grid
+    // make a view that covers it
+    typename grid_type::view_type tgtAmplitudeView { _tgtAmplitude.view() };
+    // initialize it
+    std::transform( tgtView.begin(), tgtView.end(), tgtAmplitudeView.begin(), magnitude);
+
+    // all done
+}
+
+
+// end of file

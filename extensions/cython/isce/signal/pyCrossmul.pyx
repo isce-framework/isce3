@@ -39,7 +39,7 @@ cdef class pyCrossmul:
                  pyRaster referenceSLC,
                  pyRaster secondarySLC,
                  pyRaster interferogram,
-                 pyRaster coherence,
+                 pyRaster coherence=None,
                  pyRaster rngOffset=None,
                  refDoppler=None,
                  secDoppler=None,
@@ -104,22 +104,38 @@ cdef class pyCrossmul:
         # If range offset raster provided, run crossmul with range commonband filtering
         if rngOffset is not None:
             self.c_crossmul.doCommonRangebandFiltering(True)
-            self.c_crossmul.crossmul(
-                deref(referenceSLC.c_raster),
-                deref(secondarySLC.c_raster),
-                deref(rngOffset.c_raster),
-                deref(interferogram.c_raster),
-                deref(coherence.c_raster)
-            )
+            if coherence is not None:
+                self.c_crossmul.crossmul(
+                    deref(referenceSLC.c_raster),
+                    deref(secondarySLC.c_raster),
+                    deref(rngOffset.c_raster),
+                    deref(interferogram.c_raster),
+                    deref(coherence.c_raster)
+                )
+
+            else:
+                self.c_crossmul.crossmul(
+                    deref(referenceSLC.c_raster),
+                    deref(secondarySLC.c_raster),
+                    deref(rngOffset.c_raster),
+                    deref(interferogram.c_raster))
 
         # Else, run normal crossmul
         else:
-            self.c_crossmul.crossmul(
-                deref(referenceSLC.c_raster),
-                deref(secondarySLC.c_raster),
-                deref(interferogram.c_raster),
-                deref(coherence.c_raster)
-            )
+            if coherence is not None:
+                self.c_crossmul.crossmul(
+                    deref(referenceSLC.c_raster),
+                    deref(secondarySLC.c_raster),
+                    deref(interferogram.c_raster),
+                    deref(coherence.c_raster)
+                )
+
+            else:
+                self.c_crossmul.crossmul(
+                    deref(referenceSLC.c_raster),
+                    deref(secondarySLC.c_raster),
+                    deref(interferogram.c_raster)
+                )
 
         return
 

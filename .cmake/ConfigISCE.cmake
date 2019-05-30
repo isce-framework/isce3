@@ -29,6 +29,7 @@ function(CheckCXX)
     set(CMAKE_CUDA_STANDARD           14 PARENT_SCOPE)
     set(CMAKE_CUDA_STANDARD_REQUIRED  ON PARENT_SCOPE)
     set(CMAKE_CUDA_EXTENSIONS        OFF PARENT_SCOPE)
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wno-sign-compare ${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
 endfunction()
 
 
@@ -102,12 +103,15 @@ function(InitInstallDirLayout)
         set (ISCE_PACKAGESDIR packages CACHE STRING "isce/packages")
     endif(NOT ISCE_PACKAGESDIR)
 
+    ###build/packages
+    if (NOT ISCE_BUILDPACKAGESDIR)
+        set (ISCE_BUILDPACKAGESDIR ${CMAKE_BINARY_DIR}/packages CACHE STRING "build/isce/packages")
+    endif(NOT ISCE_BUILDPACKAGESDIR)
+
     ###install/lib
     if (NOT ISCE_LIBDIR)
         set (ISCE_LIBDIR lib CACHE STRING "isce/lib")
     endif(NOT ISCE_LIBDIR)
-
-    ###build/lib
 
     ###install/include
     if (NOT ISCE_INCLUDEDIR)

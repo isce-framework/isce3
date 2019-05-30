@@ -24,6 +24,3 @@ cdef extern from "isce/core/Ellipsoid.h" namespace "isce::core":
         void lonLatToXyz(cartesian_t&,cartesian_t&)
         void xyzToLonLat(cartesian_t&,cartesian_t&)
         void getImagingAnglesAtPlatform(cartesian_t&,cartesian_t&,cartesian_t&,double&,double&)
-        void TCNbasis(cartesian_t&,cartesian_t&,cartesian_t&,cartesian_t&,
-                      cartesian_t&)
-

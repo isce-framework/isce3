@@ -5,15 +5,11 @@
 //
 
 #include <cmath>
-#include <vector>
 #include "Baseline.h"
 #include "Constants.h"
-#include "LinAlg.h"
 #include "Peg.h"
 #include "Pegtrans.h"
-using std::vector;
 using isce::core::Baseline;
-using isce::core::LinAlg;
 using isce::core::orbitInterpMethod;
 using isce::core::HERMITE_METHOD;
 using isce::core::Peg;
@@ -39,21 +35,18 @@ void Baseline::initBasis(double t) {
      * For a given time, calculate an orthogonal basis for cross-track and velocity directions for
      * orbit1.
      */
-    // Local working vectors
-    cartesian_t xyz, vel, crossvec, vertvec, vel_norm;
     // Interpolate orbit to azimuth time
+    cartesian_t xyz, vel;
     _orbit1.interpolate(t, xyz, vel, _orbitMethod);
     _refxyz = xyz;
-    _velocityMagnitude = LinAlg::norm(vel);
+    _velocityMagnitude = vel.norm();
     // Get normalized vectors
-    LinAlg::unitVec(xyz, _rhat);
-    LinAlg::unitVec(vel, vel_norm);
+    const Vec3 vel_norm = vel / _velocityMagnitude;
+    _rhat = xyz.unitVec();
     // Compute cross-track vectors
-    LinAlg::cross(_rhat, vel_norm, crossvec);
-    LinAlg::unitVec(crossvec, _chat);
+    _chat = _rhat.cross(vel_norm).unitVec();
     // Compute velocity vector perpendicular to cross-track vector
-    LinAlg::cross(_chat, _rhat, vertvec);
-    LinAlg::unitVec(vertvec, _vhat);
+    _vhat = _chat.cross(_rhat).unitVec();
 }
 
 isce::core::cartesian_t Baseline::calculateBasisOffset(const cartesian_t &position) const {
@@ -61,13 +54,10 @@ isce::core::cartesian_t Baseline::calculateBasisOffset(const cartesian_t &positi
      * Given a position vector, calculate offset between reference position and that vector,
      * projected in the reference basis.
      */
-    cartesian_t dx = {position[0] - _refxyz[0],
-                      position[1] - _refxyz[1],
-                      position[2] - _refxyz[2]};
-    cartesian_t off = {LinAlg::dot(dx, _vhat),
-                       LinAlg::dot(dx, _rhat),
-                       LinAlg::dot(dx, _chat)};
-    return off;
+    const Vec3 dx = position - _refxyz;
+    return Vec3 { dx.dot(_vhat),
+                  dx.dot(_rhat),
+                  dx.dot(_chat) };
 }
 
 void Baseline::computeBaselines() {

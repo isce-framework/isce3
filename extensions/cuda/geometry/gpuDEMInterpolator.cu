@@ -8,6 +8,7 @@
 #include "gpuDEMInterpolator.h"
 #include <isce/cuda/except/Error.h>
 
+using isce::core::Vec3;
 using isce::cuda::core::ProjectionBase;
 
 /** @param[in] demInterp DEMInterpolator object.
@@ -123,14 +124,16 @@ finalizeProjInterp() {
 
 /** @param[out] double* Array of lon-lat-h at middle of DEM. */
 __device__
-void
+Vec3
 isce::cuda::geometry::gpuDEMInterpolator::
-midLonLat(double * llh) const {
+midLonLat() const {
     // Create coordinates for middle X/Y
-    double xyz[3] = {midX(), midY(), _refHeight};
+    const Vec3 xyz = {midX(), midY(), _refHeight};
+    Vec3 llh;
     // Call projection inverse
     (*_proj)->inverse(xyz, llh);
-} 
+    return llh;
+}
 
 /** @param[in] lon longitude of interpolation point.
   * @param[in] lat latitude of interpolation point.
@@ -147,8 +150,8 @@ interpolateLonLat(double lon, double lat) const {
     }
 
     // Pass latitude and longitude through projection
-    double xyz[3];
-    double llh[3] = {lon, lat, 0.0};
+    const Vec3 llh { lon, lat, 0. };
+    Vec3 xyz;
     (*_proj)->forward(llh, xyz);
 
     // Interpolate DEM at its native coordinates

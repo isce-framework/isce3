@@ -16,6 +16,7 @@
 #include <cereal/types/memory.hpp>
 #include <cereal/types/vector.hpp>
 #include <cereal/archives/xml.hpp>
+#include <sstream>
 
 // pyre
 #include <pyre/journal.h>
@@ -89,7 +90,7 @@ namespace isce {
             ellps.a(ellpsData[0]);
             ellps.e2(ellpsData[1]);
         }
-        
+
         // ------------------------------------------------------------------------
         // Serialization for Orbit
         // ------------------------------------------------------------------------
@@ -113,8 +114,8 @@ namespace isce {
          * @param[in] orbit         Orbit object to be configured. */
         inline void loadFromH5(isce::io::IGroup & group, Orbit & orbit) {
             // Reset orbit data
-            orbit.position.clear(); 
-            orbit.velocity.clear(); 
+            orbit.position.clear();
+            orbit.velocity.clear();
             orbit.UTCtime.clear();
             orbit.epochs.clear();
 
@@ -145,7 +146,7 @@ namespace isce {
          * @param[in] group         HDF5 group object.
          * @param[in] orbit         Orbit object to be saved. */
         inline void saveToH5(isce::io::IGroup & group, const Orbit & orbit) {
-            
+
             // Save position
             std::array<size_t, 2> dims = {static_cast<size_t>(orbit.nVectors), 3};
             isce::io::saveToH5(group, "position", orbit.position, dims, "meters");
@@ -171,7 +172,7 @@ namespace isce {
             // Create temporary data
             std::vector<double> time, angles, yaw, pitch, roll;
             isce::core::DateTime refEpoch;
-            
+
             // Load angles
             isce::io::loadFromH5(group, "eulerAngles", angles);
 
@@ -211,7 +212,7 @@ namespace isce {
                 angles[i*3 + 1] = deg * euler.pitch()[i];
                 angles[i*3 + 2] = deg * euler.roll()[i];
             }
-            
+
             // Save angles
             std::array<size_t, 2> dims = {euler.nVectors(), 3};
             isce::io::saveToH5(group, "eulerAngles", angles, dims, "degrees");
@@ -220,7 +221,7 @@ namespace isce {
             isce::io::saveToH5(group, "time", euler.time());
             isce::io::setRefEpoch(group, "time", euler.refEpoch());
         }
-  
+
         // ------------------------------------------------------------------------
         // Serialization for Metadata
         // ------------------------------------------------------------------------
@@ -287,10 +288,10 @@ namespace isce {
          * @param[in] poly          Poly2d to be configured.
          * @param[in] name          Dataset name within group. */
         inline void loadFromH5(isce::io::IGroup & group, Poly2d & poly, std::string name) {
-            
+
             // Configure the polynomial coefficients
             isce::io::loadFromH5(group, name, poly.coeffs);
-            
+
             // Set other polynomial properties
             poly.rangeOrder = poly.coeffs.size() - 1;
             poly.azimuthOrder = 0;
@@ -418,11 +419,19 @@ namespace isce {
 
         // Serialization save method
         template<class Archive>
-        inline void save(Archive & archive, StateVector const & sv) {
+        inline void save(Archive & archive, const StateVector & sv) {
+            // Serialize position vector to string as whitespace-delimited values
+            std::stringstream pos_stream;
+            pos_stream << sv.position[0] << " " << sv.position[1] << " " << sv.position[2];
+            std::string position_string = pos_stream.str();
+            // Serialize velocity vector to string as whitespace-delimited values
+            std::stringstream vel_stream;
+            vel_stream << sv.velocity[0] << " " << sv.velocity[1] << " " << sv.velocity[2];
+            std::string velocity_string = vel_stream.str();
             // Archive
-            archive(cereal::make_nvp("Time", sv.date().isoformat()),
-                    cereal::make_nvp("Position", sv.positionToString()),
-                    cereal::make_nvp("Velocity", sv.velocityToString()));
+            archive(cereal::make_nvp("Time", sv.datetime.isoformat()),
+                    cereal::make_nvp("Position", position_string),
+                    cereal::make_nvp("Velocity", velocity_string));
         }
 
         // Serialization load method
@@ -434,10 +443,14 @@ namespace isce {
             archive(cereal::make_nvp("Time", datetime_string),
                     cereal::make_nvp("Position", position_string),
                     cereal::make_nvp("Velocity", velocity_string));
-            // Send position/velocity strings to parser
-            sv.fromString(position_string, velocity_string);
             // Send datetime string to datetime object parser
-            sv.date(datetime_string);
+            sv.datetime = datetime_string;
+            // De-serialize position vector from stringstream
+            std::stringstream pos_stream (position_string);
+            pos_stream >> sv.position[0] >> sv.position[1] >> sv.position[2];
+            // De-serialize velocity vector from stringstream
+            std::stringstream vel_stream (velocity_string);
+            vel_stream >> sv.velocity[0] >> sv.velocity[1] >> sv.velocity[2];
         }
     }
 }

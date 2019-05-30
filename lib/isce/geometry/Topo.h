@@ -46,6 +46,12 @@ class isce::geometry::Topo {
                     size_t numberAzimuthLooks = 1,
                     size_t numberRangeLooks = 1);
 
+        inline Topo(const isce::product::RadarGridParameters & radarGrid,
+                    const isce::core::Orbit & orbit,
+                    const isce::core::LUT2d<double> & doppler,
+                    const isce::core::Ellipsoid & ellipsoid,
+                    const int lookSide);
+
         /** Constructor using core objects*/
         inline Topo(const isce::core::Ellipsoid &,
                     const isce::core::Orbit &,
@@ -131,17 +137,17 @@ class isce::geometry::Topo {
     private:
 
         /** Initialize TCN basis for given azimuth line */
-        void _initAzimuthLine(size_t,
-                              double &,
-                              isce::core::StateVector &,
-                              isce::core::Basis &);
+        void _initAzimuthLine(size_t, double&,
+                              isce::core::Vec3& pos, isce::core::Vec3& vel,
+                              isce::core::Basis&);
 
         /** Write to output layers */
         void _setOutputTopoLayers(cartesian_t &,
                                   TopoLayers &,
                                   size_t,
                                   isce::core::Pixel &,
-                                  isce::core::StateVector &,
+                                  isce::core::Vec3& pos,
+                                  isce::core::Vec3& vel,
                                   isce::core::Basis &,
                                   DEMInterpolator &);
         

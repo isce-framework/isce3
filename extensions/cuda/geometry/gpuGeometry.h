@@ -9,25 +9,20 @@
 #include <cmath>
 
 // isce::core
-#include "isce/core/Ellipsoid.h"
-#include "isce/core/Orbit.h"
-#include "isce/core/LUT1d.h"
+#include <isce/core/Ellipsoid.h>
+#include <isce/core/Orbit.h>
+#include <isce/core/Pixel.h>
+#include <isce/core/LUT1d.h>
 
 // isce::geometry
-#include "isce/geometry/DEMInterpolator.h"
+#include <isce/geometry/DEMInterpolator.h>
 
 // isce::cuda::core
-#include "isce/cuda/core/Common.h"
-#include "isce/cuda/core/gpuBasis.h"
-#include "isce/cuda/core/gpuEllipsoid.h"
-#include "isce/cuda/core/gpuOrbit.h"
-#include "isce/cuda/core/gpuPixel.h"
-#include "isce/cuda/core/gpuLUT1d.h"
-#include "isce/cuda/core/gpuLinAlg.h"
-#include "isce/cuda/core/gpuStateVector.h"
+#include <isce/cuda/core/gpuOrbit.h>
+#include <isce/cuda/core/gpuLUT1d.h>
 
 // isce::cuda::geometry
-#include "isce/cuda/geometry/gpuDEMInterpolator.h"
+#include <isce/cuda/geometry/gpuDEMInterpolator.h>
 
 // Declaration
 namespace isce {
@@ -37,23 +32,22 @@ namespace geometry {
     /** Radar geometry coordinates to map coordinates transformer*/
     CUDA_DEV int rdr2geo(double, double, double,
                          const isce::cuda::core::gpuOrbit &,
-                         const isce::cuda::core::gpuEllipsoid &,
+                         const isce::core::Ellipsoid &,
                          const gpuDEMInterpolator &,
-                         double *,
-                         double, int, double, int, int);
+                         isce::core::Vec3&, double, int, double, int, int);
 
     /** Radar geometry coordinates to map coordinates transformer*/
-    CUDA_DEV int rdr2geo(const isce::cuda::core::gpuPixel &,
-                         const isce::cuda::core::gpuBasis &,
-                         const isce::cuda::core::gpuStateVector &,
-                         const isce::cuda::core::gpuEllipsoid &,
+    CUDA_DEV int rdr2geo(const isce::core::Pixel &,
+                         const isce::core::Basis &,
+                         const isce::core::Vec3& pos,
+                         const isce::core::Vec3& vel,
+                         const isce::core::Ellipsoid &,
                          const gpuDEMInterpolator &,
-                         double *,
-                         int, double, int, int);
+                         isce::core::Vec3&, int, double, int, int);
 
     /** Map coordinates to radar geometry coordinates transformer*/
-    CUDA_DEV int geo2rdr(double *,
-                         const isce::cuda::core::gpuEllipsoid &,
+    CUDA_DEV int geo2rdr(const isce::core::Vec3&,
+                         const isce::core::Ellipsoid&,
                          const isce::cuda::core::gpuOrbit &,
                          const isce::cuda::core::gpuLUT1d<double> &,
                          double *, double *,
@@ -62,14 +56,15 @@ namespace geometry {
     /** Radar geometry coordinates to map coordinates transformer (host testing) */
     CUDA_HOST int rdr2geo_h(const isce::core::Pixel &,
                             const isce::core::Basis &,
-                            const isce::core::StateVector &,
+                            const isce::core::Vec3& pos,
+                            const isce::core::Vec3& vel,
                             const isce::core::Ellipsoid &,
                             isce::geometry::DEMInterpolator &,
                             cartesian_t &,
                             int, double, int, int);
 
     /** Map coordinates to radar geometry coordinates transformer (host testing) */
-    CUDA_HOST int geo2rdr_h(const cartesian_t &,
+    CUDA_HOST int geo2rdr_h(const cartesian_t&,
                             const isce::core::Ellipsoid &,
                             const isce::core::Orbit &,
                             const isce::core::LUT1d<double> &,

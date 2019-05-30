@@ -8,7 +8,6 @@
 
 #include <cmath>
 #include <isce/core/LUT2d.h>
-#include <isce/cuda/core/Common.h>
 #include <isce/cuda/core/gpuInterpolator.h>
 
 // Declaration

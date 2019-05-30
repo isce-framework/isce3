@@ -1,15 +1,17 @@
+#Mimicking mm behaviour
+set(PACKAGENAME core)
+string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
+
 ####Set the source files
-set(CPPS Attitude.cpp
-         Baseline.cpp
+set(CPPS Baseline.cpp
          BilinearInterpolator.cpp
          BicubicInterpolator.cpp
          DateTime.cpp
-         Doppler.cpp
          Ellipsoid.cpp
          EulerAngles.cpp
          Interpolator.cpp
+         Kernels.cpp
          LUT2d.cpp
-         LinAlg.cpp
          Metadata.cpp
          NearestNeighborInterpolator.cpp
          Orbit.cpp
@@ -27,18 +29,27 @@ set(CPPS Attitude.cpp
 set(HEADERS Attitude.h
             Baseline.h
             Basis.h
+            Cartesian.h
+            Common.h
+            Constants.h
             Constants.h
             DateTime.h
-            Doppler.h
+            DenseMatrix.h
             Ellipsoid.h
             EulerAngles.h
+            Interp1d.h
+            Interp1d.icc
             Interpolator.h
+            Kernels.h
+            Linspace.h
+            Linspace.icc
             LUT1d.h
             LUT1d.icc
             LUT2d.h
-            LinAlg.h
             Matrix.h
             Matrix.icc
+            Cube.h
+            Cube.icc
             Metadata.h
             Orbit.h
             Peg.h
@@ -52,6 +63,7 @@ set(HEADERS Attitude.h
             Serialization.h
             StateVector.h
             TimeDelta.h
-            Utilities.h)
+            Utilities.h
+            Vector.h)
 
 add_isce_libdir(core "${CPPS}" "${HEADERS}")

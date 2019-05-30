@@ -1,0 +1,1600 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis <michael.aivazis@para-sim.com>
+// parasim
+// (c) 1998-2019 all rights reserved
+//
+
+// code guard
+#if !defined(ampcor_cuda_correlators_Sequential_icc)
+#error This header is an implementation detail of ampcor::cuda::correlators::Sequential
+#endif
+
+// interface
+template <typename raster_t>
+void
+ampcor::cuda::correlators::Sequential<raster_t>::
+addReferenceTile(size_type pid, const constview_type & ref)
+{
+    // figure out the starting address of this tile in the arena
+    cell_type * support = _arena + pid*(_refCells + _tgtCells);
+    // adapt it into a grid
+    tile_type tile(_refLayout, support);
+    // move the data
+    std::copy(ref.begin(), ref.end(), tile.view().begin());
+    // all done
+    return;
+}
+
+
+template <typename raster_t>
+void
+ampcor::cuda::correlators::Sequential<raster_t>::
+addTargetTile(size_type pid, const constview_type & tgt)
+{
+    // figure out the starting address of this tile in the arena
+    cell_type * support = _arena + pid*(_refCells + _tgtCells) + _refCells;
+    // adapt it into a grid
+    tile_type tile(_tgtLayout, support);
+    // move the data
+    std::copy(tgt.begin(), tgt.end(), tile.view().begin());
+    // all done
+    return;
+}
+
+
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+adjust() -> const value_type *
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.cuda");
+
+    // compute the dimension of the reference tiles; assume they are square
+    auto refDim = _refLayout.shape()[0];
+    // compute the dimension of the target tiles; assume they are square
+    auto tgtDim = _tgtLayout.shape()[0];
+    // compute the dimension of the correlation matrix
+    auto corDim = _corLayout.shape()[0];
+
+    // prelude: coarse adjustments
+    // move the tiles to the device
+    auto coarseArena = _push();
+    // compute their amplitudes
+    auto amplitudes = _detect(coarseArena, refDim, tgtDim);
+    // adjust the reference tiles to zero mean and compute the variances
+    auto refStatistics = _refStats(amplitudes, refDim, tgtDim);
+    // compute the sum area tables for all possible search window placements within the target tile
+    auto sat = _sat(amplitudes, refDim, tgtDim);
+    // use the SATs to compute the mean amplitude of all possible window placements
+    auto tgtStatistics = _tgtStats(sat, refDim, tgtDim, corDim);
+    // compute the correlation hyper-surface
+    auto gamma = _correlate(amplitudes, refStatistics, tgtStatistics, refDim, tgtDim, corDim);
+    // find its maxima
+    auto maxcor = _maxcor(gamma, corDim);
+
+    // interlude: housekeeping
+    cudaFree(gamma);
+    cudaFree(tgtStatistics);
+    cudaFree(sat);
+    cudaFree(refStatistics);
+    cudaFree(amplitudes);
+
+    // refinement: refine the tiles by a factor and repeat the process with a narrower search
+    // window around the location of maximum correlation
+    // compute the dimension of the reference tiles; assume they are square
+    auto refRefinedDim = _refRefinedLayout.shape()[0];
+    // compute the dimension of the target tiles; assume they are square
+    auto tgtRefinedDim = _tgtRefinedLayout.shape()[0];
+    // compute the dimension of the correlation matrix
+    auto corRefinedDim = _corRefinedLayout.shape()[0];
+    // compute the dimension of the zoomed correlation matrix
+    auto corZoomedDim = _corZoomedLayout.shape()[0];
+    // ensure that the expanded target tiles where the correlation is maximum fit within the
+    // search window
+    _nudge(maxcor, refDim, tgtDim);
+    // allocate room for the refinement area
+    auto refinedArena = _refinedArena();
+    // refine the reference tiles
+    _refRefine(coarseArena, refinedArena);
+    // collect the expanded maxcor tiles and migrate them to our new arena
+    _tgtMigrate(coarseArena, maxcor, refinedArena);
+    // refine the expanded target tiles in place
+    _tgtRefine(refinedArena);
+
+    // interlude: housekeeping
+    cudaFree(coarseArena);
+
+    // deramp
+    _deramp(refinedArena);
+    // compute amplitudes
+    amplitudes = _detect(refinedArena, refRefinedDim, tgtRefinedDim);
+    // adjust the reference tiles to zero mean and compute the variances
+    refStatistics = _refStats(amplitudes, refRefinedDim, tgtRefinedDim);
+    // compute the sum area tables for all possible search window placements with the target tile
+    sat = _sat(amplitudes, refRefinedDim, tgtRefinedDim);
+    // compute the correlation  hyper-surface
+    gamma = _correlate(amplitudes, refStatistics, tgtStatistics,
+                       refRefinedDim, tgtRefinedDim, corRefinedDim);
+    // zoom in
+    auto zoomed = _zoomcor(gamma);
+    // find its maxima
+    auto maxcorZoomed = _maxcor(zoomed, corZoomedDim);
+
+    // compute the shifts and return them
+    auto offsets = _offsetField(maxcor, maxcorZoomed);
+
+    // clean up
+    cudaFree(maxcorZoomed);
+    cudaFree(maxcor);
+    cudaFree(gamma);
+    cudaFree(tgtStatistics);
+    cudaFree(sat);
+    cudaFree(refStatistics);
+    cudaFree(amplitudes);
+    cudaFree(refinedArena);
+
+    // all done
+    return offsets;
+}
+
+
+// accessors
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+arena() const -> const cell_type *
+{
+    return _arena;
+}
+
+
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+pairs() const -> size_type
+{
+    return _pairs;
+}
+
+
+// meta-methods
+template <typename raster_t>
+ampcor::cuda::correlators::Sequential<raster_t>::
+~Sequential() {
+    // release the host memory
+    delete [] _arena;
+    delete [] _offsets;
+}
+
+
+template <typename raster_t>
+ampcor::cuda::correlators::Sequential<raster_t>::
+Sequential(size_type pairs,
+           const layout_type & refLayout, const layout_type & tgtLayout,
+           size_type refineFactor, size_type refineMargin, size_type zoomFactor) :
+    _pairs{ pairs },
+    _refineFactor{ refineFactor },
+    _refineMargin{ refineMargin },
+    _zoomFactor{ zoomFactor },
+    _refLayout{ refLayout },
+    _tgtLayout{ tgtLayout },
+    _corLayout{ tgtLayout.shape() - refLayout.shape() + index_type::fill(1) },
+    _refRefinedLayout{ refineFactor * _refLayout.shape() },
+    _tgtRefinedLayout{ refineFactor * (_refLayout.shape() + index_type::fill(2*refineMargin)) },
+    _corRefinedLayout{ index_type::fill(2*refineFactor*refineMargin+1) },
+    _corZoomedLayout { zoomFactor * _corRefinedLayout.shape() },
+    _refCells{ _refLayout.size() },
+    _tgtCells{ _tgtLayout.size() },
+    _corCells{ _corLayout.size() },
+    _refRefinedCells{ _refRefinedLayout.size() },
+    _tgtRefinedCells{ _tgtRefinedLayout.size() },
+    _refFootprint{ _refCells * sizeof(cell_type) },
+    _tgtFootprint{ _tgtCells * sizeof(cell_type) },
+    _corFootprint{ _corCells * sizeof(value_type) }, // the correlation matrix is real...
+    _refRefinedFootprint{ _refRefinedCells * sizeof(cell_type) },
+    _tgtRefinedFootprint{ _tgtRefinedCells * sizeof(cell_type) },
+    _arena{ new cell_type[ _pairs * (_refCells+_tgtCells) ] },
+    _offsets{ new value_type[ 2 * _pairs ] }
+{
+    // compute the footprints
+    auto footprint = _pairs*(_refFootprint + _tgtFootprint);
+    auto refinedFootprint = _pairs*(_refRefinedFootprint + _tgtRefinedFootprint);
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.cuda");
+    // show me
+    channel
+        << pyre::journal::at(__HERE__)
+        << "new Sequential worker:"
+        << pyre::journal::newline
+        << "    pairs: " << _pairs
+        << pyre::journal::newline
+        << "    ref shape: " << _refLayout << ", " << _refCells << " cells"
+        << pyre::journal::newline
+        << "    tgt shape: " << _tgtLayout << ", " << _tgtCells << " cells"
+        << pyre::journal::newline
+        << "    footprint: " << (_refCells+_tgtCells) << " cells in "
+        << (footprint/1024/1024) << " Mb"
+        << pyre::journal::newline
+        << "    refine factor: " << refineFactor
+        << pyre::journal::newline
+        << "    refine margin: " << refineMargin
+        << pyre::journal::newline
+        << "    refined ref shape: " << _refRefinedLayout << ", " << _refRefinedCells << " cells"
+        << pyre::journal::newline
+        << "    refined tgt shape: " << _tgtRefinedLayout << ", " << _tgtRefinedCells << " cells"
+        << pyre::journal::newline
+        << "    footprint: " << (_refRefinedCells+_tgtRefinedCells) << " cells in "
+        << (refinedFootprint/1024/1024) << " Mb"
+        << pyre::journal::newline
+        << "    arena: " << _arena
+        << pyre::journal::endl;
+}
+
+
+// debugging support
+template <typename raster_t>
+void
+ampcor::cuda::correlators::Sequential<raster_t>::
+dump() const
+{
+    // dump the arena as a sequence of reference and target tiles
+    pyre::journal::debug_t channel("ampcor.cuda");
+
+    // sign in
+    channel << pyre::journal::at(__HERE__);
+    // go through all the pairs
+    for (auto pid = 0; pid < _pairs; ++pid) {
+        // inject the pid
+        channel << "pid: " << pid << pyre::journal::newline;
+        // compute the address of the reference tile in the arena
+        cell_type * refLoc = _arena + pid*(_refCells + _tgtCells);
+        // adapt it into a grid
+        tile_type ref(_refLayout, refLoc);
+        // inject it
+        channel << "reference: " << pyre::journal::newline;
+        for (auto idx = 0; idx < _refLayout.shape()[0]; ++idx) {
+            for (auto jdx = 0; jdx < _refLayout.shape()[1]; ++jdx) {
+                channel << ref[{idx, jdx}] << " ";
+            }
+            channel << pyre::journal::newline;
+        }
+
+        // compute the address of the target tile in the arena
+        cell_type * tgtLoc = refLoc + _refCells;
+        // adapt it into a grid
+        tile_type tgt(_tgtLayout, tgtLoc);
+
+        // inject it
+        channel << "target: " << pyre::journal::newline;
+        for (auto idx = 0; idx < _tgtLayout.shape()[0]; ++idx) {
+            for (auto jdx = 0; jdx < _tgtLayout.shape()[1]; ++jdx) {
+                channel << tgt[{idx, jdx}] << " ";
+            }
+            channel << pyre::journal::newline;
+        }
+
+    }
+    // sing off
+    channel << pyre::journal::endl;
+
+    // all done
+    return;
+}
+
+
+// implementation details: methods
+
+// push the tiles to the device
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+_push() const -> cell_type *
+{
+    // grab a spot
+    cell_type * cArena = nullptr;
+    // compute the required size
+    auto footprint = _pairs * (_refFootprint + _tgtFootprint);
+    // allocate room for it
+    auto status = cudaMallocManaged(&cArena, footprint);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while allocating " << 1.0*footprint/1024/1024
+            << "Mb of device memory for the input hyper-grid: "
+            << cudaGetErrorName(status) << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::bad_alloc();
+    }
+
+    // move the data
+    status = cudaMemcpy(cArena, _arena, footprint, cudaMemcpyHostToDevice);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // build the error description
+        std::string description = cudaGetErrorName(status);
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while transferring tiles to the device: "
+            << description << " (" << status << ")"
+            << pyre::journal::endl;
+        // release the memory
+        cudaFree(cArena);
+        // and bail
+        throw std::logic_error(description);
+    }
+
+    // all done
+    return cArena;
+}
+
+// compute the amplitude of the signal
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+_detect(const cell_type * cArena, size_type refDim, size_type tgtDim) const -> value_type *
+{
+    // compute the size of a reference tile
+    auto refCells = refDim * refDim;
+    // compute the size of a target tile
+    auto tgtCells = tgtDim * tgtDim;
+
+    // find a spot on the device
+    value_type * rArena = nullptr;
+    // compute the number of cells whose amplitude we have to compute
+    auto cells = _pairs * (refCells + tgtCells);
+    // compute the required size
+    auto footprint = cells * sizeof(value_type);
+    // allocate room for it
+    auto status = cudaMallocManaged(&rArena, footprint);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while allocating " << 1.0*footprint/1024/1024
+            << "Mb of device memory for the tile amplitudes: "
+            << cudaGetErrorName(status) << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::bad_alloc();
+    }
+
+    // engage...
+    kernels::detect(cArena, cells, rArena);
+
+    // all done
+    return rArena;
+};
+
+// subtract the tile mean from each reference pixel
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+_refStats(value_type * rArena, size_type refDim, size_type tgtDim) const -> value_type *
+{
+    // compute the size of a reference tile
+    auto refCells = refDim * refDim;
+    // compute the size of a target tile
+    auto tgtCells = tgtDim * tgtDim;
+
+    // grab a spot
+    value_type * stats = nullptr;
+    // compute the amount of memory needed to store the variances of the reference tiles: one
+    // number per reference tile
+    auto footprint = _pairs * sizeof(value_type);
+    // allocate room
+    auto status = cudaMallocManaged(&stats, footprint);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while allocating " << 1.0*footprint/1024/1024
+            << "Mb of device memory for the variances of the reference tiles: "
+            << cudaGetErrorName(status) << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::bad_alloc();
+    }
+
+    // engage
+    kernels::refStats(rArena, _pairs, refDim, refCells + tgtCells, stats);
+
+    // all done
+    return stats;
+}
+
+// build the sum area tables for the target tiles
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+_sat(const value_type * rArena, size_type refDim, size_type tgtDim) const -> value_type *
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.cuda");
+
+    // compute the size of a reference tile
+    auto refCells = refDim * refDim;
+    // compute the size of a target tile
+    auto tgtCells = tgtDim * tgtDim;
+    // compute the memory footprint of a target tile
+    auto tgtFootprint = tgtCells * sizeof(value_type);
+
+    // grab a spot for the sat tables
+    value_type * sat = nullptr;
+    // compute the amount of memory needed to store them
+    auto footprint = _pairs * tgtFootprint;
+    // allocate memory
+    auto status = cudaMallocManaged(&sat, footprint);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while allocating memory for the sum area tables: "
+            << cudaGetErrorName(status) << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::bad_alloc();
+    }
+    // otherwise, show me
+    channel
+        << pyre::journal::at(__HERE__)
+        << "allocated an arena of " << footprint << " bytes for the sum area tables at "
+        << sat
+        << pyre::journal::endl;
+
+    // engage
+    kernels::sat(rArena, _pairs, refCells, tgtCells, tgtDim, sat);
+
+    // all done
+    return sat;
+}
+
+
+// compute the average values for all possible placements of the reference shape within the
+// target tile
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+_tgtStats(const value_type * dSAT,
+          size_type refDim, size_type tgtDim, size_type corDim) const -> value_type *
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.cuda");
+
+    // pick a spot for the table of amplitude averages
+    value_type * stats = nullptr;
+    // compute the amount of memory needed to store the target tile statistics: we store the
+    // mean per placement per tile
+    auto footprint = _pairs * corDim*corDim * sizeof(value_type);
+    // allocate memory on the device
+    auto status = cudaMallocManaged(&stats, footprint);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // get the error description
+        std::string description = cudaGetErrorName(status);
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while allocating device memory for the table of target amplitude averages: "
+            << description << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::bad_alloc();
+    }
+    // show me
+    channel
+        << pyre::journal::at(__HERE__)
+        << "allocated an arena of " << footprint << " bytes for the target amplitude averages at "
+        << stats
+        << pyre::journal::endl;
+
+    // engage
+    kernels::tgtStats(dSAT, _pairs, refDim, tgtDim, corDim, stats);
+
+    // all done
+    return stats;
+}
+
+
+// compute the correlation surface
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+_correlate(const value_type * rArena,
+           const value_type * refStats, const value_type * tgtStats,
+           size_type refDim, size_type tgtDim, size_type corDim) const -> value_type *
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.cuda");
+
+    // compute the size of the reference tile
+    auto refCells = refDim * refDim;
+    // compute the size of the target tile
+    auto tgtCells = tgtDim * tgtDim;
+    // compute the size of the correlation matrix
+    auto corCells = corDim * corDim;
+
+    // pick a spot for the correlation matrix
+    value_type * dCorrelation = nullptr;
+    // compute the total number of cells in the amplitude hyper-grid
+    auto size = _pairs * corCells;
+    // and the amount of memory needed to store them
+    auto footprint = size * sizeof(value_type);
+    // allocate memory on the device
+    auto status = cudaMallocManaged(&dCorrelation, footprint);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // get the error description
+        std::string description = cudaGetErrorName(status);
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while allocating device memory for the correlation matrix: "
+            << description << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::bad_alloc();
+    }
+    // show me
+    channel
+        << pyre::journal::at(__HERE__)
+        << "allocated " << footprint << " bytes for the correlation matrix at "
+        << dCorrelation
+        << pyre::journal::endl;
+
+    // engage
+    kernels::correlate(rArena, refStats, tgtStats,
+                       _pairs,
+                       refCells, tgtCells, corCells, refDim, tgtDim, corDim,
+                       dCorrelation);
+
+    // all done
+    return dCorrelation;
+}
+
+
+// find the locations of the correlation maxima
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+_maxcor(const value_type * gamma, size_type corDim) const -> int *
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.cuda");
+
+    // compute the size of the correlation matrix
+    auto corCells = corDim * corDim;
+
+    // find a spot
+    int * loc = nullptr;
+    // compute the amount of memory we need: a (row, coal) locator for each tile pair
+    auto footprint = 2 * _pairs * sizeof(int);
+    // allocate memory on the device
+    auto status = cudaMallocManaged(&loc, footprint);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // get the error description
+        std::string description = cudaGetErrorName(status);
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while allocating device memory for the location of the correlation maxima: "
+            << description << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::bad_alloc();
+    }
+    // show me
+    channel
+        << pyre::journal::at(__HERE__)
+        << "allocated " << footprint << " bytes for the locations of the correlation maxima at "
+        << loc
+        << pyre::journal::endl;
+
+    // engage
+    kernels::maxcor(gamma, _pairs, corCells, corDim, loc);
+
+    // all done
+    return loc;
+}
+
+
+// adjust the locations of the correlation maxima so that the new target tiles fit within the
+// search window
+template <typename raster_t>
+void
+ampcor::cuda::correlators::Sequential<raster_t>::
+_nudge(int * locations, size_type refDim, size_type tgtDim) const
+{
+    // make sure that all locations are adjusted so that they allow enough room for the
+    // {refineMargin} by moving the ULHC of the tiles so they fit
+    kernels::nudge(_pairs, refDim, tgtDim, _refineMargin, locations);
+
+    // all done
+    return;
+}
+
+
+// allocate room for the refined tiles
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+_refinedArena() const -> cell_type *
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.cuda");
+
+    // grab a spot
+    cell_type * arena = nullptr;
+    // compute the required size
+    auto footprint = _pairs * (_refRefinedFootprint + _tgtRefinedFootprint);
+    // allocate room for it
+    auto status = cudaMallocManaged(&arena, footprint);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while allocating " << 1.0*footprint/1024/1024
+            << "Mb of device memory for the refined tile hyper-grid: "
+            << cudaGetErrorName(status) << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::bad_alloc();
+    }
+
+    // show me
+    channel
+        << pyre::journal::at(__HERE__)
+        << "allocated a refined arena: " << footprint << " bytes at " << arena
+        << pyre::journal::endl;
+
+    // initialize the memory
+    status = cudaMemset(arena, 0, footprint);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // get the error description
+        std::string description = cudaGetErrorName(status);
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while initializing " << footprint
+            << " bytes of device memory for the refined tile hyper-grid: "
+            << description << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error(description);
+    }
+
+    // all done
+    return arena;
+}
+
+
+// refine the reference tiles
+template <typename raster_t>
+void
+ampcor::cuda::correlators::Sequential<raster_t>::
+_refRefine(cell_type * coarseArena, cell_type * refinedArena) const
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.cuda");
+
+    // get the shape the reference tile
+    auto rshape = _refLayout.shape();
+    // and the shape of the refined tile
+    auto tshape = _refRefinedLayout.shape();
+
+    // step 1: forward FFT from {coarseArena} to {refinedArena}
+    // the plan characteristics
+    int dim = 2;
+    int fwdRanks[] = { static_cast<int>(rshape[0]), static_cast<int>(rshape[1]) };
+    //  the data layout of the coarse tiles
+    // the tile shape stays the same
+    int fwdIEmbed[] = { static_cast<int>(rshape[0]), static_cast<int>(rshape[1]) };
+    // the data is densely packed
+    int fwdIStride = 1;
+    // the distance between reference tiles
+    int fwdIDist = _refCells + _tgtCells;
+    // the data layout of the refined tiles
+    // the tile shape stays the same
+    int fwdOEmbed[] = { static_cast<int>(tshape[0]), static_cast<int>(tshape[1]) };
+    // the data is densely packed
+    int fwdOStride = 1;
+    // the distance between reference tiles in the refined arena
+    int fwdODist = _refRefinedCells + _tgtRefinedCells;
+
+    // grab a spot for a plan
+    cufftHandle fwdPlan;
+    // instantiate
+    auto status = cufftPlanMany(&fwdPlan, dim, fwdRanks,
+                                fwdIEmbed, fwdIStride, fwdIDist,
+                                fwdOEmbed, fwdOStride, fwdODist,
+                                CUFFT_C2C,
+                                _pairs
+                                );
+    // if something went wrong
+    if (status != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while refining the reference tiles: forward FFT plan: error " << status
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while refining the reference tiles: forward FFT plan error");
+    }
+
+    // execute the forward plan
+    status = cufftExecC2C(fwdPlan,
+                          reinterpret_cast<cufftComplex *>(coarseArena),
+                          reinterpret_cast<cufftComplex *>(refinedArena),
+                          CUFFT_FORWARD);
+    // if something went wrong
+    if (status != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while refining the reference tiles: executing the forward FFT plan: error "
+            << status
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while executing the forward FFT plan for the reference tiles");
+    }
+    // wait for the device to finish
+    auto code = cudaDeviceSynchronize();
+    // if something went wrong
+    if (code != cudaSuccess) {
+        // form the error description
+        std::string description = cudaGetErrorName(code);
+        // make a channel
+        pyre::journal::error_t channel("ampcor.cuda");
+        // complain
+        channel
+            << pyre::journal::at(__HERE__)
+            << "while refining reference tiles: STEP 1: " << description << " (" << code << ")"
+            << pyre::journal::endl;
+        // bail
+        throw std::runtime_error(description);
+    }
+    // clean up
+    cufftDestroy(fwdPlan);
+
+    // step 2: inverse FFT of the refined tiles back into the refined arena
+    // the plan characteristics
+    int revRanks[] = { static_cast<int>(tshape[0]), static_cast<int>(tshape[1]) };
+    // the data layout of the transformed reference tiles
+    int revIEmbed[] = { static_cast<int>(tshape[0]), static_cast<int>(tshape[1]) };
+    // the data is densely packed
+    int revIStride = 1;
+    // the distance between reference tiles
+    int revIDist = _refRefinedCells + _tgtRefinedCells;
+    // the inverse FFT tiles have identical layout
+    int revOEmbed[] = { static_cast<int>(tshape[0]), static_cast<int>(tshape[1]) };
+    // the data is densely packed
+    int revOStride = 1;
+    // the distance between reference tiles
+    int revODist = _refRefinedCells + _tgtRefinedCells;
+
+    // grab a spot
+    cufftHandle revPlan;
+    // instantiate the inverse plan
+    status = cufftPlanMany(&revPlan, dim, revRanks,
+                           revIEmbed, revIStride, revIDist,
+                           revOEmbed, revOStride, revODist,
+                           CUFFT_C2C,
+                           _pairs
+                           );
+    // if something went wrong
+    if (status != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while refining the reference tiles: inverse FFT plan: error " << status
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while refining the reference tiles: inverse FFT plan error");
+    }
+
+    // execute the inverse plan
+    status = cufftExecC2C(revPlan,
+                          reinterpret_cast<cufftComplex *>(refinedArena),
+                          reinterpret_cast<cufftComplex *>(refinedArena),
+                          CUFFT_INVERSE);
+    // if something went wrong
+    if (status != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while refining the reference tiles: executing the inverse FFT plan: error "
+            << status
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while executing the inverse FFT plan for the reference tiles");
+    }
+    // wait for the device to finish
+    code = cudaDeviceSynchronize();
+    // if something went wrong
+    if (code != cudaSuccess) {
+        // form the error description
+        std::string description = cudaGetErrorName(code);
+        // make a channel
+        pyre::journal::error_t channel("ampcor.cuda");
+        // complain
+        channel
+            << pyre::journal::at(__HERE__)
+            << "while refining reference tiles: STEP 2: " << description << " (" << code << ")"
+            << pyre::journal::endl;
+        // bail
+        throw std::runtime_error(description);
+    }
+
+    // clean up
+    cufftDestroy(revPlan);
+
+    // all done
+    return;
+}
+
+
+// migrate the expanded unrefined target tiles into the {refinedArena}
+template <typename raster_t>
+void
+ampcor::cuda::correlators::Sequential<raster_t>::
+_tgtMigrate(cell_type * coarseArena, int * locations, cell_type * refinedArena) const
+{
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.cuda");
+
+    // the reference tile shape
+    auto refShape = _refLayout.shape();
+    // the target tile shape
+    auto tgtShape = _tgtLayout.shape();
+    // the refined reference tile shape
+    auto refRefinedShape = _refRefinedLayout.shape();
+    // the refined target tile shape
+    auto tgtRefinedShape = _tgtRefinedLayout.shape();
+
+    // unpack the dimensions
+    auto refDim = refShape[0];
+    auto tgtDim = tgtShape[0];
+    auto refRefinedDim = refRefinedShape[0];
+    auto tgtRefinedDim = tgtRefinedShape[0];
+
+    // compute the dimension of the expanded maxcor tile
+    auto expDim = refDim + 2 * _refineMargin;
+
+    // engage...
+    kernels::migrate(coarseArena, _pairs,
+                     refDim, tgtDim, expDim,
+                     refRefinedDim, tgtRefinedDim,
+                     locations,
+                     refinedArena);
+
+    // all done
+    return;
+}
+
+
+// refine the target tiles around the locations of the correlation maxima
+template <typename raster_t>
+void
+ampcor::cuda::correlators::Sequential<raster_t>::
+_tgtRefine(cell_type * refinedArena) const
+{
+    // N.B.: assumes {locations} are already nudged and on the CPU...
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.cuda");
+
+    // the shape of the target tile
+    auto tgtShape = _tgtLayout.shape();
+    // the shape the refined target tile
+    auto tgtRefShape = _tgtRefinedLayout.shape();
+    // the shape of the expanded target tile
+    auto expShape = _refLayout.shape() + index_type::fill(2*_refineMargin);
+
+    // N.B.: the expanded maxcor target tiles are expected to have already been moved to the
+    // refined arena after the maxcor locations were determined
+
+    // step 1: forward FFT in place in {refinedArena}
+    // the plan characteristics
+    int dim = 2;
+    // use the shape of the expanded target tile
+    int fwdRanks[] = { static_cast<int>(expShape[0]), static_cast<int>(expShape[1]) };
+    // this tile is already occupying its destination location in {refinedArena}
+    int fwdIEmbed[] = { static_cast<int>(tgtRefShape[0]), static_cast<int>(tgtRefShape[1]) };
+    // the data is dense
+    int fwdIStride = 1;
+    // the distance between tiles
+    int fwdIDist = _refRefinedCells + _tgtRefinedCells;
+    // the destination of the forward FFT has indentical layout
+    int fwdOEmbed[] = { static_cast<int>(tgtRefShape[0]), static_cast<int>(tgtRefShape[1]) };
+    // the data is dense
+    int fwdOStride = 1;
+    // the distance between tiles
+    int fwdODist = _refRefinedCells + _tgtRefinedCells;
+
+    // grab a spot for a plan
+    cufftHandle fwdPlan;
+    // instantiate
+    auto status = cufftPlanMany(&fwdPlan, dim, fwdRanks,
+                                fwdIEmbed, fwdIStride, fwdIDist,
+                                fwdOEmbed, fwdOStride, fwdODist,
+                                CUFFT_C2C,
+                                _pairs
+                                );
+    // if something went wrong
+    if (status != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while refining the target tiles: forward FFT plan: error " << status
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while refining the target tiles: forward FFT plan error");
+    }
+
+    // the address of the first expanded maxcor tile
+    auto firstTile = reinterpret_cast<cufftComplex *>(refinedArena + _refRefinedCells);
+    // execute the forward plan
+    status = cufftExecC2C(fwdPlan, firstTile, firstTile, CUFFT_FORWARD);
+    // if something went wrong
+    if (status != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while refining the target tiles: executing the forward FFT plan: error "
+            << status
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while executing the forward FFT plan for the reference tiles");
+    }
+    // wait for the device to finish
+    auto code = cudaDeviceSynchronize();
+    // if something went wrong
+    if (code != cudaSuccess) {
+        // form the error description
+        std::string description = cudaGetErrorName(code);
+        // make a channel
+        pyre::journal::error_t channel("ampcor.cuda");
+        // complain
+        channel
+            << pyre::journal::at(__HERE__)
+            << "while refining target tiles: STEP 1: " << description << " (" << code << ")"
+            << pyre::journal::endl;
+        // bail
+        throw std::runtime_error(description);
+    }
+    // clean up the forward plan
+    cufftDestroy(fwdPlan);
+
+    // step 2: inverse FFT of the refined tiles back into the refined arena
+    // the plan characteristics
+    int revRanks[] = { static_cast<int>(tgtRefShape[0]), static_cast<int>(tgtRefShape[1]) };
+
+    // the data layout of the transformed reference tiles
+    int revIEmbed[] = { static_cast<int>(tgtRefShape[0]), static_cast<int>(tgtRefShape[1]) };
+    // the data is densely packed
+    int revIStride = 1;
+    // the distance between reference tiles
+    int revIDist = _refRefinedCells + _tgtRefinedCells;
+    // the inverse FFT tiles have identical layout
+    int revOEmbed[] = { static_cast<int>(tgtRefShape[0]), static_cast<int>(tgtRefShape[1]) };
+    // the data is densely packed
+    int revOStride = 1;
+    // the distance between reference tiles
+    int revODist = _refRefinedCells + _tgtRefinedCells;
+
+    // grab a spot
+    cufftHandle revPlan;
+    // instantiate the inverse plan
+    status = cufftPlanMany(&revPlan, dim, revRanks,
+                           revIEmbed, revIStride, revIDist,
+                           revOEmbed, revOStride, revODist,
+                           CUFFT_C2C,
+                           _pairs
+                           );
+    // if something went wrong
+    if (status != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while refining the target tiles: inverse FFT plan: error " << status
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while refining the target tiles: inverse FFT plan error");
+    }
+
+    // execute the inverse plan
+    status = cufftExecC2C(revPlan, firstTile, firstTile, CUFFT_FORWARD);
+    // if something went wrong
+    if (status != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while refining the target tiles: executing the inverse FFT plan: error "
+            << status
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while executing the inverse FFT plan for the target tiles");
+    }
+    // wait for the device to finish
+    code = cudaDeviceSynchronize();
+    // if something went wrong
+    if (code != cudaSuccess) {
+        // form the error description
+        std::string description = cudaGetErrorName(code);
+        // make a channel
+        pyre::journal::error_t channel("ampcor.cuda");
+        // complain
+        channel
+            << pyre::journal::at(__HERE__)
+            << "while refining target tiles: STEP 2: " << description << " (" << code << ")"
+            << pyre::journal::endl;
+        // bail
+        throw std::runtime_error(description);
+    }
+
+    // clean up
+    cufftDestroy(revPlan);
+
+    // all done
+    return;
+}
+
+
+// refine the target tiles around the locations of the correlation maxima
+template <typename raster_t>
+void
+ampcor::cuda::correlators::Sequential<raster_t>::
+_deramp(cell_type * arena) const
+{
+    // all done
+    return;
+}
+
+
+// zoom the correlation matrix
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+_zoomcor(value_type * gamma) const -> value_type *
+{
+    // constants
+    const auto Mb = 1.0 / 1024 / 1024;
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.cuda");
+
+    // get the shape of the incoming correlation matrix
+    auto corShape = _corRefinedLayout.shape();
+    // extract the dimension
+    int corDim = corShape[0];
+    // get the shape of the zoomed correlation matrix
+    auto zmdShape = _corZoomedLayout.shape();
+    // compute the number if cells in each zoomed correlation matrix
+    auto zmdCells = _corZoomedLayout.size();
+    // extract the dimension
+    int zmdDim = zmdShape[0];
+
+    // step 1: up-cast and embed
+    auto scratch = kernels::r2c(gamma, _pairs, corDim, zmdDim);
+
+    // step 2: forward FFT from the incoming gamma to the zoomed gamma
+    // the plan characteristics
+    int dim = 2;
+    int fwdRanks[] = { corDim, corDim };
+    // the input layout
+    int fwdIEmbed[] = { zmdDim, zmdDim };
+    // the data is densely packed
+    int fwdIStride = 1;
+    // the distance between correlation matrices
+    int fwdIDist = zmdCells;
+    // the output layout
+    int fwdOEmbed[] = { zmdDim, zmdDim };
+    // the data is densely packed
+    int fwdOStride = 1;
+    // the distance between successive correlation matrices
+    int fwdODist = zmdCells;
+
+    // grab a spot for the forward plan
+    cufftHandle fwdPlan;
+    // instantiate it
+    auto statusFFT = cufftPlanMany(&fwdPlan, dim, fwdRanks,
+                                   fwdIEmbed, fwdIStride, fwdIDist,
+                                   fwdOEmbed, fwdOStride, fwdODist,
+                                   CUFFT_C2C,
+                                   _pairs);
+    // if something went wrong
+    if (statusFFT != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while zooming the correlation surface: forward FFT plan: error " << statusFFT
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while zooming the correlation hyper-matrix: forward plan error");
+    }
+    // show me
+    channel
+        << pyre::journal::at(__HERE__)
+        << "zooming the correlation matrix: forward FFT"
+        << pyre::journal::endl;
+    // execute the forward plan
+    statusFFT = cufftExecC2C(fwdPlan, scratch, scratch, CUFFT_FORWARD);
+    // if something went wrong
+    if (statusFFT != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while zooming the correlation hyper-matrix: executing the forward FFT plan: error "
+            << statusFFT
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while executing the forward FFT plan for the reference tiles");
+    }
+    // wait for the device to finish
+    auto status = cudaDeviceSynchronize();
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // form the error description
+        std::string description = cudaGetErrorName(status);
+        // make a channel
+        pyre::journal::error_t channel("ampcor.cuda");
+        // complain
+        channel
+            << pyre::journal::at(__HERE__)
+            << "while zooming the correlation matrix: STEP 1: " << description
+            << " (" << status << ")"
+            << pyre::journal::endl;
+        // bail
+        throw std::runtime_error(description);
+    }
+    // clean up
+    cufftDestroy(fwdPlan);
+
+    // step 3: inverse FFT of the zero-extended zoomed gamma
+    int revRanks[] = { zmdDim, zmdDim };
+    // the input layout
+    int revIEmbed[] = { zmdDim, zmdDim };
+    // the data is densely packed
+    int revIStride = 1;
+    // the distance between correlation matrices
+    int revIDist = zmdCells;
+    // the output layout
+    int revOEmbed[] = { zmdDim, zmdDim };
+    // the data is densely packed
+    int revOStride = 1;
+    // the distance between successive correlation matrices
+    int revODist = zmdCells;
+
+    // grab a spot for the forward plan
+    cufftHandle revPlan;
+    // instantiate it
+    statusFFT = cufftPlanMany(&revPlan, dim, revRanks,
+                              revIEmbed, revIStride, revIDist,
+                              revOEmbed, revOStride, revODist,
+                              CUFFT_C2C,
+                              _pairs);
+    // if something went wrong
+    if (statusFFT != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while zooming the correlation surface: forward FFT plan: error " << statusFFT
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while zooming the correlation hyper-matrix: forward plan error");
+    }
+    // show me
+    channel
+        << pyre::journal::at(__HERE__)
+        << "zooming the correlation matrix: inverse FFT"
+        << pyre::journal::endl;
+    // execute the inverse plan
+    statusFFT = cufftExecC2C(revPlan, scratch, scratch, CUFFT_INVERSE);
+    // if something went wrong
+    if (statusFFT != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while zooming the correlation hyper-matrix: executing the inverse FFT plan: error "
+            << statusFFT
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while executing the inverse FFT plan for the reference tiles");
+    }
+    // wait for the device to finish
+    status = cudaDeviceSynchronize();
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // form the error description
+        std::string description = cudaGetErrorName(status);
+        // make a channel
+        pyre::journal::error_t channel("ampcor.cuda");
+        // complain
+        channel
+            << pyre::journal::at(__HERE__)
+            << "while zooming the correlation matrix: STEP 2: " << description
+            << " (" << status << ")"
+            << pyre::journal::endl;
+        // bail
+        throw std::runtime_error(description);
+    }
+    // clean up
+    cufftDestroy(revPlan);
+
+    // down-cast
+    auto zoomed = kernels::c2r(scratch, _pairs, zmdDim);
+
+    // clean up
+    cudaFree(scratch);
+
+    // all done
+    return zoomed;
+}
+
+
+// assemble the offsets
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+_offsetField(const int * coarse, const int * fine) -> const value_type *
+{
+    // constants
+    const auto Mb = 1.0 / (1024 * 1024);
+    // compute the search margin
+    auto margin = (_tgtLayout.shape()[0] - _refLayout.shape()[0]) / 2;
+    // compute the overall zoom factor
+    auto zoom = _refineFactor * _zoomFactor;
+
+    // compute the number of cells in the offset field
+    auto cells = 2 * _pairs;
+    // and its memory footprint
+    auto footprint = cells * sizeof(value_type);
+    // grab a spot
+    value_type * offsets = nullptr;
+    // allocate memory on the device for the answers
+    auto status = cudaMallocManaged(&offsets, footprint);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while allocating " << footprint * Mb
+            << "Mb of device memory for the offset field: "
+            << cudaGetErrorName(status) << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::bad_alloc();
+    }
+    // zero it out
+    status = cudaMemset(offsets, footprint, 0);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // get the error description
+        std::string description = cudaGetErrorName(status);
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while initializing " << footprint * Mb
+            << " Mb of device memory for the offset field: "
+            << description << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error(description);
+    }
+
+    // launch the kernel that does the work
+    kernels::offsetField(coarse, fine, _pairs, margin, _refineMargin, zoom, offsets);
+
+    // harvest the data
+    status = cudaMemcpy(_offsets, offsets, footprint, cudaMemcpyDeviceToHost);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // build the error description
+        std::string description = cudaGetErrorName(status);
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while harvesting the offset field from the device: "
+            << description << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::logic_error(description);
+    }
+
+    // clean up
+    cudaFree(offsets);
+
+    // all done
+    return _offsets;
+}
+
+
+// zoom the correlation matrix
+template <typename raster_t>
+auto
+ampcor::cuda::correlators::Sequential<raster_t>::
+_zoomcor_r2r(value_type * gamma) const -> value_type *
+{
+    // constants
+    const auto Mb = 1.0 / 1024 / 1024;
+
+    // make a channel
+    pyre::journal::debug_t channel("ampcor.cuda");
+
+    // grab a spot for the zoomed correlation matrix
+    value_type * zoomed = nullptr;
+
+    // get the shape for the incoming correlation matrix
+    auto cshape = _corRefinedLayout.shape();
+    // and the zoomed one
+    auto zshape = _corZoomedLayout.shape();
+    // get the dimension of the refined correlation matrix
+    int corDim = cshape[0];
+    // get the dimension of the zoomed correlation matrix
+    int zmdDim = zshape[0];
+
+    // the non-redundant number of cells in the hermitian transform
+    auto cells = zmdDim * (zmdDim/2 + 1);
+    // compute the amount of memory needed, including the required padding for C2R
+    auto footprint = 2 * cells * _pairs * sizeof(value_type);
+    // show me
+    channel
+        << pyre::journal::at(__HERE__)
+        << "allocating "
+        << _pairs << " hermitian " << zmdDim << "x" << zmdDim << " matrices with "
+        << cells << " independent cells," << pyre::journal::newline
+        << "for a total of " << footprint * Mb << " Mb for the zoomed correlation matrix"
+        << pyre::journal::endl;
+    // allocate memory for it
+    auto status = cudaMallocManaged(&zoomed, footprint);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while allocating " << footprint * Mb
+            << " Mb of device memory for the zoomed correlation matrix"
+            << cudaGetErrorName(status) << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::bad_alloc();
+    }
+    // initialize the memory
+    status = cudaMemset(zoomed, 0, footprint);
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // get the error description
+        std::string description = cudaGetErrorName(status);
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while initializing " << footprint * Mb
+            << " Mb of device memory for the zoomed correlation matrix: "
+            << description << " (" << status << ")"
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error(description);
+    }
+
+    // step 1: forward FFT from the incoming gamma to the zoomed gamma
+    // the plan characteristics
+    int dim = 2;
+    int fwdRanks[] = { corDim, corDim };
+    // the input layout
+    int fwdIEmbed[] = { corDim, corDim };
+    // the data is densely packed
+    int fwdIStride = 1;
+    // the distance between correlation matrices
+    int fwdIDist = _corRefinedLayout.size();
+    // the output layout
+    int fwdOEmbed[] = { zmdDim, zmdDim };
+    // the data is densely packed
+    int fwdOStride = 1;
+    // the distance between successive correlation matrices
+    int fwdODist = cells;
+
+    // grab a spot for the forward plan
+    cufftHandle fwdPlan;
+    // instantiate it
+    auto statusFFT = cufftPlanMany(&fwdPlan, dim, fwdRanks,
+                                   fwdIEmbed, fwdIStride, fwdIDist,
+                                   fwdOEmbed, fwdOStride, fwdODist,
+                                   CUFFT_R2C,
+                                   _pairs);
+    // if something went wrong
+    if (statusFFT != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while zooming the correlation surface: forward FFT plan: error " << statusFFT
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while zooming the correlation hyper-matrix: forward plan error");
+    }
+    // show me
+    channel
+        << pyre::journal::at(__HERE__)
+        << "zooming the correlation matrix: forward FFT"
+        << pyre::journal::endl;
+    // execute the forward plan
+    statusFFT = cufftExecR2C(fwdPlan, gamma, reinterpret_cast<cufftComplex *>(zoomed));
+    // if something went wrong
+    if (statusFFT != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while zooming the correlation hyper-matrix: executing the forward FFT plan: error "
+            << statusFFT
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while executing the forward FFT plan for the reference tiles");
+    }
+    // wait for the device to finish
+    status = cudaDeviceSynchronize();
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // form the error description
+        std::string description = cudaGetErrorName(status);
+        // make a channel
+        pyre::journal::error_t channel("ampcor.cuda");
+        // complain
+        channel
+            << pyre::journal::at(__HERE__)
+            << "while zooming the correlation matrix: STEP 1: " << description
+            << " (" << status << ")"
+            << pyre::journal::endl;
+        // bail
+        throw std::runtime_error(description);
+    }
+    // clean up
+    cufftDestroy(fwdPlan);
+
+    // step 2: inverse FFT of the zero-extended zoomed gamma
+    int revRanks[] = { zmdDim, zmdDim };
+    // the input layout
+    int revIEmbed[] = { zmdDim, zmdDim };
+    // the data is densely packed
+    int revIStride = 1;
+    // the distance between correlation matrices
+    int revIDist = cells;
+    // the output layout
+    int revOEmbed[] = { zmdDim, zmdDim };
+    // the data is densely packed
+    int revOStride = 1;
+    // the distance between successive correlation matrices
+    int revODist = cells;
+
+    // grab a spot for the forward plan
+    cufftHandle revPlan;
+    // instantiate it
+    statusFFT = cufftPlanMany(&revPlan, dim, revRanks,
+                              revIEmbed, revIStride, revIDist,
+                              revOEmbed, revOStride, revODist,
+                              CUFFT_C2R,
+                              _pairs);
+    // if something went wrong
+    if (statusFFT != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while zooming the correlation surface: forward FFT plan: error " << statusFFT
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while zooming the correlation hyper-matrix: forward plan error");
+    }
+    // show me
+    channel
+        << pyre::journal::at(__HERE__)
+        << "zooming the correlation matrix: inverse FFT"
+        << pyre::journal::endl;
+    // execute the inverse plan
+    statusFFT = cufftExecC2R(revPlan, reinterpret_cast<cufftComplex *>(zoomed), zoomed);
+    // if something went wrong
+    if (statusFFT != CUFFT_SUCCESS) {
+        // make a channel
+        pyre::journal::error_t error("ampcor.cuda");
+        // complain
+        error
+            << pyre::journal::at(__HERE__)
+            << "while zooming the correlation hyper-matrix: executing the inverse FFT plan: error "
+            << statusFFT
+            << pyre::journal::endl;
+        // and bail
+        throw std::runtime_error("while executing the inverse FFT plan for the reference tiles");
+    }
+    // wait for the device to finish
+    status = cudaDeviceSynchronize();
+    // if something went wrong
+    if (status != cudaSuccess) {
+        // form the error description
+        std::string description = cudaGetErrorName(status);
+        // make a channel
+        pyre::journal::error_t channel("ampcor.cuda");
+        // complain
+        channel
+            << pyre::journal::at(__HERE__)
+            << "while zooming the correlation matrix: STEP 2: " << description
+            << " (" << status << ")"
+            << pyre::journal::endl;
+        // bail
+        throw std::runtime_error(description);
+    }
+    // clean up
+    cufftDestroy(revPlan);
+
+    // all done
+    return zoomed;
+}
+
+
+// end of file
