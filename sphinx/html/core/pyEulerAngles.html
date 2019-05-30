@@ -1,0 +1,189 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>pyEulerAngles &#8212; ISCE  documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pyellipsoid">
+<h1>pyEllipsoid<a class="headerlink" href="#pyellipsoid" title="Permalink to this headline">¶</a></h1>
+<p>pyEulerAngles is meant to capture attitude information.</p>
+<dl class="class">
+<dt id="isceextension.pyEulerAngles">
+<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyEulerAngles</code><a class="headerlink" href="#isceextension.pyEulerAngles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Python wrapper for isce::core::EulerAngles</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>yaw</strong> (<em>float</em>) – Yaw angle in radians</p></li>
+<li><p><strong>pitch</strong> (<em>float</em>) – Pitch angle in radians</p></li>
+<li><p><strong>roll</strong> (<em>float</em>) – Roll angle in radians</p></li>
+<li><p><strong>yaw_orientation</strong> (<em>str</em><em>, </em><em>optional</em>) – Can be either ‘normal’ or ‘center’</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="staticmethod">
+<dt id="isceextension.pyEulerAngles.bind">
+<em class="property">static </em><code class="descname">bind</code><span class="sig-paren">(</span><em>pyEulerAngles euler</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEulerAngles.bind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new pyEulerAngles instance with C++ EulerAngles attribute shallow copied from
+another C++ EulerAngles attribute contained in a separate instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>euler</strong> (<a class="reference internal" href="#isceextension.pyEulerAngles" title="isceextension.pyEulerAngles"><em>pyEulerAngles</em></a>) – External pyEulerAngles instance to get C++ EulerAngles from.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>New pyEulerAngles instance with a shallow copy of</dt><dd><p>C++ EulerAngles.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>new_euler (<a class="reference internal" href="#isceextension.pyEulerAngles" title="isceextension.pyEulerAngles">pyEulerAngles</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyEulerAngles.pitch">
+<code class="descname">pitch</code><a class="headerlink" href="#isceextension.pyEulerAngles.pitch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return pitch angles in radians.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>numpy.ndarray[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyEulerAngles.quaternion">
+<code class="descname">quaternion</code><span class="sig-paren">(</span><em>double t</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEulerAngles.quaternion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return quaternion representation of given euler angles at a given time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>numpy.array(4)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyEulerAngles.roll">
+<code class="descname">roll</code><a class="headerlink" href="#isceextension.pyEulerAngles.roll" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return roll angles in radians.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>numpy.ndarray[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyEulerAngles.rotmat">
+<code class="descname">rotmat</code><span class="sig-paren">(</span><em>double t</em>, <em>sequence</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEulerAngles.rotmat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return rotation matrix corresponding to angle sequence at a given time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sequence</strong> (<em>str</em>) – Sequence of angles. Example: ‘ypr’</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>numpy.array((3,3))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isceextension.pyEulerAngles.yaw">
+<code class="descname">yaw</code><a class="headerlink" href="#isceextension.pyEulerAngles.yaw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return yaw angles in radians.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>numpy.ndarray[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyEulerAngles.ypr">
+<code class="descname">ypr</code><span class="sig-paren">(</span><em>double t</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEulerAngles.ypr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return yaw, pitch and roll euler angles at a given time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Euler angles (ypr)</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.array(3)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/core/pyEulerAngles.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, JPL/Caltech.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
+    </div>
+  </body>
+</html>

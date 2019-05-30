@@ -33,24 +33,48 @@
   <div class="section" id="pydatetime">
 <h1>pyDateTime<a class="headerlink" href="#pydatetime" title="Permalink to this headline">¶</a></h1>
 <p>pyDateTime is meant to represent a date time tag with double precision sub-second accuracy.</p>
+<ul class="simple">
+<li><p>The class also includes support for some time tag manipulation via the + and - operators.</p></li>
+<li><p>The class also implements a rich comparison special function for comparison of time tags.</p></li>
+</ul>
 <dl class="class">
-<dt>
-<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyDateTime</code><span class="sig-paren">(</span><em>inobj=None</em><span class="sig-paren">)</span></dt>
-<dd><p>Includes support for comparison and subtraction operators.</p>
+<dt id="isceextension.pyDateTime">
+<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyDateTime</code><span class="sig-paren">(</span><em>inobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime" title="Permalink to this definition">¶</a></dt>
+<dd><p>By default, returns GPS time reference - 1970-01-01T00:00:00.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>inobj</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime.datetime</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, optional) – Input python datetime object or iso-8601 string</p>
 </dd>
 </dl>
 <dl class="method">
-<dt>
-<code class="descname">__sub__</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dt id="isceextension.pyDateTime.__add__">
+<code class="descname">__add__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime.__add__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Addition operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dt1</strong> (<a class="reference internal" href="#isceextension.pyDateTime" title="isceextension.pyDateTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyDateTime</span></code></a>) – Time tag</p></li>
+<li><p><strong>delta</strong> (<a class="reference internal" href="pyTimeDelta.html#isceextension.pyTimeDelta" title="isceextension.pyTimeDelta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyTimeDelta</span></code></a>) – Time difference to add</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Resulting time tag</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#isceextension.pyDateTime" title="isceextension.pyDateTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyDateTime</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="isceextension.pyDateTime.__sub__">
+<code class="descname">__sub__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime.__sub__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Time difference operator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dt1</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">pyDateTime</span></code>) – Time tag 1</p></li>
-<li><p><strong>dt2</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">pyDateTime</span></code>) – Time tag 2</p></li>
+<li><p><strong>dt1</strong> (<a class="reference internal" href="#isceextension.pyDateTime" title="isceextension.pyDateTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyDateTime</span></code></a>) – Time tag 1</p></li>
+<li><p><strong>dt2</strong> (<a class="reference internal" href="#isceextension.pyDateTime" title="isceextension.pyDateTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyDateTime</span></code></a>) – Time tag 2</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -63,19 +87,19 @@
 </dd></dl>
 
 <dl class="staticmethod">
-<dt>
-<em class="property">static </em><code class="descname">bind</code><span class="sig-paren">(</span><em>pyDateTime dt</em><span class="sig-paren">)</span></dt>
+<dt id="isceextension.pyDateTime.bind">
+<em class="property">static </em><code class="descname">bind</code><span class="sig-paren">(</span><em>pyDateTime dt</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime.bind" title="Permalink to this definition">¶</a></dt>
 <dd><p>Binds the current pyEllipsoid instance to another C++ DateTime pointer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dt</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">pyDateTime</span></code>) – Source of C++ DateTime pointer.</p>
+<dd class="field-odd"><p><strong>dt</strong> (<a class="reference internal" href="#isceextension.pyDateTime" title="isceextension.pyDateTime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pyDateTime</span></code></a>) – Source of C++ DateTime pointer.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
-<dt>
-<code class="descname">isoformat</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dt id="isceextension.pyDateTime.isoformat">
+<code class="descname">isoformat</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime.isoformat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a string in ISO-8601 format.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -88,8 +112,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt>
-<code class="descname">set</code><span class="sig-paren">(</span><em>inobj</em><span class="sig-paren">)</span></dt>
+<dt id="isceextension.pyDateTime.set">
+<code class="descname">set</code><span class="sig-paren">(</span><em>inobj</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime.set" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set pyDateTime using datetime.datetime or str object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -99,8 +123,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt>
-<code class="descname">strptime</code><span class="sig-paren">(</span><em>pydatestr</em><span class="sig-paren">)</span></dt>
+<dt id="isceextension.pyDateTime.strptime">
+<code class="descname">strptime</code><span class="sig-paren">(</span><em>pydatestr</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyDateTime.strptime" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets underlying C++ DateTime object using time tag in ISO-8601 format</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
