@@ -187,6 +187,13 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const
 <tr class="memitem:a8dfa96d0e1ca03aaa17a84051f430a17"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8dfa96d0e1ca03aaa17a84051f430a17"></a>
 <a class="el" href="structisce_1_1core_1_1TimeDelta.html">TimeDelta</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator-</b> (const <a class="el" href="structisce_1_1core_1_1DateTime.html">DateTime</a> &amp;ts) const </td></tr>
 <tr class="separator:a8dfa96d0e1ca03aaa17a84051f430a17"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a205b82a46db7bebfec5fa7ea75341d8f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1DateTime.html#a205b82a46db7bebfec5fa7ea75341d8f">isClose</a> (const <a class="el" href="structisce_1_1core_1_1DateTime.html">DateTime</a> &amp;ts) const </td></tr>
+<tr class="memdesc:a205b82a46db7bebfec5fa7ea75341d8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether two DateTimes are equivalent to within TOL_SECONDS.  <a href="#a205b82a46db7bebfec5fa7ea75341d8f">More...</a><br/></td></tr>
+<tr class="separator:a205b82a46db7bebfec5fa7ea75341d8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6dd1291289fb7cc2494fcac70a34752"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa6dd1291289fb7cc2494fcac70a34752"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1DateTime.html#aa6dd1291289fb7cc2494fcac70a34752">isClose</a> (const <a class="el" href="structisce_1_1core_1_1DateTime.html">DateTime</a> &amp;ts, const <a class="el" href="structisce_1_1core_1_1TimeDelta.html">TimeDelta</a> &amp;errtol) const </td></tr>
+<tr class="memdesc:aa6dd1291289fb7cc2494fcac70a34752"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether two DateTimes are equivalent to within the specified error tolerance. <br/></td></tr>
+<tr class="separator:aa6dd1291289fb7cc2494fcac70a34752"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a562a454b15e284d72f7fa8faffa9efb6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a562a454b15e284d72f7fa8faffa9efb6"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1DateTime.html#a562a454b15e284d72f7fa8faffa9efb6">dayOfYear</a> () const </td></tr>
 <tr class="memdesc:a562a454b15e284d72f7fa8faffa9efb6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return day of year. <br/></td></tr>
@@ -274,6 +281,25 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>frac</b></td></tr>
 
 <p>Default constructor. </p>
 <p>Initialize to origin of GPS time 1970-01-01T00:00:00.0 </p>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a205b82a46db7bebfec5fa7ea75341d8f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool isce::core::DateTime::isClose </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structisce_1_1core_1_1DateTime.html">DateTime</a> &amp;&#160;</td>
+          <td class="paramname"><em>ts</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Check whether two DateTimes are equivalent to within TOL_SECONDS. </p>
 
 </div>
 </div>
