@@ -243,7 +243,7 @@ In this section we will walk through the directory setup and build system instru
 \endcode
 <li> Check out the latest version of the source code from git
 \code{.sh}
-> git clone https://github-fn.jpl.nasa.gov/ericmg/isce
+> git clone https://github-fn.jpl.nasa.gov/isce-3/isce
 \endcode
 <li> Ensure you are building the branch that you want to use. For example, if you want to build the <b>develop</b> branch
 \code{.sh}
