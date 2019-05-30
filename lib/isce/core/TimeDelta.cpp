@@ -216,7 +216,7 @@ isce::core::TimeDelta
 isce::core::TimeDelta::
 operator+(const TimeDelta &ts) const
 {
-    return TimeDelta(days+ts.days, hours + ts.hours, 
+    return TimeDelta(days+ts.days, hours + ts.hours,
             minutes + ts.minutes, seconds + ts.seconds,
             frac + ts.frac);
 }
@@ -247,7 +247,7 @@ operator-(const double& s) const
 
 isce::core::TimeDelta &
 isce::core::TimeDelta::
-operator+=(const TimeDelta& ts) 
+operator+=(const TimeDelta& ts)
 {
     days += ts.days;
     hours += ts.hours;

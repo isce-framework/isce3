@@ -124,6 +124,36 @@ TEST(DateTimeTest, TimeDeltaAssign) {
     ASSERT_EQ(dtime.isoformat(), "2017-05-12T01:12:33.641592026");
 }
 
+TEST(DateTimeTest, Comparison) {
+    isce::core::DateTime dtime1(2017, 5, 12, 1, 12, 30.141592);
+    isce::core::DateTime dtime2(2017, 5, 12, 1, 12, 30.141592);
+    isce::core::DateTime dtime3(2017, 5, 13, 2, 12, 33.241592);
+    ASSERT_TRUE(dtime1 == dtime2);
+    ASSERT_TRUE(dtime1 != dtime3);
+    ASSERT_TRUE(dtime3 > dtime2);
+    ASSERT_TRUE(dtime1 <= dtime2);
+    ASSERT_TRUE(dtime1 <= dtime3);
+}
+
+TEST(DateTimeTest, IsClose) {
+    isce::core::DateTime dtime1(2017, 5, 12, 1, 12, 30.141592);
+    isce::core::DateTime dtime2 = dtime1 + isce::core::TimeDelta(1e-11);
+    ASSERT_TRUE(dtime1.isClose(dtime2));
+    isce::core::TimeDelta errtol(1e-12);
+    ASSERT_FALSE(dtime1.isClose(dtime2, errtol));
+}
+
+TEST(DateTimeTest, TimeDeltaComparison) {
+    isce::core::TimeDelta dt1(0.5);
+    isce::core::TimeDelta dt2(0.5);
+    isce::core::TimeDelta dt3(-0.5);
+    ASSERT_TRUE(dt1 == dt2);
+    ASSERT_TRUE(dt1 != dt3);
+    ASSERT_TRUE(dt3 < dt2);
+    ASSERT_TRUE(dt1 >= dt2);
+    ASSERT_TRUE(dt1 >= dt3);
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

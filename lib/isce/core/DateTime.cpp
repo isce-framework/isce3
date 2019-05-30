@@ -271,7 +271,7 @@ operator=(const std::string & datestr) {
 bool isce::core::DateTime::
 operator<(const DateTime &ts) const
 {
-    return ((*this) - ts) < 0.0 ;
+    return ((*this) - ts) < 0.0;
 }
 
 bool isce::core::DateTime::
@@ -295,16 +295,13 @@ operator>=(const DateTime &ts) const
 bool isce::core::DateTime::
 operator==(const DateTime &ts) const
 {
-    // Make TimeDelta
-    TimeDelta dt = (*this) - ts;
-    // Check the total seconds is within tolerance (0.1 nanoseconds)
-    return (std::abs(dt.getTotalSeconds()) < TOL_SECONDS);
+    return (*this) - ts == 0.0;
 }
 
 bool isce::core::DateTime::
 operator!=(const DateTime &ts) const
 {
-    return ((*this) - ts) != 0;
+    return ((*this) - ts) != 0.0;
 }
 
 // Math operators
@@ -316,7 +313,7 @@ operator+(const TimeDelta &ts) const
     int y,m,d;
     _ord_to_ymd(ord,y,m,d);
 
-    return DateTime(y,m,d, hours + ts.hours, 
+    return DateTime(y,m,d, hours + ts.hours,
             minutes + ts.minutes, seconds + ts.seconds,
             frac + ts.frac);
 }
@@ -352,7 +349,7 @@ operator-(const double &ts) const
 //In-place update operators
 isce::core::DateTime &
 isce::core::DateTime::
-operator+=(const TimeDelta& ts) 
+operator+=(const TimeDelta& ts)
 {
     int ord = _ymd_to_ord(year, months, days) + ts.days;
     int y,m,d;
@@ -394,10 +391,24 @@ isce::core::TimeDelta
 isce::core::DateTime::
 operator-(const DateTime& ts) const
 {
-    int delta_days = _ymd_to_ord(year, months, days) 
+    int delta_days = _ymd_to_ord(year, months, days)
                    - _ymd_to_ord(ts.year, ts.months, ts.days);
     return TimeDelta(delta_days, hours-ts.hours, minutes-ts.minutes,
             seconds-ts.seconds, frac-ts.frac);
+}
+
+bool isce::core::DateTime::
+isClose(const DateTime& ts) const
+{
+    TimeDelta dt = (*this) - ts;
+    return std::abs(dt.getTotalSeconds()) < TOL_SECONDS;
+}
+
+bool isce::core::DateTime::
+isClose(const DateTime& ts, const TimeDelta& errtol) const
+{
+    TimeDelta dt = (*this) - ts;
+    return std::abs(dt.getTotalSeconds()) < errtol.getTotalSeconds();
 }
 
 // Get seconds of day
@@ -464,7 +475,7 @@ strptime(const std::string & datetime_string, const std::string & sep) {
             &decimal_seconds);
     } else {
         pyre::journal::error_t errorChannel("isce.core.DateTime");
-        errorChannel 
+        errorChannel
             << pyre::journal::at(__HERE__)
             << "Unsupported isoformat separator."
             << pyre::journal::endl;
