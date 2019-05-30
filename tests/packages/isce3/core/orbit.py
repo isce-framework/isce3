@@ -140,6 +140,8 @@ def test_OutOfBounds():
         stat, pos, vel = orb.interpolate(tinp, method='legendre')
         assert (stat == 1)
 
+    return
+
 def test_Edges():
     import numpy.testing as npt
     
@@ -157,7 +159,8 @@ def test_Edges():
 
             npt.assert_array_almost_equal(vel, refvel, decimal=6, err_msg="Failed in edge test for {0}".format(method))
 
-            
+    return
+
 def test_Reverse():
     import numpy.testing as npt
 
@@ -176,6 +179,7 @@ def test_Reverse():
         npt.assert_array_equal(posref, pos, err_msg="Position {0}".format(ii))
         npt.assert_array_equal(velref, vel, err_msg="Velocity {0}".format(ii))
 
+    return
 
 def test_OutOfOrder():
     import numpy.testing as npt
@@ -199,7 +203,7 @@ def test_OutOfOrder():
         npt.assert_array_equal(posref, pos, err_msg="Position {0}".format(ii))
         npt.assert_array_equal(velref, vel, err_msg="Velocity {0}".format(ii))
 
-
+    return
 
 def test_Hermite():
     import numpy.testing as npt
@@ -220,6 +224,7 @@ def test_Hermite():
             npt.assert_array_almost_equal(refpos, pos, decimal=5, err_msg='Pos {0}'.format(tt))
             npt.assert_array_almost_equal(refvel, vel, decimal=6, err_msg='Vel {0}'.format(tt))
 
+    return
 
 def test_SCH():
     import numpy.testing as npt
@@ -240,7 +245,7 @@ def test_SCH():
             npt.assert_array_almost_equal(refpos, pos, decimal=5, err_msg='Pos {0}'.format(tt))
             npt.assert_array_almost_equal(refvel, vel, decimal=6, err_msg='Vel {0}'.format(tt))
 
-
+    return
 
 def test_Legendre():
     import numpy.testing as npt
@@ -261,6 +266,7 @@ def test_Legendre():
             npt.assert_array_almost_equal(refpos, pos, decimal=5, err_msg='Pos {0}'.format(tt))
             npt.assert_array_almost_equal(refvel, vel, decimal=6, err_msg='Vel {0}'.format(tt))
 
+    return
 
 def test_Hermite_numpy():
     import numpy.testing as npt
@@ -297,6 +303,7 @@ def test_Hermite_numpy():
     npt.assert_array_equal(np.array(posref), poss)
     npt.assert_array_equal(np.array(velref), vels)
 
+    return
 
 def test_Legendre_numpy():
     import numpy.testing as npt
@@ -333,6 +340,7 @@ def test_Legendre_numpy():
     npt.assert_array_equal(np.array(posref), poss)
     npt.assert_array_equal(np.array(velref), vels)
 
+    return
 
 def test_SCH_numpy():
     import numpy.testing as npt
@@ -367,6 +375,7 @@ def test_SCH_numpy():
     npt.assert_array_equal(np.array(posref), poss)
     npt.assert_array_equal(np.array(velref), vels)
 
+    return
 
 if __name__ == "__main__":
     test_OutOfBounds()

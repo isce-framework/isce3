@@ -52,6 +52,7 @@ def test_CythonInterface():
     assert elp.a == 6387137.
     assert elp.e2 == 0.00000001
 
+    return
 
 def test_lonLatToXyzPoints():
     #from isce3.core import Ellipsoid
@@ -67,6 +68,8 @@ def test_lonLatToXyzPoints():
         res = wgs84.lonLatToXyz(llh)
         npt.assert_array_almost_equal(xyz, res, decimal=6, err_msg="Failed {0}".format(tname))
 
+    return
+
 def test_xyzToLonLatPoints():
     #from isce3.core import Ellipsoid
     import numpy.testing as npt
@@ -81,6 +84,8 @@ def test_xyzToLonLatPoints():
         res = wgs84.xyzToLonLat(xyz)
         npt.assert_array_almost_equal(llh[0:2], res[0:2], decimal=9, err_msg="Failed {0}".format(tname))
         npt.assert_array_almost_equal(llh[2], res[2], decimal=6, err_msg="Failed {0}".format(tname))
+
+    return
 
 def test_lonLattoXyzArray():
     #from isce3.core import Ellipsoid
@@ -112,6 +117,8 @@ def test_xyztoLonLatArray():
     res = wgs84.xyzToLonLat(xyz)
     npt.assert_array_almost_equal(llh[:,:2], res[:,:2], decimal=9, err_msg="Failed {0}".format(tname))
     npt.assert_array_almost_equal(llh[:,2], res[:,2], decimal=6, err_msg="Failed {0}".format(tname))
+
+    return
 
 if __name__ == '__main__':
 

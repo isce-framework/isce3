@@ -27,6 +27,7 @@ def testConstruction():
 
         assert abs((reconsobj - refobj).total_seconds()) < 1.0e-6
 
+    return
 
 def testComparison():
     from isce3.core import DateTime
@@ -45,6 +46,7 @@ def testComparison():
     assert (dtime1 == dtime3)
     assert (dtime1 != dtime2)
 
+    return
 
 def testTimeDelta():
 
@@ -54,10 +56,11 @@ def testTimeDelta():
 
     assert abs(delta.getTotalSeconds() - 90003.1) < 1.0e-8
 
+    return
+
 def testAddition():
     from isce3.core.DateTime import DateTime 
     from isce3.core.TimeDelta import TimeDelta
-    print("test addition")
     dtime1 = DateTime(inobj="2017-05-12T01:12:30.141592")
     delta = TimeDelta(inobj=3.0)
 
@@ -67,6 +70,8 @@ def testAddition():
     delta = TimeDelta(-4.0)
     dtime2 = dtime1 + delta
     assert(dtime2.isoformat() == "2017-05-12T01:12:26.141592000")
+
+    return
 
 def testUnits():
     #from isce3.core import TimeDelta
@@ -78,6 +83,8 @@ def testUnits():
         assert( delta.getTotalMinutes() == (value / 60.))
         assert( delta.getTotalHours() == (value / 3600.))
         assert( delta.getTotalDays() == (value / 86400.))
+
+    return
 
 if __name__ == '__main__':
     testConstruction()

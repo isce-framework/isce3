@@ -44,6 +44,8 @@ def test_createGeoTiffFloat():
     ds.GetRasterBand(1).WriteArray(data)
     ds = None
 
+    return
+
 def test_createVRTDouble_setGetValue():
     import isce3
     import os
@@ -79,6 +81,8 @@ def test_createVRTDouble_setGetValue():
 
     npt.assert_array_equal(data, arr, err_msg='Readonly mode')
 
+    return
+
 def test_createTwoBandEnvi():
     import isce3
     import os
@@ -99,6 +103,8 @@ def test_createTwoBandEnvi():
     assert( raster.numBands == 2)
     assert( raster.getDatatype() == gdal.GDT_Int16)
     del raster
+
+    return
 
 def test_createMultiBandVRT():
     import isce3
@@ -124,6 +130,8 @@ def test_createMultiBandVRT():
 
     vrt = None
 
+    return
+
 def test_createNumpyDataset():
     import numpy as np
     import isce3
@@ -142,6 +150,8 @@ def test_createNumpyDataset():
 
     dset = None
     del raster
+
+    return
 
 if __name__ == '__main__':
     test_createGeoTiffFloat()

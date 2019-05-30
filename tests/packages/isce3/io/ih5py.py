@@ -27,6 +27,8 @@ def testh5pyReadOnly():
     fid.close()
     os.remove('test.h5')
 
+    return
+
 def testh5pyUpdate():
     import isce3
     import os
@@ -48,6 +50,7 @@ def testh5pyUpdate():
     fid.close()
     os.remove('test.h5')
 
+    return
 
 if __name__ == '__main__':
     testh5pyReadOnly()

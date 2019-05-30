@@ -163,7 +163,7 @@ def test_geo2rdr():
     return
 
 if __name__ == '__main__':
-    #test_rdr2geo()
+    test_rdr2geo()
     test_geo2rdr()
 
 
