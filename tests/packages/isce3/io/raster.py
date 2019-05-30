@@ -105,9 +105,9 @@ def test_createMultiBandVRT():
     import os
 
     cmn = commonClass()
-    lat = isce3.io.raster(cmn.latFilename)
-    lon = isce3.io.raster(cmn.lonFilename)
-    inc = isce3.io.raster(cmn.incFilename)
+    lat = isce3.io.raster(filename=cmn.latFilename)
+    lon = isce3.io.raster(filename=cmn.lonFilename)
+    inc = isce3.io.raster(filename=cmn.incFilename)
 
     if os.path.exists( cmn.vrtFilename):
         os.remove(cmn.vrtFilename)
