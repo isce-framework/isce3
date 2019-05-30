@@ -95,6 +95,8 @@ def test_rdr2geo():
             assert abs(expLLH[1] - targetLLH[1]) < 1.0e-8
             assert abs(expLLH[2] - targetLLH[2]) < 1.0e-3
 
+    return 
+
 def test_geo2rdr():
     degrees = 180.0/np.pi
 
@@ -157,10 +159,11 @@ def test_geo2rdr():
             assert abs(azTime - tinp) < 1.0e-5
             assert abs(slantRange - expRange) < 1e-8 
             
-
+    # all done
+    return
 
 if __name__ == '__main__':
-    test_rdr2geo()
+    #test_rdr2geo()
     test_geo2rdr()
 
 
