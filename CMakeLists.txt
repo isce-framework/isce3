@@ -111,8 +111,8 @@ if (WITH_DOC)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             COMMENT "Generating documentation using Doxygen"
             VERBATIM )
-        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/html 
-            DESTINATION ${ISCE_DOCDIR}) 
+        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/html
+            DESTINATION ${ISCE_DOCDIR})
         message("Doxygen found. Generating C++ doc ....")
     else()
         message("Doxygen not found. Skipping C++ doc ....")

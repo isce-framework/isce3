@@ -1,0 +1,315 @@
+#ifndef ISCE_CUDA_IO_DATASTREAM_ICC
+#error "DataStream.icc is an implementation detail of DataStream.h"
+#endif
+
+#include <fstream>
+#include <isce/cuda/except/Error.h>
+#include <isce/except/Error.h>
+
+namespace isce { namespace cuda { namespace io {
+
+inline
+fstreamCallback::fstreamCallback(const std::string * filename,
+        const char * buffer,
+        std::size_t offset,
+        std::size_t count)
+:
+    filename {filename},
+    buffer {buffer},
+    offset {offset},
+    count {count}
+{}
+
+inline
+void CUDART_CB fstreamCallback::cb_write(cudaStream_t, cudaError_t, void * obj)
+{
+    reinterpret_cast<fstreamCallback *>(obj)->write();
+}
+
+inline
+void fstreamCallback::write()
+{
+    // open file
+    std::ofstream ofs;
+    ofs.open(*filename, std::ios::binary);
+    if (!ofs) {
+        std::string errmsg = "unable to open file " + (*filename) + " for writing";
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+    }
+
+    // seek to offset, read count bytes
+    if (offset) { ofs.seekp(offset); }
+    ofs.write(buffer, count);
+    if (!ofs) {
+        std::string errmsg = "error while writing to output file stream";
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+    }
+}
+
+inline
+RasterCallback::RasterCallback(isce::io::Raster * raster,
+        char * buffer,
+        std::size_t col,
+        std::size_t row,
+        std::size_t width,
+        std::size_t length)
+:
+    raster {raster},
+    buffer {buffer},
+    col {col},
+    row {row},
+    width {width},
+    length {length}
+{}
+
+template<typename T>
+inline
+void CUDART_CB RasterCallback::cb_setBlock(cudaStream_t, cudaError_t, void * obj)
+{
+    reinterpret_cast<RasterCallback *>(obj)->setBlock<T>();
+}
+
+template<typename T>
+inline
+void RasterCallback::setBlock()
+{
+    raster->setBlock(reinterpret_cast<T *>(buffer), col, row, width, length);
+}
+
+inline
+FileDataStream::FileDataStream(
+        const std::string & filename,
+        isce::cuda::core::Stream stream,
+        std::size_t buffer_size)
+:
+    _filename {filename},
+    _stream {stream},
+    _mutex {},
+    _buffer (buffer_size),
+    _callback {}
+{}
+
+inline
+const std::string & FileDataStream::filename() const
+{
+    return _filename;
+}
+
+inline
+void FileDataStream::set_filename(const std::string & filename)
+{
+    // wait til unlocked
+    isce::cuda::core::synchronize(_mutex);
+
+    _filename = filename;
+}
+
+inline
+isce::cuda::core::Stream FileDataStream::stream() const
+{
+    return _stream;
+}
+
+inline
+void FileDataStream::set_stream(isce::cuda::core::Stream stream)
+{
+    // wait til unlocked
+    isce::cuda::core::synchronize(_mutex);
+
+    _stream = stream;
+}
+
+inline
+std::size_t FileDataStream::buffer_size() const
+{
+    return _buffer.size();
+}
+
+inline
+void FileDataStream::resize_buffer(std::size_t buffer_size)
+{
+    // wait til unlocked
+    isce::cuda::core::synchronize(_mutex);
+
+    _buffer.resize(buffer_size);
+}
+
+inline
+void FileDataStream::load(void * dst, std::size_t offset, std::size_t count)
+{
+    // wait til unlocked
+    isce::cuda::core::synchronize(_mutex);
+
+    // resize internal buffer if necessary
+    if (count > _buffer.size()) {
+        _buffer.resize(count);
+    }
+
+    // open file
+    std::ifstream ifs;
+    ifs.open(_filename, std::ios::binary);
+    if (!ifs) {
+        std::string errmsg = "unable to open file " + _filename + " for reading";
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+    }
+
+    // seek to offset, read count bytes
+    if (offset) { ifs.seekg(offset); }
+    ifs.read(_buffer.data(), count);
+    if (!ifs) {
+        std::string errmsg = "error while reading from input file stream";
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+    }
+
+    // copy to device
+    checkCudaErrors( cudaMemcpyAsync(dst, _buffer.data(),
+            count, cudaMemcpyHostToDevice, _stream.get()) );
+
+    // lock until copy is completed
+    _stream.record_event(_mutex);
+}
+
+inline
+void FileDataStream::store(const void * src, std::size_t offset, std::size_t count)
+{
+    // wait til unlocked
+    isce::cuda::core::synchronize(_mutex);
+
+    // resize internal buffer if necessary
+    if (count > _buffer.size()) {
+        _buffer.resize(count);
+    }
+
+    // copy from device
+    checkCudaErrors( cudaMemcpyAsync(_buffer.data(), src,
+            count, cudaMemcpyDeviceToHost, _stream.get()) );
+
+    // write from host buffer
+    // (this is enqueued as an asynchronous operation in the stream)
+    _callback = {&_filename, _buffer.data(), offset, count};
+    checkCudaErrors( cudaStreamAddCallback(_stream.get(),
+            fstreamCallback::cb_write, &_callback, 0) );
+
+    // lock until finished writing
+    _stream.record_event(_mutex);
+}
+
+inline
+RasterDataStream::RasterDataStream(
+        isce::io::Raster * raster,
+        isce::cuda::core::Stream stream,
+        std::size_t buffer_size)
+:
+    _raster {raster},
+    _stream {stream},
+    _mutex {},
+    _buffer (buffer_size),
+    _callback {}
+{}
+
+inline
+isce::io::Raster * RasterDataStream::raster() const
+{
+    return _raster;
+}
+
+inline
+void RasterDataStream::set_raster(isce::io::Raster * raster)
+{
+    // wait til unlocked
+    isce::cuda::core::synchronize(_mutex);
+
+    _raster = raster;
+}
+
+inline
+isce::cuda::core::Stream RasterDataStream::stream() const
+{
+    return _stream;
+}
+
+inline
+void RasterDataStream::set_stream(isce::cuda::core::Stream stream)
+{
+    // wait til unlocked
+    isce::cuda::core::synchronize(_mutex);
+
+    _stream = stream;
+}
+
+inline
+std::size_t RasterDataStream::buffer_size() const
+{
+    return _buffer.size();
+}
+
+inline
+void RasterDataStream::resize_buffer(std::size_t buffer_size)
+{
+    // wait til unlocked
+    isce::cuda::core::synchronize(_mutex);
+
+    _buffer.resize(buffer_size);
+}
+
+template<typename T>
+inline
+void RasterDataStream::load(T * dst,
+        std::size_t col,
+        std::size_t row,
+        std::size_t width,
+        std::size_t length)
+{
+    // wait til unlocked
+    isce::cuda::core::synchronize(_mutex);
+
+    // resize internal buffer if necessary
+    std::size_t count = width * length * sizeof(T);
+    if (count > _buffer.size()) {
+        _buffer.resize(count);
+    }
+
+    // read block from raster
+    _raster->getBlock(reinterpret_cast<T *>(_buffer.data()), col, row, width, length);
+
+    // copy to device
+    checkCudaErrors( cudaMemcpyAsync(dst, _buffer.data(),
+            count, cudaMemcpyHostToDevice, _stream.get()) );
+
+    // lock until copy is completed
+    _stream.record_event(_mutex);
+}
+
+template<typename T>
+inline
+void RasterDataStream::store(const T * src,
+        std::size_t col,
+        std::size_t row,
+        std::size_t width,
+        std::size_t length)
+{
+    // wait til unlocked
+    isce::cuda::core::synchronize(_mutex);
+
+    // resize internal buffer if necessary
+    std::size_t count = width * length * sizeof(T);
+    if (count > _buffer.size()) {
+        _buffer.resize(count);
+    }
+
+    // copy from device
+    checkCudaErrors( cudaMemcpyAsync(_buffer.data(), src,
+            count, cudaMemcpyDeviceToHost, _stream.get()) );
+
+    // set block from host buffer to raster
+    // (this is enqueued as an asynchronous operation in the stream)
+    _callback = {_raster, _buffer.data(), col, row, width, length};
+    checkCudaErrors( cudaStreamAddCallback(_stream.get(),
+            RasterCallback::cb_setBlock<T>, &_callback, 0) );
+
+    // lock until finished writing
+    _stream.record_event(_mutex);
+}
+
+}}}
+
