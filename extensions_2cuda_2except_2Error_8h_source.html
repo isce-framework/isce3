@@ -136,9 +136,23 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        <span class="keywordflow">throw</span> <a class="code" href="structisce_1_1cuda_1_1except_1_1CudaError.html">isce::cuda::except::CudaError&lt;cufftResult&gt;</a>(info, err);</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;}</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="comment">// Wrapper to pass file name, line number, and function name</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor">#define checkCudaErrors(val) checkCudaErrorsImpl(ISCE_SRCINFO(), val)</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="comment">// Check errors from kernel launches and, if NDEBUG is not defined,</span></div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="comment">// synchronize and check for execution errors</span></div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">inline</span></div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keywordtype">void</span> checkCudaAsyncErrorsImpl(<span class="keyword">const</span> <a class="code" href="structisce_1_1except_1_1SrcInfo.html">isce::except::SrcInfo</a> &amp; info)</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;{</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    checkCudaErrorsImpl(info, cudaPeekAtLastError());</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor"></span>    checkCudaErrorsImpl(info, cudaDeviceSynchronize());</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="preprocessor"></span>}</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="comment">// Wrapper to pass file name, line number, and function name</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor">#define checkCudaErrors(val) checkCudaErrorsImpl(ISCE_SRCINFO(), val)</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="comment">// Wrapper to pass file name, line number, and function name</span></div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="preprocessor">#define checkCudaAsyncErrors() checkCudaAsyncErrorsImpl(ISCE_SRCINFO())</span></div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor"></span></div>
 <div class="ttc" id="structisce_1_1except_1_1Error_html"><div class="ttname"><a href="structisce_1_1except_1_1Error.html">isce::except::Error</a></div><div class="ttdef"><b>Definition:</b> Error.h:21</div></div>
 <div class="ttc" id="structisce_1_1except_1_1SrcInfo_html"><div class="ttname"><a href="structisce_1_1except_1_1SrcInfo.html">isce::except::SrcInfo</a></div><div class="ttdef"><b>Definition:</b> Error.h:10</div></div>
 <div class="ttc" id="structisce_1_1cuda_1_1except_1_1CudaError_html"><div class="ttname"><a href="structisce_1_1cuda_1_1except_1_1CudaError.html">isce::cuda::except::CudaError</a></div><div class="ttdoc">CudaError provide the same information as BaseError, and also retains the original error code...</div><div class="ttdef"><b>Definition:</b> Error.h:13</div></div>
