@@ -74,6 +74,21 @@ TEST(LinspaceTest, Accessor)
     EXPECT_EQ( x[5], first + 5 * spacing );
 }
 
+TEST(LinspaceTest, Resize)
+{
+    int first = 0;
+    int spacing = 1;
+    int size = 10;
+
+    isce::core::Linspace<int> x (first, spacing, size);
+
+    int new_size = 15;
+
+    x.resize(new_size);
+
+    EXPECT_EQ( x.size(), new_size );
+}
+
 TEST(LinspaceTest, SubInterval)
 {
     int first = 0;

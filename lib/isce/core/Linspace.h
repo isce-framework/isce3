@@ -78,6 +78,14 @@ public:
     int size() const;
 
     /**
+     * Change the number of samples in the sequence.
+     *
+     * @param[in] size new size
+     */
+    CUDA_HOSTDEV
+    void resize(int size);
+
+    /**
      * Return a sub-Linspace over the half-open interval [start, stop).
      *
      * The behavior is undefined if [start, stop) is not a valid interval

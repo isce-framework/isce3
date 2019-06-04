@@ -12,6 +12,7 @@ add_subdirectory(geometry)
 add_subdirectory(image)
 add_subdirectory(signal)
 add_subdirectory(matchtemplate)
+add_subdirectory(orbit_wip)
 
 # Allow for separable compilation and device code linking (-dc flag to nvcc)
 set_target_properties(${LISCECUDA} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)

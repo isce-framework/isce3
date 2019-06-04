@@ -58,7 +58,7 @@ TEST_F(OrbitTest,LinearSCH){
 
     // Create straight-line orbit with 11 state vectors, each 10 s apart
     for (int i=0; i<11; i++) {
-        makeLinearSV(i*10., opos, ovel, pos, vel); 
+        makeLinearSV(i*10., opos, ovel, pos, vel);
         orb.setStateVector(i, t+(i*10.), pos, vel);
     }
 
