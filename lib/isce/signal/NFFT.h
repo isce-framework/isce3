@@ -37,11 +37,11 @@ class isce::signal::NFFT {
     public:
         /** NFFT Constructor.
          *
-         * @param[in] m     Interpolation kernel size parameter (width=2*m+1).
-         * @param[in] n     Length of input spectrum.
-         * @param[in] nfft  Transform size (> n).
+         * @param[in] m         Interpolation kernel size parameter (width=2*m+1).
+         * @param[in] n         Length of input spectrum.
+         * @param[in] fft_size  Transform size (> n).
          */
-        NFFT(size_t m, size_t n, size_t nfft);
+        NFFT(size_t m, size_t n, size_t fft_size);
 
         /** Ingest a spectrum for transform.
          *
@@ -74,10 +74,10 @@ class isce::signal::NFFT {
 
         size_t size_kernel() {return 2*_m+1;}
         size_t size_spectrum() {return _n;}
-        size_t size_transform() {return _nfft;}
+        size_t size_transform() {return _fft_size;}
 
     private:
-        size_t _m, _n, _nfft;
+        size_t _m, _n, _fft_size;
         std::valarray<std::complex<T>> _xf, _xt;
         std::valarray<T> _weights;
         isce::core::NFFTKernel<T> _kernel;
