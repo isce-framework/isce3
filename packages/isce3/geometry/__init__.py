@@ -4,8 +4,8 @@
 import isce3.extensions.isceextension as isceextension
 
 # Import the wrappers
-from .Rdr2geo import radar2geoCoordinates
-from .Geo2rdr import geo2radarCoordinates
+from .Rdr2geo import rdr2geo_point
+from .Geo2rdr import geo2rdr_point
 from .geometry import getBoundsOnGround
 
 def rdr2geo(**kwds):

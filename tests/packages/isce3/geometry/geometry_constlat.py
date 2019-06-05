@@ -83,7 +83,7 @@ def test_rdr2geo():
             expLLH = ellipsoid.xyzToLonLat(xyz)
 
             # Run rdr2geo to estimate target llh
-            targetLLH = isce3.geometry.radar2geo_point(
+            targetLLH = isce3.geometry.rdr2geo_point(
                             azimuthTime=tinp, slantRange=rng, 
                             ellipsoid=ellipsoid, orbit=orb, side=sides[kk]
                             )
@@ -149,7 +149,7 @@ def test_geo2rdr():
             # expected Range 
             expRange = np.sqrt(np.sum(los**2))
 
-            azTime, slantRange = isce3.geometry.geo2radar_point(
+            azTime, slantRange = isce3.geometry.geo2rdr_point(
                     lonlatheight=list(targ_LLH), 
                     ellipsoid=ellipsoid, orbit=orb, 
                     doppler=zeroDop, wavelength=0.24, 
