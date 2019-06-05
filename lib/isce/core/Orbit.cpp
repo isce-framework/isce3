@@ -400,6 +400,11 @@ printOrbit() const {
 
 void isce::core::Orbit::
 loadFromHDR(const char *filename) {
+    return loadFromHDR(filename, true);
+}
+
+void isce::core::Orbit::
+loadFromHDR(const char *filename, bool update_epoch) {
     /*
      *  Load Orbit from a saved HDR file using fstreams. This assumes that the Orbit was dumped to
      *  an HDR file using this interface (or a compatible one given the reading scheme below), and
@@ -428,11 +433,16 @@ loadFromHDR(const char *filename) {
     fs.seekg(0);
 
     cartesian_t pos, vel;
-    double t;
+    std::string ts;
     int count = 0;
     // Take advantage of the power of fstreams
-    while (fs >> t >> pos[0] >> pos[1] >> pos[2] >> vel[0] >> vel[1] >> vel[2]) {
-        setStateVector(count, t, pos, vel);
+    while (fs >> ts >> pos[0] >> pos[1] >> pos[2] >> vel[0] >> vel[1] >> vel[2]) {
+        auto t = DateTime(ts);
+        if (update_epoch && (count == 0)) {
+            refEpoch = t;
+        }
+        double sec = t.secondsSinceEpoch(refEpoch);
+        setStateVector(count, sec, pos, vel);
         count++;
     }
     fs.close();
@@ -468,7 +478,8 @@ dumpToHDR(const char* filename) const {
     fs << std::showpos;
     fs.precision(16);
     for (int i=0; i<nVectors; i++) {
-        fs << UTCtime[i] << " " << position[3*i] << " " << position[3*i+1] << " " << position[3*i+2]
+        auto t = refEpoch + TimeDelta(UTCtime[i]);
+        fs << t.isoformat() << " " << position[3*i] << " " << position[3*i+1] << " " << position[3*i+2]
             << " " << velocity[3*i] << " " << velocity[3*i+1] << " " << velocity[3*i+2] << std::endl;
     }
     fs.close();
