@@ -63,6 +63,7 @@ set(HEADERS Attitude.h
             Serialization.h
             StateVector.h
             TimeDelta.h
+            TypeTraits.h
             Utilities.h
             Vector.h)
 
