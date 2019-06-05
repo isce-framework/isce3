@@ -7,12 +7,7 @@ import numpy as np
 
 # The extensions
 import isce3.extensions.isceextension as isceextension
-
-pyGeocodeFloat = isceextension.pyGeocodeFloat
-pyGeocodeDouble = isceextension.pyGeocodeDouble
-pyGeocodeComplexFloat = isceextension.pyGeocodeComplexFloat
-py_geo2rdr = isceextension.py_geo2rdr
-py_computeDEMBounds = isceextension.py_computeDEMBounds
+from isceextension import pyGeocodeFloat, pyGeocodeDouble, pyGeocodeComplexFloat
 
 
 def Geocode(orbit=None, ellipsoid=None, inputRaster=None):
@@ -30,7 +25,7 @@ def Geocode(orbit=None, ellipsoid=None, inputRaster=None):
             return pyGeocodeComplexFloat(orbit, ellipsoid)
         else:
             raise NotImplementedError('Geocode data type not yet implemented')
-    elif isinstance(dtype, float, np.float64):
+    elif isinstance(dtype, (float, np.float64)):
         return pyGeocodeDouble(orbit, ellipsoid)
     elif isinstance(dtype, np.float32):
         return pyGeocodeFloat(orbit, ellipsoid)

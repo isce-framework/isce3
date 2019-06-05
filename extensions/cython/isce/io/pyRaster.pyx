@@ -21,7 +21,7 @@ cdef class pyRaster:
     All parameters like dimensions, data types etc must be known at the time of creation.
 
     Args:
-        str_filename (str): str_filename on disk to create or to read
+        filename (str): filename on disk to create or to read
         access (Optional[int]): gdal.GA_ReadOnly or gdal.GA_Update
         dtype (Optional[int]): gdal.GDT_* for creating new raster
         width (Optional[int]): width of new raster to be created
@@ -69,7 +69,7 @@ cdef class pyRaster:
             self.__owner = False
             return
         
-        # Convert the str_filename to a C++ string representation
+        # Convert the filename to a C++ string representation
         cdef string str_filename = pyStringToBytes(filename)
         cdef string drivername = pyStringToBytes(driver)
         

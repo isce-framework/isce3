@@ -24,7 +24,6 @@ class LinearOrbit():
         return t, pos, vel
 
     def makeOrbit(self):
-        #from isce3.core import Orbit
         orb = isce3.core.orbit(nVectors=self.nVec)
         for ii in range(self.nVec):
             t, pos, vel = self.makeStateVector(ii*self.dt)

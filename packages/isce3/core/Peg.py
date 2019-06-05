@@ -3,7 +3,7 @@
 # Import the extension
 import isce3.extensions.isceextension as isceextension
 
-class DopplerEuler(isceextension.pyDopplerEuler):
+class Peg(isceextension.pyPeg):
     """
     Wrapper for pyDopplerEuler.
     """

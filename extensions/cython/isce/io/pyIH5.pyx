@@ -63,7 +63,7 @@ cdef class pyIH5File:
         Pre-constructor that creates a C++ isce::io::IH5File object and binds it to 
         python instance.
         """
-        # Convert the str_filename to a C++ string representation
+        # Convert the filename to a C++ string representation
         cdef string str_filename = pyStringToBytes(filename)
 
         # Create pointer to file

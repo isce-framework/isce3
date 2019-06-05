@@ -3,7 +3,6 @@ import isce3
 
 def testConstruction():
     import datetime
-    #from isce3.core import DateTime
 
     #Reference datetime
     refobjs = [datetime.datetime(2017,5,12,1,12,30,141592),
@@ -74,7 +73,6 @@ def testAddition():
     return
 
 def testUnits():
-    #from isce3.core import TimeDelta
 
     for value in [90456.767775688, -8956.245252, 1000, -4000]:
         delta = isce3.core.timeDelta(dt=value)

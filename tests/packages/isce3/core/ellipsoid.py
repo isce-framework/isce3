@@ -44,7 +44,6 @@ data = [
 
 
 def test_CythonInterface():
-    #from isce3.core import Ellipsoid
     import numpy.testing as npt
 
     elp = isce3.core.ellipsoid(a=6387137., e2=0.00000001)
@@ -55,7 +54,6 @@ def test_CythonInterface():
     return
 
 def test_lonLatToXyzPoints():
-    #from isce3.core import Ellipsoid
     import numpy.testing as npt
 
     wgs84 = isce3.core.ellipsoid()
@@ -71,7 +69,6 @@ def test_lonLatToXyzPoints():
     return
 
 def test_xyzToLonLatPoints():
-    #from isce3.core import Ellipsoid
     import numpy.testing as npt
 
     wgs84 = isce3.core.ellipsoid()
@@ -88,7 +85,6 @@ def test_xyzToLonLatPoints():
     return
 
 def test_lonLattoXyzArray():
-    #from isce3.core import Ellipsoid
     import numpy.testing as npt
 
     tname = "lon lat to xyz array"
