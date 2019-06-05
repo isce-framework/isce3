@@ -399,11 +399,6 @@ printOrbit() const {
 }
 
 void isce::core::Orbit::
-loadFromHDR(const char *filename) {
-    return loadFromHDR(filename, true);
-}
-
-void isce::core::Orbit::
 loadFromHDR(const char *filename, bool update_epoch) {
     /*
      *  Load Orbit from a saved HDR file using fstreams. This assumes that the Orbit was dumped to

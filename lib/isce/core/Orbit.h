@@ -129,14 +129,9 @@ struct isce::core::Orbit {
     void printOrbit() const;
 
     /** Utility function to load orbit from HDR file.
-     *  Updates refEpoch to first time in file.
-     */
-    void loadFromHDR(const char*);
-    
-    /** Utility function to load orbit from HDR file.
      *  Will update refEpoch if 2nd argument is true.
      */
-    void loadFromHDR(const char*, bool);
+    void loadFromHDR(const char *filename, bool update_epoch = true);
 
     /** Utility function to dump orbit to HDR file */
     void dumpToHDR(const char*) const;
