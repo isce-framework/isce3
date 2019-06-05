@@ -31,6 +31,5 @@ var searchData=
   ['frequencyresponseazimuth',['frequencyResponseAzimuth',['../namespaceisce_1_1signal.html#a821e6a14819666f9958b083f630a1c08',1,'isce::signal']]],
   ['frequencyresponserange',['frequencyResponseRange',['../namespaceisce_1_1signal.html#a912c1908ef1fd671196d2aa415a47d12',1,'isce::signal']]],
   ['from_5finterval',['from_interval',['../classisce_1_1core_1_1Linspace.html#a626deffc695bebddbd39ace6327ea98b',1,'isce::core::Linspace']]],
-  ['from_5fstatevectors',['from_statevectors',['../classisce_1_1orbit__wip_1_1Orbit.html#a009ef5e7ad8f99a6c137f7007de4a181',1,'isce::orbit_wip::Orbit::from_statevectors()'],['../classisce_1_1cuda_1_1orbit__wip_1_1Orbit.html#afa12d40473d1e82e24d63022b2e9009e',1,'isce::cuda::orbit_wip::Orbit::from_statevectors()']]],
   ['fft_20tutorial',['FFT Tutorial',['../tutorial_fft.html',1,'']]]
 ];
