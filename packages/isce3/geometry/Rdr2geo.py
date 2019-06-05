@@ -11,7 +11,7 @@ class Rdr2geo(isceextension.pyTopo):
     """
     pass
 
-def radar2geoCoordinates(azimuthTime=None, 
+def radar2geo_point(azimuthTime=None, 
             slantRange=None,
             ellipsoid=None,
             orbit=None,

@@ -12,7 +12,7 @@ class Geo2rdr(isceextension.pyGeo2rdr):
     """
     pass
 
-def geo2radarCoordinates(lonlatheight=None,
+def geo2radar_point(lonlatheight=None,
             ellipsoid=None,
             orbit=None,
             doppler=None,

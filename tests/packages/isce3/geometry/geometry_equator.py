@@ -10,7 +10,7 @@ def setupOrbit(lon0, omega, Nvec, ellipsoid):
 
     # Setup orbit
     orb = isce3.core.orbit()
-    t0 = isce3.core.dateTime(inobj="2017-02-12T01:12:30.0")
+    t0 = isce3.core.dateTime(dt="2017-02-12T01:12:30.0")
     orb.refEpoch = t0
     for ii in range(Nvec):
         deltat = ii*10.0
@@ -81,7 +81,7 @@ def test_rdr2geo():
         expLLH = ellipsoid.xyzToLonLat(xyz)
 
         # Run rdr2geo to estimate target llh
-        targetLLH = isce3.geometry.radar2geoCoordinates(
+        targetLLH = isce3.geometry.radar2geo_point(
                 azimuthTime=tinp, slantRange=rng, 
                 ellipsoid=ellipsoid, orbit=orb, side=1.0, 
                 threshold = 1e-8, maxIter = 25, extraIter = 15
@@ -92,7 +92,7 @@ def test_rdr2geo():
         assert abs(expLLH[2] - targetLLH[2]) < 1.0e-8
 
         # Run rdr2geo again with right looking side
-        targetLLH = isce3.geometry.radar2geoCoordinates(
+        targetLLH = isce3.geometry.radar2geo_point(
                 azimuthTime=tinp, slantRange=rng, 
                 ellipsoid=ellipsoid, orbit=orb, side=-1.0,
                 threshold = 1e-8, maxIter = 25, extraIter = 15
@@ -146,7 +146,7 @@ def test_geo2rdr():
         # expected Range 
         expRange = np.sqrt(np.sum(los**2))
 
-        azTime, slantRange = isce3.geometry.geo2radarCoordinates(
+        azTime, slantRange = isce3.geometry.geo2radar_point(
                 lonlatheight=list(targ_LLH), ellipsoid=ellipsoid, 
                 orbit=orb, doppler=zeroDop, 
                 wavelength=0.24, threshold=1.0e-9, maxiter=50, dR=10.0

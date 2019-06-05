@@ -13,14 +13,14 @@ def testConstruction():
    
     for refobj in refobjs:
         #Create using string
-        pyobj = isce3.core.dateTime(inobj=refobj.isoformat())
+        pyobj = isce3.core.dateTime(dt=refobj.isoformat())
 
         #Create datetime from DateTime
         reconsobj = datetime.datetime.strptime(pyobj.isoformat()[:-3], "%Y-%m-%dT%H:%M:%S.%f")
         assert abs((reconsobj - refobj).total_seconds()) < 1.0e-6
 
         #Create using datetime
-        pyobj = isce3.core.dateTime(inobj=refobj)
+        pyobj = isce3.core.dateTime(dt=refobj)
 
         #Create datetime from DateTime
         reconsobj = datetime.datetime.strptime(pyobj.isoformat()[:-3], "%Y-%m-%dT%H:%M:%S.%f")
@@ -32,8 +32,8 @@ def testConstruction():
 def testComparison():
     from isce3.core import DateTime
 
-    dtime1 = isce3.core.dateTime(inobj="2017-05-12T01:12:30.141592")
-    dtime2 = isce3.core.dateTime(inobj="2017-05-13T02:12:33.241592")
+    dtime1 = isce3.core.dateTime(dt="2017-05-12T01:12:30.141592")
+    dtime2 = isce3.core.dateTime(dt="2017-05-13T02:12:33.241592")
    
     ###Copy from dtime1
     dtime3 = isce3.core.dateTime()
@@ -50,8 +50,8 @@ def testComparison():
 
 def testTimeDelta():
 
-    dtime1 = isce3.core.dateTime(inobj="2017-05-12T01:12:30.141592")
-    dtime2 = isce3.core.dateTime(inobj="2017-05-13T02:12:33.241592")
+    dtime1 = isce3.core.dateTime(dt="2017-05-12T01:12:30.141592")
+    dtime2 = isce3.core.dateTime(dt="2017-05-13T02:12:33.241592")
     delta = dtime2 - dtime1
 
     assert abs(delta.getTotalSeconds() - 90003.1) < 1.0e-8
@@ -61,8 +61,8 @@ def testTimeDelta():
 def testAddition():
     from isce3.core.DateTime import DateTime 
     from isce3.core.TimeDelta import TimeDelta
-    dtime1 = DateTime(inobj="2017-05-12T01:12:30.141592")
-    delta = TimeDelta(inobj=3.0)
+    dtime1 = DateTime(dt="2017-05-12T01:12:30.141592")
+    delta = TimeDelta(dt=3.0)
 
     dtime2 = dtime1 + delta
     assert(dtime2.isoformat() == "2017-05-12T01:12:33.141592000")
@@ -77,7 +77,7 @@ def testUnits():
     #from isce3.core import TimeDelta
 
     for value in [90456.767775688, -8956.245252, 1000, -4000]:
-        delta = isce3.core.timeDelta(inobj=value)
+        delta = isce3.core.timeDelta(dt=value)
 
         assert( delta.getTotalSeconds() == value)
         assert( delta.getTotalMinutes() == (value / 60.))

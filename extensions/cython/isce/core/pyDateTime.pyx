@@ -17,7 +17,7 @@ cdef class pyDateTime:
     Includes support for comparison and subtraction operators.
 
     Args:
-        inobj (:obj:`datetime.datetime` or :obj:`str`, optional): Input python datetime object or iso-8601 string
+        dt (:obj:`datetime.datetime` or :obj:`str`, optional): Input python datetime object or iso-8601 string
     '''
     cdef DateTime * c_datetime
     cdef bool __owner
@@ -29,27 +29,27 @@ cdef class pyDateTime:
         self.c_datetime = new DateTime()
         self.__owner = True
    
-    def __init__(self, inobj=None):
+    def __init__(self, dt=None):
         import datetime
 
-        if isinstance(inobj, (str, datetime.datetime)):
-            self.set(inobj)
-        elif inobj is not None:
+        if isinstance(dt, (str, datetime.datetime)):
+            self.set(dt)
+        elif dt is not None:
             raise ValueError('pyDateTime object can be instantiated with a str or datetime.datetime object only')
 
-    def set(self, inobj):
+    def set(self, dt):
         '''
         Set pyDateTime using datetime.datetime or str object.
 
         Args:
-            inobj (:obj:`datetime.datetime` or :obj:`str`): Input object.
+            dt (:obj:`datetime.datetime` or :obj:`str`): Input object.
         '''
         import datetime
-        if isinstance(inobj, str):
-            self.strptime(inobj)
-        elif isinstance(inobj, datetime.datetime):
-            self.strptime(inobj.isoformat())
-        elif inobj is not None:
+        if isinstance(dt, str):
+            self.strptime(dt)
+        elif isinstance(dt, datetime.datetime):
+            self.strptime(dt.isoformat())
+        elif dt is not None:
             raise ValueError('pyDateTime object can be set with a str or datetime.datetime object only')
 
 

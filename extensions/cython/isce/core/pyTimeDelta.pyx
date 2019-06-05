@@ -12,7 +12,7 @@ cdef class pyTimeDelta:
     Python wrapper for isce::core::TimeDelta
 
     Args:
-        inobj(:obj:`datetime.timedelta` or float, optional): Input python timedelta object or double precision floating point number
+        dt(:obj:`datetime.timedelta` or float, optional): Input python timedelta object or double precision floating point number
     '''
     cdef TimeDelta c_timedelta
     
@@ -25,26 +25,26 @@ cdef class pyTimeDelta:
         '''
         self.c_timedelta = TimeDelta()
 
-    def __init__(self, inobj=None):
+    def __init__(self, dt=None):
         import datetime
 
-        if isinstance(inobj, (int,float,datetime.timedelta)):
-            self.set(inobj)
-        elif inobj is not None:
+        if isinstance(dt, (int,float,datetime.timedelta)):
+            self.set(dt)
+        elif dt is not None:
             raise ValueError('pyTimeDelta can only be initilized using datetime.timedelta or float')
 
-    def set(self, inobj):
+    def set(self, dt):
         '''
         Set the value using datetime.timedelta or float
 
         Args:
-            inobj (:obj:`datetime.timedelta` or float): Input object
+            dt (:obj:`datetime.timedelta` or float): Input object
         '''
         import datetime
-        if isinstance(inobj, (int,float)):
-            self.c_timedelta = float(inobj)
-        elif isinstance(inobj, datetime.timedelta):
-            self.c_timedelta = float(inobj.total_seconds())
+        if isinstance(dt, (int,float)):
+            self.c_timedelta = float(dt)
+        elif isinstance(dt, datetime.timedelta):
+            self.c_timedelta = float(dt.total_seconds())
         else:
             raise ValueError('pyTimeDelta can only be set using datetime.timedelta or float')
 
