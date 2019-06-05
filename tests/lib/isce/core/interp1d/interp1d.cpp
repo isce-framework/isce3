@@ -19,7 +19,9 @@
 #include "gtest/gtest.h"
 
 // isce::core
+#include "isce/core/Utilities.h"
 #include "isce/core/Interp1d.h"
+#include "isce/signal/NFFT.h"
 
 using isce::core::interp1d;
 using isce::core::sinc;
@@ -173,6 +175,8 @@ struct Interp1dTest : public ::testing::Test
     TestSignal ts;
     // Realization of signal at integer time steps.
     std::valarray<std::complex<double>> signal;
+    // Realizations of signal at arbitrary time steps;
+    std::vector<std::complex<double>> ref, out;
 
     protected:
         // Constructor
@@ -187,21 +191,43 @@ struct Interp1dTest : public ::testing::Test
         }
 
         void
-        check_interp(double min_cor, double max_phs, double max_bias,
-                     double max_spread, std::vector<double> times,
-                     isce::core::Kernel<double> &kernel)
+        fill_ref(const std::vector<double> &times)
         {
-            // interpolate at all offsets in [pad:-pad]
-            std::vector<std::complex<double>> ref(0), out(0);
+            auto nt = times.size();
+            ref.assign(nt, 0.0);
+            for (size_t i=0; i<nt; ++i) {
+               ref[i] = ts.eval(times[i]);
+            }
+        }
+
+        void
+        fill_out(const std::vector<double> &times,
+                 isce::core::Kernel<double> &kernel)
+        {
+            auto nt = times.size();
+            out.assign(nt, 0.0);
+            for (size_t i=0; i<nt; ++i) {
+                out[i] = interp1d<double,std::complex<double>>(kernel, signal,
+                                                               times[i]);
+            }
+        }
+
+        void
+        mask_edges(const std::vector<double> &times) {
             auto nt = times.size();
             for (size_t i=0; i<nt; ++i) {
-                double t = times[i];
-                if ((pad <= t) && (t <= n-1-pad)) {
-                    ref.push_back(ts.eval(t));
-                    auto x = interp1d<double,std::complex<double>>(kernel, signal, t);
-                    out.push_back(x);
+                auto t = times[i];
+                if ((t < pad) || (t > n-1-pad)) {
+                    out[i] = ref[i] = 0.0;
                 }
             }
+        }
+
+        // Must have filled out and ref arrays.
+        void
+        check(double min_cor, double max_phs, double max_bias,
+              double max_spread)
+        {
             auto cor = _correlation(ref, out);
             auto dphase = _phase_stdev(ref, out);
             double bias, spread;
@@ -219,17 +245,34 @@ struct Interp1dTest : public ::testing::Test
         }
 
         void
-        test_rand_offsets(double min_cor, double max_phs, double max_bias,
-                          double max_spread,
-                          isce::core::Kernel<double> &kernel)
+        check_interp(double min_cor, double max_phs, double max_bias,
+                     double max_spread, std::vector<double> &times,
+                     isce::core::Kernel<double> &kernel)
         {
-            printf("Testing random offsets.\n");
+            fill_ref(times);
+            fill_out(times, kernel);
+            mask_edges(times);
+            check(min_cor, max_phs, max_bias, max_spread);
+        }
+
+        std::vector<double>
+        gen_rand_times() {
             std::mt19937 rng(2 * seed);
             std::uniform_real_distribution<double> uniform(-0.5, 0.5);
             std::vector<double> times(n);
             for (size_t i=0; i<n; ++i) {
                 times[i] = i + uniform(rng);
             }
+            return times;
+        }
+
+        void
+        test_rand_offsets(double min_cor, double max_phs, double max_bias,
+                          double max_spread,
+                          isce::core::Kernel<double> &kernel)
+        {
+            printf("Testing random offsets.\n");
+            auto times = gen_rand_times();
             check_interp(min_cor, max_phs, max_bias, max_spread, times, kernel);
         }
 
@@ -268,6 +311,33 @@ TEST_F(Interp1dTest, Knab) {
     test_fixed_offset(0.998, 5.0, 1.0, 1.0, kernel, -0.5);
     test_fixed_offset(0.998, 5.0, 1.0, 1.0, kernel,  0.5);
     test_rand_offsets(0.998, 5.0, 0.5, 0.5, kernel);
+}
+
+TEST_F(Interp1dTest, NFFT) {
+    // FFT the signal set up by the test class to get a spectrum.
+    std::valarray<std::complex<double>> spec(n);
+    int i_n = n;
+    auto fft = isce::signal::Signal<double>();
+    fft.fftPlanForward(signal, spec, 1, &i_n, 1, NULL, 1, 1, NULL, 1, 1, -1);
+    fft.forward(signal, spec);
+
+    // Set up NFFT object with 9 taps and 2x oversampling.
+    auto itp = isce::signal::NFFT<double>(4, n, 2*n);
+
+    // Feed a spectrum to NFFT object.
+    itp.set_spectrum(spec);
+
+    // Use NFFT to interpolate at random times.
+    printf("Testing random offsets.\n");
+    auto times = gen_rand_times();
+    out.assign(times.size(), 0.0);
+    for (size_t i=0; i<times.size(); ++i) {
+        out[i] = itp.interp(times[i]);
+    }
+    // Compare to reference signal.
+    fill_ref(times);
+    mask_edges(times);
+    check(0.998, 1.0, 0.1, 0.1);
 }
 
 int main(int argc, char **argv) {
