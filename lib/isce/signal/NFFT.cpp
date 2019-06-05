@@ -87,7 +87,7 @@ set_spectrum(const std::valarray<std::complex<T>> &x)
 template<class T>
 std::complex<T>
 isce::signal::NFFT<T>::
-interp(double t)
+interp(double t) const
 {
     // scale time index to account for zero-padding of spectrum.
     t *= _fft_size / _n;

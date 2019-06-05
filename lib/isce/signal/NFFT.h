@@ -70,11 +70,11 @@ class isce::signal::NFFT {
          *
          * @param[in] t     Location in [0,n) to sample the time-domain signal.
          */
-        std::complex<T> interp(double t);
+        std::complex<T> interp(double t) const;
 
-        size_t size_kernel() {return 2*_m+1;}
-        size_t size_spectrum() {return _n;}
-        size_t size_transform() {return _fft_size;}
+        size_t size_kernel() const {return 2*_m+1;}
+        size_t size_spectrum() const {return _n;}
+        size_t size_transform() const {return _fft_size;}
 
     private:
         size_t _m, _n, _fft_size;
