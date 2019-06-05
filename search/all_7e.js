@@ -8,7 +8,7 @@ var searchData=
   ['_7egpulut2d',['~gpuLUT2d',['../classisce_1_1cuda_1_1core_1_1gpuLUT2d.html#ac49a503142fc6c389ffeccae0cf78058',1,'isce::cuda::core::gpuLUT2d']]],
   ['_7eicu',['~ICU',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#ad5704c1a4086c37d696a86312b5f0399',1,'isce::unwrap::icu::ICU']]],
   ['_7eih5dataset',['~IH5Dataset',['../classisce_1_1io_1_1IH5Dataset.html#acd21b6ad09a1f730de785ec05eb5fd8a',1,'isce::io::IH5Dataset']]],
-  ['_7einterpolator',['~Interpolator',['../classisce_1_1core_1_1Interpolator.html#a47effe62623baed1e6cc1a4d4c93c809',1,'isce::core::Interpolator']]],
+  ['_7einterpolator',['~Interpolator',['../classisce_1_1core_1_1Interpolator.html#aea3827e3eb648c06c46302643aaef81e',1,'isce::core::Interpolator']]],
   ['_7ekernel',['~Kernel',['../classisce_1_1core_1_1Kernel.html#ac225c904a5b37e720effa2c70dd83858',1,'isce::core::Kernel']]],
   ['_7ematrix',['~Matrix',['../classisce_1_1core_1_1Matrix.html#af2e1319454d7930f73ef665da70bc927',1,'isce::core::Matrix']]],
   ['_7ephass',['~Phass',['../classisce_1_1unwrap_1_1phass_1_1Phass.html#acd0f7f18400135b69e49f339234fd19b',1,'isce::unwrap::phass::Phass']]],
