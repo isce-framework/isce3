@@ -181,7 +181,7 @@ struct Interp1dTest : public ::testing::Test
     protected:
         // Constructor
         Interp1dTest() : ts(n, bw, seed) {
-            assert((0 <= pad) && (2*pad < n));
+            assert(2*pad < n);  // and pad>0 since it's unsigned.
             // Generate signal at integer sample times.
             signal.resize(n);
             for (int i=0; i<n; ++i) {
