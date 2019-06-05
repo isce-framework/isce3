@@ -33,7 +33,7 @@ cdef class pyRaster:
     cdef Raster * c_raster
     cdef bool __owner
 
-    def __cinit__(self, filename=None, int access=0, int dtype=0, 
+    def __cinit__(self, filename, int access=0, int dtype=0, 
                 int width=0, int length=0, int numBands=0, driver='', 
                 collection=[], dataset=None, h5=None):
 

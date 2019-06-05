@@ -16,7 +16,7 @@ def testh5pyReadOnly():
     ds[:] = numpy.arange(50*70).reshape((50,70))
 
 
-    img = isce3.io.raster(h5=ds)
+    img = isce3.io.raster(filename='', h5=ds)
     assert(img.width == 70)
     assert(img.length == 50)
     assert(img.numBands == 1)
@@ -39,7 +39,7 @@ def testh5pyUpdate():
     ds[:] = numpy.arange(50*70).reshape((50,70))
 
 
-    img = isce3.io.raster(h5=ds, access=gdal.GA_Update )
+    img = isce3.io.raster(filename='', h5=ds, access=gdal.GA_Update )
     assert(img.width == 70)
     assert(img.length == 50)
     assert(img.numBands == 1)

@@ -58,7 +58,7 @@ cdef class pyIH5File:
     cdef IH5File * c_ih5file
     cdef bool __owner
 
-    def __cinit__(self, filename=None, int access=0):
+    def __cinit__(self, filename, int access=0):
         """
         Pre-constructor that creates a C++ isce::io::IH5File object and binds it to 
         python instance.
