@@ -114,18 +114,18 @@ class isce::core::NFFTKernel : public isce::core::Kernel<T> {
     public:
         /** Constructor of NFFT kernel.
          *
-         * @param[in] m     Half kernel size (width = 2*m+1)
-         * @param[in] n     Length of input signal.
-         * @param[in] nfft  FFT Transform size (> n).
+         * @param[in] m         Half kernel size (width = 2*m+1)
+         * @param[in] n         Length of input signal.
+         * @param[in] fft_size  FFT Transform size (> n).
          */
-        NFFTKernel(size_t m, size_t n, size_t nfft);
+        NFFTKernel(size_t m, size_t n, size_t fft_size);
 
         T operator()(double x) const override;
     
     private:
         size_t _m;
         size_t _n;
-        size_t _nfft;
+        size_t _fft_size;
         T _scale;
         T _b;
 };

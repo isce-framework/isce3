@@ -103,10 +103,10 @@ template double isce::core::sinc(double);
 // constructor
 template <typename T>
 isce::core::NFFTKernel<T>::
-NFFTKernel(size_t m, size_t n, size_t nfft)
-    : _m(m), _n(n), _nfft(nfft)
+NFFTKernel(size_t m, size_t n, size_t fft_size)
+    : _m(m), _n(n), _fft_size(fft_size)
 {
-    _b = M_PI * (2.0 - 1.0*n/nfft);
+    _b = M_PI * (2.0 - 1.0*n/fft_size);
     _scale = 1.0 / (M_PI * std::cyl_bessel_i(0, _m*_b));
     this->_halfwidth = fabs((2*m+1) / 2.0);
 }
