@@ -13,6 +13,7 @@ var searchData=
   ['sensingstart',['sensingStart',['../classisce_1_1product_1_1RadarGridParameters.html#a4ad8c31c963962b88e16cc7a79e1c166',1,'isce::product::RadarGridParameters']]],
   ['sensingstop',['sensingStop',['../classisce_1_1product_1_1RadarGridParameters.html#aab90c0f25a76b73e187b5c792d2c803e',1,'isce::product::RadarGridParameters']]],
   ['sensingtime',['sensingTime',['../classisce_1_1product_1_1RadarGridParameters.html#a212e2cf9c05af95271ad7cbfb363affa',1,'isce::product::RadarGridParameters']]],
+  ['set_5fspectrum',['set_spectrum',['../classisce_1_1signal_1_1NFFT.html#a8f5603820bbb3ee2bc50d3d3156018db',1,'isce::signal::NFFT::set_spectrum(size_t size, size_t stride, const std::complex&lt; T &gt; *x)'],['../classisce_1_1signal_1_1NFFT.html#a33ac6b254a45dd90e88748e93a13ed8c',1,'isce::signal::NFFT::set_spectrum(const std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;x)']]],
   ['setblock',['setBlock',['../classisce_1_1io_1_1Raster.html#ae0aab108897828b0748eebe258564e93',1,'isce::io::Raster']]],
   ['setcoeff',['setCoeff',['../structisce_1_1core_1_1Poly1d.html#a9a0c75f83ae73e23b37c9da1b3088b3b',1,'isce::core::Poly1d::setCoeff()'],['../structisce_1_1core_1_1Poly2d.html#a565bc966df97edca52a142b73468dbfe',1,'isce::core::Poly2d::setCoeff()']]],
   ['setepsg',['setEPSG',['../classisce_1_1io_1_1Raster.html#a138df02798c98a1b53bce0140229cf38',1,'isce::io::Raster']]],

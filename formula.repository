@@ -1,107 +1,108 @@
 \form#0:\[ res_i = (x_i \cdot vec) \]
 \form#1:\[ res = \sum_{i=0}^2 vec[i] \cdot x_i \]
 \form#2:$ \frac{\sin(\pi x)}{\pi x} $
-\form#3:\[ f\left( x \right) = \sum_{i=0}^{N} a_i \cdot \left( \frac{x-\mu}{\sigma} \right)^i \]
-\form#4:$a_i$
-\form#5:$\mu$
-\form#6:$\sigma$
-\form#7:\[ f\left( y, x \right) = \sum_{i=0}^{N_y} \sum_{j=0}^{N_x} a_{ij} \cdot \left( \frac{y-\mu_y}{\sigma_y} \right)^i \cdot \left( \frac{x-\mu_x}{\sigma_x} \right)^j \]
-\form#8:$a_ij$
-\form#9:$\mu_x$
-\form#10:$\mu_y$
-\form#11:$\sigma_x$
-\form#12:$\sigma_y$
-\form#13:\[ a = \sum_{i=0}^{N} |x_i|^p \]
-\form#14:$a$
-\form#15:$\mathbf{T}$
-\form#16:\[ \frac{2 \cdot \mathbf{V_{sat}}\left( \eta_{f,T} \right) \cdot \left( \mathbf{T} - \mathbf{R_{sat}}\left(\eta_{f,T}\right) \right)}{\lambda \cdot R_{f,T}} = f\left(\eta_{f,T}, R_{f,T}\right) \]
-\form#17:\[ R_{f,T} = \left|\mathbf{T} - \mathbf{R_{sat}}\left(\eta_{f,T} \right)\right| \]
-\form#18:$\eta$
-\form#19:$R$
-\form#20:$f\left(\eta,R\right)$
-\form#21:$\eta_{f,T}$
-\form#22:$R_{f,T}$
-\form#23:$\eta_{0,T}$
-\form#24:$R_{0,T}$
-\form#25:$\eta_{dc,T}$
-\form#26:$R_{dc,T}$
-\form#27:$f\left(\eta_{f,T},R_{f,T}\right)$
-\form#28:$ \eta_{f,T}$
-\form#29:\[ \frac{2 \cdot \mathbf{V_{sat}}\left( \eta_{dc,T} \right) \cdot \left( \mathbf{T} - \mathbf{R_{sat}}\left(\eta_{dc,T}\right) \right)}{\lambda \cdot R_{dc,T}} = f\left(\eta_{dc,T}, R_{dc,T}\right) \]
-\form#30:\[ \mathbf{V_{sat}}\left( \eta_{0,T} \right) \cdot \left( \mathbf{T} - \mathbf{R_{sat}}\left(\eta_{0,T}\right) \right) = 0 \]
-\form#31:$ \left( \eta_{dc,T} \right) $
-\form#32:$\left( R_{dc,T}\right) $
-\form#33:$\left(X_{map}, Y_{map}, h\left(X_{map}, Y_{map}\right)\right)$
-\form#34:$\left( f_d\left(\eta,R\right)\right)$
-\form#35:$ \left(z\left( X, Y\right)\right)$
-\form#36:\[ \frac{2 \mathbf{V_{sat}\left(\eta_{dc,T}\right)} \cdot \left( \mathbf{T} - \mathbf{R_{sat}\left(\eta_{dc,T}\right)} \right)}{\lambda \cdot R_{dc,T}} = f_{dc}\left(\eta_{dc,T}, R_{dc,T} \right) \]
-\form#37:\[ \left| \mathbf{T} - \mathbf{R_{sat}\left(\eta_{dc,T}\right)} \right | = R_{dc,T} \]
-\form#38:$h_p$
-\form#39:$X_{map}, Y_{map}$
-\form#40:$ z\left(X,Y\right) $
-\form#41:$z_{map}$
-\form#42:$\left(X_{map}, Y_{map}, z_{map}\right)$
-\form#43:$h_{est}$
-\form#44:$h_0 = h_{est}$
-\form#45:$ \left( f_{d}\left(\eta_{dc,T}, R_{dc,T}\right) \right) $
-\form#46:$\mathbf{R_{sat}}$
-\form#47:$\mathbf{V_{sat}}$
-\form#48:\[ R_c =\frac{\left| \mathbf{R_{sat}}\right|} {\sqrt{ \left( \frac{X_{sat}}{a_e} \right)^2 + \left( \frac{Y_{sat}}{a_e} \right)^2 + \left( \frac{Z_{sat}}{b_e} \right)^2 }} \]
-\form#49:\[ h_{sat} = \left| \mathbf{R_{sat}} \right| - R_c \]
-\form#50:$R_c$
-\form#51:\[ \hat{n} = -\left[ \frac{X_{sat}}{\left| \mathbf{R_{sat}} \right|}, \frac{Y_{sat}}{\left| \mathbf{R_{sat}} \right|}, \frac{Z_{sat}}{\left| \mathbf{R_{sat}} \right|} \right] \]
-\form#52:\[ \hat{c} = \frac{\mathbf{V_{sat}} \times \hat{n}}{\left| \mathbf{V_{sat}} \times \hat{n} \right| } \]
-\form#53:\[ \hat{t} = \hat{c} \times \hat{n} \]
-\form#54:$\hat{n}$
-\form#55:$\hat{c}$
-\form#56:$\hat{t}$
-\form#57:$h_0$
-\form#58:$R_0$
-\form#59:\[ \mathbf{T} = \mathbf{R_{sat}} + \alpha \cdot \hat{t} + \beta \cdot \hat{c} + \gamma \cdot \hat{n} \]
-\form#60:\[ \gamma = \frac{R_0}{2} \cdot \left[ \left( \frac{h_{sat} + R_c}{R_0}\right) + \left( \frac{R_0}{h_{sat} + R_c } \right) - \left( \frac{h_0 + R_c}{h_{sat}+R_c} \right) \cdot \left( \frac{h_0 + R_{curv}}{R_0} \right) \right] \]
-\form#61:\[ \alpha = \frac{f_d\left(R_0\right) \cdot \lambda \cdot R_0}{2 \cdot \left| \mathbf{V_{sat}} \right|} - \gamma \cdot \frac{\hat{n} \cdot \hat{v}}{\hat{t} \cdot \hat{v}} \]
-\form#62:$\hat{v} = \frac{\mathbf{V_{sat}}}{\left| \mathbf{V_{sat}} \right|}$
-\form#63:\[ \beta = -L\cdot \sqrt{R_0^2 - \gamma^2 - \alpha^2} \]
-\form#64:$L=-1$
-\form#65:$L=+1$
-\form#66:$ \alpha, \beta$
-\form#67:$\gamma$
-\form#68:$\left( \mathbf{T} \right)$
-\form#69:$\left( X_{map}, Y_{map}, z_map\left(X_{map}, Y_{map}\right) \right)$
-\form#70:$\left(X_{map}, Y_{map}\right)$
-\form#71:$h_est$
-\form#72:\[ h_{est} = \left| \mathbf{T} \right| - R_c \]
-\form#73:$\left (X,Y, z\left(X,Y\right)\right)$
-\form#74:$\left(X,Y\right)$
-\form#75:$\left(f_d \left(\eta,R\right)\right)$
-\form#76:$\eta_g$
-\form#77:$\left( \mathbf{R_{sat}\left( \eta_g\right)} \right)$
-\form#78:$ \left( \mathbf{V_{sat}\left( \eta_g \right)} \right)$
-\form#79:$\Delta \eta $
-\form#80:$\Delta \eta$
-\form#81:$\left( f_d\left(\eta_{dc,T}, R_{dc,T}\right)\right)$
-\form#82:$\left( \mathbf{R_{sat}\left( \eta_g \right)} \right)$
-\form#83:$\left( \mathbf{V_{sat}\left( \eta_g \right)} \right)$
-\form#84:$y\left( \eta \right)$
-\form#85:\[ y\left( \eta \right) = \mathbf{V_{sat}\left(\eta\right)} \cdot \left( \mathbf{T} - \mathbf{R_{sat}\left( \eta \right)}\right) - \frac{\lambda}{2} \cdot f_d\left( \eta, R_{dc}\left(\eta\right)\right) \cdot R_dc\left( \eta \right) = 0 \]
-\form#86:\[ R_{dc}\left(\eta \right) = \left| \mathbf{T} - \mathbf{R_{sat}\left(\eta\right)}\right| \]
-\form#87:\[ \eta_{new} = \eta_g - \frac{y\left( \eta_g \right)}{y^{\prime}\left( \eta_g\right)} \]
-\form#88:\[ y^{\prime}\left( \eta \right) \approx \frac{\lambda}{2} \cdot \left[ \frac{ f_{dc}\left( \eta, R_{dc}\left( \eta \right) \right)}{R_{dc}\left( \eta \right)} + f_d^{\prime}\left( \eta, R_{dc}\left( \eta \right) \right) \right] \cdot \left( \mathbf{V_{sat}\left( \eta \right)} \cdot \left( \mathbf{T} - \mathbf{R_{sat}\left(\eta\right)} \right) - \left| \mathbf{V_{sat}\left( \eta \right)}\right|^2 \right) \]
-\form#89:$R_{dc}\left( \eta_{new} \right)$
-\form#90:\[ \left[ \begin{array}{c} X_{left} \\ Y_{top} \end{array} \right] = \left[ \begin{array}{c} G_0 \\ G_3 \end{array}\right] + \left[ \begin{array}{cc} G_1 & G_2 \\ G_4 & G_5 \end{array} \right] \cdot \left[ \begin{array}{c} P \\ L \end{array} \right] \]
-\form#91:$X_{left}$
-\form#92:$Y_{top}$
-\form#93:$2^a$
-\form#94:$3^b$
-\form#95:$5^c$
-\form#96:$7^d$
-\form#97:$11^e$
-\form#98:$13^f$
-\form#99:$e+f$
-\form#100:\[ I^\prime\left(x, y\right) = I\left(x, y, \Delta x, \Delta y\right) \]
-\form#101:$I^\prime()$
-\form#102:$I()$
-\form#103:$x$
-\form#104:$y$
-\form#105:$\Delta x$
-\form#106:$\Delta y$
+\form#3:$ \phi(x) $
+\form#4:\[ f\left( x \right) = \sum_{i=0}^{N} a_i \cdot \left( \frac{x-\mu}{\sigma} \right)^i \]
+\form#5:$a_i$
+\form#6:$\mu$
+\form#7:$\sigma$
+\form#8:\[ f\left( y, x \right) = \sum_{i=0}^{N_y} \sum_{j=0}^{N_x} a_{ij} \cdot \left( \frac{y-\mu_y}{\sigma_y} \right)^i \cdot \left( \frac{x-\mu_x}{\sigma_x} \right)^j \]
+\form#9:$a_ij$
+\form#10:$\mu_x$
+\form#11:$\mu_y$
+\form#12:$\sigma_x$
+\form#13:$\sigma_y$
+\form#14:\[ a = \sum_{i=0}^{N} |x_i|^p \]
+\form#15:$a$
+\form#16:$\mathbf{T}$
+\form#17:\[ \frac{2 \cdot \mathbf{V_{sat}}\left( \eta_{f,T} \right) \cdot \left( \mathbf{T} - \mathbf{R_{sat}}\left(\eta_{f,T}\right) \right)}{\lambda \cdot R_{f,T}} = f\left(\eta_{f,T}, R_{f,T}\right) \]
+\form#18:\[ R_{f,T} = \left|\mathbf{T} - \mathbf{R_{sat}}\left(\eta_{f,T} \right)\right| \]
+\form#19:$\eta$
+\form#20:$R$
+\form#21:$f\left(\eta,R\right)$
+\form#22:$\eta_{f,T}$
+\form#23:$R_{f,T}$
+\form#24:$\eta_{0,T}$
+\form#25:$R_{0,T}$
+\form#26:$\eta_{dc,T}$
+\form#27:$R_{dc,T}$
+\form#28:$f\left(\eta_{f,T},R_{f,T}\right)$
+\form#29:$ \eta_{f,T}$
+\form#30:\[ \frac{2 \cdot \mathbf{V_{sat}}\left( \eta_{dc,T} \right) \cdot \left( \mathbf{T} - \mathbf{R_{sat}}\left(\eta_{dc,T}\right) \right)}{\lambda \cdot R_{dc,T}} = f\left(\eta_{dc,T}, R_{dc,T}\right) \]
+\form#31:\[ \mathbf{V_{sat}}\left( \eta_{0,T} \right) \cdot \left( \mathbf{T} - \mathbf{R_{sat}}\left(\eta_{0,T}\right) \right) = 0 \]
+\form#32:$ \left( \eta_{dc,T} \right) $
+\form#33:$\left( R_{dc,T}\right) $
+\form#34:$\left(X_{map}, Y_{map}, h\left(X_{map}, Y_{map}\right)\right)$
+\form#35:$\left( f_d\left(\eta,R\right)\right)$
+\form#36:$ \left(z\left( X, Y\right)\right)$
+\form#37:\[ \frac{2 \mathbf{V_{sat}\left(\eta_{dc,T}\right)} \cdot \left( \mathbf{T} - \mathbf{R_{sat}\left(\eta_{dc,T}\right)} \right)}{\lambda \cdot R_{dc,T}} = f_{dc}\left(\eta_{dc,T}, R_{dc,T} \right) \]
+\form#38:\[ \left| \mathbf{T} - \mathbf{R_{sat}\left(\eta_{dc,T}\right)} \right | = R_{dc,T} \]
+\form#39:$h_p$
+\form#40:$X_{map}, Y_{map}$
+\form#41:$ z\left(X,Y\right) $
+\form#42:$z_{map}$
+\form#43:$\left(X_{map}, Y_{map}, z_{map}\right)$
+\form#44:$h_{est}$
+\form#45:$h_0 = h_{est}$
+\form#46:$ \left( f_{d}\left(\eta_{dc,T}, R_{dc,T}\right) \right) $
+\form#47:$\mathbf{R_{sat}}$
+\form#48:$\mathbf{V_{sat}}$
+\form#49:\[ R_c =\frac{\left| \mathbf{R_{sat}}\right|} {\sqrt{ \left( \frac{X_{sat}}{a_e} \right)^2 + \left( \frac{Y_{sat}}{a_e} \right)^2 + \left( \frac{Z_{sat}}{b_e} \right)^2 }} \]
+\form#50:\[ h_{sat} = \left| \mathbf{R_{sat}} \right| - R_c \]
+\form#51:$R_c$
+\form#52:\[ \hat{n} = -\left[ \frac{X_{sat}}{\left| \mathbf{R_{sat}} \right|}, \frac{Y_{sat}}{\left| \mathbf{R_{sat}} \right|}, \frac{Z_{sat}}{\left| \mathbf{R_{sat}} \right|} \right] \]
+\form#53:\[ \hat{c} = \frac{\mathbf{V_{sat}} \times \hat{n}}{\left| \mathbf{V_{sat}} \times \hat{n} \right| } \]
+\form#54:\[ \hat{t} = \hat{c} \times \hat{n} \]
+\form#55:$\hat{n}$
+\form#56:$\hat{c}$
+\form#57:$\hat{t}$
+\form#58:$h_0$
+\form#59:$R_0$
+\form#60:\[ \mathbf{T} = \mathbf{R_{sat}} + \alpha \cdot \hat{t} + \beta \cdot \hat{c} + \gamma \cdot \hat{n} \]
+\form#61:\[ \gamma = \frac{R_0}{2} \cdot \left[ \left( \frac{h_{sat} + R_c}{R_0}\right) + \left( \frac{R_0}{h_{sat} + R_c } \right) - \left( \frac{h_0 + R_c}{h_{sat}+R_c} \right) \cdot \left( \frac{h_0 + R_{curv}}{R_0} \right) \right] \]
+\form#62:\[ \alpha = \frac{f_d\left(R_0\right) \cdot \lambda \cdot R_0}{2 \cdot \left| \mathbf{V_{sat}} \right|} - \gamma \cdot \frac{\hat{n} \cdot \hat{v}}{\hat{t} \cdot \hat{v}} \]
+\form#63:$\hat{v} = \frac{\mathbf{V_{sat}}}{\left| \mathbf{V_{sat}} \right|}$
+\form#64:\[ \beta = -L\cdot \sqrt{R_0^2 - \gamma^2 - \alpha^2} \]
+\form#65:$L=-1$
+\form#66:$L=+1$
+\form#67:$ \alpha, \beta$
+\form#68:$\gamma$
+\form#69:$\left( \mathbf{T} \right)$
+\form#70:$\left( X_{map}, Y_{map}, z_map\left(X_{map}, Y_{map}\right) \right)$
+\form#71:$\left(X_{map}, Y_{map}\right)$
+\form#72:$h_est$
+\form#73:\[ h_{est} = \left| \mathbf{T} \right| - R_c \]
+\form#74:$\left (X,Y, z\left(X,Y\right)\right)$
+\form#75:$\left(X,Y\right)$
+\form#76:$\left(f_d \left(\eta,R\right)\right)$
+\form#77:$\eta_g$
+\form#78:$\left( \mathbf{R_{sat}\left( \eta_g\right)} \right)$
+\form#79:$ \left( \mathbf{V_{sat}\left( \eta_g \right)} \right)$
+\form#80:$\Delta \eta $
+\form#81:$\Delta \eta$
+\form#82:$\left( f_d\left(\eta_{dc,T}, R_{dc,T}\right)\right)$
+\form#83:$\left( \mathbf{R_{sat}\left( \eta_g \right)} \right)$
+\form#84:$\left( \mathbf{V_{sat}\left( \eta_g \right)} \right)$
+\form#85:$y\left( \eta \right)$
+\form#86:\[ y\left( \eta \right) = \mathbf{V_{sat}\left(\eta\right)} \cdot \left( \mathbf{T} - \mathbf{R_{sat}\left( \eta \right)}\right) - \frac{\lambda}{2} \cdot f_d\left( \eta, R_{dc}\left(\eta\right)\right) \cdot R_dc\left( \eta \right) = 0 \]
+\form#87:\[ R_{dc}\left(\eta \right) = \left| \mathbf{T} - \mathbf{R_{sat}\left(\eta\right)}\right| \]
+\form#88:\[ \eta_{new} = \eta_g - \frac{y\left( \eta_g \right)}{y^{\prime}\left( \eta_g\right)} \]
+\form#89:\[ y^{\prime}\left( \eta \right) \approx \frac{\lambda}{2} \cdot \left[ \frac{ f_{dc}\left( \eta, R_{dc}\left( \eta \right) \right)}{R_{dc}\left( \eta \right)} + f_d^{\prime}\left( \eta, R_{dc}\left( \eta \right) \right) \right] \cdot \left( \mathbf{V_{sat}\left( \eta \right)} \cdot \left( \mathbf{T} - \mathbf{R_{sat}\left(\eta\right)} \right) - \left| \mathbf{V_{sat}\left( \eta \right)}\right|^2 \right) \]
+\form#90:$R_{dc}\left( \eta_{new} \right)$
+\form#91:\[ \left[ \begin{array}{c} X_{left} \\ Y_{top} \end{array} \right] = \left[ \begin{array}{c} G_0 \\ G_3 \end{array}\right] + \left[ \begin{array}{cc} G_1 & G_2 \\ G_4 & G_5 \end{array} \right] \cdot \left[ \begin{array}{c} P \\ L \end{array} \right] \]
+\form#92:$X_{left}$
+\form#93:$Y_{top}$
+\form#94:$2^a$
+\form#95:$3^b$
+\form#96:$5^c$
+\form#97:$7^d$
+\form#98:$11^e$
+\form#99:$13^f$
+\form#100:$e+f$
+\form#101:\[ I^\prime\left(x, y\right) = I\left(x, y, \Delta x, \Delta y\right) \]
+\form#102:$I^\prime()$
+\form#103:$I()$
+\form#104:$x$
+\form#105:$y$
+\form#106:$\Delta x$
+\form#107:$\Delta y$
