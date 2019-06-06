@@ -58,13 +58,39 @@ class IH5Dataset final: public GDALDataset
         /** Destructor */
         virtual ~IH5Dataset();
 
+#if GDAL_VERSION_MAJOR == 2
         virtual const char *GetProjectionRef() override;
         virtual CPLErr SetProjection( const char * ) override;
-        virtual int GetGCPCount() override;
         virtual const char *GetGCPProjection() override;
-        virtual const GDAL_GCP *GetGCPs() override;
         virtual CPLErr SetGCPs( int nGCPCount, const GDAL_GCP *pasGCPList,
                             const char *pszGCPProjection ) override;
+#elif GDAL_VERSION_MAJOR == 3
+        //https://github.com/OSGeo/gdal/blob/master/gdal/MIGRATION_GUIDE.TXT
+        const char *_GetProjectionRef() override;
+        const OGRSpatialReference* GetSpatialRef() const override {
+            return GetSpatialRefFromOldGetProjectionRef();
+        }
+
+        CPLErr _SetProjection( const char * ) override;
+        CPLErr SetSpatialRef(const OGRSpatialReference* poSRS) override {
+            return OldSetProjectionFromSetSpatialRef(poSRS);
+        }
+
+        const char* _GetGCPProjection() override;
+        const OGRSpatialReference* GetGCPSpatialRef() const override {
+            return GetGCPSpatialRefFromOldGetGCPProjection();
+        }
+
+        CPLErr _SetGCPs(int nGCPCount, const GDAL_GCP *pasGCPList, const char *pszGCPProjection) override;
+        using GDALPamDataset::SetGCPs;
+        CPLErr SetGCPs( int nGCPCount, const GDAL_GCP *pasGCPList,
+                    const OGRSpatialReference* poSRS ) override {
+            return OldSetGCPsFromNew(nGCPCount, pasGCPList, poSRS);
+        }
+#endif
+
+        virtual int GetGCPCount() override;
+        virtual const GDAL_GCP *GetGCPs() override;
 
         void *GetInternalHandle (const char *) override;
 
