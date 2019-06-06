@@ -7,8 +7,6 @@ var searchData=
   ['neutintensitythr',['neutIntensityThr',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#aa79699019cfac49fbe5acb6b1fca77a3',1,'isce::unwrap::icu::ICU::neutIntensityThr() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a36a5478f54063d992f5c3871015c988a',1,'isce::unwrap::icu::ICU::neutIntensityThr(const float)']]],
   ['neutphasegradthr',['neutPhaseGradThr',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a114ac524c177f98f56e919b774025bbf',1,'isce::unwrap::icu::ICU::neutPhaseGradThr() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a20701852bd69f5e70d2f3c7a2289c964',1,'isce::unwrap::icu::ICU::neutPhaseGradThr(const float)']]],
   ['nextpoweroftwo',['nextPowerOfTwo',['../classisce_1_1signal_1_1Signal.html#a46a99f0d46794440b29a5c7e558f04f2',1,'isce::signal::Signal::nextPowerOfTwo()'],['../classgpuSignal.html#a48c920d4cf3f2ff764817d9b0eb229de',1,'gpuSignal::nextPowerOfTwo()']]],
-  ['nfft',['NFFT',['../classisce_1_1signal_1_1NFFT.html#a07855cbe31267ab152f5b974e67b7b9e',1,'isce::signal::NFFT']]],
-  ['nfftkernel',['NFFTKernel',['../classisce_1_1core_1_1NFFTKernel.html#a709837b2783ade0ad819e6015f39b37e',1,'isce::core::NFFTKernel']]],
   ['nominalacquisitionprf',['nominalAcquisitionPRF',['../classisce_1_1product_1_1Swath.html#a52f3f71a3c67c292720acbb29bc860c2',1,'isce::product::Swath::nominalAcquisitionPRF() const '],['../classisce_1_1product_1_1Swath.html#a5586a8a0d34076c168dbcebd7a8b4809',1,'isce::product::Swath::nominalAcquisitionPRF(double f)']]],
   ['nrows',['nrows',['../classisce_1_1signal_1_1Looks.html#afb7040577a8fd31e3f50f1169d9ee024',1,'isce::signal::Looks']]],
   ['nrowslooked',['nrowsLooked',['../classisce_1_1signal_1_1Looks.html#ab63330172d249b79af9890eec19a1f9f',1,'isce::signal::Looks']]],

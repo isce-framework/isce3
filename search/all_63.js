@@ -1,8 +1,8 @@
 var searchData=
 [
   ['cannyedgedetector',['CannyEdgeDetector',['../classCannyEdgeDetector.html',1,'']]],
-  ['cea',['CEA',['../structisce_1_1cuda_1_1core_1_1CEA.html',1,'isce::cuda::core']]],
   ['cea',['CEA',['../structisce_1_1core_1_1CEA.html',1,'isce::core']]],
+  ['cea',['CEA',['../structisce_1_1cuda_1_1core_1_1CEA.html',1,'isce::cuda::core']]],
   ['changedetector',['ChangeDetector',['../classChangeDetector.html',1,'']]],
   ['chat',['chat',['../classisce_1_1core_1_1Baseline.html#a007ab04c95e9930dbfcf001e0ae49a07',1,'isce::core::Baseline']]],
   ['checkveclendebug',['checkVecLenDebug',['../namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e',1,'isce::core']]],
