@@ -419,6 +419,8 @@ loadFromHDR(const char *filename, bool update_epoch) {
 
     UTCtime.clear();
     UTCtime.resize(nVectors);
+    epochs.clear();
+    epochs.resize(nVectors);
     position.clear();
     position.resize(3*nVectors);
     velocity.clear();

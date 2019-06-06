@@ -4,6 +4,7 @@
 //
 
 #include <cmath>
+#include <cstdio>
 #include <iostream>
 #include <vector>
 #include <isce/core/Constants.h>
@@ -407,6 +408,26 @@ TEST_F(OrbitTest,PolynomialLegendre) {
     fails += ::testing::Test::HasFailure();
 }
 
+TEST_F(OrbitTest,HDRFile) {
+    // Create an orbit.
+    Orbit orb(11);
+    double t = 1000.;
+    cartesian_t opos = {0., 0., 0.};
+    cartesian_t ovel = {4000., -1000., 4500.};
+    cartesian_t pos, vel;
+    for (int i=0; i<11; i++) {
+        makeLinearSV(i*10., opos, ovel, pos, vel); 
+        orb.setStateVector(i, t+(i*10.), pos, vel);
+    }
+    // Dump to file.
+    auto fn = std::tmpnam(nullptr);
+    orb.dumpToHDR(fn);
+    // Load from file.
+    Orbit o(0);
+    o.loadFromHDR(fn);
+    EXPECT_GT(o.nVectors, 0);
+    std::remove(fn);
+}
 
 int main(int argc, char **argv) {
     /*
