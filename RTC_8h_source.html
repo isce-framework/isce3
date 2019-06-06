@@ -93,38 +93,26 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">// Forward declarations</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="keyword">namespace </span>isce {</div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;    <span class="keyword">namespace </span>core {</div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;        <span class="keyword">template</span>&lt;<span class="keyword">class</span>&gt;</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;        <span class="keyword">class </span>LUT2d;</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;        <span class="keyword">class </span>Orbit;</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;    }</div>
-<div class="line"><a name="l00010"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html">   10</a></span>&#160;    <span class="keyword">namespace </span>io {</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;        <span class="keyword">class </span><a class="code" href="classisce_1_1io_1_1Raster.html">Raster</a>;</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    }</div>
-<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="namespaceisce_1_1product.html">   13</a></span>&#160;    <span class="keyword">namespace </span>product {</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;        <span class="keyword">class </span><a class="code" href="classisce_1_1product_1_1Product.html">Product</a>;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;        <span class="keyword">class </span><a class="code" href="classisce_1_1product_1_1RadarGridParameters.html">RadarGridParameters</a>;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    }</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;}</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">namespace </span>isce {</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <span class="keyword">namespace </span>geometry {</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;        <span class="keywordtype">void</span> facetRTC(<a class="code" href="classisce_1_1product_1_1Product.html">isce::product::Product</a>&amp; product,</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;                      <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; dem,</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;                      <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; out_raster,</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;                      <span class="keywordtype">char</span> frequency = <span class="charliteral">&#39;A&#39;</span>);</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;        <span class="keywordtype">void</span> facetRTC(<span class="keyword">const</span> <a class="code" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a>&amp; radarGrid,</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;                              <span class="keyword">const</span> <a class="code" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a>&amp; orbit,</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;                              <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;double&gt;</a>&amp; dop,</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;                              <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; dem,</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;                              <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; out_raster,</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;                              <span class="keyword">const</span> <span class="keywordtype">int</span> lookSide);</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    }</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;}</div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;isce/product/Product.h&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;isce/io/Raster.h&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;isce/product/RadarGridParameters.h&gt;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">namespace </span>isce {</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;    <span class="keyword">namespace </span>geometry {</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;        <span class="keywordtype">void</span> facetRTC(<a class="code" href="classisce_1_1product_1_1Product.html">isce::product::Product</a>&amp; product,</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;                      <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; dem,</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;                      <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; out_raster,</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;                      <span class="keywordtype">char</span> frequency = <span class="charliteral">&#39;A&#39;</span>);</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;        <span class="keywordtype">void</span> facetRTC(<span class="keyword">const</span> <a class="code" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a>&amp; radarGrid,</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;                              <span class="keyword">const</span> <a class="code" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a>&amp; orbit,</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;                              <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;double&gt;</a>&amp; dop,</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;                              <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; dem,</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;                              <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; out_raster,</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;                              <span class="keyword">const</span> <span class="keywordtype">int</span> lookSide);</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    }</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;}</div>
 <div class="ttc" id="classisce_1_1io_1_1Raster_html"><div class="ttname"><a href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a></div><div class="ttdoc">Data structure meant to handle Raster I/O operations. </div><div class="ttdef"><b>Definition:</b> Raster.h:39</div></div>
 <div class="ttc" id="classisce_1_1product_1_1RadarGridParameters_html"><div class="ttname"><a href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a></div><div class="ttdef"><b>Definition:</b> RadarGridParameters.h:20</div></div>
 <div class="ttc" id="classisce_1_1core_1_1LUT2d_html"><div class="ttname"><a href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt; double &gt;</a></div></div>
