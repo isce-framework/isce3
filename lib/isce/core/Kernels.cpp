@@ -119,16 +119,16 @@ operator()(double t) const
 {
     T x2 = t*t - _m*_m;
     // x=0
-    if (fabs(x2) < std::numeric_limits<double>::epsilon()) {
+    if (std::abs(x2) < std::numeric_limits<double>::epsilon()) {
         return _scale;
     }
     T out = 1.0;
     if (x2 < 0.0) {
         T x = std::sqrt(std::abs(x2));
-        out = sinh(_b*x) / x;
+        out = std::sinh(_b*x) / x;
     } else {
         T x = std::sqrt(x2);
-        out = sin(_b*x) / x;
+        out = std::sin(_b*x) / x;
     }
     return _scale * out;
 }
