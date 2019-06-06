@@ -1,5 +1,5 @@
 add_subdirectory(contrib)
 add_subdirectory(lib)
 add_subdirectory(extensions)
-
+add_subdirectory(packages)
 include(CTest)

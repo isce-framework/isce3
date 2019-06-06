@@ -52,22 +52,22 @@ cdef class pyIH5File:
     Cython wrapper for isce::io::IH5File.
 
     Args:
-        py_filename (str): Name of H5 file.
+        filename (str): Name of H5 file.
         access (Optional[int]): Access mode.
     """
     cdef IH5File * c_ih5file
     cdef bool __owner
 
-    def __cinit__(self, py_filename, int access=0):
+    def __cinit__(self, filename, int access=0):
         """
         Pre-constructor that creates a C++ isce::io::IH5File object and binds it to 
         python instance.
         """
         # Convert the filename to a C++ string representation
-        cdef string filename = pyStringToBytes(py_filename)
+        cdef string str_filename = pyStringToBytes(filename)
 
         # Create pointer to file
-        self.c_ih5file = new IH5File(filename)
+        self.c_ih5file = new IH5File(str_filename)
         self.__owner = True
 
     def __dealloc__(self):

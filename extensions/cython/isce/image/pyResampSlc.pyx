@@ -26,7 +26,8 @@ cdef class pyResampSlc:
     # Cython class objects
     cdef pyLUT2d py_doppler
     
-    def __cinit__(self, pyProduct product, pyProduct refProduct=None, freq='A'):
+    def __cinit__(self, pyProduct product=None, 
+                pyProduct refProduct=None, freq='A'):
         """
         Initialize C++ objects.
         """
