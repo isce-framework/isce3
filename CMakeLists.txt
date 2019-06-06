@@ -27,13 +27,18 @@ endif()
 # Set the name for the ISCE C++ library
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
+###Add .cmake to CMAKE MODULE PATH
+list(APPEND CMAKE_MODULE_PATH ${ISCE_SOURCE_DIR}/.cmake)
+
 ###Options for documentation
 option(WITH_DOC
     "Set ON|OFF (default=OFF) to build documentation" OFF)
 
-###Add .cmake to CMAKE MODULE PATH
-list(APPEND CMAKE_MODULE_PATH ${ISCE_SOURCE_DIR}/.cmake)
-
+option(WITH_CODE_COVERAGE "Enable code coverage reporting" OFF)
+if(WITH_CODE_COVERAGE)
+    message("Compiling with code coverage reporting.")
+    include(CodeCoverage)
+endif()
 
 ###Ensure tracking is own for testing
 enable_testing()

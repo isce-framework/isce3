@@ -1,0 +1,11 @@
+set(COVERAGE_COMPILE_OPTS -O0 -g --coverage)
+set(COVERAGE_LINK_OPTS --coverage)
+
+function(SetCoverageOptions target)
+    target_compile_options(${target} PRIVATE ${COVERAGE_COMPILE_OPTS})
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+        target_link_options  (${target} PRIVATE ${COVERAGE_LINK_OPTS})
+    else()
+        target_link_libraries(${target} PRIVATE ${COVERAGE_LINK_OPTS})
+    endif()
+endfunction()
