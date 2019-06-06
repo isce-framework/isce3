@@ -136,6 +136,9 @@ CUDA_HOSTDEV constexpr T&#160;</td><td class="memItemRight" valign="bottom"><a c
 CUDA_HOSTDEV constexpr int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Linspace.html#ac2c3d3b78b50551b8723784c9d69876e">size</a> () const </td></tr>
 <tr class="memdesc:ac2c3d3b78b50551b8723784c9d69876e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of samples. <br/></td></tr>
 <tr class="separator:ac2c3d3b78b50551b8723784c9d69876e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af28add4496328ad1c19ef90c1ce2cdb6"><td class="memItemLeft" align="right" valign="top">CUDA_HOSTDEV void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Linspace.html#af28add4496328ad1c19ef90c1ce2cdb6">resize</a> (int <a class="el" href="classisce_1_1core_1_1Linspace.html#ac2c3d3b78b50551b8723784c9d69876e">size</a>)</td></tr>
+<tr class="memdesc:af28add4496328ad1c19ef90c1ce2cdb6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the number of samples in the sequence.  <a href="#af28add4496328ad1c19ef90c1ce2cdb6">More...</a><br/></td></tr>
+<tr class="separator:af28add4496328ad1c19ef90c1ce2cdb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93c7a8f61b9f8d97faa2e8e4e159af30"><td class="memItemLeft" align="right" valign="top">CUDA_HOSTDEV <a class="el" href="classisce_1_1core_1_1Linspace.html">Linspace</a>&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Linspace.html#a93c7a8f61b9f8d97faa2e8e4e159af30">subinterval</a> (int start, int stop) const </td></tr>
 <tr class="memdesc:a93c7a8f61b9f8d97faa2e8e4e159af30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a sub-Linspace over the half-open interval [start, stop).  <a href="#a93c7a8f61b9f8d97faa2e8e4e159af30">More...</a><br/></td></tr>
 <tr class="separator:a93c7a8f61b9f8d97faa2e8e4e159af30"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -159,7 +162,7 @@ class isce::core::Linspace&lt; T &gt;</h3>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename T &gt; </div>
+template&lt;typename T&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">CUDA_HOSTDEV constexpr <a class="el" href="classisce_1_1core_1_1Linspace.html">isce::core::Linspace</a>&lt; T &gt;::<a class="el" href="classisce_1_1core_1_1Linspace.html">Linspace</a> </td>
@@ -223,7 +226,7 @@ template&lt;typename T &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename T &gt; </div>
+template&lt;typename T&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -320,6 +323,40 @@ template&lt;typename T &gt; </div>
 
 <p>Return sample at the specified position. </p>
 <p>The behavior is undefined if pos is out of range (i.e. if it is &gt;= <a class="el" href="classisce_1_1core_1_1Linspace.html#ac2c3d3b78b50551b8723784c9d69876e" title="Number of samples. ">size()</a>). </p>
+
+</div>
+</div>
+<a class="anchor" id="af28add4496328ad1c19ef90c1ce2cdb6"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">CUDA_HOSTDEV void <a class="el" href="classisce_1_1core_1_1Linspace.html">isce::core::Linspace</a>&lt; T &gt;::resize </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>size</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Change the number of samples in the sequence. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>new size </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
