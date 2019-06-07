@@ -3,12 +3,12 @@
 // Co-Author: Joshua Cohen
 // Copyright 2017
 //
+
 #ifndef __ISCE_CORE_PROJECTIONS_H__
 #define __ISCE_CORE_PROJECTIONS_H__
+#pragma once
 
-#include <cmath>
 #include <iostream>
-#include <vector>
 #include "Constants.h"
 #include "Ellipsoid.h"
 
@@ -20,8 +20,6 @@ namespace isce { namespace core {
      * forward - To convert llh (radians) to expected projection system 
      * inverse - To convert expected projection system to llh (radians) */
     struct ProjectionBase {
-
-        using cartesian_t = Vec3;
 
         /** Ellipsoid object for projections - currently only WGS84 */
         Ellipsoid ellipse;

@@ -2,7 +2,7 @@
 #ifndef ISCE_CORE_LINSPACE_H
 #define ISCE_CORE_LINSPACE_H
 
-#include <stddef.h>
+#include <cstddef>
 
 #include "Common.h"
 

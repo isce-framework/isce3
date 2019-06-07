@@ -9,6 +9,8 @@
 #error "LUT1d.icc is an implementation detail of class LUT1d"
 #endif
 
+#include <pyre/journal.h>
+
 // Constructor from an LUT2d (values averaged in y-direction)
 /** @param[in] lut2d LUT2d to copy data from */
 template <typename T>

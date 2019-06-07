@@ -6,17 +6,12 @@
 
 #ifndef ISCE_CORE_BASIS_H
 #define ISCE_CORE_BASIS_H
+#pragma once
 
-// isce::core
-#include "Cartesian.h"
-#include "Constants.h"
+#include "forward.h"
 
-// Declaration
-namespace isce {
-    namespace core {
-        class Basis;
-    }
-}
+#include "Common.h"
+#include "Vector.h"
 
 /** Simple class to store three-dimensional basis vectors*/
 class isce::core::Basis {

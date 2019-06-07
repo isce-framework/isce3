@@ -14,14 +14,16 @@
 // pyre
 #include <pyre/journal.h>
 
-// isce::core
+#include "Attitude.h"
 #include "EulerAngles.h"
+#include "Quaternion.h"
 #include "Utilities.h"
+
+constexpr auto EulerAngles_t = isce::core::Attitude::Type::EulerAngles_t;
 
 /** @param[in] yaw_orientation Can be "normal" or "center" */
 isce::core::EulerAngles::
-EulerAngles(const std::string yaw_orientation) 
-    : Attitude(EULERANGLES_T) {
+EulerAngles(const std::string yaw_orientation) : Attitude(EulerAngles_t) {
     if (yaw_orientation.compare("normal") == 0 || yaw_orientation.compare("center") == 0) {
         yawOrientation(yaw_orientation);
     } else {
@@ -46,7 +48,7 @@ EulerAngles(const std::vector<double> & time, const std::vector<double> & yaw,
 // Copy constructor
 /** @param[in] euler EulerAngles object */
 isce::core::EulerAngles::
-EulerAngles(const EulerAngles & euler) : Attitude(EULERANGLES_T),
+EulerAngles(const EulerAngles & euler) : Attitude(EulerAngles_t),
                                          _time(euler.time()), _yaw(euler.yaw()),
                                          _pitch(euler.pitch()), _roll(euler.roll()) {
     const std::string yaw_orientation = euler.yawOrientation();

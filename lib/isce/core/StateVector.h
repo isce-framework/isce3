@@ -2,6 +2,8 @@
 #ifndef ISCE_CORE_STATEVECTOR_H
 #define ISCE_CORE_STATEVECTOR_H
 
+#include "forward.h"
+
 #include "DateTime.h"
 #include "Vector.h"
 

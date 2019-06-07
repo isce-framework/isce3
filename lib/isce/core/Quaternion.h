@@ -7,11 +7,11 @@
 
 #ifndef ISCE_CORE_QUATERNION_H
 #define ISCE_CORE_QUATERNION_H
+#pragma once
 
-#include <pyre/journal.h>
+#include "forward.h"
 
 #include "Attitude.h"
-#include "Ellipsoid.h"
 
 /** Quaternion representation of attitude information*/
 class isce::core::Quaternion : public isce::core::Attitude {
@@ -51,25 +51,6 @@ class isce::core::Quaternion : public isce::core::Attitude {
         std::vector<double> _time;
         std::vector<double> _qvec;
 };
-
-// Set quaternion elements from vectors
-/** @param[in] time Vector of seconds since epoch
-  * @param[in] quaternions Flattened vector of quaternions per time epoch */
-void isce::core::Quaternion::
-data(const std::vector<double> & time, const std::vector<double> & quaternions) {
-    // Check size consistency
-    const bool flag = time.size() == (quaternions.size() / 4);
-    if (!flag) {
-        pyre::journal::error_t errorChannel("isce.core.Quaternion");
-        errorChannel    
-            << pyre::journal::at(__HERE__)
-            << "Inconsistent vector sizes"
-            << pyre::journal::endl;
-    }
-    // Set data
-    _time = time;
-    _qvec = quaternions;
-}
 
 #endif
 

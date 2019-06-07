@@ -4,8 +4,9 @@
 // Author: Bryan Riel
 // Copyright 2017
 
-#include <complex>
 #include "LUT2d.h"
+
+#include <complex>
 
 // Constructor with coordinate starting values and spacing
 /** @param[in] xstart Starting X-coordinate

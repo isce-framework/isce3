@@ -4,7 +4,7 @@
 # Copyright 2017-2018
 #
 
-cdef extern from "isce/core/Cartesian.h" namespace "isce::core" nogil:
+cdef extern from "isce/core/forward.h" namespace "isce::core" nogil:
 
     # Three-element array for representing coordinate vectors
     cdef cppclass Vec3 "isce::core::Vec3":

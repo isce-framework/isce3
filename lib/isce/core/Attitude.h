@@ -7,31 +7,23 @@
 
 #ifndef ISCE_CORE_ATTITUDE_H
 #define ISCE_CORE_ATTITUDE_H
+#pragma once
+
+#include "forward.h"
 
 #include <string>
 #include <vector>
 #include "Constants.h"
 #include "DateTime.h"
-#include "DenseMatrix.h"
-
-// Declarations
-namespace isce {
-    namespace core {
-        // The attitude classes
-        class Attitude;
-        class Quaternion;
-        class EulerAngles;
-        // Enum for specifying attitude types
-        enum AttitudeType {QUATERNION_T, EULERANGLES_T};
-    }
-}
 
 /** Base class for attitude data representation */
 class isce::core::Attitude {
 
     public:
+        enum class Type { EulerAngles_t, Quaternion_t };
+
         /** Constructor using time attitude representation type*/
-        Attitude(AttitudeType atype) : _attitude_type(atype) {};
+        Attitude(Attitude::Type atype) : _attitude_type(atype) {};
 
         /** Virtual destructor*/
         virtual ~Attitude() {}
@@ -44,7 +36,7 @@ class isce::core::Attitude {
                             double d1 = 0, double d2 = 0, double d3 = 0) = 0;
 
         /** Return type of attitude representation - quaternion or euler angle*/
-        inline AttitudeType attitudeType()  const { return _attitude_type; }
+        inline Attitude::Type attitudeType()  const { return _attitude_type; }
 
         /** Return yaw orientation - central or normal */
         inline std::string yawOrientation() const { return _yaw_orientation; }
@@ -54,7 +46,7 @@ class isce::core::Attitude {
 
     // Private data members
     private:
-        AttitudeType _attitude_type;
+        Attitude::Type _attitude_type;
         std::string _yaw_orientation;
 };
 

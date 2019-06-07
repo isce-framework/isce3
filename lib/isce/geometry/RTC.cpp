@@ -1,6 +1,8 @@
 //-*- C++ -*-
 //-*- coding: utf-8 -*-
 
+#include "RTC.h"
+
 #include <complex>
 #include <cmath>
 #include <iostream>
@@ -13,12 +15,10 @@
 #include <cstring>
 
 #include <isce/core/Constants.h>
-#include <isce/core/Cartesian.h>
 #include <isce/core/DateTime.h>
 #include <isce/core/Ellipsoid.h>
 
 #include <isce/geometry/geometry.h>
-#include <isce/geometry/RTC.h>
 #include <isce/geometry/Topo.h>
 
 using isce::core::cartesian_t;

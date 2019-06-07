@@ -4,7 +4,6 @@
 
 #include <array>
 #include <cmath>
-
 #include "Common.h"
 
 namespace isce { namespace core {

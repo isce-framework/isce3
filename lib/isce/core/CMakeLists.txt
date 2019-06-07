@@ -26,10 +26,10 @@ set(CPPS Baseline.cpp
          TimeDelta.cpp)
 
 #####Library headers
-set(HEADERS Attitude.h
+set(HEADERS forward.h
+            Attitude.h
             Baseline.h
             Basis.h
-            Cartesian.h
             Common.h
             Constants.h
             Constants.h

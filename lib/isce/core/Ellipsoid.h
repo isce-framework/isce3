@@ -7,18 +7,13 @@
 
 #ifndef ISCE_CORE_ELLIPSOID_H
 #define ISCE_CORE_ELLIPSOID_H
+#pragma once
+
+#include "forward.h"
 
 #include <cstdio>
 #include <cmath>
-#include <isce/core/Constants.h>
-#include <isce/core/Basis.h>
-
-// Declaration
-namespace isce {
-    namespace core {
-        class Ellipsoid;
-    }
-}
+#include "Constants.h"
 
 /** Data structure to store Ellipsoid information. 
  *

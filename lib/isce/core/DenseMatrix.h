@@ -2,15 +2,10 @@
 #ifndef ISCE_CORE_DENSEMATRIX_H
 #define ISCE_CORE_DENSEMATRIX_H
 
+#include "forward.h"
+
 #include <cmath>
-
 #include "Vector.h"
-
-namespace isce { namespace core {
-    template<int N> struct DenseMatrix;
-
-    typedef DenseMatrix<3> Mat3;
-}}
 
 template<int N>
 struct isce::core::DenseMatrix {

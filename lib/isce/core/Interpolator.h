@@ -5,26 +5,13 @@
 
 #ifndef ISCE_CORE_INTERPOLATOR_H
 #define ISCE_CORE_INTERPOLATOR_H
+#pragma once
 
-#include <complex>
+#include "forward.h"
+
 #include <valarray>
-
-// isce::core
 #include "Constants.h"
 #include "Matrix.h"
-
-// Declaration
-namespace isce {
-    namespace core {
-        // The interpolator classes
-        template <typename U> class Interpolator;
-        template <typename U> class BilinearInterpolator;
-        template <typename U> class BicubicInterpolator;
-        template <typename U> class NearestNeighborInterpolator;
-        template <typename U> class Spline2dInterpolator;
-        template <typename U> class Sinc2dInterpolator;
-    }
-}
 
 /** Definition of parent Interpolator */
 template <typename U>

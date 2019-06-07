@@ -5,12 +5,12 @@
 
 #ifndef __ISCE_CORE_PEGTRANS_H__
 #define __ISCE_CORE_PEGTRANS_H__
+#pragma once
 
-#include <vector>
+#include "forward.h"
+
 #include "Constants.h"
-#include "Ellipsoid.h"
 #include "DenseMatrix.h"
-#include "Peg.h"
 
 namespace isce { namespace core {
 

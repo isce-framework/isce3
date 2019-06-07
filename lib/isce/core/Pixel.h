@@ -6,13 +6,9 @@
 
 #ifndef ISCE_CORE_PIXEL_H
 #define ISCE_CORE_PIXEL_H
+#pragma once
 
-// Declaration
-namespace isce {
-    namespace core {
-        class Pixel;
-    }
-}
+#include "forward.h"
 
 /** Helper datastructure to handle slant range information for a pixel */
 class isce::core::Pixel {
