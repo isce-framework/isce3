@@ -120,7 +120,7 @@ Inheritance diagram for isce::cuda::core::ProjectionBase:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
 <tr class="memitem:a1a94f4b1f159912059a522d51821b8d1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a94f4b1f159912059a522d51821b8d1"></a>
-typedef <a class="el" href="structisce_1_1core_1_1Vector.html">isce::core::Vec3</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Vec3</b></td></tr>
+typedef <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Vec3</b></td></tr>
 <tr class="separator:a1a94f4b1f159912059a522d51821b8d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
@@ -128,16 +128,16 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:abb23d96755bd78353e3b38eb6d759990"><td class="memItemLeft" align="right" valign="top">CUDA_HOSTDEV&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1cuda_1_1core_1_1ProjectionBase.html#abb23d96755bd78353e3b38eb6d759990">ProjectionBase</a> (int code)</td></tr>
 <tr class="memdesc:abb23d96755bd78353e3b38eb6d759990"><td class="mdescLeft">&#160;</td><td class="mdescRight">Value constructor with EPSG code as input.  <a href="#abb23d96755bd78353e3b38eb6d759990">More...</a><br/></td></tr>
 <tr class="separator:abb23d96755bd78353e3b38eb6d759990"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a873c17d4a612335bf2f27f280dfab462"><td class="memItemLeft" align="right" valign="top">CUDA_HOST int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1cuda_1_1core_1_1ProjectionBase.html#a873c17d4a612335bf2f27f280dfab462">forward_h</a> (const <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;llh, <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;xyz) const </td></tr>
+<tr class="memitem:a873c17d4a612335bf2f27f280dfab462"><td class="memItemLeft" align="right" valign="top">CUDA_HOST int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1cuda_1_1core_1_1ProjectionBase.html#a873c17d4a612335bf2f27f280dfab462">forward_h</a> (const <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;llh, <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;xyz) const </td></tr>
 <tr class="memdesc:a873c17d4a612335bf2f27f280dfab462"><td class="mdescLeft">&#160;</td><td class="mdescRight">Host function for transforming from LLH.  <a href="#a873c17d4a612335bf2f27f280dfab462">More...</a><br/></td></tr>
 <tr class="separator:a873c17d4a612335bf2f27f280dfab462"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0961ac20c7240f8371d6d77ac94e8548"><td class="memItemLeft" align="right" valign="top">virtual CUDA_DEV int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1cuda_1_1core_1_1ProjectionBase.html#a0961ac20c7240f8371d6d77ac94e8548">forward</a> (const <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;llh, <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;xyz) const =0</td></tr>
+<tr class="memitem:a0961ac20c7240f8371d6d77ac94e8548"><td class="memItemLeft" align="right" valign="top">virtual CUDA_DEV int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1cuda_1_1core_1_1ProjectionBase.html#a0961ac20c7240f8371d6d77ac94e8548">forward</a> (const <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;llh, <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;xyz) const =0</td></tr>
 <tr class="memdesc:a0961ac20c7240f8371d6d77ac94e8548"><td class="mdescLeft">&#160;</td><td class="mdescRight">Device function for transform from LLH.  <a href="#a0961ac20c7240f8371d6d77ac94e8548">More...</a><br/></td></tr>
 <tr class="separator:a0961ac20c7240f8371d6d77ac94e8548"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a117d70feba95371cc40724cb1b72846b"><td class="memItemLeft" align="right" valign="top">CUDA_HOST int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1cuda_1_1core_1_1ProjectionBase.html#a117d70feba95371cc40724cb1b72846b">inverse_h</a> (const <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;xyz, <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;llh) const </td></tr>
+<tr class="memitem:a117d70feba95371cc40724cb1b72846b"><td class="memItemLeft" align="right" valign="top">CUDA_HOST int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1cuda_1_1core_1_1ProjectionBase.html#a117d70feba95371cc40724cb1b72846b">inverse_h</a> (const <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;xyz, <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;llh) const </td></tr>
 <tr class="memdesc:a117d70feba95371cc40724cb1b72846b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Host function for transforming to LLH.  <a href="#a117d70feba95371cc40724cb1b72846b">More...</a><br/></td></tr>
 <tr class="separator:a117d70feba95371cc40724cb1b72846b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e96349148e6f42dd2dc7b3b6e2f47e0"><td class="memItemLeft" align="right" valign="top">virtual CUDA_DEV int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1cuda_1_1core_1_1ProjectionBase.html#a8e96349148e6f42dd2dc7b3b6e2f47e0">inverse</a> (const <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;xyz, <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;llh) const =0</td></tr>
+<tr class="memitem:a8e96349148e6f42dd2dc7b3b6e2f47e0"><td class="memItemLeft" align="right" valign="top">virtual CUDA_DEV int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1cuda_1_1core_1_1ProjectionBase.html#a8e96349148e6f42dd2dc7b3b6e2f47e0">inverse</a> (const <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;xyz, <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;llh) const =0</td></tr>
 <tr class="memdesc:a8e96349148e6f42dd2dc7b3b6e2f47e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Device function for tranforming to LLH.  <a href="#a8e96349148e6f42dd2dc7b3b6e2f47e0">More...</a><br/></td></tr>
 <tr class="separator:a8e96349148e6f42dd2dc7b3b6e2f47e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -193,13 +193,13 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="memname">virtual CUDA_DEV int isce::cuda::core::ProjectionBase::forward </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
           <td class="paramname"><em>llh</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
           <td class="paramname"><em>xyz</em>&#160;</td>
         </tr>
         <tr>
@@ -235,13 +235,13 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="memname">CUDA_HOST int isce::cuda::core::ProjectionBase::forward_h </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
           <td class="paramname"><em>llh</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
           <td class="paramname"><em>xyz</em>&#160;</td>
         </tr>
         <tr>
@@ -274,13 +274,13 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="memname">virtual CUDA_DEV int isce::cuda::core::ProjectionBase::inverse </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
           <td class="paramname"><em>xyz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
           <td class="paramname"><em>llh</em>&#160;</td>
         </tr>
         <tr>
@@ -316,13 +316,13 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="memname">CUDA_HOST int isce::cuda::core::ProjectionBase::inverse_h </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
           <td class="paramname"><em>xyz</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td>
           <td class="paramname"><em>llh</em>&#160;</td>
         </tr>
         <tr>
