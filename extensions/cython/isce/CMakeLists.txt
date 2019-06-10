@@ -32,6 +32,9 @@ endforeach()
 
 # Add Cython module
 cython_add_module(isceextension isceextension.pyx)
+if(WITH_CODE_COVERAGE)
+    SetCoverageOptions(isceextension)
+endif()
 
 FILE(GLOB PYX_LIST ${CMAKE_CURRENT_LIST_DIR}/*/*.pyx)
 target_sources(isceextension PRIVATE ${PYX_LIST})
