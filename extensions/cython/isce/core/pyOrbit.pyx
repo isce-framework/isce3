@@ -8,10 +8,11 @@ from libcpp cimport bool
 from libcpp.vector cimport vector
 from libcpp.string cimport string
 from Cartesian cimport cartesian_t
-from Orbit cimport Orbit, orbitInterpMethod
+from Orbit cimport Orbit, orbitInterpMethod, saveOrbit, loadOrbit
 import numpy as np
 cimport numpy as np
-
+import h5py
+from IH5 cimport hid_t, IGroup
 
 cdef class pyOrbit:
     '''
@@ -589,5 +590,37 @@ cdef class pyOrbit:
         cdef bytes fname = pyStringToBytes(filename)
         cdef char *cstring = fname
         self.c_orbit.dumpToHDR(cstring)
+
+    def loadFromH5(self, h5Group):
+        '''
+        Load Orbit from an HDF5 group
+        
+        Args:
+            h5Group (h5py group): HDF5 group with orbit state vectors
+
+        Returns:
+            None
+        '''
+
+        cdef hid_t groupid = h5Group.id.id
+        cdef IGroup c_igroup
+        c_igroup = IGroup(groupid)
+        loadOrbit(c_igroup, deref(self.c_orbit))
+
+    def saveToH5(self, h5Group):
+        '''
+        Save orbit to an HDF5 group
+
+        Args:
+            h5Group (h5py group): HDF5 group which the orbit will be stored in
+
+        Returns:
+            None
+        '''
+        
+        cdef hid_t groupid = h5Group.id.id
+        cdef IGroup c_igroup
+        c_igroup = IGroup(groupid)
+        saveOrbit(c_igroup, deref(self.c_orbit))
 
 # end of file

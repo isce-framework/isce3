@@ -9,10 +9,11 @@ from libcpp.string cimport string
 from libcpp cimport bool
 
 from Cartesian cimport cartesian_t, cartmat_t
-from EulerAngles cimport EulerAngles
+from EulerAngles cimport EulerAngles, loadEulerAngles, saveEulerAngles
 import numpy as np
 cimport numpy as np
-
+import h5py
+from IH5 cimport hid_t, IGroup
 
 cdef class pyEulerAngles:
     '''
@@ -202,6 +203,38 @@ cdef class pyEulerAngles:
     @roll.setter
     def roll(self, value):
         raise NotImplementedError('Cannot set roll values')
+    
+    def loadFromH5(self, h5Group):
+        '''
+        Load EulerAngles from an HDF5 group
+
+        Args:
+            h5Group (h5py group): HDF5 group with Euler angles
+
+        Returns:
+            None
+        '''
+
+        cdef hid_t groupid = h5Group.id.id
+        cdef IGroup c_igroup
+        c_igroup = IGroup(groupid)
+        loadEulerAngles(c_igroup, deref(self.c_eulerangles))
+
+    def saveToH5(self, h5Group):
+        '''
+        Save EulerAngles to an HDF5 group
+
+        Args:
+            h5Group (h5py group): HDF5 group with Euler angles
+
+        Returns:
+            None
+        '''
+
+        cdef hid_t groupid = h5Group.id.id
+        cdef IGroup c_igroup
+        c_igroup = IGroup(groupid)
+        saveEulerAngles(c_igroup, deref(self.c_eulerangles))
     
 
 # end of file
