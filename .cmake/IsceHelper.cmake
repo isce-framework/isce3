@@ -23,6 +23,7 @@ function(add_isce_test TESTNAME)
     target_include_directories(${TESTNAME} PUBLIC
         ${ISCE_BUILDINCLUDEDIR}
         ${GDAL_INCLUDE_DIR}
+        ${HDF5_INCLUDE_DIR}
         ${PYRE_INCLUDE_DIR}
         ${ISCE_SOURCE_DIR}/contrib/cereal/include
         ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}

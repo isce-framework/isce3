@@ -29,6 +29,7 @@ include_directories(${CEREAL_SRC_INCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
                     ${PYRE_INCLUDE_DIR}
                     ${GDAL_INCLUDE_DIR}
+                    ${HDF5_INCLUDE_DIR}
                     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 # Install shared library
