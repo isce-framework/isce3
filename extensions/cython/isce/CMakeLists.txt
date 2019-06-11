@@ -52,6 +52,7 @@ target_include_directories(
         ${ISCE_BUILDINCLUDEDIR}
         ${PYTHON_NUMPY_INCLUDE_DIR}
         ${GDAL_INCLUDE_DIR}
+        ${HDF5_INCLUDE_DIR}
         ${CMAKE_SOURCE_DIR}/contrib/cereal/include
         ${PYRE_INCLUDE_DIR}
 )
