@@ -4,7 +4,8 @@
 # Copyright 2017-2019
 #
 
-from Swath cimport Swath
+from libcpp.string cimport string
+from Swath cimport Swath, loadSwath
 
 cdef class pySwath:
     """
@@ -137,5 +138,13 @@ cdef class pySwath:
         """
         cdef double d = self.c_swath.processedAzimuthBandwidth()
         return d
+
+    def loadFromH5(self, h5Group, freq):
+        cdef hid_t groupid = h5Group.id.id
+        cdef IGroup c_igroup
+        c_igroup = IGroup(groupid)
+        cdef string freq_str = pyStringToBytes(freq)
+        loadSwath(c_igroup, deref(self.c_swath), freq_str[0])
+
 
 # end of file
