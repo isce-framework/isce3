@@ -91,7 +91,8 @@ interp(double t) const
 {
     // scale time index to account for zero-padding of spectrum.
     t *= _fft_size / _n;
-    return isce::core::interp1d<T,std::complex<T>>(_kernel, _xt, t);
+    return isce::core::interp1d<T,std::complex<T>>(_kernel, _xt, t,
+                                                   /*periodic*/true);
 }
 
 template class isce::signal::NFFT<float>;
