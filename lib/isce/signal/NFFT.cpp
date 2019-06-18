@@ -95,5 +95,38 @@ interp(double t) const
                                                    /*periodic*/true);
 }
 
+template<class T>
+void
+isce::signal::NFFT<T>::
+execute(size_t isize, size_t istride,
+        const std::complex<T> *spectrum,
+        size_t tsize, size_t tstride,
+        const double *times,
+        size_t osize, size_t ostride,
+        std::complex<T> *out)
+{
+    set_spectrum(isize, istride, spectrum);
+    if (osize < tsize) {
+        throw LengthError(ISCE_SRCINFO(), "Insufficient storage");
+    }
+    for (size_t i=0; i<tsize; ++i) {
+        double t = times[i*tstride];
+        out[i*ostride] = interp(t);
+    }
+}
+
+template<class T>
+void
+isce::signal::NFFT<T>::
+execute(const std::valarray<std::complex<T>> &spectrum,
+        const std::valarray<double> &times,
+        std::valarray<std::complex<T>> &out)
+{
+    const size_t stride = 1;
+    execute(spectrum.size(), stride, &spectrum[0],
+            times.size(), stride, &times[0],
+            out.size(), stride, &out[0]);
+}
+
 template class isce::signal::NFFT<float>;
 template class isce::signal::NFFT<double>;

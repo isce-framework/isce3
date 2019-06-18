@@ -25,12 +25,15 @@ namespace isce {
 /** Non-equispaced fast Fourier transform (NFFT)
  *
  * Class implementing NFFT algorithm described in @cite keiner2009 .
+ * It takes a uniformly sampled spectrum and produces time-domain samples at
+ * arbitrary locations (here times are not scaled to the unit torus).
  * This implementation differs in that the grid points do not need to be
  * specified ahead of time, which is more convenient for SAR backprojection.
  * Typical usage will entail three steps:
  *   -# Construct NFFT object
  *   -# Feed it regularly-sampled frequency-domain data with `set_spectrum`.
  *   -# Request arbitrary time-domain samples with `interp`.
+ * The convenience method execute combines the last two steps into one.
  */
 template<class T>
 class isce::signal::NFFT {
@@ -42,6 +45,43 @@ class isce::signal::NFFT {
          * @param[in] fft_size  Transform size (> n).
          */
         NFFT(size_t m, size_t n, size_t fft_size);
+
+        /** Execute a transform.
+         *
+         * @param[in]  spectrum Signal to transform, in FFTW order.
+         * @param[in]  times    Desired sample locations in [0:n)
+         * @param[out] out      Storage for output signal, same length as times.
+         *
+         * Equivalent to set_spectrum and out[i]=NFFT::interp(times[i]).
+         * @see set_spectrum
+         * @see interp
+         */
+        void execute(const std::valarray<std::complex<T>> &spectrum,
+                     const std::valarray<double> &times,
+                     std::valarray<std::complex<T>> &out);
+
+        /** Execute a transform (raw pointer interface).
+         *
+         * @param[in]  isize    Length of spectrum (should be == n)
+         * @param[in]  istride  Stride between elements of spectrum.
+         * @param[in]  spectrum Signal to transform, in FFTW order.
+         * @param[in]  tsize    Number of output time samples.
+         * @param[in]  tstride  Stride between elements of time array.
+         * @param[in]  times    Desired sample locations in [0:n)
+         * @param[in]  tsize    Number of output samples (should be == tsize).
+         * @param[in]  tstride  Stride between elements of output array.
+         * @param[out] out      Storage for output signal.
+         *
+         * Equivalent to set_spectrum and out[i]=NFFT::interp(times[i]).
+         * @see set_spectrum
+         * @see interp
+         */
+        void execute(size_t isize, size_t istride,
+                     const std::complex<T> *spectrum,
+                     size_t tsize, size_t tstride,
+                     const double *times,
+                     size_t osize, size_t ostride,
+                     std::complex<T> *out);
 
         /** Ingest a spectrum for transform.
          *
