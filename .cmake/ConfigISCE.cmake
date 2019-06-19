@@ -120,8 +120,12 @@ function(InitInstallDirLayout)
 
     ###build/include
     if (NOT ISCE_BUILDINCLUDEDIR)
-        set (ISCE_BUILDINCLUDEDIR ${CMAKE_BINARY_DIR}/include/isce-${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR} CACHE STRING "build/isce/include")
+        set (ISCE_BUILDINCLUDEDIR ${CMAKE_SOURCE_DIR}/lib CACHE STRING "isce include dir")
     endif(NOT ISCE_BUILDINCLUDEDIR)
+    if (NOT ISCE_BUILDINCLUDEDIR_CUDA)
+        set (ISCE_BUILDINCLUDEDIR_CUDA ${CMAKE_SOURCE_DIR}/extensions
+            CACHE STRING "isce cuda include dir")
+    endif()
 
     ###install/cyinclude
     if (NOT ISCE_CYINCLUDEDIR)
