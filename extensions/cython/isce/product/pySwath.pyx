@@ -145,6 +145,13 @@ cdef class pySwath:
         c_igroup = IGroup(groupid)
         cdef string freq_str = pyStringToBytes(freq)
         loadSwath(c_igroup, deref(self.c_swath), freq_str[0])
-
+    
+    def getRadarGridParameters(self, 
+                            numberAzimuthLooks=1,
+                            numberRangeLooks=1):
+        cdef RadarGridParameters radarGrid = RadarGridParameters(
+            deref(self.c_swath), numberAzimuthLooks, numberRangeLooks
+        )
+        return pyRadarGridParameters.cbind(radarGrid)
 
 # end of file

@@ -13,9 +13,14 @@ from Raster cimport Raster
 # Cython declarations for isce::product objects
 from Product cimport Product
 
-# Interpolation methods
-from Orbit cimport orbitInterpMethod
+# Interpolation methods and Orbit
+from Orbit cimport Orbit, orbitInterpMethod
 from Interpolator cimport dataInterpMethod
+
+from RadarGridParameters cimport RadarGridParameters
+from Ellipsoid cimport Ellipsoid
+
+from LUT2d cimport LUT2d
 
 cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
     cdef cppclass Topo:
@@ -23,7 +28,9 @@ cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
         # Constructor
         Topo(Product & product, char frequency, bool nativeDoppler,
              size_t numberAzimuthLooks, size_t numberRangeLooks) except +
-        
+        Topo(RadarGridParameters & radarGrid, Orbit & orbit, 
+                LUT2d[double] & doppler, Ellipsoid & ellipsoid,
+                int lookSide) except +
         # Main topo entrypoint; internal construction of topo rasters
         void topo(Raster &, const string)
 

@@ -51,6 +51,8 @@ cdef class pyTopo:
         'biquintic': dataInterpMethod.BIQUINTIC_METHOD
     }
 
+
+    '''
     def __cinit__(self,
                   pyProduct product,
                   frequency='A',
@@ -71,6 +73,27 @@ cdef class pyTopo:
         cdef string freqstr = pyStringToBytes(frequency)
         self.c_topo = new Topo(deref(product.c_product), freqstr[0], nativeDoppler,
                                numberAzimuthLooks, numberRangeLooks)
+    '''
+
+    def __cinit__(self,
+                  pyRadarGridParameters radarGrid,
+                  pyOrbit orbit,
+                  pyLUT2d doppler,
+                  pyEllipsoid ellipsoid,
+                  int lookSide,
+                  double threshold=0.05,
+                  int numIterations=25,
+                  int extraIterations=10,
+                  orbitMethod='hermite',
+                  demMethod='biquintic',
+                  int epsgOut=4326,
+                  bool computeMask=False):
+        """
+        Constructor 
+        """
+        self.c_topo = new Topo(deref(radarGrid.c_radargrid), deref(orbit.c_orbit),
+                                deref(doppler.c_lut), deref(ellipsoid.c_ellipsoid),
+                                lookSide)
         self.__owner = True
 
         # Set processing options
