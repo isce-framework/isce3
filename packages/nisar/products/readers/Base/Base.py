@@ -20,8 +20,14 @@ class Base(pyre.component,
     _IdentificationPath = pyre.properties.str(default='identification')
     _IdentificationPath.doc = 'Absolute path ath to unique product identification information'
 
+    _ProductType = pyre.properties.str(default='SLC')
+    _ProductType.doc = 'The type of the product.'
+
     _MetadataPath = pyre.properties.str(default='metadata')
     _MetadataPath.doc = 'Relative path to metadata associated with standard product'
+
+    _ProcessingInformation = pyre.properties.str(default='processingInformation')
+    _ProcessingInformation.doc = 'Relative path to processing information associated with the product'
 
     _SwathPath = pyre.properties.str(default='swaths')
     _SwathPath.doc = 'Relative path to swaths associated with standard product'
@@ -63,12 +69,87 @@ class Base(pyre.component,
         '''
         Returns metadata corresponding to given frequency.
         '''
-        raise NotImplementedError
+        import h5py
+        import isce3
+        import os
+        #swathPath = os.path.join(self._RootPath, self.productType,
+        #                          self._SwathPath)
+        swath = isce3.product.swath()
+        with h5py.File(self.filename, 'r') as fid:
+              #swathGrp = fid[swathPath]
+              swathGrp = fid[self.SwathPath]
+              swath.loadFromH5(swathGrp, frequency)
+
+        return swath
 
     @pyre.export
     def getGridMetadata(self, frequency):
         '''
         Returns metadata corresponding to given frequency.
+        '''
+        raise NotImplementedError
+
+    @pyre.export
+    def getOrbit(self):
+        '''
+        extracts orbit 
+        '''
+        import h5py
+        import isce3
+        import os
+
+        #orbitPath = os.path.join(self._RootPath, self.productType, 
+        #        self._MetadataPath, 'orbit')
+        orbitPath = os.path.join(self.MetadataPath, 'orbit')
+
+        orbit = isce3.core.orbit()
+        with h5py.File(self.filename, 'r') as fid:
+            orbitGrp = fid[orbitPath]
+            orbit.loadFromH5(orbitGrp)
+    
+        return orbit
+
+    @pyre.export
+    def getDopplerCentroid(self, frequency):
+        import h5py
+        import isce3
+        import os
+        dopplerPath = os.path.join(self.ProcessingInformationPath, 'parameters', frequency, 'dopplerCentroid') 
+
+        with h5py.File(self.filename, 'r') as fid:
+            doppler = fid[dopplerPath][:]
+
+        dopplerCentroid = isce3.core.dopplerCentroid(x=self.getSlantRange(), 
+                                                    y=self.getZeroDopplerTime(), 
+                                                    z=doppler)
+        return dopplerCentroid
+
+    @pyre.export
+    def getZeroDopplerTime(self):
+        import h5py
+        import os
+        zeroDopplerTimePath = os.path.join(self.ProcessingInformationPath, 
+                                          'parameters/zeroDopplerTime')
+        with h5py.File(self.filename, 'r') as fid:
+            zeroDopplerTime = fid[zeroDopplerTimePath][:]
+
+        return zeroDopplerTime
+
+    @pyre.export
+    def getSlantRange(self):
+        import h5py
+        import os
+        slantRangePath = os.path.join(self.ProcessingInformationPath,
+                                            'parameters/slantRange')
+        with h5py.File(self.filename, 'r') as fid:
+            slantRange = fid[slantRangePath][:]
+
+        return slantRange
+
+    @pyre.export
+    def getRadarGrid(self, frequency):
+        '''
+        Returns radarGrid object corresponding to given frequency.
         '''
         raise NotImplementedError
 
@@ -98,6 +179,7 @@ class Base(pyre.component,
                                               msg='Could not determine polarization for frequency{0}'.format(freq))
                 self.polarizations[freq] = polList
 
+        return
 
     @property
     def CFPath(self):
@@ -121,6 +203,11 @@ class Base(pyre.component,
     def MetadataPath(self):
         import os
         return os.path.join(self.ProductPath, self._MetadataPath)
+    
+    @property
+    def ProcessingInformationPath(self):
+        import os
+        return os.path.join(self.MetadataPath, self._ProcessingInformation)
 
     @property
     def SwathPath(self):

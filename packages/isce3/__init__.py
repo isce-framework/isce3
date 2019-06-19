@@ -9,4 +9,5 @@ from . import geometry
 from . import image
 from . import io
 from . import signal
+from . import product
 # end of file
