@@ -147,9 +147,9 @@ A pixel in the raster is indexed using its Top-Left corner position. </li>
 GeoTransform</h2>
 <p>ISCE delegates the association of map coordinates (East, North) to image coordinates (Column, Row) to GDAL and uses the <a href="https://www.gdal.org/gdal_datamodel.html">Affine GeoTransform </a> mechanism to represent this mapping. GeoTransform of a raster image refers to collection of six double precisiion numbers such that</p>
 <p class="formulaDsp">
-<img class="formulaDsp" alt="\[ \left[ \begin{array}{c} X_{left} \\ Y_{top} \end{array} \right] = \left[ \begin{array}{c} G_0 \\ G_3 \end{array}\right] + \left[ \begin{array}{cc} G_1 &amp; G_2 \\ G_4 &amp; G_5 \end{array} \right] \cdot \left[ \begin{array}{c} P \\ L \end{array} \right] \]" src="form_90.png"/>
+<img class="formulaDsp" alt="\[ \left[ \begin{array}{c} X_{left} \\ Y_{top} \end{array} \right] = \left[ \begin{array}{c} G_0 \\ G_3 \end{array}\right] + \left[ \begin{array}{cc} G_1 &amp; G_2 \\ G_4 &amp; G_5 \end{array} \right] \cdot \left[ \begin{array}{c} P \\ L \end{array} \right] \]" src="form_95.png"/>
 </p>
-<p>where P and L refer to integer pixel (column) and line (row) indices of pixel of interest, and <img class="formulaInl" alt="$X_{left}$" src="form_91.png"/> and <img class="formulaInl" alt="$Y_{top}$" src="form_92.png"/> corresponds to the geographical coordinates of the Top-Left corner.</p>
+<p>where P and L refer to integer pixel (column) and line (row) indices of pixel of interest, and <img class="formulaInl" alt="$X_{left}$" src="form_96.png"/> and <img class="formulaInl" alt="$Y_{top}$" src="form_97.png"/> corresponds to the geographical coordinates of the Top-Left corner.</p>
 <h2><a class="anchor" id="pixelexample"></a>
 Example: SRTM vs NED</h2>
 <p>SRTM uses "pixelIsPoint" convention whereas NED uses "pixelIsArea" convention. See <a href="https://topochange.cr.usgs.gov/vertical.php">this link</a> for detailed explanation.</p>

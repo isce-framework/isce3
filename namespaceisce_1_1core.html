@@ -174,6 +174,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1KnabKernel.html">KnabKernel</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classisce_1_1core_1_1Kernel.html" title="Abstract base class for all kernels. ">Kernel</a> based on the paper by Knab for interpolating band-limited signals.  <a href="classisce_1_1core_1_1KnabKernel.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1NFFTKernel.html">NFFTKernel</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">NFFT time-domain kernel.  <a href="classisce_1_1core_1_1NFFTKernel.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Linspace.html">Linspace</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A uniformly-spaced sequence of values over some interval.  <a href="classisce_1_1core_1_1Linspace.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -301,14 +304,14 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>_ymd_to_ord</b> (int, 
 <tr class="memitem:a3800e7d8470617f117051afcc5a7614f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3800e7d8470617f117051afcc5a7614f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>_ord_to_ymd</b> (int, int &amp;, int &amp;, int &amp;)</td></tr>
 <tr class="separator:a3800e7d8470617f117051afcc5a7614f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeecf9772d6a318d8293a0260cd7b299f"><td class="memTemplParams" colspan="2">template&lt;typename TK , typename TD &gt; </td></tr>
-<tr class="memitem:aeecf9772d6a318d8293a0260cd7b299f"><td class="memTemplItemLeft" align="right" valign="top">TD&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#aeecf9772d6a318d8293a0260cd7b299f">interp1d</a> (const <a class="el" href="classisce_1_1core_1_1Kernel.html">isce::core::Kernel</a>&lt; TK &gt; &amp;kernel, const std::valarray&lt; TD &gt; &amp;x, double t)</td></tr>
-<tr class="memdesc:aeecf9772d6a318d8293a0260cd7b299f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate sequence x at point t.  <a href="#aeecf9772d6a318d8293a0260cd7b299f">More...</a><br/></td></tr>
-<tr class="separator:aeecf9772d6a318d8293a0260cd7b299f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a104f2ab4f0892527dbef0e38fbfec6fa"><td class="memTemplParams" colspan="2">template&lt;typename TK , typename TD &gt; </td></tr>
-<tr class="memitem:a104f2ab4f0892527dbef0e38fbfec6fa"><td class="memTemplItemLeft" align="right" valign="top">TD&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a104f2ab4f0892527dbef0e38fbfec6fa">interp1d</a> (const <a class="el" href="classisce_1_1core_1_1Kernel.html">isce::core::Kernel</a>&lt; TK &gt; &amp;kernel, const TD *x, size_t length, size_t stride, double t)</td></tr>
-<tr class="memdesc:a104f2ab4f0892527dbef0e38fbfec6fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate sequence x at point t.  <a href="#a104f2ab4f0892527dbef0e38fbfec6fa">More...</a><br/></td></tr>
-<tr class="separator:a104f2ab4f0892527dbef0e38fbfec6fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10e61f0bd7d3618fdc62fdf9c1466ab4"><td class="memTemplParams" colspan="2">template&lt;typename TK , typename TD &gt; </td></tr>
+<tr class="memitem:a10e61f0bd7d3618fdc62fdf9c1466ab4"><td class="memTemplItemLeft" align="right" valign="top">TD&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a10e61f0bd7d3618fdc62fdf9c1466ab4">interp1d</a> (const <a class="el" href="classisce_1_1core_1_1Kernel.html">isce::core::Kernel</a>&lt; TK &gt; &amp;kernel, const std::valarray&lt; TD &gt; &amp;x, double t, bool periodic=false)</td></tr>
+<tr class="memdesc:a10e61f0bd7d3618fdc62fdf9c1466ab4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate sequence x at point t.  <a href="#a10e61f0bd7d3618fdc62fdf9c1466ab4">More...</a><br/></td></tr>
+<tr class="separator:a10e61f0bd7d3618fdc62fdf9c1466ab4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abff92b7adbae495a2fdc27fe0ed93dba"><td class="memTemplParams" colspan="2">template&lt;typename TK , typename TD &gt; </td></tr>
+<tr class="memitem:abff92b7adbae495a2fdc27fe0ed93dba"><td class="memTemplItemLeft" align="right" valign="top">TD&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#abff92b7adbae495a2fdc27fe0ed93dba">interp1d</a> (const <a class="el" href="classisce_1_1core_1_1Kernel.html">isce::core::Kernel</a>&lt; TK &gt; &amp;kernel, const TD *x, size_t length, size_t stride, double t, bool periodic=false)</td></tr>
+<tr class="memdesc:abff92b7adbae495a2fdc27fe0ed93dba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate sequence x at point t.  <a href="#abff92b7adbae495a2fdc27fe0ed93dba">More...</a><br/></td></tr>
+<tr class="separator:abff92b7adbae495a2fdc27fe0ed93dba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7f4801e070f925a20979d55288a471d9"><td class="memTemplParams" colspan="2"><a class="anchor" id="a7f4801e070f925a20979d55288a471d9"></a>
 template&lt;typename U &gt; </td></tr>
 <tr class="memitem:a7f4801e070f925a20979d55288a471d9"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classisce_1_1core_1_1Interpolator.html">Interpolator</a>&lt; U &gt; *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a7f4801e070f925a20979d55288a471d9">createInterpolator</a> (<a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> method, size_t order=6, int sincLen=isce::core::SINC_LEN, int sincSub=isce::core::SINC_SUB)</td></tr>
@@ -775,7 +778,7 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="aeecf9772d6a318d8293a0260cd7b299f"></a>
+<a class="anchor" id="a10e61f0bd7d3618fdc62fdf9c1466ab4"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -800,7 +803,13 @@ template&lt;typename TK , typename TD &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>t</em>&#160;</td>
+          <td class="paramname"><em>t</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>periodic</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -821,6 +830,7 @@ template&lt;typename TK , typename TD &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">kernel</td><td><a class="el" href="classisce_1_1core_1_1Kernel.html" title="Abstract base class for all kernels. ">Kernel</a> function to use for interpolation. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">x</td><td>Sequence to interpolate. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">t</td><td>Desired time sample (0 &lt;= t &lt;= x.size()-1). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">periodic</td><td>Use periodic boundary condition. Default = false. </td></tr>
   </table>
   </dd>
 </dl>
@@ -829,7 +839,7 @@ template&lt;typename TK , typename TD &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a104f2ab4f0892527dbef0e38fbfec6fa"></a>
+<a class="anchor" id="abff92b7adbae495a2fdc27fe0ed93dba"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -866,7 +876,13 @@ template&lt;typename TK , typename TD &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>t</em>&#160;</td>
+          <td class="paramname"><em>t</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>periodic</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -889,6 +905,7 @@ template&lt;typename TK , typename TD &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">length</td><td>Length of sequence. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">stride</td><td>Stride between elements of sequence. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">t</td><td>Desired time sample (0 &lt;= t &lt;= x.size()-1). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">periodic</td><td>Use periodic boundary condition. Default = false. </td></tr>
   </table>
   </dd>
 </dl>
