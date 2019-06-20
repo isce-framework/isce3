@@ -26,14 +26,24 @@ namespace isce {
  *
  * Class implementing NFFT algorithm described in @cite keiner2009 .
  * It takes a uniformly sampled spectrum and produces time-domain samples at
- * arbitrary locations (here times are not scaled to the unit torus).
- * This implementation differs in that the grid points do not need to be
- * specified ahead of time, which is more convenient for SAR backprojection.
- * Typical usage will entail three steps:
- *   -# Construct NFFT object
- *   -# Feed it regularly-sampled frequency-domain data with `set_spectrum`.
- *   -# Request arbitrary time-domain samples with `interp`.
- * The convenience method execute combines the last two steps into one.
+ * arbitrary locations.
+ *
+ * Compared to the TU Chemnitz implementation there are some differences in
+ * conventions intended to make things simpler in the SAR context:
+ *      -# Sign conventions.  NFFT.execute() uses a positive phase (backward),
+ *         while NFFT.execute_adjoint() uses a negative phase (forward).  This
+ *         consistent with  uses where the frequency spectrum is uniformly
+ *         sampled and the time domain is not.
+ *
+ *      -# Order of spectra.  Spectra are expected to be in FFTW order, e.g.
+ *         low frequencies at the ends and high frequencies in the middle.
+ *
+ *      -# Scaling of time/frequency.  Locations are specified as sample numbers
+ *         (at rate consistent with spectrum size) instead of the unit torus.
+ *
+ *      -# Sample locations do not need to be specified in advance.  You can
+ *         use NFFT.set_spectrum and then NFFT.interp all the points you want
+ *         on the fly.  The NFFT.execute convenience function combines these.
  */
 template<class T>
 class isce::signal::NFFT {
@@ -41,12 +51,15 @@ class isce::signal::NFFT {
         /** NFFT Constructor.
          *
          * @param[in] m         Interpolation kernel size parameter (width=2*m+1).
-         * @param[in] n         Length of input spectrum.
+         * @param[in] n         Length of spectrum.
          * @param[in] fft_size  Transform size (> n).
          */
         NFFT(size_t m, size_t n, size_t fft_size);
 
         /** Execute a transform.
+         *
+         * Equivalent to \f[ f_j = \frac{1}{N} \sum_{k=-\frac{N}{2}}^{\frac{N}{2}-1} \hat{f}_k \exp(+2\pi i k t_j / N) \f]
+         * Where \f$ N \f$ is the size of the spectrum.
          *
          * @param[in]  spectrum Signal to transform, in FFTW order.
          * @param[in]  times    Desired sample locations in [0:n)
@@ -85,6 +98,10 @@ class isce::signal::NFFT {
 
         /** Execute an adjoint transform.
          *
+         * Equivalent to \f[ \hat{f}_k = \sum_{j=0}^{M-1} f_j \exp(-2\pi i k t_j / N) \f]
+         * Where \f$ M \f$ is the number of time samples and \f$ N \f$ is the
+         * size of the spectrum.
+         *
          * @param[in]  time_series  Signal to transform.
          * @param[in]  times        Sample locations in [0:n) of input signal.
          * @param[out] spectrum     Storage for output spectrum.
@@ -116,6 +133,19 @@ class isce::signal::NFFT {
 
         /** Ingest a spectrum for transform.
          *
+         * @param[in] x         Spectrum to transform.  Should be in FFTW order,
+         *                      e.g., [0:pi, -pi:0).
+         *
+         * This function will filter, zero-pad, and transform the input data.
+         * After this you can call NFFT.interp.
+         *
+         * @see execute Is an alternative strategy.
+         * @see interp
+         */
+        void set_spectrum(const std::valarray<std::complex<T>> &x);
+
+        /** Ingest a spectrum for transform (raw pointer interface).
+         *
          * @param[in] size      Length of signal.  Should be same as n in
          *                      constructor or else zero-padding will be wrong.
          * @param[in] stride    Stride between array elements.
@@ -127,19 +157,12 @@ class isce::signal::NFFT {
          */
         void set_spectrum(size_t size, size_t stride, const std::complex<T> *x);
 
-        /** Ingest a spectrum for transform.
-         *
-         * @param[in] x         Spectrum to transform.  Should be in FFTW order,
-         *                      e.g., [0:pi, -pi:0).
-         *
-         * This function will filter, zero-pad, and transform the input data.
-         * After this you can call the interp method.
-         */
-        void set_spectrum(const std::valarray<std::complex<T>> &x);
-
         /** Interpolate the transformed signal.
          *
          * @param[in] t     Location in [0,n) to sample the time-domain signal.
+         *
+         * @see execute is an alternative strategy.
+         * @see set_spectrum must be called first.
          */
         std::complex<T> interp(double t) const;
 
