@@ -83,6 +83,37 @@ class isce::signal::NFFT {
                      size_t osize, size_t ostride,
                      std::complex<T> *out);
 
+        /** Execute an adjoint transform.
+         *
+         * @param[in]  time_series  Signal to transform.
+         * @param[in]  times        Sample locations in [0:n) of input signal.
+         * @param[out] spectrum     Storage for output spectrum.
+         *                          Length should be equal to size_spectrum().
+         */
+        void execute_adjoint(const std::valarray<std::complex<T>> &time_series,
+                             const std::valarray<double> &times,
+                             std::valarray<std::complex<T>> &spectrum);
+
+        /** Execute an adjoint transform (raw pointer interface).
+         *
+         * @param[in]  isize        Length of input signal.
+         * @param[in]  istride      Stride between elements of input signal.
+         * @param[in]  time_series  Signal to transform.
+         * @param[in]  tsize        Length of time vector.  Should == isize.
+         * @param[in]  tstride      Stride of time vector.
+         * @param[in]  times        Sample locations in [0:n) of input signal.
+         * @param[in]  osize        Length of output signal (== size_spectrum())
+         * @param[in]  ostride      Stride between elements of output signal.
+         * @param[out] spectrum     Storage for output spectrum.
+         */
+        void execute_adjoint(size_t isize, size_t istride,
+                             const std::complex<T> *time_series,
+                             size_t tsize, size_t tstride,
+                             const double *times,
+                             size_t osize, size_t ostride,
+                             std::complex<T> *spectrum);
+
+
         /** Ingest a spectrum for transform.
          *
          * @param[in] size      Length of signal.  Should be same as n in
