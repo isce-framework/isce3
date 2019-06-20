@@ -38,21 +38,23 @@ class Base(pyre.component,
     productValidationType = pyre.properties.str(default='BASE')
     productValidationType.doc = 'Validation tag to compare identification information against to ensure that the right product type is being used.'
 
-    def __init__(self, **kwds):
+    def __init__(self, hdf5file='None', **kwds):
         '''
         Constructor.
         '''
         # Filename
-        self.filename = None
+        self.filename = hdf5file
 
         # Identification information
         self.identification = None
 
         # Polarization dictionary
         self.polarizations = {}
+
+        self.__parse(self.filename)
     
-    @pyre.export
-    def parse(self, hdf5file):
+    #@pyre.export
+    def __parse(self, hdf5file):
         '''
         Parse the HDF5 file and populate ISCE data structures.
         '''
@@ -65,7 +67,7 @@ class Base(pyre.component,
         self.parsePolarizations()
 
     @pyre.export
-    def getSwathMetadata(self, frequency):
+    def getSwathMetadata(self, frequency='A'):
         '''
         Returns metadata corresponding to given frequency.
         '''
@@ -83,7 +85,15 @@ class Base(pyre.component,
         return swath
 
     @pyre.export
-    def getGridMetadata(self, frequency):
+    def getRadarGridParameters(self, frequency='A'):
+        '''
+        Return radarGridParameters object
+        '''
+        swath = self.getSwathMetadata(frequency=frequency)
+        return swath.getRadarGridParameters() 
+
+    @pyre.export
+    def getGridMetadata(self, frequency='A'):
         '''
         Returns metadata corresponding to given frequency.
         '''
@@ -110,37 +120,65 @@ class Base(pyre.component,
         return orbit
 
     @pyre.export
-    def getDopplerCentroid(self, frequency):
+    def getDopplerCentroid(self, frequency='A', native=False):
+        '''
+        Extract the Doppler centroid
+        '''
         import h5py
         import isce3
         import os
-        dopplerPath = os.path.join(self.ProcessingInformationPath, 'parameters', frequency, 'dopplerCentroid') 
+        import numpy as np
 
+        dopplerPath = os.path.join(self.ProcessingInformationPath, 
+                                'parameters', 'frequency' + frequency, 
+                                'dopplerCentroid') 
+
+        zeroDopplerTimePath = os.path.join(self.ProcessingInformationPath,
+                                            'parameters/zeroDopplerTime')
+
+        slantRangePath = os.path.join(self.ProcessingInformationPath,
+                                        'parameters/slantRange')
+        # extract the native Doppler dataset
         with h5py.File(self.filename, 'r') as fid:
             doppler = fid[dopplerPath][:]
+            zeroDopplerTime = fid[zeroDopplerTimePath][:]
+            slantRange = fid[slantRangePath][:]
 
-        dopplerCentroid = isce3.core.dopplerCentroid(x=self.getSlantRange(), 
-                                                    y=self.getZeroDopplerTime(), 
+        # if the native Doppler was not requested then just return zero Doppler
+        if not native:
+            doppler = np.zeros(doppler.shape)
+
+        dopplerCentroid = isce3.core.dopplerCentroid(x=slantRange, 
+                                                    y=zeroDopplerTime, 
                                                     z=doppler)
         return dopplerCentroid
 
     @pyre.export
     def getZeroDopplerTime(self):
+        '''
+        Extract the azimuth time of the zero Doppler grid
+        '''
+
         import h5py
         import os
-        zeroDopplerTimePath = os.path.join(self.ProcessingInformationPath, 
-                                          'parameters/zeroDopplerTime')
+        zeroDopplerTimePath = os.path.join(self.SwathPath, 
+                                          'zeroDopplerTime')
         with h5py.File(self.filename, 'r') as fid:
             zeroDopplerTime = fid[zeroDopplerTimePath][:]
 
         return zeroDopplerTime
 
     @pyre.export
-    def getSlantRange(self):
+    def getSlantRange(self, frequency='A'):
+        '''
+        Extract the slant range of the zero Doppler grid
+        '''
+
         import h5py
         import os
-        slantRangePath = os.path.join(self.ProcessingInformationPath,
-                                            'parameters/slantRange')
+        slantRangePath = os.path.join(self.SwathPath,
+                                    'frequency' + frequency, 'slantRange')
+
         with h5py.File(self.filename, 'r') as fid:
             slantRange = fid[slantRangePath][:]
 
