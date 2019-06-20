@@ -56,35 +56,12 @@ cdef class pyTopo:
             'right': -1
     }
 
-    '''
-    def __cinit__(self,
-                  pyProduct product,
-                  frequency='A',
-                  bool nativeDoppler=False,
-                  int numberAzimuthLooks=1,
-                  int numberRangeLooks=1,
-                  double threshold=0.05,
-                  int numIterations=25,
-                  int extraIterations=10,
-                  orbitMethod='hermite',
-                  demMethod='biquintic',
-                  int epsgOut=4326,
-                  bool computeMask=False):
-        """
-        Constructor takes in a product in order to retrieve relevant radar parameters.
-        """
-        # Create C++ topo pointer
-        cdef string freqstr = pyStringToBytes(frequency)
-        self.c_topo = new Topo(deref(product.c_product), freqstr[0], nativeDoppler,
-                               numberAzimuthLooks, numberRangeLooks)
-    '''
-
     def __cinit__(self,
                   pyRadarGridParameters radarGrid,
                   pyOrbit orbit,
-                  pyLUT2d doppler,
                   pyEllipsoid ellipsoid,
                   str lookSide,
+                  pyLUT2d doppler=None,
                   double threshold=0.05,
                   int numIterations=25,
                   int extraIterations=10,
@@ -97,9 +74,17 @@ cdef class pyTopo:
         """
         cdef int lookDirection 
         lookDirection = self.radarLookDirection[lookSide]
-        self.c_topo = new Topo(deref(radarGrid.c_radargrid), deref(orbit.c_orbit),
-                                deref(doppler.c_lut), deref(ellipsoid.c_ellipsoid),
+        
+        if doppler is None:
+            # geometry compution for zero Doppler
+            self.c_topo = new Topo(deref(radarGrid.c_radargrid), deref(orbit.c_orbit),
+                                deref(ellipsoid.c_ellipsoid),
                                 lookDirection)
+        else:
+            self.c_topo = new Topo(deref(radarGrid.c_radargrid), deref(orbit.c_orbit),
+                                deref(ellipsoid.c_ellipsoid),
+                                lookDirection, deref(doppler.c_lut))
+
         self.__owner = True
 
         # Set processing options

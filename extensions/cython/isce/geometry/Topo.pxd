@@ -29,7 +29,10 @@ cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
         Topo(Product & product, char frequency, bool nativeDoppler,
              size_t numberAzimuthLooks, size_t numberRangeLooks) except +
         Topo(RadarGridParameters & radarGrid, Orbit & orbit, 
-                LUT2d[double] & doppler, Ellipsoid & ellipsoid,
+                Ellipsoid & ellipsoid,
+                int lookSide, LUT2d[double] & doppler) except +
+        Topo(RadarGridParameters & radarGrid, Orbit & orbit,
+                Ellipsoid & ellipsoid,
                 int lookSide) except +
         # Main topo entrypoint; internal construction of topo rasters
         void topo(Raster &, const string)

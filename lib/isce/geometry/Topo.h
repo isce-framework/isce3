@@ -48,9 +48,9 @@ class isce::geometry::Topo {
 
         inline Topo(const isce::product::RadarGridParameters & radarGrid,
                     const isce::core::Orbit & orbit,
-                    const isce::core::LUT2d<double> & doppler,
                     const isce::core::Ellipsoid & ellipsoid,
-                    const int lookSide);
+                    const int lookSide,
+                    const isce::core::LUT2d<double> & doppler = isce::core::LUT2d<double>());
 
         /** Constructor using core objects*/
         inline Topo(const isce::core::Ellipsoid &,
