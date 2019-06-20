@@ -51,6 +51,10 @@ cdef class pyTopo:
         'biquintic': dataInterpMethod.BIQUINTIC_METHOD
     }
 
+    radarLookDirection = {
+            'left': 1,
+            'right': -1
+    }
 
     '''
     def __cinit__(self,
@@ -80,7 +84,7 @@ cdef class pyTopo:
                   pyOrbit orbit,
                   pyLUT2d doppler,
                   pyEllipsoid ellipsoid,
-                  int lookSide,
+                  str lookSide,
                   double threshold=0.05,
                   int numIterations=25,
                   int extraIterations=10,
@@ -91,9 +95,11 @@ cdef class pyTopo:
         """
         Constructor 
         """
+        cdef int lookDirection 
+        lookDirection = self.radarLookDirection[lookSide]
         self.c_topo = new Topo(deref(radarGrid.c_radargrid), deref(orbit.c_orbit),
                                 deref(doppler.c_lut), deref(ellipsoid.c_ellipsoid),
-                                lookSide)
+                                lookDirection)
         self.__owner = True
 
         # Set processing options
