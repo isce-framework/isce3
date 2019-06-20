@@ -85,7 +85,7 @@ class Base(pyre.component,
         return swath
 
     @pyre.export
-    def getRadarGridParameters(self, frequency='A'):
+    def getRadarGrid(self, frequency='A'):
         '''
         Return radarGridParameters object
         '''
@@ -120,7 +120,7 @@ class Base(pyre.component,
         return orbit
 
     @pyre.export
-    def getDopplerCentroid(self, frequency='A', native=False):
+    def getDopplerCentroid(self, frequency='A'):
         '''
         Extract the Doppler centroid
         '''
@@ -143,10 +143,6 @@ class Base(pyre.component,
             doppler = fid[dopplerPath][:]
             zeroDopplerTime = fid[zeroDopplerTimePath][:]
             slantRange = fid[slantRangePath][:]
-
-        # if the native Doppler was not requested then just return zero Doppler
-        if not native:
-            doppler = np.zeros(doppler.shape)
 
         dopplerCentroid = isce3.core.dopplerCentroid(x=slantRange, 
                                                     y=zeroDopplerTime, 
@@ -184,12 +180,6 @@ class Base(pyre.component,
 
         return slantRange
 
-    @pyre.export
-    def getRadarGrid(self, frequency):
-        '''
-        Returns radarGrid object corresponding to given frequency.
-        '''
-        raise NotImplementedError
 
     def parsePolarizations(self):
         '''
