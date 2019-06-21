@@ -2,6 +2,7 @@ add_subdirectory(internal)
 
 set (EXPORT_HEADERS     gtest.h
                         gtest-death-test.h
+                        gtest-matchers.h
                         gtest-message.h
                         gtest-param-test.h
                         gtest-printers.h

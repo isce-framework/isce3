@@ -1,6 +1,7 @@
 set (PROJECT_SRCS   gtest.cc
                     gtest-death-test.cc
                     gtest-filepath.cc
+                    gtest-matchers.cc
                     gtest-port.cc
                     gtest-printers.cc
                     gtest-test-part.cc
