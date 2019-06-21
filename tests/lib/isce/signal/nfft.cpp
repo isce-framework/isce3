@@ -145,6 +145,16 @@ TEST(AdjointNFFT, MedEven)   { test_adjoint_nfft(2, 256, 1024); }
 TEST(AdjointNFFT, LongEven)  { test_adjoint_nfft(4, 256, 1024); }
 TEST(AdjointNFFT, LongOdd)   { test_adjoint_nfft(4, 256,  625); }
 
+TEST(Kernel, Singularity)
+{
+    size_t m = 1;
+    auto window = isce::core::NFFTKernel<double>(m, 10, 20);
+    double dx = 1e-6;
+    // Window should be monotonically decreasing.
+    EXPECT_GT(window(m-dx), window(m));
+    EXPECT_GT(window(m), window(m+dx));
+}
+
 int
 main(int argc, char *argv[])
 {

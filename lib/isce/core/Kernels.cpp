@@ -120,7 +120,7 @@ operator()(double t) const
     T x2 = t*t - _m*_m;
     // x=0
     if (std::abs(x2) < std::numeric_limits<double>::epsilon()) {
-        return _scale;
+        return _b * _scale;
     }
     T out = 1.0;
     if (x2 < 0.0) {
