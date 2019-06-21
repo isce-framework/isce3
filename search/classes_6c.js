@@ -4,7 +4,6 @@ var searchData=
   ['linearkernel',['LinearKernel',['../classisce_1_1core_1_1LinearKernel.html',1,'isce::core']]],
   ['linspace',['Linspace',['../classisce_1_1core_1_1Linspace.html',1,'isce::core']]],
   ['linspace_3c_20double_20_3e',['Linspace&lt; double &gt;',['../classisce_1_1core_1_1Linspace.html',1,'isce::core']]],
-  ['lonlat',['LonLat',['../structisce_1_1cuda_1_1core_1_1LonLat.html',1,'isce::cuda::core']]],
   ['lonlat',['LonLat',['../structisce_1_1core_1_1LonLat.html',1,'isce::core']]],
   ['looks',['Looks',['../classisce_1_1signal_1_1Looks.html',1,'isce::signal']]],
   ['lut1d',['LUT1d',['../classisce_1_1core_1_1LUT1d.html',1,'isce::core']]],

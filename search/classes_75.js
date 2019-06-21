@@ -5,6 +5,5 @@ var searchData=
   ['uspoint',['USPoint',['../classUSPoint.html',1,'']]],
   ['uspointkey',['USPointKey',['../classUSPointKey.html',1,'']]],
   ['uspointkeycomp',['USPointKeyComp',['../classUSPointKeyComp.html',1,'']]],
-  ['utm',['UTM',['../structisce_1_1cuda_1_1core_1_1UTM.html',1,'isce::cuda::core']]],
   ['utm',['UTM',['../structisce_1_1core_1_1UTM.html',1,'isce::core']]]
 ];
