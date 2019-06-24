@@ -12,10 +12,12 @@ bool isclose(const Vec3 & lhs, const Vec3 & rhs)
            std::abs(lhs[2] - rhs[2]) < errtol;
 }
 
-std::ostream & operator<<(std::ostream & os, const Vec3 & v)
+namespace isce { namespace core {
+std::ostream & operator<<(std::ostream & os, const isce::core::Vec3 & v)
 {
     return os << std::endl << "{ " << v[0] << ", " << v[1] << ", " << v[2] << " }";
 }
+} }
 
 // get state vector from linear orbit
 StateVector make_linear_statevec(
