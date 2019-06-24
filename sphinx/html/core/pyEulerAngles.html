@@ -35,7 +35,7 @@
 <p>pyEulerAngles is meant to capture attitude information.</p>
 <dl class="class">
 <dt id="isceextension.pyEulerAngles">
-<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyEulerAngles</code><a class="headerlink" href="#isceextension.pyEulerAngles" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">isceextension.</code><code class="sig-name descname">pyEulerAngles</code><a class="headerlink" href="#isceextension.pyEulerAngles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Python wrapper for isce::core::EulerAngles</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -47,9 +47,9 @@
 </ul>
 </dd>
 </dl>
-<dl class="staticmethod">
+<dl class="method">
 <dt id="isceextension.pyEulerAngles.bind">
-<em class="property">static </em><code class="descname">bind</code><span class="sig-paren">(</span><em>pyEulerAngles euler</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEulerAngles.bind" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">pyEulerAngles euler</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEulerAngles.bind" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new pyEulerAngles instance with C++ EulerAngles attribute shallow copied from
 another C++ EulerAngles attribute contained in a separate instance.</p>
 <dl class="field-list simple">
@@ -71,7 +71,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 
 <dl class="attribute">
 <dt id="isceextension.pyEulerAngles.pitch">
-<code class="descname">pitch</code><a class="headerlink" href="#isceextension.pyEulerAngles.pitch" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">pitch</code><a class="headerlink" href="#isceextension.pyEulerAngles.pitch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return pitch angles in radians.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -82,7 +82,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 
 <dl class="method">
 <dt id="isceextension.pyEulerAngles.quaternion">
-<code class="descname">quaternion</code><span class="sig-paren">(</span><em>double t</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEulerAngles.quaternion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">quaternion</code><span class="sig-paren">(</span><em class="sig-param">double t</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEulerAngles.quaternion" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return quaternion representation of given euler angles at a given time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -93,7 +93,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 
 <dl class="attribute">
 <dt id="isceextension.pyEulerAngles.roll">
-<code class="descname">roll</code><a class="headerlink" href="#isceextension.pyEulerAngles.roll" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">roll</code><a class="headerlink" href="#isceextension.pyEulerAngles.roll" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return roll angles in radians.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -104,7 +104,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 
 <dl class="method">
 <dt id="isceextension.pyEulerAngles.rotmat">
-<code class="descname">rotmat</code><span class="sig-paren">(</span><em>double t</em>, <em>sequence</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEulerAngles.rotmat" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">rotmat</code><span class="sig-paren">(</span><em class="sig-param">double t</em>, <em class="sig-param">sequence</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEulerAngles.rotmat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return rotation matrix corresponding to angle sequence at a given time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -118,7 +118,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 
 <dl class="attribute">
 <dt id="isceextension.pyEulerAngles.yaw">
-<code class="descname">yaw</code><a class="headerlink" href="#isceextension.pyEulerAngles.yaw" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">yaw</code><a class="headerlink" href="#isceextension.pyEulerAngles.yaw" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return yaw angles in radians.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -129,7 +129,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 
 <dl class="method">
 <dt id="isceextension.pyEulerAngles.ypr">
-<code class="descname">ypr</code><span class="sig-paren">(</span><em>double t</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEulerAngles.ypr" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">ypr</code><span class="sig-paren">(</span><em class="sig-param">double t</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEulerAngles.ypr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return yaw, pitch and roll euler angles at a given time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -159,10 +159,10 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -183,7 +183,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
     </div>
   </body>
 </html>

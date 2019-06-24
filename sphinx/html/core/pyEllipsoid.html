@@ -35,7 +35,7 @@
 <p>pyEllipsoid is meant to capture common geometry functions that are performed on an ellipsoid.</p>
 <dl class="class">
 <dt id="isceextension.pyEllipsoid">
-<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyEllipsoid</code><span class="sig-paren">(</span><em>a=6378137.</em>, <em>e2=.0066943799901</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">isceextension.</code><code class="sig-name descname">pyEllipsoid</code><span class="sig-paren">(</span><em class="sig-param">a=6378137.</em>, <em class="sig-param">e2=.0066943799901</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid" title="Permalink to this definition">¶</a></dt>
 <dd><p>By default returns a WGS84 Ellipsoid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -47,7 +47,7 @@
 </dl>
 <dl class="attribute">
 <dt id="isceextension.pyEllipsoid.a">
-<code class="descname">a</code><a class="headerlink" href="#isceextension.pyEllipsoid.a" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">a</code><a class="headerlink" href="#isceextension.pyEllipsoid.a" title="Permalink to this definition">¶</a></dt>
 <dd><p>Semi-major axis of ellipsoid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -61,7 +61,7 @@
 
 <dl class="attribute">
 <dt id="isceextension.pyEllipsoid.b">
-<code class="descname">b</code><a class="headerlink" href="#isceextension.pyEllipsoid.b" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">b</code><a class="headerlink" href="#isceextension.pyEllipsoid.b" title="Permalink to this definition">¶</a></dt>
 <dd><p>Semi-minor axis of ellipsoid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -73,9 +73,9 @@
 </dl>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="isceextension.pyEllipsoid.bind">
-<em class="property">static </em><code class="descname">bind</code><span class="sig-paren">(</span><em>pyEllipsoid elp</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.bind" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">pyEllipsoid elp</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.bind" title="Permalink to this definition">¶</a></dt>
 <dd><p>Binds the current pyEllipsoid instance to another C++ Ellipsoid pointer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -86,7 +86,7 @@
 
 <dl class="method">
 <dt id="isceextension.pyEllipsoid.copyFrom">
-<code class="descname">copyFrom</code><span class="sig-paren">(</span><em>elp</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.copyFrom" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">copyFrom</code><span class="sig-paren">(</span><em class="sig-param">elp</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.copyFrom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Copy ellipsoid parameters with any class that has semi-major axis and eccentricity parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -100,7 +100,7 @@
 
 <dl class="attribute">
 <dt id="isceextension.pyEllipsoid.e2">
-<code class="descname">e2</code><a class="headerlink" href="#isceextension.pyEllipsoid.e2" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">e2</code><a class="headerlink" href="#isceextension.pyEllipsoid.e2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Eccentricity-squared of ellipsoid.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -114,7 +114,7 @@
 
 <dl class="method">
 <dt id="isceextension.pyEllipsoid.getImagingAnglesAtPlatform">
-<code class="descname">getImagingAnglesAtPlatform</code><span class="sig-paren">(</span><em>pos</em>, <em>vel</em>, <em>los</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.getImagingAnglesAtPlatform" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getImagingAnglesAtPlatform</code><span class="sig-paren">(</span><em class="sig-param">pos</em>, <em class="sig-param">vel</em>, <em class="sig-param">los</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.getImagingAnglesAtPlatform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute azimuth angle and look angle at imaging platform.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -142,7 +142,7 @@
 
 <dl class="method">
 <dt id="isceextension.pyEllipsoid.lonLatToXyz">
-<code class="descname">lonLatToXyz</code><span class="sig-paren">(</span><em>llh</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.lonLatToXyz" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">lonLatToXyz</code><span class="sig-paren">(</span><em class="sig-param">llh</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.lonLatToXyz" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transform Lon/Lat/Hgt position to ECEF xyz coordinates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -160,7 +160,7 @@ Can be of shape (3,) or (n,3).</p>
 
 <dl class="method">
 <dt id="isceextension.pyEllipsoid.rDir">
-<code class="descname">rDir</code><span class="sig-paren">(</span><em>lat</em>, <em>hdg</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.rDir" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">rDir</code><span class="sig-paren">(</span><em class="sig-param">lat</em>, <em class="sig-param">hdg</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.rDir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Directional radius as a function of heading and latitude.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -184,7 +184,7 @@ Can be of shape (3,) or (n,3).</p>
 
 <dl class="method">
 <dt id="isceextension.pyEllipsoid.rEast">
-<code class="descname">rEast</code><span class="sig-paren">(</span><em>lat</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.rEast" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">rEast</code><span class="sig-paren">(</span><em class="sig-param">lat</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.rEast" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prime Vertical Radius as a function of latitude.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -201,7 +201,7 @@ Can be of shape (3,) or (n,3).</p>
 
 <dl class="method">
 <dt id="isceextension.pyEllipsoid.rNorth">
-<code class="descname">rNorth</code><span class="sig-paren">(</span><em>lat</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.rNorth" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">rNorth</code><span class="sig-paren">(</span><em class="sig-param">lat</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.rNorth" title="Permalink to this definition">¶</a></dt>
 <dd><p>Meridional radius as a function of latitude.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -218,7 +218,7 @@ Can be of shape (3,) or (n,3).</p>
 
 <dl class="method">
 <dt id="isceextension.pyEllipsoid.xyzToLonLat">
-<code class="descname">xyzToLonLat</code><span class="sig-paren">(</span><em>xyz</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.xyzToLonLat" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">xyzToLonLat</code><span class="sig-paren">(</span><em class="sig-param">xyz</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyEllipsoid.xyzToLonLat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transform Lon/Lat/Hgt position to ECEF xyz coordinates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -252,10 +252,10 @@ Can be of shape (3,) or (n,3).</p>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -276,7 +276,7 @@ Can be of shape (3,) or (n,3).</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
     </div>
   </body>
 </html>

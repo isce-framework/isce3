@@ -34,17 +34,17 @@
 <h1>pyPoly2d<a class="headerlink" href="#pypoly2d" title="Permalink to this headline">¶</a></h1>
 <p>pyPoly2d is a data structure meant to capture 1D functions of the form</p>
 <div class="math">
-<p><img src="_images/math/e8abbcebab577564e50ee6b697e6b7bb6bc76d1d.png" alt="f(y,x) = \sum_{i=0}^{N_y} \sum_{j=0}^{N_x} c_{ij} \cdot \left( \frac{y-\mu_y}{\sigma_y} \right)^i \cdot \left( \frac{x-\mu_x}{\sigma_x} \right)^j"/></p>
+<p><img src="_images/math/1d5e762a0ab13019ec6045f463803697f8bb744d.png" alt="f(y,x) = \sum_{i=0}^{N_y} \sum_{j=0}^{N_x} c_{ij} \cdot \left( \frac{y-\mu_y}{\sigma_y} \right)^i \cdot \left( \frac{x-\mu_x}{\sigma_x} \right)^j"/></p>
 </div><p>where</p>
 <ul class="simple">
-<li><p><img class="math" src="_images/math/86e5c09e9acab70480292f43fd10bfb99abb6877.png" alt="N_y"/> and <img class="math" src="_images/math/66f3707778ef19942b4bb02f18176926e7df7c96.png" alt="N_x"/> are the orders of the polynomial in azimuth (y) and range (x).</p></li>
-<li><p><img class="math" src="_images/math/1d179ee3ab9ccc290192219dc80ee72cff12acb2.png" alt="\mu_y"/> and <img class="math" src="_images/math/72d2ad7ba17f1db13c2bc768e8d914fee3a749ae.png" alt="\mu_x"/> are the means.</p></li>
-<li><p><img class="math" src="_images/math/0b30a2d48c2805095245dba3b4be2dfd2e2fba2e.png" alt="\sigma_y"/> and <img class="math" src="_images/math/2e5d48e1aeeaeb5798b847e2feef01ba35790ddc.png" alt="\sigma_x"/> are the norms.</p></li>
-<li><p><img class="math" src="_images/math/8f49fc2d95cc6f03ddc8b9a836f878cdba23e389.png" alt="[c_{00}, c_{01}, ..., c_{N_yN_x}]"/> is the set of coefficients.</p></li>
+<li><p><img class="math" src="_images/math/d16e73ef2d74cc024256806b538d08f52e0e7334.png" alt="N_y"/> and <img class="math" src="_images/math/8e86567060911fbdc4be435356019be79adef676.png" alt="N_x"/> are the orders of the polynomial in azimuth (y) and range (x).</p></li>
+<li><p><img class="math" src="_images/math/3cc69cc8240d56de7c082c0212bc4b2d647de80d.png" alt="\mu_y"/> and <img class="math" src="_images/math/2766c86ea640707284585eeda03dc849111546da.png" alt="\mu_x"/> are the means.</p></li>
+<li><p><img class="math" src="_images/math/1e9fdfdbb28c795915ca4e943fa54b735c212e3c.png" alt="\sigma_y"/> and <img class="math" src="_images/math/90c62b3c3ff92bd0b24c80d15a1f24741c96e79a.png" alt="\sigma_x"/> are the norms.</p></li>
+<li><p><img class="math" src="_images/math/91acf0c4e8e5c07a3f354bc9b9cb368e11281c8e.png" alt="[c_{00}, c_{01}, ..., c_{N_yN_x}]"/> is the set of coefficients.</p></li>
 </ul>
 <dl class="class">
 <dt id="isceextension.pyPoly2d">
-<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyPoly2d</code><a class="headerlink" href="#isceextension.pyPoly2d" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">isceextension.</code><code class="sig-name descname">pyPoly2d</code><a class="headerlink" href="#isceextension.pyPoly2d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Python wrapper for isce::core::Poly2D</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -64,7 +64,7 @@
 </dl>
 <dl class="attribute">
 <dt id="isceextension.pyPoly2d.azimuthMean">
-<code class="descname">azimuthMean</code><a class="headerlink" href="#isceextension.pyPoly2d.azimuthMean" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">azimuthMean</code><a class="headerlink" href="#isceextension.pyPoly2d.azimuthMean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return azimuth mean.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -78,7 +78,7 @@
 
 <dl class="attribute">
 <dt id="isceextension.pyPoly2d.azimuthNorm">
-<code class="descname">azimuthNorm</code><a class="headerlink" href="#isceextension.pyPoly2d.azimuthNorm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">azimuthNorm</code><a class="headerlink" href="#isceextension.pyPoly2d.azimuthNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return azimuth norm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -92,7 +92,7 @@
 
 <dl class="attribute">
 <dt id="isceextension.pyPoly2d.azimuthOrder">
-<code class="descname">azimuthOrder</code><a class="headerlink" href="#isceextension.pyPoly2d.azimuthOrder" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">azimuthOrder</code><a class="headerlink" href="#isceextension.pyPoly2d.azimuthOrder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns azimuth order.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -104,16 +104,16 @@
 </dl>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="isceextension.pyPoly2d.bind">
-<em class="property">static </em><code class="descname">bind</code><span class="sig-paren">(</span><em>pyPoly2d poly</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.bind" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">pyPoly2d poly</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.bind" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a pyPoly2d object that acts as a reference to an existing
 pyPoly2d instance.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="isceextension.pyPoly2d.coeffs">
-<code class="descname">coeffs</code><a class="headerlink" href="#isceextension.pyPoly2d.coeffs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">coeffs</code><a class="headerlink" href="#isceextension.pyPoly2d.coeffs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return polynomial coefficients.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -131,7 +131,7 @@ pyPoly2d instance.</p>
 
 <dl class="method">
 <dt id="isceextension.pyPoly2d.dPrint">
-<code class="descname">dPrint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.dPrint" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">dPrint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.dPrint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Debug print of underlying C++ structure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -142,7 +142,7 @@ pyPoly2d instance.</p>
 
 <dl class="method">
 <dt id="isceextension.pyPoly2d.eval">
-<code class="descname">eval</code><span class="sig-paren">(</span><em>double azi</em>, <em>double rng</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.eval" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">eval</code><span class="sig-paren">(</span><em class="sig-param">double azi</em>, <em class="sig-param">double rng</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.eval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate polynomial at given point.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -162,7 +162,7 @@ pyPoly2d instance.</p>
 
 <dl class="method">
 <dt id="isceextension.pyPoly2d.getCoeff">
-<code class="descname">getCoeff</code><span class="sig-paren">(</span><em>int row</em>, <em>int col</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.getCoeff" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getCoeff</code><span class="sig-paren">(</span><em class="sig-param">int row</em>, <em class="sig-param">int col</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.getCoeff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get polynomial coefficient using row and col indices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -182,13 +182,13 @@ pyPoly2d instance.</p>
 
 <dl class="method">
 <dt id="isceextension.pyPoly2d.printPoly">
-<code class="descname">printPoly</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.printPoly" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">printPoly</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.printPoly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Debug print function of underlying C++ structure.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="isceextension.pyPoly2d.rangeMean">
-<code class="descname">rangeMean</code><a class="headerlink" href="#isceextension.pyPoly2d.rangeMean" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">rangeMean</code><a class="headerlink" href="#isceextension.pyPoly2d.rangeMean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return range mean.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -202,7 +202,7 @@ pyPoly2d instance.</p>
 
 <dl class="attribute">
 <dt id="isceextension.pyPoly2d.rangeNorm">
-<code class="descname">rangeNorm</code><a class="headerlink" href="#isceextension.pyPoly2d.rangeNorm" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">rangeNorm</code><a class="headerlink" href="#isceextension.pyPoly2d.rangeNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return range norm</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -216,7 +216,7 @@ pyPoly2d instance.</p>
 
 <dl class="attribute">
 <dt id="isceextension.pyPoly2d.rangeOrder">
-<code class="descname">rangeOrder</code><a class="headerlink" href="#isceextension.pyPoly2d.rangeOrder" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">rangeOrder</code><a class="headerlink" href="#isceextension.pyPoly2d.rangeOrder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the range order of polynomial.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -230,7 +230,7 @@ pyPoly2d instance.</p>
 
 <dl class="method">
 <dt id="isceextension.pyPoly2d.setCoeff">
-<code class="descname">setCoeff</code><span class="sig-paren">(</span><em>int row</em>, <em>int col</em>, <em>double val</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.setCoeff" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setCoeff</code><span class="sig-paren">(</span><em class="sig-param">int row</em>, <em class="sig-param">int col</em>, <em class="sig-param">double val</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.setCoeff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set polynomial coefficient using row and col indices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -264,10 +264,10 @@ pyPoly2d instance.</p>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -288,7 +288,7 @@ pyPoly2d instance.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
     </div>
   </body>
 </html>

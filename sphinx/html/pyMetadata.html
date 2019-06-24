@@ -35,7 +35,7 @@
 <p>pyMetadata provides a wrapper for the isce::product::Metadata class which encapsulates orbit, ellipsoid, and some instrumentation information.</p>
 <dl class="class">
 <dt id="isceextension.pyMetadata">
-<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyMetadata</code><a class="headerlink" href="#isceextension.pyMetadata" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">isceextension.</code><code class="sig-name descname">pyMetadata</code><a class="headerlink" href="#isceextension.pyMetadata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Cython wrapper for isce::product::Metadata.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -47,13 +47,13 @@
 </dl>
 <dl class="attribute">
 <dt id="isceextension.pyMetadata.attitude">
-<code class="descname">attitude</code><a class="headerlink" href="#isceextension.pyMetadata.attitude" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">attitude</code><a class="headerlink" href="#isceextension.pyMetadata.attitude" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get Euler angles attitude.</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="isceextension.pyMetadata.bind">
-<em class="property">static </em><code class="descname">bind</code><span class="sig-paren">(</span><em>pyMetadata meta</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyMetadata.bind" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">pyMetadata meta</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyMetadata.bind" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new pyMetadata instance with C++ Metadata attribute shallow copied from
 another C++ Metadata attribute contained in a separate instance.</p>
 <dl class="field-list simple">
@@ -71,13 +71,13 @@ another C++ Metadata attribute contained in a separate instance.</p>
 
 <dl class="attribute">
 <dt id="isceextension.pyMetadata.orbit">
-<code class="descname">orbit</code><a class="headerlink" href="#isceextension.pyMetadata.orbit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">orbit</code><a class="headerlink" href="#isceextension.pyMetadata.orbit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get orbit.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="isceextension.pyMetadata.procInfo">
-<code class="descname">procInfo</code><a class="headerlink" href="#isceextension.pyMetadata.procInfo" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">procInfo</code><a class="headerlink" href="#isceextension.pyMetadata.procInfo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get processing information.</p>
 </dd></dl>
 
@@ -99,10 +99,10 @@ another C++ Metadata attribute contained in a separate instance.</p>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -123,7 +123,7 @@ another C++ Metadata attribute contained in a separate instance.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
     </div>
   </body>
 </html>

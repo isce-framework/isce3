@@ -35,7 +35,7 @@
 <p>pyRaster provides a light wrapper for ISCE Raster objects for the primary purpose of passing GDAL-compatible rasters to lower-level ISCE routines. Provides basic querying of raster information.</p>
 <dl class="class">
 <dt id="isceextension.pyRaster">
-<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyRaster</code><a class="headerlink" href="#isceextension.pyRaster" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">isceextension.</code><code class="sig-name descname">pyRaster</code><a class="headerlink" href="#isceextension.pyRaster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Python wrapper for isce::core::Raster</p>
 <p>All parameters like dimensions, data types etc must be known at the time of creation.</p>
 <dl class="field-list simple">
@@ -53,7 +53,7 @@
 </dl>
 <dl class="attribute">
 <dt id="isceextension.pyRaster.EPSG">
-<code class="descname">EPSG</code><a class="headerlink" href="#isceextension.pyRaster.EPSG" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">EPSG</code><a class="headerlink" href="#isceextension.pyRaster.EPSG" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns EPSG code associated with raster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -67,7 +67,7 @@
 
 <dl class="method">
 <dt id="isceextension.pyRaster.addRasterToVRT">
-<code class="descname">addRasterToVRT</code><span class="sig-paren">(</span><em>pyRaster raster</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyRaster.addRasterToVRT" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">addRasterToVRT</code><span class="sig-paren">(</span><em class="sig-param">pyRaster raster</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyRaster.addRasterToVRT" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add Raster to VRT Raster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -81,7 +81,7 @@
 
 <dl class="method">
 <dt id="isceextension.pyRaster.getDatatype">
-<code class="descname">getDatatype</code><span class="sig-paren">(</span><em>int band=1</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyRaster.getDatatype" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getDatatype</code><span class="sig-paren">(</span><em class="sig-param">int band=1</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyRaster.getDatatype" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return GDAL data type of Raster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -95,7 +95,7 @@
 
 <dl class="attribute">
 <dt id="isceextension.pyRaster.isReadOnly">
-<code class="descname">isReadOnly</code><a class="headerlink" href="#isceextension.pyRaster.isReadOnly" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">isReadOnly</code><a class="headerlink" href="#isceextension.pyRaster.isReadOnly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns flag to indicate if raster is read only.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -109,7 +109,7 @@
 
 <dl class="attribute">
 <dt id="isceextension.pyRaster.length">
-<code class="descname">length</code><a class="headerlink" href="#isceextension.pyRaster.length" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">length</code><a class="headerlink" href="#isceextension.pyRaster.length" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return length of the raster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -123,7 +123,7 @@
 
 <dl class="attribute">
 <dt id="isceextension.pyRaster.numBands">
-<code class="descname">numBands</code><a class="headerlink" href="#isceextension.pyRaster.numBands" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">numBands</code><a class="headerlink" href="#isceextension.pyRaster.numBands" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return number of Bands in the raster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -137,7 +137,7 @@
 
 <dl class="attribute">
 <dt id="isceextension.pyRaster.width">
-<code class="descname">width</code><a class="headerlink" href="#isceextension.pyRaster.width" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">width</code><a class="headerlink" href="#isceextension.pyRaster.width" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return width of the raster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -167,10 +167,10 @@
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -191,7 +191,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
     </div>
   </body>
 </html>

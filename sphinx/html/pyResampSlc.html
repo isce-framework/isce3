@@ -35,7 +35,7 @@
 <p>pyResampSlc provides a wrapper for the isce::image::ResampSlc class which is responsible for rubber-sheet transformation of SLC rasters.</p>
 <dl class="class">
 <dt id="isceextension.pyResampSlc">
-<em class="property">class </em><code class="descclassname">isceextension.</code><code class="descname">pyResampSlc</code><a class="headerlink" href="#isceextension.pyResampSlc" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">isceextension.</code><code class="sig-name descname">pyResampSlc</code><a class="headerlink" href="#isceextension.pyResampSlc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Cython wrapper for isce::image::ResampSlc.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -50,19 +50,19 @@
 </dl>
 <dl class="attribute">
 <dt id="isceextension.pyResampSlc.doppler">
-<code class="descname">doppler</code><a class="headerlink" href="#isceextension.pyResampSlc.doppler" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">doppler</code><a class="headerlink" href="#isceextension.pyResampSlc.doppler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the content Doppler LUT for the product to be resampled.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="isceextension.pyResampSlc.linesPerTile">
-<code class="descname">linesPerTile</code><a class="headerlink" href="#isceextension.pyResampSlc.linesPerTile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">linesPerTile</code><a class="headerlink" href="#isceextension.pyResampSlc.linesPerTile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of lines per processing tile.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="isceextension.pyResampSlc.resamp">
-<code class="descname">resamp</code><span class="sig-paren">(</span><em>pyRaster inSlc=None</em>, <em>pyRaster outSlc=None</em>, <em>pyRaster rgoffRaster=None</em>, <em>pyRaster azoffRaster=None</em>, <em>infile=None</em>, <em>outfile=None</em>, <em>rgfile=None</em>, <em>azfile=None</em>, <em>int inputBand=1</em>, <em>bool flatten=True</em>, <em>bool isComplex=True</em>, <em>int rowBuffer=40</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyResampSlc.resamp" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">resamp</code><span class="sig-paren">(</span><em class="sig-param">pyRaster inSlc=None</em>, <em class="sig-param">pyRaster outSlc=None</em>, <em class="sig-param">pyRaster rgoffRaster=None</em>, <em class="sig-param">pyRaster azoffRaster=None</em>, <em class="sig-param">infile=None</em>, <em class="sig-param">outfile=None</em>, <em class="sig-param">rgfile=None</em>, <em class="sig-param">azfile=None</em>, <em class="sig-param">int inputBand=1</em>, <em class="sig-param">bool flatten=True</em>, <em class="sig-param">bool isComplex=True</em>, <em class="sig-param">int rowBuffer=40</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyResampSlc.resamp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run resamp on complex image data stored in HDF5 product or specified
 as an external file.</p>
 <dl class="field-list simple">
@@ -90,7 +90,7 @@ as an external file.</p>
 
 <dl class="method">
 <dt id="isceextension.pyResampSlc.setReferenceProduct">
-<code class="descname">setReferenceProduct</code><span class="sig-paren">(</span><em>pyProduct refProduct</em>, <em>freq=u'A'</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyResampSlc.setReferenceProduct" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setReferenceProduct</code><span class="sig-paren">(</span><em class="sig-param">pyProduct refProduct</em>, <em class="sig-param">freq=u'A'</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyResampSlc.setReferenceProduct" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a reference product for flattening.</p>
 </dd></dl>
 
@@ -112,10 +112,10 @@ as an external file.</p>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -136,7 +136,7 @@ as an external file.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
     </div>
   </body>
 </html>
