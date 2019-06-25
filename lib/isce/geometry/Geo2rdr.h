@@ -57,6 +57,13 @@ class isce::geometry::Geo2rdr {
                        size_t numberAzimuthLooks = 1,
                        size_t numberRangeLooks = 1);
 
+        /** Constructor from core objects */
+        inline Geo2rdr(const isce::product::RadarGridParameters & radarGrid,
+                       const isce::core::Orbit & orbit,
+                       const isce::core::Ellipsoid & ellipsoid,
+                       const isce::core::LUT2d<double> & doppler = 
+                                                    isce::core::LUT2d<double>());
+
         /** Set convergence threshold*/
         inline void threshold(double);
         /** Set number of Newton-Raphson iterations*/

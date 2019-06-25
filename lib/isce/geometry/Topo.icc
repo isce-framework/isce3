@@ -39,6 +39,13 @@ Topo(const isce::product::Product & product,
     _linesPerBlock = std::min(_radarGrid.length(), _linesPerBlock);
 }
 
+/** @param[in] radarGrid RadarGridParameters object
+    * @param[in] orbit     Orbit object
+    * @param[in] ellipsoid Ellipsoid object
+    * @param[in] lookSide  look direction of the radar
+    * @param[in] doppler   LUT2d doppler model
+    *
+    * Alternative constructor from ellipsoid orbit and radarGrid.*/
 isce::geometry::Topo::
 Topo(const isce::product::RadarGridParameters & radarGrid,
         const isce::core::Orbit & orbit,

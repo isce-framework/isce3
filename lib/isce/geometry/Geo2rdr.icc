@@ -50,6 +50,21 @@ Geo2rdr(const isce::core::Ellipsoid & ellipsoid, const isce::core::Orbit & orbit
         _ellipsoid(ellipsoid), _orbit(orbit), _doppler(doppler),
         _radarGrid(meta, orbit.refEpoch, numberAzimuthLooks, numberRangeLooks) {}
 
+/** @param[in] radarGrid RadarGridParameters object
+  * @param[in] orbit     Orbit object 
+  * @param[in] ellipsoid Ellipsoid object
+  * @param[in] doppler   LUT2d doppler model
+  *
+  * Alternative constructor from ellipsoid orbit and radarGrid.*/
+isce::geometry::Geo2rdr::
+  Geo2rdr(const isce::product::RadarGridParameters & radarGrid,
+          const isce::core::Orbit & orbit,
+          const isce::core::Ellipsoid & ellipsoid,
+          const isce::core::LUT2d<double> & doppler) :
+          _orbit(orbit), _ellipsoid(ellipsoid),
+          _doppler(doppler), _radarGrid(radarGrid) {}
+
+
 /**@param[in] t Azimuth time convergence threshold in seconds*/
 void isce::geometry::Geo2rdr::
 threshold(double t) {
