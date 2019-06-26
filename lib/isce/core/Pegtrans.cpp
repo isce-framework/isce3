@@ -94,7 +94,7 @@ void Pegtrans::convertSCHdotToXYZdot(const cartesian_t & sch, const cartesian_t 
     xyzdot = schxyzmat.dot(schdot);
 }
 
-void Pegtrans::SCHbasis(const cartesian_t &sch, cartmat_t & xyzschmat,
+void Pegtrans::SCHbasis(const cartesian_t &sch, cartmat_t &,
                         cartmat_t & schxyzmat) const {
     /*
      * Computes the transformation matrix from xyz to a local sch frame

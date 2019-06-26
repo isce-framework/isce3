@@ -677,7 +677,7 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
 	if(line == 0) {        // For the first row ......
 	  if(pixel > 0 && pixel < ncols - 1) {
             if(Vedge_data[line][pixel - 1] > edge_th) node_data[line][pixel].dc = i_min(10, node_data[line][pixel].dc);
-	    //int r = node_data[line][pixel].dc - Vedge_data[line][pixel - 1] * 255/100.0; //*(1.0 - Vedge_data[line][pixel - 1]/255.0);
+	    //int r = node_data[line][pixel].dc - Vedge_data[line][pixel - 1] * 255/100.0; // *(1.0 - Vedge_data[line][pixel - 1]/255.0);
 	    //if(r < 0) r = 0;
             //node_data[line][pixel].dc = (unsigned char)r;
 	  }
@@ -696,7 +696,7 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
 	    //node_data[line][pixel].rc = (unsigned char)r;
 
             if(Hedge_data[line][pixel - 1] > edge_th) node_data[line][pixel].dc = i_min(node_data[line][pixel].dc, 10);
-	   // r = node_data[line][pixel].dc - Vedge_data[line][pixel - 1] *255/100.0; //* (1.0 - Vedge_data[line][pixel - 1]/255.0); 
+	   // r = node_data[line][pixel].dc - Vedge_data[line][pixel - 1] *255/100.0; // * (1.0 - Vedge_data[line][pixel - 1]/255.0); 
 
 //if(abs(line - 1108) < 3 && abs(pixel - 936) < 3) cerr << "line: " << line << "  r: " << r << "  dc: " << (int)node_data[line][pixel].dc << "  Vedge: " << (int)Vedge_data[line][pixel - 1] << endl;
 	    //if(r < 0) r = 0;
@@ -932,8 +932,8 @@ DataPatch<Node> *make_node_patch(DataPatch<fcomplex> *int_patch, double qthresh)
 {
   int nr_lines = int_patch->get_nr_lines();
   int nr_pixels = int_patch->get_nr_pixels();
-  int nrows = nr_lines + 1;
-  int ncols = nr_pixels + 1;
+  // int nrows = nr_lines + 1;
+  // int ncols = nr_pixels + 1;
 
   DataPatch<float> *phase_patch = new DataPatch<float>(nr_pixels, nr_lines);
   DataPatch<float> *amp_patch = new DataPatch<float>(nr_pixels, nr_lines);
@@ -1108,8 +1108,8 @@ DataPatch<char>* unwrap_assp(DataPatch<NodeFlow> *flows_patch, float **phase_dat
   int nr_lines = flows_patch->get_nr_lines() - 1;
   int nr_pixels = flows_patch->get_nr_pixels() - 1;
   int line, pixel, line_plus, line_minus, pixel_plus, pixel_minus;
-  int nrows = nr_lines + 1;
-  int ncols = nr_pixels + 1;
+  //int nrows = nr_lines + 1;
+  //int ncols = nr_pixels + 1;
 
   
   // do unwrapping with flood fill ......
@@ -1374,8 +1374,8 @@ DataPatch<char>* unwrap_adjust_seeds(DataPatch<NodeFlow> *flows_patch, float **p
   int nr_lines = flows_patch->get_nr_lines() - 1;
   int nr_pixels = flows_patch->get_nr_pixels() - 1;
   int line, pixel, line_plus, line_minus, pixel_plus, pixel_minus;
-  int nrows = nr_lines + 1;
-  int ncols = nr_pixels + 1;
+  //int nrows = nr_lines + 1;
+  //int ncols = nr_pixels + 1;
 
   
   // do unwrapping with flood fill ......
@@ -1531,8 +1531,8 @@ DataPatch<int> * generate_regions(DataPatch<NodeFlow> *flows_patch, int nr_seeds
   int nr_lines = flows_patch->get_nr_lines() - 1;
   int nr_pixels = flows_patch->get_nr_pixels() - 1;
   int line, pixel, line_plus, line_minus, pixel_plus, pixel_minus;
-  int nrows = nr_lines + 1;
-  int ncols = nr_pixels + 1;
+  //int nrows = nr_lines + 1;
+  //int ncols = nr_pixels + 1;
 
   
   // do unwrapping with flood fill ......
@@ -1614,8 +1614,8 @@ void generate_regions(DataPatch<NodeFlow> *flows_patch, int nr_seeds, Seed *seed
   int nr_lines = flows_patch->get_nr_lines() - 1;
   int nr_pixels = flows_patch->get_nr_pixels() - 1;
   int line, pixel, line_plus, line_minus, pixel_plus, pixel_minus;
-  int nrows = nr_lines + 1;
-  int ncols = nr_pixels + 1;
+  //int nrows = nr_lines + 1;
+  //int ncols = nr_pixels + 1;
 
   
   // do unwrapping with flood fill ......
@@ -1729,7 +1729,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
   demands = ncount;
 
 
-  int origin_supply = - (pcount - ncount);
+  //int origin_supply = - (pcount - ncount);
   if(abs(pcount - ncount) == 1) nodes[0][0].supply = - (pcount - ncount);
   else if(abs(pcount - ncount) > 1) {
     char tmp_supply = 1;
@@ -2223,7 +2223,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 
       int branch_taken = 0;
 
-      int integrated_cost = 0;
+      //int integrated_cost = 0;
 
 //cerr << "add the branches ...... \n";
 //cerr << Point(pixel, line) << "  ";

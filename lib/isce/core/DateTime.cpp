@@ -464,7 +464,7 @@ isoformat() const {
 void isce::core::DateTime::
 strptime(const std::string & datetime_string, const std::string & sep) {
     // Parse the string
-    double decimal_seconds;
+    double decimal_seconds = std::numeric_limits<double>::min();
     if (sep.compare("T") == 0) {
         sscanf(datetime_string.c_str(), "%d-%d-%dT%d:%d:%lf", &this->year,
             &this->months, &this->days, &this->hours, &this->minutes,

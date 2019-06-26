@@ -338,7 +338,7 @@ _geo2rdr(double x, double y,
 
     // Compute TCN basis for geo2rdr solution for checking side consistency
     Vec3 xyzsat, velsat;
-    int orbstat = _orbit.interpolate(azimuthTime, xyzsat, velsat, isce::core::HERMITE_METHOD);
+    _orbit.interpolate(azimuthTime, xyzsat, velsat, isce::core::HERMITE_METHOD);
     const isce::core::Basis tcn(xyzsat, velsat);
 
     // Check the side of the C-component of the look vector to the ground point

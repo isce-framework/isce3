@@ -33,7 +33,7 @@ struct GeometryTest : public ::testing::Test {
     // Constructor
     GeometryTest(){}
 
-    void Setup(double lon0, double omega, int Nvec)
+    void Setup_data(double lon0, double omega, int Nvec)
     {
         //WGS84 ellipsoid
         ellipsoid = isce::core::Ellipsoid(6378137.,.0066943799901);
@@ -100,7 +100,7 @@ TEST_F(GeometryTest, RdrToGeoEquator) {
     const double lon0 = 0.0;
     const double omega = 0.1/degrees;
     const int Nvec = 10;
-    Setup(lon0, omega, Nvec);
+    Setup_data(lon0, omega, Nvec);
 
     //Constant height DEM
     isce::geometry::DEMInterpolator dem(0.);
@@ -165,7 +165,7 @@ TEST_F(GeometryTest, GeoToRdrEquator) {
     const double lon0 = 0.0;
     const double omega = 0.1/degrees;
     const int Nvec = 10;
-    Setup(lon0, omega, Nvec);
+    Setup_data(lon0, omega, Nvec);
 
     //Constant zero Doppler
     isce::core::LUT2d<double> zeroDoppler;

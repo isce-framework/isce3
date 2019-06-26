@@ -203,7 +203,7 @@ ypr(double tintp, double & oyaw, double & opitch, double & oroll) {
 isce::core::cartmat_t
 isce::core::EulerAngles::
 rotmat(double tintp, const std::string sequence, double dyaw, double dpitch,
-       double d2, double d3) {
+       double, double) {
 
     // Interpolate to get YPR angles
     double yaw, pitch, roll;

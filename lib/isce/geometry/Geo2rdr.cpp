@@ -207,6 +207,7 @@ _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
          << "Starting acquisition time: " << t0 << pyre::journal::newline
          << "Stop acquisition time: " << tend << pyre::journal::newline
          << "Azimuth line spacing in seconds: " << dtaz << pyre::journal::newline
+         << "Slant range spacing in meters: " << dmrg << pyre::journal::newline
          << "Near range (m): " << r0 << pyre::journal::newline
          << "Far range (m): " << rngend << pyre::journal::newline
          << "Radar image length: " << _radarGrid.length() << pyre::journal::newline

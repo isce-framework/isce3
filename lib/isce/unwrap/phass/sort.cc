@@ -278,7 +278,7 @@ float median_of_medians(int n, float *data, int rank)
 //  cerr << endl;
 
   if(nr_sublists <= len) {  
-    int count = 0;
+    //int count = 0;
     for(int i = 0; i < nr_sublists; i++) {
       indexes[i] = i;  
       vals[i] = medians[i];

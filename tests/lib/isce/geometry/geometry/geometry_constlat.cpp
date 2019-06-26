@@ -37,7 +37,7 @@ struct GeometryTest : public ::testing::Test {
     GeometryTest(){}
 
     //Setup the orbit
-    void Setup(double lat0, double lon0, double omega, int Nvec)
+    void Setup_data(double lat0, double lon0, double omega, int Nvec)
     {
         //WGS84 ellipsoid
         ellipsoid = isce::core::Ellipsoid(6378137.,.0066943799901);
@@ -118,7 +118,7 @@ TEST_F(GeometryTest, RdrToGeoLat) {
     int sides[] = {-1,1};
 
     //Set up orbit
-    Setup(lat0, lon0, omega, Nvec);
+    Setup_data(lat0, lon0, omega, Nvec);
 
     //Test over 20 points
     for (size_t ii = 0; ii < 20; ++ii)
@@ -183,7 +183,7 @@ TEST_F(GeometryTest, GeoToRdrLat) {
     int sides[] = {-1,1};
 
     //Set up orbit
-    Setup(lat0, lon0, omega, Nvec);
+    Setup_data(lat0, lon0, omega, Nvec);
 
     //Constant zero Doppler
     isce::core::LUT2d<double> zeroDoppler;

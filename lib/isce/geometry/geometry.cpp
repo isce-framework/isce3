@@ -41,10 +41,10 @@ rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
 
     // Interpolate orbit to get state vector
     Vec3 pos, vel;
-    orbit.interpolate(aztime, pos, vel, orbitMethod);
+    int stat = orbit.interpolate(aztime, pos, vel, orbitMethod);
     if (stat != 0) {
-        pyre::journal::error_t error("isce.geometry.Geometry.rdr2geo");
-        error
+        pyre::journal::warning_t warning("isce.geometry.Geometry.rdr2geo");
+        warning
             << pyre::journal::at(__HERE__)
             << "Error in getting state vector for bounds computation."
             << pyre::journal::newline
@@ -65,7 +65,7 @@ rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
     Pixel pixel(slantRange, dopfact, 0);
 
     // Finally, call rdr2geo
-    int stat = rdr2geo(pixel, TCNbasis, pos, vel, ellipsoid, demInterp, targetLLH, side,
+    stat = rdr2geo(pixel, TCNbasis, pos, vel, ellipsoid, demInterp, targetLLH, side,
                        threshold, maxIter, extraIter);
     return stat;
 }
@@ -334,7 +334,7 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
         const LUT2d<double> & doppler, double & aztime, double & slantRange,
         double wavelength, double threshold, int maxIter, double deltaRange) {
 
-    cartesian_t satpos, satvel, inputXYZ, dr;
+    cartesian_t satpos, satvel, inputXYZ;
 
     // Convert LLH to XYZ
     ellipsoid.lonLatToXyz(inputLLH, inputXYZ);

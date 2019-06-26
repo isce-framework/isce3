@@ -901,10 +901,15 @@ _geo2rdr(double x, double y,
     llh[2] = demInterp.interpolateLonLat(llh[0], llh[1]);
 
     // Perform geo->rdr iterations
-    int geostat = isce::geometry::geo2rdr(
+    int converged = isce::geometry::geo2rdr(
                     llh, _ellipsoid, _orbit, _doppler, azimuthTime, slantRange,
                     _radarGrid.wavelength(), _threshold, _numiter, 1.0e-8);
 
+    //Check for convergence 
+    if (converged == 0) {
+        azimuthTime = 0.0;
+        slantRange = -1.0e-16;
+    }
 }
 
 template class isce::signal::Covariance<std::complex<float>>;

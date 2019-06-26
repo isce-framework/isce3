@@ -23,7 +23,7 @@ void detect_edge(int nr_lines, int nr_pixels, float **data, unsigned char **edge
 		 int window_length, double C_min, double R_edge, double R_line)
 {
   unsigned char Zero = (unsigned char)0;
-  unsigned char One  = (unsigned char)1;
+  //unsigned char One  = (unsigned char)1;
   
   for(int line = 0; line < nr_lines; line ++) {
     for(int pixel = 0; pixel < nr_pixels; pixel ++) {
@@ -279,8 +279,8 @@ void detect_edge(int nr_lines, int nr_pixels, float **data,
 		 int window_length, double coefficient_variance_min, double max_edge_ratio)
 {
   unsigned char Zero = (unsigned char)0;
-  unsigned char One  = (unsigned char)1;
-  double Ca_min = coefficient_variance_min;
+  //unsigned char One  = (unsigned char)1;
+  //double Ca_min = coefficient_variance_min;
   
   for(int line = 0; line < nr_lines; line ++) {
     for(int pixel = 0; pixel < nr_pixels; pixel ++) {

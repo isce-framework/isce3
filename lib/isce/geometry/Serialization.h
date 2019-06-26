@@ -33,7 +33,7 @@ namespace isce {
 
         // Topo save does nothing
         template <class Archive>
-        void save(Archive & archive, const Topo & topo) {}
+        void save(Archive &, const Topo &) {}
 
         // Topo load
         template <class Archive>
@@ -67,7 +67,7 @@ namespace isce {
 
         // Geo2rdr save does nothing
         template <class Archive>
-        void save(Archive & archive, const Geo2rdr & geo) {}
+        void save(Archive &, const Geo2rdr &) {}
 
         // Geo2rdr load
         template <class Archive>

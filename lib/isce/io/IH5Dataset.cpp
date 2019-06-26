@@ -111,7 +111,7 @@ CPLErr IH5RasterBand::IReadBlock( int nBlockXOff,
     counts[offset] = std::min(nBlockYSize, poGDS->GetRasterYSize() - starts[offset]);
     counts[offset+1] = std::min(nBlockXSize, poGDS->GetRasterXSize() - starts[offset+1]);
   
-    CPLDebug("GDAL_IH5", "%ld Read, band=%d, starts=(%d,%d), counts=(%d,%d)", 
+    CPLDebug("GDAL_IH5", "%lld Read, band=%d, starts=(%d,%d), counts=(%d,%d)", 
             poGDS->_dataset->getId(), nBand, 
             starts[offset], starts[offset+1],
             counts[offset], counts[offset+1]);
@@ -198,7 +198,7 @@ CPLErr IH5RasterBand::IWriteBlock( int nBlockXOff,
     counts[offset+1] = std::min(nBlockXSize, 
                         poGDS->GetRasterXSize() - starts[offset+1]);
 
-    CPLDebug("GDAL_IH5", "%ld Write, band=%d, starts=(%d,%d), counts=(%d,%d)", 
+    CPLDebug("GDAL_IH5", "%lld Write, band=%d, starts=(%d,%d), counts=(%d,%d)", 
             poGDS->_dataset->getId(), nBand, 
             starts[offset], starts[offset+1],
             counts[offset], counts[offset+1]);
@@ -303,10 +303,10 @@ IH5Dataset::IH5Dataset(const hid_t &inputds, GDALAccess eAccessIn ):
                  "Not a valid HDF5 ID to create IH5Dataset from");
         return;
     }
-    CPLDebug("GDAL_IH5", "Input ID = %ld", inputds);
+    CPLDebug("GDAL_IH5", "Input ID = %lld", inputds);
     eAccess = eAccessIn;
     _dataset = new isce::io::IDataSet(inputds);
-    CPLDebug("GDAL_IH5", "Extracted ID = %ld", _dataset->getId());
+    CPLDebug("GDAL_IH5", "Extracted ID = %lld", _dataset->getId());
     if (!H5::IdComponent::isValid(_dataset->getId()))
     {
         CPLError(CE_Failure, CPLE_AppDefined,
@@ -521,7 +521,7 @@ CPLErr IH5Dataset::populateFromDataset()
 
     //Determine offset to Y-axis
     int axisOffset = (ndims == 3)?1:0;
-    CPLDebug("GDAL_IH5", "%ld: Number of axes = %d", _dataset->getId(), ndims);
+    CPLDebug("GDAL_IH5", "%lld: Number of axes = %d", _dataset->getId(), ndims);
 
     //Get dimensions - row major layout
     std::vector<int> dims = _dataset->getDimensions();
@@ -540,9 +540,9 @@ CPLErr IH5Dataset::populateFromDataset()
 
     nBands = (ndims == 3) ? dimensions[0] : 1;
     if (ndims == 2)
-        CPLDebug("GDAL_IH5", "%ld: %d L x %d P", _dataset->getId(), dimensions[axisOffset], dimensions[axisOffset+1]);
+        CPLDebug("GDAL_IH5", "%lld: %d L x %d P", _dataset->getId(), dimensions[axisOffset], dimensions[axisOffset+1]);
     else
-        CPLDebug("GDAL_IH5", "%ld: %d H x %d L x %d P", _dataset->getId(), nBands, dimensions[axisOffset], dimensions[axisOffset+1]);
+        CPLDebug("GDAL_IH5", "%lld: %d H x %d L x %d P", _dataset->getId(), nBands, dimensions[axisOffset], dimensions[axisOffset+1]);
 
 
     auto chunkSize = _dataset->getChunkSize();

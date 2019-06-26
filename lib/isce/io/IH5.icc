@@ -1330,10 +1330,10 @@ isce::io::IDataSet isce::io::IGroup::createDataSet(
    }
 
    // Create the dataspace
-   hsize_t dims2[dims.size()];
+   std::vector<hsize_t> dims2(dims.size());
    for(int i=0; i<dims.size(); i++)
       dims2[i] = (hsize_t)dims[i];
-   H5::DataSpace dataSpace((int)dims.size(), dims2);
+   H5::DataSpace dataSpace((int)dims.size(), dims2.data());
 
    // Create the dataset creation properties. 
    H5::DSetCreatPropList cparms;
@@ -1345,11 +1345,11 @@ isce::io::IDataSet isce::io::IGroup::createDataSet(
       // No matter which option was used, chunking is mandatory. Only chunk the
       // first 2 dimensions, which corresponds to X, Y. The third dimension (the "band" one) 
       // and others doe not get chunked
-      hsize_t chunks[dims.size()];
-      std::fill_n(chunks, dims.size(), 1);
+      std::vector<hsize_t> chunks(dims.size());
+      std::fill_n(chunks.data(), dims.size(), 1);
       chunks[0] = chunkSizeX;
       if (dims.size() > 1) chunks[1] = chunkSizeY;
-      cparms.setChunk(dims.size(), chunks);
+      cparms.setChunk(dims.size(), chunks.data());
 
 
       // Set the NBIT compression. 
