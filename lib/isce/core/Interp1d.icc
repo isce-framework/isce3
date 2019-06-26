@@ -14,7 +14,8 @@ template <typename TK, typename TD>
 inline
 TD
 isce::core::interp1d(const isce::core::Kernel<TK> &kernel,
-                     const TD *x, size_t length, size_t stride, double t)
+                     const TD *x, size_t length, size_t stride, double t,
+                     bool periodic)
 {
     int _width = int(ceil(kernel.width()));
     long i0 = 0;
@@ -26,14 +27,18 @@ isce::core::interp1d(const isce::core::Kernel<TK> &kernel,
     long low = i0 - _width/2;  // integer division implicit floor()
     long high = low + _width;
     typename std::common_type<TD,TK>::type sum = 0;
-    if ((low < 0) || (high >= length)) {
+    if (!periodic && ((low < 0) || (high >= length))) {
         // XXX log/throw error?
         return sum;
     }
     for (long i=low; i<high; i++) {
+        long j = i;
+        if (periodic) {
+            j = i % length;
+        }
         double ti = i - t;
         TK w = kernel(ti);
-        sum += w * x[i*stride];
+        sum += w * x[j*stride];
     }
     return sum;
 }
@@ -42,7 +47,7 @@ template <typename TK, typename TD>
 inline
 TD
 isce::core::interp1d(const isce::core::Kernel<TK> &kernel,
-                     const std::valarray<TD> &x, double t)
+                     const std::valarray<TD> &x, double t, bool periodic)
 {
-    return isce::core::interp1d(kernel, &x[0], x.size(), 1, t);
+    return isce::core::interp1d(kernel, &x[0], x.size(), 1, t, periodic);
 }

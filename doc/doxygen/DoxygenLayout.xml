@@ -28,7 +28,7 @@
       <tab type="user" url="http://trac.osgeo.org/gdal/wiki/DownloadingGdalBinaries" title="Binaries"/>
     </tab> -->
     <tab type="user" url="sphinx/html/index.html" title="Python classes"/>
-    <tab type="user" url="https://github-fn.jpl.nasa.gov/ericmg/isce/issues/" title="Issue Tracker"/>
+    <tab type="user" url="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/" title="Issue Tracker"/>
     <!-- end ISCE customization -->
   </navindex>
   <!-- Layout definition for a class page -->

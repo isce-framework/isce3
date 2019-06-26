@@ -5,7 +5,7 @@
 ISCE has the following dependencies
 <ol>
 <li> <a href="http://pyre.orthologue.com">pyre</a>
-<li> C++ compiler - gcc-6 or above
+<li> C++ compiler - gcc-6/ clang-6.0 or above
 <li> Python 3.6 or above
 <li> Numpy and Cython
 <li> GDAL 2.3 or above with Python bindings
@@ -18,40 +18,47 @@ One can use any of the three package managers - Macports, Homebrew or Conda to i
 
 \section osxpack Installing packages using Macports
 
-We write the instructions assuming that we are using gcc7 and python36. Changes these to appropriate version numbers for your installation.
+We write the instructions assuming that we are using clang-8.0 and python37. Changes these to appropriate version numbers for your installation. If you decide to use gcc (say gcc7) on your mac - note that you may have to do additional changes to your macports commands to force it to use libstdc++ instead of libc++. We present instructions with clang here to ensure compatibility with most binaries that are distributed for osx.
 
 <ol>
+<li>sudo port install clang-8.0
+<ul>
+<li>sudo port select clang mp-clang-8.0
+<li>Restart terminal after this.
+</ul>
 <li>sudo port install gcc7
 <ul>
 <li>sudo port select gcc mp-gcc7
-<li>Restart terminal after this
+<li>Restart terminal after this. We only need this for the gfortran compiler.
 </ul>
-<li>sudo port install python36
+
+<li>sudo port install python37
 <ul>
-<li>sudo port select python3 python36
-<li>sudo ln -s /opt/local/Library/Frameworks/Python.framework/Versions/3.6/include/python3.6m /opt/local/include/python3.6m
+<li>sudo port select python3 python37
+<li>sudo ln -s /opt/local/Library/Frameworks/Python.framework/Versions/3.7/include/python3.7m /opt/local/include/python3.7m
 <li>The link command is to keep the paths simpler for use with installing software from source.
 </ul>
 <li>sudo port install cmake gawk coreutils gsed
 <li>sudo port install wget +ssl
-<li>sudo port install fftw-3 +gcc7
-<li>sudo port install fftw-3-single +gcc7
-<li>sudo port install hdf5 +gcc7
-<li>sudo port install py36-numpy +gcc7
-<li>sudo port install py36-scipy +gcc7
-<li>sudo port install py36-cython
+<li>sudo port install fftw-3
+<li>sudo port install fftw-3-single 
+<li>sudo port install hdf5
+<li>sudo port install py37-numpy 
+<li>sudo port install py37-scipy
+<li>sudo port install py37-cython
+<li>sudo port install py37-pytest
 <ul>
-<li>sudo ln -s /opt/local/bin/cython-3.6 /opt/local/bin/cython3
+<li>sudo ln -s /opt/local/bin/cython-3.7 /opt/local/bin/cython3
 <li>The link reproduces the environment that we usually get on linux machines
 </ul>
-<li>sudo port install py36-h5py
+<li>sudo port install py37-h5py
 <li>sudo port install proj
 <li>sudo port install gdal +curl +expat +geos +hdf5 +openjpeg
 <ul>
 <li>export GDAL_DATA=/opt/local/share/gdal
-<li>You may want to build a more complete version of GDAL with support for more formats. The recommended options list is : +hdf4 +hdf5 +netcdf +openjpeg +postgresql95 . Use gcc7 whenever the option is available to build those ports.
+<li>You may want to build a more complete version of GDAL with support for more formats. The recommended options list is : +hdf4 +hdf5 +netcdf +openjpeg +postgresql95 . If you plan to use gcc instead of clang, use gcc7 whenever the option is available to build those ports.
 </ul>
-<li>sudo port install py36-gdal
+<li>sudo port install py37-gdal
 </ol>
 
 
@@ -116,18 +123,18 @@ export MM_LIBPATH=/Users/username/tools/pyre/install/lib
 \code{.sh}
 > cd /Users/username/tools/pyre/src/pyre/.mm
 > cat config.def
- PYTHON = python3.6m
- PYTHON_DIR = /opt/local/Library/Frameworks/Python.framework/Versions/3.6
- PYTHON_INCDIR = /opt/local/Library/Frameworks/Python.framework/Versions/3.6/include/python3.6m
- PYTHON_LIB = python3.6m
- PYTHON_LIBDIR = /opt/local/Library/Frameworks/Python.framework/Versions/3.6/lib
+ PYTHON = python3.7m
+ PYTHON_DIR = /opt/local/Library/Frameworks/Python.framework/Versions/3.7
+ PYTHON_INCDIR = /opt/local/Library/Frameworks/Python.framework/Versions/3.7/include/python3.7m
+ PYTHON_LIB = python3.7m
+ PYTHON_LIBDIR = /opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib
  PYTHON_PYCFLAGS = -b
 \endcode
 
 <li>Install pyre
 \code{.sh}
 > cd /Users/username/tools/pyre/src/pyre
-> mm
+> COMPILER_CXX_NAME=clang++ mm
 \endcode
 
 <li> Since we will use cmake for the next step, you can unset the variables and aliases used by mm at this stage if needed.
@@ -160,7 +167,7 @@ In this section we will walk through the directory setup and build system instru
 \endcode
 <li> Check out the latest version of the source code from git
 \code{.sh}
-> git clone https://github-fn.jpl.nasa.gov/ericmg/isce
+> git clone https://github-fn.jpl.nasa.gov/iscce-3/isce
 \endcode
 <li> Ensure you are building the branch that you want to use. For example, if you want to build the <b>develop</b> branch
 \code{.sh}
@@ -202,7 +209,7 @@ export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
 <li> Run cmake with the correct inputs
 \code{.sh}
 
-> CC=gcc CXX=g++ cmake -DCMAKE_INSTALL_PREFIX=/Users/username/tools/isce/install /Users/username/tools/isce/src/isce
+> CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX=/Users/username/tools/isce/install /Users/username/tools/isce/src/isce
 
 \endcode
 

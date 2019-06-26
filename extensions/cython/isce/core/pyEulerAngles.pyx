@@ -23,7 +23,7 @@ cdef class pyEulerAngles:
         yaw (float): Yaw angle in radians
         pitch (float): Pitch angle in radians
         roll (float): Roll angle in radians
-        yaw_orientation (Optional[str]): Can be either 'normal' or 'center'
+        yaw_orientation (str, optional): Can be either 'normal' or 'center'
     '''
 
     cdef EulerAngles * c_eulerangles
@@ -93,7 +93,7 @@ cdef class pyEulerAngles:
         Return yaw, pitch and roll euler angles at a given time.
 
         Returns:
-            np.array(3): euler angles
+            numpy.array(3): Euler angles (ypr)
         '''
         cdef cartesian_t _ypr
         cdef double yaw = 0.0
@@ -107,7 +107,7 @@ cdef class pyEulerAngles:
         Return rotation matrix corresponding to angle sequence at a given time.
 
         Args:
-            sequence (list(3)): Sequence of angles. Example: 'ypr'
+            sequence (str): Sequence of angles. Example: 'ypr'
 
         Returns:
             numpy.array((3,3))
@@ -141,7 +141,7 @@ cdef class pyEulerAngles:
         Return yaw angles in radians.
 
         Returns:
-            ndarray[float]
+            numpy.ndarray[float]
         '''
         # Get vector of results
         cdef vector[double] values = self.c_eulerangles.yaw()
@@ -164,7 +164,7 @@ cdef class pyEulerAngles:
         Return pitch angles in radians.
 
         Returns:
-            ndarray[float]
+            numpy.ndarray[float]
         '''
         # Get vector of results
         cdef vector[double] values = self.c_eulerangles.pitch()
@@ -187,7 +187,7 @@ cdef class pyEulerAngles:
         Return roll angles in radians.
 
         Returns:
-            ndarray[float]
+            numpy.ndarray[float]
         '''
         # Get vector of results
         cdef vector[double] values = self.c_eulerangles.roll()

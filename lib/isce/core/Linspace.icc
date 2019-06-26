@@ -95,6 +95,14 @@ int Linspace<T>::size() const
 template<typename T>
 CUDA_HOSTDEV
 inline
+void Linspace<T>::resize(int size)
+{
+    _size = size;
+}
+
+template<typename T>
+CUDA_HOSTDEV
+inline
 Linspace<T>
 Linspace<T>::subinterval(int start, int stop) const
 {

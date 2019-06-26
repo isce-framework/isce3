@@ -20,6 +20,7 @@ namespace isce {
         template <typename T> class BartlettKernel;
         template <typename T> class LinearKernel;
         template <typename T> class KnabKernel;
+        template <typename T> class NFFTKernel;
     }
 }
 
@@ -99,5 +100,34 @@ class isce::core::KnabKernel : public isce::core::Kernel<T> {
 template <typename T>
 T
 isce::core::sinc(T t);
+
+
+/** NFFT time-domain kernel.
+ *
+ * This is called \f$ \phi(x) \f$ in the NFFT papers @cite keiner2009 ,
+ * specifically the Kaiser-Bessel window function.
+ * The domain is scaled so that usage is the same as other ISCE kernels, e.g.,
+ * for x in [0,n) instead of [-0.5,0.5).
+ */
+template <typename T>
+class isce::core::NFFTKernel : public isce::core::Kernel<T> {
+    public:
+        /** Constructor of NFFT kernel.
+         *
+         * @param[in] m         Half kernel size (width = 2*m+1)
+         * @param[in] n         Length of input signal.
+         * @param[in] fft_size  FFT Transform size (> n).
+         */
+        NFFTKernel(size_t m, size_t n, size_t fft_size);
+
+        T operator()(double x) const override;
+    
+    private:
+        size_t _m;
+        size_t _n;
+        size_t _fft_size;
+        T _scale;
+        T _b;
+};
 
 #endif

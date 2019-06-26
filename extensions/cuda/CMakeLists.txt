@@ -10,8 +10,10 @@ add_subdirectory(core)
 add_subdirectory(except)
 add_subdirectory(geometry)
 add_subdirectory(image)
+add_subdirectory(io)
 add_subdirectory(signal)
 add_subdirectory(matchtemplate)
+add_subdirectory(orbit_wip)
 
 # Allow for separable compilation and device code linking (-dc flag to nvcc)
 set_target_properties(${LISCECUDA} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
@@ -28,6 +30,7 @@ include_directories(${CEREAL_SRC_INCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
                     ${PYRE_INCLUDE_DIR}
                     ${GDAL_INCLUDE_DIR}
+                    ${HDF5_INCLUDE_DIR}
                     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 # Install shared library

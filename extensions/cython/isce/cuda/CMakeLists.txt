@@ -20,6 +20,9 @@ include_directories(${ISCE_BUILDCYINCLUDEDIR})
 
 # Add Cython module
 cython_add_module(iscecudaextension iscecudaextension.pyx)
+if(WITH_CODE_COVERAGE)
+    SetCoverageOptions(iscecudaextension)
+endif()
 
 # Override output shared object name to place in desired location
 set_target_properties(
@@ -35,6 +38,7 @@ target_include_directories(
         ${ISCE_BUILDCYINCLUDEDIR}
         ${PYTHON_NUMPY_INCLUDE_DIR}
         ${GDAL_INCLUDE_DIR}
+        ${HDF5_INCLUDE_DIR}
         ${CMAKE_SOURCE_DIR}/contrib/cereal/include
         ${PYRE_INCLUDE_DIR}
         ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}

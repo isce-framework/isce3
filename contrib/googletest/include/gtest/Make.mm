@@ -18,6 +18,7 @@ RECURSE_DIRS = internal
 EXPORT_HEADERS = \
     gtest.h \
     gtest-death-test.h \
+    gtest-matchers.h \
     gtest-message.h \
     gtest-param-test.h \
     gtest-printers.h \

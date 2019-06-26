@@ -1,0 +1,230 @@
+#ifndef ISCE_ORBITWIP_INTERPORBIT_ICC
+#error "InterpOrbit.icc is an implementation detail of InterpOrbit.h"
+#endif
+
+#include <assert.h>
+#include <cmath>
+
+namespace isce { namespace orbit_wip {
+
+template<class Orbit>
+CUDA_HOSTDEV
+inline
+void interpolate(
+        OrbitInterpMethod method,
+        const Orbit & orbit,
+        double t,
+        Vec3 * position,
+        Vec3 * velocity)
+{
+    switch (method) {
+        case OrbitInterpMethod::Hermite : {
+            hermite_interpolate(orbit, t, position, velocity);
+            break;
+        }
+        case OrbitInterpMethod::Legendre : {
+            legendre_interpolate(orbit, t, position, velocity);
+            break;
+        }
+        default : { // OrbitInterpMethod::SCH
+            sch_interpolate(orbit, t, position, velocity);
+            break;
+        }
+    }
+}
+
+template<class Orbit>
+CUDA_HOSTDEV
+inline
+void hermite_interpolate(
+        const Orbit & orbit,
+        double t,
+        Vec3 * position,
+        Vec3 * velocity)
+{
+    // Hermite interpolation requires 4 state vectors
+    assert(orbit.size() >= 4);
+
+    // interpolation time must be within orbit domain
+    assert(t >= orbit.time().first() && t <= orbit.time().last());
+
+    // find index of the first state vector to use to form the interpolant
+    int idx = where(orbit.time(), t) - 2;
+#ifdef __CUDA_ARCH__
+    // device code
+    idx = min(max(idx, 0), orbit.size() - 4);
+#else
+    // host code
+    idx = std::min(std::max(idx, 0), orbit.size() - 4);
+#endif
+
+    // compute some intermediate values:
+
+    double f1[4];
+    for (int i = 0; i < 4; ++i) {
+        f1[i] = t - orbit.time()[idx + i];
+    }
+
+    double f0[4];
+    for (int i = 0; i < 4; ++i) {
+        double sum = 0.;
+        for (int j = 0; j < 4; ++j) {
+            if (j == i) { continue; }
+            sum += 1. / (orbit.time()[idx + i] - orbit.time()[idx + j]);
+        }
+        f0[i] = 1. - 2. * sum * (t - orbit.time()[idx + i]);
+    }
+
+    double h[4];
+    for (int i = 0; i < 4; ++i) {
+        h[i] = 1.;
+        for (int j = 0; j < 4; ++j) {
+            if (j == i) { continue; }
+            h[i] *= (t - orbit.time()[idx + j]) /
+                    (orbit.time()[idx + i] - orbit.time()[idx + j]);
+        }
+    }
+
+    // get interpolated position
+    if (position) {
+        Vec3 pos {0., 0., 0.};
+        for (int i = 0; i < 4; ++i) {
+            pos += h[i] * h[i] * (orbit.position()[idx + i] *
+                    f0[i] + orbit.velocity()[idx + i] * f1[i]);
+        }
+        *position = pos;
+    }
+
+    // check whether to interpolate velocity as well, if not we are done
+    if (!velocity) { return; }
+
+    // compute some more intermediate values:
+
+    double hdot[4];
+    for (int i = 0; i < 4; ++i) {
+        hdot[i] = 0.;
+        for (int j = 0; j < 4; ++j) {
+            if (j == i) { continue; }
+            double prod = 1. / (orbit.time()[idx + i] - orbit.time()[idx + j]);
+            for (int k = 0; k < 4; ++k) {
+                if (k == i || k == j) { continue; }
+                prod *= (t - orbit.time()[idx + k]) /
+                        (orbit.time()[idx + i] - orbit.time()[idx + k]);
+            }
+            hdot[i] += prod;
+        }
+    }
+
+    double g1[4];
+    for (int i = 0; i < 4; ++i) {
+        g1[i] = h[i] + 2. * hdot[i] * (t - orbit.time()[idx + i]);
+    }
+
+    double g0[4];
+    for (int i = 0; i < 4; ++i) {
+        double sum = 0.;
+        for (int j = 0; j < 4; ++j) {
+            if (j == i) { continue; }
+            sum += 1. / (orbit.time()[idx + i] - orbit.time()[idx + j]);
+        }
+        g0[i] = 2. * (f0[i] * hdot[i] - sum * h[i]);
+    }
+
+    // get interpolated velocity
+    Vec3 vel {0., 0., 0.};
+    for (int i = 0; i < 4; ++i) {
+        vel += h[i] * (orbit.position()[idx + i] * g0[i] +
+                orbit.velocity()[idx + i] * g1[i]);
+    }
+    *velocity = vel;
+}
+
+template<class Orbit>
+CUDA_HOSTDEV
+inline
+void legendre_interpolate(
+        const Orbit & orbit,
+        double t,
+        Vec3 * position,
+        Vec3 * velocity)
+{
+    // Legendre interpolation requires 9 state vectors
+    assert(orbit.size() >= 9);
+
+    // interpolation time must be within orbit domain
+    assert(t >= orbit.time().first() && t <= orbit.time().last());
+
+    // find index of the first state vector to use to form the interpolant
+    int idx = where(orbit.time(), t) - 5;
+#ifdef __CUDA_ARCH__
+    // device code
+    idx = min(max(idx, 0), orbit.size() - 9);
+#else
+    // host code
+    idx = std::min(std::max(idx, 0), orbit.size() - 9);
+#endif
+
+    double trel = 8. * (t - orbit.time()[idx]) /
+            (orbit.time()[idx + 8] - orbit.time()[idx]);
+
+    double teller = 1.;
+    for (int i = 0; i < 9; ++i) {
+        teller *= trel - i;
+    }
+
+    if (teller == 0.) {
+        int i = trel;
+        if (position) { *position = orbit.position()[idx + i]; }
+        if (velocity) { *velocity = orbit.velocity()[idx + i]; }
+    }
+    else {
+        constexpr double noemer[9] = {40320.0, -5040.0, 1440.0, -720.0, 576.0,
+                -720.0, 1440.0, -5040.0, 40320.0};
+
+        Vec3 pos {0., 0., 0.};
+        Vec3 vel {0., 0., 0.};
+        for (int i = 0; i < 9; ++i) {
+            double coeff = (teller / noemer[i]) / (trel - i);
+            pos += coeff * orbit.position()[idx + i];
+            vel += coeff * orbit.velocity()[idx + i];
+        }
+
+        if (position) { *position = pos; }
+        if (velocity) { *velocity = vel; }
+    }
+}
+
+template<class Orbit>
+CUDA_HOSTDEV
+inline
+void sch_interpolate(
+        const Orbit & orbit,
+        double t,
+        Vec3 * position,
+        Vec3 * velocity)
+{
+    // SCH interpolation requires at least 2 state vectors
+    assert(orbit.size() >= 2);
+
+    // interpolation time must be within orbit domain
+    assert(t >= orbit.time().first() && t <= orbit.time().last());
+
+    Vec3 pos {0., 0., 0.};
+    Vec3 vel {0., 0., 0.};
+
+    for (int i = 0; i < orbit.size(); ++i) {
+        double frac = 1.;
+        for (int j = 0; j < orbit.size(); ++j) {
+            if (i == j) { continue; }
+            frac *= (orbit.time()[j] - t) / (orbit.time()[j] - orbit.time()[i]);
+        }
+        pos += frac * orbit.position()[i];
+        vel += frac * orbit.velocity()[i];
+    }
+
+    if (position) { *position = pos; }
+    if (velocity) { *velocity = vel; }
+}
+
+}}
+

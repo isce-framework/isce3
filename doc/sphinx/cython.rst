@@ -17,6 +17,7 @@ These are data structures that are directly related to C++ classes in the isce::
 * :doc:`pyDateTime <./core/pyDateTime>` 
 * :doc:`pyTimeDelta <./core/pyTimeDelta>`
 * :doc:`pyEllipsoid <./core/pyEllipsoid>`
+* :doc:`pyEulerAngles <./core/pyEulerAngles>`
 * :doc:`pyPoly1d <./pyPoly1d>`
 * :doc:`pyPoly2d <./pyPoly2d>`
 * :doc:`pyLUT1d <./pyLUT1d>`

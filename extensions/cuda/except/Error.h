@@ -45,6 +45,20 @@ inline void checkCudaErrorsImpl<cufftResult>(
         throw isce::cuda::except::CudaError<cufftResult>(info, err);
 }
 
+// Check errors from kernel launches and, if NDEBUG is not defined,
+// synchronize and check for execution errors
+inline
+void checkCudaAsyncErrorsImpl(const isce::except::SrcInfo & info)
+{
+    checkCudaErrorsImpl(info, cudaPeekAtLastError());
+#ifndef NDEBUG
+    checkCudaErrorsImpl(info, cudaDeviceSynchronize());
+#endif
+}
 
 // Wrapper to pass file name, line number, and function name
 #define checkCudaErrors(val) checkCudaErrorsImpl(ISCE_SRCINFO(), val)
+
+// Wrapper to pass file name, line number, and function name
+#define checkCudaAsyncErrors() checkCudaAsyncErrorsImpl(ISCE_SRCINFO())
+

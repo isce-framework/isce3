@@ -576,6 +576,8 @@ cdef class pyOrbit:
         cdef bytes fname = pyStringToBytes(filename)
         cdef char *cstring = fname
         self.c_orbit.loadFromHDR(cstring)
+        # so you can load with the one-liner o=Orbit().loadFromHDR(fn)
+        return self
     
     def dumpToHDR(self, filename):
         '''

@@ -290,8 +290,12 @@ function( cython_add_module _name )
   else()
     target_link_libraries( ${_name} ${PYTHON_LIBRARIES} )
   endif()
+  # ignore overflow warnings caused by Python's implicit conversions
+  set_property( SOURCE ${generated_file}
+                PROPERTY COMPILE_OPTIONS -Wno-overflow APPEND )
   # ignore Numpy deprecated API warning
-  target_compile_options( ${_name} PRIVATE "-Wno-cpp" )
+  # ignore warnings for using the #warning extension directive
+  target_compile_options( ${_name} PRIVATE -Wno-cpp -Wno-pedantic)
 endfunction()
 
 include( CMakeParseArguments )

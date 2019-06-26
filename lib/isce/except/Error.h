@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace isce { 
+namespace isce {
     //! The isce::except namespace
     namespace except {
 
@@ -25,6 +25,7 @@ namespace isce {
         Error(const SrcInfo& info, std::string msg);
     };
 
-    using LengthError  = Error<std::length_error>;
+    using InvalidArgument = Error<std::invalid_argument>;
+    using LengthError = Error<std::length_error>;
     using RuntimeError = Error<std::runtime_error>;
 }}

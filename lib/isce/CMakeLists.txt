@@ -8,6 +8,7 @@ add_subdirectory(except)
 add_subdirectory(geometry)
 add_subdirectory(image)
 add_subdirectory(io)
+add_subdirectory(orbit_wip)
 add_subdirectory(product)
 add_subdirectory(signal)
 add_subdirectory(unwrap)
@@ -23,7 +24,12 @@ include_directories(
     ${PYRE_INCLUDE_DIR}
     ${ISCE_BUILDINCLUDEDIR}
     ${GDAL_INCLUDE_DIR}
+    ${HDF5_INCLUDE_DIR}
     ${CEREAL_SRC_INCLUDEDIR})
+
+if(WITH_CODE_COVERAGE)
+    SetCoverageOptions(${LISCE})
+endif()
 
 # Add OpenMP if found
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")

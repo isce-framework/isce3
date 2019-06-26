@@ -1,0 +1,3 @@
+add_isce_test(cuda_orbitwip_orbit)
+add_isce_test(cuda_orbitwip_interp_orbit)
+

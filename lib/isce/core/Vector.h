@@ -35,6 +35,16 @@ public:
     CUDA_HOSTDEV           double& operator[](int i)       { return vdata[i]; }
     CUDA_HOSTDEV constexpr double  operator[](int i) const { return vdata[i]; }
 
+    CUDA_HOSTDEV
+    constexpr
+    Vector<N> & operator+=(const Vector<N> & v)
+    {
+        for (int i = 0; i < N; ++i) {
+            vdata[i] += v[i];
+        }
+        return *this;
+    }
+
     /*
      * Add two vectors
      */
@@ -150,6 +160,25 @@ CUDA_HOSTDEV inline Vec3 normalPlane(const Vec3& p1,
     const Vec3 p13 = p3 - p1;
     const Vec3 p12 = p2 - p1;
     return p13.cross(p12).unitVec();
+}
+
+template<int N>
+CUDA_HOSTDEV
+bool operator==(const Vector<N> & lhs, const Vector<N> & rhs)
+{
+    for (int i = 0; i < N; ++i) {
+        if (lhs[0] != rhs[0]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+template<int N>
+CUDA_HOSTDEV
+bool operator!=(const Vector<N> & lhs, const Vector<N> & rhs)
+{
+    return !(lhs == rhs);
 }
 
 }} // namespace isce::core

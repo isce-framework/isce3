@@ -95,3 +95,43 @@ operator()(double t) const {
 template class isce::core::KnabKernel<float>;
 template class isce::core::KnabKernel<double>;
 template double isce::core::sinc(double);
+
+/* 
+ * NFFT
+ */
+ 
+// constructor
+template <typename T>
+isce::core::NFFTKernel<T>::
+NFFTKernel(size_t m, size_t n, size_t fft_size)
+    : _m(m), _n(n), _fft_size(fft_size)
+{
+    _b = M_PI * (2.0 - 1.0*n/fft_size);
+    _scale = 1.0 / (M_PI * std::cyl_bessel_i(0, _m*_b));
+    this->_halfwidth = fabs((2*m+1) / 2.0);
+}
+
+// call
+template <typename T>
+T
+isce::core::NFFTKernel<T>::
+operator()(double t) const
+{
+    T x2 = t*t - _m*_m;
+    // x=0
+    if (std::abs(x2) < std::numeric_limits<double>::epsilon()) {
+        return _scale;
+    }
+    T out = 1.0;
+    if (x2 < 0.0) {
+        T x = std::sqrt(std::abs(x2));
+        out = std::sinh(_b*x) / x;
+    } else {
+        T x = std::sqrt(x2);
+        out = std::sin(_b*x) / x;
+    }
+    return _scale * out;
+}
+
+template class isce::core::NFFTKernel<float>;
+template class isce::core::NFFTKernel<double>;

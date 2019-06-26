@@ -11,7 +11,7 @@ As a library, it provides a variety of data structures (C++/ Python) that are us
 </tr>
 
 
-Repository: <a href="https://github-fn.jpl.nasa.gov/ericmg/isce">JPL github-fn</a><br>
+Repository: <a href="https://github-fn.jpl.nasa.gov/iscce-3/isce">JPL github-fn</a><br>
 Download: TBD
 
 \section index_install Installation
@@ -59,6 +59,6 @@ We have compiled instructions for installing ISCE for the following sets of plat
 
 \section index_citing Citing ISCE in publications
 
-Please refer to the <a href="https://github-fn.jpl.nasa.gov/ericmg/isce/CITATION">CITATION</a> file.
+Please refer to the <a href="https://github-fn.jpl.nasa.gov/isce-3/isce/CITATION">CITATION</a> file.
 
 */
