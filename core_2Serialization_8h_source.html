@@ -364,167 +364,146 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;        }</div>
 <div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;</div>
 <div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;        <span class="comment">// ------------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;        <span class="comment">// Serialization for LUT2d</span></div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;        <span class="comment">// Serialization for LUT2d (specifically for calibration grids)</span></div>
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;        <span class="comment">// ------------------------------------------------------------------------</span></div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00316"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a54b01f5468b1a8ca012bc98699cc8bd9">  316</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#a54b01f5468b1a8ca012bc98699cc8bd9">loadLUT2d</a>(<a class="code" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp; group,</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;                                <span class="keyword">const</span> std::string &amp; xName, <span class="keyword">const</span> std::string &amp; yName,</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;                                <span class="keyword">const</span> std::string &amp; dsetName, <a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;T&gt;</a> &amp; lut) {</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;            <span class="comment">// Load coordinates</span></div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;            std::valarray&lt;double&gt; x, y;</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a>(group, xName, x);</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a>(group, yName, y);</div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;            <span class="comment">// Load LUT2d data in matrix</span></div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;            <a class="code" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix&lt;T&gt;</a> matrix(y.size(), x.size());</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a>(group, dsetName, matrix);</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;</div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;            <span class="comment">// Set in lut</span></div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;            lut.<a class="code" href="classisce_1_1core_1_1LUT2d.html#aa9022640d543239d3b9e409ff9c586b3">setFromData</a>(x, y, matrix);</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;        }</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;</div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;        <span class="comment">// ------------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;        <span class="comment">// Serialization for LUT2d (specifically for calibration grids)</span></div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;        <span class="comment">// ------------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00342"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#ae6bccdb5d5812662ef7d81d99603f7bd">  342</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#ae6bccdb5d5812662ef7d81d99603f7bd">loadCalGrid</a>(<a class="code" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp; group, <span class="keyword">const</span> std::string &amp; dsetName,</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;                                <a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;T&gt;</a> &amp; lut) {</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;</div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;            <span class="comment">// Load coordinates</span></div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;            std::valarray&lt;double&gt; slantRange, zeroDopplerTime;</div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a>(group, <span class="stringliteral">&quot;slantRange&quot;</span>, slantRange);</div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a>(group, <span class="stringliteral">&quot;zeroDopplerTime&quot;</span>, zeroDopplerTime);</div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;</div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;            <span class="comment">// Load LUT2d data in matrix</span></div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;            <a class="code" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix&lt;T&gt;</a> matrix(zeroDopplerTime.size(), slantRange.size());</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a>(group, dsetName, matrix);</div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;</div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;            <span class="comment">// Set in lut</span></div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;            lut.<a class="code" href="classisce_1_1core_1_1LUT2d.html#aa9022640d543239d3b9e409ff9c586b3">setFromData</a>(slantRange, zeroDopplerTime, matrix);</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;        }</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00314"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#ae6bccdb5d5812662ef7d81d99603f7bd">  314</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#ae6bccdb5d5812662ef7d81d99603f7bd">loadCalGrid</a>(<a class="code" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp; group, <span class="keyword">const</span> std::string &amp; dsetName,</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;                                <a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;T&gt;</a> &amp; lut) {</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;            <span class="comment">// Load coordinates</span></div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;            std::valarray&lt;double&gt; slantRange, zeroDopplerTime;</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a>(group, <span class="stringliteral">&quot;slantRange&quot;</span>, slantRange);</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a>(group, <span class="stringliteral">&quot;zeroDopplerTime&quot;</span>, zeroDopplerTime);</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;            <span class="comment">// Load LUT2d data in matrix</span></div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;            <a class="code" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix&lt;T&gt;</a> matrix(zeroDopplerTime.size(), slantRange.size());</div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a>(group, dsetName, matrix);</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;            <span class="comment">// Set in lut</span></div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;            lut.<a class="code" href="classisce_1_1core_1_1LUT2d.html#aa9022640d543239d3b9e409ff9c586b3">setFromData</a>(slantRange, zeroDopplerTime, matrix);</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;        }</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;</div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00337"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a91878e1605f59499fe3bedb08a299b42">  337</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#a91878e1605f59499fe3bedb08a299b42">saveCalGrid</a>(<a class="code" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp; group,</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;                                <span class="keyword">const</span> std::string &amp; dsetName,</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;                                <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;T&gt;</a> &amp; lut,</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;                                <span class="keyword">const</span> <a class="code" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> &amp; refEpoch,</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;                                <span class="keyword">const</span> std::string &amp; units = <span class="stringliteral">&quot;&quot;</span>) {</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;</div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;            <span class="comment">// Generate uniformly spaced X (slant range) coordinates</span></div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> x0 = lut.xStart();</div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> x1 = x0 + lut.xSpacing() * (lut.width() - 1.0);</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;            <span class="keyword">const</span> std::vector&lt;double&gt; x = <a class="code" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">isce::core::linspace</a>(x0, x1, lut.width());</div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;</div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;            <span class="comment">// Generate uniformly spaced Y (zero Doppler time) coordinates</span></div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> y0 = lut.yStart();</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> y1 = y0 + lut.ySpacing() * (lut.length() - 1.0);</div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;            <span class="keyword">const</span> std::vector&lt;double&gt; y = <a class="code" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">isce::core::linspace</a>(y0, y1, lut.length());</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;</div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;            <span class="comment">// Save coordinates</span></div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">isce::io::saveToH5</a>(group, <span class="stringliteral">&quot;slantRange&quot;</span>, x, <span class="stringliteral">&quot;meters&quot;</span>);</div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">isce::io::saveToH5</a>(group, <span class="stringliteral">&quot;zeroDopplerTime&quot;</span>, y);</div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#acaef94fdfd377cb41f319b05923c2a59">isce::io::setRefEpoch</a>(group, <span class="stringliteral">&quot;zeroDopplerTime&quot;</span>, refEpoch);</div>
 <div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00365"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a91878e1605f59499fe3bedb08a299b42">  365</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#a91878e1605f59499fe3bedb08a299b42">saveCalGrid</a>(<a class="code" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp; group,</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;                                <span class="keyword">const</span> std::string &amp; dsetName,</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;                                <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;T&gt;</a> &amp; lut,</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;                                <span class="keyword">const</span> <a class="code" href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> &amp; refEpoch,</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;                                <span class="keyword">const</span> std::string &amp; units = <span class="stringliteral">&quot;&quot;</span>) {</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;            <span class="comment">// Generate uniformly spaced X (slant range) coordinates</span></div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> x0 = lut.xStart();</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> x1 = x0 + lut.xSpacing() * (lut.width() - 1.0);</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;            <span class="keyword">const</span> std::vector&lt;double&gt; x = <a class="code" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">isce::core::linspace</a>(x0, x1, lut.width());</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;            <span class="comment">// Generate uniformly spaced Y (zero Doppler time) coordinates</span></div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> y0 = lut.yStart();</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> y1 = y0 + lut.ySpacing() * (lut.length() - 1.0);</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;            <span class="keyword">const</span> std::vector&lt;double&gt; y = <a class="code" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">isce::core::linspace</a>(y0, y1, lut.length());</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;            <span class="comment">// Save LUT2d data</span></div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">isce::io::saveToH5</a>(group, dsetName, lut.data(), units);</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;        }</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;        <span class="comment">// ------------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;        <span class="comment">// Serialization for LUT1d</span></div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;        <span class="comment">// ------------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;        <span class="comment">// Serialization save method</span></div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> Archive, <span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> save(Archive &amp; archive, LUT1d&lt;T&gt; <span class="keyword">const</span> &amp; lut) {</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;            <span class="comment">// Copy LUT data from valarrays to vectors</span></div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;            std::vector&lt;double&gt; coords(lut.size());</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;            std::vector&lt;T&gt; values(lut.size());</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;            <span class="keyword">auto</span> v_coords = lut.coords();</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;            <span class="keyword">auto</span> v_values = lut.values();</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;            coords.assign(std::begin(v_coords), std::end(v_coords));</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;            values.assign(std::begin(v_values), std::end(v_values));</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;            <span class="comment">// Archive</span></div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;            archive(cereal::make_nvp(<span class="stringliteral">&quot;Coords&quot;</span>, coords),</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;Values&quot;</span>, values));</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;        }</div>
 <div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;            <span class="comment">// Save coordinates</span></div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">isce::io::saveToH5</a>(group, <span class="stringliteral">&quot;slantRange&quot;</span>, x, <span class="stringliteral">&quot;meters&quot;</span>);</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">isce::io::saveToH5</a>(group, <span class="stringliteral">&quot;zeroDopplerTime&quot;</span>, y);</div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#acaef94fdfd377cb41f319b05923c2a59">isce::io::setRefEpoch</a>(group, <span class="stringliteral">&quot;zeroDopplerTime&quot;</span>, refEpoch);</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;            <span class="comment">// Save LUT2d data</span></div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">isce::io::saveToH5</a>(group, dsetName, lut.data(), units);</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;        }</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;        <span class="comment">// ------------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;        <span class="comment">// Serialization for LUT1d</span></div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;        <span class="comment">// ------------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;        <span class="comment">// Serialization save method</span></div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">class</span> Archive, <span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> save(Archive &amp; archive, LUT1d&lt;T&gt; <span class="keyword">const</span> &amp; lut) {</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;            <span class="comment">// Copy LUT data from valarrays to vectors</span></div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;            std::vector&lt;double&gt; coords(lut.size());</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;            std::vector&lt;T&gt; values(lut.size());</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;            <span class="keyword">auto</span> v_coords = lut.coords();</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;            <span class="keyword">auto</span> v_values = lut.values();</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;            coords.assign(std::begin(v_coords), std::end(v_coords));</div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;            values.assign(std::begin(v_values), std::end(v_values));</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;            <span class="comment">// Archive</span></div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;            archive(cereal::make_nvp(<span class="stringliteral">&quot;Coords&quot;</span>, coords),</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;Values&quot;</span>, values));</div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;        }</div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;        <span class="comment">// Serialization load method</span></div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;        <span class="keyword">template</span>&lt;<span class="keyword">class</span> Archive, <span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> load(Archive &amp; archive, LUT1d&lt;T&gt; &amp; lut) {</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;            <span class="comment">// Create vector for loading results</span></div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;            std::vector&lt;double&gt; coords;</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;            std::vector&lt;T&gt; values;</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;            <span class="comment">// Load the archive</span></div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;            archive(cereal::make_nvp(<span class="stringliteral">&quot;Coords&quot;</span>, coords),</div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;Values&quot;</span>, values));</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;            <span class="comment">// Copy vector to LUT valarrays</span></div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;            std::valarray&lt;double&gt; v_coords(coords.data(), coords.size());</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;            std::valarray&lt;T&gt; v_values(values.data(), values.size());</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;            lut.coords(v_coords);</div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;            lut.values(v_values);</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;        }</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;</div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00431"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a5cc4818bb295a2e9b217a0475eaea01d">  431</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#a8921e0b091f2af23ac3c625a7b67f7b6">loadFromH5</a>(<a class="code" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp; group, <a class="code" href="classisce_1_1core_1_1LUT1d.html">LUT1d&lt;T&gt;</a> &amp; lut,</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;                               std::string name_coords, std::string name_values) {</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;            <span class="comment">// Valarrays for storing results</span></div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;            std::valarray&lt;double&gt; x, y;</div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;            <span class="comment">// Load the LUT values</span></div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a>(group, name_values, y);</div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;            <span class="comment">// Load the LUT coordinates</span></div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a>(group, name_coords, x);</div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;            <span class="comment">// Set LUT data</span></div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;            lut.<a class="code" href="classisce_1_1core_1_1LUT1d.html#a5ada628b052167028a9f4b2686bc5a6b">coords</a>(x);</div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;            lut.<a class="code" href="classisce_1_1core_1_1LUT1d.html#aff2d43e30e47a177eaac9da4de67eb82">values</a>(y);</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;        }</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;        <span class="comment">// ------------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;        <span class="comment">// Serialization for StateVector</span></div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;        <span class="comment">// ------------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;        <span class="comment">// Serialization save method</span></div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;        <span class="keyword">template</span>&lt;<span class="keyword">class</span> Archive&gt;</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> save(Archive &amp; archive, <span class="keyword">const</span> StateVector &amp; sv) {</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;            <span class="comment">// Serialize position vector to string as whitespace-delimited values</span></div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;            std::stringstream pos_stream;</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;            pos_stream &lt;&lt; sv.position[0] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; sv.position[1] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; sv.position[2];</div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;            std::string position_string = pos_stream.str();</div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;            <span class="comment">// Serialize velocity vector to string as whitespace-delimited values</span></div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;            std::stringstream vel_stream;</div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;            vel_stream &lt;&lt; sv.velocity[0] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; sv.velocity[1] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; sv.velocity[2];</div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;            std::string velocity_string = vel_stream.str();</div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;            <span class="comment">// Archive</span></div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;            archive(cereal::make_nvp(<span class="stringliteral">&quot;Time&quot;</span>, sv.datetime.isoformat()),</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;Position&quot;</span>, position_string),</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;Velocity&quot;</span>, velocity_string));</div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;        }</div>
-<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;</div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;        <span class="comment">// Serialization load method</span></div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;        <span class="keyword">template</span>&lt;<span class="keyword">class</span> Archive&gt;</div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> load(Archive &amp; archive, StateVector &amp; sv) {</div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;            <span class="comment">// Make strings for position, velocity, and datetime</span></div>
-<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;            std::string position_string, velocity_string, datetime_string;</div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;            <span class="comment">// Load the archive</span></div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;            archive(cereal::make_nvp(<span class="stringliteral">&quot;Time&quot;</span>, datetime_string),</div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;Position&quot;</span>, position_string),</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;Velocity&quot;</span>, velocity_string));</div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;            <span class="comment">// Send datetime string to datetime object parser</span></div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;            sv.datetime = datetime_string;</div>
-<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;            <span class="comment">// De-serialize position vector from stringstream</span></div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;            std::stringstream pos_stream (position_string);</div>
-<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;            pos_stream &gt;&gt; sv.position[0] &gt;&gt; sv.position[1] &gt;&gt; sv.position[2];</div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;            <span class="comment">// De-serialize velocity vector from stringstream</span></div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;            std::stringstream vel_stream (velocity_string);</div>
-<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;            vel_stream &gt;&gt; sv.velocity[0] &gt;&gt; sv.velocity[1] &gt;&gt; sv.velocity[2];</div>
-<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;        }</div>
-<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;    }</div>
-<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;}</div>
-<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;</div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;<span class="comment">// end of file</span></div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;        <span class="comment">// Serialization load method</span></div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;        <span class="keyword">template</span>&lt;<span class="keyword">class</span> Archive, <span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> load(Archive &amp; archive, LUT1d&lt;T&gt; &amp; lut) {</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;            <span class="comment">// Create vector for loading results</span></div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;            std::vector&lt;double&gt; coords;</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;            std::vector&lt;T&gt; values;</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;            <span class="comment">// Load the archive</span></div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;            archive(cereal::make_nvp(<span class="stringliteral">&quot;Coords&quot;</span>, coords),</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;Values&quot;</span>, values));</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;            <span class="comment">// Copy vector to LUT valarrays</span></div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;            std::valarray&lt;double&gt; v_coords(coords.data(), coords.size());</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;            std::valarray&lt;T&gt; v_values(values.data(), values.size());</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;            lut.coords(v_coords);</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;            lut.values(v_values);</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;        }</div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00403"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a5cc4818bb295a2e9b217a0475eaea01d">  403</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#a8921e0b091f2af23ac3c625a7b67f7b6">loadFromH5</a>(<a class="code" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp; group, <a class="code" href="classisce_1_1core_1_1LUT1d.html">LUT1d&lt;T&gt;</a> &amp; lut,</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;                               std::string name_coords, std::string name_values) {</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;            <span class="comment">// Valarrays for storing results</span></div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;            std::valarray&lt;double&gt; x, y;</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;            <span class="comment">// Load the LUT values</span></div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a>(group, name_values, y);</div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;            <span class="comment">// Load the LUT coordinates</span></div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;            <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a>(group, name_coords, x);</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;            <span class="comment">// Set LUT data</span></div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;            lut.<a class="code" href="classisce_1_1core_1_1LUT1d.html#a5ada628b052167028a9f4b2686bc5a6b">coords</a>(x);</div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;            lut.<a class="code" href="classisce_1_1core_1_1LUT1d.html#aff2d43e30e47a177eaac9da4de67eb82">values</a>(y);</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;        }</div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;</div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;        <span class="comment">// ------------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;        <span class="comment">// Serialization for StateVector</span></div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;        <span class="comment">// ------------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;        <span class="comment">// Serialization save method</span></div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;        <span class="keyword">template</span>&lt;<span class="keyword">class</span> Archive&gt;</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> save(Archive &amp; archive, <span class="keyword">const</span> StateVector &amp; sv) {</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;            <span class="comment">// Serialize position vector to string as whitespace-delimited values</span></div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;            std::stringstream pos_stream;</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;            pos_stream &lt;&lt; sv.position[0] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; sv.position[1] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; sv.position[2];</div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;            std::string position_string = pos_stream.str();</div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;            <span class="comment">// Serialize velocity vector to string as whitespace-delimited values</span></div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;            std::stringstream vel_stream;</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;            vel_stream &lt;&lt; sv.velocity[0] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; sv.velocity[1] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; sv.velocity[2];</div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;            std::string velocity_string = vel_stream.str();</div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;            <span class="comment">// Archive</span></div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;            archive(cereal::make_nvp(<span class="stringliteral">&quot;Time&quot;</span>, sv.datetime.isoformat()),</div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;Position&quot;</span>, position_string),</div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;Velocity&quot;</span>, velocity_string));</div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;        }</div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;</div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;        <span class="comment">// Serialization load method</span></div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;        <span class="keyword">template</span>&lt;<span class="keyword">class</span> Archive&gt;</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> load(Archive &amp; archive, StateVector &amp; sv) {</div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;            <span class="comment">// Make strings for position, velocity, and datetime</span></div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;            std::string position_string, velocity_string, datetime_string;</div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;            <span class="comment">// Load the archive</span></div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;            archive(cereal::make_nvp(<span class="stringliteral">&quot;Time&quot;</span>, datetime_string),</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;Position&quot;</span>, position_string),</div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;                    cereal::make_nvp(<span class="stringliteral">&quot;Velocity&quot;</span>, velocity_string));</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;            <span class="comment">// Send datetime string to datetime object parser</span></div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;            sv.datetime = datetime_string;</div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;            <span class="comment">// De-serialize position vector from stringstream</span></div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;            std::stringstream pos_stream (position_string);</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;            pos_stream &gt;&gt; sv.position[0] &gt;&gt; sv.position[1] &gt;&gt; sv.position[2];</div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;            <span class="comment">// De-serialize velocity vector from stringstream</span></div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;            std::stringstream vel_stream (velocity_string);</div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;            vel_stream &gt;&gt; sv.velocity[0] &gt;&gt; sv.velocity[1] &gt;&gt; sv.velocity[2];</div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;        }</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;    }</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;}</div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;</div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;<span class="comment">// end of file</span></div>
 <div class="ttc" id="classisce_1_1core_1_1Ellipsoid_html_a285f0d5a2912cd2a2f2f88b5586f2fa0"><div class="ttname"><a href="classisce_1_1core_1_1Ellipsoid.html#a285f0d5a2912cd2a2f2f88b5586f2fa0">isce::core::Ellipsoid::e2</a></div><div class="ttdeci">CUDA_HOSTDEV double e2() const </div><div class="ttdoc">Return eccentricity^2. </div><div class="ttdef"><b>Definition:</b> Ellipsoid.h:58</div></div>
 <div class="ttc" id="classisce_1_1core_1_1EulerAngles_html_a22e9ddf2afecfae6f2f53fb6d6509fe3"><div class="ttname"><a href="classisce_1_1core_1_1EulerAngles.html#a22e9ddf2afecfae6f2f53fb6d6509fe3">isce::core::EulerAngles::nVectors</a></div><div class="ttdeci">size_t nVectors() const </div><div class="ttdoc">Return number of epochs. </div><div class="ttdef"><b>Definition:</b> EulerAngles.h:89</div></div>
 <div class="ttc" id="structisce_1_1core_1_1Orbit_html_a7c7c4d64a2914129f11fb3840c76123a"><div class="ttname"><a href="structisce_1_1core_1_1Orbit.html#a7c7c4d64a2914129f11fb3840c76123a">isce::core::Orbit::position</a></div><div class="ttdeci">std::vector&lt; double &gt; position</div><div class="ttdoc">Linearized position values of contained State Vectors. </div><div class="ttdef"><b>Definition:</b> Orbit.h:48</div></div>
@@ -542,7 +521,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="structisce_1_1core_1_1Poly2d_html_a9930fcccf722b3f34101db17a1d52cbb"><div class="ttname"><a href="structisce_1_1core_1_1Poly2d.html#a9930fcccf722b3f34101db17a1d52cbb">isce::core::Poly2d::rangeNorm</a></div><div class="ttdeci">double rangeNorm</div><div class="ttdoc">Norm in range or x direction. </div><div class="ttdef"><b>Definition:</b> Poly2d.h:41</div></div>
 <div class="ttc" id="namespaceisce_1_1core_html_aa7b34dffee2880f200ff9249eae16989"><div class="ttname"><a href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">isce::core::linspace</a></div><div class="ttdeci">std::vector&lt; T &gt; linspace(T low, T high, std::size_t number)</div><div class="ttdoc">Function to return a Matlab/Python style linspace vector. </div><div class="ttdef"><b>Definition:</b> Utilities.h:85</div></div>
 <div class="ttc" id="namespaceisce_1_1core_html_a8921e0b091f2af23ac3c625a7b67f7b6"><div class="ttname"><a href="namespaceisce_1_1core.html#a8921e0b091f2af23ac3c625a7b67f7b6">isce::core::loadFromH5</a></div><div class="ttdeci">void loadFromH5(isce::io::IGroup &amp;group, Ellipsoid &amp;ellps)</div><div class="ttdoc">Load Ellipsoid parameters from HDF5. </div><div class="ttdef"><b>Definition:</b> Serialization.h:85</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_ae6bccdb5d5812662ef7d81d99603f7bd"><div class="ttname"><a href="namespaceisce_1_1core.html#ae6bccdb5d5812662ef7d81d99603f7bd">isce::core::loadCalGrid</a></div><div class="ttdeci">void loadCalGrid(isce::io::IGroup &amp;group, const std::string &amp;dsetName, isce::core::LUT2d&lt; T &gt; &amp;lut)</div><div class="ttdoc">Load LUT2d data from HDF5 product. </div><div class="ttdef"><b>Definition:</b> Serialization.h:342</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_ae6bccdb5d5812662ef7d81d99603f7bd"><div class="ttname"><a href="namespaceisce_1_1core.html#ae6bccdb5d5812662ef7d81d99603f7bd">isce::core::loadCalGrid</a></div><div class="ttdeci">void loadCalGrid(isce::io::IGroup &amp;group, const std::string &amp;dsetName, isce::core::LUT2d&lt; T &gt; &amp;lut)</div><div class="ttdoc">Load LUT2d data from HDF5 product. </div><div class="ttdef"><b>Definition:</b> Serialization.h:314</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Matrix_html"><div class="ttname"><a href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix&lt; T &gt;</a></div></div>
 <div class="ttc" id="classisce_1_1core_1_1Ellipsoid_html"><div class="ttname"><a href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a></div><div class="ttdoc">Data structure to store Ellipsoid information. </div><div class="ttdef"><b>Definition:</b> Ellipsoid.h:26</div></div>
 <div class="ttc" id="namespaceisce_1_1io_html_acaef94fdfd377cb41f319b05923c2a59"><div class="ttname"><a href="namespaceisce_1_1io.html#acaef94fdfd377cb41f319b05923c2a59">isce::io::setRefEpoch</a></div><div class="ttdeci">void setRefEpoch(H5obj &amp;h5obj, const std::string &amp;datasetPath, const isce::core::DateTime &amp;refEpoch)</div><div class="ttdoc">Save reference epoch DateTime as an attribute. </div><div class="ttdef"><b>Definition:</b> Serialization.h:256</div></div>
@@ -564,8 +543,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="structisce_1_1core_1_1DateTime_html"><div class="ttname"><a href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a></div><div class="ttdoc">Data structure to store date time to nano-sec precision. </div><div class="ttdef"><b>Definition:</b> DateTime.h:24</div></div>
 <div class="ttc" id="namespaceisce_1_1io_html_ac3028775734d38721d27c2cd0ad96034"><div class="ttname"><a href="namespaceisce_1_1io.html#ac3028775734d38721d27c2cd0ad96034">isce::io::getRefEpoch</a></div><div class="ttdeci">isce::core::DateTime getRefEpoch(H5obj &amp;h5obj, const std::string &amp;datasetPath)</div><div class="ttdoc">Parse time units in a dataset attribute to get a reference epoch. </div><div class="ttdef"><b>Definition:</b> Serialization.h:229</div></div>
 <div class="ttc" id="classisce_1_1core_1_1EulerAngles_html_a642577c39cbb61ea4bd22e9abd91e947"><div class="ttname"><a href="classisce_1_1core_1_1EulerAngles.html#a642577c39cbb61ea4bd22e9abd91e947">isce::core::EulerAngles::refEpoch</a></div><div class="ttdeci">const isce::core::DateTime &amp; refEpoch() const </div><div class="ttdoc">Get reference epoch. </div><div class="ttdef"><b>Definition:</b> EulerAngles.h:84</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_a54b01f5468b1a8ca012bc98699cc8bd9"><div class="ttname"><a href="namespaceisce_1_1core.html#a54b01f5468b1a8ca012bc98699cc8bd9">isce::core::loadLUT2d</a></div><div class="ttdeci">void loadLUT2d(isce::io::IGroup &amp;group, const std::string &amp;xName, const std::string &amp;yName, const std::string &amp;dsetName, isce::core::LUT2d&lt; T &gt; &amp;lut)</div><div class="ttdoc">Load LUT2d data from HDF5 product. </div><div class="ttdef"><b>Definition:</b> Serialization.h:316</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_a91878e1605f59499fe3bedb08a299b42"><div class="ttname"><a href="namespaceisce_1_1core.html#a91878e1605f59499fe3bedb08a299b42">isce::core::saveCalGrid</a></div><div class="ttdeci">void saveCalGrid(isce::io::IGroup &amp;group, const std::string &amp;dsetName, const isce::core::LUT2d&lt; T &gt; &amp;lut, const isce::core::DateTime &amp;refEpoch, const std::string &amp;units=&quot;&quot;)</div><div class="ttdoc">Save LUT2d data to HDF5 product. </div><div class="ttdef"><b>Definition:</b> Serialization.h:365</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_a91878e1605f59499fe3bedb08a299b42"><div class="ttname"><a href="namespaceisce_1_1core.html#a91878e1605f59499fe3bedb08a299b42">isce::core::saveCalGrid</a></div><div class="ttdeci">void saveCalGrid(isce::io::IGroup &amp;group, const std::string &amp;dsetName, const isce::core::LUT2d&lt; T &gt; &amp;lut, const isce::core::DateTime &amp;refEpoch, const std::string &amp;units=&quot;&quot;)</div><div class="ttdoc">Save LUT2d data to HDF5 product. </div><div class="ttdef"><b>Definition:</b> Serialization.h:337</div></div>
 <div class="ttc" id="classisce_1_1core_1_1EulerAngles_html_ab939e305c9f644b0d5116f1dbb899e1c"><div class="ttname"><a href="classisce_1_1core_1_1EulerAngles.html#ab939e305c9f644b0d5116f1dbb899e1c">isce::core::EulerAngles::roll</a></div><div class="ttdeci">const std::vector&lt; double &gt; &amp; roll() const </div><div class="ttdoc">Return data vector of roll. </div><div class="ttdef"><b>Definition:</b> EulerAngles.h:55</div></div>
 <div class="ttc" id="structisce_1_1core_1_1Poly2d_html_a03ff9aee7b05163f06e26e572eebbe5d"><div class="ttname"><a href="structisce_1_1core_1_1Poly2d.html#a03ff9aee7b05163f06e26e572eebbe5d">isce::core::Poly2d::azimuthOrder</a></div><div class="ttdeci">int azimuthOrder</div><div class="ttdoc">Order of polynomial in azimuth or y. </div><div class="ttdef"><b>Definition:</b> Poly2d.h:35</div></div>
 <div class="ttc" id="structisce_1_1core_1_1Poly2d_html"><div class="ttname"><a href="structisce_1_1core_1_1Poly2d.html">isce::core::Poly2d</a></div><div class="ttdoc">Data structure for representing 1D polynomials. </div><div class="ttdef"><b>Definition:</b> Poly2d.h:31</div></div>
