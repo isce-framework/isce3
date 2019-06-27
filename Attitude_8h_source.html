@@ -100,67 +100,57 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;</div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#ifndef ISCE_CORE_ATTITUDE_H</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define ISCE_CORE_ATTITUDE_H</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;Constants.h&quot;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &quot;DateTime.h&quot;</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &quot;DenseMatrix.h&quot;</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment">// Declarations</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="namespaceisce.html">   18</a></span>&#160;<span class="keyword">namespace </span>isce {</div>
-<div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html">   19</a></span>&#160;    <span class="keyword">namespace </span>core {</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;        <span class="comment">// The attitude classes</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;        <span class="keyword">class </span><a class="code" href="classisce_1_1core_1_1Attitude.html">Attitude</a>;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        <span class="keyword">class </span><a class="code" href="classisce_1_1core_1_1Quaternion.html">Quaternion</a>;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;        <span class="keyword">class </span><a class="code" href="classisce_1_1core_1_1EulerAngles.html">EulerAngles</a>;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        <span class="comment">// Enum for specifying attitude types</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;        <span class="keyword">enum</span> AttitudeType {QUATERNION_T, EULERANGLES_T};</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    }</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;}</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
-<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Attitude.html">   30</a></span>&#160;<span class="keyword">class </span><a class="code" href="classisce_1_1core_1_1Attitude.html">isce::core::Attitude</a> {</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Attitude.html#a909af97050ff424424be2eed032241bf">   34</a></span>&#160;        <a class="code" href="classisce_1_1core_1_1Attitude.html#a909af97050ff424424be2eed032241bf">Attitude</a>(AttitudeType atype) : _attitude_type(atype) {};</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
-<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Attitude.html#ac256c51f2278c7515691cbceb4d00f29">   37</a></span>&#160;        <span class="keyword">virtual</span> <a class="code" href="classisce_1_1core_1_1Attitude.html#ac256c51f2278c7515691cbceb4d00f29">~Attitude</a>() {}</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1Attitude.html#adfc3683cf0fac17f250c06273f7ee739">ypr</a>(<span class="keywordtype">double</span> tintp, <span class="keywordtype">double</span>&amp; yaw, <span class="keywordtype">double</span>&amp; pitch, <span class="keywordtype">double</span>&amp; roll) = 0;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        <span class="keyword">virtual</span> <a class="code" href="structisce_1_1core_1_1DenseMatrix.html">Mat3</a> <a class="code" href="classisce_1_1core_1_1Attitude.html#a552528ab614cc3be06bb99597fdee28a">rotmat</a>(<span class="keywordtype">double</span> tintp, <span class="keyword">const</span> std::string, <span class="keywordtype">double</span> d0 = 0,</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;                            <span class="keywordtype">double</span> d1 = 0, <span class="keywordtype">double</span> d2 = 0, <span class="keywordtype">double</span> d3 = 0) = 0;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
-<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Attitude.html#a2e27081a421039c8d191f8028c2e4068">   47</a></span>&#160;        <span class="keyword">inline</span> AttitudeType <a class="code" href="classisce_1_1core_1_1Attitude.html#a2e27081a421039c8d191f8028c2e4068">attitudeType</a>()<span class="keyword">  const </span>{ <span class="keywordflow">return</span> _attitude_type; }</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;</div>
-<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Attitude.html#a182f4e50832950de6d917225c0837f8b">   50</a></span>&#160;        <span class="keyword">inline</span> std::string <a class="code" href="classisce_1_1core_1_1Attitude.html#a182f4e50832950de6d917225c0837f8b">yawOrientation</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> _yaw_orientation; }</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1Attitude.html#a182f4e50832950de6d917225c0837f8b">yawOrientation</a>(<span class="keyword">const</span> std::string);</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="comment">// Private data members</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        AttitudeType _attitude_type;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        std::string _yaw_orientation;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;};</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="comment">// Go ahead and define setYawOrientation here</span></div>
-<div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Attitude.html#a45d4facb651205474e294f41dfd02a86">   62</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1Attitude.html#a182f4e50832950de6d917225c0837f8b">isce::core::Attitude::yawOrientation</a>(<span class="keyword">const</span> std::string orientation) {</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    _yaw_orientation = orientation;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;}</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="comment">// end of file</span></div>
-<div class="ttc" id="classisce_1_1core_1_1Quaternion_html"><div class="ttname"><a href="classisce_1_1core_1_1Quaternion.html">isce::core::Quaternion</a></div><div class="ttdoc">Quaternion representation of attitude information. </div><div class="ttdef"><b>Definition:</b> Quaternion.h:17</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Attitude_html_a2e27081a421039c8d191f8028c2e4068"><div class="ttname"><a href="classisce_1_1core_1_1Attitude.html#a2e27081a421039c8d191f8028c2e4068">isce::core::Attitude::attitudeType</a></div><div class="ttdeci">AttitudeType attitudeType() const </div><div class="ttdoc">Return type of attitude representation - quaternion or euler angle. </div><div class="ttdef"><b>Definition:</b> Attitude.h:47</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Attitude_html_a182f4e50832950de6d917225c0837f8b"><div class="ttname"><a href="classisce_1_1core_1_1Attitude.html#a182f4e50832950de6d917225c0837f8b">isce::core::Attitude::yawOrientation</a></div><div class="ttdeci">std::string yawOrientation() const </div><div class="ttdoc">Return yaw orientation - central or normal. </div><div class="ttdef"><b>Definition:</b> Attitude.h:50</div></div>
-<div class="ttc" id="classisce_1_1core_1_1EulerAngles_html"><div class="ttname"><a href="classisce_1_1core_1_1EulerAngles.html">isce::core::EulerAngles</a></div><div class="ttdoc">Data structure for Euler Angle representation of attitude information. </div><div class="ttdef"><b>Definition:</b> EulerAngles.h:17</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Attitude_html"><div class="ttname"><a href="classisce_1_1core_1_1Attitude.html">isce::core::Attitude</a></div><div class="ttdoc">Base class for attitude data representation. </div><div class="ttdef"><b>Definition:</b> Attitude.h:30</div></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;forward.h&quot;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &quot;Constants.h&quot;</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &quot;DateTime.h&quot;</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
+<div class="line"><a name="l00020"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Attitude.html">   20</a></span>&#160;<span class="keyword">class </span><a class="code" href="classisce_1_1core_1_1Attitude.html">isce::core::Attitude</a> {</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;        <span class="keyword">enum class</span> Type { EulerAngles_t, Quaternion_t };</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
+<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Attitude.html#a985117dc9ff5d3afdc0fec35b56cd313">   26</a></span>&#160;        <a class="code" href="classisce_1_1core_1_1Attitude.html#a985117dc9ff5d3afdc0fec35b56cd313">Attitude</a>(Attitude::Type atype) : _attitude_type(atype) {};</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;</div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Attitude.html#ac256c51f2278c7515691cbceb4d00f29">   29</a></span>&#160;        <span class="keyword">virtual</span> <a class="code" href="classisce_1_1core_1_1Attitude.html#ac256c51f2278c7515691cbceb4d00f29">~Attitude</a>() {}</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;        <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1Attitude.html#adfc3683cf0fac17f250c06273f7ee739">ypr</a>(<span class="keywordtype">double</span> tintp, <span class="keywordtype">double</span>&amp; yaw, <span class="keywordtype">double</span>&amp; pitch, <span class="keywordtype">double</span>&amp; roll) = 0;</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        <span class="keyword">virtual</span> <a class="code" href="structisce_1_1core_1_1DenseMatrix.html">Mat3</a> <a class="code" href="classisce_1_1core_1_1Attitude.html#a552528ab614cc3be06bb99597fdee28a">rotmat</a>(<span class="keywordtype">double</span> tintp, <span class="keyword">const</span> std::string, <span class="keywordtype">double</span> d0 = 0,</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;                            <span class="keywordtype">double</span> d1 = 0, <span class="keywordtype">double</span> d2 = 0, <span class="keywordtype">double</span> d3 = 0) = 0;</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
+<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Attitude.html#aa6a0519af6d98cd56a7db75278eb9791">   39</a></span>&#160;        <span class="keyword">inline</span> Attitude::Type <a class="code" href="classisce_1_1core_1_1Attitude.html#aa6a0519af6d98cd56a7db75278eb9791">attitudeType</a>()<span class="keyword">  const </span>{ <span class="keywordflow">return</span> _attitude_type; }</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;</div>
+<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Attitude.html#a182f4e50832950de6d917225c0837f8b">   42</a></span>&#160;        <span class="keyword">inline</span> std::string <a class="code" href="classisce_1_1core_1_1Attitude.html#a182f4e50832950de6d917225c0837f8b">yawOrientation</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> _yaw_orientation; }</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1Attitude.html#a182f4e50832950de6d917225c0837f8b">yawOrientation</a>(<span class="keyword">const</span> std::string);</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="comment">// Private data members</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        Attitude::Type _attitude_type;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        std::string _yaw_orientation;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;};</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="comment">// Go ahead and define setYawOrientation here</span></div>
+<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Attitude.html#a45d4facb651205474e294f41dfd02a86">   54</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1Attitude.html#a182f4e50832950de6d917225c0837f8b">isce::core::Attitude::yawOrientation</a>(<span class="keyword">const</span> std::string orientation) {</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    _yaw_orientation = orientation;</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;}</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="comment">// end of file</span></div>
+<div class="ttc" id="classisce_1_1core_1_1Attitude_html_a182f4e50832950de6d917225c0837f8b"><div class="ttname"><a href="classisce_1_1core_1_1Attitude.html#a182f4e50832950de6d917225c0837f8b">isce::core::Attitude::yawOrientation</a></div><div class="ttdeci">std::string yawOrientation() const </div><div class="ttdoc">Return yaw orientation - central or normal. </div><div class="ttdef"><b>Definition:</b> Attitude.h:42</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Attitude_html_aa6a0519af6d98cd56a7db75278eb9791"><div class="ttname"><a href="classisce_1_1core_1_1Attitude.html#aa6a0519af6d98cd56a7db75278eb9791">isce::core::Attitude::attitudeType</a></div><div class="ttdeci">Attitude::Type attitudeType() const </div><div class="ttdoc">Return type of attitude representation - quaternion or euler angle. </div><div class="ttdef"><b>Definition:</b> Attitude.h:39</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Attitude_html"><div class="ttname"><a href="classisce_1_1core_1_1Attitude.html">isce::core::Attitude</a></div><div class="ttdoc">Base class for attitude data representation. </div><div class="ttdef"><b>Definition:</b> Attitude.h:20</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Attitude_html_adfc3683cf0fac17f250c06273f7ee739"><div class="ttname"><a href="classisce_1_1core_1_1Attitude.html#adfc3683cf0fac17f250c06273f7ee739">isce::core::Attitude::ypr</a></div><div class="ttdeci">virtual void ypr(double tintp, double &amp;yaw, double &amp;pitch, double &amp;roll)=0</div><div class="ttdoc">Virtual function to return yaw, pitch, roll. </div></div>
-<div class="ttc" id="structisce_1_1core_1_1DenseMatrix_html"><div class="ttname"><a href="structisce_1_1core_1_1DenseMatrix.html">isce::core::DenseMatrix</a></div><div class="ttdef"><b>Definition:</b> DenseMatrix.h:10</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Attitude_html_a909af97050ff424424be2eed032241bf"><div class="ttname"><a href="classisce_1_1core_1_1Attitude.html#a909af97050ff424424be2eed032241bf">isce::core::Attitude::Attitude</a></div><div class="ttdeci">Attitude(AttitudeType atype)</div><div class="ttdoc">Constructor using time attitude representation type. </div><div class="ttdef"><b>Definition:</b> Attitude.h:34</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Attitude_html_a985117dc9ff5d3afdc0fec35b56cd313"><div class="ttname"><a href="classisce_1_1core_1_1Attitude.html#a985117dc9ff5d3afdc0fec35b56cd313">isce::core::Attitude::Attitude</a></div><div class="ttdeci">Attitude(Attitude::Type atype)</div><div class="ttdoc">Constructor using time attitude representation type. </div><div class="ttdef"><b>Definition:</b> Attitude.h:26</div></div>
+<div class="ttc" id="structisce_1_1core_1_1DenseMatrix_html"><div class="ttname"><a href="structisce_1_1core_1_1DenseMatrix.html">isce::core::DenseMatrix</a></div><div class="ttdef"><b>Definition:</b> DenseMatrix.h:11</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Attitude_html_a552528ab614cc3be06bb99597fdee28a"><div class="ttname"><a href="classisce_1_1core_1_1Attitude.html#a552528ab614cc3be06bb99597fdee28a">isce::core::Attitude::rotmat</a></div><div class="ttdeci">virtual Mat3 rotmat(double tintp, const std::string, double d0=0, double d1=0, double d2=0, double d3=0)=0</div><div class="ttdoc">Virtual function return rotation matrix with optional perturbations. </div></div>
-<div class="ttc" id="classisce_1_1core_1_1Attitude_html_ac256c51f2278c7515691cbceb4d00f29"><div class="ttname"><a href="classisce_1_1core_1_1Attitude.html#ac256c51f2278c7515691cbceb4d00f29">isce::core::Attitude::~Attitude</a></div><div class="ttdeci">virtual ~Attitude()</div><div class="ttdoc">Virtual destructor. </div><div class="ttdef"><b>Definition:</b> Attitude.h:37</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Attitude_html_ac256c51f2278c7515691cbceb4d00f29"><div class="ttname"><a href="classisce_1_1core_1_1Attitude.html#ac256c51f2278c7515691cbceb4d00f29">isce::core::Attitude::~Attitude</a></div><div class="ttdeci">virtual ~Attitude()</div><div class="ttdoc">Virtual destructor. </div><div class="ttdef"><b>Definition:</b> Attitude.h:29</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
