@@ -90,7 +90,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classisce_1_1core_1_1Attitude-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -113,19 +112,12 @@ Inheritance diagram for isce::core::Attitude:</div>
 </map>
  </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:aa1da9708990e6bd43bee206544b7bc2b"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><b>Type</b> { <b>EulerAngles_t</b>, 
-<b>Quaternion_t</b>
- }</td></tr>
-<tr class="separator:aa1da9708990e6bd43bee206544b7bc2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a985117dc9ff5d3afdc0fec35b56cd313"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a985117dc9ff5d3afdc0fec35b56cd313"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Attitude.html#a985117dc9ff5d3afdc0fec35b56cd313">Attitude</a> (Attitude::Type atype)</td></tr>
-<tr class="memdesc:a985117dc9ff5d3afdc0fec35b56cd313"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor using time attitude representation type. <br/></td></tr>
-<tr class="separator:a985117dc9ff5d3afdc0fec35b56cd313"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a909af97050ff424424be2eed032241bf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a909af97050ff424424be2eed032241bf"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Attitude.html#a909af97050ff424424be2eed032241bf">Attitude</a> (AttitudeType atype)</td></tr>
+<tr class="memdesc:a909af97050ff424424be2eed032241bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor using time attitude representation type. <br/></td></tr>
+<tr class="separator:a909af97050ff424424be2eed032241bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac256c51f2278c7515691cbceb4d00f29"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac256c51f2278c7515691cbceb4d00f29"></a>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Attitude.html#ac256c51f2278c7515691cbceb4d00f29">~Attitude</a> ()</td></tr>
 <tr class="memdesc:ac256c51f2278c7515691cbceb4d00f29"><td class="mdescLeft">&#160;</td><td class="mdescRight">Virtual destructor. <br/></td></tr>
@@ -138,10 +130,10 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 virtual <a class="el" href="structisce_1_1core_1_1DenseMatrix.html">Mat3</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Attitude.html#a552528ab614cc3be06bb99597fdee28a">rotmat</a> (double tintp, const std::string, double d0=0, double d1=0, double d2=0, double d3=0)=0</td></tr>
 <tr class="memdesc:a552528ab614cc3be06bb99597fdee28a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Virtual function return rotation matrix with optional perturbations. <br/></td></tr>
 <tr class="separator:a552528ab614cc3be06bb99597fdee28a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa6a0519af6d98cd56a7db75278eb9791"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa6a0519af6d98cd56a7db75278eb9791"></a>
-Attitude::Type&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Attitude.html#aa6a0519af6d98cd56a7db75278eb9791">attitudeType</a> () const </td></tr>
-<tr class="memdesc:aa6a0519af6d98cd56a7db75278eb9791"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return type of attitude representation - quaternion or euler angle. <br/></td></tr>
-<tr class="separator:aa6a0519af6d98cd56a7db75278eb9791"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e27081a421039c8d191f8028c2e4068"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2e27081a421039c8d191f8028c2e4068"></a>
+AttitudeType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Attitude.html#a2e27081a421039c8d191f8028c2e4068">attitudeType</a> () const </td></tr>
+<tr class="memdesc:a2e27081a421039c8d191f8028c2e4068"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return type of attitude representation - quaternion or euler angle. <br/></td></tr>
+<tr class="separator:a2e27081a421039c8d191f8028c2e4068"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a182f4e50832950de6d917225c0837f8b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a182f4e50832950de6d917225c0837f8b"></a>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Attitude.html#a182f4e50832950de6d917225c0837f8b">yawOrientation</a> () const </td></tr>
 <tr class="memdesc:a182f4e50832950de6d917225c0837f8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return yaw orientation - central or normal. <br/></td></tr>
