@@ -6,19 +6,14 @@
 
 #ifndef ISCE_CORE_BASELINE_H
 #define ISCE_CORE_BASELINE_H
+#pragma once
 
-#include "Cartesian.h"
+#include "forward.h"
+
 #include "Constants.h"
 #include "Ellipsoid.h"
 #include "Metadata.h"
 #include "Orbit.h"
-
-// Declaration
-namespace isce {
-    namespace core {
-        class Baseline;
-    }
-}
 
 /** Data structure for computing interferometric baselines */
 class isce::core::Baseline {

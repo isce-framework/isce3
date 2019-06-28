@@ -4,7 +4,9 @@
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
-using namespace isce::core;
+// XXX ambiguous: core::Orbit vs. orbit_wip::Orbit
+// using namespace isce::core;
+using isce::core::Vec3;
 using namespace isce::cuda::orbit_wip;
 
 bool isclose(const Vec3 & lhs, const Vec3 & rhs)

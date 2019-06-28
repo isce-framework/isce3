@@ -6,6 +6,7 @@
 #include <isce/core/DateTime.h>
 #include <isce/core/Linspace.h>
 #include <isce/core/StateVector.h>
+#include <isce/core/TimeDelta.h>
 #include <isce/core/Vector.h>
 #include <vector>
 

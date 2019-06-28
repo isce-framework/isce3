@@ -7,18 +7,13 @@
 
 #ifndef ISCE_CORE_DATETIME_H
 #define ISCE_CORE_DATETIME_H
+#pragma once
+
+#include "forward.h"
 
 #include <cassert>
 #include <cmath>
 #include <string>
-#include "TimeDelta.h"
-
-// Declaration
-namespace isce {
-    namespace core {
-        struct DateTime;
-    }
-}
 
 /** Data structure to store date time to nano-sec precision*/
 struct isce::core::DateTime {

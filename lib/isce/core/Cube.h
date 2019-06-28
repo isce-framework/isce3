@@ -6,18 +6,14 @@
 
 #ifndef ISCE_CORE_CUBE_H
 #define ISCE_CORE_CUBE_H
+#pragma once
+
+#include "forward.h"
 
 #include <cmath>
 #include <valarray>
 #include <vector>
 #include <pyre/grid.h>
-
-// Declaration
-namespace isce {
-    namespace core {
-        template <typename cell_t> class Cube;
-    }
-}
 
 // isce::core::Cube definition
 template <typename cell_t>

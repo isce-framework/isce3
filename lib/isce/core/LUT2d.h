@@ -5,22 +5,14 @@
 
 #ifndef ISCE_CORE_LUT2D_H
 #define ISCE_CORE_LUT2D_H
+#pragma once
 
-// std
-#include <complex>
+#include "forward.h"
+
 #include <valarray>
-#include <type_traits>
-
-// isce::core
-#include <isce/core/Interpolator.h>
-#include <isce/core/Utilities.h>
-
-// Declaration
-namespace isce {
-    namespace core {
-        template <typename T> class LUT2d;
-    }
-}
+#include "Constants.h"
+#include "Interpolator.h"
+#include "Utilities.h"
 
 /** Data structure to store 2D Lookup table.
  *  Suitable for storing data of the form z = f(x,y)*/

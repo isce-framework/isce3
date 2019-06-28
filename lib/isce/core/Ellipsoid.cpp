@@ -3,9 +3,9 @@
 // Copyright 2017
 //
 
-#include <cmath>
-#include "Constants.h"
 #include "Ellipsoid.h"
+
+#include <cmath>
 
 using isce::core::Vec3;
 

@@ -8,10 +8,11 @@
 #include <cstdio>
 #include <cmath>
 #include <vector>
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 // isce::core
-#include "isce/core/DateTime.h"
+#include <isce/core/DateTime.h>
+#include <isce/core/TimeDelta.h>
 
 TEST(DateTimeTest, StandardConstruction) {
     isce::core::DateTime dtime(2017, 5, 12, 1, 12, 30.141592);

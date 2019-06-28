@@ -1,7 +1,12 @@
 #include <isce/orbit_wip/Orbit.h>
 #include <gtest/gtest.h>
 
-using namespace isce::core;
+// XXX ambiguous: core::Orbit vs. orbit_wip::Orbit
+// using namespace isce::core;
+using isce::core::DateTime;
+using isce::core::StateVector;
+using isce::core::TimeDelta;
+
 using isce::orbit_wip::Orbit;
 
 bool isclose(const Vec3 & lhs, const Vec3 & rhs)

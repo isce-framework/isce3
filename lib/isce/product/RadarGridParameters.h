@@ -7,6 +7,7 @@
 // isce::core
 #include <isce/core/Metadata.h>
 #include <isce/core/DateTime.h>
+#include <isce/core/TimeDelta.h>
 
 // isce::product
 #include <isce/product/Product.h>

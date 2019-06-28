@@ -4,9 +4,11 @@
 //
 
 #include "Kernels.h"
+
 #include <isce/except/Error.h>
 #include <complex>
 #include <cmath>
+#include <type_traits>
 
 using isce::except::RuntimeError;
 
@@ -69,7 +71,7 @@ _sampling_window(T t, T halfwidth, T bandwidth)
     const T tf = t / halfwidth;
     std::complex<T> y = sqrt((std::complex<T>)(1.0 - tf*tf));
     T window = real(cosh(c * y) / cosh(c));
-    if (!isfinite(window)) {
+    if (!std::isfinite(window)) {
         throw RuntimeError(ISCE_SRCINFO(), "Invalid window parameters.");
     }
     return window;

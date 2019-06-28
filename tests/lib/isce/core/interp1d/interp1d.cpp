@@ -16,12 +16,13 @@
 #include <complex>
 #include <vector>
 #include <random>
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 // isce::core
-#include "isce/core/Utilities.h"
-#include "isce/core/Interp1d.h"
-#include "isce/signal/NFFT.h"
+#include <isce/core/Interp1d.h>
+#include <isce/core/Kernels.h>
+#include <isce/core/Utilities.h>
+#include <isce/signal/NFFT.h>
 
 using isce::core::interp1d;
 using isce::core::sinc;

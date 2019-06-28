@@ -6,6 +6,7 @@
 
 #ifndef ISCE_CORE_UTILITIES_H
 #define ISCE_CORE_UTILITIES_H
+#pragma once
 
 #include <algorithm>
 #include <iostream>
@@ -15,8 +16,6 @@
 #include <vector>
 #include <valarray>
 #include <complex>
-#include <cstdint>
-#include <iterator>
 #include <gdal.h>
 #include <gdal_priv.h>
 

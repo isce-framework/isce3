@@ -5,18 +5,14 @@
 
 #ifndef ISCE_CORE_POLY2D_H
 #define ISCE_CORE_POLY2D_H
+#pragma once
+
+#include "forward.h"
 
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include "Constants.h"
-
-// Declaration
-namespace isce {
-    namespace core {
-        struct Poly2d;
-    }
-}
 
 /** Data structure for representing 1D polynomials
  *

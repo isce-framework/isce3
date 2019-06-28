@@ -5,6 +5,7 @@
 
 #include "gpuGeometry.h"
 #include <isce/cuda/except/Error.h>
+#include <isce/core/Basis.h>
 
 using isce::core::Basis;
 using isce::core::Vec3;

@@ -5,12 +5,11 @@
 
 #ifndef ISCE_CORE_INTERP1D_H
 #define ISCE_CORE_INTERP1D_H
+#pragma once
 
 #include <valarray>
 
-// isce::core
-#include "Constants.h"
-#include "Kernels.h"
+#include "forward.h"
 
 // Declaration
 namespace isce {

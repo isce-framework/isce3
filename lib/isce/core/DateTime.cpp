@@ -4,9 +4,10 @@
 // Author: Piyush Agram, Bryan Riel
 // Copyright 2017-2018
 
-#include <iostream>
-#include <pyre/journal.h>
 #include "DateTime.h"
+
+#include <pyre/journal.h>
+#include "TimeDelta.h"
 
 //Handful of utility functions
 bool isce::core::

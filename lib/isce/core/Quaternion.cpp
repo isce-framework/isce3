@@ -5,23 +5,29 @@
 // Copyright 2018
 //
 
+#include "Quaternion.h"
+
 #include <iostream>
 #include <string>
 #include <cmath>
 #include <map>
 
-#include "Quaternion.h"
+#include <pyre/journal.h>
+
+#include "Ellipsoid.h"
 #include "EulerAngles.h"
+
+constexpr auto Quaternion_t = isce::core::Attitude::Type::Quaternion_t;
 
 // Quaternion default constructor
 isce::core::Quaternion::
-Quaternion() : Attitude(QUATERNION_T) {}
+Quaternion() : Attitude(Quaternion_t) {}
 
 // Quaternion constructor with vectors of time and quaternions
 isce::core::Quaternion::
 Quaternion(const std::vector<double> & time, const std::vector<double> & quaternions) :
-           Attitude(QUATERNION_T) {
-    this->data(time, quaternions); 
+           Attitude(Quaternion_t) {
+    this->data(time, quaternions);
 }
 
 // Return vector of Euler angles evaluated at a given time
@@ -158,6 +164,25 @@ factoredYPR(double tintp,
     // Extract Euler angles from rotation matrix
     cartesian_t angles = EulerAngles::rotmat2ypr(L);
     return angles;
+}
+
+// Set quaternion elements from vectors
+/** @param[in] time Vector of seconds since epoch
+  * @param[in] quaternions Flattened vector of quaternions per time epoch */
+void isce::core::Quaternion::data(const std::vector<double>& time,
+                                  const std::vector<double>& quaternions) {
+    // Check size consistency
+    const bool flag = time.size() == (quaternions.size() / 4);
+    if (!flag) {
+        pyre::journal::error_t errorChannel("isce.core.Quaternion");
+        errorChannel
+            << pyre::journal::at(__HERE__)
+            << "Inconsistent vector sizes"
+            << pyre::journal::endl;
+    }
+    // Set data
+    _time = time;
+    _qvec = quaternions;
 }
 
 // end of file

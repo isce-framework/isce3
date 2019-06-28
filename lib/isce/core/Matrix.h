@@ -6,18 +6,14 @@
 
 #ifndef ISCE_CORE_MATRIX_H
 #define ISCE_CORE_MATRIX_H
+#pragma once
+
+#include "forward.h"
 
 #include <cmath>
 #include <valarray>
 #include <vector>
 #include <pyre/grid.h>
-
-// Declaration
-namespace isce {
-    namespace core {
-        template <typename cell_t> class Matrix;
-    }
-}
 
 /** Data structure for a 2D row-major matrix*/
 template <typename cell_t>
@@ -44,7 +40,7 @@ class isce::core::Matrix {
 
         /** Constructor with number of rows and number of columns */
         inline Matrix(size_t nrows, size_t ncols);
-        
+
         /** Deep copy constructor from another matrix - allocates memory and copies values */
         inline Matrix(const Matrix<cell_t> & m);
 

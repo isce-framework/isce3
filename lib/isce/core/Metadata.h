@@ -7,16 +7,12 @@
 
 #ifndef ISCE_CORE_METADATA_H
 #define ISCE_CORE_METADATA_H
+#pragma once
+
+#include "forward.h"
 
 #include <iosfwd>
 #include "DateTime.h"
-
-// Declarations
-namespace isce {
-    namespace core {
-        struct Metadata;
-    }
-}
 
 /** Data structure for storing basic radar geometry image metadata */
 struct isce::core::Metadata {

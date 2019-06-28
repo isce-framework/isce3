@@ -5,24 +5,17 @@
 
 #ifndef ISCE_CORE_KERNELS_H
 #define ISCE_CORE_KERNELS_H
+#pragma once
+
+#include "forward.h"
 
 #include <valarray>
 
-// isce::core
-#include "Constants.h"
-
-// Declaration
-namespace isce {
-    namespace core {
-        template <typename T> T sinc(T t);
-        // The kernel classes
-        template <typename T> class Kernel;
-        template <typename T> class BartlettKernel;
-        template <typename T> class LinearKernel;
-        template <typename T> class KnabKernel;
-        template <typename T> class NFFTKernel;
-    }
-}
+/** sinc function defined as \f$ \frac{\sin(\pi x)}{\pi x} \f$ */
+namespace isce { namespace core {
+    template<class T>
+    T sinc(T t);
+}}
 
 /** Abstract base class for all kernels.
  *
@@ -121,7 +114,7 @@ class isce::core::NFFTKernel : public isce::core::Kernel<T> {
         NFFTKernel(size_t m, size_t n, size_t fft_size);
 
         T operator()(double x) const override;
-    
+
     private:
         size_t _m;
         size_t _n;

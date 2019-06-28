@@ -5,6 +5,7 @@
 
 #ifndef ISCE_CORE_CONSTANTS_H
 #define ISCE_CORE_CONSTANTS_H
+#pragma once
 
 #include <stdexcept>
 #include <iostream>

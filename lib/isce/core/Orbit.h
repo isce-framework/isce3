@@ -5,14 +5,15 @@
 
 #ifndef ISCE_CORE_ORBIT_H
 #define ISCE_CORE_ORBIT_H
+#pragma once
 
-#include <ostream>
+#include "forward.h"
+
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 // isce::core
-#include "Cartesian.h"
 #include "Constants.h"
 #include "Utilities.h"
 #include "StateVector.h"

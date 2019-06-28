@@ -7,22 +7,11 @@
 
 #ifndef ISCE_CORE_LUT1D_H
 #define ISCE_CORE_LUT1D_H
+#pragma once
 
-#include <complex>
+#include "forward.h"
+
 #include <valarray>
-
-// pyre
-#include <pyre/journal.h>
-
-// isce::core
-#include <isce/core/LUT2d.h>
-
-// Declaration
-namespace isce {
-    namespace core {
-        template <typename T> class LUT1d;
-    }
-}
 
 /** Data structure to hold a 1D Lookup table.
  *  Suitable for storing data of the form y = f(x)*/
@@ -36,7 +25,7 @@ class isce::core::LUT1d {
             std::valarray<double> y{0.0, 0.0};
             _coords = x;
             _values = y;
-        } 
+        }
 
         /** Constructor with a constant reference value */
         inline LUT1d(T refValue) : _haveData(false), _refValue(refValue), _extrapolate{true} {}
@@ -46,7 +35,7 @@ class isce::core::LUT1d {
             _coords.resize(size);
             _values.resize(size);
         }
-        
+
         /** Constructor with coordinates and values 
           * @param[in] coords Valarray for coordinates of LUT
           * @param[in] values Valarray for values of LUT

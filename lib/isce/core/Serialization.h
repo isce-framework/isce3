@@ -10,6 +10,7 @@
 
 #ifndef ISCE_CORE_SERIALIZATION_H
 #define ISCE_CORE_SERIALIZATION_H
+#pragma once
 
 #include <iostream>
 #include <memory>

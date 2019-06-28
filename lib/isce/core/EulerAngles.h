@@ -7,9 +7,11 @@
 
 #ifndef ISCE_CORE_EULERANGLES_H
 #define ISCE_CORE_EULERANGLES_H
+#pragma once
+
+#include "forward.h"
 
 #include "Attitude.h"
-#include "Quaternion.h"
 
 /** Data structure for Euler Angle representation of attitude information
  *

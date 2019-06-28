@@ -6,15 +6,9 @@
 
 #ifndef ISCE_CORE_TIMEDELTA_H
 #define ISCE_CORE_TIMEDELTA_H
+#pragma once
 
-#include <cstdint>
-
-// Declaration
-namespace isce {
-    namespace core {
-        struct TimeDelta;
-    }
-}
+#include "forward.h"
 
 /** Data structure to store TimeDelta to double precision seconds
  *

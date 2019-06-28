@@ -5,13 +5,9 @@
 
 #ifndef ISCE_CORE_PEG_H
 #define ISCE_CORE_PEG_H
+#pragma once
 
-// Declaration
-namespace isce {
-    namespace core {
-        struct Peg;
-    }
-}
+#include "forward.h"
 
 /** Data structure to store a peg point
  *
