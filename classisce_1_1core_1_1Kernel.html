@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>ISCE: isce::core::Kernel&lt; class &gt; Class Template Reference</title>
+<title>ISCE: isce::core::Kernel&lt; T &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -94,7 +94,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classisce_1_1core_1_1Kernel-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">isce::core::Kernel&lt; class &gt; Class Template Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
+<div class="title">isce::core::Kernel&lt; T &gt; Class Template Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -102,45 +102,57 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
  <a href="classisce_1_1core_1_1Kernel.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="Kernels_8h_source.html">Kernels.h</a>&gt;</code></p>
+<div class="dynheader">
+Inheritance diagram for isce::core::Kernel&lt; T &gt;:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="classisce_1_1core_1_1Kernel.png" usemap="#isce::core::Kernel&lt; T &gt;_map" alt=""/>
+  <map id="isce::core::Kernel&lt; T &gt;_map" name="isce::core::Kernel&lt; T &gt;_map">
+<area href="classisce_1_1core_1_1BartlettKernel.html" title="Bartlett kernel (triangle function). " alt="isce::core::BartlettKernel&lt; T &gt;" shape="rect" coords="0,56,180,80"/>
+<area href="classisce_1_1core_1_1KnabKernel.html" title="Kernel based on the paper by Knab for interpolating band-limited signals. " alt="isce::core::KnabKernel&lt; T &gt;" shape="rect" coords="190,56,370,80"/>
+<area href="classisce_1_1core_1_1NFFTKernel.html" title="NFFT time-domain kernel. " alt="isce::core::NFFTKernel&lt; T &gt;" shape="rect" coords="380,56,560,80"/>
+<area href="classisce_1_1core_1_1LinearKernel.html" title="Linear kernel, which is just a special case of Bartlett. " alt="isce::core::LinearKernel&lt; T &gt;" shape="rect" coords="0,112,180,136"/>
+</map>
+ </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a0f5f8b10f34cc9fb463f00532665694c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0f5f8b10f34cc9fb463f00532665694c"></a>
-virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Kernel.html#a0f5f8b10f34cc9fb463f00532665694c">~Kernel</a> ()</td></tr>
-<tr class="memdesc:a0f5f8b10f34cc9fb463f00532665694c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Virtual destructor (allow destruction of base <a class="el" href="classisce_1_1core_1_1Kernel.html" title="Abstract base class for all kernels. ">Kernel</a> pointer) <br/></td></tr>
-<tr class="separator:a0f5f8b10f34cc9fb463f00532665694c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42dd84fc6830307d9111f90c00e48d6c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a42dd84fc6830307d9111f90c00e48d6c"></a>
-virtual T&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Kernel.html#a42dd84fc6830307d9111f90c00e48d6c">operator()</a> (double x) const =0</td></tr>
-<tr class="memdesc:a42dd84fc6830307d9111f90c00e48d6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate kernel at given location in [-halfwidth, halfwidth]. <br/></td></tr>
-<tr class="separator:a42dd84fc6830307d9111f90c00e48d6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3b8b9f34743cb77156d7982fd2ed0d41"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Kernel.html#a3b8b9f34743cb77156d7982fd2ed0d41">width</a> () const </td></tr>
-<tr class="memdesc:a3b8b9f34743cb77156d7982fd2ed0d41"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get width of kernel.  <a href="#a3b8b9f34743cb77156d7982fd2ed0d41">More...</a><br/></td></tr>
-<tr class="separator:a3b8b9f34743cb77156d7982fd2ed0d41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac225c904a5b37e720effa2c70dd83858"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac225c904a5b37e720effa2c70dd83858"></a>
+virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Kernel.html#ac225c904a5b37e720effa2c70dd83858">~Kernel</a> ()</td></tr>
+<tr class="memdesc:ac225c904a5b37e720effa2c70dd83858"><td class="mdescLeft">&#160;</td><td class="mdescRight">Virtual destructor (allow destruction of base <a class="el" href="classisce_1_1core_1_1Kernel.html" title="Abstract base class for all kernels. ">Kernel</a> pointer) <br/></td></tr>
+<tr class="separator:ac225c904a5b37e720effa2c70dd83858"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a43071441b479efda847103afa82b894c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a43071441b479efda847103afa82b894c"></a>
+virtual T&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Kernel.html#a43071441b479efda847103afa82b894c">operator()</a> (double x) const =0</td></tr>
+<tr class="memdesc:a43071441b479efda847103afa82b894c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate kernel at given location in [-halfwidth, halfwidth]. <br/></td></tr>
+<tr class="separator:a43071441b479efda847103afa82b894c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab1ac4c4c72fc6ce20e93380a8b70df48"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Kernel.html#ab1ac4c4c72fc6ce20e93380a8b70df48">width</a> () const </td></tr>
+<tr class="memdesc:ab1ac4c4c72fc6ce20e93380a8b70df48"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get width of kernel.  <a href="#ab1ac4c4c72fc6ce20e93380a8b70df48">More...</a><br/></td></tr>
+<tr class="separator:ab1ac4c4c72fc6ce20e93380a8b70df48"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:ae66f945842167d1c5d761912856fa910"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae66f945842167d1c5d761912856fa910"></a>
+<tr class="memitem:a651bf4c9d5d614c24caf0fa10f4ec674"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a651bf4c9d5d614c24caf0fa10f4ec674"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>_halfwidth</b></td></tr>
-<tr class="separator:ae66f945842167d1c5d761912856fa910"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a651bf4c9d5d614c24caf0fa10f4ec674"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;class&gt;<br/>
-class isce::core::Kernel&lt; class &gt;</h3>
+<div class="textblock"><h3>template&lt;typename T&gt;<br/>
+class isce::core::Kernel&lt; T &gt;</h3>
 
 <p>Abstract base class for all kernels. </p>
 <p>Basically just a closure around an arbitrary function and a width property. Template parameter T defines type for coefficients, typically float or double. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a3b8b9f34743cb77156d7982fd2ed0d41"></a>
+<a class="anchor" id="ab1ac4c4c72fc6ce20e93380a8b70df48"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class &gt; </div>
+template&lt;typename T&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classisce_1_1core_1_1Kernel.html">isce::core::Kernel</a>&lt; class &gt;::width </td>
+          <td class="memname">double <a class="el" href="classisce_1_1core_1_1Kernel.html">isce::core::Kernel</a>&lt; T &gt;::width </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -158,8 +170,7 @@ template&lt;class &gt; </div>
 
 </div>
 </div>
-<hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/conda/isce/lib/isce/core/<a class="el" href="forward_8h_source.html">forward.h</a></li>
+<hr/>The documentation for this class was generated from the following file:<ul>
 <li>/home/conda/isce/lib/isce/core/<a class="el" href="Kernels_8h_source.html">Kernels.h</a></li>
 </ul>
 </div><!-- contents -->

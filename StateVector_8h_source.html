@@ -95,40 +95,38 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#ifndef ISCE_CORE_STATEVECTOR_H</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define ISCE_CORE_STATEVECTOR_H</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;forward.h&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;DateTime.h&quot;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;Vector.h&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;DateTime.h&quot;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;Vector.h&quot;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">namespace </span>isce { <span class="keyword">namespace </span>core {</div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keyword">namespace </span>isce { <span class="keyword">namespace </span>core {</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
-<div class="line"><a name="l00012"></a><span class="lineno"><a class="line" href="structisce_1_1core_1_1StateVector.html">   12</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structisce_1_1core_1_1StateVector.html">StateVector</a> {</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;    <a class="code" href="structisce_1_1core_1_1DateTime.html">DateTime</a> datetime;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    <a class="code" href="classisce_1_1core_1_1Vector.html">Vec3</a> position;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    <a class="code" href="classisce_1_1core_1_1Vector.html">Vec3</a> velocity;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;};</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keywordtype">bool</span> operator==(<span class="keyword">const</span> <a class="code" href="structisce_1_1core_1_1StateVector.html">StateVector</a> &amp; lhs, <span class="keyword">const</span> <a class="code" href="structisce_1_1core_1_1StateVector.html">StateVector</a> &amp; rhs)</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;{</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="keywordflow">return</span> lhs.datetime == rhs.datetime &amp;&amp;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;           lhs.position == rhs.position &amp;&amp;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;           lhs.velocity == rhs.velocity;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;}</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keywordtype">bool</span> operator!=(<span class="keyword">const</span> StateVector &amp; lhs, <span class="keyword">const</span> StateVector &amp; rhs)</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;{</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keywordflow">return</span> !(lhs == rhs);</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;}</div>
+<div class="line"><a name="l00010"></a><span class="lineno"><a class="line" href="structisce_1_1core_1_1StateVector.html">   10</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structisce_1_1core_1_1StateVector.html">StateVector</a> {</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;    <a class="code" href="structisce_1_1core_1_1DateTime.html">DateTime</a> datetime;</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    <a class="code" href="structisce_1_1core_1_1Vector.html">Vec3</a> position;</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;    <a class="code" href="structisce_1_1core_1_1Vector.html">Vec3</a> velocity;</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;};</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">inline</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keywordtype">bool</span> operator==(<span class="keyword">const</span> <a class="code" href="structisce_1_1core_1_1StateVector.html">StateVector</a> &amp; lhs, <span class="keyword">const</span> <a class="code" href="structisce_1_1core_1_1StateVector.html">StateVector</a> &amp; rhs)</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;{</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keywordflow">return</span> lhs.datetime == rhs.datetime &amp;&amp;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;           lhs.position == rhs.position &amp;&amp;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;           lhs.velocity == rhs.velocity;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;}</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">inline</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="keywordtype">bool</span> operator!=(<span class="keyword">const</span> StateVector &amp; lhs, <span class="keyword">const</span> StateVector &amp; rhs)</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;{</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keywordflow">return</span> !(lhs == rhs);</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;}</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;}}</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;}}</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor"></span></div>
-<div class="ttc" id="structisce_1_1core_1_1StateVector_html"><div class="ttname"><a href="structisce_1_1core_1_1StateVector.html">isce::core::StateVector</a></div><div class="ttdef"><b>Definition:</b> StateVector.h:12</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Vector_html"><div class="ttname"><a href="classisce_1_1core_1_1Vector.html">isce::core::Vector&lt; 3 &gt;</a></div></div>
-<div class="ttc" id="structisce_1_1core_1_1DateTime_html"><div class="ttname"><a href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a></div><div class="ttdoc">Data structure to store date time to nano-sec precision. </div><div class="ttdef"><b>Definition:</b> DateTime.h:19</div></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor"></span></div>
+<div class="ttc" id="structisce_1_1core_1_1StateVector_html"><div class="ttname"><a href="structisce_1_1core_1_1StateVector.html">isce::core::StateVector</a></div><div class="ttdef"><b>Definition:</b> StateVector.h:10</div></div>
+<div class="ttc" id="structisce_1_1core_1_1Vector_html"><div class="ttname"><a href="structisce_1_1core_1_1Vector.html">isce::core::Vector&lt; 3 &gt;</a></div></div>
+<div class="ttc" id="structisce_1_1core_1_1DateTime_html"><div class="ttname"><a href="structisce_1_1core_1_1DateTime.html">isce::core::DateTime</a></div><div class="ttdoc">Data structure to store date time to nano-sec precision. </div><div class="ttdef"><b>Definition:</b> DateTime.h:24</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by

@@ -5,7 +5,6 @@ var searchData=
   ['nearestneighborinterpolator',['NearestNeighborInterpolator',['../classisce_1_1core_1_1NearestNeighborInterpolator.html',1,'isce::core']]],
   ['nfft',['NFFT',['../classisce_1_1signal_1_1NFFT.html',1,'isce::signal']]],
   ['nfftkernel',['NFFTKernel',['../classisce_1_1core_1_1NFFTKernel.html',1,'isce::core']]],
-  ['nfftkernel_3c_20t_20_3e',['NFFTKernel&lt; T &gt;',['../classisce_1_1core_1_1NFFTKernel.html',1,'isce::core']]],
   ['node',['Node',['../structNode.html',1,'']]],
   ['nodeflow',['NodeFlow',['../structNodeFlow.html',1,'']]]
 ];
