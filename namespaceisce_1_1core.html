@@ -403,10 +403,6 @@ template&lt;class Archive &gt; </td></tr>
 <tr class="memitem:ab11f207e09c1eee42c709349856e6859"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#ab11f207e09c1eee42c709349856e6859">loadFromH5</a> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, <a class="el" href="structisce_1_1core_1_1Poly2d.html">Poly2d</a> &amp;poly, std::string name)</td></tr>
 <tr class="memdesc:ab11f207e09c1eee42c709349856e6859"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load polynomial coefficients from HDF5 product.  <a href="#ab11f207e09c1eee42c709349856e6859">More...</a><br/></td></tr>
 <tr class="separator:ab11f207e09c1eee42c709349856e6859"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54b01f5468b1a8ca012bc98699cc8bd9"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a54b01f5468b1a8ca012bc98699cc8bd9"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a54b01f5468b1a8ca012bc98699cc8bd9">loadLUT2d</a> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, const std::string &amp;xName, const std::string &amp;yName, const std::string &amp;dsetName, <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; T &gt; &amp;lut)</td></tr>
-<tr class="memdesc:a54b01f5468b1a8ca012bc98699cc8bd9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load <a class="el" href="classisce_1_1core_1_1LUT2d.html" title="Data structure to store 2D Lookup table. ">LUT2d</a> data from HDF5 product.  <a href="#a54b01f5468b1a8ca012bc98699cc8bd9">More...</a><br/></td></tr>
-<tr class="separator:a54b01f5468b1a8ca012bc98699cc8bd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6bccdb5d5812662ef7d81d99603f7bd"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:ae6bccdb5d5812662ef7d81d99603f7bd"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#ae6bccdb5d5812662ef7d81d99603f7bd">loadCalGrid</a> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, const std::string &amp;dsetName, <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; T &gt; &amp;lut)</td></tr>
 <tr class="memdesc:ae6bccdb5d5812662ef7d81d99603f7bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load <a class="el" href="classisce_1_1core_1_1LUT2d.html" title="Data structure to store 2D Lookup table. ">LUT2d</a> data from HDF5 product.  <a href="#ae6bccdb5d5812662ef7d81d99603f7bd">More...</a><br/></td></tr>
@@ -1357,72 +1353,6 @@ template&lt;typename T &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">group</td><td>HDF5 group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">poly</td><td><a class="el" href="structisce_1_1core_1_1Poly2d.html" title="Data structure for representing 1D polynomials. ">Poly2d</a> to be configured. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Dataset name within group. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="a54b01f5468b1a8ca012bc98699cc8bd9"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void isce::core::loadLUT2d </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;&#160;</td>
-          <td class="paramname"><em>group</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>xName</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>yName</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>dsetName</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; T &gt; &amp;&#160;</td>
-          <td class="paramname"><em>lut</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Load <a class="el" href="classisce_1_1core_1_1LUT2d.html" title="Data structure to store 2D Lookup table. ">LUT2d</a> data from HDF5 product. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">group</td><td>HDF5 group object. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xName</td><td>Dataset name within the group to be loaded as X coordinate of <a class="el" href="classisce_1_1core_1_1LUT2d.html" title="Data structure to store 2D Lookup table. ">LUT2d</a> </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xName</td><td>Dataset name within the group to be loaded as Y coordinate of <a class="el" href="classisce_1_1core_1_1LUT2d.html" title="Data structure to store 2D Lookup table. ">LUT2d</a> </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dsetName</td><td>Dataset name within group to be loaded as <a class="el" href="classisce_1_1core_1_1LUT2d.html" title="Data structure to store 2D Lookup table. ">LUT2d</a> data </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">lut</td><td><a class="el" href="classisce_1_1core_1_1LUT2d.html" title="Data structure to store 2D Lookup table. ">LUT2d</a> to be configured. </td></tr>
   </table>
   </dd>
 </dl>

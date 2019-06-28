@@ -120,9 +120,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac413048a1a0339b8bd541c6fbdf55c97"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geo2rdr.html#ac413048a1a0339b8bd541c6fbdf55c97">Geo2rdr</a> (const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;, const <a class="el" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;, const <a class="el" href="structisce_1_1core_1_1Metadata.html">isce::core::Metadata</a> &amp;, size_t numberAzimuthLooks=1, size_t numberRangeLooks=1)</td></tr>
 <tr class="memdesc:ac413048a1a0339b8bd541c6fbdf55c97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from core objects.  <a href="#ac413048a1a0339b8bd541c6fbdf55c97">More...</a><br/></td></tr>
 <tr class="separator:ac413048a1a0339b8bd541c6fbdf55c97"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afac568088bbfb86af222d756d48eba24"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geo2rdr.html#afac568088bbfb86af222d756d48eba24">Geo2rdr</a> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;<a class="el" href="classisce_1_1geometry_1_1Geo2rdr.html#a8c2414895c31fbb2b5d9f33dd9b75f11">orbit</a>, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;<a class="el" href="classisce_1_1geometry_1_1Geo2rdr.html#ac52971f32d424e5a40509f57e99f9bbb">ellipsoid</a>, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;<a class="el" href="classisce_1_1geometry_1_1Geo2rdr.html#a17ff01139f343d800f8ea41a9a0a7353">doppler</a>=<a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt;())</td></tr>
-<tr class="memdesc:afac568088bbfb86af222d756d48eba24"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from core objects.  <a href="#afac568088bbfb86af222d756d48eba24">More...</a><br/></td></tr>
-<tr class="separator:afac568088bbfb86af222d756d48eba24"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afdaa259d99e47485a2593ac645217e67"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geo2rdr.html#afdaa259d99e47485a2593ac645217e67">threshold</a> (double)</td></tr>
 <tr class="memdesc:afdaa259d99e47485a2593ac645217e67"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set convergence threshold.  <a href="#afdaa259d99e47485a2593ac645217e67">More...</a><br/></td></tr>
 <tr class="separator:afdaa259d99e47485a2593ac645217e67"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -313,64 +310,6 @@ const double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
   </dd>
 </dl>
 <p>Alternative constructor from ellipsoid, orbit, doppler, and metadata. </p>
-
-</div>
-</div>
-<a class="anchor" id="afac568088bbfb86af222d756d48eba24"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">isce::geometry::Geo2rdr::Geo2rdr </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;&#160;</td>
-          <td class="paramname"><em>radarGrid</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;&#160;</td>
-          <td class="paramname"><em>orbit</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;&#160;</td>
-          <td class="paramname"><em>ellipsoid</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;&#160;</td>
-          <td class="paramname"><em>doppler</em> = <code><a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt;double&gt;()</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Constructor from core objects. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">radarGrid</td><td>RadarGridParameters object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">orbit</td><td>Orbit object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ellipsoid</td><td>Ellipsoid object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">doppler</td><td>LUT2d doppler model</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Alternative constructor from ellipsoid orbit and radarGrid. </p>
 
 </div>
 </div>
