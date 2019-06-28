@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>ISCE: /home/conda/isce/lib/isce/core/Cartesian.h Source File</title>
+<title>ISCE: Member List</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -40,8 +40,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="namespaces.html"><span>Namespaces</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
-      <li class="current"><a href="files.html"><span>Files</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Classes</span></a></li>
+      <li><a href="files.html"><span>Files</span></a></li>
       <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
       <li><a href="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li>
@@ -64,7 +64,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
-      <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
+      <li><a href="hierarchy.html"><span>Class&#160;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -83,34 +85,21 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_58f4997a0606e8afbe9d7eb91f442043.html">isce</a></li><li class="navelem"><a class="el" href="dir_60e423c05e81a63f8dd9073c44b1ea18.html">lib</a></li><li class="navelem"><a class="el" href="dir_3183497ebe3ce774c9a7583e7c2a1bf6.html">isce</a></li><li class="navelem"><a class="el" href="dir_2f8375380481da2f83a6010de4386bea.html">core</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespaceisce.html">isce</a></li><li class="navelem"><a class="el" href="namespaceisce_1_1except.html">except</a></li><li class="navelem"><a class="el" href="structisce_1_1except_1_1Error.html">Error</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">Cartesian.h</div>  </div>
+<div class="title">isce::except::Error&lt; T &gt; Member List</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment"> * Compatibility definitions for legacy `cartesian_t` type</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;</div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#ifndef ISCE_CORE_CARTESIAN_H</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define ISCE_CORE_CARTESIAN_H</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;Vector.h&quot;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;DenseMatrix.h&quot;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">namespace </span>isce { <span class="keyword">namespace </span>core {</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;    <span class="keyword">typedef</span> <a class="code" href="structisce_1_1core_1_1Vector.html">isce::core::Vec3</a> cartesian_t;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    <span class="keyword">typedef</span> <a class="code" href="structisce_1_1core_1_1DenseMatrix.html">isce::core::Mat3</a> cartmat_t;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;}}</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="structisce_1_1core_1_1DenseMatrix_html"><div class="ttname"><a href="structisce_1_1core_1_1DenseMatrix.html">isce::core::DenseMatrix</a></div><div class="ttdef"><b>Definition:</b> DenseMatrix.h:10</div></div>
-<div class="ttc" id="structisce_1_1core_1_1Vector_html"><div class="ttname"><a href="structisce_1_1core_1_1Vector.html">isce::core::Vector&lt; 3 &gt;</a></div></div>
-</div><!-- fragment --></div><!-- contents -->
+
+<p>This is the complete list of members for <a class="el" href="structisce_1_1except_1_1Error.html">isce::except::Error&lt; T &gt;</a>, including all inherited members.</p>
+<table class="directory">
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>Error</b>(const SrcInfo &amp;info) (defined in <a class="el" href="structisce_1_1except_1_1Error.html">isce::except::Error&lt; T &gt;</a>)</td><td class="entry"><a class="el" href="structisce_1_1except_1_1Error.html">isce::except::Error&lt; T &gt;</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0"><td class="entry"><b>Error</b>(const SrcInfo &amp;info, std::string msg) (defined in <a class="el" href="structisce_1_1except_1_1Error.html">isce::except::Error&lt; T &gt;</a>)</td><td class="entry"><a class="el" href="structisce_1_1except_1_1Error.html">isce::except::Error&lt; T &gt;</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>info</b> (defined in <a class="el" href="structisce_1_1except_1_1Error.html">isce::except::Error&lt; T &gt;</a>)</td><td class="entry"><a class="el" href="structisce_1_1except_1_1Error.html">isce::except::Error&lt; T &gt;</a></td><td class="entry"></td></tr>
+</table></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
 <a href="http://www.doxygen.org/index.html"><img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.8.5.
