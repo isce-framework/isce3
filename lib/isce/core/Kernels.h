@@ -121,3 +121,24 @@ class isce::core::NFFTKernel : public isce::core::Kernel<T> {
         T _scale;
         T _b;
 };
+
+/** Tabulated Kernel
+ *
+ */
+template <typename T>
+class isce::core::TabulatedKernel : public isce::core::Kernel<T> {
+    public:
+        /** Constructor of tabulated kernel.
+         *
+         * @param[in] kernel    Kernel to sample.
+         * @param[in] n         Table size.
+         */
+        TabulatedKernel(isce::core::Kernel<T> &kernel, size_t n);
+
+        T operator()(double x) const override;
+    
+    private:
+        std::valarray<T> _table;
+        size_t _imax;
+        T _1_dx;
+};

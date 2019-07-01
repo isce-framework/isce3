@@ -11,6 +11,7 @@
 #include <type_traits>
 
 using isce::except::RuntimeError;
+using isce::except::LengthError;
 
 /* 
  * Bartlett
@@ -137,3 +138,54 @@ operator()(double t) const
 
 template class isce::core::NFFTKernel<float>;
 template class isce::core::NFFTKernel<double>;
+
+/*
+ * Tabulated kernel.
+ */
+
+// Constructor
+template <typename T>
+isce::core::TabulatedKernel<T>::
+TabulatedKernel(isce::core::Kernel<T> &kernel, size_t n)
+{
+    this->_halfwidth = kernel.width() / 2.0;
+    // Need at least two points for linear interpolation.
+    if (n < 2) {
+        throw LengthError(ISCE_SRCINFO(), "Require table size >= 2.");
+    }
+    // Need i+1 < n so linear interp doesn't run off of table.
+    _imax = n - 2;
+    // Allocate table.
+    _table.resize(n);
+    // Assume Kernel is even and fill table with f(x) for 0 <= x <= halfwidth.
+    const double dx = this->_halfwidth / (n - 1.0);
+    _1_dx = 1.0 / dx;
+    for (size_t i=0; i<n; ++i) {
+        double x = i * dx;
+        _table[i] = kernel(x);
+    }
+}
+
+// call
+template <typename T>
+T
+isce::core::TabulatedKernel<T>::
+operator()(double x) const
+{
+    // Return zero outside table.
+    auto ax = std::abs(x);
+    if (ax > this->_halfwidth) {
+        return T(0);
+    }
+    // Normalize to table sample index.
+    auto axn = ax * _1_dx;
+    // Determine left side of interval.
+    size_t i = (size_t) std::floor(axn);
+    // Make sure floating point multiply doesn't cause off-by-one.
+    i = (i > _imax) ? _imax : i;
+    // Linear interpolation.
+    return _table[i] + (axn - i) * (_table[i+1] - _table[i]);
+}
+
+template class isce::core::TabulatedKernel<float>;
+template class isce::core::TabulatedKernel<double>;
