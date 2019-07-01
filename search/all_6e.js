@@ -9,7 +9,7 @@ var searchData=
   ['neutcorrthr',['neutCorrThr',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#af85a19785f3b749516799585263b6e7b',1,'isce::unwrap::icu::ICU::neutCorrThr() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a5294ac0272785413247f5952aa45e105',1,'isce::unwrap::icu::ICU::neutCorrThr(const float)']]],
   ['neutintensitythr',['neutIntensityThr',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#aa79699019cfac49fbe5acb6b1fca77a3',1,'isce::unwrap::icu::ICU::neutIntensityThr() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a36a5478f54063d992f5c3871015c988a',1,'isce::unwrap::icu::ICU::neutIntensityThr(const float)']]],
   ['neutphasegradthr',['neutPhaseGradThr',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a114ac524c177f98f56e919b774025bbf',1,'isce::unwrap::icu::ICU::neutPhaseGradThr() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a20701852bd69f5e70d2f3c7a2289c964',1,'isce::unwrap::icu::ICU::neutPhaseGradThr(const float)']]],
-  ['nextpoweroftwo',['nextPowerOfTwo',['../classisce_1_1signal_1_1Signal.html#a46a99f0d46794440b29a5c7e558f04f2',1,'isce::signal::Signal']]],
+  ['nextpoweroftwo',['nextPowerOfTwo',['../classisce_1_1signal_1_1Signal.html#a46a99f0d46794440b29a5c7e558f04f2',1,'isce::signal::Signal::nextPowerOfTwo()'],['../classgpuSignal.html#a48c920d4cf3f2ff764817d9b0eb229de',1,'gpuSignal::nextPowerOfTwo()']]],
   ['nfft',['NFFT',['../classisce_1_1signal_1_1NFFT.html#a07855cbe31267ab152f5b974e67b7b9e',1,'isce::signal::NFFT']]],
   ['nfft',['NFFT',['../classisce_1_1signal_1_1NFFT.html',1,'isce::signal']]],
   ['nfftkernel',['NFFTKernel',['../classisce_1_1core_1_1NFFTKernel.html#a709837b2783ade0ad819e6015f39b37e',1,'isce::core::NFFTKernel']]],
