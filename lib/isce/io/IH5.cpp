@@ -6,11 +6,9 @@
 
 ///////////////////////// UTILITIES ///////////////////////////////////
 
-
-
-
-
-void attrsNames(H5::H5Object &loc, H5std_string nameAttr, void *opdata){
+//The first argument refers to the H5Object that gets used to call 
+//this function as an operator.
+void attrsNames(H5::H5Object &, H5std_string nameAttr, void *opdata){
    auto up = reinterpret_cast<std::vector<std::string> *>(opdata);
    up->push_back(nameAttr);
 }
@@ -27,7 +25,7 @@ void attrsNames(H5::H5Object &loc, H5std_string nameAttr, void *opdata){
 // To keep things simple, the search string and object needed are stored in the 
 // vector in the first and second location respectively. They are removed from 
 // the vector once the search is completed  
-herr_t matchName(hid_t loc_id, const char *name, const H5O_info_t *info, 
+herr_t matchName(hid_t, const char *name, const H5O_info_t *info, 
                      void *opdata) {
    
    //auto outList = reinterpret_cast<std::vector<std::string> *>(opdata);
@@ -219,8 +217,8 @@ std::vector<int> isce::io::IDataSet::getDimensions(const std::string &v) {
     // If dataset is not a scalar proceed
     if (rank) {
 	   // Get dimensions    
-       hsize_t dims[rank];
-       dspace.getSimpleExtentDims(dims, NULL);
+       std::vector<hsize_t> dims(rank);
+       dspace.getSimpleExtentDims(dims.data(), NULL);
 
        // Fill the output vector
        for (int i=0; i<rank; i++)
@@ -964,13 +962,13 @@ std::string isce::io::IGroup::getPathname()
     size_t len = H5Iget_name(this->getId(), NULL, 0);
 
     // Set up a buffer correctly sized to receive the path of the group
-    char buffer[len];
+    std::vector<char> buffer(len);
 
     // Get the path
-    H5Iget_name(this->getId(),buffer,len+1);
+    H5Iget_name(this->getId(),buffer.data(),len+1);
 
     // Return as std::string
-    std::string path = buffer;
+    std::string path = buffer.data();
 
     return path;
 }
@@ -1145,6 +1143,11 @@ isce::io::IGroup isce::io::IGroup::createGroup(const H5std_string &name) {
     // don't exist. Needs the C interface.
     hid_t gcpl = H5Pcreate(H5P_LINK_CREATE);
     herr_t status = H5Pset_create_intermediate_group(gcpl, 1);
+    if (status)
+    {
+        //Add logic for journal / error catching here
+        return IGroup();
+    }
 
     hid_t group = H5Gcreate(this->getId(), name.c_str(), gcpl, H5P_DEFAULT, H5P_DEFAULT);
     H5Pclose(gcpl);
@@ -1282,6 +1285,11 @@ isce::io::IGroup isce::io::IH5File::createGroup(const H5std_string &name) {
     // don't exist. Needs the C interface.
     hid_t gcpl = H5Pcreate(H5P_LINK_CREATE);
     herr_t status = H5Pset_create_intermediate_group(gcpl, 1);
+    if (status)
+    {
+        //Add logic for journal / error catching here
+        return IGroup();
+    }
 
     hid_t group = H5Gcreate(this->getId(), name.c_str(), gcpl, H5P_DEFAULT, H5P_DEFAULT);
     H5Pclose(gcpl);

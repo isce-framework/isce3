@@ -152,7 +152,8 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radarGri
                 dem_interp.interpolateXY(dem_xmid, dem_ymid)};
             // Compute facet-central LLH vector
             const Vec3 inputLLH = proj->inverse(inputDEM);
-            int geostat = isce::geometry::geo2rdr(inputLLH, ellps, orbit, dop,
+            //Should incorporate check on return status here
+            isce::geometry::geo2rdr(inputLLH, ellps, orbit, dop,
                     a, r, radarGrid.wavelength(), 1e-4, 100, 1e-4);
             const float azpix = (a - start) / pixazm;
             const float ranpix = (r - r0) / dr;

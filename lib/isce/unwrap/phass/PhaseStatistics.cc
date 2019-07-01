@@ -268,7 +268,7 @@ void compute_corr(int nr_lines, int nr_pixels, float **data, unsigned char **cor
     }
   }
 
-  double phi_max = pi/2.0;
+  //double phi_max = pi/2.0;
 
   double scale = 0.025; // riginal value 0.05
 # pragma omp parallel for

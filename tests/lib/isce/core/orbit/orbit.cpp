@@ -141,7 +141,7 @@ TEST_F(OrbitTest,LinearLegendre){
 }
 
 
-void makeCircularSV(double dt, cartesian_t &opos, cartesian_t &ovel, cartesian_t &pos,
+void makeCircularSV(double dt, cartesian_t &opos, cartesian_t &, cartesian_t &pos,
                     cartesian_t &vel) {
     double omega1 = (2. * M_PI) / 7000.;
     double omega2 = (2. * M_PI) / 4000.;

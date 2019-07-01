@@ -86,7 +86,7 @@ isce::core::Quaternion::ypr(double tintp, double & yaw, double & pitch, double &
 // Convert quaternion to rotation matrix
 isce::core::cartmat_t
 isce::core::Quaternion::
-rotmat(double tintp, const std::string dummy, double dq0, double dq1, double dq2, double dq3) {
+rotmat(double tintp, const std::string, double dq0, double dq1, double dq2, double) {
 
     // Check time bounds; error if out of bonds
     const int n = nVectors();

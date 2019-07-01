@@ -194,7 +194,7 @@ void
 isce::signal::Filter<T>::
 constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,
                              std::valarray<double> subBandBandwidths,
-                             double dt,
+                             double,
                              std::valarray<double>& frequency,
                              double beta,
                              std::valarray<std::complex<T>>& _filter1D)

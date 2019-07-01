@@ -100,7 +100,7 @@ _sinc_eval_2d(const isce::core::Matrix<U> & arrin, int intpx, int intpy,
 template <class U>
 void
 isce::core::Sinc2dInterpolator<U>::
-_sinc_coef(double beta, double relfiltlen, int decfactor, double pedestal, int weight,
+_sinc_coef(double beta, double , int decfactor, double pedestal, int weight,
            std::valarray<double> & filter) {
  
     int filtercoef = int(filter.size()) - 1;

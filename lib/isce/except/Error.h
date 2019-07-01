@@ -18,8 +18,9 @@ namespace isce {
 #define ISCE_ERROR(T, str) isce::except::Error<T>(ISCE_SRCINFO(), str)
 
     template<typename T>
-    struct Error : T {
-        const SrcInfo info;
+    class Error : public T {
+        public:
+            const SrcInfo info;
 
         Error(const SrcInfo& info);
         Error(const SrcInfo& info, std::string msg);
