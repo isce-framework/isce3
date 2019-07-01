@@ -27,7 +27,7 @@ target_link_libraries(${LISCECUDA} ${CUDAFFT_LIBRARY})
 target_link_libraries(${LISCECUDA} ${LISCE})
 include_directories(${CEREAL_SRC_INCLUDEDIR}
                     ${ISCE_BUILDINCLUDEDIR}
-                    ${ISCE_BUILDINCLUDEDIR}/${LOCALPROJ}/cuda/${PACKAGENAME}
+                    ${ISCE_BUILDINCLUDEDIR_CUDA}
                     ${PYRE_INCLUDE_DIR}
                     ${GDAL_INCLUDE_DIR}
                     ${HDF5_INCLUDE_DIR}
