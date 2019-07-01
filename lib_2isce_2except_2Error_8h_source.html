@@ -110,18 +110,19 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define ISCE_ERROR(T, str) isce::except::Error&lt;T&gt;(ISCE_SRCINFO(), str)</span></div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="structisce_1_1except_1_1Error.html">   21</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structisce_1_1except_1_1Error.html">Error</a> : T {</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        <span class="keyword">const</span> <a class="code" href="structisce_1_1except_1_1SrcInfo.html">SrcInfo</a> info;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        <a class="code" href="structisce_1_1except_1_1Error.html">Error</a>(<span class="keyword">const</span> <a class="code" href="structisce_1_1except_1_1SrcInfo.html">SrcInfo</a>&amp; info);</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;        <a class="code" href="structisce_1_1except_1_1Error.html">Error</a>(<span class="keyword">const</span> <a class="code" href="structisce_1_1except_1_1SrcInfo.html">SrcInfo</a>&amp; info, std::string msg);</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    };</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <span class="keyword">using</span> <a class="code" href="structisce_1_1except_1_1Error.html">InvalidArgument</a> = <a class="code" href="structisce_1_1except_1_1Error.html">Error&lt;std::invalid_argument&gt;</a>;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keyword">using</span> <a class="code" href="structisce_1_1except_1_1Error.html">LengthError</a> = <a class="code" href="structisce_1_1except_1_1Error.html">Error&lt;std::length_error&gt;</a>;</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="keyword">using</span> <a class="code" href="structisce_1_1except_1_1Error.html">RuntimeError</a> = <a class="code" href="structisce_1_1except_1_1Error.html">Error&lt;std::runtime_error&gt;</a>;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;}}</div>
-<div class="ttc" id="structisce_1_1except_1_1Error_html"><div class="ttname"><a href="structisce_1_1except_1_1Error.html">isce::except::Error</a></div><div class="ttdef"><b>Definition:</b> Error.h:21</div></div>
+<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="classisce_1_1except_1_1Error.html">   21</a></span>&#160;    <span class="keyword">class </span><a class="code" href="classisce_1_1except_1_1Error.html">Error</a> : <span class="keyword">public</span> T {</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;            <span class="keyword">const</span> <a class="code" href="structisce_1_1except_1_1SrcInfo.html">SrcInfo</a> info;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;        <a class="code" href="classisce_1_1except_1_1Error.html">Error</a>(<span class="keyword">const</span> <a class="code" href="structisce_1_1except_1_1SrcInfo.html">SrcInfo</a>&amp; info);</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;        <a class="code" href="classisce_1_1except_1_1Error.html">Error</a>(<span class="keyword">const</span> <a class="code" href="structisce_1_1except_1_1SrcInfo.html">SrcInfo</a>&amp; info, std::string msg);</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    };</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keyword">using</span> <a class="code" href="classisce_1_1except_1_1Error.html">InvalidArgument</a> = <a class="code" href="classisce_1_1except_1_1Error.html">Error&lt;std::invalid_argument&gt;</a>;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="keyword">using</span> <a class="code" href="classisce_1_1except_1_1Error.html">LengthError</a> = <a class="code" href="classisce_1_1except_1_1Error.html">Error&lt;std::length_error&gt;</a>;</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="keyword">using</span> <a class="code" href="classisce_1_1except_1_1Error.html">RuntimeError</a> = <a class="code" href="classisce_1_1except_1_1Error.html">Error&lt;std::runtime_error&gt;</a>;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;}}</div>
+<div class="ttc" id="classisce_1_1except_1_1Error_html"><div class="ttname"><a href="classisce_1_1except_1_1Error.html">isce::except::Error</a></div><div class="ttdef"><b>Definition:</b> Error.h:21</div></div>
 <div class="ttc" id="structisce_1_1except_1_1SrcInfo_html"><div class="ttname"><a href="structisce_1_1except_1_1SrcInfo.html">isce::except::SrcInfo</a></div><div class="ttdef"><b>Definition:</b> Error.h:10</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <hr>

@@ -101,7 +101,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;    <span class="keyword">using namespace </span>isce::except;</div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="structisce_1_1cuda_1_1except_1_1CudaError.html">   13</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structisce_1_1cuda_1_1except_1_1CudaError.html">CudaError</a> : <a class="code" href="structisce_1_1except_1_1Error.html">RuntimeError</a> {</div>
+<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="structisce_1_1cuda_1_1except_1_1CudaError.html">   13</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structisce_1_1cuda_1_1except_1_1CudaError.html">CudaError</a> : <a class="code" href="classisce_1_1except_1_1Error.html">RuntimeError</a> {</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;        <span class="keyword">const</span> T err;</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;        <a class="code" href="structisce_1_1cuda_1_1except_1_1CudaError.html">CudaError</a>(<span class="keyword">const</span> <a class="code" href="structisce_1_1except_1_1SrcInfo.html">SrcInfo</a>&amp; info, <span class="keyword">const</span> T err);</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    };</div>
@@ -117,7 +117,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <a class="code" href="structisce_1_1cuda_1_1except_1_1CudaError.html">CudaError&lt;T&gt;::CudaError</a>(<span class="keyword">const</span> <a class="code" href="structisce_1_1except_1_1SrcInfo.html">SrcInfo</a>&amp; info, <span class="keyword">const</span> T err) :</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;            err(err),</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;            <a class="code" href="structisce_1_1except_1_1Error.html">RuntimeError</a>(info, std::string(<span class="stringliteral">&quot;cudaError &quot;</span>) + std::to_string(err)) {}</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;            <a class="code" href="classisce_1_1except_1_1Error.html">RuntimeError</a>(info, std::string(<span class="stringliteral">&quot;cudaError &quot;</span>) + std::to_string(err)) {}</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;}}}</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div>
@@ -153,7 +153,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="comment">// Wrapper to pass file name, line number, and function name</span></div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="preprocessor">#define checkCudaAsyncErrors() checkCudaAsyncErrorsImpl(ISCE_SRCINFO())</span></div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor"></span></div>
-<div class="ttc" id="structisce_1_1except_1_1Error_html"><div class="ttname"><a href="structisce_1_1except_1_1Error.html">isce::except::Error</a></div><div class="ttdef"><b>Definition:</b> Error.h:21</div></div>
+<div class="ttc" id="classisce_1_1except_1_1Error_html"><div class="ttname"><a href="classisce_1_1except_1_1Error.html">isce::except::Error</a></div><div class="ttdef"><b>Definition:</b> Error.h:21</div></div>
 <div class="ttc" id="structisce_1_1except_1_1SrcInfo_html"><div class="ttname"><a href="structisce_1_1except_1_1SrcInfo.html">isce::except::SrcInfo</a></div><div class="ttdef"><b>Definition:</b> Error.h:10</div></div>
 <div class="ttc" id="structisce_1_1cuda_1_1except_1_1CudaError_html"><div class="ttname"><a href="structisce_1_1cuda_1_1except_1_1CudaError.html">isce::cuda::except::CudaError</a></div><div class="ttdoc">CudaError provide the same information as BaseError, and also retains the original error code...</div><div class="ttdef"><b>Definition:</b> Error.h:13</div></div>
 </div><!-- fragment --></div><!-- contents -->
