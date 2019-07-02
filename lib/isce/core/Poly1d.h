@@ -23,7 +23,7 @@
  * where \f$a_i\f$ represents the coefficients, \f$\mu\f$ represents the mean and 
  * \f$\sigma\f$ represents the norm*/
 class isce::core::Poly1d {
-private:
+public:
 
     /** Order of the polynomial */
     int order;
@@ -33,8 +33,6 @@ private:
     double norm;
     /** Coefficients of the polynomial */
     std::vector<double> coeffs;
-
-public:
 
     /** Constructor
      *
