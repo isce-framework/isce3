@@ -34,10 +34,22 @@ list(APPEND CMAKE_MODULE_PATH ${ISCE_SOURCE_DIR}/.cmake)
 option(WITH_DOC
     "Set ON|OFF (default=OFF) to build documentation" OFF)
 
-option(WITH_CODE_COVERAGE "Enable code coverage reporting" OFF)
-if(WITH_CODE_COVERAGE)
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Coverage" CACHE STRING "" FORCE)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+if(NOT CMAKE_BUILD_TYPE IN_LIST CMAKE_CONFIGURATION_TYPES)
+    message(FATAL_ERROR "Unsupported build type '${CMAKE_BUILD_TYPE}' "
+                        "(must be one of ${CMAKE_CONFIGURATION_TYPES})")
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL Coverage)
     message("Compiling with code coverage reporting.")
     include(CodeCoverage)
+else()
+    # Define a dummy function so we don't have to keep checking BUILD_TYPE
+    function(SetCoverageOptions target)
+    endfunction()
 endif()
 
 ###Ensure tracking is own for testing

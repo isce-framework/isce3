@@ -27,9 +27,7 @@ include_directories(
     ${HDF5_INCLUDE_DIR}
     ${CEREAL_SRC_INCLUDEDIR})
 
-if(WITH_CODE_COVERAGE)
-    SetCoverageOptions(${LISCE})
-endif()
+SetCoverageOptions(${LISCE})
 
 # Add OpenMP if found
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")

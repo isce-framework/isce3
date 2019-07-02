@@ -20,9 +20,7 @@ include_directories(${ISCE_BUILDCYINCLUDEDIR})
 
 # Add Cython module
 cython_add_module(iscecudaextension iscecudaextension.pyx)
-if(WITH_CODE_COVERAGE)
-    SetCoverageOptions(iscecudaextension)
-endif()
+SetCoverageOptions(iscecudaextension)
 
 # Override output shared object name to place in desired location
 set_target_properties(
