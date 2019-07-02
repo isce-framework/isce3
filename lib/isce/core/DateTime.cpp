@@ -6,6 +6,7 @@
 
 #include "DateTime.h"
 
+#include <limits>
 #include <pyre/journal.h>
 #include "TimeDelta.h"
 

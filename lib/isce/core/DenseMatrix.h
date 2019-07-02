@@ -8,7 +8,7 @@
 #include "Vector.h"
 
 template<int N>
-struct isce::core::DenseMatrix {
+class isce::core::DenseMatrix {
 
 private:
 

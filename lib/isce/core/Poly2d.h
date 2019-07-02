@@ -24,7 +24,9 @@
  *
  * where \f$a_ij\f$ represents the coefficients, \f$\mu_x\f$ and \f$\mu_y\f$ represent the means and 
  * \f$\sigma_x\f$ and \f$\sigma_y\f$ represent the norms*/
-struct isce::core::Poly2d {
+class isce::core::Poly2d {
+public:
+
     /** Order of polynomial in range or x*/
     int rangeOrder;
     /** Order of polynomial in azimuth or y*/

@@ -16,7 +16,8 @@
 #include <string>
 
 /** Data structure to store date time to nano-sec precision*/
-struct isce::core::DateTime {
+class isce::core::DateTime {
+public:
 
     int year;
     int months;

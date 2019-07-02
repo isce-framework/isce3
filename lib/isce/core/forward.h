@@ -16,7 +16,7 @@ namespace isce {
         class Poly1d;
         class Poly2d;
         class Quaternion;
-        class StateVector;
+        struct StateVector;
         class TimeDelta;
 
         // templates
