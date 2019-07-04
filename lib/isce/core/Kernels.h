@@ -142,3 +142,23 @@ class isce::core::TabulatedKernel : public isce::core::Kernel<T> {
         size_t _imax;
         T _1_dx;
 };
+
+/** Polynomial Kernel
+ *
+ */
+template <typename T>
+class isce::core::ChebyKernel : public isce::core::Kernel<T> {
+    public:
+        /** Constructor that computes fit of another Kernel.
+         *
+         * @param[in] kernel    Kernel to fit (assumed even).
+         * @param[in] n         Number of coefficients.
+         */
+        ChebyKernel(isce::core::Kernel<T> &kernel, size_t n);
+
+        T operator()(double x) const override;
+
+    private:
+        std::valarray<T> _coeffs;
+        T _scale;
+};

@@ -42,6 +42,7 @@ namespace isce {
         template<class> class LinearKernel;
         template<class> class NFFTKernel;
         template<class> class TabulatedKernel;
+        template<class> class ChebyKernel;
 
         // using-declarations
         using Mat3 = DenseMatrix<3>;

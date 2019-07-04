@@ -322,6 +322,13 @@ TEST_F(Interp1dTest, TabulatedKnab) {
     test_rand_offsets(0.998, 5.0, 0.5, 0.5, kernel);
 }
 
+TEST_F(Interp1dTest, ChebyKnab) {
+    auto knab = isce::core::KnabKernel<double>(9.0, 0.8);
+    auto kernel = isce::core::ChebyKernel<double>(knab, 16);
+    test_fixed_offset(0.999999, 0.001, 0.001, 0.001, kernel,  0.0);
+    test_rand_offsets(0.998, 5.0, 0.5, 0.5, kernel);
+}
+
 TEST_F(Interp1dTest, NFFT) {
     // FFT the signal set up by the test class to get a spectrum.
     std::valarray<std::complex<double>> spec(n);

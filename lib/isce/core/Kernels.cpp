@@ -189,3 +189,61 @@ operator()(double x) const
 
 template class isce::core::TabulatedKernel<float>;
 template class isce::core::TabulatedKernel<double>;
+
+template <typename T>
+isce::core::ChebyKernel<T>::
+ChebyKernel(isce::core::Kernel<T> &kernel, size_t n)
+{
+    this->_halfwidth = kernel.width() / 2.0;
+    // Fit a kernel with DCT of fn at Chebyshev zeros.
+    // Assume even function and fit on interval [0,width/2] to avoid a bunch
+    // of zero coefficients.
+    std::valarray<T> q(n), fx(n);
+    _scale = 4.0 / kernel.width();
+    for (long i=0; i<n; ++i) {
+        q[i] = M_PI * (2.0*i + 1.0) / (2.0*n);
+        // shift & scale [-1,1] to [0,width/2].
+        T x = (std::cos(q[i]) + 1.0) / _scale;
+        fx[i] = kernel(x);
+    }
+    // FFTW provides DCT with plan_r2r(REDFT10) but this isn't exposed in
+    // isce::core::signal.  Typically we're only fitting a few coefficients
+    // anyway so just implement O(n^2) algorithm.
+    _coeffs.resize(n);
+    for (long i=0; i<n; ++i) {
+        _coeffs[i] = 0.0;
+        for (size_t j=0; j<n; ++j) {
+            T w = std::cos(i * q[j]);
+            _coeffs[i] += w * fx[j];
+        }
+        _coeffs[i] *= 2.0 / n;
+    }
+    _coeffs[0] *= 0.5;
+}
+
+template <typename T>
+T
+isce::core::ChebyKernel<T>::
+operator()(double x) const
+{
+    // Careful to avoid weird stuff outside [-1,1] definition.
+    const auto ax = std::abs(x);
+    if (ax > this->_halfwidth) {
+        return T(0);
+    }
+    // Map [0,L/2] to [-1,1]
+    const T q = (ax * _scale) - T(1);
+    const T twoq = T(2) * q;
+    const int n = _coeffs.size();
+    // Clenshaw algorithm for two term recurrence.
+    T bk=0, bk1=0, bk2=0;
+    for (int i=n-1; i>0; --i) {
+        bk = _coeffs[i] + twoq * bk1 - bk2;
+        bk2 = bk1;
+        bk1 = bk;
+    }
+    return _coeffs[0] + q*bk1 - bk2;
+}
+
+template class isce::core::ChebyKernel<float>;
+template class isce::core::ChebyKernel<double>;
