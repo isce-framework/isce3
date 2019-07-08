@@ -1,6 +1,5 @@
 #-*- coding: utf-8 -*-
 
-from .deserialize import deserialize
 
 def azimuthFMRate(**kwds):
     """returns a 2D lookup table (LUT2d) object"""
