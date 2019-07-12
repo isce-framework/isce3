@@ -74,11 +74,8 @@ class Base(pyre.component,
         import h5py
         import isce3
         import os
-        #swathPath = os.path.join(self._RootPath, self.productType,
-        #                          self._SwathPath)
         swath = isce3.product.swath()
         with h5py.File(self.filename, 'r') as fid:
-              #swathGrp = fid[swathPath]
               swathGrp = fid[self.SwathPath]
               swath.loadFromH5(swathGrp, frequency)
 
@@ -108,15 +105,12 @@ class Base(pyre.component,
         import isce3
         import os
 
-        #orbitPath = os.path.join(self._RootPath, self.productType, 
-        #        self._MetadataPath, 'orbit')
         orbitPath = os.path.join(self.MetadataPath, 'orbit')
 
-        orbit = isce3.core.orbit()
         with h5py.File(self.filename, 'r') as fid:
             orbitGrp = fid[orbitPath]
-            orbit.loadFromH5(orbitGrp)
-    
+            orbit = isce3.core.orbit.loadFromH5(orbitGrp)
+
         return orbit
 
     @pyre.export

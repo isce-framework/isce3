@@ -593,7 +593,9 @@ cdef class pyOrbit:
         cdef char *cstring = fname
         self.c_orbit.dumpToHDR(cstring)
 
-    def loadFromH5(self, h5Group):
+
+    @staticmethod
+    def loadFromH5(h5Group):
         '''
         Load Orbit from an HDF5 group
         
@@ -601,13 +603,15 @@ cdef class pyOrbit:
             h5Group (h5py group): HDF5 group with orbit state vectors
 
         Returns:
-            None
+            return pyOrbit object
         '''
 
         cdef hid_t groupid = h5Group.id.id
         cdef IGroup c_igroup
         c_igroup = IGroup(groupid)
-        loadOrbit(c_igroup, deref(self.c_orbit))
+        orb = pyOrbit()
+        loadOrbit(c_igroup, deref(orb.c_orbit))
+        return orb
 
     def saveToH5(self, h5Group):
         '''
