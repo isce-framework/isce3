@@ -139,12 +139,24 @@ cdef class pySwath:
         cdef double d = self.c_swath.processedAzimuthBandwidth()
         return d
 
-    def loadFromH5(self, h5Group, freq):
+    @staticmethod
+    def loadFromH5(h5Group, freq):
+        '''
+        Load Swath from an HDF5 group
+
+        Args:
+            h5Group (h5py group): HDF5 group with swath
+
+        Returns:
+            pySwath object
+        '''
+
         cdef hid_t groupid = h5Group.id.id
         cdef IGroup c_igroup
         c_igroup = IGroup(groupid)
         cdef string freq_str = pyStringToBytes(freq)
-        loadSwath(c_igroup, deref(self.c_swath), freq_str[0])
+        swathObj = pySwath()
+        loadSwath(c_igroup, deref(swathObj.c_swath), freq_str[0])
     
     def getRadarGridParameters(self, 
                             numberAzimuthLooks=1,

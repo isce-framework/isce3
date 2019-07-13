@@ -204,6 +204,7 @@ cdef class pyEulerAngles:
     def roll(self, value):
         raise NotImplementedError('Cannot set roll values')
     
+    @staticmethod
     def loadFromH5(self, h5Group):
         '''
         Load EulerAngles from an HDF5 group
@@ -212,13 +213,17 @@ cdef class pyEulerAngles:
             h5Group (h5py group): HDF5 group with Euler angles
 
         Returns:
-            None
+            pyEulerAngles object
         '''
 
         cdef hid_t groupid = h5Group.id.id
         cdef IGroup c_igroup
         c_igroup = IGroup(groupid)
-        loadEulerAngles(c_igroup, deref(self.c_eulerangles))
+        euleranglesObj = pyEulerAngles()
+        loadEulerAngles(c_igroup, deref(euleranglesObj.c_eulerangles))
+
+        return euleranglesObj
+
 
     def saveToH5(self, h5Group):
         '''

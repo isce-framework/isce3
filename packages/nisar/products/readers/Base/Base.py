@@ -74,10 +74,9 @@ class Base(pyre.component,
         import h5py
         import isce3
         import os
-        swath = isce3.product.swath()
         with h5py.File(self.filename, 'r') as fid:
               swathGrp = fid[self.SwathPath]
-              swath.loadFromH5(swathGrp, frequency)
+              swath = isce3.product.swath.loadFromH5(swathGrp, frequency)
 
         return swath
 

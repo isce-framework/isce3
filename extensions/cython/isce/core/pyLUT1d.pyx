@@ -164,7 +164,8 @@ cdef class pyLUT1d:
     def size(self, s):
         raise NotImplementedError('Cannot overwrite LUT size.')
 
-    def loadFromH5(self, h5Group, name_coords='r0', name_values='skewdc_values'):
+    @staticmethod
+    def loadFromH5(h5Group, name_coords='r0', name_values='skewdc_values'):
         '''
         Load LUT1d from an HDF5 group
 
@@ -172,15 +173,16 @@ cdef class pyLUT1d:
             h5Group (h5py group): HDF5 group with lut1d data
 
         Returns:
-            None
+            pyLUT1d object
         '''
 
         cdef hid_t groupid = h5Group.id.id
         cdef IGroup c_igroup
         c_igroup = IGroup(groupid)
-        loadLUT1d(c_igroup, deref(self.c_lut), <string> pyStringToBytes(name_coords),
+        lutObj = pyLUT1d()
+        loadLUT1d(c_igroup, deref(lutObj.c_lut), <string> pyStringToBytes(name_coords),
                 <string> pyStringToBytes(name_values))
 
-        return
+        return lutObj
 
 # end of file 
