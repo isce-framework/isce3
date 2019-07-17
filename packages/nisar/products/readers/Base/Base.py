@@ -51,10 +51,9 @@ class Base(pyre.component,
         # Polarization dictionary
         self.polarizations = {}
 
-        self.__parse(self.filename)
+        self._parse(self.filename)
     
-    #@pyre.export
-    def __parse(self, hdf5file):
+    def _parse(self, hdf5file):
         '''
         Parse the HDF5 file and populate ISCE data structures.
         '''
