@@ -46,15 +46,15 @@ NFFT(size_t m, size_t n, size_t fft_size)
     // Pre-compute spectral weights (1/phi_hat in NFFT papers).
     // Also include factor of n since FFTW does not normalize DFT.
     T b = M_PI * (2.0 - 1.0*n/fft_size);
-    T norm = std::cyl_bessel_i(0, b*m) / n;
+    T norm = isce::math::bessel_i0(b*m) / n;
     size_t n2 = (n - 1) / 2 + 1;
     for (size_t i=0; i<n2; ++i) {
         double f = 2 * M_PI * i / _fft_size;
-        _weights[i] = norm / std::cyl_bessel_i(0, m * std::sqrt(b*b-f*f));
+        _weights[i] = norm / isce::math::bessel_i0(m * std::sqrt(b*b-f*f));
     }
     for (size_t i=n2; i<n; ++i) {
         double f = 2 * M_PI * ((double)i - n) / _fft_size;
-        _weights[i] = norm / std::cyl_bessel_i(0, m * std::sqrt(b*b-f*f));
+        _weights[i] = norm / isce::math::bessel_i0(m * std::sqrt(b*b-f*f));
     }
 }
 
