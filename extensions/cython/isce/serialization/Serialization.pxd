@@ -23,20 +23,11 @@ cdef extern from "isce/core/Serialization.h" namespace "isce::core":
     void load_archive[T](string metadata, char * objTag, T * obj)
     void load_archive_reference[T](string metadata, char * objTag, T & obj)
 
-    # Load ellipsoid data
-    void loadFromH5(IGroup & group, Ellipsoid & ellps)
-
-    # Load orbit data
-    void loadFromH5(IGroup & group, Orbit & orbit)
-
     # Load attitude data
     void loadFromH5(IGroup & group, EulerAngles & euler)
 
     # Load Poly2d
     void loadFromH5(IGroup & group, Poly2d & poly, string dtype)
-
-    # Load LUT1d
-    void loadFromH5(IGroup & group, LUT1d[double] & lut, string name_coords, string name_values)
 
     # Load metadata
     void loadFromH5(IGroup & group, Metadata & meta, string mode)

@@ -4,10 +4,10 @@
 import isce3.extensions.isceextension as isceextension
 
 # Import the wrappers
-from . import core
-from . import geometry
-from . import image
-from . import io
-from . import signal
-from . import product
+def swath(**kwds):
+    """A factory for swath"""
+    from .Swath import Swath
+
+    return Swath(**kwds)
+
 # end of file

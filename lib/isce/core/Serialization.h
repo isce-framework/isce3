@@ -303,6 +303,34 @@ namespace isce {
         }
 
         // ------------------------------------------------------------------------
+        // Serialization for LUT2d
+        // ------------------------------------------------------------------------
+
+         /** \brief Load LUT2d data from HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] xName         Dataset name within the group to be loaded as X coordinate of LUT2d
+         * @param[in] xName         Dataset name within the group to be loaded as Y coordinate of LUT2d
+         * @param[in] dsetName      Dataset name within group to be loaded as LUT2d data
+         * @param[in] lut           LUT2d to be configured. */
+        template <typename T>
+        inline void loadLUT2d(isce::io::IGroup & group,
+                                const std::string & xName, const std::string & yName,
+                                const std::string & dsetName, isce::core::LUT2d<T> & lut) {
+            // Load coordinates
+            std::valarray<double> x, y;
+            isce::io::loadFromH5(group, xName, x);
+            isce::io::loadFromH5(group, yName, y);
+
+            // Load LUT2d data in matrix
+            isce::core::Matrix<T> matrix(y.size(), x.size());
+            isce::io::loadFromH5(group, dsetName, matrix);
+
+            // Set in lut
+            lut.setFromData(x, y, matrix);
+        }
+
+        // ------------------------------------------------------------------------
         // Serialization for LUT2d (specifically for calibration grids)
         // ------------------------------------------------------------------------
 

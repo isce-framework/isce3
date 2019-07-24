@@ -20,8 +20,14 @@ class Base(pyre.component,
     _IdentificationPath = pyre.properties.str(default='identification')
     _IdentificationPath.doc = 'Absolute path ath to unique product identification information'
 
+    _ProductType = pyre.properties.str(default='SLC')
+    _ProductType.doc = 'The type of the product.'
+
     _MetadataPath = pyre.properties.str(default='metadata')
     _MetadataPath.doc = 'Relative path to metadata associated with standard product'
+
+    _ProcessingInformation = pyre.properties.str(default='processingInformation')
+    _ProcessingInformation.doc = 'Relative path to processing information associated with the product'
 
     _SwathPath = pyre.properties.str(default='swaths')
     _SwathPath.doc = 'Relative path to swaths associated with standard product'
@@ -32,21 +38,22 @@ class Base(pyre.component,
     productValidationType = pyre.properties.str(default='BASE')
     productValidationType.doc = 'Validation tag to compare identification information against to ensure that the right product type is being used.'
 
-    def __init__(self, **kwds):
+    def __init__(self, hdf5file='None', **kwds):
         '''
         Constructor.
         '''
         # Filename
-        self.filename = None
+        self.filename = hdf5file
 
         # Identification information
         self.identification = None
 
         # Polarization dictionary
         self.polarizations = {}
+
+        self._parse(self.filename)
     
-    @pyre.export
-    def parse(self, hdf5file):
+    def _parse(self, hdf5file):
         '''
         Parse the HDF5 file and populate ISCE data structures.
         '''
@@ -59,18 +66,112 @@ class Base(pyre.component,
         self.parsePolarizations()
 
     @pyre.export
-    def getSwathMetadata(self, frequency):
+    def getSwathMetadata(self, frequency='A'):
+        '''
+        Returns metadata corresponding to given frequency.
+        '''
+        import h5py
+        import isce3
+        import os
+        with h5py.File(self.filename, 'r') as fid:
+              swathGrp = fid[self.SwathPath]
+              swath = isce3.product.swath.loadFromH5(swathGrp, frequency)
+
+        return swath
+
+    @pyre.export
+    def getRadarGrid(self, frequency='A'):
+        '''
+        Return radarGridParameters object
+        '''
+        swath = self.getSwathMetadata(frequency=frequency)
+        return swath.getRadarGridParameters() 
+
+    @pyre.export
+    def getGridMetadata(self, frequency='A'):
         '''
         Returns metadata corresponding to given frequency.
         '''
         raise NotImplementedError
 
     @pyre.export
-    def getGridMetadata(self, frequency):
+    def getOrbit(self):
         '''
-        Returns metadata corresponding to given frequency.
+        extracts orbit 
         '''
-        raise NotImplementedError
+        import h5py
+        import isce3
+        import os
+
+        orbitPath = os.path.join(self.MetadataPath, 'orbit')
+
+        with h5py.File(self.filename, 'r') as fid:
+            orbitGrp = fid[orbitPath]
+            orbit = isce3.core.orbit.loadFromH5(orbitGrp)
+
+        return orbit
+
+    @pyre.export
+    def getDopplerCentroid(self, frequency='A'):
+        '''
+        Extract the Doppler centroid
+        '''
+        import h5py
+        import isce3
+        import os
+        import numpy as np
+
+        dopplerPath = os.path.join(self.ProcessingInformationPath, 
+                                'parameters', 'frequency' + frequency, 
+                                'dopplerCentroid') 
+
+        zeroDopplerTimePath = os.path.join(self.ProcessingInformationPath,
+                                            'parameters/zeroDopplerTime')
+
+        slantRangePath = os.path.join(self.ProcessingInformationPath,
+                                        'parameters/slantRange')
+        # extract the native Doppler dataset
+        with h5py.File(self.filename, 'r') as fid:
+            doppler = fid[dopplerPath][:]
+            zeroDopplerTime = fid[zeroDopplerTimePath][:]
+            slantRange = fid[slantRangePath][:]
+
+        dopplerCentroid = isce3.core.dopplerCentroid(x=slantRange, 
+                                                    y=zeroDopplerTime, 
+                                                    z=doppler)
+        return dopplerCentroid
+
+    @pyre.export
+    def getZeroDopplerTime(self):
+        '''
+        Extract the azimuth time of the zero Doppler grid
+        '''
+
+        import h5py
+        import os
+        zeroDopplerTimePath = os.path.join(self.SwathPath, 
+                                          'zeroDopplerTime')
+        with h5py.File(self.filename, 'r') as fid:
+            zeroDopplerTime = fid[zeroDopplerTimePath][:]
+
+        return zeroDopplerTime
+
+    @pyre.export
+    def getSlantRange(self, frequency='A'):
+        '''
+        Extract the slant range of the zero Doppler grid
+        '''
+
+        import h5py
+        import os
+        slantRangePath = os.path.join(self.SwathPath,
+                                    'frequency' + frequency, 'slantRange')
+
+        with h5py.File(self.filename, 'r') as fid:
+            slantRange = fid[slantRangePath][:]
+
+        return slantRange
+
 
     def parsePolarizations(self):
         '''
@@ -98,6 +199,7 @@ class Base(pyre.component,
                                               msg='Could not determine polarization for frequency{0}'.format(freq))
                 self.polarizations[freq] = polList
 
+        return
 
     @property
     def CFPath(self):
@@ -121,6 +223,11 @@ class Base(pyre.component,
     def MetadataPath(self):
         import os
         return os.path.join(self.ProductPath, self._MetadataPath)
+    
+    @property
+    def ProcessingInformationPath(self):
+        import os
+        return os.path.join(self.MetadataPath, self._ProcessingInformation)
 
     @property
     def SwathPath(self):

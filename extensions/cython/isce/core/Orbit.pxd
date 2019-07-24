@@ -8,6 +8,7 @@ from libcpp.vector cimport vector
 from libcpp cimport bool
 from Cartesian cimport cartesian_t
 from DateTime cimport DateTime
+from IH5 cimport IGroup
 
 cdef extern from "isce/core/Constants.h" namespace "isce::core":
     cdef enum orbitInterpMethod:
@@ -39,3 +40,8 @@ cdef extern from "isce/core/Orbit.h" namespace "isce::core":
         void printOrbit()
         void loadFromHDR(const char*)
         void dumpToHDR(const char*)
+
+cdef extern from "isce/core/Serialization.h" namespace "isce::core":
+    void loadOrbit "loadFromH5" (IGroup & group, Orbit & orbit)
+    void saveOrbit "saveToH5" (IGroup & group, Orbit & orbit) 
+

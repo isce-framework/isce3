@@ -91,7 +91,7 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radarGri
     isce::core::Ellipsoid ellps(isce::core::EarthSemiMajorAxis,
                             isce::core::EarthEccentricitySquared);
 
-    isce::geometry::Topo topo(radarGrid, orbit, dop, ellps, lookSide);
+    isce::geometry::Topo topo(radarGrid, orbit, ellps, lookSide, dop);
     topo.orbitMethod(isce::core::orbitInterpMethod::HERMITE_METHOD);
 
     const double start = radarGrid.sensingStart();

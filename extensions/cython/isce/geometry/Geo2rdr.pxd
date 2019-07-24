@@ -13,8 +13,12 @@ from Raster cimport Raster
 # Cython declarations for isce::product objects
 from Product cimport Product
 
-# Interpolation methods
-from Orbit cimport orbitInterpMethod
+# Orbit and Orbit Interpolation methods
+from Orbit cimport Orbit, orbitInterpMethod
+
+from RadarGridParameters cimport RadarGridParameters
+from Ellipsoid cimport Ellipsoid
+from LUT2d cimport LUT2d
 
 cdef extern from "isce/geometry/Geo2rdr.h" namespace "isce::geometry":
 
@@ -24,6 +28,10 @@ cdef extern from "isce/geometry/Geo2rdr.h" namespace "isce::geometry":
         # Constructor
         Geo2rdr(Product & product, char frequency, bool nativeDoppler,
                 size_t numberAzimuthLooks, size_t numberRangeLooks) except +
+        Geo2rdr(RadarGridParameters & radarGrid, Orbit & orbit,
+                Ellipsoid & ellipsoid, LUT2d[double] & doppler) except +
+        Geo2rdr(RadarGridParameters & radarGrid, Orbit & orbit,
+                Ellipsoid & ellipsoid) except +
 
         # Set options
         void threshold(double)

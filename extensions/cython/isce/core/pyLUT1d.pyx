@@ -5,10 +5,13 @@
 #
 
 from libcpp cimport bool
+from libcpp.string cimport string
 import numpy as np
 cimport numpy as np
-from LUT1d cimport LUT1d
+from LUT1d cimport LUT1d, loadLUT1d
 from Matrix cimport valarray
+import h5py
+from IH5 cimport hid_t, IGroup
 
 cdef class pyLUT1d:
     '''
@@ -160,5 +163,26 @@ cdef class pyLUT1d:
     @size.setter
     def size(self, s):
         raise NotImplementedError('Cannot overwrite LUT size.')
-    
+
+    @staticmethod
+    def loadFromH5(h5Group, name_coords='r0', name_values='skewdc_values'):
+        '''
+        Load LUT1d from an HDF5 group
+
+        Args:
+            h5Group (h5py group): HDF5 group with lut1d data
+
+        Returns:
+            pyLUT1d object
+        '''
+
+        cdef hid_t groupid = h5Group.id.id
+        cdef IGroup c_igroup
+        c_igroup = IGroup(groupid)
+        lutObj = pyLUT1d()
+        loadLUT1d(c_igroup, deref(lutObj.c_lut), <string> pyStringToBytes(name_coords),
+                <string> pyStringToBytes(name_values))
+
+        return lutObj
+
 # end of file 

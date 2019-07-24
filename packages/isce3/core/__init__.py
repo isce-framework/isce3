@@ -1,5 +1,12 @@
 #-*- coding: utf-8 -*-
 
+
+def azimuthFMRate(**kwds):
+    """returns a 2D lookup table (LUT2d) object"""
+    from .LUT2d import LUT2d
+
+    return LUT2d(**kwds)
+
 def basis(**kwds):
     """A factory for Basis"""
     from .Basis import Basis
@@ -10,6 +17,11 @@ def dateTime(**kwds):
     """A factory for DateTime"""
     from .DateTime import DateTime
     return DateTime(**kwds)
+
+def dopplerCentroid(**kwds):
+    """returns a 2D lookup table (LUT2d) object"""
+    from .LUT2d import LUT2d
+    return LUT2d(**kwds)
 
 def dopplerEuler(**kwds):
     """A factory for DopplerEuler"""

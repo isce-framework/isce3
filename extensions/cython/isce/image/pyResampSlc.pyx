@@ -25,20 +25,30 @@ cdef class pyResampSlc:
 
     # Cython class objects
     cdef pyLUT2d py_doppler
-    
-    def __cinit__(self, pyProduct product=None, 
-                pyProduct refProduct=None, freq='A'):
-        """
-        Initialize C++ objects.
-        """
-        cdef string freqstr = pyStringToBytes(freq)
-        if product is not None:
-            self.c_resamp = new ResampSlc(deref(product.c_product), freqstr[0])
 
-        elif product is not None and refProduct is not None:
-            self.c_resamp = new ResampSlc(deref(product.c_product),
-                                          deref(refProduct.c_product),
-                                          freqstr[0])
+    def __cinit__(self, pyRadarGridParameters radarGrid,
+                  pyLUT2d doppler,
+                  double wavelength,
+                  pyRadarGridParameters referenceRadarGrid=None,
+                  double referenceWavelength=0.0):
+
+        if referenceRadarGrid is not None and referenceWavelength!=0.0:
+            print("no referencing")
+            # constructor for flattening resampled SLC
+            self.c_resamp = new ResampSlc(deref(doppler.c_lut), 
+                    radarGrid.startingRange, radarGrid.rangePixelSpacing, 
+                    radarGrid.sensingStart, radarGrid.prf, 
+                    wavelength,
+                    referenceRadarGrid.startingRange, 
+                    referenceRadarGrid.rangePixelSpacing,
+                    referenceWavelength)
+        else:
+            # constructor for not flattening resampled SLC
+            self.c_resamp = new ResampSlc(deref(doppler.c_lut), 
+                    radarGrid.startingRange, radarGrid.rangePixelSpacing, 
+                    radarGrid.sensingStart, radarGrid.prf, 
+                    wavelength)
+
         self.__owner = True
 
         # Bind the C++ LUT2d class to the Cython pyLUT2d instance

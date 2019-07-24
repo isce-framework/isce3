@@ -26,12 +26,6 @@ class ProductReader(pyre.protocol,
     _GridPath.doc = 'Relative path to grids associated with standard product'
 
     
-    @pyre.provides
-    def parse(self, hdf5file):
-        '''
-        Open and parse the user provided HDF5 file.
-        '''
-
     @classmethod
     def pyre_default(cls, **kwds):
         '''

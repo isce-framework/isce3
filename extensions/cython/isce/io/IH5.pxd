@@ -7,6 +7,11 @@
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 
+cdef extern from "hdf5.h":
+    # Basic types
+    ctypedef long int hid_t
+
+
 cdef extern from "isce/io/IH5.h" namespace "isce::io":
 
     # IDataSet class
@@ -38,7 +43,9 @@ cdef extern from "isce/io/IH5.h" namespace "isce::io":
 
         # Constructors
         IGroup() except +
-    
+
+        IGroup(hid_t & group) except +
+
         # Open a given dataset
         IDataSet openDataSet(const string & name)
 

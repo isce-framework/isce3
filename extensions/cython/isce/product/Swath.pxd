@@ -5,6 +5,7 @@
 #
 
 from Matrix cimport valarray
+from IH5 cimport IGroup
 
 cdef extern from "isce/product/Swath.h" namespace "isce::product":
     cdef cppclass Swath:
@@ -62,5 +63,8 @@ cdef extern from "isce/product/Swath.h" namespace "isce::product":
         # Processed bandwidth
         double processedAzimuthBandwidth() const
         void processedAzimuthBandwidth(double)
-       
+
+cdef extern from "isce/product/Serialization.h" namespace "isce::product":
+    void loadSwath "loadFromH5" (IGroup & group, Swath & swath, char freq)
+
 # end of file 

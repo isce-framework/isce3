@@ -17,12 +17,11 @@ class SLC(Base, family='nisar.productreader.slc'):
         '''
 
         ###Read base product information like Identification
-        super(SLC, self).__init__(**kwds)
+        super().__init__(**kwds) 
 
-    @pyre.export
-    def parse(self, hdf5file):
+    def _parse(self, hdf5file):
         '''
         Parse the SLC HDF5 file and populate ISCE data structures.
         '''
+        super()._parse(hdf5file)
 
-        super(SLC, self).parse(hdf5file)
