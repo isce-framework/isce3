@@ -10,6 +10,7 @@
 #include "forward.h"
 
 #include <valarray>
+#include <isce/math/Bessel.h>
 
 /** sinc function defined as \f$ \frac{\sin(\pi x)}{\pi x} \f$ */
 namespace isce { namespace core {
