@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <ctime>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -354,6 +355,60 @@ TEST_F(Interp1dTest, NFFT) {
     fill_ref(times);
     mask_edges(times);
     check(0.998, 1.0, 0.1, 0.1);
+}
+
+template<class T>
+class SpeedCheck {
+public:
+    const long n;
+    const long npts;
+    std::valarray<T> t;
+    std::valarray<std::complex<T>> x, y;
+
+    SpeedCheck() : n(1024*512), npts(1024), t(npts), x(npts), y(npts) {
+        std::mt19937 rng(2345);
+        std::normal_distribution<T> normal(0.0, 1.0);
+        std::uniform_real_distribution<T> uniform(0.0, npts-1.0);
+        for (long i=0; i<npts; ++i) {
+            t[i] = uniform(rng);
+            x[i] = std::complex<T>(normal(rng), normal(rng));
+        }
+    }
+
+    double run(isce::core::Kernel<T> &kernel) {
+        std::clock_t start = std::clock();
+        for (long i=0; i<n; ++i) {
+            long j = i % npts;
+            y[j] = isce::core::interp1d(kernel, x, t[j], true);
+        }
+        return (std::clock() - start) / (double) CLOCKS_PER_SEC;
+    }
+};
+
+TEST(Kernel, Speed)
+{
+    #define U float
+    isce::core::NFFTKernel<U> exact(4, 1, 2);
+    // A degree 16 Chebyshev and 2k linear table give similar approximation
+    // errors of about 5e-8.  See notebook ApproxWindow.ipynb.
+    isce::core::ChebyKernel<U> cheby(exact, 16);
+    isce::core::TabulatedKernel<U> table(exact, 2048);
+    SpeedCheck<U> timer;
+    #undef U
+
+    // The first run seems to have a penalty as things get loaded in to cache?
+    // So discard its timing result.
+    timer.run(table);
+
+    auto time_exact = timer.run(exact);
+    printf("exact ran in %g seconds\n", time_exact);
+    auto time_cheby = timer.run(cheby);
+    printf("cheby ran in %g seconds\n", time_cheby);
+    auto time_table = timer.run(table);
+    printf("table ran in %g seconds\n", time_table);
+
+    EXPECT_GT(time_exact, time_table);
+    EXPECT_GT(time_cheby, time_table);
 }
 
 int main(int argc, char **argv) {
