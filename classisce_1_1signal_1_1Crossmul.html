@@ -113,9 +113,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ab5e452da1d373f99e3f5f7ee0255651d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Crossmul.html#ab5e452da1d373f99e3f5f7ee0255651d">crossmul</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;referenceSLC, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;secondarySLC, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;interferogram)</td></tr>
 <tr class="memdesc:ab5e452da1d373f99e3f5f7ee0255651d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run crossmul.  <a href="#ab5e452da1d373f99e3f5f7ee0255651d">More...</a><br/></td></tr>
 <tr class="separator:ab5e452da1d373f99e3f5f7ee0255651d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38c0f22bbeed97fb9fad67cde4f58aea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Crossmul.html#a38c0f22bbeed97fb9fad67cde4f58aea">lookdownShiftImpact</a> (size_t oversample, size_t fft_size, size_t blockRows, std::valarray&lt; std::complex&lt; float &gt;&gt; &amp;shiftImpact)</td></tr>
-<tr class="memdesc:a38c0f22bbeed97fb9fad67cde4f58aea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the frequency response due to a subpixel shift introduced by upsampling and downsampling.  <a href="#a38c0f22bbeed97fb9fad67cde4f58aea">More...</a><br/></td></tr>
-<tr class="separator:a38c0f22bbeed97fb9fad67cde4f58aea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ed1b6e1b931702e95e05646ddaa27e9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Crossmul.html#a9ed1b6e1b931702e95e05646ddaa27e9">lookdownShiftImpact</a> (size_t oversample, size_t nfft, size_t blockRows, std::valarray&lt; std::complex&lt; float &gt;&gt; &amp;shiftImpact)</td></tr>
+<tr class="memdesc:a9ed1b6e1b931702e95e05646ddaa27e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the frequency response due to a subpixel shift introduced by upsampling and downsampling.  <a href="#a9ed1b6e1b931702e95e05646ddaa27e9">More...</a><br/></td></tr>
+<tr class="separator:a9ed1b6e1b931702e95e05646ddaa27e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70edc4030a0a6755e08161795edf23a1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Crossmul.html#a70edc4030a0a6755e08161795edf23a1">rangeCommonBandFilter</a> (std::valarray&lt; std::complex&lt; float &gt;&gt; &amp;refSlc, std::valarray&lt; std::complex&lt; float &gt;&gt; &amp;secSlc, std::valarray&lt; std::complex&lt; float &gt;&gt; geometryIfgram, std::valarray&lt; std::complex&lt; float &gt;&gt; geometryIfgramConj, std::valarray&lt; std::complex&lt; float &gt;&gt; &amp;refSpectrum, std::valarray&lt; std::complex&lt; float &gt;&gt; &amp;secSpectrum, std::valarray&lt; double &gt; &amp;rangeFrequencies, <a class="el" href="classisce_1_1signal_1_1Filter.html">isce::signal::Filter</a>&lt; float &gt; &amp;rngFilter, size_t blockRows, size_t ncols)</td></tr>
 <tr class="memdesc:a70edc4030a0a6755e08161795edf23a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Range common band filtering.  <a href="#a70edc4030a0a6755e08161795edf23a1">More...</a><br/></td></tr>
 <tr class="separator:a70edc4030a0a6755e08161795edf23a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -155,9 +155,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:afca12662952ef1aa590240a7e72d4ff3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Crossmul.html#afca12662952ef1aa590240a7e72d4ff3">doCommonRangebandFiltering</a> (bool)</td></tr>
 <tr class="memdesc:afca12662952ef1aa590240a7e72d4ff3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set common range band filtering flag.  <a href="#afca12662952ef1aa590240a7e72d4ff3">More...</a><br/></td></tr>
 <tr class="separator:afca12662952ef1aa590240a7e72d4ff3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a306fb4dfb90925defb55a6efc640deee"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Crossmul.html#a306fb4dfb90925defb55a6efc640deee">rangeFrequencyShift</a> (std::valarray&lt; std::complex&lt; float &gt;&gt; &amp;refAvgSpectrum, std::valarray&lt; std::complex&lt; float &gt;&gt; &amp;secAvgSpectrum, std::valarray&lt; double &gt; &amp;rangeFrequencies, size_t blockRowsData, size_t fft_size, double &amp;frequencyShift)</td></tr>
-<tr class="memdesc:a306fb4dfb90925defb55a6efc640deee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the avergae frequency shift in range direction between two SLCs.  <a href="#a306fb4dfb90925defb55a6efc640deee">More...</a><br/></td></tr>
-<tr class="separator:a306fb4dfb90925defb55a6efc640deee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad512d69652f68c4502f8cf90cd469045"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Crossmul.html#ad512d69652f68c4502f8cf90cd469045">rangeFrequencyShift</a> (std::valarray&lt; std::complex&lt; float &gt;&gt; &amp;refAvgSpectrum, std::valarray&lt; std::complex&lt; float &gt;&gt; &amp;secAvgSpectrum, std::valarray&lt; double &gt; &amp;rangeFrequencies, size_t blockRowsData, size_t nfft, double &amp;frequencyShift)</td></tr>
+<tr class="memdesc:ad512d69652f68c4502f8cf90cd469045"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the avergae frequency shift in range direction between two SLCs.  <a href="#ad512d69652f68c4502f8cf90cd469045">More...</a><br/></td></tr>
+<tr class="separator:ad512d69652f68c4502f8cf90cd469045"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9836bb8215b66253e369ea01734b50e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Crossmul.html#aa9836bb8215b66253e369ea01734b50e">getPeakIndex</a> (std::valarray&lt; float &gt; data, size_t &amp;peakIndex)</td></tr>
 <tr class="memdesc:aa9836bb8215b66253e369ea01734b50e"><td class="mdescLeft">&#160;</td><td class="mdescRight">estimate the index of the maximum of a vector of data  <a href="#aa9836bb8215b66253e369ea01734b50e">More...</a><br/></td></tr>
 <tr class="separator:aa9836bb8215b66253e369ea01734b50e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -559,7 +559,7 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a38c0f22bbeed97fb9fad67cde4f58aea"></a>
+<a class="anchor" id="a9ed1b6e1b931702e95e05646ddaa27e9"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -573,7 +573,7 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>fft_size</em>, </td>
+          <td class="paramname"><em>nfft</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -599,7 +599,7 @@ Public Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">oversample</td><td>upsampling factor </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fft_size</td><td>fft length in range direction </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nfft</td><td>fft length in range direction </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">blockRows</td><td>number of rows of the block of data </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">shiftImpact</td><td>frequency responce (a linear phase) to a sub-pixel shift in time domain introduced by upsampling followed by downsampling </td></tr>
   </table>
@@ -763,7 +763,7 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a306fb4dfb90925defb55a6efc640deee"></a>
+<a class="anchor" id="ad512d69652f68c4502f8cf90cd469045"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -798,7 +798,7 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>fft_size</em>, </td>
+          <td class="paramname"><em>nfft</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -826,7 +826,7 @@ Public Member Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">secSpectrum</td><td>the spectrum of a block of complex data </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">rangeFrequencies</td><td>the frequencies in range direction </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">blockRowsData</td><td>number of rows in refSpectrum and secSpectrum </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fft_size</td><td>number of columns in refSpectrum and secSpectrum </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nfft</td><td>number of columns in refSpectrum and secSpectrum </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">estimated</td><td>frequency shift between refSpectrum and secSpectrum </td></tr>
   </table>
   </dd>
