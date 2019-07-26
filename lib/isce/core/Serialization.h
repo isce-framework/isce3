@@ -37,6 +37,9 @@
 #include <isce/io/IH5.h>
 #include <isce/io/Serialization.h>
 
+//isce::orbit_wip
+#include <isce/orbit_wip/Orbit.h>
+
 //! The isce namespace
 namespace isce {
     //! The isce::core namespace
@@ -159,6 +162,29 @@ namespace isce {
             isce::io::saveToH5(group, "time", orbit.UTCtime);
             isce::io::setRefEpoch(group, "time", orbit.refEpoch);
         }
+
+        // ----------------------------------------------------------------------
+        // Serialization for orbit_wip::Orbit
+        // ----------------------------------------------------------------------
+
+        template <class Archive>
+        inline void save(Archive & archive, const isce::orbit_wip::Orbit & orbit) {
+            archive(cereal::make_nvp("StateVectors", orbit.to_statevectors()));
+        }
+
+        template <class Archive>
+        static void load_and_construct(Archive & archive, cereal::construct<isce::orbit_wip::Orbit> & orbit) {
+            //Load data
+            std::vector<StateVector> svlist;
+            archive(cereal::make_nvp("Statevectors", svlist));
+            double spacing = (svlist[1].datetime - svlist[0].datetime).getTotalSeconds();
+            orbit(svlist[0].datetime, spacing);
+            for (auto &sv : svlist)
+            {
+                orbit->push_back(sv);
+            }
+        }
+
 
         // ------------------------------------------------------------------------
         // Serialization for EulerAngles
@@ -300,34 +326,6 @@ namespace isce {
             poly.azimuthMean = 0.0;
             poly.rangeNorm = 1.0;
             poly.azimuthNorm = 1.0;
-        }
-
-        // ------------------------------------------------------------------------
-        // Serialization for LUT2d
-        // ------------------------------------------------------------------------
-
-         /** \brief Load LUT2d data from HDF5 product.
-         *
-         * @param[in] group         HDF5 group object.
-         * @param[in] xName         Dataset name within the group to be loaded as X coordinate of LUT2d
-         * @param[in] xName         Dataset name within the group to be loaded as Y coordinate of LUT2d
-         * @param[in] dsetName      Dataset name within group to be loaded as LUT2d data
-         * @param[in] lut           LUT2d to be configured. */
-        template <typename T>
-        inline void loadLUT2d(isce::io::IGroup & group,
-                                const std::string & xName, const std::string & yName,
-                                const std::string & dsetName, isce::core::LUT2d<T> & lut) {
-            // Load coordinates
-            std::valarray<double> x, y;
-            isce::io::loadFromH5(group, xName, x);
-            isce::io::loadFromH5(group, yName, y);
-
-            // Load LUT2d data in matrix
-            isce::core::Matrix<T> matrix(y.size(), x.size());
-            isce::io::loadFromH5(group, dsetName, matrix);
-
-            // Set in lut
-            lut.setFromData(x, y, matrix);
         }
 
         // ------------------------------------------------------------------------
