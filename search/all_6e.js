@@ -18,7 +18,7 @@ var searchData=
   ['node',['Node',['../structNode.html',1,'']]],
   ['nodeflow',['NodeFlow',['../structNodeFlow.html',1,'']]],
   ['nominalacquisitionprf',['nominalAcquisitionPRF',['../classisce_1_1product_1_1Swath.html#a52f3f71a3c67c292720acbb29bc860c2',1,'isce::product::Swath::nominalAcquisitionPRF() const '],['../classisce_1_1product_1_1Swath.html#a5586a8a0d34076c168dbcebd7a8b4809',1,'isce::product::Swath::nominalAcquisitionPRF(double f)']]],
-  ['norm',['norm',['../classisce_1_1core_1_1Poly1d.html#a123489f472adff67a1712d6d30d6f45c',1,'isce::core::Poly1d']]],
+  ['norm',['norm',['../structisce_1_1core_1_1Poly1d.html#a123489f472adff67a1712d6d30d6f45c',1,'isce::core::Poly1d']]],
   ['nrows',['nrows',['../classisce_1_1signal_1_1Looks.html#afb7040577a8fd31e3f50f1169d9ee024',1,'isce::signal::Looks']]],
   ['nrowslooked',['nrowsLooked',['../classisce_1_1signal_1_1Looks.html#ab63330172d249b79af9890eec19a1f9f',1,'isce::signal::Looks']]],
   ['null_5fvalue',['NULL_VALUE',['../classisce_1_1geometry_1_1Geo2rdr.html#a619f025773af42d47a89b1b699872de1',1,'isce::geometry::Geo2rdr']]],
@@ -34,5 +34,5 @@ var searchData=
   ['numoverlaplines',['numOverlapLines',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#ab25e51967a6c361aad65ede60b67a3ec',1,'isce::unwrap::icu::ICU::numOverlapLines() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a3d6932883f3ad3da4c8ef147c267b959',1,'isce::unwrap::icu::ICU::numOverlapLines(const size_t)']]],
   ['numtrees',['numTrees',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#ac48a546add51b3deea5f8cdeb2890414',1,'isce::unwrap::icu::ICU::numTrees() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#ac7f808d967064d1cfdb205cf7f55f9fd',1,'isce::unwrap::icu::ICU::numTrees(const int)']]],
   ['nvector',['nVector',['../classisce_1_1core_1_1Ellipsoid.html#a9e68332324c0c3afd0cdf4dcd76d032e',1,'isce::core::Ellipsoid']]],
-  ['nvectors',['nVectors',['../classisce_1_1core_1_1Orbit.html#a104a4f97edfaef422045ba2d203dcf4d',1,'isce::core::Orbit::nVectors()'],['../classisce_1_1core_1_1EulerAngles.html#a22e9ddf2afecfae6f2f53fb6d6509fe3',1,'isce::core::EulerAngles::nVectors()'],['../classisce_1_1core_1_1Quaternion.html#a2e02acba6c5b2e855832345c1607854a',1,'isce::core::Quaternion::nVectors()']]]
+  ['nvectors',['nVectors',['../structisce_1_1core_1_1Orbit.html#a104a4f97edfaef422045ba2d203dcf4d',1,'isce::core::Orbit::nVectors()'],['../classisce_1_1core_1_1EulerAngles.html#a22e9ddf2afecfae6f2f53fb6d6509fe3',1,'isce::core::EulerAngles::nVectors()'],['../classisce_1_1core_1_1Quaternion.html#a2e02acba6c5b2e855832345c1607854a',1,'isce::core::Quaternion::nVectors()']]]
 ];

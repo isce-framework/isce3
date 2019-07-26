@@ -5,6 +5,6 @@ var searchData=
   ['x2',['x2',['../classisce_1_1core_1_1Basis.html#a0c98fce86e66909e315f2839cda997ef',1,'isce::core::Basis::x2() const '],['../classisce_1_1core_1_1Basis.html#a5ef6f22e227804123a02000d68bf681a',1,'isce::core::Basis::x2(const Vec3 &amp;x2)']]],
   ['xstart',['xStart',['../classisce_1_1geometry_1_1DEMInterpolator.html#a08c26c46a0f4a45cb11668e5938b1dc7',1,'isce::geometry::DEMInterpolator']]],
   ['xyzonellipse',['xyzOnEllipse',['../classisce_1_1core_1_1Ellipsoid.html#a050239865e8548751b92a1bf0192bb5f',1,'isce::core::Ellipsoid']]],
-  ['xyztoenu',['xyzToEnu',['../classisce_1_1core_1_1DenseMatrix.html#aa31076c534040d72b3e003e642c6ebe7',1,'isce::core::DenseMatrix']]],
+  ['xyztoenu',['xyzToEnu',['../structisce_1_1core_1_1DenseMatrix.html#aa31076c534040d72b3e003e642c6ebe7',1,'isce::core::DenseMatrix']]],
   ['xyztolonlat',['xyzToLonLat',['../classisce_1_1core_1_1Ellipsoid.html#a1c07049428d3c525a772941b34adf3f6',1,'isce::core::Ellipsoid']]]
 ];
