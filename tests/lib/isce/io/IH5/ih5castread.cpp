@@ -77,7 +77,7 @@ typedef ::testing::Types<TypeDefs<unsigned char, short int>,
                          TypeDefs<double, std::complex<double>>> MyTypes;
 
 //Setup test suite
-TYPED_TEST_CASE(IH5Test, MyTypes);
+TYPED_TEST_SUITE(IH5Test, MyTypes);
 
 //This is a typed test
 TYPED_TEST(IH5Test, nochunk) {

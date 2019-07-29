@@ -15,7 +15,8 @@
  * The intent of the class is to assist in translating DateTime tags
  * to double precision floats w.r.t Reference epoch for numerical
  * computation and vice-versa*/
-struct isce::core::TimeDelta {
+class isce::core::TimeDelta {
+public:
 
     /** Integer days */
     int days;

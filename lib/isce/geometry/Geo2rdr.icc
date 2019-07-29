@@ -61,7 +61,7 @@ isce::geometry::Geo2rdr::
           const isce::core::Orbit & orbit,
           const isce::core::Ellipsoid & ellipsoid,
           const isce::core::LUT2d<double> & doppler) :
-          _orbit(orbit), _ellipsoid(ellipsoid),
+          _ellipsoid(ellipsoid), _orbit(orbit),
           _doppler(doppler), _radarGrid(radarGrid) {}
 
 

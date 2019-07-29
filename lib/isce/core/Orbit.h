@@ -21,7 +21,6 @@
 // Declaration
 namespace isce {
     namespace core {
-        struct Orbit;
         void orbitHermite(const std::vector<cartesian_t>&,
                           const std::vector<cartesian_t>&,
                           const std::vector<double>&,double,cartesian_t&,cartesian_t&);
@@ -37,7 +36,8 @@ namespace isce {
  *  All Time stamps are assumed to be UTC.
  *  All positions are in meters and in ECEF coordinates w.r.t WGS84 ellipsoid
  *  All velocities are in meters/sec and in ECEF coordinates w.r.t WGS84 Ellipsoid */
-struct isce::core::Orbit {
+class isce::core::Orbit {
+public:
 
     /** Number of state vectors */
     int nVectors;
@@ -51,6 +51,7 @@ struct isce::core::Orbit {
     std::vector<double> velocity;
     /** Vector of isce::core::StateVector*/
     std::vector<StateVector> stateVectors;
+
     /** \brief Reference epoch for the orbit object.
      *
      * Defaults to MIN_DATE_TIME. This value is used to reference DateTime tags

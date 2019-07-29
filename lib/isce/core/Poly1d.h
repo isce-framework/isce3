@@ -22,7 +22,9 @@
  *
  * where \f$a_i\f$ represents the coefficients, \f$\mu\f$ represents the mean and 
  * \f$\sigma\f$ represents the norm*/
-struct isce::core::Poly1d {
+class isce::core::Poly1d {
+public:
+
     /** Order of the polynomial */
     int order;
     /** Mean of the polynomial */
@@ -32,7 +34,7 @@ struct isce::core::Poly1d {
     /** Coefficients of the polynomial */
     std::vector<double> coeffs;
 
-    /** Constructor 
+    /** Constructor
      *
      * @param[in] ord Order
      * @param[in] mn Mean

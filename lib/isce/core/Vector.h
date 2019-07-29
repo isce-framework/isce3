@@ -9,7 +9,7 @@
 namespace isce { namespace core {
 
 template<int N>
-struct Vector {
+class Vector {
 
 private:
 
