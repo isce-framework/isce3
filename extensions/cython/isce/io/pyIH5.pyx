@@ -4,6 +4,51 @@
 # Copyright 2017-2018
 #
 
+# Exception types
+# https://support.hdfgroup.org/HDF5/doc/cpplus_RM/class_h5_1_1_exception.html
+class H5Exception(RuntimeError):
+    pass
+class H5AttributeIException(H5Exception):
+    pass
+class H5DataSetIException(H5Exception):
+    pass
+class H5DataSpaceIException(H5Exception):
+    pass
+class H5DataTypeIException(H5Exception):
+    pass
+class H5FileIException(H5Exception):
+    pass
+class H5GroupIException(H5Exception):
+    pass
+class H5IdComponentException(H5Exception):
+    pass
+class H5LibraryIException(H5Exception):
+    pass
+class H5LocationException(H5Exception):
+    pass
+class H5ObjHeaderIException(H5Exception):
+    pass
+class H5PropListIException(H5Exception):
+    pass
+class H5ReferenceException(H5Exception):
+    pass
+
+from cpython.ref cimport PyObject
+
+cdef public PyObject* h5exception            = <PyObject*> H5Exception
+cdef public PyObject* h5attributeiexception  = <PyObject*> H5AttributeIException
+cdef public PyObject* h5datasetiexception    = <PyObject*> H5DataSetIException
+cdef public PyObject* h5dataspaceiexception  = <PyObject*> H5DataSpaceIException
+cdef public PyObject* h5datatypeiexception   = <PyObject*> H5DataTypeIException
+cdef public PyObject* h5fileiexception       = <PyObject*> H5FileIException
+cdef public PyObject* h5groupiexception      = <PyObject*> H5GroupIException
+cdef public PyObject* h5idcomponentexception = <PyObject*> H5IdComponentException
+cdef public PyObject* h5libraryiexception    = <PyObject*> H5LibraryIException
+cdef public PyObject* h5locationexception    = <PyObject*> H5LocationException
+cdef public PyObject* h5objheaderiexception  = <PyObject*> H5ObjHeaderIException
+cdef public PyObject* h5proplistiexception   = <PyObject*> H5PropListIException
+cdef public PyObject* h5referenceexception   = <PyObject*> H5ReferenceException
+
 from libcpp.string cimport string
 from IH5 cimport IH5File, IDataSet, IGroup
 

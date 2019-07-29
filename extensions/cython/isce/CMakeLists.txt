@@ -5,15 +5,6 @@
 # Find Numpy
 find_package(Numpy REQUIRED)
 
-# Add subdirectories for installing pxd files
-add_subdirectory(io)
-add_subdirectory(core)
-add_subdirectory(product)
-add_subdirectory(image)
-add_subdirectory(signal)
-add_subdirectory(geometry)
-add_subdirectory(serialization)
-
 # Set the name for the ISCE C++ library
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
@@ -70,3 +61,12 @@ if (WITH_CUDA)
     add_subdirectory(cuda)
     target_include_directories(iscecudaextension PRIVATE ${CMAKE_CURRENT_LIST_DIR}/except)
 endif(WITH_CUDA)
+
+# Add subdirectories for installing pxd files
+add_subdirectory(io)
+add_subdirectory(core)
+add_subdirectory(product)
+add_subdirectory(image)
+add_subdirectory(signal)
+add_subdirectory(geometry)
+add_subdirectory(serialization)

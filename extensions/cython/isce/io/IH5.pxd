@@ -7,6 +7,9 @@
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 
+cdef extern from "H5Error.h":
+    cdef void translateH5Exception();
+
 cdef extern from "hdf5.h":
     # Basic types
     ctypedef long int hid_t
@@ -18,7 +21,7 @@ cdef extern from "isce/io/IH5.h" namespace "isce::io":
     cdef cppclass IDataSet:
 
         # Constructors
-        IDataSet() except +
+        IDataSet() except +translateH5Exception
 
         # Get the number of dimension of dataset or given attribute
         int getRank(const string &)
@@ -42,9 +45,9 @@ cdef extern from "isce/io/IH5.h" namespace "isce::io":
     cdef cppclass IGroup:
 
         # Constructors
-        IGroup() except +
+        IGroup() except +translateH5Exception
 
-        IGroup(hid_t & group) except +
+        IGroup(hid_t & group) except +translateH5Exception
 
         # Open a given dataset
         IDataSet openDataSet(const string & name)
@@ -56,11 +59,13 @@ cdef extern from "isce/io/IH5.h" namespace "isce::io":
         vector[string] find(const string name, const string start, const string dtype,
                             const string returnedPath)
 
+
+
     # IH5File class
     cdef cppclass IH5File:
 
         # Constructors
-        IH5File(const string & filename) except +
+        IH5File(const string & filename) except +translateH5Exception
 
         # Open a given dataset
         IDataSet openDataSet(const string & name)
