@@ -314,7 +314,7 @@ class isce::signal::Signal {
         /** \brief upsampling a block of data in range direction */
         void upsample(std::valarray<std::complex<T>> &signal,
                     std::valarray<std::complex<T>> &signalOversampled,
-                    int rows, int nfft, int oversampleFactor);
+                    int rows, int fft_size, int oversampleFactor);
 
         /** \brief upsampling a block of data in range direction and shifting 
          * the upsampled signal by a constant. The shift is applied by an 
@@ -322,7 +322,7 @@ class isce::signal::Signal {
          */
         void upsample(std::valarray<std::complex<T>> &signal,
                     std::valarray<std::complex<T>> &signalOversampled,
-                    int rows, int nfft, int oversampleFactor, 
+                    int rows, int fft_size, int oversampleFactor,
                     std::valarray<std::complex<T>> shiftImpact);
 
         /** \brief next power of two*/

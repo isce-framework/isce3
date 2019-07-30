@@ -89,13 +89,13 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
                                 std::string filterType)
 {
 
-    int nfft = ncols;
+    int fft_size = ncols;
 
-    _filter.resize(nfft*nrows);
-    std::valarray<std::complex<T>> _filter1D(nfft); //
+    _filter.resize(fft_size*nrows);
+    std::valarray<std::complex<T>> _filter1D(fft_size); //
     _filter1D = std::complex<T>(0.0,0.0);
 
-    std::valarray<double> frequency(nfft);
+    std::valarray<double> frequency(fft_size);
     double dt = 1.0/rangeSamplingFrequency;
     fftfreq(dt, frequency);
 
@@ -104,7 +104,7 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
                             subBandCenterFrequencies,
                             subBandBandwidths,
                             dt,
-                            nfft,
+                            fft_size,
                             _filter1D);
 
     } else if (filterType=="cosine"){
@@ -121,10 +121,10 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
     }
 
     //construct a block of the filter with normalization
-    const std::complex<T> norm(nfft, nfft);
+    const std::complex<T> norm(fft_size, fft_size);
     for (size_t line = 0; line < nrows; line++ ){
-        for (size_t col = 0; col < nfft; col++ ){
-            _filter[line*nfft+col] = _filter1D[col] / norm;
+        for (size_t col = 0; col < fft_size; col++ ){
+            _filter[line*fft_size+col] = _filter1D[col] / norm;
         }
     }
 
@@ -135,7 +135,7 @@ constructRangeBandpassFilter(double rangeSamplingFrequency,
  * @param[in] subBandCenterFrequencies a vector of center frequencies for each band
  * @param[in] subBandBandwidths a vector of bandwidths for each band
  * @param[in] dt samplig rate of the signal
- * @param[in] nfft length of the spectrum
+ * @param[in] fft_size length of the spectrum
  * @param[out] _filter1D one dimensional boxcar bandpass filter in frequency domain 
  */
 template <class T>
@@ -144,7 +144,7 @@ isce::signal::Filter<T>::
 constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
                              std::valarray<double> subBandBandwidths,
                              double dt,
-                             int nfft,
+                             int fft_size,
                              std::valarray<std::complex<T>>& _filter1D)
 {
     // construct a boxcar bandpass filter in frequency domian 
@@ -160,12 +160,12 @@ constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
 
         //index of frequencies for fL and fH
         int indL; 
-        indexOfFrequency(dt, nfft, fL, indL); 
+        indexOfFrequency(dt, fft_size, fL, indL); 
         int indH;
-        indexOfFrequency(dt, nfft, fH, indH);
+        indexOfFrequency(dt, fft_size, fH, indH);
         std::cout << "fL: "<< fL << " , fH: " << fH << " indL: " << indL << " , indH: " << indH << std::endl;
         if (fL<0 && fH>=0){
-            for (size_t ind = indL; ind < nfft; ++ind){
+            for (size_t ind = indL; ind < fft_size; ++ind){
                 _filter1D[ind] = std::complex<T>(1.0, 0.0);
             }
             for (size_t ind = 0; ind < indH; ++ind){
@@ -262,9 +262,9 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
     const double norm = 1.0;
 
     // we probably need to give next power of 2 ???
-    int nfft = nrows;
+    int fft_size = nrows;
     // Construct vector of frequencies
-    std::valarray<double> frequency(nfft);
+    std::valarray<double> frequency(fft_size);
     fftfreq(1.0/prf, frequency);
     
     // Loop over range bins
@@ -296,7 +296,7 @@ constructAzimuthCommonbandFilter(const isce::core::LUT1d<double> & refDoppler,
     }
 
     // Normalize the filter
-    const std::complex<T> filtNorm(nfft, nfft);
+    const std::complex<T> filtNorm(fft_size, fft_size);
     for (int j = 0; j < ncols; ++j) {
         for (size_t i = 0; i < frequency.size(); ++i) {
             _filter[i*ncols+j] /= filtNorm;

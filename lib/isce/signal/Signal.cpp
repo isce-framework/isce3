@@ -824,14 +824,14 @@ inverse2DFFT(std::complex<T>* spectrum,
 *   @param[in] signal input block of data
 *   @param[in] signalUpsampled output block of oversampled data
 *   @param[in] rows number of rows of the block of input and upsampled data
-*   @param[in] nfft number of columns of the block of input data
+*   @param[in] fft_size number of columns of the block of input data
 *   @param[in] upsampleFactor upsampling factor
 */
 template<class T>
 void isce::signal::Signal<T>::
 upsample(std::valarray<std::complex<T>> &signal,
             std::valarray<std::complex<T>> &signalUpsampled,
-            int rows, int nfft, int upsampleFactor)
+            int rows, int fft_size, int upsampleFactor)
 {
 
     // a dummy zero size valarray for shiftImpacts. Using this zero size 
@@ -841,7 +841,7 @@ upsample(std::valarray<std::complex<T>> &signal,
     
     // actually upsampling the signal
     upsample(signal, signalUpsampled,
-            rows, nfft, upsampleFactor, shiftImpact);
+            rows, fft_size, upsampleFactor, shiftImpact);
 
 }
 
@@ -849,7 +849,7 @@ upsample(std::valarray<std::complex<T>> &signal,
 *   @param[in] signal input block of data
 *   @param[out] signalUpsampled output block of oversampled data
 *   @param[in] rows number of rows of the block of input and upsampled data
-*   @param[in] nfft number of columns of the block of input data
+*   @param[in] fft_size number of columns of the block of input data
 *   @param[in] upsampleFactor upsampling factor
 *   @param[out] shiftImpact a linear phase term equivalent to a constant shift in time domain 
 */
@@ -857,15 +857,15 @@ template<class T>
 void isce::signal::Signal<T>::
 upsample(std::valarray<std::complex<T>> &signal,
             std::valarray<std::complex<T>> &signalUpsampled,
-            int rows, int nfft, int upsampleFactor, 
+            int rows, int fft_size, int upsampleFactor, 
             std::valarray<std::complex<T>> shiftImpact)
 {
 
     // number of columns of upsampled spectrum
-    int columns = upsampleFactor*nfft;
+    int columns = upsampleFactor*fft_size;
 
     // temporary storage for the spectrum before and after the shift
-    std::valarray<std::complex<T>> spectrum(nfft*rows);
+    std::valarray<std::complex<T>> spectrum(fft_size*rows);
     std::valarray<std::complex<T>> spectrumShifted(columns*rows);
 
     spectrumShifted = std::complex<T> (0.0,0.0);
@@ -873,11 +873,11 @@ upsample(std::valarray<std::complex<T>> &signal,
     // forward fft in range
     pimpl->_plan_fwd.execute_dft(&signal[0], &spectrum[0]);
 
-    //spectrum /=nfft;
+    //spectrum /= fft_size;
     //shift the spectrum
-    // The spectrum has values from begining to nfft index for each line. We want
+    // The spectrum has values from begining to fft_size index for each line. We want
     // to put the spectrum in correct ouput locations such that the spectrum of
-    // the upsampled data has values from 0 to nfft/2 and from upsampleFactor*nfft - nfft/2 to the end.
+    // the upsampled data has values from 0 to fft_size/2 and from upsampleFactor*fft_size - fft_size/2 to the end.
     // For a 1D example:
     //      spectrum = [1,2,3,4,5,6,0,0,0,0,0,0]
     //  becomes:
@@ -885,13 +885,13 @@ upsample(std::valarray<std::complex<T>> &signal,
     //
 
     #pragma omp parallel for
-    for (size_t column = 0; column<nfft/2; ++column)
-        spectrumShifted[std::slice(column, rows, columns)] = spectrum[std::slice(column, rows, nfft)];
+    for (size_t column = 0; column<fft_size/2; ++column)
+        spectrumShifted[std::slice(column, rows, columns)] = spectrum[std::slice(column, rows, fft_size)];
 
     #pragma omp parallel for
-    for (size_t i = 0; i<nfft/2; ++i){
-        size_t j = upsampleFactor*nfft - nfft/2 + i;
-        spectrumShifted[std::slice(j, rows, columns)] = spectrum[std::slice(i+nfft/2, rows, nfft)];
+    for (size_t i = 0; i<fft_size/2; ++i){
+        size_t j = upsampleFactor*fft_size - fft_size/2 + i;
+        spectrumShifted[std::slice(j, rows, columns)] = spectrum[std::slice(i+fft_size/2, rows, fft_size)];
     }
 
 
@@ -904,7 +904,7 @@ upsample(std::valarray<std::complex<T>> &signal,
     pimpl->_plan_inv.execute_dft(&spectrumShifted[0], &signalUpsampled[0]);
 
     // Normalize
-    signalUpsampled /=nfft;
+    signalUpsampled /= fft_size;
 
 }
 

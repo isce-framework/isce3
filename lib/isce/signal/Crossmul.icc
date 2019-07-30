@@ -120,7 +120,7 @@ doCommonRangebandFiltering(bool flag )
 @param[in] secSpectrum the spectrum of a block of complex data 
 @param[in] rangeFrequencies the frequencies in range direction
 @param[in] blockRowsData number of rows in refSpectrum and secSpectrum
-@param[in] nfft number of columns in refSpectrum and secSpectrum
+@param[in] fft_size number of columns in refSpectrum and secSpectrum
 @param[out] estimated frequency shift between refSpectrum and secSpectrum
 */
 void isce::signal::Crossmul::
@@ -128,19 +128,19 @@ rangeFrequencyShift(std::valarray<std::complex<float>> &refSpectrum,
                     std::valarray<std::complex<float>> &secSpectrum,
                     std::valarray<double> &rangeFrequencies,
             size_t blockRowsData,
-            size_t nfft,
+            size_t fft_size,
                     double &frequencyShift)
 {
 
-    std::valarray<float> refAvgSpectrum(nfft); 
+    std::valarray<float> refAvgSpectrum(fft_size); 
     refAvgSpectrum = 0.0;
-    std::valarray<float> secAvgSpectrum(nfft); 
+    std::valarray<float> secAvgSpectrum(fft_size); 
     secAvgSpectrum = 0.0;
 
     for (size_t line = 0; line < blockRowsData; ++line){
-        for (size_t col = 0; col < nfft; ++col){
-            refAvgSpectrum[col] += std::abs(refSpectrum[line*nfft + col]);
-            secAvgSpectrum[col] += std::abs(secSpectrum[line*nfft + col]);
+        for (size_t col = 0; col < fft_size; ++col){
+            refAvgSpectrum[col] += std::abs(refSpectrum[line*fft_size + col]);
+            secAvgSpectrum[col] += std::abs(secSpectrum[line*fft_size + col]);
         }
     }
 
