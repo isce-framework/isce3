@@ -11,7 +11,7 @@ var searchData=
   ['radcur',['radcur',['../structisce_1_1core_1_1Pegtrans.html#afc1cef48d19152dbbc28fe2d70e6059a',1,'isce::core::Pegtrans']]],
   ['rangebandwidth',['rangeBandwidth',['../classisce_1_1signal_1_1Covariance.html#a6a073da0678c8400075a30b77fd6f1af',1,'isce::signal::Covariance::rangeBandwidth()'],['../classisce_1_1signal_1_1Crossmul.html#aa82d9ba5824d32e96280f4ae5da7c23e',1,'isce::signal::Crossmul::rangeBandwidth()']]],
   ['rangecommonbandfilter',['rangeCommonBandFilter',['../classisce_1_1signal_1_1Crossmul.html#a70edc4030a0a6755e08161795edf23a1',1,'isce::signal::Crossmul']]],
-  ['rangefrequencyshift',['rangeFrequencyShift',['../classisce_1_1signal_1_1Crossmul.html#ad512d69652f68c4502f8cf90cd469045',1,'isce::signal::Crossmul']]],
+  ['rangefrequencyshift',['rangeFrequencyShift',['../classisce_1_1signal_1_1Crossmul.html#a306fb4dfb90925defb55a6efc640deee',1,'isce::signal::Crossmul']]],
   ['rangelooks',['rangeLooks',['../classisce_1_1signal_1_1Crossmul.html#a879f135d1f60b0c6cb0ae978b54c4a51',1,'isce::signal::Crossmul']]],
   ['rangemean',['rangeMean',['../classisce_1_1core_1_1Poly2d.html#a7b53783b7f3a7d631524073414f74687',1,'isce::core::Poly2d']]],
   ['rangenorm',['rangeNorm',['../classisce_1_1core_1_1Poly2d.html#a9930fcccf722b3f34101db17a1d52cbb',1,'isce::core::Poly2d']]],
