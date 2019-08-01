@@ -1,14 +1,23 @@
-Copyright: <DATE> to the present, California Institute of Technology.
-ALL RIGHTS RESERVED. United States Government Sponsorship acknowledged.
-Any commercial use must be negotiated with the Office of Technology Transfer
-at the California Institute of Technology.
+COPYRIGHT (C) 2008-2019 CALIFORNIA INSTITUTE OF TECHNOLOGY. ALL RIGHTS RESERVED.
 
-This software may be subject to U.S. export control laws. By accepting this
-software, the user agrees to comply with all applicable U.S. export laws and
-regulations. User has the responsibility to obtain export licenses,  or other
-export authority as may be required before exporting such information to
-foreign countries or providing access to foreign persons.
+THE ISCE3 SOFTWARE IS LICENSED UNDER THE APACHE LICENSE, VERSION 2.0 (THE "LICENSE");
+YOU MAY NOT USE THIS FILE EXCEPT IN COMPLIANCE WITH THE LICENSE.
+YOU MAY OBTAIN A COPY OF THE LICENSE AT
 
-Installation and use of this software is restricted by a license agreement
-between the licensee and the California Institute of Technology. It is the
-User's responsibility to abide by the terms of the license agreement.
+http://www.apache.org/licenses/LICENSE-2.0
+
+UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING, SOFTWARE
+DISTRIBUTED UNDER THE LICENSE IS DISTRIBUTED ON AN "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+SEE THE LICENSE FOR THE SPECIFIC LANGUAGE GOVERNING PERMISSIONS AND
+LIMITATIONS UNDER THE LICENSE.
+
+UNITED STATES GOVERNMENT SPONSORSHIP ACKNOWLEDGED. THIS SOFTWARE IS SUBJECT TO
+U.S. EXPORT CONTROL LAWS AND REGULATIONS AND HAS BEEN CLASSIFIED AS 'EAR99 NLR'
+(NO [EXPORT] LICENSE REQUIRED EXCEPT WHEN EXPORTING TO AN EMBARGOED COUNTRY,
+END USER, OR IN SUPPORT OF A PROHIBITED END USE). BY DOWNLOADING THIS SOFTWARE,
+THE USER AGREES TO COMPLY WITH ALL APPLICABLE U.S. EXPORT LAWS AND REGULATIONS.
+THE USER HAS THE RESPONSIBILITY TO OBTAIN EXPORT LICENSES, OR OTHER EXPORT
+AUTHORITY AS MAY BE REQUIRED BEFORE EXPORTING THIS SOFTWARE TO ANY 'EAR99'
+EMBARGOED FOREIGN COUNTRY OR CITIZEN OF THOSE COUNTRIES.
+
