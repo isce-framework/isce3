@@ -318,12 +318,12 @@ TEST_F(Interp1dTest, NFFT) {
     // FFT the signal set up by the test class to get a spectrum.
     std::valarray<std::complex<double>> spec(n);
     int i_n = n;
-    auto fft = isce::signal::Signal<double>();
+    isce::signal::Signal<double> fft;
     fft.fftPlanForward(signal, spec, 1, &i_n, 1, NULL, 1, 1, NULL, 1, 1, -1);
     fft.forward(signal, spec);
 
     // Set up NFFT object with 9 taps and 2x oversampling.
-    auto itp = isce::signal::NFFT<double>(4, n, 2*n);
+    isce::signal::NFFT<double> itp(4, n, 2*n);
 
     // Feed a spectrum to NFFT object.
     itp.set_spectrum(spec);
