@@ -155,6 +155,17 @@ TEST(DateTimeTest, TimeDeltaComparison) {
     ASSERT_TRUE(dt1 >= dt3);
 }
 
+TEST(DateTimeTest, Normalize)
+{
+    isce::core::DateTime t0(1999, 12, 31, 23, 59, 59);
+    isce::core::TimeDelta dt = 1.0;
+    isce::core::DateTime t1 = t0 + dt;
+
+    isce::core::DateTime expected(2000, 1, 1);
+
+    EXPECT_TRUE( t1.isClose(expected) );
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

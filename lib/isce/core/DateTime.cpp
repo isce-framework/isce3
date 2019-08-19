@@ -160,7 +160,7 @@ _normalize_date()
         {
             months++;
             days = 1;
-            if (months == 12)
+            if (months == 13)
             {
                 months = 1;
                 year++;
