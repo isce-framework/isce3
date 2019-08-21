@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
+#
+# Authors: Heresh Fattahi, Liang Yu
+# Copyright 2019-
+#
 
+import h5py
+import os
 import pyre
+import isce3
 from ..protocols import ProductReader
 
 class Base(pyre.component,
@@ -51,15 +58,6 @@ class Base(pyre.component,
         # Polarization dictionary
         self.polarizations = {}
 
-        self._parse(self.filename)
-    
-    def _parse(self, hdf5file):
-        '''
-        Parse the HDF5 file and populate ISCE data structures.
-        '''
-        import h5py
-
-        self.filename = hdf5file
         self.populateIdentification()
         #For now, Needs to be an assertion check in the future
         self.identification.productType = self.productValidationType
@@ -70,12 +68,9 @@ class Base(pyre.component,
         '''
         Returns metadata corresponding to given frequency.
         '''
-        import h5py
-        import isce3
-        import os
-        with h5py.File(self.filename, 'r') as fid:
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
               swathGrp = fid[self.SwathPath]
-              swath = isce3.product.swath.loadFromH5(swathGrp, frequency)
+              swath = isce3.product.swath().loadFromH5(swathGrp, frequency)
 
         return swath
 
@@ -99,15 +94,12 @@ class Base(pyre.component,
         '''
         extracts orbit 
         '''
-        import h5py
-        import isce3
-        import os
 
         orbitPath = os.path.join(self.MetadataPath, 'orbit')
 
-        with h5py.File(self.filename, 'r') as fid:
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
             orbitGrp = fid[orbitPath]
-            orbit = isce3.core.orbit.loadFromH5(orbitGrp)
+            orbit = isce3.core.orbit().loadFromH5(orbitGrp)
 
         return orbit
 
@@ -116,9 +108,6 @@ class Base(pyre.component,
         '''
         Extract the Doppler centroid
         '''
-        import h5py
-        import isce3
-        import os
         import numpy as np
 
         dopplerPath = os.path.join(self.ProcessingInformationPath, 
@@ -131,7 +120,7 @@ class Base(pyre.component,
         slantRangePath = os.path.join(self.ProcessingInformationPath,
                                         'parameters/slantRange')
         # extract the native Doppler dataset
-        with h5py.File(self.filename, 'r') as fid:
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
             doppler = fid[dopplerPath][:]
             zeroDopplerTime = fid[zeroDopplerTimePath][:]
             slantRange = fid[slantRangePath][:]
@@ -147,11 +136,9 @@ class Base(pyre.component,
         Extract the azimuth time of the zero Doppler grid
         '''
 
-        import h5py
-        import os
         zeroDopplerTimePath = os.path.join(self.SwathPath, 
                                           'zeroDopplerTime')
-        with h5py.File(self.filename, 'r') as fid:
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
             zeroDopplerTime = fid[zeroDopplerTimePath][:]
 
         return zeroDopplerTime
@@ -162,23 +149,41 @@ class Base(pyre.component,
         Extract the slant range of the zero Doppler grid
         '''
 
-        import h5py
-        import os
         slantRangePath = os.path.join(self.SwathPath,
                                     'frequency' + frequency, 'slantRange')
 
-        with h5py.File(self.filename, 'r') as fid:
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
             slantRange = fid[slantRangePath][:]
 
         return slantRange
+
+
+    def getSlcDataset(self, frequency, polarization):
+        '''
+        Return SLC dataset of given frequency and polarization from hdf5 file 
+        '''
+
+        # TODO add checks for (1) file open error (2) path check
+        slcDataset = None
+
+        # open H5 with swmr mode enabled
+        fid = h5py.File(self.filename, 'r', libver='latest', swmr=True)
+
+        # build path the desired dataset
+        folder = self.SwathPath
+        ds_path = os.path.join(folder, 'frequency{0}'.format(frequency), polarization)
+
+        # get dataset
+        slcDataset = fid[ds_path]
+
+        # return dataset
+        return slcDataset
 
 
     def parsePolarizations(self):
         '''
         Parse HDF5 and identify polarization channels available for each frequency.
         '''
-        import os
-        import h5py
         from nisar.h5 import bytestring, extractWithIterator
 
         try:
@@ -192,7 +197,7 @@ class Base(pyre.component,
         else:
             folder = self.SwathPath
 
-        with h5py.File(self.filename, 'r') as fid:
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
             for freq in frequencyList:
                 root = os.path.join(folder, 'frequency{0}'.format(freq))
                 polList = extractWithIterator(fid[root], 'listOfPolarizations', bytestring,
@@ -211,32 +216,26 @@ class Base(pyre.component,
 
     @property
     def IdentificationPath(self):
-        import os
         return os.path.join(self.RootPath, self._IdentificationPath)
 
     @property
     def ProductPath(self):
-        import os
         return os.path.join(self.RootPath, self.productType)
 
     @property
     def MetadataPath(self):
-        import os
         return os.path.join(self.ProductPath, self._MetadataPath)
     
     @property
     def ProcessingInformationPath(self):
-        import os
         return os.path.join(self.MetadataPath, self._ProcessingInformation)
 
     @property
     def SwathPath(self):
-        import os
         return os.path.join(self.ProductPath, self._SwathPath)
 
     @property
     def GridPath(self):
-        import os
         return os.path.join(self.ProductPath, self._GridPath)
 
     @property
@@ -247,10 +246,9 @@ class Base(pyre.component,
         '''
         Read in the Identification information and assert identity.
         '''
-        import h5py
         from .Identification import Identification
 
-        with h5py.File(self.filename, 'r') as fileID:
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fileID:
             h5grp = fileID[self.IdentificationPath]
             self.identification = Identification(h5grp)
 
