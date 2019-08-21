@@ -1,4 +1,6 @@
 if(PYTEST_FOUND)
-    add_subdirectory(isce3)
-    message(STATUS "python unit tests will be run for isce")
+    foreach (PKG isce3 nisar)
+        add_subdirectory(${PKG})
+        message(STATUS "python unit tests will be run for ${PKG}")
+    endforeach ()
 endif(PYTEST_FOUND)
