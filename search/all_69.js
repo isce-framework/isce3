@@ -14,7 +14,6 @@ var searchData=
   ['ih5file',['IH5File',['../classisce_1_1io_1_1IH5File.html',1,'isce::io']]],
   ['ih5file',['IH5File',['../classisce_1_1io_1_1IH5File.html#ac322c456433b12fb971a03db517fde15',1,'isce::io::IH5File']]],
   ['ih5rasterband',['IH5RasterBand',['../classisce_1_1io_1_1IH5RasterBand.html',1,'isce::io']]],
-  ['image',['image',['../namespaceisce_1_1image.html',1,'isce']]],
   ['isce_20_2d_20insar_20scientific_20computing_20environment',['ISCE - InSAR Scientific Computing Environment',['../index.html',1,'']]],
   ['indexoffrequency',['indexOfFrequency',['../classisce_1_1signal_1_1Filter.html#a95c5c343743065b7550c1d585a9ba49d',1,'isce::signal::Filter']]],
   ['initcorrthr',['initCorrThr',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a56ded77037a99355937955c7b34f2bc9',1,'isce::unwrap::icu::ICU::initCorrThr() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a65960c9501417e3a89e54d041d003999',1,'isce::unwrap::icu::ICU::initCorrThr(const float)']]],
@@ -35,8 +34,8 @@ var searchData=
   ['interpolateschorbit',['interpolateSCHOrbit',['../classisce_1_1core_1_1Orbit.html#a0399ae02fe42f0c5368a814bc7e21f6a',1,'isce::core::Orbit']]],
   ['interpolatewgs84orbit',['interpolateWGS84Orbit',['../classisce_1_1core_1_1Orbit.html#a2aeacbc75c17ef26477e7fbb3282b3a5',1,'isce::core::Orbit']]],
   ['interpolatexy',['interpolateXY',['../classisce_1_1geometry_1_1DEMInterpolator.html#a706cdc3736946d591895346e48d52a92',1,'isce::geometry::DEMInterpolator']]],
-  ['interpolator',['Interpolator',['../classisce_1_1core_1_1Interpolator.html',1,'isce::core']]],
   ['interpolator',['interpolator',['../classisce_1_1signal_1_1Covariance.html#a130000bab46400484aa608431524fd97',1,'isce::signal::Covariance::interpolator(isce::core::dataInterpMethod method)'],['../classisce_1_1signal_1_1Covariance.html#ac96b97284ecbb8439fa5f8451e182dde',1,'isce::signal::Covariance::interpolator(isce::core::Interpolator&lt; T &gt; *interp)']]],
+  ['interpolator',['Interpolator',['../classisce_1_1core_1_1Interpolator.html',1,'isce::core']]],
   ['interpolator_3c_20float_20_3e',['Interpolator&lt; float &gt;',['../classisce_1_1core_1_1Interpolator.html',1,'isce::core']]],
   ['interpolator_3c_20std_3a_3acomplex_3c_20float_20_3e_20_3e',['Interpolator&lt; std::complex&lt; float &gt; &gt;',['../classisce_1_1core_1_1Interpolator.html',1,'isce::core']]],
   ['interpolator_3c_20t_20_3e',['Interpolator&lt; T &gt;',['../classisce_1_1core_1_1Interpolator.html',1,'isce::core']]],
@@ -55,6 +54,5 @@ var searchData=
   ['isclose',['isClose',['../classisce_1_1core_1_1DateTime.html#a205b82a46db7bebfec5fa7ea75341d8f',1,'isce::core::DateTime::isClose(const DateTime &amp;ts) const '],['../classisce_1_1core_1_1DateTime.html#aa6dd1291289fb7cc2494fcac70a34752',1,'isce::core::DateTime::isClose(const DateTime &amp;ts, const TimeDelta &amp;errtol) const ']]],
   ['isoformat',['isoformat',['../classisce_1_1core_1_1DateTime.html#ae8c0624fcbb10cc0d9b5910624ee5b16',1,'isce::core::DateTime']]],
   ['product',['product',['../namespaceisce_1_1product.html',1,'isce']]],
-  ['signal',['signal',['../namespaceisce_1_1signal.html',1,'isce']]],
   ['image_20resampling_20tutorial',['Image Resampling Tutorial',['../tutorial_resamp.html',1,'']]]
 ];
