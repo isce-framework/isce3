@@ -97,217 +97,222 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Author: Bryan V. Riel</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">// Copyright 2017-2018</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;sstream&gt;</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment">// isce::core</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;isce/core/DateTime.h&gt;</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="comment">// isce::io</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &lt;isce/io/IH5.h&gt;</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">namespace </span>isce {</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keyword">namespace </span>io {</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj&gt;</div>
-<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">   34</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">bool</span> <a class="code" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">exists</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; name,</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;                           <span class="keyword">const</span> std::string start = <span class="stringliteral">&quot;.&quot;</span>, <span class="keyword">const</span> std::string type = <span class="stringliteral">&quot;BOTH&quot;</span>) {</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;            <span class="comment">// Search for objects</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;            std::vector&lt;std::string&gt; objs = h5obj.find(name, start, type, <span class="stringliteral">&quot;FULL&quot;</span>);</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;            <span class="comment">// Check size of vector</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;            <span class="keywordflow">if</span> (objs.size() &gt; 0) {</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;                <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;            } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;            }</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        }</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">   52</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">loadFromH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath, T &amp; v) {</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;            <span class="comment">// Open dataset</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dataset = h5obj.openDataSet(datasetPath);</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;            <span class="comment">// Read the scalar dataset</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;            dataset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">read</a>(v);</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        }</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00065"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a1df60672434d0bfada46ecf42dd2faad">   65</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">loadFromH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;                               std::vector&lt;T&gt; &amp; v) {</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;            <span class="comment">// Open dataset</span></div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dataset = h5obj.openDataSet(datasetPath);</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;            <span class="comment">// Read the vector dataset</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;            dataset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">read</a>(v);</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        }</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a942a3392af55e6091a1461f8283ac12f">   79</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">loadFromH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                               std::valarray&lt;T&gt; &amp; v) {</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;            <span class="comment">// Open dataset</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dataset = h5obj.openDataSet(datasetPath);</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;            <span class="comment">// Read the valarray dataset</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;            dataset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">read</a>(v);</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        }</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00093"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a2d9ef7ae78eeae4fb2c60ee55dc65b98">   93</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">loadFromH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;                               <a class="code" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix&lt;T&gt;</a> &amp; m) {</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;            <span class="comment">// Open dataset</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dataset = h5obj.openDataSet(datasetPath);</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;            <span class="comment">// Read the Matrix dataset using raw pointer interface</span></div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;            dataset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">read</a>(m.<a class="code" href="classisce_1_1core_1_1Matrix.html#a249ed1a5a898f6fda604c899fe56de02">data</a>());</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;        }</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00108"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">  108</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">saveToH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;                             <span class="keyword">const</span> std::vector&lt;T&gt; &amp; v, <span class="keyword">const</span> std::string &amp; units = <span class="stringliteral">&quot;&quot;</span>) {</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;            <span class="comment">// Check for existence of dataset</span></div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">exists</a>(h5obj, datasetPath)) {</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;                <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;            }</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;            <span class="comment">// Create dataset</span></div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.createDataSet(datasetPath, v);</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;            <span class="comment">// Update units attribute if long enough</span></div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;            <span class="keywordflow">if</span> (units.length() &gt; 0) {</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;                dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a>(<span class="stringliteral">&quot;units&quot;</span>, units);</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;            }</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;        }</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00129"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a7ad62deeacf74242e4ab73ab24cbcda5">  129</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">saveToH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;                             <span class="keyword">const</span> std::valarray&lt;T&gt; &amp; v, <span class="keyword">const</span> std::string &amp; units = <span class="stringliteral">&quot;&quot;</span>) {</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;            <span class="comment">// Check for existence of dataset</span></div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">exists</a>(h5obj, datasetPath)) {</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;                <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;            }</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;            <span class="comment">// Create dataset</span></div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.createDataSet(datasetPath, v);</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;            <span class="comment">// Update units attribute if long enough</span></div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;            <span class="keywordflow">if</span> (units.length() &gt; 0) {</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;                dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a>(<span class="stringliteral">&quot;units&quot;</span>, units);</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;            }</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;        }</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T, <span class="keywordtype">size_t</span> S&gt;</div>
-<div class="line"><a name="l00150"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#ab9dcdaef7ef216c43dfaccc2579417ee">  150</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">saveToH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;                             <span class="keyword">const</span> std::vector&lt;T&gt; &amp; v, std::array&lt;size_t, S&gt; dims,</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;                             <span class="keyword">const</span> std::string &amp; units = <span class="stringliteral">&quot;&quot;</span>) {</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;            <span class="comment">// Check for existence of dataset</span></div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">exists</a>(h5obj, datasetPath)) {</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;                <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;            }</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;            <span class="comment">// Create dataset</span></div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.createDataSet(datasetPath, v, dims);</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;            <span class="comment">// Update units attribute if long enough</span></div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;            <span class="keywordflow">if</span> (units.length() &gt; 0) {</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;                dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a>(<span class="stringliteral">&quot;units&quot;</span>, units);</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;            }</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;        }</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T, <span class="keywordtype">size_t</span> S&gt;</div>
-<div class="line"><a name="l00172"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#ad2433f714c893e8b0c43f9b01a055dac">  172</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">saveToH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;                             <span class="keyword">const</span> std::valarray&lt;T&gt; &amp; v, std::array&lt;size_t, S&gt; dims,</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;                             <span class="keyword">const</span> std::string &amp; units = <span class="stringliteral">&quot;&quot;</span>) {</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;            <span class="comment">// Check for existence of dataset</span></div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">exists</a>(h5obj, datasetPath)) {</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;                <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;            }</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;            <span class="comment">// Create dataset</span></div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.createDataSet(datasetPath, v, dims);</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;            <span class="comment">// Update units attribute if long enough</span></div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;            <span class="keywordflow">if</span> (units.length() &gt; 0) {</div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;                dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a>(<span class="stringliteral">&quot;units&quot;</span>, units);</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;            }</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;        }</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00194"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a359378fe8ecbf3aa5d272dff7bd34323">  194</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">saveToH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;                             <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix&lt;T&gt;</a> &amp; mat, </div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;                             <span class="keyword">const</span> std::string &amp; units = <span class="stringliteral">&quot;&quot;</span>) {</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;            <span class="comment">// Check for existence of dataset</span></div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">exists</a>(h5obj, datasetPath)) {</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;                <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;            }</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;            <span class="comment">// Create dataset</span></div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;            std::array&lt;size_t, 2&gt; dims{mat.<a class="code" href="classisce_1_1core_1_1Matrix.html#ae4c89ae14f3d42b03242805657893919">length</a>(), mat.<a class="code" href="classisce_1_1core_1_1Matrix.html#a064b24a62028354c13aace918ab02918">width</a>()};</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.createDataSet(datasetPath, mat.<a class="code" href="classisce_1_1core_1_1Matrix.html#a249ed1a5a898f6fda604c899fe56de02">data</a>(), dims);</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;            <span class="comment">// Update units attribute if long enough</span></div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;            <span class="keywordflow">if</span> (units.length() &gt; 0) {</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;                dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a>(<span class="stringliteral">&quot;units&quot;</span>, units);</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;            }</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;        }</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj&gt;</div>
-<div class="line"><a name="l00215"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#aab499ddb417f6ddf7c48f2100bf1f2cf">  215</a></span>&#160;        <span class="keyword">inline</span> std::vector&lt;int&gt; <a class="code" href="namespaceisce_1_1io.html#aab499ddb417f6ddf7c48f2100bf1f2cf">getImageDims</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath) {</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;            <span class="comment">// Open dataset</span></div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dataset = h5obj.openDataSet(datasetPath);</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;            <span class="comment">// Get dimensions</span></div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;            <span class="keywordflow">return</span> dataset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a56770bba9841bf4f48df2e3dfc69ac69">getDimensions</a>();</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;        }</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj&gt;</div>
-<div class="line"><a name="l00228"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#ac3028775734d38721d27c2cd0ad96034">  228</a></span>&#160;        <span class="keyword">inline</span> <a class="code" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> <a class="code" href="namespaceisce_1_1io.html#ac3028775734d38721d27c2cd0ad96034">getRefEpoch</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath) {</div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;            <span class="comment">// Open the dataset</span></div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.openDataSet(datasetPath);</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;            <span class="comment">// Get the attribute</span></div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;            std::string unitAttr;</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;            std::string attribute(<span class="stringliteral">&quot;units&quot;</span>);</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;            dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">read</a>(unitAttr, attribute);</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;            <span class="comment">// Parse it</span></div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;            std::string dummy1, dummy2, datestr, timestr;</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;            std::istringstream ss(unitAttr);</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;            ss &gt;&gt; dummy1 &gt;&gt; dummy2 &gt;&gt; datestr &gt;&gt; timestr;</div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;            std::string inputstr = datestr + <span class="stringliteral">&quot;T&quot;</span> + timestr + <span class="stringliteral">&quot;.00&quot;</span>;</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;            <a class="code" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> epoch(inputstr);</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;            <span class="comment">// Done</span></div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;            <span class="keywordflow">return</span> epoch;</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;        }</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj&gt;</div>
-<div class="line"><a name="l00255"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#acaef94fdfd377cb41f319b05923c2a59">  255</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#acaef94fdfd377cb41f319b05923c2a59">setRefEpoch</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;                                <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> &amp; refEpoch) {</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;            <span class="comment">// Open the dataset</span></div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.openDataSet(datasetPath);</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;            </div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;            <span class="comment">// Need to create string representation of DateTime manually</span></div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;            <span class="keywordtype">char</span> buffer[40];</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;            sprintf(buffer,</div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;                    <span class="stringliteral">&quot;seconds since %04d-%02d-%02d %02d:%02d:%02d&quot;</span>,</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;                    refEpoch.year,</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;                    refEpoch.months,</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;                    refEpoch.days,</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;                    refEpoch.hours,</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;                    refEpoch.minutes,</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;                    refEpoch.seconds);</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;            std::string unitsAttr{buffer};</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;            <span class="comment">// Save buffer to attribute</span></div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;            dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a>(<span class="stringliteral">&quot;units&quot;</span>, unitsAttr);</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;        }</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    }</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;}</div>
-<div class="ttc" id="namespaceisce_1_1io_html_a1494fc37a747626d8a44976b72146b92"><div class="ttname"><a href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">isce::io::exists</a></div><div class="ttdeci">bool exists(H5obj &amp;h5obj, const std::string &amp;name, const std::string start=&quot;.&quot;, const std::string type=&quot;BOTH&quot;)</div><div class="ttdoc">Check existence of a dataset or group. </div><div class="ttdef"><b>Definition:</b> Serialization.h:34</div></div>
-<div class="ttc" id="classisce_1_1core_1_1DateTime_html"><div class="ttname"><a href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a></div><div class="ttdoc">Data structure to store date time to nano-sec precision. </div><div class="ttdef"><b>Definition:</b> DateTime.h:17</div></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#ifndef ISCE_IO_SERIALIZATION_H</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define ISCE_IO_SERIALIZATION_H</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;sstream&gt;</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment">// isce::core</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &lt;isce/core/DateTime.h&gt;</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="comment">// isce::io</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;isce/io/IH5.h&gt;</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">namespace </span>isce {</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="keyword">namespace </span>io {</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj&gt;</div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">   35</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">bool</span> <a class="code" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">exists</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; name,</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;                           <span class="keyword">const</span> std::string start = <span class="stringliteral">&quot;.&quot;</span>, <span class="keyword">const</span> std::string type = <span class="stringliteral">&quot;BOTH&quot;</span>) {</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;            <span class="comment">// Search for objects</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;            std::vector&lt;std::string&gt; objs = h5obj.find(name, start, type, <span class="stringliteral">&quot;FULL&quot;</span>);</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;            <span class="comment">// Check size of vector</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;            <span class="keywordflow">if</span> (objs.size() &gt; 0) {</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;                <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;            } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;            }</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        }</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">   53</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">loadFromH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath, T &amp; v) {</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;            <span class="comment">// Open dataset</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dataset = h5obj.openDataSet(datasetPath);</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;            <span class="comment">// Read the scalar dataset</span></div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;            dataset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">read</a>(v);</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        }</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a1df60672434d0bfada46ecf42dd2faad">   66</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">loadFromH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                               std::vector&lt;T&gt; &amp; v) {</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;            <span class="comment">// Open dataset</span></div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dataset = h5obj.openDataSet(datasetPath);</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;            <span class="comment">// Read the vector dataset</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;            dataset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">read</a>(v);</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        }</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00080"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a942a3392af55e6091a1461f8283ac12f">   80</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">loadFromH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                               std::valarray&lt;T&gt; &amp; v) {</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;            <span class="comment">// Open dataset</span></div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dataset = h5obj.openDataSet(datasetPath);</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;            <span class="comment">// Read the valarray dataset</span></div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;            dataset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">read</a>(v);</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        }</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00094"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a2d9ef7ae78eeae4fb2c60ee55dc65b98">   94</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">loadFromH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;                               <a class="code" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix&lt;T&gt;</a> &amp; m) {</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;            <span class="comment">// Open dataset</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dataset = h5obj.openDataSet(datasetPath);</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;            <span class="comment">// Read the Matrix dataset using raw pointer interface</span></div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;            dataset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">read</a>(m.<a class="code" href="classisce_1_1core_1_1Matrix.html#a249ed1a5a898f6fda604c899fe56de02">data</a>());</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;        }</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00109"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">  109</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">saveToH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;                             <span class="keyword">const</span> std::vector&lt;T&gt; &amp; v, <span class="keyword">const</span> std::string &amp; units = <span class="stringliteral">&quot;&quot;</span>) {</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;            <span class="comment">// Check for existence of dataset</span></div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">exists</a>(h5obj, datasetPath)) {</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;                <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;            }</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;            <span class="comment">// Create dataset</span></div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.createDataSet(datasetPath, v);</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;            <span class="comment">// Update units attribute if long enough</span></div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;            <span class="keywordflow">if</span> (units.length() &gt; 0) {</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;                dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a>(<span class="stringliteral">&quot;units&quot;</span>, units);</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;            }</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;        }</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00130"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a7ad62deeacf74242e4ab73ab24cbcda5">  130</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">saveToH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;                             <span class="keyword">const</span> std::valarray&lt;T&gt; &amp; v, <span class="keyword">const</span> std::string &amp; units = <span class="stringliteral">&quot;&quot;</span>) {</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;            <span class="comment">// Check for existence of dataset</span></div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">exists</a>(h5obj, datasetPath)) {</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;                <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;            }</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;            <span class="comment">// Create dataset</span></div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.createDataSet(datasetPath, v);</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;            <span class="comment">// Update units attribute if long enough</span></div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;            <span class="keywordflow">if</span> (units.length() &gt; 0) {</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;                dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a>(<span class="stringliteral">&quot;units&quot;</span>, units);</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;            }</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;        }</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T, <span class="keywordtype">size_t</span> S&gt;</div>
+<div class="line"><a name="l00151"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#ab9dcdaef7ef216c43dfaccc2579417ee">  151</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">saveToH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;                             <span class="keyword">const</span> std::vector&lt;T&gt; &amp; v, std::array&lt;size_t, S&gt; dims,</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;                             <span class="keyword">const</span> std::string &amp; units = <span class="stringliteral">&quot;&quot;</span>) {</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;            <span class="comment">// Check for existence of dataset</span></div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">exists</a>(h5obj, datasetPath)) {</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;                <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;            }</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;            <span class="comment">// Create dataset</span></div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.createDataSet(datasetPath, v, dims);</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;            <span class="comment">// Update units attribute if long enough</span></div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;            <span class="keywordflow">if</span> (units.length() &gt; 0) {</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;                dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a>(<span class="stringliteral">&quot;units&quot;</span>, units);</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;            }</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;        }</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T, <span class="keywordtype">size_t</span> S&gt;</div>
+<div class="line"><a name="l00173"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#ad2433f714c893e8b0c43f9b01a055dac">  173</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">saveToH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;                             <span class="keyword">const</span> std::valarray&lt;T&gt; &amp; v, std::array&lt;size_t, S&gt; dims,</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;                             <span class="keyword">const</span> std::string &amp; units = <span class="stringliteral">&quot;&quot;</span>) {</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;            <span class="comment">// Check for existence of dataset</span></div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">exists</a>(h5obj, datasetPath)) {</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;                <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;            }</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;            <span class="comment">// Create dataset</span></div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.createDataSet(datasetPath, v, dims);</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;            <span class="comment">// Update units attribute if long enough</span></div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;            <span class="keywordflow">if</span> (units.length() &gt; 0) {</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;                dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a>(<span class="stringliteral">&quot;units&quot;</span>, units);</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;            }</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;        }</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj, <span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00195"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a359378fe8ecbf3aa5d272dff7bd34323">  195</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">saveToH5</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;                             <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix&lt;T&gt;</a> &amp; mat, </div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;                             <span class="keyword">const</span> std::string &amp; units = <span class="stringliteral">&quot;&quot;</span>) {</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;            <span class="comment">// Check for existence of dataset</span></div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">exists</a>(h5obj, datasetPath)) {</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;                <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;            }</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;            <span class="comment">// Create dataset</span></div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;            std::array&lt;size_t, 2&gt; dims{mat.<a class="code" href="classisce_1_1core_1_1Matrix.html#ae4c89ae14f3d42b03242805657893919">length</a>(), mat.<a class="code" href="classisce_1_1core_1_1Matrix.html#a064b24a62028354c13aace918ab02918">width</a>()};</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.createDataSet(datasetPath, mat.<a class="code" href="classisce_1_1core_1_1Matrix.html#a249ed1a5a898f6fda604c899fe56de02">data</a>(), dims);</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;            <span class="comment">// Update units attribute if long enough</span></div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;            <span class="keywordflow">if</span> (units.length() &gt; 0) {</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;                dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a>(<span class="stringliteral">&quot;units&quot;</span>, units);</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;            }</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;        }</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj&gt;</div>
+<div class="line"><a name="l00216"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#aab499ddb417f6ddf7c48f2100bf1f2cf">  216</a></span>&#160;        <span class="keyword">inline</span> std::vector&lt;int&gt; <a class="code" href="namespaceisce_1_1io.html#aab499ddb417f6ddf7c48f2100bf1f2cf">getImageDims</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath) {</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;            <span class="comment">// Open dataset</span></div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dataset = h5obj.openDataSet(datasetPath);</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;            <span class="comment">// Get dimensions</span></div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;            <span class="keywordflow">return</span> dataset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a56770bba9841bf4f48df2e3dfc69ac69">getDimensions</a>();</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;        }</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj&gt;</div>
+<div class="line"><a name="l00229"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#ac3028775734d38721d27c2cd0ad96034">  229</a></span>&#160;        <span class="keyword">inline</span> <a class="code" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> <a class="code" href="namespaceisce_1_1io.html#ac3028775734d38721d27c2cd0ad96034">getRefEpoch</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath) {</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;            <span class="comment">// Open the dataset</span></div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.openDataSet(datasetPath);</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;            <span class="comment">// Get the attribute</span></div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;            std::string unitAttr;</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;            std::string attribute(<span class="stringliteral">&quot;units&quot;</span>);</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;            dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">read</a>(unitAttr, attribute);</div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;</div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;            <span class="comment">// Parse it</span></div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;            std::string dummy1, dummy2, datestr, timestr;</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;            std::istringstream ss(unitAttr);</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;            ss &gt;&gt; dummy1 &gt;&gt; dummy2 &gt;&gt; datestr &gt;&gt; timestr;</div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;            std::string inputstr = datestr + <span class="stringliteral">&quot;T&quot;</span> + timestr + <span class="stringliteral">&quot;.00&quot;</span>;</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;            <a class="code" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> epoch(inputstr);</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;            <span class="comment">// Done</span></div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;            <span class="keywordflow">return</span> epoch;</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;        }</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;        <span class="keyword">template</span> &lt;<span class="keyword">typename</span> H5obj&gt;</div>
+<div class="line"><a name="l00256"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#acaef94fdfd377cb41f319b05923c2a59">  256</a></span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1io.html#acaef94fdfd377cb41f319b05923c2a59">setRefEpoch</a>(H5obj &amp; h5obj, <span class="keyword">const</span> std::string &amp; datasetPath,</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;                                <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> &amp; refEpoch) {</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;</div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;            <span class="comment">// Open the dataset</span></div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;            <a class="code" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a> dset = h5obj.openDataSet(datasetPath);</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;            </div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;            <span class="comment">// Need to create string representation of DateTime manually</span></div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;            <span class="keywordtype">char</span> buffer[40];</div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;            sprintf(buffer,</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;                    <span class="stringliteral">&quot;seconds since %04d-%02d-%02d %02d:%02d:%02d&quot;</span>,</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;                    refEpoch.year,</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;                    refEpoch.months,</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;                    refEpoch.days,</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;                    refEpoch.hours,</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;                    refEpoch.minutes,</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;                    refEpoch.seconds);</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;            std::string unitsAttr{buffer};</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;</div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;            <span class="comment">// Save buffer to attribute</span></div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;            dset.<a class="code" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a>(<span class="stringliteral">&quot;units&quot;</span>, unitsAttr);</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;        }</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;    }</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;}</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;<span class="comment">// end of file</span></div>
+<div class="ttc" id="namespaceisce_1_1io_html_a1494fc37a747626d8a44976b72146b92"><div class="ttname"><a href="namespaceisce_1_1io.html#a1494fc37a747626d8a44976b72146b92">isce::io::exists</a></div><div class="ttdeci">bool exists(H5obj &amp;h5obj, const std::string &amp;name, const std::string start=&quot;.&quot;, const std::string type=&quot;BOTH&quot;)</div><div class="ttdoc">Check existence of a dataset or group. </div><div class="ttdef"><b>Definition:</b> Serialization.h:35</div></div>
+<div class="ttc" id="classisce_1_1core_1_1DateTime_html"><div class="ttname"><a href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a></div><div class="ttdoc">Data structure to store date time to nano-sec precision. </div><div class="ttdef"><b>Definition:</b> DateTime.h:19</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Matrix_html_a064b24a62028354c13aace918ab02918"><div class="ttname"><a href="classisce_1_1core_1_1Matrix.html#a064b24a62028354c13aace918ab02918">isce::core::Matrix::width</a></div><div class="ttdeci">size_t width() const </div><div class="ttdoc">Get matrix width. </div><div class="ttdef"><b>Definition:</b> Matrix.icc:349</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Matrix_html_a249ed1a5a898f6fda604c899fe56de02"><div class="ttname"><a href="classisce_1_1core_1_1Matrix.html#a249ed1a5a898f6fda604c899fe56de02">isce::core::Matrix::data</a></div><div class="ttdeci">cell_t * data()</div><div class="ttdoc">Access to data buffer. </div><div class="ttdef"><b>Definition:</b> Matrix.icc:219</div></div>
 <div class="ttc" id="classisce_1_1io_1_1IDataSet_html_a27ba34b0b4a61befeb6841f8cb572904"><div class="ttname"><a href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">isce::io::IDataSet::read</a></div><div class="ttdeci">void read(T &amp;v, const std::string &amp;att=&quot;&quot;)</div><div class="ttdoc">Reading scalar (non string) dataset or attributes. </div><div class="ttdef"><b>Definition:</b> IH5.icc:162</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Matrix_html"><div class="ttname"><a href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix&lt; T &gt;</a></div></div>
-<div class="ttc" id="namespaceisce_1_1io_html_acaef94fdfd377cb41f319b05923c2a59"><div class="ttname"><a href="namespaceisce_1_1io.html#acaef94fdfd377cb41f319b05923c2a59">isce::io::setRefEpoch</a></div><div class="ttdeci">void setRefEpoch(H5obj &amp;h5obj, const std::string &amp;datasetPath, const isce::core::DateTime &amp;refEpoch)</div><div class="ttdoc">Save reference epoch DateTime as an attribute. </div><div class="ttdef"><b>Definition:</b> Serialization.h:255</div></div>
-<div class="ttc" id="classisce_1_1io_1_1IDataSet_html"><div class="ttname"><a href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a></div><div class="ttdoc">Our derived dataset structure that includes utility functions. </div><div class="ttdef"><b>Definition:</b> IH5.h:65</div></div>
+<div class="ttc" id="namespaceisce_1_1io_html_acaef94fdfd377cb41f319b05923c2a59"><div class="ttname"><a href="namespaceisce_1_1io.html#acaef94fdfd377cb41f319b05923c2a59">isce::io::setRefEpoch</a></div><div class="ttdeci">void setRefEpoch(H5obj &amp;h5obj, const std::string &amp;datasetPath, const isce::core::DateTime &amp;refEpoch)</div><div class="ttdoc">Save reference epoch DateTime as an attribute. </div><div class="ttdef"><b>Definition:</b> Serialization.h:256</div></div>
+<div class="ttc" id="classisce_1_1io_1_1IDataSet_html"><div class="ttname"><a href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a></div><div class="ttdoc">Our derived dataset structure that includes utility functions. </div><div class="ttdef"><b>Definition:</b> IH5.h:67</div></div>
 <div class="ttc" id="classisce_1_1io_1_1IDataSet_html_a56770bba9841bf4f48df2e3dfc69ac69"><div class="ttname"><a href="classisce_1_1io_1_1IDataSet.html#a56770bba9841bf4f48df2e3dfc69ac69">isce::io::IDataSet::getDimensions</a></div><div class="ttdeci">std::vector&lt; int &gt; getDimensions(const std::string &amp;v=&quot;&quot;)</div><div class="ttdoc">Get the size of each dimension of the dataset or given attribute. </div><div class="ttdef"><b>Definition:</b> IH5.cpp:204</div></div>
-<div class="ttc" id="namespaceisce_1_1io_html_afcf9cedd0323d52df639b1e833dbc931"><div class="ttname"><a href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">isce::io::saveToH5</a></div><div class="ttdeci">void saveToH5(H5obj &amp;h5obj, const std::string &amp;datasetPath, const std::vector&lt; T &gt; &amp;v, const std::string &amp;units=&quot;&quot;)</div><div class="ttdoc">Write vector dataset to HDF5 file. </div><div class="ttdef"><b>Definition:</b> Serialization.h:108</div></div>
-<div class="ttc" id="namespaceisce_1_1io_html_ae96538b781df97ffbcda47c4d92ffbb6"><div class="ttname"><a href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a></div><div class="ttdeci">void loadFromH5(H5obj &amp;h5obj, const std::string &amp;datasetPath, T &amp;v)</div><div class="ttdoc">Load scalar dataset from HDF5 file. </div><div class="ttdef"><b>Definition:</b> Serialization.h:52</div></div>
+<div class="ttc" id="namespaceisce_1_1io_html_afcf9cedd0323d52df639b1e833dbc931"><div class="ttname"><a href="namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931">isce::io::saveToH5</a></div><div class="ttdeci">void saveToH5(H5obj &amp;h5obj, const std::string &amp;datasetPath, const std::vector&lt; T &gt; &amp;v, const std::string &amp;units=&quot;&quot;)</div><div class="ttdoc">Write vector dataset to HDF5 file. </div><div class="ttdef"><b>Definition:</b> Serialization.h:109</div></div>
+<div class="ttc" id="namespaceisce_1_1io_html_ae96538b781df97ffbcda47c4d92ffbb6"><div class="ttname"><a href="namespaceisce_1_1io.html#ae96538b781df97ffbcda47c4d92ffbb6">isce::io::loadFromH5</a></div><div class="ttdeci">void loadFromH5(H5obj &amp;h5obj, const std::string &amp;datasetPath, T &amp;v)</div><div class="ttdoc">Load scalar dataset from HDF5 file. </div><div class="ttdef"><b>Definition:</b> Serialization.h:53</div></div>
 <div class="ttc" id="classisce_1_1io_1_1IDataSet_html_a2e69f2d6be9554846dc9aabe885dbbba"><div class="ttname"><a href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">isce::io::IDataSet::createAttribute</a></div><div class="ttdeci">void createAttribute(const std::string &amp;name, const T &amp;data)</div><div class="ttdoc">Creating and writing a scalar as an attribute. </div><div class="ttdef"><b>Definition:</b> IH5.icc:993</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Matrix_html_ae4c89ae14f3d42b03242805657893919"><div class="ttname"><a href="classisce_1_1core_1_1Matrix.html#ae4c89ae14f3d42b03242805657893919">isce::core::Matrix::length</a></div><div class="ttdeci">size_t length() const </div><div class="ttdoc">Get matrix length. </div><div class="ttdef"><b>Definition:</b> Matrix.icc:357</div></div>
-<div class="ttc" id="namespaceisce_1_1io_html_ac3028775734d38721d27c2cd0ad96034"><div class="ttname"><a href="namespaceisce_1_1io.html#ac3028775734d38721d27c2cd0ad96034">isce::io::getRefEpoch</a></div><div class="ttdeci">isce::core::DateTime getRefEpoch(H5obj &amp;h5obj, const std::string &amp;datasetPath)</div><div class="ttdoc">Parse time units in a dataset attribute to get a reference epoch. </div><div class="ttdef"><b>Definition:</b> Serialization.h:228</div></div>
-<div class="ttc" id="namespaceisce_1_1io_html_aab499ddb417f6ddf7c48f2100bf1f2cf"><div class="ttname"><a href="namespaceisce_1_1io.html#aab499ddb417f6ddf7c48f2100bf1f2cf">isce::io::getImageDims</a></div><div class="ttdeci">std::vector&lt; int &gt; getImageDims(H5obj &amp;h5obj, const std::string &amp;datasetPath)</div><div class="ttdoc">Get dimensions of complex imagery from HDF5 file. </div><div class="ttdef"><b>Definition:</b> Serialization.h:215</div></div>
+<div class="ttc" id="namespaceisce_1_1io_html_ac3028775734d38721d27c2cd0ad96034"><div class="ttname"><a href="namespaceisce_1_1io.html#ac3028775734d38721d27c2cd0ad96034">isce::io::getRefEpoch</a></div><div class="ttdeci">isce::core::DateTime getRefEpoch(H5obj &amp;h5obj, const std::string &amp;datasetPath)</div><div class="ttdoc">Parse time units in a dataset attribute to get a reference epoch. </div><div class="ttdef"><b>Definition:</b> Serialization.h:229</div></div>
+<div class="ttc" id="namespaceisce_1_1io_html_aab499ddb417f6ddf7c48f2100bf1f2cf"><div class="ttname"><a href="namespaceisce_1_1io.html#aab499ddb417f6ddf7c48f2100bf1f2cf">isce::io::getImageDims</a></div><div class="ttdeci">std::vector&lt; int &gt; getImageDims(H5obj &amp;h5obj, const std::string &amp;datasetPath)</div><div class="ttdoc">Get dimensions of complex imagery from HDF5 file. </div><div class="ttdef"><b>Definition:</b> Serialization.h:216</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
