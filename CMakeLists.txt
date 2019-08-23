@@ -94,6 +94,7 @@ CheckPytest()
 InitInstallDirLayout()
 
 ###Setup for gtest framework
+option(INSTALL_GTEST "Enable installation of googletest" OFF)
 add_subdirectory(contrib)
 
 ###Recurs directories
