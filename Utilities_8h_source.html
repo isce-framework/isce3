@@ -97,325 +97,331 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Authors: Bryan Riel, Joshua Cohen</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">// Copyright 2017-2018</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;limits&gt;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;sstream&gt;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;valarray&gt;</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;complex&gt;</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;gdal.h&gt;</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &lt;gdal_priv.h&gt;</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="comment">// Macro wrappers to check vector lengths </span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="comment">// (adds calling function and variable name information to the exception)</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#define checkVecLen(v,l) isce::core::checkVecLenDebug(v,l,#v,__PRETTY_FUNCTION__)</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define check2dVecLen(v,l,w) isce::core::check2dVecLenDebug(v,l,w,#v,__PRETTY_FUNCTION__)</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="keyword">namespace </span>isce { <span class="keyword">namespace </span>core {</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e">   32</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e">checkVecLenDebug</a>(<span class="keyword">const</span> std::vector&lt;T&gt; &amp;vec, <span class="keywordtype">size_t</span> len, <span class="keyword">const</span> <span class="keywordtype">char</span> *vec_name, </div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;                                 <span class="keyword">const</span> <span class="keywordtype">char</span> *parent_func) {</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;        <span class="keywordflow">if</span> (vec.size() != len) {</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;            std::string errstr = <span class="stringliteral">&quot;In &#39;&quot;</span> + std::string(parent_func) + <span class="stringliteral">&quot;&#39;: Vector &#39;&quot;</span> + </div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;                                 std::string(vec_name) + <span class="stringliteral">&quot;&#39; has size &quot;</span> + </div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;                                 std::to_string(vec.size()) + <span class="stringliteral">&quot;, expected size &quot;</span> + </div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;                                 std::to_string(len) + <span class="stringliteral">&quot;.&quot;</span>;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;            <span class="keywordflow">throw</span> std::invalid_argument(errstr);</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        }</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    }</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="comment">// Same as above but for 2D vectors</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> check2dVecLenDebug(<span class="keyword">const</span> std::vector&lt;std::vector&lt;T&gt;&gt; &amp;vec,</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;                                   <span class="keywordtype">size_t</span> len, <span class="keywordtype">size_t</span> width, <span class="keyword">const</span> <span class="keywordtype">char</span> *vec_name,</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;                                   <span class="keyword">const</span> <span class="keywordtype">char</span> *parent_func) {</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <span class="keywordflow">if</span> ((vec.size() != len) &amp;&amp; (vec[0].size() != width)) {</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;            std::string errstr = <span class="stringliteral">&quot;In &#39;&quot;</span> + std::string(parent_func) + <span class="stringliteral">&quot;&#39;: Vector &#39;&quot;</span> + </div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                                 std::string(vec_name) + <span class="stringliteral">&quot;&#39; has size (&quot;</span> + </div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;                                 std::to_string(vec.size()) + <span class="stringliteral">&quot; x &quot;</span> + </div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;                                 std::to_string(vec[0].size()) + <span class="stringliteral">&quot;), expected size (&quot;</span> + </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                                 std::to_string(len) + <span class="stringliteral">&quot; x &quot;</span> + std::to_string(width) + <span class="stringliteral">&quot;).&quot;</span>;</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;            <span class="keywordflow">throw</span> std::invalid_argument(errstr);</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;        }</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    }</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a607ae942e885db44bc22f28d80a82b39">   63</a></span>&#160;    <span class="keyword">inline</span> std::vector&lt;T&gt; <a class="code" href="namespaceisce_1_1core.html#a607ae942e885db44bc22f28d80a82b39">arange</a>(T low, T high, T increment) {</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <span class="comment">// Instantiate the vector</span></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        std::vector&lt;T&gt; data;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        <span class="comment">// Set the first value</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        T current = low;</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        <span class="comment">// Loop over the increments and add to vector</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        <span class="keywordflow">while</span> (current &lt; high) {</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;            data.push_back(current);</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;            current += increment;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        }</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="comment">// done</span></div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        <span class="keywordflow">return</span> data;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    }</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00082"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">   82</a></span>&#160;    <span class="keyword">inline</span> std::vector&lt;T&gt; <a class="code" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">linspace</a>(T low, T high, std::size_t number) {</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;        <span class="comment">// Instantiate the vector</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;        std::vector&lt;T&gt; data;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        <span class="comment">// Compute the increment</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        T increment = (high - low) / (number - 1);</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        <span class="comment">// Handle cases where number in (0, 1)</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        <span class="keywordflow">if</span> (number == 0) {</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;            <span class="keywordflow">return</span> data;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        }</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;        <span class="keywordflow">if</span> (number == 1) {</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;            data.push_back(low);</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;            <span class="keywordflow">return</span> data;</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;        }</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;        <span class="comment">// Loop over the increments and add to vector</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;        <span class="keywordflow">for</span> (std::size_t i = 0; i &lt; number - 1; ++i) {</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;            data.push_back(low + i * increment);</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;        }</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;        <span class="comment">// Add the last element</span></div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;        data.push_back(high);</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        <span class="comment">// done</span></div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;        <span class="keywordflow">return</span> data;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    }</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00110"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a3518c930a3511e0c92a17a849f9efe75">  110</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">linspace</a>(T low, T high, std::vector&lt;T&gt; &amp; data) {</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;        <span class="comment">// Compute the increment</span></div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;        <span class="keywordtype">int</span> number = data.size();</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;        T increment = (high - low) / (number - 1);</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        <span class="comment">// Handle cases where number in (0, 1)</span></div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;        <span class="keywordflow">if</span> (number == 0) {</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;            <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;        }</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;        <span class="keywordflow">if</span> (number == 1) {</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;            data[0] = low;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;            <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;        }</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;        <span class="comment">// Loop over the increments and add to vector</span></div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;        <span class="keywordflow">for</span> (std::size_t i = 0; i &lt; number; ++i) {</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;            data[i] = low + i * increment;</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;        }</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;        <span class="comment">// done</span></div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    }</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00134"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a9df068ebd5a9cc6baece6398affa05d6">  134</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">linspace</a>(T low, T high, std::valarray&lt;T&gt; &amp; data) {</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;        <span class="comment">// Compute the increment</span></div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;        <span class="keywordtype">int</span> number = data.size();</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;        T increment = (high - low) / (number - 1);</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;        <span class="comment">// Handle cases where number in (0, 1)</span></div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;        <span class="keywordflow">if</span> (number == 0) {</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;            <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;        }</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;        <span class="keywordflow">if</span> (number == 1) {</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;            data[0] = low;</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;            <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;        }</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;        <span class="comment">// Loop over the increments and add to vector</span></div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;        <span class="keywordflow">for</span> (std::size_t i = 0; i &lt; number; ++i) {</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;            data[i] = low + i * increment;</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;        }</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;        <span class="comment">// done</span></div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    }</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00159"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a7fe9017a304146b33c054e90dd733105">  159</a></span>&#160;    <span class="keyword">inline</span> std::vector&lt;T&gt; <a class="code" href="namespaceisce_1_1core.html#a7fe9017a304146b33c054e90dd733105">logspace</a>(T first, T last, std::size_t number, T base=10) {</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;        <span class="comment">// Instantiate the vector</span></div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;        std::vector&lt;T&gt; data;</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;        <span class="comment">// Compute the increment of the powers</span></div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;        T increment = (last - first) / (number - 1);</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;        <span class="comment">// Handle cases where number in (0, 1)</span></div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;        <span class="keywordflow">if</span> (number == 0) {</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;            <span class="keywordflow">return</span> data;</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;        }</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;        <span class="keywordflow">if</span> (number == 1) {</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;            data.push_back(pow(base, first));</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;            <span class="keywordflow">return</span> data;</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;        }</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;        <span class="comment">// Loop over the increments and add to vector</span></div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;        <span class="keywordflow">for</span> (std::size_t i = 0; i &lt; number - 1; ++i) {</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;            T value = pow(base, first + i * increment);</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;            data.push_back(value);</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;        }</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;        <span class="comment">// Add the last element</span></div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;        data.push_back(pow(base, last));</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;        <span class="comment">// done</span></div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;        <span class="keywordflow">return</span> data;</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    }</div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00187"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a22545d2fc4f92173946f1049862d89e9">  187</a></span>&#160;    <span class="keyword">inline</span> std::vector&lt;T&gt; <a class="code" href="namespaceisce_1_1core.html#a22545d2fc4f92173946f1049862d89e9">stringToVector</a>(<span class="keyword">const</span> std::string &amp; str) {</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;        <span class="comment">// Make a stream</span></div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;        std::stringstream stream(str);</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;        <span class="comment">// Parse string</span></div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;        T number;</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;        std::vector&lt;T&gt; vec;</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;        <span class="keywordflow">while</span> (stream &gt;&gt; number) {</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;            vec.push_back(number);</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;        }</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;        <span class="comment">// done</span></div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;        <span class="keywordflow">return</span> vec;</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    }</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00204"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#ab3ab15086fc03cd08e41914466ef5f1c">  204</a></span>&#160;    <span class="keyword">inline</span> std::string <a class="code" href="namespaceisce_1_1core.html#ab3ab15086fc03cd08e41914466ef5f1c">vectorToString</a>(<span class="keyword">const</span> std::vector&lt;T&gt; &amp; vec) {</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;        <span class="comment">// Initialize stream</span></div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;        std::stringstream stream;</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;        <span class="comment">// Print values</span></div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;        std::copy(vec.begin(), vec.end(), std::ostream_iterator&lt;T&gt;(stream, <span class="stringliteral">&quot; &quot;</span>));</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;        <span class="comment">// done</span></div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;        <span class="keywordflow">return</span> stream.str();</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;    }</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;</div>
-<div class="line"><a name="l00217"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a4123e8e839c6bc00ea12744cf8781f3a">  217</a></span>&#160;    <span class="keyword">inline</span> std::string <a class="code" href="namespaceisce_1_1core.html#a4123e8e839c6bc00ea12744cf8781f3a">stringFromVRT</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> * filename, <span class="keywordtype">int</span> bandNum=1) {</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;</div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;        <span class="comment">// Register GDAL drivers</span></div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;        GDALAllRegister();</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;        <span class="comment">// Open the VRT dataset</span></div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;        GDALDataset * dataset = (GDALDataset *) GDALOpen(filename, GA_ReadOnly);</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;        <span class="keywordflow">if</span> (dataset == NULL) {</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;            std::cout &lt;&lt; <span class="stringliteral">&quot;Cannot open dataset &quot;</span> &lt;&lt; filename &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;            exit(1);</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;        }</div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;</div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;        <span class="comment">// Read the metadata</span></div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;        <span class="keywordtype">char</span> **metadata_str = dataset-&gt;GetRasterBand(bandNum)-&gt;GetMetadata(<span class="stringliteral">&quot;xml:isce&quot;</span>);</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;        <span class="comment">// The cereal-relevant XML is the first element in the list</span></div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;        std::string meta{metadata_str[0]};</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;        <span class="comment">// Close the VRT dataset</span></div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;        GDALClose(dataset);</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;        <span class="comment">// All done</span></div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;        <span class="keywordflow">return</span> meta;</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    }</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
-<div class="line"><a name="l00250"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">  250</a></span>&#160;    <a class="code" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">compareFloatingPoint</a>(T first, T second) {</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;        <span class="keyword">const</span> T scale = std::max({<span class="keyword">static_cast&lt;</span>T<span class="keyword">&gt;</span>(1.0), std::abs(first), std::abs(second)});</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;        <span class="keywordflow">return</span> std::abs(first - second) &lt;= std::numeric_limits&lt;T&gt;::epsilon() * scale;</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;    }</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
-<div class="line"><a name="l00261"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#af5eda98731f7f62fce5c7f428f0e61a5">  261</a></span>&#160;    <a class="code" href="namespaceisce_1_1core.html#af5eda98731f7f62fce5c7f428f0e61a5">compareComplex</a>(std::complex&lt;T&gt; first, std::complex&lt;T&gt; second) {</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">compareFloatingPoint</a>(first.real(), second.real())</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;            &amp;&amp; <a class="code" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">compareFloatingPoint</a>(first.imag(), second.imag());</div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    }</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    <span class="keyword">inline</span> std::valarray&lt;bool&gt;</div>
-<div class="line"><a name="l00272"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a55c1c561c113f7d0aeead8d9e772403e">  272</a></span>&#160;    <a class="code" href="namespaceisce_1_1core.html#a55c1c561c113f7d0aeead8d9e772403e">makeMask</a>(<span class="keyword">const</span> std::valarray&lt;std::complex&lt;T&gt;&gt; &amp; v, std::complex&lt;T&gt; noDataValue) {</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;        std::valarray&lt;bool&gt; mask(v.size());</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; v.size(); ++i) {</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1core.html#af5eda98731f7f62fce5c7f428f0e61a5">compareComplex</a>(v[i], noDataValue)) {</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;                mask[i] = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;            } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;                mask[i] = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;            }</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        }</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;        <span class="keywordflow">return</span> mask;</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    }</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    <span class="keyword">inline</span> std::valarray&lt;bool&gt;</div>
-<div class="line"><a name="l00290"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a1f15714f1c3862ea7655253bd0cf750e">  290</a></span>&#160;    <a class="code" href="namespaceisce_1_1core.html#a55c1c561c113f7d0aeead8d9e772403e">makeMask</a>(<span class="keyword">const</span> std::valarray&lt;T&gt; &amp; v, T noDataValue) {</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;        std::valarray&lt;bool&gt; mask(v.size());</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; v.size(); ++i) {</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">compareFloatingPoint</a>(v[i], noDataValue)) {</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;                mask[i] = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;            } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;                mask[i] = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;            }</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;        }</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;        <span class="keywordflow">return</span> mask;</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    }</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;</div>
-<div class="line"><a name="l00303"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a1802795a0f8e448f9120e1a137b95b38">  303</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#a1802795a0f8e448f9120e1a137b95b38">insertionSort</a>(std::valarray&lt;double&gt; &amp; a,</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;                              std::valarray&lt;double&gt; &amp; b,</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;                              std::valarray&lt;double&gt; &amp; c) {</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 1; i &lt; a.size(); ++i) {</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;            <span class="keywordtype">int</span> j = i - 1;</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> tempa = a[i];</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> tempb = b[i];</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> tempc = c[i];</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;            <span class="keywordflow">while</span> (j &gt;= 0 &amp;&amp; a[j] &gt; tempa) {</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;                a[j+1] = a[j];</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;                b[j+1] = b[j];</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;                c[j+1] = c[j];</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;                j = j - 1;</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;            }</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;            a[j+1] = tempa;</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;            b[j+1] = tempb;</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;            c[j+1] = tempc;</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;        }</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;    }</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    </div>
-<div class="line"><a name="l00324"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a23f05852e3565b108c03494ccabefc8e">  324</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#a1802795a0f8e448f9120e1a137b95b38">insertionSort</a>(std::valarray&lt;double&gt; &amp; a,</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;                              std::valarray&lt;double&gt; &amp; b) {</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 1; i &lt; a.size(); ++i) {</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;            <span class="keywordtype">int</span> j = i - 1;</div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> tempa = a[i];</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> tempb = b[i];</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;            <span class="keywordflow">while</span> (j &gt;= 0 &amp;&amp; a[j] &gt; tempa) {</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;                a[j+1] = a[j];</div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;                b[j+1] = b[j];</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;                j = j - 1;</div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;            }</div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;            a[j+1] = tempa;</div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;            b[j+1] = tempb;</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;        }</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    }</div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    </div>
-<div class="line"><a name="l00341"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#aa58e4e7320500f1e24913e17c79b0b09">  341</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="namespaceisce_1_1core.html#aa58e4e7320500f1e24913e17c79b0b09">binarySearch</a>(<span class="keyword">const</span> std::valarray&lt;double&gt; &amp; array, <span class="keywordtype">double</span> value) {</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;   </div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;        <span class="comment">// Do the binary search </span></div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;        <span class="keywordtype">int</span> left = 0;</div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;        <span class="keywordtype">int</span> right = array.size() - 1;</div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;        <span class="keywordtype">int</span> index;</div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;        <span class="keywordflow">while</span> (left &lt;= right) {</div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">int</span> middle = <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(std::round(0.5 * (left + right)));</div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;            <span class="keywordflow">if</span> (left == (right - 1)) {</div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;                index = left;</div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;                <span class="keywordflow">return</span> index;</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;            }</div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;            <span class="keywordflow">if</span> (array[middle] &lt;= value) {</div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;                left = middle;</div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (array[middle] &gt; value) {</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;                right = middle;</div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;            }</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;        }</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;        index = left;</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;        <span class="keywordflow">return</span> index;</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;    }</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00365"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a65c88b1efd8564d22e60f47f68417e64">  365</a></span>&#160;    <span class="keyword">inline</span> <span class="keyword">const</span> T &amp; <a class="code" href="namespaceisce_1_1core.html#a65c88b1efd8564d22e60f47f68417e64">clamp</a>(<span class="keyword">const</span> T &amp; x, <span class="keyword">const</span> T &amp; lower, <span class="keyword">const</span> T &amp; upper) {</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;        <span class="keywordflow">return</span> std::min(upper, std::max(x, lower));</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;    }</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;}}</div>
-<div class="ttc" id="namespaceisce_1_1core_html_a94fb25766eab8d9a67a8bd7fe5045d3e"><div class="ttname"><a href="namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e">isce::core::checkVecLenDebug</a></div><div class="ttdeci">void checkVecLenDebug(const std::vector&lt; T &gt; &amp;vec, size_t len, const char *vec_name, const char *parent_func)</div><div class="ttdoc">Inline function for input checking on vector lengths (primarily to check to see if 3D vector has the ...</div><div class="ttdef"><b>Definition:</b> Utilities.h:32</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_a607ae942e885db44bc22f28d80a82b39"><div class="ttname"><a href="namespaceisce_1_1core.html#a607ae942e885db44bc22f28d80a82b39">isce::core::arange</a></div><div class="ttdeci">std::vector&lt; T &gt; arange(T low, T high, T increment)</div><div class="ttdoc">Function to return a Python style arange vector. </div><div class="ttdef"><b>Definition:</b> Utilities.h:63</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_a7fe9017a304146b33c054e90dd733105"><div class="ttname"><a href="namespaceisce_1_1core.html#a7fe9017a304146b33c054e90dd733105">isce::core::logspace</a></div><div class="ttdeci">std::vector&lt; T &gt; logspace(T first, T last, std::size_t number, T base=10)</div><div class="ttdoc">Function to return a Matlab/Python style logspace vector. </div><div class="ttdef"><b>Definition:</b> Utilities.h:159</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_a65c88b1efd8564d22e60f47f68417e64"><div class="ttname"><a href="namespaceisce_1_1core.html#a65c88b1efd8564d22e60f47f68417e64">isce::core::clamp</a></div><div class="ttdeci">const T &amp; clamp(const T &amp;x, const T &amp;lower, const T &amp;upper)</div><div class="ttdoc">Clip a number between an upper and lower range (implements std::clamp for older GCC) ...</div><div class="ttdef"><b>Definition:</b> Utilities.h:365</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_aa58e4e7320500f1e24913e17c79b0b09"><div class="ttname"><a href="namespaceisce_1_1core.html#aa58e4e7320500f1e24913e17c79b0b09">isce::core::binarySearch</a></div><div class="ttdeci">int binarySearch(const std::valarray&lt; double &gt; &amp;array, double value)</div><div class="ttdoc">Searches array for index closest to provided value. </div><div class="ttdef"><b>Definition:</b> Utilities.h:341</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_ab3ab15086fc03cd08e41914466ef5f1c"><div class="ttname"><a href="namespaceisce_1_1core.html#ab3ab15086fc03cd08e41914466ef5f1c">isce::core::vectorToString</a></div><div class="ttdeci">std::string vectorToString(const std::vector&lt; T &gt; &amp;vec)</div><div class="ttdoc">Generate a string of space-separated values from a vector. </div><div class="ttdef"><b>Definition:</b> Utilities.h:204</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_aa7b34dffee2880f200ff9249eae16989"><div class="ttname"><a href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">isce::core::linspace</a></div><div class="ttdeci">std::vector&lt; T &gt; linspace(T low, T high, std::size_t number)</div><div class="ttdoc">Function to return a Matlab/Python style linspace vector. </div><div class="ttdef"><b>Definition:</b> Utilities.h:82</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_a22545d2fc4f92173946f1049862d89e9"><div class="ttname"><a href="namespaceisce_1_1core.html#a22545d2fc4f92173946f1049862d89e9">isce::core::stringToVector</a></div><div class="ttdeci">std::vector&lt; T &gt; stringToVector(const std::string &amp;str)</div><div class="ttdoc">Parse a space-separated string into a vector. </div><div class="ttdef"><b>Definition:</b> Utilities.h:187</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_af5eda98731f7f62fce5c7f428f0e61a5"><div class="ttname"><a href="namespaceisce_1_1core.html#af5eda98731f7f62fce5c7f428f0e61a5">isce::core::compareComplex</a></div><div class="ttdeci">bool compareComplex(std::complex&lt; T &gt; first, std::complex&lt; T &gt; second)</div><div class="ttdoc">Tolerance test for real and imaginary components for scalar value. </div><div class="ttdef"><b>Definition:</b> Utilities.h:261</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_a1802795a0f8e448f9120e1a137b95b38"><div class="ttname"><a href="namespaceisce_1_1core.html#a1802795a0f8e448f9120e1a137b95b38">isce::core::insertionSort</a></div><div class="ttdeci">void insertionSort(std::valarray&lt; double &gt; &amp;a, std::valarray&lt; double &gt; &amp;b, std::valarray&lt; double &gt; &amp;c)</div><div class="ttdoc">Sort arrays a, b, c by the values in array a. </div><div class="ttdef"><b>Definition:</b> Utilities.h:303</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_a55c1c561c113f7d0aeead8d9e772403e"><div class="ttname"><a href="namespaceisce_1_1core.html#a55c1c561c113f7d0aeead8d9e772403e">isce::core::makeMask</a></div><div class="ttdeci">std::valarray&lt; bool &gt; makeMask(const std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;v, std::complex&lt; T &gt; noDataValue)</div><div class="ttdoc">making a boolean mask for an array based on noDataValue </div><div class="ttdef"><b>Definition:</b> Utilities.h:272</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_ac18b3e621f399811a3e54baafd30c8f2"><div class="ttname"><a href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">isce::core::compareFloatingPoint</a></div><div class="ttdeci">bool compareFloatingPoint(T first, T second)</div><div class="ttdoc">Combined absolute and relative tolerance test. </div><div class="ttdef"><b>Definition:</b> Utilities.h:250</div></div>
-<div class="ttc" id="namespaceisce_1_1core_html_a4123e8e839c6bc00ea12744cf8781f3a"><div class="ttname"><a href="namespaceisce_1_1core.html#a4123e8e839c6bc00ea12744cf8781f3a">isce::core::stringFromVRT</a></div><div class="ttdeci">std::string stringFromVRT(const char *filename, int bandNum=1)</div><div class="ttdoc">Read metadata from a VRT file and return an std::string. </div><div class="ttdef"><b>Definition:</b> Utilities.h:217</div></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#ifndef ISCE_CORE_UTILITIES_H</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define ISCE_CORE_UTILITIES_H</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;limits&gt;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;sstream&gt;</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;valarray&gt;</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#include &lt;complex&gt;</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &lt;gdal.h&gt;</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &lt;gdal_priv.h&gt;</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="comment">// Macro wrappers to check vector lengths </span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="comment">// (adds calling function and variable name information to the exception)</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#define checkVecLen(v,l) isce::core::checkVecLenDebug(v,l,#v,__PRETTY_FUNCTION__)</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define check2dVecLen(v,l,w) isce::core::check2dVecLenDebug(v,l,w,#v,__PRETTY_FUNCTION__)</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keyword">namespace </span>isce { <span class="keyword">namespace </span>core {</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e">   34</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e">checkVecLenDebug</a>(<span class="keyword">const</span> std::vector&lt;T&gt; &amp;vec, <span class="keywordtype">size_t</span> len, <span class="keyword">const</span> <span class="keywordtype">char</span> *vec_name, </div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;                                 <span class="keyword">const</span> <span class="keywordtype">char</span> *parent_func) {</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;        <span class="keywordflow">if</span> (vec.size() != len) {</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;            std::string errstr = <span class="stringliteral">&quot;In &#39;&quot;</span> + std::string(parent_func) + <span class="stringliteral">&quot;&#39;: Vector &#39;&quot;</span> + </div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;                                 std::string(vec_name) + <span class="stringliteral">&quot;&#39; has size &quot;</span> + </div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;                                 std::to_string(vec.size()) + <span class="stringliteral">&quot;, expected size &quot;</span> + </div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;                                 std::to_string(len) + <span class="stringliteral">&quot;.&quot;</span>;</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;            <span class="keywordflow">throw</span> std::invalid_argument(errstr);</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;        }</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    }</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="comment">// Same as above but for 2D vectors</span></div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> check2dVecLenDebug(<span class="keyword">const</span> std::vector&lt;std::vector&lt;T&gt;&gt; &amp;vec,</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;                                   <span class="keywordtype">size_t</span> len, <span class="keywordtype">size_t</span> width, <span class="keyword">const</span> <span class="keywordtype">char</span> *vec_name,</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;                                   <span class="keyword">const</span> <span class="keywordtype">char</span> *parent_func) {</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        <span class="keywordflow">if</span> ((vec.size() != len) &amp;&amp; (vec[0].size() != width)) {</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;            std::string errstr = <span class="stringliteral">&quot;In &#39;&quot;</span> + std::string(parent_func) + <span class="stringliteral">&quot;&#39;: Vector &#39;&quot;</span> + </div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;                                 std::string(vec_name) + <span class="stringliteral">&quot;&#39; has size (&quot;</span> + </div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                                 std::to_string(vec.size()) + <span class="stringliteral">&quot; x &quot;</span> + </div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                                 std::to_string(vec[0].size()) + <span class="stringliteral">&quot;), expected size (&quot;</span> + </div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;                                 std::to_string(len) + <span class="stringliteral">&quot; x &quot;</span> + std::to_string(width) + <span class="stringliteral">&quot;).&quot;</span>;</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;            <span class="keywordflow">throw</span> std::invalid_argument(errstr);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        }</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    }</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00065"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a607ae942e885db44bc22f28d80a82b39">   65</a></span>&#160;    <span class="keyword">inline</span> std::vector&lt;T&gt; <a class="code" href="namespaceisce_1_1core.html#a607ae942e885db44bc22f28d80a82b39">arange</a>(T low, T high, T increment) {</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        <span class="comment">// Instantiate the vector</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        std::vector&lt;T&gt; data;</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        <span class="comment">// Set the first value</span></div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        T current = low;</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="comment">// Loop over the increments and add to vector</span></div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="keywordflow">while</span> (current &lt; high) {</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;            data.push_back(current);</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;            current += increment;</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        }</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        <span class="comment">// done</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;        <span class="keywordflow">return</span> data;</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    }</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00084"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">   84</a></span>&#160;    <span class="keyword">inline</span> std::vector&lt;T&gt; <a class="code" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">linspace</a>(T low, T high, std::size_t number) {</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        <span class="comment">// Instantiate the vector</span></div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        std::vector&lt;T&gt; data;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        <span class="comment">// Compute the increment</span></div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        T increment = (high - low) / (number - 1);</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;        <span class="comment">// Handle cases where number in (0, 1)</span></div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        <span class="keywordflow">if</span> (number == 0) {</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;            <span class="keywordflow">return</span> data;</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        }</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        <span class="keywordflow">if</span> (number == 1) {</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;            data.push_back(low);</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;            <span class="keywordflow">return</span> data;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;        }</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;        <span class="comment">// Loop over the increments and add to vector</span></div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;        <span class="keywordflow">for</span> (std::size_t i = 0; i &lt; number - 1; ++i) {</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;            data.push_back(low + i * increment);</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;        }</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        <span class="comment">// Add the last element</span></div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;        data.push_back(high);</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;        <span class="comment">// done</span></div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;        <span class="keywordflow">return</span> data;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    }</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00112"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a3518c930a3511e0c92a17a849f9efe75">  112</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">linspace</a>(T low, T high, std::vector&lt;T&gt; &amp; data) {</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;        <span class="comment">// Compute the increment</span></div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        <span class="keywordtype">int</span> number = data.size();</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;        T increment = (high - low) / (number - 1);</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;        <span class="comment">// Handle cases where number in (0, 1)</span></div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;        <span class="keywordflow">if</span> (number == 0) {</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;            <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;        }</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;        <span class="keywordflow">if</span> (number == 1) {</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;            data[0] = low;</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;            <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;        }</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;        <span class="comment">// Loop over the increments and add to vector</span></div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;        <span class="keywordflow">for</span> (std::size_t i = 0; i &lt; number; ++i) {</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;            data[i] = low + i * increment;</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;        }</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;        <span class="comment">// done</span></div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    }</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00136"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a9df068ebd5a9cc6baece6398affa05d6">  136</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">linspace</a>(T low, T high, std::valarray&lt;T&gt; &amp; data) {</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;        <span class="comment">// Compute the increment</span></div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;        <span class="keywordtype">int</span> number = data.size();</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;        T increment = (high - low) / (number - 1);</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;        <span class="comment">// Handle cases where number in (0, 1)</span></div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;        <span class="keywordflow">if</span> (number == 0) {</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;            <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;        }</div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;        <span class="keywordflow">if</span> (number == 1) {</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;            data[0] = low;</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;            <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;        }</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;        <span class="comment">// Loop over the increments and add to vector</span></div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;        <span class="keywordflow">for</span> (std::size_t i = 0; i &lt; number; ++i) {</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;            data[i] = low + i * increment;</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;        }</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;        <span class="comment">// done</span></div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    }</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00161"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a7fe9017a304146b33c054e90dd733105">  161</a></span>&#160;    <span class="keyword">inline</span> std::vector&lt;T&gt; <a class="code" href="namespaceisce_1_1core.html#a7fe9017a304146b33c054e90dd733105">logspace</a>(T first, T last, std::size_t number, T base=10) {</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;        <span class="comment">// Instantiate the vector</span></div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;        std::vector&lt;T&gt; data;</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;        <span class="comment">// Compute the increment of the powers</span></div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;        T increment = (last - first) / (number - 1);</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;        <span class="comment">// Handle cases where number in (0, 1)</span></div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;        <span class="keywordflow">if</span> (number == 0) {</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;            <span class="keywordflow">return</span> data;</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;        }</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;        <span class="keywordflow">if</span> (number == 1) {</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;            data.push_back(pow(base, first));</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;            <span class="keywordflow">return</span> data;</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;        }</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;        <span class="comment">// Loop over the increments and add to vector</span></div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;        <span class="keywordflow">for</span> (std::size_t i = 0; i &lt; number - 1; ++i) {</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;            T value = pow(base, first + i * increment);</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;            data.push_back(value);</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;        }</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;        <span class="comment">// Add the last element</span></div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;        data.push_back(pow(base, last));</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;        <span class="comment">// done</span></div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;        <span class="keywordflow">return</span> data;</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;    }</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00189"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a22545d2fc4f92173946f1049862d89e9">  189</a></span>&#160;    <span class="keyword">inline</span> std::vector&lt;T&gt; <a class="code" href="namespaceisce_1_1core.html#a22545d2fc4f92173946f1049862d89e9">stringToVector</a>(<span class="keyword">const</span> std::string &amp; str) {</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;        <span class="comment">// Make a stream</span></div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;        std::stringstream stream(str);</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;        <span class="comment">// Parse string</span></div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;        T number;</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;        std::vector&lt;T&gt; vec;</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;        <span class="keywordflow">while</span> (stream &gt;&gt; number) {</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;            vec.push_back(number);</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;        }</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;        <span class="comment">// done</span></div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;        <span class="keywordflow">return</span> vec;</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    }</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00206"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#ab3ab15086fc03cd08e41914466ef5f1c">  206</a></span>&#160;    <span class="keyword">inline</span> std::string <a class="code" href="namespaceisce_1_1core.html#ab3ab15086fc03cd08e41914466ef5f1c">vectorToString</a>(<span class="keyword">const</span> std::vector&lt;T&gt; &amp; vec) {</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;        <span class="comment">// Initialize stream</span></div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;        std::stringstream stream;</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;        <span class="comment">// Print values</span></div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;        std::copy(vec.begin(), vec.end(), std::ostream_iterator&lt;T&gt;(stream, <span class="stringliteral">&quot; &quot;</span>));</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;        <span class="comment">// done</span></div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;        <span class="keywordflow">return</span> stream.str();</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    }</div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;</div>
+<div class="line"><a name="l00219"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a4123e8e839c6bc00ea12744cf8781f3a">  219</a></span>&#160;    <span class="keyword">inline</span> std::string <a class="code" href="namespaceisce_1_1core.html#a4123e8e839c6bc00ea12744cf8781f3a">stringFromVRT</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> * filename, <span class="keywordtype">int</span> bandNum=1) {</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;        <span class="comment">// Register GDAL drivers</span></div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;        GDALAllRegister();</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;        <span class="comment">// Open the VRT dataset</span></div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;        GDALDataset * dataset = (GDALDataset *) GDALOpen(filename, GA_ReadOnly);</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;        <span class="keywordflow">if</span> (dataset == NULL) {</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;            std::cout &lt;&lt; <span class="stringliteral">&quot;Cannot open dataset &quot;</span> &lt;&lt; filename &lt;&lt; std::endl;</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;            exit(1);</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;        }</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;        <span class="comment">// Read the metadata</span></div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;        <span class="keywordtype">char</span> **metadata_str = dataset-&gt;GetRasterBand(bandNum)-&gt;GetMetadata(<span class="stringliteral">&quot;xml:isce&quot;</span>);</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;        <span class="comment">// The cereal-relevant XML is the first element in the list</span></div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;        std::string meta{metadata_str[0]};</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;        <span class="comment">// Close the VRT dataset</span></div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;        GDALClose(dataset);</div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;</div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;        <span class="comment">// All done</span></div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;        <span class="keywordflow">return</span> meta;</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;    }</div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
+<div class="line"><a name="l00252"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">  252</a></span>&#160;    <a class="code" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">compareFloatingPoint</a>(T first, T second) {</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;        <span class="keyword">const</span> T scale = std::max({<span class="keyword">static_cast&lt;</span>T<span class="keyword">&gt;</span>(1.0), std::abs(first), std::abs(second)});</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;        <span class="keywordflow">return</span> std::abs(first - second) &lt;= std::numeric_limits&lt;T&gt;::epsilon() * scale;</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    }</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">bool</span></div>
+<div class="line"><a name="l00263"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#af5eda98731f7f62fce5c7f428f0e61a5">  263</a></span>&#160;    <a class="code" href="namespaceisce_1_1core.html#af5eda98731f7f62fce5c7f428f0e61a5">compareComplex</a>(std::complex&lt;T&gt; first, std::complex&lt;T&gt; second) {</div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">compareFloatingPoint</a>(first.real(), second.real())</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;            &amp;&amp; <a class="code" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">compareFloatingPoint</a>(first.imag(), second.imag());</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    }</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    <span class="keyword">inline</span> std::valarray&lt;bool&gt;</div>
+<div class="line"><a name="l00274"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a55c1c561c113f7d0aeead8d9e772403e">  274</a></span>&#160;    <a class="code" href="namespaceisce_1_1core.html#a55c1c561c113f7d0aeead8d9e772403e">makeMask</a>(<span class="keyword">const</span> std::valarray&lt;std::complex&lt;T&gt;&gt; &amp; v, std::complex&lt;T&gt; noDataValue) {</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;        std::valarray&lt;bool&gt; mask(v.size());</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; v.size(); ++i) {</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1core.html#af5eda98731f7f62fce5c7f428f0e61a5">compareComplex</a>(v[i], noDataValue)) {</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;                mask[i] = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;            } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;                mask[i] = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;            }</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;        }</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;        <span class="keywordflow">return</span> mask;</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    }</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    <span class="keyword">inline</span> std::valarray&lt;bool&gt;</div>
+<div class="line"><a name="l00292"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a1f15714f1c3862ea7655253bd0cf750e">  292</a></span>&#160;    <a class="code" href="namespaceisce_1_1core.html#a55c1c561c113f7d0aeead8d9e772403e">makeMask</a>(<span class="keyword">const</span> std::valarray&lt;T&gt; &amp; v, T noDataValue) {</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;        std::valarray&lt;bool&gt; mask(v.size());</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; v.size(); ++i) {</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;            <span class="keywordflow">if</span> (<a class="code" href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">compareFloatingPoint</a>(v[i], noDataValue)) {</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;                mask[i] = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;            } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;                mask[i] = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;            }</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;        }</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;        <span class="keywordflow">return</span> mask;</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;    }</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;</div>
+<div class="line"><a name="l00305"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a1802795a0f8e448f9120e1a137b95b38">  305</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#a1802795a0f8e448f9120e1a137b95b38">insertionSort</a>(std::valarray&lt;double&gt; &amp; a,</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;                              std::valarray&lt;double&gt; &amp; b,</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;                              std::valarray&lt;double&gt; &amp; c) {</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 1; i &lt; a.size(); ++i) {</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;            <span class="keywordtype">int</span> j = i - 1;</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> tempa = a[i];</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> tempb = b[i];</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> tempc = c[i];</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;            <span class="keywordflow">while</span> (j &gt;= 0 &amp;&amp; a[j] &gt; tempa) {</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;                a[j+1] = a[j];</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;                b[j+1] = b[j];</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;                c[j+1] = c[j];</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;                j = j - 1;</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;            }</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;            a[j+1] = tempa;</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;            b[j+1] = tempb;</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;            c[j+1] = tempc;</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;        }</div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    }</div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    </div>
+<div class="line"><a name="l00326"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a23f05852e3565b108c03494ccabefc8e">  326</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="namespaceisce_1_1core.html#a1802795a0f8e448f9120e1a137b95b38">insertionSort</a>(std::valarray&lt;double&gt; &amp; a,</div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;                              std::valarray&lt;double&gt; &amp; b) {</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 1; i &lt; a.size(); ++i) {</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;            <span class="keywordtype">int</span> j = i - 1;</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> tempa = a[i];</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">double</span> tempb = b[i];</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;            <span class="keywordflow">while</span> (j &gt;= 0 &amp;&amp; a[j] &gt; tempa) {</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;                a[j+1] = a[j];</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;                b[j+1] = b[j];</div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;                j = j - 1;</div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;            }</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;            a[j+1] = tempa;</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;            b[j+1] = tempb;</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;        }</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;    }</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    </div>
+<div class="line"><a name="l00343"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#aa58e4e7320500f1e24913e17c79b0b09">  343</a></span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">int</span> <a class="code" href="namespaceisce_1_1core.html#aa58e4e7320500f1e24913e17c79b0b09">binarySearch</a>(<span class="keyword">const</span> std::valarray&lt;double&gt; &amp; array, <span class="keywordtype">double</span> value) {</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;   </div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;        <span class="comment">// Do the binary search </span></div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;        <span class="keywordtype">int</span> left = 0;</div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;        <span class="keywordtype">int</span> right = array.size() - 1;</div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;        <span class="keywordtype">int</span> index;</div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;        <span class="keywordflow">while</span> (left &lt;= right) {</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;            <span class="keyword">const</span> <span class="keywordtype">int</span> middle = <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(std::round(0.5 * (left + right)));</div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;            <span class="keywordflow">if</span> (left == (right - 1)) {</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;                index = left;</div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;                <span class="keywordflow">return</span> index;</div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;            }</div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;            <span class="keywordflow">if</span> (array[middle] &lt;= value) {</div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;                left = middle;</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (array[middle] &gt; value) {</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;                right = middle;</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;            }</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;        }</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;        index = left;</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;        <span class="keywordflow">return</span> index;</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    }</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00367"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a65c88b1efd8564d22e60f47f68417e64">  367</a></span>&#160;    <span class="keyword">inline</span> <span class="keyword">const</span> T &amp; <a class="code" href="namespaceisce_1_1core.html#a65c88b1efd8564d22e60f47f68417e64">clamp</a>(<span class="keyword">const</span> T &amp; x, <span class="keyword">const</span> T &amp; lower, <span class="keyword">const</span> T &amp; upper) {</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;        <span class="keywordflow">return</span> std::min(upper, std::max(x, lower));</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;    }</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;}}</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;<span class="comment">// end of file</span></div>
+<div class="ttc" id="namespaceisce_1_1core_html_a94fb25766eab8d9a67a8bd7fe5045d3e"><div class="ttname"><a href="namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e">isce::core::checkVecLenDebug</a></div><div class="ttdeci">void checkVecLenDebug(const std::vector&lt; T &gt; &amp;vec, size_t len, const char *vec_name, const char *parent_func)</div><div class="ttdoc">Inline function for input checking on vector lengths (primarily to check to see if 3D vector has the ...</div><div class="ttdef"><b>Definition:</b> Utilities.h:34</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_a607ae942e885db44bc22f28d80a82b39"><div class="ttname"><a href="namespaceisce_1_1core.html#a607ae942e885db44bc22f28d80a82b39">isce::core::arange</a></div><div class="ttdeci">std::vector&lt; T &gt; arange(T low, T high, T increment)</div><div class="ttdoc">Function to return a Python style arange vector. </div><div class="ttdef"><b>Definition:</b> Utilities.h:65</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_a7fe9017a304146b33c054e90dd733105"><div class="ttname"><a href="namespaceisce_1_1core.html#a7fe9017a304146b33c054e90dd733105">isce::core::logspace</a></div><div class="ttdeci">std::vector&lt; T &gt; logspace(T first, T last, std::size_t number, T base=10)</div><div class="ttdoc">Function to return a Matlab/Python style logspace vector. </div><div class="ttdef"><b>Definition:</b> Utilities.h:161</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_a65c88b1efd8564d22e60f47f68417e64"><div class="ttname"><a href="namespaceisce_1_1core.html#a65c88b1efd8564d22e60f47f68417e64">isce::core::clamp</a></div><div class="ttdeci">const T &amp; clamp(const T &amp;x, const T &amp;lower, const T &amp;upper)</div><div class="ttdoc">Clip a number between an upper and lower range (implements std::clamp for older GCC) ...</div><div class="ttdef"><b>Definition:</b> Utilities.h:367</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_aa58e4e7320500f1e24913e17c79b0b09"><div class="ttname"><a href="namespaceisce_1_1core.html#aa58e4e7320500f1e24913e17c79b0b09">isce::core::binarySearch</a></div><div class="ttdeci">int binarySearch(const std::valarray&lt; double &gt; &amp;array, double value)</div><div class="ttdoc">Searches array for index closest to provided value. </div><div class="ttdef"><b>Definition:</b> Utilities.h:343</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_ab3ab15086fc03cd08e41914466ef5f1c"><div class="ttname"><a href="namespaceisce_1_1core.html#ab3ab15086fc03cd08e41914466ef5f1c">isce::core::vectorToString</a></div><div class="ttdeci">std::string vectorToString(const std::vector&lt; T &gt; &amp;vec)</div><div class="ttdoc">Generate a string of space-separated values from a vector. </div><div class="ttdef"><b>Definition:</b> Utilities.h:206</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_aa7b34dffee2880f200ff9249eae16989"><div class="ttname"><a href="namespaceisce_1_1core.html#aa7b34dffee2880f200ff9249eae16989">isce::core::linspace</a></div><div class="ttdeci">std::vector&lt; T &gt; linspace(T low, T high, std::size_t number)</div><div class="ttdoc">Function to return a Matlab/Python style linspace vector. </div><div class="ttdef"><b>Definition:</b> Utilities.h:84</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_a22545d2fc4f92173946f1049862d89e9"><div class="ttname"><a href="namespaceisce_1_1core.html#a22545d2fc4f92173946f1049862d89e9">isce::core::stringToVector</a></div><div class="ttdeci">std::vector&lt; T &gt; stringToVector(const std::string &amp;str)</div><div class="ttdoc">Parse a space-separated string into a vector. </div><div class="ttdef"><b>Definition:</b> Utilities.h:189</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_af5eda98731f7f62fce5c7f428f0e61a5"><div class="ttname"><a href="namespaceisce_1_1core.html#af5eda98731f7f62fce5c7f428f0e61a5">isce::core::compareComplex</a></div><div class="ttdeci">bool compareComplex(std::complex&lt; T &gt; first, std::complex&lt; T &gt; second)</div><div class="ttdoc">Tolerance test for real and imaginary components for scalar value. </div><div class="ttdef"><b>Definition:</b> Utilities.h:263</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_a1802795a0f8e448f9120e1a137b95b38"><div class="ttname"><a href="namespaceisce_1_1core.html#a1802795a0f8e448f9120e1a137b95b38">isce::core::insertionSort</a></div><div class="ttdeci">void insertionSort(std::valarray&lt; double &gt; &amp;a, std::valarray&lt; double &gt; &amp;b, std::valarray&lt; double &gt; &amp;c)</div><div class="ttdoc">Sort arrays a, b, c by the values in array a. </div><div class="ttdef"><b>Definition:</b> Utilities.h:305</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_a55c1c561c113f7d0aeead8d9e772403e"><div class="ttname"><a href="namespaceisce_1_1core.html#a55c1c561c113f7d0aeead8d9e772403e">isce::core::makeMask</a></div><div class="ttdeci">std::valarray&lt; bool &gt; makeMask(const std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;v, std::complex&lt; T &gt; noDataValue)</div><div class="ttdoc">making a boolean mask for an array based on noDataValue </div><div class="ttdef"><b>Definition:</b> Utilities.h:274</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_ac18b3e621f399811a3e54baafd30c8f2"><div class="ttname"><a href="namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2">isce::core::compareFloatingPoint</a></div><div class="ttdeci">bool compareFloatingPoint(T first, T second)</div><div class="ttdoc">Combined absolute and relative tolerance test. </div><div class="ttdef"><b>Definition:</b> Utilities.h:252</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_a4123e8e839c6bc00ea12744cf8781f3a"><div class="ttname"><a href="namespaceisce_1_1core.html#a4123e8e839c6bc00ea12744cf8781f3a">isce::core::stringFromVRT</a></div><div class="ttdeci">std::string stringFromVRT(const char *filename, int bandNum=1)</div><div class="ttdoc">Read metadata from a VRT file and return an std::string. </div><div class="ttdef"><b>Definition:</b> Utilities.h:219</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
