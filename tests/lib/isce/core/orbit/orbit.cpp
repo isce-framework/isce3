@@ -420,7 +420,11 @@ TEST_F(OrbitTest,HDRFile) {
         orb.setStateVector(i, t+(i*10.), pos, vel);
     }
     // Dump to file.
-    auto fn = std::tmpnam(nullptr);
+    const char* fn = "orbitDumpHDR.txt";
+    struct stat buffer;
+    if (stat (fn, &buffer) == 0)
+       std::remove(fn);
+
     orb.dumpToHDR(fn);
     // Load from file.
     Orbit o(0);

@@ -157,6 +157,7 @@ cdef class pySwath:
         cdef string freq_str = pyStringToBytes(freq)
         swathObj = pySwath()
         loadSwath(c_igroup, deref(swathObj.c_swath), freq_str[0])
+        return swathObj
     
     def getRadarGridParameters(self, 
                             numberAzimuthLooks=1,

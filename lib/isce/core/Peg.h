@@ -12,7 +12,8 @@
 /** Data structure to store a peg point
  *
  * Peg points are used for SCH coordinate system representation for UAVSAR*/
-struct isce::core::Peg {
+class isce::core::Peg {
+public:
 
     //peg latitude in radians
     double lat;

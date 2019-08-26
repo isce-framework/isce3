@@ -62,7 +62,7 @@ class isce::signal::Crossmul {
                     isce::io::Raster& interferogram);
 
         /** Compute the frequency response due to a subpixel shift introduced by upsampling and downsampling*/
-        void lookdownShiftImpact(size_t oversample, size_t nfft, 
+        void lookdownShiftImpact(size_t oversample, size_t fft_size,
                                 size_t blockRows,
                                 std::valarray<std::complex<float>> &shiftImpact);
 
@@ -123,7 +123,7 @@ class isce::signal::Crossmul {
                                         std::valarray<std::complex<float>> &secAvgSpectrum,
                                         std::valarray<double> &rangeFrequencies,
                                         size_t blockRowsData,
-                                        size_t nfft,
+                                        size_t fft_size,
                                         double &frequencyShift);
 
         /** estimate the index of the maximum of a vector of data */

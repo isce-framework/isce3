@@ -6,6 +6,7 @@
 
 #include "DateTime.h"
 
+#include <limits>
 #include <pyre/journal.h>
 #include "TimeDelta.h"
 
@@ -159,7 +160,7 @@ _normalize_date()
         {
             months++;
             days = 1;
-            if (months == 12)
+            if (months == 13)
             {
                 months = 1;
                 year++;

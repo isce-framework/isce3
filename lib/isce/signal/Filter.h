@@ -71,7 +71,7 @@ class isce::signal::Filter {
         void constructRangeBandpassBoxcar(std::valarray<double> subBandCenterFrequencies,
                                        std::valarray<double> subBandBandwidths,
                                        double dt,
-                                       int nfft,
+                                       int fft_size,
                                        std::valarray<std::complex<T>> &_filter1D);
 
         void constructRangeBandpassCosine(std::valarray<double> subBandCenterFrequencies,

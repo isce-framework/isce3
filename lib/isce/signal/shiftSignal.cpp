@@ -27,7 +27,7 @@ shiftSignal(std::valarray<T> & data,
 {
 
     // variable for the total length of the signal used in FFT computation
-    size_t nfft = 1;
+    size_t fft_size = 1;
     std::valarray<std::complex<U>> phaseRamp(ncols*nrows);
     if (not isce::core::compareFloatingPoint(shiftX, 0.0)) {
         // buffer for the frequency domain phase ramp introduced by
@@ -37,7 +37,7 @@ shiftSignal(std::valarray<T> & data,
         frequencyResponseRange(ncols, nrows, shiftX, phaseRamp);
 
         // so far the fft length is ncols
-        nfft = ncols;
+        fft_size = ncols;
     }
 
     if (not isce::core::compareFloatingPoint(shiftY, 0.0)) {
@@ -50,7 +50,7 @@ shiftSignal(std::valarray<T> & data,
         frequencyResponseAzimuth(ncols, nrows, shiftY, phaseRampY);
 
         // taking into account nrows for the fft length 
-        nfft *=nrows;
+        fft_size *=nrows;
 
         if (not isce::core::compareFloatingPoint(shiftX, 0.0))
             // if there was a Shift in X, the impact in frequency domain
@@ -73,7 +73,7 @@ shiftSignal(std::valarray<T> & data,
                 sigObj);
          
         // since FFTW is not normalized, here we divide by total length of fft
-        dataShifted /= nfft;
+        dataShifted /= fft_size;
 
     } else {
         // if no shift requested, return the original signal 
@@ -120,7 +120,7 @@ void isce::signal::
 frequencyResponseRange(size_t ncols, size_t nrows, const double shift,
         std::valarray<std::complex<T>> & shiftImpact)
 {
-    // range frequencies given nfft and oversampling factor
+    // range frequencies given fft_size and oversampling factor
     std::valarray<double> rangeFrequencies(ncols);
 
     // sampling interval in range
@@ -154,7 +154,7 @@ void isce::signal::
 frequencyResponseAzimuth(size_t ncols, size_t nrows, const double shift,
         std::valarray<std::complex<T>> & shiftImpact)
 {
-    // azimuth frequencies given nfft and oversampling factor
+    // azimuth frequencies given fft_size and oversampling factor
     std::valarray<double> frequencies(nrows);
 
     // sampling interval in time
@@ -239,22 +239,22 @@ shiftSignal(std::valarray<std::complex<double>> & data,
             isce::signal::Signal<double> & sigObj);
 
 template void isce::signal::
-            frequencyResponseRange(size_t nfft, size_t blockRows,
+            frequencyResponseRange(size_t fft_size, size_t blockRows,
             const double shift,
             std::valarray<std::complex<float>> & shiftImpact);
 
 template void isce::signal::
-            frequencyResponseRange(size_t nfft, size_t blockRows,
+            frequencyResponseRange(size_t fft_size, size_t blockRows,
             const double shift,
             std::valarray<std::complex<double>> & shiftImpact);
 
 template void isce::signal::
-            frequencyResponseAzimuth(size_t nfft, size_t blockRows,
+            frequencyResponseAzimuth(size_t fft_size, size_t blockRows,
             const double shift,
             std::valarray<std::complex<float>> & shiftImpact);
 
 template void isce::signal::
-            frequencyResponseAzimuth(size_t nfft, size_t blockRows,
+            frequencyResponseAzimuth(size_t fft_size, size_t blockRows,
             const double shift,
             std::valarray<std::complex<double>> & shiftImpact);
 

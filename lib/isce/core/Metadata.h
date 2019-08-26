@@ -15,7 +15,8 @@
 #include "DateTime.h"
 
 /** Data structure for storing basic radar geometry image metadata */
-struct isce::core::Metadata {
+class isce::core::Metadata {
+public:
 
     // Acquisition related parameters
     double radarWavelength;

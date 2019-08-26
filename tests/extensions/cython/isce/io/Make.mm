@@ -10,12 +10,16 @@ include isce.def
 # the pile of tests
 TESTS = \
     raster \
+    h5file \
 
 all: test
 
-test: raster
+test: raster h5file
 
 raster:
 	${PYTHON} -m pytest ./raster.py
+
+h5file:
+	${PYTHON} -m pytest ./h5file.py
 
 # end of file

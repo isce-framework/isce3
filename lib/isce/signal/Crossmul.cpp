@@ -120,8 +120,8 @@ crossmul(isce::io::Raster& referenceSLC,
     looksObj.ncolsLooked(ncolsMultiLooked);
     
     // Compute FFT size (power of 2)
-    size_t nfft;
-    refSignal.nextPowerOfTwo(ncols, nfft);
+    size_t fft_size;
+    refSignal.nextPowerOfTwo(ncols, fft_size);
 
     // number of blocks to process
     size_t nblocks = nrows / blockRows;
@@ -132,10 +132,10 @@ crossmul(isce::io::Raster& referenceSLC,
     }
 
     // storage for a block of reference SLC data
-    std::valarray<std::complex<float>> refSlc(nfft*blockRows);
+    std::valarray<std::complex<float>> refSlc(fft_size*blockRows);
 
     // storage for a block of secondary SLC data
-    std::valarray<std::complex<float>> secSlc(nfft*blockRows);
+    std::valarray<std::complex<float>> secSlc(fft_size*blockRows);
 
     // storage for a block of range offsets
     std::valarray<double> rngOffset(ncols*blockRows);
@@ -143,28 +143,28 @@ crossmul(isce::io::Raster& referenceSLC,
     // storage for a simulated interferogram which its phase is the 
     // interferometric phase due to the imaging geometry:
     // phase = (4*PI/wavelength)*(rngOffset) 
-    std::valarray<std::complex<float>> geometryIfgram(nfft*blockRows);
+    std::valarray<std::complex<float>> geometryIfgram(fft_size*blockRows);
 
     // complex conjugate of geometryIfgram
-    std::valarray<std::complex<float>> geometryIfgramConj(nfft*blockRows);
+    std::valarray<std::complex<float>> geometryIfgramConj(fft_size*blockRows);
 
     // storage for spectrum of the block of data in reference SLC
-    std::valarray<std::complex<float>> refSpectrum(nfft*blockRows);
+    std::valarray<std::complex<float>> refSpectrum(fft_size*blockRows);
 
     // storage for spectrum of the block of data in secondary SLC
-    std::valarray<std::complex<float>> secSpectrum(nfft*blockRows);
+    std::valarray<std::complex<float>> secSpectrum(fft_size*blockRows);
 
     // upsampled spectrum of the block of reference SLC
-    std::valarray<std::complex<float>> refSpectrumUpsampled(oversample*nfft*blockRows);
+    std::valarray<std::complex<float>> refSpectrumUpsampled(oversample*fft_size*blockRows);
 
     // upsampled spectrum of the block of secondary SLC
-    std::valarray<std::complex<float>> secSpectrumUpsampled(oversample*nfft*blockRows);
+    std::valarray<std::complex<float>> secSpectrumUpsampled(oversample*fft_size*blockRows);
 
     // upsampled block of reference SLC 
-    std::valarray<std::complex<float>> refSlcUpsampled(oversample*nfft*blockRows);
+    std::valarray<std::complex<float>> refSlcUpsampled(oversample*fft_size*blockRows);
 
     // upsampled block of secondary SLC
-    std::valarray<std::complex<float>> secSlcUpsampled(oversample*nfft*blockRows);
+    std::valarray<std::complex<float>> secSlcUpsampled(oversample*fft_size*blockRows);
 
     // upsampled interferogram
     std::valarray<std::complex<float>> ifgramUpsampled(oversample*ncols*blockRows);
@@ -185,31 +185,31 @@ crossmul(isce::io::Raster& referenceSLC,
     std::valarray<float> coherence(ncolsMultiLooked*blockRowsMultiLooked);
 
     // make forward and inverse fft plans for the reference SLC 
-    refSignal.forwardRangeFFT(refSlc, refSpectrum, nfft, blockRows);
-    refSignal.inverseRangeFFT(refSpectrumUpsampled, refSlcUpsampled, nfft*oversample, blockRows);
+    refSignal.forwardRangeFFT(refSlc, refSpectrum, fft_size, blockRows);
+    refSignal.inverseRangeFFT(refSpectrumUpsampled, refSlcUpsampled, fft_size*oversample, blockRows);
 
     // make forward and inverse fft plans for the secondary SLC
-    secSignal.forwardRangeFFT(secSlc, secSpectrum, nfft, blockRows);
-    secSignal.inverseRangeFFT(secSpectrumUpsampled, secSlcUpsampled, nfft*oversample, blockRows);
+    secSignal.forwardRangeFFT(secSlc, secSpectrum, fft_size, blockRows);
+    secSignal.inverseRangeFFT(secSpectrumUpsampled, secSlcUpsampled, fft_size*oversample, blockRows);
 
     // looking down the upsampled interferogram may shift the samples by a fraction of a pixel
     // depending on the oversample factor. predicting the impact of the shift in frequency domain 
     // which is a linear phase allows to account for it during the upsampling process
-    std::valarray<std::complex<float>> shiftImpact(oversample*nfft*blockRows);
-    lookdownShiftImpact(oversample,  nfft, 
+    std::valarray<std::complex<float>> shiftImpact(oversample*fft_size*blockRows);
+    lookdownShiftImpact(oversample,  fft_size, 
                         blockRows, shiftImpact);
 
     //filter objects which will be used for azimuth and range common band filtering
     isce::signal::Filter<float> azimuthFilter;
     isce::signal::Filter<float> rangeFilter;
 
-    std::valarray<double> rangeFrequencies(nfft);
+    std::valarray<double> rangeFrequencies(fft_size);
     fftfreq(1.0/_rangeSamplingFrequency, rangeFrequencies);
 
-    rangeFilter.initiateRangeFilter(refSlc, refSpectrum, nfft, blockRows);
+    rangeFilter.initiateRangeFilter(refSlc, refSpectrum, fft_size, blockRows);
 
     // storage for azimuth spectrum used by filter
-    std::valarray<std::complex<float>> refAzimuthSpectrum(nfft*blockRows);
+    std::valarray<std::complex<float>> refAzimuthSpectrum(fft_size*blockRows);
 
     if (_doCommonAzimuthbandFilter){
         // construct azimuth common band filter for a block of data
@@ -219,7 +219,7 @@ crossmul(isce::io::Raster& referenceSLC,
                                             _prf, 
                                             _beta,
                                             refSlc, refAzimuthSpectrum,
-                                            nfft, blockRows);
+                                            fft_size, blockRows);
     }
 
     // loop over all blocks
@@ -256,9 +256,9 @@ crossmul(isce::io::Raster& referenceSLC,
         std::valarray<std::complex<float>> dataLine(ncols);
         for (size_t line = 0; line < blockRowsData; ++line){
             referenceSLC.getLine(dataLine, rowStart + line);
-            refSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
+            refSlc[std::slice(line*fft_size, ncols, 1)] = dataLine;
             secondarySLC.getLine(dataLine, rowStart + line);
-            secSlc[std::slice(line*nfft, ncols, 1)] = dataLine;
+            secSlc[std::slice(line*fft_size, ncols, 1)] = dataLine;
         }
         //referenceSLC.getBlock(refSlc, 0, rowStart, ncols, blockRowsData);
         //secondarySLC.getBlock(secSlc, 0, rowStart, ncols, blockRowsData);
@@ -287,8 +287,8 @@ crossmul(isce::io::Raster& referenceSLC,
             for (size_t line = 0; line < blockRowsData; ++line){
                 for (size_t col = 0; col < ncols; ++col){
                     double phase = 4.0*M_PI*_rangePixelSpacing*rngOffset[line*ncols+col]/_wavelength;
-                    geometryIfgram[line*nfft + col] = std::complex<float> (std::cos(phase), std::sin(phase));
-                    geometryIfgramConj[line*nfft + col] = std::complex<float> (std::cos(phase), 
+                    geometryIfgram[line*fft_size + col] = std::complex<float> (std::cos(phase), std::sin(phase));
+                    geometryIfgramConj[line*fft_size + col] = std::complex<float> (std::cos(phase), 
                                                                             -1.0*std::sin(phase));
 
                 }
@@ -308,25 +308,25 @@ crossmul(isce::io::Raster& referenceSLC,
                                 rangeFrequencies,
                                 rangeFilter,
                                 blockRows,
-                                nfft);
+                                fft_size);
                                 
         }
-        looksObj.ncols(nfft);
+        looksObj.ncols(fft_size);
         // refAmplitudeLooked = sum(abs(refSlc)^2)
         looksObj.multilook(refSlc, refAmplitudeLooked, 2);
         looksObj.multilook(secSlc, secAmplitudeLooked, 2);
 
         // upsample the refernce and secondary SLCs
-        refSignal.upsample(refSlc, refSlcUpsampled, blockRows, nfft, oversample, shiftImpact);
-        secSignal.upsample(secSlc, secSlcUpsampled, blockRows, nfft, oversample, shiftImpact);
+        refSignal.upsample(refSlc, refSlcUpsampled, blockRows, fft_size, oversample, shiftImpact);
+        secSignal.upsample(secSlc, secSlcUpsampled, blockRows, fft_size, oversample, shiftImpact);
        
         // Compute oversampled interferogram data
         #pragma omp parallel for
         for (size_t line = 0; line < blockRowsData; line++){
             for (size_t col = 0; col < oversample*ncols; col++){
                 ifgramUpsampled[line*(oversample*ncols) + col] = 
-                        refSlcUpsampled[line*(oversample*nfft) + col]*
-                        std::conj(secSlcUpsampled[line*(oversample*nfft) + col]);
+                        refSlcUpsampled[line*(oversample*fft_size) + col]*
+                        std::conj(secSlcUpsampled[line*(oversample*fft_size) + col]);
             }
         }
 
@@ -369,16 +369,16 @@ crossmul(isce::io::Raster& referenceSLC,
 
 /**
  * @param[in] oversample upsampling factor
- * @param[in] nfft fft length in range direction
+ * @param[in] fft_size fft length in range direction
  * @param[in] blockRows number of rows of the block of data
  * @param[out] shiftImpact frequency responce (a linear phase) to a sub-pixel shift in time domain introduced by upsampling followed by downsampling 
  */
 void isce::signal::Crossmul::
-lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows, 
+lookdownShiftImpact(size_t oversample, size_t fft_size, size_t blockRows, 
         std::valarray<std::complex<float>> &shiftImpact)
 {
-    // range frequencies given nfft and oversampling factor
-    std::valarray<double> rangeFrequencies(oversample*nfft);
+    // range frequencies given fft_size and oversampling factor
+    std::valarray<double> rangeFrequencies(oversample*fft_size);
 
     // sampling interval in range
     double dt = 1.0/oversample;
@@ -402,7 +402,7 @@ lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows,
     shift = (1.0 - 1.0/oversample)/2.0;
 
     // compute the frequency response of the subpixel shift in range direction
-    std::valarray<std::complex<float>> shiftImpactLine(oversample*nfft);
+    std::valarray<std::complex<float>> shiftImpactLine(oversample*fft_size);
     for (size_t col=0; col<shiftImpactLine.size(); ++col){
         double phase = -1.0*shift*2.0*M_PI*rangeFrequencies[col];
         shiftImpactLine[col] = std::complex<float> (std::cos(phase),
@@ -411,7 +411,7 @@ lookdownShiftImpact(size_t oversample, size_t nfft, size_t blockRows,
 
     // The imapct is the same for each range line. Therefore copying the line for the block
     for (size_t line = 0; line < blockRows; ++line){
-            shiftImpact[std::slice(line*nfft*oversample, nfft*oversample, 1)] = shiftImpactLine;
+            shiftImpact[std::slice(line*fft_size*oversample, fft_size*oversample, 1)] = shiftImpactLine;
     }
 }
 
