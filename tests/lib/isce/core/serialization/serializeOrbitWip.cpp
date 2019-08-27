@@ -91,7 +91,10 @@ TEST(OrbitTest, CheckWrite) {
     {
         isce::core::StateVector refsv = orbit[i];
         isce::core::StateVector newsv = newOrb[i];
-        ASSERT_EQ(refsv, newsv);
+        double tdiff = (refsv.datetime - newsv.datetime).getTotalSeconds();
+        ASSERT_NEAR(tdiff, 0.0, 1e-10);
+        ASSERT_EQ(refsv.position, newsv.position);
+        ASSERT_EQ(refsv.velocity, newsv.velocity);
     }
 }
 
