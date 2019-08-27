@@ -173,7 +173,8 @@ namespace isce {
         }
 
         template <class Archive>
-        static void load_and_construct(Archive & archive, cereal::construct<isce::orbit_wip::Orbit> & orbit) {
+        static void load_and_construct(Archive & archive, cereal::construct<isce::orbit_wip::Orbit> & orbit)
+        {
             //Load data
             std::vector<StateVector> svlist;
             archive(cereal::make_nvp("Statevectors", svlist));
@@ -185,6 +186,94 @@ namespace isce {
             }
         }
 
+
+        /** \brief Load orbit data from HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] orbit         Orbit object to be configured. */
+        inline void loadFromH5(isce::io::IGroup & group, isce::orbit_wip::Orbit & orbit) {
+            // Reset orbit data
+            orbit.resize(0);
+
+            //Open datasets
+            isce::io::IDataSet posDS = group.openDataSet("position");
+            std::vector<int> posSize = posDS.getDimensions();
+            std::vector<double> posFlat(posSize[0]*3);
+            posDS.read(posFlat);
+
+            isce::io::IDataSet velDS = group.openDataSet("velocity");
+            std::vector<int> velSize = velDS.getDimensions();
+            std::vector<double> velFlat(velSize[0]*3);
+            velDS.read(velFlat);
+
+            isce::io::IDataSet timeDS = group.openDataSet("time");
+            std::vector<int> timeSize = timeDS.getDimensions();
+            std::vector<double> time(timeSize[0]);
+            timeDS.read(time);
+
+            //Add logic to check for size consistency and logging here
+
+
+            // Get the reference epoch
+            DateTime refEpoch = isce::io::getRefEpoch(group, "time");
+
+            std::vector<StateVector> statevecs;
+            for (int ii=0; ii < posSize[0]; ii++)
+            {
+                int idx = ii*3;
+                StateVector sv;
+
+                sv.datetime = refEpoch + time[ii];
+                sv.position = {posFlat[idx], posFlat[idx+1], posFlat[idx+2]};
+                sv.velocity = {velFlat[idx], velFlat[idx+1], velFlat[idx+2]};
+
+                statevecs.push_back(sv);
+            }
+               
+            orbit.set_statevectors(statevecs);
+        }
+
+       /** \brief Save orbit data to HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] orbit         Orbit object to be saved. */
+        inline void saveToH5(isce::io::IGroup & group, const isce::orbit_wip::Orbit & orbit) {
+
+            // Save position
+            std::array<size_t, 2> dims = {static_cast<size_t>(orbit.size()), 3};
+            std::vector<double> posFlat(orbit.size()*3);
+            std::vector<double> velFlat(orbit.size()*3);
+            std::vector<double> time(orbit.size());
+
+            StateVector refSv = orbit[0];
+
+            for (int i=0; i < orbit.size(); i++)
+            {
+                StateVector sv = orbit[i];
+                int idx = 3*i;
+
+                posFlat[idx] = sv.position[0];
+                posFlat[idx+1] = sv.position[1];
+                posFlat[idx+2] = sv.position[2];
+
+                velFlat[idx] = sv.velocity[0];
+                velFlat[idx+1] = sv.velocity[1];
+                velFlat[idx+2] = sv.velocity[2];
+
+                time[i] = (sv.datetime - refSv.datetime).getTotalSeconds();
+            }
+
+
+            //Save position
+            isce::io::saveToH5(group, "position", posFlat, dims, "meters");
+
+            // Save velocity
+            isce::io::saveToH5(group, "velocity", velFlat, dims, "meters per second");
+
+            // Save time and reference epoch attribute
+            isce::io::saveToH5(group, "time", time);
+            isce::io::setRefEpoch(group, "time", orbit.refepoch());
+        }
 
         // ------------------------------------------------------------------------
         // Serialization for EulerAngles

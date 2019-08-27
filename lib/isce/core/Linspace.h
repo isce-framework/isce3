@@ -72,6 +72,10 @@ public:
     constexpr
     T spacing() const;
 
+    /** Set Sample Spacing */
+    CUDA_HOSTDEV
+    void spacing(const T & delta) { _spacing = delta; };
+
     /** Number of samples */
     CUDA_HOSTDEV
     constexpr
