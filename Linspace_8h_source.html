@@ -139,48 +139,45 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    T <a class="code" href="classisce_1_1core_1_1Linspace.html#a9183fbe0311ac4c90ea00b0d401f2d0e">spacing</a>() <span class="keyword">const</span>;</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    CUDA_HOSTDEV</div>
-<div class="line"><a name="l00077"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Linspace.html#a9b5c765e3b51aab51d131d41570d981d">   77</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1Linspace.html#a9b5c765e3b51aab51d131d41570d981d">spacing</a>(<span class="keyword">const</span> T &amp; delta) { _spacing = delta; };</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    CUDA_HOSTDEV</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    constexpr</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="classisce_1_1core_1_1Linspace.html#ac2c3d3b78b50551b8723784c9d69876e">size</a>() <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    CUDA_HOSTDEV</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1Linspace.html#af28add4496328ad1c19ef90c1ce2cdb6">resize</a>(<span class="keywordtype">int</span> size);</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    constexpr</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="classisce_1_1core_1_1Linspace.html#ac2c3d3b78b50551b8723784c9d69876e">size</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    CUDA_HOSTDEV</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classisce_1_1core_1_1Linspace.html#af28add4496328ad1c19ef90c1ce2cdb6">resize</a>(<span class="keywordtype">int</span> size);</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    CUDA_HOSTDEV</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <a class="code" href="classisce_1_1core_1_1Linspace.html">Linspace&lt;T&gt;</a> <a class="code" href="classisce_1_1core_1_1Linspace.html#a93c7a8f61b9f8d97faa2e8e4e159af30">subinterval</a>(<span class="keywordtype">int</span> start, <span class="keywordtype">int</span> stop) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    CUDA_HOSTDEV</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <a class="code" href="classisce_1_1core_1_1Linspace.html">Linspace&lt;T&gt;</a> <a class="code" href="classisce_1_1core_1_1Linspace.html#a93c7a8f61b9f8d97faa2e8e4e159af30">subinterval</a>(<span class="keywordtype">int</span> start, <span class="keywordtype">int</span> stop) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    CUDA_HOSTDEV</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    constexpr</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="classisce_1_1core_1_1Linspace.html#ab6848bb671bb6deb93e68444fff84384">empty</a>() <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    T _first;</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    T _spacing;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="keywordtype">int</span> _size;</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;};</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    constexpr</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="classisce_1_1core_1_1Linspace.html#ab6848bb671bb6deb93e68444fff84384">empty</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    T _first;</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    T _spacing;</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    <span class="keywordtype">int</span> _size;</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;};</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> U&gt;</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;CUDA_HOSTDEV</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;<span class="keywordtype">bool</span> operator==(<span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Linspace.html">Linspace&lt;T&gt;</a> &amp;, <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Linspace.html">Linspace&lt;U&gt;</a> &amp;);</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> U&gt;</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;CUDA_HOSTDEV</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;<span class="keywordtype">bool</span> operator==(<span class="keyword">const</span> Linspace&lt;T&gt; &amp;, <span class="keyword">const</span> Linspace&lt;U&gt; &amp;);</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;<span class="keywordtype">bool</span> operator!=(<span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Linspace.html">Linspace&lt;T&gt;</a> &amp;, <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Linspace.html">Linspace&lt;U&gt;</a> &amp;);</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> U&gt;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;CUDA_HOSTDEV</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;<span class="keywordtype">bool</span> operator!=(<span class="keyword">const</span> Linspace&lt;T&gt; &amp;, <span class="keyword">const</span> Linspace&lt;U&gt; &amp;);</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> U&gt;</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;CUDA_HOSTDEV</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="keywordtype">int</span> <a class="code" href="namespaceisce_1_1core.html#a818e73de71a689bdcc27bf1cb176c6b8">where</a>(<span class="keyword">const</span> Linspace&lt;T&gt; &amp; x, U val);</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;}}</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;<span class="preprocessor">#define ISCE_CORE_LINSPACE_ICC</span></div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;Linspace.icc&quot;</span></div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;<span class="preprocessor">#undef ISCE_CORE_LINSPACE_ICC</span></div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> U&gt;</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;CUDA_HOSTDEV</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="keywordtype">int</span> <a class="code" href="namespaceisce_1_1core.html#a818e73de71a689bdcc27bf1cb176c6b8">where</a>(<span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Linspace.html">Linspace&lt;T&gt;</a> &amp; x, U val);</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;}}</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="preprocessor">#define ISCE_CORE_LINSPACE_ICC</span></div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;Linspace.icc&quot;</span></div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;<span class="preprocessor">#undef ISCE_CORE_LINSPACE_ICC</span></div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;<span class="preprocessor"></span></div>
 <div class="ttc" id="classisce_1_1core_1_1Linspace_html_ab32543df6319085f374a206171f3a5fe"><div class="ttname"><a href="classisce_1_1core_1_1Linspace.html#ab32543df6319085f374a206171f3a5fe">isce::core::Linspace::last</a></div><div class="ttdeci">CUDA_HOSTDEV constexpr T last() const </div><div class="ttdoc">Last sample. </div><div class="ttdef"><b>Definition:</b> Linspace.icc:74</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Linspace_html_a626deffc695bebddbd39ace6327ea98b"><div class="ttname"><a href="classisce_1_1core_1_1Linspace.html#a626deffc695bebddbd39ace6327ea98b">isce::core::Linspace::from_interval</a></div><div class="ttdeci">static CUDA_HOSTDEV Linspace&lt; T &gt; from_interval(T first, T last, int size)</div><div class="ttdoc">Construct a Linspace over the closed interval [first, last]. </div><div class="ttdef"><b>Definition:</b> Linspace.icc:13</div></div>
 <div class="ttc" id="namespaceisce_1_1core_html_a818e73de71a689bdcc27bf1cb176c6b8"><div class="ttname"><a href="namespaceisce_1_1core.html#a818e73de71a689bdcc27bf1cb176c6b8">isce::core::where</a></div><div class="ttdeci">CUDA_HOSTDEV int where(const Linspace&lt; T &gt; &amp;x, U val)</div><div class="ttdoc">Return the position where the specified value would be inserted in the sequence in order to maintain ...</div><div class="ttdef"><b>Definition:</b> Linspace.icc:140</div></div>
@@ -191,7 +188,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="classisce_1_1core_1_1Linspace_html_a9183fbe0311ac4c90ea00b0d401f2d0e"><div class="ttname"><a href="classisce_1_1core_1_1Linspace.html#a9183fbe0311ac4c90ea00b0d401f2d0e">isce::core::Linspace::spacing</a></div><div class="ttdeci">CUDA_HOSTDEV constexpr T spacing() const </div><div class="ttdoc">Sample spacing. </div><div class="ttdef"><b>Definition:</b> Linspace.icc:82</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Linspace_html_a8f7325904f6f3f7ccdcddbc75dda2b7a"><div class="ttname"><a href="classisce_1_1core_1_1Linspace.html#a8f7325904f6f3f7ccdcddbc75dda2b7a">isce::core::Linspace::operator=</a></div><div class="ttdeci">CUDA_HOSTDEV Linspace&lt; T &gt; &amp; operator=(const Linspace&lt; U &gt; &amp;)</div><div class="ttdoc">Assign values. </div><div class="ttdef"><b>Definition:</b> Linspace.icc:47</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Linspace_html_ab6848bb671bb6deb93e68444fff84384"><div class="ttname"><a href="classisce_1_1core_1_1Linspace.html#ab6848bb671bb6deb93e68444fff84384">isce::core::Linspace::empty</a></div><div class="ttdeci">CUDA_HOSTDEV constexpr bool empty() const </div><div class="ttdoc">Check if the sequence contains no samples. </div><div class="ttdef"><b>Definition:</b> Linspace.icc:115</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Linspace_html_a9b5c765e3b51aab51d131d41570d981d"><div class="ttname"><a href="classisce_1_1core_1_1Linspace.html#a9b5c765e3b51aab51d131d41570d981d">isce::core::Linspace::spacing</a></div><div class="ttdeci">CUDA_HOSTDEV void spacing(const T &amp;delta)</div><div class="ttdoc">Set Sample Spacing. </div><div class="ttdef"><b>Definition:</b> Linspace.h:77</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Linspace_html_aabc46ae4c6509ab8bf061be0b9dff752"><div class="ttname"><a href="classisce_1_1core_1_1Linspace.html#aabc46ae4c6509ab8bf061be0b9dff752">isce::core::Linspace::operator[]</a></div><div class="ttdeci">CUDA_HOSTDEV constexpr T operator[](int pos) const </div><div class="ttdoc">Return sample at the specified position. </div><div class="ttdef"><b>Definition:</b> Linspace.icc:58</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Linspace_html_ac2c3d3b78b50551b8723784c9d69876e"><div class="ttname"><a href="classisce_1_1core_1_1Linspace.html#ac2c3d3b78b50551b8723784c9d69876e">isce::core::Linspace::size</a></div><div class="ttdeci">CUDA_HOSTDEV constexpr int size() const </div><div class="ttdoc">Number of samples. </div><div class="ttdef"><b>Definition:</b> Linspace.icc:90</div></div>
 </div><!-- fragment --></div><!-- contents -->
