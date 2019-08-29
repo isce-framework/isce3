@@ -170,6 +170,9 @@ public:
     /** Convert to vector of StateVectors. */
     std::vector<StateVector> to_statevectors() const;
 
+    /** Set state vectors explicitly from a list*/
+    void set_statevectors(const std::vector<StateVector> &veclist);
+
     /**
      * Return a view of a subspan of the Orbit over the half-open
      * interval [start, stop).

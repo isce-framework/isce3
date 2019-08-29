@@ -37,6 +37,9 @@
 #include <isce/io/IH5.h>
 #include <isce/io/Serialization.h>
 
+//isce::orbit_wip
+#include <isce/orbit_wip/Orbit.h>
+
 //! The isce namespace
 namespace isce {
     //! The isce::core namespace
@@ -158,6 +161,118 @@ namespace isce {
             // Save time and reference epoch attribute
             isce::io::saveToH5(group, "time", orbit.UTCtime);
             isce::io::setRefEpoch(group, "time", orbit.refEpoch);
+        }
+
+        // ----------------------------------------------------------------------
+        // Serialization for orbit_wip::Orbit
+        // ----------------------------------------------------------------------
+
+        template <class Archive>
+        inline void save(Archive & archive, const isce::orbit_wip::Orbit & orbit) {
+            archive(cereal::make_nvp("StateVectors", orbit.to_statevectors()));
+        }
+
+        template <class Archive>
+        static void load_and_construct(Archive & archive, cereal::construct<isce::orbit_wip::Orbit> & orbit)
+        {
+            //Load data
+            std::vector<StateVector> svlist;
+            archive(cereal::make_nvp("Statevectors", svlist));
+            double spacing = (svlist[1].datetime - svlist[0].datetime).getTotalSeconds();
+            orbit(svlist[0].datetime, spacing);
+            for (auto &sv : svlist)
+            {
+                orbit->push_back(sv);
+            }
+        }
+
+
+        /** \brief Load orbit data from HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] orbit         Orbit object to be configured. */
+        inline void loadFromH5(isce::io::IGroup & group, isce::orbit_wip::Orbit & orbit) {
+            // Reset orbit data
+            orbit.resize(0);
+
+            //Open datasets
+            isce::io::IDataSet posDS = group.openDataSet("position");
+            std::vector<int> posSize = posDS.getDimensions();
+            std::vector<double> posFlat(posSize[0]*3);
+            posDS.read(posFlat);
+
+            isce::io::IDataSet velDS = group.openDataSet("velocity");
+            std::vector<int> velSize = velDS.getDimensions();
+            std::vector<double> velFlat(velSize[0]*3);
+            velDS.read(velFlat);
+
+            isce::io::IDataSet timeDS = group.openDataSet("time");
+            std::vector<int> timeSize = timeDS.getDimensions();
+            std::vector<double> time(timeSize[0]);
+            timeDS.read(time);
+
+            //Add logic to check for size consistency and logging here
+
+
+            // Get the reference epoch
+            DateTime refEpoch = isce::io::getRefEpoch(group, "time");
+
+            std::vector<StateVector> statevecs;
+            for (int ii=0; ii < posSize[0]; ii++)
+            {
+                int idx = ii*3;
+                StateVector sv;
+
+                sv.datetime = refEpoch + time[ii];
+                sv.position = {posFlat[idx], posFlat[idx+1], posFlat[idx+2]};
+                sv.velocity = {velFlat[idx], velFlat[idx+1], velFlat[idx+2]};
+
+                statevecs.push_back(sv);
+            }
+               
+            orbit.set_statevectors(statevecs);
+        }
+
+       /** \brief Save orbit data to HDF5 product.
+         *
+         * @param[in] group         HDF5 group object.
+         * @param[in] orbit         Orbit object to be saved. */
+        inline void saveToH5(isce::io::IGroup & group, const isce::orbit_wip::Orbit & orbit) {
+
+            // Save position
+            std::array<size_t, 2> dims = {static_cast<size_t>(orbit.size()), 3};
+            std::vector<double> posFlat(orbit.size()*3);
+            std::vector<double> velFlat(orbit.size()*3);
+            std::vector<double> time(orbit.size());
+
+            StateVector refSv = orbit[0];
+
+            for (int i=0; i < orbit.size(); i++)
+            {
+                StateVector sv = orbit[i];
+                int idx = 3*i;
+
+                posFlat[idx] = sv.position[0];
+                posFlat[idx+1] = sv.position[1];
+                posFlat[idx+2] = sv.position[2];
+
+                velFlat[idx] = sv.velocity[0];
+                velFlat[idx+1] = sv.velocity[1];
+                velFlat[idx+2] = sv.velocity[2];
+
+                time[i] = (sv.datetime - refSv.datetime).getTotalSeconds();
+            }
+
+
+            //Save position
+            isce::io::saveToH5(group, "position", posFlat, dims, "meters");
+
+            // Save velocity
+            isce::io::saveToH5(group, "velocity", velFlat, dims, "meters per second");
+
+            // Save time and reference epoch attribute
+            isce::io::saveToH5(group, "time", time);
+            isce::io::setRefEpoch(group, "time", orbit.refepoch());
         }
 
         // ------------------------------------------------------------------------
@@ -300,34 +415,6 @@ namespace isce {
             poly.azimuthMean = 0.0;
             poly.rangeNorm = 1.0;
             poly.azimuthNorm = 1.0;
-        }
-
-        // ------------------------------------------------------------------------
-        // Serialization for LUT2d
-        // ------------------------------------------------------------------------
-
-         /** \brief Load LUT2d data from HDF5 product.
-         *
-         * @param[in] group         HDF5 group object.
-         * @param[in] xName         Dataset name within the group to be loaded as X coordinate of LUT2d
-         * @param[in] xName         Dataset name within the group to be loaded as Y coordinate of LUT2d
-         * @param[in] dsetName      Dataset name within group to be loaded as LUT2d data
-         * @param[in] lut           LUT2d to be configured. */
-        template <typename T>
-        inline void loadLUT2d(isce::io::IGroup & group,
-                                const std::string & xName, const std::string & yName,
-                                const std::string & dsetName, isce::core::LUT2d<T> & lut) {
-            // Load coordinates
-            std::valarray<double> x, y;
-            isce::io::loadFromH5(group, xName, x);
-            isce::io::loadFromH5(group, yName, y);
-
-            // Load LUT2d data in matrix
-            isce::core::Matrix<T> matrix(y.size(), x.size());
-            isce::io::loadFromH5(group, dsetName, matrix);
-
-            // Set in lut
-            lut.setFromData(x, y, matrix);
         }
 
         // ------------------------------------------------------------------------

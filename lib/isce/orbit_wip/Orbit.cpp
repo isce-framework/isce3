@@ -70,6 +70,27 @@ Orbit Orbit::from_statevectors(const std::vector<StateVector> & statevecs)
     return orbit;
 }
 
+void Orbit::set_statevectors(const std::vector<StateVector> & statevecs)
+{
+    if (statevecs.size() < 2) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "at least 2 state vectors are required");
+    }
+
+    TimeDelta spacing = statevecs[1].datetime - statevecs[0].datetime;
+    int size = statevecs.size();
+  
+    //Resize the containers
+    resize(size);
+    _refepoch = statevecs[0].datetime;
+    _time.spacing( spacing.getTotalSeconds() ); 
+
+
+    for (int i = 0; i < size; ++i) {
+        (*this)[i] = statevecs[i];
+    }
+}
+
 Orbit::Orbit(const DateTime & refepoch, const TimeDelta & spacing, int size)
 :
     _refepoch {refepoch},
