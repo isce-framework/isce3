@@ -3,6 +3,7 @@ var searchData=
   ['chat',['chat',['../classisce_1_1core_1_1Baseline.html#a007ab04c95e9930dbfcf001e0ae49a07',1,'isce::core::Baseline']]],
   ['checkveclendebug',['checkVecLenDebug',['../namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e',1,'isce::core']]],
   ['clamp',['clamp',['../namespaceisce_1_1core.html#a65c88b1efd8564d22e60f47f68417e64',1,'isce::core']]],
+  ['code',['code',['../structisce_1_1core_1_1ProjectionBase.html#a662f84782d58a45b9968c301664fea20',1,'isce::core::ProjectionBase']]],
   ['colslooks',['colsLooks',['../classisce_1_1signal_1_1Looks.html#a5b744e68b7372727a7e3b5c6595d496d',1,'isce::signal::Looks']]],
   ['combine',['combine',['../classisce_1_1core_1_1Basis.html#a718e5b30ca8f4bc25918abd32a1640a1',1,'isce::core::Basis']]],
   ['commonazimuthbandwidth',['commonAzimuthBandwidth',['../classisce_1_1signal_1_1Crossmul.html#a4cfc97b9e81a68ba948760534fb8ddab',1,'isce::signal::Crossmul']]],
