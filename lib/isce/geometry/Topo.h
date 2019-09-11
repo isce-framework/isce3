@@ -74,6 +74,12 @@ class isce::geometry::Topo {
         inline void epsgOut(int);
         /** Set mask computation flag */
         inline void computeMask(bool);
+        /** Set minimum height */
+        inline void minimumHeight(double);
+        /** Set maximum height */
+        inline void maximumHeight(double);
+        /** Set margin in decimal degrees */
+        inline void decimaldegMargin(double);
 
         // Get topo processing options
         /** Get lookSide used for processing */
@@ -90,6 +96,12 @@ class isce::geometry::Topo {
         inline isce::core::dataInterpMethod demMethod() const { return _demMethod; }
         /** Get mask computation flag */
         inline bool computeMask() const { return _computeMask; }
+        /** Get minimum height */
+        inline double minimumHeight() const { return _minH; }
+        /** Get maximum height */
+        inline double maximumHeight() const { return _maxH; }
+        /** Get margin in decimal degrees */
+        inline double decimaldegMargin() const { return _margin; }
 
         /** Get read-only reference to RadarGridParameters */
         inline const isce::product::RadarGridParameters & radarGridParameters() const {
@@ -161,12 +173,18 @@ class isce::geometry::Topo {
         isce::product::RadarGridParameters _radarGrid;
         
         // Optimization options
-        double _threshold = 1.0e-8;
-        int _numiter = 25;
-        int _extraiter = 10;
+        double _threshold = 1.0e-8;   //Threshold for convergence of slant range
+        int _numiter = 25;            //Number of primary iterations
+        int _extraiter = 10;          //Number of secondary iterations
+        double _minH = isce::core::GLOBAL_MIN_HEIGHT;   //Lowest altitude in scene (global minimum default)
+        double _maxH = isce::core::GLOBAL_MAX_HEIGHT;   //Highest altitude in scene (global maximum default)
+        double _margin = 0.15;        //Margin for bounding box in decimal degrees
+        size_t _linesPerBlock = 1000; //Block size for processing
+        bool _computeMask = true;     //Flag for generating shadow-layover mask
+        
         int _lookSide;
-        size_t _linesPerBlock = 1000;
-        bool _computeMask = true;
+
+
         isce::core::orbitInterpMethod _orbitMethod;
         isce::core::dataInterpMethod _demMethod;
 
@@ -180,9 +198,6 @@ class isce::geometry::Topo {
 #include "Topo.icc"
 #undef ISCE_GEOMETRY_TOPO_ICC
 
-const double MIN_H = -500.0;
-const double MAX_H = -1000.0;
-const double MARGIN = 0.15 * M_PI / 180.0;
 
 #endif
 

@@ -159,7 +159,7 @@ demMethod(isce::core::dataInterpMethod method) {
     // Check validity
     if ((method != isce::core::SINC_METHOD) && (method != isce::core::BILINEAR_METHOD) &&
         (method != isce::core::BICUBIC_METHOD) && (method != isce::core::NEAREST_METHOD) &&
-        (method != isce::core::AKIMA_METHOD) && (method != isce::core::BIQUINTIC_METHOD)) {
+        (method != isce::core::BIQUINTIC_METHOD)) {
         pyre::journal::error_t error("isce.geometry.Topo");
         error
             << pyre::journal::at(__HERE__)
@@ -186,6 +186,27 @@ epsgOut(int epsgcode) {
 void isce::geometry::Topo::
 computeMask(bool mask) {
     _computeMask = mask;
+}
+
+/** @param[in] minh Minimum altitude for the scene */
+void isce::geometry::Topo::
+minimumHeight(double minh)
+{
+    _minH = minh;
+}
+
+/** @param[in] maxh Maximum altitude for the scene */
+void isce::geometry::Topo::
+maximumHeight(double maxh)
+{
+    _maxH = maxh;
+}
+
+/** @param[in] deg Margin around bounding box in decimal degrees */
+void isce::geometry::Topo::
+decimaldegMargin(double deg)
+{
+    _margin = deg;
 }
 
 // end of file

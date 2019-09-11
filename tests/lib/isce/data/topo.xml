@@ -5,8 +5,8 @@
     <numIterations>25</numIterations>
     <extraIterations>10</extraIterations>
     <orbitMethod>0</orbitMethod>
-    <!-- 0: sinc, 1: bilinear, 2: bicubic, 3: nearest, 4: akima, 5: biquintic -->
-    <demMethod>5</demMethod>
+    <!-- 0: sinc, 1: bilinear, 2: bicubic, 3: nearest, 4: biquintic -->
+    <demMethod>4</demMethod>
     <epsgOut>4326</epsgOut>
   </Topo>
   <Geo2rdr>

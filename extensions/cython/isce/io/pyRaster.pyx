@@ -233,4 +233,13 @@ cdef class pyRaster:
 
         self.c_raster.addRasterToVRT(raster.c_raster[0])
 
+    @property
+    def GeoTransform(self):
+        '''
+        Return geotransform.
+        '''
+        cdef np.ndarray[np.float64_t, ndim=1] res = np.empty(6, dtype=np.float64)
+        self.c_raster.getGeoTransform(<double*> res.data)
+        return res
+
 # end of file        

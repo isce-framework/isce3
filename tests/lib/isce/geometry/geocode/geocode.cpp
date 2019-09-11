@@ -224,7 +224,7 @@ void createZeroDem() {
     isce::io::Raster demRaster("../../data/srtm_cropped.tif");
 
     // A pointer array for geoTransform
-    double * geoTrans = new double[6]; 
+    double geoTrans[6];
 
     // store the DEM's GeoTransform
     demRaster.getGeoTransform(geoTrans);
@@ -232,6 +232,7 @@ void createZeroDem() {
     // create a new Raster same as the demRAster
     isce::io::Raster zeroDemRaster("zeroHeightDEM.geo", demRaster);
     zeroDemRaster.setGeoTransform(geoTrans);
+    zeroDemRaster.setEPSG(demRaster.getEPSG());
 
     size_t length = demRaster.length();
     size_t width = demRaster.width();

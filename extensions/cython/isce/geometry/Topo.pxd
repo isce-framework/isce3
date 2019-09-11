@@ -53,5 +53,8 @@ cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
         void demMethod(dataInterpMethod)
         void epsgOut(int)
         void computeMask(bool)
+        void minimumHeight(double)
+        void maximumHeight(double)
+        void decimaldegMargin(double)
         
 # end of file

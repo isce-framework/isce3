@@ -68,9 +68,11 @@ class isce::geometry::DEMInterpolator {
 
         /** Read in subset of data from a DEM with a supported projection */
         void loadDEM(isce::io::Raster &demRaster,
-                     double minLon, double maxLon,
-                     double minLat, double maxLat,
-                     int epsgcode=4326);
+                     double minX, double maxX,
+                     double minY, double maxY);
+
+        /** Read in entire DEM with a supported projection */
+        void loadDEM(isce::io::Raster &demRaster);
 
         // Print stats
         void declare() const;

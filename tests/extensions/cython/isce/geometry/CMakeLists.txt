@@ -1,4 +1,4 @@
-foreach (TESTNAME geometry.py)
+foreach (TESTNAME geometry.py deminterp.py)
     configure_file(${TESTNAME} ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME})
     add_pytest(${TESTNAME})
     set_property(TEST ${TESTNAME} PROPERTY ENVIRONMENT

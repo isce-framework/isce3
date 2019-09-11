@@ -24,7 +24,7 @@ cdef class pyTopo:
         numIterations (Optional[int]):       Max number of normal iterations.
         extraIterations (Optional[int]):     Number of extra refinement iterations.
         orbitMethod (Optional[str]):         Orbit interpolation method ('hermite', 'sch', 'legendre')
-        demMethod (Optional[int]):           DEM interpolation method ('sinc', 'bilinear', 'bicubic', 'nearest', 'akima', 'biquintic')
+        demMethod (Optional[int]):           DEM interpolation method ('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic')
         epsgOut (Optional[int]):             EPSG code for output topo layers.
 
     Return:
@@ -47,7 +47,6 @@ cdef class pyTopo:
         'bilinear': dataInterpMethod.BILINEAR_METHOD,
         'bicubic': dataInterpMethod.BICUBIC_METHOD,
         'nearest': dataInterpMethod.NEAREST_METHOD,
-        'akima': dataInterpMethod.AKIMA_METHOD,
         'biquintic': dataInterpMethod.BIQUINTIC_METHOD
     }
 

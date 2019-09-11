@@ -9,12 +9,11 @@ from Matrix cimport valarray, Matrix
 
 cdef extern from "isce/core/Constants.h" namespace "isce::core":
     cdef enum dataInterpMethod:
-        SINC_METHOD = 0
-        BILINEAR_METHOD = 1
-        BICUBIC_METHOD = 2
-        NEAREST_METHOD = 3
-        AKIMA_METHOD = 4
-        BIQUINTIC_METHOD = 5
+        SINC_METHOD
+        BILINEAR_METHOD
+        BICUBIC_METHOD
+        NEAREST_METHOD
+        BIQUINTIC_METHOD 
 
 cdef extern from "isce/core/Interpolator.h" namespace "isce::core":
 

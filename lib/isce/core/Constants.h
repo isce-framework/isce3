@@ -50,7 +50,6 @@ namespace isce { namespace core {
         BILINEAR_METHOD,
         BICUBIC_METHOD,
         NEAREST_METHOD,
-        AKIMA_METHOD,
         BIQUINTIC_METHOD
     };
 
@@ -69,6 +68,12 @@ namespace isce { namespace core {
     /** Speed of light */
     const double SPEED_OF_LIGHT = 299792458.0;
 
+    /** Global minimum height */
+    const double GLOBAL_MIN_HEIGHT = -500.0;
+
+    /** Global maximum height */
+    const double GLOBAL_MAX_HEIGHT = 9000.0;
+
     /** Struct with fixed-length string for serialization */
     struct FixedString {
         char str[50];
@@ -77,6 +82,9 @@ namespace isce { namespace core {
     /** Layover and shadow values */
     const short SHADOW_VALUE = 1;
     const short LAYOVER_VALUE = 2;
+
+    /** Convert decimal degrees to meters approximately */
+    double inline decimaldeg2meters(double deg) { return deg * (M_PI/180.0) * 6.37e6; }
 
     /** Precision-promotion to double/complex\<double\>  **/
     template<typename T> struct double_promote;

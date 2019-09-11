@@ -129,6 +129,8 @@ int isce::io::Raster::getEPSG()
     if (pszProjection == nullptr || strlen(pszProjection) <= 0)
         return -9999;
 
+    int epsgcode = -9999;
+
     //Create a spatial reference object
     OGRSpatialReference hSRS(nullptr);
 
@@ -157,16 +159,14 @@ int isce::io::Raster::getEPSG()
         return -9997;
     }
 
-    //If the best match does not have 100% confidence level
     if (panConfidence[0] != 100) {
-        std::cout << "Could not find a 100% match in EPSG data base for wkt: \n";
-        std::cout << pszProjection << "\n";
-        return -9996;
+        std::cout << "Warning: Could not find a 100% match in EPSG data base for wkt: \n";
+        hSRS.dumpReadable();
+        //return -9996;
     }
 
     OGRSpatialReference oSRS = *reinterpret_cast<OGRSpatialReference*>(pahSRS[0]);
     const char* pszAuthorityCode = oSRS.GetAuthorityCode(nullptr);
-    int epsgcode = -9999;
     if (pszAuthorityCode)
         epsgcode = std::atoi(pszAuthorityCode);
 

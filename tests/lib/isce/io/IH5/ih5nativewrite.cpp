@@ -10,8 +10,8 @@
 #include <numeric>
 #include <gtest/gtest.h>
 
-#include "isce/io/IH5Dataset.h"
-#include "isce/io/Raster.h"
+#include <isce/io/IH5Dataset.h>
+#include <isce/io/Raster.h>
 #include "gdal_alg.h"
 
 
@@ -70,7 +70,7 @@ TYPED_TEST(IH5Test, nochunk) {
     std::array<int,2> shp={length, width};
     isce::io::IDataSet dset = grp.createDataSet<TypeParam>(std::string("data"), shp); 
     {
-        isce::io::Raster img(dset.toGDAL()); 
+        isce::io::Raster img(dset.toGDAL(), GA_Update); 
         img.setBlock(_matrix, 0, 0, 1);
 
 
@@ -121,7 +121,7 @@ TYPED_TEST(IH5Test, chunk) {
     std::array<int,2> shp={length, width};
     isce::io::IDataSet dset = grp.createDataSet<TypeParam>(std::string("data"), shp, 1);
     {
-        isce::io::Raster img(dset.toGDAL());
+        isce::io::Raster img(dset.toGDAL(), GA_Update);
         img.setBlock(_matrix, 0, 0, 1);
 
         //Check contents of the HDF5 file
