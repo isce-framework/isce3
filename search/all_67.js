@@ -37,8 +37,6 @@ var searchData=
   ['gettotalseconds',['getTotalSeconds',['../classisce_1_1core_1_1TimeDelta.html#a5581e0cab2161d370d46183b919fadf4',1,'isce::core::TimeDelta']]],
   ['gettypeclassstr',['getTypeClassStr',['../classisce_1_1io_1_1IDataSet.html#a797670bac4502cdf60da238ad2749659',1,'isce::io::IDataSet']]],
   ['getvalue',['getValue',['../classisce_1_1io_1_1Raster.html#a6533d3603c8205e7c7a7d2ce74f413d6',1,'isce::io::Raster']]],
-  ['global_5fmax_5fheight',['GLOBAL_MAX_HEIGHT',['../namespaceisce_1_1core.html#a4b53b899f68957efea6c97671f952a07',1,'isce::core']]],
-  ['global_5fmin_5fheight',['GLOBAL_MIN_HEIGHT',['../namespaceisce_1_1core.html#a6e3f82b7601e178518db5945d07fd180',1,'isce::core']]],
   ['goodcorrelation',['goodCorrelation',['../classisce_1_1unwrap_1_1phass_1_1Phass.html#a564e158d5ea7d0a18de1a281b09eaef1',1,'isce::unwrap::phass::Phass::goodCorrelation() const '],['../classisce_1_1unwrap_1_1phass_1_1Phass.html#a9d959362abb13b8f0ba22d9a449c5296',1,'isce::unwrap::phass::Phass::goodCorrelation(const double)']]],
   ['geometry_20tutorial',['Geometry Tutorial',['../tutorial_geometry.html',1,'']]]
 ];
