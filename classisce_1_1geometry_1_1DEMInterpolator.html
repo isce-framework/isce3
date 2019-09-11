@@ -115,9 +115,12 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html#ac653819a36347e2b25447ff0fb1fa4e4">~DEMInterpolator</a> ()</td></tr>
 <tr class="memdesc:ac653819a36347e2b25447ff0fb1fa4e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor. <br/></td></tr>
 <tr class="separator:ac653819a36347e2b25447ff0fb1fa4e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2fd412305d559db196f7aaddc48b821b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html#a2fd412305d559db196f7aaddc48b821b">loadDEM</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;demRaster, double minLon, double maxLon, double minLat, double maxLat, int epsgcode=4326)</td></tr>
-<tr class="memdesc:a2fd412305d559db196f7aaddc48b821b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read in subset of data from a DEM with a supported projection.  <a href="#a2fd412305d559db196f7aaddc48b821b">More...</a><br/></td></tr>
-<tr class="separator:a2fd412305d559db196f7aaddc48b821b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a576c15081183ba324eb12d6784e7b20c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html#a576c15081183ba324eb12d6784e7b20c">loadDEM</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;demRaster, double minX, double maxX, double minY, double maxY)</td></tr>
+<tr class="memdesc:a576c15081183ba324eb12d6784e7b20c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read in subset of data from a DEM with a supported projection.  <a href="#a576c15081183ba324eb12d6784e7b20c">More...</a><br/></td></tr>
+<tr class="separator:a576c15081183ba324eb12d6784e7b20c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a275d07c7af8b744c2a675525d7cb3ce0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html#a275d07c7af8b744c2a675525d7cb3ce0">loadDEM</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;demRaster)</td></tr>
+<tr class="memdesc:a275d07c7af8b744c2a675525d7cb3ce0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read in entire DEM with a supported projection.  <a href="#a275d07c7af8b744c2a675525d7cb3ce0">More...</a><br/></td></tr>
+<tr class="separator:a275d07c7af8b744c2a675525d7cb3ce0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa5dd4c9f59bdc4671c449eb5ed8e3bb2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa5dd4c9f59bdc4671c449eb5ed8e3bb2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>declare</b> () const </td></tr>
 <tr class="separator:aa5dd4c9f59bdc4671c449eb5ed8e3bb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -314,7 +317,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 
 </div>
 </div>
-<a class="anchor" id="a2fd412305d559db196f7aaddc48b821b"></a>
+<a class="anchor" id="a576c15081183ba324eb12d6784e7b20c"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -328,31 +331,25 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>minLon</em>, </td>
+          <td class="paramname"><em>minX</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>maxLon</em>, </td>
+          <td class="paramname"><em>maxX</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>minLat</em>, </td>
+          <td class="paramname"><em>minY</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>maxLat</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>epsgcode</em> = <code>4326</code>&#160;</td>
+          <td class="paramname"><em>maxY</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -369,12 +366,36 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
     <tr><td class="paramdir">[in]</td><td class="paramname">minLon</td><td>Longitude of western edge of bounding box </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">maxLon</td><td>Longitude of eastern edge of bounding box </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">minLat</td><td>Latitude of southern edge of bounding box </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">maxLat</td><td>Latitude of northern edge of bounding box </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">epsgcode</td><td>EPSG code of DEM raster</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">maxLat</td><td>Latitude of northern edge of bounding box</td></tr>
   </table>
   </dd>
 </dl>
 <p>Loads a DEM subset given the extents of a bounding box </p>
+
+</div>
+</div>
+<a class="anchor" id="a275d07c7af8b744c2a675525d7cb3ce0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::geometry::DEMInterpolator::loadDEM </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>demRaster</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Read in entire DEM with a supported projection. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">demRaster</td><td>input DEM raster to subset</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Loads the entire DEM </p>
 
 </div>
 </div>
