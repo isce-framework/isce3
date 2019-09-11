@@ -120,11 +120,11 @@ def test_deminterp(code):
             res = trans.TransformPoint(Xs[ii], Ys[jj], 0.)
             val = 100.0 * res[latIndex]
 
-            hxy = intp.atXY(Xs[ii], Ys[jj])
+            hxy = intp.interpolateXY(Xs[ii], Ys[jj])
             npt.assert_almost_equal(hxy, val, decimal=3)
 
 
-            hll = intp.atLonLat(np.radians(res[1-latIndex]), np.radians(res[latIndex]))
+            hll = intp.interpolateLonLat(np.radians(res[1-latIndex]), np.radians(res[latIndex]))
             npt.assert_almost_equal(hll, val, decimal=3)
 
     if os.path.exists(tifffile):

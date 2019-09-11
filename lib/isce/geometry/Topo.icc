@@ -188,4 +188,25 @@ computeMask(bool mask) {
     _computeMask = mask;
 }
 
+/** @param[in] minh Minimum altitude for the scene */
+void isce::geometry::Topo::
+minimumHeight(double minh)
+{
+    _minH = minh;
+}
+
+/** @param[in] maxh Maximum altitude for the scene */
+void isce::geometry::Topo::
+maximumHeight(double maxh)
+{
+    _maxH = maxh;
+}
+
+/** @param[in] deg Margin around bounding box in decimal degrees */
+void isce::geometry::Topo::
+decimaldegMargin(double deg)
+{
+    _margin = deg;
+}
+
 // end of file

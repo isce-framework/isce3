@@ -115,8 +115,8 @@ cdef class pyDEMInterpolator:
         cdef np.float32_t[:,:] view = <np.float32_t[:self.length(),:self.width()]> self.c_deminterp.data()
         return np.asarray(view)
 
-    def atLonLat(self, lon, lat):
+    def interpolateLonLat(self, lon, lat):
         return self.c_deminterp.interpolateLonLat(lon,lat)
 
-    def atXY(self, x, y):
+    def interpolateXY(self, x, y):
         return self.c_deminterp.interpolateXY(x, y)

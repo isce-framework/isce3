@@ -207,8 +207,8 @@ _loadDEM(isce::io::Raster demRaster,
         isce::core::ProjectionBase *demproj = isce::core::createProj(epsgcode);
 
         //Skip factors
-        const int askip = std::max((int) (blockLength / 10.), 1);
-        const int rskip = std::max((int) (blockWidth / 10.), 1);
+        const int askip = std::max( static_cast<int>(blockLength / 10.), 1);
+        const int rskip = std::max( static_cast<int>(blockWidth / 10.), 1);
 
 
         //Construct vectors of line/pixel indices to traverse perimeter
@@ -265,10 +265,7 @@ _loadDEM(isce::io::Raster demRaster,
     }
 
     //If not LonLat, scale to meters
-    if (epsgcode != 4326)
-    {
-        demMargin *= (M_PI/180.0) * 6.37e6;
-    }
+    demMargin = (epsgcode != 4326)? isce::core::decimaldeg2meters(demMargin) : demMargin;
 
     // Account for margins
     minX -= demMargin;

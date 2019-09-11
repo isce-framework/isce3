@@ -96,9 +96,6 @@ loadDEM(isce::io::Raster & demRaster, double minX, double maxX,
 void isce::geometry::DEMInterpolator::
 loadDEM(isce::io::Raster & demRaster) {
 
-    // Initialize journal
-    pyre::journal::warning_t warning("isce.core.Geometry");
-
     //Get the dimensions of the raster
     int width = demRaster.width();
     int length = demRaster.length();

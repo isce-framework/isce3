@@ -384,7 +384,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
         // Run topo for one iteration for two different heights
         cartesian_t llh {0., 0., 0.};
 
-        std::array<double, 2> testHeights = {MIN_H, MAX_H};
+        std::array<double, 2> testHeights = {_minH, _maxH};
         for (int k = 0; k < 2; ++k) {
 
             // If slant range vector doesn't hit ground, pick nadir point
@@ -412,7 +412,9 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
         }
     }
 
-    double margin = (epsgcode == 4326)? MARGIN: (M_PI/180.0)*6.37e6*MARGIN;
+    //Convert margin to meters it not LonLat
+    double margin = (epsgcode == 4326)? _margin : isce::core::decimaldeg2meters(_margin);
+
     // Account for margins
     minX -= margin;
     maxX += margin;
