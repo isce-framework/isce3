@@ -125,22 +125,22 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html">   32</a></span>&#160;<span class="keyword">namespace </span>isce { <span class="keyword">namespace </span>core {</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
 <div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#ab9fe27cef1fd745fcc39a2c2649d61c0">   35</a></span>&#160;    <span class="keyword">enum</span> <a class="code" href="namespaceisce_1_1core.html#ab9fe27cef1fd745fcc39a2c2649d61c0">orbitType</a> {</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;        WGS84_ORBIT,</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        SCH_ORBIT</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;        WGS84_ORBIT = 0,</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        SCH_ORBIT = 1</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    };</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
 <div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">   41</a></span>&#160;    <span class="keyword">enum</span> <a class="code" href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">orbitInterpMethod</a> {</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;        HERMITE_METHOD,</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        SCH_METHOD,</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        LEGENDRE_METHOD</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;        HERMITE_METHOD = 0,</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        SCH_METHOD = 1,</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        LEGENDRE_METHOD = 2</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    };</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
 <div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">   48</a></span>&#160;    <span class="keyword">enum</span> <a class="code" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">dataInterpMethod</a> {</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        SINC_METHOD,</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        BILINEAR_METHOD,</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        BICUBIC_METHOD,</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        NEAREST_METHOD,</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        BIQUINTIC_METHOD</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        SINC_METHOD = 0,</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        BILINEAR_METHOD = 1,</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        BICUBIC_METHOD = 2,</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        NEAREST_METHOD = 3,</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        BIQUINTIC_METHOD = 4</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    };</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
 <div class="line"><a name="l00057"></a><span class="lineno"><a class="line" href="namespaceisce_1_1core.html#a7257d73b8c42029e99427afae907ec73">   57</a></span>&#160;    <span class="keyword">const</span> <span class="keywordtype">int</span> <a class="code" href="namespaceisce_1_1core.html#a7257d73b8c42029e99427afae907ec73">SINC_HALF</a> = 4;</div>
