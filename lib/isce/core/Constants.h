@@ -33,24 +33,24 @@ namespace isce { namespace core {
 
     /**Enumeration type to indicate coordinate system of orbits*/
     enum orbitType {
-        WGS84_ORBIT,
-        SCH_ORBIT
+        WGS84_ORBIT = 0,
+        SCH_ORBIT = 1
     };
 
     /**Enumeration type to indicate method to use for orbit interpolation*/
     enum orbitInterpMethod {
-        HERMITE_METHOD,
-        SCH_METHOD,
-        LEGENDRE_METHOD
+        HERMITE_METHOD = 0,
+        SCH_METHOD = 1,
+        LEGENDRE_METHOD = 2
     };
 
     /**Enumeration type to indicate interpolation method*/
     enum dataInterpMethod {
-        SINC_METHOD,
-        BILINEAR_METHOD,
-        BICUBIC_METHOD,
-        NEAREST_METHOD,
-        BIQUINTIC_METHOD
+        SINC_METHOD = 0,
+        BILINEAR_METHOD = 1,
+        BICUBIC_METHOD = 2,
+        NEAREST_METHOD = 3,
+        BIQUINTIC_METHOD = 4
     };
 
     /** Default sinc parameters */
