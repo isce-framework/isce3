@@ -9,11 +9,6 @@
 #include <iostream>
 #include "fftw3cxx.h"
 
-//TODO FAYOUB test only
-#include <chrono>
-#include <iomanip> //to be deleted
-#include <fstream> //to be deleted
-
 template<class T>
 struct isce::signal::Signal<T>::impl {
     isce::fftw3cxx::plan<T> _plan_fwd;
