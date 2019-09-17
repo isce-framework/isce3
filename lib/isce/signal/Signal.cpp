@@ -9,6 +9,11 @@
 #include <iostream>
 #include "fftw3cxx.h"
 
+//TODO FAYOUB test only
+#include <chrono>
+#include <iomanip> //to be deleted
+#include <fstream> //to be deleted
+
 template<class T>
 struct isce::signal::Signal<T>::impl {
     isce::fftw3cxx::plan<T> _plan_fwd;
@@ -79,6 +84,10 @@ fftPlanForward(std::complex<T> *input, std::complex<T> *output,
             int *onembed, int ostride, int odist, int sign)
 {
 
+    _fwd_configure(rank, n, howmany, 
+               inembed, istride, idist, 
+               onembed, ostride, odist);
+
     pimpl->_plan_fwd = fftw3cxx::plan<T>::plan_many_dft(rank, n, howmany,
                                             input, inembed, istride, idist,
                                             output, onembed, ostride, odist,
@@ -134,6 +143,10 @@ fftPlanForward(T *input, std::complex<T> *output,
             int *inembed, int istride, int idist,
             int *onembed, int ostride, int odist)
 {
+
+    _fwd_configure(rank, n, howmany, 
+               inembed, istride, idist, 
+               onembed, ostride, odist);
 
     pimpl->_plan_fwd = fftw3cxx::plan<T>::plan_many_dft_r2c(rank, n, howmany,
                                             input, inembed, istride, idist,
@@ -197,6 +210,10 @@ fftPlanBackward(std::complex<T> *input, std::complex<T> *output,
             int *onembed, int ostride, int odist, int sign)
 {
 
+    _rev_configure(rank, n, howmany, 
+               inembed, istride, idist, 
+               onembed, ostride, odist);
+
     pimpl->_plan_inv = fftw3cxx::plan<T>::plan_many_dft(rank, n, howmany,
                                             input, inembed, istride, idist,
                                             output, onembed, ostride, odist,
@@ -254,6 +271,10 @@ fftPlanBackward(std::complex<T> *input, T *output,
             int *inembed, int istride, int idist,
             int *onembed, int ostride, int odist)
 {
+
+    _rev_configure(rank, n, howmany, 
+               inembed, istride, idist, 
+               onembed, ostride, odist);
 
     pimpl->_plan_inv = fftw3cxx::plan<T>::plan_many_dft_c2r(rank, n, howmany,
                                             input, inembed, istride, idist,
@@ -386,11 +407,11 @@ forwardRangeFFT(std::complex<T> *signal,
                 int ncolumns, int nrows)
 {
 
-    _configureRangeFFT(ncolumns, nrows);
+    _fwd_configureRangeFFT(ncolumns, nrows);
     
-    fftPlanForward(signal, spectrum, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist, FFTW_FORWARD);
+    fftPlanForward(signal, spectrum, _fwd_rank, _fwd_n, _fwd_howmany,
+                    _fwd_inembed, _fwd_istride, _fwd_idist,
+                    _fwd_onembed, _fwd_ostride, _fwd_odist, FFTW_FORWARD);
 
 }
 
@@ -424,11 +445,11 @@ forwardRangeFFT(T *signal,
                 int ncolumns, int nrows)
 {
 
-    _configureRangeFFT(ncolumns, nrows);   
+    _fwd_configureRangeFFT(ncolumns, nrows);   
 
-    fftPlanForward(signal, spectrum, _rank, _n, _howmany,
-                _inembed, _istride, _idist,
-                _onembed, _ostride, _odist);
+    fftPlanForward(signal, spectrum, _fwd_rank, _fwd_n, _fwd_howmany,
+                _fwd_inembed, _fwd_istride, _fwd_idist,
+                _fwd_onembed, _fwd_ostride, _fwd_odist);
 
 }
 
@@ -463,11 +484,11 @@ forwardAzimuthFFT(std::complex<T> *signal,
                 int ncolumns, int nrows)
 {
 
-    _configureAzimuthFFT(ncolumns, nrows);
+    _fwd_configureAzimuthFFT(ncolumns, nrows);
 
-    fftPlanForward(signal, spectrum, _rank, _n, _howmany,
-                _inembed, _istride, _idist,
-                _onembed, _ostride, _odist, FFTW_FORWARD);
+    fftPlanForward(signal, spectrum, _fwd_rank, _fwd_n, _fwd_howmany,
+                _fwd_inembed, _fwd_istride, _fwd_idist,
+                _fwd_onembed, _fwd_ostride, _fwd_odist, FFTW_FORWARD);
 
 }
 
@@ -500,11 +521,11 @@ forwardAzimuthFFT(T *signal,
                 int ncolumns, int nrows)
 {
 
-    _configureAzimuthFFT(ncolumns, nrows);
+    _fwd_configureAzimuthFFT(ncolumns, nrows);
 
-    fftPlanForward(signal, spectrum, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist);
+    fftPlanForward(signal, spectrum, _fwd_rank, _fwd_n, _fwd_howmany,
+                   _fwd_inembed, _fwd_istride, _fwd_idist,
+                   _fwd_onembed, _fwd_ostride, _fwd_odist);
 
 }
 
@@ -520,9 +541,35 @@ forward2DFFT(std::valarray<std::complex<T>> &signal,
                 std::valarray<std::complex<T>> &spectrum,
                 int ncolumns, int nrows)
 {
+
     forward2DFFT(&signal[0], &spectrum[0],
-                ncolumns, nrows);
+                 ncolumns, nrows, ncolumns, nrows);
 }
+
+
+/**
+*  @param[in] signal input block of data
+*  @param[out] spectrum output block of spectrum
+*  @param[in] incolumns number of columns of the block of data
+*  @param[in] inrows number of rows of the block of data
+*  @param[in] oncolumns number of columns of the block of data in output container
+*  @param[in] onrows number of rows of the block of data in output container
+*
+*  If doing an out-of-place FFT, the output can be stored in a container whose
+*  number of columns and rows could be different than the input. This would be
+*  necessary for instance in the case of 2D upsampling
+*/
+template<class T>
+void isce::signal::Signal<T>::
+forward2DFFT(std::valarray<std::complex<T>> &signal,
+                std::valarray<std::complex<T>> &spectrum,
+                int incolumns, int inrows,
+                int oncolumns, int onrows)
+{
+    forward2DFFT(&signal[0], &spectrum[0],
+                 incolumns, inrows, oncolumns, onrows);
+}
+
 
 /**
 *  @param[in] signal input block of data
@@ -537,13 +584,67 @@ forward2DFFT(std::complex<T>* signal,
                 int ncolumns, int nrows)
 {
 
-    _configure2DFFT(ncolumns, nrows);
-
-    fftPlanForward(signal, spectrum, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist, FFTW_FORWARD);
+    forward2DFFT(signal, spectrum, ncolumns, nrows, ncolumns, nrows);
 
 }
+
+
+
+/**
+*  @param[in] signal input block of data
+*  @param[out] spectrum output block of spectrum
+*  @param[in] incolumns number of columns of the block of data in input container
+*  @param[in] inrows number of rows of the block of data in input container
+*  @param[in] oncolumns number of columns of the block of data in output container
+*  @param[in] oupnrows number of rows of the block of data in output container
+*
+*  If doing an out-of-place FFT, the output can be stored in a container whose
+*  number of columns and rows could be different than the input. This would be
+*  necessary for instance in the case of 2D upsampling
+*/
+template<class T>
+void isce::signal::Signal<T>::
+forward2DFFT(std::complex<T>* signal,
+                std::complex<T>* spectrum,
+                int incolumns, int inrows,
+                int oncolumns, int onrows)
+{
+
+    _fwd_configure2DFFT(incolumns, inrows, oncolumns, onrows);
+
+    fftPlanForward(signal, spectrum, _fwd_rank, _fwd_n, _fwd_howmany,
+                    _fwd_inembed, _fwd_istride, _fwd_idist,
+                    _fwd_onembed, _fwd_ostride, _fwd_odist, FFTW_FORWARD);
+
+}
+
+
+
+/**
+*  @param[in] signal input block of data
+*  @param[out] spectrum output block of spectrum
+*  @param[in] incolumns number of columns of the block of data in input container
+*  @param[in] inrows number of rows of the block of data in input container
+*  @param[in] oncolumns number of columns of the block of data in output container
+*  @param[in] oupnrows number of rows of the block of data in output container
+*
+*  If doing an out-of-place FFT, the output can be stored in a container whose
+*  number of columns and rows could be different than the input. This would be
+*  necessary for instance in the case of 2D upsampling
+*/
+template<class T>
+void isce::signal::Signal<T>::
+forward2DFFT(std::valarray<T> &signal,
+            std::valarray<std::complex<T>> &spectrum,
+            int incolumns, int inrows,
+            int oncolumns, int onrows)
+{
+    forward2DFFT(&signal[0],
+            &spectrum[0],
+            incolumns, inrows,
+            oncolumns, onrows);
+}
+
 
 /**
 *  @param[in] signal input block of data
@@ -562,6 +663,8 @@ forward2DFFT(std::valarray<T> &signal,
             ncolumns, nrows);
 }
 
+
+
 /**
 *  @param[in] signal input block of data
 *  @param[out] spectrum output block of spectrum
@@ -574,13 +677,35 @@ forward2DFFT(T* signal,
             std::complex<T>* spectrum,
             int ncolumns, int nrows)
 {
+    forward2DFFT(signal, spectrum,
+                 ncolumns, nrows, ncolumns, nrows);
+}
 
-    _configure2DFFT(ncolumns, nrows);
+/**
+*  @param[in] signal input block of data
+*  @param[out] spectrum output block of spectrum
+*  @param[in] incolumns number of columns of the block of data in input container
+*  @param[in] inrows number of rows of the block of data in input container
+*  @param[in] oncolumns number of columns of the block of data in output container
+*  @param[in] oupnrows number of rows of the block of data in output container
+*
+*  If doing an out-of-place FFT, the output can be stored in a container whose
+*  number of columns and rows could be different than the input. This would be
+*  necessary for instance in the case of 2D upsampling
+*/
+template<class T>
+void isce::signal::Signal<T>::
+forward2DFFT(T* signal,
+            std::complex<T>* spectrum,
+            int incolumns, int inrows,
+            int oncolumns, int onrows)
+{
 
-    fftPlanForward(signal, spectrum, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist);
+    _fwd_configure2DFFT(incolumns, inrows, oncolumns, onrows);
 
+    fftPlanForward(signal, spectrum, _fwd_rank, _fwd_n, _fwd_howmany,
+                    _fwd_inembed, _fwd_istride, _fwd_idist,
+                    _fwd_onembed, _fwd_ostride, _fwd_odist);
 }
 
 /**
@@ -595,11 +720,11 @@ inverseRangeFFT(std::complex<T>* spectrum,
                 std::complex<T>* signal,
                 int ncolumns, int nrows)
 {
-    _configureRangeFFT(ncolumns, nrows);
+    _rev_configureRangeFFT(ncolumns, nrows);
 
-    fftPlanBackward(spectrum, signal, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist, FFTW_BACKWARD);
+    fftPlanBackward(spectrum, signal, _rev_rank, _rev_n, _rev_howmany,
+                    _rev_inembed, _rev_istride, _rev_idist,
+                    _rev_onembed, _rev_ostride, _rev_odist, FFTW_BACKWARD);
 }
 
 /**
@@ -614,11 +739,11 @@ inverseRangeFFT(std::valarray<std::complex<T>> &spectrum,
                 std::valarray<std::complex<T>> &signal,
                 int ncolumns, int nrows)
 {
-    _configureRangeFFT(ncolumns, nrows);
+    _rev_configureRangeFFT(ncolumns, nrows);
 
-    fftPlanBackward(spectrum, signal, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist, FFTW_BACKWARD);
+    fftPlanBackward(spectrum, signal, _rev_rank, _rev_n, _rev_howmany,
+                    _rev_inembed, _rev_istride, _rev_idist,
+                    _rev_onembed, _rev_ostride, _rev_odist, FFTW_BACKWARD);
 }
 
 /**
@@ -633,11 +758,11 @@ inverseRangeFFT(std::valarray<std::complex<T>> &spectrum,
                 std::valarray<T> &signal,
                 int ncolumns, int nrows)
 {
-    _configureRangeFFT(ncolumns, nrows);
+    _rev_configureRangeFFT(ncolumns, nrows);
 
-    fftPlanBackward(spectrum, signal, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist);
+    fftPlanBackward(spectrum, signal, _rev_rank, _rev_n, _rev_howmany,
+                    _rev_inembed, _rev_istride, _rev_idist,
+                    _rev_onembed, _rev_ostride, _rev_odist);
 }
 
 /**
@@ -652,11 +777,11 @@ inverseRangeFFT(std::complex<T>* spectrum,
                 T* signal,
                 int ncolumns, int nrows)
 {
-    _configureRangeFFT(ncolumns, nrows);
+    _rev_configureRangeFFT(ncolumns, nrows);
 
-    fftPlanBackward(spectrum, signal, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist);
+    fftPlanBackward(spectrum, signal, _rev_rank, _rev_n, _rev_howmany,
+                    _rev_inembed, _rev_istride, _rev_idist,
+                    _rev_onembed, _rev_ostride, _rev_odist);
 }
 
 /**
@@ -672,11 +797,11 @@ inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
                 int ncolumns, int nrows)
 {
 
-    _configureAzimuthFFT(ncolumns, nrows);
+    _rev_configureAzimuthFFT(ncolumns, nrows);
 
-    fftPlanBackward(spectrum, signal, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist, FFTW_BACKWARD);
+    fftPlanBackward(spectrum, signal, _rev_rank, _rev_n, _rev_howmany,
+                    _rev_inembed, _rev_istride, _rev_idist,
+                    _rev_onembed, _rev_ostride, _rev_odist, FFTW_BACKWARD);
 }
 
 /**
@@ -692,11 +817,11 @@ inverseAzimuthFFT(std::complex<T>* spectrum,
                     int ncolumns, int nrows)
 {
 
-    _configureAzimuthFFT(ncolumns, nrows);
+    _rev_configureAzimuthFFT(ncolumns, nrows);
 
-    fftPlanBackward(spectrum, signal, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist, FFTW_BACKWARD);
+    fftPlanBackward(spectrum, signal, _rev_rank, _rev_n, _rev_howmany,
+                    _rev_inembed, _rev_istride, _rev_idist,
+                    _rev_onembed, _rev_ostride, _rev_odist, FFTW_BACKWARD);
 }
 
 /**
@@ -712,11 +837,11 @@ inverseAzimuthFFT(std::valarray<std::complex<T>> &spectrum,
                 int ncolumns, int nrows)
 {
 
-    _configureAzimuthFFT(ncolumns, nrows);
+    _rev_configureAzimuthFFT(ncolumns, nrows);
 
-    fftPlanBackward(spectrum, signal, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist);
+    fftPlanBackward(spectrum, signal, _rev_rank, _rev_n, _rev_howmany,
+                    _rev_inembed, _rev_istride, _rev_idist,
+                    _rev_onembed, _rev_ostride, _rev_odist);
 }
 
 /**
@@ -732,11 +857,11 @@ inverseAzimuthFFT(std::complex<T>* spectrum,
                 int ncolumns, int nrows)
 {
 
-    _configureAzimuthFFT(ncolumns, nrows);
+    _rev_configureAzimuthFFT(ncolumns, nrows);
 
-    fftPlanBackward(spectrum, signal, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist);
+    fftPlanBackward(spectrum, signal, _rev_rank, _rev_n, _rev_howmany,
+                    _rev_inembed, _rev_istride, _rev_idist,
+                    _rev_onembed, _rev_ostride, _rev_odist);
 }
 
 
@@ -753,11 +878,11 @@ inverse2DFFT(std::valarray<std::complex<T>> &spectrum,
                 int ncolumns, int nrows)
 {
 
-    _configure2DFFT(ncolumns, nrows);
+    _rev_configure2DFFT(ncolumns, nrows);
 
-    fftPlanBackward(spectrum, signal, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist, FFTW_BACKWARD);
+    fftPlanBackward(spectrum, signal, _rev_rank, _rev_n, _rev_howmany,
+                    _rev_inembed, _rev_istride, _rev_idist,
+                    _rev_onembed, _rev_ostride, _rev_odist, FFTW_BACKWARD);
 }
 
 /**
@@ -773,11 +898,11 @@ inverse2DFFT(std::complex<T>* spectrum,
                 int ncolumns, int nrows)
 {
 
-    _configure2DFFT(ncolumns, nrows);
+    _rev_configure2DFFT(ncolumns, nrows);
 
-    fftPlanBackward(spectrum, signal, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist, FFTW_BACKWARD);
+    fftPlanBackward(spectrum, signal, _rev_rank, _rev_n, _rev_howmany,
+                    _rev_inembed, _rev_istride, _rev_idist,
+                    _rev_onembed, _rev_ostride, _rev_odist, FFTW_BACKWARD);
 }
 
 /**
@@ -793,11 +918,11 @@ inverse2DFFT(std::valarray<std::complex<T>> &spectrum,
                 int ncolumns, int nrows)
 {
 
-    _configure2DFFT(ncolumns, nrows);
+    _rev_configure2DFFT(ncolumns, nrows);
 
-    fftPlanBackward(spectrum, signal, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist);
+    fftPlanBackward(spectrum, signal, _rev_rank, _rev_n, _rev_howmany,
+                    _rev_inembed, _rev_istride, _rev_idist,
+                    _rev_onembed, _rev_ostride, _rev_odist);
 }
 
 /**
@@ -813,11 +938,11 @@ inverse2DFFT(std::complex<T>* spectrum,
                 int ncolumns, int nrows)
 {
 
-    _configure2DFFT(ncolumns, nrows);
+    _rev_configure2DFFT(ncolumns, nrows);
 
-    fftPlanBackward(spectrum, signal, _rank, _n, _howmany,
-                    _inembed, _istride, _idist,
-                    _onembed, _ostride, _odist);
+    fftPlanBackward(spectrum, signal, _rev_rank, _rev_n, _rev_howmany,
+                    _rev_inembed, _rev_istride, _rev_idist,
+                    _rev_onembed, _rev_ostride, _rev_odist);
 }
 
 /**
@@ -907,6 +1032,201 @@ upsample(std::valarray<std::complex<T>> &signal,
     signalUpsampled /= fft_size;
 
 }
+
+
+
+
+
+
+/**
+*   @param[in] signal input block of 2D data
+*   @param[out] signalUpsampled output block of oversampled data
+*   @param[in] upsampleFactor upsampling factor
+*   @param[in] shiftImpact a linear phase term equivalent to a constant shift in time domain 
+*
+*   When doing out-of-place upsampling, i.e., when the container of the input to upsample is
+*   different to the one that will contain the upsampled data, the FFT forward plan must be
+*   set to out-of-place (with the input and output containers) and the FFT reverse plan to 
+*   in-place (with the output container).
+*/
+template<class T>
+void isce::signal::Signal<T>::
+upsample2D(std::valarray<std::complex<T>> &signal,
+                std::valarray<std::complex<T>> &signalUpsampled,
+                int oversampleFactor) {
+
+    upsample2D(&signal[0], &signalUpsampled[0], 
+               oversampleFactor, nullptr);
+
+}
+
+
+
+/**
+*   @param[in] signal input block of 2D data
+*   @param[out] signalUpsampled output block of oversampled data
+*   @param[in] upsampleFactor upsampling factor
+*   @param[in] shiftImpact a linear phase term equivalent to a constant shift in time domain 
+*
+*   When doing out-of-place upsampling, i.e., when the container of the input to upsample is
+*   different to the one that will contain the upsampled data, the FFT forward plan must be
+*   set to out-of-place (with the input and output containers) and the FFT reverse plan to 
+*   in-place (with the output container).
+*/
+template<class T>
+void isce::signal::Signal<T>::
+upsample2D(std::valarray<std::complex<T>> &signal,
+                std::valarray<std::complex<T>> &signalUpsampled,
+                int upsampleFactor,
+                std::valarray<std::complex<T>> &shiftImpact) {
+
+   upsample2D(&signal[0], &signalUpsampled[0],
+              upsampleFactor, &shiftImpact[0]); 
+
+}
+
+
+/**
+*   @param[in] signal input block of 2D data
+*   @param[out] signalUpsampled output block of oversampled data
+*   @param[in] upsampleFactor upsampling factor
+*
+*   When doing out-of-place upsampling, i.e., when the container of the input to upsample is
+*   different to the one that will contain the upsampled data, the FFT forward plan must be
+*   set to out-of-place (with the input and output containers) and the FFT reverse plan to 
+*   in-place (with the output container).
+*/
+template<class T>
+void isce::signal::Signal<T>::
+upsample2D(std::complex<T> *signal,
+           std::complex<T> *signalUpsampled,
+           int upsampleFactor) 
+{
+   upsample2D(signal, signalUpsampled,
+              upsampleFactor, nullptr); 
+}
+
+
+
+/**
+*   @param[in] signal input block of 2D data
+*   @param[out] signalUpsampled output block of oversampled data
+*   @param[in] upsampleFactor upsampling factor
+*   @param[in] shiftImpact a linear phase term equivalent to a constant shift in time domain 
+*
+*   When doing out-of-place upsampling, i.e., when the container of the input to upsample is
+*   different to the one that will contain the upsampled data, the FFT forward plan must be
+*   set to out-of-place (with the input and output containers) and the FFT reverse plan to 
+*   in-place (with the output container).
+*/
+template<class T>
+void isce::signal::Signal<T>::
+upsample2D(std::complex<T> *signal,
+           std::complex<T> *signalUpsampled,
+           int upsampleFactor, 
+           std::complex<T> *shiftImpact)
+{
+    
+    //rank 2 is the only possible value. Just as a sanity check
+    if (_fwd_rank != 2 || _rev_rank !=2) { 
+       std::cout << "upsample2D required rank 2 inputs" << std::endl;
+       return;
+    }
+   
+    // Sanity check that reverse FFT rank is coherent with upsampleFactor
+    if (upsampleFactor * _fwd_n[0] != _rev_n[0] || upsampleFactor * _fwd_n[1] != _rev_n[1]) {
+        std::cout << "Discrepency between upsampling factor and reverse FFT rank values" << std::endl;
+        return;
+    }
+    
+
+
+    // Spectrum shift
+    // Dimensions of the quarts
+    //
+    //        cols1  cols2
+    //       _____________ 
+    //       |     |      |
+    // rows1 |     |      |
+    //       |_____|______|
+    //       |     |      |
+    // rows2 |     |      |
+    //       |_____|______| 
+    //
+    //
+    //
+    size_t cols2 = _fwd_n[0]/2;
+    size_t cols1 = _fwd_n[0] - cols2;
+    size_t rows2 = _fwd_n[1]/2;
+    size_t rows1 = _fwd_n[1] - rows2;
+
+
+    // [1] Forward fft
+    // If doing out-of-place transform, i.e., input signal is a different container than
+    // output container, the forward FFT is done out-of-place and the reverse FFT will be
+    // done in-place.
+    if (signal != signalUpsampled) 
+       pimpl->_plan_fwd.execute_dft(signal, signalUpsampled);
+    else
+       pimpl->_plan_fwd.execute_dft(signalUpsampled, signalUpsampled);
+
+
+    // [2] Spectrum shuffling - Moving the 4 quarts to the corners of the output (larger)
+    // container. In-place operation
+    #pragma omp parallel for
+    for (size_t p = 0; p < _fwd_howmany; p++) {
+
+        std::complex<T> * loc;
+
+        for (size_t r = 0; r < rows1; r++) {
+            loc = &signalUpsampled[p * _fwd_odist + r * _fwd_onembed[0] + cols1];
+            std::swap_ranges(loc, 
+                             loc + cols2,
+                             &signalUpsampled[p * _rev_idist + r * _rev_onembed[0] + _rev_n[0] - cols2]);
+        }
+
+        for (size_t r = 0; r < rows2; r++) {
+            loc = &signalUpsampled[p * _fwd_odist + (r+rows1) * _fwd_onembed[0]];
+            std::swap_ranges(loc, 
+                             loc+cols1,
+                             &signalUpsampled[p * _rev_idist + (_rev_n[1] - rows2 + r) * _rev_onembed[0]]);
+            loc = &signalUpsampled[p * _fwd_odist + (r+rows1) * _fwd_onembed[0] + cols1];
+            std::swap_ranges(loc, 
+                             loc + cols2,
+                             &signalUpsampled[p * _rev_idist + (_rev_n[1] - rows2 + 1 + r) * _rev_onembed[0] - cols2]);
+        }
+
+    }    
+
+
+    // multiply the shiftImpact (a linear phase is frequency domain
+    // equivalent to a shift in time domain) by the spectrum
+    if (shiftImpact != nullptr) {
+       #pragma omp parallel for
+       for (size_t p = 0; p < _fwd_howmany; p++) 
+          for (size_t j = 0; j < _rev_n[1]; j++) 
+             for (size_t i = 0; i < _rev_n[0]; i++) 
+                signalUpsampled[p*_rev_idist + j*_rev_onembed[0] + i] *= shiftImpact[j*_rev_n[0] + i];
+    }
+
+
+    // [3] Inverse fft to get the upsampled signal
+    pimpl->_plan_inv.execute_dft(signalUpsampled, signalUpsampled);
+
+
+    // [4] Normalize
+    size_t sz = _fwd_n[0] * _fwd_n[1];
+    #pragma omp parallel for
+    for (size_t p = 0; p < _fwd_howmany; p++) 
+       for (size_t j = 0; j < _rev_n[1]; j++) 
+          for (size_t i = 0; i < _rev_n[0]; i++) 
+             signalUpsampled[p*_rev_idist + j*_rev_onembed[0] + i] /= sz;
+
+
+}
+
+
+
 
 // We currently allow float and double. If at any time "long double" is needed, 
 // declaration should be added here. 
