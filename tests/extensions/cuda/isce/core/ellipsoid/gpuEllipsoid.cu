@@ -70,8 +70,8 @@ void xyzToLonLat_h(isce::core::Ellipsoid e, const Vec3& xyz, Vec3& llh) {
 
 #define ellipsoidGpuTest(name,p,q,r,x,y,z)       \
     TEST_F(GpuEllipsoidTest, name) {       \
-        isce::core::cartesian_t ref_llh{p,q,r};    \
-        isce::core::cartesian_t ref_xyz = {x,y,z};    \
+        isce::core::cartesian_t ref_llh p,q,r;    \
+        isce::core::cartesian_t ref_xyz x,y,z;    \
         isce::core::cartesian_t xyz, gpu_xyz, cpu_xyz; \
         isce::core::cartesian_t llh, gpu_llh, cpu_llh; \
         llh = ref_llh;                  \

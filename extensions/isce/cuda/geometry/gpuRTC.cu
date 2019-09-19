@@ -105,8 +105,8 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     const Vec3 xyz11 = ellps.lonLatToXyz(llh11);
 
     // Compute normal vectors for each facet
-    const Vec3 normalFacet1 = normalPlane(xyz00, xyz10, xyz01);
-    const Vec3 normalFacet2 = normalPlane(xyz01, xyz10, xyz11);
+    const Vec3 normalFacet1 = isce::core::normalPlane(xyz00, xyz10, xyz01);
+    const Vec3 normalFacet2 = isce::core::normalPlane(xyz01, xyz10, xyz11);
 
     // Side lengths
     const double p00_01 = (xyz00 - xyz01).norm();

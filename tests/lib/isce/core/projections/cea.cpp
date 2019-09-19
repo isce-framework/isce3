@@ -31,8 +31,8 @@ struct CEATest : public ::testing::Test {
 
 #define ceaTest(name,p,q,r,x,y,z)       \
     TEST_F(CEATest, name) {       \
-        cartesian_t ref_llh = {p,q,r};    \
-        cartesian_t ref_xyz = {x,y,z};    \
+        cartesian_t ref_llh p,q,r;    \
+        cartesian_t ref_xyz x,y,z;    \
         cartesian_t xyz, llh;  \
         llh = ref_llh;                  \
         proj.forward(llh, xyz);    \

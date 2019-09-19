@@ -33,8 +33,8 @@ struct GeocentTest : public ::testing::Test {
 
 #define geocentTest(name,p,q,r,x,y,z)       \
     TEST_F(GeocentTest, name) {       \
-        cartesian_t ref_llh = {p,q,r};    \
-        cartesian_t ref_xyz = {x,y,z};    \
+        cartesian_t ref_llh p,q,r;    \
+        cartesian_t ref_xyz x,y,z;    \
         cartesian_t xyz, llh;  \
         llh = ref_llh;                  \
         proj.forward_h(llh, xyz);    \

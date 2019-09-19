@@ -247,7 +247,7 @@ addStateVector(double t, const cartesian_t & pos, const cartesian_t & vel) {
     while ((vec_idx < nVectors) && (t > UTCtime[vec_idx])) vec_idx++;
     UTCtime.insert(UTCtime.begin()+vec_idx, t);
     epochs.insert(epochs.begin()+vec_idx, refEpoch + t);
-    position.insert(position.begin()+(3*vec_idx), pos.begin(), pos.end());
-    velocity.insert(velocity.begin()+(3*vec_idx), vel.begin(), vel.end());
+    position.insert(position.begin()+(3*vec_idx), &pos[0], &pos[0] + 3);
+    velocity.insert(velocity.begin()+(3*vec_idx), &vel[0], &vel[0] + 3);
     nVectors++;
 }

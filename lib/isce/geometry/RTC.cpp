@@ -215,8 +215,8 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radar_gr
             const Vec3 xyz11 = ellps.lonLatToXyz(proj->inverse(dem11));
 
             // Compute normal vectors for each facet
-            const Vec3 normal_facet_1 = normalPlane(xyz00, xyz01, xyz10);
-            const Vec3 normal_facet_2 = normalPlane(xyz01, xyz11, xyz10);
+            const Vec3 normal_facet_1 = isce::core::normalPlane(xyz00, xyz01, xyz10);
+            const Vec3 normal_facet_2 = isce::core::normalPlane(xyz01, xyz11, xyz10);
 
             // Side lengths
             const double p00_01 = (xyz00 - xyz01).norm();

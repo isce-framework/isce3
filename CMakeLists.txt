@@ -46,7 +46,7 @@ set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 option(WITH_DOC
     "Set ON|OFF (default=OFF) to build documentation" OFF)
 
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Coverage" CACHE STRING "" FORCE)
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;Coverage" CACHE STRING "" FORCE)
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()

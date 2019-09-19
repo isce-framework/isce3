@@ -23,7 +23,8 @@ namespace isce {
         // templates
         template<class T> T sinc(T);
         template<int> class DenseMatrix;
-        template<int> class Vector;
+        template<int, typename = double> class Vector;
+
         template<class> class Cube;
         template<class> class LUT1d;
         template<class> class LUT2d;
