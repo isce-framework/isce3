@@ -96,43 +96,47 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">// Copyright 2017</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">//</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;</div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;forward.h&quot;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;</div>
-<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Peg.html">   13</a></span>&#160;<span class="keyword">class </span><a class="code" href="classisce_1_1core_1_1Peg.html">isce::core::Peg</a> {</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    <span class="comment">//peg latitude in radians</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    <span class="keywordtype">double</span> lat;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="comment">//peg longiture in radians</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <span class="keywordtype">double</span> lon;</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <span class="comment">//peg heading in radians</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keywordtype">double</span> hdg;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
-<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Peg.html#af105e8e35fd480f28d3f53ba4a6e8901">   30</a></span>&#160;    <a class="code" href="classisce_1_1core_1_1Peg.html#af105e8e35fd480f28d3f53ba4a6e8901">Peg</a>(<span class="keywordtype">double</span> lt, <span class="keywordtype">double</span> ln, <span class="keywordtype">double</span> hd) : lat(lt), lon(ln), hdg(hd) {}</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;</div>
-<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Peg.html#ab003db648f2ed18627c3b39def1c4b88">   33</a></span>&#160;    <a class="code" href="classisce_1_1core_1_1Peg.html#ab003db648f2ed18627c3b39def1c4b88">Peg</a>() : <a class="code" href="classisce_1_1core_1_1Peg.html">Peg</a>(0.,0.,0.) {}</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;</div>
-<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Peg.html#a5c5bedeb2bc30d6c64b7f800229736ec">   36</a></span>&#160;    <a class="code" href="classisce_1_1core_1_1Peg.html#a5c5bedeb2bc30d6c64b7f800229736ec">Peg</a>(<span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Peg.html">Peg</a> &amp;p) : lat(p.lat), lon(p.lon), hdg(p.hdg) {}</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keyword">inline</span> <a class="code" href="classisce_1_1core_1_1Peg.html">Peg</a>&amp; <a class="code" href="classisce_1_1core_1_1Peg.html#a38d701e637b9eac75b320e1e9c561fc5">operator=</a>(<span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Peg.html">Peg</a>&amp;);</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;};</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<a class="code" href="classisce_1_1core_1_1Peg.html">isce::core::Peg</a> &amp; <a class="code" href="classisce_1_1core_1_1Peg.html#a38d701e637b9eac75b320e1e9c561fc5">isce::core::Peg::</a></div>
-<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Peg.html#a38d701e637b9eac75b320e1e9c561fc5">   43</a></span>&#160;<a class="code" href="classisce_1_1core_1_1Peg.html#a38d701e637b9eac75b320e1e9c561fc5">operator=</a>(<span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Peg.html">Peg</a> &amp;rhs) {</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    lat = rhs.lat;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    lon = rhs.lon;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    hdg = rhs.hdg;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;}</div>
-<div class="ttc" id="classisce_1_1core_1_1Peg_html_af105e8e35fd480f28d3f53ba4a6e8901"><div class="ttname"><a href="classisce_1_1core_1_1Peg.html#af105e8e35fd480f28d3f53ba4a6e8901">isce::core::Peg::Peg</a></div><div class="ttdeci">Peg(double lt, double ln, double hd)</div><div class="ttdoc">Simple peg point constructor. </div><div class="ttdef"><b>Definition:</b> Peg.h:30</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Peg_html_a5c5bedeb2bc30d6c64b7f800229736ec"><div class="ttname"><a href="classisce_1_1core_1_1Peg.html#a5c5bedeb2bc30d6c64b7f800229736ec">isce::core::Peg::Peg</a></div><div class="ttdeci">Peg(const Peg &amp;p)</div><div class="ttdoc">Copy constructor. </div><div class="ttdef"><b>Definition:</b> Peg.h:36</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Peg_html_a38d701e637b9eac75b320e1e9c561fc5"><div class="ttname"><a href="classisce_1_1core_1_1Peg.html#a38d701e637b9eac75b320e1e9c561fc5">isce::core::Peg::operator=</a></div><div class="ttdeci">Peg &amp; operator=(const Peg &amp;)</div><div class="ttdoc">Assignment operator. </div><div class="ttdef"><b>Definition:</b> Peg.h:43</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Peg_html"><div class="ttname"><a href="classisce_1_1core_1_1Peg.html">isce::core::Peg</a></div><div class="ttdoc">Data structure to store a peg point. </div><div class="ttdef"><b>Definition:</b> Peg.h:13</div></div>
-<div class="ttc" id="classisce_1_1core_1_1Peg_html_ab003db648f2ed18627c3b39def1c4b88"><div class="ttname"><a href="classisce_1_1core_1_1Peg.html#ab003db648f2ed18627c3b39def1c4b88">isce::core::Peg::Peg</a></div><div class="ttdeci">Peg()</div><div class="ttdoc">Empty constructor. </div><div class="ttdef"><b>Definition:</b> Peg.h:33</div></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#ifndef ISCE_CORE_PEG_H</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define ISCE_CORE_PEG_H</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;forward.h&quot;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
+<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Peg.html">   15</a></span>&#160;<span class="keyword">class </span><a class="code" href="classisce_1_1core_1_1Peg.html">isce::core::Peg</a> {</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    <span class="comment">//peg latitude in radians</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keywordtype">double</span> lat;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="comment">//peg longiture in radians</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <span class="keywordtype">double</span> lon;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="comment">//peg heading in radians</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keywordtype">double</span> hdg;</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
+<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Peg.html#af105e8e35fd480f28d3f53ba4a6e8901">   32</a></span>&#160;    <a class="code" href="classisce_1_1core_1_1Peg.html#af105e8e35fd480f28d3f53ba4a6e8901">Peg</a>(<span class="keywordtype">double</span> lt, <span class="keywordtype">double</span> ln, <span class="keywordtype">double</span> hd) : lat(lt), lon(ln), hdg(hd) {}</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Peg.html#ab003db648f2ed18627c3b39def1c4b88">   35</a></span>&#160;    <a class="code" href="classisce_1_1core_1_1Peg.html#ab003db648f2ed18627c3b39def1c4b88">Peg</a>() : <a class="code" href="classisce_1_1core_1_1Peg.html">Peg</a>(0.,0.,0.) {}</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;</div>
+<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Peg.html#a5c5bedeb2bc30d6c64b7f800229736ec">   38</a></span>&#160;    <a class="code" href="classisce_1_1core_1_1Peg.html#a5c5bedeb2bc30d6c64b7f800229736ec">Peg</a>(<span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Peg.html">Peg</a> &amp;p) : lat(p.lat), lon(p.lon), hdg(p.hdg) {}</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    <span class="keyword">inline</span> <a class="code" href="classisce_1_1core_1_1Peg.html">Peg</a>&amp; <a class="code" href="classisce_1_1core_1_1Peg.html#a38d701e637b9eac75b320e1e9c561fc5">operator=</a>(<span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Peg.html">Peg</a>&amp;);</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;};</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<a class="code" href="classisce_1_1core_1_1Peg.html">isce::core::Peg</a> &amp; <a class="code" href="classisce_1_1core_1_1Peg.html#a38d701e637b9eac75b320e1e9c561fc5">isce::core::Peg::</a></div>
+<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="classisce_1_1core_1_1Peg.html#a38d701e637b9eac75b320e1e9c561fc5">   45</a></span>&#160;<a class="code" href="classisce_1_1core_1_1Peg.html#a38d701e637b9eac75b320e1e9c561fc5">operator=</a>(<span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Peg.html">Peg</a> &amp;rhs) {</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    lat = rhs.lat;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    lon = rhs.lon;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    hdg = rhs.hdg;</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;}</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="classisce_1_1core_1_1Peg_html_af105e8e35fd480f28d3f53ba4a6e8901"><div class="ttname"><a href="classisce_1_1core_1_1Peg.html#af105e8e35fd480f28d3f53ba4a6e8901">isce::core::Peg::Peg</a></div><div class="ttdeci">Peg(double lt, double ln, double hd)</div><div class="ttdoc">Simple peg point constructor. </div><div class="ttdef"><b>Definition:</b> Peg.h:32</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Peg_html_a5c5bedeb2bc30d6c64b7f800229736ec"><div class="ttname"><a href="classisce_1_1core_1_1Peg.html#a5c5bedeb2bc30d6c64b7f800229736ec">isce::core::Peg::Peg</a></div><div class="ttdeci">Peg(const Peg &amp;p)</div><div class="ttdoc">Copy constructor. </div><div class="ttdef"><b>Definition:</b> Peg.h:38</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Peg_html_a38d701e637b9eac75b320e1e9c561fc5"><div class="ttname"><a href="classisce_1_1core_1_1Peg.html#a38d701e637b9eac75b320e1e9c561fc5">isce::core::Peg::operator=</a></div><div class="ttdeci">Peg &amp; operator=(const Peg &amp;)</div><div class="ttdoc">Assignment operator. </div><div class="ttdef"><b>Definition:</b> Peg.h:45</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Peg_html"><div class="ttname"><a href="classisce_1_1core_1_1Peg.html">isce::core::Peg</a></div><div class="ttdoc">Data structure to store a peg point. </div><div class="ttdef"><b>Definition:</b> Peg.h:15</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Peg_html_ab003db648f2ed18627c3b39def1c4b88"><div class="ttname"><a href="classisce_1_1core_1_1Peg.html#ab003db648f2ed18627c3b39def1c4b88">isce::core::Peg::Peg</a></div><div class="ttdeci">Peg()</div><div class="ttdoc">Empty constructor. </div><div class="ttdef"><b>Definition:</b> Peg.h:35</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
