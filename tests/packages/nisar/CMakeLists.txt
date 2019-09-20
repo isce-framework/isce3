@@ -8,3 +8,4 @@ set (MISCELOCATION ${ISCE_BUILDPACKAGESDIR})
 set(PYTEST_PYTHONPATH "${MISCELOCATION}:$ENV{PYTHONPATH}" CACHE INTERNAL "python paths for pytest")
 
 add_subdirectory(products)
+add_subdirectory(workflows)

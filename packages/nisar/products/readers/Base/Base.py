@@ -94,7 +94,6 @@ class Base(pyre.component,
         '''
         extracts orbit 
         '''
-
         orbitPath = os.path.join(self.MetadataPath, 'orbit')
 
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:

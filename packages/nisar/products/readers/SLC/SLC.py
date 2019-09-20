@@ -4,6 +4,8 @@
 # Copyright 2019-
 #
 
+import os
+import gdal
 import pyre
 from ..Base import Base
 
