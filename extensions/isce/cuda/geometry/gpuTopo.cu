@@ -6,6 +6,7 @@
 #include "gpuTopo.h"
 
 #include <isce/core/Basis.h>
+#include <isce/core/DenseMatrix.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Pixel.h>
 #include <isce/geometry/TopoLayers.h>

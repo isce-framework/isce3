@@ -14,6 +14,7 @@
 
 #include <pyre/journal.h>
 
+#include "DenseMatrix.h"
 #include "Ellipsoid.h"
 #include "EulerAngles.h"
 

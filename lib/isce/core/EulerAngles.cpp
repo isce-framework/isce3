@@ -15,9 +15,11 @@
 #include <pyre/journal.h>
 
 #include "Attitude.h"
+#include "DenseMatrix.h"
 #include "EulerAngles.h"
 #include "Quaternion.h"
 #include "Utilities.h"
+#include "Vector.h"
 
 constexpr auto EulerAngles_t = isce::core::Attitude::Type::EulerAngles_t;
 
@@ -218,9 +220,7 @@ rotmat(double tintp, const std::string sequence, double dyaw, double dpitch,
     R_map['r'] = T1(roll);
 
     // Build composite matrix
-    return R_map[sequence[0]].dot(
-            R_map[sequence[1]].dot(R_map[sequence[2]])
-           );
+    return R_map[sequence[0]] * R_map[sequence[1]] * R_map[sequence[2]];
 }
 
 // Rotation around Z-axis

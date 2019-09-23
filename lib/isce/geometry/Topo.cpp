@@ -20,6 +20,7 @@
 #include <isce/core/Basis.h>
 #include <isce/core/Constants.h>
 #include <isce/core/Pixel.h>
+#include <isce/core/DenseMatrix.h>
 #include <isce/core/Utilities.h>
 
 // isce::geometry

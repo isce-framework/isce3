@@ -16,6 +16,7 @@
 
 #include <isce/core/Constants.h>
 #include <isce/core/DateTime.h>
+#include <isce/core/DenseMatrix.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Projections.h>
 

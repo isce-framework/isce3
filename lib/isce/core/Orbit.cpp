@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 #include "Constants.h"
+#include "DenseMatrix.h"
 #include "Ellipsoid.h"
 #include "TimeDelta.h"
 
