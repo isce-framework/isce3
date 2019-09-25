@@ -38,10 +38,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
-      <li><a href="annotated.html"><span>C++&#160;Classes</span></a></li>
-      <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
-      <li><a href="https://github.com/isce-framework/isce3/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
+      <li class="current"><a href="namespaces.html"><span>Namespaces</span></a></li>
+      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li><a href="files.html"><span>Files</span></a></li>
+      <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
+      <li><a href="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
         <span class="left">
@@ -60,12 +62,18 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       </li>
     </ul>
   </div>
+  <div id="navrow2" class="tabs2">
+    <ul class="tablist">
+      <li><a href="namespaces.html"><span>Namespace&#160;List</span></a></li>
+      <li><a href="namespacemembers.html"><span>Namespace&#160;Members</span></a></li>
+    </ul>
+  </div>
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Friends</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -95,7 +103,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">DEM Interpolator.  <a href="classisce_1_1geometry_1_1DEMInterpolator.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geo2rdr.html">Geo2rdr</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transformer from map coordinates to radar geometry coordinates.  <a href="classisce_1_1geometry_1_1Geo2rdr.html#details">More...</a><br/></td></tr>
@@ -586,7 +593,7 @@ template&lt;class Archive &gt; </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">doppler</td><td>doppler model value corresponding to line,pixel </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">orbit</td><td>Orbit object </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">ellipsoid</td><td>Ellipsoid object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">demInterp</td><td><a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html" title="DEM Interpolator. ">DEMInterpolator</a> object </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">demInterp</td><td><a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> object </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">targetLLH</td><td>output Lon/Lat/Hae corresponding to aztime and slantRange </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">wvl</td><td>imaging wavelength </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">side</td><td>+1 for left and -1 for right </td></tr>
@@ -686,7 +693,7 @@ template&lt;class Archive &gt; </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">TCNbasis</td><td>Geocentric TCN basis corresponding to pixel </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pos/vel</td><td>position and velocity as Vec3 objects </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">ellipsoid</td><td>Ellipsoid object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">demInterp</td><td><a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html" title="DEM Interpolator. ">DEMInterpolator</a> object </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">demInterp</td><td><a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> object </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">targetLLH</td><td>output Lon/Lat/Hae corresponding to pixel </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">side</td><td>+1 for left and -1 for right </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">threshold</td><td>Distance threshold for convergence </td></tr>

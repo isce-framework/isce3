@@ -38,10 +38,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
-      <li><a href="annotated.html"><span>C++&#160;Classes</span></a></li>
-      <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
-      <li><a href="https://github.com/isce-framework/isce3/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
+      <li class="current"><a href="namespaces.html"><span>Namespaces</span></a></li>
+      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li><a href="files.html"><span>Files</span></a></li>
+      <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
+      <li><a href="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
         <span class="left">
@@ -60,12 +62,18 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       </li>
     </ul>
   </div>
+  <div id="navrow2" class="tabs2">
+    <ul class="tablist">
+      <li><a href="namespaces.html"><span>Namespace&#160;List</span></a></li>
+      <li><a href="namespacemembers.html"><span>Namespace&#160;Members</span></a></li>
+    </ul>
+  </div>
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Friends</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -96,25 +104,19 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1io_1_1float16.html">float16</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Proxy type for <a class="el" href="structisce_1_1io_1_1float16.html" title="Proxy type for float16. ">float16</a>.  <a href="structisce_1_1io_1_1float16.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1io_1_1n1bit.html">n1bit</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Proxy type for 1 bit integer.  <a href="structisce_1_1io_1_1n1bit.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1io_1_1n2bit.html">n2bit</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Proxy type for 2 bit integer.  <a href="structisce_1_1io_1_1n2bit.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1io_1_1findMeta.html">findMeta</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parameters containers for HDF5 searching capability.  <a href="structisce_1_1io_1_1findMeta.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html">IDataSet</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Our derived dataset structure that includes utility functions.  <a href="classisce_1_1io_1_1IDataSet.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IGroup.html">IGroup</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Our derived dataset that includes utility functions.  <a href="classisce_1_1io_1_1IGroup.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IH5File.html">IH5File</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Our derived dataset that includes utility functions.  <a href="classisce_1_1io_1_1IH5File.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IH5Dataset.html">IH5Dataset</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">IH5 interface to GDAL Dataset to allow read/write to HDF5 datasets from ISCE.  <a href="classisce_1_1io_1_1IH5Dataset.html#details">More...</a><br/></td></tr>
@@ -129,23 +131,19 @@ Classes</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
 <tr class="memitem:a2edbe970ae5fbe2384c0e6533c4b3b90"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2edbe970ae5fbe2384c0e6533c4b3b90"></a>
-typedef struct <a class="el" href="structisce_1_1io_1_1float16.html">isce::io::float16</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#a2edbe970ae5fbe2384c0e6533c4b3b90">float16</a></td></tr>
-<tr class="memdesc:a2edbe970ae5fbe2384c0e6533c4b3b90"><td class="mdescLeft">&#160;</td><td class="mdescRight">Proxy type for <a class="el" href="structisce_1_1io_1_1float16.html" title="Proxy type for float16. ">float16</a>. <br/></td></tr>
+typedef struct <a class="el" href="structisce_1_1io_1_1float16.html">isce::io::float16</a>&#160;</td><td class="memItemRight" valign="bottom"><b>float16</b></td></tr>
 <tr class="separator:a2edbe970ae5fbe2384c0e6533c4b3b90"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afdc655f7356f03e0b38669ebecdb71ec"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afdc655f7356f03e0b38669ebecdb71ec"></a>
-typedef struct <a class="el" href="structisce_1_1io_1_1n1bit.html">isce::io::n1bit</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#afdc655f7356f03e0b38669ebecdb71ec">n1bit</a></td></tr>
-<tr class="memdesc:afdc655f7356f03e0b38669ebecdb71ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Proxy type for 1 bit integer. <br/></td></tr>
+typedef struct <a class="el" href="structisce_1_1io_1_1n1bit.html">isce::io::n1bit</a>&#160;</td><td class="memItemRight" valign="bottom"><b>n1bit</b></td></tr>
 <tr class="separator:afdc655f7356f03e0b38669ebecdb71ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff4ff3fa3a5567f01ca5ba4087436ee0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aff4ff3fa3a5567f01ca5ba4087436ee0"></a>
-typedef struct <a class="el" href="structisce_1_1io_1_1n2bit.html">isce::io::n2bit</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#aff4ff3fa3a5567f01ca5ba4087436ee0">n2bit</a></td></tr>
-<tr class="memdesc:aff4ff3fa3a5567f01ca5ba4087436ee0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Proxy type for 2 bit integer. <br/></td></tr>
+typedef struct <a class="el" href="structisce_1_1io_1_1n2bit.html">isce::io::n2bit</a>&#160;</td><td class="memItemRight" valign="bottom"><b>n2bit</b></td></tr>
 <tr class="separator:aff4ff3fa3a5567f01ca5ba4087436ee0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a149fe3b422513f4be11b46ca902f567d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a149fe3b422513f4be11b46ca902f567d"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#a149fe3b422513f4be11b46ca902f567d">mapFileAccessMode</a> (const char mode)</td></tr>
-<tr class="memdesc:a149fe3b422513f4be11b46ca902f567d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function to map File access options between H5py-type and HDF5 types. <br/></td></tr>
+unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>mapFileAccessMode</b> (const char mode)</td></tr>
 <tr class="separator:a149fe3b422513f4be11b46ca902f567d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b7bc6ef4eb371dbb2f030eee87bea4e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3b7bc6ef4eb371dbb2f030eee87bea4e"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>CPLFree</b> (pasGCPList)</td></tr>

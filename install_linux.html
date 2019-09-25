@@ -38,10 +38,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
-      <li><a href="annotated.html"><span>C++&#160;Classes</span></a></li>
-      <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
-      <li><a href="https://github.com/isce-framework/isce3/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li class="current"><a href="pages.html"><span>Related&#160;Pages</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
+      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li><a href="files.html"><span>Files</span></a></li>
+      <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
+      <li><a href="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
         <span class="left">
@@ -65,7 +67,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Friends</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -86,7 +88,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </ul>
 </li>
 <li class="level1"><a href="#conda">Installing Anaconda and Python packages</a></li>
-<li class="level1"><a href="#pyreinstall">Installing pyre</a></li>
+<li class="level1"><a href="#pyreinstall">Installing pyre</a><ul><li class="level2"><a href="#pyresrc">Option 1: Install pyre from source</a></li>
+<li class="level2"><a href="#pyrebin">Option 2: Install pyre binaries (warning: currently not available)</a></li>
+</ul>
+</li>
 <li class="level1"><a href="#isce3linux">Install ISCE from source</a><ul><li class="level2"><a href="#isce3targit">Step 1: Get latest version of ISCE source</a><ul><li class="level3"><a href="#isce3git">Option 1: Checkout latest version from git</a></li>
 <li class="level3"><a href="#isce3tar">Option 2: Get the latest tarball</a></li>
 </ul>
@@ -107,13 +112,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>
 C++ compiler - gcc-6 or above </li>
 <li>
-Python 3.7 or above </li>
+Python 3.6 or above </li>
 <li>
 Numpy and Cython </li>
 <li>
-GDAL 3.0 or above with Python bindings </li>
+GDAL 2.3 or above with Python bindings </li>
 <li>
-HDF5 1.10.4 or above with h5py </li>
+HDF5 1.10.2 or above with h5py </li>
 <li>
 cmake 3.11 or above </li>
 <li>
@@ -233,6 +238,8 @@ fftw
 </ol>
 <h1><a class="anchor" id="pyreinstall"></a>
 Installing pyre</h1>
+<h2><a class="anchor" id="pyresrc"></a>
+Option 1: Install pyre from source</h2>
 <p>In order to install pyre from source, we must first download the config package which is a Python-based build system built on top of GNU <code>make</code>. </p>
 <div class="fragment"><div class="line">&gt; cd ${HOME}/tools</div>
 <div class="line">&gt; git clone https:<span class="comment">//github.com/aivazis/config.git</span></div>
@@ -293,7 +300,34 @@ Installing pyre</h1>
 <div class="line">export PATH=$PYREDIR/bin:$PATH</div>
 <div class="line">export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH</div>
 <div class="line">export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH</div>
-</div><!-- fragment --><h1><a class="anchor" id="isce3linux"></a>
+</div><!-- fragment --><h2><a class="anchor" id="pyrebin"></a>
+Option 2: Install pyre binaries (warning: currently not available)</h2>
+<p>If pre-built pyre binaries are available, we can simply download the binaries and install them in the correct location. We will install pyre binaries in ${HOME}/tools/pyre.</p>
+<ol>
+<li>
+<p class="startli">Download the pyre binaries. </p>
+<div class="fragment"><div class="line">&gt; cd ${HOME}/tools</div>
+<div class="line">&gt; curl -sSL http:<span class="comment">//pyre.orthologue.com/pyre-1.0.cpython-36m-x86_64-linux-gnu.zip -o pyre.zip</span></div>
+</div><!-- fragment --><p class="endli"></p>
+</li>
+<li>
+<p class="startli">Unzip the zip file. </p>
+<div class="fragment"><div class="line">&gt; cd ${HOME}/tools</div>
+<div class="line">&gt; mkdir pyre</div>
+<div class="line">&gt; cd pyre</div>
+<div class="line">&gt; unzip ../pyre.zip</div>
+</div><!-- fragment --><p class="endli"></p>
+</li>
+<li>
+<p class="startli">Setup relevant environment variables </p>
+<div class="fragment"><div class="line">export PYREDIR=${HOME}/tools/pyre</div>
+<div class="line">export PATH=$PYREDIR/bin:$PATH</div>
+<div class="line">export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH</div>
+<div class="line">export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH</div>
+</div><!-- fragment --><p class="endli"></p>
+</li>
+</ol>
+<h1><a class="anchor" id="isce3linux"></a>
 Install ISCE from source</h1>
 <p>In this section we will walk through the directory setup and build system instructions for installing ISCE. ISCE can be built with 2 different build systems - <a href="https://github.com/aivazis/config">mm</a> and <a href="https://cmake.org/">cmake</a>. In this set of instructions, we focus on cmake as it is already available via standard package managers.</p>
 <h2><a class="anchor" id="isce3targit"></a>
@@ -305,7 +339,7 @@ Option 1: Checkout latest version from git</h3>
 Ensure that you are in the source folder <div class="fragment"><div class="line">&gt; cd ${HOME}/src</div>
 </div><!-- fragment --> </li>
 <li>
-Check out the latest version of the source code from git <div class="fragment"><div class="line">&gt; git clone https:<span class="comment">//github.com/isce-framework/isce3</span></div>
+Check out the latest version of the source code from git <div class="fragment"><div class="line">&gt; git clone https:<span class="comment">//github-fn.jpl.nasa.gov/isce-3/isce</span></div>
 </div><!-- fragment --> </li>
 <li>
 Ensure you are building the branch that you want to use. For example, if you want to build the <b>develop</b> branch <div class="fragment"><div class="line">&gt; cd isce</div>

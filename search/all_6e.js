@@ -1,9 +1,7 @@
 var searchData=
 [
   ['n1bit',['n1bit',['../structisce_1_1io_1_1n1bit.html',1,'isce::io']]],
-  ['n1bit',['n1bit',['../namespaceisce_1_1io.html#afdc655f7356f03e0b38669ebecdb71ec',1,'isce::io']]],
   ['n2bit',['n2bit',['../structisce_1_1io_1_1n2bit.html',1,'isce::io']]],
-  ['n2bit',['n2bit',['../namespaceisce_1_1io.html#aff4ff3fa3a5567f01ca5ba4087436ee0',1,'isce::io']]],
   ['ncols',['ncols',['../classisce_1_1signal_1_1Looks.html#acc92832573210d4d2b74627b01eec1c8',1,'isce::signal::Looks']]],
   ['ncolslooked',['ncolsLooked',['../classisce_1_1signal_1_1Looks.html#a7a23f11f79fb00de1ff8ede78960d664',1,'isce::signal::Looks']]],
   ['nearestneighborinterpolator',['NearestNeighborInterpolator',['../classisce_1_1core_1_1NearestNeighborInterpolator.html#a0115bc94a9f00b0eea9547f767f0ef3b',1,'isce::core::NearestNeighborInterpolator']]],
@@ -20,8 +18,7 @@ var searchData=
   ['node',['Node',['../structNode.html',1,'']]],
   ['nodeflow',['NodeFlow',['../structNodeFlow.html',1,'']]],
   ['nominalacquisitionprf',['nominalAcquisitionPRF',['../classisce_1_1product_1_1Swath.html#a52f3f71a3c67c292720acbb29bc860c2',1,'isce::product::Swath::nominalAcquisitionPRF() const '],['../classisce_1_1product_1_1Swath.html#a5586a8a0d34076c168dbcebd7a8b4809',1,'isce::product::Swath::nominalAcquisitionPRF(double f)']]],
-  ['norm',['norm',['../classisce_1_1core_1_1Poly1d.html#a123489f472adff67a1712d6d30d6f45c',1,'isce::core::Poly1d::norm()'],['../classisce_1_1core_1_1Vector.html#aeb8559c22421255373444e03b2cc972f',1,'isce::core::Vector::norm()']]],
-  ['normalplane',['normalPlane',['../namespaceisce_1_1core.html#a4a44d10d20f1918f8e4f1ced583ebd4a',1,'isce::core']]],
+  ['norm',['norm',['../classisce_1_1core_1_1Poly1d.html#a123489f472adff67a1712d6d30d6f45c',1,'isce::core::Poly1d']]],
   ['nrows',['nrows',['../classisce_1_1signal_1_1Looks.html#afb7040577a8fd31e3f50f1169d9ee024',1,'isce::signal::Looks']]],
   ['nrowslooked',['nrowsLooked',['../classisce_1_1signal_1_1Looks.html#ab63330172d249b79af9890eec19a1f9f',1,'isce::signal::Looks']]],
   ['null_5fvalue',['NULL_VALUE',['../classisce_1_1geometry_1_1Geo2rdr.html#a619f025773af42d47a89b1b699872de1',1,'isce::geometry::Geo2rdr']]],

@@ -1,7 +1,6 @@
 var searchData=
 [
   ['makemask',['makeMask',['../namespaceisce_1_1core.html#a55c1c561c113f7d0aeead8d9e772403e',1,'isce::core::makeMask(const std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;v, std::complex&lt; T &gt; noDataValue)'],['../namespaceisce_1_1core.html#a1f15714f1c3862ea7655253bd0cf750e',1,'isce::core::makeMask(const std::valarray&lt; T &gt; &amp;v, T noDataValue)']]],
-  ['mapfileaccessmode',['mapFileAccessMode',['../namespaceisce_1_1io.html#a149fe3b422513f4be11b46ca902f567d',1,'isce::io']]],
   ['mat',['mat',['../structisce_1_1core_1_1Pegtrans.html#aa9c4c83023ab8070cac394c7d640acd2',1,'isce::core::Pegtrans']]],
   ['match',['match',['../classisce_1_1io_1_1Raster.html#a5c2cadb24c0dc41ede85bfb4276d83dd',1,'isce::io::Raster']]],
   ['matinv',['matinv',['../structisce_1_1core_1_1Pegtrans.html#ad5ed255a751bdade332b89e9556f9024',1,'isce::core::Pegtrans']]],

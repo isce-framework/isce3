@@ -10,8 +10,6 @@ var searchData=
   ['nfft',['NFFT',['../classisce_1_1signal_1_1NFFT.html#a07855cbe31267ab152f5b974e67b7b9e',1,'isce::signal::NFFT']]],
   ['nfftkernel',['NFFTKernel',['../classisce_1_1core_1_1NFFTKernel.html#a709837b2783ade0ad819e6015f39b37e',1,'isce::core::NFFTKernel']]],
   ['nominalacquisitionprf',['nominalAcquisitionPRF',['../classisce_1_1product_1_1Swath.html#a52f3f71a3c67c292720acbb29bc860c2',1,'isce::product::Swath::nominalAcquisitionPRF() const '],['../classisce_1_1product_1_1Swath.html#a5586a8a0d34076c168dbcebd7a8b4809',1,'isce::product::Swath::nominalAcquisitionPRF(double f)']]],
-  ['norm',['norm',['../classisce_1_1core_1_1Vector.html#aeb8559c22421255373444e03b2cc972f',1,'isce::core::Vector']]],
-  ['normalplane',['normalPlane',['../namespaceisce_1_1core.html#a4a44d10d20f1918f8e4f1ced583ebd4a',1,'isce::core']]],
   ['nrows',['nrows',['../classisce_1_1signal_1_1Looks.html#afb7040577a8fd31e3f50f1169d9ee024',1,'isce::signal::Looks']]],
   ['nrowslooked',['nrowsLooked',['../classisce_1_1signal_1_1Looks.html#ab63330172d249b79af9890eec19a1f9f',1,'isce::signal::Looks']]],
   ['numbands',['numBands',['../classisce_1_1io_1_1Raster.html#a272d6dedd7cfcc0f072f2fdd4d8422cc',1,'isce::io::Raster']]],
