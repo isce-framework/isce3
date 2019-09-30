@@ -4,8 +4,15 @@
 //
 
 #include "gpuGeometry.h"
-#include <isce/cuda/except/Error.h>
+
 #include <isce/core/Basis.h>
+#include <isce/core/Ellipsoid.h>
+#include <isce/core/Orbit.h>
+#include <isce/core/Pixel.h>
+#include <isce/cuda/core/gpuLUT1d.h>
+#include <isce/cuda/core/gpuOrbit.h>
+#include <isce/cuda/except/Error.h>
+#include <isce/cuda/geometry/gpuDEMInterpolator.h>
 
 using isce::core::Basis;
 using isce::core::Vec3;

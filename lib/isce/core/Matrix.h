@@ -4,8 +4,6 @@
 // Author: Bryan V. Riel
 // Copyright 2017-2018
 
-#ifndef ISCE_CORE_MATRIX_H
-#define ISCE_CORE_MATRIX_H
 #pragma once
 
 #include "forward.h"
@@ -147,7 +145,3 @@ class isce::core::Matrix {
 #define ISCE_CORE_MATRIX_ICC
 #include "Matrix.icc"
 #undef ISCE_CORE_MATRIX_ICC
-
-#endif
-
-// end of file

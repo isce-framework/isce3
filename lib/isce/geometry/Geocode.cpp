@@ -6,6 +6,10 @@
 
 #include "Geocode.h"
 
+#include <isce/core/Basis.h>
+#include <isce/core/Projections.h>
+#include "DEMInterpolator.h"
+
 using isce::core::Vec3;
 
 template<class T>

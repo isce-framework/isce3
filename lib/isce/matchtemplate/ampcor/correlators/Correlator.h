@@ -4,12 +4,8 @@
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2019 all rights reserved
-//
 
-// code guard
-#if !defined(ampcor_libampcor_correlators_correlator_h)
-#define ampcor_libampcor_correlators_correlator_h
-
+#pragma once
 
 // externals
 #include <pyre/grid.h>
@@ -61,9 +57,3 @@ private:
     // the amplitude of the target SLC:
     grid_type _tgtAmplitude;
 };
-
-
-// code guard
-#endif
-
-// end of file

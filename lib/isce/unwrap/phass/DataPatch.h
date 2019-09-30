@@ -12,8 +12,7 @@
 // 
 //  ======================================================================
 
-#ifndef __DATA_PATCH
-#define __DATA_PATCH
+#pragma once
 
 #include "stdlib.h"
 #include <complex>
@@ -338,7 +337,3 @@ template<class type> inline type DataPatch<type>::mean(){
   if (cnt != 0) sum /= cnt;
   return sum;
 }
-
-//------------------------------------------------------------------------------
-#endif
-//------------------------------------------------------------------------------

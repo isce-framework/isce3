@@ -3,15 +3,17 @@
 // Author: Bryan V. Riel, Joshua Cohen
 // Copyright: 2017-2018
 
+#include "gpuGeo2rdr.h"
+
 #include <isce/core/Ellipsoid.h>
 
 // isce::cuda::core
-#include "isce/cuda/core/gpuOrbit.h"
-#include "isce/cuda/core/gpuLUT1d.h"
+#include <isce/cuda/core/gpuLUT1d.h>
+#include <isce/cuda/core/gpuOrbit.h>
+#include <isce/cuda/core/gpuProjections.h>
 
 // isce::cuda::geometry
 #include "gpuGeometry.h"
-#include "gpuGeo2rdr.h"
 
 #include <isce/cuda/except/Error.h>
 

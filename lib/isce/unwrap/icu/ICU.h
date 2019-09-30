@@ -1,5 +1,4 @@
-#ifndef ISCE_UNWRAP_ICU_ICU_H
-#define ISCE_UNWRAP_ICU_ICU_H
+#pragma once
 
 #include <array> // std::array
 #include <complex> // std::complex
@@ -202,6 +201,3 @@ private:
 #define ISCE_UNWRAP_ICU_ICU_ICC
 #include "ICU.icc"
 #undef ISCE_UNWRAP_ICU_ICU_ICC
-
-#endif /* ISCE_UNWRAP_ICU_ICU_H */
-

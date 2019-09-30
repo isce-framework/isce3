@@ -4,8 +4,6 @@
 // Author: Piyush Agram
 // Copyright 2017-2019
 
-#ifndef ISCE_CORE_CUBE_H
-#define ISCE_CORE_CUBE_H
 #pragma once
 
 #include "forward.h"
@@ -146,7 +144,3 @@ class isce::core::Cube {
 #define ISCE_CORE_CUBE_ICC
 #include "Cube.icc"
 #undef ISCE_CORE_CUBE_ICC
-
-#endif
-
-// end of file

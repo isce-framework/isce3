@@ -1,7 +1,6 @@
 //-*- C++ -*-
 
-#ifndef ISCE_IO_CONSTANTS_H
-#define ISCE_IO_CONSTANTS_H
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -30,10 +29,5 @@ namespace isce {
            {typeid(std::complex<int32_t>), GDT_CInt32},
            {typeid(std::complex<float>),   GDT_CFloat32},
            {typeid(std::complex<double>),  GDT_CFloat64}};
-        
     }
 }
-
-#endif
-
-// end of file

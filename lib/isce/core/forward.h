@@ -15,6 +15,7 @@ namespace isce {
         class Pixel;
         class Poly1d;
         class Poly2d;
+        class ProjectionBase;
         class Quaternion;
         struct StateVector;
         class TimeDelta;

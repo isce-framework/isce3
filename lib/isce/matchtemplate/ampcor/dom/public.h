@@ -4,12 +4,8 @@
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2019 all rights reserved
-//
 
-// code guard
-#if !defined(ampcor_libampcor_dom_public_h)
-#define ampcor_libampcor_dom_public_h
-
+#pragma once
 
 // externals
 #include <pyre/grid.h>
@@ -67,9 +63,3 @@ namespace ampcor {
 #define ampcor_libampcor_dom_slc_icc
 #include "SLC.icc"
 #undef ampcor_libampcor_dom_slc_icc
-
-
-// code guard
-#endif
-
-// end of file

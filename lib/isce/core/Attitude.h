@@ -5,8 +5,6 @@
 // Copyright 2018
 //
 
-#ifndef ISCE_CORE_ATTITUDE_H
-#define ISCE_CORE_ATTITUDE_H
 #pragma once
 
 #include "forward.h"
@@ -54,7 +52,3 @@ class isce::core::Attitude {
 void isce::core::Attitude::yawOrientation(const std::string orientation) {
     _yaw_orientation = orientation;
 }
-
-#endif
-
-// end of file

@@ -12,12 +12,7 @@
 // 
 //  ======================================================================
 
-
-#ifndef  PhassUnwrapper_h
-#define  PhassUnwrapper_h
+#pragma once
 
 void phass_unwrap(int nr_lines, int nr_pixels, float **phase_data, float **corr_data, float **power, int **region_map,
 		  double corr_th, double good_corr, int min_pixels_per_region);
-
-#endif
-

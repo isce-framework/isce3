@@ -3,8 +3,6 @@
 // Copyright 2019
 //
 
-#ifndef ISCE_CORE_KERNELS_H
-#define ISCE_CORE_KERNELS_H
 #pragma once
 
 #include "forward.h"
@@ -123,5 +121,3 @@ class isce::core::NFFTKernel : public isce::core::Kernel<T> {
         T _scale;
         T _b;
 };
-
-#endif

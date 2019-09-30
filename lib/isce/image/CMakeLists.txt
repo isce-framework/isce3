@@ -3,7 +3,8 @@ set(SRCS
     ResampSlc.cpp)
 
 #####Library headers
-set(HEADERS ResampSlc.h
+set(HEADERS forward.h
+            ResampSlc.h
             ResampSlc.icc
             Tile.h
             Tile.icc)

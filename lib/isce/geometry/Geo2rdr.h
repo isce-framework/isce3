@@ -4,8 +4,7 @@
 // Author: Bryan Riel, Joshua Cohen
 // Copyright 2017-2018
 
-#ifndef ISCE_CORE_GEO2RDR_H
-#define ISCE_CORE_GEO2RDR_H
+#pragma once
 
 // pyre
 #include <pyre/journal.h>
@@ -139,7 +138,3 @@ class isce::geometry::Geo2rdr {
 #define ISCE_GEOMETRY_GEO2RDR_ICC
 #include "Geo2rdr.icc"
 #undef ISCE_GEOMETRY_GEO2RDR_ICC
-
-#endif
-
-// end of file

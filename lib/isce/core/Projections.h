@@ -4,8 +4,6 @@
 // Copyright 2017
 //
 
-#ifndef __ISCE_CORE_PROJECTIONS_H__
-#define __ISCE_CORE_PROJECTIONS_H__
 #pragma once
 
 #include <iostream>
@@ -190,5 +188,3 @@ namespace isce { namespace core {
     int projTransform(ProjectionBase* in, ProjectionBase *out, const Vec3& inpts,
                       Vec3& outpts);
 }}
-
-#endif

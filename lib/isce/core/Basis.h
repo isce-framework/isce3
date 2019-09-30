@@ -4,8 +4,6 @@
 // Author: Bryan V. Riel, Joshua Cohen
 // Copyright 2017-2018
 
-#ifndef ISCE_CORE_BASIS_H
-#define ISCE_CORE_BASIS_H
 #pragma once
 
 #include "forward.h"
@@ -89,7 +87,3 @@ class isce::core::Basis {
         cartesian_t _x1;
         cartesian_t _x2;
 };
-
-#endif
-
-// end of file

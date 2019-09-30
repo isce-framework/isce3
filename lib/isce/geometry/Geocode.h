@@ -4,20 +4,15 @@
 // Author: Heresh Fattahi
 // Copyright 2019-
 
-#ifndef ISCE_GEOMETRY_GEOCODE_H
-#define ISCE_GEOMETRY_GEOCODE_H
+#pragma once
 
 // pyre
 #include <pyre/journal.h>
 
 // isce::core
-#include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
-#include <isce/core/Poly2d.h>
-#include <isce/core/Projections.h>
-#include <isce/core/LUT2d.h>
 #include <isce/core/Ellipsoid.h>
-#include <isce/core/Interpolator.h>
+#include <isce/core/LUT2d.h>
 #include <isce/core/Constants.h>
 
 // isce::io
@@ -29,15 +24,6 @@
 
 // isce::geometry
 #include "geometry.h"
-#include "DEMInterpolator.h"
-
-// Declaration
-namespace isce {
-    namespace geometry {
-        template<class T>
-        class Geocode;
-    }
-}
 
 template<class T>
 class isce::geometry::Geocode {
@@ -198,7 +184,3 @@ class isce::geometry::Geocode {
 #define ISCE_GEOMETRY_GEOCODE_ICC
 #include "Geocode.icc"
 #undef ISCE_GEOMETRY_GEOCODE_ICC
-
-
-#endif
-

@@ -1,6 +1,4 @@
 #pragma once
-#ifndef ISCE_CUDA_CORE_STREAM_H
-#define ISCE_CUDA_CORE_STREAM_H
 
 #include <memory>
 
@@ -51,6 +49,3 @@ void synchronize(Stream);
 bool query(Stream);
 
 }}}
-
-#endif
-

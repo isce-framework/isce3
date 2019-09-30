@@ -1,4 +1,5 @@
 set(HEADERS
+        forward.h
         gpuSignal.h
         gpuFilter.h
         gpuLooks.h

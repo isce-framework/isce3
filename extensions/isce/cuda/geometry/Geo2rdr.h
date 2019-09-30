@@ -3,20 +3,11 @@
 // Author: Bryan V. Riel
 // Copyright: 2017-2018
 
-#ifndef ISCE_CUDA_GEOMETRY_GEO2RDR_H
-#define ISCE_CUDA_GEOMETRY_GEO2RDR_H
+#pragma once
 
-// isce::geometry
-#include "isce/geometry/Geo2rdr.h"
+#include "forward.h"
 
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace geometry {
-            class Geo2rdr;
-        }
-    }
-}
+#include <isce/geometry/Geo2rdr.h>
 
 // CUDA Topo class definition
 /** Transformer from map coordinates to radar geometry coordinates using GPU.
@@ -72,7 +63,3 @@ class isce::cuda::geometry::Geo2rdr : public isce::geometry::Geo2rdr {
         /** Compute number of lines per block dynamically from GPU memmory */
         void computeLinesPerBlock();
 };
-
-#endif
-
-// end of file

@@ -6,10 +6,8 @@
 // 
 //  ----------------------------------------------------------------------------
 //  Author:  Xiaoqing Wu
-// 
 
-#ifndef ASSP_H
-#define ASSP_H
+#pragma once
 
 #include "Seed.h"
 #include "Point.h"
@@ -94,5 +92,3 @@ DataPatch<char>* unwrap_assp(DataPatch<NodeFlow> *flows_patch, float **phase_dat
 
 DataPatch<int> * generate_regions(DataPatch<NodeFlow> *flows_patch, int nr_seeds, Seed *seeds);
 void generate_regions(DataPatch<NodeFlow> *flows_patch, int nr_seeds, Seed *seeds, int **region_map);
-
-#endif

@@ -1,6 +1,4 @@
 #pragma once
-#ifndef ISCE_CORE_LINSPACE_H
-#define ISCE_CORE_LINSPACE_H
 
 #include <cstddef>
 
@@ -134,6 +132,3 @@ int where(const Linspace<T> & x, U val);
 #define ISCE_CORE_LINSPACE_ICC
 #include "Linspace.icc"
 #undef ISCE_CORE_LINSPACE_ICC
-
-#endif
-

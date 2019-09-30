@@ -10,6 +10,8 @@
 // 
 //  ======================================================================
 
+#pragma once
+
 #include "stdlib.h"
 
 void	maxHeapify (double * vals, int n, int *indexes, int root);
@@ -27,5 +29,3 @@ float median_use_histogram(int n, float *data, int start_count = 0, int total_si
 // median_use_histogram(n, data, 0, n), 
 // or simply 
 // median_use_histogram(n, data);
-
-

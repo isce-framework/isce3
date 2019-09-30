@@ -4,12 +4,8 @@
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2019 all rights reserved
-//
 
-// code guard
-#if !defined(ampcor_libampcor_correlators_public_h)
-#define ampcor_libampcor_correlators_public_h
-
+#pragma once
 
 // externals
 // STL
@@ -87,9 +83,3 @@ namespace ampcor {
 #define ampcor_libampcor_correlators_sumarea_icc
 #include "SumArea.icc"
 #undef ampcor_libampcor_correlators_sumarea_icc
-
-
-// code guard
-#endif
-
-// end of file

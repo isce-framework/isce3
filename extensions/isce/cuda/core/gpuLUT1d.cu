@@ -5,6 +5,8 @@
 //
 
 #include "gpuLUT1d.h"
+
+#include <isce/core/LUT1d.h>
 #include <isce/cuda/except/Error.h>
 
 // Deep copy constructor from CPU LUT1d

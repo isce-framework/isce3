@@ -6,19 +6,15 @@
 //       to carefully manage the deep-copying in the constructors (so we don't have to worry about 
 //       adding it to every code that uses this class)
 
-#ifndef __ISCE_CUDA_CORE_GPUORBIT_H__
-#define __ISCE_CUDA_CORE_GPUORBIT_H__
+#pragma once
 
 #include <vector>
-#include "isce/core/Orbit.h"
+#include <isce/core/Orbit.h>
 
-using isce::core::Orbit;
 using isce::core::cartesian_t;
 
-namespace isce { 
-    //! The isce::cuda namespace
-    namespace cuda { 
-        namespace core {
+namespace isce { namespace cuda { namespace core {
+
     struct gpuOrbit {
         int nVectors;
         double *UTCtime;
@@ -35,7 +31,7 @@ namespace isce {
                                                  position(o.position), velocity(o.velocity), 
                                                  owner(false) {}
         // Advanced "copy constructor only allowed on host (manages deep copies from host to device)
-        CUDA_HOST gpuOrbit(const Orbit&);
+        CUDA_HOST gpuOrbit(const isce::core::Orbit&);
         CUDA_HOSTDEV gpuOrbit& operator=(const gpuOrbit&) = delete;
         ~gpuOrbit();
 
@@ -64,5 +60,3 @@ namespace isce {
         }
     }
 }}}
-
-#endif

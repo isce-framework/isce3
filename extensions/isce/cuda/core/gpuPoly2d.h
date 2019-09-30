@@ -3,13 +3,11 @@
 // Copyright 2018
 //
 
-#ifndef ISCE_CUDA_CORE_GPUPOLY2D_H
-#define ISCE_CUDA_CORE_GPUPOLY2D_H
+#pragma once
+
+#include <isce/core/forward.h>
 
 #include <cmath>
-#include "isce/core/Poly2d.h"
-
-using isce::core::Poly2d;
 
 namespace isce { namespace cuda { namespace core {
     struct gpuPoly2d{
@@ -40,7 +38,7 @@ namespace isce { namespace cuda { namespace core {
                                                 rangeMean(p.rangeMean), azimuthMean(p.azimuthMean), 
                                                 rangeNorm(p.rangeNorm), azimuthNorm(p.azimuthNorm), 
                                                 coeffs(p.coeffs), owner(false) {}
-        CUDA_HOST gpuPoly2d(const Poly2d&);
+        CUDA_HOST gpuPoly2d(const isce::core::Poly2d&);
         ~gpuPoly2d();
 
         CUDA_HOSTDEV inline gpuPoly2d& operator=(const gpuPoly2d&);
@@ -66,5 +64,3 @@ namespace isce { namespace cuda { namespace core {
 
 
 }}}
-
-#endif

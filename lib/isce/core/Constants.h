@@ -3,8 +3,6 @@
 // Copyright 2017-2018
 //
 
-#ifndef ISCE_CORE_CONSTANTS_H
-#define ISCE_CORE_CONSTANTS_H
 #pragma once
 
 #include <stdexcept>
@@ -102,5 +100,3 @@ namespace isce { namespace core {
     template<> struct double_promote<std::complex<double>> { using type = std::complex<double>; };
   }
 }
-
-#endif

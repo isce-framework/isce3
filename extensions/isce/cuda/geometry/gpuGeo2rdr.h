@@ -3,13 +3,10 @@
 // Author: Bryan V. Riel
 // Copyright: 2017-2018
 
-#ifndef ISCE_CUDA_GEOMETRY_GPUGEO2RDR_H
-#define ISCE_CUDA_GEOMETRY_GPUGEO2RDR_H
+#pragma once
 
-// isce::core
-#include "isce/core/Ellipsoid.h"
-#include "isce/core/Orbit.h"
-#include "isce/core/LUT1d.h"
+#include <valarray>
+#include <isce/core/forward.h>
 
 namespace isce {
     namespace cuda {
@@ -31,7 +28,3 @@ namespace isce {
         }
     }
 }
-
-#endif
-
-// end of file

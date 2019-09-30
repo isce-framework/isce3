@@ -5,8 +5,9 @@
 // Copyright 2018-
 //
 
-#ifndef ISCE_SIGNAL_SIGNAL_H
-#define ISCE_SIGNAL_SIGNAL_H
+#pragma once
+
+#include "forward.h"
 
 #include <cmath>
 #include <valarray>
@@ -14,15 +15,6 @@
 #include <cstring>
 
 #include <isce/core/Constants.h>
-
-// Declaration
-namespace isce {
-    //! The isce::signal namespace
-    namespace signal {
-        template<class T>
-        class Signal;
-    }
-}
 
 /** A class to handle 2D FFT or 1D FFT in range or azimuth directions 
  */
@@ -452,7 +444,3 @@ class isce::signal::Signal {
 #define ISCE_SIGNAL_SIGNAL_ICC
 #include "Signal.icc"
 #undef ISCE_SIGNAL_SIGNAL_ICC
-
-#endif
-
-

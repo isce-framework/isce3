@@ -4,33 +4,23 @@
 // Author: Bryan Riel, Joshua Cohen
 // Copyright 2017-2018
 
-#ifndef ISCE_GEOMETRY_TOPO_H
-#define ISCE_GEOMETRY_TOPO_H
+#pragma once
 
-// pyre
-#include <pyre/journal.h>
+#include "forward.h"
 
-// isce::core
-#include <isce/core/Metadata.h>
-#include <isce/core/Peg.h>
+#include <isce/core/forward.h>
+#include <isce/core/Ellipsoid.h>
+#include <isce/core/Orbit.h>
 
 // isce::io
-#include <isce/io/Raster.h>
+#include <isce/io/forward.h>
 
 // isce::product
-#include <isce/product/Product.h>
+#include <isce/product/forward.h>
 #include <isce/product/RadarGridParameters.h>
 
 // isce::geometry
 #include "geometry.h"
-#include "TopoLayers.h"
-
-// Declaration
-namespace isce {
-    namespace geometry {
-        class Topo;
-    }
-}
 
 // Declare Topo class
 /** Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude
@@ -197,8 +187,3 @@ class isce::geometry::Topo {
 #define ISCE_GEOMETRY_TOPO_ICC
 #include "Topo.icc"
 #undef ISCE_GEOMETRY_TOPO_ICC
-
-
-#endif
-
-// end of file

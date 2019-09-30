@@ -9,6 +9,7 @@ set(SRCS
 
 #####Library headers
 set(HEADERS
+    forward.h
     DEMInterpolator.h
     Geo2rdr.h
     Geo2rdr.icc

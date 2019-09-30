@@ -8,8 +8,7 @@
 //  Point class definitions
 // ------------------------------------------------------------------------------
 
-#ifndef __POINT_H
-#define __POINT_H
+#pragma once
 
 #include <iostream>
 #include <iomanip>
@@ -564,7 +563,3 @@ class Geopoint {
 
 double cross(Point p1, Point p2);
 double cross(D2point p1, D2point p2);
-
-
-
-#endif

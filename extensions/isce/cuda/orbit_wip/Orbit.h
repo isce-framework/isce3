@@ -1,6 +1,4 @@
 #pragma once
-#ifndef ISCE_CUDA_ORBITWIP_ORBIT_H
-#define ISCE_CUDA_ORBITWIP_ORBIT_H
 
 #include <isce/core/DateTime.h>
 #include <isce/core/Linspace.h>
@@ -138,6 +136,3 @@ bool operator==(const Orbit &, const Orbit &);
 bool operator!=(const Orbit &, const Orbit &);
 
 }}}
-
-#endif
-

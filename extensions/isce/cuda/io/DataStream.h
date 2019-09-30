@@ -1,6 +1,4 @@
 #pragma once
-#ifndef ISCE_CUDA_IO_DATASTREAM_H
-#define ISCE_CUDA_IO_DATASTREAM_H
 
 #include <isce/cuda/core/Event.h>
 #include <isce/cuda/core/Stream.h>
@@ -245,6 +243,3 @@ private:
 #define ISCE_CUDA_IO_DATASTREAM_ICC
 #include "DataStream.icc"
 #undef ISCE_CUDA_IO_DATASTREAM_ICC
-
-#endif
-

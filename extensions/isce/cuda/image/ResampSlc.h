@@ -3,22 +3,13 @@
 //
 // Author: Liang Yu
 // Copyright 2018
-//
 
-#ifndef ISCE_CUDA_IMAGE_RESAMPSLC_H
-#define ISCE_CUDA_IMAGE_RESAMPSLC_H
+#pragma once
+
+#include "forward.h"
 
 // isce::image
-#include "isce/image/ResampSlc.h"
-
-// Declaration
-namespace isce { 
-    namespace cuda { 
-        namespace image {
-            class ResampSlc;
-        }
-    }
-}
+#include <isce/image/ResampSlc.h>
 
 // Definition
 class isce::cuda::image::ResampSlc : public isce::image::ResampSlc {
@@ -65,7 +56,3 @@ class isce::cuda::image::ResampSlc : public isce::image::ResampSlc {
                     int chipSize=isce::core::SINC_ONE);
         
 };
-
-#endif
-
-// end of file

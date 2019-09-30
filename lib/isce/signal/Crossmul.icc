@@ -9,6 +9,7 @@
 #error "Crossmul.icc is an implementation detail of class Crossmul"
 #endif
 
+#include <iostream>
 
 /** @param[in] refSlcDoppler 2D Doppler polynomial for refernce SLC
 *   @param[in] secSlcDoppler 2D Doppler polynomial for secondary SLC

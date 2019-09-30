@@ -3,8 +3,6 @@
 // Copyright 2017
 //
 
-#ifndef ISCE_CORE_POLY1D_H
-#define ISCE_CORE_POLY1D_H
 #pragma once
 
 #include "forward.h"
@@ -101,7 +99,3 @@ getCoeff(int idx) const {
     }
     return coeffs[idx];
 }
-
-#endif
-
-// end of file

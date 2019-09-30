@@ -4,8 +4,7 @@
 // Source Author: Bryan Riel
 // Copyright 2017-2019
 
-#ifndef ISCE_PRODUCT_METADATA_H
-#define ISCE_PRODUCT_METADATA_H
+#pragma once
 
 // isce::core
 #include <isce/core/EulerAngles.h>
@@ -69,7 +68,3 @@ class isce::product::Metadata {
 isce::product::Metadata::
 Metadata(const Metadata & meta) : _attitude(meta.attitude()), _orbit(meta.orbit()),
                                   _procInfo(meta.procInfo()) {}
-
-#endif
-
-// end of file

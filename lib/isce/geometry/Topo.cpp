@@ -4,6 +4,8 @@
 // Author: Bryan V. Riel, Joshua Cohen
 // Copyright 2017-2018
 
+#include "Topo.h"
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -15,11 +17,14 @@
 #include <algorithm>
 
 // isce::core
+#include <isce/core/Basis.h>
 #include <isce/core/Constants.h>
+#include <isce/core/Pixel.h>
 #include <isce/core/Utilities.h>
 
 // isce::geometry
-#include "Topo.h"
+#include "DEMInterpolator.h"
+#include "TopoLayers.h"
 
 // pull in some isce::core namespaces
 using isce::core::Basis;

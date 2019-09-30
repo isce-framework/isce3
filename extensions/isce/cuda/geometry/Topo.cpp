@@ -4,10 +4,14 @@
 // Author: Bryan V. Riel
 // Copyright 2017-2018
 
-#include <chrono>
 #include "Topo.h"
+
+#include <chrono>
 #include "utilities.h"
 #include "gpuTopo.h"
+#include <isce/core/LUT1d.h>
+#include <isce/geometry/DEMInterpolator.h>
+#include <isce/geometry/TopoLayers.h>
 
 // pull in some isce namespaces
 using isce::core::Ellipsoid;

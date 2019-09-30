@@ -5,10 +5,20 @@
 // Copyright 2017-2018
 //
 
+#include "geometry.h"
+
 #include <cmath>
 #include <cstdio>
+#include <pyre/journal.h>
+#include <isce/core/Basis.h>
+#include <isce/core/Ellipsoid.h>
+#include <isce/core/LUT2d.h>
+#include <isce/core/Orbit.h>
 #include <isce/core/Peg.h>
-#include "geometry.h"
+#include <isce/core/Pixel.h>
+#include <isce/core/Poly2d.h>
+#include <isce/geometry/DEMInterpolator.h>
+#include <isce/product/RadarGridParameters.h>
 
 // pull in useful isce::core namespace
 using namespace isce::core;

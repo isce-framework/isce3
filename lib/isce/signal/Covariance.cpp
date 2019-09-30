@@ -7,6 +7,11 @@
 
 #include "Covariance.h"
 
+#include <isce/geometry/DEMInterpolator.h>
+#include "Crossmul.h"
+#include "Looks.h"
+#include "Signal.h"
+
 /**
  * @param[in] slc polarimetric channels provided as std::map of Raster object of polarimetric channels. The keys are two or four of hh, hv, vh, and vv channels.
  * @param[out] cov covariance components obtained by cross multiplication and multi-looking the polarimetric channels

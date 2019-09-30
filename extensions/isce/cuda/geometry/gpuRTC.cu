@@ -12,8 +12,11 @@
 #include <isce/core/Constants.h>
 #include <isce/core/DateTime.h>
 #include <isce/core/Ellipsoid.h>
+#include <isce/core/LUT1d.h>
 #include <isce/core/Peg.h>
 #include <isce/core/Pegtrans.h>
+#include <isce/core/Projections.h>
+#include <isce/geometry/DEMInterpolator.h>
 #include <isce/geometry/RTC.h>
 #include <isce/geometry/Topo.h>
 

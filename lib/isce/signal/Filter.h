@@ -5,8 +5,9 @@
 // Copyright 2018-
 //
 
-#ifndef ISCE_SIGNAL_FILTER_H
-#define ISCE_SIGNAL_FILTER_H
+#pragma once
+
+#include "forward.h"
 
 #include <cmath>
 #include <valarray>
@@ -17,15 +18,10 @@
 #include "Signal.h"
 
 // Declaration
-namespace isce {
-    namespace signal {
-        template<class T>
-        class Filter;
-
-        /** Create a vector of frequencies*/
-        void fftfreq(double dt, std::valarray<double> &freq);
-    }
-}
+namespace isce { namespace signal {
+    /** Create a vector of frequencies*/
+    void fftfreq(double dt, std::valarray<double> &freq);
+}}
 
 template<class T>
 class isce::signal::Filter {
@@ -108,7 +104,3 @@ class isce::signal::Filter {
         std::valarray<std::complex<T>> _filter;
 
 };
-
-#endif
-
-

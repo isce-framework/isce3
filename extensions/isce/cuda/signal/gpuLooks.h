@@ -4,24 +4,14 @@
 // Source Author: Liang Yu
 // Copyright 2019
 
-#ifndef ISCE_CUDA_SIGNAL_LOOKS_H
-#define ISCE_CUDA_SIGNAL_LOOKS_H
+#pragma once
+
+#include "forward.h"
 
 #include <valarray>
 #include <thrust/complex.h>
 #include <isce/core/Common.h>
 
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace signal {
-            template<class T>
-            class gpuLooks;
-        }
-    }
-}
-
-// Definition
 template<class T>
 class isce::cuda::signal::gpuLooks {
     public:
@@ -30,28 +20,28 @@ class isce::cuda::signal::gpuLooks {
 
         /** Multi-looking an array of real data */
         void multilook(std::valarray<T> &input,
-                        std::valarray<T> &output);
+                       std::valarray<T> &output);
 
         void multilook(std::valarray<std::complex<T>> &input,
-                        std::valarray<std::complex<T>> &output);
+                       std::valarray<std::complex<T>> &output);
 
         /** Multi-looking an array of real data */
         void multilook(std::valarray<T> &input,
-                        std::valarray<T> &output,
-                        std::valarray<T> &weights);
+                       std::valarray<T> &output,
+                       std::valarray<T> &weights);
 
         /** Multi-looking an array of real data (excluding noData values) */
         void multilook(std::valarray<T> &input,
-                        std::valarray<T> &output,
-                        T noDataValue);
+                       std::valarray<T> &output,
+                       T noDataValue);
         void multilook(std::valarray<std::complex<T>> &input,
-                        std::valarray<std::complex<T>> &output,
-                        std::complex<T> noDataValue);
+                       std::valarray<std::complex<T>> &output,
+                       std::complex<T> noDataValue);
 
         /** POWER! */
         void multilook(std::valarray<std::complex<T>> &input,
-                        std::valarray<T> &output,
-                        int p);
+                       std::valarray<T> &output,
+                       int p);
 
         void nrows(size_t n) { _nrows = n; };
         void ncols(size_t n) { _ncols = n; };
@@ -149,7 +139,3 @@ CUDA_GLOBAL void multilooks_power_g(T *lo_res,
         int col_resize,
         int sz_lo,
         T blk_sz);
-
-#endif
-
-// end of file

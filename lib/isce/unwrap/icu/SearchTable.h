@@ -1,12 +1,10 @@
-#ifndef ISCE_UNWRAP_ICU_SEARCHTABLE_H
-#define ISCE_UNWRAP_ICU_SEARCHTABLE_H
+#pragma once
 
 #include <cstddef> // size_t
 
 #include "ICU.h" // offset2_t
 
-namespace isce::unwrap::icu
-{
+namespace isce::unwrap::icu {
 
 // \brief Lookup table of points to search for residues or neutrons
 //
@@ -37,6 +35,3 @@ private:
 #define ISCE_UNWRAP_ICU_SEARCHTABLE_ICC
 #include "SearchTable.icc"
 #undef ISCE_UNWRAP_ICU_SEARCHTABLE_ICC
-
-#endif /* ISCE_UNWRAP_ICU_SEARCHTABLE_H */
-

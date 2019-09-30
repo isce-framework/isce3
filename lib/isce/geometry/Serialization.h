@@ -4,8 +4,7 @@
 // Author: Bryan V. Riel
 // Copyright 2017-2018
 
-#ifndef ISCE_GEOMETRY_SERIALIZATION_H
-#define ISCE_GEOMETRY_SERIALIZATION_H
+#pragma once
 
 #include <iostream>
 #include <memory>
@@ -89,7 +88,3 @@ namespace isce {
 
     }
 }
-
-#endif
-
-// end of file

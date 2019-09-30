@@ -1,4 +1,5 @@
 set(HEADERS
+        forward.h
         gpuDEMInterpolator.h
         gpuGeometry.h
         gpuRTC.h
@@ -12,7 +13,7 @@ set(SRCS
         gpuGeometry.cu
         gpuRTC.cu
         gpuTopo.cu
-        gpuTopoLayers.cu
+        gpuTopoLayers.cpp
         gpuGeo2rdr.cu
         utilities.cu
         Topo.cpp

@@ -6,10 +6,8 @@
 // 
 //  ----------------------------------------------------------------------------
 //  Author:  Xiaoqing Wu
-// 
 
-#ifndef CannyEdgeDetector_H
-#define CannyEdgeDetector_H
+#pragma once
 
 #include "Point.h"
 #include "constants.h"
@@ -48,5 +46,3 @@ class CannyEdgeDetector {
 //  float **get_data() { return data_patch->get_data_lines_ptr(); }
   
 };
-
-#endif
