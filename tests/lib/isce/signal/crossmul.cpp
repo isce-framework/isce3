@@ -30,8 +30,8 @@ TEST(Crossmul, RunCrossmul)
 
     // a raster object for the interferogram
     isce::io::Raster interferogram("igram.int", width, length, 1, GDT_CFloat32, "ISCE");
+    isce::io::Raster coherence("coherence.bin", width, length, 1, GDT_Float32, "ISCE");
 
-    isce::io::Raster coherence("coherence.bin.", width, length, 1, GDT_Float32, "ISCE");
     // HDF5 file with required metadata
     std::string h5file("../data/envisat.h5");
     
@@ -113,9 +113,8 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
 
 
     // a raster object for the interferogram
-    isce::io::Raster interferogram("/vsimem/igram.int", width, length, 1, GDT_CFloat32, "ISCE");
-
-    isce::io::Raster coherence("/vsimem/coherence.bin.", width, length, 1, GDT_Float32, "ISCE");
+    isce::io::Raster interferogram("igram.int", width, length, 1, GDT_CFloat32, "ISCE");
+    isce::io::Raster coherence("coherence.bin", width, length, 1, GDT_Float32, "ISCE");
 
     // HDF5 file with required metadata
     std::string h5file("../data/envisat.h5");
