@@ -686,7 +686,7 @@ forward2DFFT(T* signal,
 *
 *  If doing an out-of-place FFT, the output can be stored in a container whose
 *  number of columns and rows could be different than the input. This would be
-*  necessary for instance in the case of 2D upsampling
+*  necessary for instance in the case of 2D upsampling.
 */
 template<class T>
 void isce::signal::Signal<T>::
@@ -1037,12 +1037,14 @@ upsample(std::valarray<std::complex<T>> &signal,
 *   @param[in] signal input block of 2D data
 *   @param[out] signalUpsampled output block of oversampled data
 *   @param[in] upsampleFactor upsampling factor
-*   @param[in] shiftImpact a linear phase term equivalent to a constant shift in time domain 
 *
 *   When doing out-of-place upsampling, i.e., when the container of the input to upsample is
 *   different to the one that will contain the upsampled data, the FFT forward plan must be
 *   set to out-of-place (with the input and output containers) and the FFT reverse plan to 
-*   in-place (with the output container).
+*   in-place (with the output container). 
+*   In both case (in-place or out-of-place 2D upsampling), it is the user responsability to 
+*   provide an output container that is padded (for in-place) or filled (for out-of-place) 
+*   with zeros.
 */
 template<class T>
 void isce::signal::Signal<T>::
@@ -1067,6 +1069,9 @@ upsample2D(std::valarray<std::complex<T>> &signal,
 *   different to the one that will contain the upsampled data, the FFT forward plan must be
 *   set to out-of-place (with the input and output containers) and the FFT reverse plan to 
 *   in-place (with the output container).
+*   In both case (in-place or out-of-place 2D upsampling), it is the user responsability to 
+*   provide an output container that is padded (for in-place) or filled (for out-of-place) 
+*   with zeros.
 */
 template<class T>
 void isce::signal::Signal<T>::
@@ -1090,6 +1095,9 @@ upsample2D(std::valarray<std::complex<T>> &signal,
 *   different to the one that will contain the upsampled data, the FFT forward plan must be
 *   set to out-of-place (with the input and output containers) and the FFT reverse plan to 
 *   in-place (with the output container).
+*   In both case (in-place or out-of-place 2D upsampling), it is the user responsability to 
+*   provide an output container that is padded (for in-place) or filled (for out-of-place) 
+*   with zeros.
 */
 template<class T>
 void isce::signal::Signal<T>::
@@ -1113,6 +1121,9 @@ upsample2D(std::complex<T> *signal,
 *   different to the one that will contain the upsampled data, the FFT forward plan must be
 *   set to out-of-place (with the input and output containers) and the FFT reverse plan to 
 *   in-place (with the output container).
+*   In both case (in-place or out-of-place 2D upsampling), it is the user responsability to 
+*   provide an output container that is padded (for in-place) or filled (for out-of-place) 
+*   with zeros.
 */
 template<class T>
 void isce::signal::Signal<T>::
