@@ -4,8 +4,6 @@
 // Authors: Bryan Riel, Joshua Cohen
 // Copyright 2017-2018
 
-#ifndef ISCE_CORE_UTILITIES_H
-#define ISCE_CORE_UTILITIES_H
 #pragma once
 
 #include <algorithm>
@@ -369,7 +367,3 @@ namespace isce { namespace core {
     }
 
 }}
-
-#endif
-
-// end of file

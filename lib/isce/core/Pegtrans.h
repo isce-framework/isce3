@@ -3,8 +3,6 @@
 // Copyright 2017
 //
 
-#ifndef __ISCE_CORE_PEGTRANS_H__
-#define __ISCE_CORE_PEGTRANS_H__
 #pragma once
 
 #include "forward.h"
@@ -76,5 +74,3 @@ namespace isce { namespace core {
         void SCHbasis(const cartesian_t &,cartmat_t&,cartmat_t&) const;
     };
 }}
-
-#endif

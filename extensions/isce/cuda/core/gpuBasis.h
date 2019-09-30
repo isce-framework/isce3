@@ -3,23 +3,13 @@
 // Copyright 2017-2018
 //
 
-#ifndef ISCE_CUDA_CORE_GPUBASIS_H
-#define ISCE_CUDA_CORE_GPUBASIS_H
+#pragma once
 
 // isce::core
-#include "isce/core/Basis.h"
+#include <isce/core/Basis.h>
 
 // isce::cuda::core
-#include "isce/cuda/core/Common.h"
-
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace core {
-            class gpuBasis;
-        }
-    }
-}
+#include <isce/cuda/core/Common.h>
 
 /** Simple class to store three-dimensional basis vectors. */
 class isce::cuda::core::gpuBasis {
@@ -72,7 +62,3 @@ class isce::cuda::core::gpuBasis {
         double x1[3];
         double x2[3];
 };
-
-#endif
-
-// end of file

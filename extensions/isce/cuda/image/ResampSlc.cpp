@@ -5,15 +5,21 @@
 // Copyright 2017-2018
 //
 
+#include "ResampSlc.h"
+
 #include <algorithm>
 #include <iostream>
 #include <chrono>
 #include <cmath>
 
 // isce::core
-#include "isce/core/Constants.h"
+#include <isce/core/Constants.h>
+#include <isce/core/LUT1d.h>
 
-#include "ResampSlc.h"
+#include <isce/image/Tile.h>
+
+#include <isce/cuda/core/gpuInterpolator.h>
+
 #include "gpuResampSlc.h"
 
 using isce::io::Raster;

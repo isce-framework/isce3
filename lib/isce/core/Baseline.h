@@ -4,8 +4,6 @@
 // Copyright 2017
 //
 
-#ifndef ISCE_CORE_BASELINE_H
-#define ISCE_CORE_BASELINE_H
 #pragma once
 
 #include "forward.h"
@@ -125,7 +123,3 @@ operator=(const Baseline & rhs) {
     _velocityMagnitude = rhs.velocityMagnitude();
     return *this;
 }
-
-#endif
-
-// end of file

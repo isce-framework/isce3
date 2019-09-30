@@ -1,6 +1,4 @@
 #pragma once
-#ifndef ISCE_CUDA_CORE_EVENT_H
-#define ISCE_CUDA_CORE_EVENT_H
 
 #include <memory>
 
@@ -34,6 +32,3 @@ void synchronize(Event);
 bool query(Event);
 
 }}}
-
-#endif
-

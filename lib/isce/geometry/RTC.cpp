@@ -17,7 +17,9 @@
 #include <isce/core/Constants.h>
 #include <isce/core/DateTime.h>
 #include <isce/core/Ellipsoid.h>
+#include <isce/core/Projections.h>
 
+#include <isce/geometry/DEMInterpolator.h>
 #include <isce/geometry/geometry.h>
 #include <isce/geometry/Topo.h>
 

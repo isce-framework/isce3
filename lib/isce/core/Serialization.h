@@ -8,8 +8,6 @@
  *
  * Serialization functions for isce::core objects. */
 
-#ifndef ISCE_CORE_SERIALIZATION_H
-#define ISCE_CORE_SERIALIZATION_H
 #pragma once
 
 #include <iostream>
@@ -570,7 +568,3 @@ namespace isce {
         }
     }
 }
-
-#endif
-
-// end of file

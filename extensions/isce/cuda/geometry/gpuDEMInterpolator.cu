@@ -6,6 +6,9 @@
 //
 
 #include "gpuDEMInterpolator.h"
+
+#include <isce/geometry/DEMInterpolator.h>
+#include <isce/cuda/core/gpuInterpolator.h>
 #include <isce/cuda/except/Error.h>
 
 using isce::core::Vec3;

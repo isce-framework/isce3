@@ -5,23 +5,18 @@
 // Copyright 2019-
 //
 
-#ifndef ISCE_LIB_COVARIANCE_H
-#define ISCE_LIB_COVARIANCE_H
+#pragma once
+
+#include "forward.h"
 
 #include <map>
 
 // isce::core
-#include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
-#include <isce/core/Poly2d.h>
-#include <isce/core/LUT2d.h>
 #include <isce/core/Ellipsoid.h>
-#include <isce/core/Projections.h>
-#include <isce/core/Interpolator.h>
 #include <isce/core/LUT2d.h>
 
 // isce::product
-#include <isce/product/Product.h>
 #include <isce/product/RadarGridParameters.h>
 
 // isce::io
@@ -30,19 +25,6 @@
 // isce::geometry
 #include <isce/geometry/geometry.h>
 
-#include <isce/geometry/DEMInterpolator.h>
-
-#include "Signal.h"
-#include "Looks.h"
-#include "Crossmul.h"
-
-namespace isce {
-    namespace signal {
-        template<class T>
-        class Covariance;
-    }
-}
-
 /** \brief Covariance estimation from dual-polarization or quad-polarization data 
  *
  */
@@ -50,13 +32,13 @@ template<class T>
 class isce::signal::Covariance {
 
     public:
-        
+
         // constructor
         Covariance() {};
 
         // destructor
         ~Covariance() {
-        
+
             if (_interp) {
                 delete _interp;
             }
@@ -64,7 +46,7 @@ class isce::signal::Covariance {
                 delete _proj;
             }
         };
-        
+
 
         /** Covariance estimation */
         void covariance(std::map<std::string, isce::io::Raster> & slc,
@@ -352,7 +334,3 @@ class isce::signal::Covariance {
 #define ISCE_SIGNAL_COVARIANCE_ICC
 #include "Covariance.icc"
 #undef ISCE_SIGNAL_COVARIANCE_ICC
-
-
-#endif
-

@@ -5,8 +5,6 @@
 // Copyright 2017-2018
 //
 
-#ifndef ISCE_CORE_LUT1D_H
-#define ISCE_CORE_LUT1D_H
 #pragma once
 
 #include "forward.h"
@@ -132,7 +130,3 @@ class isce::core::LUT1d {
 #define ISCE_CORE_LUT1D_ICC
 #include "LUT1d.icc"
 #undef ISCE_CORE_LUT1D_ICC
-
-#endif
-
-// end of file

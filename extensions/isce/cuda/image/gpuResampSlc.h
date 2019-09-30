@@ -3,24 +3,17 @@
 // Author: Liang Yu
 // Copyright: 2018
 
-#ifndef ISCE_CUDA_GEOMETRY_GPURESAMPSLC_H
-#define ISCE_CUDA_GEOMETRY_GPURESAMPSLC_H
+#pragma once
+
+#include "forward.h"
 
 #include <complex>
 #include <thrust/complex.h>
 
-// isce::core
-#include "isce/core/Poly2d.h"
-#include "isce/core/LUT1d.h"
-
-// isce:io:
-#include  "isce/io/Raster.h"
-
-// isce::image
-#include "isce/image/Tile.h"
-
-// isce::cuda::core
-#include "isce/cuda/core/gpuInterpolator.h"
+#include <isce/core/forward.h>
+#include <isce/image/forward.h>
+#include <isce/io/forward.h>
+#include <isce/cuda/core/forward.h>
 
 using isce::cuda::core::gpuSinc2dInterpolator;
 
@@ -46,8 +39,3 @@ namespace isce {
         }
     }
 }
-
-
-#endif
-
-// end of file

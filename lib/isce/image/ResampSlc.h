@@ -7,6 +7,9 @@
 
 #ifndef ISCE_IMAGE_RESAMPSLC_H
 #define ISCE_IMAGE_RESAMPSLC_H
+#pragma once
+
+#include "forward.h"
 
 #include <cstdint>
 #include <cstdio>
@@ -14,25 +17,14 @@
 #include <valarray>
 
 // isce::core
-#include "isce/core/Interpolator.h"
-#include "isce/core/Poly2d.h"
-#include "isce/core/LUT1d.h"
+#include <isce/core/Interpolator.h>
+#include <isce/core/Poly2d.h>
 
 // isce::io
-#include "isce/io/Raster.h"
+#include <isce/io/forward.h>
 
 // isce::product
-#include "isce/product/Product.h"
-
-// isce::image
-#include "Tile.h"
-
-// Declarations
-namespace isce {
-    namespace image {
-        class ResampSlc;
-    }
-}
+#include <isce/product/Product.h>
 
 // Definition
 class isce::image::ResampSlc {

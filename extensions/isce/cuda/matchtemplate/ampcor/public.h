@@ -4,12 +4,8 @@
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2019 all rights reserved
-//
 
-// code guard
-#if !defined(ampcor_libampcor_cuda_correlators_public_h)
-#define ampcor_libampcor_cuda_correlators_public_h
-
+#pragma once
 
 // externals
 // STL
@@ -71,9 +67,3 @@ namespace ampcor {
 #define ampcor_cuda_correlators_Sequential_icc
 #include "Sequential.icc"
 #undef ampcor_cuda_correlators_Sequential_icc
-
-
-// code guard
-#endif
-
-// end of file

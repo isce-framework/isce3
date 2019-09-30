@@ -3,28 +3,20 @@
 //
 // Author: Bryan Riel
 // Copyright 2017-2018
-//
 
-#ifndef ISCE_CORE_DEMInterpolator_H
-#define ISCE_CORE_DEMInterpolator_H
+#pragma once
+
+#include "forward.h"
 
 // pyre
 #include <pyre/journal.h>
 
 // isce::core
+#include <isce/core/forward.h>
 #include <isce/core/Constants.h>
 #include <isce/core/Interpolator.h>
-#include <isce/core/Projections.h>
 
-// isce::io
-#include <isce/io/Raster.h>
-
-// Declaration
-namespace isce {
-    namespace geometry {
-        class DEMInterpolator;
-    }
-}
+#include <isce/io/forward.h>
 
 // DEMInterpolator declaration
 class isce::geometry::DEMInterpolator {
@@ -57,14 +49,7 @@ class isce::geometry::DEMInterpolator {
             _interpMethod{method} {}
 
         /** Destructor */
-        inline ~DEMInterpolator() {
-            if (_interp) {
-                delete _interp;
-            }
-            if (_proj) {
-                delete _proj;
-            }
-        }
+        ~DEMInterpolator();
 
         /** Read in subset of data from a DEM with a supported projection */
         void loadDEM(isce::io::Raster &demRaster,
@@ -151,7 +136,3 @@ class isce::geometry::DEMInterpolator {
         // Starting x/y for DEM subset and spacing
         double _xstart, _ystart, _deltax, _deltay;
 };
-
-#endif
-
-// end of file

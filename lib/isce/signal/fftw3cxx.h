@@ -59,8 +59,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef fftw3cxx_hh
-#define fftw3cxx_hh
 #pragma once
 
 #include <stdexcept>
@@ -846,4 +844,3 @@ inline const char *codelet_optim(void)
 
 } // namespace fftw3cxx
 } // namespace isce
-#endif

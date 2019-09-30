@@ -4,12 +4,8 @@
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2019 all rights reserved
-//
 
-// code guard
-#if !defined(ampcor_libampcor_correlators_sequential_h)
-#define ampcor_libampcor_correlators_sequential_h
-
+#pragma once
 
 // access to the dom
 #include <isce/matchtemplate/ampcor/dom.h>
@@ -78,9 +74,3 @@ private:
     // storage for the correlation results
     cell_type * _correlation;
 };
-
-
-// code guard
-#endif
-
-// end of file

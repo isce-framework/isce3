@@ -5,8 +5,6 @@
 // Author: Piyush Agram
 // Copyright 2017-2018
 
-#ifndef ISCE_CORE_DATETIME_H
-#define ISCE_CORE_DATETIME_H
 #pragma once
 
 #include "forward.h"
@@ -154,7 +152,3 @@ namespace isce {
         void _ord_to_ymd(int, int &, int &, int &);
     }
 }
-
-#endif
-
-// end if

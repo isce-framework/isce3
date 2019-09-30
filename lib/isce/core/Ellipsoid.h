@@ -5,8 +5,6 @@
 // Copyright 2017-2018
 //
 
-#ifndef ISCE_CORE_ELLIPSOID_H
-#define ISCE_CORE_ELLIPSOID_H
 #pragma once
 
 #include "forward.h"
@@ -233,7 +231,3 @@ xyzToLonLat(const cartesian_t & xyz, cartesian_t & llh) const {
     // Height is a function of location and radius
     llh[2] = ((k + _e2 - 1.) * sqrt(std::pow(d, 2) + std::pow(xyz[2], 2))) / k;
 }
-
-#endif
-
-// end of file

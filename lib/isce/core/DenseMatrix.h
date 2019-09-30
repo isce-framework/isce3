@@ -1,6 +1,4 @@
 #pragma once
-#ifndef ISCE_CORE_DENSEMATRIX_H
-#define ISCE_CORE_DENSEMATRIX_H
 
 #include "forward.h"
 
@@ -87,6 +85,3 @@ public:
                       { cos(lat)*cos(lon),  cos(lat)*sin(lon), sin(lat)}}};
     }
 };
-
-
-#endif

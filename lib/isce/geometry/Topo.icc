@@ -8,6 +8,7 @@
 #error "Topo.icc is an implementation detail of class Topo"
 #endif
 
+#include <isce/core/Projections.h>
 
 /** @param[in] product Input Product
   * @param[in] frequency Frequency designation

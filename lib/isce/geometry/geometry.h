@@ -10,28 +10,13 @@
  * There are no classes defined in this file. Its a collection of functions
  * that are meant to be light weight versions of isce::geometry::Topo and
  * isce::geometry::Geo2rdr.*/
-#ifndef ISCE_CORE_GEOMETRY_H
-#define ISCE_CORE_GEOMETRY_H
+#pragma once
 
-// std
-#include <cmath>
-#include <valarray>
+#include "forward.h"
+#include <isce/core/forward.h>
+#include <isce/product/forward.h>
 
-// isce::core
 #include <isce/core/Constants.h>
-#include <isce/core/Basis.h>
-#include <isce/core/Orbit.h>
-#include <isce/core/Ellipsoid.h>
-#include <isce/core/Metadata.h>
-#include <isce/core/Pixel.h>
-#include <isce/core/Poly2d.h>
-#include <isce/core/LUT2d.h>
-
-// isce::product
-#include <isce/product/RadarGridParameters.h>
-
-// isce::geometry
-#include "DEMInterpolator.h"
 
 // Declaration
 namespace isce {
@@ -96,7 +81,3 @@ namespace isce {
 
     }
 }
-
-#endif
-
-// end of file

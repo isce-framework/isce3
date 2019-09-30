@@ -7,6 +7,7 @@ set(SRCS
 
 #####Library headers
 set(HEADERS
+    forward.h
     Constants.h
     IH5.h
     IH5.icc

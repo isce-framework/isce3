@@ -7,6 +7,10 @@
 
 #include "Crossmul.h"
 
+#include "Filter.h"
+#include "Looks.h"
+#include "Signal.h"
+
 // Utility function to get number of OpenMP threads
 // (gcc sometimes has problems with omp_get_num_threads)
 size_t omp_thread_count() {

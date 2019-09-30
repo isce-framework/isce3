@@ -1,6 +1,4 @@
-
-#ifndef __ISCE_IO_H5_H__
-#define __ISCE_IO_H5_H__
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -10,9 +8,9 @@
 #include <regex>
 #include <type_traits>
 #include <typeindex>
+#include <H5Cpp.h>
 
-#include "../core/Constants.h"
-#include "H5Cpp.h"
+#include <isce/core/Constants.h>
 
 //#include <pyre/journal.h>
 
@@ -584,5 +582,3 @@ namespace isce {
 #define ISCE_IO_IH5_ICC
 #include "IH5.icc"
 #undef ISCE_IO_IH5_ICC
-
-#endif

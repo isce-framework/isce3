@@ -3,9 +3,12 @@
 // Author: Bryan V. Riel, Joshua Cohen
 // Copyright: 2017-2018
 
+#include "gpuTopo.h"
+
 #include <isce/core/Basis.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Pixel.h>
+#include <isce/geometry/TopoLayers.h>
 
 // isce::cuda::core
 #include <isce/cuda/core/gpuOrbit.h>
@@ -17,7 +20,6 @@
 #include "gpuDEMInterpolator.h"
 #include "gpuGeometry.h"
 #include "gpuTopoLayers.h"
-#include "gpuTopo.h"
 
 using isce::core::Vec3;
 using isce::core::Mat3;

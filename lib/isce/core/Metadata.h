@@ -5,8 +5,6 @@
 // Co-Author: Joshua Cohen
 // Copyright 2017-2018
 
-#ifndef ISCE_CORE_METADATA_H
-#define ISCE_CORE_METADATA_H
 #pragma once
 
 #include "forward.h"
@@ -42,7 +40,3 @@ public:
 
 // Define std::cout interaction for debugging
 std::ostream& operator<<(std::ostream &os, const isce::core::Metadata &radar);
-
-#endif
-
-// end of file

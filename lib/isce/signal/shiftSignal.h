@@ -4,12 +4,12 @@
 // Author: Heresh Fattahi
 // Copyright 2018-
 
-#ifndef ISCE_LIB_SHIFTSIGNAL_H
-#define ISCE_LIB_SHIFTSIGNAL_H
+#pragma once
+
+#include "forward.h"
 
 #include <cmath>
 #include <valarray>
-#include "Signal.h"
 #include "Filter.h"
 #include <isce/core/Utilities.h>
 
@@ -55,5 +55,3 @@ namespace isce {
             std::valarray<std::complex<T>> & shiftImpact);
     }
 }
-
-#endif

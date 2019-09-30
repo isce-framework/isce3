@@ -5,22 +5,16 @@
 // Copyright 2018-
 //
 
-#ifndef ISCE_SIGNAL_SIGNAL_H
-#define ISCE_SIGNAL_SIGNAL_H
+#pragma once
+
+#include "forward.h"
 
 #include <cmath>
 #include <valarray>
+//TODO FAYOUB
+#include <cstring>
 
 #include <isce/core/Constants.h>
-
-// Declaration
-namespace isce {
-    //! The isce::signal namespace
-    namespace signal {
-        template<class T>
-        class Signal;
-    }
-}
 
 /** A class to handle 2D FFT or 1D FFT in range or azimuth directions 
  */
@@ -220,12 +214,26 @@ class isce::signal::Signal {
         void forward2DFFT(std::valarray<std::complex<T>> &signal,
                                 std::valarray<std::complex<T>> &spectrum,
                                 int ncolumns, int nrows);
+
+        /** \brief initiate plan for forward two imensional FFT for a block of complex data
+         */
+        void forward2DFFT(std::valarray<std::complex<T>> &signal,
+                                std::valarray<std::complex<T>> &spectrum,
+                                int incolumns, int inrows,
+                                int oncolumns, int onrows);
         
         /** \brief initiate plan for forward two imensional FFT for a block of complex data
          */
         void forward2DFFT(std::complex<T>* signal,
                                 std::complex<T>* spectrum,
                                 int ncolumns, int nrows);
+
+        /** \brief initiate plan for forward two imensional FFT for a block of complex data
+         */
+        void forward2DFFT(std::complex<T>* signal,
+                                std::complex<T>* spectrum,
+                                int incolumns, int inrows,
+                                int oncolumns, int onrows);
 
         /** \brief initiate plan for forward two imensional FFT for a block of real data
          */
@@ -235,9 +243,23 @@ class isce::signal::Signal {
 
         /** \brief initiate plan for forward two imensional FFT for a block of real data
          */
+        void forward2DFFT(std::valarray<T>& signal,
+                            std::valarray<std::complex<T>>& spectrum,
+                            int incolumns, int inrows,
+                            int oncolumns, int onrows);
+
+        /** \brief initiate plan for forward two imensional FFT for a block of real data
+         */
         void forward2DFFT(T* signal,
                             std::complex<T>* spectrum,
                             int ncolumns, int nrows);
+
+        /** \brief initiate plan for forward two imensional FFT for a block of real data
+         */
+        void forward2DFFT(T* signal,
+                            std::complex<T>* spectrum,
+                            int incolumns, int inrows,
+                            int oncolumns, int onrows);
 
         /** \brief initiate plan for backward FFT in range direction for a block of data
          */
@@ -325,28 +347,95 @@ class isce::signal::Signal {
                     int rows, int fft_size, int oversampleFactor,
                     std::valarray<std::complex<T>> shiftImpact);
 
+
+
+
+        /** \brief 2D upsampling a block of 2D data */
+        void upsample2D(std::valarray<std::complex<T>> &signal,
+                        std::valarray<std::complex<T>> &signalOversampled,
+                        int oversampleFactor);
+
+        /** \brief 2D upsampling a block of 2D data and shifting the upsampled 
+         * signal by a constant. The shift is applied by an inout linear phase 
+         * term in frequency domain. 
+         */
+        void upsample2D(std::valarray<std::complex<T>> &signal,
+                        std::valarray<std::complex<T>> &signalOversampled,
+                        int oversampleFactor,
+                        std::valarray<std::complex<T>> &shiftImpact);
+
+
+        /** \brief 2D upsampling a block of 2D data */
+        void upsample2D(std::complex<T> *signal,
+                        std::complex<T> *signalOversampled,
+                        int oversampleFactor);
+
+        /** \brief 2D upsampling a block of 2D data and shifting the upsampled 
+         * signal by a constant. The shift is applied by an inout linear phase 
+         * term in frequency domain. 
+         */
+        void upsample2D(std::complex<T> *signal,
+                        std::complex<T> *signalOversampled,
+                        int oversampleFactor,
+                        std::complex<T> *shiftImpact);
+
+
+
+
         /** \brief next power of two*/
         inline void nextPowerOfTwo(size_t N, size_t& fftLength);
 
+
+        /** \brief save FFT plan parameters */
+        inline void _fwd_configure(int rank, int* n, int howmany,
+                               int* inembed, int istride, int idist,
+                               int* onembed, int ostride, int odist);
+
+        /** \brief save FFT plan parameters */
+        inline void _rev_configure(int rank, int* n, int howmany,
+                               int* inembed, int istride, int idist,
+                               int* onembed, int ostride, int odist);
+
+
         /** \brief determine the required parameters for setting range FFT plans */
-        inline void _configureRangeFFT(int ncolumns, int nrows);
+        inline void _fwd_configureRangeFFT(int ncolumns, int nrows);
 
         /** \brief determine the required parameters for setting azimuth FFT plans */
-        inline void _configureAzimuthFFT(int ncolumns, int nrows);
+        inline void _fwd_configureAzimuthFFT(int ncolumns, int nrows);
 
         /** \brief determine the required parameters for setting 2D FFT plans */
-        inline void _configure2DFFT(int ncolumns, int nrows);
+        inline void _fwd_configure2DFFT(int incolumns, int inrows, int oncolumns, int onrows);
+
+        /** \brief determine the required parameters for setting range FFT plans */
+        inline void _rev_configureRangeFFT(int ncolumns, int nrows);
+
+        /** \brief determine the required parameters for setting azimuth FFT plans */
+        inline void _rev_configureAzimuthFFT(int ncolumns, int nrows);
+
+        /** \brief determine the required parameters for setting 2D FFT plans */
+        inline void _rev_configure2DFFT(int ncolumns, int nrows);
+
 
     private:
-        int _rank;
-        int* _n;
-        int _howmany;
-        int* _inembed;
-        int _istride;
-        int _idist;
-        int* _onembed;
-        int _ostride;
-        int _odist;
+        int _fwd_rank;
+        int* _fwd_n;
+        int _fwd_howmany;
+        int* _fwd_inembed;
+        int _fwd_istride;
+        int _fwd_idist;
+        int* _fwd_onembed;
+        int _fwd_ostride;
+        int _fwd_odist;
+
+        int _rev_rank;
+        int* _rev_n;
+        int _rev_howmany;
+        int* _rev_inembed;
+        int _rev_istride;
+        int _rev_idist;
+        int* _rev_onembed;
+        int _rev_ostride;
+        int _rev_odist;
 
         struct impl;
         std::unique_ptr<impl, void(*)(impl*)> pimpl;
@@ -355,7 +444,3 @@ class isce::signal::Signal {
 #define ISCE_SIGNAL_SIGNAL_ICC
 #include "Signal.icc"
 #undef ISCE_SIGNAL_SIGNAL_ICC
-
-#endif
-
-

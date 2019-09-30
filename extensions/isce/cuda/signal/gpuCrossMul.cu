@@ -3,13 +3,14 @@
 //
 // Author: Liang Yu
 // Copyright 2019
-//
 
 #include "gpuCrossMul.h"
-#include "gpuSignal.h"
+
+#include "gpuFilter.h"
 #include "gpuLooks.h"
-#include "isce/signal/Signal.h"
-#include "isce/signal/Filter.h"
+#include "gpuSignal.h"
+#include <isce/signal/Filter.h>
+#include <isce/signal/Signal.h>
 #include <isce/cuda/except/Error.h>
 
 // debug includes

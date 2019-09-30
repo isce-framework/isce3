@@ -8,6 +8,8 @@
 #error "Covariance.icc is an implementation detail of class Covariance"
 #endif
 
+#include <isce/core/Projections.h>
+
 /** param[in] number of looks in range direction*/
 template<class T>
 void isce::signal::Covariance<T>::

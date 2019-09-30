@@ -3,8 +3,7 @@
 // Author: Bryan V. Riel
 // Copyright: 2017-2018
 
-#ifndef ISCE_CUDA_GEOMETRY_UTILITIES_H
-#define ISCE_CUDA_GEOMETRY_UTILITIES_H
+#pragma once
 
 namespace isce {
     namespace cuda {
@@ -16,7 +15,3 @@ namespace isce {
         }
     }
 }
-
-#endif
-
-// end of file

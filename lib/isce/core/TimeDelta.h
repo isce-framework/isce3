@@ -4,8 +4,6 @@
 // Author: Piyush Agram
 // Copyright 2017-2018
 
-#ifndef ISCE_CORE_TIMEDELTA_H
-#define ISCE_CORE_TIMEDELTA_H
 #pragma once
 
 #include "forward.h"
@@ -109,7 +107,3 @@ namespace isce {
         const int DAY_TO_HOUR=24;
     }
 }
-
-#endif
-
-// end of file

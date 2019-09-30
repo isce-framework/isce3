@@ -3,8 +3,6 @@
 // Copyright 2019
 //
 
-#ifndef ISCE_CORE_INTERP1D_H
-#define ISCE_CORE_INTERP1D_H
 #pragma once
 
 #include <valarray>
@@ -63,5 +61,3 @@ isce::core::interp1d(const isce::core::Kernel<TK> &kernel,
 #define ISCE_CORE_INTERP1D_ICC
 #include "Interp1d.icc"
 #undef ISCE_CORE_INTERP1D_ICC
-
-#endif

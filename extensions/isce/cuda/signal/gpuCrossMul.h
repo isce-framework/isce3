@@ -3,29 +3,15 @@
 //
 // Author: Liang Yu
 // Copyright 2018-
-//
 
-#ifndef ISCE_CUDA_SIGNAL_CROSSMUL_H
-#define ISCE_CUDA_SIGNAL_CROSSMUL_H
+#pragma once
 
-#include <isce/io/Raster.h>
-#include <isce/core/LUT1d.h>
+#include "forward.h"
+#include <isce/io/forward.h> // Raster
+
 #include <isce/core/Common.h>
-#include <isce/cuda/core/gpuLUT1d.h>
-#include "gpuSignal.h"
-#include "gpuFilter.h"
-#include "gpuLooks.h"
+#include <isce/core/LUT1d.h>
 #include <thrust/complex.h>
-
-
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace signal {
-            class gpuCrossmul;
-        }
-    }
-}
 
 class isce::cuda::signal::gpuCrossmul {
 
@@ -150,4 +136,3 @@ CUDA_GLOBAL void calculate_coherence_g(T *ref_amp,
         T *sec_amp,
         thrust::complex<T> *ifgram_mlook,
         int n_elements);
-#endif

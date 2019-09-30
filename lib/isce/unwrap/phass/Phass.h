@@ -4,8 +4,7 @@
 // Author: Heresh Fattahi
 // Copyright 2019-
 
-#ifndef ISCE_UNWRAP_PHASS_PHASS_H
-#define ISCE_UNWRAP_PHASS_PHASS_H
+#pragma once
 
 #include <complex> // std::complex
 #include <cstddef> // size_t
@@ -15,8 +14,7 @@
 
 #include "PhassUnwrapper.h"
 
-namespace isce::unwrap::phass
-{
+namespace isce::unwrap::phass {
 
 class Phass
 {
@@ -80,6 +78,3 @@ public:
 #define ISCE_UNWRAP_PHASS_PHASS_ICC
 #include "Phass.icc"
 #undef ISCE_UNWRAP_PHASS_PHASS_ICC
-
-#endif /* ISCE_UNWRAP_PHASS_PHASS_H */
-

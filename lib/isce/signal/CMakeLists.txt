@@ -11,6 +11,7 @@ set(SRCS
 ####Append current path to every source file
 #####Library headers
 set(HEADERS
+    forward.h
     Signal.h
     Signal.icc
     NFFT.h

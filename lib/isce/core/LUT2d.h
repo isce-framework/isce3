@@ -3,8 +3,6 @@
 // Copyright 2017
 //
 
-#ifndef ISCE_CORE_LUT2D_H
-#define ISCE_CORE_LUT2D_H
 #pragma once
 
 #include "forward.h"
@@ -218,5 +216,3 @@ _setInterpolator(isce::core::dataInterpMethod method) {
         _interp = isce::core::createInterpolator<T>(method);
     }
 }
-
-#endif

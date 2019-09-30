@@ -3,14 +3,12 @@
 // Copyright 2018
 //
 
-#ifndef __ISCE_CUDA_CORE_GPUINTERPOLATOR_H__
-#define __ISCE_CUDA_CORE_GPUINTERPOLATOR_H__
+#pragma once
 
 #include <stdio.h>
 #include <complex>
-#include "isce/core/Matrix.h"
-#include "isce/core/Interpolator.h"
-#include "isce/core/Common.h"
+#include <isce/core/forward.h>
+#include <isce/core/Common.h>
 
 using isce::core::Matrix;
 
@@ -77,5 +75,3 @@ class gpuSinc2dInterpolator : public isce::cuda::core::gpuInterpolator<U> {
         CUDA_HOST void interpolate_h(const Matrix<double>&, Matrix<U>&, double, double, U*);
 };
 }}}
-
-#endif

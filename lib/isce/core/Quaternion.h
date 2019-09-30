@@ -5,8 +5,6 @@
 // Copyright 2018
 //
 
-#ifndef ISCE_CORE_QUATERNION_H
-#define ISCE_CORE_QUATERNION_H
 #pragma once
 
 #include "forward.h"
@@ -51,7 +49,3 @@ class isce::core::Quaternion : public isce::core::Attitude {
         std::vector<double> _time;
         std::vector<double> _qvec;
 };
-
-#endif
-
-// end of file

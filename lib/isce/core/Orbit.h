@@ -3,8 +3,6 @@
 // Copyright 2017
 //
 
-#ifndef ISCE_CORE_ORBIT_H
-#define ISCE_CORE_ORBIT_H
 #pragma once
 
 #include "forward.h"
@@ -253,7 +251,3 @@ addStateVector(double t, const cartesian_t & pos, const cartesian_t & vel) {
     velocity.insert(velocity.begin()+(3*vec_idx), vel.begin(), vel.end());
     nVectors++;
 }
-
-#endif
-
-// end of file

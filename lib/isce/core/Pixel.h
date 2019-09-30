@@ -4,8 +4,6 @@
 // Author: Bryan V. Riel, Joshua Cohen
 // Copyright 2017-2018
 
-#ifndef ISCE_CORE_PIXEL_H
-#define ISCE_CORE_PIXEL_H
 #pragma once
 
 #include "forward.h"
@@ -31,7 +29,3 @@ class isce::core::Pixel {
         double _dopfact;
         size_t _bin;
 };
-
-#endif
-
-// end of file

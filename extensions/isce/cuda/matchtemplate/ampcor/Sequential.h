@@ -4,12 +4,8 @@
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2019 all rights reserved
-//
 
-// code guard
-#if !defined(ampcor_libampcor_cuda_correlators_Sequential_h)
-#define ampcor_libampcor_cuda_correlators_Sequential_h
-
+#pragma once
 
 // resource management and orchestration of the execution of the correlation plan
 template <typename raster_t>
@@ -163,9 +159,3 @@ private:
     // host storage for the offset field
     value_type * const _offsets;
 };
-
-
-// code guard
-#endif
-
-// end of file

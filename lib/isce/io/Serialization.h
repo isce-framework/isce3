@@ -8,8 +8,7 @@
  *
  * Serialization utilities using HDF5 API. */
 
-#ifndef ISCE_IO_SERIALIZATION_H
-#define ISCE_IO_SERIALIZATION_H
+#pragma once
 
 #include <iostream>
 #include <sstream>
@@ -277,7 +276,3 @@ namespace isce {
 
     }
 }
-
-#endif
-
-// end of file

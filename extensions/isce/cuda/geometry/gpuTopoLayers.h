@@ -3,22 +3,13 @@
 // Copyright 2018
 //
 
-#ifndef ISCE_CUDA_GEOMETRY_GPUTOPOLAYERS_H
-#define ISCE_CUDA_GEOMETRY_GPUTOPOLAYERS_H
+#pragma once
+
+#include "forward.h"
 
 #include <iostream>
-
 #include <isce/core/Common.h>
-#include <isce/geometry/TopoLayers.h>
-
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace geometry {
-            class gpuTopoLayers;
-        }
-    }
-}
+#include <isce/geometry/forward.h>
 
 // DEMInterpolator declaration
 class isce::cuda::geometry::gpuTopoLayers {
@@ -103,7 +94,3 @@ class isce::cuda::geometry::gpuTopoLayers {
         size_t _nbytes_double, _nbytes_float;
         bool _owner;
 };
-
-#endif
-
-// end of file

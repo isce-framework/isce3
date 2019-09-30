@@ -5,8 +5,9 @@
 // Copyright 2019-
 //
 
-#ifndef ISCE_SIGNAL_NFFT_H
-#define ISCE_SIGNAL_NFFT_H
+#pragma once
+
+#include "forward.h"
 
 #include <cmath>
 #include <valarray>
@@ -14,13 +15,6 @@
 #include <isce/core/Constants.h>
 #include <isce/core/Kernels.h>
 #include "Signal.h"
-
-// Declaration
-namespace isce {
-    namespace signal {
-        template<class T> class NFFT;
-    }
-}
 
 /** Non-equispaced fast Fourier transform (NFFT)
  *
@@ -177,5 +171,3 @@ class isce::signal::NFFT {
         isce::core::NFFTKernel<T> _kernel;
         isce::signal::Signal<T> _fft;
 };
-
-#endif

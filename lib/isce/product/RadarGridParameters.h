@@ -1,8 +1,7 @@
 //-*- C++ -*-
 //-*- coding: utf-8 -*-
 
-#ifndef ISCE_PRODUCT_CONFIGPARAMETERS_H
-#define ISCE_PRODUCT_CONFIGPARAMETERS_H
+#pragma once
 
 // isce::core
 #include <isce/core/Metadata.h>
@@ -248,7 +247,3 @@ RadarGridParameters(size_t numberAzimuthLooks,
     _rlength(length),
     _rwidth(width),
     _refEpoch(refEpoch) {}
-
-#endif
-
-// end of file

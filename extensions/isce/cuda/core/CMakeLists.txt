@@ -1,6 +1,7 @@
 set(PACKAGENAME core)
 
 set(HEADERS
+        forward.h
         Event.h
         gpuBasis.h
         gpuInterpolator.h

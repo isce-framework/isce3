@@ -3,8 +3,6 @@
 // Copyright 2017-2018
 //
 
-#ifndef ISCE_CORE_INTERPOLATOR_H
-#define ISCE_CORE_INTERPOLATOR_H
 #pragma once
 
 #include "forward.h"
@@ -228,7 +226,3 @@ namespace isce {
 
     }
 }
-
-#endif
-
-// end of file

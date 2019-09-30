@@ -13,14 +13,16 @@
 #include <gtest/gtest.h>
 
 // isce::core
-#include "isce/core/Constants.h"
-#include "isce/core/DateTime.h"
-#include "isce/core/Ellipsoid.h"
-#include "isce/core/Orbit.h"
-#include "isce/core/LUT1d.h"
+#include <isce/core/Constants.h>
+#include <isce/core/DateTime.h>
+#include <isce/core/Ellipsoid.h>
+#include <isce/core/Orbit.h>
+#include <isce/core/LUT1d.h>
+#include <isce/core/LUT2d.h>
 
 // isce::geometry
-#include "isce/geometry/geometry.h"
+#include <isce/geometry/DEMInterpolator.h>
+#include <isce/geometry/geometry.h>
 
 
 struct GeometryTest : public ::testing::Test {

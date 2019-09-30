@@ -1,6 +1,4 @@
 #pragma once
-#ifndef ISCE_CORE_VECTOR_H
-#define ISCE_CORE_VECTOR_H
 
 #include <array>
 #include <cmath>
@@ -181,5 +179,3 @@ bool operator!=(const Vector<N> & lhs, const Vector<N> & rhs)
 }
 
 }} // namespace isce::core
-
-#endif

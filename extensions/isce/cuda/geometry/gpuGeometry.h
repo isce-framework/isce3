@@ -3,31 +3,21 @@
 // Copyright 2018
 //
 
-#ifndef ISCE_CUDA_GEOMETRY_GPUGEOMETRY_H
-#define ISCE_CUDA_GEOMETRY_GPUGEOMETRY_H
+#pragma once
 
-#include <cmath>
+#include <isce/core/forward.h>
+#include <isce/geometry/forward.h>
+#include <isce/cuda/core/forward.h>
+#include <isce/cuda/geometry/forward.h>
 
-// isce::core
-#include <isce/core/Ellipsoid.h>
-#include <isce/core/Orbit.h>
-#include <isce/core/Pixel.h>
-#include <isce/core/LUT1d.h>
-
-// isce::geometry
-#include <isce/geometry/DEMInterpolator.h>
-
-// isce::cuda::core
-#include <isce/cuda/core/gpuOrbit.h>
-#include <isce/cuda/core/gpuLUT1d.h>
-
-// isce::cuda::geometry
-#include <isce/cuda/geometry/gpuDEMInterpolator.h>
+#include <isce/core/Common.h>
 
 // Declaration
 namespace isce {
 namespace cuda {
 namespace geometry {
+
+    using cartesian_t = isce::core::Vec3;
 
     /** Radar geometry coordinates to map coordinates transformer*/
     CUDA_DEV int rdr2geo(double, double, double,
@@ -80,7 +70,3 @@ CUDA_GLOBAL void createProjection(isce::cuda::core::ProjectionBase **, int);
 
 /** Delete ProjectionBase pointer on the device (meant to be run by a single thread) */
 CUDA_GLOBAL void deleteProjection(isce::cuda::core::ProjectionBase **);
-
-#endif
-
-// end of file
