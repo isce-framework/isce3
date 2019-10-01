@@ -169,11 +169,10 @@ class Base(pyre.component,
         fid = h5py.File(self.filename, 'r', libver='latest', swmr=True)
 
         # build path the desired dataset
-        folder = self.SwathPath
-        ds_path = os.path.join(folder, 'frequency{0}'.format(frequency), polarization)
+        dsPath = self.slcPath(frequency, polarization)
 
         # get dataset
-        slcDataset = fid[ds_path]
+        slcDataset = fid[dsPath]
 
         # return dataset
         return slcDataset
@@ -270,5 +269,13 @@ class Base(pyre.component,
         Compute the bounding box as a polygon in given projection system.
         '''
         raise NotImplementedError
+
+    def slcPath(self, frequency, polarization):
+        '''
+        return path to hdf5 dataset of given frequency and polarization
+        '''
+        datasetPath = os.path.join(self.SwathPath, f'frequency{frequency}', polarization)
+        return datasetPath
+
 
 # end of file
