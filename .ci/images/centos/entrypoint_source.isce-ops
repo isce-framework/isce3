@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+# Activate the `root` conda environment.
+. /opt/docker/bin/entrypoint_source.conda
+
+# Set ISCE env
+. /opt/docker/bin/entrypoint_source.isce

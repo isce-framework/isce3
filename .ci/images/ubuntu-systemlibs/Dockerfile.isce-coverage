@@ -1,0 +1,46 @@
+FROM nisar/isce-cu1904-devbase AS isce-builder
+LABEL cmakelabel="__TAG__"
+COPY . /isce-src
+
+# cmake
+RUN cd /isce-build && \
+    cmake /isce-src \
+        -DWITH_CUDA=y -DCMAKE_BUILD_TYPE=Coverage \
+        -DCMAKE_INSTALL_PREFIX=/isce-install
+
+# make
+RUN cd /isce-build && \
+    make -j`nproc` && \
+    make install
+
+
+FROM nvidia/cuda:10.1-base-ubuntu19.04
+
+# Runtime libraries
+# cmake used for ctest
+RUN apt-get update && apt-get install -y \
+    cmake \
+    lcov \
+    libcufft10 \
+    libfftw3-3 \
+    libgdal20 \
+    libhdf5-103 \
+    libhdf5-cpp-103 \
+    python3 \
+    python3-distutils-extra \
+    wget && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=isce-builder /pyre-install /pyre-install
+COPY --from=isce-builder /isce-build   /isce-build
+#COPY --from=isce-builder /isce-install /isce-install
+COPY --from=isce-builder /isce-src /isce-src
+
+RUN cd /isce-build && \
+    ctest -E rtc; true
+
+RUN cd /isce-build && \
+    wget https://raw.github.com/eriwen/lcov-to-cobertura-xml/master/lcov_cobertura/lcov_cobertura.py && \
+    make coverage && \
+    python3 lcov_cobertura.py lcov.info -b /isce-src -o /coverage.xml
+

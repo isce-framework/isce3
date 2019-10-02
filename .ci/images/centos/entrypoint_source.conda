@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+
+# Activate the `root` conda environment.
+. /opt/conda/bin/activate root
+
+# Set paths to gdal
+export GDAL_DIR=/opt/conda
+export PATH=$GDAL_DIR/bin:$PATH
+export GDAL_DATA=$GDAL_DIR/share/gdal
+
+# Set paths to Pyre
+export PYREDIR=/opt/pyre
+export PATH=$PYREDIR/bin:$PYREDIR/packages:$PATH
+export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH
+export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH

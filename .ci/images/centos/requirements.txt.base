@@ -1,0 +1,11 @@
+git
+h5py
+numpy
+fftw
+hdf4
+hdf5
+netcdf4
+gdal
+libgdal
+libgcc
+libstdcxx-ng

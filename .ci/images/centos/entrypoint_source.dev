@@ -1,0 +1,18 @@
+#!/bin/bash
+set -e
+
+# Enable the compiler toolset.
+#
+# Must do this before activating conda or
+# the system Python interpreter is not used.
+# This is a problem for many reasons. One being
+# that the Python scripts used to activate the
+# toolset are not Python 3 compatible.
+. /opt/rh/devtoolset-7/enable
+
+# Activate the `root` conda environment.
+. /opt/docker/bin/entrypoint_source.conda
+
+# use custom gcc7 with c++11 plus enabled
+export PATH=/opt/gcc7/bin:$PATH
+export LD_LIBRARY_PATH=/opt/gcc7/lib64:$LD_LIBRARY_PATH
