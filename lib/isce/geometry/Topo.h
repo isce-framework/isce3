@@ -22,168 +22,343 @@
 // isce::geometry
 #include "geometry.h"
 
-// Declare Topo class
-/** Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude
+/**
+ * Transformer from radar geometry coordinates to map coordinates with
+ * DEM / reference altitude
  *
- * See <a href="overview_geometry.html#forwardgeom">geometry overview</a> for a description of the algorithm*/
+ * See <a href="overview_geometry.html#forwardgeom">geometry overview</a>
+ * for a description of the algorithm
+ */
 class isce::geometry::Topo {
+public:
 
-    public:
-        /** Constructor using a product*/
-        inline Topo(const isce::product::Product &,
-                    char frequency = 'A',
-                    bool nativeDoppler = false,
-                    size_t numberAzimuthLooks = 1,
-                    size_t numberRangeLooks = 1);
+    /**
+     * Constructor using a product
+     *
+     * @param[in] product Input Product
+     * @param[in] frequency Frequency designation
+     * @param[in] nativeDoppler Flag for using native Doppler frequencies instead of zero-Doppler
+     * @param[in] numberAzimuthLooks Number of azimuth looks of input product
+     * @param[in] numberRangeLooks Number of range looks of input product
+     */
+    Topo(const isce::product::Product &,
+         char frequency = 'A',
+         bool nativeDoppler = false, size_t numberAzimuthLooks = 1,
+         size_t numberRangeLooks = 1);
 
-        inline Topo(const isce::product::RadarGridParameters & radarGrid,
-                    const isce::core::Orbit & orbit,
-                    const isce::core::Ellipsoid & ellipsoid,
-                    const int lookSide,
-                    const isce::core::LUT2d<double> & doppler = isce::core::LUT2d<double>());
+    /**
+     * Alternative constructor from ellipsoid orbit and radarGrid.
+     *
+     * @param[in] radarGrid RadarGridParameters object
+     * @param[in] orbit     Orbit object
+     * @param[in] ellipsoid Ellipsoid object
+     * @param[in] lookSide  look direction of the radar
+     * @param[in] doppler   LUT2d doppler model
+     */
+    Topo(const isce::product::RadarGridParameters & radarGrid,
+         const isce::core::Orbit & orbit,
+         const isce::core::Ellipsoid & ellipsoid,
+         const int lookSide,
+         const isce::core::LUT2d<double> & doppler = {});
 
-        /** Constructor using core objects*/
-        inline Topo(const isce::core::Ellipsoid &,
-                    const isce::core::Orbit &,
-                    const isce::core::LUT2d<double> &,
-                    const isce::core::Metadata &,
-                    size_t numberAzimuthLooks = 1,
-                    size_t numberRangeLooks = 1);
-        
-        /** Set convergence threshold */
-        inline void threshold(double);
-        /** Set number of primary iterations */
-        inline void numiter(int);
-        /** Set number of secondary iterations */
-        inline void extraiter(int);
-        /** Set orbit interpolation method */
-        inline void orbitMethod(isce::core::orbitInterpMethod);
-        /** Set DEM interpolation method */
-        inline void demMethod(isce::core::dataInterpMethod);
-        /** Set output coordinate system */
-        inline void epsgOut(int);
-        /** Set mask computation flag */
-        inline void computeMask(bool);
-        /** Set minimum height */
-        inline void minimumHeight(double);
-        /** Set maximum height */
-        inline void maximumHeight(double);
-        /** Set margin in decimal degrees */
-        inline void decimaldegMargin(double);
+    /**
+     * Constructor using core objects
+     *
+     * Alternative constructor from ellipsoid orbit and metadata.
+     * Used for supporting VRT-formatted products.
+     *
+     * @param[in] ellipsoid Ellipsoid object
+     * @param[in] orbit     Orbit object
+     * @param[in] doppler   LUT1d doppler model
+     * @param[in] meta      Metadata object with radar image parameters
+     * @param[in] numberAzimuthLooks Number of azimuth looks of input product
+     * @param[in] numberRangeLooks Number of range looks of input product
+     */
+    Topo(const isce::core::Ellipsoid & ellipsoid,
+         const isce::core::Orbit & orbit,
+         const isce::core::LUT2d<double> & doppler,
+         const isce::core::Metadata & meta,
+         size_t numberAzimuthLooks = 1,
+         size_t numberRangeLooks = 1);
 
-        // Get topo processing options
-        /** Get lookSide used for processing */
-        inline int lookSide() const { return _lookSide; }
-        /** Get distance convergence threshold used for processing */
-        inline double threshold() const { return _threshold; }
-        /** Get number of primary iterations used for processing */
-        inline int numiter() const { return _numiter; }
-        /** Get number of secondary iterations used for processing*/
-        inline int extraiter() const { return _extraiter; }
-        /** Get the output coordinate system used for processing */
-        inline int epsgOut() const { return _epsgOut; }
-        /** Get the DEM interpolation method used for processing */
-        inline isce::core::dataInterpMethod demMethod() const { return _demMethod; }
-        /** Get mask computation flag */
-        inline bool computeMask() const { return _computeMask; }
-        /** Get minimum height */
-        inline double minimumHeight() const { return _minH; }
-        /** Get maximum height */
-        inline double maximumHeight() const { return _maxH; }
-        /** Get margin in decimal degrees */
-        inline double decimaldegMargin() const { return _margin; }
+    /**
+     * Set convergence threshold
+     *
+     * @param[in] t Distance threshold to flag convergence of iterations
+     */
+    void threshold(double t) { _threshold = t; }
 
-        /** Get read-only reference to RadarGridParameters */
-        inline const isce::product::RadarGridParameters & radarGridParameters() const {
-            return _radarGrid;
-        }
+    /**
+     * Set number of primary iterations
+     *
+     * This is the number of iterations where solution of previous solution is
+     * directly used to initialize the next iteration
+     *
+     * @param[in] n Number of primary iterations
+     */
+    void numiter(int n) { _numiter = n; }
 
-        // Get DEM bounds using first/last azimuth line and slant range bin
-        void computeDEMBounds(isce::io::Raster &,
-                              DEMInterpolator &,
-                              size_t, size_t);
+    /**
+     * Set number of secondary iterations
+     *
+     * When we haven't converged after primary iterations, it typically means
+     * that the solver is iterating between two very close solutions. In this
+     * case, we use the previous 2 solutions and use the average to initialize
+     * the next iteration. This is equivalent to changing the step size between
+     * iterations.
+     *
+     * @param[in] n Number of secondary iterations
+     */
+    void extraiter(int n) { _extraiter = n; }
 
-        /** Main entry point for the module; internal creation of topo rasters */
-        void topo(isce::io::Raster &, const std::string);
+    /**
+     * Set the orbit interpolation method while checking its validity
+     *
+     * @param[in] method orbit interpolation method to use
+     */
+    void orbitMethod(isce::core::orbitInterpMethod method);
 
-        /** Run topo with externally created topo rasters in TopoLayers object */
-        void topo(isce::io::Raster & demRaster, TopoLayers & layers);
+    /**
+     * Set the DEM interpolation method while checking its validity
+     *
+     * @param[in] DEM inerpolation method
+     */
+    void demMethod(isce::core::dataInterpMethod method);
 
-        /** Run topo with externally created topo rasters; generate mask */
-        void topo(isce::io::Raster & demRaster, isce::io::Raster & xRaster,
-                  isce::io::Raster & yRaster, isce::io::Raster & heightRaster,
-                  isce::io::Raster & incRaster, isce::io::Raster & hdgRaster,
-                  isce::io::Raster & localIncRaster, isce::io::Raster & localPsiRaster,
-                  isce::io::Raster & simRaster, isce::io::Raster & maskRaster);
+    /**
+     * Set output coordinate system
+     *
+     * Set the EPSG code of the output layers and configure projection.
+     * See <a href="raster.html#rasterproj">here</a> for supported projections.
+     *
+     * @param[in] epsgcode EPSG code of desired pixel-by-pixel outputs
+     */
+    void epsgOut(int epsgcode);
 
-        /** Run topo with externally created topo rasters; generate mask */
-        void topo(isce::io::Raster & demRaster, isce::io::Raster & xRaster,
-                  isce::io::Raster & yRaster, isce::io::Raster & heightRaster,
-                  isce::io::Raster & incRaster, isce::io::Raster & hdgRaster,
-                  isce::io::Raster & localIncRaster, isce::io::Raster & localPsiRaster,
-                  isce::io::Raster & simRaster);
+    /**
+     * Set mask computation flag
+     *
+     * @param[in] mask Boolean for mask computation
+     */
+    void computeMask(bool mask) { _computeMask = mask; }
 
-        /** Compute layover/shadow masks */
-        void setLayoverShadow(TopoLayers &,
-                              DEMInterpolator &,
-                              std::vector<isce::core::cartesian_t> &);
+    /**
+     * Set minimum height
+     *
+     * @param[in] minh Minimum altitude for the scene
+     */
+    void minimumHeight(double minh) { _minH = minh; }
 
-        // Getters for isce objects
-        /** Get the orbits used for processing */
-        inline const isce::core::Orbit & orbit() const { return _orbit; }
-        /** Get the ellipsoid used for processing */
-        inline const isce::core::Ellipsoid & ellipsoid() const { return _ellipsoid; }
-        /** Get the doppler module used for processing */
-        inline const isce::core::LUT2d<double> & doppler() const { return _doppler; }
+    /**
+     * Set maximum height
+     *
+     * @param[in] maxh Maximum altitude for the scene
+     */
+    void maximumHeight(double maxh) { _maxH = maxh; }
 
-    private:
+    /**
+     * Set margin in decimal degrees
+     *
+     * @param[in] deg Margin around bounding box in decimal degrees
+     */
+    void decimaldegMargin(double deg) { _margin = deg; }
 
-        /** Initialize TCN basis for given azimuth line */
-        void _initAzimuthLine(size_t, double&,
-                              isce::core::Vec3& pos, isce::core::Vec3& vel,
-                              isce::core::Basis&);
+    // Get topo processing options
 
-        /** Write to output layers */
-        void _setOutputTopoLayers(cartesian_t &,
-                                  TopoLayers &,
-                                  size_t,
-                                  isce::core::Pixel &,
-                                  isce::core::Vec3& pos,
-                                  isce::core::Vec3& vel,
-                                  isce::core::Basis &,
-                                  DEMInterpolator &);
-        
-    private:
-        // isce::core objects
-        isce::core::Orbit _orbit;
-        isce::core::Ellipsoid _ellipsoid;
-        isce::core::LUT2d<double> _doppler;
+    /** Get lookSide used for processing */
+    int lookSide() const { return _lookSide; }
 
-        // RadarGridParameters
-        isce::product::RadarGridParameters _radarGrid;
-        
-        // Optimization options
-        double _threshold = 1.0e-8;   //Threshold for convergence of slant range
-        int _numiter = 25;            //Number of primary iterations
-        int _extraiter = 10;          //Number of secondary iterations
-        double _minH = isce::core::GLOBAL_MIN_HEIGHT;   //Lowest altitude in scene (global minimum default)
-        double _maxH = isce::core::GLOBAL_MAX_HEIGHT;   //Highest altitude in scene (global maximum default)
-        double _margin = 0.15;        //Margin for bounding box in decimal degrees
-        size_t _linesPerBlock = 1000; //Block size for processing
-        bool _computeMask = true;     //Flag for generating shadow-layover mask
-        
-        int _lookSide;
+    /** Get distance convergence threshold used for processing */
+    double threshold() const { return _threshold; }
 
+    /** Get number of primary iterations used for processing */
+    int numiter() const { return _numiter; }
 
-        isce::core::orbitInterpMethod _orbitMethod;
-        isce::core::dataInterpMethod _demMethod;
+    /** Get number of secondary iterations used for processing*/
+    int extraiter() const { return _extraiter; }
 
-        // Output options and objects
-        int _epsgOut;
-        isce::core::ProjectionBase * _proj;
+    /** Get the output coordinate system used for processing */
+    int epsgOut() const { return _epsgOut; }
+
+    /** Get the DEM interpolation method used for processing */
+    isce::core::dataInterpMethod demMethod() const { return _demMethod; }
+
+    /** Get mask computation flag */
+    bool computeMask() const { return _computeMask; }
+
+    /** Get minimum height */
+    double minimumHeight() const { return _minH; }
+
+    /** Get maximum height */
+    double maximumHeight() const { return _maxH; }
+
+    /** Get margin in decimal degrees */
+    double decimaldegMargin() const { return _margin; }
+
+    /** Get read-only reference to RadarGridParameters */
+    const isce::product::RadarGridParameters & radarGridParameters() const { return _radarGrid; }
+
+    // Get DEM bounds using first/last azimuth line and slant range bin
+    void computeDEMBounds(isce::io::Raster &, DEMInterpolator &, size_t, size_t);
+
+    /**
+     * Main entry point for the module; internal creation of topo rasters
+     *
+     * This is the main topo driver. The pixel-by-pixel output file names are fixed for now
+     * <ul>
+     * <li> x.rdr - X coordinate in requested projection system (meters or degrees)
+     * <li> y.rdr - Y cooordinate in requested projection system (meters or degrees)
+     * <li> z.rdr - Height above ellipsoid (meters)
+     * <li> inc.rdr - Incidence angle (degrees) computed from vertical at target
+     * <li> hdg.rdr - Azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
+     * <li> localInc.rdr - Local incidence angle (degrees) at target
+     * <li> locaPsi.rdr - Local projection angle (degrees) at target
+     * <li> simamp.rdr - Simulated amplitude image.
+     * </ul>
+     *
+     * @param[in] demRaster input DEM raster
+     * @param[in] outdir  directory to write outputs to
+     */
+    void topo(isce::io::Raster & demRaster, const std::string & outdir);
+
+    /**
+     * Run topo with externally created topo rasters in TopoLayers object
+     *
+     * @param[in] demRaster input DEM raster
+     * @param[in] layers TopoLayers object for storing and writing results
+     */
+    void topo(isce::io::Raster & demRaster, TopoLayers & layers);
+
+    /**
+     * Run topo with externally created topo rasters; generate mask
+     *
+     * @param[in] demRaster input DEM raster
+     * @param[in] xRaster output raster for X coordinate in requested projection system (meters or degrees)
+     * @param[in] yRaster output raster for Y cooordinate in requested projection system (meters or degrees)
+     * @param[in] zRaster output raster for height above ellipsoid (meters)
+     * @param[in] incRaster output raster for incidence angle (degrees) computed from vertical at target
+     * @param[in] hdgRaster output raster for azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
+     * @param[in] localIncRaster output raster for local incidence angle (degrees) at target
+     * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
+     * @param[in] simRaster output raster for simulated amplitude image.
+     * @param[in] maskRaster output raster for layover/shadow mask.
+     */
+    void topo(isce::io::Raster & demRaster, isce::io::Raster & xRaster,
+              isce::io::Raster & yRaster, isce::io::Raster & heightRaster,
+              isce::io::Raster & incRaster, isce::io::Raster & hdgRaster,
+              isce::io::Raster & localIncRaster, isce::io::Raster & localPsiRaster,
+              isce::io::Raster & simRaster, isce::io::Raster & maskRaster);
+
+    /**
+     * Run topo with externally created topo rasters; generate mask
+     *
+     * @param[in] demRaster input DEM raster
+     * @param[in] xRaster output raster for X coordinate in requested projection system (meters or degrees)
+     * @param[in] yRaster output raster for Y cooordinate in requested projection system (meters or degrees)
+     * @param[in] zRaster output raster for height above ellipsoid (meters)
+     * @param[in] incRaster output raster for incidence angle (degrees) computed from vertical at target
+     * @param[in] hdgRaster output raster for azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
+     * @param[in] localIncRaster output raster for local incidence angle (degrees) at target
+     * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
+     * @param[in] simRaster output raster for simulated amplitude image.
+     */
+    void topo(isce::io::Raster & demRaster, isce::io::Raster & xRaster,
+              isce::io::Raster & yRaster, isce::io::Raster & heightRaster,
+              isce::io::Raster & incRaster, isce::io::Raster & hdgRaster,
+              isce::io::Raster & localIncRaster, isce::io::Raster & localPsiRaster,
+              isce::io::Raster & simRaster);
+
+    /**
+     * Compute layover/shadow masks
+     *
+     * @param[in] layers Object containing output layers
+     * @param[in] demInterp DEMInterpolator object
+     * @param[in] satPosition Vector of cartesian_t of satellite position for each line in block
+     */
+    void setLayoverShadow(TopoLayers &,
+                          DEMInterpolator &,
+                          std::vector<isce::core::cartesian_t> &);
+
+    // Getters for isce objects
+
+    /** Get the orbits used for processing */
+    inline const isce::core::Orbit & orbit() const { return _orbit; }
+    /** Get the ellipsoid used for processing */
+    inline const isce::core::Ellipsoid & ellipsoid() const { return _ellipsoid; }
+    /** Get the doppler module used for processing */
+    inline const isce::core::LUT2d<double> & doppler() const { return _doppler; }
+
+private:
+
+    /**
+     * Initialize TCN basis for given azimuth line
+     *
+     * The module is optimized to work with range doppler coordinates. This
+     * section would need to be changed to work with data in PFA coordinates
+     * (not currently supported).
+     *
+     * @param[in] line line number of input radar geometry product
+     * @param[out] pos/vel state variables needed for processing the line
+     * @param[out] TCNbasis TCN basis corresponding to the state
+     */
+    void _initAzimuthLine(size_t line, double&,
+                          isce::core::Vec3& pos, isce::core::Vec3& vel,
+                          isce::core::Basis& TCNbasis);
+
+    /**
+     * Write to output layers
+     *
+     * Currently, local slopes are computed by simple numerical differencing.
+     * In the future, we should accommodate possibility of reading in this
+     * as an external layer
+     *
+     * @param[in] llh Lon/Lat/Hae for target
+     * @param[in] layers Object containing output layers
+     * @param[in] line line number to write to output
+     * @param[in] pixel pixel number to write to output
+     * @param[in] pos/vel state for the line under consideration
+     * @param[in] TCNbasis basis for the line under consideration
+     * @param[in] demInterp DEM interpolator object used to compute local slope
+     */
+    void _setOutputTopoLayers(cartesian_t &,
+                              TopoLayers &,
+                              size_t,
+                              isce::core::Pixel &,
+                              isce::core::Vec3& pos,
+                              isce::core::Vec3& vel,
+                              isce::core::Basis &,
+                              DEMInterpolator &);
+
+    // isce::core objects
+    isce::core::Orbit _orbit;
+    isce::core::Ellipsoid _ellipsoid;
+    isce::core::LUT2d<double> _doppler;
+
+    // RadarGridParameters
+    isce::product::RadarGridParameters _radarGrid;
+
+    // Optimization options
+    double _threshold = 1.0e-8;   //Threshold for convergence of slant range
+    int _numiter = 25;            //Number of primary iterations
+    int _extraiter = 10;          //Number of secondary iterations
+    double _minH = isce::core::GLOBAL_MIN_HEIGHT;   //Lowest altitude in scene (global minimum default)
+    double _maxH = isce::core::GLOBAL_MAX_HEIGHT;   //Highest altitude in scene (global maximum default)
+    double _margin = 0.15;        //Margin for bounding box in decimal degrees
+    size_t _linesPerBlock = 1000; //Block size for processing
+    bool _computeMask = true;     //Flag for generating shadow-layover mask
+
+    int _lookSide;
+
+    isce::core::orbitInterpMethod _orbitMethod;
+    isce::core::dataInterpMethod _demMethod;
+
+    // Output options and objects
+    int _epsgOut;
+    isce::core::ProjectionBase * _proj;
 };
 
 // Get inline implementations for Topo
 #define ISCE_GEOMETRY_TOPO_ICC
 #include "Topo.icc"
 #undef ISCE_GEOMETRY_TOPO_ICC
+
