@@ -16,6 +16,7 @@
 #include <pyre/journal.h>
 // ampcor
 #include "isce/matchtemplate/ampcor/correlators.h"
+//#include "isce/matchtemplate/ampcor/correlators/publics.h"
 
 
 // type aliases
