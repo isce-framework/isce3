@@ -3,7 +3,9 @@ set(PACKAGENAME core)
 string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 
 ####Set the source files
-set(CPPS Baseline.cpp
+set(CPPS
+         Attitude.cpp
+         Baseline.cpp
          BilinearInterpolator.cpp
          BicubicInterpolator.cpp
          DateTime.cpp
@@ -15,7 +17,6 @@ set(CPPS Baseline.cpp
          Metadata.cpp
          NearestNeighborInterpolator.cpp
          Orbit.cpp
-         Peg.cpp
          Pegtrans.cpp
          Poly1d.cpp
          Poly2d.cpp

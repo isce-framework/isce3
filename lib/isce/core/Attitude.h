@@ -24,7 +24,7 @@ class isce::core::Attitude {
         Attitude(Attitude::Type atype) : _attitude_type(atype) {};
 
         /** Virtual destructor*/
-        virtual ~Attitude() {}
+        virtual ~Attitude();
 
         /** Virtual function to return yaw, pitch, roll */
         virtual void ypr(double tintp, double& yaw, double& pitch, double& roll) = 0;

@@ -1,20 +1,24 @@
 // Copyright (c) 2017-, California Institute of Technology ("Caltech"). U.S.
 // Government sponsorship acknowledged.
 // All rights reserved.
-// 
+//
 // Author(s):
-// 
+//
 //  ======================================================================
-// 
+//
 //  FILENAME: EdgeDetector.cc
-// 
+//
 //  CREATED BY: Xiaoqing WU
-// 
+//
 //  ======================================================================
 #include "EdgeDetector.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+// with gcc, openmp support requires an include
+#if defined(__GNUC__) && !defined(__clang__)
 #include <omp.h>
+#endif
 
 using namespace std;
 
@@ -24,7 +28,7 @@ void detect_edge(int nr_lines, int nr_pixels, float **data, unsigned char **edge
 {
   unsigned char Zero = (unsigned char)0;
   //unsigned char One  = (unsigned char)1;
-  
+
   for(int line = 0; line < nr_lines; line ++) {
     for(int pixel = 0; pixel < nr_pixels; pixel ++) {
       edge_data[line][pixel] = Zero;
@@ -66,13 +70,13 @@ void detect_edge(int nr_lines, int nr_pixels, float **data, unsigned char **edge
 //     if(line > 5995 ) cerr << "  line: " << line << "  pixel: " << pixel << "  mean: " << mean << "  deviation: " << deviation << endl;
       if(mean <= 1.0e-20 && deviation <= 1.0e-20) continue;
       deviation /= (double)(window_length * window_length - 1);
-      
+
 
       double Ca = sqrt(deviation)/mean;
 
 
 
-      if(Ca < C_min) continue;      // Homogenous area with no edge      
+      if(Ca < C_min) continue;      // Homogenous area with no edge
 
 // Check Edge structures ......
       // horizontal edge ......
@@ -248,7 +252,7 @@ void detect_edge(int nr_lines, int nr_pixels, float **data, unsigned char **edge
   }
 
 
-  for(int pixel = 0; pixel < win; pixel ++) {  
+  for(int pixel = 0; pixel < win; pixel ++) {
     for(int line = 0; line < nr_lines; line ++) {
       unsigned char maxValue = 0;
       for(int jj = pixel - win; jj <= pixel + win; jj++) {
@@ -260,7 +264,7 @@ void detect_edge(int nr_lines, int nr_pixels, float **data, unsigned char **edge
   }
 
 
-  for(int pixel = nr_pixels - win; pixel < nr_pixels; pixel ++) {  
+  for(int pixel = nr_pixels - win; pixel < nr_pixels; pixel ++) {
     for(int line = 0; line < nr_lines; line ++) {
       unsigned char maxValue = 0;
       for(int jj = pixel - win; jj <= pixel + win; jj++) {
@@ -270,18 +274,18 @@ void detect_edge(int nr_lines, int nr_pixels, float **data, unsigned char **edge
       edge_data[line][pixel] = maxValue;
     }
   }
-	
+
 }
 
 
-void detect_edge(int nr_lines, int nr_pixels, float **data, 
+void detect_edge(int nr_lines, int nr_pixels, float **data,
 		 unsigned char **horizontal_edge_data, unsigned char **vertical_edge_data,
 		 int window_length, double coefficient_variance_min, double max_edge_ratio)
 {
   unsigned char Zero = (unsigned char)0;
   //unsigned char One  = (unsigned char)1;
   //double Ca_min = coefficient_variance_min;
-  
+
   for(int line = 0; line < nr_lines; line ++) {
     for(int pixel = 0; pixel < nr_pixels; pixel ++) {
       horizontal_edge_data[line][pixel] = Zero;
@@ -338,12 +342,12 @@ void detect_edge(int nr_lines, int nr_pixels, float **data,
       double Ca = sqrt(deviation)/mean;
 
 
-//      if(Ca < coefficient_variance_min) continue;      // Homogenous area with no edge  
-      
+//      if(Ca < coefficient_variance_min) continue;      // Homogenous area with no edge
+
       double weight = (1.0 - Cu2/Ca/Ca)/(1 + Cu2);
       ca_data[line][pixel] = weight;
       mean_data[line][pixel] = mean;
-      
+
     }
   }
 

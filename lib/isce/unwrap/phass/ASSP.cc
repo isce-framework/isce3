@@ -1,9 +1,9 @@
 // Copyright (c) 2017-, California Institute of Technology ("Caltech"). U.S.
 // Government sponsorship acknowledged.
 // All rights reserved.
-// 
+//
 // Author(s):
-// 
+//
 
 /* ----------------------------------------------------------------------------
  * Author:  Xiaoqing Wu
@@ -17,7 +17,11 @@
 #include "BMFS.h"
 #include "Point.h"
 #include "sort.h"
-#include <omp.h> 
+
+// with gcc, openmp support requires an include
+#if defined(__GNUC__) && !defined(__clang__)
+#include <omp.h>
+#endif
 
 using namespace std;
 
@@ -44,7 +48,7 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
 
   DataPatch<unsigned char> *Hweight_patch = NULL;
   DataPatch<unsigned char> *Vweight_patch = NULL;
-  
+
   fcomplex ff(cos(const_phase_to_remove),-sin(const_phase_to_remove));
 
   if(fopen(corr_file, "r") == NULL) {  // no separate corr_file
@@ -117,7 +121,7 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
     fclose(fp);
     delete[] int_data;
 
-    
+
     fp = fopen(corr_file, "r");
     byte_offset = (long long)4 * (long long)nr_pixels * (long long)start_line;
     fseek(fp, byte_offset, SEEK_SET);
@@ -125,7 +129,7 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
       fread(corr_data[line], 4, nr_pixels, fp);
     }
     fclose(fp);
-    
+
     amp_patch = new DataPatch<float>(nr_pixels, nr_lines);
     amp_data = amp_patch->get_data_lines_ptr();
     fp = fopen(amp_file, "r");
@@ -138,8 +142,8 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
   }
 
 /*
-  DataPatch<unsigned char> *edge_patch = NULL; 
-  unsigned char **edge_data = NULL; 
+  DataPatch<unsigned char> *edge_patch = NULL;
+  unsigned char **edge_data = NULL;
   if(amp_data) {
     cerr << "update the costs with amplitude ...... \n";
 
@@ -156,7 +160,7 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
     detect_edge(nr_lines, nr_pixels, amp_data, edge_data, window_length, C_min, R_edge, R_line);
 
     cerr << "ending detect_edge() ...... \n";
-    
+
     for(int line = 0; line < nr_lines; line ++) {
       for(int pixel = 0; pixel < nr_pixels; pixel ++) {
         if(edge_data[line][pixel] > 0) corr_data[line][pixel] = 0;
@@ -178,7 +182,7 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
   }
   else if(1) {
     DataPatch<unsigned char> *tmp_patch = new DataPatch<unsigned char>(nr_pixels, nr_lines);
-    unsigned char **tmp_data = tmp_patch->get_data_lines_ptr();  
+    unsigned char **tmp_data = tmp_patch->get_data_lines_ptr();
     double max_phase_std = 1.2;
     compute_corr(nr_lines, nr_pixels, phase_data, tmp_data, max_phase_std);
 
@@ -205,12 +209,12 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
     Hweight_patch = compute_Hweight(nr_lines, nr_pixels, phase_data);
     Vweight_patch = compute_Hweight(nr_lines, nr_pixels, phase_data);
   }
-  
+
 /*
   // replace corr_data with the calculated phase noises ......
   if(0){
     DataPatch<unsigned char> *tmp_patch = new DataPatch<unsigned char>(nr_pixels, nr_lines);
-    unsigned char **tmp_data = tmp_patch->get_data_lines_ptr();  
+    unsigned char **tmp_data = tmp_patch->get_data_lines_ptr();
     double max_phase_std = 1.2;
     compute_corr(nr_lines, nr_pixels, phase_data, tmp_data, max_phase_std);
 
@@ -228,7 +232,7 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
 
     delete tmp_patch;
   }
-  else { 
+  else {
     double max_phase_std = 7.0;
     for(int line = 0; line < nr_lines; line ++) {
       for(int pixel = 0; pixel < nr_pixels; pixel ++) {
@@ -262,7 +266,7 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
   exit(0);
 */
 
- 
+
   FILE *fp_lay = fopen(layover_file, "r");
   if(fp_lay) {  // yes layover_file
     unsigned char Zero = (unsigned char)0;
@@ -349,8 +353,8 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
     CannyEdgeDetector *edgeDetector = new CannyEdgeDetector(nr_lines, nr_pixels, -200.0, amp_data, low, high, gw, gws);
 
     float **edge = edgeDetector->get_edge();
- 
-    
+
+
     float corr_th_plus = corr_th + 1.01/(200.0 * corr_th); // 0.05; // corr_th + (sqrt(corr_th*corr_th + 0.01) - corr_th) + 0.01;
 
     cerr << "corr_th: " << corr_th << "  corr_th_plus: " << corr_th_plus << endl;
@@ -375,13 +379,13 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
   }
 
 
-  
+
 
   cerr << "good_corr: " << good_corr << endl;
   cerr << "File read !!!! \n";
 
 
-  //  
+  //
 
   int nrows = nr_lines + 1;
   int ncols = nr_pixels + 1;
@@ -392,13 +396,13 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
   for(int row = 0; row < nrows; row++) {
     for(int col = 0; col < ncols; col ++) {
       node_data[row][col].supply = 0;
-      node_data[row][col].rc = 0;	  
+      node_data[row][col].rc = 0;
       node_data[row][col].dc = 0;
 //      node_data[row][col].edge_flag = edge_all;
     }
   }
-  
-  
+
+
   double pi = 3.14159265;
   double two_pi = 2.0 * pi;
   float *phases = new float[5];
@@ -419,13 +423,13 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
     }
   }
   delete[] phases;
-  
+
   double x, y;
 /*
   double phase_difference_threshold = phase_th * pi;
   double dx = 0, dy = 0;
 
-  
+
   double mean_phx = 0;
   double mean_phy = 0;
   double sigma_phx = 0;
@@ -466,7 +470,7 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
 
   cerr << "mean_phx: " << mean_phx << "  sigma_phx: " << sigma_phx << endl;
   cerr << "mean_phy: " << mean_phy << "  sigma_phy: " << sigma_phy << endl;
-  
+
 */
 //  double corr_scale = sqrt(1.0 - corr_th*corr_th) / corr_th;
 //  uchar cost_cap = 200;
@@ -485,7 +489,7 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
 	  node_data[line][pixel].dc = Vweight_patch->get_data_lines_ptr()[line - 1][pixel - 1];
 	}
       }
-	  
+
     }
   }
 */  // Oct 21, 2015 commented by XWU
@@ -521,14 +525,14 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
 	  x = min(corr_data[line][pixel - 1], corr_data[line][pixel]);
 	  node_data[line][pixel].dc = (uchar)(x * cost_scale);
 
-          //if(line == nrows - 2) { 
+          //if(line == nrows - 2) {
           //  node_data[line][pixel].dc = 255;
 	  //}
 	}
       }
 
       if(node_data[line][pixel].dc > mask_th) node_data[line][pixel].dc = 255;
-      if(node_data[line][pixel].rc > mask_th) node_data[line][pixel].rc = 255;	  
+      if(node_data[line][pixel].rc > mask_th) node_data[line][pixel].rc = 255;
     }
   }
 
@@ -657,7 +661,7 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
 /*
   if(amp_data) {
     cerr << "update the costs with amplitude ...... \n";
-    
+
     int window_length = 5;
     double Ca_min = 0.5;
     double edge_ratio_max = 0.6;
@@ -685,34 +689,34 @@ void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layo
 	else if(line < nrows - 1) {    // For middle rows ......
 	  if(pixel == 0) {
 	    if(Hedge_data[line - 1][pixel] > edge_th) node_data[line][pixel].rc = i_min(node_data[line][pixel].rc, 10);
-	    //int r = node_data[line][pixel].rc - Hedge_data[line - 1][pixel] * 255/100.0; // *(1.0 - Hedge_data[line - 1][pixel]/255.0); 
+	    //int r = node_data[line][pixel].rc - Hedge_data[line - 1][pixel] * 255/100.0; // *(1.0 - Hedge_data[line - 1][pixel]/255.0);
 	    //if(r < 0) r = 0;
 	    //node_data[line][pixel].rc = (unsigned char)r;
 	  }
 	  else if(pixel < ncols - 1) {
 	    if(Hedge_data[line - 1][pixel] > edge_th) node_data[line][pixel].rc = i_min(node_data[line][pixel].rc, 10);
-	    //int r = node_data[line][pixel].rc - Hedge_data[line - 1][pixel] * 255/100.0; // *(1.0 - Hedge_data[line - 1][pixel]/255.0); 
+	    //int r = node_data[line][pixel].rc - Hedge_data[line - 1][pixel] * 255/100.0; // *(1.0 - Hedge_data[line - 1][pixel]/255.0);
 	    //if(r < 0) r = 0;
 	    //node_data[line][pixel].rc = (unsigned char)r;
 
             if(Hedge_data[line][pixel - 1] > edge_th) node_data[line][pixel].dc = i_min(node_data[line][pixel].dc, 10);
-	   // r = node_data[line][pixel].dc - Vedge_data[line][pixel - 1] *255/100.0; // * (1.0 - Vedge_data[line][pixel - 1]/255.0); 
+	   // r = node_data[line][pixel].dc - Vedge_data[line][pixel - 1] *255/100.0; // * (1.0 - Vedge_data[line][pixel - 1]/255.0);
 
 //if(abs(line - 1108) < 3 && abs(pixel - 936) < 3) cerr << "line: " << line << "  r: " << r << "  dc: " << (int)node_data[line][pixel].dc << "  Vedge: " << (int)Vedge_data[line][pixel - 1] << endl;
 	    //if(r < 0) r = 0;
-	    //node_data[line][pixel].dc = (unsigned char)r;	    
+	    //node_data[line][pixel].dc = (unsigned char)r;
 	  }
-	}	
+	}
       }
     }
-   
+
 
     delete Hedge_patch;
     delete Vedge_patch;
   }
 */
 
- 
+
 /*
 int *cost = new int[ncols];
 FILE *fp = fopen("tmp.Hedge", "w");
@@ -734,14 +738,14 @@ fclose(fp);
 delete[] cost;
 */
 
-  /*   old way 
+  /*   old way
 
   if(amp_data) {
     cerr << "update the costs with amplitude ...... \n";
 
     double dx, dy;
-    
-    DataPatch<float> *tmp_patch = new DataPatch<float>(nr_pixels, nr_lines); 
+
+    DataPatch<float> *tmp_patch = new DataPatch<float>(nr_pixels, nr_lines);
     float **tmp_data = tmp_patch->get_data_lines_ptr();
     for(int line = 0; line < nr_lines; line ++) {
       for(int pixel = 0; pixel < nr_pixels; pixel ++) {
@@ -767,27 +771,27 @@ delete[] cost;
 	}
         heapSort (count, data, indexes);
         amp_data[line][pixel] = data[indexes[count/2]];
-      }    
+      }
       delete[] data;
       delete[] indexes;
     }
     delete tmp_patch;
 
-    
-    
+
+
     cerr << "amp_th: " << amp_th << endl;
-    
+
     for(int line = 0; line < nrows; line++) {
       for(int pixel = 0; pixel < ncols; pixel ++) {
 	//cerr << "line: " << line << "  pixel: " << pixel << endl;
-	
+
 	if(line == 0) {        // For the first row ......
 	  if(pixel > 0 && pixel < ncols - 1) {
 	    if(amp_data[line][pixel] > small && amp_data[line][pixel - 1] > small) {
 	      dx = fabs(20.0*(log10(amp_data[line][pixel]) - log10(amp_data[line][pixel - 1])));
-	      
+
 	      //cerr << "line: " << line << "  pixel: " << pixel << "  dx: " << dx << endl;
-	      
+
 	      if(dx >= amp_th) node_data[line][pixel].dc = 0;
 	      //else node_data[line][pixel].dc = (uchar)(node_data[line][pixel].dc * (amp_th - dx)/amp_th);
 	    }
@@ -809,7 +813,7 @@ delete[] cost;
 	      if(dy >= amp_th) node_data[line][pixel].rc = 0;
 	      //else node_data[line][pixel].rc = (uchar)(node_data[line][pixel].rc * (amp_th - dy)/amp_th);
 	    }
-	    
+
 	    if(amp_data[line][pixel] > small && amp_data[line][pixel - 1] > small) {
 	      dx = fabs(20.0*(log10(amp_data[line][pixel]) - log10(amp_data[line][pixel - 1])));
 	      //cerr << "line: " << line << "  pixel: " << pixel << "  dx: " << dx << endl;
@@ -818,10 +822,10 @@ delete[] cost;
 	    }
 	  }
 	}
-	
+
       }
     }
-    
+
     cerr << "end of amp \n";
   }
 */
@@ -829,7 +833,7 @@ delete[] cost;
 
 
   // update the costs with phases ......
-  
+
   double max_dph = phase_th; //1.0; // PI/2.0;
   double dx = 0;
   for(int line = 0; line < nrows; line++) {
@@ -845,7 +849,7 @@ delete[] cost;
 //	      node_data[line][pixel].dc = (unsigned char)((1.0 - dx/max_dph) * (double)node_data[line][pixel].dc);
 //	    }
 	    //if(dx > phase_difference_threshold) dx = phase_difference_threshold;
-	    //node_data[line][pixel].dc = (uchar)(x * (phase_difference_threshold - dx)/phase_difference_threshold * cost_scale);	
+	    //node_data[line][pixel].dc = (uchar)(x * (phase_difference_threshold - dx)/phase_difference_threshold * cost_scale);
 	  }
 	}
       }
@@ -875,7 +879,7 @@ delete[] cost;
 //	    }
             //else node_data[line][pixel].rc *= 1.0 - dx/max_dph;
 	  }
-	  
+
 	  if(corr_data[line][pixel] > small && corr_data[line][pixel - 1] > small) {
 	    dx = phase_data[line][pixel] - phase_data[line][pixel - 1];
 	    dx = fabs(dx);
@@ -888,7 +892,7 @@ delete[] cost;
 	  }
 	}
       }
-	  
+
     }
   }
 
@@ -910,7 +914,7 @@ delete[] cost;
     fclose(fp);
     exit(0);
   }
-*/  
+*/
 
 
   delete corr_patch;
@@ -937,7 +941,7 @@ DataPatch<Node> *make_node_patch(DataPatch<fcomplex> *int_patch, double qthresh)
 
   DataPatch<float> *phase_patch = new DataPatch<float>(nr_pixels, nr_lines);
   DataPatch<float> *amp_patch = new DataPatch<float>(nr_pixels, nr_lines);
-  
+
   fcomplex **int_data = int_patch->get_data_lines_ptr();
   float **phase_data = phase_patch->get_data_lines_ptr();
   float **amp_data = amp_patch->get_data_lines_ptr();
@@ -979,12 +983,12 @@ DataPatch<Node> *make_node_patch(int nr_lines, int nr_pixels, float **corr_data,
   for(int row = 0; row < nrows; row++) {
     for(int col = 0; col < ncols; col ++) {
       node_data[row][col].supply = 0;
-      node_data[row][col].rc = 0;	  
+      node_data[row][col].rc = 0;
       node_data[row][col].dc = 0;
 //      node_data[row][col].edge_flag = edge_all;
     }
   }
-  
+
   double pi = 3.14159265;
   float *phases = new float[5];
   for(int line=1; line<nr_lines; line++) {
@@ -1004,7 +1008,7 @@ DataPatch<Node> *make_node_patch(int nr_lines, int nr_pixels, float **corr_data,
     }
   }
   delete[] phases;
-  
+
   double x, y;
 
     double phase_difference_threshold = 1.0*pi;
@@ -1017,12 +1021,12 @@ DataPatch<Node> *make_node_patch(int nr_lines, int nr_pixels, float **corr_data,
 	  // x = (corr_data[line][pixel - 1] + corr_data[line][pixel] )/2.0;
 	  x = min(corr_data[line][pixel - 1], corr_data[line][pixel]);
 	  //x *= x;
-	  //node_data[line][pixel].dc = (uchar)(x * cost_scale);	
+	  //node_data[line][pixel].dc = (uchar)(x * cost_scale);
 	  dx = fabs(phase_data[line][pixel] - phase_data[line][pixel - 1]);
 	  if(dx > pi) dx = 2*pi - dx;
 	  if(dx > phase_difference_threshold) dx = phase_difference_threshold;
 	  node_data[line][pixel].dc = (uchar)(x  * cost_scale);
-	  //node_data[line][pixel].dc = (uchar)(x * (phase_difference_threshold - dx)/phase_difference_threshold * cost_scale);	
+	  //node_data[line][pixel].dc = (uchar)(x * (phase_difference_threshold - dx)/phase_difference_threshold * cost_scale);
 	}
       }
       else if(line < nrows - 1) {    // For middle rows ......
@@ -1061,7 +1065,7 @@ DataPatch<Node> *make_node_patch(int nr_lines, int nr_pixels, float **corr_data,
 	  // if(line % 100 == 0) cerr << line << " " << pixel << "  x: " << x << "  dc: " << (int)node_data[line][pixel].dc << "  cost_scale: " << cost_scale << endl;
 	}
       }
-	  
+
     }
   }
 
@@ -1071,7 +1075,7 @@ DataPatch<Node> *make_node_patch(int nr_lines, int nr_pixels, float **corr_data,
     for(int pixel = 0; pixel < ncols; pixel ++) {
       node_data[line][pixel].rc = 1;
       node_data[line][pixel].dc = 1;
-      if(line == 0 || line == nrows - 1) {	
+      if(line == 0 || line == nrows - 1) {
 	node_data[line][pixel].rc = 0;
       }
       if(pixel == 0 || pixel == ncols - 1) {
@@ -1080,14 +1084,14 @@ DataPatch<Node> *make_node_patch(int nr_lines, int nr_pixels, float **corr_data,
     }
   }
   */
-  
+
   // Test Only **************
   /*
   for(int line = 0; line < nrows; line++) {
     for(int pixel = 0; pixel < ncols; pixel ++) {
       node_data[line][pixel].rc = 1;
       node_data[line][pixel].dc = 1;
-      if(line == 0 || line == nrows - 1) {	
+      if(line == 0 || line == nrows - 1) {
 	node_data[line][pixel].rc = 0;
       }
       if(pixel == 0 || pixel == ncols - 1) {
@@ -1111,11 +1115,11 @@ DataPatch<char>* unwrap_assp(DataPatch<NodeFlow> *flows_patch, float **phase_dat
   //int nrows = nr_lines + 1;
   //int ncols = nr_pixels + 1;
 
-  
+
   // do unwrapping with flood fill ......
   DataPatch<char> *visit_patch = new DataPatch<char>(nr_pixels, nr_lines);
   char **visit = visit_patch->get_data_lines_ptr();
-  
+
   char not_unwrapped = 0;
   char unwrapped = 1;
 
@@ -1132,7 +1136,7 @@ DataPatch<char>* unwrap_assp(DataPatch<NodeFlow> *flows_patch, float **phase_dat
   NodeFlow **flows = flows_patch->get_data_lines_ptr();
 
   queue<Point> workq;
-  
+
   for(int seed_id = 0; seed_id < nr_seeds; seed_id ++) {
     //  char unwrapped = seed_id + 1;
 
@@ -1155,29 +1159,29 @@ DataPatch<char>* unwrap_assp(DataPatch<NodeFlow> *flows_patch, float **phase_dat
       line  = point.get_Y();
       pixel = point.get_X();
 //      visit[line][pixel] = unwrapped;
-      
+
       seed_phase = phase_data[line][pixel];
-      
+
       line_plus = line + 1;
       line_minus = line - 1;
       pixel_plus = pixel + 1;
       pixel_minus = pixel - 1;
-      
+
       if(line > 0) {              // facing up ......
 	if(flows[line][pixel].toRight == 0 && visit[line_minus][pixel] == not_unwrapped) {
 	  workq.push(Point(pixel, line_minus));
 	  x = phase_data[line_minus][pixel] - seed_phase;
 	  phase_data[line_minus][pixel] -= (int)(rint(x/two_pi)) * two_pi;
 	  visit[line_minus][pixel] = unwrapped;
-	}	
+	}
       }
-      if(line < nr_lines - 1) {   // facing down ......    
+      if(line < nr_lines - 1) {   // facing down ......
 	if(flows[line + 1][pixel].toRight == 0 && visit[line_plus][pixel] == not_unwrapped) {
 	  workq.push(Point(pixel, line_plus));
 	  x = phase_data[line_plus][pixel] - seed_phase;
 	  phase_data[line_plus][pixel] -= (int)(rint(x/two_pi)) * two_pi;
 	  visit[line_plus][pixel] = unwrapped;
-	}	
+	}
       }
       if(pixel > 0) {             // facing left ......
 	if(flows[line][pixel].toDown == 0 && visit[line][pixel_minus] == not_unwrapped) {
@@ -1185,7 +1189,7 @@ DataPatch<char>* unwrap_assp(DataPatch<NodeFlow> *flows_patch, float **phase_dat
 	  x = phase_data[line][pixel_minus] - seed_phase;
 	  phase_data[line][pixel_minus] -= (int)(rint(x/two_pi)) * two_pi;
 	  visit[line][pixel_minus] = unwrapped;
-	}	
+	}
       }
       if(pixel < nr_pixels - 1) {// facing right ......
 	if(flows[line][pixel_plus].toDown == 0 && visit[line][pixel_plus] == not_unwrapped) {
@@ -1193,7 +1197,7 @@ DataPatch<char>* unwrap_assp(DataPatch<NodeFlow> *flows_patch, float **phase_dat
 	  x = phase_data[line][pixel_plus] - seed_phase;
 	  phase_data[line][pixel_plus] -= (int)(rint(x/two_pi)) * two_pi;
 	  visit[line][pixel_plus] = unwrapped;
-	}	
+	}
       }
     }
   }
@@ -1205,7 +1209,7 @@ DataPatch<char>* unwrap_assp(DataPatch<NodeFlow> *flows_patch, float **phase_dat
       }
     }
   }
-  
+
   return visit_patch;
 }
 
@@ -1226,11 +1230,11 @@ void create_seeds(DataPatch<NodeFlow> *flows_patch, int minimum_nr_pixels, int& 
   Seed *tmp_seeds = new Seed[max_seeds];
   double *pixels_of_region = new double[max_seeds];
 
-  
+
   // do unwrapping with flood fill ......
   DataPatch<char> *visit_patch = new DataPatch<char>(ncols - 1, nrows - 1);
   char **visit = visit_patch->get_data_lines_ptr();
-  
+
   char not_unwrapped = 0;
   char unwrapped = 1;
 
@@ -1249,14 +1253,14 @@ void create_seeds(DataPatch<NodeFlow> *flows_patch, int minimum_nr_pixels, int& 
   int region_id = 0;
 
   //  cerr << "region_id: " << region_id << endl;
-  
+
   for(int ii = 0; ii < nr_lines; ii++) {
     // cerr << "ii: " << ii << endl;
     //for(int jj = 0; jj < nr_pixels; jj++) {
     // reversing the order so that farther out pixesl are used for the seed, reducing the sensitivity
     // to bad dem
     for(int jj = nr_pixels-1; jj >=0; jj--) {
-          
+
       // cerr << "ii: " << ii << "  jj: " << jj << "  visit: " << visit[jj][ii] << "  region_id: " << region_id << "  visit: " << (int)visit[ii][jj]<< endl;
 
       if(visit[ii][jj] == unwrapped) continue;
@@ -1271,7 +1275,7 @@ void create_seeds(DataPatch<NodeFlow> *flows_patch, int minimum_nr_pixels, int& 
       tmp_seeds[region_id].x = jj;
       tmp_seeds[region_id].y = ii;
       tmp_seeds[region_id].nr_2pi = 0;
-      
+
       while( !workq.empty() ) {
 	point = workq.front();
 	workq.pop();
@@ -1280,49 +1284,49 @@ void create_seeds(DataPatch<NodeFlow> *flows_patch, int minimum_nr_pixels, int& 
 
 	count ++;
 
-        if(count == minimum_nr_pixels / 2) {	  
+        if(count == minimum_nr_pixels / 2) {
           tmp_seeds[region_id].x = pixel;
           tmp_seeds[region_id].y = line;
           tmp_seeds[region_id].nr_2pi = 0;
  	}
 
-	
+
 	line_plus = line + 1;
 	line_minus = line - 1;
 	pixel_plus = pixel + 1;
 	pixel_minus = pixel - 1;
-	
+
 	if(line > 0) {              // facing up ......
 	  if(flows[line][pixel].toRight == 0 && visit[line_minus][pixel] == not_unwrapped) {
 	    workq.push(Point(pixel, line_minus));
 	    visit[line_minus][pixel] = unwrapped;
-	  }	
+	  }
 	}
-	if(line < nr_lines - 1) {   // facing down ......    
+	if(line < nr_lines - 1) {   // facing down ......
 	  if(flows[line_plus][pixel].toRight == 0 && visit[line_plus][pixel] == not_unwrapped) {
 	    workq.push(Point(pixel, line_plus));
 	    visit[line_plus][pixel] = unwrapped;
-	  }	
+	  }
 	}
 	if(pixel > 0) {             // facing left ......
 	  if(flows[line][pixel].toDown == 0 && visit[line][pixel_minus] == not_unwrapped) {
 	    workq.push(Point(pixel_minus, line));
 	    visit[line][pixel_minus] = unwrapped;
-	  }	
+	  }
 	}
 	if(pixel < nr_pixels - 1) {// facing right ......
 	  if(flows[line][pixel_plus].toDown == 0 && visit[line][pixel_plus] == not_unwrapped) {
 	    workq.push(Point(pixel_plus, line));
 	    visit[line][pixel_plus] = unwrapped;
-	  }	
+	  }
 	}
       }
       // if(count > 1) cerr << "ii: " << ii << "  jj: " << jj << "  region_id: " << region_id << "  count: " << count << "  mini: " << minimum_nr_pixels<<  endl;
       if(count >= minimum_nr_pixels) {
-	
+
 	pixels_of_region[region_id] = count;
 	region_id ++;
-	
+
 	if(region_id >= max_seeds) break;
       }
     }
@@ -1335,7 +1339,7 @@ void create_seeds(DataPatch<NodeFlow> *flows_patch, int minimum_nr_pixels, int& 
   // cerr << "nr_regions: " << nr_regions << endl;
 
 
-  int *indexes = new int[nr_regions];  
+  int *indexes = new int[nr_regions];
   heapSort(nr_regions, pixels_of_region, indexes, 1);
 
   nr_seeds = nr_regions;
@@ -1356,7 +1360,7 @@ void create_seeds(DataPatch<NodeFlow> *flows_patch, int minimum_nr_pixels, int& 
 
     //  cerr << "i: " << i << "  index: " << index << "  seed: " << return_seeds[i].x << " " << return_seeds[i].y << " " << return_seeds[i].nr_2pi << "  pixels_of_region: " << pixels_of_region[index] << endl;
   }
-  
+
 
   delete[] indexes;
   delete[] pixels_of_region;
@@ -1377,11 +1381,11 @@ DataPatch<char>* unwrap_adjust_seeds(DataPatch<NodeFlow> *flows_patch, float **p
   //int nrows = nr_lines + 1;
   //int ncols = nr_pixels + 1;
 
-  
+
   // do unwrapping with flood fill ......
   DataPatch<char> *visit_patch = new DataPatch<char>(nr_pixels, nr_lines);
   char **visit = visit_patch->get_data_lines_ptr();
-  
+
   char not_unwrapped = 0;
   char unwrapped = 1;
 
@@ -1398,7 +1402,7 @@ DataPatch<char>* unwrap_adjust_seeds(DataPatch<NodeFlow> *flows_patch, float **p
   NodeFlow **flows = flows_patch->get_data_lines_ptr();
 
   queue<Point> workq, backupq;
-  
+
   int nr_amb = 21;
   int *histogram = new int[nr_amb];
   double *lower_bound = new double[nr_amb];
@@ -1428,7 +1432,7 @@ DataPatch<char>* unwrap_adjust_seeds(DataPatch<NodeFlow> *flows_patch, float **p
       line  = point.get_Y();
       pixel = point.get_X();
       visit[line][pixel] = unwrapped;
-      
+
       seed_phase = phase_data[line][pixel];
 
       for(int aid = 0; aid < nr_amb; aid++) {
@@ -1436,12 +1440,12 @@ DataPatch<char>* unwrap_adjust_seeds(DataPatch<NodeFlow> *flows_patch, float **p
 	  histogram[aid] ++;
 	}
       }
-      
+
       line_plus = line + 1;
       line_minus = line - 1;
       pixel_plus = pixel + 1;
       pixel_minus = pixel - 1;
-      
+
       if(line > 0) {              // facing up ......
 	if(flows[line][pixel].toRight == 0 && visit[line_minus][pixel] == not_unwrapped) {
 	  workq.push(Point(pixel, line_minus));
@@ -1449,16 +1453,16 @@ DataPatch<char>* unwrap_adjust_seeds(DataPatch<NodeFlow> *flows_patch, float **p
 	  x = phase_data[line_minus][pixel] - seed_phase;
 	  phase_data[line_minus][pixel] -= (int)(rint(x/two_pi)) * two_pi;
 	  visit[line_minus][pixel] = unwrapped;
-	}	
+	}
       }
-      if(line < nr_lines - 1) {   // facing down ......    
+      if(line < nr_lines - 1) {   // facing down ......
 	if(flows[line + 1][pixel].toRight == 0 && visit[line_plus][pixel] == not_unwrapped) {
 	  workq.push(Point(pixel, line_plus));
 	  backupq.push(Point(pixel, line_plus));
 	  x = phase_data[line_plus][pixel] - seed_phase;
 	  phase_data[line_plus][pixel] -= (int)(rint(x/two_pi)) * two_pi;
 	  visit[line_plus][pixel] = unwrapped;
-	}	
+	}
       }
       if(pixel > 0) {             // facing left ......
 	if(flows[line][pixel].toDown == 0 && visit[line][pixel_minus] == not_unwrapped) {
@@ -1467,7 +1471,7 @@ DataPatch<char>* unwrap_adjust_seeds(DataPatch<NodeFlow> *flows_patch, float **p
 	  x = phase_data[line][pixel_minus] - seed_phase;
 	  phase_data[line][pixel_minus] -= (int)(rint(x/two_pi)) * two_pi;
 	  visit[line][pixel_minus] = unwrapped;
-	}	
+	}
       }
       if(pixel < nr_pixels - 1) {// facing right ......
 	if(flows[line][pixel_plus].toDown == 0 && visit[line][pixel_plus] == not_unwrapped) {
@@ -1476,7 +1480,7 @@ DataPatch<char>* unwrap_adjust_seeds(DataPatch<NodeFlow> *flows_patch, float **p
 	  x = phase_data[line][pixel_plus] - seed_phase;
 	  phase_data[line][pixel_plus] -= (int)(rint(x/two_pi)) * two_pi;
 	  visit[line][pixel_plus] = unwrapped;
-	}	
+	}
       }
     }
     int N = 0;
@@ -1516,7 +1520,7 @@ DataPatch<char>* unwrap_adjust_seeds(DataPatch<NodeFlow> *flows_patch, float **p
       }
     }
   }
-  
+
   delete[] histogram;
   delete[] lower_bound;
   delete[] upper_bound;
@@ -1534,11 +1538,11 @@ DataPatch<int> * generate_regions(DataPatch<NodeFlow> *flows_patch, int nr_seeds
   //int nrows = nr_lines + 1;
   //int ncols = nr_pixels + 1;
 
-  
+
   // do unwrapping with flood fill ......
   DataPatch<int> *visit_patch = new DataPatch<int>(nr_pixels, nr_lines);
   int **visit = visit_patch->get_data_lines_ptr();
-  
+
   int not_unwrapped = -1;
 
   for(line = 0; line < nr_lines; line ++) {
@@ -1569,36 +1573,36 @@ DataPatch<int> * generate_regions(DataPatch<NodeFlow> *flows_patch, int nr_seeds
       line  = point.get_Y();
       pixel = point.get_X();
       visit[line][pixel] = seed_id;
-      
-      
+
+
       line_plus = line + 1;
       line_minus = line - 1;
       pixel_plus = pixel + 1;
       pixel_minus = pixel - 1;
-      
+
       if(line > 0) {              // facing up ......
 	if(flows[line][pixel].toRight == 0 && visit[line_minus][pixel] == not_unwrapped) {
 	  workq.push(Point(pixel, line_minus));
 	  visit[line_minus][pixel] = seed_id;
-	}	
+	}
       }
-      if(line < nr_lines - 1) {   // facing down ......    
+      if(line < nr_lines - 1) {   // facing down ......
 	if(flows[line + 1][pixel].toRight == 0 && visit[line_plus][pixel] == not_unwrapped) {
 	  workq.push(Point(pixel, line_plus));
 	  visit[line_plus][pixel] = seed_id;
-	}	
+	}
       }
       if(pixel > 0) {             // facing left ......
 	if(flows[line][pixel].toDown == 0 && visit[line][pixel_minus] == not_unwrapped) {
 	  workq.push(Point(pixel_minus, line));
 	  visit[line][pixel_minus] = seed_id;
-	}	
+	}
       }
       if(pixel < nr_pixels - 1) {// facing right ......
 	if(flows[line][pixel_plus].toDown == 0 && visit[line][pixel_plus] == not_unwrapped) {
 	  workq.push(Point(pixel_plus, line));
 	  visit[line][pixel_plus] = seed_id;
-	}	
+	}
       }
     }
   }
@@ -1617,9 +1621,9 @@ void generate_regions(DataPatch<NodeFlow> *flows_patch, int nr_seeds, Seed *seed
   //int nrows = nr_lines + 1;
   //int ncols = nr_pixels + 1;
 
-  
+
   // do unwrapping with flood fill ......
-  
+
   int not_unwrapped = -1;
 
   for(line = 0; line < nr_lines; line ++) {
@@ -1650,36 +1654,36 @@ void generate_regions(DataPatch<NodeFlow> *flows_patch, int nr_seeds, Seed *seed
       line  = point.get_Y();
       pixel = point.get_X();
       regions[line][pixel] = seed_id;
-      
-      
+
+
       line_plus = line + 1;
       line_minus = line - 1;
       pixel_plus = pixel + 1;
       pixel_minus = pixel - 1;
-      
+
       if(line > 0) {              // facing up ......
 	if(flows[line][pixel].toRight == 0 && regions[line_minus][pixel] == not_unwrapped) {
 	  workq.push(Point(pixel, line_minus));
 	  regions[line_minus][pixel] = seed_id;
-	}	
+	}
       }
-      if(line < nr_lines - 1) {   // facing down ......    
+      if(line < nr_lines - 1) {   // facing down ......
 	if(flows[line + 1][pixel].toRight == 0 && regions[line_plus][pixel] == not_unwrapped) {
 	  workq.push(Point(pixel, line_plus));
 	  regions[line_plus][pixel] = seed_id;
-	}	
+	}
       }
       if(pixel > 0) {             // facing left ......
 	if(flows[line][pixel].toDown == 0 && regions[line][pixel_minus] == not_unwrapped) {
 	  workq.push(Point(pixel_minus, line));
 	  regions[line][pixel_minus] = seed_id;
-	}	
+	}
       }
       if(pixel < nr_pixels - 1) {// facing right ......
 	if(flows[line][pixel_plus].toDown == 0 && regions[line][pixel_plus] == not_unwrapped) {
 	  workq.push(Point(pixel_plus, line));
 	  regions[line][pixel_plus] = seed_id;
-	}	
+	}
       }
     }
   }
@@ -1691,14 +1695,14 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
   int nrows = node_patch->get_nr_lines();
   int ncols = node_patch->get_nr_pixels();
   Node **nodes = node_patch->get_data_lines_ptr();
-  
+
   Flow flow;
-  
+
   DataPatch<NodeFlow> *node_flow_patch = new DataPatch<NodeFlow>(ncols, nrows);
   DataPatch<NodeFlow> *new_flow_patch = new DataPatch<NodeFlow>(ncols, nrows);
   NodeFlow **node_flow = node_flow_patch->get_data_lines_ptr();
   NodeFlow **new_flow  = new_flow_patch->get_data_lines_ptr();
-  
+
   for(int line = 0; line < nrows; line++) {
     for(int pixel = 0; pixel < ncols; pixel ++) {
       node_flow[line][pixel].toRight = 0;
@@ -1707,9 +1711,9 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
       new_flow[line][pixel].toDown = 0;
     }
   }
-  
 
-  //count the positive and negative residues 
+
+  //count the positive and negative residues
   int pcount = 0;
   int ncount = 0;
   for(int line = 0; line < nrows; line++) {
@@ -1720,7 +1724,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
     }
   }
 
-  cerr << "pcount: " << pcount << "  ncount: " << ncount << endl; 
+  cerr << "pcount: " << pcount << "  ncount: " << ncount << endl;
 
   int supplys, demands;
   char supply = 1;
@@ -1746,7 +1750,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
       }
       if(index >= count) break;
     }
-	
+
   }
 
 
@@ -1775,12 +1779,12 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 
 /*
   cerr << "Residues ............\n";
-  cerr << "     ";  
+  cerr << "     ";
   for(int ii = 0; ii < ncols; ii ++) {
     cerr << ii % 10 << "  ";
   }
   cerr << endl;
-  
+
   for(int ii = 0; ii < nrows; ii++) {
     cerr << " " << ii % 10 << "  ";
     for(int jj = 0; jj < ncols; jj ++) {
@@ -1813,14 +1817,14 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
   cerr << endl;
 */
 
-  // initialize the Supply terminal and the Demand terminal 
+  // initialize the Supply terminal and the Demand terminal
 
-  
+
   Point *S = new Point[supplys];
   Point *T = new Point[supplys];
   pcount = 0;
   ncount = 0;
-  
+
   for(int line = 0; line < nrows; line++) {
     for(int pixel = 0; pixel < ncols; pixel ++) {
 //      if(nodes[line][pixel].edge_flag == 0) continue;
@@ -1837,7 +1841,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
       }
     }
   }
-  
+
 
   demands = ncount;
 
@@ -1854,7 +1858,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
   }
 
 //  initialize_flows_PI(nrows, ncols, nodes, supplys, S, demands, T, node_flow, pot);
-  
+
 /*
   int new_supplys = 0;
   for(int i = 0; i < supplys; i++) {
@@ -1862,7 +1866,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
     pixel = S[i].x;
     if(nodes[line][pixel].supply != 0) new_supplys ++;
   }
-  
+
   int new_demands = 0;
   for(int i = 0; i < demands; i++) {
     line = T[i].y;
@@ -1884,9 +1888,9 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
       index ++;
     }
   }
-    
+
   delete[] S;
-  
+
   Point *new_T = new Point[new_demands];
   index = 0;
   for(int i = 0; i < demands; i++) {
@@ -1900,10 +1904,10 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
       index ++;
     }
   }
-    
+
   delete[] T;
 */
-  
+
 
   // (2) initialization of the visit matrix and the distance matrix ......
 
@@ -1918,7 +1922,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 
   DataPatch<uint> *dist_patch = new DataPatch<uint>(ncols, nrows);
   uint **dists = dist_patch->get_data_lines_ptr();
-  
+
 
   DataPatch<uchar> *branch_patch = new DataPatch<uchar>(ncols, nrows);
   uchar **branches = branch_patch->get_data_lines_ptr();
@@ -1935,12 +1939,12 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
   int nr_queues = cost_scale * min(ncols, nrows) * 2;
 
   queue<Point> *dist_queues = new queue<Point>[nr_queues];
-  
+
   Point point;
 
   uint d, curr_dist, reduced_cost;
 
-  
+
   // start loop from here ......
 
   int supplys_left = supplys;
@@ -1956,14 +1960,14 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 
 //    cerr << "\n iter: " << iter << endl;
     // (1) initializing ......
-    
+
     for(int ii = 0; ii < nrows; ii++) {
       for(int jj = 0; jj < ncols; jj ++) {
 	visit[ii][jj] = unlabeled;
 	dists[ii][jj] = infinity;
       }
     }
-    
+
 
 //    for(int s = 0; s < new_supplys; s++) {
 //      line = new_S[s].y;
@@ -1983,9 +1987,9 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
     }
 
     // (2) calculate shortest distances from supplys
-    
 
-    
+
+
 //    int total_scanned = 0;
 //    int scanned_count = 0;
     int min_dist = 0;
@@ -2005,7 +2009,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 	//if(nodes[line][pixel].supply == demand) scanned_count ++;
 
 	while( dist_queues[min_dist].empty()){
-	  min_dist ++;	  
+	  min_dist ++;
 	  if(min_dist >= nr_queues) break;
 	}
 //	if(pixel == 3 && line == 3) cerr << "after   min_dist: " << min_dist << endl;
@@ -2033,7 +2037,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
         //uchar cost = nodes[line][pixel - 1].rc;
 	//if(node_flow[line][pixel - 1].toRight > 0) d = curr_dist - cost;
         //else d = curr_dist + cost;
-	
+
 	if(d < dists[line][pixel - 1]) {
           visit[line][pixel - 1] = labeled;
 	  dists[line][pixel - 1] = d;
@@ -2049,7 +2053,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 	}
 //       }
       }
-      
+
       // Right pixel ......
       if(pixel < ncols - 1 && visit[line][pixel + 1] != scanned) {
 //       if(node_flow[line][pixel].toRight < flow_limit_per_arc) {
@@ -2060,7 +2064,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 	//if(node_flow[line][pixel].toRight < 0) d = curr_dist - cost;
         //else d = curr_dist + cost;
 
-	if(d < dists[line][pixel + 1]) { 	
+	if(d < dists[line][pixel + 1]) {
 	  visit[line][pixel + 1] = labeled;
 	  dists[line][pixel + 1] = d;
 	  branches[line][pixel + 1] = flow_left;
@@ -2074,7 +2078,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 	}
 //       }
       }
-      
+
       // Up pixel ......
       if(line > 0 && visit[line - 1][pixel] != scanned) {
 //       if(node_flow[line - 1][pixel].toDown > -flow_limit_per_arc) {
@@ -2084,7 +2088,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
         //uchar cost = nodes[line - 1][pixel].dc;
 	//if(node_flow[line - 1][pixel].toDown > 0) d = curr_dist - cost;
         //else d = curr_dist + cost;
-	
+
 	if(d < dists[line - 1][pixel]) {
 	  visit[line - 1][pixel] = labeled;
 	  dists[line - 1][pixel] = d;
@@ -2099,7 +2103,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 	}
 //       }
       }
-      
+
       // Down pixel ......
       if(line < nrows - 1 && visit[line + 1][pixel] != scanned) {
 //       if(node_flow[line][pixel].toDown < flow_limit_per_arc) {
@@ -2126,9 +2130,9 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 	//if(d < tmp_mind) tmp_mind = d;
 //       }
       }
-      
+
       if(tmp_mind < min_dist) min_dist = tmp_mind;
-      
+
       while( dist_queues[min_dist].empty()){
 	min_dist ++;
 	if(min_dist > max_dist) break;
@@ -2137,7 +2141,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
       //if(iter > 0 && scanned_count == supplys_left) cerr << "total_scanned: " << total_scanned << endl;
       //if(iter > 0 && scanned_count == supplys_left) break;
     }
-    
+
 /*
     int start_dist = 0;
     if(min_dist > 0) start_dist = min_dist;
@@ -2145,7 +2149,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
       dist_queues[i] = queue<Point>();
     }
 */
-    
+
 /*
     // check the distances ......
       cerr << "Check dist ...... \n";
@@ -2160,20 +2164,20 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
     }
     cerr << endl;
 */
-    
-   
+
+
 //    if(L0L1_mode == 1) {
       for(int line = 0; line < nrows; line ++) {
         for(int pixel = 0; pixel < ncols; pixel ++) {
 //	  if(dists[line][pixel] > 0 && visit[line][pixel] == scanned) {
 	    pot[line][pixel] += dists[line][pixel];
-//	  }	  
+//	  }
         }
       }
-//    } 
+//    }
 
-    
-/*    
+
+/*
     // check the PIs ......
       cerr << "Check potential ......\n ";
     for(int line = 0; line < nrows; line ++) {
@@ -2184,11 +2188,11 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
       cerr << endl;
     }
     cerr << endl;
-*/    
-     
+*/
+
   //  exit(0);
-    
-    
+
+
     cerr << "iter: " << iter << "  supplys_left: " << supplys_left << endl;
 //    cerr << "iter: " << iter << "  supplys_left: " << supplys_left << "  scanned_count: "  << scanned_count << "  total_scanned: " << total_scanned << endl;
 //    cerr << "iter: " << iter << "  supplys_left: " << supplys_left << "  min_dist: " << min_dist << "  max_dist: " << max_dist << "  nr_queues: " << nr_queues << endl; //"  scanned_count: "  << scanned_count << endl;
@@ -2206,7 +2210,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
       count ++;
     }
     heapSort (count, dd, indexes);
-    
+
 //cerr << "count: " << count << endl;
 //cerr << "end of heapSort() !!!!!! \n";
 
@@ -2216,10 +2220,10 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
       int pixel = T[index].x;
       if(nodes[line][pixel].supply == 0) continue;
       flow.flowdir.clear();
-      
+
       flow.xstart = pixel;
       flow.ystart = line;
-      
+
 
       int branch_taken = 0;
 
@@ -2230,7 +2234,7 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 
       do {
 	flow.flowdir.push_back(branches[line][pixel]);
-	
+
 	if(branches[line][pixel] == flow_up) {
 	  //if(pixel != 0 && pixel != ncols - 1 && new_flow[line - 1][pixel].toDown != 0) {
 	  if(new_flow[line - 1][pixel].toDown != 0) {
@@ -2271,23 +2275,23 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 //cerr << Point(pixel, line) << "  ";
 
       } while(branches[line][pixel] != noflow);
-      
+
 //cerr << endl;
 
 //     cerr << "for flow start at: " << flow.xstart << ", " << flow.ystart  << "  branch_taken: " << branch_taken << "  End at supply " << pixel << " " << line << "  supply: " << (int)nodes[line][pixel].supply << endl;
 
       if(branch_taken == 1) continue;
       // if(integrated_cost != 0) continue;
-      
+
       if(nodes[line][pixel].supply == 0) continue;  // if the supply node is balanced terminate !!
       supplys_left --;
       nodes[line][pixel].supply -= supply;                  // supply
-      nodes[flow.ystart][flow.xstart].supply -= demand;     // demand  
+      nodes[flow.ystart][flow.xstart].supply -= demand;     // demand
 
 //cerr << "   start supply: " << (int)nodes[flow.ystart][flow.xstart].supply << "  end supply: " << (int)nodes[line][pixel].supply << endl;
 
       // update the new flows ......
-      
+
       line = flow.ystart;
       pixel = flow.xstart;
       for(int j = 0; j < flow.flowdir.size(); j ++) {
@@ -2307,17 +2311,17 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 	  if(line > 0 && line < nrows - 1) new_flow[line][pixel].toRight --;
 	  pixel ++;
 	}
-      }  // for loop 
-      
-      
+      }  // for loop
+
+
     } // for(int i
-    
-//cerr << "update node_flow[][] ...... \n";    
+
+//cerr << "update node_flow[][] ...... \n";
 
     // update the node flow ......
 
-//    int max_flows_per_arc = 0; 
-//    Point max_flows_location;   
+//    int max_flows_per_arc = 0;
+//    Point max_flows_location;
 
     for(int line = 0; line < nrows; line ++) {
       for(int pixel = 0; pixel < ncols; pixel ++) {
@@ -2330,9 +2334,9 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 	  new_flow[line][pixel].toDown = 0;
 	}
 	/*
-	if(abs(new_flow[line][pixel].toRight) > 1 || abs(new_flow[line][pixel].toDown) > 1) 
+	if(abs(new_flow[line][pixel].toRight) > 1 || abs(new_flow[line][pixel].toDown) > 1)
 	  cerr << " New Flow  line: " << line << "  pixel: " << pixel << "  To Right: " << abs(new_flow[line][pixel].toRight) << "  To Down : " << abs(new_flow[line][pixel].toDown) << endl;
-	if(abs(node_flow[line][pixel].toRight) > 1 || abs(node_flow[line][pixel].toDown) > 1) 
+	if(abs(node_flow[line][pixel].toRight) > 1 || abs(node_flow[line][pixel].toDown) > 1)
 	  cerr << " total Flow line: " << line << "  pixel: " << pixel << "  ToRight: " << abs(node_flow[line][pixel].toRight) << "  To Down: " << abs(node_flow[line][pixel].toDown)<< endl;
 	*/
 /*
@@ -2348,11 +2352,11 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
       }
     }
 
-      
+
 
 //    cerr << "iter: " << iter << "  supplys_left: " << supplys_left << "  max_flows_per_arc: " << max_flows_per_arc << "  max_flows_location: " << max_flows_location << endl;
 //    cerr << "(0, 499) toRight: " << (int)node_flow[499][0].toRight << "  toDown: " << (int)node_flow[499][0].toDown << endl;
-    iter++;  
+    iter++;
   }
 
 /*
@@ -2409,4 +2413,3 @@ DataPatch<NodeFlow> *solve(DataPatch<Node> *node_patch)
 
   return node_flow_patch;
 }
-

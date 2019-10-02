@@ -71,6 +71,13 @@ function(CheckHDF5)
         message(FATAL_ERROR "Did not find HDF5 version >= 1.10.2")
     endif()
 
+    # check whether the hdf5 library includes parallel support
+    if ((HDF5_IS_PARALLEL))
+        # look for MPI
+        FIND_PACKAGE(MPI REQUIRED COMPONENTS CXX)
+        list(APPEND HDF5_INCLUDE_DIRS ${MPI_CXX_INCLUDE_DIRS})
+        list(APPEND HDF5_CXX_LIBRARIES ${MPI_CXX_LIBRARIES})
+    endif()
     # Use more standard names to propagate variables
     set(HDF5_INCLUDE_DIR ${HDF5_INCLUDE_DIRS} CACHE PATH "HDF5 include directory")
     set(HDF5_LIBRARY "${HDF5_CXX_LIBRARIES}" CACHE STRING "HDF5 libraries")
@@ -162,4 +169,3 @@ function(InitInstallDirLayout)
         set (ISCE_DOCDIR "doc" CACHE STRING "isce/doc")
     endif(NOT ISCE_DOCDIR)
 endfunction()
-

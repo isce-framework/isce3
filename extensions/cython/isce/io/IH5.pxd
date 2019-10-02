@@ -7,7 +7,7 @@
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 
-cdef extern from "H5Error.h":
+cdef extern from "io/H5Error.h":
     cdef void translateH5Exception();
 
 cdef extern from "hdf5.h":

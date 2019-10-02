@@ -1,0 +1,15 @@
+; isce3 default configurations
+
+
+; the WGS84 reference ellipsoid
+isce3.ellipsoid # wgs84:
+    a = 6378.137 * km
+    e2 = .0066943799901
+
+; a spherical earth
+isce3.ellipsoid # spherical:
+    a = 6378.137 * km
+    e2 = 0.
+
+
+; end of file
