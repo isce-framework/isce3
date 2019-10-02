@@ -4,8 +4,12 @@
 // michael a.g. aïvázis <michael.aivazis@para-sim.com>
 // parasim
 // (c) 1998-2019 all rights reserved
+//
 
-#pragma once
+
+// code guard
+#if !defined(ampcor_libampcor_correlators_public_h)
+#define ampcor_libampcor_correlators_public_h
 
 // externals
 // STL
@@ -13,6 +17,7 @@
 #include <algorithm>
 #include <functional>
 #include <numeric>
+#include <exception>
 // pyre
 #include <pyre/journal.h>
 #include <pyre/timers.h>
@@ -34,52 +39,37 @@ namespace ampcor {
         template <size_t dim, typename pixel_t>
         using heapgrid_t =
             pyre::grid::grid_t< pixel_t,
-                                pyre::grid::layout_t<
-                                    pyre::grid::index_t<std::array<size_t, dim>>>,
-                                pyre::memory::heap_t<pixel_t>
+                               pyre::grid::layout_t<
+                                   pyre::grid::index_t<std::array<size_t, dim>>>,
+                               pyre::memory::heap_t<pixel_t>
                                 >;
 
         // forward declarations of local classes
-        // correlator
-        template <typename rasterT>
-        class Correlator;
-        // workers
-        class Sequential;
-        // sum area
-        template <typename rasterT>
-        class SumArea;
+        // the manager
+        template <typename raster_t> class Sequential;
 
         // the public type aliases for the local objects
-        // correlator
-        template <typename rasterT>
-        using correlator_t = Correlator<rasterT>;
         // workers
-        using sequential_t = Sequential;
-        // sum area
-        template <typename rasterT>
-        using sumarea_t = SumArea<rasterT>;
+        template <typename raster_t>
+        using sequential_t = Sequential<raster_t>;
 
     } // of namespace correlators
 } // of namespace ampcor
 
+// kernels
+#include "kernels.h"
 
 // the class declarations
-#include "Correlator.h"
 #include "Sequential.h"
-#include "SumArea.h"
 
-// the implementations of the inline methods
-// correlators
-#define ampcor_libampcor_correlators_correlator_icc
-#include "Correlator.icc"
-#undef ampcor_libampcor_correlators_correlator_icc
-
-// workers
-#define ampcor_libampcor_correlators_sequential_icc
+// the inline definitions
+// sequential
+#define ampcor_correlators_Sequential_icc
 #include "Sequential.icc"
-#undef ampcor_libampcor_correlators_sequential_icc
+#undef ampcor_correlators_Sequential_icc
 
-// sum area tables
-#define ampcor_libampcor_correlators_sumarea_icc
-#include "SumArea.icc"
-#undef ampcor_libampcor_correlators_sumarea_icc
+
+// code guard
+#endif
+
+// end of file
