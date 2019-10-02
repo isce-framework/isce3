@@ -68,20 +68,32 @@ class isce::product::RadarGridParameters {
         /** Get reference epoch */
         inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
 
-        /** Get sensing start time in seconds */
-        inline double sensingStart() const { return _sensingStart; }
+        /** Get sensing start time in seconds of single look data */
+        inline double sensingStartSingleLook() const { return _sensingStart; }
+
+        /** Get sensing start time in seconds of multilooked data */
+        inline double sensingStart() const { return sensingTime(0.); }
 
         /** Get radar wavelength */
         inline double wavelength() const { return _wavelength; }
 
-        /** Get pulse repetition frequency */
+        /** Get pulse repetition frequency of single look data */
         inline double prf() const { return _prf; }
 
-        /** Get starting slant range */
-        inline double startingRange() const { return _startingRange; }
+        /** Get azimuth time interval of multilooked data */
+        inline double azimuthTimeInterval() const { return _prf*_numberAzimuthLooks; };
 
-        /** Get slant range pixel spacing */
-        inline double rangePixelSpacing() const { return _rangePixelSpacing; }
+        /** Get starting slant range of single look data */
+        inline double startingRangeSingleLook() const { return _startingRange; }
+
+        /** Get starting slant range of multilooked data */
+        inline double startingRange() const { return slantRange(0.); }
+
+        /** Get slant range pixel spacing of single look data*/
+        inline double rangePixelSpacingSingleLook() const { return _rangePixelSpacing; }
+
+        /** Get slant range pixel spacing for multilooked data */
+        inline double rangePixelSpacing() const { return _rangePixelSpacing * _numberRangeLooks ; };
 
         /** Get radar grid length */
         inline size_t length() const { return _rlength; }
@@ -92,52 +104,69 @@ class isce::product::RadarGridParameters {
         /** Get total number of radar grid elements */
         inline size_t size() const { return _rlength * _rwidth; }
 
-        /** Get sensing stop time in seconds */
-        inline double sensingStop() const {
-            return _sensingStart + (_rlength - 1.0) / _prf;
-        }
+        /** Get sensing stop time of multilooked data in seconds */
+        inline double sensingStop() const { return sensingTime(_rlength - 1.0); }
 
         /** Get sensing mid time in seconds */
         inline double sensingMid() const {
-            return 0.5 * (_sensingStart + sensingStop());
+            return 0.5 * (sensingStart() + sensingStop());
         }
 
         /** Get sensing time for a given line (row) */
-        inline double sensingTime(size_t line) const {
-            return _sensingStart + line * _numberAzimuthLooks / _prf;
+        inline double sensingTime(double line) const {
+            return _sensingStart + ((_numberAzimuthLooks-1)/2 + line * _numberAzimuthLooks) / _prf;
         }
 
         /** Get a sensing DateTime for a given line (row) */
-        inline isce::core::DateTime sensingDateTime(size_t line) const {
+        inline isce::core::DateTime sensingDateTime(double line) const {
             return _refEpoch + sensingTime(line);
         }
 
         /** Get ending slant range */
         inline double endingRange() const {
-            return _startingRange + (_rwidth - 1.0) * _rangePixelSpacing;
+            return slantRange(_rwidth - 1.0);
         }
 
         /** Get middle slant range */
         inline double midRange() const {
-            return 0.5 * (_startingRange + endingRange());
+            return 0.5 * (startingRange() + endingRange());
         }
 
         /** Get slant range for a given sample (column) */
-        inline double slantRange(size_t sample) const {
-            return _startingRange + sample * _numberRangeLooks * _rangePixelSpacing;
+        inline double slantRange(double sample) const {
+            return _startingRange + ((_numberRangeLooks-1)/2 + sample * _numberRangeLooks) * _rangePixelSpacing;
         }
 
     // Protected data members can be accessed by derived classes
     protected:
+        /** Number of azimuth looks in multilooked data */
         size_t _numberAzimuthLooks;
+
+        /** Number of range looks in multilooked data */
         size_t _numberRangeLooks;
+
+        /** Sensing start time of single look data */
         double _sensingStart;
+
+        /** Imaging wavelength */
         double _wavelength;
+
+        /** PRF of single look data */
         double _prf;
+
+        /** Slant range to center of first pixel in single look data */
         double _startingRange;
+
+        /** Slant range pixel spacing of single look data */
         double _rangePixelSpacing;
+
+        /** Number of lines in the image */
         size_t _rlength;
+
+        /** Number of samples in the image */
         size_t _rwidth;
+
+        /** Reference epoch for time tags */
         isce::core::DateTime _refEpoch;
 };
 
