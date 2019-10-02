@@ -11,7 +11,7 @@
 
 
 /** @param[in] N the actual length of a signal
-*   @param[in] fftLength next power of two 
+*   @param[in] fftLength next power of two
 */
 template <class T>
 void
@@ -39,13 +39,13 @@ _fwd_configureRangeFFT(int ncolumns, int nrows)
     _fwd_n[0] = ncolumns;
 
     _fwd_howmany = nrows;
-    
+
     _fwd_inembed = new int[1];
     _fwd_inembed[0] = ncolumns;
 
     _fwd_istride = 1;
     _fwd_idist = ncolumns;
-    
+
     _fwd_onembed = new int[1];
     _fwd_onembed[0] = ncolumns;
 
@@ -66,13 +66,13 @@ _rev_configureRangeFFT(int ncolumns, int nrows)
     _rev_n[0] = ncolumns;
 
     _rev_howmany = nrows;
-    
+
     _rev_inembed = new int[1];
     _rev_inembed[0] = ncolumns;
 
     _rev_istride = 1;
     _rev_idist = ncolumns;
-    
+
     _rev_onembed = new int[1];
     _rev_onembed[0] = ncolumns;
 
@@ -147,17 +147,17 @@ _rev_configureAzimuthFFT(int ncolumns, int nrows)
 template <class T>
 void
 isce::signal::Signal<T>::
-_fwd_configure2DFFT(int incolumns, int inrows, 
+_fwd_configure2DFFT(int incolumns, int inrows,
                     int oncolumns, int onrows)
 {
     _fwd_rank = 2;
-    _fwd_n = new int[2]; 
-    _fwd_n[0] = inrows; 
+    _fwd_n = new int[2];
+    _fwd_n[0] = inrows;
     _fwd_n[1] = incolumns;
 
     _fwd_howmany = 1;
 
-    _fwd_inembed = new int[2]; 
+    _fwd_inembed = new int[2];
     _fwd_inembed[0] = inrows;
     _fwd_inembed[1] = incolumns;
 
@@ -165,7 +165,7 @@ _fwd_configure2DFFT(int incolumns, int inrows,
     _fwd_idist = 0;
 
     _fwd_onembed = new int[2];
-    _fwd_onembed[0] = onrows; 
+    _fwd_onembed[0] = onrows;
     _fwd_onembed[1] = oncolumns;
 
     _fwd_ostride = 1;
@@ -182,13 +182,13 @@ isce::signal::Signal<T>::
 _rev_configure2DFFT(int ncolumns, int nrows)
 {
     _rev_rank = 2;
-    _rev_n = new int[2]; 
-    _rev_n[0] = nrows; 
+    _rev_n = new int[2];
+    _rev_n[0] = nrows;
     _rev_n[1] = ncolumns;
 
     _rev_howmany = 1;
 
-    _rev_inembed = new int[2]; 
+    _rev_inembed = new int[2];
     _rev_inembed[0] = nrows;
     _rev_inembed[1] = ncolumns;
 
@@ -196,7 +196,7 @@ _rev_configure2DFFT(int ncolumns, int nrows)
     _rev_idist = 0;
 
     _rev_onembed = new int[2];
-    _rev_onembed[0] = nrows; 
+    _rev_onembed[0] = nrows;
     _rev_onembed[1] = ncolumns;
 
     _rev_ostride = 1;
@@ -225,19 +225,31 @@ _fwd_configure(int rank, int* n, int howmany,
     _fwd_rank = rank;
     _fwd_n = new int[rank];
     for (int i=0; i<rank;i++)
-       _fwd_n[i] = n[i]; 
+        _fwd_n[i] = n[i];
 
     _fwd_howmany = howmany;
 
-    _fwd_inembed = new int[rank]; 
-    for (int i=0; i<rank;i++)
-       _fwd_inembed[i] = inembed[i]; 
+    if (inembed) {
+        _fwd_inembed = new int[rank];
+        for (int i=0; i<rank;i++)
+            _fwd_inembed[i] = inembed[i];
+    }
+    else {
+        _fwd_inembed = nullptr;
+    }
+
     _fwd_istride = istride;
     _fwd_idist = idist;
 
-    _fwd_onembed = new int[rank];
-    for (int i=0; i<rank;i++)
-       _fwd_onembed[i] = onembed[i]; 
+    if (onembed) {
+        _fwd_onembed = new int[rank];
+        for (int i=0; i<rank;i++)
+            _fwd_onembed[i] = onembed[i];
+    }
+    else {
+        _fwd_onembed = nullptr;
+    }
+
     _fwd_ostride = ostride;
     _fwd_odist = odist;
 }
@@ -263,19 +275,31 @@ _rev_configure(int rank, int* n, int howmany,
     _rev_rank = rank;
     _rev_n = new int[rank];
     for (int i=0; i<rank;i++)
-       _rev_n[i] = n[i]; 
+        _rev_n[i] = n[i];
 
     _rev_howmany = howmany;
 
-    _rev_inembed = new int[rank]; 
-    for (int i=0; i<rank;i++)
-       _rev_inembed[i] = inembed[i]; 
+    if (inembed) {
+        _rev_inembed = new int[rank];
+        for (int i=0; i<rank;i++)
+            _rev_inembed[i] = inembed[i];
+    }
+    else {
+        _rev_inembed = nullptr;
+    }
+
     _rev_istride = istride;
     _rev_idist = idist;
 
-    _rev_onembed = new int[rank];
-    for (int i=0; i<rank;i++)
-       _rev_onembed[i] = onembed[i]; 
+    if (onembed) {
+        _rev_onembed = new int[rank];
+        for (int i=0; i<rank;i++)
+            _rev_onembed[i] = onembed[i];
+        }
+    else {
+        _rev_onembed = nullptr;
+    }
+
     _rev_ostride = ostride;
     _rev_odist = odist;
 }
