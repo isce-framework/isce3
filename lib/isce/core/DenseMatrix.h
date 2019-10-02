@@ -3,7 +3,8 @@
 #include "forward.h"
 
 #include <cmath>
-#include <eigen3/Eigen/Dense>
+#define EIGEN_MPL2_ONLY
+#include <Eigen/Dense>
 #include "Common.h"
 
 namespace isce { namespace core {

@@ -109,6 +109,9 @@ InitInstallDirLayout()
 option(INSTALL_GTEST "Enable installation of googletest" OFF)
 add_subdirectory(contrib)
 
+# Setup for Eigen
+include_directories(contrib/eigen3)
+
 ###Recurs directories
 add_subdirectory(lib)
 
