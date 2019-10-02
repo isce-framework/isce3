@@ -166,7 +166,7 @@ topo(Raster & demRaster, TopoLayers & layers)
         layers.setBlockSize(blockLength, _radarGrid.width());
 
         // Allocate vector for storing satellite position for each line
-        std::vector<cartesian_t> satPosition(blockLength);
+        std::vector<Vec3> satPosition(blockLength);
 
         // For each line in block
         double tline;
@@ -199,7 +199,7 @@ topo(Raster & demRaster, TopoLayers & layers)
                 Pixel pixel(rng, dopfact, rbin);
 
                 // Initialize LLH to middle of input DEM and average height
-                cartesian_t llh = demInterp.midLonLat();
+                Vec3 llh = demInterp.midLonLat();
 
                 // Perform rdr->geo iterations
                 int geostat = rdr2geo(
@@ -333,7 +333,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
         Pixel pixel(rng, dopfact, rbin);
 
         // Run topo for one iteration for two different heights
-        cartesian_t llh {0., 0., 0.};
+        Vec3 llh {0., 0., 0.};
 
         std::array<double, 2> testHeights = {_minH, _maxH};
         for (int k = 0; k < 2; ++k) {
@@ -379,7 +379,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
 }
 
 void isce::geometry::Topo::
-_setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
+_setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
                      Pixel & pixel, Vec3& pos, Vec3& vel, Basis & TCNbasis,
                      DEMInterpolator & demInterp)
 {
@@ -389,7 +389,7 @@ _setOutputTopoLayers(cartesian_t & targetLLH, TopoLayers & layers, size_t line,
     const size_t bin = pixel.bin();
 
     // Convert lat/lon values to output coordinate system
-    cartesian_t xyzOut;
+    Vec3 xyzOut;
     _proj->forward(targetLLH, xyzOut);
     const double x = xyzOut[0];
     const double y = xyzOut[1];
@@ -518,8 +518,8 @@ setLayoverShadow(TopoLayers& layers, DEMInterpolator& demInterp,
             const float z_grid = demInterp.interpolateXY(x_grid, y_grid);
 
             // Convert DEM XYZ to ECEF XYZ
-            cartesian_t llh, xyz, satToGround;
-            cartesian_t demXYZ{x_grid, y_grid, z_grid};
+            Vec3 llh, xyz, satToGround;
+            Vec3 demXYZ{x_grid, y_grid, z_grid};
             _proj->inverse(demXYZ, llh);
             _ellipsoid.lonLatToXyz(llh, xyz);
 

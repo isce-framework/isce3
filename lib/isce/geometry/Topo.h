@@ -273,11 +273,11 @@ public:
      *
      * @param[in] layers Object containing output layers
      * @param[in] demInterp DEMInterpolator object
-     * @param[in] satPosition Vector of cartesian_t of satellite position for each line in block
+     * @param[in] satPosition Vector of satellite position vectors for each line in block
      */
     void setLayoverShadow(TopoLayers &,
                           DEMInterpolator &,
-                          std::vector<isce::core::cartesian_t> &);
+                          std::vector<isce::core::Vec3> &);
 
     // Getters for isce objects
 
@@ -320,7 +320,7 @@ private:
      * @param[in] TCNbasis basis for the line under consideration
      * @param[in] demInterp DEM interpolator object used to compute local slope
      */
-    void _setOutputTopoLayers(cartesian_t &,
+    void _setOutputTopoLayers(isce::core::Vec3 &,
                               TopoLayers &,
                               size_t,
                               isce::core::Pixel &,
