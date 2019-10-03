@@ -7,7 +7,7 @@
 //
 
 // configuration
-//#include <portinfo>
+#include <portinfo>
 // pyre
 #include <pyre/journal.h>
 // pull the declarations

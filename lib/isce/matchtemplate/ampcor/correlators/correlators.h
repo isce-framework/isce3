@@ -7,9 +7,10 @@
 //
 
 
+
 // code guard
-#if !defined(ampcor_libampcor_correlators_public_h)
-#define ampcor_libampcor_correlators_public_h
+#if !defined(ampcor_libampcor_correlators_correlators_h)
+#define ampcor_libampcor_correlators_correlators_h
 
 // externals
 // STL
@@ -23,7 +24,8 @@
 #include <pyre/timers.h>
 #include <pyre/grid.h>
 // access to the dom
-#include <isce/matchtemplate/ampcor/dom.h>
+//#include <isce/matchtemplate/ampcor/dom.h>
+#include <isce/matchtemplate/ampcor/dom/dom.h>
 
 namespace ampcor {
     namespace correlators {

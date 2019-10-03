@@ -528,7 +528,6 @@ _nudge(int * locations, size_type refDim, size_type tgtDim) const
 {
     // make sure that all locations are adjusted so that they allow enough room for the
     // {refineMargin} by moving the ULHC of the tiles so they fit
-    //kernels::nudge(_pairs, refDim, tgtDim, _refineMargin, locations, reinterpret_cast<float *>(_offsets));
     kernels::nudge(_pairs, refDim, tgtDim, _refineMargin, locations, _offsets);
 
     // all done

@@ -1,11 +1,4 @@
 
-//#include <iostream>
-//#include <cstdio>
-//#include <string>
-//#include <sstream>
-//#include <fstream>
-//#include <cmath>
-//#include <valarray>
 #include <complex>
 #include <gtest/gtest.h>
 
@@ -15,8 +8,7 @@
 #include <pyre/grid.h>
 #include <pyre/journal.h>
 // ampcor
-#include "isce/matchtemplate/ampcor/correlators.h"
-//#include "isce/matchtemplate/ampcor/correlators/publics.h"
+#include "isce/matchtemplate/ampcor/correlators/correlators.h"
 
 
 // type aliases

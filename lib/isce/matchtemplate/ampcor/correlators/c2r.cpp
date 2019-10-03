@@ -8,7 +8,7 @@
 
 
 // configuration
-//#include <portinfo>
+#include <portinfo>
 // STL
 #include <exception>
 #include <string>

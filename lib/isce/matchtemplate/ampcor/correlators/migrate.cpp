@@ -7,7 +7,7 @@
 //
 
 // configuration
-//#include <portinfo>
+#include <portinfo>
 // pyre
 #include <pyre/journal.h>
 // pull the declarations
@@ -23,7 +23,7 @@ _migrate(const pixel_t * coarse,
          std::size_t cellsPerPair, std::size_t cellsPerRefinedPair,
          std::size_t refCells, 
          std::size_t refRefinedCells, 
-         std::size_t rdim, std::size_t tdim, std::size_t edim, std::size_t trdim,
+         std::size_t tdim, std::size_t edim, std::size_t trdim,
          const int * locations,
          pixel_t * refined);
 
@@ -66,7 +66,7 @@ migrate(const std::complex<float> * coarse,
                  pairId,
                  cellsPerPair, cellsPerRefinedPair,
                  refCells, refRefinedCells, 
-                 refDim, tgtDim, expDim, tgtRefinedDim,
+                 tgtDim, expDim, tgtRefinedDim,
                  locations,
                  reinterpret_cast<std::complex<float> *>(refined));
 
@@ -83,7 +83,7 @@ _migrate(const pixel_t * coarse,
          std::size_t cellsPerPair, std::size_t cellsPerRefinedPair,
          std::size_t refCells, 
          std::size_t refRefinedCells, 
-         std::size_t rdim, std::size_t tdim, std::size_t edim, std::size_t trdim,
+         std::size_t tdim, std::size_t edim, std::size_t trdim,
          const int * locations,
          pixel_t * refined)
 {
