@@ -90,6 +90,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
+<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">isce::geometry Namespace Reference</div>  </div>
@@ -114,20 +115,29 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1TopoLayers.html">TopoLayers</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:afbc3dd3e6d57f099ab0875bda4c25b4c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afbc3dd3e6d57f099ab0875bda4c25b4c"></a>
+typedef <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cartesian_t</b></td></tr>
+<tr class="separator:afbc3dd3e6d57f099ab0875bda4c25b4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9387f2c590c001cf2ae0b9ede1bbee3e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9387f2c590c001cf2ae0b9ede1bbee3e"></a>
+typedef <a class="el" href="classisce_1_1core_1_1DenseMatrix.html">isce::core::cartmat_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>cartmat_t</b></td></tr>
+<tr class="separator:a9387f2c590c001cf2ae0b9ede1bbee3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ac37b2844b0421107222960c42e6127b7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#ac37b2844b0421107222960c42e6127b7">rdr2geo</a> (double aztime, double slantRange, double doppler, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;ellipsoid, const <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> &amp;demInterp, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;targetLLH, double wvl, int side, double threshold, int maxIter, int extraIter, <a class="el" href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a> orbitMethod)</td></tr>
-<tr class="memdesc:ac37b2844b0421107222960c42e6127b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Radar geometry coordinates to map coordinates transformer.  <a href="#ac37b2844b0421107222960c42e6127b7">More...</a><br/></td></tr>
-<tr class="separator:ac37b2844b0421107222960c42e6127b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8b650ee7ff7cf7bf9e8ff1ea20b630e2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a8b650ee7ff7cf7bf9e8ff1ea20b630e2">rdr2geo</a> (const <a class="el" href="classisce_1_1core_1_1Pixel.html">isce::core::Pixel</a> &amp;pixel, const <a class="el" href="classisce_1_1core_1_1Basis.html">isce::core::Basis</a> &amp;TCNbasis, const <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;pos, const <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;vel, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;ellipsoid, const <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> &amp;demInterp, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;targetLLH, int side, double threshold, int maxIter, int extraIter)</td></tr>
-<tr class="memdesc:a8b650ee7ff7cf7bf9e8ff1ea20b630e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Radar geometry coordinates to map coordinates transformer.  <a href="#a8b650ee7ff7cf7bf9e8ff1ea20b630e2">More...</a><br/></td></tr>
-<tr class="separator:a8b650ee7ff7cf7bf9e8ff1ea20b630e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a358bcb562cf897e26c46c4c878017147"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a358bcb562cf897e26c46c4c878017147">geo2rdr</a> (const <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;inputLLH, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;ellipsoid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1Poly2d.html">isce::core::Poly2d</a> &amp;doppler, double &amp;aztime, double &amp;slantRange, double wavelength, double startingRange, double rangePixelSpacing, size_t rwidth, double threshold, int maxIter, double deltaRange)</td></tr>
-<tr class="memdesc:a358bcb562cf897e26c46c4c878017147"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map coordinates to radar geometry coordinates transformer.  <a href="#a358bcb562cf897e26c46c4c878017147">More...</a><br/></td></tr>
-<tr class="separator:a358bcb562cf897e26c46c4c878017147"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9f5d137979b09a28993b774d217ab137"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a9f5d137979b09a28993b774d217ab137">geo2rdr</a> (const <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;inputLLH, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;ellipsoid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;doppler, double &amp;aztime, double &amp;slantRange, double wavelength, double threshold, int maxIter, double deltaRange)</td></tr>
-<tr class="memdesc:a9f5d137979b09a28993b774d217ab137"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map coordinates to radar geometry coordinates transformer.  <a href="#a9f5d137979b09a28993b774d217ab137">More...</a><br/></td></tr>
-<tr class="separator:a9f5d137979b09a28993b774d217ab137"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f446689e36b737f2e21ae5341d769e0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a5f446689e36b737f2e21ae5341d769e0">rdr2geo</a> (double, double, double, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;, const <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> &amp;, <a class="el" href="classisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;, double, int, double, int, int, <a class="el" href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a>)</td></tr>
+<tr class="memdesc:a5f446689e36b737f2e21ae5341d769e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Radar geometry coordinates to map coordinates transformer.  <a href="#a5f446689e36b737f2e21ae5341d769e0">More...</a><br/></td></tr>
+<tr class="separator:a5f446689e36b737f2e21ae5341d769e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1f691c6462bba0fc380f879d63c988d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#ad1f691c6462bba0fc380f879d63c988d">rdr2geo</a> (const <a class="el" href="classisce_1_1core_1_1Pixel.html">isce::core::Pixel</a> &amp;, const <a class="el" href="classisce_1_1core_1_1Basis.html">isce::core::Basis</a> &amp;, const <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;pos, const <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;vel, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;, const <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> &amp;, <a class="el" href="classisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;, int, double, int, int)</td></tr>
+<tr class="memdesc:ad1f691c6462bba0fc380f879d63c988d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Radar geometry coordinates to map coordinates transformer.  <a href="#ad1f691c6462bba0fc380f879d63c988d">More...</a><br/></td></tr>
+<tr class="separator:ad1f691c6462bba0fc380f879d63c988d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7a78c7229abbfda76f4525db1fcd50f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#aa7a78c7229abbfda76f4525db1fcd50f">geo2rdr</a> (const <a class="el" href="classisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;, const <a class="el" href="classisce_1_1core_1_1Poly2d.html">isce::core::Poly2d</a> &amp;, double &amp;, double &amp;, double, double, double, size_t, double, int, double)</td></tr>
+<tr class="memdesc:aa7a78c7229abbfda76f4525db1fcd50f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map coordinates to radar geometry coordinates transformer.  <a href="#aa7a78c7229abbfda76f4525db1fcd50f">More...</a><br/></td></tr>
+<tr class="separator:aa7a78c7229abbfda76f4525db1fcd50f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0f6e7e94dba3d9ee118d53f5f527bdd"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#aa0f6e7e94dba3d9ee118d53f5f527bdd">geo2rdr</a> (const <a class="el" href="classisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;, double &amp;, double &amp;, double, double, int, double)</td></tr>
+<tr class="memdesc:aa0f6e7e94dba3d9ee118d53f5f527bdd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map coordinates to radar geometry coordinates transformer.  <a href="#aa0f6e7e94dba3d9ee118d53f5f527bdd">More...</a><br/></td></tr>
+<tr class="separator:aa0f6e7e94dba3d9ee118d53f5f527bdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ec18a9486f88ef4a91ea670404afe0e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a5ec18a9486f88ef4a91ea670404afe0e">computeDEMBounds</a> (const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;ellipsoid, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;doppler, int lookSide, const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, size_t xoff, size_t yoff, size_t xsize, size_t ysize, double margin, double &amp;min_lon, double &amp;min_lat, double &amp;max_lon, double &amp;max_lat)</td></tr>
 <tr class="memdesc:a5ec18a9486f88ef4a91ea670404afe0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility function to compute geographic bounds for a radar grid.  <a href="#a5ec18a9486f88ef4a91ea670404afe0e">More...</a><br/></td></tr>
 <tr class="separator:a5ec18a9486f88ef4a91ea670404afe0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -260,34 +270,34 @@ template&lt;class Archive &gt; </td></tr>
 <p>Utility function to compute geographic bounds for a radar grid. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">orbit</td><td>Orbit object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ellipsoid</td><td>Ellipsoid object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">doppler</td><td>LUT2d doppler object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">lookSide</td><td>+1 for left-looking and -1 for right-looking </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">radarGrid</td><td>RadarGridParameters object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xoff</td><td>Column index of radar subwindow </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">yoff</td><td>Row index of radar subwindow </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">xsize</td><td>Number of columns of radar subwindow </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ysize</td><td>Number of rows of radar subwindiw </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">margin</td><td>Padding of extracted DEM (radians) </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">min_lon</td><td>Minimum longitude of geographic region (radians) </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">min_lat</td><td>Minimum latitude of geographic region (radians) </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">max_lon</td><td>Maximum longitude of geographic region (radians) </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">max_lat</td><td>Maximum latitude of geographic region (radians) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">orbit</td><td>Orbit object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ellipsoid</td><td>Ellipsoid object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">doppler</td><td>LUT2d doppler object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">lookSide</td><td>+1 for left-looking and -1 for right-looking. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">radarGrid</td><td>RadarGridParameters object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xoff</td><td>Column index of radar subwindow. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">yoff</td><td>Row index of radar subwindow. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">xsize</td><td>Number of columns of radar subwindow. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ysize</td><td>Number of rows of radar subwindiw. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">margin</td><td>Padding of extracted DEM (radians). </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">min_lon</td><td>Minimum longitude of geographic region (radians). </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">min_lat</td><td>Minimum latitude of geographic region (radians). </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">max_lon</td><td>Maximum longitude of geographic region (radians). </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">max_lat</td><td>Maximum latitude of geographic region (radians). </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a class="anchor" id="a358bcb562cf897e26c46c4c878017147"></a>
+<a class="anchor" id="aa7a78c7229abbfda76f4525db1fcd50f"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">int isce::geometry::geo2rdr </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;&#160;</td>
           <td class="paramname"><em>inputLLH</em>, </td>
         </tr>
         <tr>
@@ -371,7 +381,6 @@ template&lt;class Archive &gt; </td></tr>
 </div><div class="memdoc">
 
 <p>Map coordinates to radar geometry coordinates transformer. </p>
-<p>This is the elementary transformation from map geometry to radar geometry. The transformation is applicable for a single lon/lat/h coordinate (i.e., a single point target). For algorithmic details, see <a class="el" href="overview_geometry.html">geometry overview</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">inputLLH</td><td>Lon/Lat/Hae of target of interest </td></tr>
@@ -386,21 +395,22 @@ template&lt;class Archive &gt; </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">rwidth</td><td>Width (number of samples) of reference image </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">threshold</td><td>azimuth time convergence threshold in seconds </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">maxIter</td><td>Maximum number of Newton-Raphson iterations </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">deltaRange</td><td>step size used for computing derivative of doppler </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">deltaRange</td><td>step size used for computing derivative of doppler</td></tr>
   </table>
   </dd>
 </dl>
+<p>This is the elementary transformation from map geometry to radar geometry. The transformation is applicable for a single lon/lat/h coordinate (i.e., a single point target). For algorithmic details, see <a class="el" href="overview_geometry.html">geometry overview</a>. </p>
 
 </div>
 </div>
-<a class="anchor" id="a9f5d137979b09a28993b774d217ab137"></a>
+<a class="anchor" id="aa0f6e7e94dba3d9ee118d53f5f527bdd"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">int isce::geometry::geo2rdr </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;&#160;</td>
           <td class="paramname"><em>inputLLH</em>, </td>
         </tr>
         <tr>
@@ -466,7 +476,6 @@ template&lt;class Archive &gt; </td></tr>
 </div><div class="memdoc">
 
 <p>Map coordinates to radar geometry coordinates transformer. </p>
-<p>This is the elementary transformation from map geometry to radar geometry. The transformation is applicable for a single lon/lat/h coordinate (i.e., a single point target). For algorithmic details, see <a class="el" href="overview_geometry.html">geometry overview</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">inputLLH</td><td>Lon/Lat/Hae of target of interest </td></tr>
@@ -478,14 +487,15 @@ template&lt;class Archive &gt; </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">wavelength</td><td>Radar wavelength </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">threshold</td><td>azimuth time convergence threshold in seconds </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">maxIter</td><td>Maximum number of Newton-Raphson iterations </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">deltaRange</td><td>step size used for computing derivative of doppler </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">deltaRange</td><td>step size used for computing derivative of doppler</td></tr>
   </table>
   </dd>
 </dl>
+<p>This is the elementary transformation from map geometry to radar geometry. The transformation is applicable for a single lon/lat/h coordinate (i.e., a single point target). For algorithmic details, see <a class="el" href="overview_geometry.html">geometry overview</a>. </p>
 
 </div>
 </div>
-<a class="anchor" id="ac37b2844b0421107222960c42e6127b7"></a>
+<a class="anchor" id="a5f446689e36b737f2e21ae5341d769e0"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -528,7 +538,7 @@ template&lt;class Archive &gt; </td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;&#160;</td>
           <td class="paramname"><em>targetLLH</em>, </td>
         </tr>
         <tr>
@@ -576,7 +586,6 @@ template&lt;class Archive &gt; </td></tr>
 </div><div class="memdoc">
 
 <p>Radar geometry coordinates to map coordinates transformer. </p>
-<p>This is meant to be the light version of <a class="el" href="classisce_1_1geometry_1_1Topo.html" title="Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude...">isce::geometry::Topo</a> and not meant to be used for processing large number of targets of interest. Note that doppler and wavelength are meant for completeness and this method can be used with both Native and Zero Doppler geometries. For details of the algorithm, see the <a class="el" href="overview_geometry.html">geometry overview</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">aztime</td><td>azimuth time corresponding to line of interest </td></tr>
@@ -591,14 +600,15 @@ template&lt;class Archive &gt; </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">threshold</td><td>Distance threshold for convergence </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">maxIter</td><td>Number of primary iterations </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">extraIter</td><td>Number of secondary iterations </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">orbitMethod</td><td>Orbit interpolation method </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">orbitMethod</td><td>Orbit interpolation method</td></tr>
   </table>
   </dd>
 </dl>
+<p>This is meant to be the light version of <a class="el" href="classisce_1_1geometry_1_1Topo.html" title="Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude...">isce::geometry::Topo</a> and not meant to be used for processing large number of targets of interest. Note that doppler and wavelength are meant for completeness and this method can be used with both Native and Zero Doppler geometries. For details of the algorithm, see the <a class="el" href="overview_geometry.html">geometry overview</a>. </p>
 
 </div>
 </div>
-<a class="anchor" id="a8b650ee7ff7cf7bf9e8ff1ea20b630e2"></a>
+<a class="anchor" id="ad1f691c6462bba0fc380f879d63c988d"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -641,7 +651,7 @@ template&lt;class Archive &gt; </td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1core_1_1Vector.html">cartesian_t</a> &amp;&#160;</td>
           <td class="paramname"><em>targetLLH</em>, </td>
         </tr>
         <tr>
@@ -677,7 +687,6 @@ template&lt;class Archive &gt; </td></tr>
 </div><div class="memdoc">
 
 <p>Radar geometry coordinates to map coordinates transformer. </p>
-<p>This is the elementary transformation from radar geometry to map geometry. The transformation is applicable for a single slant range and azimuth time (i.e., a single point target). The slant range and Doppler information are encapsulated in the Pixel object, so this function can work for both zero and native Doppler geometries. The azimuth time information is encapsulated in the TCNbasis and StateVector of the platform. For algorithmic details, see <a class="el" href="overview_geometry.html">geometry overview</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pixel</td><td>Pixel object </td></tr>
@@ -689,10 +698,11 @@ template&lt;class Archive &gt; </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">side</td><td>+1 for left and -1 for right </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">threshold</td><td>Distance threshold for convergence </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">maxIter</td><td>Number of primary iterations </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">extraIter</td><td>Number of secondary iterations </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">extraIter</td><td>Number of secondary iterations</td></tr>
   </table>
   </dd>
 </dl>
+<p>This is the elementary transformation from radar geometry to map geometry. The transformation is applicable for a single slant range and azimuth time (i.e., a single point target). The slant range and Doppler information are encapsulated in the Pixel object, so this function can work for both zero and native Doppler geometries. The azimuth time information is encapsulated in the TCNbasis and StateVector of the platform. For algorithmic details, see <a class="el" href="overview_geometry.html">geometry overview</a>. </p>
 
 </div>
 </div>

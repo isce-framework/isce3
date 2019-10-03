@@ -5,8 +5,6 @@ var searchData=
   ['ih5dataset',['IH5Dataset',['../classisce_1_1io_1_1IH5Dataset.html#a182a10b977bdf90ad5f91fdb7f8b5a44',1,'isce::io::IH5Dataset']]],
   ['ih5file',['IH5File',['../classisce_1_1io_1_1IH5File.html#ac322c456433b12fb971a03db517fde15',1,'isce::io::IH5File']]],
   ['indexoffrequency',['indexOfFrequency',['../classisce_1_1signal_1_1Filter.html#a95c5c343743065b7550c1d585a9ba49d',1,'isce::signal::Filter']]],
-  ['init',['init',['../classisce_1_1core_1_1Baseline.html#afeda06ecb27a6f7889cbbe18ada4b6ab',1,'isce::core::Baseline']]],
-  ['initbasis',['initBasis',['../classisce_1_1core_1_1Baseline.html#a42f04f833c7fb8bfd43323c83664dbf1',1,'isce::core::Baseline']]],
   ['initcorrthr',['initCorrThr',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a56ded77037a99355937955c7b34f2bc9',1,'isce::unwrap::icu::ICU::initCorrThr() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a65960c9501417e3a89e54d041d003999',1,'isce::unwrap::icu::ICU::initCorrThr(const float)']]],
   ['initfrompointer',['initFromPointer',['../classisce_1_1io_1_1Raster.html#a7f0e5381ba751bf0548f0c3b98a4ca9e',1,'isce::io::Raster']]],
   ['initiateazimuthfilter',['initiateAzimuthFilter',['../classisce_1_1signal_1_1Filter.html#a3636862e2e86cf73c53b958a7ac3441e',1,'isce::signal::Filter']]],

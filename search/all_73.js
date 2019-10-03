@@ -27,7 +27,7 @@ var searchData=
   ['setepsg',['setEPSG',['../classisce_1_1io_1_1Raster.html#a138df02798c98a1b53bce0140229cf38',1,'isce::io::Raster']]],
   ['setfromdata',['setFromData',['../classisce_1_1core_1_1LUT2d.html#aa9022640d543239d3b9e409ff9c586b3',1,'isce::core::LUT2d']]],
   ['setgeotransform',['setGeoTransform',['../classisce_1_1io_1_1Raster.html#a0eeb1326b2473b76c8e8e0a0beb9fe37',1,'isce::io::Raster::setGeoTransform(double *arr)'],['../classisce_1_1io_1_1Raster.html#a37339bc2a5c06aa5ea3de8aeb01d2c11',1,'isce::io::Raster::setGeoTransform(std::vector&lt; double &gt; &amp;)'],['../classisce_1_1io_1_1Raster.html#a8ea2332287ea2712aac89e31394fd567',1,'isce::io::Raster::setGeoTransform(std::valarray&lt; double &gt; &amp;)']]],
-  ['setlayovershadow',['setLayoverShadow',['../classisce_1_1geometry_1_1Topo.html#a2c60974dad7738881e2c8773087037f3',1,'isce::geometry::Topo']]],
+  ['setlayovershadow',['setLayoverShadow',['../classisce_1_1geometry_1_1Topo.html#a393e8e51b297cc8e1cc3461413481893',1,'isce::geometry::Topo']]],
   ['setline',['setLine',['../classisce_1_1io_1_1Raster.html#a5de4555b46e3abb100744fafdb12efd9',1,'isce::io::Raster']]],
   ['setrefepoch',['setRefEpoch',['../namespaceisce_1_1io.html#acaef94fdfd377cb41f319b05923c2a59',1,'isce::io']]],
   ['setstatevector',['setStateVector',['../classisce_1_1core_1_1Orbit.html#a3ffbd7d76c45d8663f3319477f829a40',1,'isce::core::Orbit']]],
