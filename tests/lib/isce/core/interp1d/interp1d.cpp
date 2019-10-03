@@ -387,14 +387,13 @@ public:
 
 TEST(Kernel, Speed)
 {
-    #define U float
+    using U = float;
     isce::core::NFFTKernel<U> exact(4, 1, 2);
     // A degree 16 Chebyshev and 2k linear table give similar approximation
     // errors of about 5e-8.  See notebook ApproxWindow.ipynb.
     isce::core::ChebyKernel<U> cheby(exact, 16);
     isce::core::TabulatedKernel<U> table(exact, 2048);
     SpeedCheck<U> timer;
-    #undef U
 
     // The first run seems to have a penalty as things get loaded in to cache?
     // So discard its timing result.
