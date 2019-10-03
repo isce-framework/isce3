@@ -180,9 +180,9 @@ operator()(double x) const
     // Normalize to table sample index.
     auto axn = ax * _1_dx;
     // Determine left side of interval.
-    size_t i = (size_t) std::floor(axn);
+    size_t i = std::floor(axn);
     // Make sure floating point multiply doesn't cause off-by-one.
-    i = (i > _imax) ? _imax : i;
+    i = std::min(i, _imax);
     // Linear interpolation.
     return _table[i] + (axn - i) * (_table[i+1] - _table[i]);
 }
@@ -212,7 +212,7 @@ ChebyKernel(const isce::core::Kernel<T> &kernel, size_t n)
     _coeffs.resize(n);
     for (long i=0; i<n; ++i) {
         _coeffs[i] = 0.0;
-        for (size_t j=0; j<n; ++j) {
+        for (long j=0; j<n; ++j) {
             T w = std::cos(i * q[j]);
             _coeffs[i] += w * fx[j];
         }
