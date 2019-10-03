@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['chat',['chat',['../classisce_1_1core_1_1Baseline.html#a007ab04c95e9930dbfcf001e0ae49a07',1,'isce::core::Baseline']]],
-  ['chebykernel',['ChebyKernel',['../classisce_1_1core_1_1ChebyKernel.html#ae1b4b13eba0c8356cb8cf8295af89434',1,'isce::core::ChebyKernel']]],
+  ['calculatebasisoffset',['calculateBasisOffset',['../classisce_1_1core_1_1Baseline.html#aff4499f6621bf047b91099b07979c994',1,'isce::core::Baseline']]],
+  ['calculatelookvector',['calculateLookVector',['../classisce_1_1core_1_1Baseline.html#aca625afa5017f21beec974e7130e1b9f',1,'isce::core::Baseline']]],
+  ['chat',['chat',['../classisce_1_1core_1_1Baseline.html#a62b719f905eb48deba4bb86a9d363734',1,'isce::core::Baseline']]],
   ['checkveclendebug',['checkVecLenDebug',['../namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e',1,'isce::core']]],
   ['clamp',['clamp',['../namespaceisce_1_1core.html#a65c88b1efd8564d22e60f47f68417e64',1,'isce::core']]],
   ['code',['code',['../structisce_1_1core_1_1ProjectionBase.html#a662f84782d58a45b9968c301664fea20',1,'isce::core::ProjectionBase']]],
@@ -11,9 +12,10 @@ var searchData=
   ['comparecomplex',['compareComplex',['../namespaceisce_1_1core.html#af5eda98731f7f62fce5c7f428f0e61a5',1,'isce::core']]],
   ['comparefloatingpoint',['compareFloatingPoint',['../namespaceisce_1_1core.html#ac18b3e621f399811a3e54baafd30c8f2',1,'isce::core']]],
   ['computeacceleration',['computeAcceleration',['../classisce_1_1core_1_1Orbit.html#a1f03ba5b201db6e285c7a43297ff8609',1,'isce::core::Orbit']]],
+  ['computebaselines',['computeBaselines',['../classisce_1_1core_1_1Baseline.html#a0bb7d20662852a43c380d99977f82d64',1,'isce::core::Baseline']]],
   ['computedembounds',['computeDEMBounds',['../namespaceisce_1_1geometry.html#a5ec18a9486f88ef4a91ea670404afe0e',1,'isce::geometry']]],
   ['computeheightstats',['computeHeightStats',['../classisce_1_1geometry_1_1DEMInterpolator.html#a5d5b2ce2150dd07a95999ea44fc357bc',1,'isce::geometry::DEMInterpolator']]],
-  ['computemask',['computeMask',['../classisce_1_1geometry_1_1Topo.html#a6a89e406428af7bac0d49bc57c657430',1,'isce::geometry::Topo::computeMask(bool)'],['../classisce_1_1geometry_1_1Topo.html#a9aadbddf14853b565f3fef96bb11ec3a',1,'isce::geometry::Topo::computeMask() const ']]],
+  ['computemask',['computeMask',['../classisce_1_1geometry_1_1Topo.html#a5850001be15926641ac0e25e52b0ddb2',1,'isce::geometry::Topo::computeMask(bool mask)'],['../classisce_1_1geometry_1_1Topo.html#a9aadbddf14853b565f3fef96bb11ec3a',1,'isce::geometry::Topo::computeMask() const ']]],
   ['constructazimuthcommonbandfilter',['constructAzimuthCommonbandFilter',['../classisce_1_1signal_1_1Filter.html#a96a3d4f5a41641e8229f93ff3b7f9535',1,'isce::signal::Filter']]],
   ['constructrangebandpassboxcar',['constructRangeBandpassBoxcar',['../classisce_1_1signal_1_1Filter.html#a8b4dbb10a6f864d0255288cc1ce4e499',1,'isce::signal::Filter']]],
   ['constructrangebandpasscosine',['constructRangeBandpassCosine',['../classisce_1_1signal_1_1Filter.html#ac4d92863f4f8cd966f2c856d82b76726',1,'isce::signal::Filter']]],

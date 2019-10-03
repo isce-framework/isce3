@@ -107,41 +107,42 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae6574586b816d19b5c4eb33fde6150ac"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#ae6574586b816d19b5c4eb33fde6150ac">Topo</a> (const <a class="el" href="classisce_1_1product_1_1Product.html">isce::product::Product</a> &amp;, char frequency= 'A', bool nativeDoppler=false, size_t numberAzimuthLooks=1, size_t numberRangeLooks=1)</td></tr>
 <tr class="memdesc:ae6574586b816d19b5c4eb33fde6150ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor using a product.  <a href="#ae6574586b816d19b5c4eb33fde6150ac">More...</a><br/></td></tr>
 <tr class="separator:ae6574586b816d19b5c4eb33fde6150ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acb0543016993cc6ea0b6c44a86cff67c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#acb0543016993cc6ea0b6c44a86cff67c">Topo</a> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;<a class="el" href="classisce_1_1geometry_1_1Topo.html#af7c6c38aec4874f551157e33238a7146">orbit</a>, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;<a class="el" href="classisce_1_1geometry_1_1Topo.html#a38b6c72b9b2583876d41ea0e16da2f94">ellipsoid</a>, const int <a class="el" href="classisce_1_1geometry_1_1Topo.html#a8ce8c61aeaa584c347e2b98562d5420d">lookSide</a>, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;<a class="el" href="classisce_1_1geometry_1_1Topo.html#af5a90752f851e970cd9492a7d6098b39">doppler</a>=<a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt;())</td></tr>
-<tr class="separator:acb0543016993cc6ea0b6c44a86cff67c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c2362ff69374956545a9e3a00cf8dbc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a8c2362ff69374956545a9e3a00cf8dbc">Topo</a> (const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;, const <a class="el" href="classisce_1_1core_1_1Metadata.html">isce::core::Metadata</a> &amp;, size_t numberAzimuthLooks=1, size_t numberRangeLooks=1)</td></tr>
-<tr class="memdesc:a8c2362ff69374956545a9e3a00cf8dbc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor using core objects.  <a href="#a8c2362ff69374956545a9e3a00cf8dbc">More...</a><br/></td></tr>
-<tr class="separator:a8c2362ff69374956545a9e3a00cf8dbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac36c634d9f9cd714511832920ecec44e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#ac36c634d9f9cd714511832920ecec44e">threshold</a> (double)</td></tr>
-<tr class="memdesc:ac36c634d9f9cd714511832920ecec44e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set convergence threshold.  <a href="#ac36c634d9f9cd714511832920ecec44e">More...</a><br/></td></tr>
-<tr class="separator:ac36c634d9f9cd714511832920ecec44e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3920b33872158a8e30459446bf432d98"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a3920b33872158a8e30459446bf432d98">numiter</a> (int)</td></tr>
-<tr class="memdesc:a3920b33872158a8e30459446bf432d98"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set number of primary iterations.  <a href="#a3920b33872158a8e30459446bf432d98">More...</a><br/></td></tr>
-<tr class="separator:a3920b33872158a8e30459446bf432d98"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca86eaf9c0f1cd912d16a7e022f7caf6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#aca86eaf9c0f1cd912d16a7e022f7caf6">extraiter</a> (int)</td></tr>
-<tr class="memdesc:aca86eaf9c0f1cd912d16a7e022f7caf6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set number of secondary iterations.  <a href="#aca86eaf9c0f1cd912d16a7e022f7caf6">More...</a><br/></td></tr>
-<tr class="separator:aca86eaf9c0f1cd912d16a7e022f7caf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb7334bbae0d88334267468e0be2f865"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#adb7334bbae0d88334267468e0be2f865">orbitMethod</a> (<a class="el" href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a>)</td></tr>
-<tr class="memdesc:adb7334bbae0d88334267468e0be2f865"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set orbit interpolation method.  <a href="#adb7334bbae0d88334267468e0be2f865">More...</a><br/></td></tr>
-<tr class="separator:adb7334bbae0d88334267468e0be2f865"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9fa57dd048ee7d86d617f078ab2edcd7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a9fa57dd048ee7d86d617f078ab2edcd7">demMethod</a> (<a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a>)</td></tr>
-<tr class="memdesc:a9fa57dd048ee7d86d617f078ab2edcd7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set DEM interpolation method.  <a href="#a9fa57dd048ee7d86d617f078ab2edcd7">More...</a><br/></td></tr>
-<tr class="separator:a9fa57dd048ee7d86d617f078ab2edcd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03101674ba5120fd63f767689604c2c8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a03101674ba5120fd63f767689604c2c8">epsgOut</a> (int)</td></tr>
-<tr class="memdesc:a03101674ba5120fd63f767689604c2c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set output coordinate system.  <a href="#a03101674ba5120fd63f767689604c2c8">More...</a><br/></td></tr>
-<tr class="separator:a03101674ba5120fd63f767689604c2c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a89e406428af7bac0d49bc57c657430"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a6a89e406428af7bac0d49bc57c657430">computeMask</a> (bool)</td></tr>
-<tr class="memdesc:a6a89e406428af7bac0d49bc57c657430"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set mask computation flag.  <a href="#a6a89e406428af7bac0d49bc57c657430">More...</a><br/></td></tr>
-<tr class="separator:a6a89e406428af7bac0d49bc57c657430"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad6b3b324ef67e6fd1d2d549457b4e753"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#ad6b3b324ef67e6fd1d2d549457b4e753">minimumHeight</a> (double)</td></tr>
-<tr class="memdesc:ad6b3b324ef67e6fd1d2d549457b4e753"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set minimum height.  <a href="#ad6b3b324ef67e6fd1d2d549457b4e753">More...</a><br/></td></tr>
-<tr class="separator:ad6b3b324ef67e6fd1d2d549457b4e753"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40558707268ddea4ee0130edbe192005"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a40558707268ddea4ee0130edbe192005">maximumHeight</a> (double)</td></tr>
-<tr class="memdesc:a40558707268ddea4ee0130edbe192005"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set maximum height.  <a href="#a40558707268ddea4ee0130edbe192005">More...</a><br/></td></tr>
-<tr class="separator:a40558707268ddea4ee0130edbe192005"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afc77a61694284dafe47765d80a718ddb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#afc77a61694284dafe47765d80a718ddb">decimaldegMargin</a> (double)</td></tr>
-<tr class="memdesc:afc77a61694284dafe47765d80a718ddb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set margin in decimal degrees.  <a href="#afc77a61694284dafe47765d80a718ddb">More...</a><br/></td></tr>
-<tr class="separator:afc77a61694284dafe47765d80a718ddb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef56664f77ea23323cd69ba6bf48f3ea"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#aef56664f77ea23323cd69ba6bf48f3ea">Topo</a> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;<a class="el" href="classisce_1_1geometry_1_1Topo.html#af7c6c38aec4874f551157e33238a7146">orbit</a>, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;<a class="el" href="classisce_1_1geometry_1_1Topo.html#a38b6c72b9b2583876d41ea0e16da2f94">ellipsoid</a>, const int <a class="el" href="classisce_1_1geometry_1_1Topo.html#a8ce8c61aeaa584c347e2b98562d5420d">lookSide</a>, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;<a class="el" href="classisce_1_1geometry_1_1Topo.html#af5a90752f851e970cd9492a7d6098b39">doppler</a>={})</td></tr>
+<tr class="memdesc:aef56664f77ea23323cd69ba6bf48f3ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Alternative constructor from ellipsoid orbit and radarGrid.  <a href="#aef56664f77ea23323cd69ba6bf48f3ea">More...</a><br/></td></tr>
+<tr class="separator:aef56664f77ea23323cd69ba6bf48f3ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a016bb924db0d3a2f4d180b0bd9cbc930"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a016bb924db0d3a2f4d180b0bd9cbc930">Topo</a> (const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;<a class="el" href="classisce_1_1geometry_1_1Topo.html#a38b6c72b9b2583876d41ea0e16da2f94">ellipsoid</a>, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;<a class="el" href="classisce_1_1geometry_1_1Topo.html#af7c6c38aec4874f551157e33238a7146">orbit</a>, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;<a class="el" href="classisce_1_1geometry_1_1Topo.html#af5a90752f851e970cd9492a7d6098b39">doppler</a>, const <a class="el" href="classisce_1_1core_1_1Metadata.html">isce::core::Metadata</a> &amp;meta, size_t numberAzimuthLooks=1, size_t numberRangeLooks=1)</td></tr>
+<tr class="memdesc:a016bb924db0d3a2f4d180b0bd9cbc930"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor using core objects.  <a href="#a016bb924db0d3a2f4d180b0bd9cbc930">More...</a><br/></td></tr>
+<tr class="separator:a016bb924db0d3a2f4d180b0bd9cbc930"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a87d37b7051448f67e3ef452bbb1694e5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a87d37b7051448f67e3ef452bbb1694e5">threshold</a> (double t)</td></tr>
+<tr class="memdesc:a87d37b7051448f67e3ef452bbb1694e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set convergence threshold.  <a href="#a87d37b7051448f67e3ef452bbb1694e5">More...</a><br/></td></tr>
+<tr class="separator:a87d37b7051448f67e3ef452bbb1694e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31df80767c6032d14913f532f120ac0a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a31df80767c6032d14913f532f120ac0a">numiter</a> (int n)</td></tr>
+<tr class="memdesc:a31df80767c6032d14913f532f120ac0a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set number of primary iterations.  <a href="#a31df80767c6032d14913f532f120ac0a">More...</a><br/></td></tr>
+<tr class="separator:a31df80767c6032d14913f532f120ac0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e35373e90bc6de3d755b5add8a4989d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a3e35373e90bc6de3d755b5add8a4989d">extraiter</a> (int n)</td></tr>
+<tr class="memdesc:a3e35373e90bc6de3d755b5add8a4989d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set number of secondary iterations.  <a href="#a3e35373e90bc6de3d755b5add8a4989d">More...</a><br/></td></tr>
+<tr class="separator:a3e35373e90bc6de3d755b5add8a4989d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73dba9f5a8a686d92795d1d827a3bc3a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a73dba9f5a8a686d92795d1d827a3bc3a">orbitMethod</a> (<a class="el" href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a> method)</td></tr>
+<tr class="memdesc:a73dba9f5a8a686d92795d1d827a3bc3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the orbit interpolation method while checking its validity.  <a href="#a73dba9f5a8a686d92795d1d827a3bc3a">More...</a><br/></td></tr>
+<tr class="separator:a73dba9f5a8a686d92795d1d827a3bc3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62ba73d280c5dfeacaf3278ecb19efba"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a62ba73d280c5dfeacaf3278ecb19efba">demMethod</a> (<a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> method)</td></tr>
+<tr class="memdesc:a62ba73d280c5dfeacaf3278ecb19efba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the DEM interpolation method while checking its validity.  <a href="#a62ba73d280c5dfeacaf3278ecb19efba">More...</a><br/></td></tr>
+<tr class="separator:a62ba73d280c5dfeacaf3278ecb19efba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60900e91b713f7134724a470622fd529"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a60900e91b713f7134724a470622fd529">epsgOut</a> (int epsgcode)</td></tr>
+<tr class="memdesc:a60900e91b713f7134724a470622fd529"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set output coordinate system.  <a href="#a60900e91b713f7134724a470622fd529">More...</a><br/></td></tr>
+<tr class="separator:a60900e91b713f7134724a470622fd529"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5850001be15926641ac0e25e52b0ddb2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a5850001be15926641ac0e25e52b0ddb2">computeMask</a> (bool mask)</td></tr>
+<tr class="memdesc:a5850001be15926641ac0e25e52b0ddb2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set mask computation flag.  <a href="#a5850001be15926641ac0e25e52b0ddb2">More...</a><br/></td></tr>
+<tr class="separator:a5850001be15926641ac0e25e52b0ddb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0311070992b9415cf38379c764fb30b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#ad0311070992b9415cf38379c764fb30b">minimumHeight</a> (double minh)</td></tr>
+<tr class="memdesc:ad0311070992b9415cf38379c764fb30b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set minimum height.  <a href="#ad0311070992b9415cf38379c764fb30b">More...</a><br/></td></tr>
+<tr class="separator:ad0311070992b9415cf38379c764fb30b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac80faddaa78b18d904c695909e66f81c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#ac80faddaa78b18d904c695909e66f81c">maximumHeight</a> (double maxh)</td></tr>
+<tr class="memdesc:ac80faddaa78b18d904c695909e66f81c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set maximum height.  <a href="#ac80faddaa78b18d904c695909e66f81c">More...</a><br/></td></tr>
+<tr class="separator:ac80faddaa78b18d904c695909e66f81c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14aa505f9cdd97262ed7b6a6a5308ca1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a14aa505f9cdd97262ed7b6a6a5308ca1">decimaldegMargin</a> (double deg)</td></tr>
+<tr class="memdesc:a14aa505f9cdd97262ed7b6a6a5308ca1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set margin in decimal degrees.  <a href="#a14aa505f9cdd97262ed7b6a6a5308ca1">More...</a><br/></td></tr>
+<tr class="separator:a14aa505f9cdd97262ed7b6a6a5308ca1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ce8c61aeaa584c347e2b98562d5420d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8ce8c61aeaa584c347e2b98562d5420d"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a8ce8c61aeaa584c347e2b98562d5420d">lookSide</a> () const </td></tr>
 <tr class="memdesc:a8ce8c61aeaa584c347e2b98562d5420d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get lookSide used for processing. <br/></td></tr>
@@ -190,9 +191,9 @@ const <br class="typebreak"/>
 <tr class="memitem:ae31f8a5d0dfd9f7d1a0e21e5a49d13c6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae31f8a5d0dfd9f7d1a0e21e5a49d13c6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>computeDEMBounds</b> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;, <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> &amp;, size_t, size_t)</td></tr>
 <tr class="separator:ae31f8a5d0dfd9f7d1a0e21e5a49d13c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad68ec1aeb2bb756c573d18d5b5d14bb0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#ad68ec1aeb2bb756c573d18d5b5d14bb0">topo</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;, const std::string)</td></tr>
-<tr class="memdesc:ad68ec1aeb2bb756c573d18d5b5d14bb0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Main entry point for the module; internal creation of topo rasters.  <a href="#ad68ec1aeb2bb756c573d18d5b5d14bb0">More...</a><br/></td></tr>
-<tr class="separator:ad68ec1aeb2bb756c573d18d5b5d14bb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afde6b4b7d810995b0b3ea25edb61dcb4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#afde6b4b7d810995b0b3ea25edb61dcb4">topo</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;demRaster, const std::string &amp;outdir)</td></tr>
+<tr class="memdesc:afde6b4b7d810995b0b3ea25edb61dcb4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Main entry point for the module; internal creation of topo rasters.  <a href="#afde6b4b7d810995b0b3ea25edb61dcb4">More...</a><br/></td></tr>
+<tr class="separator:afde6b4b7d810995b0b3ea25edb61dcb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac901231be5441416dd8a2245ef2619c8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#ac901231be5441416dd8a2245ef2619c8">topo</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;demRaster, <a class="el" href="classisce_1_1geometry_1_1TopoLayers.html">TopoLayers</a> &amp;layers)</td></tr>
 <tr class="memdesc:ac901231be5441416dd8a2245ef2619c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run topo with externally created topo rasters in <a class="el" href="classisce_1_1geometry_1_1TopoLayers.html">TopoLayers</a> object.  <a href="#ac901231be5441416dd8a2245ef2619c8">More...</a><br/></td></tr>
 <tr class="separator:ac901231be5441416dd8a2245ef2619c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -202,9 +203,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>computeDEMBounds</b> 
 <tr class="memitem:a17090cd38d12b6fefe39b0705f6bbecd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a17090cd38d12b6fefe39b0705f6bbecd">topo</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;demRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;xRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;yRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;heightRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;incRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;hdgRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;localIncRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;localPsiRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;simRaster)</td></tr>
 <tr class="memdesc:a17090cd38d12b6fefe39b0705f6bbecd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run topo with externally created topo rasters; generate mask.  <a href="#a17090cd38d12b6fefe39b0705f6bbecd">More...</a><br/></td></tr>
 <tr class="separator:a17090cd38d12b6fefe39b0705f6bbecd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a393e8e51b297cc8e1cc3461413481893"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a393e8e51b297cc8e1cc3461413481893">setLayoverShadow</a> (<a class="el" href="classisce_1_1geometry_1_1TopoLayers.html">TopoLayers</a> &amp;, <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> &amp;, std::vector&lt; <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> &gt; &amp;)</td></tr>
-<tr class="memdesc:a393e8e51b297cc8e1cc3461413481893"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute layover/shadow masks.  <a href="#a393e8e51b297cc8e1cc3461413481893">More...</a><br/></td></tr>
-<tr class="separator:a393e8e51b297cc8e1cc3461413481893"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c60974dad7738881e2c8773087037f3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#a2c60974dad7738881e2c8773087037f3">setLayoverShadow</a> (<a class="el" href="classisce_1_1geometry_1_1TopoLayers.html">TopoLayers</a> &amp;, <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> &amp;, std::vector&lt; <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &gt; &amp;)</td></tr>
+<tr class="memdesc:a2c60974dad7738881e2c8773087037f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute layover/shadow masks.  <a href="#a2c60974dad7738881e2c8773087037f3">More...</a><br/></td></tr>
+<tr class="separator:a2c60974dad7738881e2c8773087037f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7c6c38aec4874f551157e33238a7146"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af7c6c38aec4874f551157e33238a7146"></a>
 const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Topo.html#af7c6c38aec4874f551157e33238a7146">orbit</a> () const </td></tr>
 <tr class="memdesc:af7c6c38aec4874f551157e33238a7146"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the orbits used for processing. <br/></td></tr>
@@ -279,15 +280,14 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
     <tr><td class="paramdir">[in]</td><td class="paramname">frequency</td><td>Frequency designation </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nativeDoppler</td><td>Flag for using native Doppler frequencies instead of zero-Doppler </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">numberAzimuthLooks</td><td>Number of azimuth looks of input product </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">numberRangeLooks</td><td>Number of range looks of input product</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">numberRangeLooks</td><td>Number of range looks of input product </td></tr>
   </table>
   </dd>
 </dl>
-<p>Primary constructor of <a class="el" href="classisce_1_1geometry_1_1Topo.html" title="Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude...">Topo</a> object. </p>
 
 </div>
 </div>
-<a class="anchor" id="acb0543016993cc6ea0b6c44a86cff67c"></a>
+<a class="anchor" id="aef56664f77ea23323cd69ba6bf48f3ea"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -322,7 +322,7 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;&#160;</td>
-          <td class="paramname"><em>doppler</em> = <code><a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt;double&gt;()</code>&#160;</td>
+          <td class="paramname"><em>doppler</em> = <code>{}</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -336,21 +336,22 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Alternative constructor from ellipsoid orbit and radarGrid. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">radarGrid</td><td>RadarGridParameters object </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">orbit</td><td>Orbit object </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">ellipsoid</td><td>Ellipsoid object </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">lookSide</td><td>look direction of the radar </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">doppler</td><td>LUT2d doppler model</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">doppler</td><td>LUT2d doppler model </td></tr>
   </table>
   </dd>
 </dl>
-<p>Alternative constructor from ellipsoid orbit and radarGrid. </p>
 
 </div>
 </div>
-<a class="anchor" id="a8c2362ff69374956545a9e3a00cf8dbc"></a>
+<a class="anchor" id="a016bb924db0d3a2f4d180b0bd9cbc930"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -407,6 +408,7 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
 </div><div class="memdoc">
 
 <p>Constructor using core objects. </p>
+<p>Alternative constructor from ellipsoid orbit and metadata. Used for supporting VRT-formatted products.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">ellipsoid</td><td>Ellipsoid object </td></tr>
@@ -414,16 +416,15 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
     <tr><td class="paramdir">[in]</td><td class="paramname">doppler</td><td>LUT1d doppler model </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">meta</td><td>Metadata object with radar image parameters </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">numberAzimuthLooks</td><td>Number of azimuth looks of input product </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">numberRangeLooks</td><td>Number of range looks of input product</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">numberRangeLooks</td><td>Number of range looks of input product </td></tr>
   </table>
   </dd>
 </dl>
-<p>Alternative constructor from ellipsoid orbit and metadata. Used for supporting VRT-formatted products. </p>
 
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a6a89e406428af7bac0d49bc57c657430"></a>
+<a class="anchor" id="a5850001be15926641ac0e25e52b0ddb2"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -455,7 +456,7 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
 
 </div>
 </div>
-<a class="anchor" id="afc77a61694284dafe47765d80a718ddb"></a>
+<a class="anchor" id="a14aa505f9cdd97262ed7b6a6a5308ca1"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -487,7 +488,7 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
 
 </div>
 </div>
-<a class="anchor" id="a9fa57dd048ee7d86d617f078ab2edcd7"></a>
+<a class="anchor" id="a62ba73d280c5dfeacaf3278ecb19efba"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -509,18 +510,17 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
 </table>
 </div><div class="memdoc">
 
-<p>Set DEM interpolation method. </p>
+<p>Set the DEM interpolation method while checking its validity. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">DEM</td><td>inerpolation method</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">DEM</td><td>inerpolation method </td></tr>
   </table>
   </dd>
 </dl>
-<p>Set the DEM interpolation method while checking its validity </p>
 
 </div>
 </div>
-<a class="anchor" id="a03101674ba5120fd63f767689604c2c8"></a>
+<a class="anchor" id="a60900e91b713f7134724a470622fd529"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -543,17 +543,17 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
 </div><div class="memdoc">
 
 <p>Set output coordinate system. </p>
+<p>Set the EPSG code of the output layers and configure projection. See <a href="raster.html#rasterproj">here</a> for supported projections.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">epsgcode</td><td>EPSG code of desired pixel-by-pixel outputs</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">epsgcode</td><td>EPSG code of desired pixel-by-pixel outputs </td></tr>
   </table>
   </dd>
 </dl>
-<p>Set the EPSG code of the output layers and configure projection. See <a href="raster.html#rasterproj">here</a> for supported projections. </p>
 
 </div>
 </div>
-<a class="anchor" id="aca86eaf9c0f1cd912d16a7e022f7caf6"></a>
+<a class="anchor" id="a3e35373e90bc6de3d755b5add8a4989d"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -576,17 +576,17 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
 </div><div class="memdoc">
 
 <p>Set number of secondary iterations. </p>
+<p>When we haven't converged after primary iterations, it typically means that the solver is iterating between two very close solutions. In this case, we use the previous 2 solutions and use the average to initialize the next iteration. This is equivalent to changing the step size between iterations.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Number of secondary iterations</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Number of secondary iterations </td></tr>
   </table>
   </dd>
 </dl>
-<p>When we haven't converged after primary iterations, it typically means that the solver is iterating between two very close solutions. In this case, we use the previous 2 solutions and use the average to initialize the next iteration. This is equivalent to changing the step size between iterations. </p>
 
 </div>
 </div>
-<a class="anchor" id="a40558707268ddea4ee0130edbe192005"></a>
+<a class="anchor" id="ac80faddaa78b18d904c695909e66f81c"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -618,7 +618,7 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
 
 </div>
 </div>
-<a class="anchor" id="ad6b3b324ef67e6fd1d2d549457b4e753"></a>
+<a class="anchor" id="ad0311070992b9415cf38379c764fb30b"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -650,7 +650,7 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
 
 </div>
 </div>
-<a class="anchor" id="a3920b33872158a8e30459446bf432d98"></a>
+<a class="anchor" id="a31df80767c6032d14913f532f120ac0a"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -673,17 +673,17 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
 </div><div class="memdoc">
 
 <p>Set number of primary iterations. </p>
+<p>This is the number of iterations where solution of previous solution is directly used to initialize the next iteration</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Number of primary iterations</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Number of primary iterations </td></tr>
   </table>
   </dd>
 </dl>
-<p>This is the number of iterations where solution of previous solution is directly used to initialize the next iteration </p>
 
 </div>
 </div>
-<a class="anchor" id="adb7334bbae0d88334267468e0be2f865"></a>
+<a class="anchor" id="a73dba9f5a8a686d92795d1d827a3bc3a"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -705,18 +705,17 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
 </table>
 </div><div class="memdoc">
 
-<p>Set orbit interpolation method. </p>
+<p>Set the orbit interpolation method while checking its validity. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">method</td><td>orbit interpolation method to use</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">method</td><td>orbit interpolation method to use </td></tr>
   </table>
   </dd>
 </dl>
-<p>Set the orbit interpolation method while checking its validity </p>
 
 </div>
 </div>
-<a class="anchor" id="a393e8e51b297cc8e1cc3461413481893"></a>
+<a class="anchor" id="a2c60974dad7738881e2c8773087037f3"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -735,7 +734,7 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &gt; &amp;&#160;</td>
           <td class="paramname">&#160;</td>
         </tr>
         <tr>
@@ -751,15 +750,14 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">layers</td><td>Object containing output layers </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">demInterp</td><td><a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">satPosition</td><td>Vector of cartesian_t of satellite position for each line in block</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">satPosition</td><td>Vector of satellite position vectors for each line in block </td></tr>
   </table>
   </dd>
 </dl>
-<p>Compute layer and shadow mask following the logic from ISCE 2 </p>
 
 </div>
 </div>
-<a class="anchor" id="ac36c634d9f9cd714511832920ecec44e"></a>
+<a class="anchor" id="a87d37b7051448f67e3ef452bbb1694e5"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -791,7 +789,7 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
 
 </div>
 </div>
-<a class="anchor" id="ad68ec1aeb2bb756c573d18d5b5d14bb0"></a>
+<a class="anchor" id="afde6b4b7d810995b0b3ea25edb61dcb4"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -804,7 +802,7 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::string&#160;</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>outdir</em>&#160;</td>
         </tr>
         <tr>
@@ -816,13 +814,6 @@ const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>
 </div><div class="memdoc">
 
 <p>Main entry point for the module; internal creation of topo rasters. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">demRaster</td><td>input DEM raster </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">outdir</td><td>directory to write outputs to</td></tr>
-  </table>
-  </dd>
-</dl>
 <p>This is the main topo driver. The pixel-by-pixel output file names are fixed for now </p>
 <ul>
 <li>
@@ -842,6 +833,13 @@ locaPsi.rdr - Local projection angle (degrees) at target </li>
 <li>
 simamp.rdr - Simulated amplitude image. </li>
 </ul>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">demRaster</td><td>input DEM raster </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">outdir</td><td>directory to write outputs to </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
