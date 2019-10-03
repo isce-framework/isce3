@@ -60,7 +60,7 @@ TYPED_TEST(IH5Test, nochunk) {
     int matsum = GDALChecksumImage(matRaster.dataset()->GetRasterBand(1), 0, 0, width, length); 
 
     //Create a HDF5 file
-    std::string wfilename = "dummy.h5"; 
+    std::string wfilename = "nativewrite_" + std::string(typeid(TypeParam).name()) + ".h5"; 
     struct stat buffer; 
     if ( stat(wfilename.c_str(), &buffer) == 0 ) 
         std::remove(wfilename.c_str()); 
@@ -111,7 +111,7 @@ TYPED_TEST(IH5Test, chunk) {
     int matsum = GDALChecksumImage(matRaster.dataset()->GetRasterBand(1), 120, 120, 10, 10);
 
     //Create a HDF5 file
-    std::string wfilename = "dummy.h5";
+    std::string wfilename = "nativewrite_" + std::string(typeid(TypeParam).name()) + ".h5";
     struct stat buffer;
     if ( stat(wfilename.c_str(), &buffer) == 0 )
         std::remove(wfilename.c_str());
