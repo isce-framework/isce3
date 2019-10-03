@@ -1,6 +1,7 @@
 var searchData=
 [
   ['chat',['chat',['../classisce_1_1core_1_1Baseline.html#a007ab04c95e9930dbfcf001e0ae49a07',1,'isce::core::Baseline']]],
+  ['chebykernel',['ChebyKernel',['../classisce_1_1core_1_1ChebyKernel.html#ae1b4b13eba0c8356cb8cf8295af89434',1,'isce::core::ChebyKernel']]],
   ['checkveclendebug',['checkVecLenDebug',['../namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e',1,'isce::core']]],
   ['clamp',['clamp',['../namespaceisce_1_1core.html#a65c88b1efd8564d22e60f47f68417e64',1,'isce::core']]],
   ['code',['code',['../structisce_1_1core_1_1ProjectionBase.html#a662f84782d58a45b9968c301664fea20',1,'isce::core::ProjectionBase']]],
