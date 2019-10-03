@@ -146,7 +146,7 @@ template class isce::core::NFFTKernel<double>;
 // Constructor
 template <typename T>
 isce::core::TabulatedKernel<T>::
-TabulatedKernel(isce::core::Kernel<T> &kernel, size_t n)
+TabulatedKernel(const isce::core::Kernel<T> &kernel, size_t n)
 {
     this->_halfwidth = kernel.width() / 2.0;
     // Need at least two points for linear interpolation.
@@ -192,7 +192,7 @@ template class isce::core::TabulatedKernel<double>;
 
 template <typename T>
 isce::core::ChebyKernel<T>::
-ChebyKernel(isce::core::Kernel<T> &kernel, size_t n)
+ChebyKernel(const isce::core::Kernel<T> &kernel, size_t n)
 {
     this->_halfwidth = kernel.width() / 2.0;
     // Fit a kernel with DCT of fn at Chebyshev zeros.
