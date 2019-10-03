@@ -90,6 +90,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li class="level1"><a href="#conda">Installing Anaconda and Python packages</a></li>
 <li class="level1"><a href="#pyreinstall">Installing pyre</a><ul><li class="level2"><a href="#pyresrc">Option 1: Install pyre from source</a></li>
 <li class="level2"><a href="#pyrebin">Option 2: Install pyre binaries (warning: currently not available)</a></li>
+<li class="level2"><a href="#pyreconda">Option 3: Install pyre via conda package</a></li>
 </ul>
 </li>
 <li class="level1"><a href="#isce3linux">Install ISCE from source</a><ul><li class="level2"><a href="#isce3targit">Step 1: Get latest version of ISCE source</a><ul><li class="level3"><a href="#isce3git">Option 1: Checkout latest version from git</a></li>
@@ -98,9 +99,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </li>
 <li class="level2"><a href="#isce3build">Step 2: Build the software</a></li>
 <li class="level2"><a href="#isce3install">Step 3: Install and set environment variables</a></li>
-</ul>
-</li>
-<li class="level1"><a href="#tips">Additional installation tips</a><ul><li class="level2"><a href="#tips_cuda">1. Set TMP_DIR for compilation of CUDA extensions</a></li>
 </ul>
 </li>
 </ul>
@@ -318,7 +316,8 @@ Option 2: Install pyre binaries (warning: currently not available)</h2>
 </div><!-- fragment --><p class="endli"></p>
 </li>
 </ol>
-<p>/subsection pyreconda Option 3: Install pyre via conda package</p>
+<h2><a class="anchor" id="pyreconda"></a>
+Option 3: Install pyre via conda package</h2>
 <div class="fragment"><div class="line">conda install conda-build</div>
 <div class="line">git clone https:<span class="comment">//github.com/rtburns-jpl/conda-pyre</span></div>
 <div class="line">cd conda-pyre</div>
@@ -457,12 +456,6 @@ Step 3: Install and set environment variables</h2>
 </div><!-- fragment --><p class="endli"></p>
 </li>
 </ol>
-<h1><a class="anchor" id="tips"></a>
-Additional installation tips</h1>
-<p>During the installation process, users may need to implement additional steps depending on their operating system, prerequisites, development environment, etc.</p>
-<h2><a class="anchor" id="tips_cuda"></a>
-1. Set TMP_DIR for compilation of CUDA extensions</h2>
-<p>During compilation of CUDA extensions with nvcc and cmake, temporary files are placed in <code>/tmp</code> or the directory pointed to by the environment variable <code>TMP_DIR</code>. Therefore, if users wish to place temporary files in a custom directory, they must set <code>TMP_DIR</code>. </p>
 </div></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
