@@ -208,16 +208,7 @@ Installing Anaconda and Python packages</h1>
 <ol>
 <li>
 <p class="startli">We will list all the required packages in a text file called "requirements.txt" located under /home/tools/python. The contents of the requirements.txt file is shown below:</p>
-<pre class="fragment">cmake
-cython
-gdal
-git
-h5py
-libgdal
-pytest
-numpy
-fftw
-</pre><p class="endli"></p>
+<div class="fragment"></div><!-- fragment --><p class="endli"></p>
 </li>
 <li>
 <p class="startli">We can then install Anaconda and these requirements as shown below: </p>
@@ -327,7 +318,13 @@ Option 2: Install pyre binaries (warning: currently not available)</h2>
 </div><!-- fragment --><p class="endli"></p>
 </li>
 </ol>
-<h1><a class="anchor" id="isce3linux"></a>
+<p>/subsection pyreconda Option 3: Install pyre via conda package</p>
+<div class="fragment"><div class="line">conda install conda-build</div>
+<div class="line">git clone https:<span class="comment">//github.com/rtburns-jpl/conda-pyre</span></div>
+<div class="line">cd conda-pyre</div>
+<div class="line">conda build .</div>
+<div class="line">conda install --use-local pyre</div>
+</div><!-- fragment --><h1><a class="anchor" id="isce3linux"></a>
 Install ISCE from source</h1>
 <p>In this section we will walk through the directory setup and build system instructions for installing ISCE. ISCE can be built with 2 different build systems - <a href="https://github.com/aivazis/config">mm</a> and <a href="https://cmake.org/">cmake</a>. In this set of instructions, we focus on cmake as it is already available via standard package managers.</p>
 <h2><a class="anchor" id="isce3targit"></a>
@@ -447,6 +444,7 @@ Step 3: Install and set environment variables</h2>
 <div class="line"><span class="preprocessor"></span>export CUDACXX=/usr/local/cuda/bin/nvcc</div>
 <div class="line"></div>
 <div class="line"><span class="preprocessor"># pyre</span></div>
+<div class="line"><span class="preprocessor"></span><span class="preprocessor"># (not needed if pyre was installed via conda package)</span></div>
 <div class="line"><span class="preprocessor"></span>export PYREDIR=${HOME}/tools/pyre</div>
 <div class="line">export PATH=$PYREDIR/bin:$PATH</div>
 <div class="line">export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH</div>
