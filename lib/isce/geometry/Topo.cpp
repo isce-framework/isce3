@@ -4,6 +4,8 @@
 // Author: Bryan V. Riel, Joshua Cohen
 // Copyright 2017-2018
 
+#include "Topo.h"
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -22,7 +24,6 @@
 
 // isce::geometry
 #include "DEMInterpolator.h"
-#include "Topo.h"
 #include "TopoLayers.h"
 
 // pull in some isce::core namespaces

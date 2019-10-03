@@ -6,9 +6,10 @@
 
 #pragma once
 
+#include "forward.h"
+
 #include "Constants.h"
 #include "Ellipsoid.h"
-#include "forward.h"
 #include "Metadata.h"
 #include "Orbit.h"
 #include "Vector.h"
@@ -108,4 +109,3 @@ private:
 };
 
 }}
-

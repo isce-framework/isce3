@@ -4,6 +4,8 @@
 // Author: Bryan V. Riel, Joshua Cohen
 // Copyright 2017-2018
 
+#include "Geo2rdr.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -14,7 +16,6 @@
 
 #include <isce/core/Constants.h>
 
-#include "Geo2rdr.h"
 #include "geometry.h"
 
 // pull in some isce::core namespaces

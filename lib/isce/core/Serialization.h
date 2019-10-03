@@ -68,8 +68,7 @@ inline void load_archive_reference(std::string metadata, char * objectTag, T & o
 // ------------------------------------------------------------------------
 
 template<class Archive>
-inline void save(Archive & archive, const Ellipsoid & ellps)
-{
+inline void save(Archive & archive, const Ellipsoid & ellps) {
     archive(cereal::make_nvp("a", ellps.a()), cereal::make_nvp("e2", ellps.e2()));
 }
 
@@ -77,8 +76,7 @@ template<class Archive>
 inline void load(Archive & archive, Ellipsoid & ellps)
 {
     double a, e2;
-    archive(cereal::make_nvp("a", a),
-            cereal::make_nvp("e2", e2));
+    archive(cereal::make_nvp("a", a), cereal::make_nvp("e2", e2));
     ellps.a(a);
     ellps.e2(e2);
 }
@@ -104,8 +102,7 @@ inline void loadFromH5(isce::io::IGroup & group, Ellipsoid & ellps)
 // ------------------------------------------------------------------------
 
 template <class Archive>
-inline void save(Archive & archive, const Orbit & orbit)
-{
+inline void save(Archive & archive, const Orbit & orbit) {
     archive(cereal::make_nvp("StateVectors", orbit.stateVectors));
 }
 
@@ -179,8 +176,7 @@ inline void saveToH5(isce::io::IGroup & group, const Orbit & orbit)
 // ----------------------------------------------------------------------
 
 template <class Archive>
-inline void save(Archive & archive, const isce::orbit_wip::Orbit & orbit)
-{
+inline void save(Archive & archive, const isce::orbit_wip::Orbit & orbit) {
     archive(cereal::make_nvp("StateVectors", orbit.to_statevectors()));
 }
 
@@ -605,4 +601,3 @@ inline void load(Archive & archive, StateVector & sv)
 
 }
 }
-

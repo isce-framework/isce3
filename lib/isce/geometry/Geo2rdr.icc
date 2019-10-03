@@ -103,4 +103,3 @@ orbitMethod(isce::core::orbitInterpMethod method)
     // Save
     _orbitMethod = method;
 }
-

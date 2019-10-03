@@ -101,4 +101,3 @@ template<> struct double_promote<std::complex<float>>  { using type = std::compl
 template<> struct double_promote<std::complex<double>> { using type = std::complex<double>; };
 
 }}
-

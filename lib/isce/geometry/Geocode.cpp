@@ -8,6 +8,7 @@
 
 #include <isce/core/Basis.h>
 #include <isce/core/Projections.h>
+
 #include "DEMInterpolator.h"
 
 using isce::core::Vec3;
@@ -357,7 +358,6 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
 
     if (rangeLastPixel > (rgWidth - 1))
         rangeLastPixel = rgWidth - 1;
-
 }
 
 template<class T>
@@ -410,4 +410,3 @@ template class isce::geometry::Geocode<float>;
 template class isce::geometry::Geocode<double>;
 template class isce::geometry::Geocode<std::complex<float>>;
 template class isce::geometry::Geocode<std::complex<double>>;
-

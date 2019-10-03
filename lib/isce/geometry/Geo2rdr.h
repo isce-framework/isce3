@@ -200,4 +200,3 @@ private:
 #define ISCE_GEOMETRY_GEO2RDR_ICC
 #include "Geo2rdr.icc"
 #undef ISCE_GEOMETRY_GEO2RDR_ICC
-

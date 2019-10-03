@@ -4,9 +4,10 @@
 // Copyright 2017
 //
 
+#include "Baseline.h"
+
 #include <cmath>
 
-#include "Baseline.h"
 #include "Constants.h"
 #include "Peg.h"
 #include "Pegtrans.h"
@@ -97,4 +98,3 @@ void Baseline::calculateLookVector(double t)
 }
 
 }}
-

@@ -361,4 +361,3 @@ private:
 #define ISCE_GEOMETRY_TOPO_ICC
 #include "Topo.icc"
 #undef ISCE_GEOMETRY_TOPO_ICC
-

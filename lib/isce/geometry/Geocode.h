@@ -164,4 +164,3 @@ private:
 #define ISCE_GEOMETRY_GEOCODE_ICC
 #include "Geocode.icc"
 #undef ISCE_GEOMETRY_GEOCODE_ICC
-
