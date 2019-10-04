@@ -12,7 +12,7 @@ var searchData=
   ['nextpoweroftwo',['nextPowerOfTwo',['../classisce_1_1signal_1_1Signal.html#a46a99f0d46794440b29a5c7e558f04f2',1,'isce::signal::Signal']]],
   ['nfft',['NFFT',['../classisce_1_1signal_1_1NFFT.html#a07855cbe31267ab152f5b974e67b7b9e',1,'isce::signal::NFFT']]],
   ['nfft',['NFFT',['../classisce_1_1signal_1_1NFFT.html',1,'isce::signal']]],
-  ['nfftkernel',['NFFTKernel',['../classisce_1_1core_1_1NFFTKernel.html#ae517f12282df0e3d188837d89ceca098',1,'isce::core::NFFTKernel']]],
+  ['nfftkernel',['NFFTKernel',['../classisce_1_1core_1_1NFFTKernel.html#a709837b2783ade0ad819e6015f39b37e',1,'isce::core::NFFTKernel']]],
   ['nfftkernel',['NFFTKernel',['../classisce_1_1core_1_1NFFTKernel.html',1,'isce::core']]],
   ['nfftkernel_3c_20t_20_3e',['NFFTKernel&lt; T &gt;',['../classisce_1_1core_1_1NFFTKernel.html',1,'isce::core']]],
   ['node',['Node',['../structNode.html',1,'']]],

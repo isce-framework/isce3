@@ -113,9 +113,9 @@ Inheritance diagram for isce::core::NFFTKernel&lt; class &gt;:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ae517f12282df0e3d188837d89ceca098"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1NFFTKernel.html#ae517f12282df0e3d188837d89ceca098">NFFTKernel</a> (int m, int n, int fft_size)</td></tr>
-<tr class="memdesc:ae517f12282df0e3d188837d89ceca098"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor of NFFT kernel.  <a href="#ae517f12282df0e3d188837d89ceca098">More...</a><br/></td></tr>
-<tr class="separator:ae517f12282df0e3d188837d89ceca098"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a709837b2783ade0ad819e6015f39b37e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1NFFTKernel.html#a709837b2783ade0ad819e6015f39b37e">NFFTKernel</a> (size_t m, size_t n, size_t fft_size)</td></tr>
+<tr class="memdesc:a709837b2783ade0ad819e6015f39b37e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor of NFFT kernel.  <a href="#a709837b2783ade0ad819e6015f39b37e">More...</a><br/></td></tr>
+<tr class="separator:a709837b2783ade0ad819e6015f39b37e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af67a059e24e94c68ed3fb08310973208"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af67a059e24e94c68ed3fb08310973208"></a>
 T&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1NFFTKernel.html#af67a059e24e94c68ed3fb08310973208">operator()</a> (double x) const override</td></tr>
 <tr class="memdesc:af67a059e24e94c68ed3fb08310973208"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate kernel at given location in [-halfwidth, halfwidth]. <br/></td></tr>
@@ -143,7 +143,7 @@ class isce::core::NFFTKernel&lt; class &gt;</h3>
 <p>NFFT time-domain kernel. </p>
 <p>This is called <img class="formulaInl" alt="$ \phi(x) $" src="form_3.png"/> in the NFFT papers <a class="el" href="citelist.html#CITEREF_keiner2009">[3]</a> , specifically the Kaiser-Bessel window function. The domain is scaled so that usage is the same as other ISCE kernels, e.g., for x in [0,n) instead of [-0.5,0.5). </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="ae517f12282df0e3d188837d89ceca098"></a>
+<a class="anchor" id="a709837b2783ade0ad819e6015f39b37e"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -152,19 +152,19 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="classisce_1_1core_1_1NFFTKernel.html">isce::core::NFFTKernel</a>&lt; T &gt;::<a class="el" href="classisce_1_1core_1_1NFFTKernel.html">NFFTKernel</a> </td>
           <td>(</td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>m</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>n</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
+          <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>fft_size</em>&#160;</td>
         </tr>
         <tr>
