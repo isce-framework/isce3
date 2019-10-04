@@ -8,21 +8,16 @@
 #error "Geo2rdr.icc is an implementation detail of class Geo2rdr"
 #endif
 
-/** @param[in] product Input Product
-  * @param[in] frequency Frequency designation
-  * @param[in] nativeDoppler Flag for using native Doppler frequencies instead of zero-Doppler
-  * @param[in] numberAzimuthLooks Number of azimuth looks of input product
-  * @param[in] numberRangeLooks Number of range looks of input product
-  *
-  * Primary constructor of Geo2rdr object. */
+inline
 isce::geometry::Geo2rdr::
 Geo2rdr(const isce::product::Product & product,
         char frequency,
         bool nativeDoppler,
         size_t numberAzimuthLooks,
-        size_t numberRangeLooks) :
-        _radarGrid(product, frequency, numberAzimuthLooks, numberRangeLooks) {
-
+        size_t numberRangeLooks)
+:
+    _radarGrid(product, frequency, numberAzimuthLooks, numberRangeLooks)
+{
     // Copy orbit and doppler
     _orbit = product.metadata().orbit();
     if (nativeDoppler) {
@@ -32,57 +27,43 @@ Geo2rdr(const isce::product::Product & product,
     // Make an ellipsoid manually
     _ellipsoid = isce::core::Ellipsoid(isce::core::EarthSemiMajorAxis,
                                        isce::core::EarthEccentricitySquared);
-    
 }
 
-/** @param[in] ellipsoid Ellipsoid object
-  * @param[in] orbit Orbit object
-  * @param[in] doppler LUT1d doppler model
-  * @param[in] meta Metadata object
-  * @param[in] numberAzimuthLooks Number of azimuth looks of input product
-  * @param[in] numberRangeLooks Number of range looks of input product
-  *
-  * Alternative constructor from ellipsoid, orbit, doppler, and metadata. */
+inline
 isce::geometry::Geo2rdr::
-Geo2rdr(const isce::core::Ellipsoid & ellipsoid, const isce::core::Orbit & orbit,
-        const isce::core::LUT2d<double> & doppler, const isce::core::Metadata & meta,
-        size_t numberAzimuthLooks, size_t numberRangeLooks) :
-        _ellipsoid(ellipsoid), _orbit(orbit), _doppler(doppler),
-        _radarGrid(meta, orbit.refEpoch, numberAzimuthLooks, numberRangeLooks) {}
+Geo2rdr(const isce::core::Ellipsoid & ellipsoid,
+        const isce::core::Orbit & orbit,
+        const isce::core::LUT2d<double> & doppler,
+        const isce::core::Metadata & meta,
+        size_t numberAzimuthLooks,
+        size_t numberRangeLooks)
+:
+    _ellipsoid(ellipsoid),
+    _orbit(orbit),
+    _doppler(doppler),
+    _radarGrid(meta, orbit.refEpoch, numberAzimuthLooks, numberRangeLooks)
+{}
 
-/** @param[in] radarGrid RadarGridParameters object
-  * @param[in] orbit     Orbit object 
-  * @param[in] ellipsoid Ellipsoid object
-  * @param[in] doppler   LUT2d doppler model
-  *
-  * Alternative constructor from ellipsoid orbit and radarGrid.*/
+inline
 isce::geometry::Geo2rdr::
-  Geo2rdr(const isce::product::RadarGridParameters & radarGrid,
-          const isce::core::Orbit & orbit,
-          const isce::core::Ellipsoid & ellipsoid,
-          const isce::core::LUT2d<double> & doppler) :
-          _ellipsoid(ellipsoid), _orbit(orbit),
-          _doppler(doppler), _radarGrid(radarGrid) {}
-
-
-/**@param[in] t Azimuth time convergence threshold in seconds*/
-void isce::geometry::Geo2rdr::
-threshold(double t) {
-    _threshold = t;
-}
-
-/** @param[in] n Max number of Newton-Raphson iterations*/
-void isce::geometry::Geo2rdr::
-numiter(int n) {
-    _numiter = n;
-}
+Geo2rdr(const isce::product::RadarGridParameters & radarGrid,
+        const isce::core::Orbit & orbit,
+        const isce::core::Ellipsoid & ellipsoid,
+        const isce::core::LUT2d<double> & doppler)
+:
+    _ellipsoid(ellipsoid),
+    _orbit(orbit),
+    _doppler(doppler),
+    _radarGrid(radarGrid)
+{}
 
 /** @param[in] method orbit interpolation method to use
  *
  * Set the orbit interpolation method while checking its validity*/
+inline
 void isce::geometry::Geo2rdr::
-orbitMethod(isce::core::orbitInterpMethod method) {
-
+orbitMethod(isce::core::orbitInterpMethod method)
+{
     // Check validity
     if (method == isce::core::HERMITE_METHOD) {
         if (_orbit.nVectors < 4) {
@@ -122,4 +103,3 @@ orbitMethod(isce::core::orbitInterpMethod method) {
     // Save
     _orbitMethod = method;
 }
-

@@ -8,6 +8,7 @@
 
 #include <isce/core/Basis.h>
 #include <isce/core/Projections.h>
+
 #include "DEMInterpolator.h"
 
 using isce::core::Vec3;
@@ -16,16 +17,15 @@ template<class T>
 void isce::geometry::Geocode<T>::
 geocode(isce::io::Raster & inputRaster,
         isce::io::Raster & outputRaster,
-        isce::io::Raster & demRaster) 
+        isce::io::Raster & demRaster)
 {
-
     // number of bands in the input raster
     size_t nbands = inputRaster.numBands();
 
     // create projection based on _epsg code
     isce::core::ProjectionBase * proj = isce::core::createProj(_epsgOut);
 
-    // instantiate the DEMInterpolator 
+    // instantiate the DEMInterpolator
     isce::geometry::DEMInterpolator demInterp;
 
     // Compute number of blocks in the output geocoded grid
@@ -55,14 +55,14 @@ geocode(isce::io::Raster & inputRaster,
 
         // load a block of DEM for the current geocoded grid
         _loadDEM(demRaster, demInterp, proj,
-                lineStart, geoBlockLength, _geoGridWidth, 
+                lineStart, geoBlockLength, _geoGridWidth,
                 _demBlockMargin);
 
         //Given the current block on geocoded grid,
         //compute the bounding box of a block of data in the radar image.
         //This block of data will be used to interpolate the
         //values to the geocoded block
-        _computeRangeAzimuthBoundingBox(lineStart, 
+        _computeRangeAzimuthBoundingBox(lineStart,
                         geoBlockLength, _geoGridWidth,
                         _radarBlockMargin, demInterp, proj,
                         azimuthFirstLine, azimuthLastLine,
@@ -72,7 +72,7 @@ geocode(isce::io::Raster & inputRaster,
         size_t rdrBlockLength = azimuthLastLine - azimuthFirstLine + 1;
         size_t rdrBlockWidth = rangeLastPixel - rangeFirstPixel + 1;
 
-        // X and Y indices (in the radar coordinates) for the 
+        // X and Y indices (in the radar coordinates) for the
         // geocoded pixels (after geo2rdr computation)
         std::valarray<double> radarX(blockSize);
     	std::valarray<double> radarY(blockSize);
@@ -81,20 +81,20 @@ geocode(isce::io::Raster & inputRaster,
         for (size_t blockLine = 0; blockLine < geoBlockLength; ++blockLine) {
             // Global line index
             const size_t line = lineStart + blockLine;
-           
+
             // y coordinate in the out put grid
             double y = _geoGridStartY + _geoGridSpacingY*line;
 
             // Loop over geocoded grid pixels
             #pragma omp parallel for
             for (size_t pixel = 0; pixel < _geoGridWidth; ++pixel) {
-                
+
                 // x in the output geocoded Grid
                 double x = _geoGridStartX + _geoGridSpacingX*pixel;
 
                 // Consistency check
-                
-                // compute the azimuth time and slant range for the 
+
+                // compute the azimuth time and slant range for the
                 // x,y coordinates in the output grid
                 double aztime, srange;
                 _geo2rdr(x, y, aztime, srange, demInterp, proj);
@@ -103,30 +103,30 @@ geocode(isce::io::Raster & inputRaster,
                 double rdrX, rdrY;
                 rdrY = (aztime - _radarGrid.sensingStart()) *
                        (_radarGrid.prf() / _radarGrid.numberAzimuthLooks());
-		
-                rdrX = (srange - _radarGrid.startingRange()) /
-                       (_radarGrid.numberRangeLooks() * _radarGrid.rangePixelSpacing());	
 
-                // adjust the row and column indicies for the current block, 
+                rdrX = (srange - _radarGrid.startingRange()) /
+                       (_radarGrid.numberRangeLooks() * _radarGrid.rangePixelSpacing());
+
+                // adjust the row and column indicies for the current block,
                 // i.e., moving the origin to the top-left of this radar block.
                 rdrY -= azimuthFirstLine;
                 rdrX -= rangeFirstPixel;
-                
-                //store the adjusted X and Y indices 
+
+                //store the adjusted X and Y indices
                 radarX[blockLine*_geoGridWidth + pixel] = rdrX;
                 radarY[blockLine*_geoGridWidth + pixel] = rdrY;
 
-            } // end loop over pixels of output grid 
+            } // end loop over pixels of output grid
         } // end loops over lines of output grid
 
         // define the matrix based on the rasterbands data type
-        isce::core::Matrix<T> rdrDataBlock(rdrBlockLength, rdrBlockWidth);        
+        isce::core::Matrix<T> rdrDataBlock(rdrBlockLength, rdrBlockWidth);
         isce::core::Matrix<T> geoDataBlock(geoBlockLength, _geoGridWidth);
 
         // fill both matrices with zero
         rdrDataBlock.zeros();
         geoDataBlock.zeros();
-         
+
         //for each band in the input:
         for (size_t band = 0; band < nbands; ++band){
 
@@ -139,12 +139,12 @@ geocode(isce::io::Raster & inputRaster,
 
             // interpolate the data in radar grid to the geocoded grid
             std::cout << "interpolate " << std::endl;
-            _interpolate(rdrDataBlock, geoDataBlock, radarX, radarY, 
+            _interpolate(rdrDataBlock, geoDataBlock, radarX, radarY,
                                 rdrBlockWidth, rdrBlockLength);
 
             // set output
             std::cout << "set output " << std::endl;
-            outputRaster.setBlock(geoDataBlock.data(), 0, lineStart, 
+            outputRaster.setBlock(geoDataBlock.data(), 0, lineStart,
                                 _geoGridWidth, geoBlockLength, band+1);
         }
         // set output block of data
@@ -156,19 +156,18 @@ geocode(isce::io::Raster & inputRaster,
 
 template<class T>
 void isce::geometry::Geocode<T>::
-_interpolate(isce::core::Matrix<T>& rdrDataBlock, 
+_interpolate(isce::core::Matrix<T>& rdrDataBlock,
             isce::core::Matrix<T>& geoDataBlock,
-            std::valarray<double>& radarX, std::valarray<double>& radarY, 
+            std::valarray<double>& radarX, std::valarray<double>& radarY,
             int radarBlockWidth, int radarBlockLength)
 {
-
     size_t length = geoDataBlock.length();
     size_t width = geoDataBlock.width();
     double extraMargin = 4.0;
 
     #pragma omp parallel for
     for (size_t kk = 0; kk < length*width; ++kk) {
-        
+
         size_t i = kk / width;
         size_t j = kk % width;
 
@@ -181,7 +180,6 @@ _interpolate(isce::core::Matrix<T>& rdrDataBlock,
                                                 radarY[i*width + j], rdrDataBlock);
 
         }
-
     }
 }
 
@@ -189,14 +187,13 @@ template<class T>
 void isce::geometry::Geocode<T>::
 _loadDEM(isce::io::Raster demRaster,
         isce::geometry::DEMInterpolator & demInterp,
-        isce::core::ProjectionBase * proj, 
-        int lineStart, int blockLength, 
+        isce::core::ProjectionBase * proj,
+        int lineStart, int blockLength,
         int blockWidth, double demMargin)
 {
-
     //Create projection for DEM
     int epsgcode = demRaster.getEPSG();
-    
+
     //Initialize bounds
     double minX = -1.0e64;
     double maxX = 1.0e64;
@@ -206,8 +203,8 @@ _loadDEM(isce::io::Raster demRaster,
     //Projection systems are different
     if (epsgcode != proj->code())
     {
-        
-        //Create transformer to match the DEM 
+
+        //Create transformer to match the DEM
         isce::core::ProjectionBase *demproj = isce::core::createProj(epsgcode);
 
         //Skip factors
@@ -217,7 +214,7 @@ _loadDEM(isce::io::Raster demRaster,
 
         //Construct vectors of line/pixel indices to traverse perimeter
         std::vector<int> lineInd, pixInd;
-   
+
         // Top edge
         for (int j = 0; j < blockWidth; j += rskip) {
             lineInd.push_back(0);
@@ -299,7 +296,7 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
     std::valarray<double> X(4);
     std::valarray<double> Y(4);
 
-    // to store the azimuth time and slant range corresponding to 
+    // to store the azimuth time and slant range corresponding to
     // the corner of the block on ground
     std::valarray<double> azimuthTime(4);
     std::valarray<double> slantRange(4);
@@ -320,17 +317,17 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
     Y[1] = _geoGridStartY + _geoGridSpacingY*lineStart;
     X[1] = _geoGridStartX + _geoGridSpacingX*(blockWidth - 1);
 
-    //bottom left corener on ground 
+    //bottom left corener on ground
     Y[2] = _geoGridStartY + _geoGridSpacingY*(lineStart + blockLength - 1);
     X[2] = _geoGridStartX;
-    
+
     //bottom right corener on ground
     Y[3] = _geoGridStartY + _geoGridSpacingY*(lineStart + blockLength - 1);
     X[3] = _geoGridStartX + _geoGridSpacingX*(blockWidth - 1);
 
     // compute geo2rdr for the 4 corners
     for (size_t i = 0; i<4; ++i){
-        _geo2rdr(X[i], Y[i], azimuthTime[i], slantRange[i], demInterp, proj); 
+        _geo2rdr(X[i], Y[i], azimuthTime[i], slantRange[i], demInterp, proj);
     }
 
     // the first azimuth line
@@ -339,7 +336,7 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
     // the last azimuth line
     azimuthLastLine = (azimuthTime.max() - _radarGrid.sensingStart()) / dtaz;
 
-    // the first and last range pixels 
+    // the first and last range pixels
     rangeFirstPixel = (slantRange.min() - _radarGrid.startingRange()) / dtrg;
     rangeLastPixel = (slantRange.max() - _radarGrid.startingRange()) / dtrg;
 
@@ -361,12 +358,11 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
 
     if (rangeLastPixel > (rgWidth - 1))
         rangeLastPixel = rgWidth - 1;
-
 }
 
 template<class T>
 void isce::geometry::Geocode<T>::
-_geo2rdr(double x, double y, 
+_geo2rdr(double x, double y,
         double & azimuthTime, double & slantRange,
         isce::geometry::DEMInterpolator & demInterp,
         isce::core::ProjectionBase * proj)
@@ -408,11 +404,9 @@ _geo2rdr(double x, double y,
         azimuthTime = 0.0;
         slantRange = -1.0e-16;
     }
-
 }
 
 template class isce::geometry::Geocode<float>;
 template class isce::geometry::Geocode<double>;
 template class isce::geometry::Geocode<std::complex<float>>;
 template class isce::geometry::Geocode<std::complex<double>>;
-
