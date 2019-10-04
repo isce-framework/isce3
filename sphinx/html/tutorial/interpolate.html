@@ -1,30 +1,20 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>2D Interpolation Tutorial &#8212; ISCE  documentation</title>
     <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -44,7 +34,7 @@
 <h1>2D Interpolation Tutorial<a class="headerlink" href="#d-interpolation-tutorial" title="Permalink to this headline">¶</a></h1>
 <p>2D interpolation is a fundamental operation for image resampling, oversampling, terrain extraction, etc. ISCE currently implements several basic types of interpolation methods: bilinear, bicubic, spline, and sinc interpolation. At the Python level, users will often work with NumPy arrays and are encouraged to use many of the available interpolation methods provided by NumPy and SciPy. Nevertheless, we provide Python interfaces to the ISCE interpolation routines for convenience and consistency.</p>
 <p>We first generate a synthetic 2D low-resolution image which we wish to interpolate (this code follows the SciPy interp2d <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp2d.html">tutorial</a>):</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
 <span class="c1"># Create test data</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">5.01</span><span class="p">,</span> <span class="mf">5.01</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
@@ -59,7 +49,7 @@
 </pre></div>
 </div>
 <p>Next, we will create interpolator objects for three different types of interpolators:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">isceextension</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">isceextension</span>
 
 <span class="c1"># Create interpolators</span>
 <span class="n">bilinear</span> <span class="o">=</span> <span class="n">isceextension</span><span class="o">.</span><span class="n">pyInterpolator</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;bilinear&#39;</span><span class="p">)</span>
@@ -68,13 +58,13 @@
 </pre></div>
 </div>
 <p>Next, generate arrays for the indices on which to interpolate at. Note, these indices are currently in units of image pixels, i.e. starting at (0,0) for the first pixel in the image and incrementing by one in both dimensions.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Create coordinates we want to interpolate at</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create coordinates we want to interpolate at</span>
 <span class="n">xnew</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">500</span><span class="p">)</span>
 <span class="n">ynew</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">xnew</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">ny</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Interpolation simply involves passing these values to the interpolator objects.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Interpolate</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Interpolate</span>
 <span class="n">z_bilinear</span> <span class="o">=</span> <span class="n">bilinear</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">xnew</span><span class="p">,</span> <span class="n">ynew</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
 <span class="n">z_bicubic</span> <span class="o">=</span> <span class="n">bicubic</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">xnew</span><span class="p">,</span> <span class="n">ynew</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
 <span class="n">z_spline</span> <span class="o">=</span> <span class="n">spline</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">xnew</span><span class="p">,</span> <span class="n">ynew</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
@@ -113,13 +103,13 @@
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -137,7 +127,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
     </div>
   </body>
 </html>
