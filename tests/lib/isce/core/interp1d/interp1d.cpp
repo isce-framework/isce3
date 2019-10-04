@@ -406,8 +406,12 @@ TEST(Kernel, Speed)
     auto time_table = timer.run(table);
     printf("table ran in %g seconds\n", time_table);
 
-    EXPECT_GT(time_exact, time_table);
-    EXPECT_GT(time_cheby, time_table);
+    // XXX Concerned that performance isn't portable, and our unit tests should
+    // XXX only verify correctness.  Disabled until we have a separate
+    // XXX performance test suite.
+    // EXPECT_GT(time_exact, time_table);
+    // EXPECT_GT(time_cheby, time_table);
+    EXPECT_TRUE(true);
 }
 
 int main(int argc, char **argv) {
