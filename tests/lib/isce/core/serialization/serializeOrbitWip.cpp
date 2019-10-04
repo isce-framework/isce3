@@ -71,7 +71,7 @@ TEST(OrbitTest, CheckWrite) {
     // Write orbit data
     {
     // Create a dummy hdf5 file
-    std::string dummyfile("dummy.h5");
+    std::string dummyfile("dummy_orbitwip.h5");
     isce::io::IH5File dummy(dummyfile, 'x');
 
     // Write orbit to dataset
@@ -81,7 +81,7 @@ TEST(OrbitTest, CheckWrite) {
 
     // Load a new orbit from created file
     isce::orbit_wip::Orbit newOrb;
-    std::string h5file("dummy.h5");
+    std::string h5file("dummy_orbitwip.h5");
     isce::io::IH5File file(h5file);
     isce::io::IGroup group = file.openGroup("orbit");
     isce::core::loadFromH5(group, newOrb);
