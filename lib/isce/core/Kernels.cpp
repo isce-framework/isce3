@@ -106,9 +106,12 @@ template double isce::core::sinc(double);
 // constructor
 template <typename T>
 isce::core::NFFTKernel<T>::
-NFFTKernel(size_t m, size_t n, size_t fft_size)
+NFFTKernel(int m, int n, int fft_size)
     : _m(m), _n(n), _fft_size(fft_size)
 {
+    if ((m<1) || (n<1) || (fft_size<1)) {
+        throw LengthError(ISCE_SRCINFO(), "NFFT parameters must be positive.");
+    }
     _b = M_PI * (2.0 - 1.0*n/fft_size);
     _scale = 1.0 / (M_PI * isce::math::bessel_i0(_m*_b));
     this->_halfwidth = fabs((2*m+1) / 2.0);
@@ -146,7 +149,7 @@ template class isce::core::NFFTKernel<double>;
 // Constructor
 template <typename T>
 isce::core::TabulatedKernel<T>::
-TabulatedKernel(const isce::core::Kernel<T> &kernel, size_t n)
+TabulatedKernel(const isce::core::Kernel<T> &kernel, int n)
 {
     this->_halfwidth = kernel.width() / 2.0;
     // Need at least two points for linear interpolation.
@@ -160,7 +163,7 @@ TabulatedKernel(const isce::core::Kernel<T> &kernel, size_t n)
     // Assume Kernel is even and fill table with f(x) for 0 <= x <= halfwidth.
     const double dx = this->_halfwidth / (n - 1.0);
     _1_dx = 1.0 / dx;
-    for (size_t i=0; i<n; ++i) {
+    for (int i=0; i<n; ++i) {
         double x = i * dx;
         _table[i] = kernel(x);
     }
@@ -180,7 +183,7 @@ operator()(double x) const
     // Normalize to table sample index.
     auto axn = ax * _1_dx;
     // Determine left side of interval.
-    size_t i = std::floor(axn);
+    int i = std::floor(axn);
     // Make sure floating point multiply doesn't cause off-by-one.
     i = std::min(i, _imax);
     // Linear interpolation.
@@ -192,15 +195,18 @@ template class isce::core::TabulatedKernel<double>;
 
 template <typename T>
 isce::core::ChebyKernel<T>::
-ChebyKernel(const isce::core::Kernel<T> &kernel, size_t n)
+ChebyKernel(const isce::core::Kernel<T> &kernel, int n)
 {
+    if (n < 1) {
+        throw LengthError(ISCE_SRCINFO(), "Need at least one coefficient.");
+    }
     this->_halfwidth = kernel.width() / 2.0;
     // Fit a kernel with DCT of fn at Chebyshev zeros.
     // Assume even function and fit on interval [0,width/2] to avoid a bunch
     // of zero coefficients.
     std::valarray<T> q(n), fx(n);
     _scale = 4.0 / kernel.width();
-    for (long i=0; i<n; ++i) {
+    for (int i=0; i<n; ++i) {
         q[i] = M_PI * (2.0*i + 1.0) / (2.0*n);
         // shift & scale [-1,1] to [0,width/2].
         T x = (std::cos(q[i]) + 1.0) / _scale;
@@ -210,9 +216,9 @@ ChebyKernel(const isce::core::Kernel<T> &kernel, size_t n)
     // isce::core::signal.  Typically we're only fitting a few coefficients
     // anyway so just implement O(n^2) algorithm.
     _coeffs.resize(n);
-    for (long i=0; i<n; ++i) {
+    for (int i=0; i<n; ++i) {
         _coeffs[i] = 0.0;
-        for (long j=0; j<n; ++j) {
+        for (int j=0; j<n; ++j) {
             T w = std::cos(i * q[j]);
             _coeffs[i] += w * fx[j];
         }

@@ -39,8 +39,8 @@ _correlation(std::vector<std::complex<double>> &x,
              std::vector<std::complex<double>> &y)
 {
     double xy=0.0, xx=0.0, yy=0.0;
-    size_t n = std::min(x.size(), y.size());
-    for (size_t i=0; i<n; ++i) {
+    int n = std::min(x.size(), y.size());
+    for (int i=0; i<n; ++i) {
         auto xi = x[i];
         auto yi = y[i];
         xy += std::abs(xi * std::conj(yi));
@@ -75,7 +75,7 @@ _phase_stdev(std::vector<std::complex<double>> &x,
     auto n = std::min(x.size(), y.size());
     std::vector<double> phase(n);
     // assume we don't have to worry about wrapping
-    for (size_t i=0; i<n; ++i) {
+    for (int i=0; i<n; ++i) {
         phase[i] = std::arg(x[i] * std::conj(y[i]));
     }
     return _stdev(phase);
@@ -94,7 +94,7 @@ power_bias_stdev(double &bias, double &stdev, double minval,
 {
     std::vector<double> ratio(0);
     auto n = std::min(a.size(), b.size());
-    for (size_t i=0; i<n; ++i) {
+    for (int i=0; i<n; ++i) {
         auto aa = std::abs(a[i]);
         auto ab = std::abs(b[i]);
         if ((aa >= minval) && (ab >= minval)) {
@@ -103,7 +103,7 @@ power_bias_stdev(double &bias, double &stdev, double minval,
     }
     n = ratio.size();
     std::vector<double> dbr(n);
-    for (size_t i=0; i<n; ++i) {
+    for (int i=0; i<n; ++i) {
         dbr[i] = 2 * dB(ratio[i]);
     }
     bias = 2 * dB(_mean(ratio));
@@ -115,23 +115,23 @@ power_bias_stdev(double &bias, double &stdev, double minval,
  */
 class TestSignal {
 public:
-    TestSignal(size_t n, double bw, int seed);
+    TestSignal(int n, double bw, int seed);
     std::complex<double> eval(double t);
 private:
-    size_t _n;
+    int _n;
     double _bw;
     std::vector<double> _t;
     std::vector<std::complex<double>> _w;
 };
 
-TestSignal::TestSignal(size_t n, double bw, int seed)
+TestSignal::TestSignal(int n, double bw, int seed)
 {
     assert((0.0 <= bw) && (bw < 1.0));
 
     _n = n;
     _bw = bw;
 
-    size_t nt = 4 * _n;
+    int nt = 4 * _n;
     _t.resize(nt);
     _w.resize(nt);
 
@@ -153,7 +153,7 @@ TestSignal::eval(double t)
 {
     std::complex<double> sum(0.0, 0.0);
     auto n = _w.size();
-    for (size_t i=0; i<n; ++i) {
+    for (int i=0; i<n; ++i) {
         sum += _w[i] * sinc<double>(_bw * (t - _t[i]));
     }
     return sum;
@@ -162,14 +162,14 @@ TestSignal::eval(double t)
 struct Interp1dTest : public ::testing::Test
 {
     // Length of input signal.
-    const size_t n = 512;
+    const int n = 512;
     // Randon number generator seed so that results are repeatable.
     const int seed = 1234;
     // signal bandwidth as a fraction of sample rate.
     const double bw = 0.8;
     // Trick to get apples-to-apples comparisons even for different kernel
     // widths.  See assertions for acceptable range of values.
-    const size_t pad = 8;
+    const int pad = 8;
     // Amplitude mask for backscatter.
     const double minval = 1e-6;
 
@@ -197,7 +197,7 @@ struct Interp1dTest : public ::testing::Test
         {
             auto nt = times.size();
             ref.assign(nt, 0.0);
-            for (size_t i=0; i<nt; ++i) {
+            for (int i=0; i<nt; ++i) {
                ref[i] = ts.eval(times[i]);
             }
         }
@@ -208,7 +208,7 @@ struct Interp1dTest : public ::testing::Test
         {
             auto nt = times.size();
             out.assign(nt, 0.0);
-            for (size_t i=0; i<nt; ++i) {
+            for (int i=0; i<nt; ++i) {
                 out[i] = interp1d<double,std::complex<double>>(kernel, signal,
                                                                times[i]);
             }
@@ -217,7 +217,7 @@ struct Interp1dTest : public ::testing::Test
         void
         mask_edges(const std::vector<double> &times) {
             auto nt = times.size();
-            for (size_t i=0; i<nt; ++i) {
+            for (int i=0; i<nt; ++i) {
                 auto t = times[i];
                 if ((t < pad) || (t > n-1-pad)) {
                     out[i] = ref[i] = 0.0;
@@ -262,7 +262,7 @@ struct Interp1dTest : public ::testing::Test
             std::mt19937 rng(2 * seed);
             std::uniform_real_distribution<double> uniform(-0.5, 0.5);
             std::vector<double> times(n);
-            for (size_t i=0; i<n; ++i) {
+            for (int i=0; i<n; ++i) {
                 times[i] = i + uniform(rng);
             }
             return times;
@@ -286,7 +286,7 @@ struct Interp1dTest : public ::testing::Test
         {
             printf("Testing fixed offset=%g\n", off);
             std::vector<double> times(n);
-            for (size_t i=0; i<n; ++i) {
+            for (int i=0; i<n; ++i) {
                 times[i] = i + off;
             }
             check_interp(min_cor, max_phs, max_bias, max_spread, times, kernel);
@@ -348,7 +348,7 @@ TEST_F(Interp1dTest, NFFT) {
     printf("Testing random offsets.\n");
     auto times = gen_rand_times();
     out.assign(times.size(), 0.0);
-    for (size_t i=0; i<times.size(); ++i) {
+    for (int i=0; i<times.size(); ++i) {
         out[i] = itp.interp(times[i]);
     }
     // Compare to reference signal.
@@ -360,8 +360,8 @@ TEST_F(Interp1dTest, NFFT) {
 template<class T>
 class SpeedCheck {
 public:
-    const long n;
-    const long npts;
+    const int n;
+    const int npts;
     std::valarray<T> t;
     std::valarray<std::complex<T>> x, y;
 
@@ -369,7 +369,7 @@ public:
         std::mt19937 rng(2345);
         std::normal_distribution<T> normal(0.0, 1.0);
         std::uniform_real_distribution<T> uniform(0.0, npts-1.0);
-        for (long i=0; i<npts; ++i) {
+        for (int i=0; i<npts; ++i) {
             t[i] = uniform(rng);
             x[i] = std::complex<T>(normal(rng), normal(rng));
         }
@@ -377,8 +377,8 @@ public:
 
     double run(isce::core::Kernel<T> &kernel) {
         std::clock_t start = std::clock();
-        for (long i=0; i<n; ++i) {
-            long j = i % npts;
+        for (int i=0; i<n; ++i) {
+            int j = i % npts;
             y[j] = isce::core::interp1d(kernel, x, t[j], true);
         }
         return (std::clock() - start) / (double) CLOCKS_PER_SEC;
