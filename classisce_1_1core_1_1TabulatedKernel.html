@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>ISCE: isce::core::NFFTKernel&lt; class &gt; Class Template Reference</title>
+<title>ISCE: isce::core::TabulatedKernel&lt; class &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -85,41 +85,41 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="namespaceisce.html">isce</a></li><li class="navelem"><a class="el" href="namespaceisce_1_1core.html">core</a></li><li class="navelem"><a class="el" href="classisce_1_1core_1_1NFFTKernel.html">NFFTKernel</a></li>  </ul>
+<li class="navelem"><a class="el" href="namespaceisce.html">isce</a></li><li class="navelem"><a class="el" href="namespaceisce_1_1core.html">core</a></li><li class="navelem"><a class="el" href="classisce_1_1core_1_1TabulatedKernel.html">TabulatedKernel</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="classisce_1_1core_1_1NFFTKernel-members.html">List of all members</a>  </div>
+<a href="classisce_1_1core_1_1TabulatedKernel-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">isce::core::NFFTKernel&lt; class &gt; Class Template Reference</div>  </div>
+<div class="title">isce::core::TabulatedKernel&lt; class &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>NFFT time-domain kernel.  
- <a href="classisce_1_1core_1_1NFFTKernel.html#details">More...</a></p>
+<p>Tabulated <a class="el" href="classisce_1_1core_1_1Kernel.html" title="Abstract base class for all kernels. ">Kernel</a>.  
+ <a href="classisce_1_1core_1_1TabulatedKernel.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="Kernels_8h_source.html">Kernels.h</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for isce::core::NFFTKernel&lt; class &gt;:</div>
+Inheritance diagram for isce::core::TabulatedKernel&lt; class &gt;:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="classisce_1_1core_1_1NFFTKernel.png" usemap="#isce::core::NFFTKernel&lt; class &gt;_map" alt=""/>
-  <map id="isce::core::NFFTKernel&lt; class &gt;_map" name="isce::core::NFFTKernel&lt; class &gt;_map">
-<area href="classisce_1_1core_1_1Kernel.html" alt="isce::core::Kernel&lt; T &gt;" shape="rect" coords="0,0,195,24"/>
+  <img src="classisce_1_1core_1_1TabulatedKernel.png" usemap="#isce::core::TabulatedKernel&lt; class &gt;_map" alt=""/>
+  <map id="isce::core::TabulatedKernel&lt; class &gt;_map" name="isce::core::TabulatedKernel&lt; class &gt;_map">
+<area href="classisce_1_1core_1_1Kernel.html" alt="isce::core::Kernel&lt; T &gt;" shape="rect" coords="0,0,218,24"/>
 </map>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ae517f12282df0e3d188837d89ceca098"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1NFFTKernel.html#ae517f12282df0e3d188837d89ceca098">NFFTKernel</a> (int m, int n, int fft_size)</td></tr>
-<tr class="memdesc:ae517f12282df0e3d188837d89ceca098"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor of NFFT kernel.  <a href="#ae517f12282df0e3d188837d89ceca098">More...</a><br/></td></tr>
-<tr class="separator:ae517f12282df0e3d188837d89ceca098"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af67a059e24e94c68ed3fb08310973208"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af67a059e24e94c68ed3fb08310973208"></a>
-T&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1NFFTKernel.html#af67a059e24e94c68ed3fb08310973208">operator()</a> (double x) const override</td></tr>
-<tr class="memdesc:af67a059e24e94c68ed3fb08310973208"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate kernel at given location in [-halfwidth, halfwidth]. <br/></td></tr>
-<tr class="separator:af67a059e24e94c68ed3fb08310973208"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7df501d401a9e97d901f4b52fca81ec3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1TabulatedKernel.html#a7df501d401a9e97d901f4b52fca81ec3">TabulatedKernel</a> (const <a class="el" href="classisce_1_1core_1_1Kernel.html">isce::core::Kernel</a>&lt; T &gt; &amp;kernel, int n)</td></tr>
+<tr class="memdesc:a7df501d401a9e97d901f4b52fca81ec3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor of tabulated kernel.  <a href="#a7df501d401a9e97d901f4b52fca81ec3">More...</a><br/></td></tr>
+<tr class="separator:a7df501d401a9e97d901f4b52fca81ec3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaacdeba3e728cf66da29a04c0e622364"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaacdeba3e728cf66da29a04c0e622364"></a>
+T&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1TabulatedKernel.html#aaacdeba3e728cf66da29a04c0e622364">operator()</a> (double x) const override</td></tr>
+<tr class="memdesc:aaacdeba3e728cf66da29a04c0e622364"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluate kernel at given location in [-halfwidth, halfwidth]. <br/></td></tr>
+<tr class="separator:aaacdeba3e728cf66da29a04c0e622364"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classisce_1_1core_1_1Kernel"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classisce_1_1core_1_1Kernel')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classisce_1_1core_1_1Kernel.html">isce::core::Kernel&lt; T &gt;</a></td></tr>
 <tr class="memitem:a0f5f8b10f34cc9fb463f00532665694c inherit pub_methods_classisce_1_1core_1_1Kernel"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0f5f8b10f34cc9fb463f00532665694c"></a>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Kernel.html#a0f5f8b10f34cc9fb463f00532665694c">~Kernel</a> ()</td></tr>
@@ -138,34 +138,27 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>_halfwidth</b></td>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;class&gt;<br/>
-class isce::core::NFFTKernel&lt; class &gt;</h3>
+class isce::core::TabulatedKernel&lt; class &gt;</h3>
 
-<p>NFFT time-domain kernel. </p>
-<p>This is called <img class="formulaInl" alt="$ \phi(x) $" src="form_3.png"/> in the NFFT papers <a class="el" href="citelist.html#CITEREF_keiner2009">[3]</a> , specifically the Kaiser-Bessel window function. The domain is scaled so that usage is the same as other ISCE kernels, e.g., for x in [0,n) instead of [-0.5,0.5). </p>
+<p>Tabulated <a class="el" href="classisce_1_1core_1_1Kernel.html" title="Abstract base class for all kernels. ">Kernel</a>. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="ae517f12282df0e3d188837d89ceca098"></a>
+<a class="anchor" id="a7df501d401a9e97d901f4b52fca81ec3"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
 template&lt;typename T &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classisce_1_1core_1_1NFFTKernel.html">isce::core::NFFTKernel</a>&lt; T &gt;::<a class="el" href="classisce_1_1core_1_1NFFTKernel.html">NFFTKernel</a> </td>
+          <td class="memname"><a class="el" href="classisce_1_1core_1_1TabulatedKernel.html">isce::core::TabulatedKernel</a>&lt; T &gt;::<a class="el" href="classisce_1_1core_1_1TabulatedKernel.html">TabulatedKernel</a> </td>
           <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>m</em>, </td>
+          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1Kernel.html">isce::core::Kernel</a>&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>kernel</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>n</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>fft_size</em>&#160;</td>
+          <td class="paramname"><em>n</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -175,12 +168,11 @@ template&lt;typename T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Constructor of NFFT kernel. </p>
+<p>Constructor of tabulated kernel. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">m</td><td>Half kernel size (width = 2*m+1) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Length of input signal. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">fft_size</td><td>FFT Transform size (&gt; n). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">kernel</td><td><a class="el" href="classisce_1_1core_1_1Kernel.html" title="Abstract base class for all kernels. ">Kernel</a> to sample. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Table size. </td></tr>
   </table>
   </dd>
 </dl>
