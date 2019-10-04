@@ -27,7 +27,7 @@ fi
 if [ "$MEMCHECK" = "1" ]; then
    nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -c "source /opt/docker/bin/entrypoint_source && cd build && ctest --nocompress-output --output-on-failure -T Test || true && cp Testing/\$(head -1 Testing/TAG)/Test.xml . && ctest --no-compress-output --output-on-failure -T MemCheck || true && cp Testing/\$(head -1 Testing/TAG)/DynamicAnalysis.xml ."
 else
-   nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -c "source /opt/docker/bin/entrypoint_source && cd build && ctest --nocompress-output --output-on-failure -T Test || true && cp Testing/\$(head -1 Testing/TAG)/Test.xml ."
+   nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -c "source /opt/docker/bin/entrypoint_source && cd build && ctest -j `nproc` --nocompress-output --output-on-failure -T Test || true && cp Testing/\$(head -1 Testing/TAG)/Test.xml ."
 fi
 
 ###Copy file out of the container
