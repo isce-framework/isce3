@@ -3,6 +3,7 @@ var searchData=
   ['calculatebasisoffset',['calculateBasisOffset',['../classisce_1_1core_1_1Baseline.html#aff4499f6621bf047b91099b07979c994',1,'isce::core::Baseline']]],
   ['calculatelookvector',['calculateLookVector',['../classisce_1_1core_1_1Baseline.html#aca625afa5017f21beec974e7130e1b9f',1,'isce::core::Baseline']]],
   ['chat',['chat',['../classisce_1_1core_1_1Baseline.html#a62b719f905eb48deba4bb86a9d363734',1,'isce::core::Baseline']]],
+  ['chebykernel',['ChebyKernel',['../classisce_1_1core_1_1ChebyKernel.html#a08afd9a12ab262d2d2abc160f3c4c48e',1,'isce::core::ChebyKernel']]],
   ['checkveclendebug',['checkVecLenDebug',['../namespaceisce_1_1core.html#a94fb25766eab8d9a67a8bd7fe5045d3e',1,'isce::core']]],
   ['clamp',['clamp',['../namespaceisce_1_1core.html#a65c88b1efd8564d22e60f47f68417e64',1,'isce::core']]],
   ['code',['code',['../structisce_1_1core_1_1ProjectionBase.html#a662f84782d58a45b9968c301664fea20',1,'isce::core::ProjectionBase']]],
