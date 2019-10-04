@@ -1,20 +1,30 @@
 
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Projections Tutorial &#8212; ISCE  documentation</title>
     <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
-  </head><body>
+  </head>
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -35,13 +45,13 @@
 <p>ISCE’s Projection support is designed using <a class="reference external" href="https://proj4.org">PROJ</a> as a reference. We don’t expose ISCE’s projection library to Python but encourage users to use <a class="reference external" href="https://jswhit.github.io/pyproj/">pyproj</a> or GDAL’s Python bindings itself to transform coordinates at the Python level.</p>
 <p>We will present simple examples using GDAL Python bindings and pyproj to accomplish the same transformations as the ones performed in the C++ tutorial. The tutorial is organized as follows:</p>
 <ol class="arabic simple">
-<li><p><a class="reference internal" href="#projcreate"><span class="std std-ref">Create a Projection object</span></a></p></li>
-<li><p><a class="reference internal" href="#coordinatetransformgdal"><span class="std std-ref">Coordinate transformation using GDAL</span></a></p></li>
-<li><p><a class="reference internal" href="#coordinatetransformpyproj"><span class="std std-ref">Coordinate transformation using pyproj</span></a></p></li>
+<li><a class="reference internal" href="#projcreate"><span class="std std-ref">Create a Projection object</span></a></li>
+<li><a class="reference internal" href="#coordinatetransformgdal"><span class="std std-ref">Coordinate transformation using GDAL</span></a></li>
+<li><a class="reference internal" href="#coordinatetransformpyproj"><span class="std std-ref">Coordinate transformation using pyproj</span></a></li>
 </ol>
 <div class="section" id="create-a-projection-object">
 <span id="projcreate"></span><h2>Create a Projection object<a class="headerlink" href="#create-a-projection-object" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1">#Using GDAL</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1">#Using GDAL</span>
 <span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">osr</span>
 <span class="n">llh</span> <span class="o">=</span> <span class="n">osr</span><span class="o">.</span><span class="n">SpatialReference</span><span class="p">()</span>
 <span class="n">llh</span><span class="o">.</span><span class="n">ImportFromEPSG</span><span class="p">(</span><span class="mi">4326</span><span class="p">)</span>
@@ -61,7 +71,7 @@
 <span id="coordinatetransformgdal"></span><h2>Coordinate transformation using GDAL<a class="headerlink" href="#coordinate-transformation-using-gdal" title="Permalink to this headline">¶</a></h2>
 <p>Note that internally, ISCE uses Lon/Lat/Hae (rad) as common projection system that ties all the different transformers together. At the Python level, we don’t need to expose this to the user. GDAL provides methods that are similar to isce::core::projTransform method.</p>
 <p>Coordinate transformation using GDAL can be accomplished as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">osr</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">osr</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
 <span class="n">llh</span> <span class="o">=</span> <span class="n">osr</span><span class="o">.</span><span class="n">SpatialReference</span><span class="p">()</span> <span class="c1">#Create Lon/Lat</span>
@@ -82,7 +92,7 @@
 <div class="section" id="coordinate-transformation-using-pyproj">
 <span id="coordinatetransformpyproj"></span><h2>Coordinate transformation using pyproj<a class="headerlink" href="#coordinate-transformation-using-pyproj" title="Permalink to this headline">¶</a></h2>
 <p>pyproj exposes forward, inverse and transformation between coordinates. The forward and inverse methods in general only expose the horizontal datum transformations. Since all the supported coordinate systems are defined on the WGS84 Ellipsoid, transformations should not affect the height value. Coordinate transformation using pyproj can be accomplished as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pyproj</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pyproj</span>
 
 <span class="n">spolar</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Proj</span><span class="p">(</span><span class="s2">&quot;+init=EPSG:3031&quot;</span><span class="p">)</span>
 
@@ -107,7 +117,7 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="../index.html">Table of Contents</a></h3>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Map Projections Tutorial</a><ul>
 <li><a class="reference internal" href="#create-a-projection-object">Create a Projection object</a></li>
@@ -125,13 +135,13 @@
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
+  <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
     </form>
-    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -149,7 +159,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
 </html>
