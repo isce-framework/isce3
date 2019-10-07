@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>ISCE: /home/conda/isce/lib/isce/core/Orbit.h Source File</title>
+<title>ISCE: isce/core/Orbit.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -38,12 +38,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
-      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
-      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
-      <li class="current"><a href="files.html"><span>Files</span></a></li>
+      <li><a href="annotated.html"><span>C++&#160;Classes</span></a></li>
       <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
-      <li><a href="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
+      <li><a href="https://github.com/isce-framework/isce3/issues/"><span>Issue&#160;Tracker</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
         <span class="left">
@@ -62,17 +60,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       </li>
     </ul>
   </div>
-  <div id="navrow2" class="tabs2">
-    <ul class="tablist">
-      <li><a href="files.html"><span>File&#160;List</span></a></li>
-    </ul>
-  </div>
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Friends</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -83,7 +76,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_404e96cc334514cbeb4d3a6830fc20a4.html">isce</a></li><li class="navelem"><a class="el" href="dir_b9854a22a90df239c3a61bd682dc9db5.html">lib</a></li><li class="navelem"><a class="el" href="dir_13a15a912f4c112db0f23523c4d5026e.html">isce</a></li><li class="navelem"><a class="el" href="dir_ae524bb2ec5fa4eecceab3316f0148b7.html">core</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_13a15a912f4c112db0f23523c4d5026e.html">isce</a></li><li class="navelem"><a class="el" href="dir_ae524bb2ec5fa4eecceab3316f0148b7.html">core</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -274,8 +267,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;    <span class="keywordflow">while</span> ((vec_idx &lt; nVectors) &amp;&amp; (t &gt; UTCtime[vec_idx])) vec_idx++;</div>
 <div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    UTCtime.insert(UTCtime.begin()+vec_idx, t);</div>
 <div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    epochs.insert(epochs.begin()+vec_idx, refEpoch + t);</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    position.insert(position.begin()+(3*vec_idx), pos.begin(), pos.end());</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;    velocity.insert(velocity.begin()+(3*vec_idx), vel.begin(), vel.end());</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    position.insert(position.begin()+(3*vec_idx), pos.<a class="code" href="classisce_1_1core_1_1Vector.html#ae81851e707cbea83eddb8921ed959879">begin</a>(), pos.<a class="code" href="classisce_1_1core_1_1Vector.html#a51592fa6cab7a4e672db2da8f5a64ddf">end</a>());</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;    velocity.insert(velocity.begin()+(3*vec_idx), vel.<a class="code" href="classisce_1_1core_1_1Vector.html#ae81851e707cbea83eddb8921ed959879">begin</a>(), vel.<a class="code" href="classisce_1_1core_1_1Vector.html#a51592fa6cab7a4e672db2da8f5a64ddf">end</a>());</div>
 <div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;    nVectors++;</div>
 <div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;}</div>
 <div class="ttc" id="classisce_1_1core_1_1Orbit_html_a1f03ba5b201db6e285c7a43297ff8609"><div class="ttname"><a href="classisce_1_1core_1_1Orbit.html#a1f03ba5b201db6e285c7a43297ff8609">isce::core::Orbit::computeAcceleration</a></div><div class="ttdeci">int computeAcceleration(double tintp, cartesian_t &amp;acc) const </div><div class="ttdoc">Compute acceleration numerically at given epoch. </div><div class="ttdef"><b>Definition:</b> Orbit.cpp:350</div></div>
@@ -289,7 +282,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="classisce_1_1core_1_1Orbit_html_a104a4f97edfaef422045ba2d203dcf4d"><div class="ttname"><a href="classisce_1_1core_1_1Orbit.html#a104a4f97edfaef422045ba2d203dcf4d">isce::core::Orbit::nVectors</a></div><div class="ttdeci">int nVectors</div><div class="ttdoc">Number of state vectors. </div><div class="ttdef"><b>Definition:</b> Orbit.h:41</div></div>
 <div class="ttc" id="classisce_1_1core_1_1DateTime_html"><div class="ttname"><a href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a></div><div class="ttdoc">Data structure to store date time to nano-sec precision. </div><div class="ttdef"><b>Definition:</b> DateTime.h:17</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Orbit_html_ac027fff0afd4be91f5a54102ad799e0e"><div class="ttname"><a href="classisce_1_1core_1_1Orbit.html#ac027fff0afd4be91f5a54102ad799e0e">isce::core::Orbit::getStateVector</a></div><div class="ttdeci">void getStateVector(int ind, double &amp;t, cartesian_t &amp;pos, cartesian_t &amp;vel) const </div><div class="ttdoc">Get state vector by index. </div><div class="ttdef"><b>Definition:</b> Orbit.h:201</div></div>
-<div class="ttc" id="structisce_1_1core_1_1StateVector_html"><div class="ttname"><a href="structisce_1_1core_1_1StateVector.html">isce::core::StateVector</a></div><div class="ttdef"><b>Definition:</b> StateVector.h:10</div></div>
+<div class="ttc" id="structisce_1_1core_1_1StateVector_html"><div class="ttname"><a href="structisce_1_1core_1_1StateVector.html">isce::core::StateVector</a></div><div class="ttdoc">Data structure to store an orbit ephemeris state vector. </div><div class="ttdef"><b>Definition:</b> StateVector.h:11</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Orbit_html_abcbcc6a63657e37eddc1cd43ed104c10"><div class="ttname"><a href="classisce_1_1core_1_1Orbit.html#abcbcc6a63657e37eddc1cd43ed104c10">isce::core::Orbit::epochs</a></div><div class="ttdeci">std::vector&lt; DateTime &gt; epochs</div><div class="ttdoc">Linearized vector of isce::core::DateTime from contained State Vectors. </div><div class="ttdef"><b>Definition:</b> Orbit.h:43</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Orbit_html_a7a80cfdb6f0d9877819fe05aa60ce3c8"><div class="ttname"><a href="classisce_1_1core_1_1Orbit.html#a7a80cfdb6f0d9877819fe05aa60ce3c8">isce::core::Orbit::interpolate</a></div><div class="ttdeci">int interpolate(double tintp, StateVector &amp;sv, orbitInterpMethod method) const </div><div class="ttdoc">Interpolate orbit using specified method. </div><div class="ttdef"><b>Definition:</b> Orbit.cpp:83</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Orbit_html_af6f325472d3c3f0489ee5ac88e7cae74"><div class="ttname"><a href="classisce_1_1core_1_1Orbit.html#af6f325472d3c3f0489ee5ac88e7cae74">isce::core::Orbit::UTCtime</a></div><div class="ttdeci">std::vector&lt; double &gt; UTCtime</div><div class="ttdoc">Linearized vecor of UTC times corresponding to State Vectors. </div><div class="ttdef"><b>Definition:</b> Orbit.h:45</div></div>
@@ -299,7 +292,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="classisce_1_1core_1_1Orbit_html_a62be44bb88e66283750672768bf46349"><div class="ttname"><a href="classisce_1_1core_1_1Orbit.html#a62be44bb88e66283750672768bf46349">isce::core::Orbit::operator=</a></div><div class="ttdeci">Orbit &amp; operator=(const Orbit &amp;o)</div><div class="ttdoc">Assignment operator. </div><div class="ttdef"><b>Definition:</b> Orbit.h:162</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Orbit_html_aae98e9b679333884e9d4a7e475fa1de0"><div class="ttname"><a href="classisce_1_1core_1_1Orbit.html#aae98e9b679333884e9d4a7e475fa1de0">isce::core::Orbit::velocity</a></div><div class="ttdeci">std::vector&lt; double &gt; velocity</div><div class="ttdoc">Linearized velocity values of contained State Vectors. </div><div class="ttdef"><b>Definition:</b> Orbit.h:49</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Orbit_html_a9696a7f26b1a27eecc1f5afb17bdcd95"><div class="ttname"><a href="classisce_1_1core_1_1Orbit.html#a9696a7f26b1a27eecc1f5afb17bdcd95">isce::core::Orbit::operator+=</a></div><div class="ttdeci">Orbit &amp; operator+=(const Orbit &amp;o)</div><div class="ttdoc">Increment operator. </div><div class="ttdef"><b>Definition:</b> Orbit.h:174</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Vector_html_a51592fa6cab7a4e672db2da8f5a64ddf"><div class="ttname"><a href="classisce_1_1core_1_1Vector.html#a51592fa6cab7a4e672db2da8f5a64ddf">isce::core::Vector::end</a></div><div class="ttdeci">CUDA_HOST const double * end() const </div><div class="ttdoc">Return iterator to end of container. </div><div class="ttdef"><b>Definition:</b> Vector.h:163</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Orbit_html_ae052ae1828c53f6bb0b8feeb6837922c"><div class="ttname"><a href="classisce_1_1core_1_1Orbit.html#ae052ae1828c53f6bb0b8feeb6837922c">isce::core::Orbit::updateUTCTimes</a></div><div class="ttdeci">void updateUTCTimes(const DateTime &amp;epoch)</div><div class="ttdoc">Only convert datetime to seconds since epoch. </div><div class="ttdef"><b>Definition:</b> Orbit.cpp:69</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Vector_html_ae81851e707cbea83eddb8921ed959879"><div class="ttname"><a href="classisce_1_1core_1_1Vector.html#ae81851e707cbea83eddb8921ed959879">isce::core::Vector::begin</a></div><div class="ttdeci">CUDA_HOST const double * begin() const </div><div class="ttdoc">Return iterator to start of container. </div><div class="ttdef"><b>Definition:</b> Vector.h:160</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Vector_html"><div class="ttname"><a href="classisce_1_1core_1_1Vector.html">isce::core::Vector&lt; 3 &gt;</a></div></div>
 <div class="ttc" id="namespaceisce_1_1core_html_a3459742f8165c7ea52d9730a675a2822"><div class="ttname"><a href="namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822">isce::core::orbitInterpMethod</a></div><div class="ttdeci">orbitInterpMethod</div><div class="ttdoc">Enumeration type to indicate method to use for orbit interpolation. </div><div class="ttdef"><b>Definition:</b> Constants.h:40</div></div>
 <div class="ttc" id="classisce_1_1core_1_1Orbit_html_a919190f179fb4d5f554e4966e6f59629"><div class="ttname"><a href="classisce_1_1core_1_1Orbit.html#a919190f179fb4d5f554e4966e6f59629">isce::core::Orbit::stateVectors</a></div><div class="ttdeci">std::vector&lt; StateVector &gt; stateVectors</div><div class="ttdoc">Vector of isce::core::StateVector. </div><div class="ttdef"><b>Definition:</b> Orbit.h:51</div></div>

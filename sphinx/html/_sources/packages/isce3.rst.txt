@@ -1,0 +1,27 @@
+:orphan:
+
+.. title:: Python package
+
+
+ISCE's Python Interface 
+=======================
+
+All of ISCE's functionality is made available to the end user via the "isce3" package.
+
+.. code-block:: python
+
+    import isce3
+
+
+Core Datastructures
+--------------------
+These are data structures that are directly related to C++ classes in the isce::core namespace
+
+.. * :doc:`pyDateTime <./core/pyDateTime>` 
+.. * :doc:`pyTimeDelta <./core/pyTimeDelta>`
+.. * :doc:`pyEllipsoid <./core/pyEllipsoid>`
+.. * :doc:`pyEulerAngles <./core/pyEulerAngles>`
+.. * :doc:`pyPoly1d <./core/pyPoly1d>`
+.. * :doc:`pyPoly2d <./core/pyPoly2d>`
+.. * :doc:`pyLUT1d <./core/pyLUT1d>`
+.. * :doc:`pyOrbit <./core/pyOrbit>`

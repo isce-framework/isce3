@@ -38,12 +38,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow1" class="tabs">
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
-      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
-      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
-      <li class="current"><a href="annotated.html"><span>Classes</span></a></li>
-      <li><a href="files.html"><span>Files</span></a></li>
+      <li class="current"><a href="annotated.html"><span>C++&#160;Classes</span></a></li>
       <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
-      <li><a href="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
+      <li><a href="https://github.com/isce-framework/isce3/issues/"><span>Issue&#160;Tracker</span></a></li>
+      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
         <span class="left">
@@ -74,7 +72,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Friends</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -96,21 +94,31 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">isce::core::StateVector Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Data structure to store an orbit ephemeris state vector.  
+ <a href="structisce_1_1core_1_1StateVector.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="StateVector_8h_source.html">isce/core/StateVector.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a0f0f1727507d6d1e2cf3f84c1b21890a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0f0f1727507d6d1e2cf3f84c1b21890a"></a>
-<a class="el" href="classisce_1_1core_1_1DateTime.html">DateTime</a>&#160;</td><td class="memItemRight" valign="bottom"><b>datetime</b></td></tr>
+<a class="el" href="classisce_1_1core_1_1DateTime.html">DateTime</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1StateVector.html#a0f0f1727507d6d1e2cf3f84c1b21890a">datetime</a></td></tr>
+<tr class="memdesc:a0f0f1727507d6d1e2cf3f84c1b21890a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sample date and time in UTC. <br/></td></tr>
 <tr class="separator:a0f0f1727507d6d1e2cf3f84c1b21890a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af24589d14e89b7058d3a0c92a4d7e289"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af24589d14e89b7058d3a0c92a4d7e289"></a>
-<a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a>&#160;</td><td class="memItemRight" valign="bottom"><b>position</b></td></tr>
+<a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1StateVector.html#af24589d14e89b7058d3a0c92a4d7e289">position</a></td></tr>
+<tr class="memdesc:af24589d14e89b7058d3a0c92a4d7e289"><td class="mdescLeft">&#160;</td><td class="mdescRight">Platform position in ECEF coordiantes (m) <br/></td></tr>
 <tr class="separator:af24589d14e89b7058d3a0c92a4d7e289"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d52923c3d9267be8ea0071a1de48144"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d52923c3d9267be8ea0071a1de48144"></a>
-<a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a>&#160;</td><td class="memItemRight" valign="bottom"><b>velocity</b></td></tr>
+<a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structisce_1_1core_1_1StateVector.html#a1d52923c3d9267be8ea0071a1de48144">velocity</a></td></tr>
+<tr class="memdesc:a1d52923c3d9267be8ea0071a1de48144"><td class="mdescLeft">&#160;</td><td class="mdescRight">Platform velocity in ECEF coordinates (m/s) <br/></td></tr>
 <tr class="separator:a1d52923c3d9267be8ea0071a1de48144"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
-<li>/home/conda/isce/lib/isce/core/<a class="el" href="StateVector_8h_source.html">StateVector.h</a></li>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Data structure to store an orbit ephemeris state vector. </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
+<li>isce/core/<a class="el" href="StateVector_8h_source.html">StateVector.h</a></li>
 </ul>
 </div><!-- contents -->
 <hr>
