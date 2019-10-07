@@ -101,13 +101,6 @@ public:
     void numiter(int n) { _numiter = n; }
 
     /**
-     * Set the orbit interpolation method while checking its validity
-     *
-     * @param[in] method orbit interpolation method to use
-     */
-    void orbitMethod(isce::core::orbitInterpMethod method);
-
-    /**
      * Run geo2rdr with offsets and externally created offset rasters
      *
      * @param[in] topoRaster outputs of topo - i.e, pixel-by-pixel x,y,h as bands
@@ -164,9 +157,6 @@ public:
     /** Return number of Newton-Raphson iterations used for processing */
     int numiter() const { return _numiter; }
 
-    /** Return the orbit interpolation method used for processing */
-    isce::core::orbitInterpMethod orbitMethod() const { return _orbitMethod; }
-
 private:
 
     /** Print information for debugging */
@@ -193,7 +183,6 @@ private:
     int _numiter;
     double _threshold;
     size_t _linesPerBlock = 1000;
-    isce::core::orbitInterpMethod _orbitMethod;
 };
 
 // Get inline implementations for Geo2rdr

@@ -208,17 +208,7 @@ void isce::geometry::Geo2rdr::
 _checkOrbitInterpolation(double aztime)
 {
     Vec3 pos, vel;
-    int stat = _orbit.interpolate(aztime, pos, vel, _orbitMethod);
-    if (stat != 0) {
-        pyre::journal::error_t error("isce.core.Geo2rdr");
-        error
-            << pyre::journal::at(__HERE__)
-            << "Error in Topo::topo - Error getting state vector for bounds computation."
-            << pyre::journal::newline
-            << " - requested time: " << aztime << pyre::journal::newline
-            << " - bounds: " << _orbit.UTCtime[0] << " -> " << _orbit.UTCtime[_orbit.nVectors-1]
-            << pyre::journal::endl;
-    }
+    _orbit.interpolate(&pos, &vel, aztime);
 }
 
 // end of file

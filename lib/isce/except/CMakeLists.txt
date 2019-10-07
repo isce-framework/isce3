@@ -1,7 +1,9 @@
-####Set the source files
-set(CPPS Error.cpp)
+set(SOURCES
+    Error.cpp
+    )
 
-#####Library headers
-set(HEADERS Error.h)
+set(HEADERS
+    Error.h
+    )
 
-add_isce_libdir(except "${CPPS}" "${HEADERS}")
+add_isce_libdir(except "${SOURCES}" "${HEADERS}")

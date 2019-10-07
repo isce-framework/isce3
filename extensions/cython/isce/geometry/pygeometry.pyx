@@ -6,7 +6,6 @@
 
 from cython.operator cimport dereference as deref
 from geometry cimport *
-from Orbit cimport orbitInterpMethod
 
 
 def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyLUT2d doppler,
@@ -24,7 +23,7 @@ def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyLUT2d doppler,
     cdef double slantRange = 0.0
     geo2rdr(cart_llh,
             deref(ellps.c_ellipsoid),
-            deref(orbit.c_orbit),
+            orbit.c_orbit,
             deref(doppler.c_lut),
             azimuthTime, slantRange, wvl, side, threshold, maxiter, dR)
 
@@ -40,29 +39,18 @@ def py_rdr2geo(pyOrbit orbit,  pyEllipsoid ellps,
                double threshold         = 0.05,
                int      maxIter         = 50,
                int      extraIter         = 50,
-               orbitMethod             = 'hermite',
                demInterpolatorHeight = 0):
-
-    # Orbit interpolation methods
-    orbitInterpMethods = {
-        'hermite':    orbitInterpMethod.HERMITE_METHOD,
-        'sch' :        orbitInterpMethod.SCH_METHOD,
-        'legendre': orbitInterpMethod.LEGENDRE_METHOD
-    }
 
     cdef cartesian_t targ_llh
 
     cdef DEMInterpolator demInterpolator = DEMInterpolator(demInterpolatorHeight)
 
-    cdef orbitInterpMethod orbitMethodCpp = orbitInterpMethods[orbitMethod]
-
     # Call C++ rdr2geo
     rdr2geo(aztime, slantRange, doppler,
-            deref(orbit.c_orbit),
+            orbit.c_orbit,
             deref(ellps.c_ellipsoid),
             demInterpolator,
-            targ_llh, wvl, side, threshold, maxIter, extraIter,
-            orbitMethodCpp)
+            targ_llh, wvl, side, threshold, maxIter, extraIter)
 
     llh = [0, 0, 0]
 
@@ -89,7 +77,7 @@ def py_computeDEMBounds(pyOrbit orbit,
     cdef double max_lat = 0.0
 
     # Call C++ computeDEMBounds
-    computeDEMBounds(deref(orbit.c_orbit), deref(ellps.c_ellipsoid), deref(doppler.c_lut),
+    computeDEMBounds(orbit.c_orbit, deref(ellps.c_ellipsoid), deref(doppler.c_lut),
                      lookSide, deref(radarGrid.c_radargrid), xoff, yoff, xsize, ysize,
                      margin, min_lon, min_lat, max_lon, max_lat)
 

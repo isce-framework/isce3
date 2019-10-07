@@ -8,7 +8,6 @@
 
 #include <cmath>
 
-#include "Constants.h"
 #include "Peg.h"
 #include "Pegtrans.h"
 
@@ -16,13 +15,8 @@ namespace isce { namespace core {
 
 void Baseline::init()
 {
-    // Set orbit method
-    _orbitMethod = HERMITE_METHOD;
-
     // Initialize basis for the first orbit using the middle of the orbit
-    Vec3 _1, _2;
-    double tmid;
-    _orbit1.getStateVector(_orbit1.nVectors/2, tmid, _1, _2);
+    double tmid = _orbit1.midTime();
     initBasis(tmid);
 
     // Use radar metadata to compute look vector at midpoint
@@ -33,7 +27,7 @@ void Baseline::initBasis(double t)
 {
     // Interpolate orbit to azimuth time
     Vec3 xyz, vel;
-    _orbit1.interpolate(t, xyz, vel, _orbitMethod);
+    _orbit1.interpolate(&xyz, &vel, t, OrbitInterpBorderMode::FillNaN);
     _refxyz = xyz;
     _velocityMagnitude = vel.norm();
 
@@ -60,11 +54,11 @@ void Baseline::computeBaselines()
     double t, delta_t;
 
     // Start with sensing mid of orbit 2
-    _orbit2.getStateVector(_orbit2.nVectors/2, t, xyz2, vel2);
+    t = _orbit2.midTime();
     for (int iter=0; iter<2; ++iter) {
 
         //Interpolate orbit to azimuth time
-        _orbit2.interpolate(t, xyz2, vel2, _orbitMethod);
+        _orbit2.interpolate(&xyz2, &vel2, t, OrbitInterpBorderMode::FillNaN);
 
         // Compute adjustment to slave time
         offset = calculateBasisOffset(xyz2);
@@ -81,7 +75,7 @@ void Baseline::calculateLookVector(double t)
     Vec3 xyz, vel, llh;
 
     // Interpolate orbit to azimuth time
-    _orbit1.interpolate(t, xyz, vel, _orbitMethod);
+    _orbit1.interpolate(&xyz, &vel, t, OrbitInterpBorderMode::FillNaN);
     _elp.xyzToLonLat(xyz, llh);
 
     // Make a Peg

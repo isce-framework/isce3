@@ -16,6 +16,8 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/archives/xml.hpp>
 #include <sstream>
+#include <stdexcept>
+#include <vector>
 
 // pyre
 #include <pyre/journal.h>
@@ -30,13 +32,11 @@
 #include <isce/core/LUT1d.h>
 #include <isce/core/LUT2d.h>
 #include <isce/core/StateVector.h>
+#include <isce/core/TimeDelta.h>
 
 // isce::io
 #include <isce/io/IH5.h>
 #include <isce/io/Serialization.h>
-
-//isce::orbit_wip
-#include <isce/orbit_wip/Orbit.h>
 
 //! The isce namespace
 namespace isce {
@@ -103,16 +103,20 @@ inline void loadFromH5(isce::io::IGroup & group, Ellipsoid & ellps)
 
 template <class Archive>
 inline void save(Archive & archive, const Orbit & orbit) {
-    archive(cereal::make_nvp("StateVectors", orbit.stateVectors));
+    archive(cereal::make_nvp("StateVectors", orbit.getStateVectors()),
+            cereal::make_nvp("InterpMethod", orbit.interpMethod()));
 }
 
 template <class Archive>
 inline void load(Archive & archive, Orbit & orbit)
 {
-    // Load data
-    archive(cereal::make_nvp("StateVectors", orbit.stateVectors));
-    // Reformat state vectors to 1D arrays
-    orbit.reformatOrbit();
+    std::vector<StateVector> statevecs;
+    OrbitInterpMethod interp_method;
+    archive(cereal::make_nvp("StateVectors", statevecs),
+            cereal::make_nvp("InterpMethod", interp_method));
+    orbit.referenceEpoch(statevecs.at(0).datetime);
+    orbit.setStateVectors(statevecs);
+    orbit.interpMethod(interp_method);
 }
 
 /**
@@ -123,31 +127,63 @@ inline void load(Archive & archive, Orbit & orbit)
  */
 inline void loadFromH5(isce::io::IGroup & group, Orbit & orbit)
 {
-    // Reset orbit data
-    orbit.position.clear();
-    orbit.velocity.clear();
-    orbit.UTCtime.clear();
-    orbit.epochs.clear();
+    // open datasets
+    isce::io::IDataSet time_ds = group.openDataSet("time");
+    isce::io::IDataSet pos_ds = group.openDataSet("position");
+    isce::io::IDataSet vel_ds = group.openDataSet("velocity");
 
-    // Load position
-    isce::io::loadFromH5(group, "position", orbit.position);
+    // get dataset dimensions
+    std::vector<int> time_dims = time_ds.getDimensions();
+    std::vector<int> pos_dims = pos_ds.getDimensions();
+    std::vector<int> vel_dims = vel_ds.getDimensions();
 
-    // Load velocity
-    isce::io::loadFromH5(group, "velocity", orbit.velocity);
+    // check validity
+    if (time_dims.size() != 1 || pos_dims.size() != 2 || vel_dims.size() != 2) {
+        throw std::runtime_error("unexpected orbit state vector dims");
+    }
+    if (pos_dims[1] != 3 || vel_dims[1] != 3) {
+        throw std::runtime_error("unexpected orbit position/velocity vector size");
+    }
+    std::size_t size = time_dims[0];
+    if (pos_dims[0] != size || vel_dims[0] != size) {
+        throw std::runtime_error("mismatched orbit state vector component sizes");
+    }
 
-    // Load time
-    isce::io::loadFromH5(group, "time", orbit.UTCtime);
+    // read orbit data
+    std::vector<double> time(size);
+    std::vector<double> pos(3 * size);
+    std::vector<double> vel(3 * size);
+    time_ds.read(time);
+    pos_ds.read(pos);
+    vel_ds.read(vel);
 
-    // Get the reference epoch
-    orbit.refEpoch = isce::io::getRefEpoch(group, "time");
+    // get reference epoch
+    DateTime reference_epoch = isce::io::getRefEpoch(group, "time");
 
-    // Convert UTC seconds since epoch to timestamp
-    orbit.nVectors = orbit.UTCtime.size();
-    orbit.epochs.resize(orbit.nVectors);
-    for (size_t i = 0; i < orbit.nVectors; ++i) {
-        DateTime date = orbit.refEpoch;
-        date += orbit.UTCtime[i];
-        orbit.epochs[i] = date;
+    // convert to state vectors
+    std::vector<StateVector> statevecs(size);
+    for (std::size_t i = 0; i < size; ++i) {
+        statevecs[i].datetime = reference_epoch + TimeDelta(time[i]);
+        statevecs[i].position = { pos[3*i+0], pos[3*i+1], pos[3*i+2] };
+        statevecs[i].velocity = { vel[3*i+0], vel[3*i+1], vel[3*i+2] };
+    }
+
+    // build orbit
+    orbit.referenceEpoch(reference_epoch);
+    orbit.setStateVectors(statevecs);
+
+    // get interp method
+    std::vector<std::string> interp_method;
+    isce::io::loadFromH5(group, "interpMethod", interp_method);
+
+    if (interp_method.at(0) == "Hermite") {
+        orbit.interpMethod(OrbitInterpMethod::Hermite);
+    }
+    else if (interp_method.at(0) == "Legendre") {
+        orbit.interpMethod(OrbitInterpMethod::Legendre);
+    }
+    else {
+        throw std::runtime_error("unexpected orbit interpolation method '" + interp_method.at(0) + "'");
     }
 }
 
@@ -159,130 +195,45 @@ inline void loadFromH5(isce::io::IGroup & group, Orbit & orbit)
  */
 inline void saveToH5(isce::io::IGroup & group, const Orbit & orbit)
 {
-    // Save position
-    std::array<size_t, 2> dims = {static_cast<size_t>(orbit.nVectors), 3};
-    isce::io::saveToH5(group, "position", orbit.position, dims, "meters");
-
-    // Save velocity
-    isce::io::saveToH5(group, "velocity", orbit.velocity, dims, "meters per second");
-
-    // Save time and reference epoch attribute
-    isce::io::saveToH5(group, "time", orbit.UTCtime);
-    isce::io::setRefEpoch(group, "time", orbit.refEpoch);
-}
-
-// ----------------------------------------------------------------------
-// Serialization for orbit_wip::Orbit
-// ----------------------------------------------------------------------
-
-template <class Archive>
-inline void save(Archive & archive, const isce::orbit_wip::Orbit & orbit) {
-    archive(cereal::make_nvp("StateVectors", orbit.to_statevectors()));
-}
-
-template <class Archive>
-static void load_and_construct(Archive & archive, cereal::construct<isce::orbit_wip::Orbit> & orbit)
-{
-    //Load data
-    std::vector<StateVector> svlist;
-    archive(cereal::make_nvp("Statevectors", svlist));
-    double spacing = (svlist[1].datetime - svlist[0].datetime).getTotalSeconds();
-    orbit(svlist[0].datetime, spacing);
-    for (auto &sv : svlist)
-    {
-        orbit->push_back(sv);
-    }
-}
-
-/**
- * \brief Load orbit data from HDF5 product.
- *
- * @param[in] group         HDF5 group object.
- * @param[in] orbit         Orbit object to be configured.
- */
-inline void loadFromH5(isce::io::IGroup & group, isce::orbit_wip::Orbit & orbit)
-{
-    // Reset orbit data
-    orbit.resize(0);
-
-    //Open datasets
-    isce::io::IDataSet posDS = group.openDataSet("position");
-    std::vector<int> posSize = posDS.getDimensions();
-    std::vector<double> posFlat(posSize[0]*3);
-    posDS.read(posFlat);
-
-    isce::io::IDataSet velDS = group.openDataSet("velocity");
-    std::vector<int> velSize = velDS.getDimensions();
-    std::vector<double> velFlat(velSize[0]*3);
-    velDS.read(velFlat);
-
-    isce::io::IDataSet timeDS = group.openDataSet("time");
-    std::vector<int> timeSize = timeDS.getDimensions();
-    std::vector<double> time(timeSize[0]);
-    timeDS.read(time);
-
-    //Add logic to check for size consistency and logging here
-
-    // Get the reference epoch
-    DateTime refEpoch = isce::io::getRefEpoch(group, "time");
-
-    std::vector<StateVector> statevecs;
-    for (int ii=0; ii < posSize[0]; ii++)
-    {
-        int idx = ii*3;
-        StateVector sv;
-
-        sv.datetime = refEpoch + time[ii];
-        sv.position = {posFlat[idx], posFlat[idx+1], posFlat[idx+2]};
-        sv.velocity = {velFlat[idx], velFlat[idx+1], velFlat[idx+2]};
-
-        statevecs.push_back(sv);
-    }
-
-    orbit.set_statevectors(statevecs);
-}
-
-/**
- * \brief Save orbit data to HDF5 product.
- *
- * @param[in] group         HDF5 group object.
- * @param[in] orbit         Orbit object to be saved.
- */
-inline void saveToH5(isce::io::IGroup & group, const isce::orbit_wip::Orbit & orbit)
-{
-    // Save position
-    std::array<size_t, 2> dims = {static_cast<size_t>(orbit.size()), 3};
-    std::vector<double> posFlat(orbit.size()*3);
-    std::vector<double> velFlat(orbit.size()*3);
+    // convert times to vector, get flattened position, velocity
     std::vector<double> time(orbit.size());
+    std::vector<double> pos(3 * orbit.size());
+    std::vector<double> vel(3 * orbit.size());
 
-    StateVector refSv = orbit[0];
+    for (int i = 0; i < orbit.size(); ++i) {
+        time[i] = orbit.time(i);
 
-    for (int i=0; i < orbit.size(); i++)
-    {
-        StateVector sv = orbit[i];
-        int idx = 3*i;
+        pos[3*i+0] = orbit.position(i)[0];
+        pos[3*i+1] = orbit.position(i)[1];
+        pos[3*i+2] = orbit.position(i)[2];
 
-        posFlat[idx] = sv.position[0];
-        posFlat[idx+1] = sv.position[1];
-        posFlat[idx+2] = sv.position[2];
-
-        velFlat[idx] = sv.velocity[0];
-        velFlat[idx+1] = sv.velocity[1];
-        velFlat[idx+2] = sv.velocity[2];
-
-        time[i] = (sv.datetime - refSv.datetime).getTotalSeconds();
+        vel[3*i+0] = orbit.velocity(i)[0];
+        vel[3*i+1] = orbit.velocity(i)[1];
+        vel[3*i+2] = orbit.velocity(i)[2];
     }
 
-    //Save position
-    isce::io::saveToH5(group, "position", posFlat, dims, "meters");
+    // position/velocity data dims
+    std::size_t size = orbit.size();
+    std::array<std::size_t, 2> dims = {size, 3};
 
-    // Save velocity
-    isce::io::saveToH5(group, "velocity", velFlat, dims, "meters per second");
+    // interp method
+    std::vector<std::string> interp_method(1);
+    if (orbit.interpMethod() == OrbitInterpMethod::Hermite) {
+        interp_method[0] = "Hermite";
+    }
+    else if (orbit.interpMethod() == OrbitInterpMethod::Legendre) {
+        interp_method[0] = "Legendre";
+    }
+    else {
+        throw std::runtime_error("unexpected orbit interpolation method");
+    }
 
-    // Save time and reference epoch attribute
+    // serialize
     isce::io::saveToH5(group, "time", time);
-    isce::io::setRefEpoch(group, "time", orbit.refepoch());
+    isce::io::setRefEpoch(group, "time", orbit.referenceEpoch());
+    isce::io::saveToH5(group, "position", pos, dims, "meters");
+    isce::io::saveToH5(group, "velocity", vel, dims, "meters per second");
+    isce::io::saveToH5(group, "interpMethod", interp_method);
 }
 
 // ------------------------------------------------------------------------

@@ -3,7 +3,8 @@
 namespace isce { namespace cuda { namespace core {
 
     class gpuBasis;
-    class gpuOrbit;
+    class Orbit;
+    class OrbitView;
     class ProjectionBase;
 
     template<class> class gpuInterpolator;

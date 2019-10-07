@@ -48,15 +48,13 @@ namespace geometry {
  * @param[in] threshold Distance threshold for convergence
  * @param[in] maxIter Number of primary iterations
  * @param[in] extraIter Number of secondary iterations
- * @param[in] orbitMethod Orbit interpolation method
  */
 int rdr2geo(double aztime, double slantRange, double doppler,
             const isce::core::Orbit & orbit,
             const isce::core::Ellipsoid & ellipsoid,
             const DEMInterpolator & demInterp,
             isce::core::Vec3 & targetLLH,
-            double wvl, int side, double threshold, int maxIter, int extraIter,
-            isce::core::orbitInterpMethod orbitMethod);
+            double wvl, int side, double threshold, int maxIter, int extraIter);
 
 /**
  * Radar geometry coordinates to map coordinates transformer
@@ -108,7 +106,7 @@ int rdr2geo(const isce::core::Pixel & pixel,
  * @param[in] startingRange Starting slant range of reference image
  * @param[in] rangePixelSpacing Slant range pixel spacing
  * @param[in] rwidth Width (number of samples) of reference image
- * @param[in] side +1 for left and -1 for right 
+ * @param[in] side +1 for left and -1 for right
  * @param[in] threshold azimuth time convergence threshold in seconds
  * @param[in] maxIter Maximum number of Newton-Raphson iterations
  * @param[in] deltaRange step size used for computing derivative of doppler
@@ -118,7 +116,7 @@ int geo2rdr(const isce::core::Vec3 & inputLLH,
             const isce::core::Orbit & orbit,
             const isce::core::Poly2d & doppler,
             double & aztime, double & slantRange,
-            double wavelength, double startingRange, 
+            double wavelength, double startingRange,
             double rangePixelSpacing, size_t rwidth, int side,
             double threshold, int maxIter, double deltaRange);
 
@@ -137,7 +135,7 @@ int geo2rdr(const isce::core::Vec3 & inputLLH,
  * @param[out] aztime     azimuth time of inputLLH w.r.t reference epoch of the orbit
  * @param[out] slantRange slant range to inputLLH
  * @param[in] wavelength  Radar wavelength
- * @param[in] side +1 for left and -1 for right  
+ * @param[in] side +1 for left and -1 for right
  * @param[in] threshold   azimuth time convergence threshold in seconds
  * @param[in] maxIter     Maximum number of Newton-Raphson iterations
  * @param[in] deltaRange  step size used for computing derivative of doppler
@@ -147,7 +145,7 @@ int geo2rdr(const isce::core::Vec3 & inputLLH,
             const isce::core::Orbit & orbit,
             const isce::core::LUT2d<double> & doppler,
             double & aztime, double & slantRange,
-            double wavelength, int side, double threshold, 
+            double wavelength, int side, double threshold,
             int maxIter, double deltaRange);
 
 /**
@@ -184,15 +182,15 @@ void computeDEMBounds(const isce::core::Orbit & orbit,
                       double & max_lat);
 
 template <class T>
-double _compute_doppler_aztime_diff(isce::core::Vec3 dr, isce::core::Vec3 satvel, 
+double _compute_doppler_aztime_diff(isce::core::Vec3 dr, isce::core::Vec3 satvel,
                                     T & doppler, double wavelength,
                                     double aztime, double slantRange,
                                     double deltaRange);
 
 int _update_aztime(const isce::core::Orbit & orbit,
                    isce::core::Vec3 satpos, isce::core::Vec3 satvel,
-                   isce::core::Vec3 inputXYZ, int side, double & aztime, 
-                   double & slantRange, 
+                   isce::core::Vec3 inputXYZ, int side, double & aztime,
+                   double & slantRange,
                    double rangeMin=std::numeric_limits<double>::quiet_NaN(),
                    double rangeMax=std::numeric_limits<double>::quiet_NaN());
 }

@@ -243,17 +243,7 @@ _initAzimuthLine(size_t line, double& tline, Vec3& pos, Vec3& vel, Basis& TCNbas
     tline = _radarGrid.sensingTime(line);
 
     // Get state vector
-    int stat = _orbit.interpolate(tline, pos, vel, _orbitMethod);
-    if (stat != 0) {
-        pyre::journal::error_t error("isce.geometry.Topo._initAzimuthLine");
-        error
-            << pyre::journal::at(__HERE__)
-            << "Error in Topo::topo - Error getting state vector for bounds computation."
-            << pyre::journal::newline
-            << " - requested time: " << tline << pyre::journal::newline
-            << " - bounds: " << _orbit.UTCtime[0] << " -> " << _orbit.UTCtime[_orbit.nVectors-1]
-            << pyre::journal::endl;
-    }
+    _orbit.interpolate(&pos, &vel, tline);
 
     // Get geocentric TCN basis using satellite basis
     TCNbasis = Basis(pos, vel);

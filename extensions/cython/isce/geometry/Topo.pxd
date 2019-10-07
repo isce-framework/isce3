@@ -14,7 +14,7 @@ from Raster cimport Raster
 from Product cimport Product
 
 # Interpolation methods and Orbit
-from Orbit cimport Orbit, orbitInterpMethod
+from Orbit cimport Orbit
 from Interpolator cimport dataInterpMethod
 
 from RadarGridParameters cimport RadarGridParameters
@@ -28,7 +28,7 @@ cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
         # Constructor
         Topo(Product & product, char frequency, bool nativeDoppler,
              size_t numberAzimuthLooks, size_t numberRangeLooks) except +
-        Topo(RadarGridParameters & radarGrid, Orbit & orbit, 
+        Topo(RadarGridParameters & radarGrid, Orbit & orbit,
                 Ellipsoid & ellipsoid,
                 LUT2d[double] & doppler) except +
         Topo(RadarGridParameters & radarGrid, Orbit & orbit,
@@ -48,12 +48,11 @@ cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
         void threshold(double)
         void numiter(int)
         void extraiter(int)
-        void orbitMethod(orbitInterpMethod)
         void demMethod(dataInterpMethod)
         void epsgOut(int)
         void computeMask(bool)
         void minimumHeight(double)
         void maximumHeight(double)
         void decimaldegMargin(double)
-        
+
 # end of file

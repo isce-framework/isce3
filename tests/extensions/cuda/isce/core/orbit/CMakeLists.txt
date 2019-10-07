@@ -1,1 +1,1 @@
-add_isce_test(gpuOrbit)
+add_isce_test(cuda-orbit)

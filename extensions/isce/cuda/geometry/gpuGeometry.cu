@@ -10,11 +10,13 @@
 #include <isce/core/Orbit.h>
 #include <isce/core/Pixel.h>
 #include <isce/cuda/core/gpuLUT1d.h>
-#include <isce/cuda/core/gpuOrbit.h>
+#include <isce/cuda/core/Orbit.h>
+#include <isce/cuda/core/OrbitView.h>
 #include <isce/cuda/except/Error.h>
 #include <isce/cuda/geometry/gpuDEMInterpolator.h>
 
 using isce::core::Basis;
+using isce::core::OrbitInterpBorderMode;
 using isce::core::Vec3;
 
 /** @param[in] pixel Pixel object
@@ -165,7 +167,7 @@ rdr2geo(const isce::core::Pixel & pixel,
  */
 __device__ int isce::cuda::geometry::rdr2geo(
         double aztime, double slant_range, double doppler,
-        const isce::cuda::core::gpuOrbit& orbit,
+        const isce::cuda::core::OrbitView& orbit,
         const isce::core::Ellipsoid& ellipsoid,
         const isce::cuda::geometry::gpuDEMInterpolator& dem_interp,
         Vec3& target_llh, double wvl, int side, double threshold,
@@ -178,7 +180,7 @@ __device__ int isce::cuda::geometry::rdr2geo(
 
     // Interpolate orbit to get state vector
     Vec3 pos, vel;
-    orbit.interpolateWGS84Orbit(aztime, pos.data(), vel.data());
+    orbit.interpolate(&pos, &vel, aztime, OrbitInterpBorderMode::FillNaN);
 
     // Set up geocentric TCN basis
     const Basis tcn_basis(pos, vel);
@@ -213,10 +215,10 @@ CUDA_DEV
 int isce::cuda::geometry::
 geo2rdr(const Vec3& inputLLH,
         const isce::core::Ellipsoid& ellipsoid,
-        const isce::cuda::core::gpuOrbit& orbit,
+        const isce::cuda::core::OrbitView& orbit,
         const isce::cuda::core::gpuLUT1d<double> & doppler,
         double * aztime_result, double * slantRange_result,
-        double wavelength, int side, double threshold, 
+        double wavelength, int side, double threshold,
         int maxIter, double deltaRange) {
 
     assert( side == 1 || side == -1 );
@@ -232,7 +234,7 @@ geo2rdr(const Vec3& inputLLH,
     const double dopscale = 0.5 * wavelength;
 
     // Use mid-orbit epoch as initial guess
-    aztime = orbit.UTCtime[orbit.nVectors / 2];
+    aztime = orbit.midTime();
 
     // Begin iterations
     int converged = 0;
@@ -241,12 +243,12 @@ geo2rdr(const Vec3& inputLLH,
 
         // Interpolate the orbit to current estimate of azimuth time
         Vec3 pos, vel;
-        orbit.interpolateWGS84Orbit(aztime, &pos[0], &vel[0]);
+        orbit.interpolate(&pos, &vel, aztime, OrbitInterpBorderMode::FillNaN);
 
         // Compute slant range from satellite to ground point
         const Vec3 dr = inputXYZ - pos;
         slantRange = dr.norm();
- 
+
         // Check look side
         if (dr.cross(vel).dot(pos)*side > 0) {
            *slantRange_result = slantRange;
@@ -377,10 +379,10 @@ rdr2geo_h(const isce::core::Pixel & pixel,
 __global__
 void geo2rdr_d(const Vec3 llh,
                isce::core::Ellipsoid ellps,
-               isce::cuda::core::gpuOrbit orbit,
+               isce::cuda::core::OrbitView orbit,
                isce::cuda::core::gpuLUT1d<double> doppler,
                double * aztime, double * slantRange,
-               double wavelength, int side, double threshold, 
+               double wavelength, int side, double threshold,
                int maxIter, double deltaRange, int *resultcode) {
 
     // Call device function
@@ -402,7 +404,7 @@ geo2rdr_h(const cartesian_t& llh,
 
     // Make GPU objects
     isce::core::Ellipsoid gpu_ellps(ellps);
-    isce::cuda::core::gpuOrbit gpu_orbit(orbit);
+    isce::cuda::core::Orbit gpu_orbit(orbit);
     isce::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
 
     // Allocate necessary device memory
@@ -418,7 +420,7 @@ geo2rdr_h(const cartesian_t& llh,
 
     // Run geo2rdr on the GPU
     dim3 grid(1), block(1);
-    geo2rdr_d<<<grid, block>>>(llh, gpu_ellps, gpu_orbit, gpu_doppler, 
+    geo2rdr_d<<<grid, block>>>(llh, gpu_ellps, gpu_orbit, gpu_doppler,
                                aztime_d, slantRange_d, wavelength, side,
                                threshold, maxIter, deltaRange, resultcode_d);
 

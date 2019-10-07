@@ -7,6 +7,7 @@
 
 #include "forward.h"
 
+#include <isce/core/forward.h>
 #include <isce/geometry/Geo2rdr.h>
 
 // CUDA Topo class definition

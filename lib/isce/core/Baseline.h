@@ -50,9 +50,6 @@ public:
     /** Unit vector in direction of velocity */
     Vec3 vhat() const { return _vhat; }
 
-    /** Return orbit interpolation method used */
-    orbitInterpMethod orbitMethod() const { return _orbitMethod; }
-
     /** Return reference orbit */
     Orbit orbit1() const { return _orbit1; }
 
@@ -96,8 +93,6 @@ private:
     Metadata _radar;
     // Ellipsoid
     Ellipsoid _elp;
-    // Orbit interpolatation method
-    orbitInterpMethod _orbitMethod;
     // Basis vectors
     Vec3 _refxyz, _look, _rhat, _chat, _vhat;
     // Baseline scalars

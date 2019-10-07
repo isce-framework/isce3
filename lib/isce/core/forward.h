@@ -25,6 +25,7 @@ namespace isce {
         template<int> class DenseMatrix;
         template<int> class Vector;
         template<class> class Cube;
+        template<typename> class Linspace;
         template<class> class LUT1d;
         template<class> class LUT2d;
         template<class> class Matrix;
@@ -49,5 +50,9 @@ namespace isce {
         using Vec3 = Vector<3>;
         using cartmat_t   = Mat3;
         using cartesian_t = Vec3;
+
+        // enum types
+        enum class OrbitInterpMethod;
+        enum class OrbitInterpBorderMode;
     }
 }

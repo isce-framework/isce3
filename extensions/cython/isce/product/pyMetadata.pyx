@@ -1,5 +1,5 @@
 #cython: language_level=3
-# 
+#
 # Author: Bryan V. Riel
 # Copyright 2017-2019
 #
@@ -24,7 +24,7 @@ cdef class pyMetadata:
     cdef pyOrbit py_orbit
     cdef pyEulerAngles py_attitude
     cdef pyProcessingInformation py_procInfo
-    
+
     def __cinit__(self):
         """
         Constructor instantiates a C++ object and saves to python.
@@ -35,9 +35,7 @@ cdef class pyMetadata:
 
         # Bind the C++ Orbit class to the Cython pyOrbit instance
         self.py_orbit = pyOrbit()
-        del self.py_orbit.c_orbit
-        self.py_orbit.c_orbit = &self.c_metadata.orbit()
-        self.py_orbit.__owner = False
+        self.py_orbit.c_orbit = self.c_metadata.orbit()
 
         # Bind the C++ EulerAngles class to the Cython pyEulerAngles instance
         self.py_attitude = pyEulerAngles()
@@ -74,13 +72,12 @@ cdef class pyMetadata:
         new_meta.__owner = False
 
         # Bind orbit
-        new_meta.py_orbit.c_orbit = &meta.c_metadata.orbit()
-        new_meta.py_orbit.__owner = False
+        new_meta.py_orbit.c_orbit = meta.c_metadata.orbit()
 
         # Bind attitude
         new_meta.py_attitude.c_eulerangles = &meta.c_metadata.attitude()
         new_meta.py_attitude.__owner = False
-    
+
         # Bind processing info
         new_meta.py_procInfo.c_procinfo = &meta.c_metadata.procInfo()
         new_meta.py_procInfo.__owner = False
@@ -92,15 +89,16 @@ cdef class pyMetadata:
         """
         Get orbit.
         """
-        new_orbit = pyOrbit.bind(self.py_orbit)
-        return new_orbit
+        orbit = pyOrbit()
+        orbit.c_orbit = self.py_orbit.c_orbit
+        return orbit
 
     @orbit.setter
     def orbit(self, pyOrbit orb):
         """
         Set orbit.
         """
-        self.c_metadata.orbit(deref(orb.c_orbit))
+        self.c_metadata.orbit(orb.c_orbit)
 
     @property
     def attitude(self):
@@ -124,5 +122,5 @@ cdef class pyMetadata:
         """
         new_proc = pyProcessingInformation.bind(self.py_procInfo)
         return new_proc
-   
-# end of file 
+
+# end of file
