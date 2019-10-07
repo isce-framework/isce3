@@ -6,6 +6,7 @@ COPY . /isce-src
 RUN cd /isce-build && \
     cmake /isce-src \
         -DWITH_CUDA=y -DCMAKE_BUILD_TYPE=Coverage \
+        -DISCE_CUDA_ARCHS=3.7 \
         -DCMAKE_INSTALL_PREFIX=/isce-install
 
 # make

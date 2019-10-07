@@ -1,6 +1,3 @@
-###CMake builder for ISCE 3.0
-
-###Minimum version of cmake and boiler plate
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
 if (POLICY CMP0048)
@@ -17,18 +14,33 @@ project(ISCE VERSION 3.0
         LANGUAGES CXX)
 
 option(WITH_CUDA "Set ON|OFF (default=ON) to build CUDA library" OFF)
+set(ISCE_CUDA_ARCHS "Auto" CACHE STRING
+    "Select target CUDA device architecture, options are:
+    - comma-separated compute capabilities (e.g. 3.5,5.0,5.2)
+    - \"Auto\" to detect installed CUDA devices and target those architectures
+    - \"\" (empty) to use default compilation options")
+
+# add local .cmake directory to CMAKE_MODULE_PATH
+list(APPEND CMAKE_MODULE_PATH ${ISCE_SOURCE_DIR}/.cmake)
+
+# import some helper functions
+include(IsceCudaHelper)
+
 if (WITH_CUDA)
     enable_language(CUDA)
-    if (CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 9)
-        message(FATAL_ERROR "CUDA version must be atleast 9. Detected ${CMAKE_CUDA_COMPILER_VERSION}")
+
+    # check CUDA version
+    set(CUDA_VERSION ${CMAKE_CUDA_COMPILER_VERSION})
+    if (CUDA_VERSION VERSION_LESS 9)
+        message(FATAL_ERROR "CUDA version must be at least 9. Detected ${CUDA_VERSION}")
     endif()
+
+    # specify target CUDA device architecture(s)
+    set_cuda_arch_flags("${ISCE_CUDA_ARCHS}")
 endif()
 
 # Set the name for the ISCE C++ library
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
-
-###Add .cmake to CMAKE MODULE PATH
-list(APPEND CMAKE_MODULE_PATH ${ISCE_SOURCE_DIR}/.cmake)
 
 ###Options for documentation
 option(WITH_DOC
