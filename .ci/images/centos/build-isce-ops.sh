@@ -15,14 +15,13 @@ IMAGE=nisar/isce-ops
 echo "IMAGE is $IMAGE"
 echo "TAG is $TAG"
 
-# check isceCI was cloned
-if [ ! -d "${WORKSPACE}/isceCI" ]; then
-  echo "The isceCI repo doesn't exist at ${WORKSPACE}/isceCI."
-  echo "Ensure that it exists by cloning it under ${WORKSPACE}."
+# check .ci scripts directory exists
+if [ ! -d "${WORKSPACE}/.ci" ]; then
+  echo "Error: the .ci directory doesn't exist at ${WORKSPACE}/.ci"
   exit 1
 fi
 
 ###Replace TAG with correct isce-src tag
-sed -i "s/__TAG__/${TAG}/" ${WORKSPACE}/isceCI/images/centos/Dockerfile.isce-ops
+sed -i "s/__TAG__/${TAG}/" ${WORKSPACE}/.ci/images/centos/Dockerfile.isce-ops
 
-docker build --rm --force-rm -t ${IMAGE}:${TAG} -f ${WORKSPACE}/isceCI/images/centos/Dockerfile.isce-ops ${WORKSPACE}
+docker build --rm --force-rm -t ${IMAGE}:${TAG} -f ${WORKSPACE}/.ci/images/centos/Dockerfile.isce-ops ${WORKSPACE}

@@ -18,10 +18,10 @@ echo "TAG:       $TAG"
 IMAGENAME="nisar/isce-cu1904-coverage"
 
 ###Replace TAG with correct isce-src tag
-sed -i "s/__TAG__/${TAG}/" ${WORKSPACE}/isceCI/images/ubuntu-systemlibs/Dockerfile.isce-coverage
+sed -i "s/__TAG__/${TAG}/" ${WORKSPACE}/.ci/images/ubuntu-systemlibs/Dockerfile.isce-coverage
 
 nvidia-docker build . -t $IMAGENAME:$TAG \
-    -f $WORKSPACE/isceCI/images/ubuntu-systemlibs/Dockerfile.isce-coverage
+    -f $WORKSPACE/.ci/images/ubuntu-systemlibs/Dockerfile.isce-coverage
 
 # Get the coverage output XML for Cobertura
 nvidia-docker run --rm $IMAGENAME:$TAG cat /coverage.xml > coverage.xml

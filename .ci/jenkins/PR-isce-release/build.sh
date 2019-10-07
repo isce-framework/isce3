@@ -16,10 +16,10 @@ echo "WORKSPACE: $WORKSPACE"
 echo "TAG:       $TAG"
 
 ###Replace TAG with correct isce-src tag
-sed -i "s/__TAG__/${TAG}/" ${WORKSPACE}/isceCI/images/ubuntu-systemlibs/Dockerfile.isce-release
+sed -i "s/__TAG__/${TAG}/" ${WORKSPACE}/.ci/images/ubuntu-systemlibs/Dockerfile.isce-release
 
 docker build . -t nisar/cu1904-release:$TAG \
-    -f $WORKSPACE/isceCI/images/ubuntu-systemlibs/Dockerfile.isce-release
+    -f $WORKSPACE/.ci/images/ubuntu-systemlibs/Dockerfile.isce-release
 
 
 #Clean up new images

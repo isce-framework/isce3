@@ -15,12 +15,11 @@ IMAGE=nisar/isce-src
 echo "IMAGE is $IMAGE"
 echo "TAG is $TAG"
 
-# check isceCI was cloned
-if [ ! -d "${WORKSPACE}/isceCI" ]; then
-  echo "The isceCI repo doesn't exist at ${WORKSPACE}/isceCI."
-  echo "Ensure that it exists by cloning it under ${WORKSPACE}."
+# check .ci directory exists
+if [ ! -d "${WORKSPACE}/.ci" ]; then
+  echo "Error: the .ci directory doesn't exist at ${WORKSPACE}/.ci"
   exit 1
 fi
-  
+
 nvidia-docker build --rm --force-rm -t ${IMAGE}:${TAG}  \
-  -f ${WORKSPACE}/isceCI/images/centos/Dockerfile.isce-src $WORKSPACE
+  -f ${WORKSPACE}/.ci/images/centos/Dockerfile.isce-src $WORKSPACE

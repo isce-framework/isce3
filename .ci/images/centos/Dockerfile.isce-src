@@ -21,7 +21,7 @@ RUN set -ex \
  && sudo gem install --no-ri --no-rdoc fpm
 
 # install pyre requirements and write pyre build configs
-COPY isceCI/images/centos/requirements.txt.pyre /tmp/requirements.txt
+COPY .ci/images/centos/requirements.txt.pyre /tmp/requirements.txt
 RUN set -ex \
  && source /opt/docker/bin/entrypoint_source \
  # If ISCE eventually needs pyre dependencies defined in the
@@ -56,7 +56,7 @@ RUN set -ex \
        ghostscript graphviz valgrind \
   && sudo conda install --yes sphinx \
   && mkdir -p /home/conda/texmf/tex/latex/commonstuff \
-  && wget http://mirrors.ctan.org/macros/latex/contrib/anyfontsize/anyfontsize.sty -P /home/conda/texmf/tex/latex/commonstuff 
+  && wget http://mirrors.ctan.org/macros/latex/contrib/anyfontsize/anyfontsize.sty -P /home/conda/texmf/tex/latex/commonstuff
 
 # install cppcheck for C++ code analysis
 RUN set -ex \
@@ -64,7 +64,7 @@ RUN set -ex \
   && wget -q --no-check-certificate -O ~/tmp/cppcheck-1.87.tar.gz https://github.com/danmar/cppcheck/archive/1.87.tar.gz \
   && tar -zxf ~/tmp/cppcheck-1.87.tar.gz -C ~/tmp \
   && cd ~/tmp/cppcheck-1.87 \
-  && make SRCDIR=build CFGDIR=cfg HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-sign-compare -Wno-unused-function" 
+  && make SRCDIR=build CFGDIR=cfg HAVE_RULES=yes CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-sign-compare -Wno-unused-function"
 
 # copy repo
 COPY . isce
@@ -81,4 +81,4 @@ RUN set -ex \
       -DCMAKE_CUDA_FLAGS="-arch=sm_37" \
       -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=true ../isce \
  && make -j`nproc` VERBOSE=1 \
- && ~/tmp/cppcheck-1.87/cppcheck --std=c++14 --enable=all --inconclusive --force --inline-suppr --xml --xml-version=2 /home/conda/isce/lib 2> cppcheck.xml 
+ && ~/tmp/cppcheck-1.87/cppcheck --std=c++14 --enable=all --inconclusive --force --inline-suppr --xml --xml-version=2 /home/conda/isce/lib 2> cppcheck.xml

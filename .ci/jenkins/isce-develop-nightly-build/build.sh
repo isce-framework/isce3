@@ -25,7 +25,7 @@ docker system prune -f
 memcheck=1
 
 # build base and dev images
-cd isceCI/images/centos
+cd .ci/images/centos
 ./build-base.sh ${TAG}
 curl -L -H "Accept: application/octet-stream" --output gcc7.tar.gz "https://${GIT_OAUTH_TOKEN}@github-fn.jpl.nasa.gov/api/v3/repos/NISAR-ADT/gcc7/releases/assets/40"
 ./build-dev.sh ${TAG}

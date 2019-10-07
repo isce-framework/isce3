@@ -37,5 +37,5 @@ RUN set -ex \
 # Add a file for users to source to activate the `conda`
 # environment `root` and the devtoolset compiler. Also
 # add a file that wraps that for use with the `ENTRYPOINT`.
-COPY isceCI/images/centos/entrypoint_source.isce /opt/docker/bin/entrypoint_source.isce
-COPY isceCI/images/centos/entrypoint_source.isce-ops /opt/docker/bin/entrypoint_source
+COPY .ci/images/centos/entrypoint_source.isce /opt/docker/bin/entrypoint_source.isce
+COPY .ci/images/centos/entrypoint_source.isce-ops /opt/docker/bin/entrypoint_source
