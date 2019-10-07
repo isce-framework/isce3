@@ -17,26 +17,3 @@ RUN apt-get install -y \
 # set up locales
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
-
-# set up home directory for build
-RUN git clone https://github.com/aivazis/config /config \
- && git clone https://github.com/pyre/pyre      /pyre
-
-RUN mkdir /pyre-install \
- && cd /pyre \
- && export LANG=en_US.UTF-8 \
- && BLD_CONFIG=/config \
-    EXPORT_ROOT=/pyre-install \
-    LANG=en_US.UTF-8 \
-    PYTHON=python3.7m \
-    PYTHON_INCDIR=/usr/include/python3.7m \
-    PYTHON_LIB=python3.7m \
-    PYTHON_LIBDIR=/usr/lib/python3.7m \
-    PYTHON_PYCFLAGS=-b \
-    /config/make/mm.py build
-
-# help cmake find pyre components
-ENV PYREDIR    /pyre-install
-ENV PYTHONPATH /pyre-install/packages
-
-RUN mkdir /isce-build /isce-install

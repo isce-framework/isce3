@@ -1,0 +1,158 @@
+Support for components in the pyre framework
+============================================
+
+Consider the following code snippet:
+
+#----------
+import pyre
+import gauss
+
+class exp(pyre.component, family="gauss.functors.exp", implements=gauss.interfaces.functor):
+    r"""
+    A functor implementation of the form $a \exp^{\beta x}$
+    """
+
+    a = pyre.properties.float(default=1)
+    β = pyre.properties.array(default=[0])
+
+    @pyre.export
+    def eval(self, points):
+        """
+        Evaluate my functional form over the set of {points}
+        """
+        # access the exponential from the math package
+        from math import exp
+        # cache the local values
+        a = self.a
+        β = self.β
+        # loop over the points
+        for x in points:
+            # compute the exponent
+            exponent = sum(x_i*β_i for x_i, β_i in zip(x, β))
+            # yield the value on this point
+            yield a * exp(exponent)
+        # all done
+        return
+#----------
+
+It declares a component {exp} that implements the interface {functor} found in the package
+{gauss} as {gauss.interfaces.functor}.
+            
+Once the python interpreter recognizes the end of the class declaration, it collects
+
+  (o) "exp", the name of the class being declared as a string
+  (o) the class records of the immediate base classes from which it derives
+  (o) any additional arguments that were present in the class statement
+  (o) a dictionary with the names and definitions of all the objects found in the body of the
+      class declaration
+
+The interpreter tries to identify which object is responsible for building the actual class
+record. This record builder is a class known as the metaclass of our class. A class can specify
+its metaclass explicitly in its class declaration through the {metaclass} variable, or
+implicitly by deriving from a class that specifies a metaclass. This search must yield a unique
+metaclass, and that metaclass must be a plausible handler for all the classes in the ancestry
+of exp. In our case, {exp} derives from {pyre.component}, whose metaclass is explicitly
+specified as {pyre.components.Actor} in its declaration. {Actor} itself derives from
+{pyre.components.Requirement}, which in turn derives from
+{pyre.patterns.AttributeClassifier}. The latter must derive from {type}, which is the base
+class of all metaclasses, in order to be considered a valid metaclass by the
+interpreter. {AttributeClassifier} is responsible for detecting the special attributes and
+methods in the class declaration that make up the component's interface and publicly accessible
+state. {Requirement} handles the aspects of class record building that are common between
+components and interfaces, and {Actor} handles all the tasks necessary to turn {exp} into a
+component.
+
+The metaclass interface consists of four methods: 
+
+  (o) {__prepare__}: builds and returns a dictionary like object that is used as storage for
+      the attributes that are collected from the class declaration. 
+
+  (o) {__new__}: receives the name of the class being built, a tuple of its immediate
+      superclasses, the dictionary like object that {__prepare__} returned, and any other
+      arguments present in the class statement; it is supposed to build and hand back the class
+      record. User-supplied metaclasses must defer the actual class record building to {type}.
+
+  (o) {__init__}: it receives the actual class record built by {__new__}, and the bases,
+      attributes and other arguments in the class declaration, and it is supposed to perform
+      any initializations. While there are no hard and fast rules about what should be done
+      where, one typically reserves {__init__} for initializations that deal with the
+      interactions between the new class and its environment, such as other classes it may
+      interact with. Implementations must make sure that {type.__init__} gets called at some
+      point, so that the interpreter can guarantee the consistency of the class record.
+
+  (o) {__call__}: this is the method that enables classes to act as callables. It is invoked
+      whenever a request is made to construct an instance of the class, and it is supposed to
+      build and return a new instance. Trapping it enables control over what happens right
+      before or right after the creation of a new class instance. The actual instance building
+      is performed by {type.__call__}, so you must make sure it is invoked by your
+      implementation.
+
+Here is what the metaclass hierarchy looks like for components. Note the marker <<instance>> in
+the relationship between {Component} and its metaclass {Actor}: a component class is an
+instance of its metaclass. This relationship is the source of any brain twisting you may feel
+while contemplating metaclasses.
+
+
+  type
+   ^
+   |  __prepare__
+   |  __new__
+   |  __init__
+   |  __call
+   |
+  AttributeClassifier
+   ^
+   |  __prepare__               object
+   |                             ^
+  Requirement                    |
+   ^                            Configurable
+   |  __new__                    ^
+   |                             |
+  Actor  <--------------------- Component
+      __new__     <<instance>>   ^
+      __init__                   |
+      __call__                  exp
+
+
+For components, the implementation of {__prepare__} is provided by {AttributeClassifier}, which
+returns an ordered dictionary since components must record the declaration order of their
+parts.
+
+Responsibility for {__new__} is shared by {AttributeClassifier}, {Requirement} and {Actor}. The
+first two coöperate to attach attributes that are common to components and interfaces:
+
+  (o) {pyre_name}: a string with the public name of the component; this name is used by the
+      framework to identify configuration settings that are destined for this class. For
+      component class records, it is initially just the name of the class; instances record
+      here the name provided during their construction.
+
+  (o) {pyre_namemap}: a dictionary that maps aliases of class attributes to their canonical
+      name, i.e. the name provided by the declaration of the trait. 
+
+  (o) {pyre_localTraits}: a tuple of the descriptors of the traits declared locally in this
+      class; these are harvested by {AttributeClassifier} .
+
+  (o) {pyre_inheritedTraits}: a tuple of the traits that are accessible through the base
+      classes; their harvest requires careful examination of the entire ancestral tree of our
+      class to make sure that any potential shadowing of names is takes into account.
+
+  (o) {pyre_pedigree}: a tuple of the base classes that are themselves components.
+
+{Actor} further decorates the class record with attributes that are specific to components:
+
+  (o) {pyre_family}: the public name shared by all instances of this class. This enables the
+      framework to provide public access to the default values of the class traits. These
+      defaults values are used to initialize the traits of component instances.
+
+  (o) {pyre_implements}: a record of the interfaces implemented by this component. This
+      specification is built using the value of the optional {implements} argument of the class
+      statement. If present, the framework will check that the declared component implements
+      its obligations correctly and raise an exception if it doesn't.
+
+After these attributes are attached to class record, {Actor} registers the freshly minted class
+record with the pyre executive.
+
+Requests to build actual component instances are trapped by {Actor.__init__}, which makes sure
+that the constructor of your component is called by delegating that task to {type}, and
+registers the newly created instance with the framework executive.
+

@@ -1,0 +1,5 @@
+django==1.7.1
+django-compressor==1.4
+django-debug-toolbar==1.2.2
+django-extensions==1.4.9
+pyjade==3.0.0

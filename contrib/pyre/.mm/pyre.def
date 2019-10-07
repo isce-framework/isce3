@@ -1,0 +1,24 @@
+# -*- Makefile -*-
+#
+# michael a.g. aïvázis
+# orthologue
+# (c) 1998-2019 all rights reserved
+#
+
+# global options for pyre
+PROJECT = pyre
+
+# version info
+PROJECT_MAJOR = 1
+PROJECT_MINOR = 9
+
+# the live host
+include live.def
+
+# project settings
+PROJ_CXX_FLAGS += $(COMPILER_CXX_STD14)
+
+# external dependencies
+include clock/default.def
+
+# end of file

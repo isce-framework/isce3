@@ -1,0 +1,32 @@
+#!/usr/bin/env python.pyre
+# -*- Python -*-
+# -*- coding: utf-8 -*-
+#
+# michael a.g. aïvázis
+# orthologue
+# (c) 1998-2019 all rights reserved
+#
+
+# get support
+import pyre
+
+# build a shell
+shell = pyre.shells.interactive()(name='pyre.shell')
+# make a context
+context = {
+    'pyre': pyre
+}
+# make a banner
+banner = pyre.meta.header
+
+# and launch it
+shell.pyre_interactiveSession(banner=banner, context=context)
+
+# configure the garbage collector
+# import gc
+# show me who has a handle to the pyre executive
+# for entity in gc.get_referrers(pyre.executive):
+    # print(type(entity))
+    # print("   ", entity)
+
+# end of file

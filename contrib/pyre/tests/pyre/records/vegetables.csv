@@ -1,0 +1,7 @@
+sku,description,production,overhead,shipping,margin
+4000,tomatoes,2.95,5,.2,50
+4001,peppers,0.35,15,.1,25
+4002,grapes,1.65,15,.15,15
+4003,kiwis,0.95,7,.15,75
+4004,lemons,0.50,4,.25,50
+4005,oranges,0.50,4,.25,50

@@ -1,0 +1,30 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_journal_Warning_icc)
+#error This header file contains implementation details of class Warning
+#else
+
+
+// meta methods
+// destructor
+pyre::journal::Warning::
+~Warning()
+{}
+
+
+// the default constructor
+pyre::journal::Warning::
+Warning(pyre::journal::Warning::string_t name) :
+    pyre::journal::Diagnostic<pyre::journal::Warning>("warning", name),
+    pyre::journal::Channel<pyre::journal::Warning, true>(name)
+{}
+
+
+# endif
+
+// end of file

@@ -3,12 +3,6 @@ FROM nisar/dev:latest
 # Set an encoding to make things work smoothly.
 ENV LANG en_US.UTF-8
 
-# Set pyre source
-ENV PYRE_ORG rtburns-jpl
-ENV PYRE_CONFIG_ORG aivazis
-ENV PYRE_REPO https://github.com/${PYRE_ORG}/pyre.git
-ENV PYRE_CONFIG_REPO https://github.com/${PYRE_CONFIG_ORG}/config.git
-
 # Set ISCE repo
 ENV ISCE_ORG ericmg
 ENV ISCE_REPO github-fn.jpl.nasa.gov/${ISCE_ORG}/isce.git
@@ -19,34 +13,6 @@ RUN set -ex \
  && sudo yum install -y \
       make ruby-devel rpm-build rubygems \
  && sudo gem install --no-ri --no-rdoc fpm
-
-# install pyre requirements and write pyre build configs
-COPY .ci/images/centos/requirements.txt.pyre /tmp/requirements.txt
-RUN set -ex \
- && source /opt/docker/bin/entrypoint_source \
- # If ISCE eventually needs pyre dependencies defined in the
- # requirements.txt.pyre, this should be moved to Dockerfile.dev.
- # Keeping this here for now to keep final ISCE docker images small.
- && sudo conda install --yes --file /tmp/requirements.txt
-
-# add latest pyre repos version metadata to invalidate cache
-ADD https://api.github.com/repos/${PYRE_ORG}/pyre/git/refs/heads/master pyre_version.json
-ADD https://api.github.com/repos/${PYRE_CONFIG_ORG}/config/git/refs/heads/master pyre_config_version.json
-
-# build pyre
-RUN set -ex \
- && source /opt/docker/bin/entrypoint_source \
- && mkdir tmp \
- && cd tmp \
- && git clone $PYRE_REPO \
- && cd pyre \
- && git clone $PYRE_CONFIG_REPO \
- && export \
-    PYTHON=python3 \
-    PYTHON_INCDIR=$(python3 -c "import sysconfig; print(sysconfig.get_paths()['include'])") \
-    PYTHON_LIBDIR=$(python3 -c "import sysconfig; print(sysconfig.get_config_vars()['LIBDIR'])") \
-    PYTHON_LIB=$(python3 -c "import sysconfig; print(':' + sysconfig.get_config_vars()['LDLIBRARY'])") \
- && sudo python3 ~/tmp/pyre/config/make/mm.py --prefix=/opt/pyre build
 
 # install doxygen and sphinx for doc generation;
 # install valgrind for memory leak check
@@ -61,6 +27,7 @@ RUN set -ex \
 # install cppcheck for C++ code analysis
 RUN set -ex \
   && source /opt/docker/bin/entrypoint_source \
+  && mkdir ~/tmp \
   && wget -q --no-check-certificate -O ~/tmp/cppcheck-1.87.tar.gz https://github.com/danmar/cppcheck/archive/1.87.tar.gz \
   && tar -zxf ~/tmp/cppcheck-1.87.tar.gz -C ~/tmp \
   && cd ~/tmp/cppcheck-1.87 \

@@ -1,0 +1,65 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_journal_Index_icc)
+#error This header file contains implementation details of class Index
+# else
+
+
+// lookup the pair (severity,channel) and return a reference to its state
+template <typename Value>
+typename pyre::journal::Index<Value>::value_t &
+pyre::journal::Index<Value>::
+lookup(const pyre::journal::Index<Value>::string_t & channel)
+{
+    return _index[channel];
+}
+
+
+// destructor
+template <typename Value>
+pyre::journal::Index<Value>::
+~Index()
+{}
+
+
+// the default constructor
+template <typename Value>
+pyre::journal::Index<Value>::
+Index() :
+    _index()
+{
+}
+
+
+// copy constructor
+template <typename Value>
+pyre::journal::Index<Value>::
+Index(const pyre::journal::Index<Value> & other) :
+    _index(other._index)
+{
+}
+
+
+// operator =
+template <typename Value>
+pyre::journal::Index<Value> &
+pyre::journal::Index<Value>::
+operator= (const pyre::journal::Index<Value> & other)
+{
+    // skip assignment to self
+    if (&other != this) {
+        // otherwise, copy the data
+        _index = other._index;
+    }
+    // and return me
+    return *this;
+}
+
+
+# endif
+// end of file

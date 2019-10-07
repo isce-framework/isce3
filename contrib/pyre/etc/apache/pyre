@@ -1,0 +1,53 @@
+# -*- apache -*-
+# michael a.g. aïvázis
+# orthologue
+# (c) 1998-2019 all rights reserved
+
+# pyre virtual host definition file
+
+<VirtualHost *:80>
+    ServerName pyre.orthologue.com
+    ServerAdmin web@orthologue.com
+
+    # the web
+    DocumentRoot /home/projects/pyre/web/www
+    <Directory />
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride None
+        Order allow,deny
+        Allow from all
+        RewriteEngine On
+        RewriteBase "/"
+        RewriteRule "/about" "/"
+        RewriteRule "/install" "/"
+        RewriteRule "/tutorials" "/"
+        RewriteRule "/contact" "/"
+    </Directory>
+
+    # the applications
+    ScriptAlias /bin/ /home/projects/pyre/web/bin/
+    <Directory "/home/projects/pyre/web/bin">
+        AllowOverride None
+        Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+        Order allow,deny
+        Allow from all
+    </Directory>
+
+    # the repository
+    Alias /1.0/ /home/projects/pyre/repository/1.0/
+    <Directory /home/projects/pyre/repository/1.0/>
+        Options FollowSymLinks MultiViews
+        AllowOverride None
+        Order allow,deny
+        Allow from all
+    </Directory>
+
+    # logs
+    # possible values include: debug, info, notice, warn, error, crit, alert, emerg
+    LogLevel warn
+    ErrorLog /var/log/apache2/error-pyre.log
+    CustomLog /var/log/apache2/access-pyre.log combined
+
+</VirtualHost>
+
+# end of file

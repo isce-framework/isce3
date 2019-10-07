@@ -1,0 +1,199 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_mpi_Group_icc)
+#error This header file contains implementation details of class Group
+#else
+
+// operators
+// union
+pyre::mpi::Group
+pyre::mpi::groupUnion(const Group & g1, const Group & g2)
+{
+    // storage for the new group
+    MPI_Group group;
+    // build it
+    int status = MPI_Group_union(g1, g2, &group);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // wrap it and return it
+    return Group(group);
+}
+
+// intersection
+pyre::mpi::Group
+pyre::mpi::groupIntersection(const Group & g1, const Group & g2)
+{
+    // storage for the new group
+    MPI_Group group;
+    // build it
+    int status = MPI_Group_intersection(g1, g2, &group);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // wrap it and return it
+    return Group(group);
+}
+
+// difference
+pyre::mpi::Group
+pyre::mpi::groupDifference(const Group & g1, const Group & g2)
+{
+    // storage for the new group
+    MPI_Group group;
+    // build it
+    int status = MPI_Group_difference(g1, g2, &group);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // wrap it and return it
+    return Group(group);
+}
+
+// interface
+// check whether this group is empty
+bool
+pyre::mpi::Group::
+isEmpty() const
+{
+    // check the handle against the predefined null communicator
+    return _handle ==  MPI_GROUP_EMPTY;
+}
+
+// free a group handle
+void
+pyre::mpi::Group::
+free(MPI_Group * handle)
+{
+    int status = MPI_Group_free(handle);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // and return
+    return;
+}
+
+// compute the rank of this process
+int
+pyre::mpi::Group::
+rank() const
+{
+    int rank;
+    int status = MPI_Group_rank(_handle, &rank);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // and return
+    return rank;
+}
+
+// compute the size of this communicator
+int
+pyre::mpi::Group::
+size() const
+{
+    int size;
+    int status = MPI_Group_size(_handle, &size);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // and return
+    return size;
+}
+
+// build a new group out of the provided ranks
+pyre::mpi::Group
+pyre::mpi::Group::
+include(const pyre::mpi::Group::ranklist_t & ranks) const
+{
+    // the size of the ranklist
+    int size = ranks.size();
+    // storage for the new group handle
+    MPI_Group group;
+    // build it
+    int status = MPI_Group_incl(_handle, size, const_cast<int *>(&ranks[0]), &group);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // otherwise build the new group and return it
+    return group_t(group);
+}
+
+// build a new group by excluding the specified ranks
+pyre::mpi::Group
+pyre::mpi::Group::
+exclude(const pyre::mpi::Group::ranklist_t & ranks) const
+{
+    // the size of the ranklist
+    int size = ranks.size();
+    // storage for the new group handle
+    MPI_Group group;
+    // build it
+    int status = MPI_Group_excl(_handle, size, const_cast<int *>(&ranks[0]), &group);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // otherwise build the new group and return it
+    return group_t(group);
+}
+
+// cast to MPI_Group
+pyre::mpi::Group::
+operator pyre::mpi::Group::handle_t () const
+{
+    return _handle;
+}
+
+// the destructor
+pyre::mpi::Group::
+~Group()
+{}
+
+// the default constructor
+pyre::mpi::Group::
+Group(Group::handle_t value, bool immortal):
+    _handle(value, immortal)
+{}
+
+// the copy constructor
+pyre::mpi::Group::
+Group(const pyre::mpi::Group & other):
+    _handle(other._handle)
+{}
+
+// operator =
+const pyre::mpi::Group &
+pyre::mpi::Group::
+operator = (const pyre::mpi::Group & other)
+{
+    // skip assignment to self
+    if (&other == this) { return *this; }
+    // otherwise, move the data
+    _handle = other._handle;
+    // and return me
+    return *this;
+}
+
+# endif
+// end of file

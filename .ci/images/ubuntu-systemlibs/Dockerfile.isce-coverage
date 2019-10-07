@@ -31,7 +31,6 @@ RUN apt-get update && apt-get install -y \
     wget && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=isce-builder /pyre-install /pyre-install
 COPY --from=isce-builder /isce-build   /isce-build
 #COPY --from=isce-builder /isce-install /isce-install
 COPY --from=isce-builder /isce-src /isce-src

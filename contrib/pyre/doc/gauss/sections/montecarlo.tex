@@ -1,0 +1,117 @@
+% -*- LaTeX -*-
+% -*- coding: utf-8 -*-
+%
+% michael a.g. aïvázis
+% orthologue
+% (c) 1998-2019 all rights reserved
+%
+
+\section{Monte Carlo integration: a bit of theory}
+\label{sec:montecarlo}
+
+Suppose you have a function $f(x)$ that is sufficiently well behaved for
+all $x$ in a region $\Omega \subset \mathbb{R}^{n}$ and you wish to compute the
+definite integral
+%
+\begin{equation}
+  I_{\Omega} (f)
+  =
+  \int_{\Omega} f
+\label{eq:integral}
+\end{equation}
+%
+The Monte Carlo integration method estimates the value of a definite integral by sampling
+the function at points $x$ in $\Omega$ that are chosen at random with uniform
+probability. Suppose that you have $N$ such points forming a sample $X_{N}$. The Monte
+Carlo estimate for the integral is
+%
+\begin{equation}
+  I_{\Omega} (f; X_{N})
+  =
+  \Omega \cdot \langle f \rangle
+  =
+  \Omega \, \frac{1}{N} \sum_{x \in X_{N}} f(x)
+\label{eq:mc-estimate}
+\end{equation}
+%
+where $\langle f \rangle$ is the sample mean of the function $f$ and we have used $\Omega$
+as short-hand for the volume of the associated region. More details can be found in
+\citep{hammersley,ueberhuber}; see \cite{weinzierl} for an excellent pedagogical
+introduction to the subject.
+
+One can show that the error in the estimate descreases as $1/\sqrt{N}$, a convergence rate that
+is rather slow. It is possible to improve on this by being smart about how the region of
+integration is sampled; see \cite{lepage-78,lepage-80,press}. On the bright side, the
+convergence rate is {\em independent} of the dimensionality of the integral, making this method
+very well suited for multi-dimensional integrals. Further, it is rather straightforward to
+write a parallel implementation and compensate for the slow convergence by computing on a large
+machine.
+
+We are ready to recast \eqref{mc-estimate} in a form better suited for a computer
+implementation, where we use pseudo-random number generators to create the sample set. Most
+generators produce numbers between $0$ and $1$, so actual calculations require finding a box
+$B_{\Omega}$ that contains $\Omega$, and building $n$-dimensional sampling points $x$ by
+stretching and translating the unit interval to match the dimensions of $B_{\Omega}$. The
+integration is then restricted to $\Omega$ by introducing a function
+%
+\begin{equation}
+  \Theta_{\Omega}(x)
+  =
+  \left\{
+  \begin{array}{ll}
+  1 & x \in \Omega \\
+  0 & {\rm otherwise}
+  \end{array}
+  \right.
+\label{eq:theta}
+\end{equation}
+%
+that takes the value $1$ inside $\Omega$ and vanishes identically outside. We can now recast
+\eqref{integral} as
+%
+\begin{equation}
+  I_{\Omega} (f)
+  =
+  \int_{B_{\Omega}} \Theta_{\Omega} \, f
+\label{eq:integral-box}
+\end{equation}
+%
+There are now two classes of points in the sample $X_{N}$: those interior to $\Omega$, and the
+rest. Let $\tilde{N}$ be the number of points in $X_{N}$ that fall in $\Omega$; then
+\eqref{mc-estimate} becomes:
+%
+\begin{equation}
+  I_{\Omega} (f; X_{N})
+  =
+  \Omega \, \frac{1}{\tilde{N}} \sum_{x \in X_{\tilde{N}}} f(x)
+\label{eq:mc-box}
+\end{equation}
+%
+where $X_{\tilde{N}}$ is the subset of the sample in $\Omega$. Now, let $B$ be the volume
+of the sampling box and observe that
+%
+\begin{equation}
+  \Omega
+  =
+  \frac{\tilde{N}}{N} B
+\label{eq:volume-estimate}
+\end{equation}
+%
+is a good estimate of the volume of the integration region. Further, the sum over
+$X_{\tilde{N}}$ in \eqref{mc-box} can be extended to $X_{N}$ as long as $f$ is
+multiplied by $\Theta_{\Omega}$. We obtain
+%
+\begin{equation}
+  I_{\Omega} (f; X_{N})
+  =
+  B \, \frac{1}{N} \sum_{x \in X_{N}} \Theta_{\Omega} \, f(x)
+\label{eq:mc}
+\end{equation}
+%
+
+In the remainder of this article, we will transform this rather innocuous expression into
+a sequence of computer programs of increasing complexity and, hopefully, flexibility. The
+goal is to construct a piece of software that will enable our end users to explore the
+method with as little programming on their part as possible.
+
+% end of file

@@ -1,0 +1,15 @@
+;
+; michael a.g. aïvázis
+; orthologue
+; (c) 1998-2019 all rights reserved
+;
+
+; by default, postgres servers connect to the {postgres} database
+pyre.db.server.postgres:
+    database = postgres
+
+; the database for this example
+pyre.db.server.postgres # bizbook:
+    database = bizbook
+
+; end of file

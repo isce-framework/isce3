@@ -1,0 +1,76 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+// code guard
+#if !defined(pyre_memory_ConstView_icc)
+#error This header file contains implementation details of class pyre::memory::ConstView
+#endif
+
+
+// meta-methods
+template <typename cellT>
+pyre::memory::ConstView<cellT>::
+~ConstView() {}
+
+template <typename cellT>
+pyre::memory::ConstView<cellT>::
+ConstView(const pointer buffer) :
+    _buffer {buffer}
+{}
+
+
+template <typename cellT>
+pyre::memory::ConstView<cellT>::
+ConstView(const ConstView & other) :
+    _buffer {other._buffer}
+{}
+
+template <typename cellT>
+pyre::memory::ConstView<cellT> &
+pyre::memory::ConstView<cellT>::
+operator=(const ConstView & other) {
+    // trap assignment to self
+    if (this == &other) {
+        // and bail
+        return *this;
+    }
+    // grab the memory location
+    _buffer = other._buffer;
+    // make me available
+    return *this;
+}
+
+template <typename cellT>
+pyre::memory::ConstView<cellT>::
+ConstView(const ConstView && other) :
+    _buffer {other._buffer}
+{}
+
+template <typename cellT>
+pyre::memory::ConstView<cellT> &
+pyre::memory::ConstView<cellT>::
+operator=(const ConstView && other) {
+    // grab the memory location
+    _buffer = other._buffer;
+    // make me available
+    return *this;
+}
+
+
+
+// interface
+// accessor
+template <typename cellT>
+auto
+pyre::memory::ConstView<cellT>::
+data() const {
+    // easy enough
+    return _buffer;
+}
+
+// end of file

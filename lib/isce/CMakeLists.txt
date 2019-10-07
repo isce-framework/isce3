@@ -16,8 +16,8 @@ add_subdirectory(unwrap)
 add_subdirectory(matchtemplate)
 
 # Add library dependencies
-target_link_libraries(${LISCE} ${GDAL_LIBRARY} ${HDF5_LIBRARY} ${PYRE_LIBRARY}
-    ${PYRE_JOURNAL_LIBRARY} ${FFTWF_LIB} ${FFTW_LIB} ${FFTW_THREADS_LIB} ${FFTWF_THREADS_LIB})
+target_link_libraries(${LISCE} ${GDAL_LIBRARY} ${HDF5_LIBRARY} ${LPYRE} ${LJOURNAL}
+    ${FFTWF_LIB} ${FFTW_LIB} ${FFTW_THREADS_LIB} ${FFTWF_THREADS_LIB})
 
 # Add include directories
 # Pyre needed for journaling

@@ -1,0 +1,25 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_extensions_journal_DeviceProxy_icc)
+#error This header file contains implementation details of class DeviceProxy
+#else
+
+
+// the default constructor
+pyre::extensions::journal::DeviceProxy::
+DeviceProxy(PyObject * keeper):
+    pyre::journal::Device::Device(),
+    _keeper(keeper)
+{
+    Py_INCREF(_keeper);
+}
+
+
+# endif
+
+// end of file

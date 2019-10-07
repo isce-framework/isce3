@@ -1,0 +1,74 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+// code guard
+#if !defined(pyre_memory_View_icc)
+#error This header file contains implementation details of class pyre::memory::View
+#endif
+
+
+// meta-methods
+template <typename cellT>
+pyre::memory::View<cellT>::
+~View() {}
+
+template <typename cellT>
+pyre::memory::View<cellT>::
+View(pointer buffer) :
+    _buffer {buffer}
+{}
+
+template <typename cellT>
+pyre::memory::View<cellT>::
+View(const View<cellT> & other) :
+    _buffer {other._buffer}
+{}
+
+template <typename cellT>
+pyre::memory::View<cellT> &
+pyre::memory::View<cellT>::
+operator=(const View<cellT> & other) {
+    // trap assignment to self
+    if (this == &other) {
+        // and bail
+        return *this;
+    }
+    // grab the memory location
+    _buffer = other._buffer;
+    // make me available
+    return *this;
+}
+
+template <typename cellT>
+pyre::memory::View<cellT>::
+View(const View && other) :
+    _buffer {other._buffer}
+{}
+
+template <typename cellT>
+pyre::memory::View<cellT> &
+pyre::memory::View<cellT>::
+operator=(const View && other) {
+    // grab the memory location
+    _buffer = other._buffer;
+    // make me available
+    return *this;
+}
+
+
+// interface
+// accessor
+template <typename cellT>
+auto
+pyre::memory::View<cellT>::
+data() const {
+    // easy enough
+    return _buffer;
+}
+
+// end of file

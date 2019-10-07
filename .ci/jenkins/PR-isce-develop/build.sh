@@ -27,8 +27,8 @@ curl -L -H "Accept: application/octet-stream" --output gcc7.tar.gz \
   "https://${GIT_OAUTH_TOKEN}@github-fn.jpl.nasa.gov/api/v3/repos/NISAR-ADT/gcc7/releases/assets/40"
 ./build-dev.sh $TAG
 
-# use multistage docker build to build pyre and isce from source
-# in dev container, run tests and memory checks, create pyre/isce
+# use multistage docker build to build isce from source
+# in dev container, run tests and memory checks, create
 # rpm, and install in the minimal base image
 ./build-isce-src.sh $TAG $WORKSPACE
 ./run-isce-tests.sh $TAG $memcheck

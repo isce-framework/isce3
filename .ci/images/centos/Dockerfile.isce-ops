@@ -13,7 +13,6 @@ RUN set -ex \
  && cd .. \
  && mkdir -p rpm-build/opt \
  && sudo mv /opt/isce rpm-build/opt \
- && sudo mv /opt/pyre rpm-build/opt \
  && fpm -s dir -t rpm -C rpm-build --name isce \
       --prefix=/ --version=3.0 --provides=isce \
       --maintainer=piyush.agram@jpl.nasa.gov \

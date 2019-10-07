@@ -1,0 +1,56 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+// code guard
+#if !defined(pyre_geometry_PointCloud_icc)
+#error This header file contains implementation details of class pyre::geometry::PointCloud
+#endif
+
+// inlines
+// meta-methods
+template <typename pointT>
+pyre::geometry::PointCloud<pointT>::
+PointCloud(size_type count) :
+    _points(count)
+{}
+
+// interface
+// indexed access
+template <typename pointT>
+auto &
+pyre::geometry::PointCloud<pointT>::
+operator[] (size_type pos) {
+    // delegate
+    return _points[pos];
+}
+
+template <typename pointT>
+const auto &
+pyre::geometry::PointCloud<pointT>::
+operator[] (size_type pos) const {
+    // delegate
+    return _points[pos];
+}
+
+// iteration
+template <typename pointT>
+auto
+pyre::geometry::PointCloud<pointT>::
+begin()  const {
+    // delegate
+    return _points.cbegin();
+}
+
+template <typename pointT>
+auto
+pyre::geometry::PointCloud<pointT>::
+end()  const {
+    // delegate
+    return _points.cend();
+}
+
+// end of file

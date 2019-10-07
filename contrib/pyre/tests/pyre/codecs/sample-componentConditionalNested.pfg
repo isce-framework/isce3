@@ -1,0 +1,12 @@
+;
+; michael a.g. aïvázis
+; orthologue
+; (c) 1998-2019 all rights reserved
+;
+
+test.item # sample:
+    ; a nested component with a conditional binding -->
+    test.part # engine:
+        id = 3Q4XYZ
+
+; end of file

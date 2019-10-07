@@ -42,7 +42,11 @@ endfunction()
 
 ##Check for Pyre installation
 function(CheckPyre)
-    FIND_PACKAGE(Pyre REQUIRED)
+    if(HAVE_PYRE)
+        find_package(Pyre REQUIRED)
+    else()
+        set(PYRE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include PARENT_SCOPE)
+    endif()
 endfunction()
 
 function(CheckFFTW3)

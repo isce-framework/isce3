@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+# -*- Python -*-
+# -*- coding: utf-8 -*-
+#
+# michael a.g. aïvázis
+# orthologue
+# (c) 1998-2019 all rights reserved
+#
+
+# support
+import pyre
+
+# the app
+class Config(pyre.application):
+
+    # user configurable state
+    prefix = pyre.properties.bool(default=False)
+    prefix.doc = "the top level installation directory"
+
+    path = pyre.properties.bool(default=False)
+    path.doc = "the directory with the built in scripts "
+
+    pythonpath = pyre.properties.bool(default=False)
+    pythonpath.doc = "the directory with the python packages"
+
+    includes = pyre.properties.bool(default=False)
+    includes.doc = "compiler access to the headers"
+
+    libs = pyre.properties.bool(default=False)
+    libs.doc = "compiler link line"
+
+
+    # the main entry point
+    @pyre.export
+    def main(self, *args, **kwds):
+        """
+        Print pyre configuration information
+        """
+        # do we need to show the help screen
+        help = True
+
+        # if we were asked to show the installation directory
+        if self.prefix:
+            # do it
+            print(f"{pyre.prefix}")
+            # and lower the flag
+            help = False
+
+        # if we were asked to show the directory with the built in scripts
+        if self.path:
+            # do it
+            print(f"{pyre.prefix}/bin")
+            # and lower the flag
+            help = False
+
+        # if we were asked to show the directory with the python packages
+        if self.pythonpath:
+            # do it
+            print(f"{pyre.home.parent}")
+            # and lower the flag
+            help = False
+
+        # if we were asked to build a compiler command line for accessing the headers
+        if self.includes:
+            # do it
+            print(f"-I{pyre.prefix}/include")
+            # and lower the flag
+            help = False
+
+        # if were asked to build a link line
+        if self.libs:
+            # the libraries
+            libs = ["pyre", "journal"]
+            # get the host
+            host = pyre.executive.host
+            # if the host is a linux box
+            if isinstance(host, pyre.platforms.linux()):
+                # we need the runtime clock library on the link line
+                libs.append("rt")
+            # assemble the libraries
+            libs = " ".join(f"-l{lib}" for lib in libs)
+            # do it
+            print(f"-L{pyre.prefix}/lib {libs}")
+            # and lower the flag
+            help = False
+
+        # if we weren't asked to do anything
+        if help:
+            # show the help screen
+            return self.help()
+
+        # all done
+        return 0
+
+
+# main
+if __name__ == '__main__':
+    # instantiate
+    app = Config(name='pyre-config')
+    # invoke
+    status = app.run()
+    # and share the status code
+    raise SystemExit(status)
+
+
+# end of file
