@@ -106,7 +106,8 @@ TYPED_TEST(IH5Test, nochunk) {
     }
 
     //Create a HDF5 file
-    std::string wfilename = "dummy.h5"; 
+    std::string wfilename = "castwrite_" + std::string(typeid(FirstParam).name())
+                                    + std::string(typeid(SecondParam).name()) + ".h5";
     struct stat buffer; 
     if ( stat(wfilename.c_str(), &buffer) == 0 ) 
         std::remove(wfilename.c_str()); 
@@ -167,7 +168,8 @@ TYPED_TEST(IH5Test, chunk) {
     }
 
     //Create a HDF5 file
-    std::string wfilename = "dummy.h5";
+    std::string wfilename = "castwrite_" + std::string(typeid(FirstParam).name())
+                                    + std::string(typeid(SecondParam).name()) + ".h5";
     struct stat buffer;
     if ( stat(wfilename.c_str(), &buffer) == 0 )
         std::remove(wfilename.c_str());
