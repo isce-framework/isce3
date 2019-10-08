@@ -130,7 +130,7 @@ In this example, we will demonstrate the inverse mapping algorithm by using it t
       llh = [np.radians(targ[0]), np.radians(targ[1]), targ[2]]
 
       #Estimate target position
-      taz, rng = py_geo2rdr(llh, ellps, orbit, doppler, mode, 
+      taz, rng = py_geo2rdr(llh, ellps, orbit, doppler, mode, side, 
                               threshold=1.0e-8,
                               maxiter=51,
                               dR=1.0e-8)
