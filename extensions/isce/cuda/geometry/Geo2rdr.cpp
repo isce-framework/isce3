@@ -21,7 +21,7 @@ using isce::io::Raster;
 /** @param[in] topoRaster outputs of topo -i.e, pixel-by-pixel x,y,h as bands
   * @param[in] outdir directory to write outputs to
   * @param[in] azshift Number of lines to shift by in azimuth
-  * @param[in] rgshift Number of pixels to shift by in range 
+  * @param[in] rgshift Number of pixels to shift by in range
   *
   * This is the main geo2rdr driver. The pixel-by-pixel output filenames are fixed for now
   * <ul>
@@ -51,7 +51,7 @@ geo2rdr(isce::io::Raster & topoRaster,
 /** @param[in] topoRaster outputs of topo - i.e, pixel-by-pixel x,y,h as bands
   * @param[in] outdir directory to write outputs to
   * @param[in] rgoffRaster range offset output
-  * @param[in] azoffRaster azimuth offset output 
+  * @param[in] azoffRaster azimuth offset output
   * @param[in] azshift Number of lines to shift by in azimuth
   * @param[in] rgshift Number of pixels to shift by in range */
 void isce::cuda::geometry::Geo2rdr::
@@ -163,7 +163,7 @@ geo2rdr(isce::io::Raster & topoRaster,
         azoffRaster.setBlock(azoff, 0, lineStart, demWidth, blockLength);
 
     } // end for loop blocks in DEM image
-            
+
     // Print out convergence statistics
     info << "Total convergence: " << totalconv << " out of "
          << (demWidth * demLength) << pyre::journal::endl;
@@ -174,11 +174,12 @@ geo2rdr(isce::io::Raster & topoRaster,
 void isce::cuda::geometry::Geo2rdr::
 _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
               double r0, double rngend, double dmrg, size_t demWidth, size_t demLength) {
-    info 
+    info
         << pyre::journal::newline
         << "Starting acquisition time: " << t0 << pyre::journal::newline
         << "Stop acquisition time: " << tend << pyre::journal::newline
         << "Azimuth line spacing in seconds: " << dtaz << pyre::journal::newline
+        << "Slant range spacing in meters:" << dmrg << pyre::journal::newline
         << "Near range (m): " << r0 << pyre::journal::newline
         << "Far range (m): " << rngend << pyre::journal::newline
         << "Radar image length: " << this->radarGridParameters().length() << pyre::journal::newline
