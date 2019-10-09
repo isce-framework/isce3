@@ -216,7 +216,10 @@ geo2rdr(const Vec3& inputLLH,
         const isce::cuda::core::gpuOrbit& orbit,
         const isce::cuda::core::gpuLUT1d<double> & doppler,
         double * aztime_result, double * slantRange_result,
-        double wavelength, double threshold, int maxIter, double deltaRange) {
+        double wavelength, int side, double threshold, 
+        int maxIter, double deltaRange) {
+
+    assert( side == 1 || side == -1 );
 
     // Cartesian type local variables
     // Temp local variables for results
@@ -243,7 +246,15 @@ geo2rdr(const Vec3& inputLLH,
         // Compute slant range from satellite to ground point
         const Vec3 dr = inputXYZ - pos;
         slantRange = dr.norm();
-        // Check convergence
+ 
+        // Check look side
+        if (dr.cross(vel).dot(pos)*side > 0) {
+           *slantRange_result = slantRange;
+           *aztime_result = aztime;
+           return converged;
+        }
+
+       // Check convergence
         if (std::abs(slantRange - slantRange_old) < threshold) {
             converged = 1;
             *slantRange_result = slantRange;
@@ -369,13 +380,13 @@ void geo2rdr_d(const Vec3 llh,
                isce::cuda::core::gpuOrbit orbit,
                isce::cuda::core::gpuLUT1d<double> doppler,
                double * aztime, double * slantRange,
-               double wavelength, double threshold, int maxIter, double deltaRange,
-               int *resultcode) {
+               double wavelength, int side, double threshold, 
+               int maxIter, double deltaRange, int *resultcode) {
 
     // Call device function
     *resultcode = isce::cuda::geometry::geo2rdr(
-        llh, ellps, orbit, doppler, aztime, slantRange, wavelength, threshold,
-        maxIter, deltaRange);
+        llh, ellps, orbit, doppler, aztime, slantRange, wavelength,
+        side, threshold, maxIter, deltaRange);
 }
 
 // Host geo->radar to test underlying functions in a single-threaded context
@@ -386,7 +397,8 @@ geo2rdr_h(const cartesian_t& llh,
           const isce::core::Orbit & orbit,
           const isce::core::LUT1d<double> & doppler,
           double & aztime, double & slantRange,
-          double wavelength, double threshold, int maxIter, double deltaRange) {
+          double wavelength, int side, double threshold,
+          int maxIter, double deltaRange) {
 
     // Make GPU objects
     isce::core::Ellipsoid gpu_ellps(ellps);
@@ -406,8 +418,9 @@ geo2rdr_h(const cartesian_t& llh,
 
     // Run geo2rdr on the GPU
     dim3 grid(1), block(1);
-    geo2rdr_d<<<grid, block>>>(llh, gpu_ellps, gpu_orbit, gpu_doppler, aztime_d, slantRange_d,
-                               wavelength, threshold, maxIter, deltaRange, resultcode_d);
+    geo2rdr_d<<<grid, block>>>(llh, gpu_ellps, gpu_orbit, gpu_doppler, 
+                               aztime_d, slantRange_d, wavelength, side,
+                               threshold, maxIter, deltaRange, resultcode_d);
 
     // Copy results to CPU and return any error code
     int resultcode;

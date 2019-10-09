@@ -38,8 +38,8 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
         isce::cuda::core::gpuOrbit orbit,
         isce::cuda::core::gpuLUT1d<double> dop,
         size_t width,
-        double wavelength
-        ) {
+        double wavelength,
+        int side) {
 
     size_t xidx = threadIdx.x + blockIdx.x * blockDim.x;
     size_t yidx = threadIdx.y + blockIdx.y * blockDim.y;
@@ -61,7 +61,8 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     isce::cuda::core::projInverse(epsgcode, inputDEM, inputLLH);
 
     isce::cuda::geometry::geo2rdr(inputLLH, ellps, orbit, dop,
-                                  &a, &r, wavelength, 1e-4, 20, 1e-4);
+                                  &a, &r, wavelength, side,
+                                  1e-4, 20, 1e-4);
 
     const float azpix = (a - start) / pixazm;
     const float ranpix = (r - r0) / dr;
@@ -346,8 +347,9 @@ namespace isce { namespace cuda {
                 dim3 grid(xmax / BLOCK_X + 1,
                           ymax / BLOCK_Y + 1);
                 facet<<<grid, block>>>(out_d, xmax, ymax, upsample_factor,
-                                       dem_interp, ellps, orbit, dop, radarGrid.width(),
-                                       radarGrid.wavelength());
+                                       dem_interp, ellps, orbit, dop, 
+                                       radarGrid.width(), radarGrid.wavelength(),
+                                       lookDirection);
                 checkCudaErrors(cudaPeekAtLastError());
                 checkCudaErrors(cudaDeviceSynchronize());
             }

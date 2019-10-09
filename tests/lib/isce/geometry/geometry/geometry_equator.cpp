@@ -207,9 +207,11 @@ TEST_F(GeometryTest, GeoToRdrEquator) {
         // Run geo2rdr
         double aztime, slantRange;
 
-        // Run rdr2geo with left looking side
+        // Run rdr2geo with left looking side (side = +1)
+        int side = +1;
         int stat = isce::geometry::geo2rdr(targ_LLH, ellipsoid, orbit,
-            zeroDoppler, aztime, slantRange, wavelength, 1.0e-9, 50, 10.0);
+            zeroDoppler, aztime, slantRange, wavelength, side,
+            1.0e-9, 50, 10.0);
 
         // Check
         ASSERT_EQ(stat, 1);

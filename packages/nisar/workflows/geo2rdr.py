@@ -51,8 +51,8 @@ def main(opts):
 
     # Create geo2rdr instance
     geo2rdrObj = isce3.geometry.geo2rdr(radarGrid=radarGrid,
-                                    orbit=orbit,
-                                    ellipsoid=ellipsoid)
+                                        orbit=orbit,
+                                        ellipsoid=ellipsoid)
 
     # Read topo multiband raster
     topoRaster = isce3.io.raster(filename=os.path.join(opts.topodir, 'topo.vrt'))

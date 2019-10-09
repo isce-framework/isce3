@@ -19,7 +19,7 @@ cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
                 const Orbit &,
                 const LUT2d[double] &,
                 double &, double &,
-                double, double, int, double)
+                double, int, double, int, double)
 
     # Radar geometry coordinates to map coordinates transformer
     int rdr2geo(double, double, double,

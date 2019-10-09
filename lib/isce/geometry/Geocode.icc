@@ -106,8 +106,8 @@ radarGrid(isce::core::LUT2d<double> doppler,
     _doppler = doppler;
     _radarGrid = isce::product::RadarGridParameters(
         numberAzimuthLooks, numberRangeLooks, azimuthStartTime, wavelength,
-        1.0/azimuthTimeInterval, startingRange, rangeSpacing, radarGridLength,
-        radarGridWidth, refEpoch
+        1.0/azimuthTimeInterval, startingRange, rangeSpacing, lookSide,
+        radarGridLength, radarGridWidth, refEpoch
     );
     _lookSide = lookSide;
 }

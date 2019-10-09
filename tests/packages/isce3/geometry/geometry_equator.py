@@ -146,10 +146,13 @@ def test_geo2rdr():
         # expected Range 
         expRange = np.sqrt(np.sum(los**2))
 
+        # Run rdr2geo with left looking side
+        side = 1
         azTime, slantRange = isce3.geometry.geo2rdr_point(
                 lonlatheight=list(targ_LLH), ellipsoid=ellipsoid, 
                 orbit=orb, doppler=zeroDop, 
-                wavelength=0.24, threshold=1.0e-9, maxiter=50, dR=10.0
+                wavelength=0.24, side=side,
+                threshold=1.0e-9, maxiter=50, dR=10.0
                 )
 
         assert abs(azTime - tinp) < 1.0e-6

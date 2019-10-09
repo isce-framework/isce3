@@ -10,7 +10,7 @@ from Orbit cimport orbitInterpMethod
 
 
 def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyLUT2d doppler,
-               double wvl, double threshold = 0.05, int maxiter = 50,
+               double wvl, int side, double threshold = 0.05, int maxiter = 50,
                double dR = 1.0e-8):
 
     # Transfer llh to a cartesian_t
@@ -26,7 +26,7 @@ def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyLUT2d doppler,
             deref(ellps.c_ellipsoid),
             deref(orbit.c_orbit),
             deref(doppler.c_lut),
-            azimuthTime, slantRange, wvl, threshold, maxiter, dR)
+            azimuthTime, slantRange, wvl, side, threshold, maxiter, dR)
 
     # All done
     return azimuthTime, slantRange

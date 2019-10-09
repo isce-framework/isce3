@@ -151,7 +151,8 @@ geo2rdr(isce::io::Raster & topoRaster,
                 double aztime, slantRange;
                 int geostat = isce::geometry::geo2rdr(
                     llh, _ellipsoid, _orbit, _doppler,  aztime, slantRange,
-                    _radarGrid.wavelength(), _threshold, _numiter, 1.0e-8
+                    _radarGrid.wavelength(), _radarGrid.lookSide(),
+                    _threshold, _numiter, 1.0e-8
                 );
 
                 // Check if solution is out of bounds

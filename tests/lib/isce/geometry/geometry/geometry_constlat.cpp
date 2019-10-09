@@ -155,7 +155,7 @@ TEST_F(GeometryTest, RdrToGeoLat) {
             // Initialize guess
             isce::core::cartesian_t targetLLH = {0.0, 0.0, 0.0};
 
-            // Run rdr2geo with left looking side
+            // Run rdr2geo
             int stat = isce::geometry::rdr2geo(tinp, rng, 0.0,
                         orbit, ellipsoid, dem, targetLLH, 0.24, sides[kk],
                         1.0e-8, 25, 15, isce::core::HERMITE_METHOD);
@@ -193,8 +193,8 @@ TEST_F(GeometryTest, GeoToRdrLat) {
     // Dummy wavelength
     const double wavelength = 0.24;
 
-    //Test over 20 points
-    for (size_t ii = 0; ii < 20; ++ii)
+    //Test over 19 points
+    for (size_t ii = 1; ii < 20; ++ii)
     {
         //Azimuth time
         double tinp = 25.0 + ii * 2.0;
@@ -233,12 +233,11 @@ TEST_F(GeometryTest, GeoToRdrLat) {
 
             // Run geo2rdr
             double aztime, slantRange;
-
-            // Run rdr2geo with left looking side
             int stat = isce::geometry::geo2rdr(targ_LLH, ellipsoid, orbit,
-                zeroDoppler, aztime, slantRange, wavelength, 1.0e-9, 50, 10.0);
-
-            // Check
+                zeroDoppler, aztime, slantRange, wavelength, sgn,
+                1.0e-9, 50, 10.0);
+            
+           // Check
             ASSERT_EQ(stat, 1);
             ASSERT_NEAR(aztime, tinp, 1.0e-5);
             ASSERT_NEAR(slantRange, expRange, 1.0e-8);

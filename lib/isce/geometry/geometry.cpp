@@ -190,8 +190,11 @@ int isce::geometry::
 geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const Poly2d & doppler, double & aztime, double & slantRange,
         double wavelength, double startingRange, double rangePixelSpacing, size_t rwidth,
-        double threshold, int maxIter, double deltaRange)
+        int side, double threshold, int maxIter, double deltaRange)
 {
+
+    assert( side == 1 || side == -1 );
+
     Vec3 satpos, satvel, inputXYZ, dr;
 
     // Convert LLH to XYZ
@@ -251,6 +254,11 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
 
         // Compute slant range from satellite to ground point
         dr = inputXYZ - satpos;
+
+        // Check look side
+        if (dr.cross(satvel).dot(satpos)*side > 0)
+            return converged;
+
         slantRange = dr.norm();
         // Check convergence
         if (std::abs(slantRange - slantRange_old) < threshold) {
@@ -285,8 +293,11 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
 int isce::geometry::
 geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const LUT2d<double> & doppler, double & aztime, double & slantRange,
-        double wavelength, double threshold, int maxIter, double deltaRange)
-{
+        double wavelength, int side, double threshold, int maxIter, 
+        double deltaRange) {
+
+    assert( side == 1 || side == -1 );
+
     Vec3 satpos, satvel, inputXYZ;
 
     // Convert LLH to XYZ
@@ -309,6 +320,11 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         // Compute slant range from satellite to ground point
         const Vec3 dr = inputXYZ - satpos;
         slantRange = dr.norm();
+
+        // Check look side
+        if (dr.cross(satvel).dot(satpos)*side > 0)
+            return converged;
+
         // Check convergence
         if (std::abs(slantRange - slantRange_old) < threshold) {
             converged = 1;

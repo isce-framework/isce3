@@ -80,7 +80,18 @@ class Base(pyre.component,
         Return radarGridParameters object
         '''
         swath = self.getSwathMetadata(frequency=frequency)
-        return swath.getRadarGridParameters() 
+        lookDirectionPath = os.path.join(self.IdentificationPath,
+                                         'lookDirection')
+        lookDirection = None
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            lookDirectionObj = fid[lookDirectionPath] 
+            if lookDirectionObj.dtype == 'object':
+                lookDirection = fid[lookDirectionPath].value.decode()
+            else:
+                lookDirection = fid[lookDirectionPath].value
+            if isinstance(lookDirection, str):
+                lookDirection = 1 if 'right' in lookDirection.lower() else -1
+        return swath.getRadarGridParameters(lookDirection)
 
     @pyre.export
     def getGridMetadata(self, frequency='A'):
@@ -125,8 +136,8 @@ class Base(pyre.component,
             slantRange = fid[slantRangePath][:]
 
         dopplerCentroid = isce3.core.dopplerCentroid(x=slantRange, 
-                                                    y=zeroDopplerTime, 
-                                                    z=doppler)
+                                                     y=zeroDopplerTime, 
+                                                     z=doppler)
         return dopplerCentroid
 
     @pyre.export

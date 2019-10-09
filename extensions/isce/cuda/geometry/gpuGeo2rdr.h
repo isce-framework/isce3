@@ -20,11 +20,14 @@ namespace isce {
                                const std::valarray<double> & hgt,
                                std::valarray<float> & azoff,
                                std::valarray<float> & rgoff,
-                               int topoEPSG, size_t lineStart, size_t blockWidth,
-                               double t0, double r0, size_t numberAzimuthLooks,
-                               size_t numberRangeLooks, size_t length, size_t width,
-                               double prf, double rangePixelSpacing, double wavelength,
-                               double threshold, double numiter, unsigned int & totalconv);
+                               int topoEPSG, size_t lineStart, 
+                               size_t blockWidth, double t0, double r0, 
+                               size_t numberAzimuthLooks, 
+                               size_t numberRangeLooks, size_t length,
+                               size_t width, double prf, 
+                               double rangePixelSpacing, double wavelength,
+                               int side, double threshold, double numiter,
+                               unsigned int & totalconv);
         }
     }
 }

@@ -41,7 +41,7 @@ namespace geometry {
                          const isce::cuda::core::gpuOrbit &,
                          const isce::cuda::core::gpuLUT1d<double> &,
                          double *, double *,
-                         double, double, int, double);
+                         double, int, double, int, double);
 
     /** Radar geometry coordinates to map coordinates transformer (host testing) */
     CUDA_HOST int rdr2geo_h(const isce::core::Pixel &,
@@ -59,7 +59,7 @@ namespace geometry {
                             const isce::core::Orbit &,
                             const isce::core::LUT1d<double> &,
                             double &, double &,
-                            double, double, int, double);
+                            double, int, double, int, double);
 
 } // namespace geometry
 } // namespace cuda

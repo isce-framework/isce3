@@ -106,6 +106,7 @@ int rdr2geo(const isce::core::Pixel & pixel,
  * @param[in] startingRange Starting slant range of reference image
  * @param[in] rangePixelSpacing Slant range pixel spacing
  * @param[in] rwidth Width (number of samples) of reference image
+ * @param[in] side +1 for left and -1 for right 
  * @param[in] threshold azimuth time convergence threshold in seconds
  * @param[in] maxIter Maximum number of Newton-Raphson iterations
  * @param[in] deltaRange step size used for computing derivative of doppler
@@ -115,7 +116,8 @@ int geo2rdr(const isce::core::Vec3 & inputLLH,
             const isce::core::Orbit & orbit,
             const isce::core::Poly2d & doppler,
             double & aztime, double & slantRange,
-            double wavelength, double startingRange, double rangePixelSpacing, size_t rwidth,
+            double wavelength, double startingRange, 
+            double rangePixelSpacing, size_t rwidth, int side,
             double threshold, int maxIter, double deltaRange);
 
 /**
@@ -133,6 +135,7 @@ int geo2rdr(const isce::core::Vec3 & inputLLH,
  * @param[out] aztime     azimuth time of inputLLH w.r.t reference epoch of the orbit
  * @param[out] slantRange slant range to inputLLH
  * @param[in] wavelength  Radar wavelength
+ * @param[in] side +1 for left and -1 for right  
  * @param[in] threshold   azimuth time convergence threshold in seconds
  * @param[in] maxIter     Maximum number of Newton-Raphson iterations
  * @param[in] deltaRange  step size used for computing derivative of doppler
@@ -142,7 +145,8 @@ int geo2rdr(const isce::core::Vec3 & inputLLH,
             const isce::core::Orbit & orbit,
             const isce::core::LUT2d<double> & doppler,
             double & aztime, double & slantRange,
-            double wavelength, double threshold, int maxIter, double deltaRange);
+            double wavelength, int side, double threshold, 
+            int maxIter, double deltaRange);
 
 /**
  * Utility function to compute geographic bounds for a radar grid

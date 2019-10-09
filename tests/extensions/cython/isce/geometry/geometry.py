@@ -21,11 +21,12 @@ def test_geo2rdr():
     orbit = product.metadata.orbit
     doppler = product.metadata.procInfo.dopplerCentroid(freq='A')
     wvl = product.swathA.processedWavelength
+    side = product.lookSide
         
     # Call geo2rdr
     llh = [np.radians(-115.72466801139711), np.radians(34.65846532785868), 1772.0]
     aztime, slantrange = isceextension.py_geo2rdr(llh, ellps, orbit, doppler, wvl,
-                                                  threshold=1.0e-10, dR=10.0)
+                                                  side, threshold=1.0e-10, dR=10.0)
 
     # Test it
     np.testing.assert_almost_equal(aztime, 237333.993088889, decimal=9)
@@ -34,7 +35,7 @@ def test_geo2rdr():
     # Repeat with zero doppler
     zero_doppler = isceextension.pyLUT2d()
     aztime, slantrange = isceextension.py_geo2rdr(llh, ellps, orbit, zero_doppler, wvl,
-                                                  threshold=1.0e-10, dR=10.0)
+                                                  side, threshold=1.0e-10, dR=10.0)
 
     # Test it
     np.testing.assert_almost_equal(aztime, 237334.1228937040, decimal=9)

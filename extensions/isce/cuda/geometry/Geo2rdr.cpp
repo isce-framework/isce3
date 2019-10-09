@@ -154,8 +154,8 @@ geo2rdr(isce::io::Raster & topoRaster,
             ellipsoid, orbit, doppler, x, y, hgt, azoff, rgoff, topoEPSG,
             lineStart, demWidth, t0, r0, radarGrid.numberAzimuthLooks(),
             radarGrid.numberRangeLooks(), radarGrid.length(), radarGrid.width(), radarGrid.prf(),
-            radarGrid.rangePixelSpacing(), radarGrid.wavelength(), this->threshold(),
-            this->numiter(), totalconv
+            radarGrid.rangePixelSpacing(), radarGrid.wavelength(), 
+            radarGrid.lookSide(), this->threshold(), this->numiter(), totalconv
         );
 
         // Write block of data

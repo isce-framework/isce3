@@ -111,6 +111,7 @@ class isce::signal::Covariance {
                     int radarGridLength,
                     double startingRange,
                     double rangeSpacing,
+                    int side,
                     double wavelength,
                     int radarGridWidth);
 

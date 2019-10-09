@@ -134,7 +134,8 @@ TEST_F(GeometryTest, GeoToRdr) {
     // Run geo2rdr
     double aztime, slantRange;
     int stat = isce::geometry::geo2rdr(llh, ellipsoid, orbit, doppler,
-        aztime, slantRange, swath.processedWavelength(), 1.0e-10, 50, 10.0);
+        aztime, slantRange, swath.processedWavelength(), lookSide,
+        1.0e-10, 50, 10.0);
     // Convert azimuth time to a date
     isce::core::DateTime azdate = orbit.refEpoch + aztime;
 
@@ -145,7 +146,8 @@ TEST_F(GeometryTest, GeoToRdr) {
     // Run geo2rdr again with zero doppler
     isce::core::LUT2d<double> zeroDoppler;
     stat = isce::geometry::geo2rdr(llh, ellipsoid, orbit, zeroDoppler,
-        aztime, slantRange, swath.processedWavelength(), 1.0e-10, 50, 10.0);
+        aztime, slantRange, swath.processedWavelength(), lookSide,
+        1.0e-10, 50, 10.0);
     azdate = orbit.refEpoch + aztime;
 
     ASSERT_EQ(stat, 1);

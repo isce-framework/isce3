@@ -13,9 +13,13 @@ cdef extern from "isce/product/RadarGridParameters.h" namespace "isce::product":
         # Constructors
         RadarGridParameters() except +
         RadarGridParameters(const Swath & swath,
+                            int side,
                             size_t numberAzimuthLooks,
                             size_t numberRangeLooks) except +
         RadarGridParameters(const RadarGridParameters & radargrid) except +
+
+        # Look side
+        int lookSide()
 
         # Number of azimuth looks
         size_t numberAzimuthLooks()

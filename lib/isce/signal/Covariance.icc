@@ -178,6 +178,8 @@ geoGrid(double geoGridStartX, double geoGridStartY,
 * @param[in] radarGridLength number of pixels of the radar grid in azimuth direction 
 * @param[in] startingRange starting slant range of the radar grid
 * @param[in] rangeSpacing range spacing
+* @param[in] side +1 for left and -1 for right
+* @param[in] wavelength Radar wavelength
 * @param[in] radarGridWidth number of pixels of the radar grid in range direction 
 */
 template<class T>
@@ -189,13 +191,13 @@ radarGrid(isce::core::LUT2d<double> doppler,
           int radarGridLength,
           double startingRange,
           double rangeSpacing,
+          int side,
           double wavelength,
           int radarGridWidth) {
     _doppler = doppler;
     _radarGrid = isce::product::RadarGridParameters(
         1, 1, azimuthStartTime, wavelength, 1.0/azimuthTimeInterval, startingRange,
-        rangeSpacing, radarGridLength, radarGridWidth, refEpoch
-    );
+        rangeSpacing, side, radarGridLength, radarGridWidth, refEpoch);
 }
 
 /** 

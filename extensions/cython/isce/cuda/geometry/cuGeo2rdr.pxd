@@ -23,7 +23,7 @@ cdef extern from "isce/cuda/geometry/Geo2rdr.h" namespace "isce::cuda::geometry"
 
         # Set options
         void threshold(double)
-        void numiter(int);
+        void numiter(int)
         void orbitMethod(orbitInterpMethod)
 
         # Run geo2rdr with offsets and internally created offset rasters

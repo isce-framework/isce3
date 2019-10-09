@@ -35,7 +35,7 @@ cdef extern from "isce/geometry/Geo2rdr.h" namespace "isce::geometry":
 
         # Set options
         void threshold(double)
-        void numiter(int);
+        void numiter(int)
         void orbitMethod(orbitInterpMethod)
 
         # Run geo2rdr with offsets and internally created offset rasters

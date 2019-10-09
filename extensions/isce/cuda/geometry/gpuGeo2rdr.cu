@@ -30,9 +30,11 @@ void runGeo2rdrBlock(isce::core::Ellipsoid ellps,
                      float * azoff, float * rgoff,
                      isce::cuda::core::ProjectionBase ** projTopo,
                      size_t lineStart, size_t blockLength, size_t blockWidth,
-                     double t0, double r0, size_t numberAzimuthLooks, size_t numberRangeLooks,
-                     size_t length, size_t width, double prf, double rangePixelSpacing,
-                     double wavelength, double threshold, int numiter, unsigned int * totalconv) {
+                     double t0, double r0, size_t numberAzimuthLooks, 
+                     size_t numberRangeLooks, size_t length, size_t width, 
+                     double prf, double rangePixelSpacing, double wavelength,
+                     int side, double threshold, int numiter, 
+                     unsigned int * totalconv) {
 
     // Get the flattened index
     size_t index_flat = blockDim.x * blockIdx.x + threadIdx.x;
@@ -54,8 +56,8 @@ void runGeo2rdrBlock(isce::core::Ellipsoid ellps,
         double aztime, slantRange;
         const double deltaRange = 1.0e-8;
         int geostat = isce::cuda::geometry::geo2rdr(
-            llh, ellps, orbit, doppler, &aztime, &slantRange, wavelength, threshold,
-            numiter, deltaRange);
+            llh, ellps, orbit, doppler, &aztime, &slantRange, wavelength, 
+            side, threshold, numiter, deltaRange);
 
         // Compute azimuth time extents
         const double dtaz = numberAzimuthLooks / prf;
@@ -97,9 +99,11 @@ runGPUGeo2rdr(const isce::core::Ellipsoid& ellipsoid,
               std::valarray<float> & azoff,
               std::valarray<float> & rgoff,
               int topoEPSG, size_t lineStart, size_t blockWidth,
-              double t0, double r0, size_t numberAzimuthLooks, size_t numberRangeLooks,
-              size_t length, size_t width, double prf, double rangePixelSpacing,
-              double wavelength, double threshold, double numiter, unsigned int & totalconv) {
+              double t0, double r0, size_t numberAzimuthLooks,
+              size_t numberRangeLooks, size_t length, size_t width,
+              double prf, double rangePixelSpacing, double wavelength, 
+              int side, double threshold, double numiter, 
+              unsigned int & totalconv) {
 
     // Create gpu ISCE objects
     isce::cuda::core::gpuOrbit gpu_orbit(orbit);
@@ -141,10 +145,12 @@ runGPUGeo2rdr(const isce::core::Ellipsoid& ellipsoid,
     // Launch kernel
     const size_t blockLength = x.size() / blockWidth;
     runGeo2rdrBlock<<<grid, block>>>(ellipsoid, gpu_orbit, gpu_doppler,
-                                     x_d, y_d, hgt_d, azoff_d, rgoff_d, proj_d, lineStart,
-                                     blockLength, blockWidth, t0, r0, numberAzimuthLooks,
-                                     numberRangeLooks, length, width, prf, rangePixelSpacing, 
-                                     wavelength, threshold, numiter, totalconv_d);
+                                     x_d, y_d, hgt_d, azoff_d, rgoff_d, 
+                                     proj_d, lineStart, blockLength,
+                                     blockWidth, t0, r0, numberAzimuthLooks,
+                                     numberRangeLooks, length, width, prf, 
+                                     rangePixelSpacing, wavelength, side,
+                                     threshold, numiter, totalconv_d);
 
     // Check for any kernel errors
     checkCudaErrors(cudaPeekAtLastError());
