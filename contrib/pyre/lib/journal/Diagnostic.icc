@@ -1,0 +1,141 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_journal_Diagnostic_icc)
+#error This header file contains implementation details of class Diagnostic
+#else
+
+
+// the injection operator
+template <typename Severity, typename item_t>
+pyre::journal::Diagnostic<Severity> &
+pyre::journal::
+operator << (pyre::journal::Diagnostic<Severity> & channel, item_t item) {
+    return channel.inject(item);
+}
+
+
+// interface
+// record an entry into the journal
+template <typename Severity>
+pyre::journal::Diagnostic<Severity> &
+pyre::journal::Diagnostic<Severity>::
+record()
+{
+    // me as a {Severity}...
+    Severity * severity = static_cast<Severity *>(this);
+    // invoke the start hook
+    severity->_startRecording();
+    // if I am active
+    if (severity->isActive()) {
+        // flush the buffer
+        newline();
+        // grab my device
+        device_t * device = severity->device();
+        // if it is null, use the global default device
+        if (!device) {
+            device = Chronicler::defaultDevice();
+        }
+        // get it to record the accumulated information
+        device->record(_entry, _metadata);
+        // clear out the entry
+        _entry.clear();
+    }
+    // invoke the end hook
+    severity->_endRecording();
+    // and return me
+    return *this;
+}
+
+
+// add a newline in the message stream
+template <typename Severity>
+pyre::journal::Diagnostic<Severity> &
+pyre::journal::Diagnostic<Severity>::
+newline()
+{
+    // add the contents of the buffer to the message page
+    _entry.push_back(_buffer.str());
+    // clear out the buffer contents
+    _buffer.str(string_t());
+    // reset any error flags
+    _buffer.clear();
+    // and return
+    return *this;
+}
+
+
+// decorate with (key, value) meta data
+template <typename Severity>
+pyre::journal::Diagnostic<Severity> &
+pyre::journal::Diagnostic<Severity>::
+setattr(
+        pyre::journal::Diagnostic<Severity>::string_t key,
+        pyre::journal::Diagnostic<Severity>::string_t value
+        )
+{
+    _metadata[key] = value;
+    return *this;
+}
+
+
+// add an item to the message stream
+template <typename Severity>
+template <typename item_t>
+pyre::journal::Diagnostic<Severity> &
+pyre::journal::Diagnostic<Severity>:: inject(item_t item)
+{
+    _buffer << item;
+    return *this;
+}
+
+
+
+// the destructor
+template <typename Severity>
+pyre::journal::Diagnostic<Severity>::
+~Diagnostic()
+{}
+
+
+// the default constructor
+template <typename Severity>
+pyre::journal::Diagnostic<Severity>::
+Diagnostic(
+           pyre::journal::Diagnostic<Severity>::string_t severity,
+           pyre::journal::Diagnostic<Severity>::string_t name
+           ) :
+    pyre::journal::Chronicler::Chronicler(),
+    _entry(),
+    _buffer(),
+    _metadata()
+{
+    setattr("channel", name);
+    setattr("severity", severity);
+}
+
+
+// implementation details
+template <typename Severity>
+void
+pyre::journal::Diagnostic<Severity>::
+_startRecording() {
+    return;
+}
+
+
+template <typename Severity>
+void
+pyre::journal::Diagnostic<Severity>::
+_endRecording() {
+    return;
+}
+
+
+# endif
+
+// end of file

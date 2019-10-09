@@ -67,7 +67,7 @@ TEST(DopplerTest, CheckWrite) {
     // Write LUT2d to file
     {
     // Create a dummy hdf5 file
-    std::string dummyfile("dummy.h5");
+    std::string dummyfile("dummy_doppler.h5");
     isce::io::IH5File dummy(dummyfile, 'x');
 
     // Write orbit to dataset (use dummy reference epoch)
@@ -80,7 +80,7 @@ TEST(DopplerTest, CheckWrite) {
 
     // Load a new LUT2d
     isce::core::LUT2d<double> newDoppler;
-    std::string h5file("dummy.h5");
+    std::string h5file("dummy_doppler.h5");
     isce::io::IH5File file(h5file);
     isce::io::IGroup group = file.openGroup("doppler");
     isce::core::loadCalGrid(group, "frequencyA/dopplerCentroid", newDoppler);

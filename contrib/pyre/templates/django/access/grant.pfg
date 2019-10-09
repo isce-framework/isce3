@@ -1,0 +1,13 @@
+;
+; michael a.g. aïvázis
+; orthologue
+; (c) 1998-2019 all rights reserved
+;
+
+grant:
+  repository = /home/projects/{project.name}/repository
+  admin =
+  readers =
+  writers =
+
+; end of file

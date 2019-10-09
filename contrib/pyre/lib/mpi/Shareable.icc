@@ -1,0 +1,73 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_mpi_Shareable_icc)
+#error This header file contains implementation details of class pyre::mpi::Shareable
+#else
+
+// interface
+template <typename Resource>
+int
+pyre::mpi::Shareable<Resource>::
+acquire()
+{
+    // increment the reference count and return it
+     return ++_count;
+}
+
+template <typename Resource>
+int
+pyre::mpi::Shareable<Resource>::
+release()
+{
+    // decrement the reference count
+    if (--_count == 0 && !_immortal) {
+        // if the count reached zero, free the handle
+        Resource::free(&_handle);
+    }
+    // and return the count
+    return _count;
+}
+
+template <typename Resource>
+int
+pyre::mpi::Shareable<Resource>::
+references() const
+{
+    // return the count of outstanding references
+    return _count;
+}
+
+
+template <typename Resource>
+typename pyre::mpi::Shareable<Resource>::handle_t
+pyre::mpi::Shareable<Resource>::
+handle() const
+{
+    // return the MPI handle
+    return _handle;
+}
+
+
+// destructor
+template <typename Resource>
+pyre::mpi::Shareable<Resource>::
+~Shareable()
+{}
+
+// constructor
+template <typename Resource>
+pyre::mpi::Shareable<Resource>::
+Shareable(handle_t handle, bool immortal) :
+    _count(0),
+    _immortal(immortal),
+    _handle(handle)
+{}
+
+# endif
+
+// end of file

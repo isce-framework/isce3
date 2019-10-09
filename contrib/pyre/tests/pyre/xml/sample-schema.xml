@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+!
+! michael a.g. aïvázis
+! orthologue
+! (c) 1998-2019 all rights reserved
+!
+-->
+
+<inventory
+   xmlns="http://pyre.orthologue.com/releases/1.0/schema/inventory.html"
+   xmlns:pyre="http://pyre.orthologue.com/releases/1.0/schema/inventory.html"
+   xsi:schemaLocation="http://pyre.orthologue.com/releases/1.0/schema/inventory.html
+                       http://pyre.orthologue.com/releases/1.0/schema/inventory.xsd">
+
+</inventory>
+
+
+<!-- end of file -->

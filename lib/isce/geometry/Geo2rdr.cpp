@@ -4,17 +4,19 @@
 // Author: Bryan V. Riel, Joshua Cohen
 // Copyright 2017-2018
 
+#include "Geo2rdr.h"
+
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <future>
 #include <valarray>
-#include <algorithm>
 
 #include <isce/core/Constants.h>
+
 #include "geometry.h"
-#include "Geo2rdr.h"
 
 // pull in some isce::core namespaces
 using isce::io::Raster;
@@ -22,21 +24,11 @@ using isce::core::LUT1d;
 using isce::core::Vec3;
 
 // Run geo2rdr with no offsets; internal creation of offset rasters
-/** @param[in] topoRaster outputs of topo -i.e, pixel-by-pixel x,y,h as bands
-  * @param[in] outdir directory to write outputs to
-  * @param[in] azshift Number of lines to shift by in azimuth
-  * @param[in] rgshift Number of pixels to shift by in range 
-  *
-  * This is the main geo2rdr driver. The pixel-by-pixel output filenames are fixed for now
-  * <ul>
-  * <li>azimuth.off - Azimuth offset to be applied to product to align with topoRaster
-  * <li>range.off - Range offset to be applied to product to align with topoRaster
-*/
 void isce::geometry::Geo2rdr::
 geo2rdr(isce::io::Raster & topoRaster,
         const std::string & outdir,
-        double azshift, double rgshift) {
-
+        double azshift, double rgshift)
+{
     // Cache the size of the DEM images
     const size_t demWidth = topoRaster.width();
     const size_t demLength = topoRaster.length();
@@ -52,18 +44,12 @@ geo2rdr(isce::io::Raster & topoRaster,
 }
 
 // Run geo2rdr with externally created offset rasters
-/** @param[in] topoRaster outputs of topo - i.e, pixel-by-pixel x,y,h as bands
-  * @param[in] outdir directory to write outputs to
-  * @param[in] rgoffRaster range offset output
-  * @param[in] azoffRaster azimuth offset output 
-  * @param[in] azshift Number of lines to shift by in azimuth
-  * @param[in] rgshift Number of pixels to shift by in range */
 void isce::geometry::Geo2rdr::
 geo2rdr(isce::io::Raster & topoRaster,
         isce::io::Raster & rgoffRaster,
         isce::io::Raster & azoffRaster,
-        double azshift, double rgshift) {
-
+        double azshift, double rgshift)
+{
     // Create reusable pyre::journal channels
     pyre::journal::warning_t warning("isce.geometry.Geo2rdr");
     pyre::journal::info_t info("isce.geometry.Geo2rdr");
@@ -104,7 +90,7 @@ geo2rdr(isce::io::Raster & topoRaster,
     _checkOrbitInterpolation(tmid);
 
     // Adjust block size if DEM has too few lines
-    _linesPerBlock = std::min(demLength, _linesPerBlock);    
+    _linesPerBlock = std::min(demLength, _linesPerBlock);
 
     // Compute number of DEM blocks needed to process image
     size_t nBlocks = demLength / _linesPerBlock;
@@ -132,7 +118,7 @@ geo2rdr(isce::io::Raster & topoRaster,
              << "  - line end  : " << lineStart + blockLength << pyre::journal::newline
              << "  - dopplers near mid far: "
              << _doppler.eval(tblock, r0) << " "
-             << _doppler.eval(tblock, 0.5*(r0 + rngend)) << " " 
+             << _doppler.eval(tblock, 0.5*(r0 + rngend)) << " "
              << _doppler.eval(tblock, rngend) << " "
              << pyre::journal::endl;
 
@@ -192,17 +178,17 @@ geo2rdr(isce::io::Raster & topoRaster,
         azoffRaster.setBlock(azoff, 0, lineStart, demWidth, blockLength);
 
     } // end for loop blocks in DEM image
-            
+
     // Print out convergence statistics
     info << "Total convergence: " << converged << " out of "
          << (demWidth * demLength) << pyre::journal::endl;
-
 }
 
 // Print extents and image sizes
 void isce::geometry::Geo2rdr::
 _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
-              double r0, double rngend, double dmrg, size_t demWidth, size_t demLength) {
+              double r0, double rngend, double dmrg, size_t demWidth, size_t demLength)
+{
     info << pyre::journal::newline
          << "Starting acquisition time: " << t0 << pyre::journal::newline
          << "Stop acquisition time: " << tend << pyre::journal::newline
@@ -218,7 +204,8 @@ _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
 
 // Check we can interpolate orbit to middle of DEM
 void isce::geometry::Geo2rdr::
-_checkOrbitInterpolation(double aztime) {
+_checkOrbitInterpolation(double aztime)
+{
     Vec3 pos, vel;
     int stat = _orbit.interpolate(aztime, pos, vel, _orbitMethod);
     if (stat != 0) {

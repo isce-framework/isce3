@@ -1,0 +1,30 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_journal_Informational_icc)
+#error This header file contains implementation details of class Informational
+#else
+
+
+// meta methods
+// destructor
+pyre::journal::Informational::
+~Informational()
+{}
+
+
+// the default constructor
+pyre::journal::Informational::
+Informational(pyre::journal::Informational::string_t name) :
+    pyre::journal::Diagnostic<pyre::journal::Informational>("info", name),
+    pyre::journal::Channel<pyre::journal::Informational, true>(name)
+{}
+
+
+# endif
+
+// end of file

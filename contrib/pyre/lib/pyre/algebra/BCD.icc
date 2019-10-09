@@ -1,0 +1,152 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_algebra_BCD_icc)
+#error This header file contains implementation details of the class BCD
+#else
+
+
+// global arithmetic operators
+// operator +
+template <size_t scale, typename precision_t>
+pyre::algebra::BCD<scale, precision_t>
+operator+(
+          const pyre::algebra::BCD<scale, precision_t> & a,
+          const pyre::algebra::BCD<scale, precision_t> & b
+          )
+{
+    // build out of one operand
+    pyre::algebra::BCD<scale, precision_t> result = a;
+    // add the other
+    result += b;
+    // and return
+    return result;
+}
+
+
+// operator -
+template <size_t scale, typename precision_t>
+pyre::algebra::BCD<scale, precision_t>
+operator-(
+          const pyre::algebra::BCD<scale, precision_t> & a,
+          const pyre::algebra::BCD<scale, precision_t> & b
+          )
+{
+    // build out of one operand
+    pyre::algebra::BCD<scale, precision_t> result = a;
+    // add the other
+    result -= b;
+    // and return
+    return result;
+}
+
+
+// conversion to double
+template <size_t scale, typename precision_t>
+pyre::algebra::BCD<scale, precision_t>::operator double() const {
+    return _msw + static_cast<double>(_lsw)/scale;
+}
+
+
+// arithmetic
+// unary operator+
+template <size_t scale, typename precision_t>
+pyre::algebra::BCD<scale, precision_t>
+pyre::algebra::BCD<scale, precision_t>::
+operator+ () const
+{
+    return *this;
+}
+
+
+// unary operator-
+template <size_t scale, typename precision_t>
+pyre::algebra::BCD<scale, precision_t>
+pyre::algebra::BCD<scale, precision_t>::
+operator- () const
+{
+    return BCD<scale, precision_t>(-_msw, -_lsw);
+}
+
+
+// operator +=
+template <size_t scale, typename precision_t>
+pyre::algebra::BCD<scale, precision_t> &
+pyre::algebra::BCD<scale, precision_t>::
+operator+= (const pyre::algebra::BCD<scale, precision_t> & other)
+{
+    // adjust the bits
+    _lsw += other._lsw;
+    _msw += other._msw;
+    // overflow?
+    if (_lsw > scale) {
+        // move the carry
+        _msw += 1;
+        // adjust the low bits
+        _lsw %= scale;
+    }
+    // all done
+    return *this;
+}
+
+
+// operator -=
+template <size_t scale, typename precision_t>
+pyre::algebra::BCD<scale, precision_t> &
+pyre::algebra::BCD<scale, precision_t>::
+operator-= (const pyre::algebra::BCD<scale, precision_t> & other)
+{
+    // this is one is easy:
+    return *this += -other;
+}
+
+
+// constructor
+template <size_t scale, typename precision_t>
+pyre::algebra::BCD<scale, precision_t>::
+BCD(precision_t msw, precision_t lsw ) :
+    _msw(msw), _lsw(lsw)
+{}
+
+
+// copy constructor
+template <size_t scale, typename precision_t>
+pyre::algebra::BCD<scale, precision_t>::
+BCD(const BCD<scale, precision_t> & other)
+{
+    (*this) = other;
+}
+
+
+// operator=
+template <size_t scale, typename precision_t>
+const pyre::algebra::BCD<scale, precision_t> &
+pyre::algebra::BCD<scale, precision_t>::
+operator= (const pyre::algebra::BCD<scale, precision_t> & other)
+{
+    // skip assignment to self
+    if (this != &other) {
+        // otherwise, move the data
+        _msw = other._msw;
+        _lsw = other._lsw;
+    }
+
+    return *this;
+}
+
+
+// destructor
+template <size_t scale, typename precision_t>
+pyre::algebra::BCD<scale, precision_t>::
+~BCD()
+{}
+
+#endif
+
+
+// end of file

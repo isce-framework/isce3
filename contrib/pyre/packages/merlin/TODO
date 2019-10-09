@@ -1,0 +1,34 @@
+
+- i need to be able to _edit_ merlin.pml
+
+  - to support whoami, project nickname, default spell, default buildtype, ...
+  - can i preserve the user's comments in this file?
+
+- internationalization:
+
+  - spells, help, info, warnings, errors, exceptions, any other text meant for the user, ...
+  - how to layout the directory structure to include the language choice
+  - how to specify locale aliases 
+
+- commands
+
+  - merlin usage
+  - merlin version
+  - merlin copyright
+  - merlin license
+
+  - merlin whoami
+  - merlin info
+
+  - merlin spells
+  - merlin spellbook
+
+  - merlin init
+  - merlin status
+  - merlin add
+  - merlin ignore
+
+  - merlin build
+
+  - merlin help
+

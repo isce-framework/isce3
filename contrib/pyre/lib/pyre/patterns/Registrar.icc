@@ -1,0 +1,27 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_patterns_Registrar_icc)
+#error This header file contains implementation details of the class Registrar
+#else
+
+
+// destructor
+template <typename Object, typename Name>
+pyre::patterns::Registrar<Object, Name>::~Registrar() {
+    // delete the indexed items
+    // assumes that all registered entities were dynamically allocated
+    for (iterator_t i = this->begin(); i != this->end(); ++i) {
+        delete i->second;
+    }
+}
+
+
+#endif
+
+// end of file

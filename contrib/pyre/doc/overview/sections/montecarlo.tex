@@ -1,0 +1,200 @@
+% -*- LaTeX -*-
+% -*- coding: utf-8 -*-
+%
+% michael a.g. aïvázis
+% orthologue
+% (c) 1998-2019 all rights reserved
+%
+
+% --------------------------------------
+
+\section{montecarlo}
+\subsection{theory}
+
+% --------------------------------------
+% setting up the problem
+\begin{frame}
+%
+  \frametitle{Monte Carlo integration}
+%
+  \begin{itemize}
+%
+  \item let $f$ be sufficiently well behaved in a region $\Omega \subset \mathbb{R}^{n}$ and
+    consider the integral
+    \begin{equation}
+      I_{\Omega} (f) = \int_{\Omega} f
+      \label{eq:integral}
+    \end{equation}
+%
+  \item the {\em Monte Carlo} method approximates the value of the integral in \eqref{integral}
+    by sampling $f$ at random points in $\Omega$
+%
+  \item let $X_{N}$ be such a sample of $N$ points; then the Monte Carlo estimate is given by
+    \begin{equation}
+      I_{\Omega} (f; X_{N})
+      =
+      \Omega \cdot \langle f \rangle
+      =
+      \Omega \, \frac{1}{N} \sum_{x \in X_{N}} f(x)
+      \label{eq:mc-estimate}
+    \end{equation}
+%
+    where $\langle f \rangle$ is the sample mean of $f$, and $\Omega$ is used as a shorthand
+    for the volume of the integration region. Details in \citep{hammersley,ueberhuber}; see
+    \cite{weinzierl} for an excellent pedagogical introduction.
+%
+  \item the approximation error falls like $1/\sqrt{N}$
+    \begin{itemize}
+    \item rather slow
+    \item but dimension independent!
+    \end{itemize}
+  \end{itemize}
+%
+\end{frame}
+
+% --------------------------------------
+% mc implementation
+\begin{frame}
+%
+  \frametitle{Implementation strategy}
+%
+  \begin{itemize}
+%
+  \item computer implementations require a pseudo-random number generator to build the sample
+%
+    \item most generators return numbers in $(0,1)$ so
+      \begin{itemize}
+      \item find a box $B$ that contains $\Omega$
+      \item generate $n$ numbers to build a point in the unit $\mathbb{R}^{n}$ cube
+      \item stretch and translate the unit cube onto $B$
+      \end{itemize}
+%
+  \item the integration is restricted to $\Omega$ by introducing
+    \begin{equation}
+        \Theta_{\Omega}
+        =
+        \left\{
+          \begin{array}{ll}
+            1 & x \in \Omega \\
+            0 & {\rm otherwise}
+          \end{array}
+        \right.
+        \label{eq:theta}
+    \end{equation}
+    to get
+    \begin{equation}
+      I_{\Omega} (f)
+      =
+      \int_{B} \Theta_{\Omega} \, f
+      \label{eq:integral-box}
+    \end{equation}
+%
+  \end{itemize}
+%
+\end{frame}
+
+% --------------------------------------
+% reorganize to a form better suited for implementation
+\begin{frame}
+%
+  \frametitle{Recasting Monte Carlo integration}
+%
+  \begin{itemize}
+%
+  \item there are now two classes of points in the sample $X_{N}$
+    \begin{itemize}
+    \item those in $\Omega$
+    \item and the rest
+    \end{itemize}
+%
+  \item let $\tilde{N}$ be the number of sample points in $\Omega$; \eqref{mc-estimate} becomes
+    \begin{equation}
+      I_{\Omega} (f; X_{N})
+      =
+      \Omega \, \frac{1}{\tilde{N}} \sum_{x \in X_{\tilde{N}}} f(x)
+      \label{eq:mc-box}
+    \end{equation}
+%
+  \item let $B$ be the volume of the sampling box; observe that the volume of the integration
+    region can be approximated by
+    \begin{equation}
+      \Omega = \frac{\tilde{N}}{N} B
+    \end{equation}
+%
+    and the sum over the points $x \in X_{\tilde{N}}$ can be extended to the entire sample
+    $X_{N}$ by using the filter $\Theta_{\Omega}$
+%
+    \begin{equation}
+      I_{\Omega} (f; X_{N})
+      =
+      B \, \frac{1}{N} \sum_{x \in X_{N}} \Theta_{\Omega} \, f(x)
+    \end{equation}
+%
+  \end{itemize}
+%
+\end{frame}
+
+
+% --------------------------------------
+% recap
+\begin{frame}
+%
+  \frametitle{Requirements}
+%
+  \begin{itemize}
+%
+  \item to summarize, the Monte Carlo approximation is computed from
+%
+    \begin{equation}
+      I_{\Omega} (f; X_{N})
+      =
+      B \, \frac{1}{N} \sum_{x \in X_{N}} \Theta_{\Omega} \, f(x)
+    \end{equation}
+%
+    using
+    \begin{itemize}
+    \item an implementation of the function $f$ to be integrated over $\Omega$
+    \item an $n$-dimensional box $B$ that contains $\Omega$
+    \item a good pseudo-random number generator to build the sample $X_{N} \in B$
+    \item a routine to test points $x \in X_{N}$ and return \keyword{false} if they are
+      exterior to $\Omega$ and \keyword{true} otherwise
+    \end{itemize}
+%
+    to sum the values of the integrand on points interior to $\Omega$, and scale by the
+    volume of the bounding box $B$ over the sample size $N$
+%
+  \item essentially a reduction
+    \begin{itemize}
+    \item should be straightforward to implement in parallel
+    \end{itemize}
+%
+  \item rich enough structure to be a non-trivial \pyre\ application
+%
+  \end{itemize}
+%
+\end{frame}
+
+% --------------------------------------
+
+\subsection{example}
+
+% --------------------------------------
+% preview: a python script
+\begin{frame}
+%
+  \frametitle{A trivial script}
+%
+  \begin{itemize}
+  \item estimating $\pi$ using Monte Carlo integration over a quarter disk
+  \end{itemize}
+%
+  \python{
+    firstnumber=9,linerange={9-25}, xleftmargin=4em,
+    label={lst:python:pi},
+    caption={\srcfile{pi.py}: Estimating $\pi$ in python},
+  }{listings/pi.py}
+
+%
+\end{frame}
+
+% end of file

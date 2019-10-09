@@ -1,0 +1,30 @@
+# ignore rules
+
+/.bzr
+*~
+
+# machine-dependent config
+/.mm/config.def
+
+# the default build locations
+/builds
+/products
+
+# auctex lint
+/doc/**/auto
+# tex lint
+/doc/**/*.aux
+/doc/**/*.bbl
+/doc/**/*.blg
+/doc/**/*.log
+/doc/**/*.nav
+/doc/**/*.out
+/doc/**/*.snm
+/doc/**/*.toc
+/doc/**/*.vrb
+# ignore pdfs
+/doc/**/*.pdf
+# but not those that are figures
+!doc/**/figures/*.pdf
+
+# end of file

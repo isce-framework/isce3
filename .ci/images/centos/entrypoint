@@ -1,0 +1,21 @@
+#!/bin/bash
+set -e
+
+# get group id
+GID=$(id -g)
+
+# update user and group ids
+gosu 0:0 groupmod -g $GID conda 2>/dev/null
+gosu 0:0 usermod -u $UID -g $GID conda 2>/dev/null
+
+# update ownership
+gosu 0:0 chown -R conda:conda /home/conda 2>/dev/null
+gosu 0:0 chown -R conda:conda /opt/conda 2>/dev/null
+gosu 0:0 cp /root/.condarc /home/conda/.condarc 2>/dev/null
+gosu 0:0 chown conda:conda /home/conda/.condarc 2>/dev/null
+
+# Source everything that needs to be.
+. /opt/docker/bin/entrypoint_source
+
+# Run whatever the user wants.
+exec gosu conda:conda "$@"

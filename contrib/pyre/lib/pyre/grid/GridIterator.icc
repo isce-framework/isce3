@@ -1,0 +1,76 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+// code guard
+#if !defined(pyre_grid_GridIterator_icc)
+#error This header file contains implementation details of class pyre::grid::GridIterator
+#endif
+
+
+// meta-methods
+template <typename gridT>
+pyre::grid::GridIterator<gridT>::
+GridIterator(grid_type & grid, const iterator_type & iterator) :
+    _grid(grid),
+    _iterator(iterator)
+{}
+
+
+// interface
+// access to the current value
+template <typename gridT>
+auto &
+pyre::grid::GridIterator<gridT>::
+operator* () const {
+    // return the current value
+    return _grid[*_iterator];
+}
+
+
+// value update
+template <typename gridT>
+auto &
+pyre::grid::GridIterator<gridT>::
+operator++ () {
+    // update the underlying iterator
+    ++_iterator;
+    // and that's all
+    return *this;
+}
+
+
+// iterator access
+template <typename gridT>
+const auto &
+pyre::grid::GridIterator<gridT>::
+iterator() const {
+    // easy enough
+    return _iterator;
+}
+
+
+// operators on indices
+template <typename gridT>
+auto
+pyre::grid::
+operator==(const GridIterator<gridT> & left, const GridIterator<gridT> & right) {
+    // delegate to the standard algorithm
+    return left.iterator() == right.iterator();
+}
+
+
+template <typename gridT>
+auto
+pyre::grid::
+operator!=(const GridIterator<gridT> & left, const GridIterator<gridT> & right) {
+    // easy enough
+    return !(left == right);
+}
+
+
+// end of file

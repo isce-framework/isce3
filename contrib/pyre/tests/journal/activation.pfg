@@ -1,0 +1,14 @@
+;
+; michael a.g. aïvázis
+; orthologue
+; (c) 1998-2019 all rights reserved
+;
+
+journal:
+  debug.activation = on
+  firewall.activation = off
+  info.activation = on
+  warning.activation = off
+  error.activation = off
+
+; end of file

@@ -1,0 +1,80 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_mpi_Handle_icc)
+#error This header file contains implementation details of class pyre::mpi::Handle
+#else
+
+// interface
+template <typename Resource>
+pyre::mpi::Handle<Resource>::
+operator pyre::mpi::Handle<Resource>::handle_t () const
+{
+    // get and return the mpi handle
+    return _shared->handle();
+}
+
+
+// destructor
+template <typename Resource>
+pyre::mpi::Handle<Resource>::
+~Handle()
+{
+    // notify the shareable that I am done with it
+    if (_shared->release() == 0) {
+        // if its reference count has reached zero, deallocate it
+        delete _shared;
+    }
+    // and return
+    return;
+}
+
+// the default constructor
+template <typename Resource>
+pyre::mpi::Handle<Resource>::
+Handle(handle_t handle, bool immortal) :
+    _shared(new shared_t(handle, immortal))
+{
+    // grab a reference to the shared handle
+    _shared->acquire();
+}
+
+// the copy constructor
+template <typename Resource>
+pyre::mpi::Handle<Resource>::
+Handle(const pyre::mpi::Handle<Resource> & other) :
+    _shared(other._shared)
+{
+    // grab a reference to the shared handle
+    _shared->acquire();
+}
+
+// operator =
+template <typename Resource>
+pyre::mpi::Handle<Resource> &
+pyre::mpi::Handle<Resource>::
+operator = (const pyre::mpi::Handle<Resource> & other)
+{
+    // if {other} and I point to different shared handles
+    if (other._shared != _shared) {
+        // notify my shareable that I am done with it
+        if (_shared->release() == 0) {
+            // and deallocate it if its reference count reached zero
+            delete _shared;
+        }
+        // adopt the new shareable
+        _shared = other._shared;
+        // and grab a reference to it
+        _shared->acquire();
+    }
+
+    // all done
+    return *this;
+}
+
+# endif
+// end of file

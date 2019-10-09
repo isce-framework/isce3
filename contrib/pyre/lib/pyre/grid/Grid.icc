@@ -1,0 +1,179 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+// code guard
+#if !defined(pyre_grid_Grid_icc)
+#error This header file contains implementation details of class pyre::grid::Grid
+#endif
+
+ template <typename cellT, typename layoutT, typename storageT>
+ pyre::grid::Grid<cellT, layoutT, storageT>::
+Grid(layout_type layout, const storage_type & storage) :
+    _layout { layout },
+    _storage { storage }
+    {}
+
+template <typename cellT, typename layoutT, typename storageT>
+pyre::grid::Grid<cellT, layoutT, storageT>::
+Grid(layout_type layout, storage_type && storage) :
+    _layout { layout },
+    _storage { std::move(storage) }
+    {}
+
+template <typename cellT, typename layoutT, typename storageT>
+pyre::grid::Grid<cellT, layoutT, storageT>::
+Grid(layout_type layout) :
+    _layout { layout },
+    _storage { layout.size() }
+    {}
+
+template <typename cellT, typename layoutT, typename storageT>
+pyre::grid::Grid<cellT, layoutT, storageT>::
+Grid(shape_type shape) :
+    _layout { {shape} },
+    _storage { _layout.size() }
+    {}
+
+// interface
+// get the dimensionality of my index
+template <typename cellT, typename layoutT, typename storageT>
+constexpr auto
+pyre::grid::Grid<cellT, layoutT, storageT>::
+dim() {
+    // ask my layout
+    return layout_type::dim();
+}
+
+
+// accessors
+template <typename cellT, typename layoutT, typename storageT>
+const auto &
+pyre::grid::Grid<cellT, layoutT, storageT>::
+layout() const
+{
+    return _layout;
+}
+
+template <typename cellT, typename layoutT, typename storageT>
+auto
+pyre::grid::Grid<cellT, layoutT, storageT>::
+data() const
+{
+    return _storage.data();
+}
+
+template <typename cellT, typename layoutT, typename storageT>
+const auto &
+pyre::grid::Grid<cellT, layoutT, storageT>::
+storage() const
+{
+    return _storage;
+}
+
+// iteration support
+template <typename cellT, typename layoutT, typename storageT>
+auto
+pyre::grid::Grid<cellT, layoutT, storageT>::
+view()
+{
+    return view_type(*this, layout());
+}
+
+template <typename cellT, typename layoutT, typename storageT>
+auto
+pyre::grid::Grid<cellT, layoutT, storageT>::
+view(const slice_type & slice)
+{
+    return view_type(*this, slice);
+}
+
+template <typename cellT, typename layoutT, typename storageT>
+auto
+pyre::grid::Grid<cellT, layoutT, storageT>::
+view() const
+{
+    return constview_type(*this, layout());
+}
+
+template <typename cellT, typename layoutT, typename storageT>
+auto
+pyre::grid::Grid<cellT, layoutT, storageT>::
+view(const slice_type & slice) const
+{
+    return constview_type(*this, slice);
+}
+
+template <typename cellT, typename layoutT, typename storageT>
+auto
+pyre::grid::Grid<cellT, layoutT, storageT>::
+constview() const
+{
+    return constview_type(*this, layout());
+}
+
+template <typename cellT, typename layoutT, typename storageT>
+auto
+pyre::grid::Grid<cellT, layoutT, storageT>::
+constview(const slice_type & slice) const
+{
+    return constview_type(*this, slice);
+}
+
+
+// grant write access to the grid at {offset}
+template <typename cellT, typename layoutT, typename storageT>
+auto &
+pyre::grid::Grid<cellT, layoutT, storageT>::
+operator[](size_type offset)
+{
+    // get the data location
+    // N.B.: here we need write access, so the compiler may complain about discarded qualifiers
+    // if my storage is const...
+    typename storage_type::pointer cells = _storage.data();
+    // dereference and return the value
+    return cells[offset];
+}
+
+// grant read access to the grid at {index}
+template <typename cellT, typename layoutT, typename storageT>
+auto &
+pyre::grid::Grid<cellT, layoutT, storageT>::
+operator[](size_type offset) const
+{
+    // get the data location
+    typename storage_type::const_pointer cells = _storage.data();
+    // dereference and return the value
+    return cells[offset];
+}
+
+// grant write access to the grid at {index}
+template <typename cellT, typename layoutT, typename storageT>
+auto &
+pyre::grid::Grid<cellT, layoutT, storageT>::
+operator[](const index_type & index)
+{
+    // get my layout to compute the offset
+    auto offset = _layout[index];
+    // and delegate
+    return (*this)[offset];
+}
+
+
+// grant read access to the grid at {index}
+template <typename cellT, typename layoutT, typename storageT>
+const auto &
+pyre::grid::Grid<cellT, layoutT, storageT>::
+operator[](const index_type & index) const
+{
+    // get my layout to compute the offset
+    auto offset = _layout[index];
+    // and delegate
+    return (*this)[offset];
+}
+
+
+// end of file

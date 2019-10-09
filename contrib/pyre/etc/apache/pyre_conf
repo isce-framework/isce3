@@ -1,0 +1,47 @@
+# -*- apache -*-
+# michael a.g. aïvázis
+# orthologue
+# (c) 1998-2019 all rights reserved
+
+# pyre virtual host definition file
+
+<VirtualHost *:80>
+    ServerName PROJ_LIVE_HOST
+    ServerAdmin web@orthologue.com
+
+    # the web
+    DocumentRoot PROJ_LIVE_DOCROOT
+    <Directory />
+        Options Indexes FollowSymLinks MultiViews
+        Require all granted
+        RewriteEngine On
+        RewriteBase "/"
+        RewriteRule "/about" "/"
+        RewriteRule "/install" "/"
+        RewriteRule "/tutorials" "/"
+        RewriteRule "/contact" "/"
+    </Directory>
+
+    # the applications
+    ScriptAlias /bin/ PROJ_LIVE_WEBDIR/bin/
+    <Directory "PROJ_LIVE_WEBDIR/bin">
+        Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+        Require all granted
+    </Directory>
+
+    # the repositories
+    Alias /1.0/ PROJ_LIVE_HOME/repository/1.0/
+    <Directory PROJ_LIVE_HOME/repository/1.0/>
+        Options Indexes FollowSymLinks MultiViews
+        Require all granted
+    </Directory>
+
+    # logs
+    # possible values include: debug, info, notice, warn, error, crit, alert, emerg
+    LogLevel warn
+    ErrorLog /var/log/apache2/error-pyre.log
+    CustomLog /var/log/apache2/access-pyre.log combined
+
+</VirtualHost>
+
+# end of file

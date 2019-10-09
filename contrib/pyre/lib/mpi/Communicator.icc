@@ -1,0 +1,240 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_mpi_Communicator_icc)
+#error This header file contains implementation details of class Communicator
+#else
+
+// interface
+// return the raw MPI handle
+pyre::mpi::Communicator::handle_t
+pyre::mpi::Communicator::
+handle() const
+{
+    return _handle;
+}
+
+// check whether this communicator is null
+bool
+pyre::mpi::Communicator::
+isNull() const
+{
+    // check the handle against the predefined null communicator
+    return _handle ==  MPI_COMM_NULL;
+}
+
+// establish a barrier
+void
+pyre::mpi::Communicator::
+barrier() const
+{
+    int status = MPI_Barrier(_handle);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // and return
+    return;
+}
+
+// compute the rank of this process
+int
+pyre::mpi::Communicator::
+rank() const
+{
+    int rank;
+    int status = MPI_Comm_rank(_handle, &rank);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // and return
+    return rank;
+}
+
+// compute the size of this communicator
+int
+pyre::mpi::Communicator::
+size() const
+{
+    int size;
+    int status = MPI_Comm_size(_handle, &size);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // and return
+    return size;
+}
+
+// access to my process group
+pyre::mpi::Group
+pyre::mpi::Communicator::
+group() const
+{
+    // storage for the new group handle
+    MPI_Group group;
+    // construct it
+    int status = MPI_Comm_group(_handle, &group);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // all ok
+    return group_t(group);
+}
+
+// build a communicator out the given group
+pyre::mpi::Communicator
+pyre::mpi::Communicator::
+communicator(const group_t & group) const
+{
+    // storage for the new group handle
+    MPI_Comm communicator;
+    // construct it
+    int status = MPI_Comm_create(_handle, group, &communicator);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // if this process does not participate in the new communicator
+    if (communicator == MPI_COMM_NULL) {
+        // return the null communicator
+        return Communicator(communicator, true); // the null communicator lives forever
+    }
+    // otherwise, wrap the new handle and return it
+    return Communicator(communicator);
+}
+
+
+// build a cartesian communicator
+pyre::mpi::Communicator
+pyre::mpi::Communicator::
+cartesian(const ranklist_t & ranks, const ranklist_t & periods, int reorder) const
+{
+    // check that neither ranklist is empty
+    if (ranks.empty() || periods.empty()) {
+        throw Error(0);
+    }
+    // check that the two ranklists are the same size
+    if (ranks.size() != periods.size()) {
+        throw Error(0);
+    }
+    // the size of the two ranklists
+    int size = ranks.size();
+    // storage for the new group handle
+    MPI_Comm cartesian;
+    // construct it
+    int status = MPI_Cart_create(
+                                 _handle, size,
+                                 const_cast<int *>(&ranks[0]),
+                                 const_cast<int *>(&periods[0]),
+                                 reorder, &cartesian);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // wrap the new handle and return it
+    return Communicator(cartesian);
+}
+
+// compute the cartesian coordinates of the given rank
+pyre::mpi::Communicator::ranklist_t
+pyre::mpi::Communicator::
+coordinates(int rank) const
+{
+    // storage for the length of the coordinate arrays
+    int dim;
+    // ask the cartesian communicator for this information
+    int status = MPI_Cartdim_get(_handle, &dim);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // allocate an array to accept the coordinates
+    int * raw = new int[dim];
+    // extract them
+    status = MPI_Cart_coords(_handle, rank, dim, raw);
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // deallocate
+        delete [] raw;
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // start building the return value
+    ranklist_t coordinates;
+    // move the information from the array to the ranklist
+    for (int i = 0; i < dim; ++i) {
+        coordinates.push_back(raw[i]);
+    }
+    // deallocate
+    delete [] raw;
+    // and return
+    return coordinates;
+
+
+}
+
+
+// free a communicator handle
+void
+pyre::mpi::Communicator::
+free(MPI_Comm * handle)
+{
+    int status = MPI_Comm_free(handle);
+    //
+    // check the return status
+    if (status != MPI_SUCCESS) {
+        // throw an exception if something went wrong
+        throw Error(status);
+    }
+    // and return
+    return;
+}
+
+
+// the destructor
+pyre::mpi::Communicator::
+~Communicator()
+{}
+
+// the default constructor
+pyre::mpi::Communicator::
+Communicator(Communicator::handle_t value, bool immortal):
+    _handle(value, immortal)
+{}
+
+// the copy constructor
+pyre::mpi::Communicator::
+Communicator(const pyre::mpi::Communicator & other):
+    _handle(other._handle)
+{}
+
+// operator =
+const pyre::mpi::Communicator &
+pyre::mpi::Communicator::
+operator = (const pyre::mpi::Communicator & other)
+{
+    // skip assignment to self
+    if (&other == this) { return *this; }
+    // otherwise, move the data
+    _handle = other._handle;
+    // and return me
+    return *this;
+}
+
+# endif
+
+// end of file

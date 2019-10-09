@@ -1,0 +1,32 @@
+FROM nisar/isce-cu1904-devbase AS isce-builder
+LABEL cmakelabel="__TAG__"
+COPY . /isce-src
+
+# cmake
+RUN cd /isce-build && \
+    cmake /isce-src \
+        -DWITH_CUDA=y -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/isce-install
+
+# make
+RUN cd /isce-build && \
+    make -j`nproc` && \
+    make install
+
+
+FROM nvidia/cuda:10.1-base-ubuntu19.04
+
+# Runtime libraries
+# cmake used for ctest
+RUN apt-get update && apt-get install -y \
+    cmake \
+    libcufft10 \
+    libfftw3-3 \
+    libgdal20 \
+    libhdf5-103 \
+    libhdf5-cpp-103 \
+    python3 && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=isce-builder /isce-install /isce-install
+COPY --from=isce-builder /isce-build   /isce-build

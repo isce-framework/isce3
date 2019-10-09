@@ -44,6 +44,7 @@ target_include_directories(
         ${HDF5_INCLUDE_DIR}
         ${CMAKE_SOURCE_DIR}/contrib/cereal/include
         ${PYRE_INCLUDE_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}
 )
 
 add_subdirectory(except)
@@ -59,7 +60,7 @@ install(
 # Install cuda cython extensions if cuda available
 if (WITH_CUDA)
     add_subdirectory(cuda)
-    target_include_directories(iscecudaextension PRIVATE ${CMAKE_CURRENT_LIST_DIR}/except)
+    target_include_directories(iscecudaextension PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 endif(WITH_CUDA)
 
 # Add subdirectories for installing pxd files

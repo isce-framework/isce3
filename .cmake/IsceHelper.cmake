@@ -1,6 +1,11 @@
-#Find pyre and journal libraries
-find_library(LPYRE pyre HINTS ${PYRE_LIB_DIR})
-find_library(LJOURNAL journal HINTS ${PYRE_LIB_DIR})
+if(HAVE_PYRE)
+    #Find pyre and journal libraries
+    find_library(LPYRE pyre HINTS ${PYRE_LIB_DIR})
+    find_library(LJOURNAL journal HINTS ${PYRE_LIB_DIR})
+else()
+    set(LPYRE pyre)
+    set(LJOURNAL pyre)
+endif()
 
 # Create a new ctest for TESTNAME.cpp
 # Additional include directories can be specified after TESTNAME
