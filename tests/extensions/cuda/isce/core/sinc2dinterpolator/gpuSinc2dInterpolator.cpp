@@ -26,7 +26,7 @@ using isce::core::Sinc2dInterpolator;
 using isce::cuda::core::gpuInterpolator;
 using isce::cuda::core::gpuSinc2dInterpolator;
 
-void loadChipData(Matrix<std::complex<float>> &, size_t, size_t);
+void loadChipData(Matrix<std::complex<float>> &);
 
 // Function to return a Python style arange vector
 std::vector<double> arange(double low, double high, double increment) {
@@ -68,7 +68,7 @@ struct gpuSinc2dInterpolatorTest : public ::testing::Test {
             chip.resize(ny, nx);
 
             // Read the truth data
-            loadChipData(chip, nx, ny);
+            loadChipData(chip);
         }
 };
 
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
     return RUN_ALL_TESTS();
 }
 
-void loadChipData(Matrix<std::complex<float>> & chip, size_t nx, size_t ny) {
+void loadChipData(Matrix<std::complex<float>> & chip) {
     /*
      * pulled chip values from i=100, j=100 in resampslc test
     */
