@@ -10,6 +10,5 @@ var searchData=
   ['spline2dinterpolator',['Spline2dInterpolator',['../classisce_1_1core_1_1Spline2dInterpolator.html',1,'isce::core']]],
   ['srcinfo',['SrcInfo',['../structisce_1_1except_1_1SrcInfo.html',1,'isce::except']]],
   ['statevector',['StateVector',['../structisce_1_1core_1_1StateVector.html',1,'isce::core']]],
-  ['sumarea',['SumArea',['../classampcor_1_1correlators_1_1SumArea.html',1,'ampcor::correlators']]],
   ['swath',['Swath',['../classisce_1_1product_1_1Swath.html',1,'isce::product']]]
 ];

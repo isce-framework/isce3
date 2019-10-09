@@ -128,9 +128,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a152fa7b8136bd26a16069b60b6c70fa4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a152fa7b8136bd26a16069b60b6c70fa4">geoGrid</a> (double geoGridStartX, double geoGridStartY, double geoGridSpacingX, double geoGridSpacingY, int width, int length, int epsgcode)</td></tr>
 <tr class="memdesc:a152fa7b8136bd26a16069b60b6c70fa4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set geocoded grid.  <a href="#a152fa7b8136bd26a16069b60b6c70fa4">More...</a><br/></td></tr>
 <tr class="separator:a152fa7b8136bd26a16069b60b6c70fa4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ec855d82794de1c43cd6e17849e962c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a1ec855d82794de1c43cd6e17849e962c">radarGrid</a> (<a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; <a class="el" href="classisce_1_1signal_1_1Covariance.html#a8905ab3830d8e3b1aad021b7f59aaa00">doppler</a>, <a class="el" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> refEpoch, double azimuthStartTime, double azimuthTimeInterval, int radarGridLength, double startingRange, double rangeSpacing, int side, double <a class="el" href="classisce_1_1signal_1_1Covariance.html#aa2a6cf1b5b9b2b721e52e10347deb311">wavelength</a>, int radarGridWidth)</td></tr>
-<tr class="memdesc:a1ec855d82794de1c43cd6e17849e962c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the input radar grid.  <a href="#a1ec855d82794de1c43cd6e17849e962c">More...</a><br/></td></tr>
-<tr class="separator:a1ec855d82794de1c43cd6e17849e962c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30534783033c9845b6ee122591e68dc7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a30534783033c9845b6ee122591e68dc7">radarGrid</a> (<a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; <a class="el" href="classisce_1_1signal_1_1Covariance.html#a8905ab3830d8e3b1aad021b7f59aaa00">doppler</a>, <a class="el" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> refEpoch, double azimuthStartTime, double azimuthTimeInterval, int radarGridLength, double startingRange, double rangeSpacing, double <a class="el" href="classisce_1_1signal_1_1Covariance.html#aa2a6cf1b5b9b2b721e52e10347deb311">wavelength</a>, int radarGridWidth)</td></tr>
+<tr class="memdesc:a30534783033c9845b6ee122591e68dc7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the input radar grid.  <a href="#a30534783033c9845b6ee122591e68dc7">More...</a><br/></td></tr>
+<tr class="separator:a30534783033c9845b6ee122591e68dc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aacfc1f37352d8a2b8a0c0e9f0b148110"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#aacfc1f37352d8a2b8a0c0e9f0b148110">numberOfRangeLooks</a> (int rngLooks)</td></tr>
 <tr class="memdesc:aacfc1f37352d8a2b8a0c0e9f0b148110"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set number of looks in range direction for covariance estimation.  <a href="#aacfc1f37352d8a2b8a0c0e9f0b148110">More...</a><br/></td></tr>
 <tr class="separator:aacfc1f37352d8a2b8a0c0e9f0b148110"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1111,7 +1111,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a1ec855d82794de1c43cd6e17849e962c"></a>
+<a class="anchor" id="a30534783033c9845b6ee122591e68dc7"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -1165,12 +1165,6 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>side</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>wavelength</em>, </td>
         </tr>
@@ -1202,8 +1196,6 @@ template&lt;class T &gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">radarGridLength</td><td>number of pixels of the radar grid in azimuth direction </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">startingRange</td><td>starting slant range of the radar grid </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">rangeSpacing</td><td>range spacing </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">side</td><td>+1 for left and -1 for right </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wavelength</td><td>Radar wavelength </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">radarGridWidth</td><td>number of pixels of the radar grid in range direction </td></tr>
   </table>
   </dd>
