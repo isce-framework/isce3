@@ -11,6 +11,7 @@
 #include <type_traits>
 
 using isce::except::RuntimeError;
+using isce::except::LengthError;
 
 /* 
  * Bartlett
@@ -105,9 +106,12 @@ template double isce::core::sinc(double);
 // constructor
 template <typename T>
 isce::core::NFFTKernel<T>::
-NFFTKernel(size_t m, size_t n, size_t fft_size)
+NFFTKernel(int m, int n, int fft_size)
     : _m(m), _n(n), _fft_size(fft_size)
 {
+    if ((m<1) || (n<1) || (fft_size<1)) {
+        throw LengthError(ISCE_SRCINFO(), "NFFT parameters must be positive.");
+    }
     _b = M_PI * (2.0 - 1.0*n/fft_size);
     _scale = 1.0 / (M_PI * isce::math::bessel_i0(_m*_b));
     this->_halfwidth = fabs((2*m+1) / 2.0);
@@ -137,3 +141,115 @@ operator()(double t) const
 
 template class isce::core::NFFTKernel<float>;
 template class isce::core::NFFTKernel<double>;
+
+/*
+ * Tabulated kernel.
+ */
+
+// Constructor
+template <typename T>
+isce::core::TabulatedKernel<T>::
+TabulatedKernel(const isce::core::Kernel<T> &kernel, int n)
+{
+    this->_halfwidth = kernel.width() / 2.0;
+    // Need at least two points for linear interpolation.
+    if (n < 2) {
+        throw LengthError(ISCE_SRCINFO(), "Require table size >= 2.");
+    }
+    // Need i+1 < n so linear interp doesn't run off of table.
+    _imax = n - 2;
+    // Allocate table.
+    _table.resize(n);
+    // Assume Kernel is even and fill table with f(x) for 0 <= x <= halfwidth.
+    const double dx = this->_halfwidth / (n - 1.0);
+    _1_dx = 1.0 / dx;
+    for (int i=0; i<n; ++i) {
+        double x = i * dx;
+        _table[i] = kernel(x);
+    }
+}
+
+// call
+template <typename T>
+T
+isce::core::TabulatedKernel<T>::
+operator()(double x) const
+{
+    // Return zero outside table.
+    auto ax = std::abs(x);
+    if (ax > this->_halfwidth) {
+        return T(0);
+    }
+    // Normalize to table sample index.
+    auto axn = ax * _1_dx;
+    // Determine left side of interval.
+    int i = std::floor(axn);
+    // Make sure floating point multiply doesn't cause off-by-one.
+    i = std::min(i, _imax);
+    // Linear interpolation.
+    return _table[i] + (axn - i) * (_table[i+1] - _table[i]);
+}
+
+template class isce::core::TabulatedKernel<float>;
+template class isce::core::TabulatedKernel<double>;
+
+template <typename T>
+isce::core::ChebyKernel<T>::
+ChebyKernel(const isce::core::Kernel<T> &kernel, int n)
+{
+    if (n < 1) {
+        throw LengthError(ISCE_SRCINFO(), "Need at least one coefficient.");
+    }
+    this->_halfwidth = kernel.width() / 2.0;
+    // Fit a kernel with DCT of fn at Chebyshev zeros.
+    // Assume even function and fit on interval [0,width/2] to avoid a bunch
+    // of zero coefficients.
+    std::valarray<T> q(n), fx(n);
+    _scale = 4.0 / kernel.width();
+    for (int i=0; i<n; ++i) {
+        q[i] = M_PI * (2.0*i + 1.0) / (2.0*n);
+        // shift & scale [-1,1] to [0,width/2].
+        T x = (std::cos(q[i]) + 1.0) / _scale;
+        fx[i] = kernel(x);
+    }
+    // FFTW provides DCT with plan_r2r(REDFT10) but this isn't exposed in
+    // isce::core::signal.  Typically we're only fitting a few coefficients
+    // anyway so just implement O(n^2) algorithm.
+    _coeffs.resize(n);
+    for (int i=0; i<n; ++i) {
+        _coeffs[i] = 0.0;
+        for (int j=0; j<n; ++j) {
+            T w = std::cos(i * q[j]);
+            _coeffs[i] += w * fx[j];
+        }
+        _coeffs[i] *= 2.0 / n;
+    }
+    _coeffs[0] *= 0.5;
+}
+
+template <typename T>
+T
+isce::core::ChebyKernel<T>::
+operator()(double x) const
+{
+    // Careful to avoid weird stuff outside [-1,1] definition.
+    const auto ax = std::abs(x);
+    if (ax > this->_halfwidth) {
+        return T(0);
+    }
+    // Map [0,L/2] to [-1,1]
+    const T q = (ax * _scale) - T(1);
+    const T twoq = T(2) * q;
+    const int n = _coeffs.size();
+    // Clenshaw algorithm for two term recurrence.
+    T bk=0, bk1=0, bk2=0;
+    for (int i=n-1; i>0; --i) {
+        bk = _coeffs[i] + twoq * bk1 - bk2;
+        bk2 = bk1;
+        bk1 = bk;
+    }
+    return _coeffs[0] + q*bk1 - bk2;
+}
+
+template class isce::core::ChebyKernel<float>;
+template class isce::core::ChebyKernel<double>;
