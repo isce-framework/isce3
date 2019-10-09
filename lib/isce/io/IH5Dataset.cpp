@@ -4,20 +4,21 @@
 // Author: Piyush Agram
 // Copyright 2019
 
-
-#include "cpl_port.h"
 #include "IH5Dataset.h"
 
-#include "cpl_config.h"
-#include "cpl_conv.h"
-#include "cpl_error.h"
-#include "cpl_minixml.h"
-#include "cpl_progress.h"
-#include "cpl_string.h"
-#include "cpl_vsi.h"
-#include "gdal.h"
-#include "gdal_frmts.h"
-#include "gdal_priv.h"
+#include <cpl_config.h>
+#include <cpl_conv.h>
+#include <cpl_error.h>
+#include <cpl_minixml.h>
+#include <cpl_port.h>
+#include <cpl_progress.h>
+#include <cpl_string.h>
+#include <cpl_vsi.h>
+#include <gdal.h>
+#include <gdal_frmts.h>
+#include <gdal_priv.h>
+#include <sstream>
+#include <string>
 #include <vector>
 
 //Exposing some hidden HDF5 functionality to allow for interfacing
@@ -111,11 +112,13 @@ CPLErr IH5RasterBand::IReadBlock( int nBlockXOff,
     counts[offset] = std::min(nBlockYSize, poGDS->GetRasterYSize() - starts[offset]);
     counts[offset+1] = std::min(nBlockXSize, poGDS->GetRasterXSize() - starts[offset+1]);
 
-    CPLDebug("GDAL_IH5", "%lld Read, band=%d, starts=(%d,%d), counts=(%d,%d)",
-            static_cast<long long int>(poGDS->_dataset->getId()),
-            nBand,
-            starts[offset], starts[offset+1],
-            counts[offset], counts[offset+1]);
+    std::stringstream ss;
+    ss << poGDS->_dataset->getId() << " Read, "
+        << "band=" << nBand << ", "
+        << "starts=(" << starts[offset] << "," << starts[offset+1] << "), "
+        << "counts=(" << counts[offset] << "," << counts[offset+1] << ")";
+    CPLDebug("GDAL_IH5", ss.str().c_str());
+
     H5::DataSpace dspace = poGDS->_dataset->getDataSpace(starts, counts, nullptr);
     if (!H5::IdComponent::isValid(dspace.getId()))
     {
@@ -199,11 +202,12 @@ CPLErr IH5RasterBand::IWriteBlock( int nBlockXOff,
     counts[offset+1] = std::min(nBlockXSize,
                         poGDS->GetRasterXSize() - starts[offset+1]);
 
-    CPLDebug("GDAL_IH5", "%lld Write, band=%d, starts=(%d,%d), counts=(%d,%d)",
-            static_cast<long long int>(poGDS->_dataset->getId()),
-            nBand,
-            starts[offset], starts[offset+1],
-            counts[offset], counts[offset+1]);
+    std::stringstream ss;
+    ss << poGDS->_dataset->getId() << " Write, "
+        << "band=" << nBand << ", "
+        << "starts=(" << starts[offset] << "," << starts[offset+1] << "), "
+        << "counts=(" << counts[offset] << "," << counts[offset+1] << ")";
+    CPLDebug("GDAL_IH5", ss.str().c_str());
 
     H5::DataSpace dspace = poGDS->_dataset->getDataSpace(starts, counts, nullptr);
     if (!H5::IdComponent::isValid(dspace.getId()))
@@ -305,10 +309,22 @@ IH5Dataset::IH5Dataset(const hid_t &inputds, GDALAccess eAccessIn ):
                  "Not a valid HDF5 ID to create IH5Dataset from");
         return;
     }
-    CPLDebug("GDAL_IH5", "Input ID = %lld", static_cast<long long int>(inputds));
+
+    {
+        std::stringstream ss;
+        ss << "Input ID = " << inputds;
+        CPLDebug("GDAL_IH5", ss.str().c_str());
+    }
+
     eAccess = eAccessIn;
     _dataset = new isce::io::IDataSet(inputds);
-    CPLDebug("GDAL_IH5", "Extracted ID = %lld", static_cast<long long int>(_dataset->getId()));
+
+    {
+        std::stringstream ss;
+        ss << "Extracted ID = " << _dataset->getId();
+        CPLDebug("GDAL_IH5", ss.str().c_str());
+    }
+
     if (!H5::IdComponent::isValid(_dataset->getId()))
     {
         CPLError(CE_Failure, CPLE_AppDefined,
@@ -523,9 +539,12 @@ CPLErr IH5Dataset::populateFromDataset()
 
     //Determine offset to Y-axis
     int axisOffset = (ndims == 3)?1:0;
-    CPLDebug("GDAL_IH5", "%lld: Number of axes = %d",
-            static_cast<long long int>(_dataset->getId()),
-            ndims);
+
+    {
+        std::stringstream ss;
+        ss << _dataset->getId() << ": Number of axes = " << ndims;
+        CPLDebug("GDAL_IH5", ss.str().c_str());
+    }
 
     //Get dimensions - row major layout
     std::vector<int> dims = _dataset->getDimensions();
@@ -543,14 +562,21 @@ CPLErr IH5Dataset::populateFromDataset()
     nRasterXSize = dimensions[axisOffset+1];
 
     nBands = (ndims == 3) ? dimensions[0] : 1;
-    if (ndims == 2)
-        CPLDebug("GDAL_IH5", "%lld: %d L x %d P",
-                static_cast<long long int>(_dataset->getId()),
-                dimensions[axisOffset], dimensions[axisOffset+1]);
-    else
-        CPLDebug("GDAL_IH5", "%lld: %d H x %d L x %d P",
-                static_cast<long long int>(_dataset->getId()),
-                nBands, dimensions[axisOffset], dimensions[axisOffset+1]);
+    if (ndims == 2) {
+        std::stringstream ss;
+        ss << _dataset->getId() << ": "
+            << dimensions[axisOffset] << " L x "
+            << dimensions[axisOffset+1] << " P";
+        CPLDebug("GDAL_IH5", ss.str().c_str());
+    }
+    else {
+        std::stringstream ss;
+        ss << _dataset->getId() << ": "
+            << nBands << " H x "
+            << dimensions[axisOffset] << " L x "
+            << dimensions[axisOffset+1] << " P";
+        CPLDebug("GDAL_IH5", ss.str().c_str());
+    }
 
 
     auto chunkSize = _dataset->getChunkSize();
