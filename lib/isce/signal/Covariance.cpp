@@ -12,17 +12,11 @@
 #include "Looks.h"
 #include "Signal.h"
 
-/**
- * @param[in] slc polarimetric channels provided as std::map of Raster object of polarimetric channels. The keys are two or four of hh, hv, vh, and vv channels.
- * @param[out] cov covariance components obtained by cross multiplication and multi-looking the polarimetric channels
- */
 template<class T>
 void isce::signal::Covariance<T>::
 covariance(std::map<std::string, isce::io::Raster> & slc,
             std::map<std::pair<std::string, std::string>, isce::io::Raster> & cov)
-
 {
-
     size_t numPolarizations = slc.size();
     size_t numCovElements = cov.size();
 
@@ -47,7 +41,7 @@ covariance(std::map<std::string, isce::io::Raster> & slc,
 
     } else if (numPolarizations == 4 && numCovElements == 10) {
         _quadPol = true;
-    } 
+    }
 
     // instantiate the crossmul object
     isce::signal::Crossmul crsmul;
@@ -59,7 +53,7 @@ covariance(std::map<std::string, isce::io::Raster> & slc,
 
     crsmul.doCommonAzimuthbandFiltering(false);
 
-    crsmul.doCommonRangebandFiltering(false);   
+    crsmul.doCommonRangebandFiltering(false);
 
     if (_dualPol) {
 
@@ -68,7 +62,6 @@ covariance(std::map<std::string, isce::io::Raster> & slc,
         crsmul.crossmul(slc[_coPol], slc[_crossPol], cov[std::make_pair(_coPol, _crossPol)]);
 
         crsmul.crossmul(slc[_crossPol], slc[_crossPol], cov[std::make_pair(_crossPol, _crossPol)]);
-
 
     } else if (_quadPol){
 
@@ -95,78 +88,57 @@ covariance(std::map<std::string, isce::io::Raster> & slc,
     }
 }
 
-/**
- * @param[in] rdrCov covariance componenets in radar range-doppler coordinates
- * @param[out] geoCov geocoded covariance componenets
- * @param[in] demRaster digital elevation model (DEM) raster object
- */
 template<class T>
 void isce::signal::Covariance<T>::
 geocodeCovariance(isce::io::Raster& rdrCov,
                 isce::io::Raster& geoCov,
-                isce::io::Raster & demRaster) {
-
+                isce::io::Raster & demRaster)
+{
     _correctRtcFlag = false;
     _correctOrientationFlag = false;
 
     isce::io::Raster rtcRaster("/vsimem/dummyRtc", 1, 1, 1, GDT_Float32, "ENVI");
     isce::io::Raster orientationAngleRaster("/vsimem/dummyOrient", 1, 1, 1, GDT_Float32, "ENVI");
-    
+
     geocodeCovariance(rdrCov,
                 geoCov,
                 demRaster,
                 rtcRaster,
                 orientationAngleRaster);
-
-
 }
 
-/**
- * @param[in] rdrCov covariance componenets in radar range-doppler coordinates
- * @param[out] geoCov geocoded covariance componenets
- * @param[in] demRaster raster object for digital elevation model (DEM)
- * @param[in] rtcRaster raster object for radiometric terrain correction (RTC) factor 
- */
 template<class T>
 void isce::signal::Covariance<T>::
 geocodeCovariance(isce::io::Raster& rdrCov,
                 isce::io::Raster& geoCov,
                 isce::io::Raster & demRaster,
-                isce::io::Raster& rtcRaster) {
-    
+                isce::io::Raster& rtcRaster)
+{
     _correctOrientationFlag = false;
     isce::io::Raster orientationAngleRaster("/vsimem/dummyOrient", 1, 1, 1, GDT_Float32, "ENVI");
-    
+
     geocodeCovariance(rdrCov,
                 geoCov,
                 demRaster,
                 rtcRaster,
                 orientationAngleRaster);
-
 }
 
-/**
- * @param[in] rdrCov covariance componenets in radar range-doppler coordinates
- * @param[out] geoCov geocoded covariance componenets
- * @param[in] demRaster raster object for digital elevation model (DEM)
- * @param[in] rtcRaster raster object for radiometric terrain correction (RTC) factor
- * @param[in] orientationAngleRaster raster object for polarimetric orientation angle
- */
 template<class T>
 void isce::signal::Covariance<T>::
 geocodeCovariance(isce::io::Raster& rdrCov,
                 isce::io::Raster& geoCov,
                 isce::io::Raster & demRaster,
                 isce::io::Raster& rtc,
-                isce::io::Raster& orientationAngleRaster) {
-
+                isce::io::Raster& orientationAngleRaster)
+{
     // number of bands in the input raster
     size_t nbands = rdrCov.numBands();
 
     // create projection based on _epsg code
     _proj = isce::core::createProj(_epsgOut);
 
-    // instantiate the DEMInterpolator 
+    // instantiate the DEMInterpolator
     isce::geometry::DEMInterpolator demInterp;
 
     // Compute number of blocks in the output geocoded grid
@@ -175,7 +147,7 @@ geocodeCovariance(isce::io::Raster& rdrCov,
         nBlocks += 1;
 
     std::cout << " nBlocks: " << nBlocks << std::endl;
-    
+
     //loop over the blocks of the geocoded Grid
     for (size_t block = 0; block < nBlocks; ++block) {
         std::cout << "block : " << block << std::endl;
@@ -197,14 +169,14 @@ geocodeCovariance(isce::io::Raster& rdrCov,
 
         // load a block of DEM for the current geocoded grid
         _loadDEM(demRaster, demInterp, _proj,
-                lineStart, geoBlockLength, _geoGridWidth, 
+                lineStart, geoBlockLength, _geoGridWidth,
                 _demBlockMargin);
 
         //Given the current block on geocoded grid,
         //compute the bounding box of a block of data in the radar image.
         //This block of data will be used to interpolate the
         //values to the geocoded block
-        _computeRangeAzimuthBoundingBox(lineStart, 
+        _computeRangeAzimuthBoundingBox(lineStart,
                         geoBlockLength, _geoGridWidth,
                         _radarBlockMargin, demInterp,
                         azimuthFirstLine, azimuthLastLine,
@@ -214,7 +186,7 @@ geocodeCovariance(isce::io::Raster& rdrCov,
         size_t rdrBlockLength = azimuthLastLine - azimuthFirstLine + 1;
         size_t rdrBlockWidth = rangeLastPixel - rangeFirstPixel + 1;
 
-        // X and Y indices (in the radar coordinates) for the 
+        // X and Y indices (in the radar coordinates) for the
         // geocoded pixels (after geo2rdr computation)
         std::valarray<double> radarX(blockSize);
         std::valarray<double> radarY(blockSize);
@@ -223,18 +195,18 @@ geocodeCovariance(isce::io::Raster& rdrCov,
         for (size_t blockLine = 0; blockLine < geoBlockLength; ++blockLine) {
             // Global line index
             const size_t line = lineStart + blockLine;
-           
+
             // y coordinate in the out put grid
             double y = _geoGridStartY + _geoGridSpacingY*line;
 
             // Loop over DEM pixels
             #pragma omp parallel for
             for (size_t pixel = 0; pixel < _geoGridWidth; ++pixel) {
-                
+
                 // x in the output geocoded Grid
                 double x = _geoGridStartX + _geoGridSpacingX*pixel;
-                
-                // compute the azimuth time and slant range for the 
+
+                // compute the azimuth time and slant range for the
                 // x,y coordinates in the output grid
                 double aztime, srange;
                 _geo2rdr(x, y, aztime, srange, demInterp);
@@ -242,35 +214,33 @@ geocodeCovariance(isce::io::Raster& rdrCov,
                 // get the row and column index in the radar grid
                 double rdrX, rdrY;
                 rdrY = (aztime - _radarGrid.sensingStart()) * _radarGrid.prf();
-        
-                rdrX = (srange - _radarGrid.startingRange()) / _radarGrid.rangePixelSpacing(); 
 
-                // adjust the row and column indicies for the current block, 
+                rdrX = (srange - _radarGrid.startingRange()) / _radarGrid.rangePixelSpacing();
+
+                // adjust the row and column indicies for the current block,
                 // i.e., moving the origin to the top-left of this radar block.
                 rdrY -= azimuthFirstLine;
                 rdrX -= rangeFirstPixel;
-                
-                //store the adjusted X and Y indices 
+
+                //store the adjusted X and Y indices
                 radarX[blockLine*_geoGridWidth + pixel] = rdrX;
                 radarY[blockLine*_geoGridWidth + pixel] = rdrY;
 
-            } // end loop over pixels of output grid 
+            } // end loop over pixels of output grid
         } // end loops over lines of output grid
 
-        
         std::valarray<float> rtcDataBlock(0);
         if (_correctRtcFlag) {
 
             // resize the buffer for RTC
             rtcDataBlock.resize(rdrBlockLength * rdrBlockWidth);
-        
+
             // get a block of RTC
             rtc.getBlock(rtcDataBlock,
                         rangeFirstPixel, azimuthFirstLine,
                         rdrBlockWidth, rdrBlockLength);
-
         }
-        
+
         std::valarray<float> orientationAngleBlock(0);
         if (_correctOrientationFlag) {
             // buffer for the orientation angle
@@ -279,7 +249,6 @@ geocodeCovariance(isce::io::Raster& rdrCov,
             orientationAngleRaster.getBlock(orientationAngleBlock,
                         rangeFirstPixel, azimuthFirstLine,
                         rdrBlockWidth, rdrBlockLength);
-
         }
 
         //if (_dualPol) {
@@ -307,82 +276,70 @@ geocodeCovariance(isce::io::Raster& rdrCov,
 
                 // Geocode; interpolate the data in radar grid to the geocoded grid
                 std::cout << "interpolate " << std::endl;
-                _interpolate(rdrDataBlock, geoDataBlock, radarX, radarY, 
-                                rdrBlockWidth, rdrBlockLength, 
+                _interpolate(rdrDataBlock, geoDataBlock, radarX, radarY,
+                                rdrBlockWidth, rdrBlockLength,
                                 _geoGridWidth, geoBlockLength);
 
                 // set output
                 std::cout << "set output " << std::endl;
-                geoCov.setBlock(geoDataBlock, 0, lineStart, 
+                geoCov.setBlock(geoDataBlock, 0, lineStart,
                                 _geoGridWidth, geoBlockLength, band+1);
             }
-        //} 
+        //}
         //else if (_quadPol) {
-            
+
         //    std::cout << "needs to be implemented "  << std::endl;
 
         //}
-
 
         // set output block of data
     } // end loop over block of output grid
 
     geoCov.setGeoTransform(_geoTrans);
     geoCov.setEPSG(_epsgOut);
-
 }
-
 
 template<class T>
 void isce::signal::Covariance<T>::
-_correctRTC(std::valarray<std::complex<float>> & rdrDataBlock, 
-            std::valarray<float> & rtcDataBlock) {
-
+_correctRTC(std::valarray<std::complex<float>> & rdrDataBlock,
+            std::valarray<float> & rtcDataBlock)
+{
     #pragma omp parallel for
     for (size_t i = 0; i<rdrDataBlock.size(); ++i)
         rdrDataBlock[i] = rdrDataBlock[i]*rtcDataBlock[i];
-
 }
 
 template<class T>
 void isce::signal::Covariance<T>::
 _correctRTC(std::valarray<std::complex<double>> & rdrDataBlock,
-            std::valarray<float> & rtcDataBlock) {
-
+            std::valarray<float> & rtcDataBlock)
+{
     #pragma omp parallel for
     for (size_t i = 0; i<rdrDataBlock.size(); ++i)
         rdrDataBlock[i] = rdrDataBlock[i] * static_cast<double>(rtcDataBlock[i]);
-
 }
 
-/**
- * @param[in] slc polarimetric channels 
- * @param[out] faradayAngleRaster raster object for Faraday rotation angle 
- * @param[in] rangeLooks number of looks in range direction
- * @param[in] azimuthLooks number of looks in azimuth direction
- */
 template<class T>
 void isce::signal::Covariance<T>::
-faradayRotation(std::map<std::string, isce::io::Raster> & slc,  
+faradayRotation(std::map<std::string, isce::io::Raster> & slc,
                     isce::io::Raster & faradayAngleRaster,
                     size_t rangeLooks, size_t azimuthLooks)
 {
-    
     size_t numPolarizations = slc.size();
     std::cout << "number of polarizations : "<<  numPolarizations << std::endl;
 
     if (numPolarizations < 4) {
         // throw an error
-        std::cout << "quad-pol data are required for Faraday rotation estimation" << std::endl; 
+        std::cout << "quad-pol data are required for Faraday rotation estimation" << std::endl;
     }
-    
+
     size_t nrows = slc["hh"].length();
     size_t ncols = slc["hh"].width();
-    
+
     size_t blockRows = (_linesPerBlock/azimuthLooks)*azimuthLooks;
     size_t blockRowsMultiLooked = blockRows/azimuthLooks;
     size_t ncolsMultiLooked = ncols/rangeLooks;
-    
+
     std::cout << blockRows << " , " << blockRowsMultiLooked << " , " << ncolsMultiLooked << std::endl;
     // number of blocks to process
     size_t nblocks = nrows / blockRows;
@@ -391,7 +348,7 @@ faradayRotation(std::map<std::string, isce::io::Raster> & slc,
     } else if (nrows % (nblocks * blockRows) != 0) {
         nblocks += 1;
     }
-   
+
     std::cout << "number of blocks: " << nblocks << std::endl;
 
     // storage for a block of reference SLC data
@@ -403,7 +360,7 @@ faradayRotation(std::map<std::string, isce::io::Raster> & slc,
     std::valarray<float> faradayAngle(ncolsMultiLooked*blockRowsMultiLooked);
 
     for (size_t block = 0; block < nblocks; ++block) {
-        std::cout << "block: " << block << std::endl;       
+        std::cout << "block: " << block << std::endl;
 
         // start row for this block
         size_t rowStart;
@@ -412,7 +369,7 @@ faradayRotation(std::map<std::string, isce::io::Raster> & slc,
         //number of lines of data in this block. blockRowsData<= blockRows
         //Note that blockRows is fixed number of lines
         //blockRowsData might be less than or equal to blockRows.
-        //e.g. if nrows = 512, and blockRows = 100, then 
+        //e.g. if nrows = 512, and blockRows = 100, then
         //blockRowsData for last block will be 12
         size_t blockRowsData;
         if ((rowStart + blockRows) > nrows) {
@@ -421,23 +378,20 @@ faradayRotation(std::map<std::string, isce::io::Raster> & slc,
             blockRowsData = blockRows;
         }
 
-
-        // get blocks of quad-pol data 
+        // get blocks of quad-pol data
         slc["hh"].getBlock(Shh, 0, rowStart, ncols, blockRowsData);
         slc["hv"].getBlock(Shv, 0, rowStart, ncols, blockRowsData);
         slc["vh"].getBlock(Svh, 0, rowStart, ncols, blockRowsData);
         slc["vv"].getBlock(Svv, 0, rowStart, ncols, blockRowsData);
 
         // compute faraday rotation angle
-        _faradayRotationAngle(Shh, Shv, Svh, Svv, faradayAngle, 
+        _faradayRotationAngle(Shh, Shv, Svh, Svv, faradayAngle,
                                 ncols, blockRows,
                                 rangeLooks, azimuthLooks);
 
         faradayAngleRaster.setBlock(faradayAngle, 0, rowStart/azimuthLooks,
                                         ncols/rangeLooks, blockRowsData/azimuthLooks);
-
     }
-
 }
 
 template<class T>
@@ -450,7 +404,6 @@ _faradayRotationAngle(std::valarray<T>& Shh,
                     size_t width, size_t length,
                     size_t rngLooks, size_t azLooks)
 {
-
     size_t widthLooked = width/rngLooks;
     size_t lengthLooked = length/azLooks;
 
@@ -465,7 +418,7 @@ _faradayRotationAngle(std::valarray<T>& Shh,
         M2[i] = std::pow(std::abs(Shh[i]+Svv[i]), 2.0);
         M3[i] = std::pow(std::abs(Shv[i]-Svh[i]), 2.0);
     }
-   
+
     std::valarray<float> M1avg(widthLooked*lengthLooked);
     std::valarray<float> M2avg(widthLooked*lengthLooked);
     std::valarray<float> M3avg(widthLooked*lengthLooked);
@@ -481,34 +434,32 @@ _faradayRotationAngle(std::valarray<T>& Shh,
     looksObj.multilook(M1, M1avg);
     looksObj.multilook(M2, M2avg);
     looksObj.multilook(M3, M3avg);
-    
+
     size_t sizeOutput = faradayRotation.size();
 
     #pragma omp parallel for
-    for (size_t i = 0; i < sizeOutput; ++i ){ 
+    for (size_t i = 0; i < sizeOutput; ++i ){
         faradayRotation[i] = 0.25*std::atan2(M1[i], M2[i]-M3[i]);
     }
-    
 }
 
 template<class T>
 void isce::signal::Covariance<T>::
-_correctFaradayRotation(isce::core::LUT2d<double>& faradayAngle, 
+_correctFaradayRotation(isce::core::LUT2d<double>& faradayAngle,
                         std::valarray<std::complex<float>>& Shh,
-                    std::valarray<std::complex<float>>& Shv,
-                    std::valarray<std::complex<float>>& Svh,
-                    std::valarray<std::complex<float>>& Svv,
-                    size_t length,
-                    size_t width,
-                    size_t lineStart)
-
+                        std::valarray<std::complex<float>>& Shv,
+                        std::valarray<std::complex<float>>& Svh,
+                        std::valarray<std::complex<float>>& Svv,
+                        size_t length,
+                        size_t width,
+                        size_t lineStart)
 {
     #pragma omp parallel for
     for (size_t kk = 0; kk < length*width; ++kk) {
         size_t line = kk/width;
         size_t col = kk%width;
         size_t y = line + lineStart;
-    
+
         double delta = faradayAngle.eval(y, col);
         float a = std::cos(delta);
         float b = std::sin(delta);
@@ -522,18 +473,9 @@ _correctFaradayRotation(isce::core::LUT2d<double>& faradayAngle,
         Shv[kk] = shv;
         Svh[kk] = svh;
         Svv[kk] = svv;
-
-        
-        
-    }   
+    }
 }
 
-/**
- * @param[in] azimuthSlopeRaster raster object of the DEM's slope in azimuth direction  
- * @param[in] rangeSlopeRaster raster object of the DEM's slope in range direction
- * @param[in] lookAngleRaster raster object of the look angle 
- * @param[out] tauRaster raster object of the polarimetric orientation angle
- */
 template<class T>
 void isce::signal::Covariance<T>::
 orientationAngle(isce::io::Raster& azimuthSlopeRaster,
@@ -541,11 +483,9 @@ orientationAngle(isce::io::Raster& azimuthSlopeRaster,
                 isce::io::Raster& lookAngleRaster,
                 isce::io::Raster& tauRaster)
 {
- 
-    
     size_t nrows = azimuthSlopeRaster.length();
     size_t ncols = azimuthSlopeRaster.width();
-   
+
     size_t blockRows = _linesPerBlock;
 
     std::valarray<float> azimuthSlope(ncols*blockRows);
@@ -561,7 +501,7 @@ orientationAngle(isce::io::Raster& azimuthSlopeRaster,
     }
 
     for (size_t block = 0; block < nblocks; ++block) {
-        std::cout << "block: " << block << std::endl;       
+        std::cout << "block: " << block << std::endl;
 
         // start row for this block
         size_t rowStart;
@@ -570,7 +510,7 @@ orientationAngle(isce::io::Raster& azimuthSlopeRaster,
         //number of lines of data in this block. blockRowsData<= blockRows
         //Note that blockRows is fixed number of lines
         //blockRowsData might be less than or equal to blockRows.
-        //e.g. if nrows = 512, and blockRows = 100, then 
+        //e.g. if nrows = 512, and blockRows = 100, then
         //blockRowsData for last block will be 12
         size_t blockRowsData;
         if ((rowStart + blockRows) > nrows) {
@@ -587,9 +527,7 @@ orientationAngle(isce::io::Raster& azimuthSlopeRaster,
                         lookAngle, tau);
 
         tauRaster.setBlock(tau, 0, rowStart, ncols, blockRowsData);
-
     }
-   
 }
 
 
@@ -600,12 +538,11 @@ _orientationAngle(std::valarray<float>& azimuthSlope,
                 std::valarray<float>& lookAngle,
                 std::valarray<float>& tau)
 {
-
     size_t sizeData = tau.size();
     #pragma omp parallel for
     for (size_t i = 0; i < sizeData; ++i ){
-            tau = std::atan2(std::tan(azimuthSlope[i]), 
-                    std::sin(lookAngle) - 
+            tau = std::atan2(std::tan(azimuthSlope[i]),
+                    std::sin(lookAngle) -
                         std::tan(rangeSlope)*std::cos(lookAngle));
     }
 }
@@ -613,7 +550,7 @@ _orientationAngle(std::valarray<float>& azimuthSlope,
 
 template<class T>
 void isce::signal::Covariance<T>::
-_correctOrientation(std::valarray<float>& tau, 
+_correctOrientation(std::valarray<float>& tau,
                     std::valarray<std::complex<float>>& C11,
                     std::valarray<std::complex<float>>& C12,
                     std::valarray<std::complex<float>>& C13,
@@ -623,35 +560,34 @@ _correctOrientation(std::valarray<float>& tau,
                     std::valarray<std::complex<float>>& C31,
                     std::valarray<std::complex<float>>& C32,
                     std::valarray<std::complex<float>>& C33)
-
 {
-    // Given the 3x3 Covariance matrix, the matrix after 
+    // Given the 3x3 Covariance matrix, the matrix after
     // polarimetric orientation correction is obtained as:
     // C = R*C*R_T
-    // where R is the rotation matrix and R_T is the transpose 
+    // where R is the rotation matrix and R_T is the transpose
     // of the rotation matrix.
-    
+
     // the size of the rotation angle array
     size_t arraySize = tau.size();
 
     // buffer for the first two elements of the rotation matrix
     std::valarray<float> R11(arraySize);
     std::valarray<float> R12(arraySize);
-    
+
     // the first two elements of the rotation matrix
     R11 = 1.0 + std::cos(2.0f*tau);
     R12 = std::sqrt(2.0)*std::sin(2.0f*tau);
-    
+
     // All other elemensts of the rotation matrix
-    // can be derived from the first two elements. 
+    // can be derived from the first two elements.
     // R13 = 2.0 - R11;
     // R21 = -1.0*R12;
     // R22 = 2.0*(R11 - 1.0);
     // R23 = R12;
     // R31 = 2.0 - R11;
-    // R32 = -1.0*R12; 
+    // R32 = -1.0*R12;
     // R33 = R11;
-    // Therefore there is no need to compute them 
+    // Therefore there is no need to compute them
 
     #pragma omp parallel for
     for (size_t i = 0; i < arraySize; ++i) {
@@ -664,7 +600,7 @@ _correctOrientation(std::valarray<float>& tau,
         float r31 = 2.0f - R11[i];
         float r32 = -1.0f*R12[i];
         float r33 = R11[i];
-       
+
         std::complex<float> c11 = 0.25f*(r11*(C11[i]*r11 + C12[i]*r12 + C13[i]*r13) +
                         r12*(C21[i]*r11 + C22[i]*r12 + C23[i]*r13) +
                         r13*(C31[i]*r11 + C32[i]*r12 + C33[i]*r13));
@@ -710,27 +646,8 @@ _correctOrientation(std::valarray<float>& tau,
         C31[i] = c31;
         C32[i] = c32;
         C33[i] = c33;
-
-
     }
 }
-
-/*
-
-void isce::signal::Covariance::
-_correctFaradayRotation()
-{
-    
-}
-
-void isce::signal::Covariance::
-_symmetrization()
-{
-    
-}
-
-*/
-
 
 template<class T>
 void isce::signal::Covariance<T>::
@@ -740,7 +657,6 @@ _interpolate(std::valarray<T>& rdrDataBlock,
             size_t radarBlockWidth, size_t radarBlockLength,
             size_t width, size_t length)
 {
-
     double extraMargin = 4.0;
 
     #pragma omp parallel for
@@ -749,27 +665,25 @@ _interpolate(std::valarray<T>& rdrDataBlock,
         size_t i = kk / width;
         size_t j = kk % width;
 
-            // if this point falls somewhere within the radar data box,
-            // then perform the interpolation
-            if (radarX[i*width + j] >= extraMargin &&
-                    radarY[i*width + j] >= extraMargin &&
-                    radarX[i*width + j] < (radarBlockWidth - extraMargin) &&
-                    radarY[i*width + j] < (radarBlockLength - extraMargin) ) {
+        // if this point falls somewhere within the radar data box,
+        // then perform the interpolation
+        if (radarX[i*width + j] >= extraMargin &&
+                radarY[i*width + j] >= extraMargin &&
+                radarX[i*width + j] < (radarBlockWidth - extraMargin) &&
+                radarY[i*width + j] < (radarBlockLength - extraMargin) ) {
 
-                geoDataBlock[i*width + j] = _interp->interpolate(radarX[i*width + j],
-                                                radarY[i*width + j], rdrDataBlock, radarBlockWidth);
-
-            }
+            geoDataBlock[i*width + j] = _interp->interpolate(radarX[i*width + j],
+                                            radarY[i*width + j], rdrDataBlock, radarBlockWidth);
+        }
     }
-
 }
 
 template<class T>
 void isce::signal::Covariance<T>::
 _loadDEM(isce::io::Raster demRaster,
         isce::geometry::DEMInterpolator & demInterp,
-        isce::core::ProjectionBase * _proj, 
-        int lineStart, int blockLength, 
+        isce::core::ProjectionBase * _proj,
+        int lineStart, int blockLength,
         int blockWidth, double demMargin)
 {
     // convert the corner of the current geocoded grid to lon lat
@@ -809,7 +723,7 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
     std::valarray<double> X(4);
     std::valarray<double> Y(4);
 
-    // to store the azimuth time and slant range corresponding to 
+    // to store the azimuth time and slant range corresponding to
     // the corner of the block on ground
     std::valarray<double> azimuthTime(4);
     std::valarray<double> slantRange(4);
@@ -822,17 +736,17 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
     Y[1] = _geoGridStartY + _geoGridSpacingY*lineStart;
     X[1] = _geoGridStartX + _geoGridSpacingX*(blockWidth - 1);
 
-    //bottom left corener on ground 
+    //bottom left corener on ground
     Y[2] = _geoGridStartY + _geoGridSpacingY*(lineStart + blockLength - 1);
     X[2] = _geoGridStartX;
-    
+
     //bottom right corener on ground
     Y[3] = _geoGridStartY + _geoGridSpacingY*(lineStart + blockLength - 1);
     X[3] = _geoGridStartX + _geoGridSpacingX*(blockWidth - 1);
 
     // compute geo2rdr for the 4 corners
     for (size_t i = 0; i<4; ++i){
-        _geo2rdr(X[i], Y[i], azimuthTime[i], slantRange[i], demInterp); 
+        _geo2rdr(X[i], Y[i], azimuthTime[i], slantRange[i], demInterp);
     }
 
     // the first azimuth line
@@ -841,7 +755,7 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
     // the last azimuth line
     azimuthLastLine = (azimuthTime.max() - _radarGrid.sensingStart()) * _radarGrid.prf();
 
-    // the first and last range pixels 
+    // the first and last range pixels
     rangeFirstPixel = (slantRange.min() - _radarGrid.startingRange()) /
                        _radarGrid.rangePixelSpacing();
     rangeLastPixel = (slantRange.max() - _radarGrid.startingRange()) /
@@ -865,12 +779,11 @@ _computeRangeAzimuthBoundingBox(int lineStart, int blockLength, int blockWidth,
 
     if (rangeLastPixel > (_radarGrid.width() - 1))
         rangeLastPixel = _radarGrid.width() - 1;
-
 }
 
 template<class T>
 void isce::signal::Covariance<T>::
-_geo2rdr(double x, double y, 
+_geo2rdr(double x, double y,
         double & azimuthTime, double & slantRange,
         isce::geometry::DEMInterpolator & demInterp)
 {
@@ -888,11 +801,11 @@ _geo2rdr(double x, double y,
 
     // Perform geo->rdr iterations
     int converged = isce::geometry::geo2rdr(
-                    llh, _ellipsoid, _orbit, _doppler, azimuthTime, 
-                    slantRange, _radarGrid.wavelength(), 
+                    llh, _ellipsoid, _orbit, _doppler, azimuthTime,
+                    slantRange, _radarGrid.wavelength(),
                     _radarGrid.lookSide(), _threshold, _numiter, 1.0e-8);
 
-    //Check for convergence 
+    //Check for convergence
     if (converged == 0) {
         azimuthTime = 0.0;
         slantRange = -1.0e-16;
@@ -901,5 +814,3 @@ _geo2rdr(double x, double y,
 
 template class isce::signal::Covariance<std::complex<float>>;
 template class isce::signal::Covariance<std::complex<double>>;
-
-
