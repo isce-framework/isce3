@@ -15,7 +15,7 @@ private:
 
 public:
 
-    CUDA_HOSTDEV constexpr Vector<N>(const std::array<double, N>& other) {
+    constexpr Vector<N>(const std::array<double, N>& other) {
         for (int i = 0; i < N; i++)
             vdata[i] = other[i];
     }
