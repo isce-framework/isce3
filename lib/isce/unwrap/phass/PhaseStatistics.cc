@@ -160,7 +160,7 @@ cerr << "compute_V_delta_phase() ...... " <<  endl;
 }
 
 
-void compute_corr(int nr_lines, int nr_pixels, float **data, unsigned char **corr_data, double max_phase_std)
+void compute_corr(int nr_lines, int nr_pixels, float **data, unsigned char **corr_data, double /* max_phase_std */)
 {
   DataPatch<float> *delta_pixel_patch = new DataPatch<float>(nr_pixels, nr_lines);
   float **delta_pixel = delta_pixel_patch->get_data_lines_ptr();

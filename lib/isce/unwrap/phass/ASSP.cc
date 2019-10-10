@@ -27,7 +27,7 @@ using namespace std;
 
 
 void make_node_patch(char *int_file, char *corr_file, char *amp_file, char *layover_file,
-		     int start_line, int nr_lines, int nr_pixels, double corr_th, double phase_th, double amp_th,
+		     int start_line, int nr_lines, int nr_pixels, double /* corr_th */, double phase_th, double /* amp_th */,
 		     DataPatch<Node> **return_node_patch, DataPatch<float> **return_phase_patch, double minimum_corr,
 			double good_corr, double const_phase_to_remove, int sq)
 {
@@ -962,7 +962,7 @@ DataPatch<Node> *make_node_patch(DataPatch<fcomplex> *int_patch, double qthresh)
 }
 
 
-DataPatch<Node> *make_node_patch(int nr_lines, int nr_pixels, float **corr_data, float **phase_data, double qthresh)
+DataPatch<Node> *make_node_patch(int nr_lines, int nr_pixels, float **corr_data, float **phase_data, double /* qthresh */)
 {
   int nrows = nr_lines + 1;
   int ncols = nr_pixels + 1;
