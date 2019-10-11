@@ -7,5 +7,8 @@ endforeach()
 
 execute_process(COMMAND "date -u" OUTPUT_VARIABLE TODAY)
 configure_file(pyre/meta ${buildpkg}/pyre/meta.py)
+install(FILES ${buildpkg}/pyre/meta.py DESTINATION packages/pyre/)
 
-install(DIRECTORY ${buildpkg} DESTINATION packages/)
+install(DIRECTORY pyre journal
+        DESTINATION packages
+        FILES_MATCHING PATTERN *.py)

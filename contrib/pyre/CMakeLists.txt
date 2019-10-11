@@ -15,7 +15,7 @@ set(PYRE_MINOR 9)
 execute_process(COMMAND "git rev-parse --short HEAD"
                 OUTPUT_VARIABLE PYRE_REVISION)
 
-add_library(pyre SHARED)
+add_library(pyre OBJECT)
 
 add_subdirectory(lib)
 add_subdirectory(packages)
