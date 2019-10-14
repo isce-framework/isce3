@@ -61,7 +61,7 @@ TEST_F(gpuOrbitTest, LinearSCH) {
 
     // Create straight-line orbit with 11 state vectors, each 10 s apart
     for (int i=0; i<11; i++) {
-        makeLinearSV(i*10., opos, ovel, pos, vel); 
+        makeLinearSV(i*10., opos, ovel, pos, vel);
         orb_cpu.setStateVector(i, t+(i*10.), pos, vel);
     }
 
@@ -163,7 +163,7 @@ TEST_F(gpuOrbitTest,LinearLegendre){
     fails += ::testing::Test::HasFailure();
 }
 
-void makeCircularSV(double dt, cartesian_t &opos, cartesian_t &ovel, cartesian_t &pos,
+void makeCircularSV(double dt, cartesian_t &opos, cartesian_t &pos,
                     cartesian_t &vel) {
     double omega1 = (2. * M_PI) / 7000.;
     double omega2 = (2. * M_PI) / 4000.;
@@ -192,7 +192,7 @@ TEST_F(gpuOrbitTest,CircleSCH) {
 
     // Create circular orbit with 11 state vectors, each 5 s apart
     for (int i=0; i<11; i++) {
-        makeCircularSV(i*5., opos, ovel, pos, vel);
+        makeCircularSV(i*5., opos, pos, vel);
         orb_cpu.setStateVector(i, t+(i*5.), pos, vel);
     }
 
@@ -205,7 +205,7 @@ TEST_F(gpuOrbitTest,CircleSCH) {
 
     // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
     for (int i=0; i<4; i++) {
-        makeCircularSV(test_t[i], opos, ovel, ref_pos, ref_vel);
+        makeCircularSV(test_t[i], opos, ref_pos, ref_vel);
         orb_cpu.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
         orb_gpu.interpolateSCHOrbit_h(t+test_t[i], hpos, hvel);
         compareTriplet(pos, hpos, 1.0e-5);
@@ -225,11 +225,11 @@ TEST_F(gpuOrbitTest,CircleHermite) {
     Orbit orb_cpu(11);
     double t = 1000.;
     cartesian_t opos = {7000000., -4500000., 7800000.};
-    cartesian_t ovel, pos, vel, hpos, hvel;
+    cartesian_t pos, vel, hpos, hvel;
 
     // Create circular orbit with 11 state vectors, each 5 s apart
     for (int i=0; i<11; i++) {
-        makeCircularSV(i*5., opos, ovel, pos, vel);
+        makeCircularSV(i*5., opos, pos, vel);
         orb_cpu.setStateVector(i, t+(i*5.), pos, vel);
     }
 
@@ -242,7 +242,7 @@ TEST_F(gpuOrbitTest,CircleHermite) {
 
     // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
     for (int i=0; i<4; i++) {
-        makeCircularSV(test_t[i], opos, ovel, ref_pos, ref_vel);
+        makeCircularSV(test_t[i], opos, ref_pos, ref_vel);
         orb_cpu.interpolate(t+test_t[i], pos, vel, HERMITE_METHOD);
         orb_gpu.interpolateWGS84Orbit_h(t+test_t[i], hpos, hvel);
         compareTriplet(pos, hpos, 1.0e-5);
@@ -262,11 +262,11 @@ TEST_F(gpuOrbitTest,CircleLegendre) {
     Orbit orb_cpu(11);
     double t = 1000.;
     cartesian_t opos = {7000000., -4500000., 7800000.};
-    cartesian_t ovel, pos, vel, hpos, hvel;
+    cartesian_t pos, vel, hpos, hvel;
 
     // Create circular orbit with 11 state vectors, each 5 s apart
     for (int i=0; i<11; i++) {
-        makeCircularSV(i*5., opos, ovel, pos, vel);
+        makeCircularSV(i*5., opos, pos, vel);
         orb_cpu.setStateVector(i, t+(i*5.), pos, vel);
     }
 
@@ -279,7 +279,7 @@ TEST_F(gpuOrbitTest,CircleLegendre) {
 
     // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
     for (int i=0; i<4; i++) {
-        makeCircularSV(test_t[i], opos, ovel, ref_pos, ref_vel);
+        makeCircularSV(test_t[i], opos, ref_pos, ref_vel);
         orb_cpu.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD);
         orb_gpu.interpolateLegendreOrbit_h(t+test_t[i], hpos, hvel);
         compareTriplet(pos, hpos, 1.0e-5);

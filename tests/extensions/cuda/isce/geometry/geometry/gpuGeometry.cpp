@@ -129,6 +129,8 @@ TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
                 ellipsoid, dem, targetLLH, lookSide, 1.0e-4, maxiter, extraiter);
 
             // Check
+            ASSERT_EQ(stat, 0);
+            ASSERT_EQ(stat_cpu, stat_gpu);
             ASSERT_NEAR(degrees*targetLLH[0], reflon, 1.0e-8);
             ASSERT_NEAR(degrees*targetLLH[1], reflat, 1.0e-8);
             ASSERT_NEAR(targetLLH[2], refhgt, 1.0e-2);
