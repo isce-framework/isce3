@@ -1,9 +1,10 @@
-fftw>=3
+cmake>=3.13
+cython
+fftw
 gdal>=2.3
 git
 h5py
 hdf5>=1.10.2
-libgcc
-libstdcxx-ng
 numpy
+pytest
 python>=3.6
