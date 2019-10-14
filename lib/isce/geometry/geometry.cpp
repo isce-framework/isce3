@@ -216,6 +216,7 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
     // Find azimuth time with minimum valid range distance to target
     double slantRange_closest = 1.0e16;
     double aztime_closest = -1000.0;
+    int converged = 0;
     for (int k = 0; k < NUM_AZTIME_TEST; ++k) {
         // Interpolate orbit
         aztime = tstart + k * delta_t;
@@ -224,6 +225,11 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
             continue;
         // Compute slant range
         dr = inputXYZ - satpos;
+
+        // Check look side
+        if (dr.cross(satvel).dot(satpos)*side > 0)
+            return converged;
+
         slantRange = dr.norm();
         // Check validity
         if (slantRange < rangeMin)
@@ -245,7 +251,6 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
     }
 
     // Begin iterations
-    int converged = 0;
     double slantRange_old = 0.0;
     for (int i = 0; i < maxIter; ++i) {
 
@@ -254,10 +259,6 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
 
         // Compute slant range from satellite to ground point
         dr = inputXYZ - satpos;
-
-        // Check look side
-        if (dr.cross(satvel).dot(satpos)*side > 0)
-            return converged;
 
         slantRange = dr.norm();
         // Check convergence

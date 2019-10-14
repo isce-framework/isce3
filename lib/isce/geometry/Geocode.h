@@ -87,29 +87,23 @@ public:
     void interpolator(isce::core::Interpolator<T> * interp) { _interp = interp; }
 
 private:
-
-    void _computeRangeAzimuthBoundingBox(int lineStart,
-                int blockLength, int blockWidth,
-                int margin, isce::geometry::DEMInterpolator & demInterp,
-                isce::core::ProjectionBase * proj,
-                int & azimuthFirstLine, int & azimuthLastLine,
-                int & rangeFirstPixel, int & rangeLastPixel);
-
     void _loadDEM(isce::io::Raster demRaster,
-                isce::geometry::DEMInterpolator & demInterp,
-                isce::core::ProjectionBase * _proj,
-                int lineStart, int blockLength,
-                int blockWidth, double demMargin);
+                  isce::geometry::DEMInterpolator & demInterp,
+                  isce::core::ProjectionBase * _proj,
+                  int lineStart, int blockLength,
+                  int blockWidth, double demMargin);
 
     void _geo2rdr(double x, double y,
-                double & azimuthTime, double & slantRange,
-                isce::geometry::DEMInterpolator & demInterp,
-                isce::core::ProjectionBase * proj);
+                  double & azimuthTime, double & slantRange,
+                  isce::geometry::DEMInterpolator & demInterp,
+                  isce::core::ProjectionBase * proj);
 
     void _interpolate(isce::core::Matrix<T>& rdrDataBlock,
-                isce::core::Matrix<T>& geoDataBlock,
-                std::valarray<double>& radarX, std::valarray<double>& radarY,
-                int rdrBlockWidth, int rdrBlockLength);
+                      isce::core::Matrix<T>& geoDataBlock,
+                      std::valarray<double>& radarX, 
+                      std::valarray<double>& radarY,
+                      int rdrBlockWidth, int rdrBlockLength,
+                      int azimuthFirstLine, int rangeFirstPixel);
 
     // isce::core objects
     isce::core::Orbit _orbit;
