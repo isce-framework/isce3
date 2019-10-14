@@ -90,6 +90,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li class="level1"><a href="#conda">Installing Anaconda and Python packages</a></li>
 <li class="level1"><a href="#pyreinstall">Installing pyre</a><ul><li class="level2"><a href="#pyresrc">Option 1: Install pyre from source</a></li>
 <li class="level2"><a href="#pyrebin">Option 2: Install pyre binaries (warning: currently not available)</a></li>
+<li class="level2"><a href="#pyreconda">Option 3: Install pyre via conda package</a></li>
 </ul>
 </li>
 <li class="level1"><a href="#isce3linux">Install ISCE from source</a><ul><li class="level2"><a href="#isce3targit">Step 1: Get latest version of ISCE source</a><ul><li class="level3"><a href="#isce3git">Option 1: Checkout latest version from git</a></li>
@@ -98,9 +99,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </li>
 <li class="level2"><a href="#isce3build">Step 2: Build the software</a></li>
 <li class="level2"><a href="#isce3install">Step 3: Install and set environment variables</a></li>
-</ul>
-</li>
-<li class="level1"><a href="#tips">Additional installation tips</a><ul><li class="level2"><a href="#tips_cuda">1. Set TMP_DIR for compilation of CUDA extensions</a></li>
 </ul>
 </li>
 </ul>
@@ -208,16 +206,7 @@ Installing Anaconda and Python packages</h1>
 <ol>
 <li>
 <p class="startli">We will list all the required packages in a text file called "requirements.txt" located under /home/tools/python. The contents of the requirements.txt file is shown below:</p>
-<pre class="fragment">cmake
-cython
-gdal
-git
-h5py
-libgdal
-pytest
-numpy
-fftw
-</pre><p class="endli"></p>
+<div class="fragment"></div><!-- fragment --><p class="endli"></p>
 </li>
 <li>
 <p class="startli">We can then install Anaconda and these requirements as shown below: </p>
@@ -238,6 +227,7 @@ fftw
 </ol>
 <h1><a class="anchor" id="pyreinstall"></a>
 Installing pyre</h1>
+<p>Pyre will by default be installed as a component of ISCE. If you wish to install pyre yourself, choose one of the following options and specify <code>-DHAVE_PYRE=y</code> when building ISCE.</p>
 <h2><a class="anchor" id="pyresrc"></a>
 Option 1: Install pyre from source</h2>
 <p>In order to install pyre from source, we must first download the config package which is a Python-based build system built on top of GNU <code>make</code>. </p>
@@ -327,7 +317,14 @@ Option 2: Install pyre binaries (warning: currently not available)</h2>
 </div><!-- fragment --><p class="endli"></p>
 </li>
 </ol>
-<h1><a class="anchor" id="isce3linux"></a>
+<h2><a class="anchor" id="pyreconda"></a>
+Option 3: Install pyre via conda package</h2>
+<div class="fragment"><div class="line">conda install conda-build</div>
+<div class="line">git clone https:<span class="comment">//github.com/rtburns-jpl/conda-pyre</span></div>
+<div class="line">cd conda-pyre</div>
+<div class="line">conda build .</div>
+<div class="line">conda install --use-local pyre</div>
+</div><!-- fragment --><h1><a class="anchor" id="isce3linux"></a>
 Install ISCE from source</h1>
 <p>In this section we will walk through the directory setup and build system instructions for installing ISCE. ISCE can be built with 2 different build systems - <a href="https://github.com/aivazis/config">mm</a> and <a href="https://cmake.org/">cmake</a>. In this set of instructions, we focus on cmake as it is already available via standard package managers.</p>
 <h2><a class="anchor" id="isce3targit"></a>
@@ -447,6 +444,7 @@ Step 3: Install and set environment variables</h2>
 <div class="line"><span class="preprocessor"></span>export CUDACXX=/usr/local/cuda/bin/nvcc</div>
 <div class="line"></div>
 <div class="line"><span class="preprocessor"># pyre</span></div>
+<div class="line"><span class="preprocessor"></span><span class="preprocessor"># (not needed if pyre was installed via conda package)</span></div>
 <div class="line"><span class="preprocessor"></span>export PYREDIR=${HOME}/tools/pyre</div>
 <div class="line">export PATH=$PYREDIR/bin:$PATH</div>
 <div class="line">export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH</div>
@@ -459,12 +457,6 @@ Step 3: Install and set environment variables</h2>
 </div><!-- fragment --><p class="endli"></p>
 </li>
 </ol>
-<h1><a class="anchor" id="tips"></a>
-Additional installation tips</h1>
-<p>During the installation process, users may need to implement additional steps depending on their operating system, prerequisites, development environment, etc.</p>
-<h2><a class="anchor" id="tips_cuda"></a>
-1. Set TMP_DIR for compilation of CUDA extensions</h2>
-<p>During compilation of CUDA extensions with nvcc and cmake, temporary files are placed in <code>/tmp</code> or the directory pointed to by the environment variable <code>TMP_DIR</code>. Therefore, if users wish to place temporary files in a custom directory, they must set <code>TMP_DIR</code>. </p>
 </div></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
