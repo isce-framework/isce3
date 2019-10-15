@@ -34,8 +34,8 @@ var searchData=
   ['setvalue',['setValue',['../classisce_1_1io_1_1Raster.html#a291622cc0ce5cb441a959ea55ae746d2',1,'isce::io::Raster']]],
   ['shadow_5fvalue',['SHADOW_VALUE',['../namespaceisce_1_1core.html#a5265c2ca41ceac4302d34abaa663f153',1,'isce::core']]],
   ['shape',['shape',['../classisce_1_1core_1_1Cube.html#ac51ca91e3a66062ba76d9be93fbdff3f',1,'isce::core::Cube::shape()'],['../classisce_1_1core_1_1Matrix.html#a1eee59526142636d5116873f1c65113f',1,'isce::core::Matrix::shape()']]],
-  ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html',1,'isce::signal']]],
   ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html#afc9c8c9f9cfe1701558205600ab7b1f2',1,'isce::signal::Signal::Signal()'],['../classisce_1_1signal_1_1Signal.html#a759653d297ab23e66963aebec0cdafc0',1,'isce::signal::Signal::Signal(int nthreads)']]],
+  ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html',1,'isce::signal']]],
   ['signal_3c_20t_20_3e',['Signal&lt; T &gt;',['../classisce_1_1signal_1_1Signal.html',1,'isce::signal']]],
   ['sinc',['sinc',['../namespaceisce_1_1core.html#afed2beebd0911fb7bd95a8197a998009',1,'isce::core']]],
   ['sinc2dinterpolator',['Sinc2dInterpolator',['../classisce_1_1core_1_1Sinc2dInterpolator.html#a623e07dc83dd6a14c7b976adfbcda11e',1,'isce::core::Sinc2dInterpolator']]],
@@ -61,7 +61,6 @@ var searchData=
   ['subcube',['subcube',['../classisce_1_1core_1_1Cube.html#adb10437976e2dbcf06ca16bc7ec3d414',1,'isce::core::Cube']]],
   ['subinterval',['subinterval',['../classisce_1_1core_1_1Linspace.html#a93c7a8f61b9f8d97faa2e8e4e159af30',1,'isce::core::Linspace::subinterval()'],['../classisce_1_1orbit__wip_1_1Orbit.html#af4c1c011231f1647d74098974e59ce29',1,'isce::orbit_wip::Orbit::subinterval()']]],
   ['submat',['submat',['../classisce_1_1core_1_1Matrix.html#a75d7751271ac4e7a9a969fd7bccee68d',1,'isce::core::Matrix']]],
-  ['sumarea',['SumArea',['../classampcor_1_1correlators_1_1SumArea.html',1,'ampcor::correlators']]],
-  ['swath',['Swath',['../classisce_1_1product_1_1Swath.html',1,'isce::product']]],
-  ['swath',['swath',['../classisce_1_1product_1_1Product.html#a0d56e2d23e6fef155b0f3c2fc88f2062',1,'isce::product::Product::swath(char freq) const '],['../classisce_1_1product_1_1Product.html#a28de8ff216a8bd92d20a1afbd682f186',1,'isce::product::Product::swath(char freq)'],['../classisce_1_1product_1_1Product.html#ab5f95b31981df1c2b3dfea494b153521',1,'isce::product::Product::swath(const Swath &amp;s, char freq)']]]
+  ['swath',['swath',['../classisce_1_1product_1_1Product.html#a0d56e2d23e6fef155b0f3c2fc88f2062',1,'isce::product::Product::swath(char freq) const '],['../classisce_1_1product_1_1Product.html#a28de8ff216a8bd92d20a1afbd682f186',1,'isce::product::Product::swath(char freq)'],['../classisce_1_1product_1_1Product.html#ab5f95b31981df1c2b3dfea494b153521',1,'isce::product::Product::swath(const Swath &amp;s, char freq)']]],
+  ['swath',['Swath',['../classisce_1_1product_1_1Swath.html',1,'isce::product']]]
 ];
