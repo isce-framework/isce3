@@ -10,7 +10,7 @@
 // configuration
 //#include <portinfo>
 // declarations
-#include "public.h"
+#include "dom.h"
 
 
 // meta-methods
