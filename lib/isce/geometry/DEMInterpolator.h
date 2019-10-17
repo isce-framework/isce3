@@ -73,17 +73,28 @@ class isce::geometry::DEMInterpolator {
 
         /** Get starting X coordinate */
         double xStart() const { return _xstart; }
+        /** Set starting X coordinate */
+        void xStart(double xstart) { _xstart = xstart; }
+
         /** Get starting Y coordinate */
         double yStart() const { return _ystart; }
+        /** Set starting Y coordinate */
+        void yStart(double ystart) { _ystart = ystart; }
+
         /** Get X spacing */
         double deltaX() const { return _deltax; }
+        /** Set X spacing */
+        void deltaX(double deltax) { _deltax = deltax; }
+
         /** Get Y spacing */
         double deltaY() const { return _deltay; }
+        /** Set Y spacing */
+        void deltaY(double deltay) { _deltay = deltay; }
 
         /** Get mid X coordinate */
-        double midX() const { return _xstart + 0.5*_dem.width()*_deltax; }
+        double midX() const { return _xstart + 0.5*width()*_deltax; }
         /** Get mid Y coordinate */
-        double midY() const { return _ystart + 0.5*_dem.length()*_deltay; }
+        double midY() const { return _ystart + 0.5*length()*_deltay; }
         /** Get mid longitude and latitude */
         cartesian_t midLonLat() const;
 
@@ -105,16 +116,27 @@ class isce::geometry::DEMInterpolator {
         float * data() { return _dem.data(); }
 
         /** Get width of DEM data used for interpolation */
-        inline size_t width() const { return _dem.width(); }
+        inline size_t width() const { return (_haveRaster ? _dem.width() : _width); }
+        /** Set width of DEM data used for interpolation */
+        inline void width(int width) { _width = width; }
+
         /** Get length of DEM data used for interpolation */
-        inline size_t length() const { return _dem.length(); }
+        inline size_t length() const { return (_haveRaster ? _dem.length() : _length); }
+        /** Set length of DEM data used for interpolation */
+        inline void length(int length) { _length = length; }
 
         /** Get EPSG code for input DEM */
         inline int epsgCode() const { return _epsgcode; }
+        /** Set EPSG code for input DEM */
+        inline void epsgCode(int epsgcode) { _epsgcode = epsgcode; }
 
         /** Get interpolator method enum */
         inline isce::core::dataInterpMethod interpMethod() const {
             return _interpMethod;
+        }
+        /** Set interpolator method enum */
+        inline void interpMethod(isce::core::dataInterpMethod interpMethod) {
+            _interpMethod = interpMethod;
         }
 
     private:
@@ -135,4 +157,5 @@ class isce::geometry::DEMInterpolator {
         isce::core::Matrix<float> _dem;
         // Starting x/y for DEM subset and spacing
         double _xstart, _ystart, _deltax, _deltay;
+        int _width, _length;
 };

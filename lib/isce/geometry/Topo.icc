@@ -40,17 +40,18 @@ isce::geometry::Topo::
 Topo(const isce::product::RadarGridParameters & radarGrid,
      const isce::core::Orbit & orbit,
      const isce::core::Ellipsoid & ellipsoid,
-     const int lookSide,
      const isce::core::LUT2d<double> & doppler)
 :
     _orbit(orbit),
     _ellipsoid(ellipsoid),
     _doppler(doppler),
-    _radarGrid(radarGrid),
-    _lookSide(lookSide)
+    _radarGrid(radarGrid)
 {
-      // Adjust block length based on input length of the radarGrid
-      _linesPerBlock = std::min(_radarGrid.length(), _linesPerBlock);
+    // Other data
+    _lookSide = radarGrid.lookSide();
+
+    // Adjust block length based on input length of the radarGrid
+    _linesPerBlock = std::min(_radarGrid.length(), _linesPerBlock);
 }
 
 inline

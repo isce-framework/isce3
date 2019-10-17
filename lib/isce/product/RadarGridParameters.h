@@ -69,33 +69,51 @@ class isce::product::RadarGridParameters {
 
         /** Get number of azimuth looks */
         inline size_t numberAzimuthLooks() const { return _numberAzimuthLooks; }
+        /** Set number of azimuth looks */
+        inline void numberAzimuthLooks(const size_t & t) { _numberAzimuthLooks = t; }
 
         /** Get number of range looks */
         inline size_t numberRangeLooks() const { return _numberRangeLooks; }
+        /** Set number of range looks */
+        inline void numberRangeLooks(const size_t & t) { _numberRangeLooks = t; }
 
         /** Get reference epoch */
         inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
 
         /** Get sensing start time in seconds */
         inline double sensingStart() const { return _sensingStart; }
+        /** Set sensing start time in seconds */
+        inline void sensingStart(const double & t) { _sensingStart = t; }
 
         /** Get radar wavelength */
         inline double wavelength() const { return _wavelength; }
-
+        /** Set radar wavelength */
+        inline void wavelength(const double & t) { _wavelength = t; }
+        
         /** Get pulse repetition frequency */
         inline double prf() const { return _prf; }
+        /** Set pulse repetition frequency */
+        inline void prf(const double & t){ _prf = t; }
 
         /** Get starting slant range */
         inline double startingRange() const { return _startingRange; }
+        /** Set starting slant range */
+        inline void startingRange(const double & t) { _startingRange = t; }
 
         /** Get slant range pixel spacing */
         inline double rangePixelSpacing() const { return _rangePixelSpacing; }
+        /** Set slant range pixel spacing */
+        inline void rangePixelSpacing(const double & t) { _rangePixelSpacing = t; }
 
         /** Get radar grid length */
         inline size_t length() const { return _rlength; }
+        /** Set radar grid length */
+        inline void length(const double & t) { _rlength = t; }
 
         /** Get radar grid width */
         inline size_t width() const { return _rwidth; }
+        /** Set radar grid length */
+        inline void width(const double & t) { _rwidth = t; }
 
         /** Get total number of radar grid elements */
         inline size_t size() const { return _rlength * _rwidth; }

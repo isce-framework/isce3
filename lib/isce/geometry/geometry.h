@@ -15,6 +15,8 @@
 
 #include "forward.h"
 
+#include <limits>
+
 #include <isce/core/forward.h>
 #include <isce/core/Constants.h>
 
@@ -181,5 +183,17 @@ void computeDEMBounds(const isce::core::Orbit & orbit,
                       double & max_lon,
                       double & max_lat);
 
+template <class T>
+double _compute_doppler_aztime_diff(isce::core::Vec3 dr, isce::core::Vec3 satvel, 
+                                    T & doppler, double wavelength,
+                                    double aztime, double slantRange,
+                                    double deltaRange);
+
+int _update_aztime(const isce::core::Orbit & orbit,
+                   isce::core::Vec3 satpos, isce::core::Vec3 satvel,
+                   isce::core::Vec3 inputXYZ, int side, double & aztime, 
+                   double & slantRange, 
+                   double rangeMin=std::numeric_limits<double>::quiet_NaN(),
+                   double rangeMax=std::numeric_limits<double>::quiet_NaN());
 }
 }

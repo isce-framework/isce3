@@ -71,18 +71,15 @@ cdef class pyTopo:
         """
         Constructor 
         """
-        cdef int lookDirection 
-        lookDirection = self.radarLookDirection[lookSide]
-        
+
         if doppler is None:
             # geometry compution for zero Doppler
             self.c_topo = new Topo(deref(radarGrid.c_radargrid), deref(orbit.c_orbit),
-                                deref(ellipsoid.c_ellipsoid),
-                                lookDirection)
+                                deref(ellipsoid.c_ellipsoid))
         else:
             self.c_topo = new Topo(deref(radarGrid.c_radargrid), deref(orbit.c_orbit),
                                 deref(ellipsoid.c_ellipsoid),
-                                lookDirection, deref(doppler.c_lut))
+                                deref(doppler.c_lut))
 
         self.__owner = True
 

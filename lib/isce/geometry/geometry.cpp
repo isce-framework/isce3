@@ -186,6 +186,92 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
     return converged;
 }
 
+template <class T>
+double isce::geometry::
+    _compute_doppler_aztime_diff(Vec3 dr, Vec3 satvel,
+                                 T &doppler, double wavelength,
+                                 double aztime, double slantRange,
+                                 double deltaRange) {
+
+    // Compute doppler
+    const double dopfact = dr.dot(satvel);
+    const double fdop = doppler.eval(aztime, slantRange) * 0.5 * wavelength;
+    // Use forward difference to compute doppler derivative
+    const double fdopder = (doppler.eval(aztime, slantRange + deltaRange) * 0.5 * wavelength - fdop)
+                         / deltaRange;
+
+    // Evaluate cost function and its derivative
+    const double fn = dopfact - fdop * slantRange;
+    const double c1 = -satvel.dot(satvel);
+    const double c2 = (fdop / slantRange) + fdopder;
+    const double fnprime = c1 + c2 * dopfact;
+
+    const double aztime_diff = fn / fnprime;
+    // std::cout << "aztime_diff: " << aztime_diff << ", az spacing: " << aztime_diff*satvel.norm() << std::endl;
+
+    return aztime_diff;
+}
+
+int isce::geometry::
+_update_aztime(const Orbit & orbit,
+               Vec3 satpos, Vec3 satvel, Vec3 inputXYZ,
+               int side, double & aztime, double & slantRange,
+               double rangeMin, double rangeMax) {
+
+    Vec3 dr;
+
+    // Compute azimuth time spacing for coarse grid search
+    const int NUM_AZTIME_TEST = 15;
+    const double tstart = orbit.UTCtime[0];
+    const double tend = orbit.UTCtime[orbit.nVectors - 1];
+
+    int error = 1;
+    
+    // If aztime is valid (user-defined) exit
+    if (aztime >= tstart && aztime <= tend)
+        return !error;
+
+    const double delta_t = (tend - tstart) / (1.0 * (NUM_AZTIME_TEST - 1));
+
+    // Find azimuth time with minimum valid range distance to target
+    double slantRange_closest = 1.0e16;
+    double aztime_closest = -1000.0;
+    for (int k = 0; k < NUM_AZTIME_TEST; ++k) {
+        // Interpolate orbit
+        aztime = tstart + k * delta_t;
+        int status = orbit.interpolateWGS84Orbit(aztime, satpos, satvel);
+        if (status != 0)
+            continue;
+        // Compute slant range
+        dr = inputXYZ - satpos;
+
+        // Check look side (only first time)
+        if (k == 0 && dr.cross(satvel).dot(satpos)*side > 0)
+            return error; // wrong look side
+
+        slantRange = dr.norm();
+        // Check validity
+        if (!isnan(rangeMin) && slantRange < rangeMin)
+            continue;
+        if (!isnan(rangeMax) && slantRange > rangeMax)
+            continue;
+
+        // Update best guess
+        if (slantRange < slantRange_closest) {
+            slantRange_closest = slantRange;
+            aztime_closest = aztime;
+        }
+    }
+
+    // If we did not find a good guess, use tmid as intial guess
+    if (aztime_closest < 0.0)
+        aztime = orbit.UTCtime[orbit.nVectors / 2];
+    else
+        aztime = aztime_closest;
+    return !error;
+ }
+
+
 int isce::geometry::
 geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const Poly2d & doppler, double & aztime, double & slantRange,
@@ -201,57 +287,20 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
     ellipsoid.lonLatToXyz(inputLLH, inputXYZ);
 
     // Pre-compute scale factor for doppler
-    const double dopscale = 0.5 * wavelength;
+    // const double dopscale = 0.5 * wavelength;
 
     // Compute minimum and maximum valid range
     const double rangeMin = startingRange;
     const double rangeMax = rangeMin + rangePixelSpacing * (rwidth - 1);
 
-    // Compute azimuth time spacing for coarse grid search
-    const int NUM_AZTIME_TEST = 15;
-    const double tstart = orbit.UTCtime[0];
-    const double tend = orbit.UTCtime[orbit.nVectors - 1];
-    const double delta_t = (tend - tstart) / (1.0 * (NUM_AZTIME_TEST - 1));
+    int converged = 1;
+    int error = _update_aztime(orbit, satpos, satvel, inputXYZ, side, 
+                               aztime, slantRange, rangeMin, rangeMax);
+    if (error)
+        return !converged;
 
-    // Find azimuth time with minimum valid range distance to target
-    double slantRange_closest = 1.0e16;
-    double aztime_closest = -1000.0;
-    int converged = 0;
-    for (int k = 0; k < NUM_AZTIME_TEST; ++k) {
-        // Interpolate orbit
-        aztime = tstart + k * delta_t;
-        int status = orbit.interpolateWGS84Orbit(aztime, satpos, satvel);
-        if (status != 0)
-            continue;
-        // Compute slant range
-        dr = inputXYZ - satpos;
-
-        // Check look side
-        if (dr.cross(satvel).dot(satpos)*side > 0)
-            return converged;
-
-        slantRange = dr.norm();
-        // Check validity
-        if (slantRange < rangeMin)
-            continue;
-        if (slantRange > rangeMax)
-            continue;
-        // Update best guess
-        if (slantRange < slantRange_closest) {
-            slantRange_closest = slantRange;
-            aztime_closest = aztime;
-        }
-    }
-
-    // If we did not find a good guess, use tmid as intial guess
-    if (aztime_closest < 0.0) {
-        aztime = orbit.UTCtime[orbit.nVectors / 2];
-    } else {
-        aztime = aztime_closest;
-    }
-
+    double slantRange_old = slantRange;
     // Begin iterations
-    double slantRange_old = 0.0;
     for (int i = 0; i < maxIter; ++i) {
 
         // Interpolate the orbit to current estimate of azimuth time
@@ -260,35 +309,30 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         // Compute slant range from satellite to ground point
         dr = inputXYZ - satpos;
 
+        // Check look side (only first time)
+        if (i == 0 && dr.cross(satvel).dot(satpos)*side > 0)
+            return !converged; // wrong look side
+
         slantRange = dr.norm();
         // Check convergence
-        if (std::abs(slantRange - slantRange_old) < threshold) {
-            converged = 1;
+        if (std::abs(slantRange - slantRange_old) < threshold)
             return converged;
-        } else {
+        else
             slantRange_old = slantRange;
-        }
 
         // Compute slant range bin
         const double rbin = (slantRange - startingRange) / rangePixelSpacing;
-        // Compute doppler
-        const double dopfact = dr.dot(satvel);
-        const double fdop = doppler.eval(0, rbin) * dopscale;
-        // Use forward difference to compute doppler derivative
-        const double fdopder = (doppler.eval(0, rbin + deltaRange) * dopscale - fdop)
-                             / deltaRange;
-
-        // Evaluate cost function and its derivative
-        const double fn = dopfact - fdop * slantRange;
-        const double c1 = -satvel.dot(satvel);
-        const double c2 = (fdop / slantRange) + fdopder;
-        const double fnprime = c1 + c2 * dopfact;
 
         // Update guess for azimuth time
-        aztime -= fn / fnprime;
+        double aztime_diff = _compute_doppler_aztime_diff(dr, satvel,
+                                                          doppler, wavelength,
+                                                          aztime, 
+                                                          slantRange, deltaRange);
+
+        aztime -= aztime_diff;
     }
     // If we reach this point, no convergence for specified threshold
-    return converged;
+    return !converged;
 }
 
 int isce::geometry::
@@ -304,14 +348,15 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
     // Convert LLH to XYZ
     ellipsoid.lonLatToXyz(inputLLH, inputXYZ);
 
-    // Pre-compute scale factor for doppler
-    const double dopscale = 0.5 * wavelength;
-
     // Use mid-orbit epoch as initial guess
-    aztime = orbit.UTCtime[orbit.nVectors / 2];
+    int converged = 1;
+    int error = _update_aztime(orbit, 
+                               satpos, satvel, inputXYZ, side, aztime, 
+                               slantRange);
+    if (error)
+        return !converged;
 
     // Begin iterations
-    int converged = 0;
     double slantRange_old = 0.0;
     for (int i = 0; i < maxIter; ++i) {
 
@@ -323,35 +368,24 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         slantRange = dr.norm();
 
         // Check look side
-        if (dr.cross(satvel).dot(satpos)*side > 0)
-            return converged;
+        if (i == 0 && dr.cross(satvel).dot(satpos)*side > 0)
+            return !converged;
 
         // Check convergence
-        if (std::abs(slantRange - slantRange_old) < threshold) {
-            converged = 1;
+        if (std::abs(slantRange - slantRange_old) < threshold)
             return converged;
-        } else {
+        else
             slantRange_old = slantRange;
-        }
-
-        // Compute doppler
-        const double dopfact = dr.dot(satvel);
-        const double fdop = doppler.eval(aztime, slantRange) * dopscale;
-        // Use forward difference to compute doppler derivative
-        const double fdopder = (doppler.eval(aztime, slantRange + deltaRange) * dopscale - fdop)
-                             / deltaRange;
-
-        // Evaluate cost function and its derivative
-        const double fn = dopfact - fdop * slantRange;
-        const double c1 = -satvel.dot(satvel);
-        const double c2 = (fdop / slantRange) + fdopder;
-        const double fnprime = c1 + c2 * dopfact;
 
         // Update guess for azimuth time
-        aztime -= fn / fnprime;
+        const double aztime_diff = _compute_doppler_aztime_diff(dr, satvel,
+                                                                doppler, wavelength,
+                                                                aztime,
+                                                                slantRange, deltaRange);
+        aztime -= aztime_diff;
     }
     // If we reach this point, no convergence for specified threshold
-    return converged;
+    return !converged;
 }
 
 // Utility function to compute geographic bounds for a radar grid

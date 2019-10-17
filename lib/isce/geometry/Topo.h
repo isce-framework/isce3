@@ -58,7 +58,6 @@ public:
     Topo(const isce::product::RadarGridParameters & radarGrid,
          const isce::core::Orbit & orbit,
          const isce::core::Ellipsoid & ellipsoid,
-         const int lookSide,
          const isce::core::LUT2d<double> & doppler = {});
 
     /**

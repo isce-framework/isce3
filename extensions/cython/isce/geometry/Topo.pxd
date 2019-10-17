@@ -30,10 +30,9 @@ cdef extern from "isce/geometry/Topo.h" namespace "isce::geometry":
              size_t numberAzimuthLooks, size_t numberRangeLooks) except +
         Topo(RadarGridParameters & radarGrid, Orbit & orbit, 
                 Ellipsoid & ellipsoid,
-                int lookSide, LUT2d[double] & doppler) except +
+                LUT2d[double] & doppler) except +
         Topo(RadarGridParameters & radarGrid, Orbit & orbit,
-                Ellipsoid & ellipsoid,
-                int lookSide) except +
+                Ellipsoid & ellipsoid) except +
         # Main topo entrypoint; internal construction of topo rasters
         void topo(Raster &, const string)
 
