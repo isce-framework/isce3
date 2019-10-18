@@ -131,12 +131,21 @@ Functions</h2></td></tr>
 <tr class="memitem:a5ec18a9486f88ef4a91ea670404afe0e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a5ec18a9486f88ef4a91ea670404afe0e">computeDEMBounds</a> (const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;ellipsoid, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;doppler, int lookSide, const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, size_t xoff, size_t yoff, size_t xsize, size_t ysize, double margin, double &amp;min_lon, double &amp;min_lat, double &amp;max_lon, double &amp;max_lat)</td></tr>
 <tr class="memdesc:a5ec18a9486f88ef4a91ea670404afe0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility function to compute geographic bounds for a radar grid.  <a href="#a5ec18a9486f88ef4a91ea670404afe0e">More...</a><br/></td></tr>
 <tr class="separator:a5ec18a9486f88ef4a91ea670404afe0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27511a82c9e42412560ce92ca8c726c2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a27511a82c9e42412560ce92ca8c726c2"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>facetRTC</b> (<a class="el" href="classisce_1_1product_1_1Product.html">isce::product::Product</a> &amp;product, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;out_raster, char frequency= 'A')</td></tr>
-<tr class="separator:a27511a82c9e42412560ce92ca8c726c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af90c5bbc19cc1d5f83dd5b8bcd1327bb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af90c5bbc19cc1d5f83dd5b8bcd1327bb"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>facetRTC</b> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;out_raster, const int lookSide)</td></tr>
-<tr class="separator:af90c5bbc19cc1d5f83dd5b8bcd1327bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38b85c68e4068e2c5fa12ad604f52d64"><td class="memTemplParams" colspan="2"><a class="anchor" id="a38b85c68e4068e2c5fa12ad604f52d64"></a>
+template&lt;class T &gt; </td></tr>
+<tr class="memitem:a38b85c68e4068e2c5fa12ad604f52d64"><td class="memTemplItemLeft" align="right" valign="top">double&#160;</td><td class="memTemplItemRight" valign="bottom"><b>_compute_doppler_aztime_diff</b> (<a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> dr, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> satvel, T &amp;doppler, double wavelength, double aztime, double slantRange, double deltaRange)</td></tr>
+<tr class="separator:a38b85c68e4068e2c5fa12ad604f52d64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef257d82a8e4d3493befdc124d3c34a2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aef257d82a8e4d3493befdc124d3c34a2"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>_update_aztime</b> (const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> satpos, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> satvel, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> inputXYZ, int side, double &amp;aztime, double &amp;slantRange, double rangeMin=std::numeric_limits&lt; double &gt;::quiet_NaN(), double rangeMax=std::numeric_limits&lt; double &gt;::quiet_NaN())</td></tr>
+<tr class="separator:aef257d82a8e4d3493befdc124d3c34a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a65c8c6bdcff9a0f19b7f75b5e9731c7a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a65c8c6bdcff9a0f19b7f75b5e9731c7a">facetRTC</a> (<a class="el" href="classisce_1_1product_1_1Product.html">isce::product::Product</a> &amp;product, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;out_raster, char frequency= 'A', <a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a> inputRadiometry=isce::core::rtcInputRadiometry::SIGMA_NAUGHT, <a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a> outputMode=isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA)</td></tr>
+<tr class="separator:a65c8c6bdcff9a0f19b7f75b5e9731c7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add09b23742333b2da9bbd5ec6d593017"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="add09b23742333b2da9bbd5ec6d593017"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>facetRTC</b> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;out_raster, <a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a> inputRadiometry=isce::core::rtcInputRadiometry::SIGMA_NAUGHT, <a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a> outputMode=isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA)</td></tr>
+<tr class="separator:add09b23742333b2da9bbd5ec6d593017"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2eea4d3fa7611e10293fff18f86ef73c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2eea4d3fa7611e10293fff18f86ef73c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>facetRTC</b> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">isce::geometry::DEMInterpolator</a> &amp;dem_interp, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;out_raster, <a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a> inputRadiometry=isce::core::rtcInputRadiometry::SIGMA_NAUGHT, <a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a> outputMode=isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA)</td></tr>
+<tr class="separator:a2eea4d3fa7611e10293fff18f86ef73c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abca55661934751972f2d495f5e4ed48b"><td class="memTemplParams" colspan="2"><a class="anchor" id="abca55661934751972f2d495f5e4ed48b"></a>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:abca55661934751972f2d495f5e4ed48b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>load_archive</b> (std::string metadata, char *objectTag, T *object)</td></tr>
@@ -274,6 +283,67 @@ template&lt;class Archive &gt; </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">min_lat</td><td>Minimum latitude of geographic region (radians) </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">max_lon</td><td>Maximum longitude of geographic region (radians) </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">max_lat</td><td>Maximum latitude of geographic region (radians) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a65c8c6bdcff9a0f19b7f75b5e9731c7a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::geometry::facetRTC </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classisce_1_1product_1_1Product.html">isce::product::Product</a> &amp;&#160;</td>
+          <td class="paramname"><em>product</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>dem</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>out_raster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char&#160;</td>
+          <td class="paramname"><em>frequency</em> = <code>'A'</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a>&#160;</td>
+          <td class="paramname"><em>inputRadiometry</em> = <code>isce::core::rtcInputRadiometry::SIGMA_NAUGHT</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a>&#160;</td>
+          <td class="paramname"><em>outputMode</em> = <code>isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">product</td><td>input DEM (raster or <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a>) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dem</td><td>input DEM raster </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">output</td><td>raster </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">frequency</td><td>Product frequency </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">inputRadiometry</td><td>Input radiometry. Options: 0: sigma-naught ellipsoid (default); 1: beta/beta-naught. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">outputMode</td><td>Output mode. Options: 0: gamma-naught area (default); 1: gamma-naught RTC ratio; 2: sigma-naught area (under test); 3: sigma-naught RTC ratio (under test). </td></tr>
   </table>
   </dd>
 </dl>
