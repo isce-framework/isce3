@@ -1,8 +1,6 @@
 var searchData=
 [
-  ['_5fconfigureazimuthfft',['_configureAzimuthFFT',['../classisce_1_1cuda_1_1signal_1_1gpuSignal.html#a6a2c3c71bd8c8d969f8974f7e0768c1d',1,'isce::cuda::signal::gpuSignal']]],
-  ['_5fconfigurerangefft',['_configureRangeFFT',['../classisce_1_1cuda_1_1signal_1_1gpuSignal.html#a897bac0471a78956466744d829373f7b',1,'isce::cuda::signal::gpuSignal']]],
-  ['_5fepsgcode',['_epsgcode',['../structisce_1_1core_1_1ProjectionBase.html#a7f300e9fd111bbd9eeb2acf4f5c38318',1,'isce::core::ProjectionBase::_epsgcode()'],['../structisce_1_1cuda_1_1core_1_1ProjectionBase.html#a1ed842f4e7c8a4536567334f2e69b69e',1,'isce::cuda::core::ProjectionBase::_epsgcode()']]],
+  ['_5fepsgcode',['_epsgcode',['../structisce_1_1core_1_1ProjectionBase.html#a7f300e9fd111bbd9eeb2acf4f5c38318',1,'isce::core::ProjectionBase']]],
   ['_5ffwd_5fconfigure',['_fwd_configure',['../classisce_1_1signal_1_1Signal.html#ac27538d6784d52a1bf093bd19d92263c',1,'isce::signal::Signal']]],
   ['_5ffwd_5fconfigure2dfft',['_fwd_configure2DFFT',['../classisce_1_1signal_1_1Signal.html#a8e8c40d83b9d67eeb7b5361cba2337fe',1,'isce::signal::Signal']]],
   ['_5ffwd_5fconfigureazimuthfft',['_fwd_configureAzimuthFFT',['../classisce_1_1signal_1_1Signal.html#a5d7bf16ed95cde9435ef4b514fe5578f',1,'isce::signal::Signal']]],
