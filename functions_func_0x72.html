@@ -113,7 +113,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -183,23 +183,30 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 : <a class="el" href="classisce_1_1core_1_1Ellipsoid.html#aebc47c9fcd43f745f65040ebe05bad27">isce::core::Ellipsoid</a>
 </li>
 <li>read()
-: <a class="el" href="classisce_1_1io_1_1IGroup.html#ab8ac01f7abed9fec9d162f41f98e1763">isce::io::IGroup</a>
-, <a class="el" href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">isce::io::IDataSet</a>
+: <a class="el" href="classisce_1_1io_1_1IDataSet.html#a27ba34b0b4a61befeb6841f8cb572904">isce::io::IDataSet</a>
+, <a class="el" href="classisce_1_1io_1_1IGroup.html#ab8ac01f7abed9fec9d162f41f98e1763">isce::io::IGroup</a>
+, <a class="el" href="classisce_1_1io_1_1IDataSet.html#a322b412954d07a3c20a982f734466348">isce::io::IDataSet</a>
 , <a class="el" href="classisce_1_1io_1_1IGroup.html#a7acf65524e3aaf5b871b530d6e3f03af">isce::io::IGroup</a>
 </li>
 <li>rEast()
 : <a class="el" href="classisce_1_1core_1_1Ellipsoid.html#a0dd429837bed6cfe692b20e5402970cf">isce::core::Ellipsoid</a>
 </li>
-<li>refEpoch()
-: <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a29bce965174754c1084e129304753f12">isce::product::RadarGridParameters</a>
-, <a class="el" href="classisce_1_1product_1_1Swath.html#a9f558aa8e4ec28ae142cf3c60da57522">isce::product::Swath</a>
-, <a class="el" href="classisce_1_1core_1_1EulerAngles.html#a642577c39cbb61ea4bd22e9abd91e947">isce::core::EulerAngles</a>
+<li>refepoch()
+: <a class="el" href="classisce_1_1orbit__wip_1_1OrbitView.html#aeb9427752f770bec4efc456c7b36c181">isce::orbit_wip::OrbitView</a>
+, <a class="el" href="classisce_1_1orbit__wip_1_1Orbit.html#ac66416c14e3c349c1af2f356013dd1ff">isce::orbit_wip::Orbit</a>
 </li>
-<li>referenceEpoch()
-: <a class="el" href="classisce_1_1core_1_1Orbit.html#a06f984ecdc8dade36f4d1e918ad119b7">isce::core::Orbit</a>
+<li>refEpoch()
+: <a class="el" href="classisce_1_1core_1_1EulerAngles.html#a642577c39cbb61ea4bd22e9abd91e947">isce::core::EulerAngles</a>
+, <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a29bce965174754c1084e129304753f12">isce::product::RadarGridParameters</a>
+, <a class="el" href="classisce_1_1product_1_1Swath.html#a8096b48d95a57f2d422d18d298dd89ec">isce::product::Swath</a>
+, <a class="el" href="classisce_1_1core_1_1EulerAngles.html#a221e0147b3a55eec28e1e40eec3b28f4">isce::core::EulerAngles</a>
+, <a class="el" href="classisce_1_1product_1_1Swath.html#a9f558aa8e4ec28ae142cf3c60da57522">isce::product::Swath</a>
 </li>
 <li>refHeight()
 : <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html#a86c2d17fce3d183556911d23cbbdef1a">isce::geometry::DEMInterpolator</a>
+</li>
+<li>reformatOrbit()
+: <a class="el" href="classisce_1_1core_1_1Orbit.html#ab0db5df4ccd6427fea29fc6189af2264">isce::core::Orbit</a>
 </li>
 <li>refValue()
 : <a class="el" href="classisce_1_1core_1_1LUT1d.html#abc817028add0da12fa13028e4da43dbf">isce::core::LUT1d&lt; class &gt;</a>
@@ -208,12 +215,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 : <a class="el" href="classisce_1_1core_1_1Baseline.html#a6fd499b1c7a253e92f17248be40f58fa">isce::core::Baseline</a>
 </li>
 <li>ResampSlc()
-: <a class="el" href="classisce_1_1image_1_1ResampSlc.html#a6f1092e59505fd37efad5ff63527c5f3">isce::image::ResampSlc</a>
+: <a class="el" href="classisce_1_1image_1_1ResampSlc.html#a4c99855554a53d6cdd93d9c3466a8a58">isce::image::ResampSlc</a>
 </li>
 <li>resize()
-: <a class="el" href="classisce_1_1core_1_1Linspace.html#a94325b836f061d2ce99d841174f4ab37">isce::core::Linspace&lt; typename &gt;</a>
-, <a class="el" href="classisce_1_1core_1_1Matrix.html#a1131b6253548680c9b0fc60c7a3892eb">isce::core::Matrix&lt; class &gt;</a>
+: <a class="el" href="classisce_1_1core_1_1Matrix.html#a1131b6253548680c9b0fc60c7a3892eb">isce::core::Matrix&lt; class &gt;</a>
+, <a class="el" href="classisce_1_1orbit__wip_1_1Orbit.html#ae5c6b54eb6caf6de0f0d4fd085bd929c">isce::orbit_wip::Orbit</a>
 , <a class="el" href="classisce_1_1core_1_1Cube.html#a9cccfb39ce1997508470de59a1530099">isce::core::Cube&lt; cell_t &gt;</a>
+, <a class="el" href="classisce_1_1core_1_1Linspace.html#af28add4496328ad1c19ef90c1ce2cdb6">isce::core::Linspace&lt; T &gt;</a>
 </li>
 <li>rhat()
 : <a class="el" href="classisce_1_1core_1_1Baseline.html#a8bfb33ce1f6768757245441a7a059aaf">isce::core::Baseline</a>
@@ -225,15 +233,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 : <a class="el" href="classisce_1_1core_1_1EulerAngles.html#ab939e305c9f644b0d5116f1dbb899e1c">isce::core::EulerAngles</a>
 </li>
 <li>rotmat()
-: <a class="el" href="classisce_1_1core_1_1EulerAngles.html#a2fa0af7f781cd8d9750a7b8982857163">isce::core::EulerAngles</a>
-, <a class="el" href="classisce_1_1core_1_1Attitude.html#a552528ab614cc3be06bb99597fdee28a">isce::core::Attitude</a>
+: <a class="el" href="classisce_1_1core_1_1Attitude.html#a552528ab614cc3be06bb99597fdee28a">isce::core::Attitude</a>
+, <a class="el" href="classisce_1_1core_1_1EulerAngles.html#a2fa0af7f781cd8d9750a7b8982857163">isce::core::EulerAngles</a>
 , <a class="el" href="classisce_1_1core_1_1Quaternion.html#a94a09bdf5b4f3ae57ae6ff8f9076fb5a">isce::core::Quaternion</a>
 </li>
 <li>rotmat2ypr()
 : <a class="el" href="classisce_1_1core_1_1EulerAngles.html#a17cfdc94a76faec9187680d93b417777">isce::core::EulerAngles</a>
 </li>
 <li>rowptr()
-: <a class="el" href="classisce_1_1core_1_1Matrix.html#ac6f6c05aa6cd6aa0883aebe977803cad">isce::core::Matrix&lt; class &gt;</a>
+: <a class="el" href="classisce_1_1core_1_1Matrix.html#a2421517130eb2e7b3af92f26e849e643">isce::core::Matrix&lt; class &gt;</a>
 </li>
 <li>rowsLooks()
 : <a class="el" href="classisce_1_1signal_1_1Looks.html#a03644cb5c9d8842c520461f3ffa320dc">isce::signal::Looks&lt; class &gt;</a>

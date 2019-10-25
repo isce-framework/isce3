@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['orbitinterpbordermode',['OrbitInterpBorderMode',['../namespaceisce_1_1core.html#a8107565ed7c8dc1784adb506150f105b',1,'isce::core']]],
-  ['orbitinterpmethod',['OrbitInterpMethod',['../namespaceisce_1_1core.html#a0d513bfc9f6f3ea87991acf73237dfc7',1,'isce::core']]]
+  ['orbitinterpmethod',['orbitInterpMethod',['../namespaceisce_1_1core.html#a3459742f8165c7ea52d9730a675a2822',1,'isce::core']]],
+  ['orbittype',['orbitType',['../namespaceisce_1_1core.html#ab9fe27cef1fd745fcc39a2c2649d61c0',1,'isce::core']]]
 ];
