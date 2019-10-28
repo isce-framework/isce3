@@ -72,7 +72,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -103,6 +103,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <code>#include &lt;cereal/types/vector.hpp&gt;</code><br/>
 <code>#include &lt;cereal/archives/xml.hpp&gt;</code><br/>
 <code>#include &lt;sstream&gt;</code><br/>
+<code>#include &lt;stdexcept&gt;</code><br/>
+<code>#include &lt;vector&gt;</code><br/>
 <code>#include &lt;pyre/journal.h&gt;</code><br/>
 <code>#include &lt;isce/core/DateTime.h&gt;</code><br/>
 <code>#include &lt;isce/core/EulerAngles.h&gt;</code><br/>
@@ -113,9 +115,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <code>#include &lt;isce/core/LUT1d.h&gt;</code><br/>
 <code>#include &lt;isce/core/LUT2d.h&gt;</code><br/>
 <code>#include &lt;isce/core/StateVector.h&gt;</code><br/>
+<code>#include &lt;isce/core/TimeDelta.h&gt;</code><br/>
 <code>#include &lt;isce/io/IH5.h&gt;</code><br/>
 <code>#include &lt;<a class="el" href="io_2Serialization_8h_source.html">isce/io/Serialization.h</a>&gt;</code><br/>
-<code>#include &lt;isce/orbit_wip/Orbit.h&gt;</code><br/>
 </div>
 <p><a href="core_2Serialization_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -163,16 +165,6 @@ template&lt;class Archive &gt; </td></tr>
 <tr class="memitem:a6bf22fa5051240213f700ce075018053"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a6bf22fa5051240213f700ce075018053">isce::core::saveToH5</a> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, const Orbit &amp;orbit)</td></tr>
 <tr class="memdesc:a6bf22fa5051240213f700ce075018053"><td class="mdescLeft">&#160;</td><td class="mdescRight">Save orbit data to HDF5 product.  <a href="#a6bf22fa5051240213f700ce075018053">More...</a><br/></td></tr>
 <tr class="separator:a6bf22fa5051240213f700ce075018053"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee045e41dcd47cc59e2302b739155f06"><td class="memTemplParams" colspan="2"><a class="anchor" id="aee045e41dcd47cc59e2302b739155f06"></a>
-template&lt;class Archive &gt; </td></tr>
-<tr class="memitem:aee045e41dcd47cc59e2302b739155f06"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>isce::core::save</b> (Archive &amp;archive, const <a class="el" href="classisce_1_1orbit__wip_1_1Orbit.html">isce::orbit_wip::Orbit</a> &amp;orbit)</td></tr>
-<tr class="separator:aee045e41dcd47cc59e2302b739155f06"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a89fa1d9e9ee64503526299128f1f7fdf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a89fa1d9e9ee64503526299128f1f7fdf">isce::core::loadFromH5</a> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, <a class="el" href="classisce_1_1orbit__wip_1_1Orbit.html">isce::orbit_wip::Orbit</a> &amp;orbit)</td></tr>
-<tr class="memdesc:a89fa1d9e9ee64503526299128f1f7fdf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load orbit data from HDF5 product.  <a href="#a89fa1d9e9ee64503526299128f1f7fdf">More...</a><br/></td></tr>
-<tr class="separator:a89fa1d9e9ee64503526299128f1f7fdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a53762fc664014418162fa3cc00e909b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a53762fc664014418162fa3cc00e909b9">isce::core::saveToH5</a> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, const <a class="el" href="classisce_1_1orbit__wip_1_1Orbit.html">isce::orbit_wip::Orbit</a> &amp;orbit)</td></tr>
-<tr class="memdesc:a53762fc664014418162fa3cc00e909b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Save orbit data to HDF5 product.  <a href="#a53762fc664014418162fa3cc00e909b9">More...</a><br/></td></tr>
-<tr class="separator:a53762fc664014418162fa3cc00e909b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7ad2db4cc50f103e9e473230c739571b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a7ad2db4cc50f103e9e473230c739571b">isce::core::loadFromH5</a> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, EulerAngles &amp;euler)</td></tr>
 <tr class="memdesc:a7ad2db4cc50f103e9e473230c739571b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load Euler angle data from HDF5 product.  <a href="#a7ad2db4cc50f103e9e473230c739571b">More...</a><br/></td></tr>
 <tr class="separator:a7ad2db4cc50f103e9e473230c739571b"><td class="memSeparator" colspan="2">&#160;</td></tr>
