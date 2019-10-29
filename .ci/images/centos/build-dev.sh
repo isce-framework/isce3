@@ -9,10 +9,7 @@ fi
 
 set -ex
 
-TAG=$1
 IMAGE=nisar/dev
 echo "IMAGE is $IMAGE"
-echo "TAG is $TAG"
 
-docker build --rm --force-rm -t ${IMAGE}:${TAG} -f Dockerfile.dev .
-docker tag ${IMAGE}:${TAG} ${IMAGE}:latest
+docker build --rm --force-rm -t ${IMAGE}:latest -f Dockerfile.dev .

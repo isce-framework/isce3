@@ -7,10 +7,8 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-TAG=$1
 IMAGE=nisar/base
 echo "IMAGE is $IMAGE"
-echo "TAG is $TAG"
 
 # fail on any non-zero exit codes
 set -ex
@@ -20,5 +18,4 @@ docker pull nvidia/cuda:9.2-runtime-centos7
 docker tag nvidia/cuda:9.2-runtime-centos7 nvidia/cuda:latest
 
 # build base cuda image
-docker build --rm --force-rm -t ${IMAGE}:${TAG} -f Dockerfile.base .
-docker tag ${IMAGE}:${TAG} ${IMAGE}:latest
+docker build --rm --force-rm -t ${IMAGE}:latest -f Dockerfile.base .
