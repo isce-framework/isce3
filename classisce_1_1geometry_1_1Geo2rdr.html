@@ -120,9 +120,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a665d042ec95ebe38c0ecd0b07ee1cb9e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geo2rdr.html#a665d042ec95ebe38c0ecd0b07ee1cb9e">numiter</a> (int n)</td></tr>
 <tr class="memdesc:a665d042ec95ebe38c0ecd0b07ee1cb9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set number of Newton-Raphson iterations.  <a href="#a665d042ec95ebe38c0ecd0b07ee1cb9e">More...</a><br/></td></tr>
 <tr class="separator:a665d042ec95ebe38c0ecd0b07ee1cb9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50215f124ae41628a546555353d2eb38"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geo2rdr.html#a50215f124ae41628a546555353d2eb38">orbitMethod</a> (<a class="el" href="namespaceisce_1_1core.html#a0d513bfc9f6f3ea87991acf73237dfc7">isce::core::OrbitInterpMethod</a> method)</td></tr>
-<tr class="memdesc:a50215f124ae41628a546555353d2eb38"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the orbit interpolation method while checking its validity.  <a href="#a50215f124ae41628a546555353d2eb38">More...</a><br/></td></tr>
-<tr class="separator:a50215f124ae41628a546555353d2eb38"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a14123817234dfce61c379bb8137b1c88"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geo2rdr.html#a14123817234dfce61c379bb8137b1c88">geo2rdr</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;topoRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;rgoffRaster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;azoffRaster, double azshift=0.0, double rgshift=0.0)</td></tr>
 <tr class="memdesc:a14123817234dfce61c379bb8137b1c88"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run geo2rdr with offsets and externally created offset rasters.  <a href="#a14123817234dfce61c379bb8137b1c88">More...</a><br/></td></tr>
 <tr class="separator:a14123817234dfce61c379bb8137b1c88"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -154,10 +151,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geo2rdr.html#a2898e4d910a74d7caf846013e19fb3aa">numiter</a> () const </td></tr>
 <tr class="memdesc:a2898e4d910a74d7caf846013e19fb3aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return number of Newton-Raphson iterations used for processing. <br/></td></tr>
 <tr class="separator:a2898e4d910a74d7caf846013e19fb3aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a375a6b56b873418d92f1dcc09f92a5e3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a375a6b56b873418d92f1dcc09f92a5e3"></a>
-<a class="el" href="namespaceisce_1_1core.html#a0d513bfc9f6f3ea87991acf73237dfc7">isce::core::OrbitInterpMethod</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geo2rdr.html#a375a6b56b873418d92f1dcc09f92a5e3">orbitMethod</a> () const </td></tr>
-<tr class="memdesc:a375a6b56b873418d92f1dcc09f92a5e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the orbit interpolation method used for processing. <br/></td></tr>
-<tr class="separator:a375a6b56b873418d92f1dcc09f92a5e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -506,40 +499,6 @@ azimuth.off - Azimuth offset to be applied to product to align with topoRaster <
   </table>
   </dd>
 </dl>
-
-</div>
-</div>
-<a class="anchor" id="a50215f124ae41628a546555353d2eb38"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void isce::geometry::Geo2rdr::orbitMethod </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="namespaceisce_1_1core.html#a0d513bfc9f6f3ea87991acf73237dfc7">isce::core::OrbitInterpMethod</a>&#160;</td>
-          <td class="paramname"><em>method</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Set the orbit interpolation method while checking its validity. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">method</td><td>orbit interpolation method to use</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">method</td><td>orbit interpolation method to use</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Set the orbit interpolation method while checking its validity </p>
 
 </div>
 </div>
