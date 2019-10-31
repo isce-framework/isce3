@@ -1,16 +1,9 @@
-//
-// Author: Joshua Cohen
-// Copyright 2017
-//
-
-#include <cmath>
 #include <iostream>
-#include "isce/cuda/core/gpuProjections.h"
-#include "gtest/gtest.h"
-using isce::cuda::core::CEA;
-using isce::core::cartesian_t;
+#include <isce/cuda/core/gpuProjections.h>
 
-CEA proj;
+#include "projtest.h"
+
+isce::cuda::core::CEA testproj;
 
 struct CEATest : public ::testing::Test {
     virtual void SetUp() {
@@ -24,25 +17,7 @@ struct CEATest : public ::testing::Test {
     unsigned fails;
 };
 
-
-#define ceaTest(name,p,q,r,x,y,z)       \
-    TEST_F(CEATest, name) {       \
-        cartesian_t ref_llh p,q,r;    \
-        cartesian_t ref_xyz x,y,z;    \
-        cartesian_t xyz, llh;  \
-        llh = ref_llh;                  \
-        proj.forward_h(llh, xyz);    \
-        EXPECT_NEAR(xyz[0], ref_xyz[0], 1.0e-6);\
-        EXPECT_NEAR(xyz[1], ref_xyz[1], 1.0e-6);\
-        EXPECT_NEAR(xyz[2], ref_xyz[2], 1.0e-6);\
-        xyz = ref_xyz;                  \
-        proj.inverse_h(xyz, llh);    \
-        EXPECT_NEAR(llh[0], ref_llh[0], 1.0e-9);\
-        EXPECT_NEAR(llh[1], ref_llh[1], 1.0e-9);\
-        EXPECT_NEAR(llh[2], ref_llh[2], 1.0e-6);\
-        fails += ::testing::Test::HasFailure();\
-    } struct consume_semicolon
-
+#define ceaTest(...) PROJ_TEST(CEATest, testproj, __VA_ARGS__)
 
 ceaTest(Point1, {-1.397694375733237e+00,   8.496490909249732e-01,
           6.397636527923552e+03}, {-7.726813212349523e+06,

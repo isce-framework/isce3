@@ -22,12 +22,12 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
-#include <sstream> 
-#include "isce/cuda/core/gpuProjections.h"
-#include "isce/core/Projections.h"
+#include <sstream>
+#include <isce/cuda/core/gpuProjections.h>
+#include <isce/core/Projections.h>
 #include <chrono>
-
 using isce::core::cartesian_t;
+
 using std::cout;
 using std::endl;
 using std::getenv;

@@ -1,20 +1,12 @@
-//
-// Author: Joshua Cohen
-// Copyright 2017
-//
-
 #include <cmath>
 #include <iostream>
-#include "isce/cuda/core/gpuProjections.h"
-#include "gtest/gtest.h"
+#include <isce/cuda/core/gpuProjections.h>
 
-using isce::cuda::core::Geocent;
-using isce::core::cartesian_t;
+#include "projtest.h"
 
-Geocent proj;
+isce::cuda::core::Geocent proj;
 const double a = proj.ellipse.a();
 const double b = a * std::sqrt(1. - proj.ellipse.e2());
-
 
 struct GeocentTest : public ::testing::Test {
     virtual void SetUp() {
@@ -28,27 +20,7 @@ struct GeocentTest : public ::testing::Test {
     unsigned fails;
 };
 
-
-//Reusing the same test suite as ellipsoid.
-
-#define geocentTest(name,p,q,r,x,y,z)       \
-    TEST_F(GeocentTest, name) {       \
-        cartesian_t ref_llh p,q,r;    \
-        cartesian_t ref_xyz x,y,z;    \
-        cartesian_t xyz, llh;  \
-        llh = ref_llh;                  \
-        proj.forward_h(llh, xyz);    \
-        EXPECT_NEAR(xyz[0], ref_xyz[0], 1.0e-6);\
-        EXPECT_NEAR(xyz[1], ref_xyz[1], 1.0e-6);\
-        EXPECT_NEAR(xyz[2], ref_xyz[2], 1.0e-6);\
-        xyz = ref_xyz;                  \
-        proj.inverse_h(xyz, llh);    \
-        EXPECT_NEAR(llh[0], ref_llh[0], 1.0e-9);\
-        EXPECT_NEAR(llh[1], ref_llh[1], 1.0e-9);\
-        EXPECT_NEAR(llh[2], ref_llh[2], 1.0e-6);\
-        fails += ::testing::Test::HasFailure();\
-    } struct consume_semicolon
-
+#define geocentTest(...) PROJ_TEST(GeocentTest, proj, __VA_ARGS__)
 
 geocentTest(Origin, {0.,0.,0.}, {a,0.,0.});
 
@@ -110,7 +82,6 @@ geocentTest(Point15, { -1.498660315787147e+00,1.076512019764726e+00, 8.472554905
 
 
 int main(int argc, char **argv) {
-
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
