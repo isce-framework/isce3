@@ -25,7 +25,6 @@ public:
         return *this * other;
     }
 
-    CUDA_HOSTDEV DenseMatrix() = default;
     CUDA_HOSTDEV constexpr DenseMatrix(
             std::initializer_list<std::initializer_list<T>> lst) {
         int i = 0, j = 0;

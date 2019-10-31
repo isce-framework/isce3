@@ -60,7 +60,6 @@ void setOutputTopoLayers(const Vec3& targetLLH,
                          const isce::cuda::geometry::gpuDEMInterpolator & demInterp) {
 
     Vec3 targetXYZ, enu;
-    isce::core::cartmat_t enumat;
     const double degrees = 180.0 / M_PI;
 
     // Convert lat/lon values to output coordinate system
