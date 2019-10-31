@@ -144,8 +144,8 @@ factoredYPR(double tintp,
 
     // Compute vectors for TCN-like basis
     const Vec3 temp = {satxyz[0], satxyz[1], satxyz[2] / (1 - ellipsoid->e2())};
-    const Vec3 c = -temp.unitVec();
-    const Vec3 b = c.cross(Va).unitVec();
+    const Vec3 c = -temp.normalized();
+    const Vec3 b = c.cross(Va).normalized();
     const Vec3 a = b.cross(c);
 
     // Stack basis vectors to get transposed orbit matrix

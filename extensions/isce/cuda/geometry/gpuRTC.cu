@@ -130,7 +130,7 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
         Vec3 vel;
         orbit.interpolateWGS84Orbit(a, xyz_plat.data(), vel.data());
     }
-    lookXYZ = (xyz_plat - xyz_mid).unitVec();
+    lookXYZ = (xyz_plat - xyz_mid).normalized();
 
     // Compute dot product between each facet and look vector
     const double cosIncFacet1 = lookXYZ.dot(normalFacet1);

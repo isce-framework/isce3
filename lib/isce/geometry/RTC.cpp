@@ -238,7 +238,7 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radar_gr
             const Vec3 xyz_mid = ellps.lonLatToXyz(inputLLH);
             isce::core::cartesian_t xyz_plat, vel;
             orbit.interpolateWGS84Orbit(a, xyz_plat, vel);
-            const Vec3 lookXYZ = (xyz_plat - xyz_mid).unitVec();
+            const Vec3 lookXYZ = (xyz_plat - xyz_mid).normalized();
 
             // Compute dot product between each facet and look vector
             const double cos_inc_facet_1 = lookXYZ.dot(normal_facet_1);

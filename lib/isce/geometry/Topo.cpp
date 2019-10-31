@@ -431,7 +431,7 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     double beta = ((bb - aa) * degrees) / (2.0 * _ellipsoid.rNorth(gamma) * demInterp.deltaY());
 
     // Compute local incidence angle
-    const Vec3 enunorm = enu.unitVec();
+    const Vec3 enunorm = enu.normalized();
     const Vec3 slopevec {alpha, beta, -1.};
     const double costheta = enunorm.dot(slopevec) / slopevec.norm();
     layers.localInc(line, bin, std::acos(costheta)*degrees);
@@ -442,7 +442,7 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     layers.sim(line, bin, std::log10(std::abs(0.01 * costheta / (bb * bb * bb))));
 
     // Calculate psi angle between image plane and local slope
-    const Vec3 n_imghat = -_lookSide * satToGround.cross(vel).unitVec();
+    const Vec3 n_imghat = -_lookSide * satToGround.cross(vel).normalized();
     Vec3 n_img_enu = xyz2enu.dot(n_imghat);
     const Vec3 n_trg_enu = -slopevec;
     const double cospsi = n_trg_enu.dot(n_img_enu)

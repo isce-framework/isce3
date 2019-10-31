@@ -43,7 +43,7 @@ rdr2geo(const isce::core::Pixel & pixel,
     Vec3 targetLLH_old, targetVec_old, lookVec;
 
     // Compute normalized velocity
-    const Vec3 vhat = vel.unitVec();
+    const Vec3 vhat = vel.normalized();
 
     // Unpack TCN basis vectors to pointers
     const auto& that = TCNbasis.x0();

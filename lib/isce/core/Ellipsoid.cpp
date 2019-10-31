@@ -34,7 +34,7 @@ getImagingAnglesAtPlatform(const cartesian_t & pos, const cartesian_t & vel,
     look = std::acos((-n).dot(los) / los.norm());
 
     //Get Cross
-    const Vec3 c = n.cross(vel).unitVec();
-    const Vec3 t = c.cross(n  ).unitVec();
+    const Vec3 c = n.cross(vel).normalized();
+    const Vec3 t = c.cross(n  ).normalized();
     azi = std::atan2(c.dot(los), t.dot(los));
 }

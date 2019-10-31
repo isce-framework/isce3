@@ -116,7 +116,7 @@ void setOutputTopoLayers(const Vec3& targetLLH,
 
     // Calculate psi angle between image plane and local slope
     Vec3 n_img_enu, n_trg_enu;
-    const Vec3 n_imghat = satToGround.cross(vel).unitVec() * -lookSide;
+    const Vec3 n_imghat = satToGround.cross(vel).normalized() * -lookSide;
     n_img_enu = xyz2enu.dot(n_imghat);
     n_trg_enu[0] = -alpha;
     n_trg_enu[1] = -beta;
