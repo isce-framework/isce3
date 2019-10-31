@@ -21,8 +21,7 @@ namespace isce {
         class TimeDelta;
 
         // templates
-        template<class T> T sinc(T);
-        template<int N, typename = double> class DenseMatrix;
+        template<int, typename = double> class DenseMatrix;
         template<int, typename = double> class Vector;
 
         template<class> class Cube;

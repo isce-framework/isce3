@@ -27,7 +27,7 @@ public:
 
     CUDA_HOSTDEV DenseMatrix() = default;
     CUDA_HOSTDEV constexpr DenseMatrix(
-            std::initializer_list<std::initializer_list<double>> lst) {
+            std::initializer_list<std::initializer_list<T>> lst) {
         int i = 0, j = 0;
         for (const auto& l : lst) {
             for (const auto& v : l) {
