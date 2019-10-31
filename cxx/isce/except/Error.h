@@ -26,7 +26,12 @@ namespace isce {
         Error(const SrcInfo& info, std::string msg);
     };
 
+    // STL exception types
     using InvalidArgument = Error<std::invalid_argument>;
     using LengthError = Error<std::length_error>;
+    using OutOfRange = Error<std::out_of_range>;
     using RuntimeError = Error<std::runtime_error>;
+
+    // special exception type for errors returned from GDAL API functions
+    using GDALError = Error<std::runtime_error>;
 }}
