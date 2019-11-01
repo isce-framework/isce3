@@ -37,7 +37,7 @@ var searchData=
   ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html#afc9c8c9f9cfe1701558205600ab7b1f2',1,'isce::signal::Signal::Signal()'],['../classisce_1_1signal_1_1Signal.html#a759653d297ab23e66963aebec0cdafc0',1,'isce::signal::Signal::Signal(int nthreads)']]],
   ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html',1,'isce::signal']]],
   ['signal_3c_20t_20_3e',['Signal&lt; T &gt;',['../classisce_1_1signal_1_1Signal.html',1,'isce::signal']]],
-  ['sinc',['sinc',['../namespaceisce_1_1core.html#afed2beebd0911fb7bd95a8197a998009',1,'isce::core']]],
+  ['sinc',['sinc',['../namespaceisce_1_1core.html#ae73b56f5a94e197486f4cd9f99fa2be3',1,'isce::core']]],
   ['sinc2dinterpolator',['Sinc2dInterpolator',['../classisce_1_1core_1_1Sinc2dInterpolator.html#a623e07dc83dd6a14c7b976adfbcda11e',1,'isce::core::Sinc2dInterpolator']]],
   ['sinc2dinterpolator',['Sinc2dInterpolator',['../classisce_1_1core_1_1Sinc2dInterpolator.html',1,'isce::core']]],
   ['sinc_5feval',['sinc_eval',['../namespaceisce_1_1core.html#abb0055edd764350e6e27aa3cf77c3eb4',1,'isce::core']]],
