@@ -1,58 +1,24 @@
-//
-// Author: Joshua Cohen
-// Copyright 2017
-//
+#include <gtest/gtest.h>
+#include <isce/core/Projections.h>
+#include "projtest.h"
 
-#include <cmath>
-#include <iostream>
-#include "isce/core/Projections.h"
-#include "gtest/gtest.h"
-using isce::core::PolarStereo;
-using isce::core::cartesian_t;
-using std::cout;
-using std::endl;
-
-PolarStereo North(3413);
-PolarStereo South(3031);
-
+isce::core::PolarStereo North(3413);
+isce::core::PolarStereo South(3031);
 
 struct PolarTest : public ::testing::Test {
-    virtual void SetUp() {
-        fails = 0;
-    }
+    unsigned int fails;
+    virtual void SetUp() { fails = 0; }
     virtual void TearDown() {
         if (fails > 0) {
             std::cerr << "Polar::TearDown sees failures" << std::endl;
         }
     }
-    unsigned fails;
 };
 
-
-#define polarTest(hemi,name,p,q,r,x,y,z)       \
-    TEST_F(PolarTest, name) {       \
-        cartesian_t ref_llh p,q,r;    \
-        cartesian_t ref_xyz x,y,z;    \
-        cartesian_t xyz, llh;  \
-        llh = ref_llh;                  \
-        hemi.forward(llh, xyz);    \
-        EXPECT_NEAR(xyz[0], ref_xyz[0], 1.0e-6);\
-        EXPECT_NEAR(xyz[1], ref_xyz[1], 1.0e-6);\
-        EXPECT_NEAR(xyz[2], ref_xyz[2], 1.0e-6);\
-        xyz = ref_xyz;                  \
-        hemi.inverse(xyz, llh);    \
-        EXPECT_NEAR(llh[0], ref_llh[0], 1.0e-9);\
-        EXPECT_NEAR(llh[1], ref_llh[1], 1.0e-9);\
-        EXPECT_NEAR(llh[2], ref_llh[2], 1.0e-6);\
-        fails += ::testing::Test::HasFailure();\
-    } struct consume_semicolon
-
-
+#define polarTest(...) PROJ_TEST(PolarTest, __VA_ARGS__)
 
 polarTest(North, NorthPole3413, {0,0.5*M_PI, 0.}, {0.,0.,0.});
-
 polarTest(South, SouthPole3031, {0,-0.5*M_PI,0.}, {0.,0.,0.});
-
 
 //South pole tests
 polarTest(South, South1, {3.083894546782417e-02,  -1.344622005845314e+00, 1.912700155961942e+03},

@@ -1,53 +1,23 @@
-//
-// Author: Joshua Cohen
-// Copyright 2017
-//
-
-#include <cmath>
-#include <iostream>
-#include "isce/core/Projections.h"
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+#include <isce/core/Projections.h>
+#include "projtest.h"
 using isce::core::UTM;
-using isce::core::cartesian_t;
-using std::cout;
-using std::endl;
 
 struct UTMTest : public ::testing::Test {
-    virtual void SetUp() {
-        fails = 0;
-    }
+    unsigned int fails;
+    virtual void SetUp() { fails = 0; }
     virtual void TearDown() {
         if (fails > 0) {
             std::cerr << "UTM::TearDown sees failures" << std::endl;
         }
     }
-    unsigned fails;
 };
 
-
-#define utmTest(code,name,p,q,r,x,y,z)       \
-    TEST_F(UTMTest, name) {       \
-        UTM proj(code); \
-        cartesian_t ref_llh p,q,r;    \
-        cartesian_t ref_xyz x,y,z;    \
-        cartesian_t xyz, llh;  \
-        llh = ref_llh;                  \
-        proj.forward(llh, xyz);    \
-        EXPECT_NEAR(xyz[0], ref_xyz[0], 1.0e-6);\
-        EXPECT_NEAR(xyz[1], ref_xyz[1], 1.0e-6);\
-        EXPECT_NEAR(xyz[2], ref_xyz[2], 1.0e-6);\
-        xyz = ref_xyz;                  \
-        proj.inverse(xyz, llh);    \
-        EXPECT_NEAR(llh[0], ref_llh[0], 1.0e-9);\
-        EXPECT_NEAR(llh[1], ref_llh[1], 1.0e-9);\
-        EXPECT_NEAR(llh[2], ref_llh[2], 1.0e-6);\
-        fails += ::testing::Test::HasFailure();\
-    } struct consume_semicolon
-
+#define utmTest(code, ...) PROJ_TEST(UTMTest, UTM{code}, __VA_ARGS__)
 
 //Test origins for various northern systems
-#define utmOriginNorthName(ind)  ind ## _NOrigin 
-#define utmOriginNorthTest(x)\
+#define utmOriginNorthName(ind) ind ## _NOrigin
+#define utmOriginNorthTest(x) \
     utmTest(32600+x, utmOriginNorthName(x), {(-177.0+(x-1)*6.0) * M_PI / 180.0, 0., 0.}, {500000., 0., 0.})
 
 utmOriginNorthTest(1);
@@ -365,9 +335,8 @@ utmNorthTest(60, {  3.139969074874963e+00,   1.090397747278831e+00, 4.2214671806
 
 
 
-#define utmSouthName(ind)  ind ## _South
-#define utmSouthTest(code,p,q,r,x,y,z)\
-    utmTest(32700+code, utmSouthName(code), p, q, r, x, y, z)
+#define utmSouthName(ind) ind ## _South
+#define utmSouthTest(code, ...) utmTest(32700+code, utmSouthName(code), __VA_ARGS__)
 
 utmSouthTest(1, {-3.093927794291543e+00,  -1.067144322057127e+00, 4.748737687030280e+01},
         {  4.855160732325171e+05,   3.221269661690438e+06, 4.748737687030280e+01});
