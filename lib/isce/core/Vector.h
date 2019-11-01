@@ -14,6 +14,8 @@ class Vector : public Eigen::Matrix<T, N, 1> {
     using super_t::Matrix;
 };
 
+using Vec3 = Vector<3>;
+
 // Function to compute normal vector to a plane given three points
 CUDA_HOSTDEV inline Vec3 normalPlane(const Vec3& p1,
                                      const Vec3& p2,
