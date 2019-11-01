@@ -28,25 +28,24 @@ using isce::product::RadarGridParameters;
 int isce::geometry::
 rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp, Vec3 & targetLLH,
-        double wvl, int side, double threshold, int maxIter, int extraIter,
-        isce::core::orbitInterpMethod orbitMethod)
+        double wvl, int side, double threshold, int maxIter, int extraIter)
 {
     // Interpolate Orbit to azimuth time, compute TCN basis, and estimate geographic
     // coordinates.
 
     // Interpolate orbit to get state vector
-    Vec3 pos, vel;
-    int stat = orbit.interpolate(aztime, pos, vel, orbitMethod);
-    if (stat != 0) {
+    if (aztime < orbit.startTime() || aztime > orbit.endTime()) {
         pyre::journal::warning_t warning("isce.geometry.Geometry.rdr2geo");
         warning
             << pyre::journal::at(__HERE__)
             << "Error in getting state vector for bounds computation."
             << pyre::journal::newline
             << " - requested time: " << aztime << pyre::journal::newline
-            << " - bounds: " << orbit.UTCtime[0] << " -> " << orbit.UTCtime[orbit.nVectors-1]
+            << " - bounds: " << orbit.startTime() << " -> " << orbit.endTime()
             << pyre::journal::endl;
     }
+    Vec3 pos, vel;
+    orbit.interpolate(&pos, &vel, aztime, OrbitInterpBorderMode::FillNaN);
 
     // Setup geocentric TCN basis
     Basis TCNbasis(pos, vel);
@@ -60,7 +59,7 @@ rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
     Pixel pixel(slantRange, dopfact, 0);
 
     // Finally, call rdr2geo
-    stat = rdr2geo(pixel, TCNbasis, pos, vel, ellipsoid, demInterp, targetLLH, side,
+    int stat = rdr2geo(pixel, TCNbasis, pos, vel, ellipsoid, demInterp, targetLLH, side,
                        threshold, maxIter, extraIter);
     return stat;
 }
@@ -222,11 +221,11 @@ _update_aztime(const Orbit & orbit,
 
     // Compute azimuth time spacing for coarse grid search
     const int NUM_AZTIME_TEST = 15;
-    const double tstart = orbit.UTCtime[0];
-    const double tend = orbit.UTCtime[orbit.nVectors - 1];
+    const double tstart = orbit.startTime();
+    const double tend = orbit.endTime();
 
     int error = 1;
-    
+
     // If aztime is valid (user-defined) exit
     if (aztime >= tstart && aztime <= tend)
         return !error;
@@ -239,9 +238,9 @@ _update_aztime(const Orbit & orbit,
     for (int k = 0; k < NUM_AZTIME_TEST; ++k) {
         // Interpolate orbit
         aztime = tstart + k * delta_t;
-        int status = orbit.interpolateWGS84Orbit(aztime, satpos, satvel);
-        if (status != 0)
+        if (aztime < orbit.startTime() || aztime > orbit.endTime())
             continue;
+        orbit.interpolate(&satpos, &satvel, aztime);
         // Compute slant range
         dr = inputXYZ - satpos;
 
@@ -265,7 +264,7 @@ _update_aztime(const Orbit & orbit,
 
     // If we did not find a good guess, use tmid as intial guess
     if (aztime_closest < 0.0)
-        aztime = orbit.UTCtime[orbit.nVectors / 2];
+        aztime = orbit.midTime();
     else
         aztime = aztime_closest;
     return !error;
@@ -294,7 +293,7 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
     const double rangeMax = rangeMin + rangePixelSpacing * (rwidth - 1);
 
     int converged = 1;
-    int error = _update_aztime(orbit, satpos, satvel, inputXYZ, side, 
+    int error = _update_aztime(orbit, satpos, satvel, inputXYZ, side,
                                aztime, slantRange, rangeMin, rangeMax);
     if (error)
         return !converged;
@@ -304,7 +303,7 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
     for (int i = 0; i < maxIter; ++i) {
 
         // Interpolate the orbit to current estimate of azimuth time
-        orbit.interpolateWGS84Orbit(aztime, satpos, satvel);
+        orbit.interpolate(&satpos, &satvel, aztime, OrbitInterpBorderMode::FillNaN);
 
         // Compute slant range from satellite to ground point
         dr = inputXYZ - satpos;
@@ -326,7 +325,7 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         // Update guess for azimuth time
         double aztime_diff = _compute_doppler_aztime_diff(dr, satvel,
                                                           doppler, wavelength,
-                                                          aztime, 
+                                                          aztime,
                                                           slantRange, deltaRange);
 
         aztime -= aztime_diff;
@@ -338,7 +337,7 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
 int isce::geometry::
 geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const LUT2d<double> & doppler, double & aztime, double & slantRange,
-        double wavelength, int side, double threshold, int maxIter, 
+        double wavelength, int side, double threshold, int maxIter,
         double deltaRange) {
 
     assert( side == 1 || side == -1 );
@@ -350,8 +349,8 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
 
     // Use mid-orbit epoch as initial guess
     int converged = 1;
-    int error = _update_aztime(orbit, 
-                               satpos, satvel, inputXYZ, side, aztime, 
+    int error = _update_aztime(orbit,
+                               satpos, satvel, inputXYZ, side, aztime,
                                slantRange);
     if (error)
         return !converged;
@@ -361,7 +360,7 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
     for (int i = 0; i < maxIter; ++i) {
 
         // Interpolate the orbit to current estimate of azimuth time
-        orbit.interpolateWGS84Orbit(aztime, satpos, satvel);
+        orbit.interpolate(&satpos, &satvel, aztime, OrbitInterpBorderMode::FillNaN);
 
         // Compute slant range from satellite to ground point
         const Vec3 dr = inputXYZ - satpos;
@@ -453,17 +452,7 @@ computeDEMBounds(const Orbit & orbit,
 
         // Get state vector
         Vec3 xyzsat, velsat;
-        int stat = orbit.interpolate(tline, xyzsat, velsat, isce::core::HERMITE_METHOD);
-        if (stat != 0) {
-            pyre::journal::error_t error("isce.geometry.extractDEM");
-            error
-                << pyre::journal::at(__HERE__)
-                << "Error in Topo::topo - Error getting state vector for bounds computation."
-                << pyre::journal::newline
-                << " - requested time: " << tline << pyre::journal::newline
-                << " - bounds: " << orbit.UTCtime[0] << " -> " << orbit.UTCtime[orbit.nVectors-1]
-                << pyre::journal::endl;
-        }
+        orbit.interpolate(&xyzsat, &velsat, tline);
         // Save state vector
         const Vec3 pos = xyzsat;
         const Vec3 vel = velsat;

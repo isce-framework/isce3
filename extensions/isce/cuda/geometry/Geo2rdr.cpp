@@ -154,7 +154,7 @@ geo2rdr(isce::io::Raster & topoRaster,
             ellipsoid, orbit, doppler, x, y, hgt, azoff, rgoff, topoEPSG,
             lineStart, demWidth, t0, r0, radarGrid.numberAzimuthLooks(),
             radarGrid.numberRangeLooks(), radarGrid.length(), radarGrid.width(), radarGrid.prf(),
-            radarGrid.rangePixelSpacing(), radarGrid.wavelength(), 
+            radarGrid.rangePixelSpacing(), radarGrid.wavelength(),
             radarGrid.lookSide(), this->threshold(), this->numiter(), totalconv
         );
 
@@ -192,18 +192,7 @@ _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
 void isce::cuda::geometry::Geo2rdr::
 _checkOrbitInterpolation(double aztime) {
     isce::core::cartesian_t satxyz, satvel;
-    Orbit orbit = this->orbit();
-    int stat = orbit.interpolate(aztime, satxyz, satvel, this->orbitMethod());
-    if (stat != 0) {
-        pyre::journal::error_t error("isce.cuda.core.Geo2rdr");
-        error
-            << pyre::journal::at(__HERE__)
-            << "Error in Topo::topo - Error getting state vector for bounds computation."
-            << pyre::journal::newline
-            << " - requested time: " << aztime << pyre::journal::newline
-            << " - bounds: " << orbit.UTCtime[0] << " -> " << orbit.UTCtime[orbit.nVectors-1]
-            << pyre::journal::endl;
-    }
+    this->orbit().interpolate(&satxyz, &satvel, aztime);
 }
 
 // Compute number of lines per block dynamically from GPU memory

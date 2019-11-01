@@ -63,57 +63,13 @@ Topo(const isce::core::Ellipsoid & ellipsoid, const isce::core::Orbit & orbit,
     _orbit(orbit),
     _ellipsoid(ellipsoid),
     _doppler(doppler),
-    _radarGrid(meta, orbit.refEpoch, numberAzimuthLooks, numberRangeLooks)
+    _radarGrid(meta, orbit.referenceEpoch(), numberAzimuthLooks, numberRangeLooks)
 {
     // Other data
     _lookSide = meta.lookSide;
 
     // Adjust block length based in input SLC length
     _linesPerBlock = std::min(_radarGrid.length(), _linesPerBlock);
-}
-
-inline
-void isce::geometry::Topo::
-orbitMethod(isce::core::orbitInterpMethod method)
-{
-    // Check validity
-    if (method == isce::core::HERMITE_METHOD) {
-        if (_orbit.nVectors < 4) {
-            pyre::journal::error_t error("isce.geometry.Topo");
-            error
-                << pyre::journal::at(__HERE__)
-                << "Error in Topo::orbitMethod - Need at least 4 state vectors for using "
-                << "hermite polynomial interpolation."
-                << pyre::journal::endl;
-        }
-    } else if (method == isce::core::SCH_METHOD) {
-        if (_orbit.nVectors < 4) {
-            pyre::journal::error_t error("isce.geometry.Topo");
-            error
-                << pyre::journal::at(__HERE__)
-                << "Error in Topo::orbitMethod - Need at least 4 state vectors for using "
-                << "SCH interpolation."
-                << pyre::journal::endl;
-        }
-    } else if (method == isce::core::LEGENDRE_METHOD) {
-        if (_orbit.nVectors < 9) {
-            pyre::journal::error_t error("isce.geometry.Topo");
-            error
-                << pyre::journal::at(__HERE__)
-                << "Error in Topo::orbitMethod - Need at least 9 state vectors for using "
-                << "legendre polynomial interpolation."
-                << pyre::journal::endl;
-        }
-    } else {
-        pyre::journal::error_t error("isce.geometry.Topo");
-        error
-            << pyre::journal::at(__HERE__)
-            << "Error in Topo::orbitMethod - Undefined orbit interpolation method."
-            << pyre::journal::endl;
-    }
-
-    // Save
-    _orbitMethod = method;
 }
 
 inline

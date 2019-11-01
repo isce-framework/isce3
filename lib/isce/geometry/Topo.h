@@ -111,13 +111,6 @@ public:
     void extraiter(int n) { _extraiter = n; }
 
     /**
-     * Set the orbit interpolation method while checking its validity
-     *
-     * @param[in] method orbit interpolation method to use
-     */
-    void orbitMethod(isce::core::orbitInterpMethod method);
-
-    /**
      * Set the DEM interpolation method while checking its validity
      *
      * @param[in] DEM inerpolation method
@@ -348,7 +341,6 @@ private:
 
     int _lookSide;
 
-    isce::core::orbitInterpMethod _orbitMethod;
     isce::core::dataInterpMethod _demMethod;
 
     // Output options and objects

@@ -35,6 +35,7 @@ include "core/pyLUT1d.pyx"
 include "core/pyOrbit.pyx"
 include "core/pyPoly1d.pyx"
 include "core/pyPoly2d.pyx"
+include "core/pyStateVector.pyx"
 
 # Include the product extensions
 include "product/pyProcessingInformation.pyx"

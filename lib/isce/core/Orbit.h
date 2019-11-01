@@ -1,253 +1,172 @@
-//
-// Author: Joshua Cohen
-// Copyright 2017
-//
-
 #pragma once
 
-#include "forward.h"
-
-#include <stdexcept>
-#include <string>
 #include <vector>
 
-// isce::core
-#include "Constants.h"
-#include "Utilities.h"
+#include "DateTime.h"
+#include "Linspace.h"
 #include "StateVector.h"
+#include "TimeDelta.h"
+#include "Vector.h"
 
-// Declaration
-namespace isce {
-    namespace core {
-        void orbitHermite(const std::vector<cartesian_t>&,
-                          const std::vector<cartesian_t>&,
-                          const std::vector<double>&,double,cartesian_t&,cartesian_t&);
-    }
-}
+namespace isce { namespace core {
 
-/** Data structure to represent ECEF state vectors of imaging platform
+/**
+ * Orbit interpolation method
  *
- *  There are two representations of the orbit information that are currently
- *  carried by this data structure. A vector of isce::core::StateVector for a
- *  serializable representation and vectors of time-stamps, positions and
- *  velocities to speed up computations.
- *  All Time stamps are assumed to be UTC.
- *  All positions are in meters and in ECEF coordinates w.r.t WGS84 ellipsoid
- *  All velocities are in meters/sec and in ECEF coordinates w.r.t WGS84 Ellipsoid */
-class isce::core::Orbit {
-public:
-
-    /** Number of state vectors */
-    int nVectors;
-    /** Linearized vector of isce::core::DateTime from contained State Vectors*/
-    std::vector<DateTime> epochs;
-    /** Linearized vecor of UTC times corresponding to State Vectors*/
-    std::vector<double> UTCtime;
-    /** Linearized position values of contained State Vectors*/
-    std::vector<double> position;
-    /** Linearized velocity values of contained State Vectors*/
-    std::vector<double> velocity;
-    /** Vector of isce::core::StateVector*/
-    std::vector<StateVector> stateVectors;
-
-    /** \brief Reference epoch for the orbit object.
-     *
-     * Defaults to MIN_DATE_TIME. This value is used to reference DateTime tags
-     * to double precision seconds. Ideally should be within a day of time tags*/
-    DateTime refEpoch;
-
-    /** Reformat the orbit and convert datetime to seconds since epoch*/
-    void reformatOrbit(const DateTime &epoch);
-
-
-    /** Only convert datetime to seconds since epoch*/
-    void updateUTCTimes(const DateTime &epoch);
-
-    /** If no epoch provided, use MIN_DATE_TIME as epoch*/
-    void reformatOrbit();
-
-    /** \brief Constructor number of state vectors
-     *
-     * @param[in] nv Number of state vectors*/
-    Orbit(int nv) : nVectors(nv), epochs(nv,MIN_DATE_TIME),
-                    UTCtime(nv,0.), position(3*nv,0.), velocity(3*nv,0.) {}
-
-    /** Empty constructor*/
-    Orbit() : Orbit(0) {}
-
-    /** Copy constructor
-     *
-     * @param[in] o isce::core::Orbit object to copy*/
-    Orbit(const Orbit &o) : nVectors(o.nVectors), epochs(o.epochs),
-                            UTCtime(o.UTCtime), position(o.position), velocity(o.velocity),
-                            stateVectors(o.stateVectors), refEpoch(o.refEpoch) {
-    }
-
-    /** Comparison operator */
-    inline bool operator==(const Orbit &o) const;
-
-    /** Assignment operator*/
-    inline Orbit& operator=(const Orbit &o);
-
-    /** Increment operator*/
-    inline Orbit& operator+=(const Orbit &o);
-
-    /** Addition operator*/
-    inline const Orbit operator+(const Orbit &o) const;
-
-    /** Get state vector by index*/
-    inline void getStateVector(int ind, double &t, cartesian_t &pos, cartesian_t &vel) const;
-
-    /** Set state vector by index*/
-    inline void setStateVector(int ind, double t, const cartesian_t &pos, const cartesian_t &vel);
-
-    /** Adds a state vector to orbit*/
-    inline void addStateVector(double t, const cartesian_t &pos, const cartesian_t &vel);
-
-    /** Interpolate orbit using specified method.*/
-    int interpolate(double tintp, StateVector &sv, orbitInterpMethod method) const;
-
-    /** Interpolate orbit using specified method. */
-    int interpolate(double tintp, cartesian_t &opos, cartesian_t &ovel, orbitInterpMethod intp_type) const;
-
-    /** Interpolate orbit using Hermite polynomial.*/
-    int interpolateWGS84Orbit(double tintp, cartesian_t &opos, cartesian_t &ovel) const;
-
-    /** Interpolated orbit using Legendre polynomial.*/
-    int interpolateLegendreOrbit(double tintp, cartesian_t &opos,cartesian_t &ovel) const;
-
-    /** Interpolate orbit using Linear weights.*/
-    int interpolateSCHOrbit(double tintp, cartesian_t &opos, cartesian_t &ovel) const;
-
-    /** Compute acceleration numerically at given epoch.*/
-    int computeAcceleration(double tintp, cartesian_t &acc) const;
-
-    /** Compute Heading (clockwise w.r.t North) in radians at given epoch*/
-    double getENUHeading(double aztime) const;
-
-    /** Debug print function */
-    void printOrbit() const;
-
-    /** Utility function to load orbit from HDR file.
-     *  Will update refEpoch if 2nd argument is true.
-     */
-    void loadFromHDR(const char *filename, bool update_epoch = true);
-
-    /** Utility function to dump orbit to HDR file */
-    void dumpToHDR(const char*) const;
-
+ * See <a href="overview_geometry.html#orbitinterp">the documentation</a>
+ * for a description of each method.
+ */
+enum class OrbitInterpMethod {
+    Hermite,  /**< Third-order Hermite polynomial interpolation */
+    Legendre, /**< Eighth-order Legendre polynomial interpolation */
 };
 
-// Comparison operator
-bool isce::core::Orbit::
-operator==(const Orbit & rhs) const {
-    // Some easy checks first
-    bool equal = nVectors == rhs.nVectors;
-    equal *= refEpoch == rhs.refEpoch;
-    if (!equal) {
-        return false;
-    }
-    // If we pass the easy checks, check the orbit contents
-    for (size_t i = 0; i < nVectors; ++i) {
-        equal *= isce::core::compareFloatingPoint(UTCtime[i], rhs.UTCtime[i]);
-        for (size_t j = 0; j < 3; ++j) {
-            equal *= isce::core::compareFloatingPoint(position[3*i+j], rhs.position[3*i+j]);
-            equal *= isce::core::compareFloatingPoint(velocity[3*i+j], rhs.velocity[3*i+j]);
-        }
-    }
-    return equal;
-}
+/** Mode determining how interpolation outside of orbit domain is handled */
+enum class OrbitInterpBorderMode {
+    Error,       /**< Raise error if interpolation attempted outside orbit domain */
+    Extrapolate, /**< Allow extrapolation to points outside orbit domain */
+    FillNaN,     /**< Output NaN for interpolation points outside orbit domain */
+};
 
-isce::core::Orbit & isce::core::Orbit::
-operator=(const Orbit &rhs) {
-    nVectors = rhs.nVectors;
-    UTCtime = rhs.UTCtime;
-    epochs = rhs.epochs;
-    position = rhs.position;
-    velocity = rhs.velocity;
-    stateVectors = rhs.stateVectors;
-    refEpoch = rhs.refEpoch;
-    return *this;
-}
-
-isce::core::Orbit & isce::core::Orbit::
-operator+=(const Orbit &rhs) {
-    cartesian_t t_pos, t_vel;
-    for (int i = 0; i < rhs.nVectors; i++) {
-        for (int j = 0; j < 3; ++j) {
-            t_pos[j] = rhs.position[i*3+j];
-            t_vel[j] = rhs.velocity[i*3+j];
-        }
-        addStateVector(rhs.UTCtime[i], t_pos, t_vel);
-    }
-    return *this;
-}
-
-const isce::core::Orbit isce::core::Orbit::
-operator+(const Orbit &rhs) const {
-    return (Orbit(*this) += rhs);
-}
-
-
-
-
-/** @param[in] ind Index of the state vector to return
- * @param[out] t Time since the reference epoch in seconds
- * @param[out] pos Position (m) of the state vector
- * @param[out] vel Velocity (m/s) of the state vector
+/**
+ * Sequence of platform ephemeris samples (state vectors) with uniform temporal
+ * spacing, supporting efficient lookup and interpolation
  *
- * Returns values from linearized vectors and not stateVectors*/
-void isce::core::Orbit::
-getStateVector(int idx, double &t, cartesian_t &pos, cartesian_t &vel) const {
-    if ((idx < 0) || (idx >= nVectors)) {
-        std::string errstr = "Orbit::getStateVector - Trying to access vector " +
-                             std::to_string(idx+1) + " out of " + std::to_string(nVectors) +
-                             " possible vectors";
-        throw std::out_of_range(errstr);
-    }
-    t = UTCtime[idx];
-    for (int i=0; i<3; i++) {
-        pos[i] = position[(3*idx)+i];
-        vel[i] = velocity[(3*idx)+i];
-    }
-}
-
-/** @param[in] ind Index of the state vector to set
- * @param[in] t Time since reference epoch in seconds for state vector
- * @param[in] pos Position (m) of the state vector
- * @param[in] vel Velocity (m/s) of the state vector
+ * DateTimes are expected to be UTC. Positions & velocities are in meters and
+ * meters per second respectively and in ECEF coordinates w.r.t WGS84 ellipsoid.
  *
- * Sets values in linearized vectors and not stateVectors*/
-void isce::core::Orbit::
-setStateVector(int idx, double t, const cartesian_t & pos, const cartesian_t & vel) {
-    if ((idx < 0) || (idx >= nVectors)) {
-        std::string errstr = "Orbit::setStateVector - Trying to access vector " +
-                             std::to_string(idx+1) + " out of " + std::to_string(nVectors) +
-                             " possible vectors";
-        throw std::out_of_range(errstr);
+ * Platform position and velocity are stored at timepoints relative to a
+ * reference epoch. For best accuracy, reference epoch should be within 24
+ * hours of orbit time tags.
+ */
+class Orbit {
+public:
+
+    Orbit() = default;
+
+    /**
+     * Construct from list of state vectors
+     *
+     * Reference epoch defaults to time of first state vector
+     *
+     * \param[in] statevecs State vectors
+     * \param[in] interp_method Interpolation method
+     */
+    Orbit(const std::vector<StateVector> & statevecs,
+          OrbitInterpMethod interp_method = OrbitInterpMethod::Hermite);
+
+    /**
+     * Construct from list of state vectors and reference epoch
+     *
+     * \param[in] statevecs State vectors
+     * \param[in] reference_epoch Reference epoch
+     * \param[in] interp_method Interpolation method
+     */
+    Orbit(const std::vector<StateVector> & statevecs,
+          const DateTime & reference_epoch,
+          OrbitInterpMethod interp_method = OrbitInterpMethod::Hermite);
+
+    /** Export list of state vectors */
+    std::vector<StateVector> getStateVectors() const;
+
+    /** Set orbit state vectors */
+    void setStateVectors(const std::vector<StateVector> &);
+
+    /** Reference epoch (UTC) */
+    const DateTime & referenceEpoch() const { return _reference_epoch; }
+
+    /** Set reference epoch (UTC) */
+    void referenceEpoch(const DateTime &);
+
+    /** Interpolation method */
+    OrbitInterpMethod interpMethod() const { return _interp_method; }
+
+    /** Set interpolation method */
+    void interpMethod(OrbitInterpMethod interp_method) { _interp_method = interp_method; }
+
+    /** Time of first state vector relative to reference epoch (s) */
+    double startTime() const { return _time[0]; }
+
+    /** Time of center of orbit relative to reference epoch (s) */
+    double midTime() const { return startTime() + 0.5 * (size() - 1) * spacing(); }
+
+    /** Time of last state vector relative to reference epoch (s) */
+    double endTime() const { return _time[size()-1]; }
+
+    /** UTC time of first state vector */
+    DateTime startDateTime() const { return _reference_epoch + TimeDelta(startTime()); }
+
+    /** UTC time of center of orbit */
+    DateTime midDateTime() const { return _reference_epoch + TimeDelta(midTime()); }
+
+    /** UTC time of last state vector */
+    DateTime endDateTime() const { return _reference_epoch + TimeDelta(endTime()); }
+
+    /** Time interval between state vectors (s) */
+    double spacing() const { return _time.spacing(); }
+
+    /** Number of state vectors in orbit */
+    int size() const { return _time.size(); }
+
+    /** Get state vector times relative to reference epoch (s) */
+    const Linspace<double> & time() const { return _time; }
+
+    /** Get state vector positions in ECEF coordinates (m) */
+    const std::vector<Vec3> & position() const { return _position; }
+
+    /** Get state vector velocities in ECEF coordinates (m/s) */
+    const std::vector<Vec3> & velocity() const { return _velocity; }
+
+    /** Get the specified state vector time relative to reference epoch (s) */
+    double time(int idx) const { return _time[idx]; }
+
+    /** Get the specified state vector position in ECEF coordinates (m) */
+    const Vec3 & position(int idx) const { return _position[idx]; }
+
+    /** Get the specified state vector velocity in ECEF coordinates (m/s) */
+    const Vec3 & velocity(int idx) const { return _velocity[idx]; }
+
+    /**
+     * Interpolate platform position and/or velocity
+     *
+     * If either \p position or \p velocity is a null pointer, that output will
+     * not be computed. This may improve runtime by avoiding unnecessary
+     * operations.
+     *
+     * \param[out] position Interpolated position
+     * \param[out] velocity Interpolated velocity
+     * \param[in] t Interpolation time
+     * \param[in] border_mode Mode for handling interpolation outside orbit domain
+     */
+    void interpolate(Vec3 * position,
+                     Vec3 * velocity,
+                     double t,
+                     OrbitInterpBorderMode border_mode = OrbitInterpBorderMode::Error) const;
+
+private:
+    DateTime _reference_epoch;
+    Linspace<double> _time;
+    std::vector<Vec3> _position;
+    std::vector<Vec3> _velocity;
+    OrbitInterpMethod _interp_method = OrbitInterpMethod::Hermite;
+};
+
+bool operator==(const Orbit &, const Orbit &);
+bool operator!=(const Orbit &, const Orbit &);
+
+/**
+ * Get minimum number of orbit state vectors required for interpolation with
+ * specified method
+ */
+constexpr
+int minStateVecs(OrbitInterpMethod method)
+{
+    switch (method) {
+        case OrbitInterpMethod::Hermite  : return 4;
+        case OrbitInterpMethod::Legendre : return 9;
     }
-    UTCtime[idx] = t;
-    epochs[idx] = refEpoch + t;
-    for (int i=0; i<3; i++) {
-        position[3*idx+i] = pos[i];
-        velocity[3*idx+i] = vel[i];
-    }
+
+    return -1;
 }
 
-
-/** @param[in] t Time since reference epoch in seconds for state vector
- * @param[in] pos Position (m) of the state vector
- * @param[in] vel Velocity (m/s) of the state vector
- *
- * Sets values in linearized vectors and not stateVectors. Index to insert is determined
- * using the "t" value. Internally, linearized vectors are sorted by time. */
-void isce::core::Orbit::
-addStateVector(double t, const cartesian_t & pos, const cartesian_t & vel) {
-    int vec_idx = 0;
-    while ((vec_idx < nVectors) && (t > UTCtime[vec_idx])) vec_idx++;
-    UTCtime.insert(UTCtime.begin()+vec_idx, t);
-    epochs.insert(epochs.begin()+vec_idx, refEpoch + t);
-    position.insert(position.begin()+(3*vec_idx), &pos[0], &pos[0] + 3);
-    velocity.insert(velocity.begin()+(3*vec_idx), &vel[0], &vel[0] + 3);
-    nVectors++;
-}
+}}

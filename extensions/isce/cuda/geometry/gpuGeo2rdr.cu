@@ -9,7 +9,8 @@
 
 // isce::cuda::core
 #include <isce/cuda/core/gpuLUT1d.h>
-#include <isce/cuda/core/gpuOrbit.h>
+#include <isce/cuda/core/Orbit.h>
+#include <isce/cuda/core/OrbitView.h>
 #include <isce/cuda/core/gpuProjections.h>
 
 // isce::cuda::geometry
@@ -24,16 +25,16 @@ using isce::core::Vec3;
 
 __global__
 void runGeo2rdrBlock(isce::core::Ellipsoid ellps,
-                     isce::cuda::core::gpuOrbit orbit,
+                     isce::cuda::core::OrbitView orbit,
                      isce::cuda::core::gpuLUT1d<double> doppler,
                      double * x, double * y, double * hgt,
                      float * azoff, float * rgoff,
                      isce::cuda::core::ProjectionBase ** projTopo,
                      size_t lineStart, size_t blockLength, size_t blockWidth,
-                     double t0, double r0, size_t numberAzimuthLooks, 
-                     size_t numberRangeLooks, size_t length, size_t width, 
+                     double t0, double r0, size_t numberAzimuthLooks,
+                     size_t numberRangeLooks, size_t length, size_t width,
                      double prf, double rangePixelSpacing, double wavelength,
-                     int side, double threshold, int numiter, 
+                     int side, double threshold, int numiter,
                      unsigned int * totalconv) {
 
     // Get the flattened index
@@ -56,7 +57,7 @@ void runGeo2rdrBlock(isce::core::Ellipsoid ellps,
         double aztime, slantRange;
         const double deltaRange = 1.0e-8;
         int geostat = isce::cuda::geometry::geo2rdr(
-            llh, ellps, orbit, doppler, &aztime, &slantRange, wavelength, 
+            llh, ellps, orbit, doppler, &aztime, &slantRange, wavelength,
             side, threshold, numiter, deltaRange);
 
         // Compute azimuth time extents
@@ -101,12 +102,12 @@ runGPUGeo2rdr(const isce::core::Ellipsoid& ellipsoid,
               int topoEPSG, size_t lineStart, size_t blockWidth,
               double t0, double r0, size_t numberAzimuthLooks,
               size_t numberRangeLooks, size_t length, size_t width,
-              double prf, double rangePixelSpacing, double wavelength, 
-              int side, double threshold, double numiter, 
+              double prf, double rangePixelSpacing, double wavelength,
+              int side, double threshold, double numiter,
               unsigned int & totalconv) {
 
     // Create gpu ISCE objects
-    isce::cuda::core::gpuOrbit gpu_orbit(orbit);
+    isce::cuda::core::Orbit gpu_orbit(orbit);
     isce::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
 
     // Allocate memory on device topo data and results
@@ -124,7 +125,7 @@ runGPUGeo2rdr(const isce::core::Ellipsoid& ellipsoid,
     checkCudaErrors(cudaMemcpy(x_d, &x[0], nbytes_double, cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(y_d, &y[0], nbytes_double, cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(hgt_d, &hgt[0], nbytes_double, cudaMemcpyHostToDevice));
-    
+
     // Allocate projection pointer on device
     isce::cuda::core::ProjectionBase **proj_d;
     checkCudaErrors(cudaMalloc(&proj_d, sizeof(isce::cuda::core::ProjectionBase **)));
@@ -145,10 +146,10 @@ runGPUGeo2rdr(const isce::core::Ellipsoid& ellipsoid,
     // Launch kernel
     const size_t blockLength = x.size() / blockWidth;
     runGeo2rdrBlock<<<grid, block>>>(ellipsoid, gpu_orbit, gpu_doppler,
-                                     x_d, y_d, hgt_d, azoff_d, rgoff_d, 
+                                     x_d, y_d, hgt_d, azoff_d, rgoff_d,
                                      proj_d, lineStart, blockLength,
                                      blockWidth, t0, r0, numberAzimuthLooks,
-                                     numberRangeLooks, length, width, prf, 
+                                     numberRangeLooks, length, width, prf,
                                      rangePixelSpacing, wavelength, side,
                                      threshold, numiter, totalconv_d);
 

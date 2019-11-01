@@ -1,47 +1,51 @@
 #cython: language_level=3
-#
-# Author: Joshua Cohen, Tamas Gal
-# Copyright 2017-2019
-#
 
-from libcpp.vector cimport vector
 from libcpp cimport bool
-from Cartesian cimport cartesian_t
+from libcpp.string cimport string
+from libcpp.vector cimport vector
+
+from Cartesian cimport Vec3
 from DateTime cimport DateTime
 from IH5 cimport IGroup
-
-cdef extern from "isce/core/Constants.h" namespace "isce::core":
-    cdef enum orbitInterpMethod:
-        HERMITE_METHOD = 0
-        SCH_METHOD = 1
-        LEGENDRE_METHOD = 2
+from StateVector cimport StateVector
 
 cdef extern from "isce/core/Orbit.h" namespace "isce::core":
-    cdef cppclass Orbit:
-        int nVectors
-        vector[double] position
-        vector[double] velocity
-        vector[double] UTCtime
-        DateTime refEpoch
 
-        Orbit() except +
-        Orbit(int) except +
-        Orbit(const Orbit&) except +
-        void getStateVector(int,double&,cartesian_t&,cartesian_t&)
-        void setStateVector(int,double,cartesian_t&,cartesian_t&)
-        void addStateVector(double,cartesian_t&,cartesian_t&)
-        int interpolate(double,cartesian_t&,cartesian_t&,orbitInterpMethod)
-        int interpolateWGS84Orbit(double,cartesian_t&,cartesian_t&)
-        int interpolateLegendreOrbit(double,cartesian_t&,cartesian_t&)
-        int interpolateSCHOrbit(double,cartesian_t&,cartesian_t&)
-        int computeAcceleration(double,cartesian_t&)
-        void updateUTCTimes(const DateTime &)
-        double getENUHeading(double)
-        void printOrbit()
-        void loadFromHDR(const char*)
-        void dumpToHDR(const char*)
+    cdef enum OrbitInterpMethod:
+        Hermite "isce::core::OrbitInterpMethod::Hermite"
+        Legendre "isce::core::OrbitInterpMethod::Legendre"
+
+    cdef enum OrbitInterpBorderMode:
+        Error "isce::core::OrbitInterpBorderMode::Error"
+        Extrapolate "isce::core::OrbitInterpBorderMode::Extrapolate"
+        FillNaN "isce::core::OrbitInterpBorderMode::FillNaN"
+
+    cdef cppclass Orbit:
+        Orbit()
+        Orbit(const vector[StateVector] &) except +
+        Orbit(const vector[StateVector] &, const DateTime &) except +
+        vector[StateVector] getStateVectors()
+        void setStateVectors(const vector[StateVector] &) except +
+        const DateTime & referenceEpoch()
+        void referenceEpoch(const DateTime &)
+        OrbitInterpMethod interpMethod()
+        void interpMethod(OrbitInterpMethod)
+        double startTime()
+        double midTime()
+        double endTime()
+        DateTime startDateTime()
+        DateTime midDateTime()
+        DateTime endDateTime()
+        double spacing()
+        int size()
+        double time(int)
+        Vec3 position(int)
+        Vec3 velocity(int)
+        void interpolate(Vec3 *, Vec3 *, double, OrbitInterpBorderMode) except +
+
+    bool operator==(const Orbit &, const Orbit &)
+    bool operator!=(const Orbit &, const Orbit &)
 
 cdef extern from "isce/core/Serialization.h" namespace "isce::core":
-    void loadOrbit "loadFromH5" (IGroup & group, Orbit & orbit)
-    void saveOrbit "saveToH5" (IGroup & group, Orbit & orbit) 
-
+    void saveOrbitToH5 "saveToH5" (IGroup &, const Orbit &)
+    void loadOrbitFromH5 "loadFromH5" (IGroup &, Orbit &)

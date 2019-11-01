@@ -18,6 +18,7 @@
 #include <isce/core/DateTime.h>
 #include <isce/core/DenseMatrix.h>
 #include <isce/core/Ellipsoid.h>
+#include <isce/core/Orbit.h>
 #include <isce/core/Projections.h>
 
 #include <isce/geometry/DEMInterpolator.h>
@@ -26,6 +27,7 @@
 
 using isce::core::cartesian_t;
 using isce::core::Mat3;
+using isce::core::OrbitInterpBorderMode;
 using isce::core::Vec3;
 
 double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp,
@@ -72,10 +74,10 @@ void isce::geometry::facetRTC(isce::product::Product& product,
                               char frequency,
                               isce::core::rtcInputRadiometry input_radiometry,
                               isce::core::rtcOutputMode output_mode) {
-    
+
     isce::core::Orbit orbit = product.metadata().orbit();
     isce::product::RadarGridParameters radar_grid(product, frequency, 1, 1);
-    
+
     // Get a copy of the Doppler LUT; allow for out-of-bounds extrapolation
     isce::core::LUT2d<double> dop = product.metadata().procInfo().dopplerCentroid(frequency);
     dop.boundsError(false);
@@ -91,14 +93,13 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radar_gr
                               isce::io::Raster& out_raster,
                               isce::core::rtcInputRadiometry input_radiometry,
                               isce::core::rtcOutputMode output_mode) {
-   
+
     isce::core::Ellipsoid ellps(isce::core::EarthSemiMajorAxis,
                                 isce::core::EarthEccentricitySquared);
 
     isce::geometry::DEMInterpolator dem_interp(0, isce::core::dataInterpMethod::BIQUINTIC_METHOD);
 
     isce::geometry::Topo topo(radar_grid, orbit, ellps, dop);
-    topo.orbitMethod(isce::core::orbitInterpMethod::HERMITE_METHOD);
 
     // Determine DEM bounds
     topo.computeDEMBounds(dem, dem_interp, 0, radar_grid.length());
@@ -110,7 +111,7 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radar_gr
 void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radar_grid,
                               const isce::core::Orbit& orbit,
                               const isce::core::LUT2d<double>& dop,
-                              isce::geometry::DEMInterpolator & dem_interp, 
+                              isce::geometry::DEMInterpolator & dem_interp,
                               isce::io::Raster& out_raster,
                               isce::core::rtcInputRadiometry input_radiometry,
                               isce::core::rtcOutputMode output_mode) {
@@ -237,7 +238,7 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radar_gr
             // Compute look angle from sensor to ground
             const Vec3 xyz_mid = ellps.lonLatToXyz(inputLLH);
             isce::core::cartesian_t xyz_plat, vel;
-            orbit.interpolateWGS84Orbit(a, xyz_plat, vel);
+            orbit.interpolate(&xyz_plat, &vel, a, OrbitInterpBorderMode::FillNaN);
             const Vec3 lookXYZ = (xyz_plat - xyz_mid).normalized();
 
             // Compute dot product between each facet and look vector
@@ -255,7 +256,7 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radar_gr
             if (cos_inc_facet_2 > 0)
                 area += AP2 * cos_inc_facet_2;
             if (area == 0)
-                continue;    
+                continue;
 
             // Get integer indices of bounds
             const int ix1 = static_cast<int>(x1);
@@ -295,7 +296,7 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radar_gr
     }
 
     printf("\rRTC progress: 100%%");
-    
+
     delete proj;
 
     float max_hgt, avg_hgt;
@@ -310,9 +311,10 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radar_gr
         {
             for (size_t j = 0; j < radar_grid.width(); ++j)
             {
-               
-                isce::core::cartesian_t xyz_plat, vel;
-                orbit.interpolateWGS84Orbit(start + i * pixazm, xyz_plat, vel);
+
+                double t = start + i * pixazm;
+                isce::core::cartesian_t xyz_plat;
+                orbit.interpolate(&xyz_plat, nullptr, t, OrbitInterpBorderMode::FillNaN);
 
                 // Slant range for current pixel
                 const double slt_range = r0 + j * dr;
@@ -322,7 +324,7 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radar_gr
                 targetLLH[2] = avg_hgt; // initialize first guess
                 isce::geometry::rdr2geo(start + i * pixazm, slt_range, 0, orbit, ellps,
                                         flat_interp, targetLLH, radar_grid.wavelength(), side,
-                                        1e-4, 20, 20, isce::core::HERMITE_METHOD);
+                                        1e-4, 20, 20);
 
                 // Computation of ENU coordinates around ground target
                 ellps.lonLatToXyz(targetLLH, targetXYZ);

@@ -107,10 +107,3 @@ isce::signal::Covariance<T>::interpolator(isce::core::dataInterpMethod method)
 {
     _interp = isce::core::createInterpolator<T>(method);
 }
-
-template<class T>
-inline void isce::signal::Covariance<T>::orbitInterpolationMethod(
-        isce::core::orbitInterpMethod orbitMethod)
-{
-    _orbitMethod = orbitMethod;
-}

@@ -69,8 +69,6 @@ public:
 
     void orbit(isce::core::Orbit& orbit) { _orbit = orbit; }
 
-    void orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod) { _orbitMethod = orbitMethod; }
-
     void ellipsoid(isce::core::Ellipsoid& ellipsoid) { _ellipsoid = ellipsoid; }
 
     void thresholdGeo2rdr(double threshold) { _threshold = threshold; }
@@ -100,7 +98,7 @@ private:
 
     void _interpolate(isce::core::Matrix<T>& rdrDataBlock,
                       isce::core::Matrix<T>& geoDataBlock,
-                      std::valarray<double>& radarX, 
+                      std::valarray<double>& radarX,
                       std::valarray<double>& radarY,
                       int rdrBlockWidth, int rdrBlockLength,
                       int azimuthFirstLine, int rangeFirstPixel);
@@ -113,7 +111,6 @@ private:
     double _threshold;
     int _numiter;
     size_t _linesPerBlock = 1000;
-    isce::core::orbitInterpMethod _orbitMethod;
 
     // radar grids parameters
     isce::core::LUT2d<double> _doppler;

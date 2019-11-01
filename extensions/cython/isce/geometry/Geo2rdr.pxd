@@ -13,8 +13,8 @@ from Raster cimport Raster
 # Cython declarations for isce::product objects
 from Product cimport Product
 
-# Orbit and Orbit Interpolation methods
-from Orbit cimport Orbit, orbitInterpMethod
+# Orbit
+from Orbit cimport Orbit
 
 from RadarGridParameters cimport RadarGridParameters
 from Ellipsoid cimport Ellipsoid
@@ -36,7 +36,6 @@ cdef extern from "isce/geometry/Geo2rdr.h" namespace "isce::geometry":
         # Set options
         void threshold(double)
         void numiter(int)
-        void orbitMethod(orbitInterpMethod)
 
         # Run geo2rdr with offsets and internally created offset rasters
         void geo2rdr(Raster &, const string &, double, double)

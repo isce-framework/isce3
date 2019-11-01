@@ -21,7 +21,7 @@ namespace geometry {
 
     /** Radar geometry coordinates to map coordinates transformer*/
     CUDA_DEV int rdr2geo(double, double, double,
-                         const isce::cuda::core::gpuOrbit &,
+                         const isce::cuda::core::OrbitView &,
                          const isce::core::Ellipsoid &,
                          const gpuDEMInterpolator &,
                          isce::core::Vec3&, double, int, double, int, int);
@@ -38,7 +38,7 @@ namespace geometry {
     /** Map coordinates to radar geometry coordinates transformer*/
     CUDA_DEV int geo2rdr(const isce::core::Vec3&,
                          const isce::core::Ellipsoid&,
-                         const isce::cuda::core::gpuOrbit &,
+                         const isce::cuda::core::OrbitView &,
                          const isce::cuda::core::gpuLUT1d<double> &,
                          double *, double *,
                          double, int, double, int, double);
@@ -66,7 +66,7 @@ namespace geometry {
 } // namespace isce
 
 /** Create ProjectionBase pointer on the device (meant to be run by a single thread) */
-CUDA_GLOBAL void createProjection(isce::cuda::core::ProjectionBase **, int); 
+CUDA_GLOBAL void createProjection(isce::cuda::core::ProjectionBase **, int);
 
 /** Delete ProjectionBase pointer on the device (meant to be run by a single thread) */
 CUDA_GLOBAL void deleteProjection(isce::cuda::core::ProjectionBase **);

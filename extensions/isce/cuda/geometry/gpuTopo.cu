@@ -9,10 +9,12 @@
 #include <isce/core/DenseMatrix.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Pixel.h>
+#include <isce/error/ErrorCode.h>
 #include <isce/geometry/TopoLayers.h>
 
 // isce::cuda::core
-#include <isce/cuda/core/gpuOrbit.h>
+#include <isce/cuda/core/Orbit.h>
+#include <isce/cuda/core/OrbitView.h>
 #include <isce/cuda/core/gpuLUT1d.h>
 
 #include <isce/cuda/except/Error.h>
@@ -24,12 +26,13 @@
 
 using isce::core::Vec3;
 using isce::core::Mat3;
+using isce::error::ErrorCode;
 
 #define THRD_PER_BLOCK 96 // Number of threads per block (should always %32==0)
 
 __device__
 bool initAzimuthLine(size_t line,
-                     const isce::cuda::core::gpuOrbit& orbit,
+                     const isce::cuda::core::OrbitView& orbit,
                      double startAzUTCTime,
                      size_t numberAzimuthLooks,
                      double prf,
@@ -40,7 +43,8 @@ bool initAzimuthLine(size_t line,
     const double tline = startAzUTCTime + numberAzimuthLooks * line / prf;
 
     // Interpolate orbit (keeping track of validity without interrupting workflow)
-    bool valid = (orbit.interpolateWGS84Orbit(tline, pos.data(), vel.data()) == 0);
+    ErrorCode status = orbit.interpolate(&pos, &vel, tline);
+    bool valid = (status == ErrorCode::Success);
 
     // Compute geocentric TCN basis
     TCNbasis = isce::core::Basis(pos, vel);
@@ -128,7 +132,7 @@ void setOutputTopoLayers(const Vec3& targetLLH,
 
 __global__
 void runTopoBlock(isce::core::Ellipsoid ellipsoid,
-                  isce::cuda::core::gpuOrbit orbit,
+                  isce::cuda::core::OrbitView orbit,
                   isce::cuda::core::gpuLUT1d<double> doppler,
                   isce::cuda::geometry::gpuDEMInterpolator demInterp,
                   isce::cuda::core::ProjectionBase ** projOutput,
@@ -211,9 +215,9 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
            unsigned int & totalconv) {
 
     // Create gpu ISCE objects
-    isce::cuda::core::gpuOrbit gpu_orbit(orbit);
+    isce::cuda::core::Orbit gpu_orbit(orbit);
     isce::cuda::core::gpuLUT1d<double> gpu_doppler(doppler);
-    isce::cuda::geometry::gpuDEMInterpolator gpu_demInterp(demInterp); 
+    isce::cuda::geometry::gpuDEMInterpolator gpu_demInterp(demInterp);
     isce::cuda::geometry::gpuTopoLayers gpu_layers(layers);
 
     // Allocate projection pointers on device

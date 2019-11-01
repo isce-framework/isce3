@@ -205,9 +205,6 @@ public:
     /** Set platform's orbit*/
     void orbit(const isce::core::Orbit & orbit) { _orbit = orbit; }
 
-    /** Set orbit interploation method*/
-    void orbitInterpolationMethod(isce::core::orbitInterpMethod orbitMethod);
-
     /** Set ellipsoid */
     void ellipsoid(const isce::core::Ellipsoid & ellipsoid) { _ellipsoid = ellipsoid; }
 
@@ -320,7 +317,6 @@ private:
     double _threshold;
     int _numiter;
     size_t _linesPerBlock = 2000;
-    isce::core::orbitInterpMethod _orbitMethod;
 
     // radar grids parameters
     isce::core::LUT2d<double> _doppler;

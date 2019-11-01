@@ -31,7 +31,7 @@ cdef class pyGeocodeBase:
     Return:
         None
     """
-    cdef Orbit * c_orbit
+    cdef Orbit c_orbit
     cdef Ellipsoid * c_ellipsoid
     cdef LUT2d[double] * c_doppler
     cdef string refepoch_string
@@ -95,9 +95,9 @@ cdef class pyGeocodeBase:
         self.demBlockMargin = demBlockMargin
         self.radarBlockMargin = radarBlockMargin
         self.interpMethod = self.demInterpMethods[interpMethod]
-        
+
         return
-    
+
     def radarGrid(self,
                   pyLUT2d doppler,
                   pyDateTime refEpoch,
@@ -163,7 +163,7 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
         cdef Geocode[float] c_geocode = Geocode[float]()
 
         # Set properties
-        c_geocode.orbit(deref(self.c_orbit))
+        c_geocode.orbit(self.c_orbit)
         c_geocode.ellipsoid(deref(self.c_ellipsoid))
         c_geocode.thresholdGeo2rdr(self.threshold)
         c_geocode.numiterGeo2rdr(self.numiter)
@@ -187,7 +187,7 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
         # Run geocoding
         c_geocode.geocode(deref(inputRaster.c_raster), deref(outputRaster.c_raster),
                           deref(demRaster.c_raster))
-        
+
         return
 
 
@@ -205,7 +205,7 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
         cdef Geocode[double] c_geocode = Geocode[double]()
 
         # Set properties
-        c_geocode.orbit(deref(self.c_orbit))
+        c_geocode.orbit(self.c_orbit)
         c_geocode.ellipsoid(deref(self.c_ellipsoid))
         c_geocode.thresholdGeo2rdr(self.threshold)
         c_geocode.numiterGeo2rdr(self.numiter)
@@ -229,7 +229,7 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
         # Run geocoding
         c_geocode.geocode(deref(inputRaster.c_raster), deref(outputRaster.c_raster),
                           deref(demRaster.c_raster))
-        
+
         return
 
 
@@ -247,7 +247,7 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
         cdef Geocode[complex_t[float]] c_geocode = Geocode[complex_t[float]]()
 
         # Set properties
-        c_geocode.orbit(deref(self.c_orbit))
+        c_geocode.orbit(self.c_orbit)
         c_geocode.ellipsoid(deref(self.c_ellipsoid))
         c_geocode.thresholdGeo2rdr(self.threshold)
         c_geocode.numiterGeo2rdr(self.numiter)
@@ -271,7 +271,7 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
         # Run geocoding
         c_geocode.geocode(deref(inputRaster.c_raster), deref(outputRaster.c_raster),
                           deref(demRaster.c_raster))
-        
+
         return
 
 

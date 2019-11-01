@@ -13,11 +13,14 @@ add_subdirectory(image)
 add_subdirectory(io)
 add_subdirectory(signal)
 add_subdirectory(matchtemplate)
-add_subdirectory(orbit_wip)
 
 # Allow for separable compilation and device code linking (-dc flag to nvcc)
 set_target_properties(${LISCECUDA} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 set_target_properties(${LISCECUDA} PROPERTIES CUDA_HOST_COMPILATION_CPP ON)
+
+# Allow calling host constexpr functions from device code
+target_compile_options(${LISCECUDA} PUBLIC
+        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 
 # Add library dependencies
 find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})

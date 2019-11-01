@@ -18,8 +18,6 @@ cdef class pyGeo2rdr:
         product (pyProduct):                 Configured Product.
         threshold (Optional[float]):         Threshold for iteration stop for slant range.
         numIterations (Optional[int]):       Max number of normal iterations.
-        orbitMethod (Optional[str]):         Orbit interpolation method
-                                                ('hermite', 'sch', 'legendre')
 
     Return:
         None
@@ -28,13 +26,6 @@ cdef class pyGeo2rdr:
     cdef Geo2rdr * c_geo2rdr
     cdef bool __owner
 
-    # Orbit interpolation methods
-    orbitInterpMethods = {
-        'hermite': orbitInterpMethod.HERMITE_METHOD,
-        'sch' :  orbitInterpMethod.SCH_METHOD,
-        'legendre': orbitInterpMethod.LEGENDRE_METHOD
-    }
-
     def __cinit__(self,
                   pyProduct product,
                   frequency='A',
@@ -42,8 +33,7 @@ cdef class pyGeo2rdr:
                   int numberAzimuthLooks=1,
                   int numberRangeLooks=1,
                   double threshold=1.0e-5,
-                  int numIterations=50,
-                  orbitMethod='hermite'):
+                  int numIterations=50):
         """
         Constructor takes in a product in order to retrieve relevant radar parameters.
         """
@@ -56,7 +46,6 @@ cdef class pyGeo2rdr:
         # Set processing options
         self.c_geo2rdr.threshold(threshold)
         self.c_geo2rdr.numiter(numIterations)
-        self.c_geo2rdr.orbitMethod(self.orbitInterpMethods[orbitMethod])
 
     def __dealloc__(self):
         if self.__owner:
@@ -66,14 +55,14 @@ cdef class pyGeo2rdr:
                 outputDir=None, double azshift=0.0, double rgshift=0.0):
         """
         Run geo2rdr.
-        
+
         Args:
             topoRaster (pyRaster):              Raster for input topo products.
             rgoffRaster (Optional[pyRaster]):   Raster for output range offset.
             azoffRaster (Optional[pyRaster]):   Raster for output azimuth offset.
             outputDir (Optional[str]):          String for output directory.
             azshift (Optional[double]):         Constant azimuth offset.
-            rgshift (Optional[double]):         Constant range offset. 
+            rgshift (Optional[double]):         Constant range offset.
 
         Return:
             None
