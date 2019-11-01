@@ -67,7 +67,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -97,7 +97,7 @@ Include headers</h1>
 </div><!-- fragment --><p>If one is looking to use this with other features from ISCE, you might need additional appropriate header files.</p>
 <h1><a class="anchor" id="geomorbit"></a>
 Orbit</h1>
-<p><a class="el" href="classisce_1_1core_1_1Orbit.html" title="Data structure to represent ECEF state vectors of imaging platform. ">isce::core::Orbit</a> is at the heart of all geometric manipulation in ISCE. This is just a time-tagged collection of state vectors. In this example, we will just walk through an example of constructing an Orbit object with a list of time-tagged position and velocity state vectors.</p>
+<p><a class="el" href="classisce_1_1core_1_1Orbit.html" title="Sequence of platform ephemeris samples (state vectors) with uniform temporal spacing, supporting efficient lookup and interpolation. ">isce::core::Orbit</a> is at the heart of all geometric manipulation in ISCE. This is just a time-tagged collection of state vectors. In this example, we will just walk through an example of constructing an Orbit object with a list of time-tagged position and velocity state vectors.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="geometry_8h.html">isce/geometry/geometry.h</a>&quot;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;sstream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;fstream&gt;</span></div>
@@ -126,16 +126,16 @@ Orbit</h1>
 <div class="line">        sv.velocity = vel;</div>
 <div class="line"></div>
 <div class="line">        <span class="comment">//Add state vector to orbit</span></div>
-<div class="line">        orbit.<a class="code" href="classisce_1_1core_1_1Orbit.html#a919190f179fb4d5f554e4966e6f59629">stateVectors</a>.push_back(sv);</div>
+<div class="line">        orbit.stateVectors.push_back(sv);</div>
 <div class="line">    }</div>
 <div class="line">    ifid.close();</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Assume that the state vectors are sorted on input.</span></div>
 <div class="line">    <span class="comment">//Prepare orbit object for computations</span></div>
-<div class="line">    orbit.<a class="code" href="classisce_1_1core_1_1Orbit.html#a422b78341f291777771a2a9cb9c3631d">reformatOrbit</a>( orbit.<a class="code" href="classisce_1_1core_1_1Orbit.html#a919190f179fb4d5f554e4966e6f59629">stateVectors</a>[0].date());</div>
+<div class="line">    orbit.reformatOrbit( orbit.stateVectors[0].date());</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Print orbit for debugging</span></div>
-<div class="line">    orbit.<a class="code" href="classisce_1_1core_1_1Orbit.html#a1fc5a396ec61ed052b713f636bf85601">printOrbit</a>();</div>
+<div class="line">    orbit.printOrbit();</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
@@ -193,7 +193,7 @@ Forward mapping - determining bounding boxes</h1>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> tt=0; tt&lt;timetags.size(); tt++)</div>
 <div class="line">    {</div>
 <div class="line">        <span class="comment">//Azimuth time to interpolate w.r.t reference epoch of orbit</span></div>
-<div class="line">        <span class="keywordtype">double</span> tintp = timetags[tt].secondsSinceEpoch(orbit.<a class="code" href="classisce_1_1core_1_1Orbit.html#a8332fb47800e74433493014f3c0e76b9">refEpoch</a>);</div>
+<div class="line">        <span class="keywordtype">double</span> tintp = timetags[tt].secondsSinceEpoch(orbit.refEpoch);</div>
 <div class="line"></div>
 <div class="line">        <span class="comment">//For each slant range</span></div>
 <div class="line">        <span class="keywordflow">for</span>(<span class="keywordtype">int</span> rr=0; rr&lt;ranges.size(); rr++)</div>
@@ -211,7 +211,7 @@ Forward mapping - determining bounding boxes</h1>
 <div class="line">                <a class="code" href="classisce_1_1geometry_1_1DEMInterpolator.html">isce::geometry::DEMInterpolator</a> constDEM(zrange[zz]);</div>
 <div class="line"></div>
 <div class="line">                <span class="comment">//Map target to DEM assuming Zero Doppler geometry</span></div>
-<div class="line">                <span class="keywordtype">int</span> status = <a class="code" href="namespaceisce_1_1geometry.html#ac37b2844b0421107222960c42e6127b7">isce::geometry::rdr2geo</a>(tintp,  <span class="comment">//aztime</span></div>
+<div class="line">                <span class="keywordtype">int</span> status = <a class="code" href="namespaceisce_1_1geometry.html#a9d6ae859de6137a9c54ebec183c73a5e">isce::geometry::rdr2geo</a>(tintp,  <span class="comment">//aztime</span></div>
 <div class="line">                                        rng,    <span class="comment">//slant range</span></div>
 <div class="line">                                        0.,     <span class="comment">//doppler</span></div>
 <div class="line">                                        orbit,</div>
@@ -316,7 +316,7 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line">                                 1.0e-8);</div>
 <div class="line"></div>
 <div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Target at: &quot;</span> &lt;&lt; targets[tt][0] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; targets[tt][1] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; targets[tt][2] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Estimated line number: &quot;</span> &lt;&lt; (aztime - mode.startAzTime().secondsSinceEpoch(orbit.<a class="code" href="classisce_1_1core_1_1Orbit.html#a8332fb47800e74433493014f3c0e76b9">refEpoch</a>)) * mode.prf() /   mode.numberAzimuthLooks() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Estimated line number: &quot;</span> &lt;&lt; (aztime - mode.startAzTime().secondsSinceEpoch(orbit.refEpoch)) * mode.prf() /   mode.numberAzimuthLooks() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">        std::cout &lt;&lt; <span class="stringliteral">&quot;Estimated pixel number: &quot;</span> &lt;&lt; (rng - mode.startingRange())/mode.rangePixelSpacing() / mode.numberRangeLooks() &lt;&lt; <span class="stringliteral">&quot;\n\n&quot;</span>;</div>
 <div class="line">    }</div>
 <div class="line"></div>
