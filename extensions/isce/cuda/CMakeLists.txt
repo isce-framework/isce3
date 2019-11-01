@@ -36,10 +36,6 @@ include_directories(${CEREAL_SRC_INCLUDEDIR}
                     ${HDF5_INCLUDE_DIR}
                     ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
-# needed for eigen comparison operators in device code
-target_compile_options(${LISCECUDA} PUBLIC
-    $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
-
 # Install shared library
 install(TARGETS ${LISCECUDA}
         DESTINATION ${ISCE_LIBDIR}
