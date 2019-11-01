@@ -3,7 +3,7 @@ var searchData=
   ['peg',['Peg',['../classisce_1_1core_1_1Peg.html',1,'isce::core']]],
   ['peg',['Peg',['../classisce_1_1core_1_1Peg.html#af105e8e35fd480f28d3f53ba4a6e8901',1,'isce::core::Peg::Peg(double lt, double ln, double hd)'],['../classisce_1_1core_1_1Peg.html#ab003db648f2ed18627c3b39def1c4b88',1,'isce::core::Peg::Peg()'],['../classisce_1_1core_1_1Peg.html#a5c5bedeb2bc30d6c64b7f800229736ec',1,'isce::core::Peg::Peg(const Peg &amp;p)']]],
   ['pegtrans',['Pegtrans',['../structisce_1_1core_1_1Pegtrans.html',1,'isce::core']]],
-  ['pegtrans',['Pegtrans',['../structisce_1_1core_1_1Pegtrans.html#a512ae818a779c578311515cbdaf76755',1,'isce::core::Pegtrans']]],
+  ['pegtrans',['Pegtrans',['../structisce_1_1core_1_1Pegtrans.html#a512ae818a779c578311515cbdaf76755',1,'isce::core::Pegtrans::Pegtrans()'],['../structisce_1_1core_1_1Pegtrans.html#ae2e96765762db13bfab887032715ef0a',1,'isce::core::Pegtrans::Pegtrans(const Pegtrans &amp;p)']]],
   ['perpendicularbaseline',['perpendicularBaseline',['../classisce_1_1core_1_1Baseline.html#aaebfa84c726d1ab2e030a915b9e155be',1,'isce::core::Baseline']]],
   ['phasegradwinsize',['phaseGradWinSize',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#ac96fe11372b34ba069b0b938f01375ea',1,'isce::unwrap::icu::ICU::phaseGradWinSize() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#ade875b5b321d0df7f71a98073eefbddc',1,'isce::unwrap::icu::ICU::phaseGradWinSize(const int)']]],
   ['phass',['Phass',['../classisce_1_1unwrap_1_1phass_1_1Phass.html#aa32d49d056f442c5ef00f9991f39e46c',1,'isce::unwrap::phass::Phass']]],
