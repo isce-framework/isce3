@@ -27,7 +27,7 @@ var searchData=
   ['setvalue',['setValue',['../classisce_1_1io_1_1Raster.html#a291622cc0ce5cb441a959ea55ae746d2',1,'isce::io::Raster']]],
   ['shape',['shape',['../classisce_1_1core_1_1Cube.html#ac51ca91e3a66062ba76d9be93fbdff3f',1,'isce::core::Cube::shape()'],['../classisce_1_1core_1_1Matrix.html#a1eee59526142636d5116873f1c65113f',1,'isce::core::Matrix::shape()']]],
   ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html#afc9c8c9f9cfe1701558205600ab7b1f2',1,'isce::signal::Signal::Signal()'],['../classisce_1_1signal_1_1Signal.html#a759653d297ab23e66963aebec0cdafc0',1,'isce::signal::Signal::Signal(int nthreads)']]],
-  ['sinc',['sinc',['../namespaceisce_1_1core.html#ae73b56f5a94e197486f4cd9f99fa2be3',1,'isce::core']]],
+  ['sinc',['sinc',['../namespaceisce_1_1core.html#afed2beebd0911fb7bd95a8197a998009',1,'isce::core']]],
   ['sinc2dinterpolator',['Sinc2dInterpolator',['../classisce_1_1core_1_1Sinc2dInterpolator.html#a623e07dc83dd6a14c7b976adfbcda11e',1,'isce::core::Sinc2dInterpolator']]],
   ['sinc_5feval',['sinc_eval',['../namespaceisce_1_1core.html#abb0055edd764350e6e27aa3cf77c3eb4',1,'isce::core']]],
   ['sinlook',['sinLook',['../classisce_1_1core_1_1Baseline.html#adb423fd3c5e96934feb1457d40e95f50',1,'isce::core::Baseline']]],
