@@ -107,8 +107,8 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     const Vec3 xyz11 = ellps.lonLatToXyz(llh11);
 
     // Compute normal vectors for each facet
-    const Vec3 normalFacet1 = normalPlane(xyz00, xyz10, xyz01);
-    const Vec3 normalFacet2 = normalPlane(xyz01, xyz10, xyz11);
+    const Vec3 normalFacet1 = isce::core::normalPlane(xyz00, xyz10, xyz01);
+    const Vec3 normalFacet2 = isce::core::normalPlane(xyz01, xyz10, xyz11);
 
     // Side lengths
     const double p00_01 = (xyz00 - xyz01).norm();
@@ -129,7 +129,7 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     const Vec3 xyz_mid = ellps.lonLatToXyz(inputLLH);
     Vec3 xyz_plat;
     orbit.interpolate(&xyz_plat, nullptr, a, OrbitInterpBorderMode::FillNaN);
-    lookXYZ = (xyz_plat - xyz_mid).unitVec();
+    lookXYZ = (xyz_plat - xyz_mid).normalized();
 
     // Compute dot product between each facet and look vector
     const double cosIncFacet1 = lookXYZ.dot(normalFacet1);

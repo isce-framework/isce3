@@ -6,6 +6,7 @@
 #include "gpuTopo.h"
 
 #include <isce/core/Basis.h>
+#include <isce/core/DenseMatrix.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Pixel.h>
 #include <isce/error/ErrorCode.h>
@@ -63,7 +64,6 @@ void setOutputTopoLayers(const Vec3& targetLLH,
                          const isce::cuda::geometry::gpuDEMInterpolator & demInterp) {
 
     Vec3 targetXYZ, enu;
-    isce::core::cartmat_t enumat;
     const double degrees = 180.0 / M_PI;
 
     // Convert lat/lon values to output coordinate system
@@ -119,7 +119,7 @@ void setOutputTopoLayers(const Vec3& targetLLH,
 
     // Calculate psi angle between image plane and local slope
     Vec3 n_img_enu, n_trg_enu;
-    const Vec3 n_imghat = satToGround.cross(vel).unitVec() * -lookSide;
+    const Vec3 n_imghat = satToGround.cross(vel).normalized() * -lookSide;
     n_img_enu = xyz2enu.dot(n_imghat);
     n_trg_enu[0] = -alpha;
     n_trg_enu[1] = -beta;

@@ -73,7 +73,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
     // coordinates.
 
     // Compute normalized velocity
-    const Vec3 vhat = vel.unitVec();
+    const Vec3 vhat = vel.normalized();
 
     // Unpack TCN basis vectors
     const Vec3& that = TCNbasis.x0();

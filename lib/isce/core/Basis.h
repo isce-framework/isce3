@@ -28,9 +28,9 @@ class isce::core::Basis {
          * @param[in] p position vector
          * @param[in] v position vector */
         CUDA_HOSTDEV explicit Basis(const Vec3& p, const Vec3& v) {
-            const Vec3 n =         -p.unitVec();
-            const Vec3 c = n.cross(v).unitVec();
-            const Vec3 t = c.cross(n).unitVec();
+            const Vec3 n =         -p.normalized();
+            const Vec3 c = n.cross(v).normalized();
+            const Vec3 t = c.cross(n).normalized();
             _x0 = t;
             _x1 = c;
             _x2 = n;

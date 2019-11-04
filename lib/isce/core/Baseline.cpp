@@ -33,13 +33,13 @@ void Baseline::initBasis(double t)
 
     // Get normalized vectors
     const Vec3 vel_norm = vel / _velocityMagnitude;
-    _rhat = xyz.unitVec();
+    _rhat = xyz.normalized();
 
     // Compute cross-track vectors
-    _chat = _rhat.cross(vel_norm).unitVec();
+    _chat = _rhat.cross(vel_norm).normalized();
 
     // Compute velocity vector perpendicular to cross-track vector
-    _vhat = _chat.cross(_rhat).unitVec();
+    _vhat = _chat.cross(_rhat).normalized();
 }
 
 Vec3 Baseline::calculateBasisOffset(const Vec3 &position) const

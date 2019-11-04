@@ -16,6 +16,7 @@
 
 #include <isce/core/Constants.h>
 #include <isce/core/DateTime.h>
+#include <isce/core/DenseMatrix.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/Projections.h>
@@ -216,8 +217,8 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radar_gr
             const Vec3 xyz11 = ellps.lonLatToXyz(proj->inverse(dem11));
 
             // Compute normal vectors for each facet
-            const Vec3 normal_facet_1 = normalPlane(xyz00, xyz01, xyz10);
-            const Vec3 normal_facet_2 = normalPlane(xyz01, xyz11, xyz10);
+            const Vec3 normal_facet_1 = isce::core::normalPlane(xyz00, xyz01, xyz10);
+            const Vec3 normal_facet_2 = isce::core::normalPlane(xyz01, xyz11, xyz10);
 
             // Side lengths
             const double p00_01 = (xyz00 - xyz01).norm();
@@ -238,7 +239,7 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radar_gr
             const Vec3 xyz_mid = ellps.lonLatToXyz(inputLLH);
             isce::core::cartesian_t xyz_plat, vel;
             orbit.interpolate(&xyz_plat, &vel, a, OrbitInterpBorderMode::FillNaN);
-            const Vec3 lookXYZ = (xyz_plat - xyz_mid).unitVec();
+            const Vec3 lookXYZ = (xyz_plat - xyz_mid).normalized();
 
             // Compute dot product between each facet and look vector
             const double cos_inc_facet_1 = lookXYZ.dot(normal_facet_1);

@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <isce/core/forward.h>
+#include <isce/core/Common.h>
 #include <isce/core/Constants.h>
 #include <isce/cuda/core/forward.h>
 

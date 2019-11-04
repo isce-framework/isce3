@@ -6,6 +6,7 @@
 #pragma once
 
 #include <isce/core/forward.h>
+#include <isce/core/Common.h>
 
 #include <cmath>
 

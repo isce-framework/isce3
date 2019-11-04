@@ -11,6 +11,7 @@
 #include <vector>
 #include <gtest/gtest.h>
 
+#include <isce/core/DenseMatrix.h>
 #include "isce/core/Utilities.h"
 #include "isce/core/EulerAngles.h"
 

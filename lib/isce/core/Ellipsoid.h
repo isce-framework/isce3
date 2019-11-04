@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cmath>
 #include "Constants.h"
+#include "Vector.h"
 
 /** Data structure to store Ellipsoid information. 
  *

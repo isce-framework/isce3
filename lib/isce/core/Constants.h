@@ -18,10 +18,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "DenseMatrix.h"
-
-// Macro wrapper to check vector lengths (adds calling function and variable
-// name information to the exception)
+// Macro wrapper to check vector lengths (adds calling function and variable name information to the
+// exception)
 #define checkVecLen(v,l) isce::core::checkVecLenDebug(v,l,#v,__PRETTY_FUNCTION__)
 #define check2dVecLen(v,l,w) isce::core::check2dVecLenDebug(v,l,w,#v,__PRETTY_FUNCTION__)
 

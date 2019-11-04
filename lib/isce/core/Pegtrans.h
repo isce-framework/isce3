@@ -31,7 +31,8 @@ namespace isce { namespace core {
         double radcur;
 
         /** Empty constructor */
-        Pegtrans() {}
+        Pegtrans() : mat    {{}},
+                     matinv {{}} {}
 
         /** Copy constructor */
         Pegtrans(const Pegtrans &p) : mat(p.mat), matinv(p.matinv), ov(p.ov), radcur(p.radcur) {}
