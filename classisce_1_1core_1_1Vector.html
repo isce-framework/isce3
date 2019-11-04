@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>ISCE: isce::core::Vector&lt; int &gt; Class Template Reference</title>
+<title>ISCE: isce::core::Vector&lt; int, typename &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -90,90 +90,19 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#friends">Friends</a> &#124;
 <a href="classisce_1_1core_1_1Vector-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">isce::core::Vector&lt; int &gt; Class Template Reference</div>  </div>
+<div class="title">isce::core::Vector&lt; int, typename &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
-Public Member Functions</h2></td></tr>
-<tr class="memitem:a644e87d2213be64acbc4a08123795b76"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a644e87d2213be64acbc4a08123795b76"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (const std::array&lt; double, N &gt; &amp;other)</td></tr>
-<tr class="separator:a644e87d2213be64acbc4a08123795b76"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f532d0a72c67ba469bc8280e27b7ef1"><td class="memTemplParams" colspan="2"><a class="anchor" id="a0f532d0a72c67ba469bc8280e27b7ef1"></a>
-template&lt;typename... Ts&gt; </td></tr>
-<tr class="memitem:a0f532d0a72c67ba469bc8280e27b7ef1"><td class="memTemplItemLeft" align="right" valign="top">CUDA_HOSTDEV constexpr&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Vector</b> (Ts...vals)</td></tr>
-<tr class="separator:a0f532d0a72c67ba469bc8280e27b7ef1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e3d2eaa48457a84a6126ad52851bea9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0e3d2eaa48457a84a6126ad52851bea9"></a>
-CUDA_HOSTDEV constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (const <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt; &amp;other)</td></tr>
-<tr class="separator:a0e3d2eaa48457a84a6126ad52851bea9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab1ea62839d24e9929951a79c76bd5305"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab1ea62839d24e9929951a79c76bd5305"></a>
-CUDA_HOSTDEV double &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (int i)</td></tr>
-<tr class="separator:ab1ea62839d24e9929951a79c76bd5305"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11672ff5246ed3391943c8c744df4447"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a11672ff5246ed3391943c8c744df4447"></a>
-CUDA_HOSTDEV constexpr double&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (int i) const </td></tr>
-<tr class="separator:a11672ff5246ed3391943c8c744df4447"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a277169c7735c07e02e1c63474fd85730"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a277169c7735c07e02e1c63474fd85730"></a>
-CUDA_HOSTDEV constexpr <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a><br class="typebreak"/>
-&lt; N &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (const <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt; &amp;v)</td></tr>
-<tr class="separator:a277169c7735c07e02e1c63474fd85730"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a68a5ae09bd50c4bf32fbb548a1c98833"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a68a5ae09bd50c4bf32fbb548a1c98833"></a>
-CUDA_HOSTDEV constexpr <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>operator+</b> (const <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt; &amp;v) const </td></tr>
-<tr class="separator:a68a5ae09bd50c4bf32fbb548a1c98833"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0fa8ce6ff6e2489aa8e357ab66e810e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab0fa8ce6ff6e2489aa8e357ab66e810e"></a>
-CUDA_HOSTDEV constexpr <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>operator-</b> (const <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt; &amp;v) const </td></tr>
-<tr class="separator:ab0fa8ce6ff6e2489aa8e357ab66e810e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a298d9fc1c0044eb59da91b194e06b999"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a298d9fc1c0044eb59da91b194e06b999"></a>
-CUDA_HOSTDEV constexpr <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>operator-</b> () const </td></tr>
-<tr class="separator:a298d9fc1c0044eb59da91b194e06b999"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d75bc15184fddd3be5d2852fa4c300f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d75bc15184fddd3be5d2852fa4c300f"></a>
-CUDA_HOSTDEV constexpr <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> (const double f) const </td></tr>
-<tr class="separator:a0d75bc15184fddd3be5d2852fa4c300f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6b9b8e0f9ee1ea5c5469cd25fba04ab2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6b9b8e0f9ee1ea5c5469cd25fba04ab2"></a>
-CUDA_HOSTDEV constexpr <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>operator/</b> (const double d) const </td></tr>
-<tr class="separator:a6b9b8e0f9ee1ea5c5469cd25fba04ab2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf6ca132d1be9e9831365b8595d2b459"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf6ca132d1be9e9831365b8595d2b459"></a>
-CUDA_HOSTDEV <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (const double d)</td></tr>
-<tr class="separator:abf6ca132d1be9e9831365b8595d2b459"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeb8559c22421255373444e03b2cc972f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeb8559c22421255373444e03b2cc972f"></a>
-CUDA_HOSTDEV constexpr double&#160;</td><td class="memItemRight" valign="bottom"><b>norm</b> () const </td></tr>
-<tr class="separator:aeb8559c22421255373444e03b2cc972f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a243052ac00f177c1db72feba35b3c62e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a243052ac00f177c1db72feba35b3c62e"></a>
-CUDA_HOSTDEV constexpr double&#160;</td><td class="memItemRight" valign="bottom"><b>dot</b> (const <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt; &amp;v) const </td></tr>
-<tr class="separator:a243052ac00f177c1db72feba35b3c62e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a375947a20a5a07f011fba643dfb7ad29"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a375947a20a5a07f011fba643dfb7ad29"></a>
-CUDA_HOSTDEV constexpr <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>cross</b> (const <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt; &amp;v) const </td></tr>
-<tr class="separator:a375947a20a5a07f011fba643dfb7ad29"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad799db575efb2de70d2d8b1d6a72f363"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad799db575efb2de70d2d8b1d6a72f363"></a>
-CUDA_HOSTDEV constexpr <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>unitVec</b> () const </td></tr>
-<tr class="separator:ad799db575efb2de70d2d8b1d6a72f363"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aba7fd2b78da9c5301946b2c0a8b9e7bc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aba7fd2b78da9c5301946b2c0a8b9e7bc"></a>
-CUDA_HOSTDEV double *&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> ()</td></tr>
-<tr class="separator:aba7fd2b78da9c5301946b2c0a8b9e7bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6cf3c6852e904bc5fd96dd167c4c6639"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6cf3c6852e904bc5fd96dd167c4c6639"></a>
-CUDA_HOSTDEV const double *&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () const </td></tr>
-<tr class="separator:a6cf3c6852e904bc5fd96dd167c4c6639"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae81851e707cbea83eddb8921ed959879"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae81851e707cbea83eddb8921ed959879"></a>
-CUDA_HOST const double *&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () const </td></tr>
-<tr class="separator:ae81851e707cbea83eddb8921ed959879"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a51592fa6cab7a4e672db2da8f5a64ddf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51592fa6cab7a4e672db2da8f5a64ddf"></a>
-CUDA_HOST const double *&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () const </td></tr>
-<tr class="separator:a51592fa6cab7a4e672db2da8f5a64ddf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2dae77816dd2440bd0aa22eae4e4bc5c"><td class="memTemplParams" colspan="2"><a class="anchor" id="a2dae77816dd2440bd0aa22eae4e4bc5c"></a>
-template&lt;&gt; </td></tr>
-<tr class="memitem:a2dae77816dd2440bd0aa22eae4e4bc5c"><td class="memTemplItemLeft" align="right" valign="top">CUDA_HOSTDEV constexpr <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; 3 &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>cross</b> (const <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; 3 &gt; &amp;v) const</td></tr>
-<tr class="separator:a2dae77816dd2440bd0aa22eae4e4bc5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
-Friends</h2></td></tr>
-<tr class="memitem:ac16bfff239ef8c43faea01f795bc2ca6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac16bfff239ef8c43faea01f795bc2ca6"></a>
-CUDA_HOSTDEV constexpr friend <br class="typebreak"/>
-<a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> (const double f, const <a class="el" href="classisce_1_1core_1_1Vector.html">Vector</a>&lt; N &gt; &amp;v)</td></tr>
-<tr class="separator:ac16bfff239ef8c43faea01f795bc2ca6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
+<div class="dynheader">
+Inheritance diagram for isce::core::Vector&lt; int, typename &gt;:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="classisce_1_1core_1_1Vector.png" usemap="#isce::core::Vector&lt; int, typename &gt;_map" alt=""/>
+  <map id="isce::core::Vector&lt; int, typename &gt;_map" name="isce::core::Vector&lt; int, typename &gt;_map">
+</map>
+ </div></div>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>/home/conda/isce/lib/isce/core/<a class="el" href="core_2forward_8h_source.html">forward.h</a></li>
 <li>/home/conda/isce/lib/isce/core/<a class="el" href="Vector_8h_source.html">Vector.h</a></li>
