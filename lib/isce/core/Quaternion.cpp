@@ -12,6 +12,7 @@
 #include <cmath>
 #include <map>
 
+#include <Eigen/Geometry>
 #include <pyre/journal.h>
 
 #include "DenseMatrix.h"
@@ -31,47 +32,46 @@ Quaternion(const std::vector<double> & time, const std::vector<double> & quatern
     this->data(time, quaternions);
 }
 
+
+Eigen::Quaternion<double>
+isce::core::Quaternion::_interp(double t) const
+{
+    // Check time bounds; error if out of bonds
+    const int n = nVectors();
+    if (t < _time[0] || t > _time[n-1]) {
+        pyre::journal::error_t errorChannel("isce.core.Quaternion");
+        errorChannel
+            << pyre::journal::at(__HERE__)
+            << "Requested out-of-bounds time."
+            << pyre::journal::endl;
+    }
+
+    // Find interval containing desired point.
+    // FIXME Use binary search or require equal time steps.
+    int i;
+    for (i = 1; i < n; ++i)
+        if (_time[i] >= t)
+            break;
+
+    // Slerp between the nearest data points.
+    const double tq = (t - _time[i-1]) / (_time[i] - _time[i-1]);
+    Eigen::Quaternion q0(&_qvec[(i-1)*4]);
+    Eigen::Quaternion q1(&_qvec[i*4]);
+    return q0.slerp(tq, q1);
+}
+
+
 // Return vector of Euler angles evaluated at a given time
-/** @param[in] tintp Seconds since reference epoch 
+/** @param[in] tintp Seconds since reference epoch
   * @param[out] oyaw Interpolated yaw angle
   * @param[out] opitch Interpolated pitch angle
   * @param[out] oroll Interpolated roll angle */
 void
-isce::core::Quaternion::ypr(double tintp, double & yaw, double & pitch, double & roll) {
+isce::core::Quaternion::ypr(double tintp, double & yaw, double & pitch, double & roll)
+{
+    auto q = _interp(tintp);
 
-    // Check time bounds; warn if invalid time requested
-    const int n = nVectors();
-    if (tintp < _time[0] || tintp > _time[n-1]) {
-        pyre::journal::warning_t warnChannel("isce.core.Quaternion");
-        warnChannel
-            << pyre::journal::at(__HERE__)
-            << "Requested out-of-bounds time. Attitude will be invalid."
-            << pyre::journal::endl;
-        return;
-    }
-
-    // For now, we only implement nearest neighbor
-    int idx = -1;
-    for (int i = 0; i < n; ++i) {
-        if (_time[i] >= tintp) {
-            idx = i;
-            break;
-        }
-    }
-
-    // Get quaternion elements
-    double q0 = _qvec[idx*4 + 0];
-    double q1 = _qvec[idx*4 + 1];
-    double q2 = _qvec[idx*4 + 2];
-    double q3 = _qvec[idx*4 + 3];
-
-    // Compute quaternion norm
-    const double qmod = std::sqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
-    // Normalize elements
-    q0 /= qmod;
-    q1 /= qmod;
-    q2 /= qmod;
-    q3 /= qmod;
+    const double q0 = q.x(), q1 = q.y(), q2 = q.z(), q3 = q.w();
 
     // Compute Euler angles
     const double r11 = 2.0 * (q1*q2 + q0*q3);
@@ -89,30 +89,14 @@ isce::core::cartmat_t
 isce::core::Quaternion::
 rotmat(double tintp, const std::string, double dq0, double dq1, double dq2, double) {
 
-    // Check time bounds; error if out of bonds
-    const int n = nVectors();
-    if (tintp < _time[0] || tintp > _time[n-1]) {
-        pyre::journal::error_t errorChannel("isce.core.Quaternion");
-        errorChannel
-            << pyre::journal::at(__HERE__)
-            << "Requested out-of-bounds time."
-            << pyre::journal::endl;
-    }
-
-    // For now, we only implement nearest neighbor
-    int idx = -1;
-    for (int i = 0; i < n; ++i) {
-        if (_time[i] >= tintp) {
-            idx = i;
-            break;
-        }
-    }
+    auto q = _interp(tintp);
 
     // Get quaternion elements
-    const double a = _qvec[idx*4 + 0] + dq0;
-    const double b = _qvec[idx*4 + 1] + dq1;
-    const double c = _qvec[idx*4 + 2] + dq2;
-    const double d = _qvec[idx*4 + 3] + dq2;
+    const double
+        a = q.x() + dq0,
+        b = q.y() + dq1,
+        c = q.z() + dq2,
+        d = q.w() + dq2;  // WTF repeating dq2
 
     // Construct rotation matrix
     cartmat_t R{{

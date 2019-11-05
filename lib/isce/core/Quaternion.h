@@ -6,6 +6,8 @@
 //
 
 #pragma once
+#define EIGEN_MPL2_ONLY
+#include <Eigen/Geometry>
 
 #include "forward.h"
 
@@ -48,4 +50,5 @@ class isce::core::Quaternion : public isce::core::Attitude {
     private:
         std::vector<double> _time;
         std::vector<double> _qvec;
+        Eigen::Quaternion<double> _interp(double t) const;
 };
