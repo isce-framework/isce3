@@ -1,1 +1,2 @@
 add_isce_test(gpuResampSlc)
+add_dependencies(gpuResampSlc geom_test_data)
