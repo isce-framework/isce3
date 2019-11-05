@@ -14,6 +14,7 @@ class DenseMatrix : public Eigen::Matrix<T, N, N> {
     using super_t = Eigen::Matrix<T, N, N>;
     using super_t::Matrix;
 public:
+    DenseMatrix() = default;
     CUDA_HOSTDEV auto operator[](int i)       { return this->row(i); }
     CUDA_HOSTDEV auto operator[](int i) const { return this->row(i); }
 
