@@ -75,8 +75,8 @@ TEST(Geo2rdrTest, CheckResults) {
         }
     }
     // Check errors; azimuth errors tend to be a little larger
-    ASSERT_TRUE(rg_error < 1.0e-10);
-    ASSERT_TRUE(az_error < 1.0e-10);
+    EXPECT_LT(rg_error, 1e-9);
+    EXPECT_LT(az_error, 1e-9);
 }
 
 int main(int argc, char * argv[]) {
