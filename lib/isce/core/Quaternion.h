@@ -20,7 +20,14 @@ class isce::core::Quaternion : public isce::core::Attitude {
         /**Default constructor*/
         Quaternion();
 
-        /** Constructor using vectors of time and quaternions */
+        /** Constructor using vectors of time and quaternions
+         *
+         * @param[in] time          Time tags, seconds since some epoch.
+         *                          Must be strictly increasing.
+         * @param[in] quaternions   Unit quaternions representing antenna to XYZ
+         *                          rotation.  Packed in size N*4 vector with
+         *                          each quaternion contiguous.
+         */
         Quaternion(const std::vector<double> & time, const std::vector<double> & quaternions);
 
         /** Set all quaternion elements from a vector*/

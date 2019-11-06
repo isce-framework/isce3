@@ -12,7 +12,6 @@
 #include <cmath>
 #include <map>
 
-#include <Eigen/Geometry>
 #include <pyre/journal.h>
 
 #include "DenseMatrix.h"
@@ -47,6 +46,7 @@ isce::core::Quaternion::_interp(double t) const
     }
 
     // Find interval containing desired point.
+    // _time setter guarantees monotonic.
     // FIXME Use binary search or require equal time steps.
     int i;
     for (i = 1; i < n; ++i)
@@ -152,7 +152,7 @@ factoredYPR(double tintp,
 }
 
 // Set quaternion elements from vectors
-/** @param[in] time Vector of seconds since epoch
+/** @param[in] time Vector of seconds since epoch, strictly increasing.
   * @param[in] quaternions Flattened vector of quaternions per time epoch */
 void isce::core::Quaternion::data(const std::vector<double>& time,
                                   const std::vector<double>& quaternions) {
@@ -164,6 +164,15 @@ void isce::core::Quaternion::data(const std::vector<double>& time,
             << pyre::journal::at(__HERE__)
             << "Inconsistent vector sizes"
             << pyre::journal::endl;
+    }
+    // Require strictly monotonic time stamps.
+    for (int i=1; i<time.size(); ++i) {
+        double dt = time[i] - time[i-1];
+        if (dt <= 0.0) {
+            pyre::journal::error_t errorChannel("isce.core.Quaternion");
+            errorChannel << pyre::journal::at(__HERE__)
+                << "Need strictly increasing time tags." << pyre::journal::endl;
+        }
     }
     // Set data
     _time = time;
