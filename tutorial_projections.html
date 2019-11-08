@@ -39,6 +39,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li class="current"><a href="pages.html"><span>Related&#160;Pages</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
+      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li><a href="files.html"><span>Files</span></a></li>
       <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
       <li><a href="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li>
@@ -64,7 +67,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -101,13 +104,13 @@ Include headers</h1>
 Creating a projection object</h1>
 <p>ISCE projection objects are created exclusively using the EPSG codes (see <a href="file:///Users/agram/tools/isce_git/cmake/build/doc/html/overview_raster.html#multi_row">Raster overview</a>). For example</p>
 <div class="fragment"><div class="line"><span class="comment">//Creates interface to standard WGS84 Lon/Lat system</span></div>
-<div class="line">isce::core::ProjectionBase *llh = isce::core::createProj(4326);</div>
+<div class="line"><a class="code" href="structisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> *llh = isce::core::createProj(4326);</div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Creates interface to UTM 20N</span></div>
-<div class="line">isce::core::ProjectionBase *utm20n = isce::core::createProj(32620);</div>
+<div class="line"><a class="code" href="structisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> *utm20n = isce::core::createProj(32620);</div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Creates interface to Antarctic Polar Stereographic</span></div>
-<div class="line">isce::core::ProjectionBase *spolar = isce::core::createProj(3031);</div>
+<div class="line"><a class="code" href="structisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> *spolar = isce::core::createProj(3031);</div>
 </div><!-- fragment --><h1><a class="anchor" id="projuse"></a>
 Transforming coordinates</h1>
 <p>ISCE projection objects are similar to PJ datastructure in the <a href="https://proj4.org/">PROJ</a> framework. Internally, each projection object provides an interface to convert to and from a given coordinate system to Lon/Lat/Hae (radians).</p>
@@ -115,13 +118,13 @@ Transforming coordinates</h1>
 Forward transform</h2>
 <p>This is accomplished via the isce::core::ProjectionBase::fwd method. We refer to transformation of a Lon/Lat/Hae (radians) to projection of interest as Forward transformation. For example</p>
 <div class="fragment"><div class="line"><span class="comment">//Create interface to Antarctic Polar Stereographic</span></div>
-<div class="line">isce::core::ProjectionBase *spolar = isce::core::createProj(3031);</div>
+<div class="line"><a class="code" href="structisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> *spolar = isce::core::createProj(3031);</div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Pick a point to transform - say south pole</span></div>
-<div class="line">isce::core::cartesian_t spole = {0., -M_PI/2.0, 0.};</div>
+<div class="line"><a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> spole = {0., -M_PI/2.0, 0.};</div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Transform the point </span></div>
-<div class="line">isce::core::cartesian_t xyz;</div>
+<div class="line"><a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> xyz;</div>
 <div class="line">spolar-&gt;fwd(llh, xyz);</div>
 <div class="line"></div>
 <div class="line">std::cout &lt;&lt; <span class="stringliteral">&quot;Coordinates in polar coordinates: &quot;</span> &lt;&lt; xyz[0] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; xyz[1] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; xyz[2] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
@@ -129,13 +132,13 @@ Forward transform</h2>
 Inverse</h2>
 <p>This is accomplished via the isce::core::ProjectionBase::inv method. We refer to the transformation from projection of interest to Lon/Lat/Hae (radians) as Inverse Transformation. For example</p>
 <div class="fragment"><div class="line"><span class="comment">//Create interface to Antarctic Polar Stereographic</span></div>
-<div class="line">isce::core::ProjectionBase *spolar = isce::core::createProj(3031);</div>
+<div class="line"><a class="code" href="structisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> *spolar = isce::core::createProj(3031);</div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Pick a point to transform - say south pole</span></div>
-<div class="line">isce::core::cartesian_t origin = {0., 0., 0.};</div>
+<div class="line"><a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> origin = {0., 0., 0.};</div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Transform the point </span></div>
-<div class="line">isce::core::cartesian_t llh;</div>
+<div class="line"><a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> llh;</div>
 <div class="line">spolar-&gt;inv(origin, llh);</div>
 <div class="line"></div>
 <div class="line">std::cout &lt;&lt; <span class="stringliteral">&quot;Coordinates in Lon/Lat/Hae (radians): &quot;</span> &lt;&lt; llh[0] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; llh[1] &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; llh[2] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
