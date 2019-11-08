@@ -6,6 +6,10 @@
 
 from cython.operator cimport dereference as deref
 from geometry cimport *
+from Cartesian cimport cartesian_t
+from Basis cimport Basis
+from libc.math cimport sin
+# NOTE get toVec3 and pyDEMInterpolator defs due to isceextension include order.
 
 
 def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyLUT2d doppler,
@@ -58,6 +62,47 @@ def py_rdr2geo(pyOrbit orbit,  pyEllipsoid ellps,
         llh[i] = targ_llh[i]
 
     return llh
+
+
+def py_rdr2geo_cone(
+        position = None,
+        axis = None,
+        double angle = 0.0,
+        double slantRange = 0.0,
+        pyEllipsoid ellipsoid = None,
+        pyDEMInterpolator demInterp = None,
+        side = None,
+        threshold = 0.05,
+        maxIter = 50,
+        extraIter = 50):
+    """See isce3.geometry.rdr2geo_cone for documentation.
+    """
+    # Handle duck typing of inputs.
+    cdef cartesian_t p = toVec3(position)
+    cdef cartesian_t v = toVec3(axis).normalized()
+    assert slantRange > 0.0, "Require slantRange > 0"
+    assert side in (1, -1), "Must specify left or right side"
+    cdef DEMInterpolator dem
+    if demInterp is not None:
+        dem = deref(demInterp.c_deminterp)
+    # NOTE The C++ interface is kind of busted since DEMInterpolator has its own
+    # implicit ellipsoid (but only when its loadDEM method has been called) and
+    # the Ellipsoid argument is assumed to describe the same one.  Usually
+    # everything is WGS84, at least.
+    cdef Ellipsoid ell
+    if ellipsoid is not None:
+        ell = deref(ellipsoid.c_ellipsoid)
+    
+    # Generate TCN basis using the given axis as the velocity.
+    cdef Basis tcn = Basis(p, v)
+    # Using this "doppler factor" accomplishes the desired task.
+    cdef Pixel pix = Pixel(slantRange, slantRange*sin(angle), 0)
+    
+    # Call C++ and return a Python array.
+    cdef cartesian_t llh
+    rdr2geo(pix, tcn, p, v, ell, dem, llh, side,threshold, maxIter, extraIter)
+    return [llh[i] for i in range(3)]
+
 
 def py_computeDEMBounds(pyOrbit orbit,
                         pyEllipsoid ellps,

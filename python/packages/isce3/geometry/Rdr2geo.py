@@ -38,3 +38,35 @@ def rdr2geo_point(azimuthTime=None,
 
     return llh
 
+def rdr2geo_cone(**kw):
+    """Solve for target position given radar position, range, and cone angle.
+    The cone is described by a generating axis and the complement of the angle
+    to that axis (e.g., angle=0 means a plane perpendicular to the axis).  The
+    vertex of the cone is at the radar position, as is the center of the range
+    sphere.
+    
+    Typically `axis` is the velocity vector and `angle` is the squint angle.
+    However, with this interface you can also set `axis` equal to the long
+    axis of the antenna, in which case `angle` is an azimuth angle.  In this
+    manner one can determine where the antenna boresight intersects the ground
+    at a given range and therefore determine the Doppler from pointing.
+    
+    All parameters are keyword arguments.  The following are required:
+        position        Position of antenna phase center, meters ECEF XYZ.
+        axis            Cone generating axis (typically velocity), ECEF XYZ.
+        slantRange      Range to target, meters.
+        side            Radar look direction, 1 (left) or -1 (right).
+    
+    These are optional:
+        angle           Complement of cone angle, radians, default=0 (plane).
+        ellipsoid       Ellipsoid of planet, type=pyEllipsoid, default=WGS84.
+        demInterp       Digital elevation model, meters above ellipsoid,
+                        type=pyDEMInterpolator, default=ellipsoid surface.
+        threshold       Range convergence threshold, meters, default=0.05.
+        maxIter         Maximum iterations, default=50.
+        extraIter       Additional iterations, default=50.
+    
+    Returns [longitude, latitude, height] of target relative to input ellipsoid,
+    with units [radians, radians, meters].
+    """
+    return isceextension.py_rdr2geo_cone(**kw)
