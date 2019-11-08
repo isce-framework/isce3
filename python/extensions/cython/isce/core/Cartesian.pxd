@@ -10,6 +10,8 @@ cdef extern from "isce/core/forward.h" namespace "isce::core" nogil:
     cdef cppclass Vec3 "isce::core::Vec3":
         Vec3() except +
         double& operator[](size_t)
+        Vec3 normalized()
+        void normalize()
 
     ctypedef Vec3 cartesian_t
 
