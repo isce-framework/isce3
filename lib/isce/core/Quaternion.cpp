@@ -55,8 +55,8 @@ isce::core::Quaternion::_interp(double t) const
 
     // Slerp between the nearest data points.
     const double tq = (t - _time[i-1]) / (_time[i] - _time[i-1]);
-    Eigen::Quaternion q0(&_qvec[(i-1)*4]);
-    Eigen::Quaternion q1(&_qvec[i*4]);
+    Eigen::Quaternion<double> q0(&_qvec[(i-1)*4]);
+    Eigen::Quaternion<double> q1(&_qvec[i*4]);
     return q0.slerp(tq, q1);
 }
 
