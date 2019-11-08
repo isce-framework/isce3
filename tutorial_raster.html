@@ -39,9 +39,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li class="current"><a href="pages.html"><span>Related&#160;Pages</span></a></li>
-      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
-      <li><a href="files.html"><span>Files</span></a></li>
       <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
       <li><a href="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li>
@@ -67,7 +64,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -96,10 +93,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li class="level1"><a href="#rasteradvanced">Advanced usage - direct access to GDAL dataset</a></li>
 </ul>
 </div>
-<div class="textblock"><p>ISCE delegates raster data handling to the Geospatial Data Abstraction Library (<a href="https://www.gdal.org">GDAL</a>). Hence, it uses all the conventions defined by the <a href="http://www.gdal.org/gdal_datamodel.html">GDAL data model</a> to simplify the interface. You will find detailed documentation of all the methods available here: <a class="el" href="classisce_1_1io_1_1Raster.html" title="Data structure meant to handle Raster I/O operations. ">isce::io::Raster</a>.</p>
+<div class="textblock"><p>ISCE delegates raster data handling to the Geospatial Data Abstraction Library (<a href="https://www.gdal.org">GDAL</a>). Hence, it uses all the conventions defined by the <a href="http://www.gdal.org/gdal_datamodel.html">GDAL data model</a> to simplify the interface. You will find detailed documentation of all the methods available here: isce::io::Raster.</p>
 <h1><a class="anchor" id="rasterinclude"></a>
 Include headers</h1>
-<p>In general, one only needs to include the <a class="el" href="classisce_1_1io_1_1Raster.html" title="Data structure meant to handle Raster I/O operations. ">isce::io::Raster</a> headerfile. </p>
+<p>In general, one only needs to include the isce::io::Raster headerfile. </p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &quot;isce/io/Raster.h&quot;</span></div>
 </div><!-- fragment --><p>If one is looking to create Rasters as part of your workflow, include appropriate the main GDAL header file. This will provide access to pre-defined data types and enum variables. </p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &quot;gdal.h&quot;</span></div>
@@ -109,26 +106,26 @@ Constructors</h1>
 <h2><a class="anchor" id="rasterreadonly"></a>
 Read-Only Mode</h2>
 <p>Raster imagery that already exists can be opened in Read-Only mode in a simple manner with just a string with the filename to be used.</p>
-<div class="fragment"><div class="line"><a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> raster(inputFilename);</div>
+<div class="fragment"><div class="line">isce::io::Raster raster(inputFilename);</div>
 </div><!-- fragment --><p>All the GDAL environment variables and driver settings are respected. One should also be able to access remotely located resources using vsicurl / vsis3 etc. One can also use standard GDAL interfaces to access raster imagery within NETCDF and HDF5 by treating them as subdatasets (see here for details on <a href="https://www.gdal.org/frmt_netcdf.html">NETCDF</a> and <a href="https://www.gdal.org/frmt_hdf5.html">HDF5</a>). For a complete list of supported formats in your GDAL build, refer to output of</p>
 <div class="fragment"><div class="line">&gt; gdalinfo --formats</div>
 </div><!-- fragment --><h2><a class="anchor" id="rasterupdate"></a>
 Update Mode</h2>
 <p>An existing GDAL-compatible raster can be opened in Update mode in ISCE as follows </p>
 <div class="fragment"><div class="line"><span class="comment">//Will need to include gdal.h for definition of GA_Update</span></div>
-<div class="line"><a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> raster(inputFilename, GA_Update)</div>
+<div class="line">isce::io::Raster raster(inputFilename, GA_Update)</div>
 </div><!-- fragment --><h2><a class="anchor" id="rastercreatetut"></a>
 Create new rasters</h2>
-<p>The most general interface to creation of rasters is exposed via <a class="el" href="classisce_1_1io_1_1Raster.html" title="Data structure meant to handle Raster I/O operations. ">isce::io::Raster(const std::string&amp; fname, size_t width, size_t length, size_t numBands, GDALDataType dtype, const std::string&amp; driverName)</a>.</p>
+<p>The most general interface to creation of rasters is exposed via isce::io::Raster(const std::string&amp; fname, size_t width, size_t length, size_t numBands, GDALDataType dtype, const std::string&amp; driverName).</p>
 <ol>
 <li>
 If numBands is not provided, it is assumed that user wants to create a single band raster. </li>
 <li>
-If no dtype is provided, it is assumed that user wants to work with <a class="el" href="namespaceisce_1_1io.html#a6c7ad9442efb45358a485a3d163aea44" title="Default GDAL data type used by Raster for creation. ">isce::io::defaultGDALDataType</a>. </li>
+If no dtype is provided, it is assumed that user wants to work with isce::io::defaultGDALDataType. </li>
 <li>
-If no driverName is provided, it is assumed that user wants to work with <a class="el" href="namespaceisce_1_1io.html#a5f9c8f1f6d23cbf0ba9e6bcb8b4edd89" title="Default GDAL driver used by Raster for creation. ">isce::io::defaultGDALDriver</a>. </li>
+If no driverName is provided, it is assumed that user wants to work with isce::io::defaultGDALDriver. </li>
 </ol>
-<p>See the full range of <a class="el" href="classisce_1_1io_1_1Raster.html" title="Data structure meant to handle Raster I/O operations. ">isce::io::Raster</a> constructors available for options. Note that you will need to include gdal.h to use GDAL type definitions.</p>
+<p>See the full range of isce::io::Raster constructors available for options. Note that you will need to include gdal.h to use GDAL type definitions.</p>
 <h2><a class="anchor" id="rastercreatedefault"></a>
 Default raster driver</h2>
 <p>When the user does not provide a driver name, ISCE currently assumes that user is requesting a flat binary file on disk with an associated VRT file (see <a href="overview_raster.html">Special drivers</a>).</p>
@@ -137,9 +134,9 @@ Default raster driver</h2>
 <h1><a class="anchor" id="rasterpixel"></a>
 Reading/Writing Single Pixel</h1>
 <p>Note that all pixels are indexed by the Top-Left corner (see <a href="overview_raster.html">Raster Overview</a>). One can read the data into a buffer of a type different from the storage format, as GDAL will handle the type translation.</p>
-<p>We use <a class="el" href="classisce_1_1io_1_1Raster.html#a6533d3603c8205e7c7a7d2ce74f413d6">isce::io::Raster::getValue</a> to read a pixel value from Band 2 of the raster image in this example. If band number is not provided, it is assumed to be 1.</p>
+<p>We use isce::io::Raster::getValue to read a pixel value from Band 2 of the raster image in this example. If band number is not provided, it is assumed to be 1.</p>
 <div class="fragment"><div class="line"><span class="comment">//Open existing tiff file</span></div>
-<div class="line"><a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> raster(<span class="stringliteral">&quot;test.tif&quot;</span>);</div>
+<div class="line">isce::io::Raster raster(<span class="stringliteral">&quot;test.tif&quot;</span>);</div>
 <div class="line"><span class="keywordtype">double</span> val;</div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Get value from Band 2</span></div>
@@ -147,18 +144,18 @@ Reading/Writing Single Pixel</h1>
 <div class="line"></div>
 <div class="line">std::cout &lt;&lt; <span class="stringliteral">&quot;Image dimensions: &quot;</span> &lt;&lt; raster.width() &lt;&lt; <span class="stringliteral">&quot; x &quot;</span> &lt;&lt; raster.length() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">std::cout &lt;&lt; <span class="stringliteral">&quot;Value at 5P, 10L = &quot;</span> &lt;&lt; val &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span></div>
-</div><!-- fragment --><p>Similarly, <a class="el" href="classisce_1_1io_1_1Raster.html#a291622cc0ce5cb441a959ea55ae746d2">isce::io::Raster::setValue</a> can be used to set a pixel value.</p>
+</div><!-- fragment --><p>Similarly, isce::io::Raster::setValue can be used to set a pixel value.</p>
 <div class="fragment"><div class="line"><span class="comment">//Create a Float32 raster of 100 pixels by 200 lines</span></div>
-<div class="line"><a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> raster(<span class="stringliteral">&quot;test.tif&quot;</span>, 100, 200,1, GDT_Float32, <span class="stringliteral">&quot;GTiff&quot;</span>); </div>
+<div class="line">isce::io::Raster raster(<span class="stringliteral">&quot;test.tif&quot;</span>, 100, 200,1, GDT_Float32, <span class="stringliteral">&quot;GTiff&quot;</span>); </div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Set value in Band 1</span></div>
 <div class="line"><span class="keywordtype">int</span> val = 25;</div>
 <div class="line">raster.setValue(val, 5,10);</div>
 </div><!-- fragment --><h1><a class="anchor" id="rasterline"></a>
 Reading/Writing Single line</h1>
-<p>ISCE Raster object can currently interact with 3 types of containers - a raw buffer (no size checks), std::vector and std::valarray. One can use any of the 3 interfaces with the <a class="el" href="classisce_1_1io_1_1Raster.html#a7b803f4981fed76e94ba254649069bd5" title="Read one line of data from given band to buffer, vector, or valarray. ">isce::io::Raster::getLine</a> and <a class="el" href="classisce_1_1io_1_1Raster.html#a5de4555b46e3abb100744fafdb12efd9" title="Write one line of data from buffer, vector, or valarray to given band. ">isce::io::Raster::setLine</a> methods.</p>
+<p>ISCE Raster object can currently interact with 3 types of containers - a raw buffer (no size checks), std::vector and std::valarray. One can use any of the 3 interfaces with the isce::io::Raster::getLine and isce::io::Raster::setLine methods.</p>
 <div class="fragment"><div class="line"><span class="comment">//Create a Float32 raster of 100 pixels by 200 lines</span></div>
-<div class="line"><a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> raster(<span class="stringliteral">&quot;test.vrt&quot;</span>, 100, 200);</div>
+<div class="line">isce::io::Raster raster(<span class="stringliteral">&quot;test.vrt&quot;</span>, 100, 200);</div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Create a vector and valarray for reading</span></div>
 <div class="line">std::vector&lt;float&gt; input(100);</div>
@@ -174,9 +171,9 @@ Reading/Writing Single line</h1>
 <div class="line">raster.getLine(output, 10);</div>
 </div><!-- fragment --><h1><a class="anchor" id="rasterblock"></a>
 Reading/Writing Single block</h1>
-<p>Like single line I/O, one can use any of the 3 interfaces (pointer, vector, valarray) with the <a class="el" href="classisce_1_1io_1_1Raster.html#acb7498b4e70813221710f6eaa5775121" title="Read block of data from given band to buffer, vector, or valarray. ">isce::io::Raster::getBlock</a> and <a class="el" href="classisce_1_1io_1_1Raster.html#ae0aab108897828b0748eebe258564e93" title="Write block of data to given band from buffer, vector, or valarray. ">isce::io::Raster::setBlock</a> methods. Note that all data is read in from or to a contiguous bufferin row major order. Currently, there is no interface to read/write from a blocked interface. If one wishes to do this see the section on advanced usage below to work with the GDAL Dataset pointer directly.</p>
+<p>Like single line I/O, one can use any of the 3 interfaces (pointer, vector, valarray) with the isce::io::Raster::getBlock and isce::io::Raster::setBlock methods. Note that all data is read in from or to a contiguous bufferin row major order. Currently, there is no interface to read/write from a blocked interface. If one wishes to do this see the section on advanced usage below to work with the GDAL Dataset pointer directly.</p>
 <div class="fragment"><div class="line"><span class="comment">//Create a Float32 raster of 100 pixels by 200 lines</span></div>
-<div class="line"><a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> raster(<span class="stringliteral">&quot;test.vrt&quot;</span>, 100, 200);</div>
+<div class="line">isce::io::Raster raster(<span class="stringliteral">&quot;test.vrt&quot;</span>, 100, 200);</div>
 <div class="line"></div>
 <div class="line"><span class="comment">//Create a vector and valarray for reading</span></div>
 <div class="line"><span class="comment">//Assuming a block of 5 x 5</span></div>
@@ -193,7 +190,7 @@ Reading/Writing Single block</h1>
 <div class="line">raster.getBlock(output, 2, 3, 5, 5);</div>
 </div><!-- fragment --><h1><a class="anchor" id="rasteradvanced"></a>
 Advanced usage - direct access to GDAL dataset</h1>
-<p>ISCE Raster class is a thin wrapper over GDAL's <a href="https://www.gdal.org/classGDALDataset.html">GDALDataset</a> class. One can access the underlying pointer using the <a class="el" href="classisce_1_1io_1_1Raster.html#ae1088b222686c9392efcc13b55bc193b" title="GDALDataset pointer getter. ">isce::io::Raster::dataset</a> method. </p>
+<p>ISCE Raster class is a thin wrapper over GDAL's <a href="https://www.gdal.org/classGDALDataset.html">GDALDataset</a> class. One can access the underlying pointer using the isce::io::Raster::dataset method. </p>
 </div></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
