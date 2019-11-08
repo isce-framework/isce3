@@ -5,6 +5,7 @@ var searchData=
   ['datapatch',['DataPatch',['../classDataPatch.html',1,'']]],
   ['datapatch_3c_20float_20_3e',['DataPatch&lt; float &gt;',['../classDataPatch.html',1,'']]],
   ['datapatch_3c_20unsigned_20char_20_3e',['DataPatch&lt; unsigned char &gt;',['../classDataPatch.html',1,'']]],
+  ['dataset',['Dataset',['../classisce_1_1io_1_1gdal_1_1Dataset.html',1,'isce::io::gdal']]],
   ['datetime',['DateTime',['../classisce_1_1core_1_1DateTime.html',1,'isce::core']]],
   ['deminterpolator',['DEMInterpolator',['../classisce_1_1geometry_1_1DEMInterpolator.html',1,'isce::geometry']]],
   ['densematrix',['DenseMatrix',['../classisce_1_1core_1_1DenseMatrix.html',1,'isce::core']]],

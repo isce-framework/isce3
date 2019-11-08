@@ -1,7 +1,7 @@
 var searchData=
 [
   ['a',['a',['../classisce_1_1core_1_1Ellipsoid.html#a237f43ba751463289faad2801475b38b',1,'isce::core::Ellipsoid::a() const '],['../classisce_1_1core_1_1Ellipsoid.html#a93fd6868073d29744fa6215df767dcd6',1,'isce::core::Ellipsoid::a(double val)']]],
-  ['access',['access',['../classisce_1_1io_1_1Raster.html#a3ac218aecbd73d6cffbcf7f0818b923b',1,'isce::io::Raster']]],
+  ['access',['access',['../classisce_1_1io_1_1gdal_1_1Dataset.html#a534a4e096b133358c88f144f13e7fb3b',1,'isce::io::gdal::Dataset::access()'],['../classisce_1_1io_1_1gdal_1_1Raster.html#a018636d8045272f3551dac6f12304cad',1,'isce::io::gdal::Raster::access()'],['../classisce_1_1io_1_1Raster.html#a3ac218aecbd73d6cffbcf7f0818b923b',1,'isce::io::Raster::access()']]],
   ['acquiredcenterfrequency',['acquiredCenterFrequency',['../classisce_1_1product_1_1Swath.html#a56a5cd55bd87fccb75fa5f6783214c25',1,'isce::product::Swath::acquiredCenterFrequency() const '],['../classisce_1_1product_1_1Swath.html#ad84c47266585efd9d6c58bcc4a2b0143',1,'isce::product::Swath::acquiredCenterFrequency(double f)']]],
   ['acquiredrangebandwidth',['acquiredRangeBandwidth',['../classisce_1_1product_1_1Swath.html#a783eda47f737f17cf7d7578f159eb50a',1,'isce::product::Swath::acquiredRangeBandwidth() const '],['../classisce_1_1product_1_1Swath.html#a376b3f1328553b0416be44da9de6808e',1,'isce::product::Swath::acquiredRangeBandwidth(double b)']]],
   ['addbandtovrt',['addBandToVRT',['../classisce_1_1io_1_1Raster.html#a734742e9b608df12762056d77fe3deff',1,'isce::io::Raster']]],
