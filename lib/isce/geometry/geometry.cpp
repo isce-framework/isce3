@@ -250,9 +250,9 @@ _update_aztime(const Orbit & orbit,
 
         slantRange = dr.norm();
         // Check validity
-        if (!isnan(rangeMin) && slantRange < rangeMin)
+        if (!std::isnan(rangeMin) && slantRange < rangeMin)
             continue;
-        if (!isnan(rangeMax) && slantRange > rangeMax)
+        if (!std::isnan(rangeMax) && slantRange > rangeMax)
             continue;
 
         // Update best guess
