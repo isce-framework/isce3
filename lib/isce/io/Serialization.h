@@ -58,7 +58,7 @@ namespace isce {
 
         /** Load vector dataset from HDF5 file.
          *
-         * @param[in] file          HDF5 file or group object.
+         * @param[in] h5obj          HDF5 file or group object.
          * @param[in] datasetPath   H5 path of dataset relative to h5obj.
          * @param[in] v             Vector to store dataset. */
         template <typename H5obj, typename T>
@@ -72,7 +72,7 @@ namespace isce {
 
         /** Load valarray dataset from HDF5 file.
          *
-         * @param[in] file          HDF5 file or group object.
+         * @param[in] h5obj         HDF5 file or group object.
          * @param[in] datasetPath   H5 path of dataset relative to h5obj.
          * @param[in] v             Valarray to store dataset. */
         template <typename H5obj, typename T>
@@ -86,7 +86,7 @@ namespace isce {
 
         /** Load Matrix dataset from HDF5 file.
           *
-          * @param[in] file          HDF5 file or group object.
+          * @param[in] h5obj         HDF5 file or group object.
           * @param[in] datasetPath   H5 path of dataset relative to h5obj.
           * @param[in] m             Matrix to store dataset. */
         template <typename H5obj, typename T>
@@ -100,7 +100,7 @@ namespace isce {
 
         /** Write scalar dataset to HDF5 file.
          *
-         * @param[in] file          HDF5 file or group object.
+         * @param[in] h5obj         HDF5 file or group object.
          * @param[in] datasetPath   H5 path of dataset relative to h5obj.
          * @param[in] val           Value to write
          * @param[in] units         Units of dataset. */
@@ -121,7 +121,7 @@ namespace isce {
 
         /** Write vector dataset to HDF5 file.
          *
-         * @param[in] file          HDF5 file or group object.
+         * @param[in] h5obj         HDF5 file or group object.
          * @param[in] datasetPath   H5 path of dataset relative to h5obj.
          * @param[in] v             Vector to write.
          * @param[in] units         Units of dataset. */
@@ -142,7 +142,7 @@ namespace isce {
 
         /** Write valarray dataset to HDF5 file.
          *
-         * @param[in] file          HDF5 file or group object.
+         * @param[in] h5obj         HDF5 file or group object.
          * @param[in] datasetPath   H5 path of dataset relative to h5obj.
          * @param[in] v             Valarray to write.
          * @param[in] units         Units of dataset. */
@@ -163,7 +163,7 @@ namespace isce {
 
         /** Write vector dataset with dimensions to HDF5 file.
          *
-         * @param[in] file          HDF5 file or group object.
+         * @param[in] h5obj         HDF5 file or group object.
          * @param[in] datasetPath   H5 path of dataset relative to h5obj.
          * @param[in] v             Vector to write.
          * @param[in] units         Units of dataset. */
@@ -185,7 +185,7 @@ namespace isce {
 
         /** Write valarray dataset with dimensions to HDF5 file.
          *
-         * @param[in] file          HDF5 file or group object.
+         * @param[in] h5obj         HDF5 file or group object.
          * @param[in] datasetPath   H5 path of dataset relative to h5obj.
          * @param[in] v             Valarray to write.
          * @param[in] units         Units of dataset. */
@@ -207,7 +207,7 @@ namespace isce {
 
         /** Write Matrix dataset to HDF5 file.
          *
-         * @param[in] file          HDF5 file or group object.
+         * @param[in] h5obj         HDF5 file or group object.
          * @param[in] datasetPath   H5 path of dataset relative to h5obj.
          * @param[in] mat           Matrix to write.
          * @param[in] units         Units of dataset. */
@@ -230,7 +230,7 @@ namespace isce {
 
         /** Get dimensions of complex imagery from HDF5 file.
          *
-         * @param[in] file          HDF5 file or group object.
+         * @param[in] h5obj         HDF5 file or group object.
          * @param[in] datasetPath   H5 path of image dataset relative to h5obj. */
         template <typename H5obj>
         inline std::vector<int> getImageDims(H5obj & h5obj, const std::string & datasetPath) {
@@ -242,7 +242,7 @@ namespace isce {
 
         /** Parse time units in a dataset attribute to get a reference epoch
           *
-          * @param[in] file         HDF5 file or group object.
+          * @param[in] h5obj        HDF5 file or group object.
           * @param[in] datasetPath  H5 path of dataset relative to h5obj.
           * @param[out] epoch       isce::core::DateTime of reference epoch. */
         template <typename H5obj>
@@ -269,7 +269,7 @@ namespace isce {
 
         /** Save reference epoch DateTime as an attribute.
           *
-          * @param[in] file         HDF5 file or group object.
+          * @param[in] h5obj        HDF5 file or group object.
           * @param[in] datasetPath  H5 path of dataset relative to h5obj.
           * @param[in] epoch        isce::core::DateTime of reference epoch. */
         template <typename H5obj>
