@@ -82,7 +82,7 @@ TEST(ICU, PhaseGradNeutronCalculation)
     float dphi = 2.9f;
     for (size_t i = 0; i < w; ++i)
     {
-        std::complex<float> z{cos(dphi * float(i)), sin(dphi * float(i))};
+        std::complex<float> z{cosf(dphi * float(i)), sinf(dphi * float(i))};
         for (size_t j = 0; j < l; ++j) { intf[j * w + i] = z; }
     }
 
@@ -93,7 +93,7 @@ TEST(ICU, PhaseGradNeutronCalculation)
     dphi = 3.1f;
     for (size_t i = 0; i < w; ++i)
     {
-        std::complex<float> z{cos(dphi * float(i)), sin(dphi * float(i))};
+        std::complex<float> z{cosf(dphi * float(i)), sinf(dphi * float(i))};
         for (size_t j = 0; j < l; ++j) { intf[j * w + i] = z; }
     }
     refneut[2 * w + 2] = true;
@@ -114,7 +114,7 @@ TEST(ICU, IntensityNeutronCalculation)
     std::valarray<bool> neut(l*w), refneut(l*w);
 
     // High intensity, high correlation (not neutron)
-    std::complex<float> z{sqrt(5.f), sqrt(5.f)};
+    std::complex<float> z{sqrtf(5.f), sqrtf(5.f)};
     intf[0] = z;
 
     // Low intensity, low correlation (not neutron)
@@ -183,7 +183,7 @@ TEST(ICU, RunICU)
     for (size_t j = 0; j < l; ++j)
     {
         float y = float(j) / float(l) * 50.f;
-        std::complex<float> z{cos(y), sin(y)};
+        std::complex<float> z{cosf(y), sinf(y)};
         for (size_t i = 0; i < w; ++i) { intf[j * w + i] = z; }
     }
 
