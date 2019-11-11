@@ -11,7 +11,7 @@ namespace isce { namespace core {
 template<int N, typename T>
 class Vector : public Eigen::Matrix<T, N, 1> {
     using super_t = Eigen::Matrix<T, N, 1>;
-    using super_t::Matrix;
+    using super_t::super_t;
 };
 
 using Vec3 = Vector<3>;

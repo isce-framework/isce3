@@ -12,7 +12,7 @@ namespace isce { namespace core {
 template<int N, typename T>
 class DenseMatrix : public Eigen::Matrix<T, N, N> {
     using super_t = Eigen::Matrix<T, N, N>;
-    using super_t::Matrix;
+    using super_t::super_t;
 public:
     DenseMatrix() = default;
     CUDA_HOSTDEV auto operator[](int i)       { return this->row(i); }
