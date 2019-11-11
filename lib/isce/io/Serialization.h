@@ -98,6 +98,27 @@ namespace isce {
             dataset.read(m.data());
         }
 
+        /** Write scalar dataset to HDF5 file.
+         *
+         * @param[in] file          HDF5 file or group object.
+         * @param[in] datasetPath   H5 path of dataset relative to h5obj.
+         * @param[in] val           Value to write
+         * @param[in] units         Units of dataset. */
+        template<typename H5obj, typename T>
+        inline void saveToH5(H5obj& h5obj, const std::string &datasetPath,
+                          const T &val, const std::string & units="") {
+            //Check for existence of dataset
+            if (exists(h5obj, datasetPath)) {
+                return;
+            }
+            //Create dataset
+            isce::io::IDataSet dset = h5obj.createDataSet(datasetPath, val);
+            //Update units attribute if long enough
+            if (units.length() > 0) {
+                dset.createAttribute("units", units);
+            }
+        }
+
         /** Write vector dataset to HDF5 file.
          *
          * @param[in] file          HDF5 file or group object.
