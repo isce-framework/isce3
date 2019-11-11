@@ -100,7 +100,7 @@ geocode(isce::io::Raster & inputRaster,
                     double aztime, srange;
                     _geo2rdr(x, y, aztime, srange, demInterp, proj);
 
-                    if (isnan(aztime) || isnan(srange))
+                    if (std::isnan(aztime) || std::isnan(srange))
                         continue;
 
                     // get the row and column index in the radar grid

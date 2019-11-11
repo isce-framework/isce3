@@ -55,7 +55,7 @@ TEST(Phass, CheckConnCompLabels)
     for (size_t j = 0; j < l; ++j)
     {
         float y = float(j) / float(l) * 50.f;
-        std::complex<float> z{cos(y), sin(y)};
+        std::complex<float> z{cosf(y), sinf(y)};
         for (size_t i = 0; i < w; ++i) { phase[j * w + i] = std::arg(z); }
     }
 
@@ -105,7 +105,7 @@ void runPhass() {
     for (size_t j = 0; j < l; ++j)
     {
           float y = float(j) / float(l) * 50.f;
-          std::complex<float> z{cos(y), sin(y)};
+          std::complex<float> z{cosf(y), sinf(y)};
           for (size_t i = 0; i < w; ++i) { phase[j * w + i] = std::arg(z); }
     }
 
