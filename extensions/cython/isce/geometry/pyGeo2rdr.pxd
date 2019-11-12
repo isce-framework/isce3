@@ -7,7 +7,6 @@
 from libcpp cimport bool
 from libcpp.string cimport string
 from Geo2rdr cimport Geo2rdr
-from Orbit cimport orbitInterpMethod
 
 cdef class pyGeo2rdr:
     cdef Geo2rdr * c_geo2rdr

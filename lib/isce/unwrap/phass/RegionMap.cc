@@ -1,15 +1,15 @@
 // Copyright (c) 2017-, California Institute of Technology ("Caltech"). U.S.
 // Government sponsorship acknowledged.
 // All rights reserved.
-// 
+//
 // Author(s):
-// 
+//
 //  ======================================================================
-// 
+//
 //  FILENAME: RegionMap.cc
-//   
+//
 //  CREATED BY: Xiaoqing WU
-// 
+//
 //  ======================================================================
 
 
@@ -27,12 +27,12 @@ int create_region_map(int lines, int pixels, bool **mask, float **normalized_hei
       region_map[line][pixel] = -1;
     }
   }
-  
+
   queue<Point> workq;
 
   int region_id = 0;
   double th = 0.45;
-  
+
   for(int ii = 0; ii < lines; ii ++) {
     for(int jj = 0; jj < pixels; jj ++) {
       if(mask[ii][jj] == false) continue;
@@ -52,7 +52,7 @@ int create_region_map(int lines, int pixels, bool **mask, float **normalized_hei
 
         if(line > 0) {
 	  double diff = fabs(normalized_heights[line-1][pixel] - hgt);
-	  if( !visit[line - 1][pixel] && mask[line - 1][pixel] && diff < th) { 
+	  if( !visit[line - 1][pixel] && mask[line - 1][pixel] && diff < th) {
 	    workq.push(Point(pixel, line - 1));
 	    visit[line - 1][pixel] = true;
 	    region_map[line - 1][pixel] = region_id;
@@ -60,7 +60,7 @@ int create_region_map(int lines, int pixels, bool **mask, float **normalized_hei
 	}
         if(line < lines - 1) {
 	  double diff = fabs(normalized_heights[line+1][pixel] - hgt);
-	  if( !visit[line + 1][pixel] && mask[line + 1][pixel] && diff < th) { 
+	  if( !visit[line + 1][pixel] && mask[line + 1][pixel] && diff < th) {
 	    workq.push(Point(pixel, line + 1));
 	    visit[line + 1][pixel] = true;
 	    region_map[line + 1][pixel] = region_id;
@@ -68,7 +68,7 @@ int create_region_map(int lines, int pixels, bool **mask, float **normalized_hei
 	}
         if(pixel > 0 ) {
 	  double diff = fabs(normalized_heights[line][pixel-1] - hgt);
-	  if( !visit[line][pixel - 1] && mask[line][pixel - 1] && diff < th) { 
+	  if( !visit[line][pixel - 1] && mask[line][pixel - 1] && diff < th) {
 	    workq.push(Point(pixel - 1, line));
 	    visit[line][pixel - 1] = true;
 	    region_map[line][pixel - 1] = region_id;
@@ -76,16 +76,16 @@ int create_region_map(int lines, int pixels, bool **mask, float **normalized_hei
 	}
         if(pixel < pixels - 1 ) {
 	  double diff = fabs(normalized_heights[line][pixel+1] - hgt);
-	  if( !visit[line][pixel + 1] && mask[line][pixel + 1] && diff < th) { 
+	  if( !visit[line][pixel + 1] && mask[line][pixel + 1] && diff < th) {
 	    workq.push(Point(pixel + 1, line));
 	    visit[line][pixel + 1] = true;
 	    region_map[line][pixel + 1] = region_id;
 	  }
 	}
-	
+
         if(line > 0 && pixel > 0) {
 	  double diff = fabs(normalized_heights[line-1][pixel-1] - hgt);
-	  if( !visit[line - 1][pixel-1] && mask[line - 1][pixel-1] && diff < th) { 
+	  if( !visit[line - 1][pixel-1] && mask[line - 1][pixel-1] && diff < th) {
 	    workq.push(Point(pixel-1, line - 1));
 	    visit[line - 1][pixel-1] = true;
 	    region_map[line - 1][pixel-1] = region_id;
@@ -93,7 +93,7 @@ int create_region_map(int lines, int pixels, bool **mask, float **normalized_hei
 	}
         if(line > 0 && pixel < pixels - 1) {
 	  double diff = fabs(normalized_heights[line-1][pixel+1] - hgt);
-	  if( !visit[line - 1][pixel+1] && mask[line - 1][pixel+1] && diff < th) { 
+	  if( !visit[line - 1][pixel+1] && mask[line - 1][pixel+1] && diff < th) {
 	    workq.push(Point(pixel+1, line - 1));
 	    visit[line - 1][pixel+1] = true;
 	    region_map[line - 1][pixel+1] = region_id;
@@ -101,7 +101,7 @@ int create_region_map(int lines, int pixels, bool **mask, float **normalized_hei
 	}
         if(line < lines - 1 && pixel > 0) {
 	  double diff = fabs(normalized_heights[line+1][pixel-1] - hgt);
-	  if( !visit[line + 1][pixel-1] && mask[line + 1][pixel-1] && diff < th) { 
+	  if( !visit[line + 1][pixel-1] && mask[line + 1][pixel-1] && diff < th) {
 	    workq.push(Point(pixel-1, line + 1));
 	    visit[line + 1][pixel-1] = true;
 	    region_map[line + 1][pixel-1] = region_id;
@@ -109,7 +109,7 @@ int create_region_map(int lines, int pixels, bool **mask, float **normalized_hei
 	}
         if(line < lines - 1 && pixel < pixels - 1) {
 	  double diff = fabs(normalized_heights[line+1][pixel+1] - hgt);
-	  if( !visit[line + 1][pixel+1] && mask[line + 1][pixel+1] && diff < th) { 
+	  if( !visit[line + 1][pixel+1] && mask[line + 1][pixel+1] && diff < th) {
 	    workq.push(Point(pixel+1, line + 1));
 	    visit[line + 1][pixel+1] = true;
 	    region_map[line + 1][pixel+1] = region_id;
@@ -145,15 +145,15 @@ int create_region_map(int lines, int pixels, bool **mask, float **normalized_hei
       int line = point.y;
       int pixel = point.x;
       region_map[line][pixel] = region_id;
-    }    
+    }
     region_id ++;
-  }  
-  
+  }
+
   for(int id = 0; id < nr_regions; id++) {
     point_list[id].clear();
   }
   delete[] point_list;
-  
+
 //  exit(0);
 
   return region_id;
@@ -162,7 +162,7 @@ int create_region_map(int lines, int pixels, bool **mask, float **normalized_hei
 
 int create_region_map(int lines, int pixels, bool **mask, unsigned char **disc_data,
                        int **region_map, int min_pixels_per_region)
-// return the number of regions and assign each region with a region id and -1 to no-mask pixels 
+// return the number of regions and assign each region with a region id and -1 to no-mask pixels
 // Inputs: lines, pixels, mask, disc_data, region_map
 // Output: region_map, nr_regions, region_points
 {
@@ -175,11 +175,11 @@ int create_region_map(int lines, int pixels, bool **mask, unsigned char **disc_d
       region_map[line][pixel] = -1;
     }
   }
-  
+
   queue<Point> workq;
 
   int region_id = 0;
-  
+
   for(int ii = 0; ii < lines; ii ++) {
     for(int jj = 0; jj < pixels; jj ++) {
       if(mask[ii][jj] == false) continue;
@@ -201,7 +201,7 @@ int create_region_map(int lines, int pixels, bool **mask, unsigned char **disc_d
 
         if(line > 0 && (disc_data[line][pixel] & face_up) == 0) {
 //if(line == 1367 && pixel == 1931) cerr << "  up   " << Point(pixel, line - 1) << "  size: " << workq.size() << "  visit: " << (int)visit[line - 1][pixel] << "  mask: " << (int)mask[line - 1][pixel] << "  disc: " << (int)disc_data[line - 1][pixel] << endl;
-	  if( !visit[line - 1][pixel] && mask[line - 1][pixel] ) { 
+	  if( !visit[line - 1][pixel] && mask[line - 1][pixel] ) {
 	    workq.push(Point(pixel, line - 1));
 	    visit[line - 1][pixel] = true;
 	    region_map[line - 1][pixel] = region_id;
@@ -210,7 +210,7 @@ if(line == 1359 && pixel == 1924) cerr << "  up   " << Point(pixel, line - 1) <<
 	  }
 	}
         if(line < lines - 1 && (disc_data[line][pixel] & face_down) == 0) {
-	  if( !visit[line + 1][pixel] && mask[line + 1][pixel] ) { 
+	  if( !visit[line + 1][pixel] && mask[line + 1][pixel] ) {
 	    workq.push(Point(pixel, line + 1));
 	    visit[line + 1][pixel] = true;
 	    region_map[line + 1][pixel] = region_id;;
@@ -219,7 +219,7 @@ if(line == 1359 && pixel == 1924) cerr << "  up   " << Point(pixel, line - 1) <<
 	  }
 	}
         if(pixel > 0 && (disc_data[line][pixel] & face_left) == 0) {
-	  if( !visit[line][pixel - 1] && mask[line][pixel - 1] ) { 
+	  if( !visit[line][pixel - 1] && mask[line][pixel - 1] ) {
 	    workq.push(Point(pixel - 1, line));
 	    visit[line][pixel - 1] = true;
 	    region_map[line][pixel - 1] = region_id;
@@ -230,7 +230,7 @@ if(line == 1359 && pixel == 1924) cerr << "   left  " << Point(pixel - 1, line) 
 	  }
 	}
         if(pixel < pixels - 1 && (disc_data[line][pixel] & face_right) == 0) {
-	  if( !visit[line][pixel + 1] && mask[line][pixel + 1] ) { 
+	  if( !visit[line][pixel + 1] && mask[line][pixel + 1] ) {
 	    workq.push(Point(pixel + 1, line));
 	    visit[line][pixel + 1] = true;
 	    region_map[line][pixel + 1] = region_id;
@@ -240,7 +240,7 @@ if(line == 1359 && pixel == 1924) cerr << "   right  " << Point(pixel + 1, line)
 //cerr << "     " << Point(pixel - 1, line) << "  size: " << workq.size() << endl;
 	  }
 	}
-	
+
       }
       region_id ++;
     }
@@ -270,22 +270,22 @@ if(line == 1359 && pixel == 1924) cerr << "   right  " << Point(pixel + 1, line)
       int line = point.y;
       int pixel = point.x;
       region_map[line][pixel] = region_id;
-    }    
+    }
     region_id ++;
-  }  
-  
+  }
+
   for(int id = 0; id < nr_regions; id++) {
     point_list[id].clear();
   }
   delete[] point_list;
-  
+
 //  exit(0);
 
   return region_id;
 }
 
 
-int create_region_map(int lines, int pixels, float **unw_phases, int **region_map, int min_pixels_per_region, float nodata)
+int create_region_map(int lines, int pixels, float **unw_phases, int **region_map, int /* min_pixels_per_region */, float nodata)
 {
   DataPatch<int> *in_patch = new DataPatch<int>(pixels, lines);
   int **in_region_map = in_patch->get_data_lines_ptr();
@@ -335,9 +335,9 @@ int create_region_map(int lines, int pixels, float **unw_phases, int **region_ma
 	      workq.push(Point(pixel, line_minus));
 	      region_map[line_minus][pixel] = rid;
 	      visit[line_minus][pixel] = true;
-            }	
+            }
           }
-          if(line < nr_lines - 1) {   // facing down ...... 
+          if(line < nr_lines - 1) {   // facing down ......
             if(unw_phases[line_plus][pixel] != no_phase_value && visit[line_plus][pixel] == false && in_region_map[line_plus][pixel] == this_rid) {
 	      workq.push(Point(pixel, line_plus));
 	      region_map[line_plus][pixel] = rid;
@@ -349,28 +349,28 @@ int create_region_map(int lines, int pixels, float **unw_phases, int **region_ma
 	      workq.push(Point(pixel_minus, line));
 	      region_map[line][pixel_minus] = rid;
 	      visit[line][pixel_minus] = true;
-            }	
+            }
           }
           if(pixel < nr_pixels - 1) {// facing right ......           // facing left ......
             if(unw_phases[line][pixel_plus] != no_phase_value && visit[line][pixel_plus] == false && in_region_map[line][pixel_plus] == this_rid) {
 	      workq.push(Point(pixel_plus, line));
 	      region_map[line][pixel_plus] = rid;
 	      visit[line][pixel_plus] = true;
-            }	
+            }
           }
         }
         rid ++;
       }
     }
     delete visit_patch;
-   
+
     delete in_patch;
 
   return rid;
 }
 
 int create_region_map(int lines, int pixels, bool **mask, int **region_map, int min_pixels_per_region)
-// return the number of regions and assign each region with a region id and -1 to no-mask pixels 
+// return the number of regions and assign each region with a region id and -1 to no-mask pixels
 // Inputs: lines, pixels, mask, region_map
 // Output: region_map, nr_regions, region_points
 
@@ -384,11 +384,11 @@ int create_region_map(int lines, int pixels, bool **mask, int **region_map, int 
       region_map[line][pixel] = -1;
     }
   }
-  
+
   queue<Point> workq;
 
   int region_id = 0;
-  
+
   for(int ii = 0; ii < lines; ii ++) {
     for(int jj = 0; jj < pixels; jj ++) {
       if(mask[ii][jj] == false) continue;
@@ -438,7 +438,7 @@ int create_region_map(int lines, int pixels, bool **mask, int **region_map, int 
 //cerr << "     " << Point(pixel - 1, line) << "  size: " << workq.size() << endl;
 	  }
 	}
-	
+
       }
       region_id ++;
     }
@@ -468,15 +468,15 @@ int create_region_map(int lines, int pixels, bool **mask, int **region_map, int 
       int line = point.y;
       int pixel = point.x;
       region_map[line][pixel] = region_id;
-    }    
+    }
     region_id ++;
-  }  
-  
+  }
+
   for(int id = 0; id < nr_regions; id++) {
     point_list[id].clear();
   }
   delete[] point_list;
-  
+
 //  exit(0);
 
   return region_id;
@@ -532,12 +532,12 @@ int create_region_map(int lines, int pixels, int **input_regions, float **normal
       region_map[line][pixel] = -1;
     }
   }
-  
+
   queue<Point> workq;
 
   int region_id = 0;
   double th = 0.45;
-  
+
   for(int ii = 0; ii < lines; ii ++) {
     for(int jj = 0; jj < pixels; jj ++) {
       if(input_regions[ii][jj] == -1) continue;
@@ -559,7 +559,7 @@ int create_region_map(int lines, int pixels, int **input_regions, float **normal
 
         if(line > 0) {
 	  double diff = fabs(normalized_heights[line-1][pixel] - hgt);
-	  if( !visit[line - 1][pixel] && input_regions[line - 1][pixel] == original_id && diff < th) { 
+	  if( !visit[line - 1][pixel] && input_regions[line - 1][pixel] == original_id && diff < th) {
 	    workq.push(Point(pixel, line - 1));
 	    visit[line - 1][pixel] = true;
 	    region_map[line - 1][pixel] = region_id;
@@ -567,7 +567,7 @@ int create_region_map(int lines, int pixels, int **input_regions, float **normal
 	}
         if(line < lines - 1) {
 	  double diff = fabs(normalized_heights[line+1][pixel] - hgt);
-	  if( !visit[line + 1][pixel] && input_regions[line + 1][pixel] == original_id && diff < th) { 
+	  if( !visit[line + 1][pixel] && input_regions[line + 1][pixel] == original_id && diff < th) {
 	    workq.push(Point(pixel, line + 1));
 	    visit[line + 1][pixel] = true;
 	    region_map[line + 1][pixel] = region_id;
@@ -575,7 +575,7 @@ int create_region_map(int lines, int pixels, int **input_regions, float **normal
 	}
         if(pixel > 0 ) {
 	  double diff = fabs(normalized_heights[line][pixel-1] - hgt);
-	  if( !visit[line][pixel - 1] && input_regions[line][pixel - 1] == original_id && diff < th) { 
+	  if( !visit[line][pixel - 1] && input_regions[line][pixel - 1] == original_id && diff < th) {
 	    workq.push(Point(pixel - 1, line));
 	    visit[line][pixel - 1] = true;
 	    region_map[line][pixel - 1] = region_id;
@@ -583,16 +583,16 @@ int create_region_map(int lines, int pixels, int **input_regions, float **normal
 	}
         if(pixel < pixels - 1 ) {
 	  double diff = fabs(normalized_heights[line][pixel+1] - hgt);
-	  if( !visit[line][pixel + 1] && input_regions[line][pixel + 1] == original_id && diff < th) { 
+	  if( !visit[line][pixel + 1] && input_regions[line][pixel + 1] == original_id && diff < th) {
 	    workq.push(Point(pixel + 1, line));
 	    visit[line][pixel + 1] = true;
 	    region_map[line][pixel + 1] = region_id;
 	  }
 	}
-	
+
         if(line > 0 && pixel > 0) {
 	  double diff = fabs(normalized_heights[line-1][pixel-1] - hgt);
-	  if( !visit[line - 1][pixel-1] && input_regions[line - 1][pixel-1] == original_id && diff < th) { 
+	  if( !visit[line - 1][pixel-1] && input_regions[line - 1][pixel-1] == original_id && diff < th) {
 	    workq.push(Point(pixel-1, line - 1));
 	    visit[line - 1][pixel-1] = true;
 	    region_map[line - 1][pixel-1] = region_id;
@@ -600,7 +600,7 @@ int create_region_map(int lines, int pixels, int **input_regions, float **normal
 	}
         if(line > 0 && pixel < pixels - 1) {
 	  double diff = fabs(normalized_heights[line-1][pixel+1] - hgt);
-	  if( !visit[line - 1][pixel+1] && input_regions[line - 1][pixel+1] == original_id && diff < th) { 
+	  if( !visit[line - 1][pixel+1] && input_regions[line - 1][pixel+1] == original_id && diff < th) {
 	    workq.push(Point(pixel+1, line - 1));
 	    visit[line - 1][pixel+1] = true;
 	    region_map[line - 1][pixel+1] = region_id;
@@ -608,7 +608,7 @@ int create_region_map(int lines, int pixels, int **input_regions, float **normal
 	}
         if(line < lines - 1 && pixel > 0) {
 	  double diff = fabs(normalized_heights[line+1][pixel-1] - hgt);
-	  if( !visit[line + 1][pixel-1] && input_regions[line + 1][pixel-1] == original_id && diff < th) { 
+	  if( !visit[line + 1][pixel-1] && input_regions[line + 1][pixel-1] == original_id && diff < th) {
 	    workq.push(Point(pixel-1, line + 1));
 	    visit[line + 1][pixel-1] = true;
 	    region_map[line + 1][pixel-1] = region_id;
@@ -616,7 +616,7 @@ int create_region_map(int lines, int pixels, int **input_regions, float **normal
 	}
         if(line < lines - 1 && pixel < pixels - 1) {
 	  double diff = fabs(normalized_heights[line+1][pixel+1] - hgt);
-	  if( !visit[line + 1][pixel+1] && input_regions[line + 1][pixel+1] == original_id && diff < th) { 
+	  if( !visit[line + 1][pixel+1] && input_regions[line + 1][pixel+1] == original_id && diff < th) {
 	    workq.push(Point(pixel+1, line + 1));
 	    visit[line + 1][pixel+1] = true;
 	    region_map[line + 1][pixel+1] = region_id;
@@ -652,15 +652,15 @@ int create_region_map(int lines, int pixels, int **input_regions, float **normal
       int line = point.y;
       int pixel = point.x;
       region_map[line][pixel] = region_id;
-    }    
+    }
     region_id ++;
-  }  
-  
+  }
+
   for(int id = 0; id < nr_regions; id++) {
     point_list[id].clear();
   }
   delete[] point_list;
-  
+
 //  exit(0);
 
   return region_id;
@@ -678,11 +678,11 @@ int create_region_map(int lines, int pixels, int **input_regions, int **region_m
       region_map[line][pixel] = -1;
     }
   }
-  
+
   queue<Point> workq;
 
   int region_id = 0;
-  
+
   for(int ii = 0; ii < lines; ii ++) {
     for(int jj = 0; jj < pixels; jj ++) {
       if(input_regions[ii][jj] == -1) continue;
@@ -702,57 +702,57 @@ int create_region_map(int lines, int pixels, int **input_regions, int **region_m
         int pixel = point.get_X();
 
         if(line > 0) {
-	  if( !visit[line - 1][pixel] && input_regions[line - 1][pixel] == original_id) { 
+	  if( !visit[line - 1][pixel] && input_regions[line - 1][pixel] == original_id) {
 	    workq.push(Point(pixel, line - 1));
 	    visit[line - 1][pixel] = true;
 	    region_map[line - 1][pixel] = region_id;
 	  }
 	}
         if(line < lines - 1) {
-	  if( !visit[line + 1][pixel] && input_regions[line + 1][pixel] == original_id) { 
+	  if( !visit[line + 1][pixel] && input_regions[line + 1][pixel] == original_id) {
 	    workq.push(Point(pixel, line + 1));
 	    visit[line + 1][pixel] = true;
 	    region_map[line + 1][pixel] = region_id;
 	  }
 	}
         if(pixel > 0 ) {
-	  if( !visit[line][pixel - 1] && input_regions[line][pixel - 1] == original_id) { 
+	  if( !visit[line][pixel - 1] && input_regions[line][pixel - 1] == original_id) {
 	    workq.push(Point(pixel - 1, line));
 	    visit[line][pixel - 1] = true;
 	    region_map[line][pixel - 1] = region_id;
 	  }
 	}
         if(pixel < pixels - 1 ) {
-	  if( !visit[line][pixel + 1] && input_regions[line][pixel + 1] == original_id) { 
+	  if( !visit[line][pixel + 1] && input_regions[line][pixel + 1] == original_id) {
 	    workq.push(Point(pixel + 1, line));
 	    visit[line][pixel + 1] = true;
 	    region_map[line][pixel + 1] = region_id;
 	  }
 	}
-	
+
         if(line > 0 && pixel > 0) {
-	  if( !visit[line - 1][pixel-1] && input_regions[line - 1][pixel-1] == original_id) { 
+	  if( !visit[line - 1][pixel-1] && input_regions[line - 1][pixel-1] == original_id) {
 	    workq.push(Point(pixel-1, line - 1));
 	    visit[line - 1][pixel-1] = true;
 	    region_map[line - 1][pixel-1] = region_id;
 	  }
 	}
         if(line > 0 && pixel < pixels - 1) {
-	  if( !visit[line - 1][pixel+1] && input_regions[line - 1][pixel+1] == original_id) { 
+	  if( !visit[line - 1][pixel+1] && input_regions[line - 1][pixel+1] == original_id) {
 	    workq.push(Point(pixel+1, line - 1));
 	    visit[line - 1][pixel+1] = true;
 	    region_map[line - 1][pixel+1] = region_id;
 	  }
 	}
         if(line < lines - 1 && pixel > 0) {
-	  if( !visit[line + 1][pixel-1] && input_regions[line + 1][pixel-1] == original_id) { 
+	  if( !visit[line + 1][pixel-1] && input_regions[line + 1][pixel-1] == original_id) {
 	    workq.push(Point(pixel-1, line + 1));
 	    visit[line + 1][pixel-1] = true;
 	    region_map[line + 1][pixel-1] = region_id;
 	  }
 	}
         if(line < lines - 1 && pixel < pixels - 1) {
-	  if( !visit[line + 1][pixel+1] && input_regions[line + 1][pixel+1] == original_id) { 
+	  if( !visit[line + 1][pixel+1] && input_regions[line + 1][pixel+1] == original_id) {
 	    workq.push(Point(pixel+1, line + 1));
 	    visit[line + 1][pixel+1] = true;
 	    region_map[line + 1][pixel+1] = region_id;
@@ -788,15 +788,15 @@ int create_region_map(int lines, int pixels, int **input_regions, int **region_m
       int line = point.y;
       int pixel = point.x;
       region_map[line][pixel] = region_id;
-    }    
+    }
     region_id ++;
-  }  
-  
+  }
+
   for(int id = 0; id < nr_regions; id++) {
     point_list[id].clear();
   }
   delete[] point_list;
-  
+
 //  exit(0);
 
   return region_id;

@@ -15,15 +15,17 @@ namespace isce {
         class Pixel;
         class Poly1d;
         class Poly2d;
+        class ProjectionBase;
         class Quaternion;
         struct StateVector;
         class TimeDelta;
 
         // templates
-        template<class T> T sinc(T);
-        template<int> class DenseMatrix;
-        template<int> class Vector;
+        template<int, typename = double> class DenseMatrix;
+        template<int, typename = double> class Vector;
+
         template<class> class Cube;
+        template<typename> class Linspace;
         template<class> class LUT1d;
         template<class> class LUT2d;
         template<class> class Matrix;
@@ -40,11 +42,17 @@ namespace isce {
         template<class> class KnabKernel;
         template<class> class LinearKernel;
         template<class> class NFFTKernel;
+        template<class> class TabulatedKernel;
+        template<class> class ChebyKernel;
 
         // using-declarations
         using Mat3 = DenseMatrix<3>;
         using Vec3 = Vector<3>;
         using cartmat_t   = Mat3;
         using cartesian_t = Vec3;
+
+        // enum types
+        enum class OrbitInterpMethod;
+        enum class OrbitInterpBorderMode;
     }
 }

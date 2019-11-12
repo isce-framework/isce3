@@ -9,7 +9,6 @@
 #error "Looks.icc is an implementation detail of class Looks"
 #endif
 
-
 /** @param[in] numberOfRows number of rows before multi-looking
 */
 template <class T>

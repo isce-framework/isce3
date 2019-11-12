@@ -1,1 +1,1 @@
-add_subdirectory(ampcor)
+#add_subdirectory(ampcor)

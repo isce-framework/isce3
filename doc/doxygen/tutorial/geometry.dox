@@ -247,6 +247,7 @@ int main(int argc, char *argv[])
                                  mode,      //Product metadata
                                  aztime,    //Estimated azimuth time
                                  rng,       //Estimated slant range
+                                 side,      //Look side 
                                  1.0e-8,    //Convergence threshold
                                  51,        //Number of iterations
                                  1.0e-8);

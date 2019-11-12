@@ -1,0 +1,23 @@
+;
+; michael a.g. aïvázis
+; orthologue
+; (c) 1998-2019 all rights reserved
+;
+
+
+; for the application in {mpirun.py}
+mpi.application # mpirun:
+  shell = mpi.mpirun
+  shell.tasks = 4
+  shell.hostfile = localhost
+  ; shell.extra = -mca mpi_show_mca_params enviro
+
+
+; for the application in {slurm.py}
+mpi.application # slurm:
+  shell = mpi.slurm
+  shell.tasks = 8
+  shell.queue = batch
+  ; shell.submit = no
+
+; end of file

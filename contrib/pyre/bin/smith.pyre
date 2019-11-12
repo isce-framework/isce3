@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+# -*- Python -*-
+# -*- coding: utf-8 -*-
+#
+# michael a.g. aïvázis
+# orthologue
+# (c) 1998-2019 all rights reserved
+#
+
+
+# main
+if __name__ == '__main__':
+    # access the framework
+    import pyre.weaver
+
+    # instantiate
+    app = pyre.weaver.smith(name='smith')
+    # and invoke
+    status = app.run()
+
+    # return the exit code to the shell
+    raise SystemExit(status)
+
+
+# end of file

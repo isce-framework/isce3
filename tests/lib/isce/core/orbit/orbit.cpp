@@ -1,445 +1,549 @@
-//
-// Author: Joshua Cohen
-// Copyright 2017
-//
-
 #include <cmath>
-#include <cstdio>
-#include <iostream>
-#include <vector>
-#include <isce/core/Constants.h>
-#include <isce/core/Orbit.h>
 #include <gtest/gtest.h>
-using isce::core::orbitInterpMethod;
-using isce::core::HERMITE_METHOD;
-using isce::core::LEGENDRE_METHOD;
-using isce::core::SCH_METHOD;
+#include <iostream>
+#include <stdexcept>
+#include <vector>
+
+#include <isce/core/DateTime.h>
+#include <isce/core/Orbit.h>
+#include <isce/core/StateVector.h>
+#include <isce/core/TimeDelta.h>
+#include <isce/core/Vector.h>
+#include <isce/except/Error.h>
+
+using isce::core::DateTime;
 using isce::core::Orbit;
-using isce::core::cartesian_t;
-using std::cout;
-using std::endl;
-using std::vector;
+using isce::core::OrbitInterpBorderMode;
+using isce::core::OrbitInterpMethod;
+using isce::core::StateVector;
+using isce::core::TimeDelta;
+using isce::core::Vec3;
 
+namespace isce { namespace core {
 
-struct OrbitTest : public ::testing::Test {
-    virtual void SetUp() {
-        fails = 0;
-    }
-    virtual void TearDown() {
-        if (fails > 0) {
-            std::cerr << "Orbit::TearDown sees failures" << std::endl;
-        }
-    }
-    unsigned fails;
+/** Serialize DateTime to ostream */
+std::ostream & operator<<(std::ostream & os, const DateTime & dt)
+{
+    return os << dt.isoformat();
+}
+
+/** Serialize Vector to ostream */
+std::ostream & operator<<(std::ostream & os, const Vec3 & v)
+{
+    return os << "{ " << v[0] << ", " << v[1] << ", " << v[2] << " }";
+}
+
+}}
+
+/** Check if two DateTimes are equivalent to within errtol seconds */
+bool compareDatetimes(const DateTime & lhs, const DateTime & rhs, double errtol)
+{
+    return lhs.isClose(rhs, TimeDelta(errtol));
+}
+
+/** Check if two Vectors are pointwise equivalent to within errtol */
+bool compareVecs(const Vec3 & lhs, const Vec3 & rhs, double errtol)
+{
+    return std::abs(lhs[0] - rhs[0]) < errtol &&
+           std::abs(lhs[1] - rhs[1]) < errtol &&
+           std::abs(lhs[2] - rhs[2]) < errtol;
+}
+
+/** Analytical linear orbit with constant velocity */
+class LinearOrbit {
+public:
+
+    LinearOrbit() = default;
+
+    LinearOrbit(const Vec3 & initial_position, const Vec3 & velocity) :
+        _initial_position(initial_position), _velocity(velocity)
+    {}
+
+    /** Get position at time t */
+    Vec3 position(double t) const { return _initial_position + _velocity * t; }
+
+    /** Get velocity at time t */
+    Vec3 velocity(double /*t*/) const { return _velocity; }
+
+private:
+    Vec3 _initial_position;
+    Vec3 _velocity;
 };
 
+/** Analytical orbit defined by a polynomial */
+class PolynomialOrbit {
+public:
 
-#define compareTriplet(a,b,c)\
-    EXPECT_NEAR(a[0], b[0], c); \
-    EXPECT_NEAR(a[1], b[1], c); \
-    EXPECT_NEAR(a[2], b[2], c);
+    PolynomialOrbit() = default;
 
+    PolynomialOrbit(const std::vector<Vec3> & coeffs) :
+        _coeffs(coeffs), _order(int(coeffs.size()))
+    {}
 
-void makeLinearSV(double dt, cartesian_t &opos, cartesian_t &ovel, cartesian_t &pos,
-                  cartesian_t &vel) {
-    pos = {opos[0] + (dt * ovel[0]), opos[1] + (dt * ovel[1]), opos[2] + (dt * ovel[2])};
-    vel = ovel;
-}
-
-TEST_F(OrbitTest,LinearSCH){
-    /*
-     * Test linear orbit.
-     */
-
-    Orbit orb(11);
-    double t = 1000.;
-    cartesian_t opos = {0., 0., 0.};
-    cartesian_t ovel = {4000., -1000., 4500.};
-    cartesian_t pos, vel;
-
-    // Create straight-line orbit with 11 state vectors, each 10 s apart
-    for (int i=0; i<11; i++) {
-        makeLinearSV(i*10., opos, ovel, pos, vel);
-        orb.setStateVector(i, t+(i*10.), pos, vel);
-    }
-
-    // Interpolation test times
-    double test_t[] = {23.3, 36.7, 54.5, 89.3};
-    cartesian_t ref_pos, ref_vel;
-
-    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
-    for (int i=0; i<4; i++) {
-        makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
-        orb.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
-        compareTriplet(pos, ref_pos, 1.0e-5);
-        compareTriplet(vel, ref_vel, 1.0e-6);
-    }
-
-    fails += ::testing::Test::HasFailure();
-}
-
-TEST_F(OrbitTest,LinearHermite){
-    /*
-     * Test linear orbit.
-     */
-
-    Orbit orb(11);
-    double t = 1000.;
-    cartesian_t opos = {0., 0., 0.};
-    cartesian_t ovel = {4000., -1000., 4500.};
-    cartesian_t pos, vel;
-
-    // Create straight-line orbit with 11 state vectors, each 10 s apart
-    for (int i=0; i<11; i++) {
-        makeLinearSV(i*10., opos, ovel, pos, vel);
-        orb.setStateVector(i, t+(i*10.), pos, vel);
-    }
-
-    // Interpolation test times
-    double test_t[] = {23.3, 36.7, 54.5, 89.3};
-    cartesian_t ref_pos, ref_vel;
-
-    for (int i=0; i<4; i++) {
-        makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
-        orb.interpolate(t+test_t[i], pos, vel, HERMITE_METHOD);
-        compareTriplet(pos, ref_pos, 1.0e-5);
-        compareTriplet(vel, ref_vel, 1.0e-6);
-    }
-
-    fails += ::testing::Test::HasFailure();
-}
-
-TEST_F(OrbitTest,LinearLegendre){
-    /*
-     * Test linear orbit.
-     */
-
-    Orbit orb(11);
-    double t = 1000.;
-    cartesian_t opos = {0., 0., 0.};
-    cartesian_t ovel = {4000., -1000., 4500.};
-    cartesian_t pos, vel;
-
-    // Create straight-line orbit with 11 state vectors, each 10 s apart
-    for (int i=0; i<11; i++) {
-        makeLinearSV(i*10., opos, ovel, pos, vel);
-        orb.setStateVector(i, t+(i*10.), pos, vel);
-    }
-
-    // Interpolation test times
-    double test_t[] = {23.3, 36.7, 54.5, 89.3};
-    cartesian_t ref_pos, ref_vel;
-
-    for (int i=0; i<4; i++) {
-        makeLinearSV(test_t[i], opos, ovel, ref_pos, ref_vel);
-        orb.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD);
-        compareTriplet(pos, ref_pos, 1.0e-5);
-        compareTriplet(vel, ref_vel, 1.0e-6);
-    }
-
-    fails += ::testing::Test::HasFailure();
-}
-
-
-void makeCircularSV(double dt, cartesian_t &opos, cartesian_t &, cartesian_t &pos,
-                    cartesian_t &vel) {
-    double omega1 = (2. * M_PI) / 7000.;
-    double omega2 = (2. * M_PI) / 4000.;
-    double theta1 = (2. * M_PI) / 8.;
-    double theta2 = (2. * M_PI) / 12.;
-    double radius = 8000000.;
-    double ang1 = theta1 + (dt * omega1);
-    double ang2 = theta2 + (dt * omega2);
-    pos = {opos[0] + (radius * cos(ang1)),
-           opos[1] + (radius * (sin(ang1) + cos(ang2))),
-           opos[2] + (radius * sin(ang2))};
-    vel = {radius * -omega1 * sin(ang1),
-           radius * ((omega1 * cos(ang1)) - (omega2 * sin(ang2))),
-           radius * omega2 * cos(ang2)};
-}
-
-TEST_F(OrbitTest,CircleSCH) {
-    /*
-     * Test circular orbit.
-     */
-
-    Orbit orb(11);
-    double t = 1000.;
-    cartesian_t opos = {7000000., -4500000., 7800000.};
-    cartesian_t ovel, pos, vel;
-
-    // Create circular orbit with 11 state vectors, each 5 s apart
-    for (int i=0; i<11; i++) {
-        makeCircularSV(i*5., opos, ovel, pos, vel);
-        orb.setStateVector(i, t+(i*5.), pos, vel);
-    }
-
-    // Interpolation test times
-    double test_t[] = {11.65, 18.35, 27.25, 44.65};
-    cartesian_t ref_pos, ref_vel;
-
-    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
-    for (int i=0; i<4; i++) {
-        makeCircularSV(test_t[i], opos, ovel, ref_pos, ref_vel);
-        orb.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
-        compareTriplet(ref_pos, pos, 1.0e-5);
-        compareTriplet(ref_vel, vel, 1.0e-6);
-    }
-
-    fails += ::testing::Test::HasFailure();
-}
-
-TEST_F(OrbitTest,CircleHermite) {
-    /*
-     * Test circular orbit.
-     */
-
-    Orbit orb(11);
-    double t = 1000.;
-    cartesian_t opos = {7000000., -4500000., 7800000.};
-    cartesian_t ovel, pos, vel;
-
-    // Create circular orbit with 11 state vectors, each 5 s apart
-    for (int i=0; i<11; i++) {
-        makeCircularSV(i*5., opos, ovel, pos, vel);
-        orb.setStateVector(i, t+(i*5.), pos, vel);
-    }
-
-    // Interpolation test times
-    double test_t[] = {11.65, 18.35, 27.25, 44.65};
-    cartesian_t ref_pos, ref_vel;
-
-    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
-    for (int i=0; i<4; i++) {
-        makeCircularSV(test_t[i], opos, ovel, ref_pos, ref_vel);
-        orb.interpolate(t+test_t[i], pos, vel, HERMITE_METHOD);
-        compareTriplet(ref_pos, pos, 1.0e-5);
-        compareTriplet(ref_vel, vel, 1.0e-6);
-    }
-
-    fails += ::testing::Test::HasFailure();
-}
-
-
-TEST_F(OrbitTest,CircleLegendre) {
-    /*
-     * Test circular orbit.
-     */
-
-    Orbit orb(11);
-    double t = 1000.;
-    cartesian_t opos = {7000000., -4500000., 7800000.};
-    cartesian_t ovel, pos, vel;
-
-    // Create circular orbit with 11 state vectors, each 5 s apart
-    for (int i=0; i<11; i++) {
-        makeCircularSV(i*5., opos, ovel, pos, vel);
-        orb.setStateVector(i, t+(i*5.), pos, vel);
-    }
-
-    // Interpolation test times
-    double test_t[] = {11.65, 18.35, 27.25, 44.65};
-    cartesian_t ref_pos, ref_vel;
-
-    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
-    for (int i=0; i<4; i++) {
-        makeCircularSV(test_t[i], opos, ovel, ref_pos, ref_vel);
-        orb.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD);
-        compareTriplet(ref_pos, pos, 1.0e-5);
-        compareTriplet(ref_vel, vel, 1.0e-6);
-    }
-
-    fails += ::testing::Test::HasFailure();
-}
-
-
-void makePolynomialSV(double dt, vector<double> &xpoly, vector<double> &ypoly,
-                                 vector<double> &zpoly, cartesian_t &pos,
-                                 cartesian_t &vel) {
-
-    pos[0] = 0.0;
-    double fact = 1.0;
-    for (int i=0; i < static_cast<int>(xpoly.size()); i++, fact*=dt)
+    /** Get position at time t */
+    Vec3 position(double t) const
     {
-        pos[0] += fact * xpoly[i];
+        Vec3 position(0., 0., 0.);
+        double tt = 1.;
+        for (int i = 0; i < _order; ++i) {
+            position += tt * _coeffs[i];
+            tt *= t;
+        }
+        return position;
     }
 
-    vel[0] = 0.0;
-    fact = 1.0;
-    for(int i=1; i < static_cast<int>(xpoly.size()); i++, fact*=dt)
+    /** Get velocity at time t */
+    Vec3 velocity(double t) const
     {
-        vel[0] += i * xpoly[i] * fact;
+        Vec3 velocity(0., 0., 0.);
+        double tt = 1.;
+        for (int i = 1; i < _order; ++i) {
+            velocity += i * tt * _coeffs[i];
+            tt *= t;
+        }
+        return velocity;
     }
 
+private:
+    std::vector<Vec3> _coeffs;
+    int _order;
+};
 
-    pos[1] = 0.0;
-    fact = 1.0;
-    for (int i=0; i < static_cast<int>(ypoly.size()); i++, fact*=dt)
+/** Analytical circular orbit with constant angular velocity */
+class CircularOrbit {
+public:
+
+    CircularOrbit() = default;
+
+    CircularOrbit(double theta0, double phi0, double dtheta, double dphi, double r) :
+        _theta0(theta0), _phi0(phi0), _dtheta(dtheta), _dphi(dphi), _r(r)
+    {}
+
+    /** Get position at time t */
+    Vec3 position(double t) const
     {
-        pos[1] += fact * ypoly[i];
+        double theta = _theta0 + t * _dtheta;
+        double phi = _phi0 + t * _dphi;
+
+        double x = _r * std::cos(theta);
+        double y = _r * (std::sin(theta) + std::cos(phi));
+        double z = _r * std::sin(phi);
+
+        return {x, y, z};
     }
 
-    vel[1] = 0.0;
-    fact = 1.0;
-    for(int i=1; i < static_cast<int>(ypoly.size()); i++, fact*=dt)
+    /** Get velocity at time t */
+    Vec3 velocity(double t) const
     {
-        vel[1] += i * ypoly[i] * fact;
+        double theta = _theta0 + t * _dtheta;
+        double phi = _phi0 + t * _dphi;
+
+        double vx = -1. * _r * _dtheta * std::sin(theta);
+        double vy = _r * ((_dtheta * std::cos(theta)) - (_dphi * std::sin(phi)));
+        double vz = _r * _dphi * std::cos(phi);
+
+        return {vx, vy, vz};
     }
 
+private:
+    double _theta0, _phi0, _dtheta, _dphi, _r;
+};
 
-    pos[2] = 0.0;
-    fact = 1.0;
-    for (int i=0; i < static_cast<int>(zpoly.size()); i++, fact*=dt)
+struct OrbitTest : public testing::Test {
+
+    std::vector<StateVector> statevecs;
+
+    void SetUp() override
     {
-        pos[2] += fact * zpoly[i];
-    }
+        DateTime starttime(2000, 1, 1);
+        double spacing = 10.;
+        int size = 11;
 
-    vel[2] = 0.0;
-    fact = 1.0;
-    for(int i=1; i < static_cast<int>(zpoly.size()); i++, fact*=dt)
-    {
-        vel[2] += i * zpoly[i] * fact;
-    }
+        Vec3 initial_position = {0., 0., 0.};
+        Vec3 velocity = {4000., -1000., 4500.};
+        LinearOrbit reforbit(initial_position, velocity);
 
+        statevecs.resize(size);
+        for (int i = 0; i < size; ++i) {
+            double t = i * spacing;
+            statevecs[i].datetime = starttime + TimeDelta(t);
+            statevecs[i].position = reforbit.position(t);
+            statevecs[i].velocity = reforbit.velocity(t);
+        }
+    }
+};
+
+TEST_F(OrbitTest, Constructor)
+{
+    Orbit orbit(statevecs);
+
+    // reference epoch defaults to time of first state vector
+    DateTime refepoch = statevecs[0].datetime;
+    double dt = (statevecs[1].datetime - statevecs[0].datetime).getTotalSeconds();
+    int size = statevecs.size();
+
+    EXPECT_EQ( orbit.referenceEpoch(), refepoch );
+    EXPECT_DOUBLE_EQ( orbit.spacing(), dt );
+    EXPECT_EQ( orbit.size(), size );
+
+    for (int i = 0; i < size; ++i) {
+        double t = (statevecs[i].datetime - refepoch).getTotalSeconds();
+        EXPECT_DOUBLE_EQ( orbit.time(i), t );
+        EXPECT_EQ( orbit.position(i), statevecs[i].position );
+        EXPECT_EQ( orbit.velocity(i), statevecs[i].velocity );
+    }
 }
 
-TEST_F(OrbitTest,PolynomialSCH) {
-    /*
-     * Test linear orbit.
-     */
+TEST_F(OrbitTest, GetStateVectors)
+{
+    Orbit orbit(statevecs);
+    std::vector<StateVector> orbit_statevecs = orbit.getStateVectors();
 
-    Orbit orb(11);
-    double t = 1000.;
-    cartesian_t pos, vel;
+    EXPECT_EQ( orbit_statevecs.size(), statevecs.size() );
 
-    vector<double> xpoly = {-7000000., 5435., -45.0, 7.3};
-    vector<double> ypoly = {5400000., -4257., 23.0, 3.9, 0.01};
-    vector<double> zpoly = {0.0, 7000., 11.0};
-
-    // Create straight-line orbit with 11 state vectors, each 10 s apart
-    for (int i=0; i<11; i++) {
-        makePolynomialSV(i*10., xpoly, ypoly, zpoly, pos, vel);
-        orb.setStateVector(i, t+(i*10.), pos, vel);
+    int size = statevecs.size();
+    double errtol = 1e-13;
+    for (int i = 0; i < size; ++i) {
+        DateTime t1 = orbit_statevecs[i].datetime;
+        DateTime t2 = statevecs[i].datetime;
+        EXPECT_PRED3( compareDatetimes, t1, t2, errtol );
+        EXPECT_EQ( orbit_statevecs[i].position, statevecs[i].position );
+        EXPECT_EQ( orbit_statevecs[i].velocity, statevecs[i].velocity );
     }
-
-    // Interpolation test times
-    double test_t[] = {23.3, 36.7, 54.5, 89.3};
-    cartesian_t ref_pos, ref_vel;
-
-
-    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
-    for (int i=0; i<4; i++) {
-        makePolynomialSV(test_t[i], xpoly, ypoly, zpoly, ref_pos, ref_vel);
-        orb.interpolate(t+test_t[i], pos, vel, SCH_METHOD);
-        compareTriplet(ref_pos, pos, 1.0e-5);
-        compareTriplet(ref_vel, vel, 1.0e-6);
-    }
-
-    fails += ::testing::Test::HasFailure();
 }
 
-TEST_F(OrbitTest,PolynomialHermite) {
-    /*
-     * Test linear orbit.
-     */
+TEST_F(OrbitTest, SetStateVectors)
+{
+    DateTime refepoch = statevecs[0].datetime;
+    double dt = (statevecs[1].datetime - statevecs[0].datetime).getTotalSeconds();
+    int size = statevecs.size();
 
-    Orbit orb(11);
-    double t = 1000.;
-    cartesian_t pos, vel;
+    Orbit orbit;
+    orbit.referenceEpoch(refepoch);
+    orbit.setStateVectors(statevecs);
 
-    vector<double> xpoly = {-7000000., 5435., -45.0, 7.3};
-    vector<double> ypoly = {5400000., -4257., 23.0, 3.9, 0.01};
-    vector<double> zpoly = {0.0, 7000., 11.0};
+    EXPECT_EQ( orbit.referenceEpoch(), refepoch );
+    EXPECT_DOUBLE_EQ( orbit.spacing(), dt );
+    EXPECT_EQ( orbit.size(), size );
 
-    // Create straight-line orbit with 11 state vectors, each 10 s apart
-    for (int i=0; i<11; i++) {
-        makePolynomialSV(i*10., xpoly, ypoly, zpoly, pos, vel);
-        orb.setStateVector(i, t+(i*10.), pos, vel);
+    for (int i = 0; i < size; ++i) {
+        double t = (statevecs[i].datetime - refepoch).getTotalSeconds();
+        EXPECT_DOUBLE_EQ( orbit.time(i), t );
+        EXPECT_EQ( orbit.position(i), statevecs[i].position );
+        EXPECT_EQ( orbit.velocity(i), statevecs[i].velocity );
     }
-
-    // Interpolation test times
-    double test_t[] = {23.3, 36.7, 54.5, 89.3};
-    cartesian_t ref_pos, ref_vel;
-
-
-    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
-    for (int i=0; i<4; i++) {
-        makePolynomialSV(test_t[i], xpoly, ypoly, zpoly, ref_pos, ref_vel);
-        orb.interpolate(t+test_t[i], pos, vel, HERMITE_METHOD);
-        compareTriplet(ref_pos, pos, 1.0e-5);
-        compareTriplet(ref_vel, vel, 1.0e-6);
-    }
-
-    fails += ::testing::Test::HasFailure();
 }
 
-TEST_F(OrbitTest,PolynomialLegendre) {
-    /*
-     * Test linear orbit.
-     */
+TEST_F(OrbitTest, InvalidStateVectors)
+{
+    Orbit orbit(statevecs);
 
-    Orbit orb(11);
-    double t = 1000.;
-    cartesian_t pos, vel;
-
-    vector<double> xpoly = {-7000000., 5435., -45.0, 7.3};
-    vector<double> ypoly = {5400000., -4257., 23.0, 3.9, 0.01};
-    vector<double> zpoly = {0.0, 7000., 11.0};
-
-    // Create straight-line orbit with 11 state vectors, each 10 s apart
-    for (int i=0; i<11; i++) {
-        makePolynomialSV(i*10., xpoly, ypoly, zpoly, pos, vel);
-        orb.setStateVector(i, t+(i*10.), pos, vel);
+    // two or more state vectors are required
+    {
+        std::vector<StateVector> new_statevecs(1);
+        EXPECT_THROW( orbit.setStateVectors(new_statevecs), std::invalid_argument );
     }
 
-    // Interpolation test times
-    double test_t[] = {23.3, 36.7, 54.5, 89.3};
-    cartesian_t ref_pos, ref_vel;
-
-
-    // Test each interpolation time against SCH, Hermite, and Legendre interpolation methods
-    for (int i=0; i<4; i++) {
-        makePolynomialSV(test_t[i], xpoly, ypoly, zpoly, ref_pos, ref_vel);
-        orb.interpolate(t+test_t[i], pos, vel, LEGENDRE_METHOD);
-        compareTriplet(ref_pos, pos, 1.0e-5);
-        compareTriplet(ref_vel, vel, 1.0e-6);
+    // state vectors must be uniformly sampled
+    {
+        std::vector<StateVector> new_statevecs(3);
+        new_statevecs[0].datetime = DateTime();
+        new_statevecs[1].datetime = DateTime() + TimeDelta(1.);
+        new_statevecs[2].datetime = DateTime() + TimeDelta(10.);
+        EXPECT_THROW( orbit.setStateVectors(new_statevecs), std::invalid_argument );
     }
-
-    fails += ::testing::Test::HasFailure();
 }
 
-TEST_F(OrbitTest,HDRFile) {
-    // Create an orbit.
-    Orbit orb(11);
-    double t = 1000.;
-    cartesian_t opos = {0., 0., 0.};
-    cartesian_t ovel = {4000., -1000., 4500.};
-    cartesian_t pos, vel;
-    for (int i=0; i<11; i++) {
-        makeLinearSV(i*10., opos, ovel, pos, vel); 
-        orb.setStateVector(i, t+(i*10.), pos, vel);
-    }
-    // Dump to file.
-    const char* fn = "orbitDumpHDR.txt";
-    struct stat buffer;
-    if (stat (fn, &buffer) == 0)
-       std::remove(fn);
+TEST_F(OrbitTest, ReferenceEpoch)
+{
+    Orbit orbit(statevecs);
+    DateTime new_refepoch = statevecs[1].datetime;
+    orbit.referenceEpoch(new_refepoch);
 
-    orb.dumpToHDR(fn);
-    // Load from file.
-    Orbit o(0);
-    o.loadFromHDR(fn);
-    EXPECT_GT(o.nVectors, 0);
-    std::remove(fn);
+    EXPECT_EQ( orbit.referenceEpoch(), new_refepoch );
+
+    double errtol = 1e-13;
+    for (int i = 0; i < orbit.size(); ++i) {
+        DateTime t1 = statevecs[i].datetime;
+        DateTime t2 = orbit.referenceEpoch() + TimeDelta(orbit.time(i));
+        EXPECT_PRED3( compareDatetimes, t1, t2, errtol );
+    }
 }
 
-int main(int argc, char **argv) {
-    /*
-     * Orbit unit-testing script.
-     */
+TEST_F(OrbitTest, InterpMethod)
+{
+    Orbit orbit(statevecs);
+    OrbitInterpMethod new_method = OrbitInterpMethod::Legendre;
+    orbit.interpMethod(new_method);
 
-    ::testing::InitGoogleTest(&argc, argv);
+    EXPECT_EQ( orbit.interpMethod(), new_method );
+}
 
+TEST_F(OrbitTest, StartMidEndTime)
+{
+    // Orbit with two state vectors separated by 1 second
+    {
+        std::vector<StateVector> statevecs(2);
+        statevecs[0].datetime = DateTime(2000, 1, 1, 0, 0, 0);
+        statevecs[1].datetime = DateTime(2000, 1, 1, 0, 0, 1);
+        Orbit orbit(statevecs);
+
+        EXPECT_DOUBLE_EQ( orbit.startTime(), 0. );
+        EXPECT_DOUBLE_EQ( orbit.midTime(), 0.5 );
+        EXPECT_DOUBLE_EQ( orbit.endTime(), 1. );
+    }
+
+    // Orbit with three state vectors with 1 second spacing
+    {
+        std::vector<StateVector> statevecs(3);
+        statevecs[0].datetime = DateTime(2000, 1, 1, 0, 0, 0);
+        statevecs[1].datetime = DateTime(2000, 1, 1, 0, 0, 1);
+        statevecs[2].datetime = DateTime(2000, 1, 1, 0, 0, 2);
+        Orbit orbit(statevecs);
+
+        EXPECT_DOUBLE_EQ( orbit.startTime(), 0. );
+        EXPECT_DOUBLE_EQ( orbit.midTime(), 1. );
+        EXPECT_DOUBLE_EQ( orbit.endTime(), 2. );
+    }
+}
+
+TEST_F(OrbitTest, StartMidEndDateTime)
+{
+    double errtol = 1e-13;
+
+    // Orbit with two state vectors separated by 1 second
+    {
+        std::vector<StateVector> statevecs(2);
+        statevecs[0].datetime = DateTime(2000, 1, 1, 0, 0, 0);
+        statevecs[1].datetime = DateTime(2000, 1, 1, 0, 0, 1);
+        Orbit orbit(statevecs);
+
+        EXPECT_PRED3( compareDatetimes, orbit.startDateTime(), DateTime(2000, 1, 1, 0, 0, 0), errtol );
+        EXPECT_PRED3( compareDatetimes, orbit.midDateTime(), DateTime(2000, 1, 1, 0, 0, 0.5), errtol );
+        EXPECT_PRED3( compareDatetimes, orbit.endDateTime(), DateTime(2000, 1, 1, 0, 0, 1), errtol );
+    }
+
+    // Orbit with three state vectors with 1 second spacing
+    {
+        std::vector<StateVector> statevecs(3);
+        statevecs[0].datetime = DateTime(2000, 1, 1, 0, 0, 0);
+        statevecs[1].datetime = DateTime(2000, 1, 1, 0, 0, 1);
+        statevecs[2].datetime = DateTime(2000, 1, 1, 0, 0, 2);
+        Orbit orbit(statevecs);
+
+        EXPECT_PRED3( compareDatetimes, orbit.startDateTime(), DateTime(2000, 1, 1, 0, 0, 0), errtol );
+        EXPECT_PRED3( compareDatetimes, orbit.midDateTime(), DateTime(2000, 1, 1, 0, 0, 1), errtol );
+        EXPECT_PRED3( compareDatetimes, orbit.endDateTime(), DateTime(2000, 1, 1, 0, 0, 2), errtol );
+    }
+}
+
+TEST_F(OrbitTest, Comparison)
+{
+    Orbit orbit1(statevecs);
+    Orbit orbit2(statevecs);
+    Orbit orbit3;
+
+    EXPECT_TRUE( orbit1 == orbit2 );
+    EXPECT_TRUE( orbit1 != orbit3 );
+}
+
+TEST_F(OrbitTest, OrbitInterpBorderMode)
+{
+    Orbit orbit(statevecs);
+
+    // throw error on attempt to interpolate outside orbit domain
+    {
+        OrbitInterpBorderMode border_mode = OrbitInterpBorderMode::Error;
+
+        double t = orbit.endTime() + 1.;
+        Vec3 pos, vel;
+        EXPECT_THROW( orbit.interpolate(&pos, &vel, t, border_mode), isce::except::RuntimeError );
+    }
+
+    // output NaN on attempt to interpolate outside orbit domain
+    {
+        OrbitInterpBorderMode border_mode = OrbitInterpBorderMode::FillNaN;
+
+        double t = orbit.endTime() + 1.;
+        Vec3 pos, vel;
+        orbit.interpolate(&pos, &vel, t, border_mode);
+
+        EXPECT_TRUE( std::isnan(pos[0]) && std::isnan(pos[1]) && std::isnan(pos[2]) );
+        EXPECT_TRUE( std::isnan(vel[0]) && std::isnan(vel[1]) && std::isnan(vel[2]) );
+    }
+}
+
+struct LinearOrbitInterpTest : public testing::Test {
+
+    LinearOrbit reforbit;
+    std::vector<StateVector> statevecs;
+    std::vector<double> interp_times;
+    double errtol;
+
+    void SetUp() override
+    {
+        DateTime starttime(2000, 1, 1);
+        double spacing = 10.;
+        int size = 11;
+
+        Vec3 initial_position = {0., 0., 0.};
+        Vec3 velocity = {4000., -1000., 4500.};
+        reforbit = LinearOrbit(initial_position, velocity);
+
+        statevecs.resize(size);
+        for (int i = 0; i < size; ++i) {
+            double t = i * spacing;
+            statevecs[i].datetime = starttime + TimeDelta(t);
+            statevecs[i].position = reforbit.position(t);
+            statevecs[i].velocity = reforbit.velocity(t);
+        }
+
+        interp_times = { 23.3, 36.7, 54.5, 89.3 };
+        errtol = 1e-8;
+    }
+};
+
+TEST_F(LinearOrbitInterpTest, Hermite)
+{
+    Orbit orbit(statevecs, OrbitInterpMethod::Hermite);
+
+    for (auto t : interp_times) {
+        Vec3 pos, vel;
+        orbit.interpolate(&pos, &vel, t);
+        EXPECT_PRED3( compareVecs, pos, reforbit.position(t), errtol );
+        EXPECT_PRED3( compareVecs, vel, reforbit.velocity(t), errtol );
+    }
+}
+
+TEST_F(LinearOrbitInterpTest, Legendre)
+{
+    Orbit orbit(statevecs, OrbitInterpMethod::Legendre);
+
+    for (auto t : interp_times) {
+        Vec3 pos, vel;
+        orbit.interpolate(&pos, &vel, t);
+        EXPECT_PRED3( compareVecs, pos, reforbit.position(t), errtol );
+        EXPECT_PRED3( compareVecs, vel, reforbit.velocity(t), errtol );
+    }
+}
+
+struct PolynomialOrbitInterpTest : public testing::Test {
+
+    PolynomialOrbit reforbit;
+    std::vector<StateVector> statevecs;
+    std::vector<double> interp_times;
+    double errtol;
+
+    void SetUp() override
+    {
+        DateTime starttime(2000, 1, 1);
+        double spacing = 10.;
+        int size = 11;
+
+        std::vector<Vec3> coeffs =
+            {{ -7000000.0, 5400000.0 ,    0.0},
+             {     5435.0,   -4257.0 , 7000.0},
+             {      -45.0,      23.0 ,   11.0},
+             {        7.3,       3.9 ,    0.0},
+             {        0.0,       0.01,    0.0}};
+        reforbit = PolynomialOrbit(coeffs);
+
+        statevecs.resize(size);
+        for (int i = 0; i < size; ++i) {
+            double t = i * spacing;
+            statevecs[i].datetime = starttime + TimeDelta(t);
+            statevecs[i].position = reforbit.position(t);
+            statevecs[i].velocity = reforbit.velocity(t);
+        }
+
+        interp_times = { 23.3, 36.7, 54.5, 89.3 };
+        errtol = 1e-8;
+    }
+};
+
+TEST_F(PolynomialOrbitInterpTest, Hermite)
+{
+    Orbit orbit(statevecs, OrbitInterpMethod::Hermite);
+
+    for (auto t : interp_times) {
+        Vec3 pos, vel;
+        orbit.interpolate(&pos, &vel, t);
+        EXPECT_PRED3( compareVecs, pos, reforbit.position(t), errtol );
+        EXPECT_PRED3( compareVecs, vel, reforbit.velocity(t), errtol );
+    }
+}
+
+TEST_F(PolynomialOrbitInterpTest, Legendre)
+{
+    Orbit orbit(statevecs, OrbitInterpMethod::Legendre);
+
+    for (auto t : interp_times) {
+        Vec3 pos, vel;
+        orbit.interpolate(&pos, &vel, t);
+        EXPECT_PRED3( compareVecs, pos, reforbit.position(t), errtol );
+        EXPECT_PRED3( compareVecs, vel, reforbit.velocity(t), errtol );
+    }
+}
+
+struct CircularOrbitInterpTest : public testing::Test {
+
+    CircularOrbit reforbit;
+    std::vector<StateVector> statevecs;
+    std::vector<double> interp_times;
+    double errtol;
+
+    void SetUp() override
+    {
+        DateTime starttime(2000, 1, 1);
+        double spacing = 5.;
+        int size = 11;
+
+        double theta0 = 2. * M_PI / 8.;
+        double phi0 = 2. * M_PI / 12.;
+        double dtheta = 2. * M_PI / 7000.;
+        double dphi = 2. * M_PI / 4000.;
+        double r = 8000000.;
+        reforbit = CircularOrbit(theta0, phi0, dtheta, dphi, r);
+
+        statevecs.resize(size);
+        for (int i = 0; i < size; ++i) {
+            double t = i * spacing;
+            statevecs[i].datetime = starttime + TimeDelta(t);
+            statevecs[i].position = reforbit.position(t);
+            statevecs[i].velocity = reforbit.velocity(t);
+        }
+
+        interp_times = { 11.65, 18.35, 27.25, 44.65 };
+        errtol = 1e-8;
+    }
+};
+
+TEST_F(CircularOrbitInterpTest, Hermite)
+{
+    Orbit orbit(statevecs, OrbitInterpMethod::Hermite);
+
+    for (auto t : interp_times) {
+        Vec3 pos, vel;
+        orbit.interpolate(&pos, &vel, t);
+        EXPECT_PRED3( compareVecs, pos, reforbit.position(t), errtol );
+        EXPECT_PRED3( compareVecs, vel, reforbit.velocity(t), errtol );
+    }
+}
+
+TEST_F(CircularOrbitInterpTest, Legendre)
+{
+    Orbit orbit(statevecs, OrbitInterpMethod::Legendre);
+
+    for (auto t : interp_times) {
+        Vec3 pos, vel;
+        orbit.interpolate(&pos, &vel, t);
+        EXPECT_PRED3( compareVecs, pos, reforbit.position(t), errtol );
+        EXPECT_PRED3( compareVecs, vel, reforbit.velocity(t), errtol );
+    }
+}
+
+int main(int argc, char * argv[])
+{
+    testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
-
 }

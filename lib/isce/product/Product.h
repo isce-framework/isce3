@@ -4,8 +4,7 @@
 // Source Author: Bryan Riel
 // Copyright 2017-2018
 
-#ifndef ISCE_PRODUCT_PRODUCT_H
-#define ISCE_PRODUCT_PRODUCT_H
+#pragma once
 
 // std
 #include <string>
@@ -92,7 +91,3 @@ lookSide(const std::string & inputLook) {
             << pyre::journal::endl;
     }
 }
-
-#endif
-
-// end of file

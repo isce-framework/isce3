@@ -4,20 +4,20 @@ include(IsceHelper)
 add_library(${LISCE} SHARED)
 
 add_subdirectory(core)
+add_subdirectory(error)
 add_subdirectory(except)
 add_subdirectory(geometry)
 add_subdirectory(image)
 add_subdirectory(io)
 add_subdirectory(math)
-add_subdirectory(orbit_wip)
 add_subdirectory(product)
 add_subdirectory(signal)
 add_subdirectory(unwrap)
 add_subdirectory(matchtemplate)
 
 # Add library dependencies
-target_link_libraries(${LISCE} ${GDAL_LIBRARY} ${HDF5_LIBRARY} ${PYRE_LIBRARY}
-    ${PYRE_JOURNAL_LIBRARY} ${FFTWF_LIB} ${FFTW_LIB} ${FFTW_THREADS_LIB} ${FFTWF_THREADS_LIB})
+target_link_libraries(${LISCE} ${GDAL_LIBRARY} ${HDF5_LIBRARY} ${LPYRE} ${LJOURNAL}
+    ${FFTWF_LIB} ${FFTW_LIB} ${FFTW_THREADS_LIB} ${FFTWF_THREADS_LIB})
 
 # Add include directories
 # Pyre needed for journaling

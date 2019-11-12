@@ -26,7 +26,7 @@ using isce::core::Sinc2dInterpolator;
 using isce::cuda::core::gpuInterpolator;
 using isce::cuda::core::gpuSinc2dInterpolator;
 
-void loadChipData(Matrix<std::complex<float>> &, size_t, size_t);
+void loadChipData(Matrix<std::complex<float>> &);
 
 // Function to return a Python style arange vector
 std::vector<double> arange(double low, double high, double increment) {
@@ -68,14 +68,14 @@ struct gpuSinc2dInterpolatorTest : public ::testing::Test {
             chip.resize(ny, nx);
 
             // Read the truth data
-            loadChipData(chip, nx, ny);
+            loadChipData(chip);
         }
 };
 
 // Test sinc2d interpolation
 TEST_F(gpuSinc2dInterpolatorTest, Sinc2dFloat) {
     isce::core::Matrix<double> indices;
-    int n_instances = 1024;
+    constexpr int n_instances = 1024;
     indices.resize(n_instances,2);
     for (int i = 0; i < n_instances; ++i) {
         indices(i,0) = xindex;
@@ -84,7 +84,7 @@ TEST_F(gpuSinc2dInterpolatorTest, Sinc2dFloat) {
 
     thrust::complex<float> gpu_z[n_instances];
     std::complex<float> cpu_z;
-    
+
     // instantiate GPU and CPU class
     gpuSinc2dInterpolator<thrust::complex<float>> gpuSinc2d(
                   isce::core::SINC_LEN, isce::core::SINC_SUB);
@@ -97,7 +97,7 @@ TEST_F(gpuSinc2dInterpolatorTest, Sinc2dFloat) {
         for (int j = 0; j < chip.width(); ++j)
             gpu_chip(i,j) = thrust::complex<float>(std::real(chip(i,j)), std::imag(chip(i,j)));
     }
-        
+
     // Perform interpolation
     cpu_z = cpuSinc2d.interpolate(xindex, yindex, chip);
     gpuSinc2d.interpolate_h(indices, gpu_chip, start, delta, gpu_z);
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
     return RUN_ALL_TESTS();
 }
 
-void loadChipData(Matrix<std::complex<float>> & chip, size_t nx, size_t ny) {
+void loadChipData(Matrix<std::complex<float>> & chip) {
     /*
      * pulled chip values from i=100, j=100 in resampslc test
     */

@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# michael a.g. aïvázis
+# orthologue
+# (c) 1998-2019 all rights reserved
+#
+
+
+"""
+Print the contents of the filesystem rooted at the current directory
+"""
+
+# support
+import pyre
+
+# the app
+class Walk(pyre.application):
+    """
+    Generate a graphical representation of the contents of a directory
+    """
+
+    # user configurable state
+    root = pyre.properties.path(default='.')
+    root.doc = 'the starting point for walking the hierarchy'
+
+    # main
+    @pyre.export
+    def main(self, *args, **kwds):
+        """
+        Walk the tree
+        """
+        # unpack
+        root = self.root
+        # build a local filesystem
+        fs = pyre.filesystem.local(root=root).discover()
+        # make an explorer
+        explorer = pyre.filesystem.treeExplorer()
+        # build the document
+        doc = '\n  '.join(explorer.explore(node=fs, label=root))
+        # and render
+        self.info.line("contents of '{}'".format(root))
+        self.info.log(doc)
+        # all done
+        return
+
+# main
+if __name__ == "__main__":
+    # instanstiate
+    walker = Walk(name='walk')
+    # invoke
+    status = walker.run()
+    # share
+    raise SystemExit(status)
+
+# end of file

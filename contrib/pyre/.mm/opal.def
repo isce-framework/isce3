@@ -1,0 +1,13 @@
+# -*- Makefile -*-
+#
+# michael a.g. aïvázis
+# orthologue
+# (c) 1998-2019 all rights reserved
+#
+
+# global options for opal
+PROJECT = opal
+# the live host
+include live.def
+
+# end of file

@@ -5,7 +5,7 @@
 #
 
 from DEMInterpolator cimport DEMInterpolator
-from Orbit cimport Orbit, orbitInterpMethod
+from Orbit cimport Orbit
 from Ellipsoid cimport Ellipsoid
 from Cartesian cimport cartesian_t
 from LUT2d cimport LUT2d
@@ -19,13 +19,13 @@ cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
                 const Orbit &,
                 const LUT2d[double] &,
                 double &, double &,
-                double, double, int, double)
+                double, int, double, int, double)
 
     # Radar geometry coordinates to map coordinates transformer
     int rdr2geo(double, double, double,
                 const Orbit &, const Ellipsoid &, const DEMInterpolator &,
                 cartesian_t &,
-                double, int, double, int, int, orbitInterpMethod)
+                double, int, double, int, int)
 
     # Utility function to compute geographic bounds for a radar grid
     void computeDEMBounds(const Orbit & orbit,

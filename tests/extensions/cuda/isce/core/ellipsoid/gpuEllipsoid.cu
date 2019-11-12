@@ -68,31 +68,32 @@ void xyzToLonLat_h(isce::core::Ellipsoid e, const Vec3& xyz, Vec3& llh) {
     llh = *gpu_llh;
 }
 
-#define ellipsoidGpuTest(name,p,q,r,x,y,z)       \
-    TEST_F(GpuEllipsoidTest, name) {       \
-        isce::core::cartesian_t ref_llh{p,q,r};    \
-        isce::core::cartesian_t ref_xyz = {x,y,z};    \
-        isce::core::cartesian_t xyz, gpu_xyz, cpu_xyz; \
-        isce::core::cartesian_t llh, gpu_llh, cpu_llh; \
-        llh = ref_llh;                  \
-        lonLatToXyz_h(wgs84, llh, gpu_xyz); \
-        wgs84.lonLatToXyz(llh, cpu_xyz); \
-        EXPECT_NEAR(gpu_xyz[0], ref_xyz[0], 1.0e-6);\
-        EXPECT_NEAR(gpu_xyz[1], ref_xyz[1], 1.0e-6);\
-        EXPECT_NEAR(gpu_xyz[2], ref_xyz[2], 1.0e-6);\
-        EXPECT_NEAR(gpu_xyz[0], cpu_xyz[0], 1.0e-6);\
-        EXPECT_NEAR(gpu_xyz[1], cpu_xyz[1], 1.0e-6);\
-        EXPECT_NEAR(gpu_xyz[2], cpu_xyz[2], 1.0e-6);\
-        xyz = ref_xyz;                  \
-        xyzToLonLat_h(wgs84, xyz, gpu_llh); \
-        wgs84.xyzToLonLat(xyz, cpu_llh); \
-        EXPECT_NEAR(gpu_llh[0], ref_llh[0], 1.0e-9);\
-        EXPECT_NEAR(gpu_llh[1], ref_llh[1], 1.0e-9);\
-        EXPECT_NEAR(gpu_llh[2], ref_llh[2], 1.0e-6);\
-        EXPECT_NEAR(gpu_llh[0], cpu_llh[0], 1.0e-9);\
-        EXPECT_NEAR(gpu_llh[1], cpu_llh[1], 1.0e-9);\
-        EXPECT_NEAR(gpu_llh[2], cpu_llh[2], 1.0e-6);\
-        fails += ::testing::Test::HasFailure();\
+auto ellipsoidGpuTestImpl(const Vec3& ref_llh, const Vec3& ref_xyz) {
+    Vec3 gpu_xyz, cpu_xyz;
+    lonLatToXyz_h(wgs84, ref_llh, gpu_xyz);
+    wgs84.lonLatToXyz(ref_llh, cpu_xyz);
+    EXPECT_NEAR(gpu_xyz[0], ref_xyz[0], 1e-6);
+    EXPECT_NEAR(gpu_xyz[1], ref_xyz[1], 1e-6);
+    EXPECT_NEAR(gpu_xyz[2], ref_xyz[2], 1e-6);
+    EXPECT_NEAR(gpu_xyz[0], cpu_xyz[0], 1e-6);
+    EXPECT_NEAR(gpu_xyz[1], cpu_xyz[1], 1e-6);
+    EXPECT_NEAR(gpu_xyz[2], cpu_xyz[2], 1e-6);
+
+    Vec3 gpu_llh, cpu_llh;
+    xyzToLonLat_h(wgs84, ref_xyz, gpu_llh);
+    wgs84.xyzToLonLat(ref_xyz, cpu_llh);
+    EXPECT_NEAR(gpu_llh[0], ref_llh[0], 1e-9);
+    EXPECT_NEAR(gpu_llh[1], ref_llh[1], 1e-9);
+    EXPECT_NEAR(gpu_llh[2], ref_llh[2], 1e-6);
+    EXPECT_NEAR(gpu_llh[0], cpu_llh[0], 1e-9);
+    EXPECT_NEAR(gpu_llh[1], cpu_llh[1], 1e-9);
+    EXPECT_NEAR(gpu_llh[2], cpu_llh[2], 1e-6);
+}
+
+#define ellipsoidGpuTest(name, ...)             \
+    TEST_F(GpuEllipsoidTest, name) {            \
+        ellipsoidGpuTestImpl(__VA_ARGS__);      \
+        fails += ::testing::Test::HasFailure(); \
     } struct consume_semicolon
 
 ellipsoidGpuTest(Origin, {0.,0.,0.}, {wgs84.a(),0.,0.});

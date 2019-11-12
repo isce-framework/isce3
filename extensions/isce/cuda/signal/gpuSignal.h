@@ -4,8 +4,9 @@
 // Source Author: Liang Yu
 // Copyright 2019
 
-#ifndef ISCE_CUDA_SIGNAL_SIGNAL_H
-#define ISCE_CUDA_SIGNAL_SIGNAL_H
+#pragma once
+
+#include "forward.h"
 
 #include <complex>
 #include <valarray>
@@ -15,21 +16,8 @@
 
 #include <isce/core/Common.h>
 
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace signal {
-            template<class T>
-            class gpuSignal;
-        }
-    }
-}
-
-using isce::cuda::signal::gpuSignal;
-
-// Definition
 template<class T>
-class gpuSignal {
+class isce::cuda::signal::gpuSignal {
 
     public:
         // Default constructor
@@ -181,14 +169,14 @@ CUDA_GLOBAL void rangeShiftImpactMult_g(thrust::complex<T> *data_lo_res,
         int n_cols_hi);
 
 template<class T>
-void upsample(gpuSignal<T> &fwd,
-        gpuSignal<T> &inv,
+void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
+        isce::cuda::signal::gpuSignal<T> &inv,
         thrust::complex<T> *input,
         thrust::complex<T> *output);
 
 template<class T>
-void upsample(gpuSignal<T> &fwd,
-        gpuSignal<T> &inv,
+void upsample(isce::cuda::signal::gpuSignal<T> &fwd,
+        isce::cuda::signal::gpuSignal<T> &inv,
         thrust::complex<T> *input,
         thrust::complex<T> *output,
         thrust::complex<T> *shiftImpact);
@@ -214,7 +202,3 @@ template<class T>
 CUDA_GLOBAL void normalize_g(thrust::complex<T> *data,
         T normalization,
         size_t n_elements);
-
-#endif
-
-// end of file

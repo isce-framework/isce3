@@ -4,14 +4,20 @@
 // Author: Bryan V. Riel
 // Copyright 2017-2018
 
-#include <chrono>
 #include "Topo.h"
+
+#include <chrono>
 #include "utilities.h"
 #include "gpuTopo.h"
+#include <isce/core/LUT1d.h>
+#include <isce/core/Orbit.h>
+#include <isce/geometry/DEMInterpolator.h>
+#include <isce/geometry/TopoLayers.h>
 
 // pull in some isce namespaces
 using isce::core::Ellipsoid;
 using isce::core::Orbit;
+using isce::core::OrbitInterpBorderMode;
 using isce::core::LUT1d;
 using isce::core::cartesian_t;
 using isce::io::Raster;
@@ -77,18 +83,18 @@ topo(Raster & demRaster,
 }
 
 /** @param[in] demRaster input DEM raster
-  * @param[in] xRaster output raster for X coordinate in requested projection system 
+  * @param[in] xRaster output raster for X coordinate in requested projection system
                    (meters or degrees)
   * @param[in] yRaster output raster for Y cooordinate in requested projection system
                    (meters or degrees)
   * @param[in] zRaster output raster for height above ellipsoid (meters)
-  * @param[in] incRaster output raster for incidence angle (degrees) computed from vertical 
+  * @param[in] incRaster output raster for incidence angle (degrees) computed from vertical
                at target
-  * @param[in] hdgRaster output raster for azimuth angle (degrees) computed anti-clockwise 
+  * @param[in] hdgRaster output raster for azimuth angle (degrees) computed anti-clockwise
                from EAST (Right hand rule)
   * @param[in] localIncRaster output raster for local incidence angle (degrees) at target
   * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
-  * @param[in] simRaster output raster for simulated amplitude image. 
+  * @param[in] simRaster output raster for simulated amplitude image.
   * @param[in] maskRaster output raster for layover/shadow mask. */
 void isce::cuda::geometry::Topo::
 topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
@@ -109,18 +115,18 @@ topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRast
 }
 
 /** @param[in] demRaster input DEM raster
-  * @param[in] xRaster output raster for X coordinate in requested projection system 
+  * @param[in] xRaster output raster for X coordinate in requested projection system
                    (meters or degrees)
   * @param[in] yRaster output raster for Y cooordinate in requested projection system
                    (meters or degrees)
   * @param[in] zRaster output raster for height above ellipsoid (meters)
-  * @param[in] incRaster output raster for incidence angle (degrees) computed from vertical 
+  * @param[in] incRaster output raster for incidence angle (degrees) computed from vertical
                at target
-  * @param[in] hdgRaster output raster for azimuth angle (degrees) computed anti-clockwise 
+  * @param[in] hdgRaster output raster for azimuth angle (degrees) computed anti-clockwise
                from EAST (Right hand rule)
   * @param[in] localIncRaster output raster for local incidence angle (degrees) at target
   * @param[in] localPsiRaster output raster for local projection angle (degrees) at target
-  * @param[in] simRaster output raster for simulated amplitude image. 
+  * @param[in] simRaster output raster for simulated amplitude image.
   * @param[in] maskRaster output raster for layover/shadow mask. */
 void isce::cuda::geometry::Topo::
 topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
@@ -276,7 +282,7 @@ computeLinesPerBlock(isce::io::Raster & demRaster, TopoLayers & layers) {
 
 // Compute layover and shadow masks
 void isce::cuda::geometry::Topo::
-_setLayoverShadowWithOrbit(const isce::core::Orbit & orbit,
+_setLayoverShadowWithOrbit(const Orbit & orbit,
                            TopoLayers & layers,
                            DEMInterpolator & demInterp,
                            size_t lineStart) {
@@ -289,8 +295,8 @@ _setLayoverShadowWithOrbit(const isce::core::Orbit & orbit,
         const double tline = this->radarGridParameters().sensingTime(i + lineStart);
 
         // Get state vector
-        cartesian_t xyzsat, velsat;
-        orbit.interpolateWGS84Orbit(tline, xyzsat, velsat);
+        cartesian_t xyzsat;
+        orbit.interpolate(&xyzsat, nullptr, tline, OrbitInterpBorderMode::FillNaN);
         satPosition[i] = xyzsat;
     }
 

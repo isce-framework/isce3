@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+#-*- coding: utf-8 -*-
+
+# version check
+# python version information is in {sys.version}
+import sys
+# unwrap
+major, minor, _, _, _ = sys.version_info
+# check
+if major < 3 or (major == 3 and minor < 6):
+    # complain
+    raise RuntimeError("isce3 needs python 3.6 or newer")
+
+
+# check
+try:
+    # whether pyre is available
+    import pyre
+# if this fails
+except ImportError:
+    # we will grab a minimal version from the web
+    import urllib.request
+    # the pyre bootstrap
+    boot = 'pyre-boot.zip'
+    # lives at
+    url = f"http://pyre.orthologue.com/{boot}"
+    # let the user know
+    print(f"couldn't find pyre; downloading from '{url}'")
+    # ask the server
+    with urllib.request.urlopen(url=url) as istream:
+        # open the local file
+        with open(boot, mode='wb') as ostream:
+            # pull and write
+            ostream.write(istream.read())
+            # try importing pyre again; if anything bas happens, let it through
+            import pyre
+
+
+# get my package; should we attempt to bootstrap a minimal version as well?
+import isce3
+
+
+# boot
+if __name__ == "__main__":
+    # build an instance of the plexus
+    app = isce3.shells.plexus(name="isce3.plexus")
+    # invoke it
+    status = app.run()
+    # and pass the status on to the shell
+    raise SystemExit(status)
+
+
+# end of file

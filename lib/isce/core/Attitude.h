@@ -5,8 +5,6 @@
 // Copyright 2018
 //
 
-#ifndef ISCE_CORE_ATTITUDE_H
-#define ISCE_CORE_ATTITUDE_H
 #pragma once
 
 #include "forward.h"
@@ -26,7 +24,7 @@ class isce::core::Attitude {
         Attitude(Attitude::Type atype) : _attitude_type(atype) {};
 
         /** Virtual destructor*/
-        virtual ~Attitude() {}
+        virtual ~Attitude();
 
         /** Virtual function to return yaw, pitch, roll */
         virtual void ypr(double tintp, double& yaw, double& pitch, double& roll) = 0;
@@ -54,7 +52,3 @@ class isce::core::Attitude {
 void isce::core::Attitude::yawOrientation(const std::string orientation) {
     _yaw_orientation = orientation;
 }
-
-#endif
-
-// end of file

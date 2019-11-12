@@ -42,10 +42,10 @@ void createTestData();
 
 TEST(GeocodeTest, RunGeocode) {
 
-    // This test runs Topo to compute lat lon height on ellipsoid for a given 
-    // radar dataset. Then each of the computed latitude and longitude 
-    // grids (radar grids) get geocoded. This will allow to check geocoding by 
-    // comparing the values of the geocoded pixels with its coordinate. 
+    // This test runs Topo to compute lat lon height on ellipsoid for a given
+    // radar dataset. Then each of the computed latitude and longitude
+    // grids (radar grids) get geocoded. This will allow to check geocoding by
+    // comparing the values of the geocoded pixels with its coordinate.
 
     // Create a DEM with zero height (ellipsoid surface)
     createZeroDem();
@@ -58,7 +58,7 @@ TEST(GeocodeTest, RunGeocode) {
 
     // Load the product
     isce::product::Product product(file);
-    
+
     const isce::product::Swath & swath = product.swath('A');
     isce::core::Orbit orbit = product.metadata().orbit();
     isce::core::Ellipsoid ellipsoid;
@@ -82,14 +82,14 @@ TEST(GeocodeTest, RunGeocode) {
     int geoGridWidth = 500;
     int epsgcode = 4326;
 
-    // The DEM to be used for geocoding 
+    // The DEM to be used for geocoding
     isce::io::Raster demRaster("zeroHeightDEM.geo");
 
     // input raster in radar coordinates to be geocoded
     isce::io::Raster radarRaster("x.rdr");
 
     // geocoded raster
-    isce::io::Raster geocodedRaster("x.geo", 
+    isce::io::Raster geocodedRaster("x.geo",
                         geoGridWidth, geoGridLength,
                         1, GDT_Float64, "ENVI");
 
@@ -105,7 +105,7 @@ TEST(GeocodeTest, RunGeocode) {
     isce::geometry::Geocode<double> geoObj;
 
     // manually configure geoObj
-    
+
     geoObj.orbit(orbit);
 
     geoObj.ellipsoid(ellipsoid);
@@ -123,7 +123,7 @@ TEST(GeocodeTest, RunGeocode) {
     geoObj.interpolator(method);
 
     geoObj.radarGrid(doppler,
-                      orbit.refEpoch,
+                      orbit.referenceEpoch(),
                       swath.zeroDopplerTime()[0],
                       azimuthTimeInterval,
                       radarGridLength,
@@ -154,16 +154,16 @@ TEST(GeocodeTest, RunGeocode) {
 }
 
 TEST(GeocodeTest, CheckGeocode) {
-    // The geocoded latitude and longitude data should be 
+    // The geocoded latitude and longitude data should be
     // consistent with the geocoded pixel location.
-    
+
     isce::io::Raster xRaster("x.geo");
 
     isce::io::Raster yRaster("y.geo");
 
     double * geoTrans = new double[6];
     xRaster.getGeoTransform(geoTrans);
-    
+
     double x0 = geoTrans[0] + geoTrans[1]/2.0;
     double dx = geoTrans[1];
 
@@ -191,7 +191,7 @@ TEST(GeocodeTest, CheckGeocode) {
             if (geoX[line*width + pixel] != 0.0) {
                 gridLon = x0 + pixel * dx;
                 errX = geoX[line*width + pixel] - gridLon;
-                
+
                 gridLat = y0 + line * dy;
                 errY = geoY[line*width + pixel] - gridLat;
 

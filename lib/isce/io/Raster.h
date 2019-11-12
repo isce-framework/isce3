@@ -4,32 +4,25 @@
 // Author: Marco Lavalle
 // Original code: Joshua Cohen
 // Copyright 2018
-//
 
-#ifndef __ISCE_IO_RASTER_H__
-#define __ISCE_IO_RASTER_H__
+#pragma once
+
+#include "forward.h"
 
 #include <complex>
 #include <cstdint>
-#include <iostream>
 #include <string>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
 #include <valarray>
-#include "gdal_priv.h"
-#include "gdal_vrt.h"
-#include "ogr_spatialref.h"
+#include <gdal_priv.h>
+#include <gdal_vrt.h>
+#include <ogr_spatialref.h>
 #include "Constants.h"
-#include "isce/core/Matrix.h"
+#include <isce/core/Matrix.h>
 
 //#include <pyre/journal.h>
-
-namespace isce {
-    namespace io {
-        class Raster;
-    }
-}
 
 /** Data structure meant to handle Raster I/O operations.
 *
@@ -198,5 +191,3 @@ private:
 #define ISCE_IO_RASTER_ICC
 #include "Raster.icc"
 #undef ISCE_IO_RASTER_ICC
-
-#endif

@@ -4,8 +4,7 @@
 // Author: Bryan V. Riel
 // Copyright 2017-2019
 
-#ifndef ISCE_PRODUCT_PROCESSINGINFORMATION_H
-#define ISCE_PRODUCT_PROCESSINGINFORMATION_H
+#pragma once
 
 // std
 #include <valarray>
@@ -124,7 +123,3 @@ operator=(const isce::product::ProcessingInformation & proc) {
     }
     return *this;
 }
-
-#endif
-
-// end of file

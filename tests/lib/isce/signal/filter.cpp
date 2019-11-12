@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <cstdio>
 #include <sstream>
@@ -7,12 +6,13 @@
 #include <complex>
 #include <gtest/gtest.h>
 
-#include "isce/signal/Signal.h"
-#include "isce/io/Raster.h"
-#include "isce/signal/Crossmul.h"
 #include <isce/io/IH5.h>
+#include <isce/io/Raster.h>
 #include <isce/product/Serialization.h>
 #include <isce/product/Product.h>
+#include <isce/signal/Crossmul.h>
+#include <isce/signal/Filter.h>
+#include <isce/signal/Signal.h>
 
 TEST(Filter, constructAzimuthCommonbandFilter)
 {

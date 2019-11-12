@@ -1,0 +1,97 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+// code guard
+#if !defined(pyre_grid_View_icc)
+#error This header file contains implementation details of class pyre::grid::View
+#endif
+
+
+// meta-methods
+template <typename gridT>
+pyre::grid::View<gridT>::
+View(grid_type & grid, const slice_type & slice) :
+    _grid(grid),
+    _slice(slice)
+{}
+
+
+// Assign values from one view to another
+template <typename gridT>
+const pyre::grid::View<gridT> &
+pyre::grid::View<gridT>::
+operator=(const pyre::grid::View<gridT> & view) const {
+    std::copy(view.begin(), view.end(), begin());
+    return *this;
+}
+
+
+// interface
+template <typename gridT>
+const auto &
+pyre::grid::View<gridT>::
+low() const {
+    // easy
+    return _slice.low();
+}
+
+
+template <typename gridT>
+const auto &
+pyre::grid::View<gridT>::
+high() const {
+    // easy
+    return _slice.high();
+}
+
+
+template <typename gridT>
+const auto &
+pyre::grid::View<gridT>::
+packing() const {
+    // easy
+    return _slice.packing();
+}
+
+
+template <typename gridT>
+const auto &
+pyre::grid::View<gridT>::
+slice() const {
+    // easy
+    return _slice;
+}
+
+
+template <typename gridT>
+auto
+pyre::grid::View<gridT>::
+layout() const {
+    // easy
+    return layout_type(_slice.shape(), _slice.packing());
+}
+
+
+template <typename gridT>
+auto
+pyre::grid::View<gridT>::
+begin() const {
+    // easy enough...
+    return iterator_type(_grid, _slice.begin());
+}
+
+
+template <typename gridT>
+auto
+pyre::grid::View<gridT>::
+end() const {
+    // easy enough...
+    return iterator_type(_grid, _slice.end());
+}
+
+// end of file

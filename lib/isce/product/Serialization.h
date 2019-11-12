@@ -8,8 +8,7 @@
  *
  * Serialization functions for isce::product objects. */
 
-#ifndef ISCE_PRODUCT_SERIALIZATION_H
-#define ISCE_PRODUCT_SERIALIZATION_H
+#pragma once
 
 // isce::core
 #include <isce/core/Constants.h>
@@ -155,7 +154,3 @@ namespace isce {
 
     }
 }
-
-#endif
-
-// end of file

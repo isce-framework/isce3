@@ -88,7 +88,8 @@ cdef class pyProduct:
 
         # Create RadarGridParameters object
         cdef RadarGridParameters radarGrid = RadarGridParameters(
-            swath, numberAzimuthLooks, numberRangeLooks
+            swath, self.c_product.lookSide(), numberAzimuthLooks, 
+            numberRangeLooks
         )
         return pyRadarGridParameters.cbind(radarGrid)
 

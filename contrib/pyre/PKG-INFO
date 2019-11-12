@@ -1,0 +1,11 @@
+Metadata-Version: 1.1
+Name: pyre
+Version: 1.0
+Author: Michael A.G. Aivazis
+Author-email: michael.aivazis at orthologue com
+Home-page: http://pyre.orthologue.com
+Download-url: http://pyre.orthologue.com
+Summary: An extensible, component based framework for specifying and staging complex, multi-physics simulations.
+License: BSD
+Description: UNKNOWN
+Platform: UNKNOWN

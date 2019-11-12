@@ -1,0 +1,68 @@
+FROM nvidia/cuda:9.2-runtime-centos7
+
+MAINTAINER Piyush Agram <piyush.agram@jpl.nasa.gov>
+
+# Set default UID and GID
+ENV USER_ID 1000
+ENV GROUP_ID 1000
+
+# Set an encoding to make things work smoothly.
+ENV LANG en_US.UTF-8
+
+# Set gosu version
+ENV GOSU_VERSION=1.10
+
+# create user and install latest miniconda
+COPY requirements.txt.base /tmp/requirements.txt
+RUN set -ex \
+ && groupadd -r conda -g $GROUP_ID \
+ && useradd -u $USER_ID -r -g conda -d /home/conda -s /bin/bash -m conda \
+ && chmod 755 /home/conda \
+ && echo 'conda ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
+ && yum update -y \
+ && yum install -y \
+      wget \
+      curl \
+      sudo \
+      bzip2 \
+      zip \
+      centos-release-scl-rh \
+      yum-utils \
+ && yum update -y \
+ && yum clean all \
+ && curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o miniconda.sh \
+ && bash miniconda.sh -b -p /opt/conda \
+ && rm miniconda.sh \
+ && touch /opt/conda/conda-meta/pinned \
+ && export PATH=/opt/conda/bin:$PATH \
+ && conda config --set show_channel_urls True \
+ && conda update --all --yes \
+ && conda install --yes --file /tmp/requirements.txt \
+ && gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
+ && curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64" \
+ && curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64.asc" \
+ && gpg --verify /usr/local/bin/gosu.asc \
+ && rm /usr/local/bin/gosu.asc \
+ && rm -r /root/.gnupg/ \
+ && chmod +x /usr/local/bin/gosu \
+ && chmod u+s /usr/local/bin/gosu \
+ && conda clean -tipsy \
+ && rm -rf /opt/conda/pkgs \
+ && rm -rf /var/cache/yum \
+ && rm /tmp/requirements.txt
+
+# Add a file for users to source to activate the `conda`
+# environment `root` and the devtoolset compiler. Also
+# add a file that wraps that for use with the `ENTRYPOINT`.
+COPY entrypoint /opt/docker/bin/entrypoint
+COPY entrypoint_source.conda /opt/docker/bin/entrypoint_source.conda
+COPY entrypoint_source.base /opt/docker/bin/entrypoint_source
+
+# set default user and workdir
+USER conda
+WORKDIR /home/conda
+
+# Activate the `conda` environment `root` and the devtoolset compiler.
+# Provide a default command (`bash`), which will start if the user doesn't specify one.
+ENTRYPOINT [ "/opt/docker/bin/entrypoint" ]
+CMD [ "/bin/bash" ]

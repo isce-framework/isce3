@@ -7,6 +7,19 @@
 
 #include "DEMInterpolator.h"
 
+#include <isce/core/Projections.h>
+#include <isce/io/Raster.h>
+
+isce::geometry::DEMInterpolator::
+~DEMInterpolator() {
+    if (_interp) {
+        delete _interp;
+    }
+    if (_proj) {
+        delete _proj;
+    }
+}
+
 // Load DEM subset into memory
 /** @param[in] demRaster input DEM raster to subset
   * @param[in] minLon Longitude of western edge of bounding box

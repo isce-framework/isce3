@@ -1,0 +1,30 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_journal_Debug_icc)
+#error This header file contains implementation details of class Debug
+#else
+
+
+// meta methods
+// destructor
+pyre::journal::Debug::
+~Debug()
+{}
+
+
+// the default constructor
+pyre::journal::Debug::
+Debug(pyre::journal::Debug::string_t name) :
+    pyre::journal::Diagnostic<pyre::journal::Debug>("debug", name),
+    pyre::journal::Channel<pyre::journal::Debug, false>(name)
+{}
+
+
+# endif
+
+// end of file

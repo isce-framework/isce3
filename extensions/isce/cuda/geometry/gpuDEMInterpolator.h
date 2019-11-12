@@ -3,24 +3,13 @@
 // Copyright 2018
 //
 
-#ifndef ISCE_CUDA_GEOMETRY_GPUDEMINTERPOLATOR_H
-#define ISCE_CUDA_GEOMETRY_GPUDEMINTERPOLATOR_H
+#pragma once
 
-// isce::geometry
-#include "isce/geometry/DEMInterpolator.h"
+#include "forward.h"
+#include <isce/geometry/forward.h>
+#include <isce/cuda/core/forward.h>
 
-// isce::cuda::core
-#include "isce/cuda/core/gpuInterpolator.h"
-#include "isce/cuda/core/gpuProjections.h"
-
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace geometry {
-            class gpuDEMInterpolator;
-        }
-    }
-}
+#include <isce/cuda/core/gpuProjections.h>
 
 // DEMInterpolator declaration
 class isce::cuda::geometry::gpuDEMInterpolator {
@@ -131,7 +120,3 @@ class isce::cuda::geometry::gpuDEMInterpolator {
         // Boolean for owning memory
         bool _owner;
 };
-
-#endif
-
-// end of file

@@ -3,15 +3,14 @@
  * Copyright 2018
  */
 
-#ifndef __ISCE_CUDA_CORE_PROJECTIONS_H__
-#define __ISCE_CUDA_CORE_PROJECTIONS_H__
+#pragma once
 
 #include <cmath>
 #include <iostream>
 #include <vector>
 
 #include <isce/core/Ellipsoid.h>
-#include <isce/core/Projections.h>
+#include <isce/core/forward.h>
 
 namespace isce { namespace cuda { namespace core {
 
@@ -150,5 +149,3 @@ namespace isce { namespace cuda { namespace core {
     CUDA_DEV int projInverse(int code, const double* in, double* out_llh);
     CUDA_DEV int projInverse(int code, const isce::core::Vec3& in, isce::core::Vec3& out_llh);
 }}}
-
-#endif

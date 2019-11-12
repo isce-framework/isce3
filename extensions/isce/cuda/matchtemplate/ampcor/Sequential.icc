@@ -11,6 +11,8 @@
 #error This header is an implementation detail of ampcor::cuda::correlators::Sequential
 #endif
 
+#include <cufft.h>
+
 // interface
 template <typename raster_t>
 void
@@ -377,7 +379,7 @@ _detect(const cell_type * cArena, size_type refDim, size_type tgtDim) const -> v
 
     // all done
     return rArena;
-};
+}
 
 // subtract the tile mean from each reference pixel
 template <typename raster_t>

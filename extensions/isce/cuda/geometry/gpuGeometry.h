@@ -3,35 +3,25 @@
 // Copyright 2018
 //
 
-#ifndef ISCE_CUDA_GEOMETRY_GPUGEOMETRY_H
-#define ISCE_CUDA_GEOMETRY_GPUGEOMETRY_H
+#pragma once
 
-#include <cmath>
+#include <isce/core/forward.h>
+#include <isce/geometry/forward.h>
+#include <isce/cuda/core/forward.h>
+#include <isce/cuda/geometry/forward.h>
 
-// isce::core
-#include <isce/core/Ellipsoid.h>
-#include <isce/core/Orbit.h>
-#include <isce/core/Pixel.h>
-#include <isce/core/LUT1d.h>
-
-// isce::geometry
-#include <isce/geometry/DEMInterpolator.h>
-
-// isce::cuda::core
-#include <isce/cuda/core/gpuOrbit.h>
-#include <isce/cuda/core/gpuLUT1d.h>
-
-// isce::cuda::geometry
-#include <isce/cuda/geometry/gpuDEMInterpolator.h>
+#include <isce/core/Common.h>
 
 // Declaration
 namespace isce {
 namespace cuda {
 namespace geometry {
 
+    using cartesian_t = isce::core::Vec3;
+
     /** Radar geometry coordinates to map coordinates transformer*/
     CUDA_DEV int rdr2geo(double, double, double,
-                         const isce::cuda::core::gpuOrbit &,
+                         const isce::cuda::core::OrbitView &,
                          const isce::core::Ellipsoid &,
                          const gpuDEMInterpolator &,
                          isce::core::Vec3&, double, int, double, int, int);
@@ -48,10 +38,10 @@ namespace geometry {
     /** Map coordinates to radar geometry coordinates transformer*/
     CUDA_DEV int geo2rdr(const isce::core::Vec3&,
                          const isce::core::Ellipsoid&,
-                         const isce::cuda::core::gpuOrbit &,
+                         const isce::cuda::core::OrbitView &,
                          const isce::cuda::core::gpuLUT1d<double> &,
                          double *, double *,
-                         double, double, int, double);
+                         double, int, double, int, double);
 
     /** Radar geometry coordinates to map coordinates transformer (host testing) */
     CUDA_HOST int rdr2geo_h(const isce::core::Pixel &,
@@ -69,18 +59,14 @@ namespace geometry {
                             const isce::core::Orbit &,
                             const isce::core::LUT1d<double> &,
                             double &, double &,
-                            double, double, int, double);
+                            double, int, double, int, double);
 
 } // namespace geometry
 } // namespace cuda
 } // namespace isce
 
 /** Create ProjectionBase pointer on the device (meant to be run by a single thread) */
-CUDA_GLOBAL void createProjection(isce::cuda::core::ProjectionBase **, int); 
+CUDA_GLOBAL void createProjection(isce::cuda::core::ProjectionBase **, int);
 
 /** Delete ProjectionBase pointer on the device (meant to be run by a single thread) */
 CUDA_GLOBAL void deleteProjection(isce::cuda::core::ProjectionBase **);
-
-#endif
-
-// end of file

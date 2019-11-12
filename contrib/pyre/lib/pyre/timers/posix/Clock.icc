@@ -1,0 +1,32 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_timers_Clock_icc)
+#error This header file contains implementation details of the class Clock
+#else
+
+// interface
+pyre::timers::Clock::tick_t pyre::timers::Clock::time() const {
+    timespec t;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t);
+    return tick_t(t.tv_sec,t.tv_nsec);
+}
+
+double pyre::timers::Clock::elapsed(const tick_t & delta) const {
+    return delta;
+}
+
+// constructor
+pyre::timers::Clock::Clock() {}
+
+// destructor
+pyre::timers::Clock::~Clock() {}
+
+#endif
+
+// end of file

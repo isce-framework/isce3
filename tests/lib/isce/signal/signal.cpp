@@ -364,6 +364,90 @@ TEST(Signal, upsample)
 
 }
 
+
+TEST(Signal, upsample2D)
+{
+    // Dimension of the 2D input array
+    int nX = 100;
+    int nY = 100;
+
+    // upsampling factor
+    int oversample = 2;
+
+    // reserve memory for a block of data
+    std::valarray<std::complex<double>> slc(nX*nY);
+    std::valarray<std::complex<double>> slcU(nX*oversample * nY*oversample);
+
+
+    // Fill the dataset in the X direction
+    for (int j=0; j<nY; j++){
+        for (int i=0; i<nX; i++){
+            double phase = std::sin(10*M_PI*((double)i)/nX);
+            slc[j*nX + i] = std::complex<double> (std::cos(phase), std::sin(phase));
+        }
+    }
+
+    // Cross-fill in the Y direction
+    for (int j=0; j<nX; j++){
+        for (int i=0; i<nY; i++){
+            double phase = std::sin(10*M_PI*((double)i)/nY);
+            slc[i*nY + j] *= std::complex<double> (std::cos(phase), std::sin(phase));
+        }
+    }
+
+
+
+    // instantiate a signal object
+    isce::signal::Signal<double> sig;
+
+    // Upsampling
+    sig.forward2DFFT(slc, slcU, nX, nY, nX*oversample, nY*oversample);
+    sig.inverse2DFFT(slcU, slcU, nX*oversample, nY*oversample);
+    sig.upsample2D(slc, slcU, oversample);
+
+
+    // Check if the original smaples have the same phase in the signal before and after upsampling
+    double max_err = 0.0;
+    double err;
+    for (int j = 0; j<nY; j++){
+        for (int i = 0; i<nX; i++){
+           err = std::arg(slc[j*nX + i] * std::conj(slcU[j*nX*oversample*oversample + i*oversample]));
+            if (std::abs(err) > max_err)
+                max_err = std::abs(err);
+        }
+    }
+
+
+    // Check that upsampling is *close* to theorethical values
+    double max_err_u = 0.0;
+    double err_u;
+    double step = 1.0/oversample;
+    std::complex<double> cpxData;
+
+    for (int row = 0; row<nY*oversample; row++){
+        for (int col = 0; col<nX*oversample; col++){
+            double i = col*step;
+            double j = row*step;
+            double phase = std::sin(10*M_PI*i/nX);
+            cpxData = std::complex<double> (std::cos(phase), std::sin(phase));
+            phase = std::sin(10*M_PI*j/nY);
+            cpxData *= std::complex<double> (std::cos(phase), std::sin(phase));
+            err_u = std::arg(cpxData * std::conj(slcU[row*nX*oversample + col]));
+            if (std::abs(err_u) > max_err_u)
+                max_err_u = std::abs(err_u);
+        }
+    }
+
+    //std::cout << "max_err " << max_err << std::endl;
+    //std::cout << "max_err_u " << max_err_u << std::endl;
+    ASSERT_LT(max_err, 1.0e-14);
+    ASSERT_LT(max_err_u, 1.0e-8);
+
+
+
+}
+
+
 TEST(Signal, FFT2D)
   {
 

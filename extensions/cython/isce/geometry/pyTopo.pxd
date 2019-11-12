@@ -5,7 +5,6 @@
 #
 
 from Topo cimport Topo
-from Orbit cimport orbitInterpMethod
 from Interpolator cimport dataInterpMethod
 
 cdef class pyTopo:

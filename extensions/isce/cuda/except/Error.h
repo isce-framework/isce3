@@ -61,4 +61,3 @@ void checkCudaAsyncErrorsImpl(const isce::except::SrcInfo & info)
 
 // Wrapper to pass file name, line number, and function name
 #define checkCudaAsyncErrors() checkCudaAsyncErrorsImpl(ISCE_SRCINFO())
-

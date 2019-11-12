@@ -21,7 +21,7 @@ using isce::io::Raster;
 /** @param[in] topoRaster outputs of topo -i.e, pixel-by-pixel x,y,h as bands
   * @param[in] outdir directory to write outputs to
   * @param[in] azshift Number of lines to shift by in azimuth
-  * @param[in] rgshift Number of pixels to shift by in range 
+  * @param[in] rgshift Number of pixels to shift by in range
   *
   * This is the main geo2rdr driver. The pixel-by-pixel output filenames are fixed for now
   * <ul>
@@ -51,7 +51,7 @@ geo2rdr(isce::io::Raster & topoRaster,
 /** @param[in] topoRaster outputs of topo - i.e, pixel-by-pixel x,y,h as bands
   * @param[in] outdir directory to write outputs to
   * @param[in] rgoffRaster range offset output
-  * @param[in] azoffRaster azimuth offset output 
+  * @param[in] azoffRaster azimuth offset output
   * @param[in] azshift Number of lines to shift by in azimuth
   * @param[in] rgshift Number of pixels to shift by in range */
 void isce::cuda::geometry::Geo2rdr::
@@ -154,8 +154,8 @@ geo2rdr(isce::io::Raster & topoRaster,
             ellipsoid, orbit, doppler, x, y, hgt, azoff, rgoff, topoEPSG,
             lineStart, demWidth, t0, r0, radarGrid.numberAzimuthLooks(),
             radarGrid.numberRangeLooks(), radarGrid.length(), radarGrid.width(), radarGrid.prf(),
-            radarGrid.rangePixelSpacing(), radarGrid.wavelength(), this->threshold(),
-            this->numiter(), totalconv
+            radarGrid.rangePixelSpacing(), radarGrid.wavelength(),
+            radarGrid.lookSide(), this->threshold(), this->numiter(), totalconv
         );
 
         // Write block of data
@@ -163,7 +163,7 @@ geo2rdr(isce::io::Raster & topoRaster,
         azoffRaster.setBlock(azoff, 0, lineStart, demWidth, blockLength);
 
     } // end for loop blocks in DEM image
-            
+
     // Print out convergence statistics
     info << "Total convergence: " << totalconv << " out of "
          << (demWidth * demLength) << pyre::journal::endl;
@@ -174,11 +174,12 @@ geo2rdr(isce::io::Raster & topoRaster,
 void isce::cuda::geometry::Geo2rdr::
 _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
               double r0, double rngend, double dmrg, size_t demWidth, size_t demLength) {
-    info 
+    info
         << pyre::journal::newline
         << "Starting acquisition time: " << t0 << pyre::journal::newline
         << "Stop acquisition time: " << tend << pyre::journal::newline
         << "Azimuth line spacing in seconds: " << dtaz << pyre::journal::newline
+        << "Slant range spacing in meters:" << dmrg << pyre::journal::newline
         << "Near range (m): " << r0 << pyre::journal::newline
         << "Far range (m): " << rngend << pyre::journal::newline
         << "Radar image length: " << this->radarGridParameters().length() << pyre::journal::newline
@@ -191,18 +192,7 @@ _printExtents(pyre::journal::info_t & info, double t0, double tend, double dtaz,
 void isce::cuda::geometry::Geo2rdr::
 _checkOrbitInterpolation(double aztime) {
     isce::core::cartesian_t satxyz, satvel;
-    Orbit orbit = this->orbit();
-    int stat = orbit.interpolate(aztime, satxyz, satvel, this->orbitMethod());
-    if (stat != 0) {
-        pyre::journal::error_t error("isce.cuda.core.Geo2rdr");
-        error
-            << pyre::journal::at(__HERE__)
-            << "Error in Topo::topo - Error getting state vector for bounds computation."
-            << pyre::journal::newline
-            << " - requested time: " << aztime << pyre::journal::newline
-            << " - bounds: " << orbit.UTCtime[0] << " -> " << orbit.UTCtime[orbit.nVectors-1]
-            << pyre::journal::endl;
-    }
+    this->orbit().interpolate(&satxyz, &satvel, aztime);
 }
 
 // Compute number of lines per block dynamically from GPU memory

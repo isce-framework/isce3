@@ -3,12 +3,14 @@
 // Copyright 2018
 //
 
+#include "gpuInterpolator.h"
+
 #include <iostream>
 #include <stdio.h>
 #include <valarray>
 #include <cuda_runtime.h>
 #include <thrust/complex.h>
-#include "gpuInterpolator.h"
+#include <isce/core/Matrix.h>
 #include <isce/cuda/except/Error.h>
 
 using isce::cuda::core::gpuInterpolator;

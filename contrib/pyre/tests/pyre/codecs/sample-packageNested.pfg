@@ -1,0 +1,19 @@
+;
+; michael a.g. aïvázis
+; orthologue
+; (c) 1998-2019 all rights reserved
+;
+
+pyre:
+    ; some global settings
+  home = pyre.home()
+  prefix = pyre.prefix()
+
+  ; and some per user settings
+  user:
+    name = michael a.g. aïvázis
+    email = michael.aivazis@orthologue.com
+
+  user.affiliation = orthologue
+
+; end of file

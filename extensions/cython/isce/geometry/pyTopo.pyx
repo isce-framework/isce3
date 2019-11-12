@@ -11,7 +11,6 @@ from cython.operator cimport dereference as deref
 
 from SerializeGeometry cimport load_archive
 from Topo cimport *
-from Orbit cimport orbitInterpMethod
 from Interpolator cimport dataInterpMethod
 
 cdef class pyTopo:
@@ -23,7 +22,6 @@ cdef class pyTopo:
         threshold (Optional[float]):         Threshold for iteration stop for slant range.
         numIterations (Optional[int]):       Max number of normal iterations.
         extraIterations (Optional[int]):     Number of extra refinement iterations.
-        orbitMethod (Optional[str]):         Orbit interpolation method ('hermite', 'sch', 'legendre')
         demMethod (Optional[int]):           DEM interpolation method ('sinc', 'bilinear', 'bicubic', 'nearest', 'biquintic')
         epsgOut (Optional[int]):             EPSG code for output topo layers.
 
@@ -33,13 +31,6 @@ cdef class pyTopo:
     # C++ class instances
     cdef Topo * c_topo
     cdef bool __owner
-
-    # Orbit interpolation methods
-    orbitInterpMethods = {
-        'hermite': orbitInterpMethod.HERMITE_METHOD,
-        'sch' :  orbitInterpMethod.SCH_METHOD,
-        'legendre': orbitInterpMethod.LEGENDRE_METHOD
-    }
 
     # DEM interpolation methods
     demInterpMethods = {
@@ -64,25 +55,21 @@ cdef class pyTopo:
                   double threshold=0.05,
                   int numIterations=25,
                   int extraIterations=10,
-                  orbitMethod='hermite',
                   demMethod='biquintic',
                   int epsgOut=4326,
                   bool computeMask=False):
         """
-        Constructor 
+        Constructor
         """
-        cdef int lookDirection 
-        lookDirection = self.radarLookDirection[lookSide]
-        
+
         if doppler is None:
             # geometry compution for zero Doppler
-            self.c_topo = new Topo(deref(radarGrid.c_radargrid), deref(orbit.c_orbit),
-                                deref(ellipsoid.c_ellipsoid),
-                                lookDirection)
+            self.c_topo = new Topo(deref(radarGrid.c_radargrid), orbit.c_orbit,
+                                deref(ellipsoid.c_ellipsoid))
         else:
-            self.c_topo = new Topo(deref(radarGrid.c_radargrid), deref(orbit.c_orbit),
+            self.c_topo = new Topo(deref(radarGrid.c_radargrid), orbit.c_orbit,
                                 deref(ellipsoid.c_ellipsoid),
-                                lookDirection, deref(doppler.c_lut))
+                                deref(doppler.c_lut))
 
         self.__owner = True
 
@@ -90,7 +77,7 @@ cdef class pyTopo:
         self.c_topo.threshold(threshold)
         self.c_topo.numiter(numIterations)
         self.c_topo.extraiter(extraIterations)
-        self.c_topo.orbitMethod(self.orbitInterpMethods[orbitMethod])
+
         self.c_topo.demMethod(self.demInterpMethods[demMethod])
         self.c_topo.epsgOut(epsgOut)
         self.c_topo.computeMask(computeMask)
@@ -105,7 +92,7 @@ cdef class pyTopo:
              pyRaster simRaster=None, pyRaster maskRaster=None, outputDir=None):
         """
         Run topo.
-        
+
         Args:
             demRaster (pyRaster):               Raster for input DEM.
             xRaster (Optional[str]):            Raster for output X coordinate.
@@ -123,8 +110,8 @@ cdef class pyTopo:
             None
         """
         cdef string outdir
-       
-        # Run topo with pre-created rasters if they exist 
+
+        # Run topo with pre-created rasters if they exist
         if xRaster is not None and yRaster is not None and heightRaster is not None:
 
             # Run with mask computation
@@ -152,5 +139,5 @@ cdef class pyTopo:
         else:
             assert False, 'No rasters or output directory specified for topo'
 
-        
+
 # end of file

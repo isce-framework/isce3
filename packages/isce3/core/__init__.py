@@ -1,6 +1,5 @@
 #-*- coding: utf-8 -*-
 
-
 def azimuthFMRate(**kwds):
     """returns a 2D lookup table (LUT2d) object"""
     from .LUT2d import LUT2d
@@ -10,7 +9,7 @@ def azimuthFMRate(**kwds):
 def basis(**kwds):
     """A factory for Basis"""
     from .Basis import Basis
-    
+
     return Basis(**kwds)
 
 def dateTime(**kwds):
@@ -94,6 +93,12 @@ def poly2d(**kwds):
     from .Poly2d import Poly2d
 
     return Poly2d(**kwds)
+
+def statevector(**kwds):
+    """A factory for StateVector"""
+    from .StateVector import StateVector
+
+    return StateVector(**kwds)
 
 def timeDelta(**kwds):
     """A factory for TimeDelta"""

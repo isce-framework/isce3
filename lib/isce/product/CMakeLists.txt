@@ -1,5 +1,6 @@
 #####Library headers
 set(HEADERS
+    forward.h
     RadarGridParameters.h
     Metadata.h
     ProcessingInformation.h

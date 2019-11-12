@@ -5,23 +5,15 @@
 // Copyright 2018-
 //
 
-#ifndef ISCE_LIB_LOOKS_H
-#define ISCE_LIB_LOOKS_H
+#pragma once
 
-# include <assert.h>
+#include "forward.h"
 
 // pyre
 #include <pyre/journal.h>
 
 #include <isce/core/Utilities.h>
 #include <isce/io/Raster.h>
-
-namespace isce {
-    namespace signal {
-        template<class T>
-        class Looks;
-    }
-}
 
 template<class T>
 class isce::signal::Looks {
@@ -131,6 +123,3 @@ class isce::signal::Looks {
 #define ISCE_SIGNAL_LOOKS_ICC
 #include "Looks.icc"
 #undef ISCE_SIGNAL_LOOKS_ICC
-
-#endif
-

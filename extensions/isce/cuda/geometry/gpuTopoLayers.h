@@ -3,22 +3,13 @@
 // Copyright 2018
 //
 
-#ifndef ISCE_CUDA_GEOMETRY_GPUTOPOLAYERS_H
-#define ISCE_CUDA_GEOMETRY_GPUTOPOLAYERS_H
+#pragma once
+
+#include "forward.h"
 
 #include <iostream>
-
 #include <isce/core/Common.h>
-#include <isce/geometry/TopoLayers.h>
-
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace geometry {
-            class gpuTopoLayers;
-        }
-    }
-}
+#include <isce/geometry/forward.h>
 
 // DEMInterpolator declaration
 class isce::cuda::geometry::gpuTopoLayers {
@@ -26,14 +17,25 @@ class isce::cuda::geometry::gpuTopoLayers {
     public:
         // Constructor for host only - allocate memory on device
         CUDA_HOST gpuTopoLayers(const isce::geometry::TopoLayers & layers);
-    
+
         // Copy constructor on device (these should nominally be CUDA_HOSTDEV)
-        CUDA_HOSTDEV inline gpuTopoLayers(gpuTopoLayers & layers) :
-            _length(layers.length()), _width(layers.width()), _x(layers._x),
-            _y(layers._y), _z(layers._z), _inc(layers._inc), _hdg(layers._hdg),
-            _localInc(layers._localInc), _localPsi(layers._localPsi), _sim(layers._sim),
-            _crossTrack(layers._crossTrack), _nbytes_double(layers.nbytes_double()),
-            _nbytes_float(layers.nbytes_float()), _owner(false) {}
+        CUDA_HOSTDEV
+        gpuTopoLayers(const gpuTopoLayers & layers) :
+            _x(layers._x),
+            _y(layers._y),
+            _z(layers._z),
+            _inc(layers._inc),
+            _hdg(layers._hdg),
+            _localInc(layers._localInc),
+            _localPsi(layers._localPsi),
+            _sim(layers._sim),
+            _crossTrack(layers._crossTrack),
+            _length(layers.length()),
+            _width(layers.width()),
+            _nbytes_double(layers.nbytes_double()),
+            _nbytes_float(layers.nbytes_float()),
+            _owner(false)
+        {}
 
         // Destructor
         CUDA_HOST ~gpuTopoLayers();
@@ -103,7 +105,3 @@ class isce::cuda::geometry::gpuTopoLayers {
         size_t _nbytes_double, _nbytes_float;
         bool _owner;
 };
-
-#endif
-
-// end of file

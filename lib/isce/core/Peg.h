@@ -3,8 +3,6 @@
 // Copyright 2017
 //
 
-#ifndef ISCE_CORE_PEG_H
-#define ISCE_CORE_PEG_H
 #pragma once
 
 #include "forward.h"
@@ -48,5 +46,3 @@ operator=(const Peg &rhs) {
     hdg = rhs.hdg;
     return *this;
 }
-
-#endif

@@ -12,8 +12,7 @@
 // 
 //  ======================================================================
 
-#ifndef  PhaseStatistics_h
-#define  PhaseStatistics_h
+#pragma once
 
 #include "Point.h"
 #include "constants.h"
@@ -25,7 +24,3 @@ DataPatch<unsigned char> *compute_Hweight(int nr_lines, int nr_pixels, float **d
 DataPatch<unsigned char> *compute_Vweight(int nr_lines, int nr_pixels, float **data);
 DataPatch<float> *compute_H_delta_phase(int nr_lines, int nr_pixels, float **data);
 DataPatch<float> *compute_V_delta_phase(int nr_lines, int nr_pixels, float **data);
-
-
-#endif
-

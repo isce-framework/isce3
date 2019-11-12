@@ -1,5 +1,4 @@
-#ifndef ISCE_UNWRAP_ICU_LABELMAP_H
-#define ISCE_UNWRAP_ICU_LABELMAP_H
+#pragma once
 
 #include <cstddef> // size_t
 #include <cstdint> // uint8_t
@@ -37,6 +36,3 @@ private:
 #define ISCE_UNWRAP_ICU_LABELMAP_ICC
 #include "LabelMap.icc"
 #undef ISCE_UNWRAP_ICU_LABELMAP_ICC
-
-#endif /* ISCE_UNWRAP_ICU_LABELMAP_H */
-

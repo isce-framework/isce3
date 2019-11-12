@@ -4,9 +4,12 @@
 // Copyright 2017-2019
 //
 
-#include <isce/core/Matrix.h>
-#include <isce/cuda/except/Error.h>
 #include "gpuLUT2d.h"
+
+#include <isce/core/LUT2d.h>
+#include <isce/core/Matrix.h>
+#include <isce/cuda/core/gpuInterpolator.h>
+#include <isce/cuda/except/Error.h>
 
 __device__
 double clamp(double d, double min, double max) {

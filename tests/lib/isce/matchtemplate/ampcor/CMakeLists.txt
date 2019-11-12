@@ -1,3 +1,3 @@
-foreach (TESTNAME correlator correlator-correlate-tile sumarea sumarea-sum)
+foreach (TESTNAME ampcor)
     add_isce_test(${TESTNAME})
 endforeach ()

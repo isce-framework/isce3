@@ -1,0 +1,26 @@
+;
+; michael a.g. aïvázis
+; orthologue
+; (c) 1998-2019 all rights reserved
+;
+
+grant:
+  admin = pyre
+  repository = /home/projects/pyre/repository
+
+  readers =
+    ; parasim
+    raul.radovitzky,
+    ; caltech
+    romain.jolivet,
+    ; jpl
+    bryan.riel, eric.gurrola, marco.lavalle, piyush.agram, joshua.cohen, 
+    heresh.fattahi, paul.rosen, joshua.doubleday,
+    ; urban radish
+    radish,
+
+  writers = 
+    ; developers
+    alec.aivazis, leif.strand, michael.aivazis,
+
+; end of file

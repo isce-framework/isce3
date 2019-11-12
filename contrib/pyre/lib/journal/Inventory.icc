@@ -1,0 +1,103 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_journal_Inventory_icc)
+#error This header file contains implementation details of class Inventory
+#else
+
+
+// accessors
+template <bool DefaultState>
+typename pyre::journal::Inventory<DefaultState>::state_t
+pyre::journal::Inventory<DefaultState>::
+state() const
+{
+    return _state;
+}
+
+
+template <bool DefaultState>
+typename pyre::journal::Inventory<DefaultState>::device_t *
+pyre::journal::Inventory<DefaultState>::
+device() const
+{
+    return _device;
+}
+
+
+// mutators
+template <bool DefaultState>
+void
+pyre::journal::Inventory<DefaultState>::
+activate()
+{
+    _state = true;
+}
+
+
+template <bool DefaultState>
+void
+pyre::journal::Inventory<DefaultState>::
+deactivate()
+{
+    _state = false;
+}
+
+
+template <bool DefaultState>
+void
+pyre::journal::Inventory<DefaultState>::
+device(typename Inventory::device_t * device)
+{
+    _device = device;
+}
+
+
+// destructor
+template <bool DefaultState>
+pyre::journal::Inventory<DefaultState>::
+~Inventory()
+{}
+
+
+// the default constructor
+template <bool DefaultState>
+pyre::journal::Inventory<DefaultState>::
+Inventory(typename Inventory::state_t state, typename Inventory::device_t * device) :
+    _state(state),
+    _device(device)
+{}
+
+
+// the copy constructor
+template <bool DefaultState>
+pyre::journal::Inventory<DefaultState>::
+Inventory(const pyre::journal::Inventory<DefaultState> & other) :
+    _state(other._state),
+    _device(other._device)
+{}
+
+
+// operator =
+template <bool DefaultState>
+const pyre::journal::Inventory<DefaultState> &
+pyre::journal::Inventory<DefaultState>::
+operator = (const pyre::journal::Inventory<DefaultState> & other)
+{
+    // skip assignment to self
+    if (&other == this) { return *this; }
+    // otherwise, copy the data
+    _state = other._state;
+    _device = other._device;
+    // and return me
+    return *this;
+}
+
+
+# endif
+
+// end of file

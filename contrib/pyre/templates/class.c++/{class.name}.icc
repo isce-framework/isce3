@@ -1,0 +1,21 @@
+// -*- C++ -*-
+// 
+// {project.authors}
+// {project.affiliations}
+// (c) {project.span} all rights reserved
+// 
+
+// code guard
+#if !defined({project.name}_{class.category}_{class.name}_icc)
+#error This file contains implementation details of the class {project.name}::{class.category}::{class.name}
+#endif
+
+
+// meta-methods
+// default constructor
+{project.name}::{class.category}::{class.name}::
+{class.name}()
+{{}}
+
+
+// end of file

@@ -1,0 +1,19 @@
+# -*- coding: utf-8 -*-
+#
+# michael a.g. aïvázis
+# orthologue
+# (c) 1998-2019 all rights reserved
+#
+
+
+from pyre.components.Component import Component
+
+
+class one(Component):
+    """a sample component"""
+
+class two(one):
+    """another sample component"""
+
+
+# end of file

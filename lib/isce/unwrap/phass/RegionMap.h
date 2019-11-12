@@ -12,8 +12,7 @@
 // 
 //  ======================================================================
 
-#ifndef  RegionMap_h
-#define  RegionMap_h
+#pragma once
 
 #include "Point.h"
 #include "constants.h"
@@ -45,5 +44,3 @@ list<USPoint> *make_point_list(int lines, int pixels, int **region_map, int nr_r
 
 
 void make_point_list(int lines, int pixels, int **region_map, int &nr_regions, list<USPoint> **point_list);
-
-#endif

@@ -5,53 +5,47 @@
 // Copyright 2017-2018
 //
 
+#include "geometry.h"
+
 #include <cmath>
 #include <cstdio>
+#include <isce/core/Basis.h>
+#include <isce/core/Ellipsoid.h>
+#include <isce/core/LUT2d.h>
+#include <isce/core/Orbit.h>
 #include <isce/core/Peg.h>
-#include "geometry.h"
+#include <isce/core/Pixel.h>
+#include <isce/core/Poly2d.h>
+#include <isce/core/Vector.h>
+#include <isce/geometry/DEMInterpolator.h>
+#include <isce/product/RadarGridParameters.h>
+#include <pyre/journal.h>
 
 // pull in useful isce::core namespace
 using namespace isce::core;
 using isce::product::RadarGridParameters;
 
-/** @param[in] aztime azimuth time corresponding to line of interest
- * @param[in] slantRange slant range corresponding to pixel of interest
- * @param[in] doppler doppler model value corresponding to line,pixel
- * @param[in] orbit Orbit object
- * @param[in] ellipsoid Ellipsoid object
- * @param[in] demInterp DEMInterpolator object
- * @param[out] targetLLH output Lon/Lat/Hae corresponding to aztime and slantRange
- * @param[in] wvl imaging wavelength
- * @param[in] side +1 for left and -1 for right
- * @param[in] threshold Distance threshold for convergence
- * @param[in] maxIter Number of primary iterations
- * @param[in] extraIter Number of secondary iterations
- * @param[in] orbitMethod Orbit interpolation method
- *
- * This is meant to be the light version of isce::geometry::Topo and not meant to be used for processing large number of targets of interest. Note that doppler and wavelength are meant for completeness and this method can be used with both Native and Zero Doppler geometries. For details of the algorithm, see the \ref overview_geometry "geometry overview".*/ 
 int isce::geometry::
 rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
-        const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp, cartesian_t & targetLLH,
-        double wvl, int side, double threshold, int maxIter, int extraIter,
-        isce::core::orbitInterpMethod orbitMethod) {
-    /*
-    Interpolate Orbit to azimuth time, compute TCN basis, and estimate geographic
-    coordinates.
-    */
+        const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp, Vec3 & targetLLH,
+        double wvl, int side, double threshold, int maxIter, int extraIter)
+{
+    // Interpolate Orbit to azimuth time, compute TCN basis, and estimate geographic
+    // coordinates.
 
     // Interpolate orbit to get state vector
-    Vec3 pos, vel;
-    int stat = orbit.interpolate(aztime, pos, vel, orbitMethod);
-    if (stat != 0) {
+    if (aztime < orbit.startTime() || aztime > orbit.endTime()) {
         pyre::journal::warning_t warning("isce.geometry.Geometry.rdr2geo");
         warning
             << pyre::journal::at(__HERE__)
             << "Error in getting state vector for bounds computation."
             << pyre::journal::newline
             << " - requested time: " << aztime << pyre::journal::newline
-            << " - bounds: " << orbit.UTCtime[0] << " -> " << orbit.UTCtime[orbit.nVectors-1]
+            << " - bounds: " << orbit.startTime() << " -> " << orbit.endTime()
             << pyre::journal::endl;
     }
+    Vec3 pos, vel;
+    orbit.interpolate(&pos, &vel, aztime, OrbitInterpBorderMode::FillNaN);
 
     // Setup geocentric TCN basis
     Basis TCNbasis(pos, vel);
@@ -65,40 +59,26 @@ rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
     Pixel pixel(slantRange, dopfact, 0);
 
     // Finally, call rdr2geo
-    stat = rdr2geo(pixel, TCNbasis, pos, vel, ellipsoid, demInterp, targetLLH, side,
+    int stat = rdr2geo(pixel, TCNbasis, pos, vel, ellipsoid, demInterp, targetLLH, side,
                        threshold, maxIter, extraIter);
     return stat;
 }
 
-
-/** @param[in] pixel Pixel object
- * @param[in] TCNbasis Geocentric TCN basis corresponding to pixel
- * @param[in] pos/vel position and velocity as Vec3 objects
- * @param[in] ellipsoid Ellipsoid object
- * @param[in] demInterp DEMInterpolator object
- * @param[out] targetLLH output Lon/Lat/Hae corresponding to pixel
- * @param[in] side +1 for left and -1 for right
- * @param[in] threshold Distance threshold for convergence
- * @param[in] maxIter Number of primary iterations
- * @param[in] extraIter Number of secondary iterations
- *
- * This is the elementary transformation from radar geometry to map geometry. The transformation is applicable for a single slant range and azimuth time (i.e., a single point target). The slant range and Doppler information are encapsulated in the Pixel object, so this function can work for both zero and native Doppler geometries. The azimuth time information is encapsulated in the TCNbasis and StateVector of the platform. For algorithmic details, see \ref overview_geometry "geometry overview".*/
 int isce::geometry::
 rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3& vel,
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp,
-        cartesian_t & targetLLH, int side, double threshold, int maxIter, int extraIter) {
-    /*
-    Assume orbit has been interpolated to correct azimuth time, then estimate geographic
-    coordinates.
-    */
+        Vec3 & targetLLH, int side, double threshold, int maxIter, int extraIter)
+{
+    // Assume orbit has been interpolated to correct azimuth time, then estimate geographic
+    // coordinates.
 
     // Compute normalized velocity
-    const Vec3 vhat = vel.unitVec();
+    const Vec3 vhat = vel.normalized();
 
     // Unpack TCN basis vectors
-    const cartesian_t& that = TCNbasis.x0();
-    const cartesian_t& chat = TCNbasis.x1();
-    const cartesian_t& nhat = TCNbasis.x2();
+    const Vec3& that = TCNbasis.x0();
+    const Vec3& chat = TCNbasis.x1();
+    const Vec3& nhat = TCNbasis.x2();
 
     // Pre-compute TCN vector products
     const double ndotv = nhat.dot(vhat);
@@ -133,15 +113,15 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
         // Compute angles
         const double a = satDist;
         const double b = radius + zrdr;
-        const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a 
+        const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a
                               - (b/a) * (b/pixel.range()));
-        const double sintheta = std::sqrt(1.0 - costheta*costheta); 
+        const double sintheta = std::sqrt(1.0 - costheta*costheta);
 
         // Compute TCN scale factors
         const double gamma = pixel.range() * costheta;
         const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
         const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
-                                            * std::pow(sintheta, 2) 
+                                            * std::pow(sintheta, 2)
                                             - std::pow(alpha, 2));
 
         // Compute vector from satellite to ground
@@ -205,44 +185,51 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
     return converged;
 }
 
+template <class T>
+double isce::geometry::
+    _compute_doppler_aztime_diff(Vec3 dr, Vec3 satvel,
+                                 T &doppler, double wavelength,
+                                 double aztime, double slantRange,
+                                 double deltaRange) {
 
-/** @param[in] inputLLH Lon/Lat/Hae of target of interest
- * @param[in] ellipsoid Ellipsoid object
- * @param[in] orbit Orbit object
- * @param[in] doppler   Poly2D Doppler model
- * @param[out] aztime azimuth time of inputLLH w.r.t reference epoch of the orbit
- * @param[out] slantRange slant range to inputLLH
- * @param[in] wavelength Radar wavelength
- * @param[in] startingRange Starting slant range of reference image
- * @param[in] rangePixelSpacing Slant range pixel spacing
- * @param[in] rwidth Width (number of samples) of reference image
- * @param[in] threshold azimuth time convergence threshold in seconds
- * @param[in] maxIter Maximum number of Newton-Raphson iterations
- * @param[in] deltaRange step size used for computing derivative of doppler
- *
- * This is the elementary transformation from map geometry to radar geometry. The transformation is applicable for a single lon/lat/h coordinate (i.e., a single point target). For algorithmic details, see \ref overview_geometry "geometry overview".*/
+    // Compute doppler
+    const double dopfact = dr.dot(satvel);
+    const double fdop = doppler.eval(aztime, slantRange) * 0.5 * wavelength;
+    // Use forward difference to compute doppler derivative
+    const double fdopder = (doppler.eval(aztime, slantRange + deltaRange) * 0.5 * wavelength - fdop)
+                         / deltaRange;
+
+    // Evaluate cost function and its derivative
+    const double fn = dopfact - fdop * slantRange;
+    const double c1 = -satvel.dot(satvel);
+    const double c2 = (fdop / slantRange) + fdopder;
+    const double fnprime = c1 + c2 * dopfact;
+
+    const double aztime_diff = fn / fnprime;
+    // std::cout << "aztime_diff: " << aztime_diff << ", az spacing: " << aztime_diff*satvel.norm() << std::endl;
+
+    return aztime_diff;
+}
+
 int isce::geometry::
-geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
-        const Poly2d & doppler, double & aztime, double & slantRange,
-        double wavelength, double startingRange, double rangePixelSpacing, size_t rwidth,
-        double threshold, int maxIter, double deltaRange) {
+_update_aztime(const Orbit & orbit,
+               Vec3 satpos, Vec3 satvel, Vec3 inputXYZ,
+               int side, double & aztime, double & slantRange,
+               double rangeMin, double rangeMax) {
 
-    cartesian_t satpos, satvel, inputXYZ, dr;
-
-    // Convert LLH to XYZ
-    ellipsoid.lonLatToXyz(inputLLH, inputXYZ);
-
-    // Pre-compute scale factor for doppler
-    const double dopscale = 0.5 * wavelength;
-
-    // Compute minimum and maximum valid range
-    const double rangeMin = startingRange;
-    const double rangeMax = rangeMin + rangePixelSpacing * (rwidth - 1);
+    Vec3 dr;
 
     // Compute azimuth time spacing for coarse grid search
     const int NUM_AZTIME_TEST = 15;
-    const double tstart = orbit.UTCtime[0];
-    const double tend = orbit.UTCtime[orbit.nVectors - 1];
+    const double tstart = orbit.startTime();
+    const double tend = orbit.endTime();
+
+    int error = 1;
+
+    // If aztime is valid (user-defined) exit
+    if (aztime >= tstart && aztime <= tend)
+        return !error;
+
     const double delta_t = (tend - tstart) / (1.0 * (NUM_AZTIME_TEST - 1));
 
     // Find azimuth time with minimum valid range distance to target
@@ -251,17 +238,23 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
     for (int k = 0; k < NUM_AZTIME_TEST; ++k) {
         // Interpolate orbit
         aztime = tstart + k * delta_t;
-        int status = orbit.interpolateWGS84Orbit(aztime, satpos, satvel);
-        if (status != 0)
+        if (aztime < orbit.startTime() || aztime > orbit.endTime())
             continue;
+        orbit.interpolate(&satpos, &satvel, aztime);
         // Compute slant range
         dr = inputXYZ - satpos;
+
+        // Check look side (only first time)
+        if (k == 0 && dr.cross(satvel).dot(satpos)*side > 0)
+            return error; // wrong look side
+
         slantRange = dr.norm();
         // Check validity
-        if (slantRange < rangeMin)
+        if (!std::isnan(rangeMin) && slantRange < rangeMin)
             continue;
-        if (slantRange > rangeMax)
+        if (!std::isnan(rangeMax) && slantRange > rangeMax)
             continue;
+
         // Update best guess
         if (slantRange < slantRange_closest) {
             slantRange_closest = slantRange;
@@ -270,135 +263,131 @@ geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit &
     }
 
     // If we did not find a good guess, use tmid as intial guess
-    if (aztime_closest < 0.0) {
-        aztime = orbit.UTCtime[orbit.nVectors / 2];
-    } else {
+    if (aztime_closest < 0.0)
+        aztime = orbit.midTime();
+    else
         aztime = aztime_closest;
-    }
+    return !error;
+ }
 
-    // Begin iterations
-    int converged = 0;
-    double slantRange_old = 0.0;
-    for (int i = 0; i < maxIter; ++i) {
 
-        // Interpolate the orbit to current estimate of azimuth time
-        orbit.interpolateWGS84Orbit(aztime, satpos, satvel);
-
-        // Compute slant range from satellite to ground point
-        dr = inputXYZ - satpos;
-        slantRange = dr.norm();
-        // Check convergence
-        if (std::abs(slantRange - slantRange_old) < threshold) {
-            converged = 1;
-            return converged;
-        } else {
-            slantRange_old = slantRange;
-        }
-
-        // Compute slant range bin
-        const double rbin = (slantRange - startingRange) / rangePixelSpacing;
-        // Compute doppler
-        const double dopfact = dr.dot(satvel);
-        const double fdop = doppler.eval(0, rbin) * dopscale;
-        // Use forward difference to compute doppler derivative
-        const double fdopder = (doppler.eval(0, rbin + deltaRange) * dopscale - fdop)
-                             / deltaRange;
-        
-        // Evaluate cost function and its derivative
-        const double fn = dopfact - fdop * slantRange;
-        const double c1 = -satvel.dot(satvel);
-        const double c2 = (fdop / slantRange) + fdopder;
-        const double fnprime = c1 + c2 * dopfact;
-
-        // Update guess for azimuth time
-        aztime -= fn / fnprime;
-    }
-    // If we reach this point, no convergence for specified threshold
-    return converged;
-}
-
-/** @param[in] inputLLH             Lon/Lat/Hae of target of interest
- * @param[in] ellipsoid             Ellipsoid object
- * @param[in] orbit                 Orbit object
- * @param[in] doppler               LUT2d Doppler model
- * @param[out] aztime               azimuth time of inputLLH w.r.t reference epoch of the orbit
- * @param[out] slantRange           slant range to inputLLH
- * @param[in] wavelength            Radar wavelength
- * @param[in] threshold             azimuth time convergence threshold in seconds
- * @param[in] maxIter               Maximum number of Newton-Raphson iterations
- * @param[in] deltaRange            step size used for computing derivative of doppler
- *
- * This is the elementary transformation from map geometry to radar geometry. The transformation is applicable for a single lon/lat/h coordinate (i.e., a single point target). For algorithmic details, see \ref overview_geometry "geometry overview".*/
 int isce::geometry::
-geo2rdr(const cartesian_t & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
-        const LUT2d<double> & doppler, double & aztime, double & slantRange,
-        double wavelength, double threshold, int maxIter, double deltaRange) {
+geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
+        const Poly2d & doppler, double & aztime, double & slantRange,
+        double wavelength, double startingRange, double rangePixelSpacing, size_t rwidth,
+        int side, double threshold, int maxIter, double deltaRange)
+{
 
-    cartesian_t satpos, satvel, inputXYZ;
+    assert( side == 1 || side == -1 );
+
+    Vec3 satpos, satvel, inputXYZ, dr;
 
     // Convert LLH to XYZ
     ellipsoid.lonLatToXyz(inputLLH, inputXYZ);
 
     // Pre-compute scale factor for doppler
-    const double dopscale = 0.5 * wavelength;
+    // const double dopscale = 0.5 * wavelength;
+
+    // Compute minimum and maximum valid range
+    const double rangeMin = startingRange;
+    const double rangeMax = rangeMin + rangePixelSpacing * (rwidth - 1);
+
+    int converged = 1;
+    int error = _update_aztime(orbit, satpos, satvel, inputXYZ, side,
+                               aztime, slantRange, rangeMin, rangeMax);
+    if (error)
+        return !converged;
+
+    double slantRange_old = slantRange;
+    // Begin iterations
+    for (int i = 0; i < maxIter; ++i) {
+
+        // Interpolate the orbit to current estimate of azimuth time
+        orbit.interpolate(&satpos, &satvel, aztime, OrbitInterpBorderMode::FillNaN);
+
+        // Compute slant range from satellite to ground point
+        dr = inputXYZ - satpos;
+
+        // Check look side (only first time)
+        if (i == 0 && dr.cross(satvel).dot(satpos)*side > 0)
+            return !converged; // wrong look side
+
+        slantRange = dr.norm();
+        // Check convergence
+        if (std::abs(slantRange - slantRange_old) < threshold)
+            return converged;
+        else
+            slantRange_old = slantRange;
+
+        // Compute slant range bin
+        const double rbin = (slantRange - startingRange) / rangePixelSpacing;
+
+        // Update guess for azimuth time
+        double aztime_diff = _compute_doppler_aztime_diff(dr, satvel,
+                                                          doppler, wavelength,
+                                                          aztime,
+                                                          slantRange, deltaRange);
+
+        aztime -= aztime_diff;
+    }
+    // If we reach this point, no convergence for specified threshold
+    return !converged;
+}
+
+int isce::geometry::
+geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
+        const LUT2d<double> & doppler, double & aztime, double & slantRange,
+        double wavelength, int side, double threshold, int maxIter,
+        double deltaRange) {
+
+    assert( side == 1 || side == -1 );
+
+    Vec3 satpos, satvel, inputXYZ;
+
+    // Convert LLH to XYZ
+    ellipsoid.lonLatToXyz(inputLLH, inputXYZ);
 
     // Use mid-orbit epoch as initial guess
-    aztime = orbit.UTCtime[orbit.nVectors / 2];
+    int converged = 1;
+    int error = _update_aztime(orbit,
+                               satpos, satvel, inputXYZ, side, aztime,
+                               slantRange);
+    if (error)
+        return !converged;
 
     // Begin iterations
-    int converged = 0;
     double slantRange_old = 0.0;
     for (int i = 0; i < maxIter; ++i) {
 
         // Interpolate the orbit to current estimate of azimuth time
-        orbit.interpolateWGS84Orbit(aztime, satpos, satvel);
+        orbit.interpolate(&satpos, &satvel, aztime, OrbitInterpBorderMode::FillNaN);
 
         // Compute slant range from satellite to ground point
         const Vec3 dr = inputXYZ - satpos;
         slantRange = dr.norm();
+
+        // Check look side
+        if (i == 0 && dr.cross(satvel).dot(satpos)*side > 0)
+            return !converged;
+
         // Check convergence
-        if (std::abs(slantRange - slantRange_old) < threshold) {
-            converged = 1;
+        if (std::abs(slantRange - slantRange_old) < threshold)
             return converged;
-        } else {
+        else
             slantRange_old = slantRange;
-        }
-
-        // Compute doppler
-        const double dopfact = dr.dot(satvel);
-        const double fdop = doppler.eval(aztime, slantRange) * dopscale;
-        // Use forward difference to compute doppler derivative
-        const double fdopder = (doppler.eval(aztime, slantRange + deltaRange) * dopscale - fdop)
-                             / deltaRange;
-
-        // Evaluate cost function and its derivative
-        const double fn = dopfact - fdop * slantRange;
-        const double c1 = -satvel.dot(satvel);
-        const double c2 = (fdop / slantRange) + fdopder;
-        const double fnprime = c1 + c2 * dopfact;
 
         // Update guess for azimuth time
-        aztime -= fn / fnprime;
+        const double aztime_diff = _compute_doppler_aztime_diff(dr, satvel,
+                                                                doppler, wavelength,
+                                                                aztime,
+                                                                slantRange, deltaRange);
+        aztime -= aztime_diff;
     }
     // If we reach this point, no convergence for specified threshold
-    return converged;
+    return !converged;
 }
 
 // Utility function to compute geographic bounds for a radar grid
-/** @param[in] orbit                Orbit object.
-  * @param[in] ellipsoid            Ellipsoid object.
-  * @param[in] doppler              LUT2d doppler object.
-  * @param[in] lookSide             +1 for left-looking and -1 for right-looking.
-  * @param[in] radarGrid            RadarGridParameters object.
-  * @param[in] xoff                 Column index of radar subwindow.
-  * @param[in] yoff                 Row index of radar subwindow.
-  * @param[in] xsize                Number of columns of radar subwindow.
-  * @param[in] ysize                Number of rows of radar subwindiw.
-  * @param[in] margin               Padding of extracted DEM (radians). 
-  * @param[out] min_lon             Minimum longitude of geographic region (radians).
-  * @param[out] min_lat             Minimum latitude of geographic region (radians).
-  * @param[out] max_lon             Maximum longitude of geographic region (radians).
-  * @param[out] max_lat             Maximum latitude of geographic region (radians). */
 void isce::geometry::
 computeDEMBounds(const Orbit & orbit,
                  const Ellipsoid & ellipsoid,
@@ -413,8 +402,8 @@ computeDEMBounds(const Orbit & orbit,
                  double & min_lon,
                  double & min_lat,
                  double & max_lon,
-                 double & max_lat) {
-
+                 double & max_lat)
+{
     // Initialize journal
     pyre::journal::warning_t warning("isce.geometry.extractDEM");
 
@@ -462,18 +451,8 @@ computeDEMBounds(const Orbit & orbit,
         const double tline = radarGrid.sensingTime(azInd[i]);
 
         // Get state vector
-        cartesian_t xyzsat, velsat;
-        int stat = orbit.interpolate(tline, xyzsat, velsat, isce::core::HERMITE_METHOD);
-        if (stat != 0) {
-            pyre::journal::error_t error("isce.geometry.extractDEM");
-            error
-                << pyre::journal::at(__HERE__)
-                << "Error in Topo::topo - Error getting state vector for bounds computation."
-                << pyre::journal::newline
-                << " - requested time: " << tline << pyre::journal::newline
-                << " - bounds: " << orbit.UTCtime[0] << " -> " << orbit.UTCtime[orbit.nVectors-1]
-                << pyre::journal::endl;
-        }
+        Vec3 xyzsat, velsat;
+        orbit.interpolate(&xyzsat, &velsat, tline);
         // Save state vector
         const Vec3 pos = xyzsat;
         const Vec3 vel = velsat;
@@ -482,7 +461,7 @@ computeDEMBounds(const Orbit & orbit,
         Basis TCNbasis(pos, vel);
 
         // Compute satellite velocity and height
-        cartesian_t satLLH;
+        Vec3 satLLH;
         const double satVmag = velsat.norm();
         ellipsoid.xyzToLonLat(xyzsat, satLLH);
 
@@ -496,7 +475,7 @@ computeDEMBounds(const Orbit & orbit,
         Pixel pixel(rng, dopfact, rbin);
 
         // Run topo for one iteration for two different heights
-        cartesian_t llh {0., 0., 0.};
+        Vec3 llh {0., 0., 0.};
         std::array<double, 2> testHeights = {-500.0, 1000.0};
         for (int k = 0; k < 2; ++k) {
 

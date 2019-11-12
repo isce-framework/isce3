@@ -80,7 +80,18 @@ class Base(pyre.component,
         Return radarGridParameters object
         '''
         swath = self.getSwathMetadata(frequency=frequency)
-        return swath.getRadarGridParameters() 
+        lookDirectionPath = os.path.join(self.IdentificationPath,
+                                         'lookDirection')
+        lookDirection = None
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
+            lookDirectionObj = fid[lookDirectionPath] 
+            if lookDirectionObj.dtype == 'object':
+                lookDirection = fid[lookDirectionPath].value.decode()
+            else:
+                lookDirection = fid[lookDirectionPath].value
+            if isinstance(lookDirection, str):
+                lookDirection = 1 if 'right' in lookDirection.lower() else -1
+        return swath.getRadarGridParameters(lookDirection)
 
     @pyre.export
     def getGridMetadata(self, frequency='A'):
@@ -125,8 +136,8 @@ class Base(pyre.component,
             slantRange = fid[slantRangePath][:]
 
         dopplerCentroid = isce3.core.dopplerCentroid(x=slantRange, 
-                                                    y=zeroDopplerTime, 
-                                                    z=doppler)
+                                                     y=zeroDopplerTime, 
+                                                     z=doppler)
         return dopplerCentroid
 
     @pyre.export
@@ -169,11 +180,10 @@ class Base(pyre.component,
         fid = h5py.File(self.filename, 'r', libver='latest', swmr=True)
 
         # build path the desired dataset
-        folder = self.SwathPath
-        ds_path = os.path.join(folder, 'frequency{0}'.format(frequency), polarization)
+        dsPath = self.slcPath(frequency, polarization)
 
         # get dataset
-        slcDataset = fid[ds_path]
+        slcDataset = fid[dsPath]
 
         # return dataset
         return slcDataset
@@ -270,5 +280,13 @@ class Base(pyre.component,
         Compute the bounding box as a polygon in given projection system.
         '''
         raise NotImplementedError
+
+    def slcPath(self, frequency, polarization):
+        '''
+        return path to hdf5 dataset of given frequency and polarization
+        '''
+        datasetPath = os.path.join(self.SwathPath, f'frequency{frequency}', polarization)
+        return datasetPath
+
 
 # end of file

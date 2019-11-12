@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+!
+! michael a.g. aïvázis
+! orthologue
+! (c) 1998-2019 all rights reserved
+!
+-->
+
+<filesystem>
+  <folder name="tmp">
+    <!-- a file -->
+    <file name="index.html"/>
+    <!-- a subfolder -->
+    <folder name="images">
+      <!-- a file -->
+      <file name="logo.png"/>
+    </folder>
+  </folder>
+</filesystem>
+
+<!-- end of file -->

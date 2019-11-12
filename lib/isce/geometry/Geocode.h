@@ -4,20 +4,15 @@
 // Author: Heresh Fattahi
 // Copyright 2019-
 
-#ifndef ISCE_GEOMETRY_GEOCODE_H
-#define ISCE_GEOMETRY_GEOCODE_H
+#pragma once
 
 // pyre
 #include <pyre/journal.h>
 
 // isce::core
-#include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
-#include <isce/core/Poly2d.h>
-#include <isce/core/Projections.h>
-#include <isce/core/LUT2d.h>
 #include <isce/core/Ellipsoid.h>
-#include <isce/core/Interpolator.h>
+#include <isce/core/LUT2d.h>
 #include <isce/core/Constants.h>
 
 // isce::io
@@ -29,176 +24,134 @@
 
 // isce::geometry
 #include "geometry.h"
-#include "DEMInterpolator.h"
-
-// Declaration
-namespace isce {
-    namespace geometry {
-        template<class T>
-        class Geocode;
-    }
-}
 
 template<class T>
 class isce::geometry::Geocode {
+public:
 
-    public:
+    ~Geocode();
 
-        Geocode() {};
+    void geocode(isce::io::Raster & input,
+                 isce::io::Raster & output,
+                 isce::io::Raster & demRaster);
 
-        ~Geocode() {
- 
-           if (_interp) {
-                delete _interp;
-            }
-        };
+    /** Set the output geocoded grid*/
+    void geoGrid(double geoGridStartX, double geoGridStartY,
+                 double geoGridSpacingX, double geoGridSpacingY,
+                 double geoGridEndX, double geoGridEndY,
+                 int epsgcode);
 
-        //inline Geocode(isce::product::Product &);
+    void geoGrid(double geoGridStartX, double geoGridStartY,
+                 double geoGridSpacingX, double geoGridSpacingY,
+                 int width, int length, int epsgcode);
 
-        void geocode(isce::io::Raster & input, 
-                isce::io::Raster & output,
-                isce::io::Raster & demRaster);
+    // Set the input radar grid from Doppler and RadarGridParameters objects
+    void radarGrid(isce::core::LUT2d<double> doppler,
+                   isce::product::RadarGridParameters rgparam,
+                   int lookSide);
 
-        /** Set the output geocoded grid*/
-        inline void geoGrid(double geoGridStartX, double geoGridStartY,
-                double geoGridSpacingX, double geoGridSpacingY,
-                double geoGridEndX, double geoGridEndY,
-                int epsgcode);
-        
-        inline void geoGrid(double geoGridStartX, double geoGridStartY, 
-                double geoGridSpacingX, double geoGridSpacingY,
-                int width, int length, int epsgcode);
+    // Set the input radar grid from individual parameters
+    void radarGrid(isce::core::LUT2d<double> doppler,
+                   isce::core::DateTime refEpoch,
+                   double azimuthStartTime,
+                   double azimuthTimeInterval,
+                   int radarGridLength,
+                   double startingRange,
+                   double rangeSpacing,
+                   double wavelength,
+                   int radarGridWidth,
+                   int lookSide,
+                   int numberAzimuthLooks = 1,
+                   int numberRangeLooks = 1);
 
-        // Set the input radar grid from Doppler and RadarGridParameters objects
-        inline void radarGrid(isce::core::LUT2d<double> doppler,
-                              isce::product::RadarGridParameters rgparam,
-                              int lookSide);
+    // Set interpolator
+    void interpolator(isce::core::dataInterpMethod method) { _interp = isce::core::createInterpolator<T>(method); }
 
-        // Set the input radar grid from individual parameters
-        inline void radarGrid(isce::core::LUT2d<double> doppler,
-                              isce::core::DateTime refEpoch,
-                              double azimuthStartTime,
-                              double azimuthTimeInterval,
-                              int radarGridLength,
-                              double startingRange,
-                              double rangeSpacing,
-                              double wavelength,
-                              int radarGridWidth,
-                              int lookSide,
-                              int numberAzimuthLooks = 1,
-                              int numberRangeLooks = 1);
+    void orbit(isce::core::Orbit& orbit) { _orbit = orbit; }
 
-        // Set interpolator 
-        inline void interpolator(isce::core::dataInterpMethod method);
+    void ellipsoid(isce::core::Ellipsoid& ellipsoid) { _ellipsoid = ellipsoid; }
 
-        inline void orbit(isce::core::Orbit& orbit);
+    void thresholdGeo2rdr(double threshold) { _threshold = threshold; }
 
-        inline void orbitInterploationMethod(isce::core::orbitInterpMethod orbitMethod);
+    void numiterGeo2rdr(int numiter) { _numiter = numiter; }
 
-        inline void ellipsoid(isce::core::Ellipsoid& ellipsoid);
+    void linesPerBlock(size_t linesPerBlock) { _linesPerBlock = linesPerBlock; }
 
-        inline void projection(isce::core::ProjectionBase * proj);
+    void demBlockMargin(double demBlockMargin) { _demBlockMargin = demBlockMargin; }
 
-        inline void thresholdGeo2rdr(double threshold);
+    void radarBlockMargin(int radarBlockMargin) { _radarBlockMargin = radarBlockMargin; }
 
-        inline void numiterGeo2rdr(int numiter);
+    //interpolator
+    void interpolator(isce::core::Interpolator<T> * interp) { _interp = interp; }
 
-        inline void linesPerBlock(size_t linesPerBlock);
+private:
+    void _loadDEM(isce::io::Raster demRaster,
+                  isce::geometry::DEMInterpolator & demInterp,
+                  isce::core::ProjectionBase * _proj,
+                  int lineStart, int blockLength,
+                  int blockWidth, double demMargin);
 
-        inline void demBlockMargin(double demBlockMargin);
+    void _geo2rdr(double x, double y,
+                  double & azimuthTime, double & slantRange,
+                  isce::geometry::DEMInterpolator & demInterp,
+                  isce::core::ProjectionBase * proj);
 
-        inline void radarBlockMargin(int radarBlockMargin);
+    void _interpolate(isce::core::Matrix<T>& rdrDataBlock,
+                      isce::core::Matrix<T>& geoDataBlock,
+                      std::valarray<double>& radarX,
+                      std::valarray<double>& radarY,
+                      int rdrBlockWidth, int rdrBlockLength,
+                      int azimuthFirstLine, int rangeFirstPixel);
 
-        //interpolator
-        //isce::core::Interpolator * _interp = nullptr;
-        inline void interpolator(isce::core::Interpolator<T> * interp);
+    // isce::core objects
+    isce::core::Orbit _orbit;
+    isce::core::Ellipsoid _ellipsoid;
 
+    // Optimization options
+    double _threshold;
+    int _numiter;
+    size_t _linesPerBlock = 1000;
 
+    // radar grids parameters
+    isce::core::LUT2d<double> _doppler;
+    isce::product::RadarGridParameters _radarGrid;
+    int _lookSide;
 
-    private:
+    // start X position for the output geocoded grid
+    double _geoGridStartX;
 
-        void _computeRangeAzimuthBoundingBox(int lineStart, 
-                        int blockLength, int blockWidth,
-                        int margin, isce::geometry::DEMInterpolator & demInterp,
-                        isce::core::ProjectionBase * proj,
-                        int & azimuthFirstLine, int & azimuthLastLine,
-                        int & rangeFirstPixel, int & rangeLastPixel);
+    // start Y position for the output geocoded grid
+    double _geoGridStartY;
 
-        void _loadDEM(isce::io::Raster demRaster,
-                    isce::geometry::DEMInterpolator & demInterp,
-                    isce::core::ProjectionBase * _proj,
-                    int lineStart, int blockLength,
-                    int blockWidth, double demMargin);
+    // X spacing for the output geocoded grid
+    double _geoGridSpacingX;
 
-        void _geo2rdr(double x, double y,
-                    double & azimuthTime, double & slantRange,
-                    isce::geometry::DEMInterpolator & demInterp,
-                    isce::core::ProjectionBase * proj);
+    // Y spacing for the output geocoded grid
+    double _geoGridSpacingY;
 
-        void _interpolate(isce::core::Matrix<T>& rdrDataBlock, 
-                    isce::core::Matrix<T>& geoDataBlock,
-                    std::valarray<double>& radarX, std::valarray<double>& radarY,
-                    int rdrBlockWidth, int rdrBlockLength);
-        
+    // number of pixels in east-west direction (X direction)
+    size_t _geoGridWidth;
 
-    private:
-        
-        // isce::core objects
-        isce::core::Orbit _orbit;
-        isce::core::Ellipsoid _ellipsoid;
+    // number of lines in north-south direction (Y direction)
+    size_t _geoGridLength;
 
-        // Optimization options
-        double _threshold;
-        int _numiter;
-        size_t _linesPerBlock = 1000;
-        isce::core::orbitInterpMethod _orbitMethod;
+    // geoTransform array (gdal style)
+    double * _geoTrans;
 
-        // radar grids parameters
-        isce::core::LUT2d<double> _doppler;
-        isce::product::RadarGridParameters _radarGrid;
-        int _lookSide;
+    // epsg code for the output geocoded grid
+    int _epsgOut;
 
-        // start X position for the output geocoded grid
-        double _geoGridStartX;
+    // margin around a computed bounding box for DEM (in degrees)
+    double _demBlockMargin;
 
-        // start Y position for the output geocoded grid
-        double _geoGridStartY;
+    // margin around the computed bounding box for radar dara (integer number of lines/pixels)
+    int _radarBlockMargin;
 
-        // X spacing for the output geocoded grid
-        double _geoGridSpacingX;
-
-        // Y spacing for the output geocoded grid
-        double _geoGridSpacingY;
-
-        // number of pixels in east-west direction (X direction)
-        size_t _geoGridWidth;
-
-        // number of lines in north-south direction (Y direction)
-        size_t _geoGridLength;
-
-        // geoTransform array (gdal style)
-        double * _geoTrans;
-
-        // epsg code for the output geocoded grid
-        int _epsgOut;
-
-        // margin around a computed bounding box for DEM (in degrees)
-        double _demBlockMargin;
-
-        // margin around the computed bounding box for radar dara (integer number of lines/pixels)
-        int _radarBlockMargin;
-
-        //interpolator 
-        isce::core::Interpolator<T> * _interp = nullptr;
-
-       
+    //interpolator
+    isce::core::Interpolator<T> * _interp = nullptr;
 };
 
 // Get inline implementations for Geocode
 #define ISCE_GEOMETRY_GEOCODE_ICC
 #include "Geocode.icc"
 #undef ISCE_GEOMETRY_GEOCODE_ICC
-
-
-#endif
-

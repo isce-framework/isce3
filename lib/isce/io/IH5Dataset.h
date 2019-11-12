@@ -4,13 +4,13 @@
 // Author: Piyush Agram
 // Copyright 2019
 
+#pragma once
 
-#ifndef __ISCE_IO_IH5DATASET_H__
-#define __ISCE_IO_IH5DATASET_H__
+#include "forward.h"
 
-#include "gdal_pam.h"
-#include "gdal_priv.h"
-#include "gdal_rat.h"
+#include <gdal_pam.h>
+#include <gdal_priv.h>
+#include <gdal_rat.h>
 #include "IH5.h"
 
 
@@ -20,7 +20,6 @@ namespace io {
 /************************************************************************/
 /*                            IH5Dataset                                */
 /************************************************************************/
-class IH5RasterBand;
 
 /** IH5 interface to GDAL Dataset to allow 
  *  read/write to HDF5 datasets from ISCE*/
@@ -129,7 +128,4 @@ class IH5RasterBand : public GDALPamRasterBand
 /** Function to register driver with GDAL */
 void GDALRegister_IH5();
 
-}
-}
-
-#endif /*  __ISCE_IO_IH5DATASET_H__ */
+}} // namespace isce::io

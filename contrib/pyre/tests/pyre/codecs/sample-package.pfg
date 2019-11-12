@@ -1,0 +1,12 @@
+;
+; michael a.g. aïvázis
+; orthologue
+; (c) 1998-2019 all rights reserved
+;
+
+pyre:
+    ; some global settings
+    home = pyre.home
+    prefix = pyre.prefix
+
+; end of file

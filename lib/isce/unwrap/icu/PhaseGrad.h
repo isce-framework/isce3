@@ -1,5 +1,4 @@
-#ifndef ISCE_UNWRAP_ICU_PHASEGRAD_H
-#define ISCE_UNWRAP_ICU_PHASEGRAD_H
+#pragma once
 
 #include <complex> // std::complex
 #include <cstddef> // size_t
@@ -27,6 +26,3 @@ void calcPhaseGrad(
     const int winsize);
 
 }
-
-#endif /* ISCE_UNWRAP_ICU_PHASEGRAD_H */
-

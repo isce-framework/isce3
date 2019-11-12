@@ -3,8 +3,6 @@
 // Copyright 2017
 //
 
-#ifndef __ISCE_CORE_PEGTRANS_H__
-#define __ISCE_CORE_PEGTRANS_H__
 #pragma once
 
 #include "forward.h"
@@ -33,7 +31,8 @@ namespace isce { namespace core {
         double radcur;
 
         /** Empty constructor */
-        Pegtrans() {}
+        Pegtrans() : mat    {{}},
+                     matinv {{}} {}
 
         /** Copy constructor */
         Pegtrans(const Pegtrans &p) : mat(p.mat), matinv(p.matinv), ov(p.ov), radcur(p.radcur) {}
@@ -76,5 +75,3 @@ namespace isce { namespace core {
         void SCHbasis(const cartesian_t &,cartmat_t&,cartmat_t&) const;
     };
 }}
-
-#endif

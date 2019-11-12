@@ -4,20 +4,21 @@
 // Author: Piyush Agram
 // Copyright 2019
 
-
-#include "cpl_port.h"
 #include "IH5Dataset.h"
 
-#include "cpl_config.h"
-#include "cpl_conv.h"
-#include "cpl_error.h"
-#include "cpl_minixml.h"
-#include "cpl_progress.h"
-#include "cpl_string.h"
-#include "cpl_vsi.h"
-#include "gdal.h"
-#include "gdal_frmts.h"
-#include "gdal_priv.h"
+#include <cpl_config.h>
+#include <cpl_conv.h>
+#include <cpl_error.h>
+#include <cpl_minixml.h>
+#include <cpl_port.h>
+#include <cpl_progress.h>
+#include <cpl_string.h>
+#include <cpl_vsi.h>
+#include <gdal.h>
+#include <gdal_frmts.h>
+#include <gdal_priv.h>
+#include <sstream>
+#include <string>
 #include <vector>
 
 //Exposing some hidden HDF5 functionality to allow for interfacing
@@ -47,7 +48,7 @@ IH5RasterBand::IH5RasterBand( IH5Dataset *ds, int bandIn,
     //Access is passed in as an argument
     eAccess = ds->eAccess;
 
-    //Set band number 
+    //Set band number
     nBand = bandIn;
 
     //This is passed as an argument
@@ -80,7 +81,7 @@ CPLErr IH5RasterBand::IReadBlock( int nBlockXOff,
                                   void * pImage )
 {
 
-    //Determine native data type to use 
+    //Determine native data type to use
     IH5Dataset *poGDS = static_cast<IH5Dataset *>(poDS);
     H5::DataType readType = poGDS->nativeType;
 
@@ -95,7 +96,7 @@ CPLErr IH5RasterBand::IReadBlock( int nBlockXOff,
     int starts[3];
     int counts[3];
     int offset = 0;
-   
+
     //If 3D dataset is being used
     if (dims == 3)
     {
@@ -110,11 +111,14 @@ CPLErr IH5RasterBand::IReadBlock( int nBlockXOff,
     //Account for partial blocks
     counts[offset] = std::min(nBlockYSize, poGDS->GetRasterYSize() - starts[offset]);
     counts[offset+1] = std::min(nBlockXSize, poGDS->GetRasterXSize() - starts[offset+1]);
-  
-    CPLDebug("GDAL_IH5", "%lld Read, band=%d, starts=(%d,%d), counts=(%d,%d)", 
-            poGDS->_dataset->getId(), nBand, 
-            starts[offset], starts[offset+1],
-            counts[offset], counts[offset+1]);
+
+    std::stringstream ss;
+    ss << poGDS->_dataset->getId() << " Read, "
+        << "band=" << nBand << ", "
+        << "starts=(" << starts[offset] << "," << starts[offset+1] << "), "
+        << "counts=(" << counts[offset] << "," << counts[offset+1] << ")";
+    CPLDebug("GDAL_IH5", ss.str().c_str());
+
     H5::DataSpace dspace = poGDS->_dataset->getDataSpace(starts, counts, nullptr);
     if (!H5::IdComponent::isValid(dspace.getId()))
     {
@@ -145,7 +149,7 @@ CPLErr IH5RasterBand::IReadBlock( int nBlockXOff,
                  "Failure to get memory space in Read Block");
         return CE_Failure;
     }
-     
+
     poGDS->_dataset->H5::DataSet::read(pImage, readType, mspace, dspace);
     if (!H5::IdComponent::isValid(poGDS->_dataset->getId()))
     {
@@ -159,7 +163,7 @@ CPLErr IH5RasterBand::IReadBlock( int nBlockXOff,
 
     if (H5::IdComponent::isValid(mspace.getId()))
         mspace.close();
-    
+
     return CE_None;
 }
 
@@ -193,15 +197,17 @@ CPLErr IH5RasterBand::IWriteBlock( int nBlockXOff,
     starts[offset+1] = nBlockXOff * nBlockXSize;
 
     //Account for partial blocks
-    counts[offset] = std::min(nBlockYSize, 
+    counts[offset] = std::min(nBlockYSize,
                         poGDS->GetRasterYSize() - starts[offset]);
-    counts[offset+1] = std::min(nBlockXSize, 
+    counts[offset+1] = std::min(nBlockXSize,
                         poGDS->GetRasterXSize() - starts[offset+1]);
 
-    CPLDebug("GDAL_IH5", "%lld Write, band=%d, starts=(%d,%d), counts=(%d,%d)", 
-            poGDS->_dataset->getId(), nBand, 
-            starts[offset], starts[offset+1],
-            counts[offset], counts[offset+1]);
+    std::stringstream ss;
+    ss << poGDS->_dataset->getId() << " Write, "
+        << "band=" << nBand << ", "
+        << "starts=(" << starts[offset] << "," << starts[offset+1] << "), "
+        << "counts=(" << counts[offset] << "," << counts[offset+1] << ")";
+    CPLDebug("GDAL_IH5", ss.str().c_str());
 
     H5::DataSpace dspace = poGDS->_dataset->getDataSpace(starts, counts, nullptr);
     if (!H5::IdComponent::isValid(dspace.getId()))
@@ -209,7 +215,7 @@ CPLErr IH5RasterBand::IWriteBlock( int nBlockXOff,
         CPLError(CE_Failure, CPLE_AppDefined,
                  "Failure to get data space in Write Block");
         return CE_Failure;
-    } 
+    }
 
     //Set up appropriate memory space
     hsize_t blockdims[2];
@@ -225,8 +231,8 @@ CPLErr IH5RasterBand::IWriteBlock( int nBlockXOff,
     blockoffsets[1] = 0;
 
     H5::DataSpace mspace(2, blockdims);
-    mspace.selectHyperslab( H5S_SELECT_SET, blockcounts, 
-                blockoffsets); 
+    mspace.selectHyperslab( H5S_SELECT_SET, blockcounts,
+                blockoffsets);
     if (!H5::IdComponent::isValid(mspace.getId()))
     {
         CPLError(CE_Failure, CPLE_AppDefined,
@@ -234,7 +240,7 @@ CPLErr IH5RasterBand::IWriteBlock( int nBlockXOff,
         return CE_Failure;
     }
 
-    poGDS->_dataset->H5::DataSet::write(pImage, writeType, 
+    poGDS->_dataset->H5::DataSet::write(pImage, writeType,
             mspace, dspace);
     if (!H5::IdComponent::isValid(poGDS->_dataset->getId()))
     {
@@ -289,24 +295,36 @@ IH5Dataset::IH5Dataset(const hid_t &inputds, GDALAccess eAccessIn ):
     nGCPCount = 0;
     pasGCPList = nullptr;
     ndims = 0;
-   
+
     adfGeoTransform[0] = 0.0;
     adfGeoTransform[1] = 1.0;
     adfGeoTransform[2] = 0.0;
     adfGeoTransform[3] = 0.0;
     adfGeoTransform[4] = 0.0;
     adfGeoTransform[5] = -1.0;
-   
+
     if (!H5::IdComponent::isValid(inputds))
     {
         CPLError(CE_Failure, CPLE_AppDefined,
                  "Not a valid HDF5 ID to create IH5Dataset from");
         return;
     }
-    CPLDebug("GDAL_IH5", "Input ID = %lld", inputds);
+
+    {
+        std::stringstream ss;
+        ss << "Input ID = " << inputds;
+        CPLDebug("GDAL_IH5", ss.str().c_str());
+    }
+
     eAccess = eAccessIn;
     _dataset = new isce::io::IDataSet(inputds);
-    CPLDebug("GDAL_IH5", "Extracted ID = %lld", _dataset->getId());
+
+    {
+        std::stringstream ss;
+        ss << "Extracted ID = " << _dataset->getId();
+        CPLDebug("GDAL_IH5", ss.str().c_str());
+    }
+
     if (!H5::IdComponent::isValid(_dataset->getId()))
     {
         CPLError(CE_Failure, CPLE_AppDefined,
@@ -481,7 +499,7 @@ CPLErr IH5Dataset::_SetGCPs( int nNewCount, const GDAL_GCP *pasNewGCPList,
 H5::DataType IH5GetNativeType(H5::DataType &intype)
 {
     H5::DataType nativeType;
-     
+
     //Resort to C API to get native type.
     //Does not seem to have been exposed in C++ API.
     //TODO - moving this function to IH5 API.
@@ -521,7 +539,12 @@ CPLErr IH5Dataset::populateFromDataset()
 
     //Determine offset to Y-axis
     int axisOffset = (ndims == 3)?1:0;
-    CPLDebug("GDAL_IH5", "%lld: Number of axes = %d", _dataset->getId(), ndims);
+
+    {
+        std::stringstream ss;
+        ss << _dataset->getId() << ": Number of axes = " << ndims;
+        CPLDebug("GDAL_IH5", ss.str().c_str());
+    }
 
     //Get dimensions - row major layout
     std::vector<int> dims = _dataset->getDimensions();
@@ -539,10 +562,21 @@ CPLErr IH5Dataset::populateFromDataset()
     nRasterXSize = dimensions[axisOffset+1];
 
     nBands = (ndims == 3) ? dimensions[0] : 1;
-    if (ndims == 2)
-        CPLDebug("GDAL_IH5", "%lld: %d L x %d P", _dataset->getId(), dimensions[axisOffset], dimensions[axisOffset+1]);
-    else
-        CPLDebug("GDAL_IH5", "%lld: %d H x %d L x %d P", _dataset->getId(), nBands, dimensions[axisOffset], dimensions[axisOffset+1]);
+    if (ndims == 2) {
+        std::stringstream ss;
+        ss << _dataset->getId() << ": "
+            << dimensions[axisOffset] << " L x "
+            << dimensions[axisOffset+1] << " P";
+        CPLDebug("GDAL_IH5", ss.str().c_str());
+    }
+    else {
+        std::stringstream ss;
+        ss << _dataset->getId() << ": "
+            << nBands << " H x "
+            << dimensions[axisOffset] << " L x "
+            << dimensions[axisOffset+1] << " P";
+        CPLDebug("GDAL_IH5", ss.str().c_str());
+    }
 
 
     auto chunkSize = _dataset->getChunkSize();
@@ -608,7 +642,7 @@ CPLErr IH5Dataset::populateFromDataset()
         else if( nativeType == H5::PredType::NATIVE_DOUBLE )
             eType = GDT_Float64;
     }
-    else if (nativeType.getClass() ==  H5T_COMPOUND) 
+    else if (nativeType.getClass() ==  H5T_COMPOUND)
     {
         //Get compound data type
         H5::CompType compoundType(*_dataset);
@@ -637,7 +671,7 @@ CPLErr IH5Dataset::populateFromDataset()
                 {
                     eType = GDT_CFloat32;
                 }
-                else if ( nativeFirstType == H5::PredType::NATIVE_DOUBLE ) 
+                else if ( nativeFirstType == H5::PredType::NATIVE_DOUBLE )
                 {
                     eType = GDT_CFloat64;
                 }

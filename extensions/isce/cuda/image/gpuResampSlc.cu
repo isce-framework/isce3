@@ -2,18 +2,22 @@
 //
 // Author: Liang Yu
 // Copyright: 2018
-#include <math.h>
+
+#include "gpuResampSlc.h"
+
+#include <cmath>
 
 // isce::core
-#include "isce/core/Constants.h"
-#include "isce/core/Poly2d.h"
+#include <isce/core/Constants.h>
+#include <isce/core/Poly2d.h>
+
+#include <isce/image/Tile.h>
+#include <isce/io/Raster.h>
 
 // isce::cuda::core
-#include "isce/cuda/core/gpuPoly2d.h"
-#include "isce/cuda/core/gpuLUT1d.h"
-
-// isce::cuda::image
-#include "gpuResampSlc.h"
+#include <isce/cuda/core/gpuPoly2d.h>
+#include <isce/cuda/core/gpuLUT1d.h>
+#include <isce/cuda/core/gpuInterpolator.h>
 
 #include <isce/cuda/except/Error.h>
 

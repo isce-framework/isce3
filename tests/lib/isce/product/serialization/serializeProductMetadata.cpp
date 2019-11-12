@@ -38,17 +38,17 @@ TEST(MetadataTest, FromHDF5) {
 
     // Copy isce::core::Orbit unit test code here
     // Check we have the right number of state vectors
-    ASSERT_EQ(orbit.nVectors, 11);
+    ASSERT_EQ(orbit.size(), 11);
 
     // Check the position of middle vector
-    ASSERT_NEAR(orbit.position[5*3+0], -2305250.945, 1.0e-6);
-    ASSERT_NEAR(orbit.position[5*3+1], -5443208.984, 1.0e-6);
-    ASSERT_NEAR(orbit.position[5*3+2], 4039406.416, 1.0e-6);
+    ASSERT_NEAR(orbit.position(5)[0], -2305250.945, 1.0e-6);
+    ASSERT_NEAR(orbit.position(5)[1], -5443208.984, 1.0e-6);
+    ASSERT_NEAR(orbit.position(5)[2], 4039406.416, 1.0e-6);
 
     // Check the velocity of middle vector
-    ASSERT_NEAR(orbit.velocity[5*3+0], -3252.930393, 1.0e-6);
-    ASSERT_NEAR(orbit.velocity[5*3+1], -3129.103767, 1.0e-6);
-    ASSERT_NEAR(orbit.velocity[5*3+2], -6055.488170, 1.0e-6);
+    ASSERT_NEAR(orbit.velocity(5)[0], -3252.930393, 1.0e-6);
+    ASSERT_NEAR(orbit.velocity(5)[1], -3129.103767, 1.0e-6);
+    ASSERT_NEAR(orbit.velocity(5)[2], -6055.488170, 1.0e-6);
 
     // Get the attitude
     const isce::core::EulerAngles & euler = meta.attitude();
@@ -71,7 +71,7 @@ TEST(MetadataTest, FromHDF5) {
     ASSERT_NEAR(proc.slantRange()[0], 826000.0, 1.0e-10);
     ASSERT_NEAR(proc.zeroDopplerTime()[0], 237321.0, 1.0e-10);
 
-    // Check effective velocity LUT    
+    // Check effective velocity LUT
     const isce::core::LUT2d<double> & veff = proc.effectiveVelocity();
     ASSERT_EQ(veff.width(), 240);
     ASSERT_EQ(veff.length(), 80);

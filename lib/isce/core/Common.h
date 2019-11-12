@@ -32,3 +32,24 @@
     "calling a __global__ function (i.e. kernel) " \
     "is not supported by non-CUDA compilers")
 #endif
+
+// Suppress nvcc warnings about calling a __host__ function
+// from a __host__ __device__ function
+#ifdef __NVCC__
+#define NVCC_HD_WARNING_DISABLE _Pragma("hd_warning_disable")
+#else
+#define NVCC_HD_WARNING_DISABLE
+#endif
+
+// Convert s into a string literal (s is not macro-expanded first)
+#define STRINGIFY(s) #s
+
+// Hint to the compiler that the subsequent loop should be unrolled (if
+// supported by the compiler). The unroll count can be optionally specified.
+#if defined(__clang__) || defined(__NVCC__)
+#define PRAGMA_UNROLL              _Pragma("unroll")
+#define PRAGMA_UNROLL_COUNT(count) _Pragma(STRINGIFY(unroll count))
+#else
+#define PRAGMA_UNROLL
+#define PRAGMA_UNROLL_COUNT(count)
+#endif

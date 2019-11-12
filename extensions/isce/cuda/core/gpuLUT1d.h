@@ -3,22 +3,13 @@
 // Copyright 2017-2018
 //
 
-#ifndef ISCE_CUDA_CORE_GPULUT1D_H
-#define ISCE_CUDA_CORE_GPULUT1D_H
+#pragma once
+
+#include "forward.h"
 
 #include <cmath>
-#include "isce/core/LUT1d.h"
-
+#include <isce/core/forward.h>
 #include <isce/core/Common.h>
-
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace core {
-            template <typename T> class gpuLUT1d;
-        }
-    }
-}
 
 // gpuLUT1d declaration
 template <typename T>
@@ -92,7 +83,3 @@ class isce::cuda::core::gpuLUT1d {
         bool _extrapolate;
         bool _owner;
 };
-
-#endif
-
-// end of file

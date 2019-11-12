@@ -112,7 +112,7 @@ def test_geo2rdr():
     zeroDop = isce3.core.lut2d()
 
     #Dummy wavelength
-    wavelength = 0.24;
+    wavelength = 0.24
 
     for ii in range(20):
         tinp = 25.0 + ii * 2.0
@@ -152,9 +152,8 @@ def test_geo2rdr():
             azTime, slantRange = isce3.geometry.geo2rdr_point(
                     lonlatheight=list(targ_LLH), 
                     ellipsoid=ellipsoid, orbit=orb, 
-                    doppler=zeroDop, wavelength=0.24, 
-                    threshold=1.0e-9, maxiter=50, dR=10.0
-                    )
+                    doppler=zeroDop, wavelength=0.24, side=sgn, 
+                    threshold=1.0e-9, maxiter=50, dR=10.0)
 
             assert abs(azTime - tinp) < 1.0e-5
             assert abs(slantRange - expRange) < 1e-8 

@@ -5,25 +5,13 @@
 // Copyright 2018-
 //
 
-#ifndef ISCE_LIB_CROSSMUL_H
-#define ISCE_LIB_CROSSMUL_H
+#pragma once
 
-# include <assert.h>
+#include "forward.h"
 
-// pyre
-#include <pyre/journal.h>
-
-#include <isce/io/Raster.h>
+#include <complex>
 #include <isce/core/LUT1d.h>
-#include "Signal.h"
-#include "Filter.h"
-#include "Looks.h"
-
-namespace isce {
-    namespace signal {
-        class Crossmul;
-    }
-}
+#include <isce/io/forward.h>
 
 /** \brief Intereferogram generation by cross-multiplication of reference and secondary SLCs.
  *
@@ -188,5 +176,3 @@ class isce::signal::Crossmul {
 #define ISCE_SIGNAL_CROSSMUL_ICC
 #include "Crossmul.icc"
 #undef ISCE_SIGNAL_CROSSMUL_ICC
-
-#endif

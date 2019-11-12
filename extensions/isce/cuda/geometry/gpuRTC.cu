@@ -12,13 +12,17 @@
 #include <isce/core/Constants.h>
 #include <isce/core/DateTime.h>
 #include <isce/core/Ellipsoid.h>
+#include <isce/core/LUT1d.h>
 #include <isce/core/Peg.h>
 #include <isce/core/Pegtrans.h>
+#include <isce/core/Projections.h>
+#include <isce/geometry/DEMInterpolator.h>
 #include <isce/geometry/RTC.h>
 #include <isce/geometry/Topo.h>
 
 #include <isce/cuda/core/gpuLUT1d.h>
-#include <isce/cuda/core/gpuOrbit.h>
+#include <isce/cuda/core/Orbit.h>
+#include <isce/cuda/core/OrbitView.h>
 #include <isce/cuda/except/Error.h>
 #include <isce/cuda/geometry/gpuGeometry.h>
 #include <isce/cuda/geometry/gpuDEMInterpolator.h>
@@ -26,17 +30,18 @@
 __constant__ double start, r0, pixazm, dr;
 __constant__ float xbound, ybound;
 
+using isce::core::OrbitInterpBorderMode;
 using isce::core::Vec3;
 using isce::core::Mat3;
 
 __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_factor,
         isce::cuda::geometry::gpuDEMInterpolator dem_interp,
         isce::core::Ellipsoid ellps,
-        isce::cuda::core::gpuOrbit orbit,
+        isce::cuda::core::OrbitView orbit,
         isce::cuda::core::gpuLUT1d<double> dop,
         size_t width,
-        double wavelength
-        ) {
+        double wavelength,
+        int side) {
 
     size_t xidx = threadIdx.x + blockIdx.x * blockDim.x;
     size_t yidx = threadIdx.y + blockIdx.y * blockDim.y;
@@ -46,7 +51,7 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     const double dem_y1 = dem_y0 + dem_interp.deltaY() / upsample_factor;
     const double dem_ymid = dem_interp.yStart() + (0.5 + yidx) * dem_interp.deltaY() / upsample_factor;
 
-    cartesian_t lookXYZ;
+    Vec3 lookXYZ;
 
     const double dem_xmid = dem_interp.xStart() + dem_interp.deltaX() * (xidx + 0.5) / upsample_factor;
 
@@ -58,7 +63,8 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     isce::cuda::core::projInverse(epsgcode, inputDEM, inputLLH);
 
     isce::cuda::geometry::geo2rdr(inputLLH, ellps, orbit, dop,
-                                  &a, &r, wavelength, 1e-4, 20, 1e-4);
+                                  &a, &r, wavelength, side,
+                                  1e-4, 20, 1e-4);
 
     const float azpix = (a - start) / pixazm;
     const float ranpix = (r - r0) / dr;
@@ -88,7 +94,7 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
         dem_interp.interpolateXY(dem_x1, dem_y1)};
 
     // Get LLH corner vectors
-    cartesian_t llh00, llh01, llh10, llh11;
+    Vec3 llh00, llh01, llh10, llh11;
     isce::cuda::core::projInverse(epsgcode, dem00, llh00);
     isce::cuda::core::projInverse(epsgcode, dem01, llh01);
     isce::cuda::core::projInverse(epsgcode, dem10, llh10);
@@ -101,8 +107,8 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     const Vec3 xyz11 = ellps.lonLatToXyz(llh11);
 
     // Compute normal vectors for each facet
-    const Vec3 normalFacet1 = normalPlane(xyz00, xyz10, xyz01);
-    const Vec3 normalFacet2 = normalPlane(xyz01, xyz10, xyz11);
+    const Vec3 normalFacet1 = isce::core::normalPlane(xyz00, xyz10, xyz01);
+    const Vec3 normalFacet2 = isce::core::normalPlane(xyz01, xyz10, xyz11);
 
     // Side lengths
     const double p00_01 = (xyz00 - xyz01).norm();
@@ -122,11 +128,8 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
     // Compute look angle from sensor to ground
     const Vec3 xyz_mid = ellps.lonLatToXyz(inputLLH);
     Vec3 xyz_plat;
-    {
-        Vec3 vel;
-        orbit.interpolateWGS84Orbit(a, xyz_plat.data(), vel.data());
-    }
-    lookXYZ = (xyz_plat - xyz_mid).unitVec();
+    orbit.interpolate(&xyz_plat, nullptr, a, OrbitInterpBorderMode::FillNaN);
+    lookXYZ = (xyz_plat - xyz_mid).normalized();
 
     // Compute dot product between each facet and look vector
     const double cosIncFacet1 = lookXYZ.dot(normalFacet1);
@@ -161,7 +164,7 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
 // Compute the flat earth incidence angle correction applied by UAVSAR processing
 __global__ void flatearth(float* out,
         const isce::cuda::geometry::gpuDEMInterpolator flat_interp,
-        const isce::cuda::core::gpuOrbit orbit,
+        const isce::cuda::core::OrbitView orbit,
         const isce::core::Ellipsoid ellps,
         size_t length,
         size_t width,
@@ -175,8 +178,9 @@ __global__ void flatearth(float* out,
     if (j >= width or i >= length)
         return;
 
-    Vec3 xyz_plat, vel;
-    orbit.interpolateWGS84Orbit(start + i * pixazm, &xyz_plat[0], &vel[0]);
+    Vec3 xyz_plat;
+    double t = start + i * pixazm;
+    orbit.interpolate(&xyz_plat, nullptr, t, OrbitInterpBorderMode::FillNaN);
 
     // Slant range for current pixel
     const double slt_range = r0 + j * dr;
@@ -209,25 +213,25 @@ double computeUpsamplingFactor(const isce::geometry::DEMInterpolator& dem_interp
     isce::core::ProjectionBase * proj = isce::core::createProj(dem_interp.epsgCode());
 
     // Get middle XY coordinate in DEM coords, lat/lon, and ECEF XYZ
-    isce::core::cartesian_t demXY{dem_interp.midX(), dem_interp.midY(), 0.}, llh;
+    Vec3 demXY{dem_interp.midX(), dem_interp.midY(), 0.}, llh;
     proj->inverse(demXY, llh);
-    isce::core::cartesian_t xyz0;
+    Vec3 xyz0;
     ellps.lonLatToXyz(llh, xyz0);
 
     // Repeat for middle coordinate + deltaX
     demXY[0] += dem_interp.deltaX();
     proj->inverse(demXY, llh);
-    isce::core::cartesian_t xyz1;
+    Vec3 xyz1;
     ellps.lonLatToXyz(llh, xyz1);
 
     // Repeat for middle coordinate + deltaX + deltaY
     demXY[1] += dem_interp.deltaY();
     proj->inverse(demXY, llh);
-    isce::core::cartesian_t xyz2;
+    Vec3 xyz2;
     ellps.lonLatToXyz(llh, xyz2);
 
     // Estimate width of DEM pixel
-    isce::core::cartesian_t delta = xyz1 - xyz0;
+    Vec3 delta = xyz1 - xyz0;
     const double dx = delta.norm();
 
     // Estimate length of DEM pixel
@@ -262,10 +266,6 @@ T* deviceCopy(T* host_obj) {
 
 namespace isce { namespace cuda {
 
-    namespace core {
-        using cartesian_t = double[3];
-    }
-
     namespace geometry {
 
         void facetRTC(isce::product::Product& product,
@@ -277,7 +277,6 @@ namespace isce { namespace cuda {
             isce::core::Orbit orbit_h(product.metadata().orbit());
             isce::product::RadarGridParameters radarGrid(product, frequency, 1, 1);
             isce::geometry::Topo topo_h(product, frequency, true);
-            topo_h.orbitMethod(isce::core::orbitInterpMethod::HERMITE_METHOD);
             const int lookDirection = product.lookSide();
 
             // Initialize other ISCE objects
@@ -322,7 +321,7 @@ namespace isce { namespace cuda {
             // Create hostside device objects
             isce::cuda::geometry::gpuDEMInterpolator dem_interp(dem_interp_h);
             isce::core::Ellipsoid ellps(ellps_h);
-            isce::cuda::core::gpuOrbit orbit(orbit_h);
+            isce::cuda::core::Orbit orbit(orbit_h);
 
             // Convert LUT2d doppler to LUT1d
             isce::core::LUT1d<double> dop_h(product.metadata().procInfo().dopplerCentroid(frequency));
@@ -343,8 +342,9 @@ namespace isce { namespace cuda {
                 dim3 grid(xmax / BLOCK_X + 1,
                           ymax / BLOCK_Y + 1);
                 facet<<<grid, block>>>(out_d, xmax, ymax, upsample_factor,
-                                       dem_interp, ellps, orbit, dop, radarGrid.width(),
-                                       radarGrid.wavelength());
+                                       dem_interp, ellps, orbit, dop,
+                                       radarGrid.width(), radarGrid.wavelength(),
+                                       lookDirection);
                 checkCudaErrors(cudaPeekAtLastError());
                 checkCudaErrors(cudaDeviceSynchronize());
             }

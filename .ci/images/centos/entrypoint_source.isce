@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+# Set paths to ISCE
+export ISCEDIR=/opt/isce
+export PATH=$ISCEDIR/bin:$ISCEDIR/packages:$PATH
+export PYTHONPATH=$ISCEDIR/packages:$PYTHONPATH
+export LD_LIBRARY_PATH=$ISCEDIR/lib:$LD_LIBRARY_PATH

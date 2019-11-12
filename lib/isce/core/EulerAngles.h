@@ -5,8 +5,6 @@
 // Copyright 2018
 //
 
-#ifndef ISCE_CORE_EULERANGLES_H
-#define ISCE_CORE_EULERANGLES_H
 #pragma once
 
 #include "forward.h"
@@ -101,7 +99,3 @@ class isce::core::EulerAngles : public isce::core::Attitude {
         // Reference epoch
         isce::core::DateTime _refEpoch;
 };
-
-#endif
-
-// end of file

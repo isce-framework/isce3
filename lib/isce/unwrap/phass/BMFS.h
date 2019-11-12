@@ -7,8 +7,7 @@
 //  file BMFS.h  -- Basic Math FunctionS 
 //  author Xiaoqing Wu
 
-#ifndef BMFS_h
-#define BMFS_h
+#pragma once
 
 #include <math.h>
 #include <stdlib.h>
@@ -36,6 +35,3 @@ void moving_window_average(int items, double *input, int window_length, double p
 double *standard_deviation(int items, double *input, int window_length, double *mean = NULL);
 
 double sinc(double x);
-
-#endif
-

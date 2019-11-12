@@ -4,19 +4,13 @@
 // Author: Bryan V. Riel, Joshua Cohen
 // Copyright 2017-2018
 
-#ifndef ISCE_GEOMETRY_TOPOLAYERS_H
-#define ISCE_GEOMETRY_TOPOLAYERS_H
+#pragma once
+
+#include "forward.h"
 
 #include <valarray>
 #include <string>
 #include <isce/io/Raster.h>
-
-// Declaration
-namespace isce {
-    namespace geometry {
-        class TopoLayers;
-    }
-}
 
 class isce::geometry::TopoLayers {
 
@@ -284,7 +278,3 @@ class isce::geometry::TopoLayers {
         std::string _topodir;
         bool _haveRasters;
 };
-    
-#endif
-
-// end of file

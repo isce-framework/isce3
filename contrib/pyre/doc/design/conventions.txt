@@ -1,0 +1,37 @@
+
+-- verb prefixes:
+
+  is: boolean state read/write
+
+  set: set the value of an attribute
+       the implication is that the internal state of the object will change
+  get: retrieve the value of an attribute
+
+  new: create a new instance (factory)
+  configure:
+  initialize:
+  finalize:
+
+  -- when talking to a container
+  add: insert an existing instance into a container
+  register: associate the object with a key, typically the object's name
+
+  create: create a new instance (factory) and adopt it
+  adopt: create an association with an object and assume life-cycle responsibility
+
+  get: lookup and return the named object; if it doesn't exist, make a default one and return it
+  find: lookup and return an existing object from a container without breaking its association
+         may raise exceptions if the lookup fails
+
+  fetch: lookup and return an existing object, breaking its association; may raise exceptions if
+         the lookup fails
+
+  remove: remove an instance from a container
+  delete: remove an association with an object and walk it through end-of-life
+  destruct: same as above for languages where delete is a keyword
+  release: break an association with an object and assume its life-cycle is managed elsewhere
+
+  -- event handling
+  handle: a hook to process the named event 
+
+

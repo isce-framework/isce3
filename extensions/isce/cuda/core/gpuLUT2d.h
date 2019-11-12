@@ -3,21 +3,15 @@
 // Copyright 2017-2019
 //
 
-#ifndef ISCE_CUDA_CORE_GPULUT2D_H
-#define ISCE_CUDA_CORE_GPULUT2D_H
+#pragma once
+
+#include "forward.h"
 
 #include <cmath>
-#include <isce/core/LUT2d.h>
-#include <isce/cuda/core/gpuInterpolator.h>
-
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace core {
-            template <typename T> class gpuLUT2d;
-        }
-    }
-}
+#include <isce/core/forward.h>
+#include <isce/core/Common.h>
+#include <isce/core/Constants.h>
+#include <isce/cuda/core/forward.h>
 
 // gpuLUT2d declaration
 template <typename T>
@@ -111,7 +105,3 @@ class isce::cuda::core::gpuLUT2d {
         /** Finalize/delete interpolation object on device. */
         CUDA_HOST void _finalizeInterp();
 };
-
-#endif
-
-// end of file

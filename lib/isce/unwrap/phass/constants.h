@@ -3,7 +3,8 @@
 // All rights reserved.
 // 
 // Author(s):
-// 
+
+#pragma once
 
 #include <complex>
 

@@ -1,0 +1,8 @@
+armadillo
+cmake
+cython
+gdal
+git
+h5py
+libgdal
+numpy

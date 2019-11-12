@@ -11,16 +11,20 @@
 #include <sstream>
 #include <fstream>
 #include <gtest/gtest.h>
+#include <vector>
 
 // isce::core
-#include "isce/core/Constants.h"
-#include "isce/core/DateTime.h"
-#include "isce/core/Ellipsoid.h"
-#include "isce/core/Orbit.h"
-#include "isce/core/LUT1d.h"
+#include <isce/core/Constants.h>
+#include <isce/core/DateTime.h>
+#include <isce/core/Ellipsoid.h>
+#include <isce/core/Orbit.h>
+#include <isce/core/LUT1d.h>
+#include <isce/core/LUT2d.h>
+#include <isce/core/StateVector.h>
 
 // isce::geometry
-#include "isce/geometry/geometry.h"
+#include <isce/geometry/DEMInterpolator.h>
+#include <isce/geometry/geometry.h>
 
 
 struct GeometryTest : public ::testing::Test {
@@ -51,9 +55,13 @@ struct GeometryTest : public ::testing::Test {
 
         //Setup orbit
         isce::core::DateTime t0("2017-02-12T01:12:30.0");
+        orbit.referenceEpoch(t0);
+
         double clat = std::cos(lat0);
         double slat = std::sin(lat0);
         double sath = ellipsoid.a() + hsat;
+
+        std::vector<isce::core::StateVector> statevecs(Nvec);
         for(int ii=0; ii < Nvec; ii++)
         {
             double deltat = ii * 10.0;
@@ -70,15 +78,11 @@ struct GeometryTest : public ::testing::Test {
 
             isce::core::DateTime epoch = t0 + deltat;
 
-            isce::core::StateVector sv;
-            sv.datetime = epoch.isoformat();
-            sv.position = pos;
-            sv.velocity = vel;
-
-            orbit.stateVectors.push_back(sv);
+            statevecs[ii].datetime = epoch;
+            statevecs[ii].position = pos;
+            statevecs[ii].velocity = vel;
         }
-
-        orbit.reformatOrbit(t0);
+        orbit.setStateVectors(statevecs);
     }
 
     //Solve for Geocentric latitude given a slant range
@@ -153,10 +157,10 @@ TEST_F(GeometryTest, RdrToGeoLat) {
             // Initialize guess
             isce::core::cartesian_t targetLLH = {0.0, 0.0, 0.0};
 
-            // Run rdr2geo with left looking side
+            // Run rdr2geo
             int stat = isce::geometry::rdr2geo(tinp, rng, 0.0,
                         orbit, ellipsoid, dem, targetLLH, 0.24, sides[kk],
-                        1.0e-8, 25, 15, isce::core::HERMITE_METHOD);
+                        1.0e-8, 25, 15);
 
             // Check
             ASSERT_EQ(stat, 1);
@@ -191,8 +195,8 @@ TEST_F(GeometryTest, GeoToRdrLat) {
     // Dummy wavelength
     const double wavelength = 0.24;
 
-    //Test over 20 points
-    for (size_t ii = 0; ii < 20; ++ii)
+    //Test over 19 points
+    for (size_t ii = 1; ii < 20; ++ii)
     {
         //Azimuth time
         double tinp = 25.0 + ii * 2.0;
@@ -231,12 +235,11 @@ TEST_F(GeometryTest, GeoToRdrLat) {
 
             // Run geo2rdr
             double aztime, slantRange;
-
-            // Run rdr2geo with left looking side
             int stat = isce::geometry::geo2rdr(targ_LLH, ellipsoid, orbit,
-                zeroDoppler, aztime, slantRange, wavelength, 1.0e-9, 50, 10.0);
+                zeroDoppler, aztime, slantRange, wavelength, sgn,
+                1.0e-9, 50, 10.0);
 
-            // Check
+           // Check
             ASSERT_EQ(stat, 1);
             ASSERT_NEAR(aztime, tinp, 1.0e-5);
             ASSERT_NEAR(slantRange, expRange, 1.0e-8);

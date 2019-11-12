@@ -1,0 +1,165 @@
+% -*- LaTeX -*-
+% -*- coding: utf-8 -*-
+%
+% michael a.g. aïvázis
+% orthologue
+% (c) 1998-2019 all rights reserved
+%
+
+% language
+\usepackage[english]{babel}
+% encoding
+\usepackage[utf8x]{inputenc}
+% fonts
+\usepackage{dingbat}
+\usepackage{amsfonts}
+
+% figures
+\usepackage{graphicx}
+\usepackage{tikz}
+
+% color
+\usepackage{xcolor}
+% the colors from the pyre logo
+\definecolor{pyre@pipe}{rgb}{0.675, .694, .251}
+\definecolor{pyre@green}{rgb}{0.557, .765, .286}
+\definecolor{pyre@blue}{rgb}{0.173, .678, .878}
+\definecolor{pyre@orange}{rgb}{0.961, .569, .180}
+
+\definecolor{pyre@darkblue}{RGB}{68,96,160}
+\definecolor{pyre@gray}{RGB}{128,128,128}
+\definecolor{pyre@lightblue}{RGB}{128,158,168}
+\definecolor{pyre@gold}{RGB}{230,150,16}
+
+\definecolor{pyre@cream}{rgb}{0.96, .95, .89}
+\definecolor{pyre@sand}{rgb}{0.86, .85, .77}
+\definecolor{pyre@stone}{rgb}{0.55, .54, .46}
+\definecolor{pyre@leather}{rgb}{0.48, .47, .38}
+\definecolor{pyre@olive}{rgb}{0.28, .29, .25}
+\definecolor{pyre@lava}{rgb}{0.25, .23, .22}
+\definecolor{pyre@brick}{rgb}{0.95, .50, .30}
+
+% references
+\usepackage[numbers]{natbib}
+
+% misc
+\usepackage{dcolumn}
+\newcolumntype{d}[1]{D{.}{.}{#1}}
+
+% listings and their configurations
+\usepackage[algoruled,linesnumbered]{algorithm2e}
+\usepackage{textcomp}
+\usepackage{listings}
+
+% languages
+\lstloadlanguages{C,C++,python,bash}
+% support for the pyre configuration files
+\lstdefinelanguage{cfg}
+{
+  sensitive=true,
+  morecomment=[l]{;},
+  alsoletter={[,]},
+  keywords={\],\[},
+}
+
+% the colors for the code listings
+\definecolor{keywordcolor}{rgb}{.25,.25,0.75}
+\definecolor{commentcolor}{gray}{.6}
+\definecolor{stringcolor}{gray}{.4}
+\definecolor{linenumbercolor}{gray}{.5}
+\definecolor{identifiercolor}{rgb}{0.5, 0.25, 0.75}
+\definecolor{listingbgcolor}{gray}{.97}
+
+
+\lstset{
+  columns=flexible,
+  upquote=true,
+  %
+  aboveskip=\medskipamount,
+  belowskip=\bigskipamount,
+  % abovecaptionskip=\medskipamount,
+  % belowcaptionskip=\medskipamount,
+  %
+  numbers=left,
+  numberstyle=\color{linenumbercolor}\tiny,
+  firstnumber=auto,
+  stepnumber=1,
+  numbersep=5pt,
+  numberblanklines=true,
+  %
+  basicstyle=\tt\scriptsize,
+  keywordstyle=\color{keywordcolor},
+  commentstyle=\color{commentcolor}\slshape,
+  stringstyle=\color{stringcolor}\slshape,
+  showstringspaces=false,
+  %
+  frame=tb,
+  captionpos=t,
+  backgroundcolor=\color{listingbgcolor},
+  xleftmargin=0em,
+  xrightmargin=0em,
+  %
+  literate={π}{{$\pi$}}1 {μ}{{$\mu$}}1 {σ}{{$\sigma$}}1 {ö}{{\"o}}1
+}
+
+\def\python#1#2{
+  \lstinputlisting[%
+  language=python,
+  morekeywords={as,self,yield,False,True,None},
+  escapeinside={\#@}{@},#1]
+  {#2}}
+
+\def\cfg#1#2{
+  \lstinputlisting[%
+  language=cfg,
+  escapeinside={\;@}{@},#1]
+  {#2}}
+
+\def\C#1#2{
+  \lstinputlisting[%
+    language=C++,
+    escapeinside={/*}{*/},#1]
+  {#2}}
+
+\def\Cpp#1#2{
+  \lstinputlisting[%
+    language=C++,
+    escapeinside={/*}{*/},#1]
+  {#2}}
+
+
+% listing environments for in-line code
+\lstnewenvironment{ipython}[2][]{
+  \lstset{
+    language=python,
+    morekeywords={as,self,yield,False,True,None},
+    escapeinside={\#@}{@},
+    #1
+  }}{#2}
+
+\lstnewenvironment{icfg}[2][]{
+  \lstset{
+    language=cfg,
+    #1
+  }}{#2}
+
+\lstnewenvironment{iC}[2][]{
+  \lstset{
+    language=C,
+    #1
+  }}{#2}
+
+\lstnewenvironment{iCpp}[2][]{
+  \lstset{
+    language=C++,
+    #1
+  }}{#2}
+
+\lstnewenvironment{ish}[2][]{
+  \lstset{
+    language=sh,
+    #1
+  }}{#2}
+
+
+% end of file

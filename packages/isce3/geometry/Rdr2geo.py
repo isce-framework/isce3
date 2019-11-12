@@ -11,7 +11,7 @@ class Rdr2geo(isceextension.pyTopo):
     """
     pass
 
-def rdr2geo_point(azimuthTime=None, 
+def rdr2geo_point(azimuthTime=None,
             slantRange=None,
             ellipsoid=None,
             orbit=None,
@@ -21,7 +21,6 @@ def rdr2geo_point(azimuthTime=None,
             threshold = 0.05,
             maxIter = 50,
             extraIter = 50,
-            orbitMethod = 'hermite',
             demInterpolatorHeight = 0):
 
     """
@@ -34,7 +33,7 @@ def rdr2geo_point(azimuthTime=None,
             azimuthTime, slantRange, side,
             doppler, wvl,
             threshold, maxIter, extraIter,
-            orbitMethod, demInterpolatorHeight
+            demInterpolatorHeight
             )
 
     return llh

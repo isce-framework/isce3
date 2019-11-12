@@ -7,20 +7,15 @@
 
 #ifndef ISCE_IMAGE_TILE_H
 #define ISCE_IMAGE_TILE_H
+#pragma once
+
+#include "forward.h"
 
 #include <complex>
 #include <valarray>
 
 // pyre
 #include <pyre/journal.h>
-
-// Declarations
-namespace isce {
-    //! The isce::image namespace
-    namespace image {
-        template <typename T> class Tile;
-    }
-}
 
 // Definition
 template <typename T>

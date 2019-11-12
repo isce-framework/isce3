@@ -1,0 +1,16 @@
+# -*- yaml -*-
+#
+# michael a.g. aïvázis
+# orthologue
+# (c) 1998-2019 all rights reserved
+#
+
+language: python
+
+python:
+  - "3.6.4"
+
+script:
+ - echo hello
+
+# end of file

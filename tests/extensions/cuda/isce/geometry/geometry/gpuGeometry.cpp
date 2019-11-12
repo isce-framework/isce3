@@ -100,7 +100,7 @@ TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
 
             // Interpolate orbit to get state vector
             Vec3 pos, vel;
-            int stat = orbit.interpolate(azTime, pos, vel, isce::core::HERMITE_METHOD);
+            orbit.interpolate(&pos, &vel, azTime);
 
             // Setup geocentric TCN basis
             isce::core::Basis TCNbasis(pos, vel);
@@ -129,6 +129,7 @@ TEST_F(GpuGeometryTest, RdrToGeoWithInterpolation) {
                 ellipsoid, dem, targetLLH, lookSide, 1.0e-4, maxiter, extraiter);
 
             // Check
+            ASSERT_EQ(stat_cpu, stat_gpu);
             ASSERT_NEAR(degrees*targetLLH[0], reflon, 1.0e-8);
             ASSERT_NEAR(degrees*targetLLH[1], reflat, 1.0e-8);
             ASSERT_NEAR(targetLLH[2], refhgt, 1.0e-2);
@@ -140,7 +141,7 @@ TEST_F(GpuGeometryTest, GeoToRdr) {
 
     // Make a reference epoch for numerical precision
     isce::core::DateTime refEpoch(2003, 2, 25);
-    orbit.updateUTCTimes(refEpoch);
+    orbit.referenceEpoch(refEpoch);
 
     // Make a test LLH
     const double radians = M_PI / 180.0;
@@ -153,7 +154,7 @@ TEST_F(GpuGeometryTest, GeoToRdr) {
     // Run geo2rdr on gpu
     double aztime, slantRange;
     int stat = isce::cuda::geometry::geo2rdr_h(llh, ellipsoid, orbit, doppler,
-        aztime, slantRange, rgparam.wavelength(), 1.0e-10, 50, 10.0);
+        aztime, slantRange, rgparam.wavelength(), rgparam.lookSide(), 1.0e-10, 50, 10.0);
     // Convert azimuth time to a date
     isce::core::DateTime azdate = refEpoch + aztime;
 
@@ -164,7 +165,7 @@ TEST_F(GpuGeometryTest, GeoToRdr) {
     // Run geo2rdr again with zero doppler
     isce::core::LUT1d<double> zeroDoppler;
     stat = isce::cuda::geometry::geo2rdr_h(llh, ellipsoid, orbit, zeroDoppler,
-        aztime, slantRange, rgparam.wavelength(), 1.0e-10, 50, 10.0);
+        aztime, slantRange, rgparam.wavelength(), rgparam.lookSide(), 1.0e-10, 50, 10.0);
     azdate = refEpoch + aztime;
 
     ASSERT_EQ(stat, 1);

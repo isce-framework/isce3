@@ -14,10 +14,11 @@
 #include <pyre/journal.h>
 
 // isce::core
-#include "isce/core/Constants.h"
+#include <isce/core/Constants.h>
 
 // isce::image
 #include "ResampSlc.h"
+#include "Tile.h"
 
 using isce::io::Raster;
 

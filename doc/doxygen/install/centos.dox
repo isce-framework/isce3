@@ -81,17 +81,7 @@ In this set of instructions, we rely on <a href="https://anaconda.org/">Anaconda
 <ol>
 <li> We will list all the required packages in a text file called "requirements.txt" located under /home/tools/python. The contents of the requirements.txt file is shown below:
 
-\verbatim
-cmake
-cython
-gdal
-git
-h5py
-libgdal
-pytest
-numpy
-fftw
-\endverbatim
+\include requirements.txt
 
 <li> We can then install Anaconda and these requirements as shown below:
 \code{.sh}
@@ -114,6 +104,10 @@ fftw
 </ol>
 
 \section pyreinstall Installing pyre
+
+Pyre will by default be installed as a component of ISCE.
+If you wish to install pyre yourself, choose one of the following
+options and specify `-DHAVE_PYRE=y` when building ISCE.
 
 \subsection pyresrc Option 1: Install pyre from source
 
@@ -227,6 +221,16 @@ export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
 \endcode
 
 </ol>
+
+\subsection pyreconda Option 3: Install pyre via conda package
+
+\code{.sh}
+conda install conda-build
+git clone https://github.com/rtburns-jpl/conda-pyre
+cd conda-pyre
+conda build .
+conda install --use-local pyre
+\endcode
 
 \section isce3linux Install ISCE from source
 
@@ -355,6 +359,7 @@ export LD_LIBRARY_PATH=${HOME}/python/miniconda3/lib:$LD_LIBRARY_PATH
 export CUDACXX=/usr/local/cuda/bin/nvcc
 
 # pyre
+# (not needed if pyre was installed via conda package)
 export PYREDIR=${HOME}/tools/pyre
 export PATH=$PYREDIR/bin:$PATH
 export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH
@@ -367,14 +372,5 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HOME}/tools/isce/lib
 \endcode
 
 </ol>
-
-\section tips Additional installation tips
-
-During the installation process, users may need to implement additional steps depending on their operating system, prerequisites, development environment, etc.
-
-\subsection tips_cuda 1. Set TMP_DIR for compilation of CUDA extensions
-
-During compilation of CUDA extensions with nvcc and cmake, temporary files are placed in `/tmp` or the directory pointed to by the environment variable `TMP_DIR`. Therefore, if users wish to place temporary files in a custom directory, they must set `TMP_DIR`.
-
 
 */

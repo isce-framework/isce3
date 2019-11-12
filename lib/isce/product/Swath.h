@@ -1,8 +1,7 @@
 //-*- C++ -*-
 //-*- coding: utf-8 -*-
 
-#ifndef ISCE_PRODUCT_SWATH_H
-#define ISCE_PRODUCT_SWATH_H
+#pragma once
 
 // std
 #include <valarray>
@@ -133,7 +132,3 @@ class isce::product::Swath {
         // Reference epoch
         isce::core::DateTime _refEpoch;
 };
-
-#endif
-
-// end of file

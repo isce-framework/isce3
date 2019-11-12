@@ -12,8 +12,7 @@
 // 
 //  ======================================================================
 
-#ifndef  EdgeDetector_h
-#define  EdgeDetector_h
+#pragma once
 
 #include "Point.h"
 #include "constants.h"
@@ -26,6 +25,3 @@ void detect_edge(int nr_lines, int nr_pixels, float **data, unsigned char **edge
 void detect_edge(int nr_lines, int nr_pixels, float **data, 
 		 unsigned char **horizontal_edge_data, unsigned char **vertical_edge_data,
 		 int window_length, double coefficient_variance_min, double max_edge_ratio);
-
-#endif
-

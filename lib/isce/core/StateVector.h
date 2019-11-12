@@ -1,6 +1,4 @@
 #pragma once
-#ifndef ISCE_CORE_STATEVECTOR_H
-#define ISCE_CORE_STATEVECTOR_H
 
 #include "forward.h"
 
@@ -30,6 +28,3 @@ bool operator!=(const StateVector & lhs, const StateVector & rhs)
 }
 
 }}
-
-#endif
-

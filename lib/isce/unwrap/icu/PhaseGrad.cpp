@@ -9,7 +9,7 @@ template<int WINSIZE>
 void _calcPhaseGrad(
     float * phasegradx,
     float * phasegrady,
-    const std::complex<float> * intf, 
+    const std::complex<float> * intf,
     const size_t length,
     const size_t width)
 {
@@ -31,13 +31,13 @@ void _calcPhaseGrad(
 
     // Init phase slope.
     const size_t tilesize = length * width;
-    for (size_t i = 0; i < tilesize; ++i) 
-    { 
-        phasegradx[i] = 0.f; 
-        phasegrady[i] = 0.f; 
+    for (size_t i = 0; i < tilesize; ++i)
+    {
+        phasegradx[i] = 0.f;
+        phasegrady[i] = 0.f;
     }
 
-    // Compute smoothed phase slope using a weighted average of phase 
+    // Compute smoothed phase slope using a weighted average of phase
     // differences.
     #pragma omp parallel for collapse(2)
     for (size_t j = WINSIZE/2 + 1; j < length - WINSIZE/2; ++j)
@@ -47,10 +47,8 @@ void _calcPhaseGrad(
             auto sx = std::complex<float>(0.f, 0.f);
             auto sy = std::complex<float>(0.f, 0.f);
 
-            #pragma unroll
             for (int jj = -WINSIZE/2; jj <= WINSIZE/2; ++jj)
             {
-                #pragma unroll
                 for (int ii = -WINSIZE/2; ii <= WINSIZE/2; ++ii)
                 {
                     float w = weights[(jj + WINSIZE/2) * WINSIZE + (ii + WINSIZE/2)];
@@ -73,7 +71,7 @@ void _calcPhaseGrad(
 void _calcPhaseGrad(
     float * phasegradx,
     float * phasegrady,
-    const std::complex<float> * intf, 
+    const std::complex<float> * intf,
     const size_t length,
     const size_t width,
     const int winsize)
@@ -96,13 +94,13 @@ void _calcPhaseGrad(
 
     // Init phase slope.
     const size_t tilesize = length * width;
-    for (size_t i = 0; i < tilesize; ++i) 
-    { 
-        phasegradx[i] = 0.f; 
-        phasegrady[i] = 0.f; 
+    for (size_t i = 0; i < tilesize; ++i)
+    {
+        phasegradx[i] = 0.f;
+        phasegrady[i] = 0.f;
     }
 
-    // Compute smoothed phase slope using a weighted average of phase 
+    // Compute smoothed phase slope using a weighted average of phase
     // differences.
     #pragma omp parallel for collapse(2)
     for (size_t j = winsize/2 + 1; j < length - winsize/2; ++j)
@@ -138,7 +136,7 @@ void _calcPhaseGrad(
 void calcPhaseGrad(
     float * phasegradx,
     float * phasegrady,
-    const std::complex<float> * intf, 
+    const std::complex<float> * intf,
     const size_t length,
     const size_t width,
     const int winsize)
@@ -146,22 +144,22 @@ void calcPhaseGrad(
     // Let the compiler optimize for some common window sizes.
     switch(winsize)
     {
-        case 3: 
+        case 3:
             _calcPhaseGrad<3>(phasegradx, phasegrady, intf, length, width);
             break;
-        case 5: 
+        case 5:
             _calcPhaseGrad<5>(phasegradx, phasegrady, intf, length, width);
             break;
-        case 7: 
+        case 7:
             _calcPhaseGrad<7>(phasegradx, phasegrady, intf, length, width);
             break;
-        case 9: 
+        case 9:
             _calcPhaseGrad<9>(phasegradx, phasegrady, intf, length, width);
             break;
-        case 11: 
+        case 11:
             _calcPhaseGrad<11>(phasegradx, phasegrady, intf, length, width);
             break;
-        default: 
+        default:
             _calcPhaseGrad(phasegradx, phasegrady, intf, length, width, winsize);
             break;
     }

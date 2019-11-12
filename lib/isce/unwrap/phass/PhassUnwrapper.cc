@@ -1,26 +1,30 @@
 // Copyright (c) 2017-, California Institute of Technology ("Caltech"). U.S.
 // Government sponsorship acknowledged.
 // All rights reserved.
-// 
+//
 // Author(s):
-// 
+//
 //  ======================================================================
-// 
+//
 //  FILENAME: PhassUnwrapper.cc
-//   
+//
 //  CREATED BY: Xiaoqing WU
-// 
+//
 //  ======================================================================
 #include "CannyEdgeDetector.h"
 #include "PhassUnwrapper.h"
 #include "ASSP.h"
 #include "DataPatch.h"
 #include "Point.h"
-#include <vector>  
-#include <set>   
-#include <list>   
-#include <queue>  
-#include <omp.h> 
+#include <vector>
+#include <set>
+#include <list>
+#include <queue>
+
+// with gcc, openmp support requires an include
+#if defined(__GNUC__) && !defined(__clang__)
+#include <omp.h>
+#endif
 
 void phass_unwrap(int nr_lines, int nr_pixels, float **phase_data, float **corr_data, float **power_data, int **region_map,
 		  double corr_th, double good_corr, int min_pixels_per_region)
@@ -85,11 +89,11 @@ void phass_unwrap(int nr_lines, int nr_pixels, float **phase_data, float **corr_
   for(int row = 0; row < nrows; row++) {
     for(int col = 0; col < ncols; col ++) {
       node_data[row][col].supply = 0;
-      node_data[row][col].rc = 0;	  
+      node_data[row][col].rc = 0;
       node_data[row][col].dc = 0;
     }
   }
-  
+
   double pi = PI;
   double two_pi = 2.0 * PI;
   float *phases = new float[5];
@@ -134,7 +138,7 @@ void phass_unwrap(int nr_lines, int nr_pixels, float **phase_data, float **corr_
 	}
       }
       if(node_data[line][pixel].dc > mask_th) node_data[line][pixel].dc = 255;
-      if(node_data[line][pixel].rc > mask_th) node_data[line][pixel].rc = 255;	  
+      if(node_data[line][pixel].rc > mask_th) node_data[line][pixel].rc = 255;
     }
   }
 
@@ -178,7 +182,7 @@ void phass_unwrap(int nr_lines, int nr_pixels, float **phase_data, float **corr_
 	    if(dx >= max_dph) node_data[line][pixel].dc = 0;
             //else if(dx > max_dph/2) {
 	    //  node_data[line][pixel].dc = (unsigned char)((1.0 - dx/max_dph) * (double)node_data[line][pixel].dc);
-	    //}	
+	    //}
 	  }
 	}
       }
@@ -191,7 +195,7 @@ void phass_unwrap(int nr_lines, int nr_pixels, float **phase_data, float **corr_
 	    if(dx >= max_dph) node_data[line][pixel].rc = 0;
             //else if(dx > max_dph/2) {
 	    //  node_data[line][pixel].rc = (unsigned char)((1.0 - dx/max_dph) * (double)node_data[line][pixel].rc);
-	    //}	
+	    //}
 	  }
 	}
 	else if(pixel < ncols - 1) {
@@ -202,9 +206,9 @@ void phass_unwrap(int nr_lines, int nr_pixels, float **phase_data, float **corr_
 	    if(dx >= max_dph) node_data[line][pixel].rc = 0;
             //else if(dx > max_dph/2) {
 	    //  node_data[line][pixel].rc = (unsigned char)((1.0 - dx/max_dph) * (double)node_data[line][pixel].rc);
-	    //}	
+	    //}
 	  }
-	  
+
 	  if(corr_data[line][pixel] > small && corr_data[line][pixel - 1] > small) {
 	    dx = phase_data[line][pixel] - phase_data[line][pixel - 1];
 	    dx = fabs(dx);
@@ -212,11 +216,11 @@ void phass_unwrap(int nr_lines, int nr_pixels, float **phase_data, float **corr_
 	    if(dx >= max_dph) node_data[line][pixel].dc = 0;
             //else if(dx > max_dph/2) {
 	    //  node_data[line][pixel].dc = (unsigned char)((1.0 - dx/max_dph) * (double)node_data[line][pixel].dc);
-	    //}	
+	    //}
 	  }
 	}
       }
-	  
+
     }
   }
 
@@ -254,13 +258,13 @@ void phass_unwrap(int nr_lines, int nr_pixels, float **phase_data, float **corr_
     fclose(fp);
     exit(0);
   }
-  
+
 // End of making nodes  !!!!!!!!!!!!!!!!!
 
-// (2) seek minimum cost flow solution .......... 
+// (2) seek minimum cost flow solution ..........
 
   DataPatch<NodeFlow> *flows = solve(node_patch);
-  NodeFlow **flow_data = flows->get_data_lines_ptr(); 
+  NodeFlow **flow_data = flows->get_data_lines_ptr();
 
 //  FILE *fp_flow = fopen("June20.int.flow", "r");
 //  DataPatch<NodeFlow> *flows = new DataPatch<NodeFlow>(ncols, nrows);;
@@ -279,7 +283,7 @@ void phass_unwrap(int nr_lines, int nr_pixels, float **phase_data, float **corr_
       }
     }
     uchar th = cost_scale * corr_th;
-      cerr << "***** th: " << (int) th << endl;    
+      cerr << "***** th: " << (int) th << endl;
     for(int line = 0; line < nrows; line ++) {
       for(int pixel = 0; pixel < ncols; pixel ++) {
 	if(node_data[line][pixel].rc < th && flow_data[line][pixel].toRight == 0) {
@@ -289,7 +293,7 @@ void phass_unwrap(int nr_lines, int nr_pixels, float **phase_data, float **corr_
 	  if(!isEdge[line][pixel]) flow_data[line][pixel].toDown = 1;
 	}
       }
-    } 
+    }
     for(int line = 0; line < nr_lines + 1; line ++) {
       delete[] isEdge[line];
     }
@@ -297,20 +301,19 @@ void phass_unwrap(int nr_lines, int nr_pixels, float **phase_data, float **corr_
   }
 
 // (3) start unwrap ..........
-  
+
   int nr_seeds = 0;
 
   Seed *seeds = NULL;
-  create_seeds(flows, min_pixels_per_region, nr_seeds, &seeds);      // create seeds only 
+  create_seeds(flows, min_pixels_per_region, nr_seeds, &seeds);      // create seeds only
 //  DataPatch<char> *visit_patch = unwrap_assp(flows, phase_data, nr_seeds, seeds); // unwrap only
   DataPatch<char> *visit_patch = unwrap_adjust_seeds(flows, phase_data, nr_seeds, seeds); // unwrap only
   delete visit_patch;
-    
+
   generate_regions(flows, nr_seeds, seeds, region_map);
 
-  
+
   delete[] seeds;
   delete flows;
   delete node_patch;
 }
-

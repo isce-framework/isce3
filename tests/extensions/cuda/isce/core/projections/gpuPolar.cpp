@@ -13,15 +13,13 @@
 
 #include <cmath>
 #include <iostream>
-#include "isce/cuda/core/gpuProjections.h"
+#include <isce/cuda/core/gpuProjections.h>
 #include <chrono>
 
-#include "gtest/gtest.h"
-using isce::core::cartesian_t;
+#include "projtest.h"
 
 isce::cuda::core::PolarStereo gNorth(3413);
 isce::cuda::core::PolarStereo gSouth(3031);
-
 
 struct PolarTest : public ::testing::Test {
     virtual void SetUp() {
@@ -35,26 +33,7 @@ struct PolarTest : public ::testing::Test {
     unsigned fails;
 };
 
-
-#define polarTest(hemi,name,p,q,r,x,y,z)       \
-    TEST_F(PolarTest, name) {       \
-        cartesian_t ref_llh = {p,q,r};    \
-        cartesian_t ref_xyz = {x,y,z};    \
-        cartesian_t xyz, llh;  \
-        llh = ref_llh;                  \
-        hemi.forward_h(llh, xyz);    \
-        EXPECT_NEAR(xyz[0], ref_xyz[0], 1.0e-6);\
-        EXPECT_NEAR(xyz[1], ref_xyz[1], 1.0e-6);\
-        EXPECT_NEAR(xyz[2], ref_xyz[2], 1.0e-6);\
-        xyz = ref_xyz;                  \
-        hemi.inverse_h(xyz, llh);    \
-        EXPECT_NEAR(llh[0], ref_llh[0], 1.0e-9);\
-        EXPECT_NEAR(llh[1], ref_llh[1], 1.0e-9);\
-        EXPECT_NEAR(llh[2], ref_llh[2], 1.0e-6);\
-        fails += ::testing::Test::HasFailure();\
-    } struct consume_semicolon
-
-
+#define polarTest(...) PROJ_TEST(PolarTest, __VA_ARGS__)
 
 polarTest(gNorth, NorthPole3413, {0,0.5*M_PI, 0.}, {0.,0.,0.});
 

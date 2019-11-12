@@ -3,41 +3,20 @@
 // Copyright 2019
 //
 
-#ifndef __ISCE_CUDA_SIGNAL_GPUFILTER_H__
-#define __ISCE_CUDA_SIGNAL_GPUFILTER_H__
+#pragma once
+
+#include "forward.h"
+#include <isce/core/forward.h>
 
 #include <complex>
 #include <valarray>
 #include <thrust/complex.h>
 
 #include "gpuSignal.h"
-#include <isce/core/LUT1d.h>
-
-using isce::cuda::signal::gpuSignal;
-
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace signal {
-            template<class T>
-            class gpuFilter;
-
-            template<class T>
-            class gpuAzimuthFilter;
-
-            template<class T>
-            class gpuRangeFilter;
-        }
-    }
-}
-
-using isce::cuda::signal::gpuFilter;
-using isce::cuda::signal::gpuAzimuthFilter;
-using isce::cuda::signal::gpuRangeFilter;
 
 // Definition of base class
 template<class T>
-class gpuFilter {
+class isce::cuda::signal::gpuFilter {
     public:
         gpuFilter() {};
         ~gpuFilter();
@@ -64,7 +43,7 @@ class gpuFilter {
 
 // Azimuth filter class derived from base class
 template <class T>
-class gpuAzimuthFilter : public gpuFilter<T> {
+class isce::cuda::signal::gpuAzimuthFilter : public gpuFilter<T> {
     public:
         gpuAzimuthFilter();
         ~gpuAzimuthFilter() {};
@@ -87,7 +66,7 @@ class gpuAzimuthFilter : public gpuFilter<T> {
 
 // Range filter class derived from base class
 template <class T>
-class gpuRangeFilter : public gpuFilter<T> {
+class isce::cuda::signal::gpuRangeFilter : public gpuFilter<T> {
     public:
         gpuRangeFilter();
         ~gpuRangeFilter();
@@ -157,5 +136,3 @@ __global__ void filter_g(thrust::complex<T> *signal, thrust::complex<T> *filter,
 
 template<class T>
 __global__ void sumSpectrum_g(thrust::complex<T> *spectrum, T *spectrum_sum, int n_rows, int n_cols);
-
-#endif

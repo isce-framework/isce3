@@ -1,0 +1,142 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# michael a.g. aïvázis
+# orthologue
+# (c) 1998-2019 all rights reserved
+#
+
+# externals
+import csv, collections, datetime, re
+# support
+import pyre
+
+
+# app
+class Blame(pyre.application, family='pyre.applications.blame'):
+    """
+    Extract revision meta-data from a {bzr} log
+    """
+
+    # user configurable state
+    log = pyre.properties.istream()
+    log.tip = 'the file to analyze'
+
+    out = pyre.properties.ostream(default='report.csv')
+    out.tip = 'the file with the results'
+
+
+    # behavior
+    @pyre.export(tip='perform the analysis')
+    def main(self, *args, **kwds):
+        """
+        The main entry point
+        """
+        # my report
+        report = collections.defaultdict(int)
+        # extract the commit meta-data
+        for meta in self.extract():
+            # get the month
+            month = meta.when.strftime("%Y%m")
+            # increment the relevant bucket
+            report[month] += 1
+
+        # make a writer
+        writer = csv.writer(self.out)
+        # save
+        writer.writerows( (month, report[month]) for month in sorted(report))
+
+        # all done
+        return 0
+
+
+    # implementation details
+    def extract(self):
+        """
+        Go through the input file and extract the relevant information
+        """
+        # unpack
+        log = self.log
+        revno = self.revno
+        committer = self.committer
+        timestamp = self.timestamp
+        FORMAT = self.TIMESTAMP
+
+        # show me
+        for line in log:
+            # check whether the line indicates a new revno
+            match = revno.match(line)
+            # if not, move on
+            if not match: continue
+
+            # otherwise, extract the revno
+            which = match.group('revno')
+            # skip lines until we find the committer
+            for line in log:
+                # is it this one?
+                match = committer.match(line)
+                # if yes
+                if match:
+                    # extract
+                    who = match.group('committer')
+                    # and go to the next section
+                    break
+
+            # skip lines until we find the timestamp
+            for line in log:
+                # is it this one?
+                match = timestamp.match(line)
+                # if yes
+                if match:
+                    # extract
+                    when = datetime.datetime.strptime(match.group('timestamp'), FORMAT)
+                    # and move
+                    break
+
+            # assemble and make available
+            yield RevisionInfo(who=who, which=which, when=when)
+
+        # all done
+        return
+
+
+
+    # data
+    revno = re.compile('revno: (?P<revno>\d+)')
+    committer = re.compile('committer: (?P<committer>.+)\s+$')
+    timestamp = re.compile('timestamp: (?P<timestamp>.+)\s+$')
+
+    TIMESTAMP = "%a %Y-%m-%d %H:%M:%S %z"
+
+
+# support
+class RevisionInfo:
+
+    # data
+    which = None
+    who = None
+    when = None
+
+    # meta-method
+    def __init__(self, which, who, when, **kwds):
+        # chain up
+        super().__init__(**kwds)
+        # save
+        self.which = which
+        self.who = who
+        self.when = when
+        # all done
+        return
+
+
+# main
+if __name__ ==  "__main__":
+    # make one
+    app = Blame(name='blame')
+    # run it
+    status = app.run()
+    # share
+    raise SystemExit(status)
+
+
+# end of file

@@ -3,8 +3,6 @@
 // Copyright 2019
 //
 
-#ifndef ISCE_CORE_KERNELS_H
-#define ISCE_CORE_KERNELS_H
 #pragma once
 
 #include "forward.h"
@@ -112,16 +110,55 @@ class isce::core::NFFTKernel : public isce::core::Kernel<T> {
          * @param[in] n         Length of input signal.
          * @param[in] fft_size  FFT Transform size (> n).
          */
-        NFFTKernel(size_t m, size_t n, size_t fft_size);
+        NFFTKernel(int m, int n, int fft_size);
 
         T operator()(double x) const override;
 
     private:
-        size_t _m;
-        size_t _n;
-        size_t _fft_size;
+        int _m;
+        int _n;
+        int _fft_size;
         T _scale;
         T _b;
 };
 
-#endif
+/** Tabulated Kernel
+ *
+ */
+template <typename T>
+class isce::core::TabulatedKernel : public isce::core::Kernel<T> {
+    public:
+        /** Constructor of tabulated kernel.
+         *
+         * @param[in] kernel    Kernel to sample.
+         * @param[in] n         Table size.
+         */
+        TabulatedKernel(const isce::core::Kernel<T> &kernel, int n);
+
+        T operator()(double x) const override;
+    
+    private:
+        std::valarray<T> _table;
+        int _imax;
+        T _1_dx;
+};
+
+/** Polynomial Kernel
+ *
+ */
+template <typename T>
+class isce::core::ChebyKernel : public isce::core::Kernel<T> {
+    public:
+        /** Constructor that computes fit of another Kernel.
+         *
+         * @param[in] kernel    Kernel to fit (assumed even).
+         * @param[in] n         Number of coefficients.
+         */
+        ChebyKernel(const isce::core::Kernel<T> &kernel, int n);
+
+        T operator()(double x) const override;
+
+    private:
+        std::valarray<T> _coeffs;
+        T _scale;
+};

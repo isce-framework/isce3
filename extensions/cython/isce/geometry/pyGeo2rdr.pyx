@@ -20,8 +20,6 @@ cdef class pyGeo2rdr:
         doppler   (pyLUT2d)                  doppler in form of LUT2d object
         threshold (Optional[float]):         Threshold for iteration stop for slant range.
         numIterations (Optional[int]):       Max number of normal iterations.
-        orbitMethod (Optional[str]):         Orbit interpolation method
-                                                ('hermite', 'sch', 'legendre')
 
     Return:
         None
@@ -30,21 +28,13 @@ cdef class pyGeo2rdr:
     cdef Geo2rdr * c_geo2rdr
     cdef bool __owner
 
-    # Orbit interpolation methods
-    orbitInterpMethods = {
-        'hermite': orbitInterpMethod.HERMITE_METHOD,
-        'sch' :  orbitInterpMethod.SCH_METHOD,
-        'legendre': orbitInterpMethod.LEGENDRE_METHOD
-    }
-
-    def __cinit__(self, 
+    def __cinit__(self,
                   pyRadarGridParameters radarGrid,
                   pyOrbit orbit,
                   pyEllipsoid ellipsoid,
                   pyLUT2d doppler=None,
                   double threshold=1.0e-5,
-                  int numIterations=50,
-                  orbitMethod='hermite'):
+                  int numIterations=50):
         """
         Constructor.
         """
@@ -52,12 +42,12 @@ cdef class pyGeo2rdr:
 
         if doppler is None:
             #geometry computation for zero Doppler
-            self.c_geo2rdr = new Geo2rdr(deref(radarGrid.c_radargrid), 
-                                         deref(orbit.c_orbit),
+            self.c_geo2rdr = new Geo2rdr(deref(radarGrid.c_radargrid),
+                                         orbit.c_orbit,
                                          deref(ellipsoid.c_ellipsoid))
         else:
             self.c_geo2rdr = new Geo2rdr(deref(radarGrid.c_radargrid),
-                                         deref(orbit.c_orbit),
+                                         orbit.c_orbit,
                                          deref(ellipsoid.c_ellipsoid),
                                          deref(doppler.c_lut))
 
@@ -66,7 +56,6 @@ cdef class pyGeo2rdr:
         # Set processing options
         self.c_geo2rdr.threshold(threshold)
         self.c_geo2rdr.numiter(numIterations)
-        self.c_geo2rdr.orbitMethod(self.orbitInterpMethods[orbitMethod])
 
     def __dealloc__(self):
         if self.__owner:
@@ -76,14 +65,14 @@ cdef class pyGeo2rdr:
                 outputDir=None, double azshift=0.0, double rgshift=0.0):
         """
         Run geo2rdr.
-        
+
         Args:
             topoRaster (pyRaster):              Raster for input topo products.
             rgoffRaster (Optional[pyRaster]):   Raster for output range offset.
             azoffRaster (Optional[pyRaster]):   Raster for output azimuth offset.
             outputDir (Optional[str]):          String for output directory.
             azshift (Optional[double]):         Constant azimuth offset.
-            rgshift (Optional[double]):         Constant range offset. 
+            rgshift (Optional[double]):         Constant range offset.
 
         Return:
             None

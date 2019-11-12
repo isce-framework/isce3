@@ -3,22 +3,12 @@
 // Author: Bryan V. Riel
 // Copyright: 2017-2018
 
-#ifndef ISCE_CUDA_GEOMETRY_TOPO_H
-#define ISCE_CUDA_GEOMETRY_TOPO_H
+#pragma once
 
-// isce::geometry
-#include "isce/geometry/Topo.h"
-#include "isce/geometry/TopoLayers.h"
-#include "isce/geometry/DEMInterpolator.h"
+#include "forward.h"
 
-// Declaration
-namespace isce {
-    namespace cuda {
-        namespace geometry {
-            class Topo;
-        }
-    }
-}
+#include <isce/geometry/forward.h>
+#include <isce/geometry/Topo.h>
 
 // CUDA Topo class definition
 /** Transformer from radar geometry coordinates to map coordinates with DEM / reference altitude on GPU
@@ -80,7 +70,3 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
                                         isce::geometry::DEMInterpolator & demInterp,
                                         size_t lineStart);
 };
-
-#endif
-
-// end of file

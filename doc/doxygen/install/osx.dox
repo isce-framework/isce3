@@ -64,6 +64,10 @@ We write the instructions assuming that we are using clang-8.0 and python37. Cha
 
 \section pyre Installing pyre from source
 
+Pyre will by default be installed as a component of ISCE.
+If you wish to install pyre yourself, do the following
+and specify `-DHAVE_PYRE=y` when building ISCE.
+
 In this set of instructions, we will install pyre from source using its custom build system - "mm".
 The directory structure that we assume for installing pyre is as follows:
 <table>

@@ -1,0 +1,9 @@
+fftw>=3
+gdal>=2.3
+git
+h5py
+hdf5>=1.10.2
+libgcc
+libstdcxx-ng
+numpy
+python>=3.6

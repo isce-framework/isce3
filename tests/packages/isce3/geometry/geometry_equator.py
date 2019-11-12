@@ -9,11 +9,13 @@ def setupOrbit(lon0, omega, Nvec, ellipsoid):
     hsat = 700000.0
 
     # Setup orbit
-    orb = isce3.core.orbit()
     t0 = isce3.core.dateTime(dt="2017-02-12T01:12:30.0")
-    orb.refEpoch = t0
+
+    statevecs = []
     for ii in range(Nvec):
         deltat = ii*10.0
+        t = t0 + isce3.core.timeDelta(dt=deltat)
+
         lon = lon0 + omega*deltat
 
         pos = [(ellipsoid.a + hsat) * np.cos(lon),
@@ -24,11 +26,14 @@ def setupOrbit(lon0, omega, Nvec, ellipsoid):
                 omega*pos[0],
                 0.0]
 
-        orb.addStateVector(deltat, pos, vel)
+        sv = isce3.core.statevector(datetime=t, position=pos, velocity=vel)
+        statevecs.append(sv)
+
+    orb = isce3.core.orbit(statevecs=statevecs)
 
     return orb, hsat
 
-# Solve for Geocentric latitude 
+# Solve for Geocentric latitude
 def solve(R, hsat, ellipsoid):
     temp = 1 + hsat/ellipsoid.a
     temp1 = R/ellipsoid.a
@@ -51,7 +56,7 @@ def solve(R, hsat, ellipsoid):
 
 def test_rdr2geo():
     degrees = 180.0/np.pi
-    
+
     lon0 = 0.0
     omega = 0.1/degrees
     Nvec = 10
@@ -82,8 +87,8 @@ def test_rdr2geo():
 
         # Run rdr2geo to estimate target llh
         targetLLH = isce3.geometry.rdr2geo_point(
-                azimuthTime=tinp, slantRange=rng, 
-                ellipsoid=ellipsoid, orbit=orb, side=1.0, 
+                azimuthTime=tinp, slantRange=rng,
+                ellipsoid=ellipsoid, orbit=orb, side=1.0,
                 threshold = 1e-8, maxIter = 25, extraIter = 15
                 )
 
@@ -93,7 +98,7 @@ def test_rdr2geo():
 
         # Run rdr2geo again with right looking side
         targetLLH = isce3.geometry.rdr2geo_point(
-                azimuthTime=tinp, slantRange=rng, 
+                azimuthTime=tinp, slantRange=rng,
                 ellipsoid=ellipsoid, orbit=orb, side=-1.0,
                 threshold = 1e-8, maxIter = 25, extraIter = 15
                 )
@@ -121,7 +126,7 @@ def test_geo2rdr():
 
     for ii in range(20):
         tinp = 25.0 + ii * 2.0
-        
+
         # Start with geocentric lat
         geocentricLat = (2.0 + ii * 0.1)/degrees
 
@@ -139,21 +144,24 @@ def test_geo2rdr():
         sat_xyz = [(ellipsoid.a + hsat) * np.cos(expectedLon),
                     (ellipsoid.a + hsat) * np.sin(expectedLon),
                     0.0]
-        
+
         # line of sight vector
         los = np.array(sat_xyz) - np.array(targ_xyz)
 
-        # expected Range 
+        # expected Range
         expRange = np.sqrt(np.sum(los**2))
 
+        # Run rdr2geo with left looking side
+        side = 1
         azTime, slantRange = isce3.geometry.geo2rdr_point(
-                lonlatheight=list(targ_LLH), ellipsoid=ellipsoid, 
-                orbit=orb, doppler=zeroDop, 
-                wavelength=0.24, threshold=1.0e-9, maxiter=50, dR=10.0
+                lonlatheight=list(targ_LLH), ellipsoid=ellipsoid,
+                orbit=orb, doppler=zeroDop,
+                wavelength=0.24, side=side,
+                threshold=1.0e-9, maxiter=50, dR=10.0
                 )
 
         assert abs(azTime - tinp) < 1.0e-6
-        assert abs(slantRange - expRange) < 1e-8 
+        assert abs(slantRange - expRange) < 1e-8
 
     return
 

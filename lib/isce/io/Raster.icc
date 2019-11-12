@@ -10,6 +10,7 @@
 #error "Raster.icc is an implementation detail of class Raster"
 #endif
 
+#include <iostream>
 #include <isce/except/Error.h>
 
 //Constructor to map a raw stream to a Raster

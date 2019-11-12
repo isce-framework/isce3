@@ -10,7 +10,6 @@ from libcpp.string cimport string
 # Cython declarations for isce::core objects
 from isceextension cimport Raster
 from isceextension cimport Product
-from isceextension cimport orbitInterpMethod
 
 cdef extern from "isce/cuda/geometry/Geo2rdr.h" namespace "isce::cuda::geometry":
 
@@ -23,8 +22,7 @@ cdef extern from "isce/cuda/geometry/Geo2rdr.h" namespace "isce::cuda::geometry"
 
         # Set options
         void threshold(double)
-        void numiter(int);
-        void orbitMethod(orbitInterpMethod)
+        void numiter(int)
 
         # Run geo2rdr with offsets and internally created offset rasters
         void geo2rdr(Raster &, const string &, double, double)
