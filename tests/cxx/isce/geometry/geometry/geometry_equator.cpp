@@ -26,6 +26,8 @@
 #include <isce/geometry/DEMInterpolator.h>
 #include <isce/geometry/geometry.h>
 
+using isce::geometry::Direction;
+
 
 struct GeometryTest : public ::testing::Test {
 
@@ -135,7 +137,7 @@ TEST_F(GeometryTest, RdrToGeoEquator) {
 
         // Run rdr2geo with left looking side
         int stat = isce::geometry::rdr2geo(tinp, rng, 0.0,
-            orbit, ellipsoid, dem, targetLLH, 0.24, 1,
+            orbit, ellipsoid, dem, targetLLH, 0.24, Direction::Left,
             1.0e-8, 25, 15);
 
         // Check
@@ -147,7 +149,7 @@ TEST_F(GeometryTest, RdrToGeoEquator) {
         // Run again with right looking side
         targetLLH = {0., 0., 0.};
         stat = isce::geometry::rdr2geo(tinp, rng, 0.0,
-            orbit, ellipsoid, dem, targetLLH, 0.24, -1,
+            orbit, ellipsoid, dem, targetLLH, 0.24, Direction::Right,
             1.0e-8, 25, 15);
 
         // Check
@@ -208,8 +210,8 @@ TEST_F(GeometryTest, GeoToRdrEquator) {
         // Run geo2rdr
         double aztime, slantRange;
 
-        // Run rdr2geo with left looking side (side = +1)
-        int side = +1;
+        // Run rdr2geo with left looking
+        auto side = isce::geometry::Direction::Left;
         int stat = isce::geometry::geo2rdr(targ_LLH, ellipsoid, orbit,
             zeroDoppler, aztime, slantRange, wavelength, side,
             1.0e-9, 50, 10.0);

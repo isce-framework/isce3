@@ -26,6 +26,17 @@
 #include <isce/geometry/DEMInterpolator.h>
 #include <isce/geometry/geometry.h>
 
+// flatten namespaces
+using isce::geometry::Direction;
+const auto Left = Direction::Left;
+const auto Right = Direction::Right;
+
+// convenience enum to convey semantics of sign on spin rate
+enum OrbitDirection { EastBound, WestBound };
+enum OrbitDirection orbDir(double omega) {
+    if (omega > 0) return EastBound;
+    return WestBound;
+}
 
 struct GeometryTest : public ::testing::Test {
 
@@ -40,7 +51,8 @@ struct GeometryTest : public ::testing::Test {
     // Constructor
     GeometryTest(){}
 
-    //Setup the orbit
+    // Setup an orbit moving eastbound in a circle about the Z-axis at constant
+    // angular rate omega = dlon/dt.
     void Setup_data(double lat0, double lon0, double omega, int Nvec)
     {
         //WGS84 ellipsoid
@@ -85,9 +97,8 @@ struct GeometryTest : public ::testing::Test {
         orbit.setStateVectors(statevecs);
     }
 
-    //Solve for Geocentric latitude given a slant range
-    //And look side, assuming omega is +ve
-    double solve(double R, int side)
+    //Solve for Geocentric latitude given a slant range and look side.
+    double solve(double R, Direction side)
     {
         double temp = 1.0 + hsat/ellipsoid.a();
         double temp1 = R/ellipsoid.a();
@@ -97,13 +108,12 @@ struct GeometryTest : public ::testing::Test {
         double angdiff = std::acos(cosang);
 
         double x;
-        if ( (side * satomega) > 0)
-        {
+        if ( ((Left == side) && (EastBound == orbDir(satomega)))
+                || ((Right == side) && (WestBound == orbDir(satomega))) ) {
             x = satlat0 + angdiff;
-        }
-        else
+        } else {
             x = satlat0 - angdiff;
-
+        }
         return x;
 
     }
@@ -119,7 +129,7 @@ TEST_F(GeometryTest, RdrToGeoLat) {
     const double omega = 0.1/degrees;
     const int Nvec = 10;
     const double lat0 = 45.0/degrees;
-    int sides[] = {-1,1};
+    Direction sides[] = {Right, Left};
 
     //Set up orbit
     Setup_data(lat0, lon0, omega, Nvec);
@@ -184,7 +194,7 @@ TEST_F(GeometryTest, GeoToRdrLat) {
     const double omega = 0.1/degrees;
     const int Nvec = 10;
     const double lat0 = 45.0/degrees;
-    int sides[] = {-1,1};
+    Direction sides[] = {Right, Left};
 
     //Set up orbit
     Setup_data(lat0, lon0, omega, Nvec);
@@ -204,12 +214,14 @@ TEST_F(GeometryTest, GeoToRdrLat) {
 
         for (int kk=0; kk<2; kk++)
         {
-
-            //Determine sign
-            int sgn = ((omega * sides[kk]) < 0)? 1 : -1;
-
             //Start with geocentric lat
-            double geocentricLat = (lat0 + sgn * ii * 0.1/degrees) ;
+            double geocentricLat = 0;
+            if ( ((Left == sides[kk]) && (EastBound == orbDir(satomega)))
+                    || ((Right == sides[kk]) && (WestBound == orbDir(satomega))) ) {
+                geocentricLat = (lat0 + ii * 0.1/degrees) ;
+            } else {
+                geocentricLat = (lat0 - ii * 0.1/degrees) ;
+            }
 
             //Theoretical solutions
             double expectedLon = lon0 + omega * tinp;
@@ -236,7 +248,7 @@ TEST_F(GeometryTest, GeoToRdrLat) {
             // Run geo2rdr
             double aztime, slantRange;
             int stat = isce::geometry::geo2rdr(targ_LLH, ellipsoid, orbit,
-                zeroDoppler, aztime, slantRange, wavelength, sgn,
+                zeroDoppler, aztime, slantRange, wavelength, sides[kk],
                 1.0e-9, 50, 10.0);
 
            // Check

@@ -46,7 +46,7 @@ struct GeometryTest : public ::testing::Test {
     isce::product::ProcessingInformation proc;
     isce::product::Swath swath;
 
-    int lookSide;
+    isce::geometry::Direction lookSide;
 
     // Constructor
     protected:
