@@ -24,4 +24,5 @@ Error<T>::Error(const SrcInfo& info, std::string msg) :
 
 template class isce::except::Error<std::invalid_argument>;
 template class isce::except::Error<std::length_error>;
+template class isce::except::Error<std::out_of_range>;
 template class isce::except::Error<std::runtime_error>;

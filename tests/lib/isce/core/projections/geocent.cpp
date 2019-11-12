@@ -3,8 +3,8 @@
 #include "projtest.h"
 
 isce::core::Geocent proj;
-const double a = proj.ellipse.a();
-const double b = a * std::sqrt(1.0 - proj.ellipse.e2());
+const double a = proj.ellipsoid().a();
+const double b = a * std::sqrt(1.0 - proj.ellipsoid().e2());
 
 struct GeocentTest : public ::testing::Test {
     unsigned int fails;

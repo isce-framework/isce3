@@ -17,22 +17,24 @@ namespace isce { namespace core {
      *Internally, every derived class is expected to provide two functions.
      * forward - To convert llh (radians) to expected projection system 
      * inverse - To convert expected projection system to llh (radians) */
-    struct ProjectionBase {
-
+    class ProjectionBase {
         /** Ellipsoid object for projections - currently only WGS84 */
         Ellipsoid ellipse;
+        
         /** Type of projection system. This can be used to check if projection systems are equal
          * Private member and should not be modified after initialization*/
         int _epsgcode;
+    
+    public:
 
         /** Value constructor with EPSG code as input. Ellipsoid is always initialized to standard WGS84 ellipse.*/
         ProjectionBase(int code) : ellipse(6378137.,.0066943799901), _epsgcode(code) {}
 
-        /** Virtual destructor */
-        virtual ~ProjectionBase() {}
-
         /** Return EPSG code */
-        int code() const { return _epsgcode; }
+        inline int code() const { return _epsgcode; }
+
+        /** Return underlying ellipsoid */
+        inline const Ellipsoid& ellipsoid() const { return ellipse; }
 
         /** Print function for debugging */
         virtual void print() const = 0;
@@ -53,10 +55,14 @@ namespace isce { namespace core {
             inverse(native, llh);
             return llh;
         }
+
+        /** Virtual destructor */
+        virtual ~ProjectionBase() {}
     };
 
     /** Standard WGS84 Lon/Lat Projection extension of ProjBase - EPSG:4326 */
-    struct LonLat : public ProjectionBase {
+    class LonLat : public ProjectionBase {
+    public:
         // Value constructor
         LonLat() : ProjectionBase(4326) {}
 
@@ -68,7 +74,7 @@ namespace isce { namespace core {
     };
 
     inline void LonLat::print() const {
-        std::cout << "Projection: LatLon" << std::endl << "EPSG: " << _epsgcode << std::endl;
+        std::cout << "Projection: LatLon" << std::endl << "EPSG: " << code() << std::endl;
     }
 
     inline int LonLat::forward(const cartesian_t &in, cartesian_t &out) const {
@@ -86,7 +92,8 @@ namespace isce { namespace core {
     }
 
     /** Standard WGS84 ECEF coordinates extension of ProjBase - EPSG:4978 */
-    struct Geocent : public ProjectionBase {
+    class Geocent : public ProjectionBase {
+    public:
         // Value constructor
         Geocent() : ProjectionBase(4978) {}
         
@@ -99,14 +106,14 @@ namespace isce { namespace core {
     };
 
     inline void Geocent::print() const {
-        std::cout << "Projection: Geocent" << std::endl << "EPSG: " << _epsgcode << std::endl;
+        std::cout << "Projection: Geocent" << std::endl << "EPSG: " << code() << std::endl;
     }
 
     /** UTM coordinate extension of ProjBase
      *
      * EPSG 32601-32660 for Northern Hemisphere
      * EPSG 32701-32760 for Southern Hemisphere*/
-    struct UTM : public ProjectionBase { 
+    class UTM : public ProjectionBase { 
         // Constants related to the projection system
         double lon0;
         int zone;
@@ -115,6 +122,7 @@ namespace isce { namespace core {
         double cgb[6], cbg[6], utg[6], gtu[6];
         double Qn, Zb;
 
+    public:
         // Value constructor
         UTM(int);
 
@@ -128,18 +136,19 @@ namespace isce { namespace core {
 
     inline void UTM::print() const {
         std::cout << "Projection: UTM" << std::endl << "Zone: " << zone << (isnorth ? "N" : "S") << 
-                     std::endl << "EPSG: " << _epsgcode << std::endl;
+                     std::endl << "EPSG: " << code() << std::endl;
     }
 
     /** Polar stereographic extension of ProjBase
      *
      * EPSG: 3413 - Greenland
      * EPSG: 3031 - Antarctica*/
-    struct PolarStereo : public ProjectionBase {
+    class PolarStereo : public ProjectionBase {
         // Constants related to projection system
         double lat0, lon0, lat_ts, akm1, e;
         bool isnorth;
 
+    public:
         // Value constructor
         PolarStereo(int);
 
@@ -153,17 +162,18 @@ namespace isce { namespace core {
     
     inline void PolarStereo::print() const {
         std::cout << "Projection: " << (isnorth ? "North" : "South") << " Polar Stereographic" <<
-                     std::endl << "EPSG: " << _epsgcode << std::endl;
+                     std::endl << "EPSG: " << code() << std::endl;
     }
 
     /** Equal Area Projection extension of ProjBase
      *
      * EPSG:6933 for EASE2 grid*/
-    struct CEA: public ProjectionBase {
+    class CEA: public ProjectionBase {
         // Constants related to projection system
         double apa[3];
         double lat_ts, k0, e, one_es, qp;
 
+    public:
         // Value constructor
         CEA();
 
@@ -177,7 +187,7 @@ namespace isce { namespace core {
     };
 
     inline void CEA::print() const {
-        std::cout << "Projection: Cylindrical Equal Area" << std::endl << "EPSG: " << _epsgcode <<
+        std::cout << "Projection: Cylindrical Equal Area" << std::endl << "EPSG: " << code() <<
                      std::endl;
     }
 

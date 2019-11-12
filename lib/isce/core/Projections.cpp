@@ -30,7 +30,7 @@ int Geocent::forward(const cartesian_t &llh, cartesian_t& xyz) const {
      *
      */
 
-    ellipse.lonLatToXyz(llh, xyz);
+    ellipsoid().lonLatToXyz(llh, xyz);
     return 0;
 }
 
@@ -39,7 +39,7 @@ int Geocent::inverse(const cartesian_t &xyz, cartesian_t& llh) const {
      * This is to transform Geocent to LonLatHeight, which is just a pass-through to xyzToLonLat.
      */
 
-    ellipse.xyzToLonLat(xyz, llh);
+    ellipsoid().xyzToLonLat(xyz, llh);
     return 0;
 }
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -95,15 +95,15 @@ UTM::UTM(int code) : ProjectionBase(code) {
      * code (previously contained in a private _setup() method but moved given that _setup() was
      * not supposed to be callable after construction).
      */
-    if ((_epsgcode > 32600) && (_epsgcode <= 32660)) {
-        zone = _epsgcode - 32600;
+    if ((code > 32600) && (code <= 32660)) {
+        zone = code - 32600;
         isnorth = true;
-    } else if ((_epsgcode > 32700) && (_epsgcode <= 32760)) {
-        zone = _epsgcode - 32700;
+    } else if ((code > 32700) && (code <= 32760)) {
+        zone = code - 32700;
         isnorth = false;
     } else {
         string errstr = "In UTM::UTM - Invalid EPSG Code for UTM Projection. Received ";
-        errstr += to_string(_epsgcode);
+        errstr += to_string(code);
         errstr += ", expected in ranges (32600,32660] or (32700,32760].";
         throw invalid_argument(errstr);
     }
@@ -111,7 +111,7 @@ UTM::UTM(int code) : ProjectionBase(code) {
     lon0 = ((zone - 0.5) * (M_PI / 30.)) - M_PI;
 
     // Ellipsoid flattening
-    double f = ellipse.e2() / (1. + sqrt(1 - ellipse.e2()));
+    double f = ellipsoid().e2() / (1. + sqrt(1 - ellipsoid().e2()));
     // Third flattening
     double n = f / (2. - f);
 
@@ -189,8 +189,8 @@ int UTM::forward(const cartesian_t &llh, cartesian_t &utm) const {
     Ce += dCe;
 
     if (fabs(Ce) <= 2.623395162778) {
-        utm[0] = (Qn * Ce * ellipse.a()) + 500000.;
-        utm[1] = (((Qn * Cn) + Zb) * ellipse.a()) + (isnorth ? 0. : 10000000.);
+        utm[0] = (Qn * Ce * ellipsoid().a()) + 500000.;
+        utm[1] = (((Qn * Cn) + Zb) * ellipsoid().a()) + (isnorth ? 0. : 10000000.);
         // UTM is lateral projection only, height is pass through.
         utm[2] = llh[2];
         return 0;
@@ -203,8 +203,8 @@ int UTM::inverse(const cartesian_t &utm, cartesian_t &llh) const {
     /*
      * Transform from UTM to LLH.
      */
-    double Cn = (utm[1] - (isnorth ? 0. : 10000000.)) /  ellipse.a();
-    double Ce = (utm[0] - 500000.) /  ellipse.a();
+    double Cn = (utm[1] - (isnorth ? 0. : 10000000.)) /  ellipsoid().a();
+    double Ce = (utm[0] - 500000.) /  ellipsoid().a();
 
     //Normalize N,E to Spherical N,E
     Cn = (Cn - Zb) / Qn;
@@ -248,13 +248,13 @@ PolarStereo::PolarStereo(int code) : ProjectionBase(code) {
      * Set up various parameters for polar stereographic projection. Currently only EPSG:3031
      * (Antarctic) and EPSG:3413 (Greenland) are supported.
      */
-    if (_epsgcode == 3031) {
+    if (code == 3031) {
         isnorth = false;
         lat0 = -M_PI / 2.;
         // Only need absolute value
         lat_ts = (71. * M_PI) / 180.;
         lon0 = 0.;
-    } else if (_epsgcode == 3413) {
+    } else if (code == 3413) {
         isnorth = true;
         lat0 = M_PI / 2.;
         lat_ts = 70. * (M_PI / 180.);
@@ -262,14 +262,14 @@ PolarStereo::PolarStereo(int code) : ProjectionBase(code) {
     } else {
         string errstr = "In PolarStereo::PolarStereo - Invalid EPSG Code for Polar Stereographic ";
         errstr += "projection. Received ";
-        errstr += to_string(_epsgcode);
+        errstr += to_string(code);
         errstr += ", expected either 3031 (Antarctic) or 3413 (Greenland). [NOTE: Other codes are ";
         errstr += "currently not supported]";
         throw invalid_argument(errstr);
     }
-    e = sqrt(ellipse.e2());
+    e = sqrt(ellipsoid().e2());
     akm1 = cos(lat_ts) / pj_tsfn(lat_ts, sin(lat_ts), e);
-    akm1 *= ellipse.a() / sqrt(1. - (pow(e,2) * pow(sin(lat_ts),2)));
+    akm1 *= ellipsoid().a() / sqrt(1. - (pow(e,2) * pow(sin(lat_ts),2)));
 }
 
 int PolarStereo::forward(const cartesian_t &llh, cartesian_t &out) const {
@@ -326,12 +326,12 @@ CEA::CEA() : ProjectionBase(6933) {
      * Set up parameters for equal area projection.
      */
     lat_ts = M_PI / 6.;
-    k0 = cos(lat_ts) / sqrt(1. - (ellipse.e2() * pow(sin(lat_ts),2)));
-    e = sqrt(ellipse.e2());
-    one_es = 1. - ellipse.e2();
-    apa[0] = ellipse.e2() * ((1./3.) + (ellipse.e2() * ((31./180.) + (ellipse.e2() * (517./5040.)))));
-    apa[1] = pow(ellipse.e2(),2) * ((23./360.) + (ellipse.e2() * (251./3780.)));
-    apa[2] = pow(ellipse.e2(),3) * (761./45360.);
+    k0 = cos(lat_ts) / sqrt(1. - (ellipsoid().e2() * pow(sin(lat_ts),2)));
+    e = sqrt(ellipsoid().e2());
+    one_es = 1. - ellipsoid().e2();
+    apa[0] = ellipsoid().e2() * ((1./3.) + (ellipsoid().e2() * ((31./180.) + (ellipsoid().e2() * (517./5040.)))));
+    apa[1] = pow(ellipsoid().e2(),2) * ((23./360.) + (ellipsoid().e2() * (251./3780.)));
+    apa[2] = pow(ellipsoid().e2(),3) * (761./45360.);
     qp = pj_qsfn(1., e, one_es);
 }
 
@@ -339,8 +339,8 @@ int CEA::forward(const cartesian_t &llh, cartesian_t &enu) const {
     /*
      * Transform from LLH to CEA.
      */
-    enu[0] = k0 * llh[0] * ellipse.a();
-    enu[1] = (.5 * ellipse.a() * pj_qsfn(sin(llh[1]), e, one_es)) / k0;
+    enu[0] = k0 * llh[0] * ellipsoid().a();
+    enu[1] = (.5 * ellipsoid().a() * pj_qsfn(sin(llh[1]), e, one_es)) / k0;
     enu[2] = llh[2];
     return 0;
 }
@@ -349,8 +349,8 @@ int CEA::inverse(const cartesian_t &enu, cartesian_t &llh) const {
     /*
      * Transform from LLH to CEA.
      */
-    llh[0] = enu[0] / (k0 * ellipse.a());
-    double beta = asin((2. * enu[1] * k0) / (ellipse.a() * qp));
+    llh[0] = enu[0] / (k0 * ellipsoid().a());
+    double beta = asin((2. * enu[1] * k0) / (ellipsoid().a() * qp));
     llh[1] = beta + (apa[0] * sin(2. * beta)) + (apa[1] * sin(4. * beta)) +
              (apa[2] * sin(6. * beta));
     llh[2] = enu[2];
@@ -396,7 +396,7 @@ ProjectionBase* isce::core::createProj(int epsgcode)
 /* * * * * * * * * * * * * * * * * * * Projection Transformer * * * * * * * * * * * * * * * * * * */
 int isce::core::projTransform(ProjectionBase *in, ProjectionBase *out, const isce::core::Vec3 &inpts,
                   isce::core::Vec3 &outpts) {
-    if (in->_epsgcode == out->_epsgcode) {
+    if (in->code() == out->code()) {
         // If input/output projections are the same don't even bother processing
         outpts = inpts;
         return 0;

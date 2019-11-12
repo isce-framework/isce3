@@ -5,7 +5,8 @@ set(SRCS
     geometry.cpp
     RTC.cpp
     Topo.cpp
-    Geocode.cpp)
+    Geocode.cpp
+    boundingbox.cpp)
 
 #####Library headers
 set(HEADERS
@@ -20,6 +21,8 @@ set(HEADERS
     Topo.icc
     TopoLayers.h
     Geocode.h
-    Geocode.icc)
+    Geocode.icc
+    boundingbox.h
+    Shapes.h)
 
 add_isce_libdir(geometry "${SRCS}" "${HEADERS}")

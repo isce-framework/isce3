@@ -4,5 +4,6 @@ add_subdirectory(topo)
 add_subdirectory(geo2rdr)
 #add_subdirectory(rtc)
 add_subdirectory(geocode)
+add_subdirectory(bbox)
 
 # end of file
