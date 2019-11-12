@@ -9,13 +9,19 @@ from geometry cimport *
 from Cartesian cimport cartesian_t
 from Basis cimport Basis
 from libc.math cimport sin
+from libcpp.string cimport string
 # NOTE get toVec3 and pyDEMInterpolator defs due to isceextension include order.
 
+cdef Direction _parseDirection(s):
+    cdef string cs = string(s).encode('UTF-8')
+    return parseDirection(cs)
 
 def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyLUT2d doppler,
-               double wvl, int side, double threshold = 0.05, int maxiter = 50,
+               double wvl, _side, double threshold = 0.05, int maxiter = 50,
                double dR = 1.0e-8):
 
+    cdef Direction side = _parseDirection(_side)
+    
     # Transfer llh to a cartesian_t
     cdef int i
     cdef cartesian_t cart_llh
@@ -37,7 +43,7 @@ def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyLUT2d doppler,
 
 
 def py_rdr2geo(pyOrbit orbit,  pyEllipsoid ellps,
-               double aztime, double slantRange, int side,
+               double aztime, double slantRange, _side,
                double doppler         = 0.0,
                double wvl             = 0.24,
                double threshold         = 0.05,
@@ -48,6 +54,8 @@ def py_rdr2geo(pyOrbit orbit,  pyEllipsoid ellps,
     cdef cartesian_t targ_llh
 
     cdef DEMInterpolator demInterpolator = DEMInterpolator(demInterpolatorHeight)
+    
+    cdef Direction side = _parseDirection(_side)
 
     # Call C++ rdr2geo
     rdr2geo(aztime, slantRange, doppler,
@@ -71,7 +79,7 @@ def py_rdr2geo_cone(
         double slantRange = 0.0,
         pyEllipsoid ellipsoid = None,
         pyDEMInterpolator demInterp = None,
-        side = None,
+        _side = None,
         threshold = 0.05,
         maxIter = 50,
         extraIter = 50):
@@ -81,7 +89,8 @@ def py_rdr2geo_cone(
     cdef cartesian_t p = toVec3(position)
     cdef cartesian_t v = toVec3(axis).normalized()
     assert slantRange > 0.0, "Require slantRange > 0"
-    assert side in (1, -1), "Must specify left or right side"
+    assert _side is not None, "Must specify 'left' or 'right' side"
+    cdef Direction side = _parseDirection(_side)
     cdef DEMInterpolator dem
     if demInterp is not None:
         dem = deref(demInterp.c_deminterp)

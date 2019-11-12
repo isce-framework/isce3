@@ -6,6 +6,7 @@
 
 from DateTime cimport DateTime
 from Swath cimport Swath
+from .geometry.geometry cimport Direction
 
 cdef extern from "isce/product/RadarGridParameters.h" namespace "isce::product":
     cdef cppclass RadarGridParameters:
@@ -13,11 +14,11 @@ cdef extern from "isce/product/RadarGridParameters.h" namespace "isce::product":
         # Constructors
         RadarGridParameters() except +
         RadarGridParameters(const Swath & swath,
-                            int side) except +
+                            Direction side) except +
         RadarGridParameters(const RadarGridParameters & radargrid) except +
 
         # Look side
-        int lookSide()
+        Direction lookSide()
 
         # Reference epoch
         DateTime & refEpoch()

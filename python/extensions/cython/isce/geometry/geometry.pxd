@@ -11,6 +11,7 @@ from Ellipsoid cimport Ellipsoid
 from Cartesian cimport cartesian_t
 from LUT2d cimport LUT2d
 from RadarGridParameters cimport RadarGridParameters
+from libcpp.string cimport string
 
 cdef extern from "isce/core/Pixel.h" namespace "isce::core":
     cdef cppclass Pixel:
@@ -19,7 +20,14 @@ cdef extern from "isce/core/Pixel.h" namespace "isce::core":
     
 
 cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
+    
+    cdef enum Direction "isce::geometry::Direction":
+        Left "isce::geometry::Direction::Left"
+        Right "isce::geometry::Direction::Right"
 
+    string printDirection(Direction d)
+    Direction parseDirection(string s)
+    
     # Map coordinates to radar geometry coordinates transformer
     int geo2rdr(const cartesian_t &,
                 const Ellipsoid &,
@@ -32,7 +40,7 @@ cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
     int rdr2geo(double, double, double,
                 const Orbit &, const Ellipsoid &, const DEMInterpolator &,
                 cartesian_t &,
-                double, int, double, int, int)
+                double, Direction, double, int, int)
     
     int rdr2geo(const Pixel & pixel,
                 const Basis & TCNbasis,
@@ -41,14 +49,14 @@ cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
                 const Ellipsoid & ellipsoid,
                 const DEMInterpolator & demInterp,
                 cartesian_t & targetLLH,
-                int side, double threshold, int maxIter, int extraIter)
+                Direction side, double threshold, int maxIter, int extraIter)
 
 
     # Utility function to compute geographic bounds for a radar grid
     void computeDEMBounds(const Orbit & orbit,
                           const Ellipsoid & ellipsoid,
                           const LUT2d[double] & doppler,
-                          int lookSide,
+                          Direction lookSide,
                           const RadarGridParameters & radarGrid,
                           size_t xoff,
                           size_t yoff,

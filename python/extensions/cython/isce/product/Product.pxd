@@ -9,6 +9,7 @@ from IH5 cimport IH5File
 
 from Metadata cimport Metadata
 from Swath cimport Swath
+from geometry cimport Direction
 
 cdef extern from "isce/product/Product.h" namespace "isce::product":
 
@@ -25,7 +26,7 @@ cdef extern from "isce/product/Product.h" namespace "isce::product":
         Swath & swath(char)
 
         # Look side
-        int lookSide()
+        Direction lookSide()
 
         # The filename of the HDF5 file
         string filename()
