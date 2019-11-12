@@ -173,17 +173,17 @@ inline void loadFromH5(isce::io::IGroup & group, Orbit & orbit)
     orbit.setStateVectors(statevecs);
 
     // get interp method
-    std::vector<std::string> interp_method;
+    std::string interp_method;
     isce::io::loadFromH5(group, "interpMethod", interp_method);
 
-    if (interp_method.at(0) == "Hermite") {
+    if (interp_method == "Hermite") {
         orbit.interpMethod(OrbitInterpMethod::Hermite);
     }
-    else if (interp_method.at(0) == "Legendre") {
+    else if (interp_method == "Legendre") {
         orbit.interpMethod(OrbitInterpMethod::Legendre);
     }
     else {
-        throw std::runtime_error("unexpected orbit interpolation method '" + interp_method.at(0) + "'");
+        throw std::runtime_error("unexpected orbit interpolation method '" + interp_method + "'");
     }
 }
 
@@ -217,12 +217,12 @@ inline void saveToH5(isce::io::IGroup & group, const Orbit & orbit)
     std::array<std::size_t, 2> dims = {size, 3};
 
     // interp method
-    std::vector<std::string> interp_method(1);
+    std::string interp_method;
     if (orbit.interpMethod() == OrbitInterpMethod::Hermite) {
-        interp_method[0] = "Hermite";
+        interp_method = "Hermite";
     }
     else if (orbit.interpMethod() == OrbitInterpMethod::Legendre) {
-        interp_method[0] = "Legendre";
+        interp_method = "Legendre";
     }
     else {
         throw std::runtime_error("unexpected orbit interpolation method");
