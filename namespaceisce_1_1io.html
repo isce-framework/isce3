@@ -349,7 +349,7 @@ template&lt;typename H5obj &gt; </div>
 <p>Get dimensions of complex imagery from HDF5 file. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">h5obj</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of image dataset relative to h5obj. </td></tr>
   </table>
   </dd>
@@ -394,7 +394,7 @@ template&lt;typename H5obj &gt; </div>
 <p>Parse time units in a dataset attribute to get a reference epoch. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">h5obj</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">epoch</td><td><a class="el" href="classisce_1_1core_1_1DateTime.html" title="Data structure to store date time to nano-sec precision. ">isce::core::DateTime</a> of reference epoch. </td></tr>
   </table>
@@ -498,7 +498,7 @@ template&lt;typename H5obj , typename T &gt; </div>
 <p>Load vector dataset from HDF5 file. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">h5obj</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>Vector to store dataset. </td></tr>
   </table>
@@ -550,7 +550,7 @@ template&lt;typename H5obj , typename T &gt; </div>
 <p>Load valarray dataset from HDF5 file. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">h5obj</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>Valarray to store dataset. </td></tr>
   </table>
@@ -602,7 +602,7 @@ template&lt;typename H5obj , typename T &gt; </div>
 <p>Load Matrix dataset from HDF5 file. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">h5obj</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">m</td><td>Matrix to store dataset. </td></tr>
   </table>
@@ -660,7 +660,7 @@ template&lt;typename H5obj , typename T &gt; </div>
 <p>Write scalar dataset to HDF5 file. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">h5obj</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">val</td><td>Value to write </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">units</td><td>Units of dataset. </td></tr>
@@ -719,7 +719,7 @@ template&lt;typename H5obj , typename T &gt; </div>
 <p>Write vector dataset to HDF5 file. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">h5obj</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>Vector to write. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">units</td><td>Units of dataset. </td></tr>
@@ -778,7 +778,7 @@ template&lt;typename H5obj , typename T &gt; </div>
 <p>Write valarray dataset to HDF5 file. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">h5obj</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>Valarray to write. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">units</td><td>Units of dataset. </td></tr>
@@ -843,7 +843,7 @@ template&lt;typename H5obj , typename T , size_t S&gt; </div>
 <p>Write vector dataset with dimensions to HDF5 file. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">h5obj</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>Vector to write. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">units</td><td>Units of dataset. </td></tr>
@@ -908,7 +908,7 @@ template&lt;typename H5obj , typename T , size_t S&gt; </div>
 <p>Write valarray dataset with dimensions to HDF5 file. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">h5obj</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">v</td><td>Valarray to write. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">units</td><td>Units of dataset. </td></tr>
@@ -967,7 +967,7 @@ template&lt;typename H5obj , typename T &gt; </div>
 <p>Write Matrix dataset to HDF5 file. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">h5obj</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">mat</td><td>Matrix to write. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">units</td><td>Units of dataset. </td></tr>
@@ -1020,7 +1020,7 @@ template&lt;typename H5obj &gt; </div>
 <p>Save reference epoch DateTime as an attribute. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">file</td><td>HDF5 file or group object. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">h5obj</td><td>HDF5 file or group object. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">datasetPath</td><td>H5 path of dataset relative to h5obj. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">epoch</td><td><a class="el" href="classisce_1_1core_1_1DateTime.html" title="Data structure to store date time to nano-sec precision. ">isce::core::DateTime</a> of reference epoch. </td></tr>
   </table>
