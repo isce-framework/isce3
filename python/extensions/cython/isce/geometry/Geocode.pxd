@@ -19,7 +19,7 @@ from Ellipsoid cimport Ellipsoid
 from Orbit cimport Orbit
 from LUT2d cimport LUT2d
 from Interpolator cimport dataInterpMethod
-from geometry cimport Direction
+from Direction cimport Direction
 
 cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
 

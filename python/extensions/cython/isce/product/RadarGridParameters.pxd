@@ -6,7 +6,7 @@
 
 from DateTime cimport DateTime
 from Swath cimport Swath
-from geometry cimport Direction
+from Direction cimport Direction
 
 cdef extern from "isce/product/RadarGridParameters.h" namespace "isce::product":
     cdef cppclass RadarGridParameters:

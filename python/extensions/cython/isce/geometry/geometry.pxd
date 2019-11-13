@@ -6,27 +6,16 @@
 
 from Basis cimport Basis
 from DEMInterpolator cimport DEMInterpolator
+from Direction cimport *
 from Orbit cimport Orbit
+from Pixel cimport Pixel
 from Ellipsoid cimport Ellipsoid
 from Cartesian cimport cartesian_t
 from LUT2d cimport LUT2d
 from RadarGridParameters cimport RadarGridParameters
-from libcpp.string cimport string
 
-cdef extern from "isce/core/Pixel.h" namespace "isce::core":
-    cdef cppclass Pixel:
-        Pixel()
-        Pixel(double r, double r_sin_squint, size_t bin)
-    
 
 cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
-    
-    cdef enum Direction "isce::geometry::Direction":
-        Left "isce::geometry::Direction::Left"
-        Right "isce::geometry::Direction::Right"
-
-    string printDirection(Direction d)
-    Direction parseDirection(string s)
     
     # Map coordinates to radar geometry coordinates transformer
     int geo2rdr(const cartesian_t &,

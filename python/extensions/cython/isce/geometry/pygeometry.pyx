@@ -7,13 +7,14 @@
 from cython.operator cimport dereference as deref
 from geometry cimport *
 from Cartesian cimport cartesian_t
+from Direction cimport Direction, parseDirection
 from Basis cimport Basis
 from libc.math cimport sin
 from libcpp.string cimport string
 # NOTE get toVec3 and pyDEMInterpolator defs due to isceextension include order.
 
 cdef Direction _parseDirection(s):
-    cdef string cs = string(s).encode('UTF-8')
+    cdef string cs = str(s).encode('UTF-8')
     return parseDirection(cs)
 
 def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyLUT2d doppler,
