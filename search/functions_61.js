@@ -12,6 +12,5 @@ var searchData=
   ['attitudetype',['attitudeType',['../classisce_1_1core_1_1Attitude.html#aa6a0519af6d98cd56a7db75278eb9791',1,'isce::core::Attitude']]],
   ['azimuthfmrate',['azimuthFMRate',['../classisce_1_1product_1_1ProcessingInformation.html#a2de0d65e315705e8f1956a5c59406835',1,'isce::product::ProcessingInformation::azimuthFMRate(char freq) const '],['../classisce_1_1product_1_1ProcessingInformation.html#a2316c148d70dfaae33623a946c8937a1',1,'isce::product::ProcessingInformation::azimuthFMRate(const isce::core::LUT2d&lt; double &gt; &amp;lut, char freq)']]],
   ['azimuthfmratemap',['azimuthFMRateMap',['../classisce_1_1product_1_1ProcessingInformation.html#a0b92572cf58bacf16cb9f12eac64c4b8',1,'isce::product::ProcessingInformation']]],
-  ['azimuthlooks',['azimuthLooks',['../classisce_1_1signal_1_1Crossmul.html#a8259371554fcc2c0ab1011d6bee1ccdb',1,'isce::signal::Crossmul']]],
-  ['azimuthtimeinterval',['azimuthTimeInterval',['../classisce_1_1product_1_1RadarGridParameters.html#a6bf8e071a051160484bb45b77bcf9401',1,'isce::product::RadarGridParameters']]]
+  ['azimuthlooks',['azimuthLooks',['../classisce_1_1signal_1_1Crossmul.html#a8259371554fcc2c0ab1011d6bee1ccdb',1,'isce::signal::Crossmul']]]
 ];
