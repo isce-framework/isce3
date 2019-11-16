@@ -70,10 +70,9 @@ cdef class pyProduct:
     @property
     def lookSide(self):
         """
-        Get integer for look direction (+1 for left-looking, -1 for right-looking)
+        Get look direction "left" or "right"
         """
-        cdef int side = self.c_product.lookSide()
-        return side
+        return printDirection(self.c_product.lookSide())
 
     def radarGridParameters(self,
                             freq='A'):

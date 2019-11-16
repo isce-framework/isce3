@@ -22,7 +22,7 @@ def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyLUT2d doppler,
                double dR = 1.0e-8):
 
     cdef Direction side = _parseDirection(_side)
-    
+
     # Transfer llh to a cartesian_t
     cdef int i
     cdef cartesian_t cart_llh
@@ -55,7 +55,7 @@ def py_rdr2geo(pyOrbit orbit,  pyEllipsoid ellps,
     cdef cartesian_t targ_llh
 
     cdef DEMInterpolator demInterpolator = DEMInterpolator(demInterpolatorHeight)
-    
+
     cdef Direction side = _parseDirection(_side)
 
     # Call C++ rdr2geo
@@ -80,7 +80,7 @@ def py_rdr2geo_cone(
         double slantRange = 0.0,
         pyEllipsoid ellipsoid = None,
         pyDEMInterpolator demInterp = None,
-        _side = None,
+        side = None,
         threshold = 0.05,
         maxIter = 50,
         extraIter = 50):
@@ -90,8 +90,8 @@ def py_rdr2geo_cone(
     cdef cartesian_t p = toVec3(position)
     cdef cartesian_t v = toVec3(axis).normalized()
     assert slantRange > 0.0, "Require slantRange > 0"
-    assert _side is not None, "Must specify 'left' or 'right' side"
-    cdef Direction side = _parseDirection(_side)
+    assert side is not None, "Must specify 'left' or 'right' side"
+    cdef Direction _side = _parseDirection(side)
     cdef DEMInterpolator dem
     if demInterp is not None:
         dem = deref(demInterp.c_deminterp)
@@ -102,22 +102,22 @@ def py_rdr2geo_cone(
     cdef Ellipsoid ell
     if ellipsoid is not None:
         ell = deref(ellipsoid.c_ellipsoid)
-    
+
     # Generate TCN basis using the given axis as the velocity.
     cdef Basis tcn = Basis(p, v)
     # Using this "doppler factor" accomplishes the desired task.
     cdef Pixel pix = Pixel(slantRange, slantRange*sin(angle), 0)
-    
+
     # Call C++ and return a Python array.
     cdef cartesian_t llh
-    rdr2geo(pix, tcn, p, v, ell, dem, llh, side,threshold, maxIter, extraIter)
+    rdr2geo(pix, tcn, p, v, ell, dem, llh, _side,threshold, maxIter, extraIter)
     return [llh[i] for i in range(3)]
 
 
 def py_computeDEMBounds(pyOrbit orbit,
                         pyEllipsoid ellps,
                         pyLUT2d doppler,
-                        int lookSide,
+                        lookSide,
                         pyRadarGridParameters radarGrid,
                         unsigned int xoff,
                         unsigned int yoff,
@@ -131,9 +131,11 @@ def py_computeDEMBounds(pyOrbit orbit,
     cdef double max_lon = 0.0
     cdef double max_lat = 0.0
 
+    cdef Direction side = _parseDirection(lookSide)
+
     # Call C++ computeDEMBounds
     computeDEMBounds(orbit.c_orbit, deref(ellps.c_ellipsoid), deref(doppler.c_lut),
-                     lookSide, deref(radarGrid.c_radargrid), xoff, yoff, xsize, ysize,
+                     side, deref(radarGrid.c_radargrid), xoff, yoff, xsize, ysize,
                      margin, min_lon, min_lat, max_lon, max_lat)
 
     # Return GDAL projwin-like list [ulx, uly, lrx, lry]

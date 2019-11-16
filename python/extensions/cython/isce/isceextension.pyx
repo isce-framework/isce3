@@ -14,6 +14,8 @@ def pyStringToBytes(s):
         raise ValueError('Input Python string not str or bytes')
 
 include "except/pyError.pyx"
+include "core/forward.pyx"
+include "geometry/forward.pyx"
 
 # Include the io extensions
 include "io/pyGDAL.pyx"

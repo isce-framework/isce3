@@ -6,6 +6,7 @@
 
 from DateTime cimport DateTime
 from RadarGridParameters cimport RadarGridParameters
+#from pygeometry cimport _parseDirection
 
 cdef class pyRadarGridParameters:
     """
@@ -16,11 +17,14 @@ cdef class pyRadarGridParameters:
 
     def __cinit__(self,
                   pySwath swath=None,
-                  int side=-9999):
-        if swath is not None and side == -9999:
-            raise AttributeError("Invalid look direction.")
-        elif swath is not None: 
-            self.c_radargrid = new RadarGridParameters(deref(swath.c_swath), side)
+                  side = None):
+        cdef Direction _side
+        if swath is not None:
+            if side is None:
+                raise AttributeError("Invalid look direction.")
+            _side = _parseDirection(side)
+            self.c_radargrid = new RadarGridParameters(
+                deref(swath.c_swath), _side)
             self.__owner = True
         else:
             self.c_radargrid = new RadarGridParameters()
