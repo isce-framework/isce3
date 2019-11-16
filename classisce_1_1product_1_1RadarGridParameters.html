@@ -74,7 +74,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -153,14 +153,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 const <a class="el" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a29bce965174754c1084e129304753f12">refEpoch</a> () const </td></tr>
 <tr class="memdesc:a29bce965174754c1084e129304753f12"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get reference epoch. <br/></td></tr>
 <tr class="separator:a29bce965174754c1084e129304753f12"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a7b7c23841a7136dc8b69459a9a1aa1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7a7b7c23841a7136dc8b69459a9a1aa1"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a7a7b7c23841a7136dc8b69459a9a1aa1">sensingStartSingleLook</a> () const </td></tr>
-<tr class="memdesc:a7a7b7c23841a7136dc8b69459a9a1aa1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get sensing start time in seconds of single look data. <br/></td></tr>
-<tr class="separator:a7a7b7c23841a7136dc8b69459a9a1aa1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ad8c31c963962b88e16cc7a79e1c166"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4ad8c31c963962b88e16cc7a79e1c166"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a4ad8c31c963962b88e16cc7a79e1c166">sensingStart</a> () const </td></tr>
-<tr class="memdesc:a4ad8c31c963962b88e16cc7a79e1c166"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get sensing start time in seconds of multilooked data. <br/></td></tr>
+<tr class="memdesc:a4ad8c31c963962b88e16cc7a79e1c166"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get sensing start time in seconds. <br/></td></tr>
 <tr class="separator:a4ad8c31c963962b88e16cc7a79e1c166"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3178b62880a62b7c4f639d87afad3eb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af3178b62880a62b7c4f639d87afad3eb"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#af3178b62880a62b7c4f639d87afad3eb">sensingStart</a> (const double &amp;t)</td></tr>
+<tr class="memdesc:af3178b62880a62b7c4f639d87afad3eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set sensing start time in seconds. <br/></td></tr>
+<tr class="separator:af3178b62880a62b7c4f639d87afad3eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a725bc8407bcd4baf1514ee4347fade9f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a725bc8407bcd4baf1514ee4347fade9f"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a725bc8407bcd4baf1514ee4347fade9f">wavelength</a> () const </td></tr>
 <tr class="memdesc:a725bc8407bcd4baf1514ee4347fade9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get radar wavelength. <br/></td></tr>
@@ -171,31 +171,23 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="separator:aa07ced1ce6d29652e5d990cc07a35c35"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a05f1a35a59a4f7aec5143b3e583c876d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a05f1a35a59a4f7aec5143b3e583c876d"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a05f1a35a59a4f7aec5143b3e583c876d">prf</a> () const </td></tr>
-<tr class="memdesc:a05f1a35a59a4f7aec5143b3e583c876d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get pulse repetition frequency of single look data. <br/></td></tr>
+<tr class="memdesc:a05f1a35a59a4f7aec5143b3e583c876d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get pulse repetition frequency. <br/></td></tr>
 <tr class="separator:a05f1a35a59a4f7aec5143b3e583c876d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01f94a187a284b665e696b35c0d644e9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01f94a187a284b665e696b35c0d644e9"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a01f94a187a284b665e696b35c0d644e9">prf</a> (const double &amp;t)</td></tr>
 <tr class="memdesc:a01f94a187a284b665e696b35c0d644e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set pulse repetition frequency. <br/></td></tr>
 <tr class="separator:a01f94a187a284b665e696b35c0d644e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6bf8e071a051160484bb45b77bcf9401"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6bf8e071a051160484bb45b77bcf9401"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a6bf8e071a051160484bb45b77bcf9401">azimuthTimeInterval</a> () const </td></tr>
-<tr class="memdesc:a6bf8e071a051160484bb45b77bcf9401"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get azimuth time interval of multilooked data. <br/></td></tr>
-<tr class="separator:a6bf8e071a051160484bb45b77bcf9401"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad4d41ddbad9fd1ae437ffc42c2e72a78"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad4d41ddbad9fd1ae437ffc42c2e72a78"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#ad4d41ddbad9fd1ae437ffc42c2e72a78">startingRangeSingleLook</a> () const </td></tr>
-<tr class="memdesc:ad4d41ddbad9fd1ae437ffc42c2e72a78"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get starting slant range of single look data. <br/></td></tr>
-<tr class="separator:ad4d41ddbad9fd1ae437ffc42c2e72a78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec8c72738530e30b569b9b0d38a4776b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aec8c72738530e30b569b9b0d38a4776b"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#aec8c72738530e30b569b9b0d38a4776b">startingRange</a> () const </td></tr>
-<tr class="memdesc:aec8c72738530e30b569b9b0d38a4776b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get starting slant range of multilooked data. <br/></td></tr>
+<tr class="memdesc:aec8c72738530e30b569b9b0d38a4776b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get starting slant range. <br/></td></tr>
 <tr class="separator:aec8c72738530e30b569b9b0d38a4776b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a78127a16c7070e6a5c77794a56ed94f0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a78127a16c7070e6a5c77794a56ed94f0"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a78127a16c7070e6a5c77794a56ed94f0">rangePixelSpacingSingleLook</a> () const </td></tr>
-<tr class="memdesc:a78127a16c7070e6a5c77794a56ed94f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get slant range pixel spacing of single look data. <br/></td></tr>
-<tr class="separator:a78127a16c7070e6a5c77794a56ed94f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c2fcaacb09c7a39977f4e7a561c04e6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5c2fcaacb09c7a39977f4e7a561c04e6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a5c2fcaacb09c7a39977f4e7a561c04e6">startingRange</a> (const double &amp;t)</td></tr>
+<tr class="memdesc:a5c2fcaacb09c7a39977f4e7a561c04e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set starting slant range. <br/></td></tr>
+<tr class="separator:a5c2fcaacb09c7a39977f4e7a561c04e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff576f8180454f1da2fa90684ea293a2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aff576f8180454f1da2fa90684ea293a2"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#aff576f8180454f1da2fa90684ea293a2">rangePixelSpacing</a> () const </td></tr>
-<tr class="memdesc:aff576f8180454f1da2fa90684ea293a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get slant range pixel spacing for multilooked data. <br/></td></tr>
+<tr class="memdesc:aff576f8180454f1da2fa90684ea293a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get slant range pixel spacing. <br/></td></tr>
 <tr class="separator:aff576f8180454f1da2fa90684ea293a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43711bec562316b14a666a32399682fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a43711bec562316b14a666a32399682fb"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a43711bec562316b14a666a32399682fb">rangePixelSpacing</a> (const double &amp;t)</td></tr>
@@ -223,20 +215,20 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 <tr class="separator:a23ee9f299e34d3746346c578b50cf926"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab90c0f25a76b73e187b5c792d2c803e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aab90c0f25a76b73e187b5c792d2c803e"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#aab90c0f25a76b73e187b5c792d2c803e">sensingStop</a> () const </td></tr>
-<tr class="memdesc:aab90c0f25a76b73e187b5c792d2c803e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get sensing stop time of multilooked data in seconds. <br/></td></tr>
+<tr class="memdesc:aab90c0f25a76b73e187b5c792d2c803e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get sensing stop time in seconds. <br/></td></tr>
 <tr class="separator:aab90c0f25a76b73e187b5c792d2c803e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab1579f4033c2cba0b82d1081e19b8b7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aab1579f4033c2cba0b82d1081e19b8b7"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#aab1579f4033c2cba0b82d1081e19b8b7">sensingMid</a> () const </td></tr>
 <tr class="memdesc:aab1579f4033c2cba0b82d1081e19b8b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get sensing mid time in seconds. <br/></td></tr>
 <tr class="separator:aab1579f4033c2cba0b82d1081e19b8b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a47ce172de25eeaff02a8553afe20ecaa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a47ce172de25eeaff02a8553afe20ecaa"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a47ce172de25eeaff02a8553afe20ecaa">sensingTime</a> (double line) const </td></tr>
-<tr class="memdesc:a47ce172de25eeaff02a8553afe20ecaa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get sensing time for a given line (row) <br/></td></tr>
-<tr class="separator:a47ce172de25eeaff02a8553afe20ecaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa531661b80b81e7168e807c406e792b9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa531661b80b81e7168e807c406e792b9"></a>
-<a class="el" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#aa531661b80b81e7168e807c406e792b9">sensingDateTime</a> (double line) const </td></tr>
-<tr class="memdesc:aa531661b80b81e7168e807c406e792b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a sensing DateTime for a given line (row) <br/></td></tr>
-<tr class="separator:aa531661b80b81e7168e807c406e792b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a212e2cf9c05af95271ad7cbfb363affa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a212e2cf9c05af95271ad7cbfb363affa"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a212e2cf9c05af95271ad7cbfb363affa">sensingTime</a> (size_t line) const </td></tr>
+<tr class="memdesc:a212e2cf9c05af95271ad7cbfb363affa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get sensing time for a given line (row) <br/></td></tr>
+<tr class="separator:a212e2cf9c05af95271ad7cbfb363affa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9d786a9d0494e6d8bedbcd640d44461"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad9d786a9d0494e6d8bedbcd640d44461"></a>
+<a class="el" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#ad9d786a9d0494e6d8bedbcd640d44461">sensingDateTime</a> (size_t line) const </td></tr>
+<tr class="memdesc:ad9d786a9d0494e6d8bedbcd640d44461"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a sensing DateTime for a given line (row) <br/></td></tr>
+<tr class="separator:ad9d786a9d0494e6d8bedbcd640d44461"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f226c190f934d2757f83435acd71977"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0f226c190f934d2757f83435acd71977"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a0f226c190f934d2757f83435acd71977">endingRange</a> () const </td></tr>
 <tr class="memdesc:a0f226c190f934d2757f83435acd71977"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get ending slant range. <br/></td></tr>
@@ -245,56 +237,45 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#ae3b9ed6901ef9b37faeffef9fe892360">midRange</a> () const </td></tr>
 <tr class="memdesc:ae3b9ed6901ef9b37faeffef9fe892360"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get middle slant range. <br/></td></tr>
 <tr class="separator:ae3b9ed6901ef9b37faeffef9fe892360"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a360b4a5dc85d50011f069197dfd1d734"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a360b4a5dc85d50011f069197dfd1d734"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a360b4a5dc85d50011f069197dfd1d734">slantRange</a> (double sample) const </td></tr>
-<tr class="memdesc:a360b4a5dc85d50011f069197dfd1d734"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get slant range for a given sample (column) <br/></td></tr>
-<tr class="separator:a360b4a5dc85d50011f069197dfd1d734"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa52a152db25cc363522ddde4141ccaf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afa52a152db25cc363522ddde4141ccaf"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#afa52a152db25cc363522ddde4141ccaf">slantRange</a> (size_t sample) const </td></tr>
+<tr class="memdesc:afa52a152db25cc363522ddde4141ccaf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get slant range for a given sample (column) <br/></td></tr>
+<tr class="separator:afa52a152db25cc363522ddde4141ccaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
 <tr class="memitem:a788d98439f7f326ee4368c5088ebef51"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a788d98439f7f326ee4368c5088ebef51"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a788d98439f7f326ee4368c5088ebef51">_numberAzimuthLooks</a></td></tr>
-<tr class="memdesc:a788d98439f7f326ee4368c5088ebef51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of azimuth looks in multilooked data. <br/></td></tr>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>_numberAzimuthLooks</b></td></tr>
 <tr class="separator:a788d98439f7f326ee4368c5088ebef51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaab5c8a71930a22a922afe19033519df"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaab5c8a71930a22a922afe19033519df"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#aaab5c8a71930a22a922afe19033519df">_numberRangeLooks</a></td></tr>
-<tr class="memdesc:aaab5c8a71930a22a922afe19033519df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of range looks in multilooked data. <br/></td></tr>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>_numberRangeLooks</b></td></tr>
 <tr class="separator:aaab5c8a71930a22a922afe19033519df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ac9a0f7d3dab1403c093f151e62e276"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4ac9a0f7d3dab1403c093f151e62e276"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a4ac9a0f7d3dab1403c093f151e62e276">_lookSide</a></td></tr>
-<tr class="memdesc:a4ac9a0f7d3dab1403c093f151e62e276"><td class="mdescLeft">&#160;</td><td class="mdescRight">Left or right looking geometry indicator. <br/></td></tr>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>_lookSide</b></td></tr>
 <tr class="separator:a4ac9a0f7d3dab1403c093f151e62e276"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaa341bb6f0a3e168bfc665f7b46d6768"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaa341bb6f0a3e168bfc665f7b46d6768"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#aaa341bb6f0a3e168bfc665f7b46d6768">_sensingStart</a></td></tr>
-<tr class="memdesc:aaa341bb6f0a3e168bfc665f7b46d6768"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sensing start time of single look data. <br/></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>_sensingStart</b></td></tr>
 <tr class="separator:aaa341bb6f0a3e168bfc665f7b46d6768"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43418768612a7c1bcacf47289b208d90"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a43418768612a7c1bcacf47289b208d90"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a43418768612a7c1bcacf47289b208d90">_wavelength</a></td></tr>
-<tr class="memdesc:a43418768612a7c1bcacf47289b208d90"><td class="mdescLeft">&#160;</td><td class="mdescRight">Imaging wavelength. <br/></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>_wavelength</b></td></tr>
 <tr class="separator:a43418768612a7c1bcacf47289b208d90"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d4dc9a70a4c3f5ec80d533437e2a9ff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d4dc9a70a4c3f5ec80d533437e2a9ff"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a0d4dc9a70a4c3f5ec80d533437e2a9ff">_prf</a></td></tr>
-<tr class="memdesc:a0d4dc9a70a4c3f5ec80d533437e2a9ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">PRF of single look data. <br/></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>_prf</b></td></tr>
 <tr class="separator:a0d4dc9a70a4c3f5ec80d533437e2a9ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0b34ad276cb3401ad66f5b2c1f335163"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0b34ad276cb3401ad66f5b2c1f335163"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a0b34ad276cb3401ad66f5b2c1f335163">_startingRange</a></td></tr>
-<tr class="memdesc:a0b34ad276cb3401ad66f5b2c1f335163"><td class="mdescLeft">&#160;</td><td class="mdescRight">Slant range to center of first pixel in single look data. <br/></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>_startingRange</b></td></tr>
 <tr class="separator:a0b34ad276cb3401ad66f5b2c1f335163"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7cca2b5dae4fca6e35796900825f6ce1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7cca2b5dae4fca6e35796900825f6ce1"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a7cca2b5dae4fca6e35796900825f6ce1">_rangePixelSpacing</a></td></tr>
-<tr class="memdesc:a7cca2b5dae4fca6e35796900825f6ce1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Slant range pixel spacing of single look data. <br/></td></tr>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>_rangePixelSpacing</b></td></tr>
 <tr class="separator:a7cca2b5dae4fca6e35796900825f6ce1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61a62e682b1d987bbc234f1b002618f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a61a62e682b1d987bbc234f1b002618f9"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a61a62e682b1d987bbc234f1b002618f9">_rlength</a></td></tr>
-<tr class="memdesc:a61a62e682b1d987bbc234f1b002618f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of lines in the image. <br/></td></tr>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>_rlength</b></td></tr>
 <tr class="separator:a61a62e682b1d987bbc234f1b002618f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af5c31126e353d029ff16d80770fa42a1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af5c31126e353d029ff16d80770fa42a1"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#af5c31126e353d029ff16d80770fa42a1">_rwidth</a></td></tr>
-<tr class="memdesc:af5c31126e353d029ff16d80770fa42a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of samples in the image. <br/></td></tr>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>_rwidth</b></td></tr>
 <tr class="separator:af5c31126e353d029ff16d80770fa42a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ff1ab4df0f699aeee6cc495ac742bc9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0ff1ab4df0f699aeee6cc495ac742bc9"></a>
-<a class="el" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1product_1_1RadarGridParameters.html#a0ff1ab4df0f699aeee6cc495ac742bc9">_refEpoch</a></td></tr>
-<tr class="memdesc:a0ff1ab4df0f699aeee6cc495ac742bc9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reference epoch for time tags. <br/></td></tr>
+<a class="el" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a>&#160;</td><td class="memItemRight" valign="bottom"><b>_refEpoch</b></td></tr>
 <tr class="separator:a0ff1ab4df0f699aeee6cc495ac742bc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
