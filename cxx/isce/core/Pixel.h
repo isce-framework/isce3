@@ -7,6 +7,7 @@
 #pragma once
 
 #include "forward.h"
+#include "Common.h"
 
 /** Helper datastructure to handle slant range information for a pixel */
 class isce::core::Pixel {
