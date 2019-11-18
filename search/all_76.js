@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['validate',['validate',['../classisce_1_1product_1_1RadarGridParameters.html#aae7631bc6a8e1c8d4489bbbc182765c2',1,'isce::product::RadarGridParameters']]],
   ['validsamples',['validSamples',['../classisce_1_1product_1_1Swath.html#a711eab146b8c2fede44c082ddab10ca3',1,'isce::product::Swath::validSamples() const '],['../classisce_1_1product_1_1Swath.html#ac7991a10d17f123e76ff1a6e675a3d0f',1,'isce::product::Swath::validSamples(const std::array&lt; size_t, 2 &gt; &amp;valid)']]],
   ['values',['values',['../classisce_1_1core_1_1LUT1d.html#a085273fb46205cc546afb4eb172ea97a',1,'isce::core::LUT1d::values()'],['../classisce_1_1core_1_1LUT1d.html#a15aa42c4831e7a35a64092a10fccab14',1,'isce::core::LUT1d::values() const '],['../classisce_1_1core_1_1LUT1d.html#a491365e0a9024a3a3be7a5844944baba',1,'isce::core::LUT1d::values(const std::valarray&lt; T &gt; &amp;v)']]],
   ['vector',['Vector',['../classisce_1_1core_1_1Vector.html',1,'isce::core']]],
