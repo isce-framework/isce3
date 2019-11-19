@@ -711,23 +711,10 @@ template&lt;class Archive &gt; </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">margin</td><td>Marging to add to estimated bounding box in decimal degrees </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pointsPerEge</td><td>Number of points to use on each edge of radar grid </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">threshold</td><td>Slant range threshold for convergence </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">numiter</td><td>Max number of iterations for convergence</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">numiter</td><td>Max number of iterations for convergence </td></tr>
   </table>
   </dd>
 </dl>
-<p>If input pointer is NULL, returns results in radians for lon, lat. The outputs of this method are ready to be interpreted as a polygon shape in OGR/ shapely. The sequence of walking the perimeter is always in the following order : </p>
-<ul>
-<li>
-Start at Early Time, Near Range edge. Always the first point of the polygon. </li>
-<li>
-From there, Walk along the Early Time edge to Early Time, Far Range. </li>
-<li>
-From there, walk along the Far Range edge to Late Time, Far Range. </li>
-<li>
-From there, walk along the Late Time edge to Late Time, Near Range. </li>
-<li>
-From there, walk along the Near Range edge back to Early Time, Near Range. </li>
-</ul>
 
 </div>
 </div>
