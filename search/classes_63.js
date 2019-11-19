@@ -1,7 +1,7 @@
 var searchData=
 [
   ['cannyedgedetector',['CannyEdgeDetector',['../classCannyEdgeDetector.html',1,'']]],
-  ['cea',['CEA',['../classisce_1_1core_1_1CEA.html',1,'isce::core']]],
+  ['cea',['CEA',['../structisce_1_1core_1_1CEA.html',1,'isce::core']]],
   ['changedetector',['ChangeDetector',['../classChangeDetector.html',1,'']]],
   ['chebykernel',['ChebyKernel',['../classisce_1_1core_1_1ChebyKernel.html',1,'isce::core']]],
   ['covariance',['Covariance',['../classisce_1_1signal_1_1Covariance.html',1,'isce::signal']]],
