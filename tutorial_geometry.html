@@ -39,9 +39,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li class="current"><a href="pages.html"><span>Related&#160;Pages</span></a></li>
-      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
-      <li><a href="files.html"><span>Files</span></a></li>
       <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
       <li><a href="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li>
@@ -67,7 +64,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -93,19 +90,19 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 Include headers</h1>
 <p>In general, one only needs to include the following headerfiles. </p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &quot;isce/core/Orbit.h&quot;</span></div>
-<div class="line"><span class="preprocessor">#include &quot;<a class="code" href="geometry_8h.html">isce/geometry/geometry.h</a>&quot;</span></div>
+<div class="line"><span class="preprocessor">#include &quot;isce/geometry/geometry.h&quot;</span></div>
 </div><!-- fragment --><p>If one is looking to use this with other features from ISCE, you might need additional appropriate header files.</p>
 <h1><a class="anchor" id="geomorbit"></a>
 Orbit</h1>
-<p><a class="el" href="classisce_1_1core_1_1Orbit.html" title="Sequence of platform ephemeris samples (state vectors) with uniform temporal spacing, supporting efficient lookup and interpolation. ">isce::core::Orbit</a> is at the heart of all geometric manipulation in ISCE. This is just a time-tagged collection of state vectors. In this example, we will just walk through an example of constructing an Orbit object with a list of time-tagged position and velocity state vectors.</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="geometry_8h.html">isce/geometry/geometry.h</a>&quot;</span></div>
+<p>isce::core::Orbit is at the heart of all geometric manipulation in ISCE. This is just a time-tagged collection of state vectors. In this example, we will just walk through an example of constructing an Orbit object with a list of time-tagged position and velocity state vectors.</p>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;isce/geometry/geometry.h&quot;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;sstream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;fstream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"></div>
 <div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> *argv[])</div>
 <div class="line">{</div>
-<div class="line">    <a class="code" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> orbit;</div>
+<div class="line">    isce::core::Orbit orbit;</div>
 <div class="line"></div>
 <div class="line">    std::ifstream ifid(<span class="stringliteral">&quot;input_orbit.txt&quot;</span>);</div>
 <div class="line">    std::string line;</div>
@@ -114,13 +111,13 @@ Orbit</h1>
 <div class="line">    {</div>
 <div class="line">        std::stringstream stream;</div>
 <div class="line">        std::string aztime;</div>
-<div class="line">        <a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> pos, vel;</div>
+<div class="line">        isce::core::Vec3 pos, vel;</div>
 <div class="line"></div>
 <div class="line">        stream &lt;&lt; line;</div>
 <div class="line">        std::cout &lt;&lt; line &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">        stream &gt;&gt; aztime &gt;&gt; pos[0] &gt;&gt; pos[1] &gt;&gt; pos[2] &gt;&gt; vel[0] &gt;&gt; vel[1] &gt;&gt; vel[2];</div>
 <div class="line">        <span class="comment">//Create StateVector Object</span></div>
-<div class="line">        <a class="code" href="structisce_1_1core_1_1StateVector.html">isce::core::StateVector</a> sv;</div>
+<div class="line">        isce::core::StateVector sv;</div>
 <div class="line">        sv.datetime = aztime;    <span class="comment">//ISO-8601 format</span></div>
 <div class="line">        sv.position = pos;</div>
 <div class="line">        sv.velocity = vel;</div>
@@ -147,7 +144,7 @@ Orbit</h1>
 <h1><a class="anchor" id="geomfwd"></a>
 Forward mapping - determining bounding boxes</h1>
 <p>In this example, we will demonstrate the forward mapping algorithm by using it to determine approximate bounding boxes on the ground. See <a class="el" href="overview_geometry.html">geometry overview</a> for details on the implemented algorithm.</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="geometry_8h.html">isce/geometry/geometry.h</a>&quot;</span></div>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;isce/geometry/geometry.h&quot;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;sstream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;fstream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -155,18 +152,18 @@ Forward mapping - determining bounding boxes</h1>
 <div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> *argv[])</div>
 <div class="line">{</div>
 <div class="line"></div>
-<div class="line">    <a class="code" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> orbit;</div>
+<div class="line">    isce::core::Orbit orbit;</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Read in orbit from file</span></div>
 <div class="line">    ...</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Create WGS84 ellipsoid</span></div>
-<div class="line">    <a class="code" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> ellipse(6378137.,.0066943799901);</div>
+<div class="line">    isce::core::Ellipsoid ellipse(6378137.,.0066943799901);</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Early and late time from radar image metadata</span></div>
 <div class="line">    std::vector&lt;isce::core::DateTime&gt; timetags;</div>
-<div class="line">    timetags.push_back(<a class="code" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a>(<span class="stringliteral">&quot;2016-04-08T09:13:55.454821&quot;</span>));</div>
-<div class="line">    timetags.push_back(<a class="code" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a>(<span class="stringliteral">&quot;2016-04-08T09:14:09.555937&quot;</span>));</div>
+<div class="line">    timetags.push_back(isce::core::DateTime(<span class="stringliteral">&quot;2016-04-08T09:13:55.454821&quot;</span>));</div>
+<div class="line">    timetags.push_back(isce::core::DateTime(<span class="stringliteral">&quot;2016-04-08T09:14:09.555937&quot;</span>));</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Near and far slant range from radar image metadata</span></div>
 <div class="line">    std::vector&lt;double&gt; ranges;</div>
@@ -205,13 +202,13 @@ Forward mapping - determining bounding boxes</h1>
 <div class="line">            <span class="keywordflow">for</span>(<span class="keywordtype">int</span> zz=0; zz&lt;zrange.size(); zz++)</div>
 <div class="line">            {</div>
 <div class="line">                <span class="comment">//To store Lon/Lat/Hae of target</span></div>
-<div class="line">                <a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> llh;</div>
+<div class="line">                isce::core::cartesian_t llh;</div>
 <div class="line"></div>
 <div class="line">                <span class="comment">//Constant height DEM</span></div>
-<div class="line">                <a class="code" href="classisce_1_1geometry_1_1DEMInterpolator.html">isce::geometry::DEMInterpolator</a> constDEM(zrange[zz]);</div>
+<div class="line">                isce::geometry::DEMInterpolator constDEM(zrange[zz]);</div>
 <div class="line"></div>
 <div class="line">                <span class="comment">//Map target to DEM assuming Zero Doppler geometry</span></div>
-<div class="line">                <span class="keywordtype">int</span> status = <a class="code" href="namespaceisce_1_1geometry.html#a9d6ae859de6137a9c54ebec183c73a5e">isce::geometry::rdr2geo</a>(tintp,  <span class="comment">//aztime</span></div>
+<div class="line">                <span class="keywordtype">int</span> status = isce::geometry::rdr2geo(tintp,  <span class="comment">//aztime</span></div>
 <div class="line">                                        rng,    <span class="comment">//slant range</span></div>
 <div class="line">                                        0.,     <span class="comment">//doppler</span></div>
 <div class="line">                                        orbit,</div>
@@ -245,7 +242,7 @@ Forward mapping - determining bounding boxes</h1>
 </div><!-- fragment --><h1><a class="anchor" id="geominv"></a>
 Inverse mapping - locating corner reflectors</h1>
 <p>In this example, we will demonstrate the inverse mapping algorithm by using it to determine the location of a known target in a radar image.</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="geometry_8h.html">isce/geometry/geometry.h</a>&quot;</span></div>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;isce/geometry/geometry.h&quot;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;sstream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;fstream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -253,18 +250,18 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span> *argv[])</div>
 <div class="line">{</div>
 <div class="line"></div>
-<div class="line">    <a class="code" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> orbit;</div>
+<div class="line">    isce::core::Orbit orbit;</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Read in orbit from file</span></div>
 <div class="line">    ...</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Create WGS84 ellipsoid</span></div>
-<div class="line">    <a class="code" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> ellipse(6378137.,.0066943799901);</div>
+<div class="line">    isce::core::Ellipsoid ellipse(6378137.,.0066943799901);</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Known targets / corner reflector locations - can be read in from a file</span></div>
 <div class="line">    std::vector&lt;isce::core::cartesian_t&gt; targets;</div>
-<div class="line">    targets.push_back( <a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a>{{131.55, 32.85, 475.}});</div>
-<div class="line">    targets.push_back( <a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a>{{131.65, 32.95, 150.}});</div>
+<div class="line">    targets.push_back( isce::core::cartesian_t{{131.55, 32.85, 475.}});</div>
+<div class="line">    targets.push_back( isce::core::cartesian_t{{131.65, 32.95, 150.}});</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Wavelength</span></div>
 <div class="line">    <span class="keywordtype">double</span> wvl = 0.06;</div>
@@ -283,13 +280,13 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line">    mode.rangePixelSpacing(10.);</div>
 <div class="line">    mode.numberAzimuthLooks(10);</div>
 <div class="line">    mode.numberRangeLooks(10);</div>
-<div class="line">    <a class="code" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> t0(<span class="stringliteral">&quot;2016-04-08T09:13:55.454821&quot;</span>);</div>
+<div class="line">    isce::core::DateTime t0(<span class="stringliteral">&quot;2016-04-08T09:13:55.454821&quot;</span>);</div>
 <div class="line">    mode.startAzTime(t0);</div>
-<div class="line">    <a class="code" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> t1(<span class="stringliteral">&quot;2016-04-08T09:14:10.454821&quot;</span>);</div>
+<div class="line">    isce::core::DateTime t1(<span class="stringliteral">&quot;2016-04-08T09:14:10.454821&quot;</span>);</div>
 <div class="line">    mode.endAzTime(t1);</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Create Doppler polynomial - Zero Doppler for now</span></div>
-<div class="line">    <a class="code" href="classisce_1_1core_1_1Poly2d.html">isce::core::Poly2d</a> dop(0,0,0.,0.,1.,1.);</div>
+<div class="line">    isce::core::Poly2d dop(0,0,0.,0.,1.,1.);</div>
 <div class="line">    dop.setCoeff(0,0,0.);</div>
 <div class="line"></div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> tt=0; tt&lt;targets.size(); tt++)</div>
@@ -298,12 +295,12 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line">        <span class="keywordtype">double</span> aztime;</div>
 <div class="line"></div>
 <div class="line">        <span class="comment">//Convert from degrees to radians</span></div>
-<div class="line">        <a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::cartesian_t</a> llh;</div>
+<div class="line">        isce::core::cartesian_t llh;</div>
 <div class="line">        llh[0] = targets[tt][0] * M_PI / 180.0;</div>
 <div class="line">        llh[1] = targets[tt][1] * M_PI / 180.0;</div>
 <div class="line">        llh[2] = targets[tt][2];</div>
 <div class="line"></div>
-<div class="line">        <a class="code" href="namespaceisce_1_1geometry.html#a927c2bed9be438df9af7fd80769ea5b3">isce::geometry::geo2rdr</a>( llh,       <span class="comment">//Target location</span></div>
+<div class="line">        isce::geometry::geo2rdr( llh,       <span class="comment">//Target location</span></div>
 <div class="line">                                 ellipse,   <span class="comment">//Ellipsoid</span></div>
 <div class="line">                                 orbit,     <span class="comment">//Orbit</span></div>
 <div class="line">                                 dop,       <span class="comment">//Doppler</span></div>
