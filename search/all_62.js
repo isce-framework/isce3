@@ -11,10 +11,9 @@ var searchData=
   ['beta',['beta',['../classisce_1_1signal_1_1Crossmul.html#af251748003cb48812a1e884faee4715e',1,'isce::signal::Crossmul']]],
   ['bicubicinterpolator',['BicubicInterpolator',['../classisce_1_1core_1_1BicubicInterpolator.html',1,'isce::core']]],
   ['bicubicinterpolator',['BicubicInterpolator',['../classisce_1_1core_1_1BicubicInterpolator.html#a14ba55881438ccb62445786af38fabab',1,'isce::core::BicubicInterpolator']]],
-  ['bilinearinterpolator',['BilinearInterpolator',['../classisce_1_1core_1_1BilinearInterpolator.html#ac68f2cad210125f346a4bc9184fbb4d6',1,'isce::core::BilinearInterpolator']]],
   ['bilinearinterpolator',['BilinearInterpolator',['../classisce_1_1core_1_1BilinearInterpolator.html',1,'isce::core']]],
+  ['bilinearinterpolator',['BilinearInterpolator',['../classisce_1_1core_1_1BilinearInterpolator.html#ac68f2cad210125f346a4bc9184fbb4d6',1,'isce::core::BilinearInterpolator']]],
   ['binarysearch',['binarySearch',['../namespaceisce_1_1core.html#aa58e4e7320500f1e24913e17c79b0b09',1,'isce::core']]],
-  ['boundingbox',['BoundingBox',['../namespaceisce_1_1geometry.html#a5e3cdb96579941b01b4ec08ef98354c1',1,'isce::geometry']]],
   ['bsphasevarthr',['bsPhaseVarThr',['../classisce_1_1unwrap_1_1icu_1_1ICU.html#ab3295f73eaded59cb705ced8dba0f85e',1,'isce::unwrap::icu::ICU::bsPhaseVarThr() const '],['../classisce_1_1unwrap_1_1icu_1_1ICU.html#a06051db1eed80f3025c475245b7ceecb',1,'isce::unwrap::icu::ICU::bsPhaseVarThr(const float)']]],
   ['byteoffset',['byteoffset',['../classisce_1_1core_1_1Cube.html#ad02937e017237c371e3a4a1df412f7f8',1,'isce::core::Cube::byteoffset()'],['../classisce_1_1core_1_1Matrix.html#abd3277c139a21ea192ff4c8dd3a2b24e',1,'isce::core::Matrix::byteoffset()']]],
   ['bibliographic_20references',['Bibliographic References',['../citelist.html',1,'']]]

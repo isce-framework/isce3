@@ -73,7 +73,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Namespaces</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -90,7 +90,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">isce::geometry Namespace Reference</div>  </div>
@@ -115,26 +114,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1TopoLayers.html">TopoLayers</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
-Typedefs</h2></td></tr>
-<tr class="memitem:ac745b7d7de84c5ac07aed2a228389a40"><td class="memItemLeft" align="right" valign="top">typedef OGRLinearRing&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#ac745b7d7de84c5ac07aed2a228389a40">Perimeter</a></td></tr>
-<tr class="memdesc:ac745b7d7de84c5ac07aed2a228389a40"><td class="mdescLeft">&#160;</td><td class="mdescRight">Same as GDAL's OGRLinearRing structure.  <a href="#ac745b7d7de84c5ac07aed2a228389a40">More...</a><br/></td></tr>
-<tr class="separator:ac745b7d7de84c5ac07aed2a228389a40"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5e3cdb96579941b01b4ec08ef98354c1"><td class="memItemLeft" align="right" valign="top">typedef OGREnvelope&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a5e3cdb96579941b01b4ec08ef98354c1">BoundingBox</a></td></tr>
-<tr class="memdesc:a5e3cdb96579941b01b4ec08ef98354c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Same as GDAL's OGREnvelope structure.  <a href="#a5e3cdb96579941b01b4ec08ef98354c1">More...</a><br/></td></tr>
-<tr class="separator:a5e3cdb96579941b01b4ec08ef98354c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a26a60f8bd02b6dd531d45480b5a3afbf"><td class="memItemLeft" align="right" valign="top">typedef OGRTriangle&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a26a60f8bd02b6dd531d45480b5a3afbf">Triangle</a></td></tr>
-<tr class="memdesc:a26a60f8bd02b6dd531d45480b5a3afbf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Same as GDAL's OGRTriangle structure.  <a href="#a26a60f8bd02b6dd531d45480b5a3afbf">More...</a><br/></td></tr>
-<tr class="separator:a26a60f8bd02b6dd531d45480b5a3afbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a187198889c926ffedc054a1cf61130f9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespaceisce_1_1geometry.html#ac745b7d7de84c5ac07aed2a228389a40">Perimeter</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a187198889c926ffedc054a1cf61130f9">getGeoPerimeter</a> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> *proj, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;doppler={}, const <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> &amp;demInterp=<a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a>(0.), const int pointsPerEdge=11, const double threshold=1.0e-8, const int numiter=15)</td></tr>
-<tr class="memdesc:a187198889c926ffedc054a1cf61130f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transformer from radar geometry coordinates to map coordiantes with a DEM The sequence of walking the perimeter is always in the following order :  <a href="#a187198889c926ffedc054a1cf61130f9">More...</a><br/></td></tr>
-<tr class="separator:a187198889c926ffedc054a1cf61130f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f057358567ec0b827f83c34c8cd4057"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespaceisce_1_1geometry.html#a5e3cdb96579941b01b4ec08ef98354c1">BoundingBox</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a6f057358567ec0b827f83c34c8cd4057">getGeoBoundingBox</a> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> *proj, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;doppler={}, const std::vector&lt; double &gt; &amp;hgts={<a class="el" href="namespaceisce_1_1core.html#a6e3f82b7601e178518db5945d07fd180">isce::core::GLOBAL_MIN_HEIGHT</a>, <a class="el" href="namespaceisce_1_1core.html#a4b53b899f68957efea6c97671f952a07">isce::core::GLOBAL_MAX_HEIGHT</a>}, const double margin=0.0, const int pointsPerEdge=11, const double threshold=1.0e-8, const int numiter=15)</td></tr>
-<tr class="memdesc:a6f057358567ec0b827f83c34c8cd4057"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute bounding box using min/ max altitude for quick estimates.  <a href="#a6f057358567ec0b827f83c34c8cd4057">More...</a><br/></td></tr>
-<tr class="separator:a6f057358567ec0b827f83c34c8cd4057"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d6ae859de6137a9c54ebec183c73a5e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a9d6ae859de6137a9c54ebec183c73a5e">rdr2geo</a> (double aztime, double slantRange, double doppler, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;ellipsoid, const <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> &amp;demInterp, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp;targetLLH, double wvl, int side, double threshold, int maxIter, int extraIter)</td></tr>
 <tr class="memdesc:a9d6ae859de6137a9c54ebec183c73a5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Radar geometry coordinates to map coordinates transformer.  <a href="#a9d6ae859de6137a9c54ebec183c73a5e">More...</a><br/></td></tr>
 <tr class="separator:a9d6ae859de6137a9c54ebec183c73a5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -188,53 +169,7 @@ template&lt;class Archive &gt; </td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The <a class="el" href="namespaceisce_1_1geometry.html" title="The isce::geometry namespace. ">isce::geometry</a> namespace. </p>
-</div><h2 class="groupheader">Typedef Documentation</h2>
-<a class="anchor" id="a5e3cdb96579941b01b4ec08ef98354c1"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef OGREnvelope <a class="el" href="namespaceisce_1_1geometry.html#a5e3cdb96579941b01b4ec08ef98354c1">isce::geometry::BoundingBox</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Same as GDAL's OGREnvelope structure. </p>
-<p>See: <a href="https://gdal.org/doxygen/ogr__core_8h_source.html">https://gdal.org/doxygen/ogr__core_8h_source.html</a> </p>
-
-</div>
-</div>
-<a class="anchor" id="ac745b7d7de84c5ac07aed2a228389a40"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef OGRLinearRing <a class="el" href="namespaceisce_1_1geometry.html#ac745b7d7de84c5ac07aed2a228389a40">isce::geometry::Perimeter</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Same as GDAL's OGRLinearRing structure. </p>
-<p>See: <a href="https://gdal.org/doxygen/classOGRLinearRing.html">https://gdal.org/doxygen/classOGRLinearRing.html</a> </p>
-
-</div>
-</div>
-<a class="anchor" id="a26a60f8bd02b6dd531d45480b5a3afbf"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef OGRTriangle <a class="el" href="namespaceisce_1_1geometry.html#a26a60f8bd02b6dd531d45480b5a3afbf">isce::geometry::Triangle</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Same as GDAL's OGRTriangle structure. </p>
-<p>See: <a href="https://gdal.org/doxygen/classOGRTriangle.html">https://gdal.org/doxygen/classOGRTriangle.html</a> </p>
-
-</div>
-</div>
-<h2 class="groupheader">Function Documentation</h2>
+</div><h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="a5ec18a9486f88ef4a91ea670404afe0e"></a>
 <div class="memitem">
 <div class="memproto">
@@ -631,180 +566,6 @@ template&lt;class Archive &gt; </td></tr>
   </table>
   </dd>
 </dl>
-
-</div>
-</div>
-<a class="anchor" id="a6f057358567ec0b827f83c34c8cd4057"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="namespaceisce_1_1geometry.html#a5e3cdb96579941b01b4ec08ef98354c1">isce::geometry::BoundingBox</a> isce::geometry::getGeoBoundingBox </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;&#160;</td>
-          <td class="paramname"><em>radarGrid</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;&#160;</td>
-          <td class="paramname"><em>orbit</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> *&#160;</td>
-          <td class="paramname"><em>proj</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;&#160;</td>
-          <td class="paramname"><em>doppler</em> = <code>{}</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; double &gt; &amp;&#160;</td>
-          <td class="paramname"><em>hgts</em> = <code>{<a class="el" href="namespaceisce_1_1core.html#a6e3f82b7601e178518db5945d07fd180">isce::core::GLOBAL_MIN_HEIGHT</a>,&#160;<a class="el" href="namespaceisce_1_1core.html#a4b53b899f68957efea6c97671f952a07">isce::core::GLOBAL_MAX_HEIGHT</a>}</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const double&#160;</td>
-          <td class="paramname"><em>margin</em> = <code>0.0</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const int&#160;</td>
-          <td class="paramname"><em>pointsPerEdge</em> = <code>11</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const double&#160;</td>
-          <td class="paramname"><em>threshold</em> = <code>1.0e-8</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const int&#160;</td>
-          <td class="paramname"><em>numiter</em> = <code>15</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Compute bounding box using min/ max altitude for quick estimates. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">radarGrid</td><td>RadarGridParameters object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">orbit</td><td>Orbit object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">proj</td><td>ProjectionBase object indicating desired projection of output. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">doppler</td><td>LUT2d doppler model </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">hgts</td><td>Vector of heights to use for the scene </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">margin</td><td>Marging to add to estimated bounding box in decimal degrees </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pointsPerEge</td><td>Number of points to use on each edge of radar grid </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">threshold</td><td>Slant range threshold for convergence </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">numiter</td><td>Max number of iterations for convergence </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="a187198889c926ffedc054a1cf61130f9"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="namespaceisce_1_1geometry.html#ac745b7d7de84c5ac07aed2a228389a40">isce::geometry::Perimeter</a> isce::geometry::getGeoPerimeter </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;&#160;</td>
-          <td class="paramname"><em>radarGrid</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;&#160;</td>
-          <td class="paramname"><em>orbit</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> *&#160;</td>
-          <td class="paramname"><em>proj</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;&#160;</td>
-          <td class="paramname"><em>doppler</em> = <code>{}</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const DEMInterpolator &amp;&#160;</td>
-          <td class="paramname"><em>demInterp</em> = <code>DEMInterpolator(0.)</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const int&#160;</td>
-          <td class="paramname"><em>pointsPerEdge</em> = <code>11</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const double&#160;</td>
-          <td class="paramname"><em>threshold</em> = <code>1.0e-8</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const int&#160;</td>
-          <td class="paramname"><em>numiter</em> = <code>15</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Transformer from radar geometry coordinates to map coordiantes with a DEM The sequence of walking the perimeter is always in the following order : </p>
-<ul>
-<li>
-Start at Early Time, Near Range edge. Always the first point of the polygon. </li>
-<li>
-From there, Walk along the Early Time edge to Early Time, Far Range. </li>
-<li>
-From there, walk along the Far Range edge to Late Time, Far Range. </li>
-<li>
-From there, walk along the Late Time edge to Late Time, Near Range. </li>
-<li>
-From there, walk along the Near Range edge back to Early Time, Near Range. </li>
-</ul>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">radarGrid</td><td>RadarGridParameters object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">orbit</td><td>Orbit object </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">proj</td><td>ProjectionBase object indicating desired projection of output. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">doppler</td><td>LUT2d doppler model </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">demInterp</td><td>DEM Interpolator </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pointsPerEge</td><td>Number of points to use on each edge of radar grid </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">threshold</td><td>Slant range threshold for convergence </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">numiter</td><td>Max number of iterations for convergence</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>The outputs of this method is an OGRLinearRing. </p>
 
 </div>
 </div>
