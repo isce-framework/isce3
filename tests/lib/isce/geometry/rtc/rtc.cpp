@@ -9,11 +9,11 @@
 
 TEST(TestRTC, RunRTC) {
     // Open HDF5 file and load products
-    isce::io::IH5File file("../../data/envisat.h5");
+    isce::io::IH5File file(TESTDATA_DIR "envisat.h5");
     isce::product::Product product(file);
 
     // Open DEM raster
-    isce::io::Raster dem("../../data/srtm_cropped.tif");
+    isce::io::Raster dem(TESTDATA_DIR "srtm_cropped.tif");
 
     // Create output raster
     isce::product::Swath & swath = product.swath('A');
@@ -30,7 +30,7 @@ TEST(TestRTC, CheckResults) {
     isce::io::Raster testRaster("./rtc.bin");
 
     // Open reference raster
-    isce::io::Raster refRaster("../../data/rtc/rtc.vrt");
+    isce::io::Raster refRaster(TESTDATA_DIR "rtc/rtc.vrt");
 
     ASSERT_TRUE(testRaster.width()  == refRaster.width() and
                 testRaster.length() == refRaster.length());

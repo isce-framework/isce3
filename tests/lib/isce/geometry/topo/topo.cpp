@@ -33,7 +33,7 @@ std::stringstream streamFromVRT(const char * filename, int bandNum=1);
 TEST(TopoTest, RunTopo) {
 
     // Open the HDF5 product
-    std::string h5file("../../data/envisat.h5");
+    std::string h5file(TESTDATA_DIR "envisat.h5");
     isce::io::IH5File file(h5file);
 
     // Load the product
@@ -43,14 +43,14 @@ TEST(TopoTest, RunTopo) {
     isce::geometry::Topo topo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
-    std::ifstream xmlfid("../../data/topo.xml", std::ios::in);
+    std::ifstream xmlfid(TESTDATA_DIR "topo.xml", std::ios::in);
     {
     cereal::XMLInputArchive archive(xmlfid);
     archive(cereal::make_nvp("Topo", topo));
     }
 
     // Open DEM raster
-    isce::io::Raster demRaster("../../data/srtm_cropped.tif");
+    isce::io::Raster demRaster(TESTDATA_DIR "srtm_cropped.tif");
 
     // Run topo
     topo.topo(demRaster, ".");
@@ -63,14 +63,14 @@ TEST(TopoTest, CheckResults) {
     isce::io::Raster testRaster("topo.vrt");
     
     // Open reference topo raster
-    isce::io::Raster refRaster("../../data/topo/topo.vrt");
+    isce::io::Raster refRaster(TESTDATA_DIR "topo/topo.vrt");
 
     // The associated tolerances
     std::vector<double> tols{1.0e-5, 1.0e-5, 0.15, 1.0e-4, 1.0e-4, 0.02, 0.02};
 
     // The directories where the data are
     std::string test_dir = "./";
-    std::string ref_dir = "../../data/topo/";
+    std::string ref_dir = TESTDATA_DIR "topo/";
 
     // Valarrays to hold line of data
     std::valarray<double> test(testRaster.width()), ref(refRaster.width());

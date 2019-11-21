@@ -141,7 +141,7 @@ TEST(ICU, TreeGrowing)
     std::valarray<bool> neut(l*w), tree(l*w), reftree(l*w);
 
     // Load reference raster.
-    isce::io::Raster refRaster("../../data/icu/tree");
+    isce::io::Raster refRaster(TESTDATA_DIR "icu/tree");
     ASSERT_TRUE(refRaster.length() == l && refRaster.width() == w);
     refRaster.getBlock(reinterpret_cast<uint8_t *>(&reftree[0]), 0, 0, w, l);
 

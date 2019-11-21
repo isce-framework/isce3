@@ -14,8 +14,8 @@
 
 
 // Output HDF5 file for file creation/writing tests
-std::string wFileName("../../data/dummyHdf5.h5");
-std::string rFileName("../../data/envisat.h5");
+std::string wFileName("dummyHdf5.h5");
+std::string rFileName(TESTDATA_DIR "envisat.h5");
 
 struct IH5Test : public ::testing::Test {
 

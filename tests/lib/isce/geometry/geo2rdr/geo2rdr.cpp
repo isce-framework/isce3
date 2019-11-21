@@ -29,7 +29,7 @@
 TEST(Geo2rdrTest, RunGeo2rdr) {
 
     // Open the HDF5 product
-    std::string h5file("../../data/envisat.h5");
+    std::string h5file(TESTDATA_DIR "envisat.h5");
     isce::io::IH5File file(h5file);
 
     // Load the product
@@ -39,7 +39,7 @@ TEST(Geo2rdrTest, RunGeo2rdr) {
     isce::geometry::Geo2rdr geo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
-    std::ifstream xmlfid("../../data/topo.xml", std::ios::in);
+    std::ifstream xmlfid(TESTDATA_DIR "topo.xml", std::ios::in);
     {
     cereal::XMLInputArchive archive(xmlfid);
     archive(cereal::make_nvp("Geo2rdr", geo));

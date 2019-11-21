@@ -52,7 +52,7 @@ struct GeometryTest : public ::testing::Test {
     protected:
         GeometryTest() {
             // Open the HDF5 product
-            std::string h5file("../../data/envisat.h5");
+            std::string h5file(TESTDATA_DIR "envisat.h5");
             isce::io::IH5File file(h5file);
 
             // Instantiate a Product

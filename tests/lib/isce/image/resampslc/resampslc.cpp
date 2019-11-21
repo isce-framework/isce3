@@ -31,7 +31,7 @@
 TEST(ResampSlcTest, Resamp) {
 
     // Open the HDF5 product
-    const std::string filename = "../../data/envisat.h5";
+    const std::string filename = TESTDATA_DIR "envisat.h5";
     std::string h5file(filename);
     isce::io::IH5File file(h5file);
 
@@ -47,19 +47,19 @@ TEST(ResampSlcTest, Resamp) {
 
     // Perform resampling with default lines per tile
     resamp.resamp(input_data, "warped.slc",
-                  "../../data/offsets/range.off", "../../data/offsets/azimuth.off");
+                  TESTDATA_DIR "offsets/range.off", TESTDATA_DIR "offsets/azimuth.off");
     
     // Set lines per tile to be a weird multiple of the number of output lines
     resamp.linesPerTile(249);
     // Re-run resamp
     resamp.resamp(input_data, "warped.slc",
-                  "../../data/offsets/range.off", "../../data/offsets/azimuth.off");
+                  TESTDATA_DIR "offsets/range.off", TESTDATA_DIR "offsets/azimuth.off");
 }
 
 // Compute sum of difference between reference image and warped image
 TEST(ResampSlcTest, Validate) {
     // Open SLC rasters 
-    isce::io::Raster refSlc("../../data/warped_envisat.slc.vrt");
+    isce::io::Raster refSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
     isce::io::Raster testSlc("warped.slc");
     // Compute total complex error
     std::complex<float> sum(0.0, 0.0);

@@ -1,6 +1,5 @@
 foreach(TESTNAME geometry geometry_equator geometry_constlat)
     add_isce_test(${TESTNAME})
-    add_dependencies(${TESTNAME} geom_test_data)
 endforeach()
 
 foreach(FILENAME input_data.txt output_data.txt output_data_zerodop.txt)

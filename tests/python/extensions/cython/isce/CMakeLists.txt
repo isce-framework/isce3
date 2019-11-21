@@ -1,0 +1,7 @@
+add_subdirectory(io)
+add_subdirectory(core)
+add_subdirectory(except)
+add_subdirectory(geometry)
+if (WITH_CUDA)
+        add_subdirectory(cuda)
+endif(WITH_CUDA)

@@ -21,7 +21,7 @@ TEST(DopplerTest, CheckArchive) {
     isce::core::LUT2d<double> doppler;
 
     // Open HDF5 file
-    std::string h5file("../../data/envisat.h5");
+    std::string h5file(TESTDATA_DIR "envisat.h5");
     isce::io::IH5File file(h5file);
 
     // Open group containing Doppler grid
@@ -52,7 +52,7 @@ TEST(DopplerTest, CheckWrite) {
     // Load its data
     {
     // Open HDF5 file
-    std::string h5file("../../data/envisat.h5");
+    std::string h5file(TESTDATA_DIR "envisat.h5");
     isce::io::IH5File file(h5file);
 
     // Open group containing Doppler grid

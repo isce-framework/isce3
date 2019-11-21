@@ -26,7 +26,7 @@ TEST(Filter, constructAzimuthCommonbandFilter)
     std::valarray<std::complex<float>> refSpectrum(nfft*blockRows);
 
     // Get some metadata from an existing HDF5 file
-    std::string h5file("../data/envisat.h5");
+    std::string h5file(TESTDATA_DIR "envisat.h5");
 
     // an HDF5 object
     isce::io::IH5File file(h5file);
@@ -71,7 +71,7 @@ TEST(Filter, constructBoxcarRangeBandpassFilter)
     std::valarray<std::complex<float>> refSlc(ncols*blockRows);
     std::valarray<std::complex<float>> refSpectrum(ncols*blockRows);
 
-    std::string h5file("../data/envisat.h5");
+    std::string h5file(TESTDATA_DIR "envisat.h5");
     isce::io::IH5File file(h5file);
 
     // Create a product and swath

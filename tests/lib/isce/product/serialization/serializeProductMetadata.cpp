@@ -21,7 +21,7 @@
 TEST(MetadataTest, FromHDF5) {
 
     // Open the file
-    std::string h5file("../../data/envisat.h5");
+    std::string h5file(TESTDATA_DIR "envisat.h5");
     isce::io::IH5File file(h5file);
 
     // Instantiate a Metadata object

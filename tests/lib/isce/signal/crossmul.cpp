@@ -21,7 +21,7 @@ TEST(Crossmul, RunCrossmul)
     //interferometric phase is zero.
     
     //a raster object for the reference SLC
-    isce::io::Raster referenceSlc("../data/warped_envisat.slc.vrt");
+    isce::io::Raster referenceSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
     // get the length and width of the SLC
     int width = referenceSlc.width();
@@ -33,7 +33,7 @@ TEST(Crossmul, RunCrossmul)
     isce::io::Raster coherence("coherence.bin", width, length, 1, GDT_Float32, "ISCE");
 
     // HDF5 file with required metadata
-    std::string h5file("../data/envisat.h5");
+    std::string h5file(TESTDATA_DIR "envisat.h5");
     
     //H5 object
     isce::io::IH5File file(h5file);
@@ -105,7 +105,7 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     //interferometric phase is zero.
 
     //a raster object for the reference SLC
-    isce::io::Raster referenceSlc("../data/warped_envisat.slc.vrt");
+    isce::io::Raster referenceSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
     // get the length and width of the SLC
     int width = referenceSlc.width();
@@ -117,7 +117,7 @@ TEST(Crossmul, RunCrossmulWithAzimuthCommonBandFilter)
     isce::io::Raster coherence("coherence.bin", width, length, 1, GDT_Float32, "ISCE");
 
     // HDF5 file with required metadata
-    std::string h5file("../data/envisat.h5");
+    std::string h5file(TESTDATA_DIR "envisat.h5");
 
     //H5 object
     isce::io::IH5File file(h5file);

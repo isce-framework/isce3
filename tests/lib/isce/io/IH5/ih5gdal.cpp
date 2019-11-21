@@ -14,7 +14,7 @@
 #include "gdal_alg.h"
 
 // Output HDF5 file for file reading tests
-std::string rFileName("../../data/envisat.h5");
+std::string rFileName(TESTDATA_DIR "envisat.h5");
 
 struct IH5Test : public ::testing::Test {
 

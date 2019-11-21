@@ -15,7 +15,7 @@
 TEST(Signal, ForwardBackwardRangeFloat)
 {
     // take a block of data, perform range FFT and then iverse FFT and compare with original data   
-    isce::io::Raster inputSlc("../data/warped_envisat.slc.vrt");
+    isce::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
     int length = inputSlc.length();
@@ -67,7 +67,7 @@ TEST(Signal, ForwardBackwardRangeFloat)
 TEST(Signal, ForwardBackwardAzimuthFloat)
 {
       // take a block of data, perform azimuth FFT and then iverse FFT and compare with original data
-      isce::io::Raster inputSlc("../data/warped_envisat.slc.vrt");
+      isce::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
       int width = inputSlc.width();
       int length = inputSlc.length();
@@ -119,7 +119,7 @@ TEST(Signal, ForwardBackwardAzimuthFloat)
 TEST(Signal, nfft)
 {
     // This test is same as the previous test but with nfft used for FFT computation instead of number of columns
-    isce::io::Raster inputSlc("../data/warped_envisat.slc.vrt");
+    isce::io::Raster inputSlc(TESTDATA_DIR "warped_envisat.slc.vrt");
 
     int width = inputSlc.width();
     int length = inputSlc.length();

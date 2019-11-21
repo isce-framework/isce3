@@ -1,6 +1,5 @@
 set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 
-add_subdirectory(data)
 add_subdirectory(core)
 add_subdirectory(io)
 add_subdirectory(product)

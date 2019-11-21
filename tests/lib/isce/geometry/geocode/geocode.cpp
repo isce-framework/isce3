@@ -53,7 +53,7 @@ TEST(GeocodeTest, RunGeocode) {
     // Run Topo with the zero height DEM and cerate the lat-lon grids on ellipsoid
     createTestData();
 
-    std::string h5file("../../data/envisat.h5");
+    std::string h5file(TESTDATA_DIR "envisat.h5");
     isce::io::IH5File file(h5file);
 
     // Load the product
@@ -221,7 +221,7 @@ int main(int argc, char * argv[]) {
 void createZeroDem() {
 
     // Raster for the existing DEM
-    isce::io::Raster demRaster("../../data/srtm_cropped.tif");
+    isce::io::Raster demRaster(TESTDATA_DIR "srtm_cropped.tif");
 
     // A pointer array for geoTransform
     double geoTrans[6];
@@ -246,7 +246,7 @@ void createZeroDem() {
 void createTestData() {
 
     // Open the HDF5 product
-    std::string h5file("../../data/envisat.h5");
+    std::string h5file(TESTDATA_DIR "envisat.h5");
     isce::io::IH5File file(h5file);
 
     // Load the product
@@ -256,7 +256,7 @@ void createTestData() {
     isce::geometry::Topo topo(product, 'A', true);
 
     // Load topo processing parameters to finish configuration
-    std::ifstream xmlfid("../../data/topo.xml", std::ios::in);
+    std::ifstream xmlfid(TESTDATA_DIR "topo.xml", std::ios::in);
     {
     cereal::XMLInputArchive archive(xmlfid);
     archive(cereal::make_nvp("Topo", topo));
