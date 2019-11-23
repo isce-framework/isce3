@@ -8,6 +8,7 @@ from libcpp.vector cimport vector
 from libcpp.string cimport string
 from Cartesian cimport cartesian_t, cartmat_t
 from Ellipsoid cimport Ellipsoid
+from IH5 cimport IGroup
 
 cdef extern from "isce/core/Attitude.h" namespace "isce::core":
     cdef cppclass Attitude:
@@ -23,8 +24,11 @@ cdef extern from "isce/core/Quaternion.h" namespace "isce::core":
         # Get rotation matrix
         cartmat_t rotmat(double t, const string dummy)
         # Constructor
+        Quaternion() except +
         Quaternion(vector[double], vector[double]) except +
         # Convert quaternion to yaw, pitch, and roll angles
         cartesian_t factoredYPR(double, cartesian_t, cartesian_t, Ellipsoid *)
 
-# end of file
+cdef extern from "isce/core/Serialization.h" namespace "isce::core":
+    void saveQuaternionToH5 "saveToH5" (IGroup &, const Quaternion &)
+    void loadQuaternionFromH5 "loadFromH5" (IGroup &, Quaternion &)

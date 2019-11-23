@@ -47,8 +47,11 @@ class isce::core::Quaternion : public isce::core::Attitude {
                                 const cartesian_t &,
                                 Ellipsoid *);
 
+        /** Return data vector of time */
+        inline const std::vector<double> & time() const { return _time; }
+
         /** Get a copy of the quaternion elements*/
-        inline std::vector<double> qvec() const { return _qvec; };
+        inline const std::vector<double> qvec() const { return _qvec; };
 
         /** Return number of epochs */
         inline size_t nVectors() const { return _time.size(); }
