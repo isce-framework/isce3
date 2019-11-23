@@ -87,17 +87,21 @@ cdef class pyLUT2d:
             ndarray or float : Value(s) of LUT at coordinates
         '''
         # Initialize numpy arrays
-        cdef np.ndarray[double, ndim=1] x_np = np.array(x).squeeze()
-        cdef np.ndarray[double, ndim=1] y_np = np.array(y).squeeze()
+        cdef np.ndarray[double, ndim=1] x_np = np.array(x, 'f8').flatten()
+        cdef np.ndarray[double, ndim=1] y_np = np.array(y, 'f8').flatten()
         cdef np.ndarray[double, ndim=1] values = np.empty_like(x_np, dtype=np.float64) 
+        # TODO handle scalar x (or y) and vector y (or x).
+        assert len(x_np) == len(y_np)
 
         # Call interpolator for all points
-        cdef int N = x_np.shape[0]
+        cdef int N = len(x_np)
         cdef int i
         for i in range(N):
             values[i] = self.c_lut.eval(y_np[i], x_np[i])
 
-        return values
+        if N > 1:
+            return values
+        return values[0]
 
     def __call__(self, y, x):
         '''
