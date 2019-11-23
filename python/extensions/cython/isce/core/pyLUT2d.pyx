@@ -13,7 +13,7 @@ cdef class pyLUT2d:
     '''
     Python wrapper for isce::core::LUT2d
 
-    Args:
+    KwArgs:
         x (ndarray or list): X-Coordinates for LUT
         y (ndarray or list): Y-Coordinates for LUT
         z (ndarray):         Data values for LUT
@@ -75,13 +75,13 @@ cdef class pyLUT2d:
         new_lut.__owner = True
         return new_lut
 
-    def eval(self, x, y):
+    def eval(self, y, x):
         '''
         Evaluate LUT at given coordinate(s).
 
         Args:
-            x (ndarray or float): X-coordinate(s) to evaluate at.
             y (ndarray or float): Y-coordiante(s) to evaluate at.
+            x (ndarray or float): X-coordinate(s) to evaluate at.
 
         Returns:
             ndarray or float : Value(s) of LUT at coordinates
@@ -95,21 +95,25 @@ cdef class pyLUT2d:
         cdef int N = x_np.shape[0]
         cdef int i
         for i in range(N):
-            values[i] = self.c_lut.eval(x_np[i], y_np[i])
+            values[i] = self.c_lut.eval(y_np[i], x_np[i])
 
         return values
 
-    def __call__(self, x, y):
+    def __call__(self, y, x):
         '''
         Numpy-like interface to evaluate LUT.
 
         Args:
-            x (ndarray or float): X-coordinate(s) to evaluate at.
             y (ndarray or float): Y-coordiante(s) to evaluate at.
+            x (ndarray or float): X-coordinate(s) to evaluate at.
 
         Returns:
             ndarray or float : Value(s) of LUT at coordinates
         '''
-        return self.eval(x, y)
+        return self.eval(y, x)
     
+    @property
+    def xStart(self):
+        return self.c_lut.xStart()
+
 # end of file 

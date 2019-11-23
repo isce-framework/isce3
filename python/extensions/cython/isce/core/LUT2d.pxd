@@ -24,7 +24,9 @@ cdef extern from "isce/core/LUT2d.h" namespace "isce::core":
         LUT2d(const LUT2d[T] &) except +
         
         # Evaluation
-        T eval(double x, double y)
+        T eval(double y, double x)
+
+        double xStart()
 
 
 
