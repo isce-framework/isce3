@@ -36,11 +36,15 @@ cdef class pyLUT2d:
         cdef int i, N
         cdef valarray[double] x_array, y_array
         cdef Matrix[double] zmat
+        cdef np.ndarray[double, ndim=2] znp
 
         if x is not None and y is not None and z is not None:
             x_array = numpyToValarray(x)
             y_array = numpyToValarray(y)
-            zmat = numpyToMatrix(z)
+            # FIXME see note in pyInterpolator.numpyToMatrix
+            # FIXME zmat = numpyToMatrix(z)
+            znp = np.asarray(z, 'f8')
+            zmat = Matrix[double](&znp[0,0], len(y), len(x))
             self.c_lut = new LUT2d[double](x_array, y_array, zmat, self.interpMethods[method])
 
         else:
