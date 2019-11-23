@@ -55,7 +55,7 @@ def rdr2geo_cone(**kw):
         position        Position of antenna phase center, meters ECEF XYZ.
         axis            Cone generating axis (typically velocity), ECEF XYZ.
         slantRange      Range to target, meters.
-        side            Radar look direction, 1 (left) or -1 (right).
+        side            Radar look direction, "left" or "right".
     
     These are optional:
         angle           Complement of cone angle, radians, default=0 (plane).
