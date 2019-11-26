@@ -11,6 +11,7 @@ add_library(${LISCE} SHARED ${SRCS})
 SetCoverageOptions(${LISCE})
 
 target_link_libraries(${LISCE} PUBLIC
+    cereal
     ${GDAL_LIBRARY}
     ${HDF5_LIBRARY}
     pyre
@@ -21,7 +22,7 @@ target_include_directories(${LISCE} PUBLIC
     ${CMAKE_SOURCE_DIR}/extern/eigen3
     ${GDAL_INCLUDE_DIR}
     ${HDF5_INCLUDE_DIR}
-    ${CEREAL_SRC_INCLUDEDIR})
+    )
 
 # Install shared library
 install(TARGETS ${LISCE}
