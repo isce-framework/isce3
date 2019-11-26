@@ -42,11 +42,7 @@ namespace Eigen {
   *
   */
 template <typename Scalar, int _UpLo = Lower, typename _OrderingType =
-#ifndef EIGEN_MPL2_ONLY
-AMDOrdering<int>
-#else
 NaturalOrdering<int>
-#endif
 >
 class IncompleteCholesky : public SparseSolverBase<IncompleteCholesky<Scalar,_UpLo,_OrderingType> >
 {

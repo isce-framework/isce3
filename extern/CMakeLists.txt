@@ -8,5 +8,6 @@ install(DIRECTORY cereal/include/cereal DESTINATION include
 add_library(cereal INTERFACE)
 target_include_directories(cereal SYSTEM INTERFACE cereal/include)
 
+install(DIRECTORY eigen3/Eigen DESTINATION include)
 add_library(eigen INTERFACE)
 target_include_directories(eigen SYSTEM INTERFACE eigen3)
