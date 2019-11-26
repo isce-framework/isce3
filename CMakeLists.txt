@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
-if (POLICY CMP0048)
-    cmake_policy(SET CMP0048 NEW)
-endif()
-cmake_policy(SET CMP0060 NEW)
 if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
