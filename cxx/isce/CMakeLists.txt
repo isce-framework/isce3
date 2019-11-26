@@ -12,6 +12,7 @@ SetCoverageOptions(${LISCE})
 
 target_link_libraries(${LISCE} PUBLIC
     cereal
+    eigen
     ${GDAL_LIBRARY}
     ${HDF5_LIBRARY}
     pyre
@@ -19,7 +20,6 @@ target_link_libraries(${LISCE} PUBLIC
 
 target_include_directories(${LISCE} PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/..
-    ${CMAKE_SOURCE_DIR}/extern/eigen3
     ${GDAL_INCLUDE_DIR}
     ${HDF5_INCLUDE_DIR}
     )
