@@ -28,6 +28,3 @@ target_include_directories(${LISCE} PUBLIC
 install(TARGETS ${LISCE}
         DESTINATION ${ISCE_LIBDIR}
         COMPONENT isce_libs)
-
-# Install headers
-string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
