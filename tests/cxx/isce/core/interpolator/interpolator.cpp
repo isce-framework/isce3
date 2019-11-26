@@ -458,7 +458,7 @@ void loadInterpData(Matrix<double> & M) {
     */
 
     // Open file for reading
-    std::ifstream fid("data.txt");
+    std::ifstream fid(TESTDATA_DIR "interpolator/data.txt");
     // Check if file open was successful
     if (fid.fail()) {
         std::cout << "Error: Failed to open data file for interpolator test." << std::endl;

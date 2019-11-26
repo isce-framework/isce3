@@ -49,16 +49,6 @@ else()
 endif(PYTEST_EXECUTABLE)
 
 
-###Add things like timeouts etc to this function
-function(add_pytest path)
-    if(NOT PYTEST_EXECUTABLE)
-        message(STATUS "skipping pytest(${path}) in project '${PROJECT_NAME}'")
-        return()
-    endif()
-
-    add_test(${path} ${PYTEST_EXECUTABLE} ${path})
-endfunction()
-
 include( FindPackageHandleStandardArgs )
 FIND_PACKAGE_HANDLE_STANDARD_ARGS( Pytest REQUIRED_VARS PYTEST_EXECUTABLE
                                              VERSION_VAR __pytest_version)
