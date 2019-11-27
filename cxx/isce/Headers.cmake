@@ -42,6 +42,16 @@ core/Utilities.h
 core/Vector.h
 error/ErrorCode.h
 except/Error.h
+fft/detail/ConfigureFFTLayout.h
+fft/detail/FFTPlanBase.h
+fft/detail/FFTPlanBase.icc
+fft/detail/FFTWWrapper.h
+fft/FFT.h
+fft/FFT.icc
+fft/FFTPlan.h
+fft/FFTPlan.icc
+fft/FFTUtil.h
+fft/FFTUtil.icc
 geometry/DEMInterpolator.h
 geometry/forward.h
 geometry/Geo2rdr.h

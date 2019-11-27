@@ -19,6 +19,9 @@ core/projections/utm.cpp
 core/serialization/serializeAttitude.cpp
 core/serialization/serializeDoppler.cpp
 core/serialization/serializeOrbit.cpp
+fft/fft.cpp
+fft/fftplan.cpp
+fft/fftutil.cpp
 geometry/dem/dem.cpp
 geometry/geo2rdr/geo2rdr.cpp
 geometry/geocode/geocode.cpp

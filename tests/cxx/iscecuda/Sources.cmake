@@ -13,6 +13,8 @@ core/sinc2dinterpolator/gpuSinc2dInterpolator.cpp
 core/stream/event.cu
 core/stream/stream.cu
 except/checkCudaErrors.cpp
+fft/cuda-fft.cu
+fft/cuda-fftplan.cu
 geometry/geo2rdr/gpuGeo2rdr.cpp
 geometry/geometry/gpuGeometry.cpp
 geometry/topo/gpuTopo.cpp
