@@ -4,7 +4,7 @@
 set(TESTDATA_DIR ${CMAKE_CURRENT_LIST_DIR}/data/)
 
 add_subdirectory(data)
-add_subdirectory(contrib)
-add_subdirectory(lib)
+add_subdirectory(extern)
+add_subdirectory(cxx)
 add_subdirectory(python)
 include(CTest)
