@@ -28,35 +28,34 @@
 #     PYRE_VERSION - Version number
 
 #Start with checking if python is installed
-if (NOT PYTHON_EXECUTABLE)
-    find_package(PythonInterp 3.6)
+if (NOT Python_EXECUTABLE)
+    find_package(Python 3.6)
 endif()
 
-if (PYTHON_EXECUTABLE)
+if (Python_EXECUTABLE)
     #Find out path
     execute_process(
-        COMMAND "${PYTHON_EXECUTABLE}" -c 
+        COMMAND "${Python_EXECUTABLE}" -c
                 "import pyre, os; print(os.path.dirname(pyre.__file__))"
                 OUTPUT_VARIABLE __pyre_path)
 
     execute_process(
-        COMMAND "${PYTHON_EXECUTABLE}" -c
+        COMMAND "${Python_EXECUTABLE}" -c
                 "import pyre; print('{0}.{1}.{2}'.format(*pyre.version()));"
                 OUTPUT_VARIABLE __pyre_ver)
 else()
     message(STATUS "Python executable not found.")
-endif(PYTHON_EXECUTABLE)
+endif(Python_EXECUTABLE)
 
 ###For now just using journal.h to track pyre include path
 find_path(PYRE_JOURNAL_DIR  journal.h
-    HINTS 
+    HINTS
         "${__pyre_path}/../.."
         ENV PYRE_EXPORT_DIR
         ENV PYRE_ROOT
     PATH_SUFFIXES
         include/pyre
 )
-   
 
 if (PYRE_JOURNAL_DIR)
     set(PYRE_FOUND 1 CACHE INTERNAL "Pyre found")

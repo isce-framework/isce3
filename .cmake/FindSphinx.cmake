@@ -6,9 +6,9 @@
 #  SPHINX_FOUND
 
 set(_python_paths )
-find_package(PythonInterp)
-if(PYTHON_EXECUTABLE)
-  get_filename_component(_python_dir "${PYTHON_EXECUTABLE}" DIRECTORY)
+find_package(Python 3.6)
+if(Python_EXECUTABLE)
+  get_filename_component(_python_dir "${Python_EXECUTABLE}" DIRECTORY)
   list(APPEND _python_paths
     "${_python_dir}"
     "${_python_dir}/Scripts"
@@ -18,7 +18,7 @@ endif()
 
 find_program(SPHINX_EXECUTABLE
   NAMES
-  sphinx-build-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR} sphinx-build sphinx-build.exe
+  sphinx-build-${Python_VERSION_MAJOR}.${Python_VERSION_MINOR} sphinx-build sphinx-build.exe
   HINTS
     ${_python_paths}
   PATHS

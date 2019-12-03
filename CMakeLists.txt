@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 # CMP0074 (CMake 3.12+)
 # find_package() uses <PackageName>_ROOT variables.
