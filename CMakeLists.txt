@@ -107,19 +107,16 @@ InitInstallDirLayout()
 
 ###Setup for gtest framework
 option(INSTALL_GTEST "Enable installation of googletest" OFF)
-add_subdirectory(contrib)
+add_subdirectory(extern)
 
 # Setup for Eigen
-include_directories(contrib/eigen3)
+include_directories(SYSTEM extern/eigen3)
 
 ###Recurs directories
-add_subdirectory(lib)
+add_subdirectory(cxx)
 
-###Package directories
-add_subdirectory(packages)
-
-###Cython lib
-add_subdirectory(extensions)
+# python bindings
+add_subdirectory(python)
 
 ###Setup tests
 add_subdirectory(tests)

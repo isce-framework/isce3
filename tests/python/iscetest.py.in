@@ -1,0 +1,9 @@
+# -*- coding: utf-8 -*-
+
+# module that facilitates testing of python modules; we install copy of this in the staging
+# area so that we can affect the testing environment
+
+# point to the location of the data files
+data = "@TESTDATA_DIR@"
+
+# end of file
