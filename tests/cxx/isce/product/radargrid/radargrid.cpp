@@ -15,7 +15,7 @@
 TEST(RadarGridTest, fromProduct) {
 
     // Open the file
-    std::string h5file("../../data/envisat.h5");
+    std::string h5file(TESTDATA_DIR "envisat.h5");
     isce::io::IH5File file(h5file);
 
     // Instantiate and load a product
@@ -36,7 +36,7 @@ TEST(RadarGridTest, fromProduct) {
 TEST(RadarGridTest, fromSwath) {
 
     // Open the file
-    std::string h5file("../../data/envisat.h5");
+    std::string h5file(TESTDATA_DIR "envisat.h5");
     isce::io::IH5File file(h5file);
 
     // Instantiate and load a product

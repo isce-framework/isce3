@@ -1,6 +1,6 @@
 #Mimicking mm behaviour
-set(PACKAGENAME math)
-string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
+#set(PACKAGENAME math)
+#string(TOLOWER ${PROJECT_NAME} LOCALPROJ)
 
 ####Set the source files
 set(CPPS Bessel.cpp)
