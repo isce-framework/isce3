@@ -6,39 +6,38 @@
 #
 # Use the pytest executable that lives next to the Python executable
 # if it is a local installation.
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.12)
 
-if(NOT PYTHON_EXECUTABLE)
+if(NOT Python_EXECUTABLE)
+    set(args 3.6)
     if(Pytest_FIND_QUIETLY)
-        find_package(PythonInterp QUIET)
-    else()
-        find_package(PythonInterp)
-        set(__pytest_out 1)
+        list(PREPEND args QUIET)
     endif()
+    find_package(Python ${args})
 endif()
 
-if(PYTHON_EXECUTABLE)
+if(Python_EXECUTABLE)
     ###Import pytest and get version
-    execute_process(COMMAND "${PYTHON_EXECUTABLE}" -c
+    execute_process(COMMAND "${Python_EXECUTABLE}" -c
                             "from __future__ import print_function\ntry: import pytest; print(pytest.__version__, end='')\nexcept:pass\n"
                     OUTPUT_VARIABLE __pytest_version)
 elseif(__pytest_out)
     message(STATUS "Python executable not found.")
-endif(PYTHON_EXECUTABLE)
+endif()
 
-##First try to find py.test installed right next to python executable 
-get_filename_component( _python_path ${PYTHON_EXECUTABLE} PATH )
+##First try to find py.test installed right next to python executable
+get_filename_component( _python_path ${Python_EXECUTABLE} PATH )
 find_program(PYTEST_EXECUTABLE
-    NAMES "py.test${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}"
-        "py.test-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}"
-        "py.test${PYTHON_VERSION_MAJOR}"
-        "py.test-${PYTHON_VERSION_MAJOR}"
-        "pytest${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}"
-        "pytest-${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}"
-        "pytest${PYTHON_VERSION_MAJOR}"
-        "pytest-${PYTHON_VERSION_MAJOR}"
-        "py.test"
-        "pytest"
+    NAMES "py.test${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}"
+          "py.test-${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}"
+          "py.test${Python_VERSION_MAJOR}"
+          "py.test-${Python_VERSION_MAJOR}"
+          "pytest${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}"
+          "pytest-${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}"
+          "pytest${Python_VERSION_MAJOR}"
+          "pytest-${Python_VERSION_MAJOR}"
+          "py.test"
+          "pytest"
     HINTS ${_python_path})
 
 
@@ -48,16 +47,6 @@ else()
     message(STATUS "pytest not found")
 endif(PYTEST_EXECUTABLE)
 
-
-###Add things like timeouts etc to this function
-function(add_pytest path)
-    if(NOT PYTEST_EXECUTABLE)
-        message(STATUS "skipping pytest(${path}) in project '${PROJECT_NAME}'")
-        return()
-    endif()
-
-    add_test(${path} ${PYTEST_EXECUTABLE} ${path})
-endfunction()
 
 include( FindPackageHandleStandardArgs )
 FIND_PACKAGE_HANDLE_STANDARD_ARGS( Pytest REQUIRED_VARS PYTEST_EXECUTABLE

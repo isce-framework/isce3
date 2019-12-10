@@ -1,36 +1,28 @@
-include(IsceHelper)
-
-# Create library target
-add_library(${LISCE} SHARED)
-
-add_subdirectory(core)
-add_subdirectory(error)
-add_subdirectory(except)
-add_subdirectory(geometry)
-add_subdirectory(image)
-add_subdirectory(io)
-add_subdirectory(math)
-add_subdirectory(product)
-add_subdirectory(signal)
-add_subdirectory(unwrap)
-add_subdirectory(matchtemplate)
-
-# Add library dependencies
-target_link_libraries(${LISCE} ${GDAL_LIBRARY} ${HDF5_LIBRARY} ${LPYRE} ${LJOURNAL}
-    ${FFTWF_LIB} ${FFTW_LIB} ${FFTW_THREADS_LIB} ${FFTWF_THREADS_LIB})
-
-# Add include directories
-# Pyre needed for journaling
-target_include_directories(${LISCE} PUBLIC
-    ${ISCE_BUILDINCLUDEDIR}
-    ${GDAL_INCLUDE_DIR}
-    ${HDF5_INCLUDE_DIR}
-    ${CEREAL_SRC_INCLUDEDIR})
-
-SetCoverageOptions(${LISCE})
+include(Sources.cmake)
+include(Headers.cmake)
+install(FILES ${HEADERS} DESTINATION include/isce)
 
 # Add OpenMP if found
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+if(OpenMP_CXX_FLAGS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
+add_library(${LISCE} SHARED ${SRCS})
+SetCoverageOptions(${LISCE})
+
+target_link_libraries(${LISCE} PUBLIC
+    Cereal::Cereal
+    Eigen::Eigen
+    ${GDAL_LIBRARY}
+    ${HDF5_LIBRARY}
+    pyre
+    ${FFTWF_LIB} ${FFTW_LIB} ${FFTW_THREADS_LIB} ${FFTWF_THREADS_LIB})
+
+target_include_directories(${LISCE} PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}/..
+    ${GDAL_INCLUDE_DIR}
+    ${HDF5_INCLUDE_DIR}
+    )
 
 # Install shared library
 install(TARGETS ${LISCE}

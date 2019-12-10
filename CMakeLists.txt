@@ -1,13 +1,16 @@
-cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
-if (POLICY CMP0048)
-    cmake_policy(SET CMP0048 NEW)
-endif (POLICY CMP0048)
-
-cmake_policy(SET CMP0060 NEW)
-
+# CMP0074 (CMake 3.12+)
+# find_package() uses <PackageName>_ROOT variables.
+# This is helpful for us when using packages non-standard install locations.
 if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
+endif()
+# CMP0076 (CMake 3.13+)
+# The target_sources() command converts relative paths to absolute.
+# We're indifferent, so this quiets the warnings.
+if (POLICY CMP0076)
+  cmake_policy(SET CMP0076 NEW)
 endif()
 
 project(ISCE VERSION 3.0
@@ -107,24 +110,19 @@ InitInstallDirLayout()
 
 ###Setup for gtest framework
 option(INSTALL_GTEST "Enable installation of googletest" OFF)
-add_subdirectory(extern)
 
 # Setup for Eigen
 include_directories(SYSTEM extern/eigen3)
 
-###Recurs directories
-add_subdirectory(cxx)
+add_subdirectory(extern) # Contributed software (not maintained here)
+add_subdirectory(cxx)    # Core C++ library
+add_subdirectory(python) # Python bindings
+add_subdirectory(tests)  # Unit tests
 
-# python bindings
-add_subdirectory(python)
-
-###Setup tests
-add_subdirectory(tests)
-
-###Setup doc
+# Set up documentation
 if (WITH_DOC)
 
-    ##If Doxygen is available, build C++ documentation
+    # If Doxygen is available, build C++ documentation
     FIND_PACKAGE(Doxygen)
     if (DOXYGEN_FOUND)
         set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen/Doxyfile.in)

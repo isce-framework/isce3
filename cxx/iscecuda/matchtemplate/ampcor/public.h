@@ -20,8 +20,6 @@
 #include <pyre/journal.h>
 #include <pyre/timers.h>
 #include <pyre/grid.h>
-// access to the dom
-#include <isce/matchtemplate/ampcor/dom.h>
 
 namespace ampcor {
     namespace cuda {
