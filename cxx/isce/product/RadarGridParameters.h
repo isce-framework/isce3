@@ -23,28 +23,20 @@ class isce::product::RadarGridParameters {
         /** Default constructor */
         inline RadarGridParameters() {}
 
-        /** Constructor with a product and number of looks. */
+        /** Constructor with a product */
         inline RadarGridParameters(const isce::product::Product & product,
-                                   char frequency = 'A',
-                                   size_t numberAzimuthLooks = 1,
-                                   size_t numberRangeLooks = 1);
+                                   char frequency = 'A');
 
         /** Constructor with a swath. */
         inline RadarGridParameters(const isce::product::Swath & swath,
-                                   int lookSide,
-                                   size_t numberAzimuthLooks = 1,
-                                   size_t numberRangeLooks = 1);
+                                   int lookSide);
 
         /** Constructor from an isce::core::Metadata object. */
         inline RadarGridParameters(const isce::core::Metadata & meta,
-                                   const isce::core::DateTime & refEpoch,
-                                   size_t numberAzimuthLooks = 1,
-                                   size_t numberRangeLooks = 1);
+                                   const isce::core::DateTime & refEpoch);
 
         /** Constructor from individual components and values. */
-        inline RadarGridParameters(size_t numberAzimuthLooks,
-                                   size_t numberRangeLooks,
-                                   double sensingStart,
+        inline RadarGridParameters(double sensingStart,
                                    double wavelength,
                                    double prf,
                                    double startingRange,
@@ -69,17 +61,6 @@ class isce::product::RadarGridParameters {
         /** Set look direction from a string */
         inline void lookSide(const std::string &);
 
-        /** Get number of azimuth looks */
-        inline size_t numberAzimuthLooks() const { return _numberAzimuthLooks; }
-
-        /** Set number of azimuth looks */
-        inline void numberAzimuthLooks(const size_t & t) { _numberAzimuthLooks = t; }
-
-        /** Get number of range looks */
-        inline size_t numberRangeLooks() const { return _numberRangeLooks; }
-        /** Set number of range looks */
-        inline void numberRangeLooks(const size_t & t) { _numberRangeLooks = t; }
-
         /** Get reference epoch DateTime*/
         inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
 
@@ -101,23 +82,14 @@ class isce::product::RadarGridParameters {
         /** Set pulse repetition frequency in Hz of single look data*/
         inline void prf(const double & t){ _prf = t; }
 
-        /** Get azimuth time interval in seconds of singlelook data */
-        inline double azimuthTimeIntervalSingleLook() const { return 1.0/_prf; };
+        /** Get azimuth time interval in seconds*/
+        inline double azimuthTimeInterval() const { return 1.0/_prf; };
 
-        /** Get azimuth time interval in seconds of multilooked data */
-        inline double azimuthTimeInterval() const { return _numberAzimuthLooks/_prf; };
+        /** Get starting slant range in meters*/
+        inline double startingRange() const { return _startingRange; }
 
-        /** Get starting slant range in meters of single look data */
-        inline double startingRangeSingleLook() const { return _startingRange; }
-
-        /** Get starting slant range in meters of multilooked data */
-        inline double startingRange() const { return slantRange(0.); }
-
-        /** Get slant range pixel spacing in meters of single look data*/
-        inline double rangePixelSpacingSingleLook() const { return _rangePixelSpacing; }
-
-        /** Get slant range pixel spacing in meters for multilooked data */
-        inline double rangePixelSpacing() const { return _rangePixelSpacing * _numberRangeLooks ; };
+        /** Get slant range pixel spacing in meters*/
+        inline double rangePixelSpacing() const { return _rangePixelSpacing; }
 
         /** Set slant range pixel spacing in meters of single look data */
         inline void rangePixelSpacing(const double & t) { _rangePixelSpacing = t; }
@@ -145,12 +117,12 @@ class isce::product::RadarGridParameters {
             return 0.5 * (sensingStart() + sensingStop());
         }
 
-        /** Get sensing time for a given line (row) */
+        /** Get sensing time for a given line (zero-index row) */
         inline double sensingTime(double line) const {
-            return _sensingStart + (0.5 * (_numberAzimuthLooks-1) + line * _numberAzimuthLooks) / _prf;
+            return _sensingStart + line / _prf;
         }
 
-        /** Get a sensing DateTime for a given line (row) */
+        /** Get a sensing DateTime for a given line (zero-index row) */
         inline isce::core::DateTime sensingDateTime(double line) const {
             return _refEpoch + sensingTime(line);
         }
@@ -165,19 +137,43 @@ class isce::product::RadarGridParameters {
             return 0.5 * (startingRange() + endingRange());
         }
 
-        /** Get slant range for a given sample (column) */
+        /** Get slant range for a given sample (zero-index column) */
         inline double slantRange(double sample) const {
-            return _startingRange + (0.5 * (_numberRangeLooks-1) + sample * _numberRangeLooks) * _rangePixelSpacing;
+            return _startingRange + sample * _rangePixelSpacing;
+        }
+        
+        /** Crop/ Expand while keeping the spacing the same with top left offset and size */
+        inline RadarGridParameters offsetAndResize(double yoff, double xoff, size_t ysize, size_t xsize) const
+        {
+            return RadarGridParameters( sensingTime(yoff),
+                                        wavelength(),
+                                        prf(),
+                                        slantRange(xoff),
+                                        rangePixelSpacing(),
+                                        lookSide(),
+                                        ysize,
+                                        xsize,
+                                        refEpoch());
+        }
+
+
+        /** Multilook */
+        inline RadarGridParameters multilook(size_t azlooks, size_t rglooks)
+        {
+            //Currently implements the multilooking operation used in ISCE2 
+            return RadarGridParameters( sensingTime(0.5 * (azlooks-1)),
+                                        wavelength(),
+                                        prf() / (1.0 * azlooks),
+                                        slantRange(0.5 * (rglooks-1)),
+                                        rangePixelSpacing() * rglooks,
+                                        lookSide(),
+                                        length()/azlooks,
+                                        width()/rglooks,
+                                        refEpoch());
         }
 
     // Protected data members can be accessed by derived classes
     protected:
-        /** Number of azimuth looks in multilooked data */
-        size_t _numberAzimuthLooks;
-
-        /** Number of range looks in multilooked data */
-        size_t _numberRangeLooks;
-
         /** Left or right looking geometry indicator */
         int _lookSide;
         
@@ -211,15 +207,10 @@ class isce::product::RadarGridParameters {
 
 // Constructor with a swath.
 /** @param[in] swath Input swath
-  * @param[in] numberAzimuthLooks Number of azimuth looks in input geometry
-  * @param[in] numberRangeLooks Number of range looks in input geometry */
+  * @param[in] lookSide Indicate left (+1) or right (-1)*/
 isce::product::RadarGridParameters::
 RadarGridParameters(const isce::product::Swath & swath,
-                    int lookSide,
-                    size_t numberAzimuthLooks,
-                    size_t numberRangeLooks) :
-    _numberAzimuthLooks(numberAzimuthLooks),
-    _numberRangeLooks(numberRangeLooks),
+                    int lookSide) :
     _lookSide(lookSide),
     _sensingStart(swath.zeroDopplerTime()[0]),
     _wavelength(swath.processedWavelength()),
@@ -232,28 +223,18 @@ RadarGridParameters(const isce::product::Swath & swath,
 
 // Constructor with a product
 /** @param[in] product Input Product
-  * @param[in] frequency Frequency designation
-  * @param[in] numberAzimuthLooks Number of azimuth looks of input product
-  * @param[in] numberRangeLooks Number of range looks of input product */
+  * @param[in] frequency Frequency designation */
 isce::product::RadarGridParameters::
 RadarGridParameters(const isce::product::Product & product,
-                    char frequency,
-                    size_t numberAzimuthLooks,
-                    size_t numberRangeLooks) :
-    RadarGridParameters(product.swath(frequency), product.lookSide(), numberAzimuthLooks, numberRangeLooks) { validate(); }
+                    char frequency) :
+    RadarGridParameters(product.swath(frequency), product.lookSide()){ validate(); }
 
 // Constructor from an isce::core::Metadata object.
 /** @param[in] meta isce::core::Metadata object
-  * @param[in] refEpoch Reference epoch date
-  * @param[in] numberAzimuthLooks Number of azimuth looks in input geometry
-  * @param[in] numberRangeLooks Number of range looks in input geometry */
+  * @param[in] refEpoch Reference epoch date */
 isce::product::RadarGridParameters::
 RadarGridParameters(const isce::core::Metadata & meta,
-                    const isce::core::DateTime & refEpoch,
-                    size_t numberAzimuthLooks,
-                    size_t numberRangeLooks) :
-    _numberAzimuthLooks(numberAzimuthLooks),
-    _numberRangeLooks(numberRangeLooks),
+                    const isce::core::DateTime & refEpoch) :
     _lookSide(meta.lookSide),
     _sensingStart((meta.sensingStart - refEpoch).getTotalSeconds()),
     _wavelength(meta.radarWavelength),
@@ -268,8 +249,6 @@ RadarGridParameters(const isce::core::Metadata & meta,
 /** @param[in] rgparam RadarGridParameters object */
 isce::product::RadarGridParameters::
 RadarGridParameters(const RadarGridParameters & rgparams) :
-    _numberAzimuthLooks(rgparams.numberAzimuthLooks()),
-    _numberRangeLooks(rgparams.numberRangeLooks()),
     _lookSide(rgparams.lookSide()),
     _sensingStart(rgparams.sensingStart()),
     _wavelength(rgparams.wavelength()),
@@ -285,8 +264,6 @@ RadarGridParameters(const RadarGridParameters & rgparams) :
 isce::product::RadarGridParameters &
 isce::product::RadarGridParameters::
 operator=(const RadarGridParameters & rgparams) {
-    _numberAzimuthLooks = rgparams.numberAzimuthLooks();
-    _numberRangeLooks = rgparams.numberRangeLooks();
     _sensingStart = rgparams.sensingStart();
     _wavelength = rgparams.wavelength();
     _prf = rgparams.prf();
@@ -302,9 +279,7 @@ operator=(const RadarGridParameters & rgparams) {
 
 // Constructor from individual components and values
 isce::product::RadarGridParameters::
-RadarGridParameters(size_t numberAzimuthLooks,
-                    size_t numberRangeLooks,
-                    double sensingStart,
+RadarGridParameters(double sensingStart,
                     double wavelength,
                     double prf,
                     double startingRange,
@@ -313,8 +288,6 @@ RadarGridParameters(size_t numberAzimuthLooks,
                     size_t length,
                     size_t width,
                     isce::core::DateTime refEpoch) :
-    _numberAzimuthLooks(numberAzimuthLooks),
-    _numberRangeLooks(numberRangeLooks),
     _lookSide(lookSide),
     _sensingStart(sensingStart),
     _wavelength(wavelength),
@@ -331,15 +304,6 @@ isce::product::RadarGridParameters::
 validate()
 {
     std::string errstr = "";
-    if (numberAzimuthLooks() < 1)
-    {
-        errstr += "Azimuth looks should be an integer greater than or equal to 1. \n";
-    }
-
-    if (numberRangeLooks() < 1)
-    {
-        errstr += "Range looks should be an integer greather than or equal to 1. \n";
-    }
 
     if (wavelength() <= 0.)
     {
@@ -351,12 +315,12 @@ validate()
         errstr += "Pulse Repetition Frequency must be positive. \n";
     }
 
-    if (startingRangeSingleLook() <= 0.)
+    if (startingRange() <= 0.)
     {
         errstr += "Starting Range must be positive. \n";
     }
 
-    if (rangePixelSpacingSingleLook() <= 0. )
+    if (rangePixelSpacing() <= 0. )
     {
         errstr += "Slant range pixel spacing must be positive. \n";
     }

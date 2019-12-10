@@ -43,7 +43,7 @@ struct PerimeterTest : public ::testing::TestWithParam< std::tuple<int,int,int>>
     double hsat;
 
     // Constructor
-    PerimeterTest(): t0("2017-02-12T01:12:30.0"), grid(1, 1, 15.0,
+    PerimeterTest(): t0("2017-02-12T01:12:30.0"), grid(15.0,
                                             0.06, 1000., 800000.,
                                             1000., -1, 10000, 80,
                                             t0)
@@ -90,10 +90,10 @@ struct PerimeterTest : public ::testing::TestWithParam< std::tuple<int,int,int>>
     {
         //Customizable parameters
         grid.lookSide(lookside);
-        grid.numberAzimuthLooks(azlooks);
-        grid.numberRangeLooks(rglooks);
         grid.length(grid.length()/azlooks);
         grid.width(grid.width()/rglooks);
+        grid.prf( grid.prf()/azlooks);
+        grid.rangePixelSpacing( grid.rangePixelSpacing() * rglooks);
     }
 
 

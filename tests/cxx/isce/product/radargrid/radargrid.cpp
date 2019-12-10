@@ -62,7 +62,7 @@ TEST(RadarGridTest, fromParametersSingeLook) {
     isce::core::DateTime t0("2017-02-12T01:12:30.0");
 
     //Create radar grid from product
-    isce::product::RadarGridParameters grid(1, 1, 10.0,
+    isce::product::RadarGridParameters grid(10.0,
                                            0.06, 1729.0, 800000.,
                                            10.0, 1, 24000, 6400,
                                            t0);
@@ -79,32 +79,111 @@ TEST(RadarGridTest, fromParametersSingeLook) {
     ASSERT_EQ(grid.width(), 6400);
 }
 
+
 TEST(RadarGridTest, fromParametersMultiLook) {
     //Reference epoch
     isce::core::DateTime t0("2017-02-12T01:12:30.0");
 
     //Create radar grid from product
-    isce::product::RadarGridParameters grid(3, 4, 10.0,
+    isce::product::RadarGridParameters grid(10.0,
                                            0.06, 1729.0, 800000.,
                                            10.0, 1, 8000, 1600,
                                            t0);
 
+    //Multilook
+    isce::product::RadarGridParameters mlgrid = grid.multilook(3, 4);
+
     // Check its values
-    ASSERT_EQ(grid.lookSide(), 1);
-    ASSERT_EQ(grid.numberAzimuthLooks(), 3);
-    ASSERT_EQ(grid.numberRangeLooks(), 4);
-    ASSERT_NEAR(grid.startingRangeSingleLook(), 800000., 1.0e-10);
-    ASSERT_NEAR(grid.startingRange(), 800000. + 1.5 * 10.0, 1.0e-9);
-    ASSERT_NEAR(grid.sensingStartSingleLook(), 10.0, 1.0e-10);
-    ASSERT_NEAR(grid.sensingStart(), 10.0 + 1.0 / 1729.0, 1.0e-9);
-    ASSERT_NEAR(grid.wavelength(), 0.06, 1.0e-10);
-    ASSERT_NEAR(grid.rangePixelSpacingSingleLook(), 10.0, 1.0e-10);
-    ASSERT_NEAR(grid.rangePixelSpacing(), 40.0, 1.0e-9);
-    ASSERT_NEAR(grid.azimuthTimeIntervalSingleLook(), 1/1729.0, 1.0e-9);
-    ASSERT_NEAR(grid.azimuthTimeInterval(), 3/1729.0, 1.0e-9);
-    ASSERT_NEAR((grid.refEpoch()-t0).getTotalSeconds(), 0.0, 1.0e-10);
-    ASSERT_EQ(grid.length(), 8000);
-    ASSERT_EQ(grid.width(), 1600);
+    ASSERT_EQ(mlgrid.lookSide(), 1);
+    ASSERT_NEAR(mlgrid.startingRange(), 800000. + 1.5 * 10.0, 1.0e-9);
+    ASSERT_NEAR(mlgrid.sensingStart(), 10.0 + 1.0 / 1729.0, 1.0e-9);
+    ASSERT_NEAR(mlgrid.wavelength(), 0.06, 1.0e-10);
+    ASSERT_NEAR(mlgrid.rangePixelSpacing(), 40.0, 1.0e-9);
+    ASSERT_NEAR(mlgrid.azimuthTimeInterval(), 3/1729.0, 1.0e-9);
+    ASSERT_NEAR((mlgrid.refEpoch()-t0).getTotalSeconds(), 0.0, 1.0e-10);
+    ASSERT_EQ(mlgrid.length(), 8000/3);
+    ASSERT_EQ(mlgrid.width(), 1600/4);
+}
+
+
+TEST(RadarGridTest, fromParametersCrop) {
+    //Reference epoch
+    isce::core::DateTime t0("2017-02-12T01:12:30.0");
+
+    //Create radar grid from product
+    isce::product::RadarGridParameters grid(10.0,
+                                           0.06, 1729.0, 800000.,
+                                           10.0, 1, 8000, 1600,
+                                           t0);
+
+    //Crop
+    isce::product::RadarGridParameters mlgrid = grid.offsetAndResize(400, 500, 2000, 800);
+
+    // Check its values
+    ASSERT_EQ(mlgrid.lookSide(), 1);
+    ASSERT_NEAR(mlgrid.startingRange(), grid.slantRange(500), 1.0e-9);
+    ASSERT_NEAR(mlgrid.sensingStart(), grid.sensingTime(400), 1.0e-9);
+    ASSERT_EQ(mlgrid.wavelength(), grid.wavelength());
+    ASSERT_EQ(mlgrid.rangePixelSpacing(), grid.rangePixelSpacing());
+    ASSERT_EQ(mlgrid.azimuthTimeInterval(), grid.azimuthTimeInterval());
+    ASSERT_NEAR((mlgrid.refEpoch()-grid.refEpoch()).getTotalSeconds(), 0.0, 1.0e-10);
+    ASSERT_EQ(mlgrid.length(), 2000);
+    ASSERT_EQ(mlgrid.width(), 800);
+}
+
+
+TEST(RadarGridTest, singleLook)
+{
+
+    //Reference epoch
+    isce::core::DateTime t0("2017-02-12T01:12:30.0");
+
+    //Create radar grid from product
+    isce::product::RadarGridParameters grid(10.0,
+                                           0.06, 1729.0, 800000.,
+                                           10.0, 1, 8000, 1600,
+                                           t0);
+
+    //Multilook
+    isce::product::RadarGridParameters mlgrid = grid.multilook(1, 1);
+
+    ASSERT_EQ( grid.lookSide(), mlgrid.lookSide());
+    ASSERT_NEAR(grid.startingRange(), mlgrid.startingRange(), 1.0e-11);
+    ASSERT_NEAR(grid.sensingStart(), mlgrid.sensingStart(), 1.0e-11);
+    ASSERT_EQ(grid.wavelength(), mlgrid.wavelength());
+    ASSERT_EQ(grid.rangePixelSpacing(), mlgrid.rangePixelSpacing());
+    ASSERT_EQ(grid.azimuthTimeInterval(), mlgrid.azimuthTimeInterval());
+    ASSERT_NEAR((mlgrid.refEpoch()-grid.refEpoch()).getTotalSeconds(), 0.0, 1.0e-11);
+    ASSERT_EQ(grid.length(), mlgrid.length());
+    ASSERT_EQ(grid.width(), mlgrid.width());
+
+}
+
+TEST(RadarGridTest, cropSame)
+{
+
+    //Reference epoch
+    isce::core::DateTime t0("2017-02-12T01:12:30.0");
+
+    //Create radar grid from product
+    isce::product::RadarGridParameters grid(10.0,
+                                           0.06, 1729.0, 800000.,
+                                           10.0, 1, 8000, 1600,
+                                           t0);
+
+    //Multilook
+    isce::product::RadarGridParameters mlgrid = grid.offsetAndResize(0,0, grid.length(), grid.width());
+
+    ASSERT_EQ( grid.lookSide(), mlgrid.lookSide());
+    ASSERT_NEAR(grid.startingRange(), mlgrid.startingRange(), 1.0e-11);
+    ASSERT_NEAR(grid.sensingStart(), mlgrid.sensingStart(), 1.0e-11);
+    ASSERT_EQ(grid.wavelength(), mlgrid.wavelength());
+    ASSERT_EQ(grid.rangePixelSpacing(), mlgrid.rangePixelSpacing());
+    ASSERT_EQ(grid.azimuthTimeInterval(), mlgrid.azimuthTimeInterval());
+    ASSERT_NEAR((mlgrid.refEpoch()-grid.refEpoch()).getTotalSeconds(), 0.0, 1.0e-11);
+    ASSERT_EQ(grid.length(), mlgrid.length());
+    ASSERT_EQ(grid.width(), mlgrid.width());
+
 }
 
 

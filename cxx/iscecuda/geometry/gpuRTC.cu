@@ -275,7 +275,7 @@ namespace isce { namespace cuda {
 
             isce::core::Ellipsoid ellps_h;
             isce::core::Orbit orbit_h(product.metadata().orbit());
-            isce::product::RadarGridParameters radarGrid(product, frequency, 1, 1);
+            isce::product::RadarGridParameters radarGrid(product, frequency);
             isce::geometry::Topo topo_h(product, frequency, true);
             const int lookDirection = product.lookSide();
 

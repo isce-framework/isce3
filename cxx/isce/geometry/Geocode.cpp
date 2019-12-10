@@ -105,12 +105,9 @@ geocode(isce::io::Raster & inputRaster,
 
                     // get the row and column index in the radar grid
                     double rdrX, rdrY;
-                    rdrY = (aztime - _radarGrid.sensingStart()) *
-                           (_radarGrid.prf() / _radarGrid.numberAzimuthLooks());
+                    rdrY = (aztime - _radarGrid.sensingStart()) * _radarGrid.prf();
 
-                    rdrX = (srange - _radarGrid.startingRange()) /
-                           (_radarGrid.numberRangeLooks() *
-                            _radarGrid.rangePixelSpacing());
+                    rdrX = (srange - _radarGrid.startingRange()) / _radarGrid.rangePixelSpacing();
 
                     if (rdrY < 0 || rdrX < 0 || rdrY >= _radarGrid.length() ||
                         rdrX >= _radarGrid.width())

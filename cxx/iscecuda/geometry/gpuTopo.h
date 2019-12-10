@@ -20,7 +20,6 @@ namespace isce {
                             size_t lineStart,
                             int lookSide,
                             int epsgOut,
-                            size_t numberAzimuthLooks,
                             double startAzUTCTime,
                             double wavelength,
                             double prf,

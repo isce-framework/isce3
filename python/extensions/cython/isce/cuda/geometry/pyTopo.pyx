@@ -46,8 +46,6 @@ cdef class pyTopo:
                   pyProduct product,
                   frequency='A',
                   bool nativeDoppler=False,
-                  int numberAzimuthLooks=1,
-                  int numberRangeLooks=1,
                   double threshold=0.05,
                   int numIterations=25,
                   int extraIterations=10,
@@ -59,8 +57,7 @@ cdef class pyTopo:
         """
         # Create C++ topo pointer
         cdef string freqstr = pyStringToBytes(frequency)
-        self.c_topo = new Topo(deref(product.c_product), freqstr[0], nativeDoppler,
-                               numberAzimuthLooks, numberRangeLooks)
+        self.c_topo = new Topo(deref(product.c_product), freqstr[0], nativeDoppler)
         self.__owner = True
 
         # Set processing options

@@ -34,13 +34,12 @@ __device__
 bool initAzimuthLine(size_t line,
                      const isce::cuda::core::OrbitView& orbit,
                      double startAzUTCTime,
-                     size_t numberAzimuthLooks,
                      double prf,
                      Vec3& pos, Vec3& vel,
                      isce::core::Basis& TCNbasis) {
 
     // Get satellite azimuth time
-    const double tline = startAzUTCTime + numberAzimuthLooks * line / prf;
+    const double tline = startAzUTCTime + line / prf;
 
     // Interpolate orbit (keeping track of validity without interrupting workflow)
     ErrorCode status = orbit.interpolate(&pos, &vel, tline);
@@ -139,7 +138,6 @@ void runTopoBlock(isce::core::Ellipsoid ellipsoid,
                   isce::cuda::geometry::gpuTopoLayers layers,
                   size_t lineStart,
                   int lookSide,
-                  size_t numberAzimuthLooks,
                   double startAzUTCTime,
                   double wavelength,
                   double prf,
@@ -163,7 +161,7 @@ void runTopoBlock(isce::core::Ellipsoid ellipsoid,
         isce::core::Basis TCNbasis;
         Vec3 pos, vel;
         bool valid = (initAzimuthLine(line + lineStart, orbit, startAzUTCTime,
-                                      numberAzimuthLooks, prf, pos, vel, TCNbasis) != 0);
+                                      prf, pos, vel, TCNbasis) != 0);
 
         // Compute magnitude of satellite velocity
         const double satVmag = vel.norm();
@@ -205,7 +203,6 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
            size_t lineStart,
            int lookSide,
            int epsgOut,
-           size_t numberAzimuthLooks,
            double startAzUTCTime,
            double wavelength,
            double prf,
@@ -243,7 +240,7 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
     // Launch kernel
     runTopoBlock<<<grid, block>>>(ellipsoid, gpu_orbit, gpu_doppler,
                                   gpu_demInterp, projOutput_d, gpu_layers,
-                                  lineStart, lookSide, numberAzimuthLooks,
+                                  lineStart, lookSide,
                                   startAzUTCTime, wavelength, prf, startingRange,
                                   rangePixelSpacing, threshold, numiter, extraiter,
                                   totalconv_d);

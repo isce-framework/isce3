@@ -16,16 +16,11 @@ cdef class pyRadarGridParameters:
 
     def __cinit__(self,
                   pySwath swath=None,
-                  int side=-9999,
-                  int numberAzimuthLooks=1,
-                  int numberRangeLooks=1):
-
+                  int side=-9999):
         if swath is not None and side == -9999:
             raise AttributeError("Invalid look direction.")
         elif swath is not None: 
-            self.c_radargrid = new RadarGridParameters(
-                deref(swath.c_swath), side, numberAzimuthLooks, numberRangeLooks
-            )
+            self.c_radargrid = new RadarGridParameters(deref(swath.c_swath), side)
             self.__owner = True
         else:
             self.c_radargrid = new RadarGridParameters()
@@ -47,14 +42,6 @@ cdef class pyRadarGridParameters:
         new_grid.__owner = True
         return new_grid
                
-    @property
-    def numberAzimuthLooks(self):
-        return self.c_radargrid.numberAzimuthLooks()
-       
-    @property
-    def numberRangeLooks(self): 
-        return self.c_radargrid.numberRangeLooks()
-
     @property
     def refEpoch(self):
         cdef DateTime date = self.c_radargrid.refEpoch()

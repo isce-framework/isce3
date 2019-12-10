@@ -160,12 +160,9 @@ cdef class pySwath:
         return swathObj
     
     def getRadarGridParameters(self,
-                               side,
-                               numberAzimuthLooks=1,
-                               numberRangeLooks=1):
+                               side):
         cdef RadarGridParameters radarGrid = RadarGridParameters(
-            deref(self.c_swath), side, numberAzimuthLooks, numberRangeLooks
-        )
+            deref(self.c_swath), side)
         return pyRadarGridParameters.cbind(radarGrid)
 
 # end of file

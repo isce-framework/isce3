@@ -38,13 +38,10 @@ public:
      * @param[in] product Input Product
      * @param[in] frequency Frequency designation
      * @param[in] nativeDoppler Flag for using native Doppler frequencies instead of zero-Doppler
-     * @param[in] numberAzimuthLooks Number of azimuth looks of input product
-     * @param[in] numberRangeLooks Number of range looks of input product
      */
     Topo(const isce::product::Product &,
          char frequency = 'A',
-         bool nativeDoppler = false, size_t numberAzimuthLooks = 1,
-         size_t numberRangeLooks = 1);
+         bool nativeDoppler = false);
 
     /**
      * Alternative constructor from ellipsoid orbit and radarGrid.
@@ -70,15 +67,11 @@ public:
      * @param[in] orbit     Orbit object
      * @param[in] doppler   LUT1d doppler model
      * @param[in] meta      Metadata object with radar image parameters
-     * @param[in] numberAzimuthLooks Number of azimuth looks of input product
-     * @param[in] numberRangeLooks Number of range looks of input product
      */
     Topo(const isce::core::Ellipsoid & ellipsoid,
          const isce::core::Orbit & orbit,
          const isce::core::LUT2d<double> & doppler,
-         const isce::core::Metadata & meta,
-         size_t numberAzimuthLooks = 1,
-         size_t numberRangeLooks = 1);
+         const isce::core::Metadata & meta);
 
     /**
      * Set convergence threshold

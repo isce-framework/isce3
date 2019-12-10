@@ -64,23 +64,20 @@ geo2rdr(isce::io::Raster & topoRaster,
     // Cache sensing start
     double t0 = _radarGrid.sensingStart();
     // Adjust for const azimuth shift
-    t0 -= (azshift - 0.5 * (_radarGrid.numberAzimuthLooks() - 1)) /
-           _radarGrid.prf();
+    t0 -= azshift / _radarGrid.prf();
 
     // Cache starting range
     double r0 = _radarGrid.startingRange();
     // Adjust for constant range shift
-    r0 -= (rgshift - 0.5 * (_radarGrid.numberRangeLooks() - 1)) *
-           _radarGrid.rangePixelSpacing();
+    r0 -= rgshift * _radarGrid.rangePixelSpacing();
 
     // Compute azimuth time extents
-    double dtaz = _radarGrid.numberAzimuthLooks() / _radarGrid.prf();
+    double dtaz = 1.0 / _radarGrid.prf();
     const double tend = t0 + ((_radarGrid.length() - 1) * dtaz);
     const double tmid = 0.5 * (t0 + tend);
 
     // Compute range extents
-    const double dmrg = _radarGrid.numberRangeLooks() *
-                        _radarGrid.rangePixelSpacing();
+    const double dmrg = _radarGrid.rangePixelSpacing();
     const double rngend = r0 + ((_radarGrid.width() - 1) * dmrg);
 
     // Print out extents

@@ -305,7 +305,7 @@ computeDEMBounds(Raster & demRaster, DEMInterpolator & demInterp, size_t lineOff
     for (size_t i = 0; i < rgInd.size(); ++i) {
 
         // Convert az index to absolute line index
-        size_t lineIndex = lineOffset + azInd[i] * _radarGrid.numberAzimuthLooks();
+        size_t lineIndex = lineOffset + azInd[i];
 
          // Initialize orbit data for this azimuth line
         Vec3 pos, vel;

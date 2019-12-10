@@ -20,21 +20,15 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
         /** Constructor from Product */
         inline Topo(const isce::product::Product & product,
                     char frequency = 'A',
-                    bool nativeDoppler = false,
-                    size_t numberAzimuthLooks = 1,
-                    size_t numberRangeLooks = 1) :
-            isce::geometry::Topo(product, frequency, nativeDoppler,
-                                 numberAzimuthLooks, numberRangeLooks) {}
+                    bool nativeDoppler = false) :
+            isce::geometry::Topo(product, frequency, nativeDoppler){}
 
         /** Constructor from isce::core objects */
         inline Topo(const isce::core::Ellipsoid & ellps,
                     const isce::core::Orbit & orbit,
                     const isce::core::LUT2d<double> & doppler,
-                    const isce::core::Metadata & meta,
-                    size_t numberAzimuthLooks = 1,
-                    size_t numberRangeLooks = 1) :
-            isce::geometry::Topo(ellps, orbit, doppler, meta,
-                                 numberAzimuthLooks, numberRangeLooks) {}
+                    const isce::core::Metadata & meta) :
+            isce::geometry::Topo(ellps, orbit, doppler, meta) {}
 
         /** Run topo - main entrypoint; internal creation of topo rasters */
         void topo(isce::io::Raster &, const std::string);
