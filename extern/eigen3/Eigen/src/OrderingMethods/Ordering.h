@@ -38,51 +38,6 @@ void ordering_helper_at_plus_a(const MatrixType& A, MatrixType& symmat)
     
 }
 
-#ifndef EIGEN_MPL2_ONLY
-
-/** \ingroup OrderingMethods_Module
-  * \class AMDOrdering
-  *
-  * Functor computing the \em approximate \em minimum \em degree ordering
-  * If the matrix is not structurally symmetric, an ordering of A^T+A is computed
-  * \tparam  StorageIndex The type of indices of the matrix 
-  * \sa COLAMDOrdering
-  */
-template <typename StorageIndex>
-class AMDOrdering
-{
-  public:
-    typedef PermutationMatrix<Dynamic, Dynamic, StorageIndex> PermutationType;
-    
-    /** Compute the permutation vector from a sparse matrix
-     * This routine is much faster if the input matrix is column-major     
-     */
-    template <typename MatrixType>
-    void operator()(const MatrixType& mat, PermutationType& perm)
-    {
-      // Compute the symmetric pattern
-      SparseMatrix<typename MatrixType::Scalar, ColMajor, StorageIndex> symm;
-      internal::ordering_helper_at_plus_a(mat,symm); 
-    
-      // Call the AMD routine 
-      //m_mat.prune(keep_diag());
-      internal::minimum_degree_ordering(symm, perm);
-    }
-    
-    /** Compute the permutation with a selfadjoint matrix */
-    template <typename SrcType, unsigned int SrcUpLo> 
-    void operator()(const SparseSelfAdjointView<SrcType, SrcUpLo>& mat, PermutationType& perm)
-    { 
-      SparseMatrix<typename SrcType::Scalar, ColMajor, StorageIndex> C; C = mat;
-      
-      // Call the AMD routine 
-      // m_mat.prune(keep_diag()); //Remove the diagonal elements 
-      internal::minimum_degree_ordering(C, perm);
-    }
-};
-
-#endif // EIGEN_MPL2_ONLY
-
 /** \ingroup OrderingMethods_Module
   * \class NaturalOrdering
   *

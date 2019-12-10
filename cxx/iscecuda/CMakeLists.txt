@@ -1,18 +1,12 @@
 # Get name of ISCE CUDA library
 include(IsceCuda)
-include(IsceHelper)
+
+include(Sources.cmake)
+include(Headers.cmake)
+install(FILES ${HEADERS} DESTINATION include/isce)
 
 # Create library target
-add_library(${LISCECUDA} SHARED)
-
-# Pull in the source files
-add_subdirectory(core)
-add_subdirectory(except)
-add_subdirectory(geometry)
-add_subdirectory(image)
-add_subdirectory(io)
-add_subdirectory(signal)
-add_subdirectory(matchtemplate)
+add_library(${LISCECUDA} SHARED ${SOURCES})
 
 # Allow for separable compilation and device code linking (-dc flag to nvcc)
 set_target_properties(${LISCECUDA} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
@@ -24,17 +18,14 @@ target_compile_options(${LISCECUDA} PUBLIC
 
 # Add library dependencies
 find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
-target_link_libraries(${LISCECUDA} ${CUDART_LIBRARY})
 find_library(CUDAFFT_LIBRARY cufft ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
-target_link_libraries(${LISCECUDA} ${CUDAFFT_LIBRARY})
-target_link_libraries(${LISCECUDA} ${LISCE})
-include_directories(${CEREAL_SRC_INCLUDEDIR}
-                    ${ISCE_BUILDINCLUDEDIR}
-                    ${ISCE_BUILDINCLUDEDIR_CUDA}
-                    ${PYRE_INCLUDE_DIR}
-                    ${GDAL_INCLUDE_DIR}
-                    ${HDF5_INCLUDE_DIR}
-                    ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+target_include_directories(${LISCECUDA} PUBLIC
+    ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+target_link_libraries(${LISCECUDA} PUBLIC
+                      ${LISCE}
+                      ${CUDART_LIBRARY}
+                      ${CUDAFFT_LIBRARY}
+                      )
 
 # Install shared library
 install(TARGETS ${LISCECUDA}
