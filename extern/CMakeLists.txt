@@ -13,3 +13,5 @@ install(DIRECTORY eigen3/Eigen DESTINATION include)
 add_library(eigen INTERFACE)
 add_library(Eigen::Eigen ALIAS eigen)
 target_include_directories(eigen SYSTEM INTERFACE eigen3)
+
+add_subdirectory(pybind11)
