@@ -45,4 +45,21 @@ template<> struct Type2GDALDataType<std::complex<double>> : public GDT<GDT_CFloa
 template<> struct Type2GDALDataType<thrust::complex<float>>  : public GDT<GDT_CFloat32> {};
 template<> struct Type2GDALDataType<thrust::complex<double>> : public GDT<GDT_CFloat64> {};
 
+constexpr
+std::size_t getSize(GDALDataType datatype)
+{
+    switch (datatype) {
+        case GDT_Byte     : return sizeof(unsigned char);
+        case GDT_UInt16   : return sizeof(std::uint16_t);
+        case GDT_Int16    : return sizeof(std::int16_t);
+        case GDT_UInt32   : return sizeof(std::uint32_t);
+        case GDT_Int32    : return sizeof(std::int32_t);
+        case GDT_Float32  : return sizeof(float);
+        case GDT_Float64  : return sizeof(double);
+        case GDT_CFloat32 : return sizeof(std::complex<float>);
+        case GDT_CFloat64 : return sizeof(std::complex<double>);
+        default           : return 0;
+    }
+}
+
 }}}}

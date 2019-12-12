@@ -61,11 +61,13 @@ image/Tile.h
 image/Tile.icc
 io/Constants.h
 io/forward.h
+io/gdal/Buffer.h
+io/gdal/Buffer.icc
 io/gdal/Dataset.h
 io/gdal/Dataset.icc
 io/gdal/detail/MemDataset.h
 io/gdal/detail/MemDataset.icc
-io/gdal/detail/Type2GDALDataType.h
+io/gdal/detail/GDALDataTypeUtil.h
 io/gdal/forward.h
 io/gdal/GeoTransform.h
 io/gdal/Raster.h

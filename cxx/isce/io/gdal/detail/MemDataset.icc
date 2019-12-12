@@ -6,7 +6,7 @@
 
 #include <isce/except/Error.h>
 
-#include "Type2GDALDataType.h"
+#include "GDALDataTypeUtil.h"
 
 namespace isce { namespace io { namespace gdal { namespace detail {
 

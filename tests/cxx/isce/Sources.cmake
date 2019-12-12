@@ -27,6 +27,7 @@ geometry/geometry/geometry.cpp
 geometry/geometry/geometry_equator.cpp
 geometry/topo/topo.cpp
 image/resampslc/resampslc.cpp
+io/gdal/buffer.cpp
 io/gdal/gdal-dataset.cpp
 io/gdal/gdal-raster.cpp
 io/gdal/geotransform.cpp

@@ -1,0 +1,122 @@
+#ifndef ISCE_IO_GDAL_BUFFER_ICC
+#error "Buffer.icc is an implementation detail of Buffer.h"
+#endif
+
+#include <isce/except/Error.h>
+
+namespace isce { namespace io { namespace gdal {
+
+constexpr
+Buffer::Buffer(const void * data,
+               GDALDataType datatype,
+               const std::array<int, 2> & shape)
+:
+    Buffer(data, datatype, shape, {shape[1] * detail::getSize(datatype), detail::getSize(datatype)})
+{}
+
+constexpr
+Buffer::Buffer(void * data,
+               GDALDataType datatype,
+               const std::array<int, 2> & shape,
+               GDALAccess access)
+:
+    Buffer(data, datatype, shape, {shape[1] * detail::getSize(datatype), detail::getSize(datatype)}, access)
+{}
+
+constexpr
+Buffer::Buffer(const void * data,
+               GDALDataType datatype,
+               const std::array<int, 2> & shape,
+               const std::array<std::size_t, 2> & strides)
+:
+    _data(const_cast<void *>(data)),
+    _datatype(datatype),
+    _shape(shape),
+    _strides(strides),
+    _access(GA_ReadOnly)
+{
+    if (shape[0] < 0 || shape[1] < 0) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "shape[n] must be >= 0");
+    }
+}
+
+constexpr
+Buffer::Buffer(void * data,
+               GDALDataType datatype,
+               const std::array<int, 2> & shape,
+               const std::array<std::size_t, 2> & strides,
+               GDALAccess access)
+:
+    _data(data),
+    _datatype(datatype),
+    _shape(shape),
+    _strides(strides),
+    _access(access)
+{
+    if (shape[0] < 0 || shape[1] < 0) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "shape[n] must be >= 0");
+    }
+}
+
+template<typename T>
+constexpr
+TypedBuffer<T> Buffer::cast() const
+{
+    if (detail::Type2GDALDataType<T>::datatype != datatype()) {
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), "requested type must match the underlying data type");
+    }
+
+    return TypedBuffer<T>(static_cast<T *>(_data), _shape, _strides, _access);
+}
+
+template<typename T>
+constexpr
+TypedBuffer<T>::TypedBuffer(const T * data,
+                            const std::array<int, 2> & shape)
+:
+    TypedBuffer(data, shape, {shape[1] * sizeof(T), sizeof(T)})
+{}
+
+template<typename T>
+constexpr
+TypedBuffer<T>::TypedBuffer(T * data,
+                            const std::array<int, 2> & shape,
+                            GDALAccess access)
+:
+    TypedBuffer(data, shape, {shape[1] * sizeof(T), sizeof(T)})
+{}
+
+template<typename T>
+constexpr
+TypedBuffer<T>::TypedBuffer(const T * data,
+                            const std::array<int, 2> & shape,
+                            const std::array<std::size_t, 2> & strides)
+:
+    _data(const_cast<T *>(data)),
+    _shape(shape),
+    _strides(strides),
+    _access(GA_ReadOnly)
+{
+    if (shape[0] < 0 || shape[1] < 0) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "shape[n] must be >= 0");
+    }
+}
+
+template<typename T>
+constexpr
+TypedBuffer<T>::TypedBuffer(T * data,
+                            const std::array<int, 2> & shape,
+                            const std::array<std::size_t, 2> & strides,
+                            GDALAccess access)
+:
+    _data(data),
+    _shape(shape),
+    _strides(strides),
+    _access(access)
+{
+    if (shape[0] < 0 || shape[1] < 0) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "shape[n] must be >= 0");
+    }
+}
+
+}}}
