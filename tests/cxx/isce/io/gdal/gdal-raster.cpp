@@ -11,9 +11,11 @@
 #include <isce/io/gdal/Raster.h>
 
 using isce::core::ProjectionBase;
+using isce::io::gdal::Buffer;
 using isce::io::gdal::Dataset;
 using isce::io::gdal::GeoTransform;
 using isce::io::gdal::Raster;
+using isce::io::gdal::TypedBuffer;
 
 /** Raster w/ spatial reference & geo transform data */
 struct DEMRasterTestData {
@@ -473,6 +475,44 @@ TEST_P(RasterTest, WriteAll)
     }
 }
 
+TEST_P(RasterTest, Memmap)
+{
+    RasterTestData testdata = GetParam();
+    Raster raster(testdata.sequence.path);
+
+    {
+        Buffer mmap = raster.memmap();
+
+        using T = std::int32_t;
+        T * data = static_cast<T *>(mmap.data());
+        for (int i = 0; i < raster.length() * raster.width(); ++i) {
+            EXPECT_EQ( data[i], T(i) );
+        }
+
+        EXPECT_EQ( mmap.datatype(), raster.datatype() );
+        EXPECT_EQ( mmap.length(), raster.length() );
+        EXPECT_EQ( mmap.width(), raster.width() );
+        EXPECT_EQ( mmap.colstride(), sizeof(T) );
+        EXPECT_EQ( mmap.rowstride(), raster.width() * sizeof(T) );
+    }
+
+    {
+        using T = std::int32_t;
+        TypedBuffer<T> mmap = raster.memmap<T>();
+
+        T * data = mmap.data();
+        for (int i = 0; i < raster.length() * raster.width(); ++i) {
+            EXPECT_EQ( data[i], T(i) );
+        }
+
+        EXPECT_EQ( mmap.datatype(), raster.datatype() );
+        EXPECT_EQ( mmap.length(), raster.length() );
+        EXPECT_EQ( mmap.width(), raster.width() );
+        EXPECT_EQ( mmap.colstride(), sizeof(T) );
+        EXPECT_EQ( mmap.rowstride(), raster.width() * sizeof(T) );
+    }
+}
+
 RasterTestData envi_test_data {
         "ENVI", // driver
         { // dem
@@ -659,6 +699,46 @@ TEST_F(MEMRasterTest, WriteBlockColMajor)
     {
         Raster raster(v.data(), width, length, colstride, rowstride, GA_ReadOnly);
         EXPECT_THROW( { raster.writeBlock(vals.data(), 0, 0, width, length); }, isce::except::RuntimeError );
+    }
+}
+
+TEST_F(MEMRasterTest, Memmap)
+{
+    v = { 0,  1,  2,
+          3,  4,  5,
+          6,  7,  8,
+          9, 10, 11 };
+
+    Raster raster(v.data(), width, length);
+
+    {
+        Buffer mmap = raster.memmap();
+
+        int * data = reinterpret_cast<int *>(mmap.data());
+        for (int i = 0; i < raster.length() * raster.width(); ++i) {
+            EXPECT_EQ( data[i], i );
+        }
+
+        EXPECT_EQ( mmap.datatype(), raster.datatype() );
+        EXPECT_EQ( mmap.length(), raster.length() );
+        EXPECT_EQ( mmap.width(), raster.width() );
+        EXPECT_EQ( mmap.colstride(), sizeof(int) );
+        EXPECT_EQ( mmap.rowstride(), raster.width() * sizeof(int) );
+    }
+
+    {
+        TypedBuffer<int> mmap = raster.memmap<int>();
+
+        int * data = mmap.data();
+        for (int i = 0; i < raster.length() * raster.width(); ++i) {
+            EXPECT_EQ( data[i], i );
+        }
+
+        EXPECT_EQ( mmap.datatype(), raster.datatype() );
+        EXPECT_EQ( mmap.length(), raster.length() );
+        EXPECT_EQ( mmap.width(), raster.width() );
+        EXPECT_EQ( mmap.colstride(), sizeof(int) );
+        EXPECT_EQ( mmap.rowstride(), raster.width() * sizeof(int) );
     }
 }
 

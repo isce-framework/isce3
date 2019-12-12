@@ -1,9 +1,12 @@
 #pragma once
 
+#include "forward.h"
+
 #include <gdal_priv.h>
 #include <string>
 
 #include "Dataset.h"
+#include "detail/MemoryMap.h"
 
 namespace isce { namespace io { namespace gdal {
 
@@ -302,6 +305,30 @@ public:
     /** Get the underlying GDALRasterBand pointer */
     const GDALRasterBand * get() const { return _dataset._dataset->GetRasterBand(_band); }
 
+    /**
+     * Create a virtual memory mapping of the raster.
+     *
+     * The memory map is internally managed and is valid only during the lifetime
+     * of the raster object.
+     *
+     * \returns A buffer object describing the virtual memory mapping
+     */
+    Buffer memmap();
+
+    /**
+     * Create a virtual memory mapping of the raster.
+     *
+     * The memory map is internally managed and is valid only during the lifetime
+     * of the raster object.
+     *
+     * \throws isce::except::RuntimeError if the requested type does not match
+     * the underlying raster datatype
+     *
+     * \returns A buffer object describing the virtual memory mapping
+     */
+    template<typename T>
+    TypedBuffer<T> memmap();
+
     friend class Dataset;
 
 private:
@@ -321,6 +348,9 @@ private:
 
     Dataset _dataset;
     int _band = 1;
+
+    // _mmap must be constructed after _dataset and destructed before _dataset
+    detail::MemoryMap _mmap;
 };
 
 }}}

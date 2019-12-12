@@ -67,6 +67,7 @@ io/gdal/Dataset.h
 io/gdal/Dataset.icc
 io/gdal/detail/MemDataset.h
 io/gdal/detail/MemDataset.icc
+io/gdal/detail/MemoryMap.h
 io/gdal/detail/GDALDataTypeUtil.h
 io/gdal/forward.h
 io/gdal/GeoTransform.h
