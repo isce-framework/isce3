@@ -14,45 +14,6 @@ endif()
 
 find_package(Python 3.6 REQUIRED COMPONENTS Development)
 
-# According to http://stackoverflow.com/questions/646518/python-how-to-detect-debug-interpreter
-# testing whether sys has the gettotalrefcount function is a reliable, cross-platform
-# way to detect a CPython debug interpreter.
-#
-# The library suffix is from the config var LDVERSION sometimes, otherwise
-# VERSION. VERSION will typically be like "2.7" on unix, and "27" on windows.
-execute_process(COMMAND "${Python_EXECUTABLE}" "-c"
-    "from distutils import sysconfig as s;import sys;import struct;
-print('.'.join(str(v) for v in sys.version_info));
-print(sys.prefix);
-print(s.get_python_inc(plat_specific=True));
-print(s.get_python_lib(plat_specific=True));
-print(s.get_config_var('SO'));
-print(hasattr(sys, 'gettotalrefcount')+0);
-print(struct.calcsize('@P'));
-print(s.get_config_var('LDVERSION') or s.get_config_var('VERSION'));
-print(s.get_config_var('LIBDIR') or '');
-print(s.get_config_var('MULTIARCH') or '');
-"
-    RESULT_VARIABLE _PYTHON_SUCCESS
-    OUTPUT_VARIABLE _PYTHON_VALUES
-    ERROR_VARIABLE  _PYTHON_ERROR_VALUE)
-
-if(NOT _PYTHON_SUCCESS MATCHES 0)
-    message(FATAL_ERROR "Python config failure:\n${_PYTHON_ERROR_VALUE}")
-    set(Python_FOUND FALSE)
-    return()
-endif()
-
-# Convert the process output into a list
-if(WIN32)
-    string(REGEX REPLACE "\\\\" "/" _PYTHON_VALUES ${_PYTHON_VALUES})
-endif()
-string(REGEX REPLACE ";" "\\\\;" _PYTHON_VALUES ${_PYTHON_VALUES})
-string(REGEX REPLACE "\n" ";" _PYTHON_VALUES ${_PYTHON_VALUES})
-list(GET _PYTHON_VALUES 1 Python_PREFIX)
-list(GET _PYTHON_VALUES 4 Python_MODULE_EXTENSION)
-list(GET _PYTHON_VALUES 5 Python_IS_DEBUG)
-
 include(CheckCXXCompilerFlag)
 include(CMakeParseArguments)
 
@@ -136,26 +97,18 @@ function(_pybind11_add_lto_flags target_name prefer_thin_lto)
 endfunction()
 
 # Build a Python extension module:
-# pybind11_add_module(<name> [MODULE | SHARED] [EXCLUDE_FROM_ALL]
+# pybind11_add_module(<name> [EXCLUDE_FROM_ALL]
 #                     [NO_EXTRAS] [SYSTEM] [THIN_LTO] source1 [source2 ...])
 #
 function(pybind11_add_module target_name)
-  set(options MODULE SHARED EXCLUDE_FROM_ALL NO_EXTRAS SYSTEM THIN_LTO)
+  set(options EXCLUDE_FROM_ALL NO_EXTRAS SYSTEM THIN_LTO)
   cmake_parse_arguments(ARG "${options}" "" "" ${ARGN})
-
-  if(ARG_MODULE AND ARG_SHARED)
-    message(FATAL_ERROR "Can't be both MODULE and SHARED")
-  elseif(ARG_SHARED)
-    set(lib_type SHARED)
-  else()
-    set(lib_type MODULE)
-  endif()
 
   if(ARG_EXCLUDE_FROM_ALL)
     set(exclude_from_all EXCLUDE_FROM_ALL)
   endif()
 
-  add_library(${target_name} ${lib_type} ${exclude_from_all} ${ARG_UNPARSED_ARGUMENTS})
+  Python_add_library(${target_name} MODULE ${exclude_from_all} ${ARG_UNPARSED_ARGUMENTS})
 
   if(ARG_SYSTEM)
     set(inc_isystem SYSTEM)
@@ -172,10 +125,6 @@ function(pybind11_add_module target_name)
     target_compile_definitions(${target_name} PRIVATE Py_DEBUG)
   endif()
 
-  # The prefix and extension are provided by FindPythonLibsNew.cmake
-  set_target_properties(${target_name} PROPERTIES PREFIX "${Python_MODULE_PREFIX}")
-  set_target_properties(${target_name} PROPERTIES SUFFIX "${Python_MODULE_EXTENSION}")
-
   # -fvisibility=hidden is required to allow multiple modules compiled against
   # different pybind versions to work properly, and for some features (e.g.
   # py::module_local).  We force it on everything inside the `pybind11`
@@ -184,7 +133,6 @@ function(pybind11_add_module target_name)
   set_target_properties(${target_name} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
   set_target_properties(${target_name} PROPERTIES CUDA_VISIBILITY_PRESET "hidden")
 
-  target_link_libraries(${target_name} PRIVATE Python::Python)
   if(APPLE)
     # It's quite common to have multiple copies of the same Python version
     # installed on one's system. E.g.: one copy from the OS and another copy
