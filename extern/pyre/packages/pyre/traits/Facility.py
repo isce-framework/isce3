@@ -16,12 +16,12 @@ class Facility(Slotted, schemata.component):
     """
     The descriptor for traits that are components
     """
+
     # Facility is faced with the following problem: the expected results of coercing are
     # different depending on whether the object whose trait is being processed is a component
     # class or a component instance. In the latter case, we want to cast the trait value into
     # an actual component instance that is compatible with the facility requirements; in the
     # former we are happy with either a compatible component declaration or an instance.
-
 
     # framework data
     category = 'component'
@@ -77,8 +77,6 @@ class Facility(Slotted, schemata.component):
         """
         Coerce {value} into an instance of a component compatible with my protocol
         """
-        # leave {None} alone
-        if value is None: return None
         # run the value through my regular coercion
         value = self.process(value=value, node=node, **kwds)
         # if {value} results in {None} after initial processing, leave it alone too
@@ -103,8 +101,22 @@ class Facility(Slotted, schemata.component):
             # and no locator
             locator = None
 
-        # instantiate and return
-        return value(name=name, locator=locator)
+        # instantiate and return; mark as implicit to denote that this instance was created
+        # during facility processing, rather than explicitly
+        return value(name=name, locator=locator, implicit=True)
+
+
+    def render(self, value, renderer, workload, incognito=False):
+        """
+        Render {value} using renderer
+        """
+        # get the name to use
+        name = None if incognito else self.name
+        # delegate to my protocol
+        yield from self.protocol.pyre_render(renderer=renderer,
+                                             name=name, component=value, workload=workload)
+        # all done
+        return
 
 
     # meta-methods
@@ -112,10 +124,15 @@ class Facility(Slotted, schemata.component):
         # chain up
         super().__init__(protocol=protocol, **kwds)
         # build my slot factories
-        self.classSlot = self.factory(trait=self, processor=self.process)
-        self.instanceSlot = self.factory(trait=self, processor=self.instantiate)
+        self.classSlot = self.factory(trait=self, post=self.process)
+        # self.instanceSlot = self.factory(trait=self, pre=self.instantiate, post=self.instantiate)
+        self.instanceSlot = self.factory(trait=self, post=self.instantiate)
         # add the converter from my protocol to my pile
         self.converters.append(protocol.pyre_convert)
+        # repeat with the normalizer
+        self.normalizers.append(protocol.pyre_normalize)
+        # and the validator
+        self.validators.append(protocol.pyre_validate)
         # all done
         return
 

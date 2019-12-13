@@ -21,8 +21,11 @@ class Indenter:
         """
         Increase the indentation level by one
         """
+        # increase the indentation level
         self._level += increment
+        # and adjust the margin filler
         self.leader = self._indenter * self._level
+        # all done
         return self
 
 
@@ -30,23 +33,30 @@ class Indenter:
         """
         Decrease the indentation level by one
         """
+        # decrease the indentation level
         self._level -= decrement
+        # and adjust the margin filler
         self.leader = self._indenter * self._level
+        # all done
         return self
 
 
     def place(self, line):
+        """
+        Indent {line} and return it
+        """
+        # easy enough
         return self.leader + line
 
 
     # meta methods
-    def __init__(self, indenter=None, **kwds):
+    def __init__(self, indenter=None, level=0, **kwds):
         # chain up
         super().__init__(**kwds)
         # initialize my markers
-        self.leader = ""
-        self._level = 0
+        self._level = level
         self._indenter = self.INDENTER if indenter is None else indenter
+        self.leader = self._indenter * level
         # all done
         return
 

@@ -36,7 +36,7 @@ class Value:
         # chain up
         super().__init__(**kwds)
         # save the value
-        self._value = value
+        self.setValue(value=value)
         # all done
         return
 

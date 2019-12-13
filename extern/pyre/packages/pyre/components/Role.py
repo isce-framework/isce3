@@ -55,11 +55,12 @@ class Role(Requirement):
         # if this protocol is not user visible, there is nothing else to do
         if self.pyre_internal: return
 
+        # get the executive
+        executive = self.pyre_executive
         # if the protocol author specified a family name
         if family:
             # register with the executive
-            self.pyre_key = self.pyre_executive.registerProtocolClass(
-                family=family, protocol=self, locator=self.pyre_locator)
+            self.pyre_key = executive.registerProtocolClass(family=family, protocol=self)
         # otherwise
         else:
             # i have no registration key

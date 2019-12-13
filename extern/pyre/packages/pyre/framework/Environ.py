@@ -44,9 +44,9 @@ class Environ(collections.abc.MutableMapping):
                 nameserver.configurable(
                     name=self.prefix+name, configurable=value,
                     locator=locator, priority=priority())
-            # if anything goes wrong
-            except nameserver.FrameworkError:
-                # just skip this variable for now
+            # values with braces trigger expression syntax errors
+            except nameserver.ExpressionSyntaxError:
+                # so skip them, for now
                 continue
 
         # all done
@@ -57,12 +57,14 @@ class Environ(collections.abc.MutableMapping):
         # place the value in the environment
         os.environ[key] = value
 
+        # grab the nameserver
+        nameserver = self.nameserver
         # build a locator
         locator = tracking.here(-1)
         # a priority
-        priority = self.nameserver.priority.user()
+        priority = nameserver.priority.user()
         # and add it to the configuration store
-        self.nameserver.configurable(
+        nameserver.configurable(
             name=self.prefix+key, value=value, locator=locator, priority=priority)
 
         # all done

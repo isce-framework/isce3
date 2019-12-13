@@ -18,6 +18,7 @@ class Schema:
 
     # constants
     typename = 'identity'
+    isContainer = False
 
 
     # public data
@@ -68,6 +69,25 @@ class Schema:
         # by default, let the raw value through; the schemata that are not JSON representable
         # must override to provide something suitable
         return value
+
+
+    def render(self, renderer, value, incognito=False, **kwds):
+        """
+        Render {value} using {renderer}
+        """
+        # render value
+        entry = self.string(value)
+        # if i'm incognito
+        if incognito:
+            # render just my value
+            yield renderer.value(value=entry)
+        # otherwise
+        else:
+            # render both my name and the value
+            yield renderer.trait(name=self.name, value=entry)
+
+        # all done
+        return
 
 
     # meta-methods

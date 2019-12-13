@@ -28,11 +28,11 @@ def test():
     # add them
     s = one + two
     # check that the new slot has an invalid cache
-    assert s._value is None
+    assert s._cache is None
     # force it to evaluate
     assert s.value == 3
     # check that the cache has been updated properly
-    assert s._value == 3
+    assert s._cache == 3
 
     # check that variables have no operands
     assert len(tuple(zero.operands)) == 0

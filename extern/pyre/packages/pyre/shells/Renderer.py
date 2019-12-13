@@ -15,8 +15,8 @@ from .Terminal import Terminal
 
 
 # declaration
-class Renderer(pyre.component, family='pyre.shells.renderer',
-               implements=journal.protocols.renderer):
+class Renderer(pyre.component,
+               family='pyre.shells.renderer', implements=journal.protocols.renderer):
     """
     Custom replacement for the {journal} renderer
     """
@@ -24,6 +24,7 @@ class Renderer(pyre.component, family='pyre.shells.renderer',
 
     # public state
     terminal = Terminal()
+    terminal.doc = "the terminal type"
 
 
     # interface
@@ -59,6 +60,7 @@ class Renderer(pyre.component, family='pyre.shells.renderer',
 
 
     def __init__(self, **kwds):
+        # chain up
         super().__init__(**kwds)
 
         # get my terminal

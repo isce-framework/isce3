@@ -47,6 +47,8 @@ class Component(Schema):
         actor = protocol.actor
         # the component type
         component = protocol.component
+        # the foundry type
+        foundry = protocol.foundry
         # and the factory of its default value
         default = protocol.pyre_default
 
@@ -54,11 +56,20 @@ class Component(Schema):
         if value == default:
             # evaluate it
             value = value()
-            # and if it's none, we are done
-            if value is None: return None
+            # and if it's none
+            if value is None:
+                # we are done
+                return None
 
-        # give {value} a try
-        if isinstance(value, actor) or isinstance(value, component): return value
+        # if {value} is a foundry
+        if isinstance(value, foundry):
+            # invoke it
+            value = value()
+
+        # if {value} is a component class or instance
+        if isinstance(value, actor) or isinstance(value, component):
+            # pass it on
+            return value
 
         # the only remaining case that i can handle is {value} being a string; if it's not
         if not isinstance(value, str):
@@ -102,6 +113,10 @@ class Component(Schema):
             if factory == default:
                 # invoke it
                 factory = factory()
+            # perhaps it's a foundry
+            if isinstance(factory, foundry):
+                # invoke it
+                factory = factory()
             # now, if it is a component constructor
             if isinstance(factory, actor):
                 # use it to build a component instance
@@ -109,8 +124,8 @@ class Component(Schema):
                 # and return it
                 return candidate
 
-        # out of ideas; build an error message and complain
-        raise protocol.ResolutionError(protocol=protocol, value=value) from None
+        # out of ideas; leave {value} alone and leave it up to the validators to complain
+        return value
 
 
     def string(self, value):

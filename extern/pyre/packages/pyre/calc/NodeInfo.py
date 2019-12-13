@@ -40,6 +40,11 @@ class NodeInfo:
             # look up the key
             key = model._hash.hash(items=split)
 
+        # if the split is known
+        if split is not None:
+            # normalize it
+            split = tuple(split)
+
         # done my best: if i know the key
         if key:
             # return the info

@@ -61,8 +61,8 @@ def test():
     assert gaussian.spread == 0.75
     assert g1.mean == 0
     assert g1.spread == .25
-    assert g2.mean == 2
-    assert g2.spread == .75
+    assert g2.mean == 1
+    assert g2.spread == .5
 
     return gaussian, g1, g2
 

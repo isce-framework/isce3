@@ -8,10 +8,11 @@
 // my declarations
 #include "version.h"
 
+// build and return the version tuple
 pyre::version_t
 pyre::version() {
     //
-    return version_t { ${PYRE_MAJOR}, ${PYRE_MINOR}, "${PYRE_REVISION}" };
+    return version_t { @MAJOR@, @MINOR@, @MICRO@, "@REVISION@" };
 }
 
 // end of file

@@ -150,13 +150,15 @@ class Hierarchical(SymbolTable):
         Register the new {node} in the model under {name}
         """
         # convert value into a node
-        node = self.interpolation(value=value)
+        new = self.interpolation(value=value)
         # attempt to
         try:
             # retrieve the existing one
             old = self._nodes[key]
         # if it's not there
         except KeyError:
+            # remember we don't have one
+            old = None
             # this is a new registration; fill out the node id
             name, split, key = self.info.fillNodeId(model=self, key=key, name=name)
             # update the node metadata
@@ -164,13 +166,13 @@ class Hierarchical(SymbolTable):
         # if it's there
         else:
             # replace it
-            node.replace(old)
+            new.replace(old)
 
         # either way, update the model
-        self._nodes[key] = node
+        self._nodes[key] = new
 
         # all done
-        return key, node
+        return key, new, old
 
 
     def getInfo(self, key):

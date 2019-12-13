@@ -12,8 +12,10 @@ import sys
 import pyre
 # my metaclass
 from .Director import Director
-# access to the local interfaces
+# protocols
 from .Shell import Shell
+import journal.protocols
+# the default renderer
 from .Renderer import Renderer
 
 
@@ -42,6 +44,9 @@ class Application(pyre.component, metaclass=Director):
     shell = Shell()
     shell.doc = 'my hosting strategy'
 
+    renderer = journal.protocols.renderer(default=Renderer)
+    renderer.doc = "the specialized renderer for journal entries"
+
     DEBUG = pyre.properties.bool(default=False)
     DEBUG.doc = 'debugging mode'
 
@@ -52,7 +57,6 @@ class Application(pyre.component, metaclass=Director):
     pyre_defaults = None # the directory with my configuration folders
     pfs = None # the root of my private filesystem
     layout = None # my configuration options
-    pyre_renderer = Renderer()
 
     # journal channels
     info = None
@@ -157,8 +161,7 @@ class Application(pyre.component, metaclass=Director):
         super().__init__(name=name, **kwds)
 
         # attach my renderer to the console
-        import journal
-        journal.console.renderer = self.pyre_renderer
+        journal.scribe().device.renderer = self.renderer
 
         # make a name for my channels
         channel  = self.pyre_namespace or name
@@ -467,10 +470,14 @@ class Application(pyre.component, metaclass=Director):
         return 1
 
 
-    def pyre_interactiveSessionContext(self, context):
+    def pyre_interactiveSessionContext(self, context=None):
         """
         Prepare the interactive context by granting access to application parts
         """
+        # prime the execution context
+        context = context or {}
+        # grant access to pyre
+        context['pyre'] = pyre
         # by default, nothing to do: the shell has already bound me in this context
         return context
 

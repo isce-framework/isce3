@@ -206,7 +206,11 @@ class Measure(records.measure):
         # interface
         def sql(self, value):
             """SQL rendering of my value"""
-            # easy enough, but must escape any embedded single quotes
+            # if the value is None
+            if value is None:
+                # convert it
+                return "'None'"
+            # otherwise, escape any embedded single quotes
             return "'{}'".format(value.replace("'", "''"))
 
         # meta-methods

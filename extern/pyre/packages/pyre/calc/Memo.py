@@ -15,7 +15,7 @@ class Memo:
 
 
     # public data
-    dirty = True
+    dirty = True # initially dirty since the constructor doesn't front-load the {_cache}
 
 
     # interface
@@ -27,11 +27,11 @@ class Memo:
         # if my cache is invalid
         if self.dirty:
             # recompute
-            self._value = super().getValue(**kwds)
+            self._cache = super().getValue(**kwds)
             # mark
             self.dirty = False
         # return the cache contents
-        return self._value
+        return self._cache
 
 
     def setValue(self, value, **kwds):
@@ -60,7 +60,7 @@ class Memo:
 
 
     # private data
-    _value = None
+    _cache = None
 
 
 # end of file

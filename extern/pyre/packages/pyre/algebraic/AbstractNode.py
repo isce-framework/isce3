@@ -89,7 +89,7 @@ class AbstractNode:
         """
         Determine whether my subgraph has any cycles
         """
-        # initialize the my markers
+        # initialize my markers
         known = set()
         # go through my span
         for node in self.span:
@@ -118,7 +118,12 @@ class AbstractNode:
 
     # debugging support
     def dump(self, name, indent):
-        print('{}{}: {}'.format(indent, name, self.value))
+        """
+        Print my name and value
+        """
+        # show me
+        print(f"{indent}{name}: {self.value}")
+        # all done
         return self
 
 

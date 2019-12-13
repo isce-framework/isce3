@@ -59,11 +59,9 @@ class Diagnostic:
 
         # build my locator
         self.locator = pyre.tracking.script(source=filename, line=line, function=function)
-
         # record
         self.device.record(page=self.text, metadata=meta)
-
-        # clean up
+        # flush the text cache
         self.text = []
 
         # and return

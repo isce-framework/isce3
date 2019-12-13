@@ -11,64 +11,23 @@ def copyright():
     """
     Return the pyre journal copyright note
     """
-    return _journal_copyright
+    # easy enough
+    return print(meta.header)
 
 
 def license():
     """
     Print the pyre journal license
     """
-    print(_journal_license)
-    return
+    # easy enough
+    return print(meta.license)
 
 
 def version():
     """
     Return the pyre journal version
     """
-    return _journal_version
-
-
-# license
-_journal_version = (1, 0, 0)
-
-_journal_copyright = "pyre journal: Copyright (c) 1998-2019 Michael A.G. Aïvázis"
-
-_journal_license = """
-    pyre journal 1.0
-    Copyright (c) 1998-2019 Michael A.G. Aïvázis
-    All Rights Reserved
-
-
-    Redistribution and use in source and binary forms, with or without
-    modification, are permitted provided that the following conditions
-    are met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in
-      the documentation and/or other materials provided with the
-      distribution.
-
-    * Neither the name pyre nor the names of its contributors may be
-      used to endorse or promote products derived from this software
-      without specific prior written permission.
-
-    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-    FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-    COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-    BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-    ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-    POSSIBILITY OF SUCH DAMAGE.
-    """
+    return meta.version
 
 
 # the bootstrapping logic is tucked away in a function to prevent namespace pollution
@@ -84,7 +43,7 @@ def boot():
     from .Journal import Journal
     from .Channel import Channel
     # instantiate the journal component and patch {Channel}
-    Channel.journal = Journal()
+    Channel.journal = Journal(name="pyre.journal")
 
     # attempt to load the journal extension
     try:
@@ -118,6 +77,20 @@ def boot():
     # all done
     return extension
 
+
+# access to the singleton
+def scribe():
+    """
+    Provide access to the journal manager
+    """
+    # channel knows...
+    from .Channel import Channel as channel
+    # so make him say
+    return channel.journal
+
+
+# administrative
+from . import meta
 # grab the framework
 import pyre
 # register the package
@@ -126,19 +99,40 @@ package = pyre.executive.registerPackage(name='journal', file=__file__)
 home, prefix, defaults = package.layout()
 
 # access to the public names
-# the channel categories
+# the channel factories
 from .Debug import Debug as debug
 from .Firewall import Firewall as firewall
 from .Info import Info as info
 from .Warning import Warning as warning
 from .Error import Error as error
 
-# devices
-from .Console import Console as console
-from .File import File as file
+# the protocols
+from . import protocols
+
+
+# device foundries
+@pyre.foundry(implements=protocols.device)
+def console():
+    # grab the implementation
+    from .Console import Console
+    # steal its docstrnig
+    __doc__ = Console.__doc__
+    # and publish it
+    return Console
+
+@pyre.foundry(implements=protocols.device)
+def file():
+    # grab the implementation
+    from .File import File
+    # steal its docstrnig
+    __doc__ = File.__doc__
+    # and publish it
+    return File
+
 
 # the package exception
 from .exceptions import FirewallError
+
 
 # make it so...
 extension = boot()

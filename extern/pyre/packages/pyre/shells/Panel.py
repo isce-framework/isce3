@@ -49,7 +49,7 @@ class Panel(Command):
             # if there was a typo
             except AttributeError:
                 # show an error message
-                plexus.error.log('{.pyre_spec}: unrecognized command {!r}'.format(self, command))
+                plexus.error.log(f"{self.pyre_spec}: unrecognized command '{command}'")
                 # and my help screen
                 return self.help(plexus=plexus)
             # otherwise, all is well; attempt to
@@ -64,12 +64,14 @@ class Panel(Command):
 
             # if anything goes wrong
             except Exception as error:
-                # if we are in debug mode, just let the exception go through
-                if plexus.DEBUG: raise
+                # if we are in debug mode
+                if plexus.DEBUG:
+                    # just let the exception go through
+                    raise
                 # otherwise, grab the type of error
                 category = type(error).__name__
                 # and generate an error message for the user
-                plexus.error.log('{}: {}: {}'.format(command, category, error))
+                plexus.error.log(f"{command}: {category}: {error}")
                 # and bail
                 return 1
 

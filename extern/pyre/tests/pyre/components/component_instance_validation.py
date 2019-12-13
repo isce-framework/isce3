@@ -25,24 +25,31 @@ def test():
         interval.validators = (
             pyre.constraints.isGreaterEqual(value=-1), pyre.constraints.isLess(value=1))
 
+    return
+
     # instantiate
     b = base(name="b")
-    # make an assignment that violates the constraint
-    b.positive = -1
-    # read the value
+    # attempt to
     try:
-        b.positive
+        # make an assignment that violates the constraint
+        b.positive = -1
+        # should be unreachable
         assert False
+    # if it were detected correctly
     except b.ConstraintViolationError:
-        pass
+        # verify the state didn't change
+        assert b.positive == 0
 
-    # and another
-    b.interval = 1
+    # attempt to
     try:
-        b.interval
+        # make another assignment that violates the constraint
+        b.interval = 1
+        # should be unreachable
         assert False
+    # if it were detected correctly
     except b.ConstraintViolationError:
-        pass
+        # verify the state didn't change
+        assert b.positive == 0
 
     return
 

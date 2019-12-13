@@ -65,14 +65,22 @@ class PublicInventory(Inventory):
         """
         Set the value of the slot associated with the given {trait} descriptor
         """
-        # hash the trait name
-        key = self.key[trait.name]
+        # N.B: the previous implementation used the client key to hash the trait name directly;
+        # this method suffers from a fundamental flaw: there is no easy way to build the slot
+        # name. the current implementation builds the name path to the node and hands that to
+        # the nameserver, which is perfectly able of building a key and assembling the name
+
+        # get the name path of my client
+        split = list(self.fragments)
+        # add the trait name
+        split.append(trait.name)
         # get the nameserver
         nameserver = self.pyre_nameserver
         # adjust the model
-        nameserver.insert(key=key, **kwds)
+        _, new, old = nameserver.insert(split=split, **kwds)
+
         # all done
-        return
+        return new, old
 
 
     def getTraitValue(self, trait):
@@ -139,21 +147,24 @@ class PublicInventory(Inventory):
         Build inventory appropriate for a component instance that has a publicly visible name and
         is registered with the nameserver
         """
+        # get the executive
+        executive = component.pyre_executive
         # register the class with the executive
-        key = component.pyre_executive.registerComponentClass(family=family, component=component)
+        key = executive.registerComponentClass(family=family, component=component)
+
+        # build the inventory
+        inventory = cls(key=key)
+        # attach it
+        component.pyre_inventory = inventory
 
         # collect the slots
         local = cls.localSlots(key=key, component=component)
         inherited = cls.inheritedSlots(key=key, component=component)
         slots = itertools.chain(local, inherited)
-
         # register them with the nameserver
         slots = cls.registerSlots(key=key, slots=slots, locator=component.pyre_locator)
-
-        # build the inventory
-        inventory = cls(key=key, slots=slots)
-        # attach it
-        component.pyre_inventory = inventory
+        # and populate the inventory
+        inventory.populate(slots=slots)
 
         # configure the class
         component.pyre_configurator.configureComponentClass(component=component)
@@ -165,20 +176,48 @@ class PublicInventory(Inventory):
 
 
     @classmethod
-    def initializeInstance(cls, instance, name):
+    def initializeInstance(cls, instance, name, implicit):
         """
         Build inventory appropriate for a component instance that has a publicly visible name and
         is registered with the nameserver
         """
+        # N.B.: for EARLY BINDING
+        # if this initialization is marked {implicit}, we are already in the process of
+        # registering this instance; we must avoid causing the executive from re-registering it
+        # because it screws up the node priorities, among other potential problems
+        #
+        # check for reentry
+        # if implicit:
+            # a key already exists; grab it
+            # key = cls.pyre_nameserver.hash(name=name)
+        # otherwise
+        # else:
+            # have the executive make a key
+            # key = cls.pyre_executive.registerComponentInstance(instance=instance, name=name)
+        #
+        # For LATE BIDING, {implicit} is irrelevant because the instantiation happens only once
+
         # have the executive make a key
         key = cls.pyre_executive.registerComponentInstance(instance=instance, name=name)
-
+        # create the inventory
+        inventory = cls(key=key)
+        # attach it
+        instance.pyre_inventory = inventory
         # build the instance slots
         slots = cls.instanceSlots(key=key, instance=instance)
         # register them
         slots = cls.registerSlots(key=key, slots=slots, locator=instance.pyre_locator)
-        # build the inventory out of the instance slots and attach it
-        instance.pyre_inventory = cls(key=key, slots=slots)
+        # and populate
+        inventory.populate(slots=slots)
+        # all done
+        return
+
+
+    @classmethod
+    def configureInstance(cls, instance):
+        """
+        Configure a newly minted {instance}
+        """
         # configure the instance
         cls.pyre_configurator.configureComponentInstance(instance=instance)
         # invoke the configuration hook and pass on any errors
@@ -209,11 +248,16 @@ class PublicInventory(Inventory):
         """
         # collect the traits I am looking for
         traits = set(trait for trait in component.pyre_inheritedTraits if trait.isConfigurable)
-        # if there are no inherited traits, bail out
-        if not traits: return
+        # if there are no inherited traits
+        if not traits:
+            # there is nothing to do
+            return
+
         # go through each of the ancestors of {component}
         for ancestor in component.pyre_pedigree[1:]:
-            # and all its configurable traits
+            # get the inventory of the ancestor
+            inventory = ancestor.pyre_inventory
+            # go through its configurable traits
             for trait in ancestor.pyre_configurables():
                 # if the trait is not in the target pile
                 if trait not in traits:
@@ -221,13 +265,25 @@ class PublicInventory(Inventory):
                     continue
                 # otherwise, remove it from the target list
                 traits.remove(trait)
-                # get the associated slot
-                slot = ancestor.pyre_inventory[trait]
-                # build a reference to it; no need to switch postprocessor here, since the type of
-                # an inherited trait is determined by the nearest ancestor that declared it
-                ref = slot.ref(key=key[trait.name], postprocessor=trait.classSlot.processor)
-                # yield the trait, its class slot factory, and a reference to the inherited trait
-                yield trait, trait.classSlot, ref
+                # ancestors that are marked {internal} do not get inventories; if this is not
+                # one of them
+                if inventory is not None:
+                    # get the associated slot
+                    slot = inventory[trait]
+                    # build a reference to it; no need to switch value processors here, since
+                    # the type of an inherited trait is determined by the nearest ancestor that
+                    # declared it
+                    ref = slot.ref(key=key[trait.name],
+                                   preprocessor=trait.classSlot.pre,
+                                   postprocessor=trait.classSlot.post)
+                    # yield the trait, its class slot factory, and a reference to the inherited
+                    # slot
+                    yield trait, trait.classSlot, ref
+                # otherwise
+                else:
+                    # act like we own it
+                    yield trait, trait.classSlot, trait.default
+
             # if we have exhausted the trait pile
             if not traits:
                 # skip the rest of the ancestors
@@ -235,9 +291,8 @@ class PublicInventory(Inventory):
         # if we ran out of ancestors before we ran out of traits
         else:
             # complain
-            missing = ', '.join('{!r}'.format(trait.name) for trait in traits)
-            msg = "{}: could not locate slots for the following traits: {}".format(
-                component, missing)
+            missing = ', '.join(f"'{trait.name}'" for trait in traits)
+            msg = f"{component}: could not locate slots for the following traits: {missing}"
             # by raising a firewall, since this is almost certainly a bug
             import journal
             raise journal.firewall("pyre.components").log(msg)
@@ -258,10 +313,12 @@ class PublicInventory(Inventory):
         for trait in component.pyre_configurables():
             # ask the class inventory for the slot that corresponds to this trait
             slot = component.pyre_inventory[trait]
-            # build a reference to the class slot
-            ref = slot.ref(key=key[trait.name], postprocessor=trait.instanceSlot.processor)
-            # hand the trait, slot and its value
-            yield trait, trait.instanceSlot, ref
+            # get its value
+            value = slot.value
+            # grab the trait slot factory
+            factory = trait.instanceSlot
+            # hand the trait, the factory and the default value from the class record
+            yield trait, factory, value
         # all done
         return
 
@@ -276,7 +333,7 @@ class PublicInventory(Inventory):
         nameserver = cls.pyre_nameserver
         # get the factory of priorities in the {defaults} category
         priority = nameserver.priority.defaults
-        # look up the basename
+        # look up the base name
         base = nameserver.getName(key)
         # go through the (trait, slot) pairs
         for trait, factory, value in slots:
@@ -285,8 +342,9 @@ class PublicInventory(Inventory):
             # build the trait full name
             fullname = nameserver.join(base, name)
             # place the slot with the nameserver
-            traitKey = nameserver.insert(name=fullname, value=value,
-                                         factory=factory, locator=locator, priority=priority())
+            traitKey, _, _ = nameserver.insert(name=fullname, value=value,
+                                               factory=factory,
+                                               locator=locator, priority=priority())
             # register the trait aliases
             for alias in trait.aliases:
                 # skip the canonical name
@@ -320,7 +378,7 @@ class PublicInventory(Inventory):
 
 
     def __str__(self):
-        return "public inventory at {:#x}".format(id(self))
+        return f"public inventory at {id(self):#x}"
 
 
 # end of file

@@ -35,13 +35,33 @@ class Inventory(Dashboard):
 
 
     @classmethod
+    def configureClass(cls):
+        """
+        Configure a newly minted class record
+        """
+        # implementation dependent -- override in subclasses
+        raise NotImplementedError(
+            "class {.__name__!r} must implement 'configureClass'".format(cls))
+
+
+    @classmethod
     def initializeInstance(cls):
         """
         Build inventory for a component instance
         """
         # implementation dependent -- override in subclasses
         raise NotImplementedError(
-            "class {.__name__!r} must implement 'inistializeInstance'".format(cls))
+            "class {.__name__!r} must implement 'initializeInstance'".format(cls))
+
+
+    @classmethod
+    def configureInstance(cls):
+        """
+        Configure a newly minted instance
+        """
+        # implementation dependent -- override in subclasses
+        raise NotImplementedError(
+            "class {.__name__!r} must implement 'configureInstance'".format(cls))
 
 
     # trait and slot access
@@ -63,13 +83,11 @@ class Inventory(Dashboard):
 
 
     # meta-methods
-    def __init__(self, slots, **kwds):
+    def __init__(self, **kwds):
         # chain up
         super().__init__(**kwds)
         # initialize my table
         self.traits = {}
-        # load the slots
-        self.traits.update(slots)
         # all done
         return
 
@@ -89,6 +107,17 @@ class Inventory(Dashboard):
     def __iter__(self):
         # iterate over my keys
         return iter(self.traits)
+
+
+    # implementation details
+    def populate(self, slots):
+        """
+        Populate my trait map
+        """
+        # update my map
+        self.traits.update(slots)
+        # all done
+        return
 
 
 # end of file

@@ -10,13 +10,27 @@
 
 
 // the platform setting
-#define mm_platforms_${PLATFORM}
+PYRE_PLATFORM
 
-#if defined(mm_platforms_darwin)
+
+// platform settings
+#if defined(mm_platforms_darwin_x86_64)
+// also, more generally
+#define mm_platforms_darwin
 // system calls
 #define HAVE_SYSCTL 1
 // cpu count and geometry through "hw.xxxx"
 #define HAVE_SYSCTL_HW_DOT 1
+
+#elif defined(mm_platforms_linux_x86_64)
+// also, more generally
+#define mm_platforms_linux
+
+#elif defined(mm_platforms_linux_ppc64le)
+// also, more generally
+#define mm_platforms_linux
+
+// done with the platform section
 #endif
 
 

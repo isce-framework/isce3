@@ -46,7 +46,6 @@ def test():
         # make sure that we are just missing {sbatch}
         assert error.errno == 2
         assert error.filename == f"{sbatch}"
-        assert error.strerror == f"No such file or directory: '{sbatch}'"
 
     # return the app
     return app

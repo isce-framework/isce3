@@ -24,8 +24,9 @@ class Dispatcher(pyre.protocol, family="pyre.ipc.dispatchers"):
         """
         The suggested implementation of the {Dispatcher} protocol
         """
-        # {Selector} is the only choice currently
+        # currently, {Selector} is the only choice
         from .Selector import Selector
+        # so publish it
         return Selector
 
 

@@ -101,7 +101,7 @@ class Actor(Requirement):
         return
 
 
-    def __call__(self, name=None, locator=None, globalAliases=False, **kwds):
+    def __call__(self, name=None, locator=None, implicit=False, globalAliases=False, **kwds):
         """
         Build an instance of one of my classes
         """
@@ -134,8 +134,10 @@ class Actor(Requirement):
 
         # in any case, record the caller's location
         locator = tracking.here(1) if locator is None else locator
+        # invoke the pre-instantiation hooks
+        self.pyre_staged(name=name, locator=locator, implicit=implicit)
         # build the instance
-        instance = super().__call__(name=name, locator=locator, **kwds)
+        instance = super().__call__(name=name, locator=locator, implicit=implicit, **kwds)
 
         # invoke the instantiation hook and harvest any errors
         initializationErrors = list(instance.pyre_initialized())
@@ -151,6 +153,9 @@ class Actor(Requirement):
         registrar.registerComponentInstance(instance=instance)
         # invoke the registration hook
         instance.pyre_registered()
+
+        # mark it as fully instantiated
+        instance.pyre_cooked = True
 
         # and return it
         return instance

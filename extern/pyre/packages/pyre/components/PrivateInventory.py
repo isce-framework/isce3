@@ -32,13 +32,11 @@ class PrivateInventory(Inventory):
         # grab the old slot
         old = self.traits[trait]
         # use the factory to make a new slot
-        new = factory(value=value)
-        # replace references to the old slot
-        new.replace(old)
+        new = factory(value=value, current=old)
         # and attach the new one
         self.traits[trait] = new
         # all done
-        return
+        return new, old
 
 
     def getTraitValue(self, trait):
@@ -82,15 +80,16 @@ class PrivateInventory(Inventory):
         Build inventory appropriate for a component class that is not registered with the
         nameserver
         """
+        # build the inventory
+        inventory = cls()
+        # attach it
+        component.pyre_inventory = inventory
         # collect the slots
         local = cls.localSlots(component=component)
         inherited = cls.inheritedSlots(component=component)
         slots = itertools.chain(local, inherited)
-
-        # build the inventory
-        inventory = cls(slots=slots)
-        # attach it
-        component.pyre_inventory = inventory
+        # and populate the inventory
+        inventory.populate(slots=slots)
 
         # invoke the configuration hook
         component.pyre_classConfigured()
@@ -105,12 +104,23 @@ class PrivateInventory(Inventory):
         Build inventory appropriate for a component instance that is not registered with the
         nameserver
         """
+        # build the inventory
+        inventory = cls()
+        # attach it
+        instance.pyre_inventory = inventory
         # prime the slot generator
         slots = cls.instanceSlots(instance=instance)
-        # build the inventory
-        inventory = cls(slots=slots)
-        # and attach it
-        instance.pyre_inventory = inventory
+        # and populate the inventory
+        inventory.populate(slots=slots)
+        # all done
+        return
+
+
+    @classmethod
+    def configureInstance(cls, instance):
+        """
+        Configure a newly minted instance
+        """
         # invoke the configuration hook and pass on any errors
         yield from instance.pyre_configured()
         # all done
@@ -139,11 +149,16 @@ class PrivateInventory(Inventory):
         """
         # collect the traits I am looking for
         traits = set(trait for trait in component.pyre_inheritedTraits if trait.isConfigurable)
-        # if there are no inherited traits, bail out
-        if not traits: return
+        # if there are no inherited traits
+        if not traits:
+            # there is nothing to do
+            return
+
         # go through each of the ancestors of {component}
         for ancestor in component.pyre_pedigree[1:]:
-            # and all its configurable traits
+            # get the inventory of the ancestor
+            inventory = ancestor.pyre_inventory
+            # go through its configurable traits
             for trait in ancestor.pyre_configurables():
                 # if the trait is not in the target pile
                 if trait not in traits:
@@ -151,13 +166,21 @@ class PrivateInventory(Inventory):
                     continue
                 # otherwise, remove it from the target list
                 traits.remove(trait)
-                # get the associated slot
-                slot = ancestor.pyre_inventory[trait]
-                # build a reference to it; no need to switch postprocessor here, since the type
-                # of an inherited trait is determined by the nearest ancestor that declared it
-                ref = slot.ref(postprocessor=trait.classSlot.processor)
-                # and yield the trait, slot pair
-                yield trait, ref
+                # ancestors marked {internal} do not have inventories; if this is not one of them
+                if inventory is not None:
+                    # get the associated slot
+                    slot = inventory[trait]
+                    # build a reference to it; no need to switch value processors here, since
+                    # the type of an inherited trait is determined by the nearest ancestor that
+                    # declared it
+                    ref = slot.ref(preprocessor=trait.classSlot.pre,
+                                   postprocessor=trait.classSlot.post)
+                    # and yield the trait, reference slot pair
+                    yield trait, ref
+                # otherwise
+                else:
+                    # act like we own it
+                    yield trait, trait.classSlot(value=trait.default)
             # if we have exhausted the trait pile
             if not traits:
                 # skip the rest of the ancestors
@@ -165,9 +188,8 @@ class PrivateInventory(Inventory):
         # if we ran out of ancestors before we ran out of traits
         else:
             # complain
-            missing = ', '.join('{!r}'.format(trait.name) for trait in traits)
-            msg = "{}: could not locate slots for the following traits: {}".format(
-                component, missing)
+            missing = ', '.join(f"'{trait.name}'" for trait in traits)
+            msg = f"{component}: could not locate slots for the following traits: {missing}"
             # by accessing the journal package
             import journal
             # and raising a firewall, since this is almost certainly a bug
@@ -187,18 +209,20 @@ class PrivateInventory(Inventory):
         component = type(instance)
         # go through all the configurable traits in {component}
         for trait in component.pyre_configurables():
-            # ask the class inventory for the slot that corresponds to this trait
-            slot = component.pyre_inventory[trait]
-            # build a reference to the class slot
-            ref = slot.ref(key=None, postprocessor=trait.instanceSlot.processor)
-            # hand the trait, slot pair
-            yield trait, ref
+            # ask the class inventory for the default value
+            value = component.pyre_inventory[trait].value
+            # get the instance slot factory
+            factory = trait.instanceSlot
+            # make a slot
+            slot = factory(value=value)
+            # hand the trait and the default value from the class record
+            yield trait, slot
         # all done
         return
 
 
     def __str__(self):
-        return "private inventory at {:#x}".format(id(self))
+        return f"private inventory at {id(self):#x}"
 
 
 # end of file

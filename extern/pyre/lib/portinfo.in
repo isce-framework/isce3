@@ -1,0 +1,59 @@
+// -*- C++ -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+//
+
+#if !defined(pyre_portinfo)
+#define pyre_portinfo
+
+
+// the platform setting
+#define mm_platforms_@HOST_PLATFORM@ 1
+
+
+// platform settings
+#if defined(mm_platforms_darwin_x86_64)
+// also, more generally
+#define mm_platforms_darwin
+// system calls
+#define HAVE_SYSCTL 1
+// cpu count and geometry through "hw.xxxx"
+#define HAVE_SYSCTL_HW_DOT 1
+
+#elif defined(mm_platforms_linux_x86_64)
+// also, more generally
+#define mm_platforms_linux
+
+#elif defined(mm_platforms_linux_ppc64le)
+// also, more generally
+#define mm_platforms_linux
+
+// done with the platform section
+#endif
+
+
+// compilers
+// gcc
+#if defined(__GNUC__)
+// the gcc preprocessor defines __FUNC__
+#define HAVE__FUNC__
+// done with the gcc specific section
+#endif
+
+// clang
+#if defined(__clang__)
+// done with the clang specific section
+#endif
+
+// nvcc
+#if defined(__NVCC__)
+// done with the nvcc specific section
+#endif
+
+
+// done with portinfo
+#endif
+
+// end of file

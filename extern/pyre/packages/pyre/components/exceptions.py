@@ -156,12 +156,13 @@ class ResolutionError(ComponentError):
     description = 'could not resolve {0.value!r} into a component that implements {0.protocol}'
 
     # meta-methods
-    def __init__(self, protocol, value, **kwds):
+    def __init__(self, protocol, value, report=None, **kwds):
         # chain up
         super().__init__(**kwds)
         # store my context
         self.protocol = protocol
         self.value = value
+        self.report = report
         # all done
         return
 

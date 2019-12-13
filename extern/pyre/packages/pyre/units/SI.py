@@ -87,6 +87,8 @@ gibi = kibi**3
 tebi = kibi**4
 pebi = kibi**5
 exbi = kibi**6
+zebi = kibi**7
+yobi = kibi**8
 
 
 # end of file

@@ -6,45 +6,29 @@
 #
 
 # expansion placeholders
-date = "TODAY"
-major = MAJOR
-minor = MINOR
-revision = "REVISION"
+date = "@TODAY@"
+major = @MAJOR@
+minor = @MINOR@
+micro = @MICRO@
+revision = "@REVISION@"
 
 
 # assemble the version tuple
-version = (major, minor, revision)
+version = (major, minor, micro, revision)
 
 
 # decorations for the help system
 copyright = "copyright (c) 1998-2019 all rights reserved"
 
-banner = """
-    merlin {major}.{minor} revision {revision}
+banner = f"""
+    pyre mpi {major}.{minor}.{micro} revision {revision}
     {copyright}
-""".format(major=major, minor=minor, revision=revision, copyright=copyright)
+"""
 
 header = banner + """
 author:
     Michael Aïvázis     <michael.aivazis@orthologue.com>
 """
-
-usage = header + """
-    Basic commands:
-        merlin init           make this directory the root of a project
-        merlin status         print a summary of the state of a build target
-        merlin add            add files or directories to the build system
-        merlin build          build a target
-
-        merlin help <topic>   detailed help on topic
-        merlin help commands  list all the available commands
-        merlin help topics    list all available help topics
-
-        merlin license        terms of use
-
-    Visit http://merlin.orthologue.com for the latest documentation
-"""
-
 
 license = header + """
 license:
@@ -60,7 +44,7 @@ license:
       the documentation and other materials provided with the
       distribution.
 
-    * Neither the name merlin nor the names of its contributors may be
+    * Neither the name pyre nor the names of its contributors may be
       used to endorse or promote products derived from this software
       without specific prior written permission.
 
@@ -85,6 +69,25 @@ acknowledgments:
     National Science Foundation, the National Nuclear Safety Administration,
     the National Aeronautics and Space Administration, Orthologue, and
     ParaSim.
+
+    None of this would have been possible without Dan Meiron, Michael Ortiz,
+    Mike Gurnis, Brent Fultz, Mark Simons, and Paul Rosen, all of whom took a
+    risk by supporting pyre at various stages in its development.
+
+    Much of the current design of pyre is due to ideas and constructive
+    criticism by Leif Strand.
+
+    Raúl Radovitzky, Brad Aagaard and Patrick Hung taught me a lot about the
+    needs of massively parallel applications.
+
+    Jiao Lin has built a very sophisticated web application framework by
+    stretching pyre beyond its limits, and contributing countless use cases
+    that have had a significant impact on the current implementation.
+
+    Mike McKerns, Tim Kelly and Brandon Keith were early adopters and have
+    made significant contributions to the usability of the package. Most of
+    the existing documentation and user support over the years has been
+    possible thanks to their remarkable efforts.
 """
 
 

@@ -19,6 +19,7 @@ class Container(Schema):
 
     # constants
     typename = 'container' # the name of my type
+    isContainer = True
 
 
     @property
@@ -38,6 +39,25 @@ class Container(Schema):
         """
         # get the worker to build an iterable, cast it into my container type and return it
         return self.container(self._coerce(value=value, **kwds))
+
+
+    def render(self, renderer, value, workload):
+        """
+        Render {value} using {renderer}
+        """
+        # get my schema
+        schema = self.schema
+        # render just my name
+        yield renderer.trait(name=self.name, value='')
+        # go through the items
+        for item in value:
+            # ask my schema to render each one
+            entry = ','.join(schema.render(renderer=renderer, value=item,
+                                           workload=workload, incognito=True))
+            # and put it on a separate line
+            yield renderer.value(value=f"{entry},")
+        # all done
+        return
 
 
     # meta-methods

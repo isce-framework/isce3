@@ -1,5 +1,7 @@
 add_subdirectory(googletest)
 if(NOT HAVE_PYRE)
+    # disable pyre's test suite
+    set(BUILD_TESTING OFF)
     add_subdirectory(pyre)
 endif()
 

@@ -6,8 +6,6 @@
 #
 
 
-# externals
-import itertools
 # access to the framework
 import pyre
 # my protocol

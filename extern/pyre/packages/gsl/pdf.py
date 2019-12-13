@@ -66,7 +66,8 @@ class uniform:
     # implementation details
     support = None
 
-# the uniform probability distribution
+
+# the uniform probability distribution for strictly positive argument
 class uniform_pos:
     """
     Encapsulation of the positive uniform probability distribution

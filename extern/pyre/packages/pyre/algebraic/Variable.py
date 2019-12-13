@@ -18,17 +18,6 @@ class Variable:
 
     # interface
     @property
-    def span(self):
-        """
-        Return a sequence of the nodes in my span
-        """
-        # i am one
-        yield self
-        # and nothing further
-        return
-
-
-    @property
     def variables(self):
         """
         Return a sequence of the variables in my span

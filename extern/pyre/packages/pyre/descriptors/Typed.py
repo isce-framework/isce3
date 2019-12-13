@@ -38,14 +38,21 @@ class Typed(Schema):
         if value is None: return None
         # so are string representations of {None}
         if isinstance(value, str) and value.strip().lower() == "none": return None
+
         # otherwise, convert
-        for converter in self.converters: value = converter(value=value, **kwds)
+        for converter in self.converters:
+            # by asking each register converter to prep the value
+            value = converter(descriptor=self, value=value, **kwds)
         # cast
         value = self.coerce(value=value, **kwds)
         # normalize
-        for normalizer in self.normalizers: value = normalizer(value=value, **kwds)
+        for normalizer in self.normalizers:
+            # by asking each normalizer to bring {value} in normal form
+            value = normalizer(descriptor=self, value=value, **kwds)
         # validate
-        for validator in self.validators: value = validator(value=value)
+        for validator in self.validators:
+            # by giving a chance to each validator to raise an exception
+            value = validator(descriptor=self, value=value, **kwds)
         # and return the new value
         return value
 
@@ -53,10 +60,11 @@ class Typed(Schema):
     # framework requests
     def bind(self, **kwds):
         """
-        Called by my client to let me know that all the available meta-data have been harvested
+        Called by my client to let me know that all available meta-data have been harvested
         """
-        # repair convenient usage that breaks my representation constraints: make sure my value
-        # processors are iterable
+        # for convenience, clients are allowed to declare values processors in somewhat free
+        # form; repair this usage that breaks my representation constraints by making sure my
+        # value processors are stored in a mutable and iterable container
         self.converters = self.listify(self.converters)
         self.normalizers = self.listify(self.normalizers)
         self.validators = self.listify(self.validators)
@@ -70,7 +78,7 @@ class Typed(Schema):
         # chain up
         super().__init__(**kwds)
 
-        # initialize my value processors to something modifiable
+        # initialize my value processors to something mutable and order retaining
         self.converters = []
         self.normalizers = []
         self.validators = []

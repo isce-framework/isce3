@@ -17,31 +17,50 @@ class SlotFactory(Dashboard):
     """
 
 
+    # get the identity value processor
+    from ..schemata import identity
+    # make a null value processor
+    noop = identity().coerce
+
+
     # meta-methods
-    def __init__(self, trait, processor, **kwds):
+    def __init__(self, trait, pre=noop, post=noop, **kwds):
         # chain up
         super().__init__(**kwds)
         # save my parts
         self.trait = trait
-        self.processor = processor
+        self.pre = pre
+        self.post = post
         # all done
         return
 
 
-    def __call__(self, value, **kwds):
+    def __call__(self, value, current=None, **kwds):
         """
         Make a slot for my client trait
         """
         # if the {value} is already a slot
         if isinstance(value, self.pyre_nameserver.node):
-            # just return it
-            return value
+            # just use it
+            new = value
         # if it is a string
-        if isinstance(value, str):
+        elif isinstance(value, str):
             # do whatever the trait specifies as the slot building factory for string input
-            return self.trait.macro(postprocessor=self.processor, value=value, **kwds)
-        # anything else is native to the trait
-        return self.trait.native(postprocessor=self.processor, value=value, **kwds)
+            new = self.trait.macro(preprocessor=self.pre, postprocessor=self.post,
+                                   value=value, **kwds)
+        # anything else
+        else:
+            # is native to the trait
+            new = self.trait.native(preprocessor=self.pre, postprocessor=self.post,
+                                    value=value, **kwds)
+
+        # if the existing slot is non trivial
+        if current is not None:
+            # replace it
+            new.replace(obsolete=current)
+
+        # all done
+        return new
 
 
 # end of file
