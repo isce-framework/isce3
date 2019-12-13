@@ -14,6 +14,16 @@ endif()
 
 find_package(Python 3.6 REQUIRED COMPONENTS Development)
 
+execute_process(COMMAND "${Python_EXECUTABLE}" "-c"
+    "import sys; print(hasattr(sys, 'gettotalrefcount')+0);"
+    RESULT_VARIABLE _PYTHON_SUCCESS
+    OUTPUT_VARIABLE Python_IS_DEBUG
+    ERROR_VARIABLE _PYTHON_ERROR_VALUE)
+
+if(NOT _PYTHON_SUCCESS MATCHES 0)
+    message(FATAL_ERROR "Python config failure:\n${_PYTHON_ERROR_VALUE}")
+endif()
+
 include(CheckCXXCompilerFlag)
 include(CMakeParseArguments)
 
