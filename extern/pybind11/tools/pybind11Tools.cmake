@@ -14,6 +14,45 @@ endif()
 
 find_package(Python 3.6 REQUIRED COMPONENTS Development)
 
+# According to http://stackoverflow.com/questions/646518/python-how-to-detect-debug-interpreter
+# testing whether sys has the gettotalrefcount function is a reliable, cross-platform
+# way to detect a CPython debug interpreter.
+#
+# The library suffix is from the config var LDVERSION sometimes, otherwise
+# VERSION. VERSION will typically be like "2.7" on unix, and "27" on windows.
+execute_process(COMMAND "${Python_EXECUTABLE}" "-c"
+    "from distutils import sysconfig as s;import sys;import struct;
+print('.'.join(str(v) for v in sys.version_info));
+print(sys.prefix);
+print(s.get_python_inc(plat_specific=True));
+print(s.get_python_lib(plat_specific=True));
+print(s.get_config_var('SO'));
+print(hasattr(sys, 'gettotalrefcount')+0);
+print(struct.calcsize('@P'));
+print(s.get_config_var('LDVERSION') or s.get_config_var('VERSION'));
+print(s.get_config_var('LIBDIR') or '');
+print(s.get_config_var('MULTIARCH') or '');
+"
+    RESULT_VARIABLE _PYTHON_SUCCESS
+    OUTPUT_VARIABLE _PYTHON_VALUES
+    ERROR_VARIABLE  _PYTHON_ERROR_VALUE)
+
+if(NOT _PYTHON_SUCCESS MATCHES 0)
+    message(FATAL_ERROR "Python config failure:\n${_PYTHON_ERROR_VALUE}")
+    set(Python_FOUND FALSE)
+    return()
+endif()
+
+# Convert the process output into a list
+if(WIN32)
+    string(REGEX REPLACE "\\\\" "/" _PYTHON_VALUES ${_PYTHON_VALUES})
+endif()
+string(REGEX REPLACE ";" "\\\\;" _PYTHON_VALUES ${_PYTHON_VALUES})
+string(REGEX REPLACE "\n" ";" _PYTHON_VALUES ${_PYTHON_VALUES})
+list(GET _PYTHON_VALUES 1 Python_PREFIX)
+list(GET _PYTHON_VALUES 4 Python_MODULE_EXTENSION)
+list(GET _PYTHON_VALUES 5 Python_IS_DEBUG)
+
 include(CheckCXXCompilerFlag)
 include(CMakeParseArguments)
 
