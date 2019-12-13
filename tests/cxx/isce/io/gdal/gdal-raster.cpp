@@ -66,13 +66,23 @@ TEST_P(RasterTest, Open)
 
     // read-write access
     {
-        Raster raster(testdata.dem.path, GA_Update);
+        std::string path = testdata.driver + "Raster-open";
+        int width = 4;
+        int length = 8;
+        GDALDataType datatype = GDT_Float32;
+
+        // create new raster in working directory
+        {
+            Raster raster(path, width, length, datatype, testdata.driver);
+        }
+
+        Raster raster(path, GA_Update);
 
         EXPECT_EQ( raster.band(), 1 );
-        EXPECT_EQ( raster.datatype(), testdata.dem.datatype );
+        EXPECT_EQ( raster.datatype(), datatype );
         EXPECT_EQ( raster.access(), GA_Update );
-        EXPECT_EQ( raster.width(), testdata.dem.width );
-        EXPECT_EQ( raster.length(), testdata.dem.length );
+        EXPECT_EQ( raster.width(), width );
+        EXPECT_EQ( raster.length(), length );
         EXPECT_EQ( raster.driver(), testdata.driver );
     }
 }
