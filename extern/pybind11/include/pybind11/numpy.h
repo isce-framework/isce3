@@ -552,7 +552,7 @@ public:
 
     // Constructs an array taking shape/strides from arbitrary container types
     array(const pybind11::dtype &dt, ShapeContainer shape, StridesContainer strides,
-          const void *ptr = nullptr, handle base = handle()) {
+          const void *ptr = nullptr, handle base = handle(), bool readonly = false) {
 
         if (strides->empty())
             *strides = c_strides(*shape, dt.itemsize());
@@ -570,6 +570,9 @@ public:
             else
                 /* Writable by default, easy to downgrade later on if needed */
                 flags = detail::npy_api::NPY_ARRAY_WRITEABLE_;
+        }
+        if (readonly) {
+            flags &= ~detail::npy_api::NPY_ARRAY_WRITEABLE_;
         }
 
         auto &api = detail::npy_api::get();
@@ -606,8 +609,8 @@ public:
     template <typename T>
     explicit array(ssize_t count, const T *ptr, handle base = handle()) : array({count}, {}, ptr, base) { }
 
-    explicit array(const buffer_info &info)
-    : array(pybind11::dtype(info), info.shape, info.strides, info.ptr) { }
+    explicit array(const buffer_info &info, handle base = handle())
+    : array(pybind11::dtype(info), info.shape, info.strides, info.ptr, base, info.readonly) { }
 
     /// Array descriptor (dtype)
     pybind11::dtype dtype() const {
