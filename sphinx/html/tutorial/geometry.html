@@ -96,7 +96,7 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">isceextension</span> <span class="kn">import</span> <span class="p">(</span><span class="n">pyOrbit</span><span class="p">,</span> <span class="n">pyDateTime</span><span class="p">,</span>
                           <span class="n">pyEllipsoid</span><span class="p">,</span> <span class="n">pyImageMode</span><span class="p">,</span>
                           <span class="n">pyPoly2d</span><span class="p">,</span> <span class="n">py_geo2rdr</span><span class="p">)</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
 <span class="c1">##Load orbit</span>
 <span class="n">orbit</span> <span class="o">=</span> <span class="n">loadOrbit</span><span class="p">(</span><span class="s1">&#39;input_orbit.txt&#39;</span><span class="p">)</span>
@@ -145,9 +145,9 @@
                            <span class="n">dR</span><span class="o">=</span><span class="mf">1.0e-8</span><span class="p">)</span>
 
    <span class="c1">#Line number</span>
-   <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Target at: </span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1"> </span><span class="si">{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">targ</span><span class="p">))</span>
-   <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Estimated line number: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">taz</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="n">mode</span><span class="o">.</span><span class="n">prf</span><span class="o">/</span><span class="n">mode</span><span class="o">.</span><span class="n">numberAzimuthLooks</span><span class="p">))</span>
-   <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Estimated pixel number: </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">rng</span> <span class="o">-</span> <span class="n">mode</span><span class="o">.</span><span class="n">startingRange</span><span class="p">)</span><span class="o">/</span><span class="n">mode</span><span class="o">.</span><span class="n">rangePixelSpacing</span> <span class="o">/</span> <span class="n">mode</span><span class="o">.</span><span class="n">numberRangeLooks</span><span class="p">))</span>
+   <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Target at: {0} {1} {2}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">targ</span><span class="p">))</span>
+   <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Estimated line number: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">taz</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span> <span class="o">*</span> <span class="n">mode</span><span class="o">.</span><span class="n">prf</span><span class="o">/</span><span class="n">mode</span><span class="o">.</span><span class="n">numberAzimuthLooks</span><span class="p">))</span>
+   <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Estimated pixel number: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="n">rng</span> <span class="o">-</span> <span class="n">mode</span><span class="o">.</span><span class="n">startingRange</span><span class="p">)</span><span class="o">/</span><span class="n">mode</span><span class="o">.</span><span class="n">rangePixelSpacing</span> <span class="o">/</span> <span class="n">mode</span><span class="o">.</span><span class="n">numberRangeLooks</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -201,7 +201,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
     </div>
   </body>
 </html>
