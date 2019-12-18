@@ -34,7 +34,7 @@
 <h1>2D Interpolation Tutorial<a class="headerlink" href="#d-interpolation-tutorial" title="Permalink to this headline">¶</a></h1>
 <p>2D interpolation is a fundamental operation for image resampling, oversampling, terrain extraction, etc. ISCE currently implements several basic types of interpolation methods: bilinear, bicubic, spline, and sinc interpolation. At the Python level, users will often work with NumPy arrays and are encouraged to use many of the available interpolation methods provided by NumPy and SciPy. Nevertheless, we provide Python interfaces to the ISCE interpolation routines for convenience and consistency.</p>
 <p>We first generate a synthetic 2D low-resolution image which we wish to interpolate (this code follows the SciPy interp2d <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp2d.html">tutorial</a>):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="c1"># Create test data</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">5.01</span><span class="p">,</span> <span class="mf">5.01</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
@@ -127,7 +127,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
     </div>
   </body>
 </html>
