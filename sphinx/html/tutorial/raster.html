@@ -47,7 +47,7 @@
 
 <span class="c1">#Create object</span>
 <span class="n">raster</span> <span class="o">=</span> <span class="n">pyRaster</span><span class="p">(</span><span class="n">inputfilename</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Dims: </span><span class="si">{0}</span><span class="s1">P x </span><span class="si">{1}</span><span class="s1">L&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">raster</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">raster</span><span class="o">.</span><span class="n">length</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="s1">&#39;Dims: {0}P x {1}L&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">raster</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">raster</span><span class="o">.</span><span class="n">length</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -59,7 +59,7 @@
 <span class="c1">#Create object</span>
 <span class="n">raster</span> <span class="o">=</span> <span class="n">pyRaster</span><span class="p">(</span><span class="n">inputfilename</span><span class="p">,</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GA_Update</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">raster</span><span class="o">.</span><span class="n">numBands</span><span class="p">):</span>
-   <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Band </span><span class="si">{0}</span><span class="s1"> is of type </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GetDataTypeName</span><span class="p">(</span><span class="n">raster</span><span class="o">.</span><span class="n">getDataType</span><span class="p">(</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span><span class="p">))))</span>
+   <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Band {0} is of type {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">gdal</span><span class="o">.</span><span class="n">GetDataTypeName</span><span class="p">(</span><span class="n">raster</span><span class="o">.</span><span class="n">getDataType</span><span class="p">(</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span><span class="p">))))</span>
 </pre></div>
 </div>
 </div>
@@ -87,7 +87,7 @@
 <p>You can also create GDAL datasets out of numpy arrays and pass it to ISCE to work with.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">isceextension</span> <span class="kn">import</span> <span class="n">pyRaster</span>
 <span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal_array</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
 <span class="c1">#Create numpy array</span>
 <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1500</span><span class="p">,</span><span class="mi">1000</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
@@ -151,7 +151,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.1.
     </div>
   </body>
 </html>
