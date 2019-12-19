@@ -1,28 +1,9 @@
 #!/bin/bash
-set -ex
 
-#Get the tag from the end of the GIT_BRANCH
-BRANCH="${GIT_BRANCH##*/}"
+# This file intentionally left blank.
 
-#Get repo path by removing http://*/ and .git from GIT_URL
-REPO="${GIT_URL#*://*/}"
-REPO="${REPO%.git}"
+# The Jenkins PR-isce-release job sources this file;
+# it will now do nothing and exit successfully.
 
-TAG="$(date -u +%Y%m%d)-PR-${BUILD_ID}"
-
-echo "BRANCH:    $BRANCH"
-echo "REPO:      $REPO"
-echo "WORKSPACE: $WORKSPACE"
-echo "TAG:       $TAG"
-
-###Replace TAG with correct isce-src tag
-sed -i "s/__TAG__/${TAG}/" ${WORKSPACE}/.ci/images/ubuntu-systemlibs/Dockerfile.isce-release
-
-docker build . -t nisar/cu1904-release:$TAG \
-    -f $WORKSPACE/.ci/images/ubuntu-systemlibs/Dockerfile.isce-release
-
-
-#Clean up new images
-#For now, till we have artifactory setup
-docker rmi nisar/cu1904-release:$TAG
-docker images -q --filter "dangling=true" --filter "label=cmakelabel=${TAG}" | xargs -r docker rmi
+# TODO: delete this file (and its parent directory)
+#       once the PR-isce-release job is deleted.
