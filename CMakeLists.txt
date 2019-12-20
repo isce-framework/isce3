@@ -88,8 +88,13 @@ CheckPyre()
 ##Check for Cython
 include(useCython)
 
-##Check for OpenMP
-CheckOpenMP()
+# Check for OpenMP (optional dependency).
+# If not found, default to an empty placeholder target.
+find_package(OpenMP OPTIONAL_COMPONENTS CXX)
+add_library(OpenMP::OpenMP_CXX_Optional INTERFACE IMPORTED)
+if(TARGET OpenMP::OpenMP_CXX)
+    target_link_libraries(OpenMP::OpenMP_CXX_Optional INTERFACE OpenMP::OpenMP_CXX)
+endif()
 
 ##Check for GDAL
 CheckGDAL()
