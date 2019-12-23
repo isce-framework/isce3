@@ -59,5 +59,5 @@ def SignalDataRecordType(pixels=None,bytesperpixel=None):
                      ('PALSARFrameCounter', BinaryType('>i4')),
                      ('PALSARAuxData', BlankType(100)),
                      ('blanks4', BlankType(24)),
-                     ('RangeLine', BinaryType('>i{}'.format(bytesperpixel), count=pixels))])
+                     ('SARRawSignalData', BinaryType('>i{}'.format(bytesperpixel), count=pixels))])
 

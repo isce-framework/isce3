@@ -1,7 +1,7 @@
 ###SAR Leaderfile Descriptor
 def FacilityRelatedDataRecordHeaderType():
     '''
-    Attitude Data Record.
+    Facility Related Data Record Header.
     http://www.ga.gov.au/__data/assets/pdf_file/0019/11719/GA10287.pdf Pg:3-46.
     '''
     from .BasicTypes import IntegerType

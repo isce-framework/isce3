@@ -121,6 +121,7 @@ add_subdirectory(extern) # Contributed software (not maintained here)
 add_subdirectory(cxx)    # Core C++ library
 add_subdirectory(python) # Python bindings
 add_subdirectory(tests)  # Unit tests
+add_subdirectory(share)  # Examples
 
 configure_file(
     doc/doxygen/Doxyfile.in

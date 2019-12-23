@@ -21,7 +21,7 @@ class ImageFile(object):
 
         #Leader file always seems to consist of same set of records.
         #http://www.ga.gov.au/__data/assets/pdf_file/0019/11719/GA10287.pdf Pg: 3-1.
-        self.fid = open(self.name, 'r')
+        self.fid = open(self.name, 'rb')
 
         #Leader file descriptor
         self.description = self.parseFileDescriptor()
@@ -65,6 +65,8 @@ class ImageFile(object):
         assert(record.RightFillCountLocator == "29 4PB")
         assert(record.SARDataFormatTypeCode == "CI*1")
         assert(record.NumberOfRightFillBitsWithinPixel == 0)
+        assert(record.NumberOfBytesPerDataGroup % record.NumberOfSamplesPerDataGroup == 0)
+        assert(record.NumberOfBytesOfSARDataPerRecord % (record.NumberOfBytesPerDataGroup//record.NumberOfSamplesPerDataGroup) == 0)
 
         #Check length of record
         assert(self.fid.tell() == record.RecordLength)
@@ -81,8 +83,8 @@ class ImageFile(object):
         #Create record type with information from description
         bytesperpixel = self.description.NumberOfBytesPerDataGroup // self.description.NumberOfSamplesPerDataGroup
         pixels = self.description.NumberOfBytesOfSARDataPerRecord // bytesperpixel
-        record = SignalDataRecordType(pixels= pixels,
-                                      bytesperpixel = bytesperpixel)
+        record = SignalDataRecordType(pixels=pixels,
+                                      bytesperpixel=bytesperpixel)
 
         #Read from file
         record.fromfile(self.fid)

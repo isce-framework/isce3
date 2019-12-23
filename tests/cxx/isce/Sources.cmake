@@ -33,7 +33,6 @@ geometry/bbox/geoperimeter_equator.cpp
 image/resampslc/resampslc.cpp
 io/gdal/buffer.cpp
 io/gdal/gdal-dataset.cpp
-io/gdal/gdal-raster.cpp
 io/gdal/geotransform.cpp
 io/gdal/spatialreference.cpp
 io/IH5/ih5castread.cpp
@@ -61,3 +60,11 @@ signal/signal.cpp
 unwrap/icu/icu.cpp
 unwrap/phass/phass.cpp
 )
+
+#This is a temporary fix - since GDAL does not support 
+#expose virtualmemmap on OS X. This will be revisited 
+#when GDAL adds the functionality or we update to add
+#preprocessor directives to handle this.
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    LIST(APPEND TESTFILES io/gdal/gdal-raster.cpp)
+endif()

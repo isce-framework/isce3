@@ -1,7 +1,7 @@
 ###SAR Calibration Data Record
 def CalibrationDataRecordHeaderType():
     '''
-    Attitude Data Record.
+    Calibration Data Record Header.
     http://www.ga.gov.au/__data/assets/pdf_file/0019/11719/GA10287.pdf Pg:3-42.
     '''
     from .BasicTypes import (IntegerType,

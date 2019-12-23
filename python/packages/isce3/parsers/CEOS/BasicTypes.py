@@ -68,7 +68,7 @@ class IntegerType(StringType):
         '''
         Read one integer from file.
         '''
-        return int(StringType.value(self))
+        return int(super().value())
 
 class FloatType(StringType):
     '''
@@ -79,7 +79,7 @@ class FloatType(StringType):
         '''
         Read one integer from file.
         '''
-        return float(StringType.value(self))
+        return float(super().value())
 
 class BinaryType(object):
     '''
@@ -154,8 +154,8 @@ class MultiType(object):
         import numpy 
 
         typelist = []
-        for k,v in self.mapping:
-            typelist.append((k,v.dtype()))
+        for k, v in self.mapping:
+            typelist.append((k, v.dtype()))
 
         return numpy.dtype(typelist)
 
@@ -180,16 +180,12 @@ class MultiType(object):
         '''
         Return parsed value.
         '''
-        found = False
         for k, v in self.mapping:
             if k == key:
-                found = True
-        
                 if isinstance(v, MultiType):
                     return v
                 else:
                     return v.value()
 
-        if not found:
-            raise Exception('MultiType record does not contain field named {}'.format(key))
+        raise Exception('MultiType record does not contain field named {}'.format(key))
 

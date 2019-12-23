@@ -18,7 +18,7 @@ class LeaderFile(object):
         #Leader file always seems to consist of same set of records.
         #http://www.ga.gov.au/__data/assets/pdf_file/0019/11719/GA10287.pdf Pg: 3-1.
        
-        with open(self.name, 'r') as fid:
+        with open(self.name, 'rb') as fid:
             #Leader file descriptor
             self.description = self.parseFileDescriptor(fid)
 
@@ -33,9 +33,6 @@ class LeaderFile(object):
 
             #Calibration data
             self.calibration = self.parseCalibration(fid)
-
-            #Facility related data
-            self.facilityData = self.parseFacilityData(fid)
 
 
     def parseFileDescriptor(self, fid):
@@ -105,6 +102,7 @@ class LeaderFile(object):
         assert(record.LineContentIndicator == "RANGE")
         assert(0 <= record.AntennaBeamNumber <= 22)
         assert(0 <= record.ParameterTableNumber <= 191)
+        assert(record.DCBiasIComponent == record.DCBiasQComponent)
 
         ##Check against byte offset
         assert( fid.tell() == sum([self.description.RecordLength,
@@ -289,7 +287,7 @@ class LeaderFile(object):
         Did not find public document with a detailed description of this.
         Last record in leader and not needed for processing. So skipping transcoding it ...
         '''
-        pass
+        raise NotImplementedError()
 
 
 
