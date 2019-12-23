@@ -1,14 +1,21 @@
-set(buildpkg ${CMAKE_BINARY_DIR}/packages)
+# -*- cmake -*-
+#
+# michael a.g. aïvázis
+# orthologue
+# (c) 1998-2019 all rights reserved
+#
 
-file(GLOB_RECURSE pys RELATIVE ${CMAKE_CURRENT_LIST_DIR} pyre/*.py journal/*.py)
-foreach(py ${pys})
-    configure_file(${py} ${buildpkg}/${py} COPYONLY)
-endforeach()
+# build journal
+pyre_journalPackage()
+# build pyre
+pyre_pyrePackage()
+# build merlin
+pyre_merlinPackage()
+# build cuda
+pyre_cudaPackage()
+# build mpi
+pyre_mpiPackage()
+# build gsl
+pyre_gslPackage()
 
-execute_process(COMMAND "date -u" OUTPUT_VARIABLE TODAY)
-configure_file(pyre/meta ${buildpkg}/pyre/meta.py)
-install(FILES ${buildpkg}/pyre/meta.py DESTINATION packages/pyre/)
-
-install(DIRECTORY pyre journal
-        DESTINATION packages
-        FILES_MATCHING PATTERN *.py)
+# end of file

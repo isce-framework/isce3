@@ -11,6 +11,7 @@ class Sum:
     The representation of the sum of nodes
     """
 
+
     # value management
     def getValue(self):
         """

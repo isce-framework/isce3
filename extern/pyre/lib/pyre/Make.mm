@@ -78,12 +78,13 @@ zipit:
 	PYRE_ZIP=$(PYRE_ZIP) BLD_ACTION="zipit" $(MM) recurse
 
 # construct my {version.cc}
-version.cc: version Make.mm
+version.cc: version.cc.in Make.mm
 	@sed \
-          -e "s:MAJOR:$(PROJECT_MAJOR):g" \
-          -e "s:MINOR:$(PROJECT_MINOR):g" \
-          -e "s:REVISION:$(REVISION):g" \
+          -e "s:@MAJOR@:$(PROJECT_MAJOR):g" \
+          -e "s:@MINOR@:$(PROJECT_MINOR):g" \
+          -e "s:@MICRO@:$(PROJECT_MICRO):g" \
+          -e "s:@REVISION@:$(REVISION):g" \
           -e "s|TODAY|$(TODAY)|g" \
-          version > version.cc
+          version.cc.in > version.cc
 
 # end of file

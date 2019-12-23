@@ -69,7 +69,7 @@ class Unresolved:
 
     # debugging support
     def dump(self, name, indent):
-        print('{}{}: <unresolved>'.format(indent, name))
+        print(f"{indent}{name}: <unresolved>")
         return self
 
 

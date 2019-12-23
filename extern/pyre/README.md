@@ -5,4 +5,4 @@
 
 A framework for building scientific applications in Python. Visit the project [homepage](http://pyre.orthologue.com) for more info
 
-# end of file
+[comment]: <> (end of file)

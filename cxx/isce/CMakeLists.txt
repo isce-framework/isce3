@@ -2,11 +2,6 @@ include(Sources.cmake)
 include(Headers.cmake)
 install(FILES ${HEADERS} DESTINATION include/isce)
 
-# Add OpenMP if found
-if(OpenMP_CXX_FLAGS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif()
-
 add_library(${LISCE} SHARED ${SRCS})
 SetCoverageOptions(${LISCE})
 
@@ -15,6 +10,7 @@ target_link_libraries(${LISCE} PUBLIC
     Eigen::Eigen
     ${GDAL_LIBRARY}
     ${HDF5_LIBRARY}
+    OpenMP::OpenMP_CXX_Optional
     pyre
     ${FFTWF_LIB} ${FFTW_LIB} ${FFTW_THREADS_LIB} ${FFTWF_THREADS_LIB})
 

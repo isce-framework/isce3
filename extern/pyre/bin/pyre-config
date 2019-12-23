@@ -18,7 +18,10 @@ class Config(pyre.application):
     prefix.doc = "the top level installation directory"
 
     path = pyre.properties.bool(default=False)
-    path.doc = "the directory with the built in scripts "
+    path.doc = "the directory with the built in scripts"
+
+    ldpath = pyre.properties.bool(default=False)
+    ldpath.doc = "the directory with the shared libraries"
 
     pythonpath = pyre.properties.bool(default=False)
     pythonpath.doc = "the directory with the python packages"
@@ -38,49 +41,48 @@ class Config(pyre.application):
         """
         # do we need to show the help screen
         help = True
+        # get the package layout
+        layout = pyre.packageInfo()
 
         # if we were asked to show the installation directory
         if self.prefix:
             # do it
-            print(f"{pyre.prefix}")
+            print(layout["prefix"])
             # and lower the flag
             help = False
 
         # if we were asked to show the directory with the built in scripts
         if self.path:
             # do it
-            print(f"{pyre.prefix}/bin")
+            print(layout["path"])
+            # and lower the flag
+            help = False
+
+        # if we were asked to show the directory with the shared libraries
+        if self.ldpath:
+            # do it
+            print(layout["ldpath"])
             # and lower the flag
             help = False
 
         # if we were asked to show the directory with the python packages
         if self.pythonpath:
             # do it
-            print(f"{pyre.home.parent}")
+            print(layout["pythonpath"])
             # and lower the flag
             help = False
 
         # if we were asked to build a compiler command line for accessing the headers
         if self.includes:
             # do it
-            print(f"-I{pyre.prefix}/include")
+            print(layout["includes"])
             # and lower the flag
             help = False
 
         # if were asked to build a link line
         if self.libs:
-            # the libraries
-            libs = ["pyre", "journal"]
-            # get the host
-            host = pyre.executive.host
-            # if the host is a linux box
-            if isinstance(host, pyre.platforms.linux()):
-                # we need the runtime clock library on the link line
-                libs.append("rt")
-            # assemble the libraries
-            libs = " ".join(f"-l{lib}" for lib in libs)
             # do it
-            print(f"-L{pyre.prefix}/lib {libs}")
+            print(layout["libs"])
             # and lower the flag
             help = False
 

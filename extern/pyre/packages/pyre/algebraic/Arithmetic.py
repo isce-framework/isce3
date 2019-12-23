@@ -19,9 +19,9 @@ class Arithmetic:
     methods defined in these subclasses. These methods then build and return representations of
     the corresponding operators and their operands.
 
-    {Arithmetic} expects its subclasses to define two class methods: {literal} and
-    {operator}. The former is used to encapsulate operands that are not {Arithmetic}
-    instances. The latter is used to construct the operator representations
+    {Arithmetic} expects its subclasses to define two methods: {literal} and {operator}. The
+    former is used to encapsulate operands that are not {Arithmetic} instances. The latter is
+    used to construct the operator representations.
     """
 
 
@@ -107,49 +107,49 @@ class Arithmetic:
         # {other} is not a node, so promote it
         other = self.literal(value=other)
         # build an addition representation
-        return self.operator(evaluator=operator.add, operands=(other,self))
+        return self.operator(evaluator=operator.add, operands=(other, self))
 
 
     def __rsub__(self, other):
         # {other} is not a node, so promote it
         other = self.literal(value=other)
         # build a subtraction representation
-        return self.operator(evaluator=operator.sub, operands=(other,self))
+        return self.operator(evaluator=operator.sub, operands=(other, self))
 
 
     def __rmul__(self, other):
         # {other} is not a node, so promote it
         other = self.literal(value=other)
         # build a representation of multiplication
-        return self.operator(evaluator=operator.mul, operands=(other,self))
+        return self.operator(evaluator=operator.mul, operands=(other, self))
 
 
     def __rtruediv__(self, other):
         # {other} is not a node, so promote it
         other = self.literal(value=other)
         # build a representation of division
-        return self.operator(evaluator=operator.truediv, operands=(other,self))
+        return self.operator(evaluator=operator.truediv, operands=(other, self))
 
 
     def __rfloordiv__(self, other):
         # {other} is not a node, so promote it
         other = self.literal(value=other)
         # build a representation of floor-division
-        return self.operator(evaluator=operator.floordiv, operands=(other,self))
+        return self.operator(evaluator=operator.floordiv, operands=(other, self))
 
 
     def __rmod__(self, other):
         # {other} is not a node, so promote it
         other = self.literal(value=other)
         # build a modulus representation
-        return self.operator(evaluator=operator.mod, operands=(other,self))
+        return self.operator(evaluator=operator.mod, operands=(other, self))
 
 
     def __rpow__(self, other):
         # {other} is not a node, so promote it
         other = self.literal(value=other)
         # build a representation of exponentiation
-        return self.operator(evaluator=operator.pow, operands=(other,self))
+        return self.operator(evaluator=operator.pow, operands=(other, self))
 
 
 # end of file

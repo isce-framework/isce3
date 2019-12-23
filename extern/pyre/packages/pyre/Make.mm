@@ -84,13 +84,14 @@ revision: meta.py export-python-modules
 	@$(RM) meta.py
 
 # construct my {meta.py}
-meta.py: meta Make.mm
+meta.py: meta.py.in Make.mm
 	@sed \
-          -e "s:MAJOR:$(PROJECT_MAJOR):g" \
-          -e "s:MINOR:$(PROJECT_MINOR):g" \
-          -e "s:REVISION:$(REVISION):g" \
-          -e "s|TODAY|$(TODAY)|g" \
-          meta > meta.py
+          -e "s:@MAJOR@:$(PROJECT_MAJOR):g" \
+          -e "s:@MINOR@:$(PROJECT_MINOR):g" \
+          -e "s:@MICRO@:$(PROJECT_MICRO):g" \
+          -e "s:@REVISION@:$(REVISION):g" \
+          -e "s|@TODAY@|$(TODAY)|g" \
+          meta.py.in > meta.py
 
 # shortcuts for building specific subdirectories
 .PHONY: $(RECURSE_DIRS)

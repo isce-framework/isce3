@@ -5,12 +5,26 @@
 # (c) 1998-2019 all rights reserved
 #
 
-language: python
+dist: bionic
+# cmake 3.12
+# gcc 7.4
+# https://docs.travis-ci.com/user/reference/bionic/
 
+language: python
 python:
-  - "3.6.4"
+  - "3.6"
+
+addons:
+  apt:
+    packages:
+      - python3.6-dev
+
+install:
+  - mkdir build && cd build
+  - cmake .. -DBUILD_TESTING=y -DCMAKE_INSTALL_PREFIX=$(realpath ../install)
+  - make install
 
 script:
- - echo hello
+  - ctest --verbose
 
 # end of file

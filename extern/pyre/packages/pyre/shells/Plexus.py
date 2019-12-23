@@ -117,10 +117,12 @@ class Plexus(Application):
 
 
     # convenience
-    def pyre_invoke(self, action, argv):
+    def pyre_invoke(self, action, argv=None):
         """
         Invoke the named {action} with {argv} as additional arguments
         """
+        # make sure {argv} is iterable
+        argv = [] if argv is None else argv
         # resolve and invoke; typos and such get handled by {pyre_repertoir}
         return self.pyre_repertoir.invoke(plexus=self, action=action, argv=argv)
 
@@ -133,7 +135,7 @@ class Plexus(Application):
         # reset the pile of actions
         actions = []
         # get the documented commands
-        for uri, name, action, tip in self.pyre_action.pyre_documentedActions():
+        for uri, name, action, tip in self.pyre_action.pyre_documentedActions(plexus=self):
             # and put them on the pile
             actions.append((name, tip))
         # if there were any

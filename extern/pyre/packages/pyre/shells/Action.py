@@ -40,12 +40,14 @@ class Action(pyre.protocol, family='pyre.actions'):
 
 
     @classmethod
-    def pyre_documentedActions(cls):
+    def pyre_documentedActions(cls, plexus):
         """
         Retrieve all visible implementations that are documented
         """
+        # get the search context from the {plexus}
+        namespace = plexus.pyre_package().name
         # get all visible implementations
-        for uri, name, action in cls.pyre_locateAllImplementers():
+        for uri, name, action in cls.pyre_locateAllImplementers(namespace=namespace):
             # attempt to
             try:
                 # get the tip
@@ -54,9 +56,11 @@ class Action(pyre.protocol, family='pyre.actions'):
             except AttributeError:
                 # no worries
                 continue
-            # skip trivial  the top is trivial one
-            if not tip: continue
-            # pass this one along
+            # if this action is not documented
+            if not tip:
+                # assume it is not part of the public interface and skip it
+                continue
+            # otherwise, pass this one along
             yield uri, name, action, tip
         # all done
         return

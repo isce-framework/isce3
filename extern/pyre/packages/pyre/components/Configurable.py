@@ -23,6 +23,7 @@ class Configurable(Dashboard):
     common to both components and interfaces
     """
 
+
     # types
     from .exceptions import (
         FrameworkError, CategoryMismatchError, TraitNotFoundError, ConfigurationError,
@@ -52,6 +53,20 @@ class Configurable(Dashboard):
         yield from self.pyre_showSummary(indent=indent, **kwds)
         # my public state
         yield from self.pyre_showConfigurables(indent=indent, **kwds)
+        # all done
+        return
+
+
+    def pyre_renderTraitValues(self, renderer):
+        """
+        Generate a persistent representation of the values of my traits using {renderer}
+        """
+        # set up the workload
+        workload = [ self ]
+        # while there is still something to do
+        for configurable in workload:
+            # invoke the worker
+            yield from configurable._pyre_renderTraitValues(renderer=renderer, workload=workload)
         # all done
         return
 
@@ -91,7 +106,7 @@ class Configurable(Dashboard):
                 # mark it
                 yield "{}configuration:".format(two)
                 # and describe it
-                yield from value.pyre_showConfiguration(indent=three)
+                yield from value.pyre_showConfiguration(indent=three, deep=deep)
         # all done
         return
 
@@ -449,6 +464,34 @@ class Configurable(Dashboard):
 
         # all done
         return report
+
+
+    # implementation details
+    def _pyre_renderTraitValues(self, renderer, workload):
+        """
+        Render me and the values of my trait using {renderer}
+        """
+        # first, myself
+        yield from renderer.componentStart(component=self)
+
+        # get my configurable traits
+        traits = self.pyre_configurables()
+        # and my inventory
+        inventory = self.pyre_inventory
+        # go through them
+        for trait in traits:
+            # get the trait name
+            name = trait.name
+            # get the value
+            value = inventory.getTraitValue(trait=trait)
+            # get the trait to render the value
+            yield from trait.render(renderer=renderer, value=value, workload=workload)
+
+        # done with me
+        yield from renderer.componentEnd(component=self)
+
+        # all done
+        return
 
 
 # end of file

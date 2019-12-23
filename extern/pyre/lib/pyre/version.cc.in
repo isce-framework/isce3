@@ -1,0 +1,18 @@
+// -*- C++ -*-
+// -*- coding: utf-8 -*-
+//
+// michael a.g. aïvázis
+// orthologue
+// (c) 1998-2019 all rights reserved
+
+// my declarations
+#include "version.h"
+
+// build and return the version tuple
+pyre::version_t
+pyre::version() {
+    //
+    return version_t { @MAJOR@, @MINOR@, @MICRO@, "@REVISION@" };
+}
+
+// end of file

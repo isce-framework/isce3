@@ -60,7 +60,7 @@ class Typed:
         """
         # we do this in two passes over the tuple of schemata: once to get the pedigree of each
         # typed class, and once again to build the actual class record. this avoids the problem
-        # of having the client record modified while we are hunting for custom mixins
+        # of modifying the client record while we are hunting for custom mixins
 
         # temporary storage for the ancestors of each schema
         pedigree = []
@@ -73,7 +73,7 @@ class Typed:
         # once again, to build the classes
         for schema, ancestors in zip(schemata, pedigree):
             # make a docstring
-            doc = "A subclass of {!r} of type {!r}".format(client.__name__, schema.typename)
+            doc = f"A subclass of '{client.__name__}' of type '{schema.typename}'"
             # build the class: name it after the schema, add the docstring
             typedClient = type(schema.typename, ancestors, {"__doc__": doc})
             # and attach it to the client

@@ -234,7 +234,7 @@ class Linux(POSIX, family='pyre.platforms.linux'):
             # otherwise
             else:
                 # split apart and strip leading and trailing whitespace
-                key, value = map(operator.methodcaller('strip'), line.split(':'))
+                key, value = map(operator.methodcaller('strip'), line.split(':', maxsplit=1))
             # yield the tokens
             yield key, value
         # nothing more

@@ -52,7 +52,7 @@ def test():
 
         # register a preprocessor
         @descriptors.converter(traits=[cost])
-        def strip(value):
+        def strip(value, **kwds):
             return ''.join(money.filter.split(value))
 
 

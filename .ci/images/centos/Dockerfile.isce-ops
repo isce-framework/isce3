@@ -7,10 +7,6 @@ ENV LANG en_US.UTF-8
 # run tests and memory check, install and create RPM
 RUN set -ex \
  && source /opt/docker/bin/entrypoint_source \
- && cd build \
- && sudo mkdir /opt/isce \
- && sudo make install \
- && cd .. \
  && mkdir -p rpm-build/opt \
  && sudo mv /opt/isce rpm-build/opt \
  && fpm -s dir -t rpm -C rpm-build --name isce \

@@ -11,6 +11,7 @@ PROJECT = merlin
 # version info
 PROJECT_MAJOR = 1
 PROJECT_MINOR = 9
+PROJECT_MICRO = 5
 
 # the live host
 include live.def

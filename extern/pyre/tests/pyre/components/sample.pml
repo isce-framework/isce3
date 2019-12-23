@@ -114,9 +114,9 @@
   <component name="catalog_container" family="sample.container">
     <!-- put some components in the catalog -->
     <component name="catalog">
-      <bind property="cat1">import:component_dict.comp</bind>
-      <bind property="cat2">import:component_dict.comp#foo</bind>
-      <bind property="cat3">import:component_dict.comp</bind>
+      <bind property="cat1">sample.ifac.comp</bind>
+      <bind property="cat2">sample.ifac.comp#foo</bind>
+      <bind property="cat3">sample.ifac.comp</bind>
     </component>
   </component>
 

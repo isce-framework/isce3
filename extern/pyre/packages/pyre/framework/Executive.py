@@ -302,7 +302,7 @@ class Executive:
 
 
     # registration interface for framework objects
-    def registerProtocolClass(self, protocol, family, locator):
+    def registerProtocolClass(self, protocol, family, priority=priority.package):
         """
         Register a freshly minted protocol class
         """
@@ -312,13 +312,20 @@ class Executive:
         package = self.nameserver.package(executive=self, name=family, locator=pkgloc)
         # associate the protocol with its package
         package.protocols.add(protocol)
-        # insert it into the model
-        key = self.nameserver.configurable(name=family, configurable=protocol, locator=locator)
+
+        # grab the locator
+        locator = protocol.pyre_locator
+        # make a priority
+        priority = priority()
+        # insert the protocol into the model
+        key = self.nameserver.configurable(name=family, configurable=protocol,
+                                           priority=priority, locator=locator)
+
         # and return the nameserver registration key
         return key
 
 
-    def registerComponentClass(self, component, family):
+    def registerComponentClass(self, component, family, priority=priority.package):
         """
         Register a freshly minted component class
         """
@@ -328,22 +335,29 @@ class Executive:
         package = self.nameserver.package(executive=self, name=family, locator=pkgloc)
         # associate the component with its package
         package.components.add(component)
-        # get the component locator
+
+        # grab the locator
         locator = component.pyre_locator
+        # make a priority
+        priority = priority()
         # insert the component into the model
-        key = self.nameserver.configurable(name=family, configurable=component, locator=locator)
+        key = self.nameserver.configurable(name=family, configurable=component,
+                                           priority=priority, locator=locator)
         # return the key
         return key
 
 
-    def registerComponentInstance(self, instance, name):
+    def registerComponentInstance(self, instance, name, priority=priority.package):
         """
         Register a freshly minted component instance
         """
-        # get the instance locator
+        # get the locator
         locator = instance.pyre_locator
+        # make a priority
+        priority = priority()
         # insert the component instance into the model
-        key = self.nameserver.configurable(name=name, configurable=instance, locator=locator)
+        key = self.nameserver.configurable(name=name, configurable=instance,
+                                           priority=priority, locator=locator)
         # return the key
         return key
 

@@ -88,8 +88,13 @@ CheckPyre()
 ##Check for Cython
 include(useCython)
 
-##Check for OpenMP
-CheckOpenMP()
+# Check for OpenMP (optional dependency).
+# If not found, default to an empty placeholder target.
+find_package(OpenMP OPTIONAL_COMPONENTS CXX)
+add_library(OpenMP::OpenMP_CXX_Optional INTERFACE IMPORTED)
+if(TARGET OpenMP::OpenMP_CXX)
+    target_link_libraries(OpenMP::OpenMP_CXX_Optional INTERFACE OpenMP::OpenMP_CXX)
+endif()
 
 ##Check for GDAL
 CheckGDAL()
@@ -101,9 +106,6 @@ CheckHDF5()
 CheckFFTW3()
 ##Check for Armadillo
 ##CheckArmadillo()
-
-##Check for pytest
-CheckPytest()
 
 ###Layout same install directory structure as pyre
 InitInstallDirLayout()
@@ -119,47 +121,11 @@ add_subdirectory(cxx)    # Core C++ library
 add_subdirectory(python) # Python bindings
 add_subdirectory(tests)  # Unit tests
 
-# Set up documentation
-if (WITH_DOC)
-
-    # If Doxygen is available, build C++ documentation
-    FIND_PACKAGE(Doxygen)
-    if (DOXYGEN_FOUND)
-        set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/doxygen/Doxyfile.in)
-        set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
-
-        CONFIGURE_FILE(${DOXYGEN_IN} ${DOXYGEN_OUT})
-        add_custom_target( doc_doxygen ALL
-            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            COMMENT "Generating documentation using Doxygen"
-            VERBATIM )
-        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/html
-            DESTINATION ${ISCE_DOCDIR})
-        message("Doxygen found. Generating C++ doc ....")
-    else()
-        message("Doxygen not found. Skipping C++ doc ....")
-    endif(DOXYGEN_FOUND)
-
-    ##If Sphinx is available, build python documentation
-    FIND_PACKAGE(Sphinx)
-    if (SPHINX_FOUND)
-        set(SPHX_HTML_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc/html/sphinx/html)
-        set(SPHX_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc/html/sphinx/_build)
-        set(SPHX_CACHE_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc/html/sphinx/_doctrees)
-
-        set(SPHX_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/sphinx/conf.py.in)
-        set(SPHX_OUT ${SPHX_BUILD_DIR}/conf.py)
-
-        CONFIGURE_FILE(${SPHX_IN} ${SPHX_OUT})
-
-        add_custom_target( doc_sphinx ALL
-            COMMAND ${SPHINX_EXECUTABLE} -q -b html -c ${SPHX_BUILD_DIR} -d ${SPHX_CACHE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/doc/sphinx ${SPHX_HTML_DIR}
-            DEPENDS isceextension)
-        install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/html/sphinx
-            DESTINATION ${ISCE_DOCDIR}/html)
-        message("Sphinx found. Generating python doc ....")
-    else()
-        message("Sphinx not found. Skipping python doc ....")
-    endif(SPHINX_FOUND)
-endif(WITH_DOC)
+configure_file(
+    doc/doxygen/Doxyfile.in
+    doc/doxygen/Doxyfile
+    )
+configure_file(
+    doc/sphinx/conf.py.in
+    doc/sphinx/conf.py
+    )

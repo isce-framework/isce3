@@ -23,18 +23,19 @@ class Filter:
         # go through all my constraints
         for constraint in self.constraints:
             # if any fail, leave the value unmodified
-            if not constraint(node=node, **kwds): return self
+            if not constraint(node=self, **kwds): return self
 
         # if they all succeed, update the value
         return super().setValue(**kwds)
 
 
     # meta-methods
-    def __init__(self, constraints=None, **kwds):
-        # chain up
-        super().__init__(**kwds)
-        # initialize my constraints
+    def __init__(self, value=None, constraints=None, **kwds):
+        # initialize my constraints; must be done first because {setValue} is invoked as part
+        # of construction to process in the incoming value
         self.constraints = [] if constraints is None else constraints
+        # chain up
+        super().__init__(value=value, **kwds)
         # all done
         return
 

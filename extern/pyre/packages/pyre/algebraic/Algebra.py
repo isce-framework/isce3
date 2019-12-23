@@ -65,16 +65,22 @@ class Algebra(AbstractMetaclass):
         derivation = tuple(cls.literalDerivation(record))
         # make one
         record.literal = cls('literal', derivation, {}, ignore=True)
+        # correct its module so it gets the correct attribution in stack traces
+        record.literal.__module__ = record.__module__
 
         # build the list of base classes for the variable
         derivation = tuple(cls.variableDerivation(record))
         # make one
         record.variable = cls('variable', derivation, {}, ignore=True)
+        # correct its module so it gets the correct attribution in stack traces
+        record.variable.__module__ = record.__module__
 
         # build the list of base classes for operators
         derivation = tuple(cls.operatorDerivation(record))
         # make one
         record.operator = cls('operator', derivation, {}, ignore=True)
+        # correct its module so it gets the correct attribution in stack traces
+        record.operator.__module__ = record.__module__
 
         # mark it
         record._pyre_hasAlgebra = True
@@ -173,15 +179,11 @@ class Algebra(AbstractMetaclass):
             # looking for
             try:
                 # a marked one
-                base._pyre_hasAlgebra
-            # of that fails
+                return base._pyre_hasAlgebra
+            # if that fails
             except AttributeError:
                 # perfect; check the next one
                 continue
-            # otherwise
-            else:
-                # this class derived from one of mine
-                return base._pyre_hasAlgebra
         # all good
         return False
 

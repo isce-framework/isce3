@@ -31,6 +31,9 @@ geometry/geometry.cpp
 geometry/RTC.cpp
 geometry/Topo.cpp
 image/ResampSlc.cpp
+io/gdal/Dataset.cpp
+io/gdal/GeoTransform.cpp
+io/gdal/SpatialReference.cpp
 io/IH5.cpp
 io/IH5Dataset.cpp
 io/Raster.cpp

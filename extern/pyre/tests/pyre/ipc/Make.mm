@@ -9,7 +9,6 @@
 # project defaults
 include pyre.def
 
-
 all: test
 
 test: sanity channels scheduler selector clean
@@ -33,6 +32,7 @@ selector:
 	${PYTHON} ./selector.py
 	${PYTHON} ./selector_instantiation.py
 	${PYTHON} ./selector_alarms.py
+	${PYTHON} ./selector_signals.py
 	${PYTHON} ./selector_pickler_over_pipe.py
 	${PYTHON} ./selector_pickler_over_tcp.py
 

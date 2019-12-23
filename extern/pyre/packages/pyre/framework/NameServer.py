@@ -24,7 +24,7 @@ class NameServer(Hierarchical):
 
     # types
     from .Package import Package
-    # node storage and metadata
+    # node storage and meta-data
     from .Slot import Slot as node
     from .SlotInfo import SlotInfo as info
     from .Priority import Priority as priority
@@ -41,25 +41,17 @@ class NameServer(Hierarchical):
 
 
     # framework object management
-    def configurable(self, name, configurable, locator, priority=None):
+    def configurable(self, name, configurable, locator, priority):
         """
         Add {configurable} to the model under {name}
         """
-        # get the right priority
-        priority = self.priority.package() if priority is None else priority
-        # fill out the node info
-        name, split, key = self.info.fillNodeId(model=self, name=name)
-        # build the node metadata
-        info = self.info(name=name, split=split, key=key,
-                         locator=locator, priority=priority)
-        # grab the key
-        key = info.key
-        # build a slot to hold the {configurable}
-        slot = self.variable(key=key, value=configurable)
-        # store it in the model
-        self._nodes[key] = slot
-        self._metadata[key] = info
-
+        # add the {configurable} to the store
+        # N.B: let {insert} choose the slot factory; this uses to specify a {literal} as the
+        # slot factory, but this appears to have been misguided: there are paths when replacing
+        # an existing node that invoked the slot factory with more arguments than
+        # {self.literal} could handle...
+        key, _, _ = self.insert(name=name, value=configurable,
+                                priority=priority, locator=locator)
         # and return the key
         return key
 
@@ -94,7 +86,7 @@ class NameServer(Hierarchical):
                 # get the journal
                 import journal
                 # build the report
-                complaint = 'name conflict while configuring package {!r}: {}'.format(name, package)
+                complaint = f"name conflict while configuring package '{name}': {package}"
                 # and complain
                 raise journal.error('pyre.configuration').log(complaint)
 
@@ -136,7 +128,7 @@ class NameServer(Hierarchical):
             return self.node.expression.expand(model=self, expression=expression)
         # with empty expressions
         except self.EmptyExpressionError as error:
-            # return the expanded text, since it the input may have contained escaped braces
+            # return the expanded text, since the input may have contained escaped braces
             return error.expression
 
 
@@ -162,67 +154,87 @@ class NameServer(Hierarchical):
         # figure out the node info
         name, split, key = self.info.fillNodeId(model=self, key=key, split=split, name=name)
 
-        # look for metadata
+        # check we have full node info
+        if name is None or split is None or key is None:
+            # grab the journal
+            import journal
+            # make a bug report
+            bug = f"incomplete node info: name={name}, {locator}"
+            # and submit it
+            raise journal.firewall("pyre.framework").log(bug)
+
+        # if we were not given a slot factory
+        if factory is None:
+            # use instance slots for a generic trait, by default
+            factory = properties.identity(name=name).instanceSlot
+
+        # look for the node registered under this key
+        old = self._nodes.get(key, None)
+        # and
         try:
-            # registered under this key
+            # its meta-data
             meta = self._metadata[key]
-        # if there's no registered metadata, this is the first time this name was encountered
+        # if this is the first time this name was encountered
         except KeyError:
-            # if we need to build type information
-            if not factory:
-                # use instance slots for an identity trait, by default
-                factory = properties.identity(name=name).instanceSlot
+            # if we have no meta-data, we shouldn't have an old node either
+            if old is not None:
+                # if we do, it's a bug, so get the journal
+                import journal
+                # build a bug report
+                bug = f"{name}: found a node with no meta-data"
+                # and complain
+                raise journal.firewall("pyre.nameserver").log(bug)
             # build the info node
             meta = self.info(name=name, split=split, key=key,
                              priority=priority, locator=locator, factory=factory)
-            # and attach it
+            # attach it to the meta-data store
             self._metadata[key] = meta
-        # if there is an existing metadata node
-        else:
-            # check whether this assignment is of lesser priority, in which case we just leave
-            # the value as is
-            if priority < meta.priority:
-                # but we may have to adjust the trait
-                if factory:
-                    # which involves two steps: first, update the info node
-                    meta.factory = factory
-                    # and now look for the existing model node
-                    old = self._nodes[key]
-                    # so we can update its value postprocessor
-                    old.postprocessor = factory.processor
-                # in any case, we are done here
-                return key
-            # ok: higher priority assignment; check whether we should update the descriptor
-            if factory: meta.factory = factory
-            # adjust the locator and priority of the info node
-            meta.locator = locator
+            # build the new node
+            new = factory(key=key, value=value)
+            # and attach it
+            self._nodes[key] = new
+            # all done
+            return key, new, old
+
+        # if the assignment happens during component configuration
+        if priority.category == priority.defaults.category:
+            # update the factory registered with the meta-data; whatever is currently
+            # stored there is wrong, since the component configuration infrastructure is the
+            # definitive source of which kind of node to use to store the value
+            meta.factory = factory
+            # the rest of the meta-data, currently priority and locator, must be correct, so
+            # don't touch
+
+            # the existing node is not the correct type, so use the factory we were given to
+            # build a new one; the value of the old node must be correct, because {defaults}
+            # is the lowest possible priority; so we must save it
+            new = factory(key=key, value=old.value, current=old)
+            # and register it; no need to adjust the graph since the slot factory now takes
+            # care of this
+            self._nodes[key] = new
+
+            # and we are done
+            return key, new, old
+
+        # if the new assignment is higher priority than the existing one
+        if priority > meta.priority:
+            # record the assignment priority
             meta.priority = priority
+            # and its locator
+            meta.locator = locator
 
-        # if we get this far, we have a valid key, and valid and updated metadata; start
-        # processing the value by getting the trait; use the info node, which is the
-        # authoritative source of this information
-        factory = meta.factory
-        # and ask it to build a node for the value
-        new = factory(key=key, value=value)
+            # make a new node using the registered node factory
+            new = meta.factory(key=key, value=value, current=old)
+            # register it
+            self._nodes[key] = new
 
-        # if we are replacing an existing node
-        try:
-            # get it
-            old = self._nodes[key]
-        # if not
-        except KeyError:
-            # no worries
-            pass
-        # otherwise
-        else:
-            # adjust the dependency graph
-            new.replace(old)
+            # and we are done
+            return key, new, old
 
-        # place the new node in the model
-        self._nodes[key] = new
-
-        # and return
-        return key
+        # the only remaining case is an assignment of lower priority than the existing one that
+        # is also not happening during component configuration; there is nothing to do in this
+        # case
+        return key, None, old
 
 
     def retrieve(self, name):
@@ -292,7 +304,8 @@ class NameServer(Hierarchical):
             newNode.replace(oldNode)
             # adjust the key in the new node
             newNode.key = key
-            # adjust the post-processor
+            # adjust the value processors
+            newNode.preprocessor = oldNode.preprocessor
             newNode.postprocessor = oldNode.postprocessor
             # attach it to the store
             self._nodes[key] = newNode

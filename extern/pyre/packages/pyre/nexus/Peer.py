@@ -86,7 +86,7 @@ class Peer(pyre.component, family='pyre.nexus.peers.peer', implements=Asynchrono
         # chain up
         super().__init__(name=name, **kwds)
 
-        # i am not have a name, but i need one in what follows
+        # i may not have a name, but i need one in what follows
         name = name or self.pyre_family() or "pyre.nexus.peers"
 
         # if i were handed a timer to use

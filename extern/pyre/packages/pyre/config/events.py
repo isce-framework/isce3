@@ -16,20 +16,27 @@ global framework configuration data structures with partial input from invalid s
 
 
 class Event:
-    """The base class for all configuration events"""
+    """
+    The base class for all configuration events
+    """
 
     # public data
     locator = None
 
     # meta methods
     def __init__(self, locator, **kwds):
+        # chain up
         super().__init__(**kwds)
+        # record the locator
         self.locator = locator
+        # all done
         return
 
 
 class Command(Event):
-    """A command"""
+    """
+    A command
+    """
 
     # public data
     command = None
@@ -37,21 +44,28 @@ class Command(Event):
     # interface
     def identify(self, inspector, **kwds):
         """Ask {inspector} to process a {Command}"""
+        # forward to the {inspector}
         return inspector.execute(command=self, **kwds)
 
     # meta methods
     def __init__(self, command, **kwds):
+        # chain up
         super().__init__(**kwds)
+        # record the priority
         self.priority = None
+        # and the command itself
         self.command = command
+        # all done
         return
 
     def __str__(self):
-        return "{{{}: {}}}".format(self.locator, self.command)
+        return f"{{{self.locator}: {self.command}}}"
 
 
 class Assignment(Event):
-    """A request to bind a {key} to a {value}"""
+    """
+    A request to bind a {key} to a {value}
+    """
 
     # public data
     key = None
@@ -60,21 +74,28 @@ class Assignment(Event):
     # interface
     def identify(self, inspector, **kwds):
         """Ask {inspector} to process an {Assignment}"""
+        # forward to the {inspector}
         return inspector.assign(assignment=self, **kwds)
 
     # meta methods
     def __init__(self, key, value, **kwds):
+        # chain up
         super().__init__(**kwds)
+        # record the key
         self.key = key
+        # and the value
         self.value = value
+        # all done
         return
 
     def __str__(self):
-        return "{{{}: {} <- {}}}".format(self.locator, self.key, self.value)
+        return f"{{{self.locator}: {self.key} <- {self.value}}}"
 
 
 class ConditionalAssignment(Assignment):
-    """A request to bind a {key} to a {value} subject to a condition"""
+    """
+    A request to bind a {key} to a {value} subject to a condition
+    """
 
     # public data
     component = None
@@ -83,30 +104,41 @@ class ConditionalAssignment(Assignment):
     # interface
     def identify(self, inspector, **kwds):
         """Ask {inspector} to process a {ConditionalAssignment}"""
+        # forward to the {inspector}
         return inspector.defer(assignment=self, **kwds)
 
     # meta methods
     def __init__(self, component, condition, **kwds):
+        # chain up
         super().__init__(**kwds)
+        # record the component
         self.component = component
+        # and the conditions under which this assignment is to be applied
         self.conditions = [condition]
+        # all done
         return
 
     def __str__(self):
+        # initialize the rendering
         msg = [
-            "{{{.locator}:".format(self),
-            "  {0.component}: {0.key} <- {0.value!r}".format(self),
+            f"{{{self.locator}:",
+            f"  {self.component}: {self.key} <- {self.value!r}",
             "  subject to:"
             ]
+        # go through the conditions
         for name, family in self.conditions:
-            msg.append("    name={}, family={}".format(name, family))
+            # and add them to the pile
+            msg.append(f"    name={name}, family={family}")
+        # close the delimiter
         msg.append("}")
-
+        # assemble and return
         return "\n".join(msg)
 
 
 class Source(Event):
-    """A request to load configuration settings from a named source"""
+    """
+    A request to load configuration settings from a named source
+    """
 
     # public data
     source = None
@@ -114,16 +146,20 @@ class Source(Event):
     # interface
     def identify(self, inspector, **kwds):
         """Ask {inspector} to process a {Source} event"""
+        # forward to the {inspector}
         return inspector.load(request=self, **kwds)
 
     # meta methods
     def __init__(self, source, **kwds):
+        # chain up
         super().__init__(**kwds)
+        # save the configuration source
         self.source = source
+        # all done
         return
 
     def __str__(self):
-        return "{{{0.locator}: loading {0.source}}".format(self)
+        return "{{{self.locator}: loading {self.source}}"
 
 
 # end of file

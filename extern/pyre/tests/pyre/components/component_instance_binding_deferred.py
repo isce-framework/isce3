@@ -20,7 +20,7 @@ class comp(pyre.component, family="deferred.ifac.comp", implements=ifac):
 
 class user(pyre.component, family="deferred.user"):
     """a component user"""
-    comp = pyre.facility(protocol=ifac)
+    comp = ifac()
 
 class container(pyre.component, family="deferred.container"):
     """a component container"""
@@ -33,15 +33,18 @@ def test():
     # build the individual user
     u = user(name="user")
     # verify that its {comp} is configured correctly
-    assert u.comp.tag == "user"
+    assert u.comp.tag == "one"
+
     # build the shell
     s = container(name="tagger")
     # verify that the catalog has three members
     assert len(s.catalog) == 3
     # and that the contents were configured properly
     for name, instance in s.catalog.items():
+        # by matching the component tag against its name
         assert instance.tag == name
 
+    # all done
     return s
 
 

@@ -32,6 +32,7 @@ class Component(Configurable, metaclass=Actor, internal=True):
     pyre_inventory = None # my inventory management strategy
     pyre_implements = None # my protocol
     pyre_isComponent = True
+    pyre_cooked = False
 
     # introspection
     @property
@@ -41,8 +42,10 @@ class Component(Configurable, metaclass=Actor, internal=True):
         """
         # get my inventory
         inventory = self.pyre_inventory
-        # and ask it for my key; if i don't have one bail
-        return inventory.key if inventory is not None else None
+        # and ask it for my key
+        key =  inventory.key if inventory is not None else None
+        # all done
+        return key
 
 
     @property
@@ -88,7 +91,7 @@ class Component(Configurable, metaclass=Actor, internal=True):
         # and my family name
         family = self.pyre_family() or "<none>"
         # build the spec and return it
-        return f"{family} # {name}"
+        return f"{family}#{name}"
 
 
     @classmethod
@@ -146,9 +149,17 @@ class Component(Configurable, metaclass=Actor, internal=True):
         # build a priority
         priority = self.pyre_executive.priority.explicit() if priority is None else priority
         # set the value
-        return self.pyre_inventory.setTraitValue(
-            trait=trait, factory=trait.instanceSlot,
-            value=value, priority=priority, locator=locator)
+        new, old = self.pyre_inventory.setTraitValue(trait=trait, factory=trait.instanceSlot,
+                                                     value=value,
+                                                     priority=priority, locator=locator)
+
+        # if an actual assignment took place
+        if new is not None and self.pyre_cooked:
+            # invoke the hook
+            self.pyre_traitModified(trait=trait, new=new, old=old)
+
+        # all done
+        return
 
 
     def pyre_getTrait(self, alias):
@@ -157,11 +168,26 @@ class Component(Configurable, metaclass=Actor, internal=True):
         """
         # identify the trait descriptor
         trait = self.pyre_trait(alias)
-        # ask my inventory to do the rest
-        return self.pyre_inventory.getTraitValue(trait), self.pyre_inventory.getTraitLocator(trait)
+        # get my inventory
+        inventory = self.pyre_inventory
+        # ask it for the value
+        value = inventory.getTraitValue(trait)
+        # and the locator
+        locator = inventory.getTraitLocator(trait)
+        # pass them on
+        return value, locator
 
 
     # framework notifications
+    @classmethod
+    def pyre_staged(cls, name, locator, implicit):
+        """
+        Pre-instantiation hook invoked right before the instance is created
+        """
+        # by default, nothing to do
+        return cls
+
+
     def pyre_registered(self):
         """
         Hook that gets invoked by the framework after the component instance has been
@@ -193,6 +219,14 @@ class Component(Configurable, metaclass=Actor, internal=True):
         return
 
 
+    def pyre_traitModified(self, trait, new, old):
+        """
+        Hook that gets invoked by the framework right after a trait value has been modified.
+        """
+        # nothing to do
+        return self
+
+
     def pyre_finalized(self):
         """
         Hook that gets invoked by the framework right before the component is decommissioned.
@@ -213,7 +247,7 @@ class Component(Configurable, metaclass=Actor, internal=True):
 
     def pyre_slot(self, attribute=None):
         """
-        Return the slot associated with {attribute}; if no attribute s given, return the slot with
+        Return the slot associated with {attribute}; if no attribute is given, return the slot with
         the component instance itself
         """
         # if the caller did not specify an attribute
@@ -270,7 +304,7 @@ class Component(Configurable, metaclass=Actor, internal=True):
 
 
     # meta methods
-    def __new__(cls, name, locator, **kwds):
+    def __new__(cls, name, locator, implicit, **kwds):
         # build the instance; in order to accommodate components with non-trivial constructors,
         # we have to swallow any extra arguments passed to {__new__}; unfortunately, this
         # places some restrictions on how components participate in class hierarchies: no
@@ -286,17 +320,17 @@ class Component(Configurable, metaclass=Actor, internal=True):
         # record the locator
         instance.pyre_locator = locator
         # deduce the visibility of this instance
-        visibility = cls.PrivateInventory if name is None else cls.PublicInventory
-        # invoke it to initialize the instance and collect configuration errors
-        instance.pyre_configurationErrors = list(
-            visibility.initializeInstance(instance=instance, name=name)
-            )
+        inventory = cls.PrivateInventory if name is None else cls.PublicInventory
+        # ask the inventory to initialize the instance
+        inventory.initializeInstance(instance=instance, name=name, implicit=implicit)
+        # and collect configuration errors
+        instance.pyre_configurationErrors = list(inventory.configureInstance(instance))
 
         # all done
         return instance
 
 
-    def __init__(self, name, locator, **kwds):
+    def __init__(self, name, locator, implicit, **kwds):
         # only needed to swallow the extra arguments
         super().__init__(**kwds)
         # all done
@@ -367,29 +401,23 @@ class Component(Configurable, metaclass=Actor, internal=True):
         # we chain up here after normalizing the name. this might be ok, if it weren't for the
         # fact that it is impossible to guarantee that the locator will be correct in all cases
 
+        # we must record the location of the caller; {pyre_setTrait} doesn't know the correct
+        # stack depth whenever this method is involved
+        locator = tracking.here(level=1)
         # attempt to
         try:
-            # normalize the name
-            canonical = self.pyre_namemap[name]
-        # if the name is not in the name map
-        except KeyError:
+            # set the trait
+            self.pyre_setTrait(alias=name, value=value, locator=locator)
+        # if this fails
+        except self.TraitNotFoundError:
             # this must be a non-trait attribute
-            return super().__setattr__(name, value)
-
-        # find the trait
-        trait = self.pyre_traitmap[canonical]
-        # record the location of the caller
-        locator = tracking.here(level=1)
-        # set the priority
-        priority = self.pyre_executive.priority.explicit()
-        # set the value
-        self.pyre_inventory.setTraitValue(trait=trait, factory=trait.instanceSlot,
-                                          value=value, priority=priority, locator=locator)
+            super().__setattr__(name, value)
 
         # all done
         return
 
 
+    # instantiation prep
     # compatibility check
     @classmethod
     def pyre_isCompatible(cls, spec, fast=True):

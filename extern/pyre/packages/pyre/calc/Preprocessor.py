@@ -14,10 +14,12 @@ class Preprocessor:
 
     # types
     from ..schemata import identity
-    from .exceptions import EvaluationError
+    # the default preprocessor
+    noop = identity().coerce
+
 
     # public data
-    preprocessor = None
+    preprocessor = noop
 
 
     # value management
@@ -41,11 +43,12 @@ class Preprocessor:
 
 
     # meta-methods
-    def __init__(self, preprocessor=identity().coerce, **kwds):
+    def __init__(self, preprocessor=noop, **kwds):
+        # set my value processor; must be done first because {setValue} is invoked as part of
+        # construction to process in the incoming value
+        self.preprocessor = preprocessor
         # chain up
         super().__init__(**kwds)
-        # set my value processor
-        self.preprocessor = preprocessor
         # all done
         return
 

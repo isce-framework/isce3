@@ -32,14 +32,20 @@ class Node(Peer, family="pyre.nexus.servers.node", implements=Nexus):
         """
         Get ready to listen for incoming connections
         """
+        # get a channel
+        channel = application.debug
+        # sign in
+        channel.line(f"{self.pyre_spec}: activating services:")
         # save a weak reference to the application context
         self.application = weakref.proxy(application)
         # go through my services
         for name, service in self.services.items():
             # show me
-            application.debug.log('{}: activating {!r}'.format(self, name))
+            channel.line(f"    {name}: {service}")
             # and activate them
             service.activate(application=application, dispatcher=self.dispatcher)
+        # flush
+        channel.log()
         # all done
         return
 
@@ -51,14 +57,18 @@ class Node(Peer, family="pyre.nexus.servers.node", implements=Nexus):
         """
         # get the application context
         application = self.application
+        # get a channel
+        channel = application.debug
+        # sign in
+        channel.line(f"{self.pyre_spec}: shutting down services:")
         # go through my services
         for name, service in self.services.items():
             # show me
-            application.debug.line('shutting down {!r}'.format(name))
+            channel.line(f"    {name}: {service}")
             # shut it down
             service.shutdown()
         # flush
-        application.debug.log()
+        channel.log()
         # all done
         return super().shutdown()
 

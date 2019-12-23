@@ -12,13 +12,21 @@ PACKAGE = flow
 # the python modules
 EXPORT_PYTHON_MODULES = \
     Binder.py \
+    DynamicWorkflow.py \
     Factory.py \
+    FactoryMaker.py \
+    FactoryStatus.py \
+    Flow.py \
+    FlowMaster.py \
+    NameGenerator.py \
     Node.py \
     Producer.py \
     Product.py \
+    ProductStatus.py \
     Specification.py \
     Status.py \
     Workflow.py \
+    exceptions.py \
     __init__.py
 
 # standard targets

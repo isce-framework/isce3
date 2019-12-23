@@ -61,7 +61,7 @@ class Foundry:
         # save the original callable
         self.pyre_factory = factory
         # the tip
-        self.pyre_tip = tip or self.__doc__
+        self.pyre_tip = tip
         # and the list of implemented protocols
         self.pyre_implements = self.sequify(implements)
         # all done

@@ -17,15 +17,22 @@ class Producer(pyre.protocol):
 
     # required interface
     @pyre.provides
-    def make(self, **kwds):
+    def pyre_make(self, **kwds):
         """
         Build all products
         """
 
     @pyre.provides
-    def plan(self, **kwds):
+    def pyre_tasklist(self, **kwds):
         """
-        Describe what needs to get to done to make the products
+        Generate the sequence of factories that must be invoked to rebuild a product
+        """
+
+
+    @pyre.provides
+    def pyre_targets(self, **kwds):
+        """
+        Generate the set of products that must be refreshed while rebuilding a product
         """
 
 

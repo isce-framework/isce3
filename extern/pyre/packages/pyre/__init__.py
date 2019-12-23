@@ -62,6 +62,7 @@ def computeCallerStackDepth():
 
 
 # administrative
+
 def copyright():
     """
     Return the pyre copyright note
@@ -90,6 +91,37 @@ def credits():
     """
     # print it
     return print(meta.acknowledgments)
+
+
+def packageInfo():
+    """
+    Gather information about the pyre layout
+    """
+    # first the easy ones
+    info = {
+        "version": version(),
+        "prefix": prefix,
+        "path": prefix / "bin",
+        "ldpath": prefix / "lib",
+        "pythonpath" : home.parent,
+        "includes": f"-I{prefix}/include"
+        }
+
+    # the libraries
+    libs = [ "pyre", "journal" ]
+    # get the host
+    host = executive.host
+    # if the host is a linux box
+    if isinstance(host, platforms.linux()):
+        # we have to link against the real time clock library
+        libs.append("rt")
+    # assemble the libraries
+    libs = " ".join(f"-l{lib}" for lib in libs)
+    # attach
+    info["libs"] = f"-L{prefix}/lib {libs}"
+
+    # all done
+    return info
 
 
 # component introspection
@@ -142,7 +174,7 @@ def debug():
 
     Modules that support debugging must provide a {debug} method and do as little as possible
     during their initialization. The fundamental constraints are provided by the python import
-    algorithm that only give you one chance to import a module.
+    algorithm that only gives you a single chance to import a module.
 
     This must be done very early, before pyre itself starts importing its packages. One way to
     request debugging is to create a variable {pyre_debug} in the __main__ module that contains
@@ -151,16 +183,24 @@ def debug():
     """
     # the set of packages to patch for debug support
     packages = set()
-    # pull pyre_debug from the __main__ module
+    # get the __main__ module
     import __main__
+    # attempt to
     try:
+        # get the list of module names specified in the user's main script
         packages |= set(__main__.pyre_debug)
+    # if there aren't any
     except:
+        # no worries
         pass
-    # iterate over the names, import the package and invoke its debug method
+
+    # go through the module names
     for package in packages:
+        # import each one
         module = __import__(package, fromlist=["debug"])
+        # and invoke its debug method
         module.debug()
+
     # all done
     return
 
@@ -172,7 +212,7 @@ debug()
 # version info
 from . import meta
 # convenient access to parts of the framework
-from . import version, constraints, geometry, primitives, tracking
+from . import constraints, geometry, primitives, tracking
 # configurables and their support
 from .components.Actor import Actor as actor
 from .components.Role import Role as role

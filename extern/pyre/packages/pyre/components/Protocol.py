@@ -47,16 +47,60 @@ class Protocol(Configurable, metaclass=Role, internal=True):
         return None
 
 
-    # override this in your protocols to provide custom translations of symbols to component
+    # value processing hooks
     # specifications
     @classmethod
     def pyre_convert(cls, value, **kwds):
         """
-        Hook to enable protocols to translate the component specification in {value} into a
-        canonical form
+        Translate the component specification in {value} into canonical form; invoked during value
+        processing
         """
         # by default, do nothing
         return value
+
+
+    @classmethod
+    def pyre_normalize(cls, value, **kwds):
+        """
+        Translate the component specification in {value} into normal form; invoked during value
+        processing
+        """
+        # by default, do nothing
+        return value
+
+
+    @classmethod
+    def pyre_validate(cls, value, **kwds):
+        """
+        Check that {value} is acceptable
+        """
+        # the value {None}
+        if value is None:
+            # is perfectly acceptable
+            return value
+
+        # if the value is a component instance
+        if isinstance(value, cls.component):
+            # get its type
+            component = type(value)
+        # if it is a component class
+        elif isinstance(value, cls.actor):
+            # we know its type
+            component = value
+        # anything else
+        else:
+            # is not acceptable
+            raise cls.ResolutionError(protocol=cls, value=value)
+
+        # check that the component is compatible with me
+        report =  component.pyre_isCompatible(spec=cls)
+        # if the report is clean
+        if report.isClean:
+            # we are done
+            return value
+
+        # otherwise, complain
+        raise cls.ResolutionError(protocol=cls, value=value, report=report)
 
 
     # introspection
@@ -110,6 +154,31 @@ class Protocol(Configurable, metaclass=Role, internal=True):
         return
 
 
+    @classmethod
+    def pyre_render(cls, renderer, name, component, workload):
+        """
+        Hook invoked when serializing the value of components
+        """
+        # non-trivial components are identified using their spec
+        value = None if component is None else component.pyre_spec
+        # if i'm incognito
+        if name is None:
+            # render just my value
+            yield renderer.value(value=value)
+        # otherwise
+        else:
+            # render both my name and the value
+            yield renderer.trait(name=name, value=value)
+
+        # if the value is non-trivial
+        if component is not None and component not in workload:
+            # add the component to the workload
+            workload.append(component)
+
+        # all done
+        return
+
+
     # support for framework requests
     @classmethod
     def pyre_resolveSpecification(cls, spec, **kwds):
@@ -127,15 +196,19 @@ class Protocol(Configurable, metaclass=Role, internal=True):
             # definition of what's acceptable is somewhat complicated because there are many
             # sensible use cases to support. the first step is to check whether the candidate
             # fulfills the obligations defined my this protocol, i.e. it has the correct
-            # properties and behaviors. then, there are issues of pedigree that must be resoved
+            # properties and behaviors. then, there are issues of pedigree that must be resolved
             # on a case by case basis
 
-            # if it is compatible with my protocol
-            if candidate.pyre_isCompatible(spec=cls):
-                # show me
-                # print('pyre.components.Protocol: compatible candidate: {}'.format(candidate))
-                # we are done
-                return candidate
+            # if the candidate is not compatible with my protocol
+            if not candidate.pyre_isCompatible(spec=cls):
+                # get another
+                continue
+
+            # show me
+            # print(f"pyre.components.Protocol: compatible candidate: {candidate}")
+
+            # if the candidate satisfies all constraints, we are done
+            return candidate
 
         # if we get this far, i just couldn't pull it off
         raise cls.ResolutionError(protocol=cls, value=spec)
@@ -153,7 +226,7 @@ class Protocol(Configurable, metaclass=Role, internal=True):
 
 
     @classmethod
-    def pyre_locateAllImplementers(cls):
+    def pyre_locateAllImplementers(cls, namespace):
         """
         Retrieve all visible components that are compatible with me
 
@@ -162,17 +235,17 @@ class Protocol(Configurable, metaclass=Role, internal=True):
         packages that have not been imported yet, or live in files outside the canonical layout
         """
         # all registered implementers
-        yield from cls.pyre_locateAllRegisteredImplementers()
+        yield from cls.pyre_locateAllRegisteredImplementers(namespace=namespace)
         # all loadable implementers
-        yield from cls.pyre_locateAllLoadableImplementers()
+        yield from cls.pyre_locateAllLoadableImplementers(namespace=namespace)
         # all importable implementers
-        yield from cls.pyre_locateAllImportableImplementers()
+        yield from cls.pyre_locateAllImportableImplementers(namespace=namespace)
         # all done
         return
 
 
     @classmethod
-    def pyre_locateAllRegisteredImplementers(cls):
+    def pyre_locateAllRegisteredImplementers(cls, namespace):
         """
         Retrieve all implementers that are already registered with the framework
 
@@ -199,19 +272,26 @@ class Protocol(Configurable, metaclass=Role, internal=True):
         # all done
         return
 
+
     @classmethod
-    def pyre_locateAllImportableImplementers(cls):
+    def pyre_locateAllImportableImplementers(cls, namespace):
         """
         Retrieve all implementers registered in a namespace derivable from my family name
         """
-        # splice my family name together to form a module name
-        uri = '.'.join(cls.pyre_familyFragments())
-        # if i don't have a public name, there is nothing to do
-        if not uri: return
+        # prime the search space using my family name
+        fragments = cls.pyre_familyFragments()
+        # if i don't have a public name
+        if not fragments:
+            # there is nothing to do
+            return
+        # inject the given {namespace} in the search path
+        fragments = tuple(cls.pyre_nameserver.split(namespace)) + fragments[1:]
+        # splice the search path together to form a module name
+        uri = '.'.join(fragments)
         # attempt to
         try:
             # hunt the implementers down
-            yield from cls.pyre_implementers(uri='import:{}'.format(uri))
+            yield from cls.pyre_implementers(uri=f'import:{uri}')
         # if anything goes wrong
         except cls.FrameworkError:
             # skip this step
@@ -221,14 +301,16 @@ class Protocol(Configurable, metaclass=Role, internal=True):
 
 
     @classmethod
-    def pyre_locateAllLoadableImplementers(cls):
+    def pyre_locateAllLoadableImplementers(cls, namespace):
         """
         Retrieve all implementers that live in files and folders derivable from my family name
         """
         # get my family fragments
         fragments = cls.pyre_familyFragments()
-        # if i don't have a public name, there is nothing to do
-        if not fragments: return
+        # if i don't have a public name
+        if not fragments:
+            # there is nothing to do
+            return
         # get the file server
         vfs = cls.pyre_fileserver
         # construct the base uri
@@ -258,7 +340,7 @@ class Protocol(Configurable, metaclass=Role, internal=True):
                     # otherwise
                     else:
                         # treat it as a shelf; assemble its address
-                        shelf = 'vfs:{}'.format(name)
+                        shelf = f'vfs:{name}'
                         # and get its contents
                         yield from cls.pyre_implementers(uri=shelf)
 
@@ -312,7 +394,7 @@ class Protocol(Configurable, metaclass=Role, internal=True):
 
             # other kinds?
             import journal
-            return journal.firewall.log("new kind of symbol in shelf {!r}".format(str(uri)))
+            return journal.firewall.log(f"new kind of symbol in shelf '{uri}'")
 
         # all done
         return
@@ -324,8 +406,8 @@ class Protocol(Configurable, metaclass=Role, internal=True):
         """
         Check whether {this} protocol is compatible with the {other}
         """
-        # print("PP: me={}, other={}".format(cls, spec))
-        # first, the easy cases am i looking in the mirror?
+        # print(f"PP: me={cls}, other={spec}")
+        # first, the easy cases: am i looking in the mirror?
         if cls == spec:
             # easy; no need to build a report since the rest of the code is not supposed to
             # touch the report unless it evaluates to {False}
@@ -341,12 +423,7 @@ class Protocol(Configurable, metaclass=Role, internal=True):
 
         # do the assignment compatibility check
         report = super().pyre_isCompatible(spec=spec, fast=fast)
-        # if we are in fast mode and got an error
-        if fast and report:
-            # all done
-            return report
-
-        # all done
+        # and report any errors
         return report
 
 
@@ -360,7 +437,7 @@ class Protocol(Configurable, metaclass=Role, internal=True):
         {cls} and {protocol}
         """
         # show me
-        # print("me: {}, other: {}".format(cls, protocol))
+        # print(f"me: {cls}, other: {protocol}")
 
         # I am automatically compatible with my ancestors
         if issubclass(cls, protocol):

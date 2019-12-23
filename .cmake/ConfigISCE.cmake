@@ -92,16 +92,6 @@ function(CheckArmadillo)
     message (STATUS "Found Armadillo:  ${ARMADILLO_VERSION_STRING}")
 endfunction()
 
-#Check for OpenMP
-function(CheckOpenMP)
-    FIND_PACKAGE(OpenMP)
-endfunction()
-
-#Check for pytest
-function(CheckPytest)
-    FIND_PACKAGE(Pytest)
-endfunction()
-
 function(InitInstallDirLayout)
     ###install/bin
     if (NOT ISCE_BINDIR)

@@ -66,14 +66,13 @@ class Director(pyre.actor):
         # chain up to create the instance
         app = super().__call__(name=name, globalAliases=globalAliases, locator=locator, **kwds)
 
-        # check whether there is already an app registered with the dashboard
-        if self.pyre_application:
-            # generate a warning
-            app.warning.log('the app {.pyre_application} is already registered'.format(self))
-
         # get the dashboard
         from ..framework.Dashboard import Dashboard as dashboard
-        # attach this instance to the dashboard
+        # check whether there is already an app registered with the dashboard
+        if dashboard.pyre_application is not None:
+            # generate a warning
+            app.warning.log('the app {.pyre_application} is already registered'.format(self))
+        # in any case, attach this instance to the dashboard
         dashboard.pyre_application = app
 
         # and return it

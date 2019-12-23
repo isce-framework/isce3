@@ -97,7 +97,9 @@ class Composite:
         {replacement} when the caller does not supply a set of {clean} nodes
         """
         # if the caller didn't hand me a {clean} pile
-        if clean is None: clean = set()
+        if clean is None:
+            # make a new one
+            clean = set()
         # if the {clean} pile does not already contain {replacement}
         if replacement not in clean:
             # cycle detection: look for {self} in the span of {replacement}; do it carefully so

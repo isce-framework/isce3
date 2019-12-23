@@ -33,12 +33,8 @@ class Repertoir:
         # if this failed
         except self.ResolutionError as error:
             # report it
-            plexus.error.log('could not locate action {!r}'.format(action))
-            # and if we are in DEBUG mode
-            if plexus.DEBUG:
-                # show me what actually happened
-                plexus.error.log(str(error))
-            # indicate failure
+            plexus.error.log(error)
+            # and bail
             return 1
         # otherwise, invoke it
         return command(plexus=plexus, argv=argv)

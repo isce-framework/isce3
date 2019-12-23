@@ -156,8 +156,8 @@ class SymbolTable:
             old = self._nodes[name]
         # if not there
         except KeyError:
-            # no problem
-            pass
+            # no problem; just remember
+            old = None
         # if there is an existing node
         else:
             # replace it
@@ -167,7 +167,7 @@ class SymbolTable:
         self._nodes[name] = node
 
         # and return
-        return
+        return name, new, old
 
 
     def retrieve(self, name):

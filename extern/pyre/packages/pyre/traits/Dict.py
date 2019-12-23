@@ -10,6 +10,8 @@
 from .Property import Property
 # superclass
 from .Slotted import Slotted
+# support
+from .. import tracking
 
 
 # declaration
@@ -119,8 +121,9 @@ class Dict(Slotted):
         # record my schema
         self.schema = schema
         # build my slot factories
-        self.classSlot = self.factory(trait=self, processor=self.process)
-        self.instanceSlot = self.factory(trait=self, processor=self.instantiate)
+        self.classSlot = self.factory(trait=self, post=self.process)
+        # self.instanceSlot = self.factory(trait=self, pre=self.instantiate, post=self.instantiate)
+        self.instanceSlot = self.factory(trait=self, post=self.instantiate)
         # all done
         return
 
@@ -149,7 +152,7 @@ class Dict(Slotted):
         # go through the entries in {value}
         for key, setting in value.items():
             # make a locator
-            locator = tracking.simple('while adding entry {!r} to {.name!r}'.format(key, self))
+            locator = tracking.simple(f"while adding entry '{key}' to '{self.name}'")
             # and update my map
             catalog.insert(name=key, value=setting, locator=locator, priority=priority())
         # and return it
@@ -174,7 +177,7 @@ class Dict(Slotted):
         # get my name
         tag = nameserver.getName(key)
         # the priority of all these assignments
-        userPriority = nameserver.priority.user
+        initPriority = nameserver.priority.user
 
         # make a key based map
         catalog = KeyMap(schema=schema, factory=traitFactory, key=key)
@@ -188,10 +191,10 @@ class Dict(Slotted):
             # make a locator
             locator = tracking.simple('while adding entry {!r} to {.name!r}'.format(name, self))
             # and store them
-            catalog.insert(name=name, value=value, priority=userPriority(), locator=locator)
+            catalog.insert(name=name, value=value, priority=initPriority(), locator=locator)
 
         # grab all deferred assignments to this key
-        for assignment, priority in configurator.retrieveDeferredAssignments(key):
+        for assignment, priority in configurator.retrieveDeferredAssignments(key=key):
             # store them
             catalog.insert(
                 name=assignment.key[0], value=assignment.value,
@@ -216,7 +219,7 @@ class Dict(Slotted):
         # attach my new value
         client.pyre_inventory.setTraitValue(
             trait=self, factory=myFactory,
-            value=catalog, priority=userPriority(), locator=here)
+            value=catalog, priority=initPriority(), locator=here)
 
         # all done
         return self
@@ -224,10 +227,9 @@ class Dict(Slotted):
 
 # implementation details
 # externals
-# superclasses
 import collections.abc
+# superclass
 from ..framework.Dashboard import Dashboard
-from .. import tracking
 
 
 # the helper container classes
@@ -346,8 +348,9 @@ class KeyMap(Map):
         # build the full name of the map entry
         fullname = nameserver.join(self.name, name)
         # insert into the model
-        key = nameserver.insert(name=fullname, value=value,
-                                factory=self.factory, locator=locator, priority=priority)
+        key, _, _ = nameserver.insert(name=fullname, value=value,
+                                      factory=self.factory,
+                                      locator=locator, priority=priority)
         # adjust my map
         self.map[name] = key
         # all done

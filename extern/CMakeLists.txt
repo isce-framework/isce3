@@ -1,5 +1,7 @@
 add_subdirectory(googletest)
 if(NOT HAVE_PYRE)
+    # disable pyre's test suite
+    set(BUILD_TESTING OFF)
     add_subdirectory(pyre)
 endif()
 
@@ -13,3 +15,5 @@ install(DIRECTORY eigen3/Eigen DESTINATION include)
 add_library(eigen INTERFACE)
 add_library(Eigen::Eigen ALIAS eigen)
 target_include_directories(eigen SYSTEM INTERFACE eigen3)
+
+add_subdirectory(pybind11)

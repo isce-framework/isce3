@@ -63,7 +63,8 @@ class Calculator(algebraic.algebra):
         # for specially marked classes, we are all done
         if ignore or cls.isIgnorable(bases): return record
 
-        # the rest get some extra decoration: expressions, interpolations, and references
+        # the rest get some extra decoration
+        # first: expressions, interpolations, sequences, mappings, and references
         # build the list of base classes for expression
         derivation = tuple(cls.expressionDerivation(record))
         # make one
@@ -74,26 +75,27 @@ class Calculator(algebraic.algebra):
         # make one
         record.interpolation = cls('interpolation', derivation, {}, ignore=True)
 
-        # build the list of base classes for interpolation
+        # build the list of base classes for sequences
         derivation = tuple(cls.sequenceDerivation(record))
         # make one
         record.sequence = cls('sequence', derivation, {}, ignore=True)
 
-        # build the list of base classes for interpolation
+        # build the list of base classes for mappings
         derivation = tuple(cls.mappingDerivation(record))
         # make one
         record.mapping = cls('mapping', derivation, {}, ignore=True)
 
-        # build the list of base classes for reference
+        # build the list of base classes for references
         derivation = tuple(cls.referenceDerivation(record))
         # make one
         record.reference = cls('reference', derivation, {}, ignore=True)
 
-        # build the list of base classes for unresolved
+        # build the list of base classes for unresolved nodes
         derivation = tuple(cls.unresolvedDerivation(record))
         # make one
         record.unresolved = cls('unresolved', derivation, {}, ignore=True)
 
+        # the built-in functors
         # build the list of base classes for average
         derivation = tuple(cls.managedCompositeDerivation(cls.average, record))
         # make one
