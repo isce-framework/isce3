@@ -7,7 +7,8 @@
 from libcpp cimport bool
 import numpy as np
 cimport numpy as np
-from LUT2d cimport LUT2d
+from LUT2d cimport LUT2d, loadCalGrid, saveCalGrid
+from IH5 cimport hid_t, IGroup
 
 cdef class pyLUT2d:
     '''
@@ -124,4 +125,17 @@ cdef class pyLUT2d:
     def xStart(self):
         return self.c_lut.xStart()
 
-# end of file 
+    @staticmethod
+    def loadCalGrid(h5Group, dsetName):
+        cdef hid_t groupid = h5Group.id.id
+        cdef IGroup c_igroup
+        c_igroup = IGroup(groupid)
+        lutObj = pyLUT2d()
+        loadCalGrid(c_igroup, <string> dsetName, deref(lutObj.c_lut))
+
+    def saveCalGrid(self, h5Group, dsetName, pyDateTime refEpoch, units=""):
+        cdef hid_t groupid = h5Group.id.id
+        cdef IGroup c_igroup
+        c_igroup = IGroup(groupid)
+        saveCalGrid(c_igroup, <string> dsetName.encode("UTF-8"), deref(self.c_lut),
+                    deref(refEpoch.c_datetime), <string> units.encode("UTF-8"))
