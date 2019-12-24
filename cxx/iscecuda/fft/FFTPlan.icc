@@ -19,7 +19,7 @@ FwdFFTPlan<T>::FwdFFTPlan(thrust::complex<T> * out,
 :
     super_t(out, in, n, n, 1, detail::product(n), n, 1, detail::product(n), batch, Rank, detail::CufftR2CType<T>::type)
 {
-    static_assert( Rank <= 3 );
+    static_assert( Rank <= 3, "" );
 }
 
 template<typename T>
@@ -46,7 +46,7 @@ FwdFFTPlan<T>::FwdFFTPlan(thrust::complex<T> * out,
 :
     super_t(out, in, n, nembed, stride, dist, nembed, stride, dist, batch, Rank, detail::CufftR2CType<T>::type)
 {
-    static_assert( Rank <= 3 );
+    static_assert( Rank <= 3, "" );
 }
 
 template<typename T>
@@ -79,7 +79,7 @@ FwdFFTPlan<T>::FwdFFTPlan(thrust::complex<T> * out,
 :
     super_t(out, in, n, inembed, istride, idist, onembed, ostride, odist, batch, Rank, detail::CufftR2CType<T>::type)
 {
-    static_assert( Rank <= 3 );
+    static_assert( Rank <= 3, "" );
 }
 
 template<typename T>
@@ -97,7 +97,7 @@ InvFFTPlan<T>::InvFFTPlan(T * out,
 :
     super_t(out, in, n, n, 1, detail::product(n), n, 1, detail::product(n), batch, Rank, detail::CufftC2RType<T>::type)
 {
-    static_assert( Rank <= 3 );
+    static_assert( Rank <= 3, "" );
 }
 
 template<typename T>
@@ -124,7 +124,7 @@ InvFFTPlan<T>::InvFFTPlan(T * out,
 :
     super_t(out, in, n, nembed, stride, dist, nembed, stride, dist, batch, Rank, detail::CufftC2RType<T>::type)
 {
-    static_assert( Rank <= 3 );
+    static_assert( Rank <= 3, "" );
 }
 
 template<typename T>

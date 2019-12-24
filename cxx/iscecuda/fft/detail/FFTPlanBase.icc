@@ -34,7 +34,7 @@ FFTPlanBase<Sign, T>::FFTPlanBase(thrust::complex<T> * out,
 :
     FFTPlanBase(out, in, n, n, 1, product(n), n, 1, product(n), batch, Rank, CufftC2CType<T>::type)
 {
-    static_assert( Rank <= 3 );
+    static_assert( Rank <= 3, "" );
 }
 
 template<int Sign, typename T>
@@ -61,7 +61,7 @@ FFTPlanBase<Sign, T>::FFTPlanBase(thrust::complex<T> * out,
 :
     FFTPlanBase(out, in, n, nembed, stride, dist, nembed, stride, dist, batch, Rank, CufftC2CType<T>::type)
 {
-    static_assert( Rank <= 3 );
+    static_assert( Rank <= 3, "" );
 }
 
 template<int Sign, typename T>
@@ -94,7 +94,7 @@ FFTPlanBase<Sign, T>::FFTPlanBase(thrust::complex<T> * out,
 :
     FFTPlanBase(out, in, n, inembed, istride, idist, onembed, ostride, odist, batch, Rank, CufftC2CType<T>::type)
 {
-    static_assert( Rank <= 3 );
+    static_assert( Rank <= 3, "" );
 }
 
 template<int Sign, typename T>

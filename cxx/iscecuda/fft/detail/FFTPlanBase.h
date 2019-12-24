@@ -12,8 +12,8 @@ template<int Sign, typename T>
 class FFTPlanBase {
 public:
 
-    static_assert( Sign == CUFFT_FORWARD || Sign == CUFFT_INVERSE );
-    static_assert( std::is_same<T, float>::value || std::is_same<T, double>::value );
+    static_assert( Sign == CUFFT_FORWARD || Sign == CUFFT_INVERSE, "" );
+    static_assert( std::is_same<T, float>::value || std::is_same<T, double>::value, "" );
 
     FFTPlanBase();
 
