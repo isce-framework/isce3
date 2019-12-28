@@ -8,8 +8,6 @@
 
 namespace py = pybind11;
 
-namespace isce { namespace extension { namespace io { namespace gdal {
-
 void addbinding(py::enum_<GDALAccess> &);
 
 inline
@@ -22,5 +20,3 @@ GDALAccess toGDALAccess(char c)
 
     throw isce::except::RuntimeError(ISCE_SRCINFO(), std::string("unsupported access code '") + c + "'");
 }
-
-}}}}

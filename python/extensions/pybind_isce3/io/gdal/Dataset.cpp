@@ -13,8 +13,6 @@
 
 using isce::io::gdal::Dataset;
 
-namespace isce { namespace extension { namespace io { namespace gdal {
-
 static
 std::string getInfo(Dataset & dataset)
 {
@@ -76,5 +74,3 @@ void addbinding(py::class_<Dataset> & pyDataset)
         .def("__repr__", [](Dataset & self) { return getInfo(self); })
         ;
 }
-
-}}}}

@@ -1,9 +1,0 @@
-set(SRCS
-isce/extension/io/gdal/Dataset.cpp
-isce/extension/io/gdal/GDALAccess.cpp
-isce/extension/io/gdal/GDALDataType.cpp
-isce/extension/io/gdal/gdal.cpp
-isce/extension/io/gdal/Raster.cpp
-isce/extension/io/io.cpp
-isce/extension/isce.cpp
-)

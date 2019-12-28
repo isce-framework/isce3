@@ -5,7 +5,7 @@ include(Headers.cmake)
 
 # add build target
 # library name MUST match the name of the pybind11 module
-set(ISCEEXTENSION isce)
+set(ISCEEXTENSION pybind_isce3)
 pybind11_add_module(${ISCEEXTENSION} ${SRCS})
 
 # required c++ standard
@@ -18,7 +18,7 @@ set_target_properties(${ISCEEXTENSION}
     )
 
 # include path
-target_include_directories(${ISCEEXTENSION} PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(${ISCEEXTENSION} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/..)
 
 # dependencies
 target_link_libraries(${ISCEEXTENSION}

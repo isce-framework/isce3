@@ -17,8 +17,6 @@
 using isce::io::gdal::Buffer;
 using isce::io::gdal::Raster;
 
-namespace isce { namespace extension { namespace io { namespace gdal {
-
 template<typename T>
 static
 py::buffer_info toBuffer(Raster & raster)
@@ -151,5 +149,3 @@ void addbinding(py::class_<Raster> & pyRaster)
         .def_property_readonly("data", [](Raster & self) { return py::array(toBuffer(self), py::cast(self)); })
         ;
 }
-
-}}}}

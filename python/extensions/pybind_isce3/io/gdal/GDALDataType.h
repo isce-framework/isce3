@@ -8,8 +8,6 @@
 
 namespace py = pybind11;
 
-namespace isce { namespace extension { namespace io { namespace gdal {
-
 void addbinding(py::enum_<GDALDataType> &);
 
 inline
@@ -34,5 +32,3 @@ GDALDataType toGDALDataType(const py::object & dt)
 {
     return toGDALDataType(py::dtype::from_args(dt));
 }
-
-}}}}

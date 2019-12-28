@@ -1,7 +1,5 @@
 #include "GDALDataType.h"
 
-namespace isce { namespace extension { namespace io { namespace gdal {
-
 void addbinding(py::enum_<GDALDataType> & pyGDALDataType)
 {
     pyGDALDataType
@@ -18,5 +16,3 @@ void addbinding(py::enum_<GDALDataType> & pyGDALDataType)
         .value("GDT_CFloat64", GDT_CFloat64)
         .export_values();
 }
-
-}}}}

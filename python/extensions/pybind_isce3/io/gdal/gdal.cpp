@@ -5,9 +5,7 @@
 #include "GDALDataType.h"
 #include "Raster.h"
 
-namespace isce { namespace extension { namespace io { namespace gdal {
-
-void addsubmodule(py::module & m)
+void addsubmodule_gdal(py::module & m)
 {
     py::module m_gdal = m.def_submodule("gdal");
 
@@ -25,5 +23,3 @@ void addsubmodule(py::module & m)
     addbinding(pyDataset);
     addbinding(pyRaster);
 }
-
-}}}}

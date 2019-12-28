@@ -2,12 +2,8 @@
 
 #include "io/io.h"
 
-namespace isce { namespace extension {
-
-PYBIND11_MODULE(isce, m) {
+PYBIND11_MODULE(pybind_isce3, m) {
     m.doc() = "InSAR Scientific Computing Environment (ISCE)";
 
-    io::addsubmodule(m);
+    addsubmodule_io(m);
 }
-
-}}

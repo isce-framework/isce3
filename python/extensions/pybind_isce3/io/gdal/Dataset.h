@@ -6,8 +6,4 @@
 
 namespace py = pybind11;
 
-namespace isce { namespace extension { namespace io { namespace gdal {
-
 void addbinding(py::class_<isce::io::gdal::Dataset> &);
-
-}}}}

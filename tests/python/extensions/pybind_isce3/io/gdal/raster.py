@@ -4,7 +4,7 @@ import numpy as np
 import numpy.testing as npt
 from pathlib import Path
 
-import isce
+import pybind_isce3 as isce
 import iscetest
 
 def test_default_driver():
