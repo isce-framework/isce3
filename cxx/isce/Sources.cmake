@@ -23,6 +23,7 @@ core/Spline2dInterpolator.cpp
 core/TimeDelta.cpp
 error/ErrorCode.cpp
 except/Error.cpp
+geometry/boundingbox.cpp
 fft/detail/ConfigureFFTLayout.cpp
 fft/detail/FFTWWrapper.cpp
 geometry/DEMInterpolator.cpp

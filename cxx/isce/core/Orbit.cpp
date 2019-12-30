@@ -69,7 +69,7 @@ void Orbit::interpolate(Vec3 * position,
     // check for errors
     if (status != ErrorCode::Success) {
         std::string errmsg = getErrorString(status);
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+        throw isce::except::OutOfRange(ISCE_SRCINFO(), errmsg);
     }
 }
 

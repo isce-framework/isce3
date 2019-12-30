@@ -31,8 +31,7 @@ void runGeo2rdrBlock(isce::core::Ellipsoid ellps,
                      float * azoff, float * rgoff,
                      isce::cuda::core::ProjectionBase ** projTopo,
                      size_t lineStart, size_t blockLength, size_t blockWidth,
-                     double t0, double r0, size_t numberAzimuthLooks,
-                     size_t numberRangeLooks, size_t length, size_t width,
+                     double t0, double r0, size_t length, size_t width,
                      double prf, double rangePixelSpacing, double wavelength,
                      int side, double threshold, int numiter,
                      unsigned int * totalconv) {
@@ -61,11 +60,11 @@ void runGeo2rdrBlock(isce::core::Ellipsoid ellps,
             side, threshold, numiter, deltaRange);
 
         // Compute azimuth time extents
-        const double dtaz = numberAzimuthLooks / prf;
+        const double dtaz = 1.0 / prf;
         const double tend = t0 + ((length - 1) * dtaz);
 
         // Compute range extents
-        const double dmrg = numberRangeLooks * rangePixelSpacing;
+        const double dmrg = rangePixelSpacing;
         const double rngend = r0 + ((width - 1) * dmrg);
 
         // Check if solution is out of bounds
@@ -100,8 +99,8 @@ runGPUGeo2rdr(const isce::core::Ellipsoid& ellipsoid,
               std::valarray<float> & azoff,
               std::valarray<float> & rgoff,
               int topoEPSG, size_t lineStart, size_t blockWidth,
-              double t0, double r0, size_t numberAzimuthLooks,
-              size_t numberRangeLooks, size_t length, size_t width,
+              double t0, double r0,
+              size_t length, size_t width,
               double prf, double rangePixelSpacing, double wavelength,
               int side, double threshold, double numiter,
               unsigned int & totalconv) {
@@ -148,8 +147,8 @@ runGPUGeo2rdr(const isce::core::Ellipsoid& ellipsoid,
     runGeo2rdrBlock<<<grid, block>>>(ellipsoid, gpu_orbit, gpu_doppler,
                                      x_d, y_d, hgt_d, azoff_d, rgoff_d,
                                      proj_d, lineStart, blockLength,
-                                     blockWidth, t0, r0, numberAzimuthLooks,
-                                     numberRangeLooks, length, width, prf,
+                                     blockWidth, t0, r0,
+                                     length, width, prf,
                                      rangePixelSpacing, wavelength, side,
                                      threshold, numiter, totalconv_d);
 

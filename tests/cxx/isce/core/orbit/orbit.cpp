@@ -357,7 +357,7 @@ TEST_F(OrbitTest, OrbitInterpBorderMode)
 
         double t = orbit.endTime() + 1.;
         Vec3 pos, vel;
-        EXPECT_THROW( orbit.interpolate(&pos, &vel, t, border_mode), isce::except::RuntimeError );
+        EXPECT_THROW( orbit.interpolate(&pos, &vel, t, border_mode), isce::except::OutOfRange );
     }
 
     // output NaN on attempt to interpolate outside orbit domain

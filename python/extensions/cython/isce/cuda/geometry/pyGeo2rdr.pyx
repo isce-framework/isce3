@@ -30,8 +30,6 @@ cdef class pyGeo2rdr:
                   pyProduct product,
                   frequency='A',
                   bool nativeDoppler=False,
-                  int numberAzimuthLooks=1,
-                  int numberRangeLooks=1,
                   double threshold=1.0e-5,
                   int numIterations=50):
         """
@@ -39,8 +37,7 @@ cdef class pyGeo2rdr:
         """
         # Create C++ geo2rdr pointer
         cdef string freqstr = pyStringToBytes(frequency)
-        self.c_geo2rdr = new Geo2rdr(deref(product.c_product), freqstr[0], nativeDoppler,
-                                     numberAzimuthLooks, numberRangeLooks)
+        self.c_geo2rdr = new Geo2rdr(deref(product.c_product), freqstr[0], nativeDoppler)
         self.__owner = True
 
         # Set processing options

@@ -29,6 +29,7 @@ geometry/geometry/geometry_constlat.cpp
 geometry/geometry/geometry.cpp
 geometry/geometry/geometry_equator.cpp
 geometry/topo/topo.cpp
+geometry/bbox/geoperimeter_equator.cpp
 image/resampslc/resampslc.cpp
 io/gdal/buffer.cpp
 io/gdal/gdal-dataset.cpp
@@ -49,6 +50,7 @@ matchtemplate/ampcor/ampcor.cpp
 math/bessel/bessel53.cpp
 product/serialization/serializeProduct.cpp
 product/serialization/serializeProductMetadata.cpp
+product/radargrid/radargrid.cpp
 signal/covariance.cpp
 signal/crossmul.cpp
 signal/filter.cpp

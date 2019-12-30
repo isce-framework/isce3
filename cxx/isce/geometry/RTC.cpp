@@ -76,7 +76,7 @@ void isce::geometry::facetRTC(isce::product::Product& product,
                               isce::core::rtcOutputMode output_mode) {
 
     isce::core::Orbit orbit = product.metadata().orbit();
-    isce::product::RadarGridParameters radar_grid(product, frequency, 1, 1);
+    isce::product::RadarGridParameters radar_grid(product, frequency);
 
     // Get a copy of the Doppler LUT; allow for out-of-bounds extrapolation
     isce::core::LUT2d<double> dop = product.metadata().procInfo().dopplerCentroid(frequency);

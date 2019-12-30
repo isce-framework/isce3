@@ -60,9 +60,7 @@ public:
                    double rangeSpacing,
                    double wavelength,
                    int radarGridWidth,
-                   int lookSide,
-                   int numberAzimuthLooks = 1,
-                   int numberRangeLooks = 1);
+                   int lookSide);
 
     // Set interpolator
     void interpolator(isce::core::dataInterpMethod method) { _interp = isce::core::createInterpolator<T>(method); }

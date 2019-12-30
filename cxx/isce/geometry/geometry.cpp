@@ -319,9 +319,6 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         else
             slantRange_old = slantRange;
 
-        // Compute slant range bin
-        const double rbin = (slantRange - startingRange) / rangePixelSpacing;
-
         // Update guess for azimuth time
         double aztime_diff = _compute_doppler_aztime_diff(dr, satvel,
                                                           doppler, wavelength,

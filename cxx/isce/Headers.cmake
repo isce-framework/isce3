@@ -54,6 +54,8 @@ fft/FFTUtil.h
 fft/FFTUtil.icc
 geometry/DEMInterpolator.h
 geometry/forward.h
+geometry/Shapes.h
+geometry/boundingbox.h
 geometry/Geo2rdr.h
 geometry/Geo2rdr.icc
 geometry/Geocode.h

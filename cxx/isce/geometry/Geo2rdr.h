@@ -47,14 +47,10 @@ public:
      * @param[in] product Input Product
      * @param[in] frequency Frequency designation
      * @param[in] nativeDoppler Flag for using native Doppler frequencies instead of zero-Doppler
-     * @param[in] numberAzimuthLooks Number of azimuth looks of input product
-     * @param[in] numberRangeLooks Number of range looks of input product
      */
     Geo2rdr(const isce::product::Product &,
             char frequency = 'A',
-            bool nativeDoppler = false,
-            size_t numberAzimuthLooks = 1,
-            size_t numberRangeLooks = 1);
+            bool nativeDoppler = false);
 
     /**
      * Constructor from core objects
@@ -63,15 +59,11 @@ public:
      * @param[in] orbit Orbit object
      * @param[in] doppler LUT1d doppler model
      * @param[in] meta Metadata object
-     * @param[in] numberAzimuthLooks Number of azimuth looks of input product
-     * @param[in] numberRangeLooks Number of range looks of input product
      */
     Geo2rdr(const isce::core::Ellipsoid &,
             const isce::core::Orbit &,
             const isce::core::LUT2d<double> &,
-            const isce::core::Metadata &,
-            size_t numberAzimuthLooks = 1,
-            size_t numberRangeLooks = 1);
+            const isce::core::Metadata &);
 
     /**
      * Constructor from core objects

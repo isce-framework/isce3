@@ -17,8 +17,7 @@ cdef extern from "isce/cuda/geometry/Geo2rdr.h" namespace "isce::cuda::geometry"
     cdef cppclass Geo2rdr:
 
         # Constructor
-        Geo2rdr(Product & product, char frequency, bool nativeDoppler,
-                size_t numberAzimuthLooks, size_t numberRangeLooks) except +
+        Geo2rdr(Product & product, char frequency, bool nativeDoppler) except +
 
         # Set options
         void threshold(double)

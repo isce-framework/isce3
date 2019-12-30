@@ -76,9 +76,7 @@ cdef class pyProduct:
         return side
 
     def radarGridParameters(self,
-                            freq='A',
-                            numberAzimuthLooks=1,
-                            numberRangeLooks=1):
+                            freq='A'):
         """
         Get a pyRadarGridParameters instance correpsonding to a given frequency band.
         """
@@ -88,9 +86,7 @@ cdef class pyProduct:
 
         # Create RadarGridParameters object
         cdef RadarGridParameters radarGrid = RadarGridParameters(
-            swath, self.c_product.lookSide(), numberAzimuthLooks, 
-            numberRangeLooks
-        )
+            swath, self.c_product.lookSide())
         return pyRadarGridParameters.cbind(radarGrid)
 
     @property
