@@ -27,6 +27,7 @@ namespace isce {
     };
 
     // STL exception types
+    using DomainError = Error<std::domain_error>;
     using InvalidArgument = Error<std::invalid_argument>;
     using LengthError = Error<std::length_error>;
     using OutOfRange = Error<std::out_of_range>;

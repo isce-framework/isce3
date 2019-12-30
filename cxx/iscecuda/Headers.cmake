@@ -12,6 +12,13 @@ core/OrbitView.h
 core/OrbitView.icc
 core/Stream.h
 except/Error.h
+fft/detail/CufftWrapper.h
+fft/detail/FFTPlanBase.h
+fft/detail/FFTPlanBase.icc
+fft/FFT.h
+fft/FFT.icc
+fft/FFTPlan.h
+fft/FFTPlan.icc
 geometry/forward.h
 geometry/Geo2rdr.h
 geometry/gpuDEMInterpolator.h

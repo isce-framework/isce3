@@ -11,6 +11,7 @@ core/gpuSpline2dInterpolator.cu
 core/Orbit.cu
 core/Stream.cu
 except/Error.cpp
+fft/detail/CufftWrapper.cu
 geometry/Geo2rdr.cpp
 geometry/gpuDEMInterpolator.cu
 geometry/gpuGeo2rdr.cu

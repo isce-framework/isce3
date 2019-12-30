@@ -6,7 +6,8 @@
 
 #include <isce/except/Error.h>
 
-#include "detail/Type2GDALDataType.h"
+#include "Buffer.h"
+#include "detail/GDALDataTypeUtil.h"
 
 namespace isce { namespace io { namespace gdal {
 
@@ -175,6 +176,28 @@ inline
 void Raster::writeAll(const T * src)
 {
     return writeBlock(src, 0, 0, width(), length());
+}
+
+inline
+Buffer Raster::memmap()
+{
+    // create the virtual memory mapping if not already mapped
+    if (!_mmap) {
+        _mmap = detail::MemoryMap(get(), access());
+    }
+
+    std::array<int, 2> shape = { length(), width() };
+    std::array<std::size_t, 2> strides = { _mmap.rowstride(), _mmap.colstride() };
+
+    return Buffer(_mmap.data(), datatype(), shape, strides, access());
+}
+
+template<typename T>
+inline
+TypedBuffer<T> Raster::memmap()
+{
+    Buffer buffer = memmap();
+    return buffer.cast<T>();
 }
 
 inline

@@ -1,0 +1,140 @@
+#ifndef ISCE_CUDA_FFT_DETAIL_FFTPLANBASE_ICC
+#error "FFTPlanBase.icc is an implementation detail of FFTPlan.h"
+#endif
+
+#include <isce/cuda/except/Error.h>
+#include <isce/fft/detail/FFTPlanBase.h>
+
+namespace isce { namespace cuda { namespace fft { namespace detail {
+
+using isce::fft::detail::product;
+
+template<int Sign, typename T>
+inline
+FFTPlanBase<Sign, T>::FFTPlanBase()
+:
+    _plan(std::make_shared<cufftHandle>())
+{}
+
+template<int Sign, typename T>
+FFTPlanBase<Sign, T>::FFTPlanBase(thrust::complex<T> * out,
+                                  thrust::complex<T> * in,
+                                  int n,
+                                  int batch)
+:
+    FFTPlanBase(out, in, &n, &n, 1, n, &n, 1, n, batch, 1, CufftC2CType<T>::type)
+{}
+
+template<int Sign, typename T>
+template<int Rank>
+FFTPlanBase<Sign, T>::FFTPlanBase(thrust::complex<T> * out,
+                                  thrust::complex<T> * in,
+                                  const int (&n)[Rank],
+                                  int batch)
+:
+    FFTPlanBase(out, in, n, n, 1, product(n), n, 1, product(n), batch, Rank, CufftC2CType<T>::type)
+{
+    static_assert( Rank <= 3, "" );
+}
+
+template<int Sign, typename T>
+FFTPlanBase<Sign, T>::FFTPlanBase(thrust::complex<T> * out,
+                                  thrust::complex<T> * in,
+                                  int n,
+                                  int nembed,
+                                  int stride,
+                                  int dist,
+                                  int batch)
+:
+    FFTPlanBase(out, in, &n, &nembed, stride, dist, &nembed, stride, dist, batch, 1, CufftC2CType<T>::type)
+{}
+
+template<int Sign, typename T>
+template<int Rank>
+FFTPlanBase<Sign, T>::FFTPlanBase(thrust::complex<T> * out,
+                                  thrust::complex<T> * in,
+                                  const int (&n)[Rank],
+                                  const int (&nembed)[Rank],
+                                  int stride,
+                                  int dist,
+                                  int batch)
+:
+    FFTPlanBase(out, in, n, nembed, stride, dist, nembed, stride, dist, batch, Rank, CufftC2CType<T>::type)
+{
+    static_assert( Rank <= 3, "" );
+}
+
+template<int Sign, typename T>
+FFTPlanBase<Sign, T>::FFTPlanBase(thrust::complex<T> * out,
+                                  thrust::complex<T> * in,
+                                  int n,
+                                  int inembed,
+                                  int istride,
+                                  int idist,
+                                  int onembed,
+                                  int ostride,
+                                  int odist,
+                                  int batch)
+:
+    FFTPlanBase(out, in, &n, &inembed, istride, idist, &onembed, ostride, odist, batch, 1, CufftC2CType<T>::type)
+{}
+
+template<int Sign, typename T>
+template<int Rank>
+FFTPlanBase<Sign, T>::FFTPlanBase(thrust::complex<T> * out,
+                                  thrust::complex<T> * in,
+                                  const int (&n)[Rank],
+                                  const int (&inembed)[Rank],
+                                  int istride,
+                                  int idist,
+                                  const int (&onembed)[Rank],
+                                  int ostride,
+                                  int odist,
+                                  int batch)
+:
+    FFTPlanBase(out, in, n, inembed, istride, idist, onembed, ostride, odist, batch, Rank, CufftC2CType<T>::type)
+{
+    static_assert( Rank <= 3, "" );
+}
+
+template<int Sign, typename T>
+void FFTPlanBase<Sign, T>::execute() const
+{
+    executePlan<Sign, T>(*_plan, _in, _out, _type);
+}
+
+template<int Sign, typename T>
+template<typename U, typename V>
+FFTPlanBase<Sign, T>::FFTPlanBase(U * out,
+                                  V * in,
+                                  const int * n,
+                                  const int * inembed,
+                                  int istride,
+                                  int idist,
+                                  const int * onembed,
+                                  int ostride,
+                                  int odist,
+                                  int batch,
+                                  int rank,
+                                  cufftType type)
+:
+    _out(reinterpret_cast<void *>(out)),
+    _in(reinterpret_cast<void *>(in)),
+    _type(type)
+{
+    // construct shared pointer with custom deleter to destroy the plan
+    _plan = std::shared_ptr<cufftHandle>(new cufftHandle,
+                [](cufftHandle * plan) noexcept {
+                    if (*plan) { cufftDestroy(*plan); }
+                    delete plan;
+                });
+
+    // create plan
+    checkCudaErrors( cufftPlanMany(
+            _plan.get(), rank, const_cast<int *>(n),
+            const_cast<int *>(inembed), istride, idist,
+            const_cast<int *>(onembed), ostride, odist,
+            type, batch) );
+}
+
+}}}}

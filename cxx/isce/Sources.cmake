@@ -24,6 +24,8 @@ core/TimeDelta.cpp
 error/ErrorCode.cpp
 except/Error.cpp
 geometry/boundingbox.cpp
+fft/detail/ConfigureFFTLayout.cpp
+fft/detail/FFTWWrapper.cpp
 geometry/DEMInterpolator.cpp
 geometry/Geo2rdr.cpp
 geometry/Geocode.cpp
@@ -32,6 +34,7 @@ geometry/RTC.cpp
 geometry/Topo.cpp
 image/ResampSlc.cpp
 io/gdal/Dataset.cpp
+io/gdal/detail/MemoryMap.cpp
 io/gdal/GeoTransform.cpp
 io/gdal/SpatialReference.cpp
 io/IH5.cpp

@@ -19,6 +19,9 @@ core/projections/utm.cpp
 core/serialization/serializeAttitude.cpp
 core/serialization/serializeDoppler.cpp
 core/serialization/serializeOrbit.cpp
+fft/fft.cpp
+fft/fftplan.cpp
+fft/fftutil.cpp
 geometry/dem/dem.cpp
 geometry/geo2rdr/geo2rdr.cpp
 geometry/geocode/geocode.cpp
@@ -28,6 +31,7 @@ geometry/geometry/geometry_equator.cpp
 geometry/topo/topo.cpp
 geometry/bbox/geoperimeter_equator.cpp
 image/resampslc/resampslc.cpp
+io/gdal/buffer.cpp
 io/gdal/gdal-dataset.cpp
 io/gdal/gdal-raster.cpp
 io/gdal/geotransform.cpp
