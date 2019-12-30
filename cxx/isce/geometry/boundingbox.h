@@ -6,14 +6,10 @@
 
 #pragma once
 
-//isce::core
-#include <isce/core/Ellipsoid.h>
-
 //isce::product
 #include <isce/product/RadarGridParameters.h>
 
 //isce::geometry
-#include "geometry.h"
 #include "Shapes.h"
 #include "DEMInterpolator.h"
 
@@ -21,7 +17,19 @@
 namespace isce{
     namespace geometry{
 
-    /** Transformer from radar geometry coordinates to map coordiantes with a DEM
+    /** Compute the perimeter of a radar grid in map coordinates.
+    * 
+    * @param[in] radarGrid    RadarGridParameters object
+    * @param[in] orbit         Orbit object
+    * @param[in] proj          ProjectionBase object indicating desired projection of output. 
+    * @param[in] doppler       LUT2d doppler model
+    * @param[in] demInterp     DEM Interpolator
+    * @param[in] pointsPerEge  Number of points to use on each edge of radar grid
+    * @param[in] threshold     Slant range threshold for convergence 
+    * @param[in] numiter       Max number of iterations for convergence
+    *
+    * The outputs of this method is an OGRLinearRing.
+    * Transformer from radar geometry coordinates to map coordiantes with a DEM
     * The sequence of walking the perimeter is always in the following order :
     * <ul>
     * <li> Start at Early Time, Near Range edge. Always the first point of the polygon.
@@ -41,7 +49,20 @@ namespace isce{
                 const double threshold = 1.0e-8,
                 const int numiter = 15);
 
-    /** Compute bounding box using min/ max altitude for quick estimates*/
+    /** Compute bounding box using min/ max altitude for quick estimates
+    *
+    * @param[in] radarGrid    RadarGridParameters object
+    * @param[in] orbit         Orbit object
+    * @param[in] proj          ProjectionBase object indicating desired projection of output. 
+    * @param[in] doppler       LUT2d doppler model
+    * @param[in] hgts          Vector of heights to use for the scene
+    * @param[in] margin        Marging to add to estimated bounding box in decimal degrees
+    * @param[in] pointsPerEge  Number of points to use on each edge of radar grid
+    * @param[in] threshold     Slant range threshold for convergence 
+    * @param[in] numiter       Max number of iterations for convergence
+    *
+    * The output of this method is an OGREnvelope.
+    */
     BoundingBox
     getGeoBoundingBox(const isce::product::RadarGridParameters &radarGrid,
                       const isce::core::Orbit &orbit,

@@ -64,11 +64,8 @@ class isce::product::RadarGridParameters {
         /** Get reference epoch DateTime*/
         inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
 
-        /** Get sensing start time in seconds of single look data */
-        inline double sensingStartSingleLook() const { return _sensingStart; }
-
-        /** Get sensing start time in seconds of multilooked data */
-        inline double sensingStart() const { return sensingTime(0.); }
+        /** Get sensing start time in seconds since reference epoch */
+        inline double sensingStart() const { return _sensingStart; }
 
         /** Get radar wavelength in meters*/
         inline double wavelength() const { return _wavelength; }
@@ -109,7 +106,7 @@ class isce::product::RadarGridParameters {
         /** Get total number of radar grid elements */
         inline size_t size() const { return _rlength * _rwidth; }
 
-        /** Get sensing stop time of multilooked data in seconds */
+        /** Get sensing stop time in seconds since reference epoch*/
         inline double sensingStop() const { return sensingTime(_rlength - 1.0); }
 
         /** Get sensing mid time in seconds */
@@ -158,8 +155,17 @@ class isce::product::RadarGridParameters {
 
 
         /** Multilook */
-        inline RadarGridParameters multilook(size_t azlooks, size_t rglooks)
+        inline RadarGridParameters multilook(size_t azlooks, size_t rglooks) const
         {
+                //Check for number of points on edge
+            if ((azlooks == 0) || (rglooks == 0))
+            {
+                std::string errstr = "Number of looks must be positive. " +
+                                    std::to_string(azlooks) + "Az x" +
+                                    std::to_string(rglooks) + "Rg looks requested.";
+                throw isce::except::OutOfRange(ISCE_SRCINFO(), errstr); 
+            }
+
             //Currently implements the multilooking operation used in ISCE2 
             return RadarGridParameters( sensingTime(0.5 * (azlooks-1)),
                                         wavelength(),
@@ -202,7 +208,7 @@ class isce::product::RadarGridParameters {
         isce::core::DateTime _refEpoch;
 
         /** Validate parameters of data structure */
-        inline void validate();
+        inline void validate() const;
 };
 
 // Constructor with a swath.
@@ -301,7 +307,7 @@ RadarGridParameters(double sensingStart,
 // Validation of radar grid parameters
 void
 isce::product::RadarGridParameters::
-validate()
+validate() const
 {
     std::string errstr = "";
 

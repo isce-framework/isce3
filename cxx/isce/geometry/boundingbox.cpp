@@ -16,6 +16,9 @@
 #include <isce/core/Pixel.h>
 #include <isce/core/Projections.h>
 
+// isce::geometry
+#include <isce/geometry/geometry.h>
+
 // isce::except
 #include <isce/except/Error.h>
 
@@ -27,17 +30,6 @@ using isce::core::Vec3;
 using isce::core::ProjectionBase;
 using isce::core::Basis;
 
-/** @param[in] radarGrid    RadarGridParameters object
- * @param[in] orbit         Orbit object
- * @param[in] proj          ProjectionBase object indicating desired projection of output. 
- * @param[in] doppler       LUT2d doppler model
- * @param[in] demInterp     DEM Interpolator
- * @param[in] pointsPerEge  Number of points to use on each edge of radar grid
- * @param[in] threshold     Slant range threshold for convergence 
- * @param[in] numiter       Max number of iterations for convergence
- *
- * The outputs of this method is an OGRLinearRing.
- */
 isce::geometry::Perimeter
 isce::geometry::
 getGeoPerimeter(const isce::product::RadarGridParameters &radarGrid,
@@ -50,11 +42,22 @@ getGeoPerimeter(const isce::product::RadarGridParameters &radarGrid,
                 const int numiter)
 {
 
+    //Check for number of points on edge
+    if (pointsPerEdge <= 2)
+    {
+        std::string errstr = "Atleast 2 points per edge should be requested for perimeter estimation. " +
+                             std::to_string(pointsPerEdge) + " requested. ";
+        throw isce::except::OutOfRange(ISCE_SRCINFO(), errstr); 
+    }
+
     //Journal for warning
     pyre::journal::warning_t warning("isce.geometry.perimeter");
 
     //Initialize results
     isce::geometry::Perimeter perimeter;
+
+    //Ellipsoid being used for processing
+    const isce::core::Ellipsoid &ellipsoid = proj->ellipsoid();
 
     //Skip factors along azimuth and range
     const double azSpacing = (radarGrid.length() - 1.0) / (pointsPerEdge - 1.0);
@@ -99,43 +102,20 @@ getGeoPerimeter(const isce::product::RadarGridParameters &radarGrid,
         //Convert az index to azimuth time
         double tline = radarGrid.sensingTime( azInd[ii] );
 
-        //Initialize orbit data for this line
-        Vec3 pos, vel;
-        orbit.interpolate(&pos, &vel, tline, 
-                          isce::core::OrbitInterpBorderMode::Error);
-           
-        //Get geocentric TCN basis using satellite basis
-        Basis tcnbasis(pos, vel);
-        
-        //Compute satellite velocity and height
-        const double satVmag = vel.norm();
-        const Vec3 satLLH = proj->ellipsoid().xyzToLonLat(pos);
-
-        //Point to store solution
-        Vec3 llh, mapxyz;
-
-        //Get slant range and doppler factor
+        //Get rg index to slant range
         double rng = radarGrid.slantRange( rgInd[ii] );
 
-        //If slant range vector doesn't hit ground, pick nadir point
-        double nadirHgt = demInterp.interpolateLonLat(satLLH[0], satLLH[1]); 
-        if (rng <= (satLLH[2] - nadirHgt + 1.0))
-        {
-            llh = satLLH;
-            llh[2] = nadirHgt;
+        //Get doppler at pixel of interest
+        double dopp = doppler.eval(tline, rng);
 
-            warning << "Possible near nadir imaging " << pyre::journal::endl;
-        }
-
-        //Store in pixel object
-        //Compute Doppler Factor related to rate of slant range change
-        double dopplerFactor = (0.5 * radarGrid.wavelength() * (doppler.eval(tline, rng)
-                        /satVmag)) * rng;
-        isce::core::Pixel pixel(rng, dopplerFactor, rgInd[ii]);
+        //Target location
+        Vec3 llh, mapxyz;
 
         //Run rdr2geo
-        rdr2geo(pixel, tcnbasis, pos, vel, proj->ellipsoid(), demInterp, llh,
-                radarGrid.lookSide(), threshold, numiter, 0);
+        rdr2geo(tline, rng, dopp,
+                orbit, ellipsoid, demInterp, llh,
+                radarGrid.wavelength(), radarGrid.lookSide(),
+                threshold, numiter, 0); 
 
         //Transform point to projection
         int status = proj->forward(llh, mapxyz);
@@ -160,16 +140,6 @@ getGeoPerimeter(const isce::product::RadarGridParameters &radarGrid,
 }
 
 
-/** @param[in] radarGrid    RadarGridParameters object
- * @param[in] orbit         Orbit object
- * @param[in] proj          ProjectionBase object indicating desired projection of output. 
- * @param[in] doppler       LUT2d doppler model
- * @param[in] hgts          Vector of heights to use for the scene
- * @param[in] margin        Marging to add to estimated bounding box in decimal degrees
- * @param[in] pointsPerEge  Number of points to use on each edge of radar grid
- * @param[in] threshold     Slant range threshold for convergence 
- * @param[in] numiter       Max number of iterations for convergence
- */
 isce::geometry::BoundingBox
 isce::geometry::
 getGeoBoundingBox(const isce::product::RadarGridParameters &radarGrid,
@@ -182,6 +152,16 @@ getGeoBoundingBox(const isce::product::RadarGridParameters &radarGrid,
                   const double threshold,
                   const int numiter)
 {
+
+    //Check for number of points on edge
+    if (margin < 0.)
+    {
+        std::string errstr = "Margin should be a positive number. " +
+                             std::to_string(margin) + " requested. ";
+        throw isce::except::OutOfRange(ISCE_SRCINFO(), errstr); 
+    }
+
+
     //Initialize data structure for final output
     isce::geometry::BoundingBox bbox;
 

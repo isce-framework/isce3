@@ -16,7 +16,6 @@
 // isce::core
 #include <isce/core/Constants.h>
 #include <isce/core/DateTime.h>
-#include <isce/core/Ellipsoid.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/LUT1d.h>
 #include <isce/core/LUT2d.h>
@@ -211,7 +210,8 @@ TEST_P(PerimeterTest, Normal) {
 
         //Convert geocentric coords to xyz
         isce::core::cartesian_t xyz = { ellipsoid.a() * std::cos(geocentricLat) * std::cos(expectedLon),
-                                        ellipsoid.a() * std::cos(geocentricLat) * std::sin(expectedLon), ellipsoid.b() * std::sin(geocentricLat)};
+                                        ellipsoid.a() * std::cos(geocentricLat) * std::sin(expectedLon),
+                                        ellipsoid.b() * std::sin(geocentricLat)};
         isce::core::cartesian_t expLLH;
         ellipsoid.xyzToLonLat(xyz, expLLH);
 
