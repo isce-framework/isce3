@@ -19,7 +19,7 @@ namespace isce { namespace core {
      * inverse - To convert expected projection system to llh (radians) */
     class ProjectionBase {
         /** Ellipsoid object for projections - currently only WGS84 */
-        Ellipsoid ellipse;
+        Ellipsoid _ellipse;
         
         /** Type of projection system. This can be used to check if projection systems are equal
          * Private member and should not be modified after initialization*/
@@ -28,13 +28,13 @@ namespace isce { namespace core {
     public:
 
         /** Value constructor with EPSG code as input. Ellipsoid is always initialized to standard WGS84 ellipse.*/
-        ProjectionBase(int code) : ellipse(6378137.,.0066943799901), _epsgcode(code) {}
+        ProjectionBase(int code) : _ellipse(6378137.,.0066943799901), _epsgcode(code) {}
 
         /** Return EPSG code */
         inline int code() const { return _epsgcode; }
 
         /** Return underlying ellipsoid */
-        inline const Ellipsoid& ellipsoid() const { return ellipse; }
+        inline const Ellipsoid& ellipsoid() const { return _ellipse; }
 
         /** Print function for debugging */
         virtual void print() const = 0;

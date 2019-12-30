@@ -73,10 +73,10 @@ class isce::product::RadarGridParameters {
         /** Set radar wavelength in meters*/
         inline void wavelength(const double & t) { _wavelength = t; }
 
-        /** Get pulse repetition frequency in Hz of single look data*/
+        /** Get pulse repetition frequency in Hz - inverse of azimuth time interval*/
         inline double prf() const { return _prf; }
         
-        /** Set pulse repetition frequency in Hz of single look data*/
+        /** Set pulse repetition frequency in Hz - inverse of azimuth time interval*/
         inline void prf(const double & t){ _prf = t; }
 
         /** Get azimuth time interval in seconds*/
@@ -88,7 +88,7 @@ class isce::product::RadarGridParameters {
         /** Get slant range pixel spacing in meters*/
         inline double rangePixelSpacing() const { return _rangePixelSpacing; }
 
-        /** Set slant range pixel spacing in meters of single look data */
+        /** Set slant range pixel spacing in meters */
         inline void rangePixelSpacing(const double & t) { _rangePixelSpacing = t; }
 
         /** Get radar grid length */
@@ -183,19 +183,19 @@ class isce::product::RadarGridParameters {
         /** Left or right looking geometry indicator */
         int _lookSide;
         
-        /** Sensing start time of single look data */
+        /** Sensing start time */
         double _sensingStart;
 
         /** Imaging wavelength */
         double _wavelength;
 
-        /** PRF of single look data */
+        /** PRF */
         double _prf;
 
-        /** Slant range to center of first pixel in single look data */
+        /** Slant range to center of first pixel */
         double _startingRange;
 
-        /** Slant range pixel spacing of single look data */
+        /** Slant range pixel spacing */
         double _rangePixelSpacing;
 
         /** Number of lines in the image */
