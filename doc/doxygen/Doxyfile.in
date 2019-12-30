@@ -378,9 +378,9 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories
 # with spaces.
 
-INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/lib \
-                         @CMAKE_CURRENT_SOURCE_DIR@/doc/doxygen \
-                         @CMAKE_CURRENT_SOURCE_DIR@/extensions/cuda 
+INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/cxx/isce \
+                         @CMAKE_CURRENT_SOURCE_DIR@/cxx/iscecuda \
+                         @CMAKE_CURRENT_SOURCE_DIR@/doc/doxygen 
 
 # If the value of the INPUT tag contains directories, you can use the
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp
