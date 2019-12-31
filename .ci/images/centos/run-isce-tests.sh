@@ -7,7 +7,7 @@ if [ "$#" -ne 2 ]; then
   exit 1
 fi
 
-set -ex 
+set -ex
 
 TAG=$1
 MEMCHECK=$2
@@ -25,9 +25,9 @@ fi
 
 ###Run the container
 if [ "$MEMCHECK" = "1" ]; then
-   nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -c "source /opt/docker/bin/entrypoint_source && cd build && ctest --nocompress-output --output-on-failure -T Test || true && cp Testing/\$(head -1 Testing/TAG)/Test.xml . && ctest --no-compress-output --output-on-failure -T MemCheck || true && cp Testing/\$(head -1 Testing/TAG)/DynamicAnalysis.xml ."
+   cat run-memcheck.sh | nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -c 'cat'
 else
-   nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -c "source /opt/docker/bin/entrypoint_source && cd build && ctest -j `nproc` --nocompress-output --output-on-failure -T Test || true && cp Testing/\$(head -1 Testing/TAG)/Test.xml ."
+   cat run-test.sh | nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -c 'cat'
 fi
 
 ###Copy file out of the container
@@ -36,7 +36,7 @@ docker cp ${CONTAINERTAG}:/home/conda/build/doc/html doc
 docker cp ${CONTAINERTAG}:/home/conda/build/cppcheck.xml .
 if [ "$MEMCHECK" = "1" ]; then
    docker cp  ${CONTAINERTAG}:/home/conda/build/DynamicAnalysis.xml .
-   docker cp  ${CONTAINERTAG}:/home/conda/build/valgrind/. . 
+   docker cp  ${CONTAINERTAG}:/home/conda/build/valgrind/. .
 
    #Remove timeouts from valgrind run
    set +e
