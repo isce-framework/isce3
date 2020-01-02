@@ -26,19 +26,22 @@ isce::io::Raster(std::string& fname)
 The same applies to <a href="https://www.gdal.org/gdal_virtual_file_systems.html">virtual file systems</a> supported by GDAL as well. 
 
 
-\subsection drivers Special drivers
+\subsection rasterhdf5 IHDF5 driver
+The IHDF5 driver is considered a special driver by ISCE and is handled differently. 
 
-\subsubsection rastervrt Virtual Raster Table (VRT) driver
-The <a href="https://www.gdal.org/gdal_vrttut.html">VRT</a> driver is considered a special driver by ISCE and is handled differently during Raster creation. When a user asks a Raster to be created with the VRT driver, it is assumed that the user is requesting a raw binary file on disk with the metadata captured in a VRT file with VRTRawRasterBands. 
+<ul>
+<li> GDAL's internal HDF5 driver does not provide write or update capability.
+<li> ISCE includes an easy to use HDF5 interface using isce::io namespace, that can be used to create/ manipulate HDF5 groups and datasets. The documentation for the following classes are useful to understand HDF5 manipulation at the C++ level:
+<ol>
+<li>isce::io::IH5File - Extension of H5::H5File with simpler interfaces
+<li>isce::io::IDataSet - Extension of H5::H5DataSet with simpler interfaces
+<li>isce::io::IGroup  - Extension of H5::H5Group with simpler interfaces
+</ol>
+<li> ISCE then relies on its own custom IHDF5 GDAL driver to read/update existing HDF5 datasets. These HDF5 datasets could have been created by any external software or ISCE using the interfaces listed above.
+<li> Detailed examples can be found in the examples/ tutorials section.
+</ul>
 
-This behavior is meant to replicate the imagery file with an auxilary metadata file model used by ROI_PAC (.rsc) and ISCE v2 (.xml). VRT format allows for other metadata to be stored under custom metadata domains and includes support for special handling of xml strings. 
-
-Note that VRT format files are only handled differently during creation. VRTs created by other workflows behave like other normal GDAL datasets for reading / updating.
-
-\subsubsection rasterhdf5 HDF5 driver
-The HDF5 driver is considered a special driver by ISCE and is handle differently during Raster creation and reading. GDAL's HDF5 driver does not provide write or update capability, and ISCE relies on its own custom implmentation to support working with NISAR products that are in HDF5 format. More details to follow soon.
-
-\section areapoint Pixel is Area
+\section areapoint Geocoded Data - Pixel is Area
 
 ISCE uses the same convention as GDAL, i.e coordinates of a raster image are interpreted using the "PixelIsArea" convention. 
 
@@ -118,7 +121,7 @@ Band 1 Block=1201x1 Type=Int16, ColorInterp=Undefined
 
 \endverbatim
 
-\section rasterproj Projections
+\subsection rasterproj Projections
 
 While GDAL is used to handle rasters within ISCE, ISCE only handles a small subset of projection systems that are supported by GDAL. ISCE exclusively uses <a href="http://www.epsg.org/">EPSG</a> codes for coordinate projection. A CUDA implementation of projection transformations has also been implemented for GPU-based processing. Note that all ISCE supported projections are defined on a WGS84 ellipsoid.
 
@@ -134,9 +137,9 @@ While GDAL is used to handle rasters within ISCE, ISCE only handles a small subs
 </table>  
 
 
-\subsection rastervert Vertical Datum
+\subsubsection rastervert Vertical Datum
 
-Internally, ISCE needs all DEM heights to be referenced w.r.t WGS84 ellipsoid. However, it can delegate vertical datum transformation for a small subset of geoids to GDAL (gdalwarp with vertical datum). The set of supported geoids are 
+Internally, ISCE needs all DEM heights to be referenced w.r.t WGS84 ellipsoid. However, users can delegate vertical datum transformation for a small subset of geoids to GDAL (gdalwarp with vertical datum). The set of supported geoids that could be useful are 
 
 <table>
     <caption id="geoids">Table of supported geoids in ISCE</caption>
@@ -144,4 +147,9 @@ Internally, ISCE needs all DEM heights to be referenced w.r.t WGS84 ellipsoid. H
     <tr><td>5773<td>EGM 96<td><a href="https://en.wikipedia.org/wiki/EGM96">https://en.wikipedia.org/wiki/EGM96</a>
     <tr><td>3885<td>EGM 08<td><a href="http://earth-info.nga.mil/GandG/wgs84/gravitymod/egm2008/egm08_wgs84.html">http://earth-info.nga.mil/GandG/wgs84/gravitymod/egm2008/egm08_wgs84.html</a> 
 </table>
+
+
+\section swathpoint Radar Swath Data - Pixel Is Point
+
+ISCE uses the isce::product::RadarGridParameters data structure to represent the radar swath imaging grid limits. Swath imagery uses "Pixel Is Point" convention - i.e, isce::product::RadarGridParameters::sensingStart and isce::product::RadarGridParameters::startingRange represent the time-tag and slant range to the center of the top-left pixel in the swath.
 */

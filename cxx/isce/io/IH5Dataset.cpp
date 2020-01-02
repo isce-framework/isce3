@@ -117,7 +117,7 @@ CPLErr IH5RasterBand::IReadBlock( int nBlockXOff,
         << "band=" << nBand << ", "
         << "starts=(" << starts[offset] << "," << starts[offset+1] << "), "
         << "counts=(" << counts[offset] << "," << counts[offset+1] << ")";
-    CPLDebug("GDAL_IH5", ss.str().c_str());
+    CPLDebug("GDAL_IH5", "%s", ss.str().c_str());
 
     H5::DataSpace dspace = poGDS->_dataset->getDataSpace(starts, counts, nullptr);
     if (!H5::IdComponent::isValid(dspace.getId()))
@@ -207,7 +207,7 @@ CPLErr IH5RasterBand::IWriteBlock( int nBlockXOff,
         << "band=" << nBand << ", "
         << "starts=(" << starts[offset] << "," << starts[offset+1] << "), "
         << "counts=(" << counts[offset] << "," << counts[offset+1] << ")";
-    CPLDebug("GDAL_IH5", ss.str().c_str());
+    CPLDebug("GDAL_IH5", "%s", ss.str().c_str());
 
     H5::DataSpace dspace = poGDS->_dataset->getDataSpace(starts, counts, nullptr);
     if (!H5::IdComponent::isValid(dspace.getId()))
@@ -313,7 +313,7 @@ IH5Dataset::IH5Dataset(const hid_t &inputds, GDALAccess eAccessIn ):
     {
         std::stringstream ss;
         ss << "Input ID = " << inputds;
-        CPLDebug("GDAL_IH5", ss.str().c_str());
+        CPLDebug("GDAL_IH5", "%s", ss.str().c_str());
     }
 
     eAccess = eAccessIn;
@@ -322,7 +322,7 @@ IH5Dataset::IH5Dataset(const hid_t &inputds, GDALAccess eAccessIn ):
     {
         std::stringstream ss;
         ss << "Extracted ID = " << _dataset->getId();
-        CPLDebug("GDAL_IH5", ss.str().c_str());
+        CPLDebug("GDAL_IH5", "%s", ss.str().c_str());
     }
 
     if (!H5::IdComponent::isValid(_dataset->getId()))
@@ -543,7 +543,7 @@ CPLErr IH5Dataset::populateFromDataset()
     {
         std::stringstream ss;
         ss << _dataset->getId() << ": Number of axes = " << ndims;
-        CPLDebug("GDAL_IH5", ss.str().c_str());
+        CPLDebug("GDAL_IH5", "%s", ss.str().c_str());
     }
 
     //Get dimensions - row major layout
@@ -567,7 +567,7 @@ CPLErr IH5Dataset::populateFromDataset()
         ss << _dataset->getId() << ": "
             << dimensions[axisOffset] << " L x "
             << dimensions[axisOffset+1] << " P";
-        CPLDebug("GDAL_IH5", ss.str().c_str());
+        CPLDebug("GDAL_IH5", "%s", ss.str().c_str());
     }
     else {
         std::stringstream ss;
@@ -575,7 +575,7 @@ CPLErr IH5Dataset::populateFromDataset()
             << nBands << " H x "
             << dimensions[axisOffset] << " L x "
             << dimensions[axisOffset+1] << " P";
-        CPLDebug("GDAL_IH5", ss.str().c_str());
+        CPLDebug("GDAL_IH5", "%s", ss.str().c_str());
     }
 
 

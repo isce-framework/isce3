@@ -4,32 +4,32 @@
 
 ISCE has the following dependencies
 <ol>
-<li> <a href="http://pyre.orthologue.com">pyre</a>
 <li> C++ compiler - gcc-6/ clang-6.0 or above
 <li> Python 3.6 or above
 <li> Numpy and Cython
 <li> GDAL 2.3 or above with Python bindings
 <li> HDF5 1.10.2 or above with h5py
 <li> cmake 3.12 or above
-<li> CUDA 9.0 or above (for GPU-based processing)
 </ol>
 
-One can use any of the three package managers - Macports, Homebrew or Conda to install ISCE on OS X. We will only walk through the installation steps using Macports. It is highly recommend to not mix packages installed by different package managers as this typically leads to library incompatibility issues.
+One can use any of the three package managers - Macports, Homebrew or Conda to install ISCE on OS X. <br>
+We will only walk through the installation steps using Macports. It is highly recommend to not mix <br>
+packages installed by different package managers as this typically leads to library incompatibility issues.
 
 \section osxpack Installing packages using Macports
 
-We write the instructions assuming that we are using clang-8.0 and python37. Changes these to appropriate version numbers for your installation. If you decide to use gcc (say gcc7) on your mac - note that you may have to do additional changes to your macports commands to force it to use libstdc++ instead of libc++. We present instructions with clang here to ensure compatibility with most binaries that are distributed for osx.
+We write the instructions assuming that we are using clang-8.0 and python37.<br> 
+Changes these to appropriate version numbers for your installation. <br>
+If you decide to use gcc (say gcc7) on your mac - note that you may have to make additional changes <br>
+to your macports commands to force it to use libstdc++ instead of libc++. 
+
+We present instructions with clang here to ensure compatibility with most binaries that are distributed for osx.
 
 <ol>
 <li>sudo port install clang-8.0
 <ul>
 <li>sudo port select clang mp-clang-8.0
 <li>Restart terminal after this.
-</ul>
-<li>sudo port install gcc7
-<ul>
-<li>sudo port select gcc mp-gcc7
-<li>Restart terminal after this. We only need this for the gfortran compiler.
 </ul>
 
 <li>sudo port install python37
@@ -56,109 +56,36 @@ We write the instructions assuming that we are using clang-8.0 and python37. Cha
 <li>sudo port install gdal +curl +expat +geos +hdf5 +openjpeg
 <ul>
 <li>export GDAL_DATA=/opt/local/share/gdal
-<li>You may want to build a more complete version of GDAL with support for more formats. The recommended options list is : +hdf4 +hdf5 +netcdf +openjpeg +postgresql95 . If you plan to use gcc instead of clang, use gcc7 whenever the option is available to build those ports.
+<li>You may want to build a more complete version of GDAL with support for more formats. <br>
+The recommended options list is : +hdf4 +hdf5 +netcdf +openjpeg +postgresql10 . <br>
+If you plan to use gcc instead of clang, use gcc7 whenever the option is available to build those ports.
 </ul>
 <li>sudo port install py37-gdal
 </ol>
 
 
-\section pyre Installing pyre from source
-
-Pyre will by default be installed as a component of ISCE.
-If you wish to install pyre yourself, do the following
-and specify `-DHAVE_PYRE=y` when building ISCE.
-
-In this set of instructions, we will install pyre from source using its custom build system - "mm".
-The directory structure that we assume for installing pyre is as follows:
-<table>
-    <caption id="pyre_dir">Directory structure for installing pyre</caption>
-    <tr><th>Folder<th>Description
-    <tr><td>/Users/username/tools/pyre/config<td>Directory containing mm
-    <tr><td>/Users/username/tools/pyre/src<td>Directory which will contain source for pyre
-    <tr><td>/Users/username/tools/pyre/build<td>Build directory for pyre
-    <tr><td>/Users/username/tools/pyre/install<td>Install directory for pyre
-</table>
-
-\subsection mm Step 1: Fetch mm from github
-<ol>
-<li> Ensure you are in the correct folder. Create the pyre folder if it doesn't exist.
-\code{.sh}
-> cd /Users/username/tools/pyre
-\endcode
-
-<li>Clone the git repository for config
-\code{.sh}
-> git clone https://github.com/aivazis/config.git
-\endcode
-
-<li> Set up environment variables and aliases to use config
-\code{.sh}
-export BLD_CONFIG=/Users/username/tools/pyre/config
-export EXPORT_ROOT=/Users/username/tools/pyre/install
-alias mm="python3 /Users/username/tools/pyre/config/make/mm.py"
-alias "mm.paths"="python3 /Users/username/tools/pyre/config/make/mm.py --quiet --paths=sh $*"
-alias "mm.env"="mm --env=sh"
-alias "mm.show"="mm --show --dry"
-alias "mm.bldroot"="mm --dry --quiet --show=$BLD_ROOT"
-export PATH=$PATH:/Users/username/tools/pyre/install/bin
-export PYTHONPATH=$PYTHONPATH:/Users/username/tools/pyre/install/packages
-export LD_LIBRARY_PATH=$LD_LIBRARYPATH:/Users/username/tools/pyre/install/lib
-export MM_INCLUDES=/Users/username/tools/pyre/install/include
-export MM_LIBPATH=/Users/username/tools/pyre/install/lib
-\endcode
-
-</ol>
-
-\subsection pyregit Step 2: Fetch pyre from github and install it
-
-<ol>
-
-<li>Ensure you are in the correct folder.
-\code{.sh}
-> cd /Users/username/tools/pyre/src
-\endcode
-
-<li>Clone the git repository for pyre.
-\code{.sh}
-> git clone https://github.com/pyre/pyre
-\endcode
-
-<li> Set up config parameters for pyre. This is done by adding a file named "config.def" in the /Users/username/tools/pyre/src/pyre/.mm/
-\code{.sh}
-> cd /Users/username/tools/pyre/src/pyre/.mm
-> cat config.def
- PYTHON = python3.7m
- PYTHON_DIR = /opt/local/Library/Frameworks/Python.framework/Versions/3.7
- PYTHON_INCDIR = /opt/local/Library/Frameworks/Python.framework/Versions/3.7/include/python3.7m
- PYTHON_LIB = python3.7m
- PYTHON_LIBDIR = /opt/local/Library/Frameworks/Python.framework/Versions/3.7/lib
- PYTHON_PYCFLAGS = -b
-\endcode
-
-<li>Install pyre
-\code{.sh}
-> cd /Users/username/tools/pyre/src/pyre
-> COMPILER_CXX_NAME=clang++ mm
-\endcode
-
-<li> Since we will use cmake for the next step, you can unset the variables and aliases used by mm at this stage if needed.
-
-</ol>
-
-
 \section isce3osx Install ISCE3 from source
 
-In this section we will walk through the directory setup and build system instructions for installing ISCE. ISCE can be built with 2 different build systems - <a href="https://github.com/aivazis/config">mm</a> and <a href="https://cmake.org/">cmake</a>. In this set of instructions, we focus on cmake as it is already available via standard package managers. We assume the following directory structure in this tutorial
+In this section we will walk through the directory setup and build system instructions <br>
+for installing ISCE. ISCE can be built with 2 different build systems
+<ol>
+<li> <a href="https://github.com/aivazis/config">mm</a>
+<li> <a href="https://cmake.org/">cmake</a>
+</ol>
+
+In this set of instructions, we focus on cmake as it is already available via <br>
+standard package managers. <br>
+We assume the following directory structure in this tutorial
 
 <table>
     <caption id="isce_dir">Assumed directory structure for installing ISCE</caption>
     <tr><th>Location<th>Description
-    <tr><td>/Users/username/tools/pyre/install <td> Pyre install location
-    <tr><td>/Users/username/tools/isce/src <td> git checkout location/ unpacked tarball location of ISCE source
-    <tr><td>/Users/username/tools/isce/build <td> cmake build location
-    <tr><td>/Users/username/tools/isce/install <td>cmake install location
+    <tr><td>${ISCEHOME}/tools/isce/src <td> git checkout location/ unpacked tarball location of ISCE source
+    <tr><td>${ISCEHOME}/tools/isce/build <td> cmake build location
+    <tr><td>${ISCEHOME}/tools/isce/install <td>cmake install location
 </table>
 
+Note that ${ISCEHOME} can point to any directory on your machine.
 
 \subsection osxtargit Step 1: Get latest version of ISCE source
 
@@ -167,7 +94,7 @@ In this section we will walk through the directory setup and build system instru
 <ol>
 <li> Ensure that you are in the source folder
 \code{.sh}
-> cd /home/username/tools/isce/src
+> cd ${ISCEHOME}/tools/isce/src
 \endcode
 <li> Check out the latest version of the source code from git
 \code{.sh}
@@ -185,7 +112,7 @@ In this section we will walk through the directory setup and build system instru
 <ol>
 <li> Ensure that you are in the source folder
 \code{.sh}
-> cd /home/username/tools/isce/src
+> cd ${ISCEHOME}/tools/isce/src
 \endcode
 <li> Unpack the tarball.
 \code{.sh}
@@ -199,21 +126,13 @@ In this section we will walk through the directory setup and build system instru
 <ol>
 <li> Ensure that you are in the build folder
 \code{.sh}
-> cd /Users/username/tools/isce/build
-\endcode
-
-<li> Ensure that you have pyre related paths set in your environment variables. If not, do the following:
-\code{.sh}
-export PYREDIR=/Users/username/tools/pyre/install
-export PATH=$PYREDIR/bin:$PATH
-export PYTHONPATH=$PYREDIR/packages:$PYTHONPATH
-export LD_LIBRARY_PATH=$PYREDIR/lib:$LD_LIBRARY_PATH
+> cd ${ISCEHOME}/tools/isce/build
 \endcode
 
 <li> Run cmake with the correct inputs
 \code{.sh}
 
-> CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX=/Users/username/tools/isce/install /Users/username/tools/isce/src/isce
+> CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX=${ISCEHOME}/tools/isce/install ${ISCEHOME}/tools/isce/src/isce
 
 \endcode
 
@@ -225,6 +144,7 @@ Other optional arguments can be added to the cmake line
     <tr><td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --dsymutil=yes --track-origins=yes" -DCMAKE_BUILD_TYPE=Debug<td>  
     <tr><td>Run tests with "-T memcheck" to check for memory leaks.
     <tr><td>valgrind needs to be installed.
+    <tr><td>-DCMAKE_BUILD_TYPE=RelWithDebInfo<td>Build with optimization flags with release. Default is to build in debug mode
 </table>
 
 <li> Build the software
@@ -243,7 +163,7 @@ Other optional arguments can be added to the cmake line
 <ol>
 <li> Ensure that you are in the build folder
 \code{.sh}
-> cd /Users/username/tools/isce/build
+> cd ${ISCEHOME}/tools/isce/build
 \endcode 
 
 <li> Install the software
@@ -256,9 +176,9 @@ Other optional arguments can be added to the cmake line
 <table>
     <caption id="env_vars_osx">Environment variables to set after installing ISCE</caption>
     <tr><th>Variable<th>Setting<th>Description
-    <tr><td>PATH<td>$PATH:/Users/username/tools/isce/install/bin<td>For executables installed by ISCE
-    <tr><td>PYTHONPATH<td>$PYTHONPATH:/Users/username/tools/isce/install/packages<td>ISCE python package
-    <tr><td>LD_LIBRARY_PATH<td>$LD_LIBRARY_PATH:/Users/username/tools/isce/install/lib<td>Shared libraries built by ISCE
+    <tr><td>PATH<td>$PATH:${ISCEHOME}/tools/isce/install/bin<td>For executables installed by ISCE
+    <tr><td>PYTHONPATH<td>$PYTHONPATH:${ISCEHOME}/tools/isce/install/packages<td>ISCE python package
+    <tr><td>LD_LIBRARY_PATH<td>$LD_LIBRARY_PATH:${ISCEHOME}/tools/isce/install/lib<td>Shared libraries built by ISCE
 </table>
 
 </ol>
