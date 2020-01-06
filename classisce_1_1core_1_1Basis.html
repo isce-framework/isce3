@@ -12,6 +12,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -212,7 +218,7 @@ CUDA_HOSTDEV void&#160;</td><td class="memItemRight" valign="bottom"><a class="e
   </dd>
 </dl>
 <p class="formulaDsp">
-<img class="formulaDsp" alt="\[ res = \sum_{i=0}^2 vec[i] \cdot x_i \]" src="form_1.png"/>
+\[ res = \sum_{i=0}^2 vec[i] \cdot x_i \]
 </p>
  
 </div>
@@ -250,7 +256,7 @@ CUDA_HOSTDEV void&#160;</td><td class="memItemRight" valign="bottom"><a class="e
   </dd>
 </dl>
 <p class="formulaDsp">
-<img class="formulaDsp" alt="\[ res_i = (x_i \cdot vec) \]" src="form_0.png"/>
+\[ res_i = (x_i \cdot vec) \]
 </p>
  
 </div>

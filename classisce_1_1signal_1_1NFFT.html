@@ -12,6 +12,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -208,9 +214,9 @@ template&lt;class T &gt; </div>
 
 <p>Execute a transform. </p>
 <p>Equivalent to </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[ f_j = \frac{1}{N} \sum_{k=-\frac{N}{2}}^{\frac{N}{2}-1} \hat{f}_k \exp(+2\pi i k t_j / N) \]" src="form_17.png"/>
+\[ f_j = \frac{1}{N} \sum_{k=-\frac{N}{2}}^{\frac{N}{2}-1} \hat{f}_k \exp(+2\pi i k t_j / N) \]
 </p>
-<p> Where <img class="formulaInl" alt="$ N $" src="form_18.png"/> is the size of the spectrum.</p>
+<p> Where \( N \) is the size of the spectrum.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">spectrum</td><td><a class="el" href="classisce_1_1signal_1_1Signal.html" title="A class to handle 2D FFT or 1D FFT in range or azimuth directions. ">Signal</a> to transform, in FFTW order. </td></tr>
@@ -352,9 +358,9 @@ template&lt;class T &gt; </div>
 
 <p>Execute an adjoint transform. </p>
 <p>Equivalent to </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[ \hat{f}_k = \sum_{j=0}^{M-1} f_j \exp(-2\pi i k t_j / N) \]" src="form_19.png"/>
+\[ \hat{f}_k = \sum_{j=0}^{M-1} f_j \exp(-2\pi i k t_j / N) \]
 </p>
-<p> Where <img class="formulaInl" alt="$ M $" src="form_20.png"/> is the number of time samples and <img class="formulaInl" alt="$ N $" src="form_18.png"/> is the size of the spectrum.</p>
+<p> Where \( M \) is the number of time samples and \( N \) is the size of the spectrum.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">time_series</td><td><a class="el" href="classisce_1_1signal_1_1Signal.html" title="A class to handle 2D FFT or 1D FFT in range or azimuth directions. ">Signal</a> to transform. </td></tr>
