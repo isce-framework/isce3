@@ -132,42 +132,14 @@ template&lt;class T &gt; </td></tr>
 <tr class="memitem:aef257d82a8e4d3493befdc124d3c34a2"><td class="memItemLeft" align="right" valign="top"><a id="aef257d82a8e4d3493befdc124d3c34a2"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>_update_aztime</b> (const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> satpos, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> satvel, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> inputXYZ, int side, double &amp;aztime, double &amp;slantRange, double rangeMin=std::numeric_limits&lt; double &gt;::quiet_NaN(), double rangeMax=std::numeric_limits&lt; double &gt;::quiet_NaN())</td></tr>
 <tr class="separator:aef257d82a8e4d3493befdc124d3c34a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3120af89278104c40c84acccf02766f3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a3120af89278104c40c84acccf02766f3">facetRTC</a> (<a class="el" href="classisce_1_1product_1_1Product.html">isce::product::Product</a> &amp;product, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, char frequency='A', bool native_doppler=false, <a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a> inputRadiometry=isce::core::rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a> outputMode=isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA_ISCE3, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), double rtc_min_value_db=std::numeric_limits&lt; double &gt;::quiet_NaN(), <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_edges=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_grid=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr)</td></tr>
-<tr class="separator:a3120af89278104c40c84acccf02766f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9a6ca37fa26ab037a58f6a631b2921ed"><td class="memTemplParams" colspan="2"><a id="a9a6ca37fa26ab037a58f6a631b2921ed"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a9a6ca37fa26ab037a58f6a631b2921ed"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>_applyRTC</b> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;input_raster, float rtc_area[], <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster)</td></tr>
-<tr class="separator:a9a6ca37fa26ab037a58f6a631b2921ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a558312ea8b3d8f7d8cf89abd52e6526b"><td class="memItemLeft" align="right" valign="top"><a id="a558312ea8b3d8f7d8cf89abd52e6526b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>applyRTC</b> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;input_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, bool native_doppler=false, <a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a> inputRadiometry=isce::core::rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a> outputMode=isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA_ISCE3, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), double rtc_min_value_db=std::numeric_limits&lt; double &gt;::quiet_NaN(), <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_edges=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_grid=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *input_rtc=nullptr)</td></tr>
-<tr class="separator:a558312ea8b3d8f7d8cf89abd52e6526b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff733f92967ce4d1f08bae73b6aabda1"><td class="memItemLeft" align="right" valign="top"><a id="aff733f92967ce4d1f08bae73b6aabda1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>facetRTC</b> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, bool native_doppler=false, <a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a> inputRadiometry=isce::core::rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a> outputMode=isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA_ISCE3, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), double rtc_min_value_db=std::numeric_limits&lt; double &gt;::quiet_NaN(), <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_edges=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_grid=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr)</td></tr>
-<tr class="separator:aff733f92967ce4d1f08bae73b6aabda1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11d355e713437845c66a62f8cea4ec36"><td class="memItemLeft" align="right" valign="top"><a id="a11d355e713437845c66a62f8cea4ec36"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>facetRTCDavidSmall</b> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">isce::geometry::DEMInterpolator</a> &amp;dem_interp, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, bool native_doppler=false, <a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a> inputRadiometry=isce::core::rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a> outputMode=isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA_ISCE3, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN())</td></tr>
-<tr class="separator:a11d355e713437845c66a62f8cea4ec36"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a851deac52245a671cbe2efef940ee8d7"><td class="memItemLeft" align="right" valign="top"><a id="a851deac52245a671cbe2efef940ee8d7"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>facetRTCAreaProj</b> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, bool native_doppler=false, <a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a> inputRadiometry=isce::core::rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a> outputMode=isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA_ISCE3, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), double rtc_min_value_db=std::numeric_limits&lt; double &gt;::quiet_NaN(), <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_edges=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_grid=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr, <a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> interp_method=isce::core::dataInterpMethod::BIQUINTIC_METHOD, double threshold=1e-4, int num_iter=100, double delta_range=1e-4)</td></tr>
-<tr class="separator:a851deac52245a671cbe2efef940ee8d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a98748e0048a0ac4a6c5dbcc107cc0b9d"><td class="memItemLeft" align="right" valign="top"><a id="a98748e0048a0ac4a6c5dbcc107cc0b9d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>facetRTCAreaProj</b> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, const double y0, const double dy, const double x0, const double dx, const int geogrid_length, const int geogrid_width, const int epsg=4326, <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> *ellipsoid=nullptr, bool native_doppler=false, <a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a> inputRadiometry=isce::core::rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a> outputMode=isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA_ISCE3, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), double rtc_min_value_db=std::numeric_limits&lt; double &gt;::quiet_NaN(), <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_edges=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_grid=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr, <a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> interp_method=isce::core::dataInterpMethod::BIQUINTIC_METHOD, double threshold=1e-4, int num_iter=100, double delta_range=1e-4)</td></tr>
-<tr class="separator:a98748e0048a0ac4a6c5dbcc107cc0b9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab2681f12d7d4be4a6fe01c5acde22f22"><td class="memItemLeft" align="right" valign="top"><a id="ab2681f12d7d4be4a6fe01c5acde22f22"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>areaProjIntegrateSegment</b> (double y1, double y2, double x1, double x2, int length, int width, double w_arr[], double &amp;w_total)</td></tr>
-<tr class="separator:ab2681f12d7d4be4a6fe01c5acde22f22"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b7997bab230ce1af4e3af6faf8d02fa"><td class="memItemLeft" align="right" valign="top"><a id="a7b7997bab230ce1af4e3af6faf8d02fa"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>areaProjGetNBlocks</b> (int array_length)</td></tr>
-<tr class="separator:a7b7997bab230ce1af4e3af6faf8d02fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84834bffede294625bc3237a6be458dc"><td class="memItemLeft" align="right" valign="top"><a id="a84834bffede294625bc3237a6be458dc"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>_addArea</b> (double area, float out_array[], <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks, float out_nlooks_array[], int length, int width, int x_min, int y_min, int size_x, int size_y, double w_arr[], double nlooks, double w_arr_out[], double &amp;nlooks_out, double x_center, double x_left, double x_right, double y_center, double y_left, double y_right)</td></tr>
-<tr class="separator:a84834bffede294625bc3237a6be458dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abffb3ec0ed6340998b7ec85b2ce4d8be"><td class="memItemLeft" align="right" valign="top"><a id="abffb3ec0ed6340998b7ec85b2ce4d8be"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>_computeFacet</b> (<a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> xyz_center, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> xyz_left, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> xyz_right, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> lookXYZ, double p1, double &amp;p3, double divisor, bool clockwise_direction)</td></tr>
-<tr class="separator:abffb3ec0ed6340998b7ec85b2ce4d8be"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ace3fd8690879ca8f1dae61ddfbeca6c7"><td class="memItemLeft" align="right" valign="top"><a id="ace3fd8690879ca8f1dae61ddfbeca6c7"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>_omp_thread_count</b> ()</td></tr>
-<tr class="separator:ace3fd8690879ca8f1dae61ddfbeca6c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af98b76cfba8e4e537297b286bad92efa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#af98b76cfba8e4e537297b286bad92efa">facetRTC</a> (<a class="el" href="classisce_1_1product_1_1Product.html">isce::product::Product</a> &amp;product, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;out_raster, char frequency='A', <a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a> inputRadiometry=isce::core::rtcInputRadiometry::SIGMA_NAUGHT, <a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a> outputMode=isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA)</td></tr>
+<tr class="separator:af98b76cfba8e4e537297b286bad92efa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add09b23742333b2da9bbd5ec6d593017"><td class="memItemLeft" align="right" valign="top"><a id="add09b23742333b2da9bbd5ec6d593017"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>facetRTC</b> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;out_raster, <a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a> inputRadiometry=isce::core::rtcInputRadiometry::SIGMA_NAUGHT, <a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a> outputMode=isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA)</td></tr>
+<tr class="separator:add09b23742333b2da9bbd5ec6d593017"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2eea4d3fa7611e10293fff18f86ef73c"><td class="memItemLeft" align="right" valign="top"><a id="a2eea4d3fa7611e10293fff18f86ef73c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>facetRTC</b> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">isce::geometry::DEMInterpolator</a> &amp;dem_interp, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;out_raster, <a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a> inputRadiometry=isce::core::rtcInputRadiometry::SIGMA_NAUGHT, <a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a> outputMode=isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA)</td></tr>
+<tr class="separator:a2eea4d3fa7611e10293fff18f86ef73c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abca55661934751972f2d495f5e4ed48b"><td class="memTemplParams" colspan="2"><a id="abca55661934751972f2d495f5e4ed48b"></a>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:abca55661934751972f2d495f5e4ed48b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>load_archive</b> (std::string metadata, char *objectTag, T *object)</td></tr>
@@ -365,8 +337,8 @@ template&lt;class Archive &gt; </td></tr>
 
 </div>
 </div>
-<a id="a3120af89278104c40c84acccf02766f3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3120af89278104c40c84acccf02766f3">&#9670;&nbsp;</a></span>facetRTC()</h2>
+<a id="af98b76cfba8e4e537297b286bad92efa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af98b76cfba8e4e537297b286bad92efa">&#9670;&nbsp;</a></span>facetRTC()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -387,7 +359,7 @@ template&lt;class Archive &gt; </td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
-          <td class="paramname"><em>output_raster</em>, </td>
+          <td class="paramname"><em>out_raster</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -398,50 +370,14 @@ template&lt;class Archive &gt; </td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>native_doppler</em> = <code>false</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype"><a class="el" href="namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93">isce::core::rtcInputRadiometry</a>&#160;</td>
-          <td class="paramname"><em>inputRadiometry</em> = <code>isce::core::rtcInputRadiometry::BETA_NAUGHT</code>, </td>
+          <td class="paramname"><em>inputRadiometry</em> = <code>isce::core::rtcInputRadiometry::SIGMA_NAUGHT</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef">isce::core::rtcOutputMode</a>&#160;</td>
-          <td class="paramname"><em>outputMode</em> = <code>isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA_ISCE3</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>geogrid_upsampling</em> = <code>std::numeric_limits&lt;double&gt;::quiet_NaN()</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>rtc_min_value_db</em> = <code>std::numeric_limits&lt;double&gt;::quiet_NaN()</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
-          <td class="paramname"><em>out_geo_edges</em> = <code>nullptr</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
-          <td class="paramname"><em>out_geo_grid</em> = <code>nullptr</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
-          <td class="paramname"><em>out_nlooks</em> = <code>nullptr</code>&#160;</td>
+          <td class="paramname"><em>outputMode</em> = <code>isce::core::rtcOutputMode::GAMMA_NAUGHT_AREA</code>&#160;</td>
         </tr>
         <tr>
           <td></td>

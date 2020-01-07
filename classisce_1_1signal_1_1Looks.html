@@ -73,13 +73,6 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a10e253655a0987658f8acea821ae3b1d"><td class="memItemLeft" align="right" valign="top"><a id="a10e253655a0987658f8acea821ae3b1d"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Looks.html#a10e253655a0987658f8acea821ae3b1d">Looks</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;input_raster, int <a class="el" href="classisce_1_1signal_1_1Looks.html#a5b744e68b7372727a7e3b5c6595d496d">colsLooks</a>, int <a class="el" href="classisce_1_1signal_1_1Looks.html#a03644cb5c9d8842c520461f3ffa320dc">rowsLooks</a>)</td></tr>
-<tr class="memdesc:a10e253655a0987658f8acea821ae3b1d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor with raster. <br /></td></tr>
-<tr class="separator:a10e253655a0987658f8acea821ae3b1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8dd61adf857fa2b364bb4463b9f2862a"><td class="memItemLeft" align="right" valign="top"><a id="a8dd61adf857fa2b364bb4463b9f2862a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>multilook</b> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, int p=1)</td></tr>
-<tr class="separator:a8dd61adf857fa2b364bb4463b9f2862a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a53b705d75a56ca54a34d1d08159f545d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Looks.html#a53b705d75a56ca54a34d1d08159f545d">multilook</a> (std::valarray&lt; T &gt; &amp;input, std::valarray&lt; T &gt; &amp;output)</td></tr>
 <tr class="memdesc:a53b705d75a56ca54a34d1d08159f545d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multi-looking an array of real data.  <a href="#a53b705d75a56ca54a34d1d08159f545d">More...</a><br /></td></tr>
 <tr class="separator:a53b705d75a56ca54a34d1d08159f545d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -105,7 +98,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>multilook</b> (<a cla
 <tr class="memdesc:ae3fc2852fa6ba56638d90ac9b09c31a9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multi-looking an array of complex data.  <a href="#ae3fc2852fa6ba56638d90ac9b09c31a9">More...</a><br /></td></tr>
 <tr class="separator:ae3fc2852fa6ba56638d90ac9b09c31a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade6c5ca8e362be1ca5126d86bd427819"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Looks.html#ade6c5ca8e362be1ca5126d86bd427819">multilook</a> (std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;input, std::valarray&lt; T &gt; &amp;output, int p)</td></tr>
-<tr class="memdesc:ade6c5ca8e362be1ca5126d86bd427819"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multi-looking amplitude of an array of complex data.  <a href="#ade6c5ca8e362be1ca5126d86bd427819">More...</a><br /></td></tr>
+<tr class="memdesc:ade6c5ca8e362be1ca5126d86bd427819"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multi-looking anmplitude of an array of complex data.  <a href="#ade6c5ca8e362be1ca5126d86bd427819">More...</a><br /></td></tr>
 <tr class="separator:ade6c5ca8e362be1ca5126d86bd427819"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb7040577a8fd31e3f50f1169d9ee024"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Looks.html#afb7040577a8fd31e3f50f1169d9ee024">nrows</a> (int)</td></tr>
 <tr class="memdesc:afb7040577a8fd31e3f50f1169d9ee024"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set number of rows in the data before multi-looking.  <a href="#afb7040577a8fd31e3f50f1169d9ee024">More...</a><br /></td></tr>
@@ -563,7 +556,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Multi-looking amplitude of an array of complex data. </p>
+<p>Multi-looking anmplitude of an array of complex data. </p>
 <p>The amplitudes may be raised by an exponent before summation </p><p class="formulaDsp">
 <img class="formulaDsp" alt="\[ a = \sum_{i=0}^{N} |x_i|^p \]" src="form_15.png"/>
 </p>
