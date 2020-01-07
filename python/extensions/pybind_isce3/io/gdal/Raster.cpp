@@ -42,7 +42,7 @@ py::buffer_info toBuffer(Raster & raster)
         case GDT_Float32    : return toBuffer<float>(raster);
         case GDT_Float64    : return toBuffer<double>(raster);
         case GDT_CFloat32   : return toBuffer<std::complex<float>>(raster);
-        case GDT_CFloat64   : return toBuffer<std::complex<float>>(raster);
+        case GDT_CFloat64   : return toBuffer<std::complex<double>>(raster);
         default             : break;
     }
 
