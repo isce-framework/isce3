@@ -48,18 +48,6 @@ function(CheckPyre)
     endif()
 endfunction()
 
-function(CheckFFTW3)
-    FIND_PACKAGE(FFTW3 REQUIRED)
-    message (STATUS "FFTW3 includes: ${FFTW_INCLUDES}")
-    message (STATUS "FFTW3 libraries: ${FFTW_LIBRARIES}")
-    message (STATUS "FFTW3 double: ${FFTW_LIB} ")
-    message (STATUS "FFTW3 single: ${FFTWF_LIB}")
-    message (STATUS "FFTW3 quad: ${FFTWL_LIB}")
-    message (STATUS "FFTW3 double with threads: ${FFTW_THREADS_LIB}")
-    message (STATUS "FFTW3 single with threads: ${FFTWF_THREADS_LIB}")
-    message (STATUS "FFTW3 quad with threads: ${FFTWL_THREADS_LIB}")
-endfunction()
-
 ##Check for GDAL installation
 function(CheckGDAL)
     find_package(GDAL 2.3 REQUIRED)

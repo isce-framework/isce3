@@ -103,7 +103,8 @@ CheckGDAL()
 CheckHDF5()
 
 #Check FFTW3
-CheckFFTW3()
+find_package(FFTW REQUIRED COMPONENTS
+    Float Double FloatThreads DoubleThreads)
 ##Check for Armadillo
 ##CheckArmadillo()
 

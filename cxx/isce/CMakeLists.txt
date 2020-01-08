@@ -12,7 +12,11 @@ target_link_libraries(${LISCE} PUBLIC
     ${HDF5_LIBRARY}
     OpenMP::OpenMP_CXX_Optional
     pyre
-    ${FFTWF_LIB} ${FFTW_LIB} ${FFTW_THREADS_LIB} ${FFTWF_THREADS_LIB})
+    FFTW::Float
+    FFTW::Double
+    FFTW::FloatThreads
+    FFTW::DoubleThreads
+    )
 
 target_include_directories(${LISCE} PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/..
