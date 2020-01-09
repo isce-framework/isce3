@@ -12,6 +12,12 @@
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+</script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -134,9 +140,9 @@ std::vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Data structure for representing 1D polynomials. </p>
 <p>Poly1D is function of the form </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\[ f\left( x \right) = \sum_{i=0}^{N} a_i \cdot \left( \frac{x-\mu}{\sigma} \right)^i \]" src="form_4.png"/>
+\[ f\left( x \right) = \sum_{i=0}^{N} a_i \cdot \left( \frac{x-\mu}{\sigma} \right)^i \]
 </p>
-<p>where <img class="formulaInl" alt="$a_i$" src="form_5.png"/> represents the coefficients, <img class="formulaInl" alt="$\mu$" src="form_6.png"/> represents the mean and <img class="formulaInl" alt="$\sigma$" src="form_7.png"/> represents the norm </p>
+<p>where \(a_i\) represents the coefficients, \(\mu\) represents the mean and \(\sigma\) represents the norm </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aac405c999939e79d4e813bf921d48649"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aac405c999939e79d4e813bf921d48649">&#9670;&nbsp;</a></span>Poly1d()</h2>

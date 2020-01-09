@@ -1,6 +1,7 @@
 var searchData=
 [
   ['core',['core',['../namespaceisce_1_1core.html',1,'isce']]],
+  ['isce_20directory_20structure',['ISCE Directory Structure',['../dirstructure.html',1,'']]],
   ['except',['except',['../namespaceisce_1_1except.html',1,'isce']]],
   ['fftw3cxx',['fftw3cxx',['../namespaceisce_1_1fftw3cxx.html',1,'isce']]],
   ['geometry',['geometry',['../namespaceisce_1_1geometry.html',1,'isce']]],
