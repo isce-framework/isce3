@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['isce_20directory_20structure',['ISCE Directory Structure',['../dirstructure.html',1,'']]],
   ['isce_20_2d_20insar_20scientific_20computing_20environment',['ISCE - InSAR Scientific Computing Environment',['../index.html',1,'']]],
   ['installing_20isce_20runtime_20docker_20image',['Installing ISCE Runtime Docker image',['../install_docker_bin.html',1,'']]],
   ['installing_20isce_20developer_20docker_20image',['Installing ISCE Developer Docker image',['../install_docker_dev.html',1,'']]],
