@@ -23,11 +23,11 @@ else
     TESTNAME="MemCheck"
 fi
 
-###Run the container
+# Run the container
 if [ "$MEMCHECK" = "1" ]; then
-   cat run-memcheck.sh | nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -c 'cat'
+    nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c "$(cat run-memcheck.sh)"
 else
-   cat run-test.sh | nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -c 'cat'
+    nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c "$(cat run-test.sh)"
 fi
 
 ###Copy file out of the container
