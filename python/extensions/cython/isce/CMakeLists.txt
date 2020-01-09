@@ -41,8 +41,6 @@ target_include_directories(
         isceextension PUBLIC
         ${PYTHON_NUMPY_INCLUDE_DIR}
 )
-target_include_directories(${LISCE} PUBLIC
-        ${ISCE_BUILDCYINCLUDEDIR})
 
 target_link_libraries(isceextension PUBLIC ${LISCE} m)
 
