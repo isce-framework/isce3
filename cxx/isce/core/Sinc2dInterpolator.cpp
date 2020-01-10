@@ -16,8 +16,11 @@ Sinc2dInterpolator(int sincLen, int sincSub) :
     _kernelLength{sincSub}, _kernelWidth{sincLen}, _sincHalf{sincLen / 2} {
 
     // Temporary valarray for storing sinc coefficients
-    std::valarray<double> filter(0.0, sincSub * sincLen + 1);
+    std::valarray<double> filter(0.0, sincSub * sincLen);
     _sinc_coef(1.0, sincLen, sincSub, 0.0, 1, filter);
+
+    // Resize member kernel matrix
+    _kernel.resize(sincSub, sincLen);
 
     // Normalize filter
     for (size_t i = 0; i < sincSub; ++i) {
@@ -26,17 +29,10 @@ Sinc2dInterpolator(int sincLen, int sincSub) :
         for (size_t j = 0; j < sincLen; ++j) {
             ssum += filter[i + sincSub*j];
         }
-        // Normalize the filter
+        // Normalize the filter coefficients and copy to transposed member kernel
         for (size_t j = 0; j < sincLen; ++j) {
             filter[i + sincSub*j] /= ssum;
-        }
-    }
-
-    // Copy transpose of filter coefficients to member kernel matrix
-    _kernel.resize(sincSub, sincLen);
-    for (size_t i = 0; i < sincLen; ++i) {
-        for (size_t j = 0; j < sincSub; ++j) {
-            _kernel(j,i) = filter[j + sincSub*i];
+            _kernel(i,j) = filter[i + sincSub*j];
         }
     }
 }
@@ -103,7 +99,7 @@ isce::core::Sinc2dInterpolator<U>::
 _sinc_coef(double beta, double , int decfactor, double pedestal, int weight,
            std::valarray<double> & filter) {
  
-    int filtercoef = int(filter.size()) - 1;
+    int filtercoef = int(filter.size());
     double wgthgt = (1.0 - pedestal) / 2.0;
     double soff = (filtercoef - 1.) / 2.;
 
