@@ -25,13 +25,13 @@ fi
 
 # Run the container
 if [ "$MEMCHECK" = "1" ]; then
-    nvidia-docker run --rm --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
+    nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
         'source /opt/docker/bin/entrypoint_source \
           && cd build \
           && ctest -j `nproc` --nocompress-output --output-on-failure -T Test || true \
           && cp Testing/$(head -1 Testing/TAG)/Test.xml .'
 else
-    nvidia-docker run --rm --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
+    nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
         'source /opt/docker/bin/entrypoint_source \
           && cd build \
           && ctest --nocompress-output --output-on-failure -T Test || true \
