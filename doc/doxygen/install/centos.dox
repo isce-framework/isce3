@@ -244,11 +244,14 @@ Other optional arguments can be added to the cmake line
                         -DCMAKE_BUILD_TYPE=Debug<td>  
     <tr><td>Run tests with "-T memcheck" to check for memory leaks.
     <tr><td>valgrind needs to be installed.
-    <tr><td>-DPYTHON_EXECUTABLE:FILENAME=<path_to_python_exe><td>Pass this argument if installing to a python virtual environment
-    <tr><td>-DCMAKE_BUILD_TYPE=RelWithDebInfo<td>Build with optimization flags with release. Default is to build in debug mode
+    <tr><td>-DPYTHON_EXECUTABLE:FILENAME=<path_to_python_exe><td>Pass this argument if installing to a 
+    python virtual environment
+    <tr><td>-DCMAKE_BUILD_TYPE=RelWithDebInfo<td>Build with optimization flags with release.
+    Default is to build in debug mode
 </table>
 
-Following env variables can also be used to control cmake behavior. Use these settings if cmake fails to identify the right compilers or install locations of dependencies.
+Following env variables can also be used to control cmake behavior. Use these settings
+if cmake fails to identify the right compilers or install locations of dependencies.
 <table>
     <caption id="cmake_env_options">Additional environment variables impacting cmake</caption>
     <tr><th>Variable<th>Description

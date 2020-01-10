@@ -2,7 +2,8 @@
 
 \tableofcontents
 
-ISCE uses Doxgen for building C++ documentation and Sphinx for python documentation. Note that you will need to build the sofrware first, before being able to build the documentation.
+ISCE uses Doxgen for building C++ documentation and Sphinx for python documentation.
+Note that you will need to build the sofrware first, before being able to build the documentation.
 
 
 \section doxygenbuild Building C++ documentation using Doxygen

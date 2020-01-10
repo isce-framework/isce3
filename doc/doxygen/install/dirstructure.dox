@@ -4,7 +4,9 @@
 
 \section gitstructure Source folder structure 
 
-The directory structure of the ISCE git repository is as shown below. The repository might contain other hidden folder like ".cmake", ".mm", ".ci" etc  that contain configuration files for different build and CI systems.
+The directory structure of the ISCE git repository is as shown below.
+The repository might contain other hidden folder like ".cmake", ".mm", ".ci" etc
+that contain configuration files for different build and CI systems.
 
 \verbatim
 
@@ -52,7 +54,8 @@ The directory structure of the ISCE git repository is as shown below. The reposi
 
 \section installstructure Installation folder structure
 
-ISCE tries to follow the same directory structure as used by other open source projects like GDAL, FFTW etc. Shown below are the contents of the sub-folders populated by ISCE below the installation folder. 
+ISCE tries to follow the same directory structure as used by other open source projects like GDAL, FFTW etc.
+Shown below are the contents of the sub-folders populated by ISCE below the installation folder. 
 
 \verbatim
 
