@@ -25,9 +25,22 @@ fi
 
 # Run the container
 if [ "$MEMCHECK" = "1" ]; then
-    nvidia-docker run --rm --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c "$(cat run-memcheck.sh)"
+    nvidia-docker run --rm --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
+        'source /opt/docker/bin/entrypoint_source \
+          && cd build \
+          && ctest -j `nproc` --nocompress-output --output-on-failure -T Test || true \
+          && cp Testing/$(head -1 Testing/TAG)/Test.xml .'
 else
-    nvidia-docker run --rm --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c "$(cat run-test.sh)"
+    nvidia-docker run --rm --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
+        'source /opt/docker/bin/entrypoint_source \
+          && cd build \
+          && ctest --nocompress-output --output-on-failure -T Test || true \
+          && cp Testing/$(head -1 Testing/TAG)/Test.xml . \
+          && ctest --no-compress-output --output-on-failure --timeout 10000 -T MemCheck \
+                -E test.cxx.iscecuda.core.stream.event \
+                -E test.cxx.iscecuda.core.stream.stream \
+                || true \
+          && cp Testing/$(head -1 Testing/TAG)/DynamicAnalysis.xml .'
 fi
 
 ###Copy file out of the container
