@@ -26,8 +26,12 @@ __host__ gpuSinc2dInterpolator<U>::gpuSinc2dInterpolator(int sincLen, int sincSu
         kernel_length(sincSub), kernel_width(sincLen), sinc_half(sincLen/2), 
         owner(true) {
     // Temporary valarray for storing sinc coefficients
-    std::valarray<double> filter(0.0, sincSub * sincLen + 1);
+    std::valarray<double> filter(0.0, sincSub * sincLen);
     sinc_coef(1.0, sincLen, sincSub, 0.0, 1, filter);
+
+    // Kernel matrix sized to transposed filter coefficients
+    Matrix<double> h_kernel;
+    h_kernel.resize(sincSub, sincLen);
 
     // Normalize filter
     for (size_t i = 0; i < sincSub; ++i) {
@@ -36,18 +40,10 @@ __host__ gpuSinc2dInterpolator<U>::gpuSinc2dInterpolator(int sincLen, int sincSu
         for (size_t j = 0; j < sincLen; ++j) {
             ssum += filter[i + sincSub*j];
         }
-        // Normalize the filter
+        // Normalize the filter coefficients and copy to transposed kernel
         for (size_t j = 0; j < sincLen; ++j) {
             filter[i + sincSub*j] /= ssum;
-        }
-    }
-
-    // Copy transpose of filter coefficients to member kernel matrix
-    Matrix<double> h_kernel;
-    h_kernel.resize(sincSub, sincLen);
-    for (size_t i = 0; i < sincLen; ++i) {
-        for (size_t j = 0; j < sincSub; ++j) {
-            h_kernel(j,i) = filter[j + sincSub*i];
+            h_kernel(i,j) = filter[i + sincSub*j];
         }
     }
 
@@ -130,7 +126,7 @@ __host__ void
 gpuSinc2dInterpolator<U>::
         sinc_coef(double beta, double relfiltlen, int decfactor, double pedestal, int weight, std::valarray<double> & filter) { 
 
-    int filtercoef = int(filter.size()) - 1;
+    int filtercoef = int(filter.size());
     double wgthgt = (1.0 - pedestal) / 2.0;
     double soff = (filtercoef - 1.) / 2.;
 
