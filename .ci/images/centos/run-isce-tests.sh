@@ -47,7 +47,7 @@ BLDDIR=/home/conda/build
 SRCDIR=/home/conda/isce
 SPHX_SRC=$SRCDIR/doc/sphinx
 SPHX_CONF=$BLDDIR/doc/sphinx
-SPHX_DIR=$DOCDIR/sphinx
+SPHX_DIR=$BLDDIR/doc/html/sphinx
 SPHX_CACHE=$SPHX_DIR/_doctrees
 SPHX_HTML=$SPHX_DIR/html
 
