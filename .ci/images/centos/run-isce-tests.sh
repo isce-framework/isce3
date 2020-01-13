@@ -42,9 +42,25 @@ else
           && cp Testing/$(head -1 Testing/TAG)/DynamicAnalysis.xml .'
 fi
 
+# boilerplate documentation paths copied from Jenkins PR run script
+BLDDIR=/home/conda/build
+SRCDIR=/home/conda/isce
+SPHX_SRC=$SRCDIR/doc/sphinx
+SPHX_CONF=$BLDDIR/doc/sphinx
+SPHX_DIR=$DOCDIR/sphinx
+SPHX_CACHE=$SPHX_DIR/_doctrees
+SPHX_HTML=$SPHX_DIR/html
+
+DOCSTAG=isce-centos-docs-latest-$TAG
+nvidia-docker run --name $DOCSTAG $IMAGE:$TAG bash -exc \
+    "PYTHONPATH=$BLDDIR/packages/isce3/extensions \
+     sphinx-build -q -b html -c $SPHX_CONF -d $SPHX_CACHE $SPHX_SRC $SPHX_HTML \
+     && doxygen $BLDDIR/doc/doxygen/Doxyfile"
+docker cp $DOCSTAG:$BLDDIR/doc/html doc
+docker rm $DOCSTAG
+
 ###Copy file out of the container
 docker cp ${CONTAINERTAG}:/home/conda/build/Test.xml .
-docker cp ${CONTAINERTAG}:/home/conda/build/doc/html doc
 docker cp ${CONTAINERTAG}:/home/conda/build/cppcheck.xml .
 if [ "$MEMCHECK" = "1" ]; then
    docker cp  ${CONTAINERTAG}:/home/conda/build/DynamicAnalysis.xml .
@@ -66,4 +82,3 @@ fi
 
 ###Delete the container
 docker rm ${CONTAINERTAG}
-
