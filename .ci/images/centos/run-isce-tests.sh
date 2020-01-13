@@ -17,14 +17,14 @@ echo "TAG is $TAG"
 
 CONTAINERTAG=isce-test-latest-${TAG}
 
-if [ "$MEMCHECK" = "1" ]; then
+if [ "$MEMCHECK" = "0" ]; then
     TESTNAME="Test"
 else
     TESTNAME="MemCheck"
 fi
 
 # Run the container
-if [ "$MEMCHECK" = "1" ]; then
+if [ "$MEMCHECK" = "0" ]; then
     nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
         'source /opt/docker/bin/entrypoint_source \
           && cd build \
@@ -37,8 +37,7 @@ else
           && ctest --nocompress-output --output-on-failure -T Test || true \
           && cp Testing/$(head -1 Testing/TAG)/Test.xml . \
           && ctest --no-compress-output --output-on-failure --timeout 10000 -T MemCheck \
-                -E test.cxx.iscecuda.core.stream.event \
-                -E test.cxx.iscecuda.core.stream.stream \
+                -E test.cxx.iscecuda.core.stream. \
                 || true \
           && cp Testing/$(head -1 Testing/TAG)/DynamicAnalysis.xml .'
 fi
