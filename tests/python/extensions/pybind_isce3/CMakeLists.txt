@@ -1,4 +1,5 @@
 set(TESTFILES
+core/timedelta.py
 io/gdal/dataset.py
 io/gdal/raster.py
 )

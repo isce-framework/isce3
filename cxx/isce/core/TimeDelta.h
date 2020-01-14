@@ -99,6 +99,9 @@ public:
 // Some constants
 namespace isce {
     namespace core {
+
+        TimeDelta operator*(double, const TimeDelta &);
+
         const int MIN_TO_SEC=60;
         const int HOUR_TO_SEC=3600;
         const int HOUR_TO_MIN=60;

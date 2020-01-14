@@ -319,4 +319,13 @@ operator/=(const double& s)
     return *this;
 }
 
+namespace isce { namespace core {
+
+TimeDelta operator*(double lhs, const TimeDelta & rhs)
+{
+    return TimeDelta(lhs * rhs.getTotalSeconds());
+}
+
+}}
+
 // end of file

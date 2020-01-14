@@ -1,7 +1,5 @@
 # get source/header files
-# XXX no need to install headers, should we still track them?
 include(Sources.cmake)
-include(Headers.cmake)
 
 # add build target
 # library name MUST match the name of the pybind11 module
