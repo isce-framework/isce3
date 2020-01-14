@@ -280,6 +280,8 @@ Step 2: Build the software</h2>
 <tr>
 <th>Option </th><th>Description </th></tr>
 <tr>
+<td>-DWITH_CUDA=ON </td><td>Build with CUDA support (will need CUDA libraries installed) </td></tr>
+<tr>
 <td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE &lt;br&gt; -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --track-origins=yes" &lt;br&gt; -DCMAKE_BUILD_TYPE=Debug</td><td></td></tr>
 <tr>
 <td>Run tests with "-T memcheck" to check for memory leaks. </td></tr>
