@@ -11,6 +11,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <iostream>
 #include <string>
 
 /** Data structure to store date time to nano-sec precision*/
@@ -58,13 +59,15 @@ public:
     void _normalize();
     ///@endcond
 
+    explicit operator std::string() const { return isoformat(); }
+
     // Comparison operators
-    bool operator<( const DateTime &ts) const;
-    bool operator>( const DateTime &ts) const;
-    bool operator<=( const DateTime &ts) const;
-    bool operator>=( const DateTime &ts) const;
-    bool operator==( const DateTime &ts) const;
-    bool operator!=( const DateTime &ts) const;
+    bool operator<(const DateTime &ts) const;
+    bool operator>(const DateTime &ts) const;
+    bool operator<=(const DateTime &ts) const;
+    bool operator>=(const DateTime &ts) const;
+    bool operator==(const DateTime &ts) const;
+    bool operator!=(const DateTime &ts) const;
 
     // Math operators
     DateTime& operator=(const DateTime& ts);
@@ -121,6 +124,8 @@ public:
 // Some constants
 namespace isce {
     namespace core {
+
+        std::ostream & operator<<(std::ostream &, const DateTime &);
 
         // Constants for default constructors
         const DateTime MIN_DATE_TIME = DateTime(1970, 1, 1);

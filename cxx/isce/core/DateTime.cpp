@@ -488,4 +488,13 @@ strptime(const std::string & datetime_string, const std::string & sep) {
     this->frac = decimal_seconds - integer_seconds;
 }
 
+namespace isce { namespace core {
+
+std::ostream & operator<<(std::ostream & os, const DateTime & datetime)
+{
+    return os << std::string(datetime);
+}
+
+}}
+
 // end of file
