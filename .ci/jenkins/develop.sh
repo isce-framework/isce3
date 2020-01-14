@@ -39,7 +39,7 @@ $DOCKER rm $CONTAINER || true
 $DOCKER run --name $CONTAINER \
     -v `pwd`:$SRCDIR:ro \
     isce-ci/builder bash -c \
-    "cmake $SRCDIR -DWITH_CUDA=y -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    "cmake $SRCDIR -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                    -DCMAKE_INSTALL_PREFIX=$PREFIX \
      && make -j`nproc` VERBOSE=y \
      && make install"
