@@ -11,6 +11,7 @@ RUN dnf --enablerepo=PowerTools install -y cppcheck \
 
 RUN conda install -q -y \
         cmake \
+        fftw \
         gdal \
         h5py \
         numpy \
