@@ -102,19 +102,22 @@ $DOCKER run --rm \
     "doxygen $BLDDIR/doc/doxygen/Doxyfile"
 
 #
-# Push documentation to gh-pages
+# Push documentation pages
 #
-docker cp $CONTAINER:$BLDDIR/doc gh-pages
-cd gh-pages
-mv html/* .
-touch .nojekyll
 
-git clone --single-branch --branch gh-pages --no-checkout \
-    https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/isce-3/isce tmp
-mv tmp/.git .
+git clone --depth 1 --no-checkout https://$GIT_OAUTH_TOKEN@github-fn.jpl.nasa.gov/isce-3/pr-docs
+cd pr-docs
+git reset
+
+mkdir -p $ghprbPullId
+cd $ghprbPullId
+
+docker cp $CONTAINER:$BLDDIR/doc/. .
+mv html/* .
+
 git add .
 git status
 
 git config --local user.name  "gmanipon"
 git config --local user.email "gmanipon@jpl.nasa.gov"
-git commit -am "auto update of docs ($BUILD_URL)" && git push || echo "no changes committed"
+git commit -am "PR $ghprbPullId ($BUILD_URL)" && git push || echo "no changes committed"
