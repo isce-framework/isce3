@@ -27,6 +27,16 @@ public:
     Raster(const std::string & path, GDALAccess access = GA_ReadOnly);
 
     /**
+     * Open an HDF5 dataset containing a single raster band as a GDAL raster.
+     *
+     * The resulting raster is invalidated if the HDF5 file is closed.
+     *
+     * \param[in] dataset   HDF5 dataset
+     * \param[in] access    Access mode
+     */
+    Raster(const isce::io::IDataSet & dataset, GDALAccess access = GA_ReadOnly);
+
+    /**
      * Open an existing file as a GDAL dataset and fetch the specified raster band.
      *
      * \param[in] path File path
@@ -34,6 +44,17 @@ public:
      * \param[in] access Access mode
      */
     Raster(const std::string & path, int band, GDALAccess access = GA_ReadOnly);
+
+    /**
+     * Open an HDF5 dataset as a GDAL dataset and fetch the specified raster band.
+     *
+     * The resulting raster is invalidated if the HDF5 file is closed.
+     *
+     * \param[in] dataset   HDF5 dataset
+     * \param[in] band      Raster band index (1-based)
+     * \param[in] access    Access mode
+     */
+    Raster(const isce::io::IDataSet & dataset, int band, GDALAccess access = GA_ReadOnly);
 
     /**
      * Create a new GDAL dataset containing a single raster band.

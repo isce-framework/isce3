@@ -3,6 +3,7 @@
 #include <array>
 
 #include <isce/except/Error.h>
+#include <isce/io/IH5Dataset.h>
 
 #include "Raster.h"
 #include "SpatialReference.h"
@@ -16,6 +17,7 @@ void registerDrivers()
     if (!registered) {
         // register GDAL drivers (only needs to be done once)
         GDALAllRegister();
+        GDALRegister_IH5();
         registered = true;
     }
 }
@@ -104,6 +106,11 @@ Dataset::Dataset(const std::string & path, GDALAccess access)
 :
     _dataset(openDataset(path, access)),
     _access(access)
+{}
+
+Dataset::Dataset(const IDataSet & dataset, GDALAccess access)
+:
+    Dataset(dataset.toGDAL(), access)
 {}
 
 Dataset::Dataset(const std::string & path,

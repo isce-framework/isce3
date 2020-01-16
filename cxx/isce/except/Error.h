@@ -31,6 +31,7 @@ namespace isce {
     using InvalidArgument = Error<std::invalid_argument>;
     using LengthError = Error<std::length_error>;
     using OutOfRange = Error<std::out_of_range>;
+    using OverflowError = Error<std::overflow_error>;
     using RuntimeError = Error<std::runtime_error>;
 
     // special exception type for errors returned from GDAL API functions

@@ -7,7 +7,7 @@ if [ "$#" -ne 2 ]; then
   exit 1
 fi
 
-set -ex
+set -exu
 
 TAG=$1
 MEMCHECK=$2
@@ -17,14 +17,14 @@ echo "TAG is $TAG"
 
 CONTAINERTAG=isce-test-latest-${TAG}
 
-if [ "$MEMCHECK" = "1" ]; then
+if [ "$MEMCHECK" = "0" ]; then
     TESTNAME="Test"
 else
     TESTNAME="MemCheck"
 fi
 
 # Run the container
-if [ "$MEMCHECK" = "1" ]; then
+if [ "$MEMCHECK" = "0" ]; then
     nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
         'source /opt/docker/bin/entrypoint_source \
           && cd build \
@@ -37,15 +37,30 @@ else
           && ctest --nocompress-output --output-on-failure -T Test || true \
           && cp Testing/$(head -1 Testing/TAG)/Test.xml . \
           && ctest --no-compress-output --output-on-failure --timeout 10000 -T MemCheck \
-                -E test.cxx.iscecuda.core.stream.event \
-                -E test.cxx.iscecuda.core.stream.stream \
+                -E test.cxx.iscecuda.core.stream. \
                 || true \
           && cp Testing/$(head -1 Testing/TAG)/DynamicAnalysis.xml .'
 fi
 
+# boilerplate documentation paths copied from Jenkins PR run script
+BLDDIR=/home/conda/build
+SRCDIR=/home/conda/isce
+SPHX_SRC=$SRCDIR/doc/sphinx
+SPHX_CONF=$BLDDIR/doc/sphinx
+SPHX_DIR=$BLDDIR/doc/html/sphinx
+SPHX_CACHE=$SPHX_DIR/_doctrees
+SPHX_HTML=$SPHX_DIR/html
+
+DOCSTAG=isce-centos-docs-latest-$TAG
+nvidia-docker run --name $DOCSTAG $IMAGE:$TAG bash -exc \
+    "PYTHONPATH=$BLDDIR/packages/isce3/extensions \
+     sphinx-build -q -b html -c $SPHX_CONF -d $SPHX_CACHE $SPHX_SRC $SPHX_HTML \
+     && doxygen $BLDDIR/doc/doxygen/Doxyfile"
+docker cp $DOCSTAG:$BLDDIR/doc/html doc
+docker rm $DOCSTAG
+
 ###Copy file out of the container
 docker cp ${CONTAINERTAG}:/home/conda/build/Test.xml .
-docker cp ${CONTAINERTAG}:/home/conda/build/doc/html doc
 docker cp ${CONTAINERTAG}:/home/conda/build/cppcheck.xml .
 if [ "$MEMCHECK" = "1" ]; then
    docker cp  ${CONTAINERTAG}:/home/conda/build/DynamicAnalysis.xml .
@@ -67,4 +82,3 @@ fi
 
 ###Delete the container
 docker rm ${CONTAINERTAG}
-

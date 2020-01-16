@@ -29,7 +29,7 @@ namespace isce {
      typedef struct float16 {} float16;
      typedef struct n1bit {} n1bit;
      typedef struct n2bit {} n2bit;
-    
+
 
      // Parameters containers for HDF5 searching capability
      struct findMeta {
@@ -54,7 +54,7 @@ namespace isce {
 
 
 
-     /* 
+     /*
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
       *                                          IDATASET CLASS
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -63,9 +63,9 @@ namespace isce {
 
      /** Our derived dataset structure that includes utility functions */
      class IDataSet: public H5::DataSet {
-            
+
         public:
-                
+
            // Constructors
 
            /** Empty constructor */
@@ -80,7 +80,7 @@ namespace isce {
            // Metadata query
 
            /** Get a list of attributes attached to dataset */
-           std::vector<std::string> getAttrs(); 
+           std::vector<std::string> getAttrs();
 
            /** Get a HDF5 DataSpace object corresponding to dataset or given attribute */
            H5::DataSpace getDataSpace(const std::string &v="");
@@ -104,7 +104,7 @@ namespace isce {
            int getNumBits(const std::string &v ="");
 
             /** Generate GDALDataset Representation */
-            std::string toGDAL();
+            std::string toGDAL() const;
 
 
 
@@ -112,43 +112,43 @@ namespace isce {
 
            /** Reading scalar (non string) dataset or attributes */
            template<typename T>
-           inline void read(T &v, const std::string &att=""); 
+           inline void read(T &v, const std::string &att="");
 
            /** Reading scalar string dataset or attributes */
-           void read(std::string &v, const std::string &att=""); 
+           void read(std::string &v, const std::string &att="");
 
            /** Reading multi-dimensional attribute in raw pointer */
            template<typename T>
-           inline void read(T *buf, const std::string &att); 
+           inline void read(T *buf, const std::string &att);
 
            /** Reading multi-dimensional attribute in vector */
            template<typename T>
-           inline void read(std::vector<T> &buf, const std::string &att); 
+           inline void read(std::vector<T> &buf, const std::string &att);
 
            /** Reading multi-dimensional attribute in valarray */
            template<typename T>
-           inline void read(std::valarray<T> &buf, const std::string &att); 
-      
+           inline void read(std::valarray<T> &buf, const std::string &att);
 
 
-           // Function to read a dataset from file to memory variable. The input parameter 
-           // is a raw point/vector/valarray that will store the (partial) multi-dimensional 
+
+           // Function to read a dataset from file to memory variable. The input parameter
+           // is a raw point/vector/valarray that will store the (partial) multi-dimensional
            // dataset.
-           // Input vector/valarray is initialized by caller, but resized (if needed) by the 
-           // function. Raw pointer have to be allocated by caller. 
+           // Input vector/valarray is initialized by caller, but resized (if needed) by the
+           // function. Raw pointer have to be allocated by caller.
            // Partial extraction of data is possible using startIn, countIn, and strideIn.
            // startIn: Array containing the position of the first element to read in all
-           //          dimension. SizeIn size must be equal to the number of dimension 
+           //          dimension. SizeIn size must be equal to the number of dimension
            //          of the dataset. If nullptr, startIn values are 0.
-           // countIn: Array containing the number of elements to read in all dimension. 
+           // countIn: Array containing the number of elements to read in all dimension.
            //          countIn size must be equal to the number of dimension of the dataset.
            // strideIn:Array containing the stride between elements to read in all dimension.
-           //          strideIn size must be equal to the number of dimension of the dataset. 
+           //          strideIn size must be equal to the number of dimension of the dataset.
            //          If nullptr, stridIn values are 1.
            //
            // Examples:
            // - Dataset contains a 3-bands raster. Dimensions are (100,100,3).
-           // To retrieve the full second band: 
+           // To retrieve the full second band:
            // startIn=[0,0,1], countIn=[100,100,1], strideIn=nullptr or [1,1,1]
            // To retrieve the first band, but only every other elements in X direction:
            // startIn=[0,0,0], countIn=[50,100,1], strideIn=[2,1,1]
@@ -157,8 +157,8 @@ namespace isce {
 
            /** Reading multi-dimensional dataset in raw pointer */
            template<typename T>
-           inline void read(T *buf, const int * startIn = nullptr, 
-		                     const int * countIn = nullptr, 
+           inline void read(T *buf, const int * startIn = nullptr,
+		                     const int * countIn = nullptr,
                              const int * strideIn = nullptr);
 
            /** Reading multi-dimensional dataset in raw pointer with std:slice subsetting */
@@ -168,7 +168,7 @@ namespace isce {
            /** Reading multi-dimensional dataset in raw pointer with std:gslice subsetting */
            template<typename T>
            inline void read(T *buf, const std::gslice * gsliceIn);
-           
+
 
 
 
@@ -179,17 +179,17 @@ namespace isce {
 
            /** Reading multi-dimensional dataset in vector */
            template<typename T>
-           inline void read(std::vector<T> &buf, const std::vector<int>  * startIn, 
-		                                  const std::vector<int>  * countIn, 
+           inline void read(std::vector<T> &buf, const std::vector<int>  * startIn,
+		                                  const std::vector<int>  * countIn,
                                           const std::vector<int>  * strideIn);
 
            /** Reading multi-dimensional dataset in vector with std:slice subsetting */
            template<typename T>
-           inline void read(std::vector<T> &buf, const std::vector<std::slice> * slicesIn); 
+           inline void read(std::vector<T> &buf, const std::vector<std::slice> * slicesIn);
 
            /** Reading multi-dimensional dataset in vector with std:gslice subsetting */
            template<typename T>
-           inline void read(std::vector<T> &buf, const std::gslice * gsliceIn); 
+           inline void read(std::vector<T> &buf, const std::gslice * gsliceIn);
 
 
 
@@ -201,17 +201,17 @@ namespace isce {
 
            /** Reading multi-dimensional dataset in valarray */
            template<typename T>
-           inline void read(std::valarray<T> &buf, const std::valarray<int> * startIn, 
-                                            const std::valarray<int> * countIn, 
+           inline void read(std::valarray<T> &buf, const std::valarray<int> * startIn,
+                                            const std::valarray<int> * countIn,
                                             const std::valarray<int> * strideIn);
 
            /** Reading multi-dimensional dataset in valarray with std:slice subsetting */
            template<typename T>
-           inline void read(std::valarray<T> &buf, const std::vector<std::slice> * slicesIn); 
+           inline void read(std::valarray<T> &buf, const std::vector<std::slice> * slicesIn);
 
            /** Reading multi-dimensional dataset in valarray with std:slice subsetting */
            template<typename T>
-           inline void read(std::valarray<T> &buf, const std::gslice * gsliceIn); 
+           inline void read(std::valarray<T> &buf, const std::gslice * gsliceIn);
 
 
 
@@ -232,7 +232,7 @@ namespace isce {
            /** Writing std::vector data into a multi-dimensional dataset using std::slice for subsetting */
            template<typename T>
            inline void write(const std::vector<T> &buf, const std::vector<std::slice> * slicesIn);
-           
+
            /** Writing std::vector data into a multi-dimensional dataset using std::gslice for subsetting */
            template<typename T>
            inline void write(const std::vector<T> &buf, const std::gslice * gsliceIn);
@@ -254,7 +254,7 @@ namespace isce {
            /** Writing std::valarray data into a multi-dimensional dataset using std::slice for subsetting */
            template<typename T>
            inline void write(const std::valarray<T> &buf, const std::vector<std::slice> * slicesIn);
-           
+
            /** Writing std::valarray data into a multi-dimensional dataset using std::gslice for subsetting */
            template<typename T>
            inline void write(const std::valarray<T> &buf, const std::gslice * gsliceIn);
@@ -275,7 +275,7 @@ namespace isce {
            /** Writing a buffer into a multi-dimensional dataset using std::slice for subsetting */
            template<typename T>
            inline void write(const T *buf, const std::vector<std::slice> * slicesIn);
-           
+
            /** Writing a buffer into a multi-dimensional dataset using std::gslice for subsetting */
            template<typename T>
            inline void write(const T *buf, const std::gslice * gsliceIn);
@@ -312,7 +312,7 @@ namespace isce {
 
 
            /** Get DataSpace corresponding to slice defined by start, count and stride */
-           H5::DataSpace getDataSpace(const int * startIn, 
+           H5::DataSpace getDataSpace(const int * startIn,
                                       const int * countIn,
                                       const int * strideIn);
 
@@ -323,20 +323,20 @@ namespace isce {
            H5::DataSpace getDataSpace(const std::gslice * gsliceIn);
 
            /** Get DataSpace with a GDAL RasterIO-like interface */
-           H5::DataSpace getDataSpace(const size_t xidx, 
-                                      const size_t yidx, 
-                                      const size_t iowidth, 
-                                      const size_t iolength, 
+           H5::DataSpace getDataSpace(const size_t xidx,
+                                      const size_t yidx,
+                                      const size_t iowidth,
+                                      const size_t iolength,
                                       const size_t band);
 
 
         private:
 
            template<typename T>
-           void read(T * buffer, const H5::DataSpace& dspace); 
+           void read(T * buffer, const H5::DataSpace& dspace);
 
-           void read(std::string * buffer, const H5::DataSpace& dspace); 
-           void read(std::string * buf, const std::string &att); 
+           void read(std::string * buffer, const H5::DataSpace& dspace);
+           void read(std::string * buf, const std::string &att);
 
 
 
@@ -344,12 +344,12 @@ namespace isce {
 
 
            template<typename T>
-           void createAttribute(const std::string& name, 
+           void createAttribute(const std::string& name,
                                 const H5::DataType& datatype,
                                 const H5::DataSpace& dataspace,
                                 const T* buffer);
 
-           void createAttribute(const std::string& name, 
+           void createAttribute(const std::string& name,
                                 const H5::DataType& datatype,
                                 const H5::DataSpace& dataspace,
                                 const std::string * buffer);
@@ -375,7 +375,7 @@ namespace isce {
      class IGroup: public H5::Group {
 
         public:
-   
+
            IGroup(): H5::Group(){};
 	       IGroup(H5::Group &group): H5::Group(group){};
 	       IGroup(hid_t group): H5::Group(group){};
@@ -383,19 +383,19 @@ namespace isce {
 	       std::vector<std::string> getAttrs();
 
            /** Search function for given name in the group */
-           std::vector<std::string> find(const std::string name, 
-                                         const std::string start = ".", 
-                                         const std::string type = "BOTH", 
-                                         const std::string returnedPath = "FULL"); 
+           std::vector<std::string> find(const std::string name,
+                                         const std::string start = ".",
+                                         const std::string type = "BOTH",
+                                         const std::string returnedPath = "FULL");
 
            /** Return the path of the group from the file root */
            std::string getPathname();
 
            /** Return the H5::DataSpace of the given attribute */
-           H5::DataSpace getDataSpace(const std::string &name); 
+           H5::DataSpace getDataSpace(const std::string &name);
 
            /** Return the number of elements in the given attribute */
-           int getNumElements(const std::string &name); 
+           int getNumElements(const std::string &name);
 
            /** Reading scalar attribute given by name */
 	       template<typename T>
@@ -406,21 +406,21 @@ namespace isce {
 
            /** Reading multi-dimensional attribute in raw pointer */
            template<typename T>
-           inline void read(T *buf, const std::string &att); 
+           inline void read(T *buf, const std::string &att);
 
            /** Reading multi-dimensional string attribute in raw pointer */
-           void read(std::string *buf, const std::string &att); 
+           void read(std::string *buf, const std::string &att);
 
            /** Reading multi-dimensional attribute in vector */
            template<typename T>
-           inline void read(std::vector<T> &buf, const std::string &att); 
+           inline void read(std::vector<T> &buf, const std::string &att);
 
            /** Reading multi-dimensional attribute in valarray */
            template<typename T>
-           inline void read(std::valarray<T> &buf, const std::string &att); 
+           inline void read(std::valarray<T> &buf, const std::string &att);
 
 
-           /** Open a given dataset */ 
+           /** Open a given dataset */
            IDataSet openDataSet(const H5std_string &name);
 
            /** Open a given group */
@@ -513,12 +513,12 @@ namespace isce {
          private:
 
            template<typename T>
-           void createAttribute(const std::string& name, 
+           void createAttribute(const std::string& name,
                                 const H5::DataType& datatype,
                                 const H5::DataSpace& dataspace,
                                 const T* buffer);
 
-           void createAttribute(const std::string& name, 
+           void createAttribute(const std::string& name,
                                 const H5::DataType& datatype,
                                 const H5::DataSpace& dataspace,
                                 const std::string * buffer);
@@ -537,7 +537,7 @@ namespace isce {
 
 
      class IH5File: public H5::H5File {
-   
+
          public:
 
 
@@ -551,20 +551,20 @@ namespace isce {
             * - x: create file, overwrite if exist
             * - a: create file, fails if exist */
            IH5File(const H5std_string &name, const char mode = 'r') : H5::H5File(name, mapFileAccessMode(mode)) {};
-   
+
            void openFile(const H5std_string &name);
 
-           /** Open a given dataset */ 
+           /** Open a given dataset */
            IDataSet openDataSet(const H5std_string &name);
 
-           /** Open a given group */ 
+           /** Open a given group */
            IGroup openGroup(const H5std_string &name);
 
            /** Searching for given name in file */
-           std::vector<std::string> find(const std::string name, 
-                                         const std::string start = "/", 
-                                         const std::string type = "BOTH", 
-                                         const std::string returnedPath = "FULL"); 
+           std::vector<std::string> find(const std::string name,
+                                         const std::string start = "/",
+                                         const std::string type = "BOTH",
+                                         const std::string returnedPath = "FULL");
 
            /** Get filename of HDF5 file. */
            inline std::string filename() const { return this->getFileName(); }
