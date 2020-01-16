@@ -7,6 +7,7 @@
 #include <string>
 
 #include <isce/core/Projections.h>
+#include <isce/io/IH5.h>
 
 #include "GeoTransform.h"
 
@@ -27,6 +28,16 @@ public:
      * \param[in] access Access mode
      */
     Dataset(const std::string & path, GDALAccess access = GA_ReadOnly);
+
+    /**
+     * Create a dataset from an HDF5 dataset
+     *
+     * The resulting dataset is invalidated if the HDF5 file is closed.
+     *
+     * \param[in] dataset   HDF5 dataset
+     * \param[in] access    Access mode
+     */
+    Dataset(const isce::io::IDataSet & dataset, GDALAccess access = GA_ReadOnly);
 
     /**
      * Create a new GDAL dataset.

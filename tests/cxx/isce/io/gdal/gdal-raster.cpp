@@ -9,6 +9,7 @@
 #include <isce/io/gdal/Dataset.h>
 #include <isce/io/gdal/GeoTransform.h>
 #include <isce/io/gdal/Raster.h>
+#include <isce/io/IH5.h>
 
 using isce::core::ProjectionBase;
 using isce::io::gdal::Buffer;
@@ -16,6 +17,8 @@ using isce::io::gdal::Dataset;
 using isce::io::gdal::GeoTransform;
 using isce::io::gdal::Raster;
 using isce::io::gdal::TypedBuffer;
+using isce::io::IH5File;
+using isce::io::IDataSet;
 
 /** Raster w/ spatial reference & geo transform data */
 struct DEMRasterTestData {
@@ -550,6 +553,145 @@ RasterTestData geotiff_test_data {
 // instantiate raster tests for different drivers
 INSTANTIATE_TEST_SUITE_P(ENVIRaster, RasterTest, testing::Values(envi_test_data));
 INSTANTIATE_TEST_SUITE_P(GeoTiffRaster, RasterTest, testing::Values(geotiff_test_data));
+
+struct H5RasterTest : public testing::Test {
+    std::string filepath = TESTDATA_DIR "io/gdal/IH5Raster.h5";
+    std::string datasetpath = "sequence";
+    GDALDataType datatype = GDT_Int32;
+    int width = 3;
+    int length = 4;
+    std::string driver = "IH5";
+};
+
+TEST_F(H5RasterTest, Open)
+{
+    IH5File file(filepath);
+    IDataSet dataset = file.openDataSet(datasetpath);
+
+    Raster raster(dataset);
+
+    EXPECT_EQ( raster.band(), 1 );
+    EXPECT_EQ( raster.datatype(), datatype );
+    EXPECT_EQ( raster.access(), GA_ReadOnly );
+    EXPECT_EQ( raster.width(), width );
+    EXPECT_EQ( raster.length(), length );
+    EXPECT_EQ( raster.driver(), driver );
+}
+
+TEST_F(H5RasterTest, OpenBand)
+{
+    IH5File file(filepath);
+    IDataSet dataset = file.openDataSet(datasetpath);
+
+    {
+        int band = 1;
+        Raster raster(dataset, band);
+
+        EXPECT_EQ( raster.band(), band );
+        EXPECT_EQ( raster.datatype(), datatype );
+        EXPECT_EQ( raster.access(), GA_ReadOnly );
+        EXPECT_EQ( raster.width(), width );
+        EXPECT_EQ( raster.length(), length );
+        EXPECT_EQ( raster.driver(), driver );
+    }
+
+    // attempting to fetch invalid raster band should throw
+    {
+        int band = 100;
+        EXPECT_THROW( { Raster raster(dataset, band); }, isce::except::OutOfRange );
+    }
+}
+
+TEST_F(H5RasterTest, ReadPixel)
+{
+    IH5File file(filepath);
+    IDataSet dataset = file.openDataSet(datasetpath);
+
+    Raster raster(dataset);
+
+    int col = 2;
+    int row = 2;
+    int expected = 8;
+
+    int val;
+    raster.readPixel(&val, col, row);
+
+    EXPECT_EQ( val, expected );
+}
+
+TEST_F(H5RasterTest, ReadLine)
+{
+    IH5File file(filepath);
+    IDataSet dataset = file.openDataSet(datasetpath);
+
+    Raster raster(dataset);
+
+    int row = 1;
+    std::vector<int> expected = { 3, 4, 5 };
+
+    std::vector<int> vals(raster.width());
+    raster.readLine(vals.data(), row);
+
+    EXPECT_EQ( vals, expected );
+}
+
+TEST_F(H5RasterTest, ReadLines)
+{
+    IH5File file(filepath);
+    IDataSet dataset = file.openDataSet(datasetpath);
+
+    Raster raster(dataset);
+
+    int first_row = 0;
+    int num_rows = 2;
+    std::vector<int> expected = { 0, 1, 2,
+                                  3, 4, 5 };
+
+    std::vector<int> vals(num_rows * raster.width());
+    raster.readLines(vals.data(), first_row, num_rows);
+
+    EXPECT_EQ( vals, expected );
+}
+
+TEST_F(H5RasterTest, ReadBlock)
+{
+    IH5File file(filepath);
+    IDataSet dataset = file.openDataSet(datasetpath);
+
+    Raster raster(dataset);
+
+    int first_col = 1;
+    int first_row = 0;
+    int num_cols = 2;
+    int num_rows = 4;
+    std::vector<int> expected = {  1,  2,
+                                   4,  5,
+                                   7,  8,
+                                  10, 11 };
+
+    std::vector<int> vals(num_cols * num_rows);
+    raster.readBlock(vals.data(), first_col, first_row, num_cols, num_rows);
+
+    EXPECT_EQ( vals, expected );
+}
+
+TEST_F(H5RasterTest, ReadAll)
+{
+    IH5File file(filepath);
+    IDataSet dataset = file.openDataSet(datasetpath);
+
+    Raster raster(dataset);
+
+    std::vector<int> expected = {  0,  1,  2,
+                                   3,  4,  5,
+                                   6,  7,  8,
+                                   9, 10, 11 };
+
+    std::vector<int> vals(raster.length() * raster.width());
+    raster.readAll(vals.data());
+
+    EXPECT_EQ( vals, expected );
+}
 
 struct MEMRasterTest : public testing::Test {
     std::string driver = "MEM";

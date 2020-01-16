@@ -11,17 +11,46 @@
 
 namespace isce { namespace io { namespace gdal {
 
+namespace detail {
+
+inline
+void checkSingleBand(const Dataset & dataset)
+{
+    if (dataset.bands() == 0) {
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), "dataset contains no raster bands");
+    }
+    if (dataset.bands() > 1) {
+        std::string errmsg = "dataset contains multiple raster bands - "
+            "please specify raster band index";
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+    }
+}
+
+inline
+void checkValidBand(const Dataset & dataset, int band)
+{
+    if (band < 1 || band > dataset.bands()) {
+        std::string errmsg = "raster band index (" + std::to_string(band) + ") is out of range";
+        throw isce::except::OutOfRange(ISCE_SRCINFO(), errmsg);
+    }
+}
+
+}
+
 inline
 Raster::Raster(const std::string & path, GDALAccess access)
 :
     _dataset(path, access)
 {
-    // check that dataset contains a single band
-    if (_dataset.bands() != 1) {
-        std::string errmsg = "dataset '" + path + "' contains multiple raster "
-            "bands - please specify raster band index";
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
-    }
+    detail::checkSingleBand(_dataset);
+}
+
+inline
+Raster::Raster(const IDataSet & dataset, GDALAccess access)
+:
+    _dataset(dataset, access)
+{
+    detail::checkSingleBand(_dataset);
 }
 
 inline
@@ -30,11 +59,16 @@ Raster::Raster(const std::string & path, int band, GDALAccess access)
     _dataset(path, access),
     _band(band)
 {
-    // check that raster band is valid
-    if (band < 1 || band > _dataset.bands()) {
-        std::string errmsg = "raster band index (" + std::to_string(band) + ") is out of range";
-        throw isce::except::OutOfRange(ISCE_SRCINFO(), errmsg);
-    }
+    detail::checkValidBand(_dataset, band);
+}
+
+inline
+Raster::Raster(const IDataSet & dataset, int band, GDALAccess access)
+:
+    _dataset(dataset, access),
+    _band(band)
+{
+    detail::checkValidBand(_dataset, band);
 }
 
 inline
