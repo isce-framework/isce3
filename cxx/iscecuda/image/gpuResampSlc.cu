@@ -165,7 +165,7 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
     gpuLUT1d<double> d_dopplerLUT(dopplerLUT);
 
     // determine sizes
-    size_t nInPixels = tile.length() * tile.width();
+    size_t nInPixels = size_t(tile.length()) * tile.width();
     size_t nOutPixels = imgOut.size();
     size_t nOutBytes = nOutPixels * sizeof(thrust::complex<float>);
     size_t nChipBytes = nOutBytes * chipSize * chipSize;
