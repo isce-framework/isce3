@@ -115,7 +115,7 @@ void transformTile(const thrust::complex<float> *tile,
                 for (int jj = 0; jj < chipSize; ++jj) {
                     // Column to read from
                     const int chipCol = intRg + jj - chipHalf;
-                    chip[iChip + ii*chipSize+jj] = tile[chipRow*outWidth+chipCol] * cval;
+                    chip[iChip + ii*chipSize+jj] = tile[chipRow*inWidth+chipCol] * cval;
                 }
             }
 
@@ -165,7 +165,7 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
     gpuLUT1d<double> d_dopplerLUT(dopplerLUT);
 
     // determine sizes
-    size_t nInPixels = (tile.lastImageRow() - tile.firstImageRow() + 1) * outWidth;
+    size_t nInPixels = size_t(tile.length()) * tile.width();
     size_t nOutPixels = imgOut.size();
     size_t nOutBytes = nOutPixels * sizeof(thrust::complex<float>);
     size_t nChipBytes = nOutBytes * chipSize * chipSize;
