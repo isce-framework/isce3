@@ -120,4 +120,4 @@ git status
 
 git config --local user.name  "gmanipon"
 git config --local user.email "gmanipon@jpl.nasa.gov"
-git commit -am "PR $ghprbPullId ($BUILD_URL)" && git push || echo "no changes committed"
+git commit -m "PR $ghprbPullId ($BUILD_URL)" && git push || echo "no changes committed"
