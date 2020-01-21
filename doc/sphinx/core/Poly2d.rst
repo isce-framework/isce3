@@ -1,11 +1,11 @@
 :orphan:
 
-.. title:: pyPoly2d
+.. title:: Poly2d
 
 pyPoly2d
 ========
 
-pyPoly2d is a data structure meant to capture 1D functions of the form
+Poly2d is a data structure meant to capture 1D functions of the form
 
 .. math::
 
@@ -19,5 +19,19 @@ where
 * :math:`[c_{00}, c_{01}, ..., c_{N_yN_x}]` is the set of coefficients.
 
 
-.. autoclass:: isceextension.pyPoly2d
+Factory
+----------
+
+.. code-block:: python
+
+   from isce3.core import poly2d
+
+   obj = poly2d(**kwds)
+
+
+Documentation
+----------------
+
+.. autoclass:: isce3.core.Poly2d.Poly2d
    :members:
+   :inherited-members:
