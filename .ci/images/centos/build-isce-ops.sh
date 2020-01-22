@@ -24,4 +24,4 @@ fi
 ###Replace TAG with correct isce-src tag
 sed -i "s/__TAG__/${TAG}/" ${WORKSPACE}/.ci/images/centos/Dockerfile.isce-ops
 
-docker build --rm --force-rm -t ${IMAGE}:${TAG} -f ${WORKSPACE}/.ci/images/centos/Dockerfile.isce-ops ${WORKSPACE}
+docker build --rm --force-rm --network=host -t ${IMAGE}:${TAG} -f ${WORKSPACE}/.ci/images/centos/Dockerfile.isce-ops ${WORKSPACE}
