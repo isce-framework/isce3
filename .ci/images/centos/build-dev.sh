@@ -12,4 +12,4 @@ set -ex
 IMAGE=nisar/dev
 echo "IMAGE is $IMAGE"
 
-docker build --rm --force-rm -t ${IMAGE}:latest -f Dockerfile.dev .
+docker build --rm --force-rm --network=host -t ${IMAGE}:latest -f Dockerfile.dev .
