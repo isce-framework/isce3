@@ -35,7 +35,7 @@ def getALOSFilenames(indir):
     import os
 
     filenames = {}
-    
+
     ##First look for the leader file
     flist = glob.glob(os.path.join(indir, 'LED-ALPSRP*1.0__*'))
     if len(flist) == 0:
@@ -46,7 +46,7 @@ def getALOSFilenames(indir):
     filenames['leaderfile']  = flist[0]
     pattern = os.path.basename(flist[0])[4:]
 
-    
+
     ##Look for polarizations
     for pol in ['HH', 'HV', 'VV', 'VH']:
         flist = glob.glob(os.path.join(indir, 'IMG-{0}-{1}'.format(pol, pattern)))
@@ -68,7 +68,7 @@ def parseLeaderFile(filenames):
     '''
     Parse leader file and check values against polarizations.
     '''
-    
+
     from isce3.stripmap.readers.l0raw.ALOS.CEOS import LeaderFile
     try:
         ldr = LeaderFile.LeaderFile(filenames['leaderfile'])
@@ -78,7 +78,7 @@ def parseLeaderFile(filenames):
 
 
     ##Checks to ensure that the number of polarizations is consistent
-    numpol = len(filenames) - 2 #Subtract leader and defaulth5 name 
+    numpol = len(filenames) - 2 #Subtract leader and defaulth5 name
     if numpol != ldr.summary.NumberOfSARChannels:
         raise ValueError('Number of image files discovered is inconsistent with Leader File')
 
@@ -89,11 +89,11 @@ def constructNISARHDF5(args, ldr):
     '''
     Build skeleton of HDF5 file using leader file information.
     '''
-    import h5py 
+    import h5py
     import numpy
     import os
     import datetime
-    
+
     #Open file for writing
     fid = h5py.File(args.outh5, 'w-')
     lsar = fid.create_group('/science/LSAR')
@@ -111,7 +111,7 @@ def constructNISARHDF5(args, ldr):
     ident.create_dataset('productVersion', data=numpy.string_("0.1"))
 
 
-    ##Start populating metadata parts 
+    ##Start populating metadata parts
     rrsd = lsar.create_group('RRSD')
     inps = rrsd.create_group('metadata/processingInformation/inputs')
     inps.create_dataset('l0aGranules', data=numpy.string_([os.path.basename(args.indir)]))
@@ -135,13 +135,13 @@ def constructNISARHDF5(args, ldr):
         pos.append([sv.PositionXInm, sv.PositionYInm, sv.PositionZInm])
         vel.append([sv.VelocityXInmpers, sv.VelocityYInmpers, sv.VelocityZInmpers])
 
-    times = orbit.create_dataset('times', data=numpy.array(times))
-    times.attrs['units'] = "seconds since {0}".format(tref.strftime('%Y-%m-%d 00:00:00'))
+    time = orbit.create_dataset('time', data=numpy.array(times))
+    time.attrs['units'] = "seconds since {0}".format(tref.strftime('%Y-%m-%d 00:00:00'))
     orbit.create_dataset('position', data=numpy.array(pos))
     orbit.create_dataset('velocity', data=numpy.array(vel))
 
 
-    #Close the file 
+    #Close the file
     fid.close()
 
 def addImagery(h5file, ldr, imgfile, pol):
@@ -170,7 +170,7 @@ def addImagery(h5file, ldr, imgfile, pol):
 
     #Range related parameters
     fsamp = ldr.summary.SamplingRateInMHz * 1.0e6
-    r0 = firstrec.SlantRangeToFirstSampleInm 
+    r0 = firstrec.SlantRangeToFirstSampleInm
     dr = SOL / (2 * fsamp)
     nPixels = image.description.NumberOfBytesOfSARDataPerRecord // image.description.NumberOfSamplesPerDataGroup
     nLines = image.description.NumberOfSARDataRecords
@@ -192,7 +192,7 @@ def addImagery(h5file, ldr, imgfile, pol):
         freqA = fid[freqA]
 
         #Add bunch of assertions here if you want to be super sure that values are not different between pols
-    
+
 
     ##Now add in transmit specific information
     txgrpstr = '/science/LSAR/RRSD/swaths/frequencyA/tx{0}'.format(txP)
@@ -252,11 +252,11 @@ def addImagery(h5file, ldr, imgfile, pol):
             if len(inds) > 1:
                 txgrp['validSamplesSubSwath1'][linnum-1] = [inds[0], inds[-1]+1]
 
-        #Complex float 16 writes work with write_direct only 
+        #Complex float 16 writes work with write_direct only
         rximg.write_direct(write_arr.view(cpxtype), dest_sel=numpy.s_[linnum-1])
 
         ##Read next record
-        if linnum != nLines: 
+        if linnum != nLines:
             rec = image.readNextLine()
 
 
@@ -266,7 +266,7 @@ def addImagery(h5file, ldr, imgfile, pol):
         prf = freqA['nominalAcquisitionPRF'][()]
         tarr = (tinp - tinp[0]) * 1000
         ref = numpy.arange(tinp.size) / prf
-       
+
         ####Check every 20 microsecs
         off = numpy.arange(-50,50)*2.0e-5
         res = numpy.zeros(off.size)
@@ -286,7 +286,7 @@ def process(args=None):
     Main processing workflow.
     '''
     import os
-    
+
     #Discover file names
     filenames = getALOSFilenames(args.indir)
 
@@ -300,17 +300,17 @@ def process(args=None):
     if os.path.exists(args.outh5):
         raise ValueError('Output HDF5 file {0} already exists. Exiting ...'.format(args.outh5))
 
-    
+
     #Setup HDF5 skeleton
     constructNISARHDF5(args, leader)
 
-    
+
     #Iterate over polarizations for imagery layers
     for pol in ['HH', 'HV', 'VV', 'VH']:
         if pol in filenames:
             addImagery(args.outh5, leader, filenames[pol], pol)
 
-    
+
 if __name__ == "__main__":
     '''
     Main driver.
@@ -318,6 +318,6 @@ if __name__ == "__main__":
 
     #Parse command line
     inps = cmdLineParse()
-    
+
     #Process the data
     process(args=inps)
