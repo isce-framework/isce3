@@ -81,9 +81,7 @@ cp $IMAGE_DIR/*.xml .ci/images/centos/
 # bail out early if no login credentials provided
 if [ -z "${GIT_OAUTH_TOKEN:-}" ]; then exit 1; fi
 
-# documentation builder images
-$DOCKER build $DOCKER_BUILD_ARGS .ci/images/docs -t isce-docs
-
+# documentation builder
 SPHX_SRC=$SRCDIR/doc/sphinx
 SPHX_CONF=$BLDDIR/doc/sphinx
 SPHX_DIR=$DOCDIR/sphinx
@@ -92,13 +90,13 @@ SPHX_HTML=$SPHX_DIR/html
 
 $DOCKER run --rm \
     --volumes-from $CONTAINER \
-    isce-docs bash -c \
+    $IMAGE_ID/tester bash -c \
     "PYTHONPATH=$BLDDIR/packages/isce3/extensions \
        sphinx-build -q -b html -c $SPHX_CONF -d $SPHX_CACHE $SPHX_SRC $SPHX_HTML"
 
 $DOCKER run --rm \
     --volumes-from $CONTAINER \
-    isce-docs bash -c \
+    $IMAGE_ID/tester bash -c \
     "doxygen $BLDDIR/doc/doxygen/Doxyfile"
 
 #
