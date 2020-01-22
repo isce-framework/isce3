@@ -12,7 +12,7 @@ core/projections/gpuUTM.cpp
 core/sinc2dinterpolator/gpuSinc2dInterpolator.cpp
 core/stream/event.cu
 core/stream/stream.cu
-except/checkCudaErrors.cpp
+except/checkCudaErrors.cu
 fft/cuda-fft.cu
 fft/cuda-fftplan.cu
 geometry/geo2rdr/gpuGeo2rdr.cpp
