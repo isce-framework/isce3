@@ -15,7 +15,7 @@ echo "WORKSPACE: $WORKSPACE"
 echo "GIT_OAUTH_TOKEN: $GIT_OAUTH_TOKEN"
 
 #Get tag
-TAG=$(date -u +%Y%m%d)
+TAG=${GIT_COMMIT}
 echo "TAG: $TAG"
 
 # turn off valgrind
@@ -37,7 +37,7 @@ curl -L -H "Accept: application/octet-stream" --output gcc7.tar.gz \
 
 # update gh-pages with latest docs
 git clone --single-branch --branch gh-pages \
-  https://${GIT_OAUTH_TOKEN}@github-fn.jpl.nasa.gov/isce-3/isce.git 
+  https://${GIT_OAUTH_TOKEN}@github-fn.jpl.nasa.gov/isce-3/isce.git
   cd isce/
   git config user.name "gmanipon"
   git config user.email "gmanipon@jpl.nasa.gov"
