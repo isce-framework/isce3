@@ -111,6 +111,7 @@ mkdir -p $ghprbPullId
 cd $ghprbPullId
 
 docker cp $CONTAINER:$BLDDIR/doc/. .
+docker cp $CONTAINER:$SPHX_DIR .
 mv html/* .
 
 git add .
