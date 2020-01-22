@@ -1,0 +1,2 @@
+install(DIRECTORY nisar
+    DESTINATION ${ISCE_SHAREDIR}) 

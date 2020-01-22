@@ -140,6 +140,11 @@ function(InitInstallDirLayout)
         set (ISCE_ETCDIR etc CACHE STRING "isce/etc")
     endif(NOT ISCE_ETCDIR)
 
+    ###install/share
+    if (NOT ISCE_SHAREDIR)
+        set (ISCE_SHAREDIR share CACHE STRING "isce/share")
+    endif(NOT ISCE_SHAREDIR)
+
     ###install/templates
     if (NOT ISCE_TEMPLATESDIR)
         set (ISCE_TEMPLATESDIR templates CACHE STRING "isce/templates")
