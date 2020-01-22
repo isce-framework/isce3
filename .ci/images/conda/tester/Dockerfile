@@ -27,5 +27,7 @@ ARG PREFIX
 
 WORKDIR $BLDDIR
 
+VOLUME $DOCDIR
+
 RUN echo ". /usr/local/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
  && echo "conda activate base" >> ~/.bashrc
