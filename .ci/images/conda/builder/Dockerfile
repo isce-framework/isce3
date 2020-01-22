@@ -30,6 +30,7 @@ ARG GID=1000
 ARG SRCDIR
 ARG BLDDIR
 ARG PREFIX
+ARG DOCDIR
 
 # create build/install volumes
 RUN groupadd -g $GID -o $UNAME \
