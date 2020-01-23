@@ -3,7 +3,7 @@
 # Heresh Fattahi
 # Copyright 2019-
 
-import isce3.extensions.isceextension as isceextension
+from .. import isceextension
 
 class TimeDelta(isceextension.pyTimeDelta):
     """
