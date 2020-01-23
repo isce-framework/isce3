@@ -21,7 +21,6 @@
 
 #include <isce/cuda/except/Error.h>
 
-#include <fstream>
 #include <string>
 
 using isce::cuda::core::gpuPoly2d;
@@ -214,6 +213,7 @@ gpuTransformTile(isce::image::Tile<std::complex<float>> & tile,
 
     // Check for any kernel errors
     checkCudaErrors(cudaPeekAtLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
 
     // copy to host memory
     checkCudaErrors(cudaMemcpy(&imgOut[0], d_imgOut, nOutBytes, cudaMemcpyDeviceToHost));

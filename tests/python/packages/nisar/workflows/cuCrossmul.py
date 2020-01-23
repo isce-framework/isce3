@@ -22,15 +22,15 @@ class workflowOpts:
     rgoff = ''
     alks = 1
     rlks = 1
-    intFilePath = 'crossmul_cpu/crossmul.int'
-    cohFilePath = 'crossmul_cpu/crossmul.coh'
+    intFilePath = 'crossmul_cuda/crossmul.int'
+    cohFilePath = 'crossmul_cuda/crossmul.coh'
 
-    gpu = False
+    gpu = True
 
 
-def testCpuCrossmul():
+def testCudaCrossmul():
     '''
-    run crossmul SLC on CPU
+    run crossmul SLC on GPU
     '''
     # init inputs
     opts = workflowOpts()
@@ -41,10 +41,10 @@ def testCpuCrossmul():
     # check resulting interferogram has 0 phase
     igram = np.fromfile(opts.intFilePath, dtype=np.complex64)
     max_err = np.max(np.abs(np.angle(igram)))
-    assert(max_err < 1e09)
+    assert(max_err < 1e-7)
 
 
 if __name__ == '__main__':
-    testCpuCrossmul()
+    testCudaCrossmul()
 
 # end of file

@@ -28,17 +28,18 @@ include "pyEllipsoid.pxd"
 include "pyInterpolator.pxd"
 include "pyPeg.pxd"
 include "pyPegtrans.pxd"
-include "pyLUT1d.pxd"
 include "pyLUT2d.pxd"
+include "pyLUT1d.pxd"
 include "pyOrbit.pxd"
 include "pyPoly1d.pxd"
 include "pyPoly2d.pxd"
 
 # Include the product extensions
+include "pyProcessingInformation.pxd"
+include "pySwath.pxd"
+include "pyRadarGridParameters.pxd"
 include "pyMetadata.pxd"
 include "pyProduct.pxd"
-include "pySwath.pxd"
-include "pyProcessingInformation.pxd"
 
 # Include the image extensions
 include "pyResampSlc.pxd"

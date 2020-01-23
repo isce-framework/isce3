@@ -10,5 +10,7 @@ from Poly2d cimport Poly2d
 cdef class pyPoly2d:
     cdef Poly2d *c_poly2d
     cdef bool __owner
+    @staticmethod
+    cdef cbind(Poly2d c_poly2d)
 
 # end of file 

@@ -8,13 +8,17 @@ cimport numpy as np
 from libcpp cimport bool
 from libcpp.string cimport string
 from cython.operator cimport dereference as deref
+
+from isceextension cimport pyEllipsoid
+from isceextension cimport pyOrbit
 from isceextension cimport pyProduct
+from isceextension cimport pyRadarGridParameters
 from isceextension cimport pyRaster
 from cuTopo cimport *
 
 cdef class pyTopo:
     """
-    Cython wrapper for isce::geometry::Topo.
+    Cython wrapper for isce::cuda::geometry::Topo.
 
     Args:
         product (pyProduct):                 Configured Product.
@@ -43,9 +47,10 @@ cdef class pyTopo:
     }
 
     def __cinit__(self,
-                  pyProduct product,
-                  frequency='A',
-                  bool nativeDoppler=False,
+                  pyRadarGridParameters radarGrid,
+                  pyOrbit orbit,
+                  pyEllipsoid ellipsoid,
+                  pyLUT2d doppler=None,
                   double threshold=0.05,
                   int numIterations=25,
                   int extraIterations=10,
@@ -56,8 +61,13 @@ cdef class pyTopo:
         Constructor takes in a product in order to retrieve relevant radar parameters.
         """
         # Create C++ topo pointer
-        cdef string freqstr = pyStringToBytes(frequency)
-        self.c_topo = new Topo(deref(product.c_product), freqstr[0], nativeDoppler)
+        if doppler is None:
+            self.c_topo = new Topo(deref(radarGrid.c_radargrid), orbit.c_orbit,
+                    deref(ellipsoid.c_ellipsoid))
+        else:
+            self.c_topo = new Topo(deref(radarGrid.c_radargrid), orbit.c_orbit,
+                    deref(ellipsoid.c_ellipsoid), deref(doppler.c_lut))
+
         self.__owner = True
 
         # Set processing options

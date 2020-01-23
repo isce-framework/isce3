@@ -85,12 +85,8 @@ class Base(pyre.component,
         lookDirection = None
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
             lookDirectionObj = fid[lookDirectionPath] 
-            if lookDirectionObj.dtype == 'object':
-                lookDirection = fid[lookDirectionPath].value.decode()
-            else:
-                lookDirection = fid[lookDirectionPath].value
-            if isinstance(lookDirection, str):
-                lookDirection = 1 if 'right' in lookDirection.lower() else -1
+            lookDirection = fid[lookDirectionPath][()].decode()
+            lookDirection = -1 if 'right' in lookDirection.lower() else 1
         return swath.getRadarGridParameters(lookDirection)
 
     @pyre.export
@@ -120,9 +116,9 @@ class Base(pyre.component,
         '''
         import numpy as np
 
-        dopplerPath = os.path.join(self.ProcessingInformationPath, 
-                                'parameters', 'frequency' + frequency, 
-                                'dopplerCentroid') 
+        dopplerPath = os.path.join(self.ProcessingInformationPath,
+                                'parameters', 'frequency' + frequency,
+                                'dopplerCentroid')
 
         zeroDopplerTimePath = os.path.join(self.ProcessingInformationPath,
                                             'parameters/zeroDopplerTime')
@@ -135,8 +131,8 @@ class Base(pyre.component,
             zeroDopplerTime = fid[zeroDopplerTimePath][:]
             slantRange = fid[slantRangePath][:]
 
-        dopplerCentroid = isce3.core.dopplerCentroid(x=slantRange, 
-                                                     y=zeroDopplerTime, 
+        dopplerCentroid = isce3.core.dopplerCentroid(x=slantRange,
+                                                     y=zeroDopplerTime,
                                                      z=doppler)
         return dopplerCentroid
 

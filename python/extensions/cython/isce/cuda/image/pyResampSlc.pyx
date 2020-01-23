@@ -12,6 +12,7 @@ from cython.operator cimport dereference as deref
 from isceextension cimport pyLUT2d
 from isceextension cimport pyProduct
 from isceextension cimport pyRaster
+from isceextension cimport pyRadarGridParameters
 
 from cuResampSlc cimport ResampSlc
 
@@ -32,19 +33,30 @@ cdef class pyResampSlc:
 
     # Cython class objects
     cdef pyLUT2d py_doppler
-    
-    def __cinit__(self, pyProduct product, pyProduct refProduct=None, freq='A'):
-        """
-        Initialize C++ objects.
-        """
-        cdef string freqstr = pyStringToBytes(freq)
-        if product is not None:
-            self.c_resamp = new ResampSlc(deref(product.c_product), freqstr[0])
 
-        elif product is not None and refProduct is not None:
-            self.c_resamp = new ResampSlc(deref(product.c_product),
-                                          deref(refProduct.c_product),
-                                          freqstr[0])
+    def __cinit__(self, pyRadarGridParameters radarGrid,
+                  pyLUT2d doppler,
+                  double wavelength,
+                  pyRadarGridParameters referenceRadarGrid=None,
+                  double referenceWavelength=0.0):
+
+        if referenceRadarGrid is not None and referenceWavelength!=0.0:
+            print("no referencing")
+            # constructor for flattening resampled SLC
+            self.c_resamp = new ResampSlc(deref(doppler.c_lut), 
+                    radarGrid.startingRange, radarGrid.rangePixelSpacing, 
+                    radarGrid.sensingStart, radarGrid.prf, 
+                    wavelength,
+                    referenceRadarGrid.startingRange, 
+                    referenceRadarGrid.rangePixelSpacing,
+                    referenceWavelength)
+        else:
+            # constructor for not flattening resampled SLC
+            self.c_resamp = new ResampSlc(deref(doppler.c_lut), 
+                    radarGrid.startingRange, radarGrid.rangePixelSpacing, 
+                    radarGrid.sensingStart, radarGrid.prf, 
+                    wavelength)
+
         self.__owner = True
 
         # Bind the C++ LUT2d class to the Cython pyLUT2d instance
@@ -100,7 +112,7 @@ cdef class pyResampSlc:
     def resamp(self, pyRaster inSlc=None, pyRaster outSlc=None,
                pyRaster rgoffRaster=None, pyRaster azoffRaster=None,
                infile=None, outfile=None, rgfile=None, azfile=None,
-               int inputBand=1, bool flatten=True, bool isComplex=True,
+               int inputBand=1, bool flatten=False, bool isComplex=True,
                int rowBuffer=40):
         """
         Run resamp on complex image data stored in HDF5 product or specified

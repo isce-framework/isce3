@@ -50,7 +50,6 @@ cdef class pyTopo:
                   pyRadarGridParameters radarGrid,
                   pyOrbit orbit,
                   pyEllipsoid ellipsoid,
-                  str lookSide,
                   pyLUT2d doppler=None,
                   double threshold=0.05,
                   int numIterations=25,
@@ -64,12 +63,14 @@ cdef class pyTopo:
 
         if doppler is None:
             # geometry compution for zero Doppler
-            self.c_topo = new Topo(deref(radarGrid.c_radargrid), orbit.c_orbit,
-                                deref(ellipsoid.c_ellipsoid))
+            self.c_topo = new Topo(deref(radarGrid.c_radargrid),
+                    orbit.c_orbit,
+                    deref(ellipsoid.c_ellipsoid))
         else:
-            self.c_topo = new Topo(deref(radarGrid.c_radargrid), orbit.c_orbit,
-                                deref(ellipsoid.c_ellipsoid),
-                                deref(doppler.c_lut))
+            self.c_topo = new Topo(deref(radarGrid.c_radargrid),
+                    orbit.c_orbit,
+                    deref(ellipsoid.c_ellipsoid),
+                    deref(doppler.c_lut))
 
         self.__owner = True
 

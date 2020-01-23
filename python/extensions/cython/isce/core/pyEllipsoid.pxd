@@ -10,5 +10,7 @@ from Ellipsoid cimport Ellipsoid
 cdef class pyEllipsoid:
     cdef Ellipsoid *c_ellipsoid
     cdef bool __owner
+    @staticmethod
+    cdef cbind(Ellipsoid elp)
 
 # end of file
