@@ -30,13 +30,14 @@ ARG GID=1000
 ARG SRCDIR
 ARG BLDDIR
 ARG PREFIX
+ARG DOCDIR
 
 # create build/install volumes
 RUN groupadd -g $GID -o $UNAME \
  && useradd -m -u $UID -g $GID -o -s /bin/bash $UNAME \
  && mkdir $BLDDIR && chown $UID:$GID $BLDDIR \
  && mkdir $PREFIX && chown $UID:$GID $PREFIX
-VOLUME $BLDDIR $PREFIX
+VOLUME $DOCDIR $BLDDIR $PREFIX
 
 USER $UNAME
 WORKDIR $BLDDIR

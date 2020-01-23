@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
         cppcheck \
         cuda-cudart-10-1 \
         cuda-cufft-10-1 \
+        doxygen \
         lcov \
         libfftw3-3 \
  && rm -rf /var/lib/apt/lists/*
@@ -16,6 +17,7 @@ RUN conda install -q -y \
         h5py \
         numpy \
         pytest \
+        sphinx \
         wget \
  && conda clean --all --yes
 
