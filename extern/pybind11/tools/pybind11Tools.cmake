@@ -161,7 +161,7 @@ function(pybind11_add_module target_name)
     if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
       target_link_options(${target_name} PRIVATE -undefined dynamic_lookup)
     else()
-      target_link_libraries(${target_name} PRIVATE -undefined dynamic_lookup)
+      target_link_libraries(${target_name} PRIVATE "-undefined dynamic_lookup")
     endif()
 
     if(ARG_SHARED)
