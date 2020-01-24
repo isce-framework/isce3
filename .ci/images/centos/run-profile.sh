@@ -2,7 +2,7 @@
 
 if [ "$#" -ne 2 ]; then
   echo "Enter args: $0 <tag> <data_dir>"
-  echo "e.g.: $0 20180906 /scratch/yzheng/data/rosmond"
+  echo "e.g.: $0 workflow /scratch/yzheng/data/winnip"
   echo "      $0 my-test-tag /scrach/lyu/data/sanand"
   exit 1
 fi
@@ -10,37 +10,6 @@ fi
 TAG=$1
 DATA=$2
 IMAGE=nisar/profile
-#UID=root
-GID=root
-
-PARAMS=""
-
-while (( "$#" )); do
-   case "$1" in
-     --uid)
-       UID=$2
-       shift 2
-       ;;
-     --gid)
-       GID=$2
-       shift 2
-       ;;
-     --) # end argument parsing
-       shift
-       break
-       ;;
-     -*|--*=) # unsupported flags
-       echo "Error: Unsupported flag $1" >&2
-       exit 1
-       ;;
-     *) # preserve positional arguments
-       PARAMS="$PARAMS $1"
-       shift
-       ;;
-   esac
-done
-
-
 
 echo "IMAGE is $IMAGE"
 echo "TAG is $TAG"
