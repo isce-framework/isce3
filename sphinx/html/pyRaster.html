@@ -42,13 +42,16 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> (<em>str</em>) – filename on disk to create or to read</p></li>
+<li><p><strong>filename</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – filename on disk to create or to read</p></li>
 <li><p><strong>access</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – gdal.GA_ReadOnly or gdal.GA_Update</p></li>
 <li><p><strong>dtype</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – gdal.GDT_* for creating new raster</p></li>
 <li><p><strong>width</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – width of new raster to be created</p></li>
 <li><p><strong>length</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – length of new raster to created</p></li>
 <li><p><strong>numBands</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – number of bands in new raster to be created</p></li>
 <li><p><strong>driver</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – GDAL driver to use for creation</p></li>
+<li><p><strong>collection</strong> (<em>Optional</em><em>[</em><em>list</em><em>]</em>) – List of filenames to present as collection</p></li>
+<li><p><strong>dataset</strong> (<em>Optional</em><em>[</em><em>osgeo.gdal.Dataset</em><em>]</em>) – GDAL Dataset from python bindings</p></li>
+<li><p><strong>h5</strong> (<em>Optional</em><em>[</em><em>h5py.Dataset</em><em>]</em>) – h5py Dataset object</p></li>
 </ul>
 </dd>
 </dl>

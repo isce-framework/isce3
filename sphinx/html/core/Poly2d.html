@@ -4,25 +4,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>pyPoly2d &#8212; ISCE  documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+    <title>Poly2d &#8212; ISCE  documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -33,7 +33,7 @@
             
   <div class="section" id="pypoly2d">
 <h1>pyPoly2d<a class="headerlink" href="#pypoly2d" title="Permalink to this headline">¶</a></h1>
-<p>pyPoly2d is a data structure meant to capture 1D functions of the form</p>
+<p>Poly2d is a data structure meant to capture 1D functions of the form</p>
 <div class="math notranslate nohighlight">
 \[f(y,x) = \sum_{i=0}^{N_y} \sum_{j=0}^{N_x} c_{ij} \cdot \left( \frac{y-\mu_y}{\sigma_y} \right)^i \cdot \left( \frac{x-\mu_x}{\sigma_x} \right)^j\]</div>
 <p>where</p>
@@ -43,29 +43,23 @@
 <li><p><span class="math notranslate nohighlight">\(\sigma_y\)</span> and <span class="math notranslate nohighlight">\(\sigma_x\)</span> are the norms.</p></li>
 <li><p><span class="math notranslate nohighlight">\([c_{00}, c_{01}, ..., c_{N_yN_x}]\)</span> is the set of coefficients.</p></li>
 </ul>
-<dl class="class">
-<dt id="isceextension.pyPoly2d">
-<em class="property">class </em><code class="sig-prename descclassname">isceextension.</code><code class="sig-name descname">pyPoly2d</code><a class="headerlink" href="#isceextension.pyPoly2d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Python wrapper for isce::core::Poly2D</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Always set the orders of the polynomials before assigning coefficients to it.</p>
+<div class="section" id="factory">
+<h2>Factory<a class="headerlink" href="#factory" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">isce3.core</span> <span class="kn">import</span> <span class="n">poly2d</span>
+
+<span class="n">obj</span> <span class="o">=</span> <span class="n">poly2d</span><span class="p">(</span><span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+</pre></div>
 </div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>azimuthOrder</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Order of polynomial in azimuth (y)</p></li>
-<li><p><strong>rangeOrder</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Order of polynomial in range (x)</p></li>
-<li><p><strong>azimuthMean</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Mean for normalizing value of input in azimuth</p></li>
-<li><p><strong>rangeMean</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Mean for normalizing value of input in range</p></li>
-<li><p><strong>azimuthNorm</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Scale for normalizing value of input in azimuth</p></li>
-<li><p><strong>rangeNorm</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Scale for normalizing value of input in range</p></li>
-</ul>
-</dd>
-</dl>
+</div>
+<div class="section" id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="isce3.core.Poly2d.Poly2d">
+<em class="property">class </em><code class="sig-prename descclassname">isce3.core.Poly2d.</code><code class="sig-name descname">Poly2d</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for pyPoly2d.</p>
 <dl class="attribute">
-<dt id="isceextension.pyPoly2d.azimuthMean">
-<code class="sig-name descname">azimuthMean</code><a class="headerlink" href="#isceextension.pyPoly2d.azimuthMean" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly2d.Poly2d.azimuthMean">
+<code class="sig-name descname">azimuthMean</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.azimuthMean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return azimuth mean.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -78,8 +72,8 @@
 </dd></dl>
 
 <dl class="attribute">
-<dt id="isceextension.pyPoly2d.azimuthNorm">
-<code class="sig-name descname">azimuthNorm</code><a class="headerlink" href="#isceextension.pyPoly2d.azimuthNorm" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly2d.Poly2d.azimuthNorm">
+<code class="sig-name descname">azimuthNorm</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.azimuthNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return azimuth norm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -92,8 +86,8 @@
 </dd></dl>
 
 <dl class="attribute">
-<dt id="isceextension.pyPoly2d.azimuthOrder">
-<code class="sig-name descname">azimuthOrder</code><a class="headerlink" href="#isceextension.pyPoly2d.azimuthOrder" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly2d.Poly2d.azimuthOrder">
+<code class="sig-name descname">azimuthOrder</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.azimuthOrder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns azimuth order.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -106,15 +100,15 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyPoly2d.bind">
-<em class="property">static </em><code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">pyPoly2d poly</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.bind" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly2d.Poly2d.bind">
+<em class="property">static </em><code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">pyPoly2d poly</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.bind" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a pyPoly2d object that acts as a reference to an existing
 pyPoly2d instance.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="isceextension.pyPoly2d.coeffs">
-<code class="sig-name descname">coeffs</code><a class="headerlink" href="#isceextension.pyPoly2d.coeffs" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly2d.Poly2d.coeffs">
+<code class="sig-name descname">coeffs</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.coeffs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return polynomial coefficients.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -131,8 +125,8 @@ pyPoly2d instance.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyPoly2d.dPrint">
-<code class="sig-name descname">dPrint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.dPrint" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly2d.Poly2d.dPrint">
+<code class="sig-name descname">dPrint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.dPrint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Debug print of underlying C++ structure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -142,8 +136,8 @@ pyPoly2d instance.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyPoly2d.eval">
-<code class="sig-name descname">eval</code><span class="sig-paren">(</span><em class="sig-param">double azi</em>, <em class="sig-param">double rng</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.eval" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly2d.Poly2d.eval">
+<code class="sig-name descname">eval</code><span class="sig-paren">(</span><em class="sig-param">double azi</em>, <em class="sig-param">double rng</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.eval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate polynomial at given point.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -162,8 +156,8 @@ pyPoly2d instance.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyPoly2d.getCoeff">
-<code class="sig-name descname">getCoeff</code><span class="sig-paren">(</span><em class="sig-param">int row</em>, <em class="sig-param">int col</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.getCoeff" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly2d.Poly2d.getCoeff">
+<code class="sig-name descname">getCoeff</code><span class="sig-paren">(</span><em class="sig-param">int row</em>, <em class="sig-param">int col</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.getCoeff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get polynomial coefficient using row and col indices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -182,14 +176,14 @@ pyPoly2d instance.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyPoly2d.printPoly">
-<code class="sig-name descname">printPoly</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.printPoly" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly2d.Poly2d.printPoly">
+<code class="sig-name descname">printPoly</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.printPoly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Debug print function of underlying C++ structure.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="isceextension.pyPoly2d.rangeMean">
-<code class="sig-name descname">rangeMean</code><a class="headerlink" href="#isceextension.pyPoly2d.rangeMean" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly2d.Poly2d.rangeMean">
+<code class="sig-name descname">rangeMean</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.rangeMean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return range mean.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -202,8 +196,8 @@ pyPoly2d instance.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="isceextension.pyPoly2d.rangeNorm">
-<code class="sig-name descname">rangeNorm</code><a class="headerlink" href="#isceextension.pyPoly2d.rangeNorm" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly2d.Poly2d.rangeNorm">
+<code class="sig-name descname">rangeNorm</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.rangeNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return range norm</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -216,8 +210,8 @@ pyPoly2d instance.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="isceextension.pyPoly2d.rangeOrder">
-<code class="sig-name descname">rangeOrder</code><a class="headerlink" href="#isceextension.pyPoly2d.rangeOrder" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly2d.Poly2d.rangeOrder">
+<code class="sig-name descname">rangeOrder</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.rangeOrder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the range order of polynomial.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -230,8 +224,8 @@ pyPoly2d instance.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyPoly2d.setCoeff">
-<code class="sig-name descname">setCoeff</code><span class="sig-paren">(</span><em class="sig-param">int row</em>, <em class="sig-param">int col</em>, <em class="sig-param">double val</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly2d.setCoeff" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly2d.Poly2d.setCoeff">
+<code class="sig-name descname">setCoeff</code><span class="sig-paren">(</span><em class="sig-param">int row</em>, <em class="sig-param">int col</em>, <em class="sig-param">double val</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.setCoeff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set polynomial coefficient using row and col indices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -250,6 +244,7 @@ pyPoly2d instance.</p>
 </dd></dl>
 
 </div>
+</div>
 
 
           </div>
@@ -257,17 +252,26 @@ pyPoly2d instance.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">pyPoly2d</a><ul>
+<li><a class="reference internal" href="#factory">Factory</a></li>
+<li><a class="reference internal" href="#documentation">Documentation</a></li>
+</ul>
+</li>
+</ul>
+
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/pyPoly2d.rst.txt"
+      <li><a href="../_sources/core/Poly2d.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
+    <form class="search" action="../search.html" method="get">
       <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
@@ -282,9 +286,9 @@ pyPoly2d instance.</p>
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -254,7 +254,7 @@ Step 2: Build the software</h2>
 <tr>
 <th>Option</th><th>Description </th></tr>
 <tr>
-<td>-DWITH_DOC=ON </td><td>Build documentation from code using doxygen and sphinx. These need to be installed </td></tr>
+<td>-DCMAKE_FIND_FRAMEWORK=LAST </td><td>CMake is designed to look for frameworks on OSX first. If your cmake consistently finds the wrong Python version, you can disable it with this option </td></tr>
 <tr>
 <td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --dsymutil=yes --track-origins=yes" -DCMAKE_BUILD_TYPE=Debug</td><td></td></tr>
 <tr>

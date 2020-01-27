@@ -4,25 +4,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>pyPoly1d &#8212; ISCE  documentation</title>
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+    <title>Poly1d &#8212; ISCE  documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -31,9 +31,9 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="pypoly1d">
-<h1>pyPoly1d<a class="headerlink" href="#pypoly1d" title="Permalink to this headline">¶</a></h1>
-<p>pyPoly1d is a data structure meant to capture 1D functions of the form</p>
+  <div class="section" id="poly1d">
+<h1>Poly1d<a class="headerlink" href="#poly1d" title="Permalink to this headline">¶</a></h1>
+<p>Poly1d is a data structure meant to capture 1D functions of the form</p>
 <div class="math notranslate nohighlight">
 \[f(x) = \sum_{k=0}^{N} c_k \cdot \left( \frac{x-\mu}{\sigma} \right)^k\]</div>
 <p>where</p>
@@ -43,31 +43,28 @@
 <li><p><span class="math notranslate nohighlight">\(\sigma\)</span> is the norm.</p></li>
 <li><p><span class="math notranslate nohighlight">\([c_0, c_1, ..., c_N]\)</span> is the set of coefficients.</p></li>
 </ul>
-<dl class="class">
-<dt id="isceextension.pyPoly1d">
-<em class="property">class </em><code class="sig-prename descclassname">isceextension.</code><code class="sig-name descname">pyPoly1d</code><a class="headerlink" href="#isceextension.pyPoly1d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Python Wrapper for isce::core::Poly1d</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Order of polynomial must be set before setting coefficients</p>
+<div class="section" id="factory">
+<h2>Factory<a class="headerlink" href="#factory" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">isce3.core</span> <span class="kn">import</span> <span class="n">poly1d</span>
+
+<span class="n">obj</span> <span class="o">=</span> <span class="n">poly1d</span><span class="p">(</span><span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+</pre></div>
 </div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>order</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Order of the polynomial</p></li>
-<li><p><strong>mean</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Mean value for normalization</p></li>
-<li><p><strong>norm</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Scale value for normalization</p></li>
-</ul>
-</dd>
-</dl>
+</div>
+<div class="section" id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="isce3.core.Poly1d.Poly1d">
+<em class="property">class </em><code class="sig-prename descclassname">isce3.core.Poly1d.</code><code class="sig-name descname">Poly1d</code><a class="headerlink" href="#isce3.core.Poly1d.Poly1d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for pyPoly1d.</p>
 <dl class="method">
-<dt id="isceextension.pyPoly1d.bind">
-<em class="property">static </em><code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">pyPoly1d poly</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.bind" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly1d.Poly1d.bind">
+<em class="property">static </em><code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">pyPoly1d poly</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly1d.Poly1d.bind" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="isceextension.pyPoly1d.coeffs">
-<code class="sig-name descname">coeffs</code><a class="headerlink" href="#isceextension.pyPoly1d.coeffs" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly1d.Poly1d.coeffs">
+<code class="sig-name descname">coeffs</code><a class="headerlink" href="#isce3.core.Poly1d.Poly1d.coeffs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a numpy view of underlying C++ array for coefficients.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -84,8 +81,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyPoly1d.copy">
-<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param">poly</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.copy" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly1d.Poly1d.copy">
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param">poly</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly1d.Poly1d.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Utility method for copying metadata from another python object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -98,8 +95,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyPoly1d.eval">
-<code class="sig-name descname">eval</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.eval" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly1d.Poly1d.eval">
+<code class="sig-name descname">eval</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly1d.Poly1d.eval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate function at a given value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -115,14 +112,14 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyPoly1d.evalWithNumpy">
-<code class="sig-name descname">evalWithNumpy</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.evalWithNumpy" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly1d.Poly1d.evalWithNumpy">
+<code class="sig-name descname">evalWithNumpy</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly1d.Poly1d.evalWithNumpy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate using numpy’s polyval method</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyPoly1d.getCoeff">
-<code class="sig-name descname">getCoeff</code><span class="sig-paren">(</span><em class="sig-param">int index</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.getCoeff" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly1d.Poly1d.getCoeff">
+<code class="sig-name descname">getCoeff</code><span class="sig-paren">(</span><em class="sig-param">int index</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly1d.Poly1d.getCoeff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get coefficient at given index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -138,8 +135,8 @@
 </dd></dl>
 
 <dl class="attribute">
-<dt id="isceextension.pyPoly1d.mean">
-<code class="sig-name descname">mean</code><a class="headerlink" href="#isceextension.pyPoly1d.mean" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly1d.Poly1d.mean">
+<code class="sig-name descname">mean</code><a class="headerlink" href="#isce3.core.Poly1d.Poly1d.mean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return mean value used for normalizing inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -152,8 +149,8 @@
 </dd></dl>
 
 <dl class="attribute">
-<dt id="isceextension.pyPoly1d.norm">
-<code class="sig-name descname">norm</code><a class="headerlink" href="#isceextension.pyPoly1d.norm" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly1d.Poly1d.norm">
+<code class="sig-name descname">norm</code><a class="headerlink" href="#isce3.core.Poly1d.Poly1d.norm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return scale value used for normalizing inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -166,8 +163,8 @@
 </dd></dl>
 
 <dl class="attribute">
-<dt id="isceextension.pyPoly1d.order">
-<code class="sig-name descname">order</code><a class="headerlink" href="#isceextension.pyPoly1d.order" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly1d.Poly1d.order">
+<code class="sig-name descname">order</code><a class="headerlink" href="#isce3.core.Poly1d.Poly1d.order" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return order of the polynomial.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -180,8 +177,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyPoly1d.printPoly">
-<code class="sig-name descname">printPoly</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.printPoly" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly1d.Poly1d.printPoly">
+<code class="sig-name descname">printPoly</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly1d.Poly1d.printPoly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print poly structure at C++ level for debugging.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -191,8 +188,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyPoly1d.setCoeff">
-<code class="sig-name descname">setCoeff</code><span class="sig-paren">(</span><em class="sig-param">int index</em>, <em class="sig-param">double val</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyPoly1d.setCoeff" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.Poly1d.Poly1d.setCoeff">
+<code class="sig-name descname">setCoeff</code><span class="sig-paren">(</span><em class="sig-param">int index</em>, <em class="sig-param">double val</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly1d.Poly1d.setCoeff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set coefficient at given index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -210,6 +207,7 @@
 </dd></dl>
 
 </div>
+</div>
 
 
           </div>
@@ -217,17 +215,26 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Poly1d</a><ul>
+<li><a class="reference internal" href="#factory">Factory</a></li>
+<li><a class="reference internal" href="#documentation">Documentation</a></li>
+</ul>
+</li>
+</ul>
+
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/pyPoly1d.rst.txt"
+      <li><a href="../_sources/core/Poly1d.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
+    <form class="search" action="../search.html" method="get">
       <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
@@ -242,9 +249,9 @@
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">ISCE  documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

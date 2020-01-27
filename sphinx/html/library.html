@@ -31,22 +31,22 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="isce-s-cython-interface">
-<h1>ISCE’s Cython Interface<a class="headerlink" href="#isce-s-cython-interface" title="Permalink to this headline">¶</a></h1>
-<p>The cython extension module that is built from the C++ code is available at the python level as “isce3.extensions.isceextension”.</p>
-<p>The following classes are exposed via Cython:</p>
+  <div class="section" id="isce-s-library-interface">
+<h1>ISCE’s Library Interface<a class="headerlink" href="#isce-s-library-interface" title="Permalink to this headline">¶</a></h1>
+<p>ISCE’s library interface is meant to mimic the C++ code structure.</p>
+<p>The following classes are exposed to the Python level:</p>
 <div class="section" id="core-datastructures">
 <h2>Core Datastructures<a class="headerlink" href="#core-datastructures" title="Permalink to this headline">¶</a></h2>
 <p>These are data structures that are directly related to C++ classes in the isce::core namespace</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="core/pyDateTime.html"><span class="doc">pyDateTime</span></a></p></li>
-<li><p><a class="reference internal" href="core/pyTimeDelta.html"><span class="doc">pyTimeDelta</span></a></p></li>
-<li><p><a class="reference internal" href="core/pyEllipsoid.html"><span class="doc">pyEllipsoid</span></a></p></li>
-<li><p><a class="reference internal" href="core/pyEulerAngles.html"><span class="doc">pyEulerAngles</span></a></p></li>
-<li><p><a class="reference internal" href="pyPoly1d.html"><span class="doc">pyPoly1d</span></a></p></li>
-<li><p><a class="reference internal" href="pyPoly2d.html"><span class="doc">pyPoly2d</span></a></p></li>
-<li><p><a class="reference internal" href="pyLUT1d.html"><span class="doc">pyLUT1d</span></a></p></li>
-<li><p><a class="reference internal" href="pyOrbit.html"><span class="doc">pyOrbit</span></a></p></li>
+<li><p><a class="reference internal" href="core/DateTime.html"><span class="doc">DateTime</span></a></p></li>
+<li><p><a class="reference internal" href="core/TimeDelta.html"><span class="doc">TimeDelta</span></a></p></li>
+<li><p><a class="reference internal" href="core/Ellipsoid.html"><span class="doc">Ellipsoid</span></a></p></li>
+<li><p><a class="reference internal" href="core/EulerAngles.html"><span class="doc">EulerAngles</span></a></p></li>
+<li><p><a class="reference internal" href="core/Poly1d.html"><span class="doc">Poly1d</span></a></p></li>
+<li><p><a class="reference internal" href="core/Poly2d.html"><span class="doc">Poly2d</span></a></p></li>
+<li><p><a class="reference internal" href="core/LUT1d.html"><span class="doc">LUT1d</span></a></p></li>
+<li><p><a class="reference internal" href="core/Orbit.html"><span class="doc">Orbit</span></a></p></li>
 </ul>
 </div>
 <div class="section" id="i-o-datastructures">
@@ -86,7 +86,7 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">ISCE’s Cython Interface</a><ul>
+<li><a class="reference internal" href="#">ISCE’s Library Interface</a><ul>
 <li><a class="reference internal" href="#core-datastructures">Core Datastructures</a></li>
 <li><a class="reference internal" href="#i-o-datastructures">I/O Datastructures</a></li>
 <li><a class="reference internal" href="#product-datastructures">Product Datastructures</a></li>
@@ -99,7 +99,7 @@
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/cython.rst.txt"
+      <li><a href="_sources/library.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>

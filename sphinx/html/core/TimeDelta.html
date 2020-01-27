@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>pyTimeDelta &#8212; ISCE  documentation</title>
+    <title>TimeDelta &#8212; ISCE  documentation</title>
     <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -31,21 +31,26 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="pytimedelta">
-<h1>pyTimeDelta<a class="headerlink" href="#pytimedelta" title="Permalink to this headline">¶</a></h1>
-<p>pyTimeDelta is meant to represent time-intervals with double precision sub-second accuracy. There is no loss of precision (at nano-second scale) as long as the intervals represented are less than ~14 days.</p>
+  <div class="section" id="timedelta">
+<h1>TimeDelta<a class="headerlink" href="#timedelta" title="Permalink to this headline">¶</a></h1>
+<p>TimeDelta is meant to represent time-intervals with double precision sub-second accuracy. There is no loss of precision (at nano-second scale) as long as the intervals represented are less than ~14 days.</p>
+<div class="section" id="factory">
+<h2>Factory<a class="headerlink" href="#factory" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">isce3.core</span> <span class="kn">import</span> <span class="n">timeDelta</span>
+
+<span class="n">obj</span> <span class="o">=</span> <span class="n">timeDelta</span><span class="p">(</span><span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="isceextension.pyTimeDelta">
-<em class="property">class </em><code class="sig-prename descclassname">isceextension.</code><code class="sig-name descname">pyTimeDelta</code><span class="sig-paren">(</span><em class="sig-param">dt=None</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyTimeDelta" title="Permalink to this definition">¶</a></dt>
-<dd><p>Python wrapper for isce::core::TimeDelta</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dt</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime.timedelta</span></code> or float, optional) – Input python timedelta object or double precision floating point number</p>
-</dd>
-</dl>
+<dt id="isce3.core.TimeDelta.TimeDelta">
+<em class="property">class </em><code class="sig-prename descclassname">isce3.core.TimeDelta.</code><code class="sig-name descname">TimeDelta</code><a class="headerlink" href="#isce3.core.TimeDelta.TimeDelta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for pyTimeDelta.</p>
 <dl class="method">
-<dt id="isceextension.pyTimeDelta.getTotalDays">
-<code class="sig-name descname">getTotalDays</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyTimeDelta.getTotalDays" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.TimeDelta.TimeDelta.getTotalDays">
+<code class="sig-name descname">getTotalDays</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.TimeDelta.TimeDelta.getTotalDays" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent number of days.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -58,8 +63,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyTimeDelta.getTotalHours">
-<code class="sig-name descname">getTotalHours</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyTimeDelta.getTotalHours" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.TimeDelta.TimeDelta.getTotalHours">
+<code class="sig-name descname">getTotalHours</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.TimeDelta.TimeDelta.getTotalHours" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent number of hours.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -72,8 +77,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyTimeDelta.getTotalMinutes">
-<code class="sig-name descname">getTotalMinutes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyTimeDelta.getTotalMinutes" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.TimeDelta.TimeDelta.getTotalMinutes">
+<code class="sig-name descname">getTotalMinutes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.TimeDelta.TimeDelta.getTotalMinutes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent number of minutes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -86,8 +91,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyTimeDelta.getTotalSeconds">
-<code class="sig-name descname">getTotalSeconds</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyTimeDelta.getTotalSeconds" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.TimeDelta.TimeDelta.getTotalSeconds">
+<code class="sig-name descname">getTotalSeconds</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.TimeDelta.TimeDelta.getTotalSeconds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent number of seconds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -100,8 +105,8 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="isceextension.pyTimeDelta.set">
-<code class="sig-name descname">set</code><span class="sig-paren">(</span><em class="sig-param">dt</em><span class="sig-paren">)</span><a class="headerlink" href="#isceextension.pyTimeDelta.set" title="Permalink to this definition">¶</a></dt>
+<dt id="isce3.core.TimeDelta.TimeDelta.set">
+<code class="sig-name descname">set</code><span class="sig-paren">(</span><em class="sig-param">dt</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.TimeDelta.TimeDelta.set" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the value using datetime.timedelta or float</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -113,6 +118,7 @@
 </dd></dl>
 
 </div>
+</div>
 
 
           </div>
@@ -120,10 +126,19 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">TimeDelta</a><ul>
+<li><a class="reference internal" href="#factory">Factory</a></li>
+<li><a class="reference internal" href="#documentation">Documentation</a></li>
+</ul>
+</li>
+</ul>
+
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/core/pyTimeDelta.rst.txt"
+      <li><a href="../_sources/core/TimeDelta.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
