@@ -2,9 +2,13 @@
 
 \tableofcontents
 
-ISCE can currently handle a bunch of map projections defined on the WGS84 Ellipsoid (See <a href="file:///Users/agram/tools/isce_git/cmake/build/doc/html/overview_raster.html#multi_row">Raster overview</a>).
+ISCE can currently handle a bunch of map projections defined on the WGS84 Ellipsoid 
+(See <a href="file:///Users/agram/tools/isce_git/cmake/build/doc/html/overview_raster.html#multi_row">Raster overview</a>).
 
-The projections interface design is very similar to the one in the <a href="https://proj4.org/">PROJ</a> library. We have a separate implementation of the library for easier interaction with similar CUDA-side objects. Since, a CUDA version of <a href="https://proj4.org/">PROJ</a> is not available, we wrote our own for the subset of projections required by NISAR.
+The projections interface design is very similar to the one in the <a href="https://proj4.org/">PROJ</a> library.
+We have a separate implementation of the library for easier interaction with similar CUDA-side objects. Since, a
+CUDA version of <a href="https://proj4.org/">PROJ</a> is not available, we wrote our own for the subset of 
+projections required by NISAR.
 
 \section projinclude Include headers
 
@@ -13,7 +17,9 @@ In general, one only needs to include the isce::core::Projections headerfile.
 #include "isce/core/Projections.h"
 \endcode
 
-If one is looking to process data with more general set of projections as part of your workflow, include appropriate PROJ or GDAL header files. Note that you will not be able to use any CUDA-based optimization for such unsupported projections.
+If one is looking to process data with more general set of projections as part of your workflow, include
+appropriate PROJ or GDAL header files. Note that you will not be able to use any CUDA-based optimization
+for such unsupported projections.
 
 \section projfactory Creating a projection object
 
@@ -33,12 +39,15 @@ isce::core::ProjectionBase *spolar = isce::core::createProj(3031);
 
 \section projuse Transforming coordinates
 
-ISCE projection objects are similar to PJ datastructure in the <a href="https://proj4.org/">PROJ</a> framework. Internally, each projection object provides an interface to convert to and from a given coordinate system to Lon/Lat/Hae (radians).
+ISCE projection objects are similar to PJ datastructure in the <a href="https://proj4.org/">PROJ</a> framework.
+Internally, each projection object provides an interface to convert to and from a given coordinate system to
+Lon/Lat/Hae (radians).
 
 
 \subsection projfwd Forward transform
 
-This is accomplished via the isce::core::ProjectionBase::fwd method. We refer to transformation of a Lon/Lat/Hae (radians) to projection of interest as Forward transformation. For example
+This is accomplished via the isce::core::ProjectionBase::fwd method. We refer to transformation of a Lon/Lat/Hae (radians)
+to projection of interest as Forward transformation. For example
 
 \code{.cpp}
 //Create interface to Antarctic Polar Stereographic
@@ -56,7 +65,8 @@ std::cout << "Coordinates in polar coordinates: " << xyz[0] << " " << xyz[1] << 
 
 \subsection projinv Inverse
 
-This is accomplished via the isce::core::ProjectionBase::inv method. We refer to the transformation from projection of interest to Lon/Lat/Hae (radians) as Inverse Transformation. For example
+This is accomplished via the isce::core::ProjectionBase::inv method. We refer to the transformation from projection
+of interest to Lon/Lat/Hae (radians) as Inverse Transformation. For example
 
 \code{.cpp}
 //Create interface to Antarctic Polar Stereographic
@@ -74,10 +84,12 @@ std::cout << "Coordinates in Lon/Lat/Hae (radians): " << llh[0] << " " << llh[1]
 
 \subsection projcomb Transforming between systems
 
-One could use a pair of isce::core::ProjectionBase::fwd and isce::core::ProjectionBase::inv calls to do this or directly use isce::core::projTransform.
+One could use a pair of isce::core::ProjectionBase::fwd and isce::core::ProjectionBase::inv calls to do this
+or directly use isce::core::projTransform.
 
 
 \section projadvanced Compatibility with PROJ/ GDAL
 
-ISCE's projection interface is compatible with PROJ or GDAL (which builds on PROJ). There should be no problems with mixing the interfaces in C++ level.
+ISCE's projection interface is compatible with PROJ or GDAL (which builds on PROJ). There should be no problems
+with mixing the interfaces in C++ level.
 */

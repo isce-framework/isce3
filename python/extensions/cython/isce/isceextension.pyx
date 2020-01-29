@@ -36,6 +36,7 @@ include "core/pyOrbit.pyx"
 include "core/pyPoly1d.pyx"
 include "core/pyPoly2d.pyx"
 include "core/pyStateVector.pyx"
+include "core/pyProjections.pyx"
 
 # Include the product extensions
 include "product/pyProcessingInformation.pyx"
@@ -57,6 +58,7 @@ include "geometry/pyGeo2rdr.pyx"
 include "geometry/pyGeocode.pyx"
 include "geometry/pyRTC.pyx"
 include "geometry/pyDEMInterpolator.pyx"
+include "geometry/pyBoundingbox.pyx"
 
 # The separate serialization routines
 include "serialization/serialize.pyx"

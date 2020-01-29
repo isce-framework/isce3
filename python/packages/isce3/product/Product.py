@@ -6,9 +6,9 @@
 # The extension
 from .. import isceextension
 
-class Swath(isceextension.pySwath):
+class Product(isceextension.pyProduct):
     """
-    Wrapper for pySwath.
+    Wrapper for pyProduct.
     """
 
     pass

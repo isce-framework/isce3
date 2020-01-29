@@ -19,6 +19,7 @@ cdef class pyRaster:
     Python wrapper for isce::core::Raster
 
     All parameters like dimensions, data types etc must be known at the time of creation.
+    Order of parsing keyword arguments is always h5py -> GDAL -> C++ constructor.
 
     Args:
         filename (Optional[str]): filename on disk to create or to read
