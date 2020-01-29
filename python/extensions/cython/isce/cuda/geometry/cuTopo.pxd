@@ -8,15 +8,25 @@ from libcpp.string cimport string
 from libcpp cimport bool
 
 # Cython declaration for isce::io objects
-from isceextension cimport Raster
-from isceextension cimport Product
 from isceextension cimport dataInterpMethod
+from isceextension cimport Ellipsoid
+from isceextension cimport Product
+from isceextension cimport Orbit
+from isceextension cimport Raster
+from LUT2d cimport LUT2d
+from RadarGridParameters cimport RadarGridParameters
 
 cdef extern from "isce/cuda/geometry/Topo.h" namespace "isce::cuda::geometry":
     cdef cppclass Topo:
 
         # Constructor
         Topo(Product & product, char frequency, bool nativeDoppler) except +
+
+        Topo(RadarGridParameters & radarGrid, Orbit & orbit,
+                Ellipsoid & ellipsoid, LUT2d[double] & doppler) except+
+
+        Topo(RadarGridParameters & radarGrid, Orbit & orbit,
+                Ellipsoid & ellipsoid) except+
 
         # Main topo entrypoint; internal construction of topo rasters
         void topo(Raster &, const string)
@@ -36,5 +46,8 @@ cdef extern from "isce/cuda/geometry/Topo.h" namespace "isce::cuda::geometry":
         void demMethod(dataInterpMethod)
         void epsgOut(int)
         void computeMask(bool)
+        void minimumHeight(double)
+        void maximumHeight(double)
+        void decimaldegMargin(double)
 
 # end of file

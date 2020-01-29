@@ -1,0 +1,26 @@
+# path to HDF5 containing master SLC
+master: /home/lyu/projects/test_workflow/master.h5
+# path to HDF5 containing product/slave SLC
+product: /home/lyu/projects/test_workflow/slave.h5
+# frequency of SLC
+frequency: A
+# polarization of SLC
+polarization: HH
+# path to SLC in HDF5. used by profiler
+slcpath: 'science/LSAR/SLC/swaths/frequencyA/HH'
+# path to DEM 
+dem: /home/lyu/projects/test_workflow/test.dem
+# multilook in azimuth
+#alks: 12 #1
+# multilook in range
+#rlks: 3 #1
+alks: 1
+rlks: 1
+# where to write output
+outdir: ''
+# whether or not to use GPU
+gpu: True
+# crossmul specific arguments
+crossmul:
+    # azimuth for commonband filtering
+    azband: 75

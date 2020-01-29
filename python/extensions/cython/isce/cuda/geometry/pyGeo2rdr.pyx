@@ -15,7 +15,10 @@ cdef class pyGeo2rdr:
     Cython wrapper for isce::geometry::Geo2rdr.
 
     Args:
-        product (pyProduct):                 Configured Product.
+        radarGrid (pyRadarGridParameters)    radar grid parameters object .
+        orbit     (pyOrbit)                  orbit object
+        ellipsoid (pyEllipsoid)              ellipsoid object
+        doppler   (pyLUT2d)                  doppler in form of LUT2d object
         threshold (Optional[float]):         Threshold for iteration stop for slant range.
         numIterations (Optional[int]):       Max number of normal iterations.
 
@@ -27,17 +30,28 @@ cdef class pyGeo2rdr:
     cdef bool __owner
 
     def __cinit__(self,
-                  pyProduct product,
-                  frequency='A',
-                  bool nativeDoppler=False,
+                  pyRadarGridParameters radarGrid,
+                  pyOrbit orbit,
+                  pyEllipsoid ellipsoid,
+                  pyLUT2d doppler=None,
                   double threshold=1.0e-5,
                   int numIterations=50):
         """
         Constructor takes in a product in order to retrieve relevant radar parameters.
         """
         # Create C++ geo2rdr pointer
-        cdef string freqstr = pyStringToBytes(frequency)
-        self.c_geo2rdr = new Geo2rdr(deref(product.c_product), freqstr[0], nativeDoppler)
+
+        if doppler is None:
+            #geometry computation for zero Doppler
+            self.c_geo2rdr = new Geo2rdr(deref(radarGrid.c_radargrid),
+                                         orbit.c_orbit,
+                                         deref(ellipsoid.c_ellipsoid))
+        else:
+            self.c_geo2rdr = new Geo2rdr(deref(radarGrid.c_radargrid),
+                                         orbit.c_orbit,
+                                         deref(ellipsoid.c_ellipsoid),
+                                         deref(doppler.c_lut))
+
         self.__owner = True
 
         # Set processing options

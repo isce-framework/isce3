@@ -173,8 +173,10 @@ inline void loadFromH5(isce::io::IGroup & group, Orbit & orbit)
     orbit.setStateVectors(statevecs);
 
     // get interp method
-    std::string interp_method;
-    isce::io::loadFromH5(group, "interpMethod", interp_method);
+    std::string interp_method = "Hermite";
+    if (isce::io::exists(group, "interpMethod")) {
+        isce::io::loadFromH5(group, "interpMethod", interp_method);
+    }
 
     if (interp_method == "Hermite") {
         orbit.interpMethod(OrbitInterpMethod::Hermite);

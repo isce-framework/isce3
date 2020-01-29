@@ -139,6 +139,14 @@ cdef class pySwath:
         cdef double d = self.c_swath.processedAzimuthBandwidth()
         return d
 
+    @property
+    def nominalAcquisitionPRF(self):
+        """
+        Get processed azimuth bandwidth.
+        """
+        cdef double d = self.c_swath.nominalAcquisitionPRF()
+        return d
+
     @staticmethod
     def loadFromH5(h5Group, freq):
         '''

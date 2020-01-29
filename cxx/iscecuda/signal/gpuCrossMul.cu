@@ -60,17 +60,32 @@ __global__ void interferogram_g(thrust::complex<T> *ifgram,
 }
 
 
+/*
+   computes coherence from 2 SLC amplitude rasters
+output:
+    ref_amp_to_coh: initially input SLC amplitude that later overwritten with coherence
+                    size: m x n
+input:
+    ref_amp_to_coh: initially input SLC amplitude that later overwritten with coherence
+                    size: m x n
+    sec_amp:        another input SLC amplitude
+                    size: m x n
+    igram:          interferogram created from ref and sec SLCs
+                    size: m x n
+    n_elements:     total number of elements. m x n
+*/
 template <typename T>
-__global__ void calculate_coherence_g<T>(T *ref_amp,
+__global__ void calculate_coherence_g<T>(T *ref_amp_to_coh,
         T *sec_amp,
-        thrust::complex<T> *coherence,
+        thrust::complex<T> *igram,
         int n_elements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
 
     // make sure index within ifgram size bounds
+    // overwrite existing amplitude value as it's never used again
     if (i < n_elements) {
-        coherence[i] = abs(coherence[i]) / sqrtf(ref_amp[i] * sec_amp[i]);
+        ref_amp_to_coh[i] = thrust::abs(igram[i]) / sqrt(ref_amp_to_coh[i] * sec_amp[i]);
     }
 }
 
@@ -178,7 +193,6 @@ crossmul(isce::io::Raster& referenceSLC,
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_refSlcUpsampled), slcUpsampled_size));
 
     // upsampled block of secondary SLC
-    std::valarray<std::complex<float>> secSlcUpsampled(n_slcUpsampled);
     thrust::complex<float> *d_secSlcUpsampled;
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&d_secSlcUpsampled), slcUpsampled_size));
 
@@ -251,7 +265,7 @@ crossmul(isce::io::Raster& referenceSLC,
 
     // loop over all blocks
     for (size_t i_block = 0; i_block < nblocks; ++i_block) {
-        std::cout << "i_block: " << i_block << std::endl;
+        std::cout << "i_block: " << i_block+1 << " of " << nblocks << std::endl;
         // start row for this block
         size_t rowStart;
         rowStart = i_block * blockRows;
@@ -272,7 +286,6 @@ crossmul(isce::io::Raster& referenceSLC,
         refSlc = 0;
         secSlc = 0;
         refSlcUpsampled = 0;
-        secSlcUpsampled = 0;
         ifgram = 0;
 
         // get a block of reference and secondary SLC data
@@ -311,7 +324,7 @@ crossmul(isce::io::Raster& referenceSLC,
                     reinterpret_cast<float *>(&d_rngOffset));
         }
 
-        // upsample reference and secondary done on device
+        // upsample reference and secondary. done on device
         upsample(signalNoUpsample,
                 signalUpsample,
                 d_refSlc,
@@ -333,6 +346,10 @@ crossmul(isce::io::Raster& referenceSLC,
                 d_secSlcUpsampled,
                 nrows, ncols, nfft, oversample, oversample_f);
 
+        // Check for any kernel errors
+        checkCudaErrors(cudaPeekAtLastError());
+        checkCudaErrors(cudaDeviceSynchronize());
+
         if (_doMultiLook) {
 
             // reduce ncols*nrow to ncolsMultiLooked*blockRowsMultiLooked
@@ -345,6 +362,10 @@ crossmul(isce::io::Raster& referenceSLC,
                     _rangeLooks,                    // col resize factor of hi to lo
                     n_mlook,                        // number of lo res elements
                     float(_azimuthLooks*_rangeLooks));
+
+            // Check for any kernel errors
+            checkCudaErrors(cudaPeekAtLastError());
+            checkCudaErrors(cudaDeviceSynchronize());
 
             // get data to HOST
             checkCudaErrors(cudaMemcpy(&ifgram_mlook[0], d_ifgram_mlook, mlook_size*2, cudaMemcpyDeviceToHost));
@@ -364,6 +385,10 @@ crossmul(isce::io::Raster& referenceSLC,
                     n_mlook,                        // number of lo res elements
                     float(_azimuthLooks*_rangeLooks));
 
+            // Check for any kernel errors
+            checkCudaErrors(cudaPeekAtLastError());
+            checkCudaErrors(cudaDeviceSynchronize());
+
             multilooks_power_g<<<grid_lo, block>>>(
                     d_sec_amp_mlook,
                     d_secSlc,
@@ -375,14 +400,22 @@ crossmul(isce::io::Raster& referenceSLC,
                     n_mlook,                        // number of lo res elements
                     float(_azimuthLooks*_rangeLooks));
 
+            // Check for any kernel errors
+            checkCudaErrors(cudaPeekAtLastError());
+            checkCudaErrors(cudaDeviceSynchronize());
+
             // perform coherence calculation in place overwriting d_ifgram_mlook
             calculate_coherence_g<<<grid_lo, block>>>(d_ref_amp_mlook,
                     d_sec_amp_mlook,
                     d_ifgram_mlook,
                     ifgram_mlook.size());
 
-            // get data to HOST; overwrite multilooked ifgram with multilooked coherence
-            checkCudaErrors(cudaMemcpy(&ifgram_mlook[0], d_ifgram_mlook, ifgram_mlook.size()*sizeof(float)*2, cudaMemcpyDeviceToHost));
+            // Check for any kernel errors
+            checkCudaErrors(cudaPeekAtLastError());
+            checkCudaErrors(cudaDeviceSynchronize());
+
+            // get data to HOST from overwritten multilooked reference amplitude
+            checkCudaErrors(cudaMemcpy(&coherence[0], d_ref_amp_mlook, mlook_size, cudaMemcpyDeviceToHost));
 
             // set blocks accordingly
             coherenceRaster.setBlock(coherence, 0, rowStart/_azimuthLooks,

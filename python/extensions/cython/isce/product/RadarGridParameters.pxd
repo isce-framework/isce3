@@ -67,4 +67,6 @@ cdef extern from "isce/product/RadarGridParameters.h" namespace "isce::product":
         # Slant range for a given sample
         double slantRange(size_t)
 
+        RadarGridParameters multilook(size_t, size_t)
+
 # end of file

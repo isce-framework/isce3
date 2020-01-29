@@ -26,7 +26,8 @@ cdef class pyResampSlc:
     # Cython class objects
     cdef pyLUT2d py_doppler
 
-    def __cinit__(self, pyRadarGridParameters radarGrid,
+    def __cinit__(self,
+                  pyRadarGridParameters radarGrid,
                   pyLUT2d doppler,
                   double wavelength,
                   pyRadarGridParameters referenceRadarGrid=None,
@@ -104,7 +105,7 @@ cdef class pyResampSlc:
     def resamp(self, pyRaster inSlc=None, pyRaster outSlc=None,
                pyRaster rgoffRaster=None, pyRaster azoffRaster=None,
                infile=None, outfile=None, rgfile=None, azfile=None,
-               int inputBand=1, bool flatten=True, bool isComplex=True,
+               int inputBand=1, bool flatten=False, bool isComplex=True,
                int rowBuffer=40):
         """
         Run resamp on complex image data stored in HDF5 product or specified

@@ -156,7 +156,7 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
         Run geocoding.
         """
         # Create Geocoding object
-        cdef Geocode[float] c_geocode = Geocode[float]()
+        cdef Geocode[float] c_geocode
 
         # Set properties
         c_geocode.orbit(self.c_orbit)
@@ -197,7 +197,7 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
         Run geocoding.
         """
         # Create Geocoding object
-        cdef Geocode[double] c_geocode = Geocode[double]()
+        cdef Geocode[double] c_geocode
 
         # Set properties
         c_geocode.orbit(self.c_orbit)
@@ -238,7 +238,7 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
         Run geocoding.
         """
         # Create Geocoding object
-        cdef Geocode[complex_t[float]] c_geocode = Geocode[complex_t[float]]()
+        cdef Geocode[complex_t[float]] c_geocode
 
         # Set properties
         c_geocode.orbit(self.c_orbit)

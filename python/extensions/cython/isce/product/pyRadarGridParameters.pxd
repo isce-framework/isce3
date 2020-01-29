@@ -9,4 +9,6 @@ from RadarGridParameters cimport RadarGridParameters
 cdef class pyRadarGridParameters:
     cdef RadarGridParameters * c_radargrid
     cdef bool __owner
+    @staticmethod
+    cdef cbind(RadarGridParameters radarGrid)
 

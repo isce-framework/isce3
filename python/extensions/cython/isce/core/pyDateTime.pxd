@@ -10,3 +10,5 @@ from DateTime cimport DateTime
 cdef class pyDateTime:
     cdef DateTime * c_datetime
     cdef bool __owner
+    @staticmethod
+    cdef cbind(DateTime dt)

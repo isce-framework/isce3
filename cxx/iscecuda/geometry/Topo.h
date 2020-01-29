@@ -23,6 +23,12 @@ class isce::cuda::geometry::Topo : public isce::geometry::Topo {
                     bool nativeDoppler = false) :
             isce::geometry::Topo(product, frequency, nativeDoppler){}
 
+        inline Topo(const isce::product::RadarGridParameters & radarGrid,
+             const isce::core::Orbit & orbit,
+             const isce::core::Ellipsoid & ellipsoid,
+             const isce::core::LUT2d<double> & doppler = {}) :
+            isce::geometry::Topo(radarGrid, orbit, ellipsoid, doppler) {}
+
         /** Constructor from isce::core objects */
         inline Topo(const isce::core::Ellipsoid & ellps,
                     const isce::core::Orbit & orbit,

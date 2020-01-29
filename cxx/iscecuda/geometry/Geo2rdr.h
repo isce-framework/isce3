@@ -30,6 +30,12 @@ class isce::cuda::geometry::Geo2rdr : public isce::geometry::Geo2rdr {
                        const isce::core::Metadata & meta) :
             isce::geometry::Geo2rdr(ellps, orbit, doppler, meta) {}
 
+        inline Geo2rdr(const isce::product::RadarGridParameters & radarGrid,
+                const isce::core::Orbit & orbit,
+                const isce::core::Ellipsoid & ellipsoid,
+                const isce::core::LUT2d<double> & doppler = {}) : 
+            isce::geometry::Geo2rdr(radarGrid, orbit, ellipsoid, doppler) {}
+
         /** Run geo2rdr with offsets and externally created offset rasters */
         void geo2rdr(isce::io::Raster & topoRaster,
                      isce::io::Raster & rgoffRaster,

@@ -6,6 +6,7 @@
 
 from libcpp cimport bool
 from libcpp.string cimport string
+from cython.operator cimport dereference as deref
 
 from Geo2rdr cimport *
 

@@ -333,12 +333,12 @@ validate() const
 
     if (length() == 0)
     {
-        errstr += "Radar Grid should have length of atleast 1. \n";
+        errstr += "Radar Grid should have length of at least 1. \n";
     }
 
     if (width() == 0)
     {
-        errstr += "Radar Grid should have width of atleast 1. \n";
+        errstr += "Radar Grid should have width of at least 1. \n";
     }
 
     if (! errstr.empty())

@@ -43,6 +43,11 @@ cdef class pyRadarGridParameters:
         return new_grid
                
     @property
+    def lookSide(self):
+        cdef int n = self.c_radargrid.lookSide()
+        return n
+
+    @property
     def refEpoch(self):
         cdef DateTime date = self.c_radargrid.refEpoch()
         return pyDateTime.cbind(date)
@@ -105,5 +110,8 @@ cdef class pyRadarGridParameters:
     def slantRange(self, int column):
         return self.c_radargrid.slantRange(column)
 
+    def multilook(self, int az_looks, int rg_looks):
+        cdef RadarGridParameters radar_grid = self.c_radargrid.multilook(az_looks, rg_looks)
+        return pyRadarGridParameters.cbind(radar_grid)
 
 # end of file 
