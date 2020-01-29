@@ -43,7 +43,7 @@ RUN set -ex \
  && mkdir build \
  && mkdir build/valgrind \
  && cd build \
- && cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/isce -DWITH_CUDA=ON -DWITH_DOC=ON\
+ && cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/isce -DWITH_CUDA=ON \
       -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --dsymutil=yes --track-origins=yes --xml=yes --xml-file=/home/conda/build/valgrind/memcheck.%p.xml" \
       -DISCE_CUDA_ARCHS=3.7 \
       -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=true ../isce \
