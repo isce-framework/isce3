@@ -3,9 +3,9 @@
 # Import the extension
 from .. import isceextension
 
-class Orbit(isceextension.pyOrbit):
+class EulerAngles(isceextension.pyEulerAngles):
     """
-    Wrapper for pyOrbit.
+    Wrapper for pyEulerAngles.
     """
     pass
 

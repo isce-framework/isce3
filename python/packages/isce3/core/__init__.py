@@ -34,6 +34,10 @@ def ellipsoid(**kwds):
 
     return Ellipsoid(**kwds)
 
+def eulerAngles(**kwds):
+    """A factory for EulerAngles"""
+    from .EulerAngles import EulerAngles
+
 def interpolator(**kwds):
     """A factory for Interpolator"""
     from .Interpolator import Interpolator

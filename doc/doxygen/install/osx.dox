@@ -140,7 +140,8 @@ Other optional arguments can be added to the cmake line
 <table>
     <caption id="cmake_flags">Additional cmake options</caption>
     <tr><th>Option<th>Description
-    <tr><td>-DWITH_DOC=ON <td>Build documentation from code using doxygen and sphinx. These need to be installed
+    <tr><td>-DCMAKE_FIND_FRAMEWORK=LAST <td>CMake is designed to look for frameworks on OSX first. 
+    If your cmake consistently finds the wrong Python version, you can disable it with this option
     <tr><td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --dsymutil=yes --track-origins=yes" -DCMAKE_BUILD_TYPE=Debug<td>  
     <tr><td>Run tests with "-T memcheck" to check for memory leaks.
     <tr><td>valgrind needs to be installed.

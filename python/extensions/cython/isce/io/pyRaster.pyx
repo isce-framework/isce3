@@ -21,19 +21,22 @@ cdef class pyRaster:
     All parameters like dimensions, data types etc must be known at the time of creation.
 
     Args:
-        filename (str): filename on disk to create or to read
+        filename (Optional[str]): filename on disk to create or to read
         access (Optional[int]): gdal.GA_ReadOnly or gdal.GA_Update
         dtype (Optional[int]): gdal.GDT_* for creating new raster
         width (Optional[int]): width of new raster to be created
         length (Optional[int]): length of new raster to created
         numBands (Optional[int]): number of bands in new raster to be created
         driver (Optional[int]): GDAL driver to use for creation
+        collection (Optional[list]): List of filenames to present as collection
+        dataset (Optional[osgeo.gdal.Dataset]): GDAL Dataset from python bindings
+        h5 (Optional[h5py.Dataset]): h5py Dataset object
     '''
 
     cdef Raster * c_raster
     cdef bool __owner
 
-    def __cinit__(self, filename, int access=0, int dtype=0, 
+    def __cinit__(self, filename=None, int access=0, int dtype=0, 
                 int width=0, int length=0, int numBands=0, driver='', 
                 collection=[], dataset=None, h5=None):
 
