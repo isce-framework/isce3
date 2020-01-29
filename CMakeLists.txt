@@ -122,6 +122,7 @@ add_subdirectory(cxx)    # Core C++ library
 add_subdirectory(python) # Python bindings
 add_subdirectory(tests)  # Unit tests
 add_subdirectory(share)  # Examples
+add_subdirectory(doc)    # Documentation
 
 configure_file(
     doc/doxygen/Doxyfile.in
