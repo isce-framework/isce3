@@ -29,7 +29,9 @@
 #include <isce/geometry/DEMInterpolator.h>
 #include <isce/geometry/boundingbox.h>
 
-struct PerimeterTest : public ::testing::TestWithParam< std::tuple<int,int,int>> {
+using isce::geometry::Direction;
+
+struct PerimeterTest : public ::testing::TestWithParam< std::tuple<Direction,int,int>> {
 
     //Reference epoch
     isce::core::DateTime t0;
@@ -44,7 +46,7 @@ struct PerimeterTest : public ::testing::TestWithParam< std::tuple<int,int,int>>
     // Constructor
     PerimeterTest(): t0("2017-02-12T01:12:30.0"), grid(15.0,
                                             0.06, 1000., 800000.,
-                                            1000., -1, 10000, 80,
+                                            1000., Direction::Right, 10000, 80,
                                             t0)
     {}
 
@@ -85,7 +87,7 @@ struct PerimeterTest : public ::testing::TestWithParam< std::tuple<int,int,int>>
 
 
     //Setup the grid
-    void Setup_grid(size_t azlooks, size_t rglooks, int lookside)
+    void Setup_grid(size_t azlooks, size_t rglooks, Direction lookside)
     {
         //Customizable parameters
         grid.lookSide(lookside);
@@ -119,7 +121,7 @@ struct PerimeterTest : public ::testing::TestWithParam< std::tuple<int,int,int>>
 
 TEST_P(PerimeterTest, Normal) {
 
-    int side = std::get<0>(GetParam());
+    Direction side = std::get<0>(GetParam());
     int azlooks = std::get<1>(GetParam());
     int rglooks = std::get<2>(GetParam());
 
@@ -220,7 +222,11 @@ TEST_P(PerimeterTest, Normal) {
 
         // Check
         ASSERT_NEAR(pt.getX(), expLLH[0] * degrees, 1.0e-8);
-        ASSERT_NEAR(pt.getY(), grid.lookSide() * expLLH[1] * degrees, 1.0e-8);
+        if (grid.lookSide() == Direction::Left) {
+            ASSERT_NEAR(pt.getY(), expLLH[1] * degrees, 1.0e-8);
+        } else {
+            ASSERT_NEAR(pt.getY(), -expLLH[1] * degrees, 1.0e-8);
+        }
         ASSERT_NEAR(pt.getZ(), 0.0, 1.0e-8);
         ii++;
 
@@ -233,7 +239,7 @@ TEST_P(PerimeterTest, Normal) {
 
 TEST_P(PerimeterTest, DateLine) {
 
-    int side = std::get<0>(GetParam());
+    Direction side = std::get<0>(GetParam());
     int azlooks = std::get<1>(GetParam());
     int rglooks = std::get<2>(GetParam());
 
@@ -272,10 +278,10 @@ TEST_P(PerimeterTest, DateLine) {
 
 INSTANTIATE_TEST_SUITE_P(PerimeterTests, PerimeterTest,
                         testing::Values(
-                            std::make_tuple(-1,1,1),
-                            std::make_tuple(1,1,1),
-                            std::make_tuple(-1,3,5),
-                            std::make_tuple(1,5,3)));
+                            std::make_tuple(Direction::Right,1,1),
+                            std::make_tuple(Direction::Left,1,1),
+                            std::make_tuple(Direction::Right,3,5),
+                            std::make_tuple(Direction::Left,5,3)));
 
 
 int main(int argc, char * argv[]) {
