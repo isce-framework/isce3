@@ -398,7 +398,7 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     const Vec3 satToGround = targetXYZ - pos;
 
     // Compute cross-track range
-    if (_lookSide == isce::geometry::Direction::Right) {
+    if (_lookSide == isce::core::LookSide::Right) {
         layers.crossTrack(line, bin, satToGround.dot(TCNbasis.x1()));
     } else {
         layers.crossTrack(line, bin, -satToGround.dot(TCNbasis.x1()));
@@ -437,7 +437,7 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
 
     // Calculate psi angle between image plane and local slope
     Vec3 n_imghat = satToGround.cross(vel).normalized();
-    if (_lookSide == isce::geometry::Direction::Left) {
+    if (_lookSide == isce::core::LookSide::Left) {
         n_imghat *= -1.0;
     }
     Vec3 n_img_enu = xyz2enu.dot(n_imghat);

@@ -11,7 +11,7 @@
 
 #include <iosfwd>
 #include "DateTime.h"
-#include <isce/geometry/geometry.h> // look direction enum
+#include "LookSide.h"
 
 /** Data structure for storing basic radar geometry image metadata */
 class isce::core::Metadata {
@@ -25,7 +25,7 @@ public:
     double chirpSlope;
     double pulseDuration;
     double antennaLength;
-    isce::geometry::Direction lookSide;
+    LookSide lookSide;
     DateTime sensingStart;
     double pegHeading, pegLatitude, pegLongitude;
 

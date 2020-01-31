@@ -19,7 +19,7 @@ from Ellipsoid cimport Ellipsoid
 from Orbit cimport Orbit
 from LUT2d cimport LUT2d
 from Interpolator cimport dataInterpMethod
-from Direction cimport Direction
+from LookSide cimport LookSide
 
 cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
 
@@ -58,7 +58,7 @@ cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
                        double rangeSpacing,
                        double wavelength,
                        int radarGridWidth,
-                       Direction lookSide)
+                       LookSide lookSide)
 
         # Run geocoding
         void geocode(Raster & inputRaster,

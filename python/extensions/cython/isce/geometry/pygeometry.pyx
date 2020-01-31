@@ -7,21 +7,17 @@
 from cython.operator cimport dereference as deref
 from geometry cimport *
 from Cartesian cimport cartesian_t
-from Direction cimport Direction, parseDirection
 from Basis cimport Basis
 from libc.math cimport sin
 from libcpp.string cimport string
 # NOTE get toVec3 and pyDEMInterpolator defs due to isceextension include order.
 
-cdef Direction _parseDirection(s):
-    cdef string cs = str(s).encode('UTF-8')
-    return parseDirection(cs)
 
 def py_geo2rdr(list llh, pyEllipsoid ellps, pyOrbit orbit, pyLUT2d doppler,
                double wvl, _side, double threshold = 0.05, int maxiter = 50,
                double dR = 1.0e-8):
 
-    cdef Direction side = _parseDirection(_side)
+    cdef LookSide side = pyParseLookSide(_side)
 
     # Transfer llh to a cartesian_t
     cdef int i
@@ -56,7 +52,7 @@ def py_rdr2geo(pyOrbit orbit,  pyEllipsoid ellps,
 
     cdef DEMInterpolator demInterpolator = DEMInterpolator(demInterpolatorHeight)
 
-    cdef Direction side = _parseDirection(_side)
+    cdef LookSide side = pyParseLookSide(_side)
 
     # Call C++ rdr2geo
     rdr2geo(aztime, slantRange, doppler,
@@ -91,7 +87,7 @@ def py_rdr2geo_cone(
     cdef cartesian_t v = toVec3(axis).normalized()
     assert slantRange > 0.0, "Require slantRange > 0"
     assert side is not None, "Must specify 'left' or 'right' side"
-    cdef Direction _side = _parseDirection(side)
+    cdef LookSide _side = pyParseLookSide(side)
     cdef DEMInterpolator dem
     if demInterp is not None:
         dem = deref(demInterp.c_deminterp)
@@ -131,7 +127,7 @@ def py_computeDEMBounds(pyOrbit orbit,
     cdef double max_lon = 0.0
     cdef double max_lat = 0.0
 
-    cdef Direction side = _parseDirection(lookSide)
+    cdef LookSide side = pyParseLookSide(lookSide)
 
     # Call C++ computeDEMBounds
     computeDEMBounds(orbit.c_orbit, deref(ellps.c_ellipsoid), deref(doppler.c_lut),

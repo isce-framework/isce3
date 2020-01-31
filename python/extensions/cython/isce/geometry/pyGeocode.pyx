@@ -9,7 +9,7 @@ from libcpp.string cimport string
 from libcpp.complex cimport complex as complex_t
 from cython.operator cimport dereference as deref
 cimport cython
-from Direction cimport Direction
+from LookSide cimport LookSide
 
 from Geocode cimport *
 
@@ -53,7 +53,7 @@ cdef class pyGeocodeBase:
     cdef double rangeSpacing
     cdef double wavelength
     cdef int radarGridWidth
-    cdef Direction lookSide
+    cdef LookSide lookSide
 
     # Geographic grid parameters
     cdef double geoGridStartX
@@ -122,7 +122,7 @@ cdef class pyGeocodeBase:
         self.rangeSpacing = rangeSpacing
         self.wavelength = wavelength
         self.radarGridWidth = radarGridWidth
-        self.lookSide = _parseDirection(lookSide)
+        self.lookSide = pyParseLookSide(lookSide)
         return
 
     def geoGrid(self,

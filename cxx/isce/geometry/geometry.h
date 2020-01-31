@@ -27,17 +27,6 @@ namespace isce {
 //! The isce::geometry namespace
 namespace geometry {
 
-/** Side that radar looks at, Left or Right. */
-enum class Direction {
-    // NOTE choice of +-1 is deliberate and used for arithmetic. Do not change!
-    Left = 1,   /**< Radar points to left/port side of vehicle. */
-    Right = -1  /**< Radar points to right/starboard side of vehicle. */
-};
-
-Direction parseDirection(const std::string & str);
-std::string printDirection(Direction d);
-std::ostream & operator<<(std::ostream & out, const Direction d);
-
 /**
  * Radar geometry coordinates to map coordinates transformer
  *
@@ -65,7 +54,7 @@ int rdr2geo(double aztime, double slantRange, double doppler,
             const isce::core::Ellipsoid & ellipsoid,
             const DEMInterpolator & demInterp,
             isce::core::Vec3 & targetLLH,
-            double wvl, Direction side, double threshold,
+            double wvl, isce::core::LookSide side, double threshold,
             int maxIter, int extraIter);
 
 /**
@@ -98,7 +87,8 @@ int rdr2geo(const isce::core::Pixel & pixel,
             const isce::core::Ellipsoid & ellipsoid,
             const DEMInterpolator & demInterp,
             isce::core::Vec3 & targetLLH,
-            Direction side, double threshold, int maxIter, int extraIter);
+            isce::core::LookSide side,
+            double threshold, int maxIter, int extraIter);
 
 /**
  * Map coordinates to radar geometry coordinates transformer
@@ -129,7 +119,7 @@ int geo2rdr(const isce::core::Vec3 & inputLLH,
             const isce::core::Poly2d & doppler,
             double & aztime, double & slantRange,
             double wavelength, double startingRange,
-            double rangePixelSpacing, size_t rwidth, Direction side,
+            double rangePixelSpacing, size_t rwidth, isce::core::LookSide side,
             double threshold, int maxIter, double deltaRange);
 
 /**
@@ -157,7 +147,7 @@ int geo2rdr(const isce::core::Vec3 & inputLLH,
             const isce::core::Orbit & orbit,
             const isce::core::LUT2d<double> & doppler,
             double & aztime, double & slantRange,
-            double wavelength, Direction side, double threshold,
+            double wavelength, isce::core::LookSide side, double threshold,
             int maxIter, double deltaRange);
 
 /**
@@ -181,7 +171,7 @@ int geo2rdr(const isce::core::Vec3 & inputLLH,
 void computeDEMBounds(const isce::core::Orbit & orbit,
                       const isce::core::Ellipsoid & ellipsoid,
                       const isce::core::LUT2d<double> & doppler,
-                      Direction lookSide,
+                      isce::core::LookSide lookSide,
                       const isce::product::RadarGridParameters & radarGrid,
                       size_t xoff,
                       size_t yoff,
@@ -201,8 +191,8 @@ double _compute_doppler_aztime_diff(isce::core::Vec3 dr, isce::core::Vec3 satvel
 
 int _update_aztime(const isce::core::Orbit & orbit,
                    isce::core::Vec3 satpos, isce::core::Vec3 satvel,
-                   isce::core::Vec3 inputXYZ, Direction side, double & aztime,
-                   double & slantRange,
+                   isce::core::Vec3 inputXYZ, isce::core::LookSide side,
+                   double & aztime, double & slantRange,
                    double rangeMin=std::numeric_limits<double>::quiet_NaN(),
                    double rangeMax=std::numeric_limits<double>::quiet_NaN());
 }

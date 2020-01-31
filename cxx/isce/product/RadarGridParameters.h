@@ -6,9 +6,8 @@
 // isce::core
 #include <isce/core/Metadata.h>
 #include <isce/core/DateTime.h>
+#include <isce/core/LookSide.h>
 #include <isce/core/TimeDelta.h>
-
-#include <isce/geometry/geometry.h> // for look direction enum
 
 // isce::product
 #include <isce/product/Product.h>
@@ -31,7 +30,7 @@ class isce::product::RadarGridParameters {
 
         /** Constructor with a swath. */
         inline RadarGridParameters(const isce::product::Swath & swath,
-                                   isce::geometry::Direction lookSide);
+                                   isce::core::LookSide lookSide);
 
         /** Constructor from an isce::core::Metadata object. */
         inline RadarGridParameters(const isce::core::Metadata & meta,
@@ -43,7 +42,7 @@ class isce::product::RadarGridParameters {
                                    double prf,
                                    double startingRange,
                                    double rangePixelSpacing,
-                                   isce::geometry::Direction lookSide,
+                                   isce::core::LookSide lookSide,
                                    size_t length,
                                    size_t width,
                                    isce::core::DateTime refEpoch);
@@ -55,10 +54,10 @@ class isce::product::RadarGridParameters {
         inline RadarGridParameters & operator=(const RadarGridParameters & rgparam);
 
         /** Get the look direction */
-        inline isce::geometry::Direction lookSide() const { return _lookSide; }
+        inline isce::core::LookSide lookSide() const { return _lookSide; }
 
         /** Set look direction */
-        inline void lookSide(isce::geometry::Direction side) { _lookSide = side; }
+        inline void lookSide(isce::core::LookSide side) { _lookSide = side; }
     
         /** Set look direction from a string */
         inline void lookSide(const std::string &);
@@ -183,7 +182,7 @@ class isce::product::RadarGridParameters {
     // Protected data members can be accessed by derived classes
     protected:
         /** Left or right looking geometry indicator */
-        isce::geometry::Direction _lookSide;
+        isce::core::LookSide _lookSide;
 
         /** Sensing start time */
         double _sensingStart;
@@ -218,7 +217,7 @@ class isce::product::RadarGridParameters {
   * @param[in] lookSide Indicate left (+1) or right (-1)*/
 isce::product::RadarGridParameters::
 RadarGridParameters(const isce::product::Swath & swath,
-                    isce::geometry::Direction lookSide) :
+                    isce::core::LookSide lookSide) :
     _lookSide(lookSide),
     _sensingStart(swath.zeroDopplerTime()[0]),
     _wavelength(swath.processedWavelength()),
@@ -292,7 +291,7 @@ RadarGridParameters(double sensingStart,
                     double prf,
                     double startingRange,
                     double rangePixelSpacing,
-                    isce::geometry::Direction lookSide,
+                    isce::core::LookSide lookSide,
                     size_t length,
                     size_t width,
                     isce::core::DateTime refEpoch) :
@@ -354,5 +353,5 @@ validate() const
 void
 isce::product::RadarGridParameters::
 lookSide(const std::string & inputLook) {
-    _lookSide = isce::geometry::parseDirection(inputLook);
+    _lookSide = isce::core::parseLookSide(inputLook);
 }

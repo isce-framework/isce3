@@ -173,7 +173,7 @@ public:
                    isce::core::DateTime refEpoch, double azimuthStartTime,
                    double azimuthTimeInterval, int radarGridLength,
                    double startingRange, double rangeSpacing,
-                   isce::geometry::Direction side,
+                   isce::core::LookSide side,
                    double wavelength, int radarGridWidth);
 
     /** Set number of looks in range direction for covariance estimation */

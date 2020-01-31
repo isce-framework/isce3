@@ -18,52 +18,19 @@
 #include <isce/core/Poly2d.h>
 #include <isce/core/Vector.h>
 #include <isce/geometry/DEMInterpolator.h>
+#include <isce/core/LookSide.h>
 #include <isce/product/RadarGridParameters.h>
 #include <pyre/journal.h>
 
 // pull in useful isce::core namespace
 using namespace isce::core;
 using isce::product::RadarGridParameters;
-using isce::geometry::Direction;
-
-Direction isce::geometry::parseDirection(const std::string & inputLook)
-{
-    // Convert to lowercase
-    std::string look(inputLook);
-    std::for_each(look.begin(), look.end(), [](char & c) {
-		c = std::tolower(c);
-	});
-    // Validate look string before setting
-    if (look.compare("right") == 0) {
-        return Direction::Right;
-    } else if (look.compare("left") == 0) {
-        return Direction::Left;
-    }
-    pyre::journal::error_t error("isce.geometry");
-    error
-        << pyre::journal::at(__HERE__)
-        << "Could not successfully set look direction. Not 'right' or 'left'."
-        << pyre::journal::endl;
-}
-
-std::string isce::geometry::printDirection(Direction d)
-{
-    if (d == Direction::Left) {
-        return std::string("left");
-    }
-    assert(d == Direction::Right);
-    return std::string("right");
-}
-
-std::ostream & isce::geometry::operator<<(std::ostream & out, const isce::geometry::Direction d)
-{
-    return out << isce::geometry::printDirection(d);
-}
+using isce::core::LookSide;
 
 int isce::geometry::
 rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp, Vec3 & targetLLH,
-        double wvl, Direction side, double threshold, int maxIter, int extraIter)
+        double wvl, LookSide side, double threshold, int maxIter, int extraIter)
 {
     // Interpolate Orbit to azimuth time, compute TCN basis, and estimate geographic
     // coordinates.
@@ -102,7 +69,7 @@ rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
 int isce::geometry::
 rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3& vel,
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp,
-        Vec3 & targetLLH, Direction side, double threshold, int maxIter, int extraIter)
+        Vec3 & targetLLH, LookSide side, double threshold, int maxIter, int extraIter)
 {
     // Assume orbit has been interpolated to correct azimuth time, then estimate geographic
     // coordinates.
@@ -157,7 +124,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
         const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
         double beta = std::sqrt(
             std::pow(pixel.range() * sintheta, 2) - std::pow(alpha, 2));
-        if (side == Direction::Left) {
+        if (side == LookSide::Left) {
             beta = -beta;
         }
             
@@ -210,7 +177,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
     const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
     double beta = std::sqrt(
         std::pow(pixel.range() * sintheta, 2) - std::pow(alpha, 2));
-    if (side == Direction::Left) {
+    if (side == LookSide::Left) {
         beta = -beta;
     }
 
@@ -254,7 +221,7 @@ double isce::geometry::
 int isce::geometry::
 _update_aztime(const Orbit & orbit,
                Vec3 satpos, Vec3 satvel, Vec3 inputXYZ,
-               Direction side, double & aztime, double & slantRange,
+               LookSide side, double & aztime, double & slantRange,
                double rangeMin, double rangeMax) {
 
     Vec3 dr;
@@ -287,7 +254,7 @@ _update_aztime(const Orbit & orbit,
         // Check look side (only first time)
         if (k == 0) {
             // (Left && positive) || (Right && negative)
-            if ((side == Direction::Right) ^ (dr.cross(satvel).dot(satpos) > 0)) {
+            if ((side == LookSide::Right) ^ (dr.cross(satvel).dot(satpos) > 0)) {
                 return error; // wrong look side
             }
         }
@@ -319,7 +286,7 @@ int isce::geometry::
 geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const Poly2d & doppler, double & aztime, double & slantRange,
         double wavelength, double startingRange, double rangePixelSpacing, size_t rwidth,
-        Direction side, double threshold, int maxIter, double deltaRange)
+        LookSide side, double threshold, int maxIter, double deltaRange)
 {
 
     Vec3 satpos, satvel, inputXYZ, dr;
@@ -353,7 +320,7 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         // Check look side (only first time)
         if (i == 0) {
             // (Left && positive) || (Right && negative)
-            if ((side == Direction::Right) ^ (dr.cross(satvel).dot(satpos) > 0)) {
+            if ((side == LookSide::Right) ^ (dr.cross(satvel).dot(satpos) > 0)) {
                 return !converged; // wrong look side
             }
         }
@@ -380,7 +347,7 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
 int isce::geometry::
 geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const LUT2d<double> & doppler, double & aztime, double & slantRange,
-        double wavelength, Direction side, double threshold, int maxIter,
+        double wavelength, LookSide side, double threshold, int maxIter,
         double deltaRange) {
 
     Vec3 satpos, satvel, inputXYZ;
@@ -410,7 +377,7 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         // Check look side (only first time)
         if (i == 0) {
             // (Left && positive) || (Right && negative)
-            if ((side == Direction::Right) ^ (dr.cross(satvel).dot(satpos) > 0)) {
+            if ((side == LookSide::Right) ^ (dr.cross(satvel).dot(satpos) > 0)) {
                 return !converged; // wrong look side
             }
         }
@@ -437,7 +404,7 @@ void isce::geometry::
 computeDEMBounds(const Orbit & orbit,
                  const Ellipsoid & ellipsoid,
                  const LUT2d<double> & doppler,
-                 isce::geometry::Direction lookSide,
+                 isce::core::LookSide lookSide,
                  const RadarGridParameters & radarGrid,
                  size_t xoff,
                  size_t yoff,

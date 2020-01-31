@@ -6,7 +6,7 @@
 
 from Basis cimport Basis
 from DEMInterpolator cimport DEMInterpolator
-from Direction cimport *
+from LookSide cimport LookSide
 from Orbit cimport Orbit
 from Pixel cimport Pixel
 from Ellipsoid cimport Ellipsoid
@@ -29,7 +29,7 @@ cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
     int rdr2geo(double, double, double,
                 const Orbit &, const Ellipsoid &, const DEMInterpolator &,
                 cartesian_t &,
-                double, Direction, double, int, int)
+                double, LookSide, double, int, int)
     
     int rdr2geo(const Pixel & pixel,
                 const Basis & TCNbasis,
@@ -38,14 +38,14 @@ cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
                 const Ellipsoid & ellipsoid,
                 const DEMInterpolator & demInterp,
                 cartesian_t & targetLLH,
-                Direction side, double threshold, int maxIter, int extraIter)
+                LookSide side, double threshold, int maxIter, int extraIter)
 
 
     # Utility function to compute geographic bounds for a radar grid
     void computeDEMBounds(const Orbit & orbit,
                           const Ellipsoid & ellipsoid,
                           const LUT2d[double] & doppler,
-                          Direction lookSide,
+                          LookSide lookSide,
                           const RadarGridParameters & radarGrid,
                           size_t xoff,
                           size_t yoff,

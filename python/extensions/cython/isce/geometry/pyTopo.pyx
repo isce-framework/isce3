@@ -41,11 +41,6 @@ cdef class pyTopo:
         'biquintic': dataInterpMethod.BIQUINTIC_METHOD
     }
 
-    radarLookDirection = {
-            'left': 1,
-            'right': -1
-    }
-
     def __cinit__(self,
                   pyRadarGridParameters radarGrid,
                   pyOrbit orbit,

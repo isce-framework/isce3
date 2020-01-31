@@ -18,6 +18,7 @@
 #include <isce/core/DateTime.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Orbit.h>
+#include <isce/core/LookSide.h>
 #include <isce/core/LUT1d.h>
 #include <isce/core/LUT2d.h>
 #include <isce/core/StateVector.h>
@@ -27,9 +28,9 @@
 #include <isce/geometry/geometry.h>
 
 // flatten namespaces
-using isce::geometry::Direction;
-const auto Left = Direction::Left;
-const auto Right = Direction::Right;
+using isce::core::LookSide;
+const auto Left = LookSide::Left;
+const auto Right = LookSide::Right;
 
 // convenience enum to convey semantics of sign on spin rate
 enum OrbitDirection { EastBound, WestBound };
@@ -98,7 +99,7 @@ struct GeometryTest : public ::testing::Test {
     }
 
     //Solve for Geocentric latitude given a slant range and look side.
-    double solve(double R, Direction side)
+    double solve(double R, LookSide side)
     {
         double temp = 1.0 + hsat/ellipsoid.a();
         double temp1 = R/ellipsoid.a();
@@ -129,7 +130,7 @@ TEST_F(GeometryTest, RdrToGeoLat) {
     const double omega = 0.1/degrees;
     const int Nvec = 10;
     const double lat0 = 45.0/degrees;
-    Direction sides[] = {Right, Left};
+    LookSide sides[] = {Right, Left};
 
     //Set up orbit
     Setup_data(lat0, lon0, omega, Nvec);
@@ -194,7 +195,7 @@ TEST_F(GeometryTest, GeoToRdrLat) {
     const double omega = 0.1/degrees;
     const int Nvec = 10;
     const double lat0 = 45.0/degrees;
-    Direction sides[] = {Right, Left};
+    LookSide sides[] = {Right, Left};
 
     //Set up orbit
     Setup_data(lat0, lon0, omega, Nvec);

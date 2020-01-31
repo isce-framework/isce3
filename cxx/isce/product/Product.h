@@ -13,7 +13,7 @@
 #include <map>
 
 #include <isce/core/Constants.h>
-#include <isce/geometry/geometry.h>  // look direction enum
+#include <isce/core/LookSide.h>
 #include <isce/io/IH5.h>
 #include <isce/product/Metadata.h>
 #include <isce/product/Swath.h>
@@ -48,9 +48,9 @@ class isce::product::Product {
         inline void swath(const Swath & s, char freq) { _swaths[freq] = s; }
 
         /** Get the look direction */
-        inline isce::geometry::Direction lookSide() const { return _lookSide; }
+        inline isce::core::LookSide lookSide() const { return _lookSide; }
         /** Set look direction from an integer*/
-        inline void lookSide(isce::geometry::Direction side) { _lookSide = side; }
+        inline void lookSide(isce::core::LookSide side) { _lookSide = side; }
         /** Set look direction from a string */
         inline void lookSide(const std::string &);
 
@@ -61,7 +61,7 @@ class isce::product::Product {
         isce::product::Metadata _metadata;
         std::map<char, isce::product::Swath> _swaths;
         std::string _filename;
-        isce::geometry::Direction _lookSide;
+        isce::core::LookSide _lookSide;
 };
 
 /** @param[in] meta Metadata object
@@ -74,5 +74,5 @@ Product(const Metadata & meta, const std::map<char, isce::product::Swath> & swat
 void
 isce::product::Product::
 lookSide(const std::string & inputLook) {
-    _lookSide = isce::geometry::parseDirection(inputLook);
+    _lookSide = isce::core::parseLookSide(inputLook);
 }
