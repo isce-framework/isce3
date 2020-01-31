@@ -10,6 +10,7 @@ core/EulerAngles.cpp
 core/Interpolator.cpp
 core/Kernels.cpp
 core/LUT2d.cpp
+core/LookSide.cpp
 core/Metadata.cpp
 core/NearestNeighborInterpolator.cpp
 core/Orbit.cpp

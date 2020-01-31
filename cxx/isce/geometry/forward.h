@@ -8,5 +8,4 @@ namespace isce { namespace geometry {
 
     template<class T> class Geocode;
     
-    enum class LookDirection;
 }}
