@@ -47,8 +47,7 @@ cdef class pyRadarGridParameters:
                
     @property
     def lookSide(self):
-        cdef int n = self.c_radargrid.lookSide()
-        return n
+        return to_string(self.c_radargrid.lookSide())
 
     @property
     def refEpoch(self):
