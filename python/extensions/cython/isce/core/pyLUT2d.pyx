@@ -14,7 +14,7 @@ cdef class pyLUT2d:
     '''
     Python wrapper for isce::core::LUT2d
 
-    KwArgs:
+    Args:
         x (ndarray or list): X-Coordinates for LUT
         y (ndarray or list): Y-Coordinates for LUT
         z (ndarray):         Data values for LUT
