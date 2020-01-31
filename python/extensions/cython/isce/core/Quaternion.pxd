@@ -18,7 +18,7 @@ cdef extern from "isce/core/Attitude.h" namespace "isce::core":
 cdef extern from "isce/core/Quaternion.h" namespace "isce::core": 
     cdef cppclass Quaternion(Attitude):
         # Get copy of quaternion elements
-        vector[double] qvec()
+        vector[double] & qvec()
         # Get yaw, pitch, and roll representation
         void ypr(double t, double & yaw, double & pitch, double & roll)
         # Get rotation matrix

@@ -50,8 +50,8 @@ class isce::core::Quaternion : public isce::core::Attitude {
         /** Return data vector of time */
         inline const std::vector<double> & time() const { return _time; }
 
-        /** Get a copy of the quaternion elements*/
-        inline const std::vector<double> qvec() const { return _qvec; };
+        /** Get the quaternion elements (packed in size N*4 vector) */
+        inline const std::vector<double> & qvec() const { return _qvec; };
 
         /** Return number of epochs */
         inline size_t nVectors() const { return _time.size(); }
