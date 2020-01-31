@@ -9,6 +9,7 @@
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/Pixel.h>
+#include <isce/core/LookSide.h>
 #include <isce/cuda/core/gpuLUT1d.h>
 #include <isce/cuda/core/Orbit.h>
 #include <isce/cuda/core/OrbitView.h>
@@ -18,6 +19,7 @@
 using isce::core::Basis;
 using isce::core::OrbitInterpBorderMode;
 using isce::core::Vec3;
+using isce::core::LookSide;
 
 /** @param[in] pixel Pixel object
  * @param[in] TCNbasis Geocentric TCN basis corresponding to pixel
@@ -25,7 +27,7 @@ using isce::core::Vec3;
  * @param[in] ellipsoid Ellipsoid object
  * @param[in] demInterp gpuDEMInterpolator object
  * @param[out] targetLLH output Lon/Lat/Hae corresponding to pixel
- * @param[in] side +1 for left and -1 for right
+ * @param[in] side LookSide::Left or LookSide::Right
  * @param[in] threshold Distance threshold for convergence
  * @param[in] maxIter Number of primary iterations
  * @param[in] extraIter Number of secondary iterations
@@ -39,7 +41,7 @@ rdr2geo(const isce::core::Pixel & pixel,
         const isce::core::Ellipsoid& ellipsoid,
         const gpuDEMInterpolator & demInterp,
         Vec3& targetLLH,
-        int side, double threshold, int maxIter, int extraIter) {
+        LookSide side, double threshold, int maxIter, int extraIter) {
 
     // Initialization
     Vec3 targetLLH_old, targetVec_old, lookVec;
@@ -94,9 +96,12 @@ rdr2geo(const isce::core::Pixel & pixel,
         // Compute TCN scale factors
         const double gamma = pixel.range() * costheta;
         const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
-        const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
-                                            * std::pow(sintheta, 2)
-                                            - std::pow(alpha, 2));
+        double beta = std::sqrt(std::pow(pixel.range(), 2)
+                                * std::pow(sintheta, 2)
+                                - std::pow(alpha, 2));
+        if (side == LookSide::Left) {
+            beta = -beta;
+        }
 
         // Compute vector from satellite to ground
         const Vec3 delta = alpha * that + beta * chat + gamma * nhat;
@@ -145,9 +150,12 @@ rdr2geo(const isce::core::Pixel & pixel,
     // Compute TCN scale factors
     const double gamma = pixel.range() * costheta;
     const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
-    const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
-                                        * std::pow(sintheta, 2)
-                                        - std::pow(alpha, 2));
+    double beta = std::sqrt(std::pow(pixel.range(), 2)
+                            * std::pow(sintheta, 2)
+                            - std::pow(alpha, 2));
+    if (side == LookSide::Left) {
+        beta = -beta;
+    }
 
     // Compute vector from satellite to ground
     const Vec3 delta = alpha * that + beta * chat + gamma * nhat;
@@ -170,7 +178,7 @@ __device__ int isce::cuda::geometry::rdr2geo(
         const isce::cuda::core::OrbitView& orbit,
         const isce::core::Ellipsoid& ellipsoid,
         const isce::cuda::geometry::gpuDEMInterpolator& dem_interp,
-        Vec3& target_llh, double wvl, int side, double threshold,
+        Vec3& target_llh, double wvl, LookSide side, double threshold,
         int max_iter, int extra_iter) {
 
     /*
@@ -218,10 +226,8 @@ geo2rdr(const Vec3& inputLLH,
         const isce::cuda::core::OrbitView& orbit,
         const isce::cuda::core::gpuLUT1d<double> & doppler,
         double * aztime_result, double * slantRange_result,
-        double wavelength, int side, double threshold,
+        double wavelength, LookSide side, double threshold,
         int maxIter, double deltaRange) {
-
-    assert( side == 1 || side == -1 );
 
     // Cartesian type local variables
     // Temp local variables for results
@@ -250,7 +256,8 @@ geo2rdr(const Vec3& inputLLH,
         slantRange = dr.norm();
 
         // Check look side
-        if (dr.cross(vel).dot(pos)*side > 0) {
+        // (Left && positive) || (Right && negative)
+        if ((side == LookSide::Right) ^ (dr.cross(vel).dot(pos) > 0)) {
            *slantRange_result = slantRange;
            *aztime_result = aztime;
            return converged;
@@ -314,7 +321,7 @@ void rdr2geo_d(const isce::core::Pixel pixel,
                const isce::core::Ellipsoid ellipsoid,
                isce::cuda::geometry::gpuDEMInterpolator demInterp,
                Vec3* targetLLH,
-               int side, double threshold, int maxIter, int extraIter,
+               LookSide side, double threshold, int maxIter, int extraIter,
                int *resultcode) {
 
     // Call device function
@@ -333,7 +340,7 @@ rdr2geo_h(const isce::core::Pixel & pixel,
           const isce::core::Ellipsoid & ellipsoid,
           isce::geometry::DEMInterpolator & demInterp,
           Vec3& llh,
-          int side, double threshold, int maxIter, int extraIter) {
+          LookSide side, double threshold, int maxIter, int extraIter) {
 
     // Make GPU objects
     isce::cuda::geometry::gpuDEMInterpolator gpu_demInterp(demInterp);
@@ -382,7 +389,7 @@ void geo2rdr_d(const Vec3 llh,
                isce::cuda::core::OrbitView orbit,
                isce::cuda::core::gpuLUT1d<double> doppler,
                double * aztime, double * slantRange,
-               double wavelength, int side, double threshold,
+               double wavelength, LookSide side, double threshold,
                int maxIter, double deltaRange, int *resultcode) {
 
     // Call device function
@@ -399,7 +406,7 @@ geo2rdr_h(const cartesian_t& llh,
           const isce::core::Orbit & orbit,
           const isce::core::LUT1d<double> & doppler,
           double & aztime, double & slantRange,
-          double wavelength, int side, double threshold,
+          double wavelength, LookSide side, double threshold,
           int maxIter, double deltaRange) {
 
     // Make GPU objects

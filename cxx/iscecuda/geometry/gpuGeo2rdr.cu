@@ -6,6 +6,7 @@
 #include "gpuGeo2rdr.h"
 
 #include <isce/core/Ellipsoid.h>
+#include <isce/core/LookSide.h>
 
 // isce::cuda::core
 #include <isce/cuda/core/gpuLUT1d.h>
@@ -33,7 +34,7 @@ void runGeo2rdrBlock(isce::core::Ellipsoid ellps,
                      size_t lineStart, size_t blockLength, size_t blockWidth,
                      double t0, double r0, size_t length, size_t width,
                      double prf, double rangePixelSpacing, double wavelength,
-                     int side, double threshold, int numiter,
+                     isce::core::LookSide side, double threshold, int numiter,
                      unsigned int * totalconv) {
 
     // Get the flattened index
@@ -102,7 +103,7 @@ runGPUGeo2rdr(const isce::core::Ellipsoid& ellipsoid,
               double t0, double r0,
               size_t length, size_t width,
               double prf, double rangePixelSpacing, double wavelength,
-              int side, double threshold, double numiter,
+              isce::core::LookSide side, double threshold, double numiter,
               unsigned int & totalconv) {
 
     // Create gpu ISCE objects

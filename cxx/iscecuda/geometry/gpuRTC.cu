@@ -12,6 +12,7 @@
 #include <isce/core/Constants.h>
 #include <isce/core/DateTime.h>
 #include <isce/core/Ellipsoid.h>
+#include <isce/core/LookSide.h>
 #include <isce/core/LUT1d.h>
 #include <isce/core/Peg.h>
 #include <isce/core/Pegtrans.h>
@@ -41,7 +42,7 @@ __global__ void facet(float* out, size_t xmax, size_t ymax, float upsample_facto
         isce::cuda::core::gpuLUT1d<double> dop,
         size_t width,
         double wavelength,
-        int side) {
+        isce::core::LookSide side) {
 
     size_t xidx = threadIdx.x + blockIdx.x * blockDim.x;
     size_t yidx = threadIdx.y + blockIdx.y * blockDim.y;
@@ -169,7 +170,7 @@ __global__ void flatearth(float* out,
         size_t length,
         size_t width,
         double wavelength,
-        float lookDir,
+        isce::core::LookSide lookSide,
         float avg_hgt
         ) {
     size_t j = threadIdx.x + blockIdx.x * blockDim.x;
@@ -189,7 +190,7 @@ __global__ void flatearth(float* out,
     Vec3 targetLLH;
     targetLLH[2] = avg_hgt; // initialize first guess
     isce::cuda::geometry::rdr2geo(start + i * pixazm, slt_range, 0, orbit, ellps,
-            flat_interp, targetLLH, wavelength, 1,
+            flat_interp, targetLLH, wavelength, lookSide,
             1e-4, 20, 20);
 
     // Computation of ENU coordinates around ground target
@@ -277,7 +278,7 @@ namespace isce { namespace cuda {
             isce::core::Orbit orbit_h(product.metadata().orbit());
             isce::product::RadarGridParameters radarGrid(product, frequency);
             isce::geometry::Topo topo_h(product, frequency, true);
-            const int lookDirection = product.lookSide();
+            const isce::core::LookSide lookDirection = product.lookSide();
 
             // Initialize other ISCE objects
             isce::core::Peg peg;

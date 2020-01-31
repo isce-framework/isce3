@@ -52,7 +52,7 @@ struct GpuGeometryTest : public ::testing::Test {
 
     // isce::product objects
     isce::product::RadarGridParameters rgparam;
-    int lookSide;
+    isce::core::LookSide lookSide;
 
     // Constructor
     protected:

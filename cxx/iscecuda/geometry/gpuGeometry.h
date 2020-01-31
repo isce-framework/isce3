@@ -24,7 +24,8 @@ namespace geometry {
                          const isce::cuda::core::OrbitView &,
                          const isce::core::Ellipsoid &,
                          const gpuDEMInterpolator &,
-                         isce::core::Vec3&, double, int, double, int, int);
+                         isce::core::Vec3&, double, isce::core::LookSide,
+                         double, int, int);
 
     /** Radar geometry coordinates to map coordinates transformer*/
     CUDA_DEV int rdr2geo(const isce::core::Pixel &,
@@ -33,7 +34,8 @@ namespace geometry {
                          const isce::core::Vec3& vel,
                          const isce::core::Ellipsoid &,
                          const gpuDEMInterpolator &,
-                         isce::core::Vec3&, int, double, int, int);
+                         isce::core::Vec3&, isce::core::LookSide,
+                         double, int, int);
 
     /** Map coordinates to radar geometry coordinates transformer*/
     CUDA_DEV int geo2rdr(const isce::core::Vec3&,
@@ -41,7 +43,7 @@ namespace geometry {
                          const isce::cuda::core::OrbitView &,
                          const isce::cuda::core::gpuLUT1d<double> &,
                          double *, double *,
-                         double, int, double, int, double);
+                         double, isce::core::LookSide, double, int, double);
 
     /** Radar geometry coordinates to map coordinates transformer (host testing) */
     CUDA_HOST int rdr2geo_h(const isce::core::Pixel &,
@@ -51,7 +53,7 @@ namespace geometry {
                             const isce::core::Ellipsoid &,
                             isce::geometry::DEMInterpolator &,
                             cartesian_t &,
-                            int, double, int, int);
+                            isce::core::LookSide, double, int, int);
 
     /** Map coordinates to radar geometry coordinates transformer (host testing) */
     CUDA_HOST int geo2rdr_h(const cartesian_t&,
@@ -59,7 +61,7 @@ namespace geometry {
                             const isce::core::Orbit &,
                             const isce::core::LUT1d<double> &,
                             double &, double &,
-                            double, int, double, int, double);
+                            double, isce::core::LookSide, double, int, double);
 
 } // namespace geometry
 } // namespace cuda
