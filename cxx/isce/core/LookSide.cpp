@@ -17,9 +17,9 @@ LookSide isce::core::parseLookSide(const std::string & inputLook)
     std::transform(look.begin(), look.end(), look.begin(),
         [](unsigned char c) { return std::tolower(c); });
     // Validate look string before setting
-    if (look.compare("right") == 0) {
+    if (look == "right") {
         return LookSide::Right;
-    } else if (look.compare("left") != 0) {
+    } else if (look != "left") {
         pyre::journal::error_t error("isce.core");
         error
             << pyre::journal::at(__HERE__)
