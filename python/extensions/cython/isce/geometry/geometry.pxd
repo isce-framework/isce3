@@ -16,7 +16,7 @@ from RadarGridParameters cimport RadarGridParameters
 
 
 cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
-    
+
     # Map coordinates to radar geometry coordinates transformer
     int geo2rdr(const cartesian_t &,
                 const Ellipsoid &,
@@ -30,7 +30,7 @@ cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
                 const Orbit &, const Ellipsoid &, const DEMInterpolator &,
                 cartesian_t &,
                 double, LookSide, double, int, int)
-    
+
     int rdr2geo(const Pixel & pixel,
                 const Basis & TCNbasis,
                 const cartesian_t & pos,

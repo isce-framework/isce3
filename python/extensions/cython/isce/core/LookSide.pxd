@@ -2,7 +2,7 @@
 from libcpp.string cimport string
 
 cdef extern from "isce/core/LookSide.h" namespace "isce::core":
-    
+
     cdef enum LookSide:
         Left "isce::core::LookSide::Left"
         Right "isce::core::LookSide::Right"

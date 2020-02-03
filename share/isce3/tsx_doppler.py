@@ -110,13 +110,13 @@ class DopplerEstimate(object):
         self.measured = TsxPoly.fromXML(node.find('basebandDoppler'))
         self.geometric = TsxPoly.fromXML(node.find('geometricDoppler'))
 
-    
+
 def tsx_doppler_estimates(filename):
     root = _get_xml_root(filename)
     base = root.find('processing/doppler/dopplerCentroid')
     nodes = [node for node in base if node.tag == 'dopplerEstimate']
     return [DopplerEstimate(node) for node in nodes]
-    
+
 
 def squint(x, orbit, attitude, sin_az=0.0):
     """Find imaging time and squint (angle between LOS and velocity) for a

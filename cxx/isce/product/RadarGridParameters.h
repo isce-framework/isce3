@@ -58,7 +58,7 @@ class isce::product::RadarGridParameters {
 
         /** Set look direction */
         inline void lookSide(isce::core::LookSide side) { _lookSide = side; }
-    
+
         /** Set look direction from a string */
         inline void lookSide(const std::string &);
 

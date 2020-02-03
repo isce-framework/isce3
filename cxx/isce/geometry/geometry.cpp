@@ -127,7 +127,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
         if (side == LookSide::Left) {
             beta = -beta;
         }
-            
+
 
         // Compute vector from satellite to ground
         const Vec3 delta = alpha * that + beta * chat + gamma * nhat;
