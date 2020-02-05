@@ -36,17 +36,3 @@ curl -L -H "Accept: application/octet-stream" --output gcc7.tar.gz "https://${GI
 ./build-isce-src.sh ${TAG} $WORKSPACE
 ./run-isce-tests.sh ${TAG} $memcheck
 ./build-isce-ops.sh ${TAG} $WORKSPACE
-
-# update gh-pages with latest docs
-git clone --single-branch --branch gh-pages \
-  https://${GIT_OAUTH_TOKEN}@github-fn.jpl.nasa.gov/isce-3/isce.git 
-  cd isce/
-  git config user.name "gmanipon"
-  git config user.email "gmanipon@jpl.nasa.gov"
-  git rm -rf .
-  mv ../doc/* .
-  touch .nojekyll
-  git add .
-  git status
-  git commit -am "auto update of docs ($BUILD_URL)"
-  git push
