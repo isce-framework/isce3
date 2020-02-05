@@ -15,33 +15,51 @@ cdef extern from "isce/product/RadarGridParameters.h" namespace "isce::product":
         RadarGridParameters(const Swath & swath,
                             int side) except +
         RadarGridParameters(const RadarGridParameters & radargrid) except +
+        RadarGridParameters(double sensingStart,
+                            double wavelength,
+                            double prf,
+                            double startingRange,
+                            double rangePixelSpacing,
+                            int lookSide,
+                            size_t length,
+                            size_t width,
+                            DateTime refEpoch) except +
 
         # Look side
         int lookSide()
+        void lookSide(int)
 
         # Reference epoch
         DateTime & refEpoch()
+        void refEpoch(DateTime)
 
         # Sensing start in seconds
         double sensingStart()
+        void sensingStart(double)
 
         # Wavelength
         double wavelength()
+        void wavelength(double)
 
         # Pulse repetition frequency
         double prf()
+        void prf(double)
 
         # Starting slant range
         double startingRange()
+        void startingRange(double)
 
         # Range pixel spacing
         double rangePixelSpacing()
+        void rangePixelSpacing(double)
 
         # Radar grid length
         size_t length()
+        void length(size_t)
 
         # Radar grid width
         size_t width()
+        void width(size_t)
 
         # Number of radar grid elements
         size_t size()
@@ -53,10 +71,10 @@ cdef extern from "isce/product/RadarGridParameters.h" namespace "isce::product":
         double sensingMid()
 
         # Sensing time for a given line
-        double sensingTime(size_t)
+        double sensingTime(double)
 
         # Sensing DateTime for a given line
-        DateTime sensingDateTime(size_t)
+        DateTime sensingDateTime(double)
 
         # Endling slant range
         double endingRange()
@@ -65,7 +83,7 @@ cdef extern from "isce/product/RadarGridParameters.h" namespace "isce::product":
         double midRange()
 
         # Slant range for a given sample
-        double slantRange(size_t)
+        double slantRange(double)
 
         RadarGridParameters multilook(size_t, size_t)
 

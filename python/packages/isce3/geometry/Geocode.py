@@ -6,7 +6,7 @@
 import numpy as np
 
 # The extensions
-import isce3.extensions.isceextension as isceextension
+from .. import isceextension
 from isceextension import pyGeocodeFloat, pyGeocodeDouble, pyGeocodeComplexFloat
 
 

@@ -2,14 +2,13 @@
 #
 # Heresh Fattahi
 # Copyright 2019-
-
+#
 # The extension
 from .. import isceextension
 
-class Swath(isceextension.pySwath):
+class Projection(isceextension.pyProjection):
     """
-    Wrapper for pySwath.
+    Wrapper for pyProjection.
     """
-
     pass
 

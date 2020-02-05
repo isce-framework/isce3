@@ -6,7 +6,9 @@
 import numpy as np
 
 # The extensions
-import isce3.extensions.isceextension as isceextension
+from .. import isceextension
+from isceextension import getGeoPerimeter
+
 
 def getBoundsOnGround(orbit=None,
                      ellipsoid=None,
@@ -32,3 +34,5 @@ def getBoundsOnGround(orbit=None,
 
     # Return result
     return bounds
+
+
