@@ -15,7 +15,7 @@ echo "WORKSPACE: $WORKSPACE"
 echo "GIT_OAUTH_TOKEN: $GIT_OAUTH_TOKEN"
 
 #Get tag
-TAG=${GIT_COMMIT}
+TAG=${BUILD_NUMBER}-${GIT_COMMIT}
 echo "TAG: $TAG"
 
 # turn off valgrind
