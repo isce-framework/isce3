@@ -5,137 +5,183 @@
 Radar Geometry Tutorial
 =======================
 
-This tutorial is organized in 3 sections.
+This tutorial is organized in 4 sections.
 
 1. :ref:`usingpyorbit`
-2. :ref:`forwardmap`
-3. :ref:`invmap`
+2. :ref:`usingradargrid`
+3. :ref:`forwardmap`
+4. :ref:`invmap`
 
 .. _usingpyorbit:
 
-Working with pyOrbit
+Working with Orbits
 --------------------
 
-pyOrbit is at the heart of geometric manipulation from the python level in ISCE. This is just a time-tagged collection of state vectors. In this example, we will walk through an example of constructing a pyOrbit object with a list of state vectors. The input state vectors are provided in a simple 7-column text file as shown below:
+Orbit data structure is at the heart of geometric manipulation from the python level in ISCE.
+This is just a uniformly sampled, time-tagged collection of state vectors in 
+Earth Centered Earth Fixed (ECEF) coordinates. In this example, we will walk through 
+an example of constructing a Orbit object with a list of state vectors. 
+The input state vectors are provided in a simple 7-column text file as shown below:
 
-``2016-04-08T09:13:13.000000 -3752316.976337 4925051.878499 3417259.473609 3505.330104 -1842.136554 6482.122476``
-
-``2016-04-08T09:13:23.000000 -3717067.52658 4906329.056304 3481886.455117 3544.479224 -1902.402281 6443.152265``
-
-``........``
+.. literalinclude:: orbit_arc.txt
 
 .. code-block:: python
 
-   def loadOrbit(infilename):
-      from isceextension import pyOrbit, pyDateTime
-   
-      #Create object
-      orbit = pyOrbit()
+    def loadOrbit(infilename):
+        from isce3.core import statevector, orbit, dateTime
+        
+        #List of state vectors
+        svs = []
 
-      #Open file with state vectors for reading
-      with open(infilename, 'r') as fid:
-         linecount = 0
+        #Open file with state vectors for reading
+        with open(infilename, 'r') as fid:
+        
+            #For each line in file
+            for line in fid:
+                vals = line.strip().split()
 
-         #For each line in file
-         for line in fid:
-            vals = line.strip().split()
+                #Create dateTime object.
+                tstamp = dateTime(dt=vals[0])
 
-            #Use first time tag as reference
-            if linecount == 0:
-               refEpoch = pyDateTime(vals[0])
-               orbit.refEpoch = refEpoch
+                pos = [float(x) for x in vals[1:4]]
+                vel = [float(x) for x in vals[4:7]]
 
-            #Create pyDateTime. Can also be Python datetime
-            tstamp = pyDateTime(vals[0])
 
-            #Compute time difference w.r.t reference
-            tstampFromRef = (tstamp-refEpoch).getTotalSeconds()
-            
-            #Set the state vector
-            orbit.addStateVector(tstampFromRef, 
-                            [float(x) for x in vals[1:4]],
-                            [float(x) for x in vals[4:7]])
+                svs.append( statevector(datetime=tstamp, 
+                                        position=pos,
+                                        velocity=vel))
 
-            #Increment line counter
-            linecount += 1
+        return orbit(statevecs=svs)
 
-      return orbit
+.. note::
+    In this example, we demonstrated creation of Orbit objects with simple text files. The same approach can be used 
+    to generate Orbits from database queries or Sentinel-1/ NISAR XML files.
 
+
+.. _usingradargrid:
+
+Working with RadarGridParameters
+----------------------------------
+
+RadarGridParameters is the basic minimal data structure used to represent the limits
+of a radar image in azimuth time and slant range coordinates. This data structure is 
+relevant for all NISAR L1 and L2 radar geometry products. It is inherently assumed 
+that the imagery is laid out on a uniform grid in both azimuth time and slant range.
+
+A simple RadarGridParameters object can be created as shown below:
+
+.. code-block:: python
+
+    from isce3.product import radarGridParameters
+    from isce3.core import dateTime
+
+
+    grid = radarGridParameters()
+    
+    #lookSide
+    grid.lookSide = 1 #Left looking
+
+    #Imaging wavelength
+    grid.wavelength = 0.06
+
+    #Slant range extent
+    grid.startingRange = 8.0e5
+    grid.rangePixelSpacing = 10.
+    grid.width = 1000
+
+    #Along track extent
+    grid.referenceEpoch = dateTime(dt="2023-01-03T14:21:55.125")
+    grid.sensingStart = 0.  #Seconds since refEpoch
+    grid.prf = 1000.
+    grid.length = 1500
+
+.. note::
+    This example goes into gory detail of setting up a basic radar grid at the lowest level. 
+    In future, higher level python classes will include a getRadarGrid() method that should 
+    return a populated grid structure with data from HDF5 products.
 
 .. _forwardmap:
 
 Forward mapping example - determining bounding boxes
 ----------------------------------------------------
 
-In this example, we will demonstrate the forward mapping algorithm by using it to determine approximate bounding boxes on the ground.
+In this example, we will demonstrate the forward mapping algorithm by using it to determine approximate bounding
+boxes on the ground.
 
 .. code-block:: python
 
-   from isceextension import pyDateTime, pyOrbit
-   "coming soon"
-   "..."
+    from isce3.core import dateTime, orbit, projection
+    from isce3.product import radarGridParameters
+    from isce3.geometry import getGeoPerimeter
+
+    #See above for implementation details
+    arc = loadOrbit('orbit_arc.txt')
+
+    #Create radar grid, but sync referenceEpoch for fast computation
+    grid = radarGridParameters()
+    grid.lookSide = 1 
+    grid.wavelength = 0.06
+    grid.startingRange = 8.0e5
+    grid.rangePixelSpacing = 10.
+    grid.width = 1000
+    grid.referenceEpoch = arc.referenceEpoch
+    grid.sensingStart = (dateTime(dt="2023-01-03T14:21:55.125") - grid.referenceEpoch).getTotalSeconds()
+    grid.prf = 1000.
+    grid.length = 1500
+
+    assert(grid.referenceEpoch == arc.referenceEpoch)
+
+
+    ##Use perimeter functionality
+    epsg = projection(epsg=4326)
+    box = getGeoPerimeter(grid, arc, epsg, pointsPerEdge=5)
+
+    #box is a Geojson string
+    print(box)
+
+.. note::
+    We could also have implemented the perimeter estimation by looping over points on the edge of 
+    the swath and using isce3.geometry.rdr2geo_pt function with appropriate inputs
 
 .. _invmap:
 
-Inverse mapping example - locating corner reflectors
+Inverse mapping example - locating known targets
 ----------------------------------------------------
 
-In this example, we will demonstrate the inverse mapping algorithm by using it to determine the location of a known target in a radar image.
+In this example, we will demonstrate the inverse mapping algorithm by using it to determine the location of a known
+target in a radar image. For this example, we will use the coordinates of the estimated perimeter above and reuse
+the orbit data structure
 
 .. code-block:: python
 
-   from isceextension import (pyOrbit, pyDateTime, 
-                             pyEllipsoid, pyImageMode,
-                             pyPoly2d, py_geo2rdr)
+   from isce3.core import lut2d
+   from isce3.geometry import geo2rdr_point
+   import json
    import numpy as np
 
-   ##Load orbit
-   orbit = loadOrbit('input_orbit.txt')
+   ##Get points from Geojson
+   targets = json.loads(box)['coordinates']
 
-   ## Targets to locate in radar image
-   targets = [[131.55, 32.85, 475.],
-              [131.65, 32.95, 150.]]
+   #Set up zero doppler
+   doppler = lut2d()
 
-   #Radar wavelength
-   wvl = 0.06
+   #Get ellipsoid spec
+   elp = epsg.ellipsoid() 
 
-   #Right looking
-   side = -1
-
-   ##Fake product with relevant metadata
-   mode = pyImageMode()
-   mode.setDimensions([1500,1000])
-   mode.prf = 1000.
-   mode.rangeBandwidth = 20.0e6
-   mode.wavelength = wvl
-   mode.startingRange = 8.0e5
-   mode.rangePixelSpacing = 10.
-   mode.numberAzimuthLooks = 10
-   mode.numberRangeLooks = 10
-   mode.startAzTime = pyDateTime("2016-04-08T09:13:55.454821")
-   mode.endAzTime = pyDateTime("2016-04-08T09:14:10.454821")
-
-   t0 = (mode.startAzTime - orbit.refEpoch).getTotalSeconds()
-
-   ##Create doppler polynomial - zero doppler for now
-   doppler = pyPoly2d(azimuthOrder=0, rangeOrder=0,
-                   azimuthMean = 0., rangeMean = 0.,
-                   azimuthNorm = 1., rangeNorm = 1.)
-   doppler.coeffs = [0.]
-
-   ##Create ellipsoid - WGS84 by default
-   ellps = pyEllipsoid()
    for targ in targets:
       #Convert from degrees to radians
       llh = [np.radians(targ[0]), np.radians(targ[1]), targ[2]]
 
       #Estimate target position
-      taz, rng = py_geo2rdr(llh, ellps, orbit, doppler, mode, side, 
-                              threshold=1.0e-8,
-                              maxiter=51,
-                              dR=1.0e-8)
+      taz, rng = geo2rdr_point(llh, elp, arc, doppler,
+                               grid.wavelength, grid.lookSide)
 
-      #Line number
-      print('Target at: {0} {1} {2}'.format(*targ))
-      print('Estimated line number: {0}'.format((taz - t0) * mode.prf/mode.numberAzimuthLooks))
-      print('Estimated pixel number: {0}'.format((rng - mode.startingRange)/mode.rangePixelSpacing / mode.numberRangeLooks))
+      #Line, pixel number
+      print('Target at: ', *targ)
+      print('Estimated line number: ', (taz - grid.sensingStart) * grid.prf)
+      print('Estimated pixel number: ',(rng - grid.startingRange)/grid.rangePixelSpacing)
+
+
+.. note:: The threshold parameter to rdr2geo_point determines the accuracy of the inversion. For precise 
+    location, use threshold on order of 1.0e-6. Default threshold at Python level is on order of cm, 
+    which is generally good enough for bounding box estimates. 

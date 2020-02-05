@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>RadarGridParameters &#8212; ISCE  documentation</title>
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="radargridparameter">
+<h1>RadarGridParameter<a class="headerlink" href="#radargridparameter" title="Permalink to this headline">¶</a></h1>
+<p>RadarGridParameters is the lowest level data structure used to represent a Range-Azimuth Grid in ISCE.</p>
+<div class="section" id="factory">
+<h2>Factory<a class="headerlink" href="#factory" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">isce3.product</span> <span class="kn">import</span> <span class="n">radarGridParameters</span>
+
+<span class="n">obj</span> <span class="o">=</span> <span class="n">radarGridParameters</span><span class="p">(</span><span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters">
+<em class="property">class </em><code class="sig-prename descclassname">isce3.product.RadarGridParameters.</code><code class="sig-name descname">RadarGridParameters</code><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for pyRadarGridParameters.</p>
+<dl class="attribute">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.length">
+<code class="sig-name descname">length</code><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns number of lines in grid</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.lookSide">
+<code class="sig-name descname">lookSide</code><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.lookSide" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns look side</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.multilook">
+<code class="sig-name descname">multilook</code><span class="sig-paren">(</span><em class="sig-param">int az_looks</em>, <em class="sig-param">int rg_looks</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.multilook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new grid corresponding to the multilooking parameters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.perimeter">
+<code class="sig-name descname">perimeter</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwds</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.perimeter" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a pass through for isce3.geometry.getPerimeter. Returns parameter as geoJson.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.prf">
+<code class="sig-name descname">prf</code><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.prf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns azimuth time sampling frequency</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.rangePixelSpacing">
+<code class="sig-name descname">rangePixelSpacing</code><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.rangePixelSpacing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns slant range pixel spacing in meters</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.referenceEpoch">
+<code class="sig-name descname">referenceEpoch</code><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.referenceEpoch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return reference epoch used to represent azimuth time</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.sensingDateTime">
+<code class="sig-name descname">sensingDateTime</code><span class="sig-paren">(</span><em class="sig-param">double line</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.sensingDateTime" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.sensingStart">
+<code class="sig-name descname">sensingStart</code><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.sensingStart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns azimuth time corresponding to first line</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.sensingTime">
+<code class="sig-name descname">sensingTime</code><span class="sig-paren">(</span><em class="sig-param">double line</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.sensingTime" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.slantRange">
+<code class="sig-name descname">slantRange</code><span class="sig-paren">(</span><em class="sig-param">double column</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.slantRange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns slant range in meters at given column number</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.startingRange">
+<code class="sig-name descname">startingRange</code><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.startingRange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns slant range to first pixel in meters</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.wavelength">
+<code class="sig-name descname">wavelength</code><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.wavelength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns wavelength</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="isce3.product.RadarGridParameters.RadarGridParameters.width">
+<code class="sig-name descname">width</code><a class="headerlink" href="#isce3.product.RadarGridParameters.RadarGridParameters.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns number of pixels in grid</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">RadarGridParameter</a><ul>
+<li><a class="reference internal" href="#factory">Factory</a></li>
+<li><a class="reference internal" href="#documentation">Documentation</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/product/RadarGridParameters.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../index.html">ISCE  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, JPL/Caltech.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.0.
+    </div>
+  </body>
+</html>
