@@ -27,10 +27,10 @@ void addbinding(py::class_<Orbit> & pyOrbit)
 {
     pyOrbit
         .def_property_readonly("position", [](const Orbit & self) {
-            return py::array{toBuffer(self.position())};
+            return py::array{toBuffer(self.position()), py::cast(self)};
         })
         .def_property_readonly("velocity", [](const Orbit & self) {
-            return py::array{toBuffer(self.velocity())};
+            return py::array{toBuffer(self.velocity()), py::cast(self)};
         })
 
         /*
