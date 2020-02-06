@@ -1,6 +1,7 @@
 #include "Orbit.h"
 
 #include <isce/core/Serialization.h>
+#include <isce/core/Vector.h>
 
 #include <pybind11/chrono.h>
 #include <pybind11/operators.h>
@@ -12,9 +13,26 @@ using isce::core::Orbit;
 
 #include <pybind11/eigen.h>
 
+static py::buffer_info toBuffer(const std::vector<isce::core::Vec3>& buf)
+{
+    const auto format = py::format_descriptor<double>::format();
+    const std::vector<ssize_t> shape  { ssize_t(buf.size()), 3 };
+    const std::vector<ssize_t> strides{ sizeof(isce::core::Vec3), sizeof(double) };
+    const bool readonly = true;
+
+    return {(void*) buf.data(), sizeof(double), format, 2, shape, strides, readonly};
+}
+
 void addbinding(py::class_<Orbit> & pyOrbit)
 {
     pyOrbit
+        .def_property_readonly("position", [](const Orbit & self) {
+            return py::array{toBuffer(self.position())};
+        })
+        .def_property_readonly("velocity", [](const Orbit & self) {
+            return py::array{toBuffer(self.velocity())};
+        })
+
         /*
          * XXX
          * This is an inefficient helper method to load
@@ -44,10 +62,5 @@ void addbinding(py::class_<Orbit> & pyOrbit)
         .def_property_readonly("start_datetime", &Orbit::startDateTime)
         .def_property_readonly("mid_datetime",   &Orbit::midDateTime)
         .def_property_readonly("end_datetime",   &Orbit::endDateTime)
-
-        // trivial indexed getters
-        .def(    "time_at", py::overload_cast<int>(&Orbit::time,     py::const_))
-        .def("position_at", py::overload_cast<int>(&Orbit::position, py::const_))
-        .def("velocity_at", py::overload_cast<int>(&Orbit::velocity, py::const_))
         ;
 }
