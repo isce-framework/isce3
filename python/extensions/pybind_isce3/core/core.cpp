@@ -1,6 +1,7 @@
 #include "core.h"
 
 #include "DateTime.h"
+#include "Orbit.h"
 #include "TimeDelta.h"
 
 namespace py = pybind11;
