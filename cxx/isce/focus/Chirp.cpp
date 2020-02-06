@@ -38,7 +38,7 @@ formLinearChirp(double chirprate,
     if (size % 2 == 0) { size++; }
 
     double spacing = 1. / samplerate;
-    double startfreq = centerfreq - 0.5 * chirprate * duration;
+    double startfreq = centerfreq - 0.5 * chirprate * (size - 1) * spacing;
 
     // evaluate time-domain LFM chirp samples
     std::vector<std::complex<float>> chirp(size);

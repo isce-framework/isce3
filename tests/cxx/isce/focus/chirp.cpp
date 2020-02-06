@@ -10,14 +10,14 @@ TEST(FormLinearChirpTest, FormLinearChirp)
 {
     double startfreq = 0.;
     double endfreq = 20.;
-    double duration = 1.;
     int samples = 1001;
+    double spacing = 0.001;
     double amplitude = 7.5;
     double phi = 0.5 * M_PI;
 
-    double centerfreq = 0.5 * (startfreq + endfreq);
+    double duration = (samples - 1) * spacing;
     double chirprate = (endfreq - startfreq) / duration;
-    double spacing = duration / (samples - 1);
+    double centerfreq = startfreq + 0.5 * chirprate * duration;
     double samplerate = 1. / spacing;
 
     std::vector<std::complex<float>> chirp = formLinearChirp(
@@ -45,7 +45,7 @@ TEST(FormLinearChirpTest, FormLinearChirp)
         for (int i = 0; i < samples - 1; ++i) {
 
             // instantaneous frequency at the center of the two samples
-            double f = startfreq + (endfreq - startfreq) * (i + 0.5) / samples;
+            double f = startfreq + (endfreq - startfreq) * (i + 0.5) * spacing;
 
             std::complex<double> z1 = chirp[i];
             std::complex<double> z2 = chirp[i + 1];
@@ -54,7 +54,7 @@ TEST(FormLinearChirpTest, FormLinearChirp)
             maxerr = std::max(maxerr, std::abs(2. * M_PI * f * spacing - dphi));
         }
 
-        EXPECT_LT(maxerr, 1e-3);
+        EXPECT_LT(maxerr, 1e-6);
     }
 }
 
