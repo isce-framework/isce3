@@ -53,6 +53,7 @@ fft/FFTPlan.h
 fft/FFTPlan.icc
 fft/FFTUtil.h
 fft/FFTUtil.icc
+focus/Chirp.h
 geometry/DEMInterpolator.h
 geometry/forward.h
 geometry/Shapes.h

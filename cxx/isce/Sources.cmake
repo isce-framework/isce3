@@ -27,6 +27,7 @@ except/Error.cpp
 geometry/boundingbox.cpp
 fft/detail/ConfigureFFTLayout.cpp
 fft/detail/FFTWWrapper.cpp
+focus/Chirp.cpp
 geometry/DEMInterpolator.cpp
 geometry/Geo2rdr.cpp
 geometry/Geocode.cpp
