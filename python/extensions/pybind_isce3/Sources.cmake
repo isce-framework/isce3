@@ -1,6 +1,7 @@
 set(SRCS
 core/core.cpp
 core/DateTime.cpp
+core/Orbit.cpp
 core/TimeDelta.cpp
 io/gdal/Dataset.cpp
 io/gdal/GDALAccess.cpp

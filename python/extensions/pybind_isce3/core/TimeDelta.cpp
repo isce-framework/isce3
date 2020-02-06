@@ -35,7 +35,7 @@ void addbinding(py::class_<TimeDelta> & pyTimeDelta)
                 py::arg("frac"))
         .def(py::init([](const std::chrono::duration<int, std::micro> & duration)
                 {
-                    return std::make_unique<TimeDelta>(1e-6 * duration.count());
+                    return TimeDelta(1e-6 * duration.count());
                 }))
         .def(py::self < py::self)
         .def(py::self > py::self)
