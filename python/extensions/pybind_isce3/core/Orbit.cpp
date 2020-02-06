@@ -37,13 +37,13 @@ void addbinding(py::class_<Orbit> & pyOrbit)
         })
 
         // trivial member getters
-        .def("spacing",        &Orbit::spacing)
-        .def("size",           &Orbit::size)
-        .def("start_time",     &Orbit::startTime)
-        .def("end_time",       &Orbit::endTime)
-        .def("start_datetime", &Orbit::startDateTime)
-        .def("mid_datetime",   &Orbit::midDateTime)
-        .def("end_datetime",   &Orbit::endDateTime)
+        .def_property_readonly("spacing",        &Orbit::spacing)
+        .def_property_readonly("size",           &Orbit::size)
+        .def_property_readonly("start_time",     &Orbit::startTime)
+        .def_property_readonly("end_time",       &Orbit::endTime)
+        .def_property_readonly("start_datetime", &Orbit::startDateTime)
+        .def_property_readonly("mid_datetime",   &Orbit::midDateTime)
+        .def_property_readonly("end_datetime",   &Orbit::endDateTime)
 
         // trivial indexed getters
         .def(    "time_at", py::overload_cast<int>(&Orbit::time,     py::const_))
