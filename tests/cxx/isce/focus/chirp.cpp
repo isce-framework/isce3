@@ -11,7 +11,7 @@ TEST(FormLinearChirpTest, FormLinearChirp)
     double startfreq = 0.;
     double endfreq = 20.;
     int samples = 1001;
-    double spacing = 0.001;
+    double spacing = 0.01;
     double amplitude = 7.5;
     double phi = 0.5 * M_PI;
 
@@ -45,7 +45,7 @@ TEST(FormLinearChirpTest, FormLinearChirp)
         for (int i = 0; i < samples - 1; ++i) {
 
             // instantaneous frequency at the center of the two samples
-            double f = startfreq + (endfreq - startfreq) * (i + 0.5) * spacing;
+            double f = startfreq + chirprate * (i + 0.5) * spacing;
 
             std::complex<double> z1 = chirp[i];
             std::complex<double> z2 = chirp[i + 1];
