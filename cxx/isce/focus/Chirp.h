@@ -13,7 +13,7 @@ namespace isce { namespace focus {
  * \param[in] samplerate    Sampling rate (Hz)
  * \param[in] centerfreq    Center frequency (Hz)
  * \param[in] amplitude     Amplitude
- * \param[in] phi           Initial phase (rad)
+ * \param[in] phi           Phase offset at center of chirp (rad)
  * \returns                 Time-domain I/Q samples
  */
 std::vector<std::complex<float>>

@@ -36,8 +36,9 @@ TEST(FormLinearChirpTest, FormLinearChirp)
         EXPECT_LT(maxerr, 1e-6);
     }
 
-    // check initial phase
-    EXPECT_FLOAT_EQ( std::arg(chirp[0]), phi );
+    // check phase at center sample
+    std::complex<float> z = chirp[chirp.size() / 2];
+    EXPECT_FLOAT_EQ( std::arg(z), phi );
 
     // check phase difference between each adjacent pair of samples
     {

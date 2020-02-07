@@ -37,14 +37,13 @@ formLinearChirp(double chirprate,
     int size = std::floor(d_size);
     if (size % 2 == 0) { size++; }
 
-    double spacing = 1. / samplerate;
-    double startfreq = centerfreq - 0.5 * chirprate * (size - 1) * spacing;
-
     // evaluate time-domain LFM chirp samples
+    double spacing = 1. / samplerate;
+    double tau0 = -0.5 * (size - 1) * spacing;
     std::vector<std::complex<float>> chirp(size);
     for (int i = 0; i < size; ++i) {
-        double tau = spacing * i;
-        double phase = phi + 2. * M_PI * (startfreq + 0.5 * chirprate * tau) * tau;
+        double tau = tau0 + spacing * i;
+        double phase = phi + 2. * M_PI * (centerfreq + 0.5 * chirprate * tau) * tau;
 
         chirp[i] = std::polar(amplitude, phase);
     }
