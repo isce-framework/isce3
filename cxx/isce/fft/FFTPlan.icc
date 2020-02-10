@@ -5,9 +5,9 @@
 namespace isce { namespace fft {
 
 template<typename T>
-FwdFFTPlan<T>::FwdFFTPlan(std::complex<T> * out, T * in, int n, int batch, unsigned flags)
+FwdFFTPlan<T>::FwdFFTPlan(std::complex<T> * out, T * in, int n, int batch, unsigned flags, int threads)
 :
-    super_t(out, in, &n, &n, 1, n, &n, 1, n, batch, flags, 1, FFTW_FORWARD)
+    super_t(out, in, &n, &n, 1, n, &n, 1, n, batch, flags, 1, FFTW_FORWARD, threads)
 {}
 
 template<typename T>
@@ -16,9 +16,10 @@ FwdFFTPlan<T>::FwdFFTPlan(std::complex<T> * out,
                           T * in,
                           const int (&n)[Rank],
                           int batch,
-                          unsigned flags)
+                          unsigned flags,
+                          int threads)
 :
-    super_t(out, in, n, n, 1, detail::product(n), n, 1, detail::product(n), batch, flags, Rank, FFTW_FORWARD)
+    super_t(out, in, n, n, 1, detail::product(n), n, 1, detail::product(n), batch, flags, Rank, FFTW_FORWARD, threads)
 {}
 
 template<typename T>
@@ -29,9 +30,10 @@ FwdFFTPlan<T>::FwdFFTPlan(std::complex<T> * out,
                           int stride,
                           int dist,
                           int batch,
-                          unsigned flags)
+                          unsigned flags,
+                          int threads)
 :
-    super_t(out, in, &n, &nembed, stride, dist, &nembed, stride, dist, batch, flags, 1, FFTW_FORWARD)
+    super_t(out, in, &n, &nembed, stride, dist, &nembed, stride, dist, batch, flags, 1, FFTW_FORWARD, threads)
 {}
 
 template<typename T>
@@ -43,9 +45,10 @@ FwdFFTPlan<T>::FwdFFTPlan(std::complex<T> * out,
                           int stride,
                           int dist,
                           int batch,
-                          unsigned flags)
+                          unsigned flags,
+                          int threads)
 :
-    super_t(out, in, n, nembed, stride, dist, nembed, stride, dist, batch, flags, Rank, FFTW_FORWARD)
+    super_t(out, in, n, nembed, stride, dist, nembed, stride, dist, batch, flags, Rank, FFTW_FORWARD, threads)
 {}
 
 template<typename T>
@@ -59,9 +62,10 @@ FwdFFTPlan<T>::FwdFFTPlan(std::complex<T> * out,
                           int ostride,
                           int odist,
                           int batch,
-                          unsigned flags)
+                          unsigned flags,
+                          int threads)
 :
-    super_t(out, in, &n, &inembed, istride, idist, &onembed, ostride, odist, batch, flags, 1, FFTW_FORWARD)
+    super_t(out, in, &n, &inembed, istride, idist, &onembed, ostride, odist, batch, flags, 1, FFTW_FORWARD, threads)
 {}
 
 template<typename T>
@@ -76,15 +80,16 @@ FwdFFTPlan<T>::FwdFFTPlan(std::complex<T> * out,
                           int ostride,
                           int odist,
                           int batch,
-                          unsigned flags)
+                          unsigned flags,
+                          int threads)
 :
-    super_t(out, in, n, inembed, istride, idist, onembed, ostride, odist, batch, flags, Rank, FFTW_FORWARD)
+    super_t(out, in, n, inembed, istride, idist, onembed, ostride, odist, batch, flags, Rank, FFTW_FORWARD, threads)
 {}
 
 template<typename T>
-InvFFTPlan<T>::InvFFTPlan(T * out, std::complex<T> * in, int n, int batch, unsigned flags)
+InvFFTPlan<T>::InvFFTPlan(T * out, std::complex<T> * in, int n, int batch, unsigned flags, int threads)
 :
-    super_t(out, in, &n, &n, 1, n, &n, 1, n, batch, flags, 1, FFTW_BACKWARD)
+    super_t(out, in, &n, &n, 1, n, &n, 1, n, batch, flags, 1, FFTW_BACKWARD, threads)
 {}
 
 template<typename T>
@@ -93,9 +98,10 @@ InvFFTPlan<T>::InvFFTPlan(T * out,
                           std::complex<T> * in,
                           const int (&n)[Rank],
                           int batch,
-                          unsigned flags)
+                          unsigned flags,
+                          int threads)
 :
-    super_t(out, in, n, n, 1, detail::product(n), n, 1, detail::product(n), batch, flags, Rank, FFTW_BACKWARD)
+    super_t(out, in, n, n, 1, detail::product(n), n, 1, detail::product(n), batch, flags, Rank, FFTW_BACKWARD, threads)
 {}
 
 template<typename T>
@@ -106,9 +112,10 @@ InvFFTPlan<T>::InvFFTPlan(T * out,
                           int stride,
                           int dist,
                           int batch,
-                          unsigned flags)
+                          unsigned flags,
+                          int threads)
 :
-    super_t(out, in, &n, &nembed, stride, dist, &nembed, stride, dist, batch, flags, 1, FFTW_BACKWARD)
+    super_t(out, in, &n, &nembed, stride, dist, &nembed, stride, dist, batch, flags, 1, FFTW_BACKWARD, threads)
 {}
 
 template<typename T>
@@ -120,9 +127,10 @@ InvFFTPlan<T>::InvFFTPlan(T * out,
                           int stride,
                           int dist,
                           int batch,
-                          unsigned flags)
+                          unsigned flags,
+                          int threads)
 :
-    super_t(out, in, n, nembed, stride, dist, nembed, stride, dist, batch, flags, Rank, FFTW_BACKWARD)
+    super_t(out, in, n, nembed, stride, dist, nembed, stride, dist, batch, flags, Rank, FFTW_BACKWARD, threads)
 {}
 
 template<typename T>
@@ -136,9 +144,10 @@ InvFFTPlan<T>::InvFFTPlan(T * out,
                           int ostride,
                           int odist,
                           int batch,
-                          unsigned flags)
+                          unsigned flags,
+                          int threads)
 :
-    super_t(out, in, &n, &inembed, istride, idist, &onembed, ostride, odist, batch, flags, 1, FFTW_BACKWARD)
+    super_t(out, in, &n, &inembed, istride, idist, &onembed, ostride, odist, batch, flags, 1, FFTW_BACKWARD, threads)
 {}
 
 template<typename T>
@@ -153,9 +162,10 @@ InvFFTPlan<T>::InvFFTPlan(T * out,
                           int ostride,
                           int odist,
                           int batch,
-                          unsigned flags)
+                          unsigned flags,
+                          int threads)
 :
-    super_t(out, in, n, inembed, istride, idist, onembed, ostride, odist, batch, flags, Rank, FFTW_BACKWARD)
+    super_t(out, in, n, inembed, istride, idist, onembed, ostride, odist, batch, flags, Rank, FFTW_BACKWARD, threads)
 {}
 
 }}

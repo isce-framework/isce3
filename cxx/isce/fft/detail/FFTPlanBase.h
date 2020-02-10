@@ -21,14 +21,16 @@ public:
                 std::complex<T> * in,
                 int n,
                 int batch = 1,
-                unsigned flags = FFTW_MEASURE);
+                unsigned flags = FFTW_MEASURE,
+                int threads = 1);
 
     template<int Rank>
     FFTPlanBase(std::complex<T> * out,
                 std::complex<T> * in,
                 const int (&n)[Rank],
                 int batch = 1,
-                unsigned flags = FFTW_MEASURE);
+                unsigned flags = FFTW_MEASURE,
+                int threads = 1);
 
     FFTPlanBase(std::complex<T> * out,
                 std::complex<T> * in,
@@ -37,7 +39,8 @@ public:
                 int stride,
                 int dist,
                 int batch = 1,
-                unsigned flags = FFTW_MEASURE);
+                unsigned flags = FFTW_MEASURE,
+                int threads = 1);
 
     template<int Rank>
     FFTPlanBase(std::complex<T> * out,
@@ -47,7 +50,8 @@ public:
                 int stride,
                 int dist,
                 int batch = 1,
-                unsigned flags = FFTW_MEASURE);
+                unsigned flags = FFTW_MEASURE,
+                int threads = 1);
 
     FFTPlanBase(std::complex<T> * out,
                 std::complex<T> * in,
@@ -59,7 +63,8 @@ public:
                 int ostride,
                 int odist,
                 int batch = 1,
-                unsigned flags = FFTW_MEASURE);
+                unsigned flags = FFTW_MEASURE,
+                int threads = 1);
 
     template<int Rank>
     FFTPlanBase(std::complex<T> * out,
@@ -72,7 +77,8 @@ public:
                 int ostride,
                 int odist,
                 int batch = 1,
-                unsigned flags = FFTW_MEASURE);
+                unsigned flags = FFTW_MEASURE,
+                int threads = 1);
 
     explicit operator bool() const { return *_plan; }
 
@@ -95,7 +101,8 @@ protected:
                 int batch,
                 unsigned flags,
                 int rank,
-                int sign);
+                int sign,
+                int threads);
 
     std::shared_ptr<fftw_plan_t> _plan;
 };
