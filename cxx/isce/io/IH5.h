@@ -311,19 +311,18 @@ namespace isce {
                                 const H5::DataSpace& dataspace,
                                 const T* buffer);
 
-           // Specialized instantiation
-           template<>
-           void createAttribute(const std::string& name,
-                                const H5::DataType& datatype,
-                                const H5::DataSpace& dataspace,
-                                const std::string* buffer);
-
            template<typename T>
            void write(const T* buf, const H5::DataSpace& filespace);
-
-           template<>
-           void write(const std::string* buf, const H5::DataSpace& dspace);
      };
+
+    // Specialized instantiations
+    template<>
+    void IDataSet::write(const std::string* buf, const H5::DataSpace& dspace);
+    template<>
+    void IDataSet::createAttribute(const std::string& name,
+                                   const H5::DataType& datatype,
+                                   const H5::DataSpace& dataspace,
+                                   const std::string* buffer);
 
 
      class IGroup: public H5::Group {
@@ -469,13 +468,13 @@ namespace isce {
                                 const H5::DataSpace& dataspace,
                                 const T* buffer);
 
-           template<>
-           void createAttribute(const std::string& name,
-                                const H5::DataType& datatype,
-                                const H5::DataSpace& dataspace,
-                                const std::string * buffer);
-
      };
+
+    template<>
+    void IGroup::createAttribute(const std::string& name,
+                                 const H5::DataType& datatype,
+                                 const H5::DataSpace& dataspace,
+                                 const std::string * buffer);
 
 
      class IH5File: public H5::H5File {
