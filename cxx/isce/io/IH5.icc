@@ -110,12 +110,11 @@ template<typename T> inline H5::DataSpace getMemorySpace(const T nbElements) {
 template<typename T, size_t S>
 inline H5::DataSpace getMemorySpace(const std::array<T, S>& dims) {
     // Create a memory dataSpace describing the dataspace of the memory buffer
-    const int rank = dims.size();
-    hsize_t* memDims = new hsize_t[rank](); // XXX must be freed
-    for (int i = 0; i < rank; i++)
-        memDims[i] = static_cast<hsize_t>(dims[i]);
+    hsize_t mem_dims[S];
+    for (int i = 0; i < S; i++)
+        mem_dims[i] = static_cast<hsize_t>(dims[i]);
 
-    return H5::DataSpace(rank, memDims);
+    return H5::DataSpace(S, mem_dims);
 }
 
 // TODO: All "read" functions below need some templating to tighten the code
