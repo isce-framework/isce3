@@ -1,6 +1,5 @@
 include(Sources.cmake)
 include(Headers.cmake)
-install(FILES ${HEADERS} DESTINATION include/isce)
 
 add_library(${LISCE} SHARED ${SRCS})
 SetCoverageOptions(${LISCE})
@@ -23,6 +22,14 @@ target_include_directories(${LISCE} PUBLIC
     ${GDAL_INCLUDE_DIR}
     ${HDF5_INCLUDE_DIR}
     )
+
+# Install public headers
+foreach(HEADER ${HEADERS})
+    get_filename_component(DIR ${HEADER} DIRECTORY)
+    install(FILES       ${HEADER}
+            DESTINATION include/isce/${DIR}
+            COMPONENT   isce_libs)
+endforeach()
 
 # Install shared library
 install(TARGETS ${LISCE}
