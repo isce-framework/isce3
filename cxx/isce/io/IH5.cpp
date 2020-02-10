@@ -7,14 +7,10 @@
 // Helper function to map file access modes between h5py and HDF5
 inline unsigned int mapFileAccessMode(const char mode) {
     switch (mode) {
-    case 'r':
-        return H5F_ACC_RDONLY;
-    case 'w':
-        return H5F_ACC_RDWR;
-    case 'x':
-        return H5F_ACC_TRUNC;
-    case 'a':
-        return H5F_ACC_EXCL;
+    case 'r': return H5F_ACC_RDONLY;
+    case 'w': return H5F_ACC_RDWR;
+    case 'x': return H5F_ACC_TRUNC;
+    case 'a': return H5F_ACC_EXCL;
     default:
         throw isce::except::InvalidArgument(ISCE_SRCINFO(),
                                             "Invalid HDF5 file access mode");
@@ -218,28 +214,17 @@ std::string isce::io::IDataSet::getTypeClassStr(const std::string& v) {
 
     // Return a human-readable attribute type
     switch (type) {
-    case H5T_STRING:
-        return "H5T_STRING";
-    case H5T_INTEGER:
-        return "H5T_INTEGER";
-    case H5T_FLOAT:
-        return "H5T_FLOAT";
-    case H5T_TIME:
-        return "H5T_TIME";
-    case H5T_BITFIELD:
-        return "H5T_BITFIELD";
-    case H5T_OPAQUE:
-        return "H5T_OPAQUE";
-    case H5T_COMPOUND:
-        return "H5T_COMPOUND";
-    case H5T_REFERENCE:
-        return "H5T_REFERENCE";
-    case H5T_ENUM:
-        return "H5T_ENUM";
-    case H5T_VLEN:
-        return "H5T_VLEN";
-    case H5T_ARRAY:
-        return "H5T_ARRAY";
+    case H5T_STRING: return "H5T_STRING";
+    case H5T_INTEGER: return "H5T_INTEGER";
+    case H5T_FLOAT: return "H5T_FLOAT";
+    case H5T_TIME: return "H5T_TIME";
+    case H5T_BITFIELD: return "H5T_BITFIELD";
+    case H5T_OPAQUE: return "H5T_OPAQUE";
+    case H5T_COMPOUND: return "H5T_COMPOUND";
+    case H5T_REFERENCE: return "H5T_REFERENCE";
+    case H5T_ENUM: return "H5T_ENUM";
+    case H5T_VLEN: return "H5T_VLEN";
+    case H5T_ARRAY: return "H5T_ARRAY";
     default:
         throw isce::except::InvalidArgument(ISCE_SRCINFO(),
                                             "Unknown data type");
