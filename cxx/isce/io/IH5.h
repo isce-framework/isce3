@@ -11,8 +11,7 @@
 #include <H5Cpp.h>
 
 #include <isce/core/Constants.h>
-
-//#include <pyre/journal.h>
+#include <isce/except/Error.h>
 
 namespace isce {
   namespace io {
@@ -40,41 +39,12 @@ namespace isce {
      };
 
 
-     // Helper function to map File access options between H5py-type and HDF5 types;
-     inline unsigned int mapFileAccessMode(const char mode) {
-        switch (mode) {
-           case 'r': return H5F_ACC_RDONLY;
-           case 'w': return H5F_ACC_RDWR;
-           case 'x': return H5F_ACC_TRUNC;
-           case 'a': return H5F_ACC_EXCL;
-           default:  std::cout << "Invalid HDF5 file opening mode" << std::endl;
-                     return 100; // Will throw within HDF5 API
-       }
-     }
-
-
-
-     /*
-      * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-      *                                          IDATASET CLASS
-      * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-     */
-
-
      /** Our derived dataset structure that includes utility functions */
      class IDataSet: public H5::DataSet {
 
         public:
-
-           // Constructors
-
-           /** Empty constructor */
            IDataSet(): H5::DataSet(){};
-
-           /** Constructor */
-           IDataSet(H5::DataSet &dset): H5::DataSet(dset){};
-
-           /** Constructor from ID */
+           IDataSet(const H5::DataSet &dset): H5::DataSet(dset){};
            IDataSet(const hid_t id): H5::DataSet(id){};
 
            // Metadata query
@@ -168,9 +138,6 @@ namespace isce {
            /** Reading multi-dimensional dataset in raw pointer with std:gslice subsetting */
            template<typename T>
            inline void read(T *buf, const std::gslice * gsliceIn);
-
-
-
 
 
            /** Reading multi-dimensional dataset in std::vector */
@@ -281,14 +248,9 @@ namespace isce {
            inline void write(const T *buf, const std::gslice * gsliceIn);
 
 
-
-
            /** Creating and writing a scalar as an attribute */
            template<typename T>
            inline void createAttribute(const std::string &name, const T& data);
-
-           /** Creating and writing a string attribute */
-           inline void createAttribute(const std::string& name, const std::string& data);
 
            /** Creating and writing a std::vector data as a 1D-array attribute */
            template<typename T>
@@ -349,27 +311,19 @@ namespace isce {
                                 const H5::DataSpace& dataspace,
                                 const T* buffer);
 
+           // Specialized instantiation
+           template<>
            void createAttribute(const std::string& name,
                                 const H5::DataType& datatype,
                                 const H5::DataSpace& dataspace,
-                                const std::string * buffer);
+                                const std::string* buffer);
 
            template<typename T>
            void write(const T* buf, const H5::DataSpace& filespace);
 
+           template<>
            void write(const std::string* buf, const H5::DataSpace& dspace);
      };
-
-
-
-
-
-
-     /* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-      *                                          IGROUP CLASS
-      * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-     */
-
 
 
      class IGroup: public H5::Group {
@@ -377,7 +331,7 @@ namespace isce {
         public:
 
            IGroup(): H5::Group(){};
-	       IGroup(H5::Group &group): H5::Group(group){};
+	       IGroup(const H5::Group &group): H5::Group(group){};
 	       IGroup(hid_t group): H5::Group(group){};
 
 	       std::vector<std::string> getAttrs();
@@ -386,7 +340,7 @@ namespace isce {
            std::vector<std::string> find(const std::string name,
                                          const std::string start = ".",
                                          const std::string type = "BOTH",
-                                         const std::string returnedPath = "FULL");
+                                         const std::string path = "FULL");
 
            /** Return the path of the group from the file root */
            std::string getPathname();
@@ -485,9 +439,6 @@ namespace isce {
            template<typename T>
            inline void createAttribute(const std::string &name, const T& data);
 
-           /** Creating and writing a string attribute */
-           inline void createAttribute(const std::string& name, const std::string& data);
-
            /** Creating and writing a std::vector data as a 1D-array attribute */
            template<typename T>
            inline void createAttribute(const std::string& name, const std::vector<T>& values);
@@ -518,6 +469,7 @@ namespace isce {
                                 const H5::DataSpace& dataspace,
                                 const T* buffer);
 
+           template<>
            void createAttribute(const std::string& name,
                                 const H5::DataType& datatype,
                                 const H5::DataSpace& dataspace,
@@ -526,20 +478,8 @@ namespace isce {
      };
 
 
-
-
-
-     /* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-      *                                          IH5FILE CLASS
-      * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-     */
-
-
-
      class IH5File: public H5::H5File {
-
          public:
-
 
            IH5File(): H5::H5File() {};
 
@@ -550,7 +490,7 @@ namespace isce {
             * - w: read/write, file must exist
             * - x: create file, overwrite if exist
             * - a: create file, fails if exist */
-           IH5File(const H5std_string &name, const char mode = 'r') : H5::H5File(name, mapFileAccessMode(mode)) {};
+           IH5File(const H5std_string &name, const char mode = 'r');
 
            void openFile(const H5std_string &name);
 
@@ -564,17 +504,14 @@ namespace isce {
            std::vector<std::string> find(const std::string name,
                                          const std::string start = "/",
                                          const std::string type = "BOTH",
-                                         const std::string returnedPath = "FULL");
+                                         const std::string path = "FULL");
 
            /** Get filename of HDF5 file. */
-           inline std::string filename() const { return this->getFileName(); }
+           inline std::string filename() const { return getFileName(); }
 
            /** Create a group */
            IGroup createGroup(const H5std_string &name);
-
      };
-
-
   }
 }
 

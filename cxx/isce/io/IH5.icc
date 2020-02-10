@@ -1,151 +1,122 @@
-
 #if !defined(ISCE_IO_IH5_ICC)
 #error "IH5.icc is an implementation detail of class IDataset/IGroup/IH5File"
 #endif
 
-template<typename T>
-inline H5::DataType getH5Type() {
-    if (std::is_same<T, char>())
-		return H5::PredType::NATIVE_CHAR;
-    else if (std::is_same<T, unsigned char>())
-        return H5::PredType::NATIVE_UCHAR;
-    else if (std::is_same<T, signed char>())
-		return H5::PredType::NATIVE_SCHAR;
-    else if (std::is_same<T, short>())
-		return H5::PredType::NATIVE_SHORT;
-    else if (std::is_same<T, unsigned short>())
-		return H5::PredType::NATIVE_USHORT;
-    else if (std::is_same<T, int>())
-		return H5::PredType::NATIVE_INT;
-    else if (std::is_same<T, unsigned int>())
-		return H5::PredType::NATIVE_UINT;
-    else if (std::is_same<T, long>())
-		return H5::PredType::NATIVE_LONG;
-    else if (std::is_same<T, unsigned long>())
-		return H5::PredType::NATIVE_ULONG;
-    else if (std::is_same<T, long long>())
-		return H5::PredType::NATIVE_LLONG;
-    else if (std::is_same<T, unsigned long long>())
-		return H5::PredType::NATIVE_ULLONG;
-    else if (std::is_same<T, float>())
-		return H5::PredType::NATIVE_FLOAT;
-    else if (std::is_same<T, double>())
-		return H5::PredType::NATIVE_DOUBLE;
-    else if (std::is_same<T, long double>())
-		return H5::PredType::NATIVE_LDOUBLE;
-    else if (std::is_same<T, isce::io::n1bit>()) {
-       H5::IntType datatype(H5::PredType::NATIVE_UINT8);
-       datatype.setOffset(0);
-       datatype.setPrecision(1);
-       return datatype;
-    }
-    else if (std::is_same<T, isce::io::n2bit>()) {
-       H5::IntType datatype(H5::PredType::NATIVE_UINT8);
-       datatype.setOffset(0);
-       datatype.setPrecision(2);
-       return datatype;
-    }
-    else if (std::is_same<T, isce::io::float16>()){
-        H5::FloatType datatype( H5::PredType::NATIVE_FLOAT);
-        datatype.setFields(15, 10, 5, 0, 10);
-        datatype.setOffset(0);
-        datatype.setPrecision(16);
-        datatype.setEbias(15);
-        datatype.setInpad(H5T_PAD_ZERO);
-        return datatype;
-    }
-    else if (std::is_same<T, std::complex<float>>()){
-        H5::CompType comp(2 * sizeof(float));
-        comp.insertMember("r", 0, H5::PredType::NATIVE_FLOAT);
-        comp.insertMember("i", sizeof(float), H5::PredType::NATIVE_FLOAT);
-        return comp;
-    }
-    else if (std::is_same<T, std::complex<short>>()){
-        H5::CompType comp(2 * sizeof(short));
-        comp.insertMember("r", 0, H5::PredType::NATIVE_SHORT);
-        comp.insertMember("i", sizeof(short), H5::PredType::NATIVE_SHORT);
-        return comp;
-    }
-    else if (std::is_same<T, std::complex<int>>()){
-        H5::CompType comp(2 * sizeof(int));
-        comp.insertMember("r", 0, H5::PredType::NATIVE_INT);
-        comp.insertMember("i", sizeof(int), H5::PredType::NATIVE_INT);
-        return comp;
-    }
-    else if (std::is_same<T, std::complex<isce::io::float16>>()){
-        H5::FloatType datatype( H5::PredType::NATIVE_FLOAT);
-        datatype.setFields(15, 10, 5, 0, 10);
-        datatype.setOffset(0);
-        datatype.setPrecision(16);
-        datatype.setEbias(15);
-        datatype.setInpad(H5T_PAD_ZERO);
+#include <type_traits>
 
-        H5::CompType comp(2 * sizeof(float));
-        comp.insertMember("r", 0, datatype);
-        comp.insertMember("i", sizeof(float), datatype);
-        datatype.close();
-        return comp;
-    }
-    else if (std::is_same<T, std::complex<double>>()){
-        H5::CompType comp(2 * sizeof(double));
-        comp.insertMember("r", 0, H5::PredType::NATIVE_DOUBLE);
-        comp.insertMember("i", sizeof(double), H5::PredType::NATIVE_DOUBLE);
-        return comp;
-    }
-    else if (std::is_same<T, std::string>()){
-        H5::StrType strdatatype(H5::PredType::C_S1, isce::io::STRLENGTH);
-        return strdatatype;
-    }
-    else if (std::is_same<T, isce::core::FixedString>()){
-        H5::StrType strdatatype(H5::PredType::C_S1, isce::io::STRLENGTH);
-        return strdatatype;
-    }
-    else if (std::is_same<T, char*>()){
-        H5::StrType strdatatype(H5::PredType::C_S1, isce::io::STRLENGTH);
-        return strdatatype;
-    }
-	else {
-        std::cout << "WARNING: (" << typeid(T).name() << ") is an unrecognised type of memory container! Defaulting to float." << std::endl;
-	    return H5::PredType::NATIVE_FLOAT;//TODO error instead ?
-    }
-}
+namespace {
+    using namespace H5;
+    using DT = DataType;
+    using PT = PredType;
+    using namespace isce::core;
+    using namespace isce::io;
 
+    template<typename T> DT getH5Type();
 
+    template<> inline DT getH5Type<          char>() { return PT::NATIVE_CHAR; }
+    template<> inline DT getH5Type<   signed char>() { return PT::NATIVE_UCHAR; }
+    template<> inline DT getH5Type< unsigned char>() { return PT::NATIVE_SCHAR; }
+    template<> inline DT getH5Type<         short>() { return PT::NATIVE_SHORT; }
+    template<> inline DT getH5Type<unsigned short>() { return PT::NATIVE_USHORT; }
+    template<> inline DT getH5Type<           int>() { return PT::NATIVE_INT; }
+    template<> inline DT getH5Type<  unsigned int>() { return PT::NATIVE_UINT; }
+    template<> inline DT getH5Type<          long>() { return PT::NATIVE_LONG; }
+    template<> inline DT getH5Type< unsigned long>() { return PT::NATIVE_ULONG; }
+    template<> inline DT getH5Type<     long long>() { return PT::NATIVE_LLONG; }
+    template<> inline DT getH5Type<         float>() { return PT::NATIVE_FLOAT; }
+    template<> inline DT getH5Type<        double>() { return PT::NATIVE_DOUBLE; }
+    template<> inline DT getH5Type<   long double>() { return PT::NATIVE_LDOUBLE; }
+
+    template<> inline DT getH5Type<std::string>() { return StrType(PT::C_S1, STRLENGTH); }
+    template<> inline DT getH5Type<FixedString>() { return StrType(PT::C_S1, STRLENGTH); }
+    template<> inline DT getH5Type<      char*>() { return StrType(PT::C_S1, STRLENGTH); }
+
+    template<typename T>
+    inline DT getH5Type() {
+        if (std::is_same<T, isce::io::n1bit>()) {
+           H5::IntType datatype(H5::PredType::NATIVE_UINT8);
+           datatype.setOffset(0);
+           datatype.setPrecision(1);
+           return datatype;
+        }
+        if (std::is_same<T, isce::io::n2bit>()) {
+           H5::IntType datatype(H5::PredType::NATIVE_UINT8);
+           datatype.setOffset(0);
+           datatype.setPrecision(2);
+           return datatype;
+        }
+        if (std::is_same<T, isce::io::float16>()) {
+            H5::FloatType datatype( H5::PredType::NATIVE_FLOAT);
+            datatype.setFields(15, 10, 5, 0, 10);
+            datatype.setOffset(0);
+            datatype.setPrecision(16);
+            datatype.setEbias(15);
+            datatype.setInpad(H5T_PAD_ZERO);
+            return datatype;
+        }
+        if (std::is_same<T, std::complex<float>>()) {
+            H5::CompType comp(2 * sizeof(float));
+            comp.insertMember("r", 0, H5::PredType::NATIVE_FLOAT);
+            comp.insertMember("i", sizeof(float), H5::PredType::NATIVE_FLOAT);
+            return comp;
+        }
+        if (std::is_same<T, std::complex<short>>()) {
+            H5::CompType comp(2 * sizeof(short));
+            comp.insertMember("r", 0, H5::PredType::NATIVE_SHORT);
+            comp.insertMember("i", sizeof(short), H5::PredType::NATIVE_SHORT);
+            return comp;
+        }
+        if (std::is_same<T, std::complex<int>>()) {
+            H5::CompType comp(2 * sizeof(int));
+            comp.insertMember("r", 0, H5::PredType::NATIVE_INT);
+            comp.insertMember("i", sizeof(int), H5::PredType::NATIVE_INT);
+            return comp;
+        }
+        if (std::is_same<T, std::complex<isce::io::float16>>()) {
+            H5::FloatType datatype(H5::PredType::NATIVE_FLOAT);
+            datatype.setFields(15, 10, 5, 0, 10);
+            datatype.setOffset(0);
+            datatype.setPrecision(16);
+            datatype.setEbias(15);
+            datatype.setInpad(H5T_PAD_ZERO);
+
+            H5::CompType comp(2 * sizeof(float));
+            comp.insertMember("r", 0, datatype);
+            comp.insertMember("i", sizeof(float), datatype);
+            return comp;
+        }
+        if (std::is_same<T, std::complex<double>>()) {
+            H5::CompType comp(2 * sizeof(double));
+            comp.insertMember("r", 0, H5::PredType::NATIVE_DOUBLE);
+            comp.insertMember("i", sizeof(double), H5::PredType::NATIVE_DOUBLE);
+            return comp;
+        }
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Type '" + std::string(typeid(T).name()) +
+                "' unrecognized for H5 container");
+    }
+} // end anon namespace
 
 
 template<typename T>
 inline H5::DataSpace getMemorySpace(const T nbElements) {
-
     // Create a memory dataSpace describing the dataspace of the memory buffer
     // that will receive the data. It's set up as a 1D array.
     hsize_t memDims[1] = {static_cast<hsize_t>(nbElements)};
-    H5::DataSpace memspace(1,memDims);
-    return memspace;
+    return H5::DataSpace(1, memDims);
 }
 
 
 template<typename T, size_t S>
 inline H5::DataSpace getMemorySpace(const std::array<T, S>& dims) {
-
     // Create a memory dataSpace describing the dataspace of the memory buffer
-    int rank = dims.size();
-    hsize_t *memDims = new hsize_t[rank]();
-    for(int i=0; i<rank; i++)
-       memDims[i] = static_cast<hsize_t>(dims[i]);
-    
-    H5::DataSpace memspace(rank, memDims);
-    
-    return memspace;
+    const int rank = dims.size();
+    hsize_t *memDims = new hsize_t[rank](); // XXX must be freed
+    for (int i = 0; i < rank; i++)
+        memDims[i] = static_cast<hsize_t>(dims[i]);
+
+    return H5::DataSpace(rank, memDims);
 }
-
-
-
-
-
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
- *                                          IDATASET CLASS
- * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-*/
 
 
 // TODO: All "read" functions below need some templating to tighten the code
@@ -160,7 +131,6 @@ inline H5::DataSpace getMemorySpace(const std::array<T, S>& dims) {
  *  function signature. */
 template<typename T>
 void isce::io::IDataSet::read(T &v, const std::string &att) {
-        
 
     // Check that the parameter that will receive the data read from the file 
     // is a numeric variable
@@ -168,133 +138,100 @@ void isce::io::IDataSet::read(T &v, const std::string &att) {
 
     // Check that the dataset/attribute contains a scalar, i.e., rank=0
     if (getRank(att) != 0)
-        return;   // TODO Should add a message or something here
-    
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Dataset/attribute must be scalar");
+
     if (att.empty()) {
-       //H5::DataSet::read(&v, memType(v));
-       H5::DataSet::read(&v, getH5Type<T>());
+        H5::DataSet::read(&v, getH5Type<T>());
+        return;
     }
-    else if (attrExists(att)) {
-       // Open the attribute
-       H5::Attribute a = openAttribute(att);
 
-       // Read the attribute from file
-       a.read(getH5Type<T>(), &v);  // Order of parameter is reversed compared to 
-                                    // dataset read
-       // Close the attribute
-       a.close();
+    if (not attrExists(att)) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Attribute '" + att + "' not found");
     }
-    else {}   // TODO Should warn or throw here
 
-    return;
+    // Read the attribute from file
+    // Order of parameter is reversed compared to dataset read
+    openAttribute(att).read(getH5Type<T>(), &v);
 }
 
 
-/** @param[in] startIn Raw pointer to array containing the read start location in each dimension.
- *  @param[in] countIn Raw pointer to array containing the number of elements to read in each dimension.
- *  @param[in] strideIn Raw pointer to array containing the reading stride in each dimension.
+/** @param[in] start   Raw pointer to array containing the read start location in each dimension.
+ *  @param[in] count   Raw pointer to array containing the number of elements to read in each dimension.
+ *  @param[in] stride  Raw pointer to array containing the reading stride in each dimension.
  *  @param[out] buffer Raw pointer to array that will received the read data.
  *
  *  buffer has to be adequately allocated by caller.
- *  startIn, countIn, strideIn must have a number of elements equals to the 
+ *  start, count, stride must have a number of elements equals to the 
  *  rank of the dataset. 
- *  If startIn is nullptr, reading start location in each dimension is 0.
- *  If countIn is nullptr, full number of element in each dimension is read.
- *  If strideIn is nullptr, stride defaults to 1 in each dimension.
+ *  If start is nullptr, reading start location in each dimension is 0.
+ *  If count is nullptr, full number of element in each dimension is read.
+ *  If stride is nullptr, stride defaults to 1 in each dimension.
  *
  * Examples:
  * Dataset contains a 3-bands raster. Dimensions are (100,100,3).
  *
  * To retrieve the full second band: 
- * startIn=[0,0,1], countIn=[100,100,1], strideIn=nullptr or [1,1,1].
+ * start=[0,0,1], count=[100,100,1], stride=nullptr or [1,1,1].
  *   
  * To retrieve the first band, but only every other elements in X direction:
- * startIn=[0,0,0], countIn=[50,100,1], strideIn=[2,1,1]. */
-//TODO: check what happen if startIns is set but no countIn - countis defaults to full which should be
-//larger than wha'ts avail given startIn
+ * start=[0,0,0], count=[50,100,1], stride=[2,1,1]. */
+//TODO: check what happen if starts is set but no count - countis defaults to full which should be
+//larger than what's available given start
 
 template<typename T>
-void isce::io::IDataSet::read(T * buffer, const int * startIn, 
-                                const int * countIn, 
-                                const int * strideIn) { 
- 
-    // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getDataSpace(startIn, countIn, strideIn);	 
-
+void isce::io::IDataSet::read(T * buffer, const int * start,
+                                          const int * count,
+                                          const int * stride) {
     // Read dataset subset to memory
-    read(buffer, dspace);
-
-    dspace.close();
+    read(buffer, getDataSpace(start, count, stride));
 }
 
 
-/** @param[in] sliceIn Vector containing an std::slice for each dimension of the dataset
+/** @param[in] slices Vector containing an std::slice for each dimension of the dataset
  *  @param[out] buffer Raw pointer to array that will received the read data.
  *
  *  buffer has to be adequately allocated by caller. */
 template<typename T>
-void isce::io::IDataSet::read(T * buffer, 
-                              const std::vector<std::slice> * slicesIn) { 
- 
-    // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getDataSpace(slicesIn);	 
-
+void isce::io::IDataSet::read(T * buffer,
+                              const std::vector<std::slice> * slices) {
     // Read dataset subset to memory
-    read(buffer, dspace);
-
-    dspace.close();
+    read(buffer, getDataSpace(slices));
 }
 
-/** @param[in] gsliceIn std::gslice for subsetting
- *  @param[out] buffer Raw pointer to array that will received the read data.
+/** @param[in]  gsliceIn std::gslice for subsetting
+ *  @param[out] buffer   Raw pointer to array that will received the read data.
  *
  *  buffer has to be adequately allocated by caller. */
 template<typename T>
-void isce::io::IDataSet::read(T * buffer, const std::gslice * gsliceIn) { 
- 
-    // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getDataSpace(gsliceIn);	 
-
+void isce::io::IDataSet::read(T * buffer, const std::gslice * gsliceIn) {
     // Read dataset subset to memory
-    read(buffer, dspace);
-
-    dspace.close();
+    read(buffer, getDataSpace(gsliceIn));
 }
 
 
-
-/** @param[in] dspace DataSpace of the subset to read
+/** @param[in]  dspace DataSpace of the subset to read
  *  @param[out] buffer Raw pointer to array that will received the read data.
  *
  *  buffer has to be adequately allocated by caller. */
 template<typename T>
 void isce::io::IDataSet::read(T * buffer, const H5::DataSpace& dspace) { 
- 
     // Check that the selection is valid (no out of bound)
-    // TODO - to be adjusted with preferred error/message handling
-    if (!dspace.selectValid()){
-       std::cout << "Sub-selection of dataset is invalid" << std::endl;
-       return;
+    if (not dspace.selectValid()) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Invalid dataset subselection");
     }
 
     // Get total number of elements to read
-    hssize_t nbElements = dspace.getSelectNpoints();
-    
+    const hssize_t nbElements = dspace.getSelectNpoints();
+
     // Format the dataspace of the memory to receive the data read from file
-    H5::DataSpace memspace = getMemorySpace((hsize_t)nbElements);
+    const H5::DataSpace memspace = getMemorySpace((hsize_t) nbElements);
 
     // Read the dataset to memory
-    H5::DataSet::read(buffer, getH5Type<T>() , memspace, dspace);
-    
-    // Close memory dataspaces
-    memspace.close();
-
+    H5::DataSet::read(buffer, getH5Type<T>(), memspace, dspace);
 }
-
-
-
-
-
 
 
 /** @param[out] buffer std::vector that will receive the full dataset.
@@ -305,35 +242,34 @@ void isce::io::IDataSet::read(T * buffer, const H5::DataSpace& dspace) {
  *  the beginning of the container. */
 template<typename T>
 void isce::io::IDataSet::read(std::vector<T> &buffer) {
+    read(buffer, nullptr, nullptr, nullptr);
+}
 
-   read(buffer, nullptr, nullptr, nullptr);
-} 
-
-/** @param[in] startIn std::vector containing the read start location in each dimension.
- *  @param[in] countIn std::vector containing the number of elements to read in each dimension.
- *  @param[in] strideIn std::vector containing the reading stride in each dimension.
+/** @param[in]  start  std::vector containing the read start location in each dimension.
+ *  @param[in]  count  std::vector containing the number of elements to read in each dimension.
+ *  @param[in]  stride std::vector containing the reading stride in each dimension.
  *  @param[out] buffer std::vector that will received the read data.
  *
  *  If the output container is undersized compared to the data to read the 
 *  function will size it accordingly. If the container is larger than the data
- *  to be read, its size is unchanged. In both case the data read is stored at
+ *  to be read, its size is unchanged.  both case the data read is stored at
  *  the beginning of the container. 
  *
- *  startIn, countIn, strideIn must have a number of elements equals to the 
+ *  start, count, stride must have a number of elements equals to the 
  *  rank of the dataset. 
- *  If startIn is nullptr, reading start location in each dimension is 0.
- *  If countIn is nullptr, full number of element in each dimension is read.
- *  If strideIn is nullptr, stride defaults to 1 in each dimension. */ 
+ *  If start is nullptr, reading start location in each dimension is 0.
+ *  If count is nullptr, full number of element in each dimension is read.
+ *  If stride is nullptr, stride defaults to 1 in each dimension. */ 
 template<typename T>
-void isce::io::IDataSet::read(std::vector<T> &buffer, const std::vector<int> * startIn, 
-                                            const std::vector<int> * countIn, 
-                                            const std::vector<int> * strideIn) { 
- 
+void isce::io::IDataSet::read(std::vector<T> &buffer,
+                              const std::vector<int> * start,
+                              const std::vector<int> * count,
+                              const std::vector<int> * stride) {
 
-    // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getDataSpace((startIn)  ? startIn->data() : nullptr,
-                                            (countIn)  ? countIn->data() : nullptr,
-                                            (strideIn) ? strideIn->data() : nullptr);
+    // Format a dataspace according to the input parameters
+    const auto dspace = getDataSpace(start  ?  start->data() : nullptr,
+                                     count  ?  count->data() : nullptr,
+                                     stride ? stride->data() : nullptr);
 
     // Check that vector is sized correctly. Adjust size if necessary
     if (buffer.size() < dspace.getSelectNpoints())
@@ -341,13 +277,9 @@ void isce::io::IDataSet::read(std::vector<T> &buffer, const std::vector<int> * s
 
     // Read the data to memory
     read(buffer.data(), dspace);
-
-    // Close dataset dataspace
-    dspace.close();
-
 }
 
-/** @param[in] sliceIn Vector containing an std::slice for each dimension of the dataset
+/** @param[in] slices Vector containing an std::slice for each dimension of the dataset
  *  @param[out] buffer std::vector that will receive the read data.
  *
  *  If the output container is undersized compared to the data to read the 
@@ -356,10 +288,10 @@ void isce::io::IDataSet::read(std::vector<T> &buffer, const std::vector<int> * s
  *  the beginning of the container. */
 template<typename T>
 void isce::io::IDataSet::read(std::vector<T> &buffer, 
-                              const std::vector<std::slice> * slicesIn) { 
+                              const std::vector<std::slice> * slices) { 
  
     // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getDataSpace(slicesIn);
+    H5::DataSpace dspace = getDataSpace(slices);
 
     // Check that vector is sized correctly. Adjust size if necessary
     if (buffer.size() < dspace.getSelectNpoints())
@@ -367,10 +299,6 @@ void isce::io::IDataSet::read(std::vector<T> &buffer,
 
     // Read the dataset to memory
     read(buffer.data(), dspace);
-    
-    // Close dataset dataspace
-    dspace.close();
-
 }
 
 /** @param[in] gsliceIn std::gslice for subsetting
@@ -393,10 +321,6 @@ void isce::io::IDataSet::read(std::vector<T> &buffer,
 
     // Read the dataset to memory
     read(buffer.data(), dspace);
-    
-    // Close dataset dataspace
-    dspace.close();
-
 }
 
 /** @param[out] buffer std::valarray that will receive the full dataset.
@@ -407,8 +331,8 @@ void isce::io::IDataSet::read(std::vector<T> &buffer,
  *  the beginning of the container. */
 template<typename T>
 void isce::io::IDataSet::read(std::valarray<T> &buffer) {
-   read(buffer, nullptr, nullptr, nullptr);
-} 
+    read(buffer, nullptr, nullptr, nullptr);
+}
 
 
 /** @param[in] startIn std::valarray containing the read start location in each dimension.
@@ -427,14 +351,15 @@ void isce::io::IDataSet::read(std::valarray<T> &buffer) {
  *  If countIn is nullptr, full number of element in each dimension is read.
  *  If strideIn is nullptr, stride defaults to 1 in each dimension. */ 
 template<typename T>
-void isce::io::IDataSet::read(std::valarray<T> &buffer, const std::valarray<int> *startIn, 
-                                              const std::valarray<int> *countIn, 
-                                              const std::valarray<int> *strideIn) { 
- 
-    // Format a dataspace according to the input parameters       
-    H5::DataSpace dspace = getDataSpace((startIn)  ? &(*startIn)[0] : nullptr,
-                                            (countIn)  ? &(*countIn)[0] : nullptr,
-                                            (strideIn) ? &(*strideIn)[0] : nullptr);
+void isce::io::IDataSet::read(std::valarray<T> &buffer,
+                              const std::valarray<int> *start,
+                              const std::valarray<int> *count,
+                              const std::valarray<int> *stride) {
+
+    // Format a dataspace according to the input parameters
+    H5::DataSpace dspace = getDataSpace(start  ? &(*start )[0] : nullptr,
+                                        count  ? &(*count )[0] : nullptr,
+                                        stride ? &(*stride)[0] : nullptr);
 
     // Check that vector is sized correctly. Adjust size if necessary
     if (buffer.size() < dspace.getSelectNpoints())
@@ -442,10 +367,6 @@ void isce::io::IDataSet::read(std::valarray<T> &buffer, const std::valarray<int>
 
     // Read the dataset to memory
     read(&buffer[0], dspace);
-    
-    // Close dataset dataspace
-    dspace.close();
-
 }
 
 /** @param[in] sliceIn sts::valarray containing an std::slice for each dimension of the dataset
@@ -458,8 +379,8 @@ void isce::io::IDataSet::read(std::valarray<T> &buffer, const std::valarray<int>
 template<typename T>
 void isce::io::IDataSet::read(std::valarray<T> &buffer, 
                               const std::vector<std::slice> *slicesIn) { 
- 
-    // Format a dataspace according to the input parameters       
+
+    // Format a dataspace according to the input parameters
     H5::DataSpace dspace = getDataSpace(slicesIn);
 
     // Check that vector is sized correctly. Adjust size if necessary
@@ -468,10 +389,6 @@ void isce::io::IDataSet::read(std::valarray<T> &buffer,
 
     // Read the dataset to memory
     read(&buffer[0], dspace);
-    
-    // Close dataset dataspace
-    dspace.close();
-
 }
 
 /** @param[in] gsliceIn std::gslice for subsetting
@@ -482,10 +399,10 @@ void isce::io::IDataSet::read(std::valarray<T> &buffer,
  *  to be read, its size is unchanged. In both case the data read is stored at
  *  the beginning of the container. */
 template<typename T>
-void isce::io::IDataSet::read(std::valarray<T> &buffer, 
-                              const std::gslice *gsliceIn) { 
- 
-    // Format a dataspace according to the input parameters       
+void isce::io::IDataSet::read(std::valarray<T> &buffer,
+                              const std::gslice *gsliceIn) {
+
+    // Format a dataspace according to the input parameters
     H5::DataSpace dspace = getDataSpace(gsliceIn);
 
     // Check that vector is sized correctly. Adjust size if necessary
@@ -494,13 +411,7 @@ void isce::io::IDataSet::read(std::valarray<T> &buffer,
 
     // Read the dataset to memory
     read(&buffer[0], dspace);
-    
-    // Close dataset dataspace
-    dspace.close();
-
 }
-
-
 
 
 /** @param[in] att String containing the name of the attribute to read.
@@ -511,9 +422,9 @@ template<typename T>
 void isce::io::IDataSet::read(T *buffer, const std::string &att) { 
 
     // Check that attribute name is not null or empty
-    if (!attrExists(att)) {
-        std::cout << "Warning: Attribute: " << att << " does not exist!" << std::endl;
-        return;
+    if (not attrExists(att)) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Attribute '" + att + "' not found");
     }
 
     //read(buffer, getH5Type<T>(), att);
@@ -524,9 +435,6 @@ void isce::io::IDataSet::read(T *buffer, const std::string &att) {
 
     // Read the dataset to memory
     a.read(getH5Type<T>(), buffer);
-
-    // Close the attribute
-    a.close();
 }
 
 
@@ -541,9 +449,9 @@ void isce::io::IDataSet::read(T *buffer, const std::string &att) {
 template<typename T>
 void isce::io::IDataSet::read(std::vector<T> &buffer, const std::string &att) { 
 
-    if (!attrExists(att)) {
-        std::cout << "Warning: Attribute: " << att << " does not exist!" << std::endl;
-        return;
+    if (not attrExists(att)) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Attribute '" + att + "' not found");
     }
 
     if (buffer.size() < getNumElements(att))
@@ -565,9 +473,9 @@ void isce::io::IDataSet::read(std::vector<T> &buffer, const std::string &att) {
 template<typename T>
 void isce::io::IDataSet::read(std::valarray<T> &buffer, const std::string &att) { 
 
-    if (!attrExists(att)) {
-        std::cout << "Warning: Attribute: " << att << " does not exist!" << std::endl;
-        return;
+    if (not attrExists(att)) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Attribute '" + att + "' not found");
     }
 
     if (buffer.size() < getNumElements(att))
@@ -579,47 +487,27 @@ void isce::io::IDataSet::read(std::valarray<T> &buffer, const std::string &att) 
 }
 
 
-
-
-
-
-
-
 /** @param[in] pointer to buffer to write to dataset.
  *  @param[in] DataSpace object for locating where to write the data in the dataset.
  *  */
 template<typename T>
 void isce::io::IDataSet::write(const T* buf, const H5::DataSpace& dspace) {
 
+    // Check that the selection is valid (no out of bound)
+    if (!dspace.selectValid()){
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Invalid dataset subselection");
+    }
 
-   // Check that the selection is valid (no out of bound)
-   // TODO - to be adjusted with preferred error/message handling
-   if (!dspace.selectValid()){
-      std::cout << "Sub-selection of dataset is invalid" << std::endl;
-      return;
-   }
+    // Construct the memory dataspace (i.e., dataspace of buf). For now, and that
+    // may change in a the future, there is no possibility to subset buf. The 
+    // full content of buf is to be selected. Buf dataspace is set to a 1D array 
+    // of size equals to the number of elements in the vector.
+    H5::DataSpace mspace = getMemorySpace(dspace.getSelectNpoints()); 
 
-   // Construct the memory dataspace (i.e., dataspace of buf). For now, and that
-   // may change in a the future, there is no possibility to subset buf. The 
-   // full content of buf is to be selected. Buf dataspace is set to a 1D array 
-   // of size equals to the number of elements in the vector.
-   H5::DataSpace mspace = getMemorySpace(dspace.getSelectNpoints()); 
-
-
-   // Get the datatype of the memory buffer
-   //H5::DataType dtype =  memType2(typeid(T));
-   H5::DataType dtype =  getH5Type<T>();
-
-   // write the data to dataset
-   H5::DataSet::write(buf, dtype, mspace, dspace);
-
-   dtype.close();
-   mspace.close();
+    // write the data to dataset
+    H5::DataSet::write(buf, getH5Type<T>(), mspace, dspace);
 }
-
-
-
-
 
 
 /** @param[in] buf std::vector of data to write to dataset.
@@ -628,40 +516,35 @@ void isce::io::IDataSet::write(const T* buf, const H5::DataSpace& dspace) {
  */
 template<typename T>
 void isce::io::IDataSet::write(const std::vector<T> &buf) {
-   
-   // Construct the dataSpace of the file dataset. It's the full size dataset
-   H5::DataSpace dspace = getSpace();
+    // Construct the dataSpace of the file dataset. It's the full size dataset
+    H5::DataSpace dspace = getSpace();
 
-   if (buf.size() != dspace.getSelectNpoints()) {
-      std::cout << "Vector container must have the same number of elements as the dataset!" << std::endl;
-      // THROW ?
-   }
- 
-   write(buf.data(), dspace);
+    if (buf.size() != dspace.getSelectNpoints()) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Vector container does not have same number of elements as dataset");
+    }
 
-   dspace.close();
+    write(buf.data(), dspace);
 }
 
  
 /** @param[in] buf std::vector of data to write to dataset.
- *  @param[in] startIn std::array containing the write start location in each dimension.
- *  @param[in] countIn std::array containing the number of elements to write in each dimension.
- *  @param[in] strideIn std::array containing the writing stride in each dimension.
+ *  @param[in] start std::array containing the write start location in each dimension.
+ *  @param[in] count std::array containing the number of elements to write in each dimension.
+ *  @param[in] stride std::array containing the writing stride in each dimension.
  */
 template<typename T, size_t S>
 void isce::io::IDataSet::write(const std::vector<T> &buf,
-            const std::array<int,S>& startIn,
-            const std::array<int,S>& countIn,
-            const std::array<int,S>& strideIn) {
-   
+            const std::array<int,S>& start,
+            const std::array<int,S>& count,
+            const std::array<int,S>& stride) {
+
    // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
    // the memory dataspace, specific parts of the file dataset can be selected for writing
    // into.
-   H5::DataSpace dspace = getDataSpace(startIn.data(), countIn.data(), strideIn.data());
+   H5::DataSpace dspace = getDataSpace(start.data(), count.data(), stride.data());
 
    write(buf.data(), dspace);
-
-   dspace.close();
 }
 
 
@@ -677,8 +560,6 @@ void isce::io::IDataSet::write(const std::vector<T> &buf, const std::vector<std:
    H5::DataSpace dspace = getDataSpace(slicesIn);
 
    write(buf.data(), dspace);
-
-   dspace.close();
 }
 
 
@@ -694,11 +575,7 @@ void isce::io::IDataSet::write(const std::vector<T> &buf, const std::gslice * gs
    H5::DataSpace dspace = getDataSpace(gsliceIn);
 
    write(buf.data(), dspace);
-
-   dspace.close();
 }
-
-
 
 
 /** @param[in] buf std::valarray of data to write to dataset.
@@ -707,18 +584,15 @@ void isce::io::IDataSet::write(const std::vector<T> &buf, const std::gslice * gs
  */
 template<typename T>
 void isce::io::IDataSet::write(const std::valarray<T> &buf) {
-   
-   // Construct the dataSpace of the file dataset. It's the full size dataset
-   H5::DataSpace dspace = getSpace();
+    // Construct the dataSpace of the file dataset. It's the full size dataset
+    H5::DataSpace dspace = getSpace();
 
-   if (buf.size() != dspace.getSelectNpoints()) {
-      std::cout << "Valarray container must have the same number of elements as the dataset!" << std::endl;
-      // TRHOW ?
-   }
+    if (buf.size() != dspace.getSelectNpoints()) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Valarray container does not have same number of elements as dataset");
+    }
 
-   write(&buf[0], dspace);
-
-   dspace.close();
+    write(&buf[0], dspace);
 }
 
 
@@ -732,15 +606,12 @@ void isce::io::IDataSet::write(const std::valarray<T> &buf,
             const std::array<int,S>& startIn,
             const std::array<int,S>& countIn,
             const std::array<int,S>& strideIn) {
-   
+
    // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
    // the memory dataspace, specific parts of the file dataset can be selected for writing
    // into.
    H5::DataSpace dspace = getDataSpace(startIn.data(), countIn.data(), strideIn.data());
-
    write(&buf[0], dspace);
-
-   dspace.close();
 }
 
 
@@ -753,11 +624,7 @@ void isce::io::IDataSet::write(const std::valarray<T> &buf, const std::vector<st
    // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
    // the memory dataspace, specific parts of the file dataset can be selected for writing
    // into.
-   H5::DataSpace dspace = getDataSpace(slicesIn);
-
-   write(&buf[0], dspace);
-
-   dspace.close();
+   write(&buf[0], getDataSpace(slicesIn));
 }
 
 
@@ -770,15 +637,8 @@ void isce::io::IDataSet::write(const std::valarray<T> &buf, const std::gslice * 
    // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
    // the memory dataspace, specific parts of the file dataset can be selected for writing
    // into.
-   H5::DataSpace dspace = getDataSpace(gsliceIn);
-
-   write(&buf[0], dspace);
-
-   dspace.close();
+   write(&buf[0], getDataSpace(gsliceIn));
 }
-
-
-
 
 
 /** @param[in] buf Raw pointer to buffer of data to write to dataset.
@@ -786,18 +646,16 @@ void isce::io::IDataSet::write(const std::valarray<T> &buf, const std::gslice * 
  */
 template<typename T>
 void isce::io::IDataSet::write(const T* buf, const size_t sz) {
-   
-   // Construct the dataSpace of the file dataset. It's the full size dataset
-   H5::DataSpace dspace = getSpace();
 
-   if (sz != dspace.getSelectNpoints()) {
-      std::cout << "Buffer must have the same number of elements as the dataset!" << std::endl;
-      //THROW ?
-   }
- 
-   write(buf, dspace);
+    // Construct the dataSpace of the file dataset. It's the full size dataset
+    H5::DataSpace dspace = getSpace();
 
-   dspace.close();
+    if (sz != dspace.getSelectNpoints()) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Buffer size does not match dataset size");
+    }
+
+    write(buf, dspace);
 }
 
 /** @param[in] buf raw pointer to a buffer of data to write to dataset.
@@ -833,15 +691,10 @@ void isce::io::IDataSet::write(const T* buf,
  */
 template<typename T>
 void isce::io::IDataSet::write(const T* buf, const std::vector<std::slice> * slicesIn) {
-
-   // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
-   // the memory dataspace, specific parts of the file dataset can be selected for writing
-   // into.
-   H5::DataSpace dspace = getDataSpace(slicesIn);
-
-   write(buf, dspace);
-
-   dspace.close();
+   // Construct the dataSpace of the file dataset, based on inputs. Contrary to
+   // the memory dataspace, specific parts of the file dataset can be selected
+   // for writing into.
+   write(buf, getDataSpace(slicesIn));
 }
 
 
@@ -853,22 +706,11 @@ void isce::io::IDataSet::write(const T* buf, const std::vector<std::slice> * sli
  */
 template<typename T>
 void isce::io::IDataSet::write(const T* buf, const std::gslice * gsliceIn) {
-
-   // Construct the dataSpace of the file dataset, based on input parameters. Contrary to
-   // the memory dataspace, specific parts of the file dataset can be selected for writing
-   // into.
-   H5::DataSpace dspace = getDataSpace(gsliceIn);
-
-   write(buf, dspace);
-
-   dspace.close();
+   // Construct the dataSpace of the file dataset, based on inputs. Contrary to
+   // the memory dataspace, specific parts of the file dataset can be selected
+   // for writing into.
+   write(buf, getDataSpace(gsliceIn));
 }
-
-
-
-
-
-
 
 
 /** 
@@ -886,24 +728,18 @@ void isce::io::IDataSet::createAttribute(
         const H5::DataSpace& dataspace,
         const T* buffer) {
 
-   if (name.empty()) {
-       std::cout << "Can't have an empty name for Attribute creation!" << std::endl;
-       //THROW ERROR
-   }
+    if (name.empty()) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Attribute name cannot be empty");
+    }
+    if (attrExists(name.c_str())) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Attribute '" + name + "' already exists");
+    }
 
-   if (attrExists(name.c_str())) {
-       std::cout << "Attribute already exists!" << std::endl;
-       //THROW ERROR
-   }
-
-   // Create the attribute
-   H5::Attribute attribute =  H5::H5Object::createAttribute(name, datatype, dataspace);
-
-   // Write the attribute data. 
-   attribute.write(datatype, buffer);
-
-   attribute.close();
-
+    // Create the attribute and write its data.
+    H5::H5Object::createAttribute(name, datatype, dataspace)
+        .write(datatype, buffer);
 }
 
 
@@ -963,9 +799,8 @@ inline void isce::io::IDataSet::createAttribute(
         const std::string& name, 
         const std::vector<T>& data) {
 
-   std::array<hsize_t,1> dims = {static_cast<hsize_t>(data.size())};
-   createAttribute(name, dims, data);
-
+    std::array<hsize_t,1> dims = {static_cast<hsize_t>(data.size())};
+    createAttribute(name, dims, data);
 }
 
 
@@ -979,9 +814,8 @@ template<typename T>
 inline void isce::io::IDataSet::createAttribute(
         const std::string& name, 
         const std::valarray<T>& data) {
-
-   std::array<hsize_t,1> dims = {static_cast<hsize_t>(data.size())};
-   createAttribute(name, dims, data);
+    std::array<hsize_t,1> dims = {static_cast<hsize_t>(data.size())};
+    createAttribute(name, dims, data);
 }
 
 
@@ -994,7 +828,7 @@ inline void isce::io::IDataSet::createAttribute(
         const std::string& name, 
         const T& data) {
 
-   createAttribute(name, getH5Type<T>(), H5::DataSpace(), &data);
+    createAttribute(name, getH5Type<T>(), H5::DataSpace(), &data);
 }
 
 
@@ -1002,37 +836,13 @@ inline void isce::io::IDataSet::createAttribute(
  * @param[in] name Name of the attribute to create
  * @param[in] data String scalar attribute
  */
+template<>
 inline void isce::io::IDataSet::createAttribute(
         const std::string& name, 
         const std::string& data) {
 
-
    createAttribute(name, getH5Type<std::string>(), H5::DataSpace(), data.c_str());
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
- *                                          IGROUP CLASS
- * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-*/
-
-
-
 
 
 /** @param[in] att  Name of the attribute 
@@ -1043,36 +853,28 @@ inline void isce::io::IDataSet::createAttribute(
  *  signature. For attribute of string type, see other signature.*/
 template<typename T>
 void isce::io::IGroup::read(T &v, const std::string &att) {
-         
     // Check that the parameter that will receive the data read from the file 
     // is a numeric variable
     //static_assert(std::is_arithmetic<T>::value, "Expected a numeric scalar");
-    if (attrExists(att)) {
-       // Open the attribute
-       H5::Attribute a = openAttribute(att);
-
-       // Get the dataSpace of the attribute
-       H5::DataSpace dspace = a.getSpace();
-
-       // If attribute contains a scalar or a 1-element array, read the attribute's 
-       // value
-       if (dspace.getSimpleExtentNdims() == 0)
-          a.read(getH5Type<T>(), &v);
-       
-       else {} // TODO warning/trow? 
-                                   
-                                            
-       // Close the attribute and dataspace
-       a.close();
-       dspace.close();
+    if (not attrExists(att)) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Attribute '" + att + "' not found");
     }
-    else {}   // TODO Should warn or throw here
+    // Open the attribute
+    H5::Attribute a = openAttribute(att);
 
-    return;
+    // Get the dataSpace of the attribute
+    H5::DataSpace dspace = a.getSpace();
+
+    // If attribute contains a scalar or a 1-element array, read the attribute's 
+    // value
+    if (dspace.getSimpleExtentNdims() != 0) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Dataset/attribute must be scalar");
+    }
+
+    a.read(getH5Type<T>(), &v);
 }
-
-
-
 
 
 /** @param[in] att String containing the name of the attribute to read.
@@ -1083,21 +885,13 @@ template<typename T>
 void isce::io::IGroup::read(T *buffer, const std::string &att) { 
 
     // Check that attribute name is not null or empty
-    if (!attrExists(att)) {
-        std::cout << "Warning: Attribute: " << att << " does not exist!" << std::endl;
-        return;
+    if (not attrExists(att)) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Attribute '" + att + "' not found");
     }
 
-    // Open the attribute
-    H5::Attribute a = openAttribute(att);
-
-    // Read the dataset to memory
-    a.read(getH5Type<T>(), buffer);
-
-    // Close the attribute
-    a.close();
+    openAttribute(att).read(getH5Type<T>(), buffer);
 }
-
 
 
 /** @param[in] att String containing the name of the attribute to read.
@@ -1110,9 +904,9 @@ void isce::io::IGroup::read(T *buffer, const std::string &att) {
 template<typename T>
 void isce::io::IGroup::read(std::vector<T> &buffer, const std::string &att) { 
 
-    if (!attrExists(att)) {
-        std::cout << "Warning: Attribute: " << att << " does not exist!" << std::endl;
-        return;
+    if (not attrExists(att)) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Attribute '" + att + "' not found");
     }
 
     if (buffer.size() < getNumElements(att))
@@ -1120,7 +914,6 @@ void isce::io::IGroup::read(std::vector<T> &buffer, const std::string &att) {
 
     read(buffer.data(), att);
 }
-
 
 
 /** @param[in] att String containing the name of the attribute to read.
@@ -1133,23 +926,18 @@ void isce::io::IGroup::read(std::vector<T> &buffer, const std::string &att) {
 template<typename T>
 void isce::io::IGroup::read(std::valarray<T> &buffer, const std::string &att) { 
 
-    if (!attrExists(att)) {
-        std::cout << "Warning: Attribute: " << att << " does not exist!" << std::endl;
-        return;
+    if (not attrExists(att)) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Attribute '" + att + "' does not exist");
     }
 
     if (buffer.size() < getNumElements(att))
        buffer.resize(getNumElements(att));
 
     read(&buffer[0], att);
-
 }
 
-
-
-
-
-/** 
+/**
  * @param[in] name Name of the dataset to create
  * @param[in] data Scalar (non std::string) data to write to the dataset
  *
@@ -1160,16 +948,11 @@ inline isce::io::IDataSet isce::io::IGroup::createDataSet(
                 const std::string &name,
                 const T& data) {
 
-   H5::DataType dtype = getH5Type<T>();
-   H5::DataSet dset =  H5::Group::createDataSet(name, dtype, H5::DataSpace());
-   dset.write(&data, dtype);
-
-   dtype.close();
-
-   return IDataSet(dset);
-
+    const auto dtype = getH5Type<T>();
+    H5::DataSet dset = H5::Group::createDataSet(name, dtype, H5::DataSpace());
+    dset.write(&data, dtype);
+    return dset;
 }
-
 
 
 /** 
@@ -1185,15 +968,13 @@ inline isce::io::IDataSet isce::io::IGroup::createDataSet(
                 const std::string &name,
                 const std::vector<T> &data) {
 
-   // Default to 1D array dataset with this interface 
-   std::array<hsize_t, 1> dims{{data.size()}};
-
-   return createDataSet(name, data, dims);
-
+    // Default to 1D array dataset with this interface 
+    std::array<hsize_t, 1> dims{{data.size()}};
+    return createDataSet(name, data, dims);
 }
 
 
-/** 
+/**
  * @param[in] name Name of the dataset to create
  * @param[in] data std::valarray of data to write to the dataset
  *
@@ -1208,9 +989,7 @@ inline isce::io::IDataSet isce::io::IGroup::createDataSet(
 
    // Default to 1D array dataset with this interface 
    std::array<hsize_t, 1> dims{{data.size()}};
-
    return createDataSet(name, data, dims);
-
 }
 
 
@@ -1232,10 +1011,7 @@ inline isce::io::IDataSet isce::io::IGroup::createDataSet(
    std::array<hsize_t, 1> dims{{sz}};
 
    return createDataSet(name, data, dims);
-
 }
-
-
 
 
 /** 
@@ -1254,7 +1030,6 @@ inline isce::io::IDataSet isce::io::IGroup::createDataSet(
    IDataSet dset = createDataSet<T>(name, dims);
    dset.write(data);
    return dset;
-
 }
 
 
@@ -1271,10 +1046,9 @@ inline isce::io::IDataSet isce::io::IGroup::createDataSet(
                const std::valarray<T> &data,
                const std::array<T2, S> &dims) {
 
-   IDataSet dset = createDataSet<T>(name, dims);
-   dset.write(data);
-   return dset;
-
+    IDataSet dset = createDataSet<T>(name, dims);
+    dset.write(data);
+    return dset;
 }
 
 
@@ -1291,14 +1065,10 @@ inline isce::io::IDataSet isce::io::IGroup::createDataSet(
                const T* data,
                const std::array<T2, S> &dims) {
 
-   IDataSet dset = createDataSet<T>(name, dims);
-   dset.write(data, dset.getSpace().getSimpleExtentNpoints());
-   return dset;
-
+    IDataSet dset = createDataSet<T>(name, dims);
+    dset.write(data, dset.getSpace().getSimpleExtentNpoints());
+    return dset;
 }
-
-
-
 
 
 /** 
@@ -1323,11 +1093,10 @@ isce::io::IDataSet isce::io::IGroup::createDataSet(
         const int shuffle,
         const int deflate) {
 
-
-   if (name.empty()) {
-       std::cout << "Can't have an empty name for DataSet creation!" << std::endl;
-       //THROW ERROR
-   }
+    if (name.empty()) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Attribute name cannot be empty");
+    }
 
    // Create the dataspace
    std::vector<hsize_t> dims2(dims.size());
@@ -1355,8 +1124,10 @@ isce::io::IDataSet isce::io::IGroup::createDataSet(
       // Set the NBIT compression. 
       // Only if the datatype is of nbit precision (float16, complex float16,..). Otherwise tests show
       // degraded compression performance
-      if ((typeid(T)==typeid(isce::io::float16)) || (typeid(T)==typeid(std::complex<isce::io::float16>)) ||
-          (typeid(T)==typeid(isce::io::n1bit)) || (typeid(T)==typeid(isce::io::n2bit))) 
+      if (std::is_same<T, isce::io::float16              >::value or
+          std::is_same<T, std::complex<isce::io::float16>>::value or
+          std::is_same<T, isce::io::n1bit                >::value or
+          std::is_same<T, isce::io::n2bit                >::value)
          cparms.setNbit();
 
 
@@ -1380,19 +1151,8 @@ isce::io::IDataSet isce::io::IGroup::createDataSet(
     }
 
     // Create the dataset
-    H5::DataSet dataset =  H5::Group::createDataSet(name, getH5Type<T>(), dataSpace, cparms);
-   
-    dataSpace.close();
-    cparms.close();
-
-    return IDataSet(dataset);
+    return H5::Group::createDataSet(name, getH5Type<T>(), dataSpace, cparms);
 }
-
-
-
-
-
-
 
 
 /** 
@@ -1405,29 +1165,24 @@ isce::io::IDataSet isce::io::IGroup::createDataSet(
  */
 template<typename T>
 void isce::io::IGroup::createAttribute(
-        const std::string& name, 
+        const std::string& name,
         const H5::DataType& datatype,
         const H5::DataSpace& dataspace,
         const T* buffer) {
 
    if (name.empty()) {
-       std::cout << "Can't have an empty name for Attribute creation!" << std::endl;
-       //THROW ERROR
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Attribute name cannot be empty");
    }
 
    if (attrExists(name.c_str())) {
-       std::cout << "Attribute already exists!" << std::endl;
-       //THROW ERROR
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "Attribute '" + name + "' already exists");
    }
 
-   // Create the attribute
-   H5::Attribute attribute =  H5::H5Object::createAttribute(name, datatype, dataspace);
-
-   // Write the attribute data. 
-   attribute.write(datatype, buffer);
-
-   attribute.close();
-
+   // Create the attribute and write its data.
+   H5::H5Object::createAttribute(name, datatype, dataspace)
+       .write(datatype, buffer);
 }
 
 
@@ -1437,11 +1192,9 @@ void isce::io::IGroup::createAttribute(
  * @param[in] buffer std::vector of attribute data to write
  */
 template<typename T, typename T2, size_t S>
-inline void isce::io::IGroup::createAttribute(
-        const std::string& name, 
-        const std::array<T2, S>& dims,
-        const std::vector<T>& buffer) {
-
+inline void isce::io::IGroup::createAttribute(const std::string& name,
+                                              const std::array<T2, S>& dims,
+                                              const std::vector<T>& buffer) {
    createAttribute(name, getH5Type<T>(), getMemorySpace(dims), buffer.data());
 }
 
@@ -1452,27 +1205,23 @@ inline void isce::io::IGroup::createAttribute(
  * @param[in] buffer std::valarray of attribute data to write
  */
 template<typename T, typename T2, size_t S>
-inline void isce::io::IGroup::createAttribute(
-        const std::string& name, 
-        const std::array<T2, S>& dims,
-        const std::valarray<T>& buffer) {
-
+inline void isce::io::IGroup::createAttribute(const std::string& name,
+                                              const std::array<T2, S>& dims,
+                                              const std::valarray<T>& buffer) {
    createAttribute(name, getH5Type<T>(), getMemorySpace(dims), &buffer[0]);
 }
 
 
-/** 
+/**
  * @param[in] name Name of the attribute to create
  * @param[in] dims Array containing the size of each dimension of the attribute
  * @param[in] buffer Raw pointer buffer to attribute data to write
  */
 template<typename T, typename T2, size_t S>
-inline void isce::io::IGroup::createAttribute(
-        const std::string& name, 
-        const std::array<T2, S>& dims,
-        const T* buffer) {
-
-   createAttribute(name, getH5Type<T>(), getMemorySpace(dims), buffer);
+inline void isce::io::IGroup::createAttribute(const std::string& name,
+                                              const std::array<T2, S>& dims,
+                                              const T* buffer) {
+    createAttribute(name, getH5Type<T>(), getMemorySpace(dims), buffer);
 }
 
 
@@ -1483,13 +1232,10 @@ inline void isce::io::IGroup::createAttribute(
  * The shape of the attribute is 1D.
  */
 template<typename T>
-inline void isce::io::IGroup::createAttribute(
-        const std::string& name, 
-        const std::vector<T>& data) {
-
-   std::array<hsize_t,1> dims = {static_cast<hsize_t>(data.size())};
-   createAttribute(name, dims, data);
-
+inline void isce::io::IGroup::createAttribute(const std::string& name,
+                                              const std::vector<T>& data) {
+    std::array<hsize_t,1> dims = {static_cast<hsize_t>(data.size())};
+    createAttribute(name, dims, data);
 }
 
 
@@ -1500,12 +1246,10 @@ inline void isce::io::IGroup::createAttribute(
  * The shape of the attribute is 1D.
  */
 template<typename T>
-inline void isce::io::IGroup::createAttribute(
-        const std::string& name, 
-        const std::valarray<T>& data) {
-
-   std::array<hsize_t,1> dims = {static_cast<hsize_t>(data.size())};
-   createAttribute(name, dims, data);
+inline void isce::io::IGroup::createAttribute(const std::string& name,
+                                              const std::valarray<T>& data) {
+    std::array<hsize_t, 1> dims = {static_cast<hsize_t>(data.size())};
+    createAttribute(name, dims, data);
 }
 
 
@@ -1514,11 +1258,9 @@ inline void isce::io::IGroup::createAttribute(
  * @param[in] data Reference to scalar attribute value
  */
 template<typename T>
-inline void isce::io::IGroup::createAttribute(
-        const std::string& name, 
-        const T& data) {
-
-   createAttribute(name, getH5Type<T>(), H5::DataSpace(), &data);
+inline void isce::io::IGroup::createAttribute(const std::string& name,
+                                              const T& data) {
+    createAttribute(name, getH5Type<T>(), H5::DataSpace(), &data);
 }
 
 
@@ -1526,22 +1268,8 @@ inline void isce::io::IGroup::createAttribute(
  * @param[in] name Name of the attribute to create
  * @param[in] data String scalar attribute
  */
-inline void isce::io::IGroup::createAttribute(
-        const std::string& name, 
-        const std::string& data) {
-
-
-   createAttribute(name, getH5Type<std::string>(), H5::DataSpace(), data.c_str());
+template<>
+inline void isce::io::IGroup::createAttribute(const std::string& name,
+                                              const std::string& data) {
+    createAttribute(name, getH5Type<std::string>(), H5::DataSpace(), data.c_str());
 }
-
-
-
-
-
-
-
-
-
-
-
-// end of file
