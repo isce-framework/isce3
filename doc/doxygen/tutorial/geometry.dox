@@ -79,6 +79,7 @@ In this example, we will demonstrate the forward mapping algorithm by using it t
 
 \code{.cpp}
 
+#include "isce/core/LookSide.h"
 #include "isce/geometry/geometry.h"
 #include <sstream>
 #include <fstream>
@@ -115,7 +116,7 @@ int main(int argc, char *argv[])
     double wvl = 0.06;
 
     //Look side from metadata
-    int side = -1; //Right-looking
+    auto side = isce::core::LookSide::Right;
 
     //Container to store sets of returned results
     std::vector<double> lats;
@@ -182,6 +183,7 @@ int main(int argc, char *argv[])
 In this example, we will demonstrate the inverse mapping algorithm by using it to determine the location of a known target in a radar image.
 
 \code{.cpp}
+#include "isce/core/LookSide.h"
 #include "isce/geometry/geometry.h"
 #include <sstream>
 #include <fstream>
@@ -207,7 +209,7 @@ int main(int argc, char *argv[])
     double wvl = 0.06;
 
     //Look side
-    int side = -1; //Right-looking
+    auto side = isce::core::LookSide::Right;
 
     //We will create a fake product with relevant metadata for use
     isce::product::ImageMode mode;

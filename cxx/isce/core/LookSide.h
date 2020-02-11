@@ -16,8 +16,12 @@ enum class LookSide {
     Right = -1  /**< Radar points to right/starboard side of vehicle. */
 };
 
+/** Parse string (e.g., "left" or "right") to enum LookSide. */
 LookSide parseLookSide(const std::string & str);
+
+/** Convert enum LookSide to string ("left" or "right"). */
 std::string to_string(LookSide d);
+
 std::ostream & operator<<(std::ostream & out, const LookSide d);
 
 }} // isce::core
