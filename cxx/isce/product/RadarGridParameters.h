@@ -65,8 +65,16 @@ class isce::product::RadarGridParameters {
         /** Get reference epoch DateTime*/
         inline const isce::core::DateTime & refEpoch() const { return _refEpoch; }
 
+        /** Set reference epoch DateTime
+         *
+         * Other dependent parameters like sensingStart are not modified. Use with caution.*/
+        inline void refEpoch(const isce::core::DateTime &epoch) { _refEpoch = epoch; }
+
         /** Get sensing start time in seconds since reference epoch */
         inline double sensingStart() const { return _sensingStart; }
+
+        /** Set sensing start time in seconds since reference epoch */
+        inline void sensingStart(const double & t){ _sensingStart = t; }
 
         /** Get radar wavelength in meters*/
         inline double wavelength() const { return _wavelength; }
@@ -85,6 +93,9 @@ class isce::product::RadarGridParameters {
 
         /** Get starting slant range in meters*/
         inline double startingRange() const { return _startingRange; }
+
+        /** Set starting slant range in meters*/
+        inline void startingRange(const double & r){ _startingRange = r; }
 
         /** Get slant range pixel spacing in meters*/
         inline double rangePixelSpacing() const { return _rangePixelSpacing; }

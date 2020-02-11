@@ -420,7 +420,6 @@ CPLErr IH5Dataset::GetGeoTransform( double *padfGeoTransform )
         return CE_None;
 
     return CE_Failure;
-
 }
 
 /************************************************************************/

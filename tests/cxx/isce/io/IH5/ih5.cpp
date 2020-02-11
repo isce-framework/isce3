@@ -200,9 +200,6 @@ TEST_F(IH5Test, findInGroup) {
         ASSERT_EQ(H5Iget_type(id), H5I_GROUP);
         H5Oclose(id);
     }
-
-    group.close();
-
 }
 
 
@@ -236,8 +233,6 @@ TEST_F(IH5Test, dataSetOpen) {
 
     // Check that the type of the open object corresponds to a dataset type
     ASSERT_EQ(H5Iget_type(dset.getId()), H5I_DATASET);
-
-    dset.close();
 }
 
 
@@ -269,8 +264,6 @@ TEST_F(IH5Test, dataSetMetaData) {
     std::vector<std::string> attnames = dset.getAttrs();
     ASSERT_EQ(attnames.size(), 1);
     ASSERT_EQ(attnames[0], "units");
-
-    dset.close();
 }
 
 
@@ -285,8 +278,6 @@ TEST_F(IH5Test, attributeMetaData) {
     ASSERT_EQ(dset.getRank(attributeName), 0); //scalar attribute
     ASSERT_EQ(dset.getNumElements(attributeName), 1);
     ASSERT_EQ(dset.getTypeClassStr(attributeName),"H5T_STRING");
-
-    dset.close();
 }
 
 
@@ -302,8 +293,6 @@ TEST_F(IH5Test, readVariableLengthString) {
     dset.read(strVal, attribute);
 
     ASSERT_EQ(strVal, "DN");
-
-    dset.close();
 }
 
 /* 
@@ -320,8 +309,6 @@ TEST_F(IH5Test, readVariableLengthString2) {
     dset.read(strVal, attribute);
 
     ASSERT_EQ(strVal, "Complex backscatter for primary mode (HH pol). Focused SLC image. All channels are registered");
-
-    dset.close();
 }
 
 */
@@ -338,8 +325,6 @@ TEST_F(IH5Test, readVariableLengthString2) {
     dset.read(strVal);
 
     ASSERT_EQ(strVal, "POLYGON ((-115.507 34.822, -115.634 34.845, -115.639 34.827, -115.512 34.805, -115.507 34.822))");
-
-    dset.close();
 }
 
 
@@ -422,9 +407,6 @@ TEST_F(IH5Test, datasetReadComplexWithRawPointer) {
     ASSERT_FLOAT_EQ(dval[87].imag(), -9.047101);
 
     delete [] dval;
-
-    dset.close();
-
 }
 
 
@@ -501,9 +483,6 @@ TEST_F(IH5Test, datasetReadComplexWithVector) {
     ASSERT_FLOAT_EQ(dval[0].imag(), -0.007895827);
     ASSERT_FLOAT_EQ(dval[87].real(), 5.6398234);
     ASSERT_FLOAT_EQ(dval[87].imag(), -9.047101);
-
-    dset.close();
-
 }
 
 
@@ -572,9 +551,6 @@ TEST_F(IH5Test, datasetReadComplexWithValarray) {
     ASSERT_FLOAT_EQ(dval[0].imag(), -0.007895827);
     ASSERT_FLOAT_EQ(dval[87].real(), 5.6398234);
     ASSERT_FLOAT_EQ(dval[87].imag(), -9.047101);
-
-    dset.close();
-
 }
 
 
@@ -590,9 +566,6 @@ TEST_F(IH5Test, datasetReadU16WithRawPointer) {
     dset.read(dval);
     ASSERT_EQ(dval[0], 0);
     ASSERT_EQ(dval[1], 500);
-
-    dset.close();
-
 }
 
 
@@ -607,8 +580,6 @@ TEST_F(IH5Test, datasetReadFloatWithVector) {
     dset.read(dval);
     ASSERT_EQ(dval.size(), 33);
     ASSERT_FLOAT_EQ(dval[0], 0);
-
-    dset.close();
 }
 
 
@@ -672,17 +643,13 @@ TEST_F(IH5Test, createGroups) {
     list = fic.find(std::string("groupVector"), "/", "GROUP");
     ASSERT_EQ(list.size(), 1);
 
-    
-
     // Create a group with unexisiting group path    
     EXPECT_NO_THROW(isce::io::IGroup grp = fic.createGroup(std::string("groupX/groupXX/groupXXX")));
-    
+
     // Does that group exists?
     list.clear();
     list = fic.find(std::string("groupXXX"), "/", "GROUP");
     ASSERT_EQ(list.size(), 1);
-
-    fic.close();
 }
 
 
@@ -769,15 +736,7 @@ TEST_F(IH5Test, createSimpleDatasetFromVectorBuffer) {
     ASSERT_EQ(v3r.size(), 100);
     ASSERT_EQ(v3r[0], std::string("1"));
     ASSERT_EQ(v3r[99], std::string("100"));
-    dset.close();
-
-
-
-    fic.close();
 }
-
-
-
 
 
 TEST_F(IH5Test, createSimpleDatasetFromValarrayBuffer) {
@@ -857,12 +816,7 @@ TEST_F(IH5Test, createSimpleDatasetFromValarrayBuffer) {
     ASSERT_EQ(v3r.size(), 100);
     ASSERT_EQ(v3r[0], std::string("1"));
     ASSERT_EQ(v3r[99], std::string("100"));
-    dset.close();
-
-    fic.close();
 }
-
-
 
 
 TEST_F(IH5Test, createSimpleDatasetFromRawPointer) {
@@ -941,13 +895,9 @@ TEST_F(IH5Test, createSimpleDatasetFromRawPointer) {
     dset.read(v3r);
     ASSERT_EQ(v3r[0], std::string("1"));
     ASSERT_EQ(v3r[99], std::string("100"));
-    dset.close();
 
     delete [] v3;
     delete [] v3r;
-
-    fic.close();
-
 }
 
 
@@ -968,7 +918,7 @@ TEST_F(IH5Test, createSimpleDatasetFromScalar) {
     dset = grp.createDataSet(std::string("v1"), val1);
 
     // Check that Dataset has been created
-    list = fic.find("v1","/groupScalar","DATASET");
+    list = fic.find("v1", "/groupScalar", "DATASET");
     ASSERT_EQ(list.size(), 1);
 
     // Read back the values and check that they are correct
@@ -976,24 +926,18 @@ TEST_F(IH5Test, createSimpleDatasetFromScalar) {
     dset.read(val1r);
     ASSERT_EQ(val1r, 9);
 
-
-
     // Same thing with a string
     dset = grp.createDataSet(std::string("v2"), val2);
 
     // Check that Dataset has been created
     list.clear();
-    list = fic.find("v2","/groupScalar","DATASET");
+    list = fic.find("v2", "/groupScalar", "DATASET");
     ASSERT_EQ(list.size(), 1);
 
     // Read back the values and check that they are correct
     std::string val2r;
     dset.read(val2r);
     ASSERT_EQ(val2r.compare(std::string("value1")), 0);
-
-
-    dset.close();
-    fic.close();
 }
 
 
@@ -1063,9 +1007,6 @@ TEST_F(IH5Test, createGroupAttributes) {
     grp.read(attv2r, list[1]);
     for(int i=0; i<attv2.size(); i++) 
        ASSERT_EQ(attv2[i].compare(attv2r[i]),0);
-
-    grp.close();
-    fic.close();
 }
 
 
@@ -1137,10 +1078,6 @@ TEST_F(IH5Test, createDataSetAttributes) {
     dset.read(attv2r, list[1]);
     for(int i=0; i<attv2.size(); i++) 
        ASSERT_EQ(attv2[i].compare(attv2r[i]),0);
-
-    dset.close();
-    fic.close();
-   
 }
 
 
@@ -1213,8 +1150,6 @@ TEST_F(IH5Test, createFloat16Dataset) {
     dset.close();
 
 
-    
-
     ////////////////////////////////////////////////////////////
     // Create a dataset with float16 values, with NBIT filter + deflate
     ////////////////////////////////////////////////////////////
@@ -1237,24 +1172,10 @@ TEST_F(IH5Test, createFloat16Dataset) {
     // Check the size on disk of the dataset
     long storageSize3 = dset.getStorageSize();
     EXPECT_GT(storageSize2, storageSize3);
-
-    dset.close();
-
-
-
-    fic.close();
 }
 
 
-
-
-
-
-// Main
 int main( int argc, char * argv[] ) {
     testing::InitGoogleTest( &argc, argv );
     return RUN_ALL_TESTS();
 }
-
-
-// end of file

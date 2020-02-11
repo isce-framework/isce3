@@ -4,7 +4,7 @@
 # Copyright 2019-
 
 # The extensions
-import isce3.extensions.isceextension as isceextension
+from .. import isceextension
 
 class Geo2rdr(isceextension.pyGeo2rdr):
     """

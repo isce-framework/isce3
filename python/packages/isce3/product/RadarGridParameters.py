@@ -6,9 +6,9 @@
 # The extension
 from .. import isceextension
 
-class Swath(isceextension.pySwath):
+class RadarGridParameters(isceextension.pyRadarGridParameters):
     """
-    Wrapper for pySwath.
+    Wrapper for pyRadarGridParameters.
     """
 
     pass

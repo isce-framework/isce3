@@ -1,12 +1,9 @@
 #-*- coding: utf-8 -*-
 
-# Import the extension
-import isce3.extensions.isceextension as isceextension
-
 # Import the wrappers
 from .Rdr2geo import rdr2geo_point, rdr2geo_cone
 from .Geo2rdr import geo2rdr_point
-from .geometry import getBoundsOnGround
+from .geometry import getGeoPerimeter
 
 def rdr2geo(**kwds):
     """A factory for Rdr2geo"""
@@ -27,6 +24,10 @@ def geocode(**kwds):
 
     return Geocode(**kwds)
 
+def deminterpolator(**kwds):
+    """A factory for DEMInterpolator"""
+    from .DEMInterpolator import DEMInterpolator
 
+    return DEMInterpolator(**kwds)
 # end of file
 

@@ -3,7 +3,6 @@ include(IsceCuda)
 
 include(Sources.cmake)
 include(Headers.cmake)
-install(FILES ${HEADERS} DESTINATION include/isce)
 
 # Create library target
 add_library(${LISCECUDA} SHARED ${SOURCES})
@@ -26,6 +25,14 @@ target_link_libraries(${LISCECUDA} PUBLIC
                       ${CUDART_LIBRARY}
                       ${CUDAFFT_LIBRARY}
                       )
+
+# Install public headers
+foreach(HEADER ${HEADERS})
+    get_filename_component(DIR ${HEADER} DIRECTORY)
+    install(FILES       ${HEADER}
+            DESTINATION include/iscecuda/${DIR}
+            COMPONENT   ISCE_CUDA)
+endforeach()
 
 # Install shared library
 install(TARGETS ${LISCECUDA}

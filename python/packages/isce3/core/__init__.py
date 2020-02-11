@@ -98,6 +98,12 @@ def poly2d(**kwds):
 
     return Poly2d(**kwds)
 
+def projection(**kwds):
+    """A factory for Projection"""
+    from .Projection import Projection
+
+    return Projection(**kwds)
+
 def statevector(**kwds):
     """A factory for StateVector"""
     from .StateVector import StateVector
