@@ -827,17 +827,21 @@ inline void isce::io::IDataSet::createAttribute(const std::string& name,
     createAttribute(name, getH5Type<T>(), H5::DataSpace(), &data);
 }
 
+namespace isce { namespace io {
+
 /**
  * @param[in] name Name of the attribute to create
  * @param[in] data String scalar attribute
  */
 template<>
-inline void isce::io::IDataSet::createAttribute(const std::string& name,
-                                                const std::string& data) {
+inline void IDataSet::createAttribute(const std::string& name,
+                                      const std::string& data) {
 
     createAttribute(name, getH5Type<std::string>(), H5::DataSpace(),
                     data.c_str());
 }
+
+}}
 
 /** @param[in] att  Name of the attribute
  *  @param[out] v   Attribute scalar value (numeric type).
@@ -1236,13 +1240,17 @@ inline void isce::io::IGroup::createAttribute(const std::string& name,
     createAttribute(name, getH5Type<T>(), H5::DataSpace(), &data);
 }
 
+namespace isce { namespace io {
+
 /**
  * @param[in] name Name of the attribute to create
  * @param[in] data String scalar attribute
  */
 template<>
-inline void isce::io::IGroup::createAttribute(const std::string& name,
-                                              const std::string& data) {
+inline void IGroup::createAttribute(const std::string& name,
+                                    const std::string& data) {
     createAttribute(name, getH5Type<std::string>(), H5::DataSpace(),
                     data.c_str());
 }
+
+}}
