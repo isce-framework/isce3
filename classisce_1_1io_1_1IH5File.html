@@ -124,9 +124,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>openFile</b> (const H
 <tr class="memitem:a8e3d8a38ea012782d3771e9c77eb60f5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classisce_1_1io_1_1IGroup.html">IGroup</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IH5File.html#a8e3d8a38ea012782d3771e9c77eb60f5">openGroup</a> (const H5std_string &amp;name)</td></tr>
 <tr class="memdesc:a8e3d8a38ea012782d3771e9c77eb60f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Open a given group.  <a href="#a8e3d8a38ea012782d3771e9c77eb60f5">More...</a><br/></td></tr>
 <tr class="separator:a8e3d8a38ea012782d3771e9c77eb60f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9b8b09ff0426de61a1fb26b4c641d949"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IH5File.html#a9b8b09ff0426de61a1fb26b4c641d949">find</a> (const std::string name, const std::string start=&quot;/&quot;, const std::string type=&quot;BOTH&quot;, const std::string returnedPath=&quot;FULL&quot;)</td></tr>
-<tr class="memdesc:a9b8b09ff0426de61a1fb26b4c641d949"><td class="mdescLeft">&#160;</td><td class="mdescRight">Searching for given name in file.  <a href="#a9b8b09ff0426de61a1fb26b4c641d949">More...</a><br/></td></tr>
-<tr class="separator:a9b8b09ff0426de61a1fb26b4c641d949"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac74ce0e0cd0c4f9bc02fb1fda459ed34"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IH5File.html#ac74ce0e0cd0c4f9bc02fb1fda459ed34">find</a> (const std::string name, const std::string start=&quot;/&quot;, const std::string type=&quot;BOTH&quot;, const std::string path=&quot;FULL&quot;)</td></tr>
+<tr class="memdesc:ac74ce0e0cd0c4f9bc02fb1fda459ed34"><td class="mdescLeft">&#160;</td><td class="mdescRight">Searching for given name in file.  <a href="#ac74ce0e0cd0c4f9bc02fb1fda459ed34">More...</a><br/></td></tr>
+<tr class="separator:ac74ce0e0cd0c4f9bc02fb1fda459ed34"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4132d39fe9acdf2d6db7be1b3f024a43"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IH5File.html#a4132d39fe9acdf2d6db7be1b3f024a43">filename</a> () const </td></tr>
 <tr class="memdesc:a4132d39fe9acdf2d6db7be1b3f024a43"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get filename of HDF5 file.  <a href="#a4132d39fe9acdf2d6db7be1b3f024a43">More...</a><br/></td></tr>
 <tr class="separator:a4132d39fe9acdf2d6db7be1b3f024a43"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -138,9 +138,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>openFile</b> (const H
 <a class="anchor" id="ac322c456433b12fb971a03db517fde15"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">isce::io::IH5File::IH5File </td>
@@ -160,11 +157,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>openFile</b> (const H
           <td></td><td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -233,7 +225,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>openFile</b> (const H
 
 </div>
 </div>
-<a class="anchor" id="a9b8b09ff0426de61a1fb26b4c641d949"></a>
+<a class="anchor" id="ac74ce0e0cd0c4f9bc02fb1fda459ed34"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -259,7 +251,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>openFile</b> (const H
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::string&#160;</td>
-          <td class="paramname"><em>returnedPath</em> = <code>&quot;FULL&quot;</code>&#160;</td>
+          <td class="paramname"><em>path</em> = <code>&quot;FULL&quot;</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -275,12 +267,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>openFile</b> (const H
     <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Regular Expression to search for. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">start</td><td>Relative path from root to start the search from. Default:file root </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>Type of object to search for. Default: BOTH </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">returnedPath</td><td>Absolute or Relative path of found object. Default: FULL</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">path</td><td>Absolute or Relative path of found object. Default: FULL</td></tr>
   </table>
   </dd>
 </dl>
 <p>The function returns paths of all objects in the file whose names satisfy the</p>
-<p>param name: can be a regular expression. param type: three types of objects to search for are available: GROUP: only returns groups whose names satisfy the inpout name. DATASET: only return datasets whose names satisfy the input name. BOTH: return groups and datsets whose names satisfy the input name. param returnedPath: the returned path of the found objects can be expressed from the root (returnedPath = FULL - this is default) or relative to the start (returnedPath = RELATIVE). </p>
+<p>param name: can be a regular expression. param type: three types of objects to search for are available: GROUP: only returns groups whose names satisfy the inpout name. DATASET: only return datasets whose names satisfy the input name. BOTH: return groups and datsets whose names satisfy the input name. param path: the returned path of the found objects can be expressed from the root (path = FULL - this is default) or relative to the start (path = RELATIVE). </p>
 
 </div>
 </div>

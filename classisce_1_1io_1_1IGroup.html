@@ -113,18 +113,18 @@ Inheritance diagram for isce::io::IGroup:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a6b2b15d5ac160d689a8ca50465714ae7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6b2b15d5ac160d689a8ca50465714ae7"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>IGroup</b> (H5::Group &amp;group)</td></tr>
-<tr class="separator:a6b2b15d5ac160d689a8ca50465714ae7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b23633c729175bc5bb57043d6100d4d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1b23633c729175bc5bb57043d6100d4d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>IGroup</b> (const H5::Group &amp;group)</td></tr>
+<tr class="separator:a1b23633c729175bc5bb57043d6100d4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac165c1916c8da11557df390e406a2363"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac165c1916c8da11557df390e406a2363"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>IGroup</b> (hid_t group)</td></tr>
 <tr class="separator:ac165c1916c8da11557df390e406a2363"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a080192d94a9cddb0ea7237feb9b24ff5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a080192d94a9cddb0ea7237feb9b24ff5"></a>
 std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>getAttrs</b> ()</td></tr>
 <tr class="separator:a080192d94a9cddb0ea7237feb9b24ff5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a684575bebbb74ea804d16be47ad74d70"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IGroup.html#a684575bebbb74ea804d16be47ad74d70">find</a> (const std::string name, const std::string start=&quot;.&quot;, const std::string type=&quot;BOTH&quot;, const std::string returnedPath=&quot;FULL&quot;)</td></tr>
-<tr class="memdesc:a684575bebbb74ea804d16be47ad74d70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Search function for given name in the group.  <a href="#a684575bebbb74ea804d16be47ad74d70">More...</a><br/></td></tr>
-<tr class="separator:a684575bebbb74ea804d16be47ad74d70"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5627e75b883124dbe7d88ea7ace208b"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IGroup.html#ac5627e75b883124dbe7d88ea7ace208b">find</a> (const std::string name, const std::string start=&quot;.&quot;, const std::string type=&quot;BOTH&quot;, const std::string path=&quot;FULL&quot;)</td></tr>
+<tr class="memdesc:ac5627e75b883124dbe7d88ea7ace208b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Search function for given name in the group.  <a href="#ac5627e75b883124dbe7d88ea7ace208b">More...</a><br/></td></tr>
+<tr class="separator:ac5627e75b883124dbe7d88ea7ace208b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a180c1b95db0e31f581f866099a87720a"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IGroup.html#a180c1b95db0e31f581f866099a87720a">getPathname</a> ()</td></tr>
 <tr class="memdesc:a180c1b95db0e31f581f866099a87720a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the path of the group from the file root.  <a href="#a180c1b95db0e31f581f866099a87720a">More...</a><br/></td></tr>
 <tr class="separator:a180c1b95db0e31f581f866099a87720a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -212,9 +212,6 @@ template&lt;typename T , typename T2 , size_t S&gt; </td></tr>
 <tr class="memitem:abd42509248f7779526782c65e3576986"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IGroup.html#abd42509248f7779526782c65e3576986">createAttribute</a> (const std::string &amp;name, const T &amp;data)</td></tr>
 <tr class="memdesc:abd42509248f7779526782c65e3576986"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a scalar as an attribute.  <a href="#abd42509248f7779526782c65e3576986">More...</a><br/></td></tr>
 <tr class="separator:abd42509248f7779526782c65e3576986"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a970876b7ba3cefa015a55faa2a9807d8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IGroup.html#a970876b7ba3cefa015a55faa2a9807d8">createAttribute</a> (const std::string &amp;name, const std::string &amp;data)</td></tr>
-<tr class="memdesc:a970876b7ba3cefa015a55faa2a9807d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a string attribute.  <a href="#a970876b7ba3cefa015a55faa2a9807d8">More...</a><br/></td></tr>
-<tr class="separator:a970876b7ba3cefa015a55faa2a9807d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9acd737962137fbcc6d297feb6c5f98"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:aa9acd737962137fbcc6d297feb6c5f98"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IGroup.html#aa9acd737962137fbcc6d297feb6c5f98">createAttribute</a> (const std::string &amp;name, const std::vector&lt; T &gt; &amp;values)</td></tr>
 <tr class="memdesc:aa9acd737962137fbcc6d297feb6c5f98"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a std::vector data as a 1D-array attribute.  <a href="#aa9acd737962137fbcc6d297feb6c5f98">More...</a><br/></td></tr>
@@ -235,6 +232,9 @@ template&lt;typename T , typename T2 , size_t S&gt; </td></tr>
 <tr class="memitem:a68c142aad9a62d7de87de6d91d0a1e2f"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IGroup.html#a68c142aad9a62d7de87de6d91d0a1e2f">createAttribute</a> (const std::string &amp;name, const std::array&lt; T2, S &gt; &amp;dims, const T *buffer)</td></tr>
 <tr class="memdesc:a68c142aad9a62d7de87de6d91d0a1e2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a raw pointer to data with dimensions (std::array) as an attribute.  <a href="#a68c142aad9a62d7de87de6d91d0a1e2f">More...</a><br/></td></tr>
 <tr class="separator:a68c142aad9a62d7de87de6d91d0a1e2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2f84e1bc58d69e64a819a8456ae3962"><td class="memTemplParams" colspan="2">template&lt;&gt; </td></tr>
+<tr class="memitem:af2f84e1bc58d69e64a819a8456ae3962"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IGroup.html#af2f84e1bc58d69e64a819a8456ae3962">createAttribute</a> (const std::string &amp;name, const H5::DataType &amp;datatype, const H5::DataSpace &amp;dataspace, const std::string *buffer)</td></tr>
+<tr class="separator:af2f84e1bc58d69e64a819a8456ae3962"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad136166efb9d3584f9d871085b8a611f"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:ad136166efb9d3584f9d871085b8a611f"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IGroup.html#ad136166efb9d3584f9d871085b8a611f">createDataSet</a> (const std::string &amp;name, const T &amp;data)</td></tr>
 <tr class="separator:ad136166efb9d3584f9d871085b8a611f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -259,6 +259,9 @@ template&lt;typename T , typename T2 , size_t S&gt; </td></tr>
 <tr class="memitem:a81c45afb4ae43a5705a87b0472038417"><td class="memTemplParams" colspan="2">template&lt;typename T , typename T2 , size_t S&gt; </td></tr>
 <tr class="memitem:a81c45afb4ae43a5705a87b0472038417"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classisce_1_1io_1_1IDataSet.html">isce::io::IDataSet</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IGroup.html#a81c45afb4ae43a5705a87b0472038417">createDataSet</a> (const std::string &amp;name, const std::array&lt; T2, S &gt; &amp;dims, const int chunk, const int shuffle, const int deflate)</td></tr>
 <tr class="separator:a81c45afb4ae43a5705a87b0472038417"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a805ee675ed606e4235ed0cf88fed1c15"><td class="memTemplParams" colspan="2">template&lt;&gt; </td></tr>
+<tr class="memitem:a805ee675ed606e4235ed0cf88fed1c15"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IGroup.html#a805ee675ed606e4235ed0cf88fed1c15">createAttribute</a> (const std::string &amp;name, const std::string &amp;data)</td></tr>
+<tr class="separator:a805ee675ed606e4235ed0cf88fed1c15"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="abd42509248f7779526782c65e3576986"></a>
@@ -300,49 +303,6 @@ template&lt;typename T &gt; </div>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Reference to scalar attribute value </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="a970876b7ba3cefa015a55faa2a9807d8"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void isce::io::IGroup::createAttribute </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>name</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>data</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Creating and writing a string attribute. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>String scalar attribute </td></tr>
   </table>
   </dd>
 </dl>
@@ -591,6 +551,96 @@ template&lt;typename T , typename T2 , size_t S&gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">dims</td><td>Array containing the size of each dimension of the attribute </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>Raw pointer buffer to attribute data to write </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="af2f84e1bc58d69e64a819a8456ae3962"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IGroup::createAttribute </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const H5::DataType &amp;&#160;</td>
+          <td class="paramname"><em>datatype</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const H5::DataSpace &amp;&#160;</td>
+          <td class="paramname"><em>dataspace</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string *&#160;</td>
+          <td class="paramname"><em>buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the group attribute to create </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">datatype</td><td>H5 data type of the attribute </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dataspace</td><td>H5 data space of the attribute </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>of std::string values to write </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a805ee675ed606e4235ed0cf88fed1c15"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IGroup::createAttribute </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>String scalar attribute </td></tr>
   </table>
   </dd>
 </dl>
@@ -1051,7 +1101,7 @@ template&lt;typename T , typename T2 , size_t S&gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a684575bebbb74ea804d16be47ad74d70"></a>
+<a class="anchor" id="ac5627e75b883124dbe7d88ea7ace208b"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1077,7 +1127,7 @@ template&lt;typename T , typename T2 , size_t S&gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::string&#160;</td>
-          <td class="paramname"><em>returnedPath</em> = <code>&quot;FULL&quot;</code>&#160;</td>
+          <td class="paramname"><em>path</em> = <code>&quot;FULL&quot;</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1093,12 +1143,12 @@ template&lt;typename T , typename T2 , size_t S&gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Regular Expression to search for. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">start</td><td>Relative path from current group to start the search from. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>Type of object to search for. Default: BOTH </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">returnedPath</td><td>Absolute or Relative path of found object. Default: FULL</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">path</td><td>Absolute or Relative path of found object. Default: FULL</td></tr>
   </table>
   </dd>
 </dl>
 <p>The function returns paths of all objects in the file whose names satisfy name.</p>
-<p>param name: can be a regular expression. param type: three types of objects to search for are available: GROUP: only returns groups whose names satisfy the inpout name. DATASET: only return datasets whose names satisfy the input name. BOTH: return groups and datsets whose names satisfy the input name. param returnedPath: the returned path of the found objects can be expressed from the current group (returnedPath = FULL - this is default) or relative to the start (returnedPath = RELATIVE). </p>
+<p>param name: can be a regular expression. param type: three types of objects to search for are available: GROUP: only returns groups whose names satisfy the inpout name. DATASET: only return datasets whose names satisfy the input name. BOTH: return groups and datsets whose names satisfy the input name. param path: the returned path of the found objects can be expressed from the current group (path = FULL - this is default) or relative to the start (path = RELATIVE). </p>
 
 </div>
 </div>

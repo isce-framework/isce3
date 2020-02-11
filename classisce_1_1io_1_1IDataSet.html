@@ -118,17 +118,11 @@ Inheritance diagram for isce::io::IDataSet:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ade8592305817e060af087668bb224e6d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ade8592305817e060af087668bb224e6d"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#ade8592305817e060af087668bb224e6d">IDataSet</a> ()</td></tr>
-<tr class="memdesc:ade8592305817e060af087668bb224e6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Empty constructor. <br/></td></tr>
-<tr class="separator:ade8592305817e060af087668bb224e6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf88f09eef5b7c0165fb63b2bf54fbbc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acf88f09eef5b7c0165fb63b2bf54fbbc"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#acf88f09eef5b7c0165fb63b2bf54fbbc">IDataSet</a> (H5::DataSet &amp;dset)</td></tr>
-<tr class="memdesc:acf88f09eef5b7c0165fb63b2bf54fbbc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor. <br/></td></tr>
-<tr class="separator:acf88f09eef5b7c0165fb63b2bf54fbbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4daccc5b0d2a7d74164f36fca0997139"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4daccc5b0d2a7d74164f36fca0997139"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>IDataSet</b> (const H5::DataSet &amp;dset)</td></tr>
+<tr class="separator:a4daccc5b0d2a7d74164f36fca0997139"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3f68cc9b72b0dfce042cde9bc333271f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3f68cc9b72b0dfce042cde9bc333271f"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a3f68cc9b72b0dfce042cde9bc333271f">IDataSet</a> (const hid_t id)</td></tr>
-<tr class="memdesc:a3f68cc9b72b0dfce042cde9bc333271f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from ID. <br/></td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>IDataSet</b> (const hid_t id)</td></tr>
 <tr class="separator:a3f68cc9b72b0dfce042cde9bc333271f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34866e34d337ad79d7eb266569c263f2"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a34866e34d337ad79d7eb266569c263f2">getAttrs</a> ()</td></tr>
 <tr class="memdesc:a34866e34d337ad79d7eb266569c263f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a list of attributes attached to dataset.  <a href="#a34866e34d337ad79d7eb266569c263f2">More...</a><br/></td></tr>
@@ -273,9 +267,6 @@ H5::DataSpace&#160;</td><td class="memItemRight" valign="bottom"><a class="el" h
 <tr class="memitem:a2e69f2d6be9554846dc9aabe885dbbba"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a2e69f2d6be9554846dc9aabe885dbbba">createAttribute</a> (const std::string &amp;name, const T &amp;data)</td></tr>
 <tr class="memdesc:a2e69f2d6be9554846dc9aabe885dbbba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a scalar as an attribute.  <a href="#a2e69f2d6be9554846dc9aabe885dbbba">More...</a><br/></td></tr>
 <tr class="separator:a2e69f2d6be9554846dc9aabe885dbbba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa6d7f34382ef00cad69dd778dc22656c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#aa6d7f34382ef00cad69dd778dc22656c">createAttribute</a> (const std::string &amp;name, const std::string &amp;data)</td></tr>
-<tr class="memdesc:aa6d7f34382ef00cad69dd778dc22656c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a string attribute.  <a href="#aa6d7f34382ef00cad69dd778dc22656c">More...</a><br/></td></tr>
-<tr class="separator:aa6d7f34382ef00cad69dd778dc22656c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2378690126f2b303e9f75ea83cb861b3"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a2378690126f2b303e9f75ea83cb861b3"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a2378690126f2b303e9f75ea83cb861b3">createAttribute</a> (const std::string &amp;name, const std::vector&lt; T &gt; &amp;values)</td></tr>
 <tr class="memdesc:a2378690126f2b303e9f75ea83cb861b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating and writing a std::vector data as a 1D-array attribute.  <a href="#a2378690126f2b303e9f75ea83cb861b3">More...</a><br/></td></tr>
@@ -312,6 +303,15 @@ H5::DataSpace&#160;</td><td class="memItemRight" valign="bottom"><a class="el" h
 H5::DataSpace&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#adf1cede01f33b5137b0c3fa7acf94383">getDataSpace</a> (const size_t xidx, const size_t yidx, const size_t iowidth, const size_t iolength, const size_t band)</td></tr>
 <tr class="memdesc:adf1cede01f33b5137b0c3fa7acf94383"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get DataSpace with a GDAL RasterIO-like interface. <br/></td></tr>
 <tr class="separator:adf1cede01f33b5137b0c3fa7acf94383"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ee874f73b0d040ee53f01dea375aeb6"><td class="memTemplParams" colspan="2">template&lt;&gt; </td></tr>
+<tr class="memitem:a7ee874f73b0d040ee53f01dea375aeb6"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a7ee874f73b0d040ee53f01dea375aeb6">write</a> (const std::string *buf, const H5::DataSpace &amp;dspace)</td></tr>
+<tr class="separator:a7ee874f73b0d040ee53f01dea375aeb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abce0836dbc27e63eda15b2dc9d2e5746"><td class="memTemplParams" colspan="2">template&lt;&gt; </td></tr>
+<tr class="memitem:abce0836dbc27e63eda15b2dc9d2e5746"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#abce0836dbc27e63eda15b2dc9d2e5746">createAttribute</a> (const std::string &amp;name, const H5::DataType &amp;datatype, const H5::DataSpace &amp;dataspace, const std::string *buffer)</td></tr>
+<tr class="separator:abce0836dbc27e63eda15b2dc9d2e5746"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25a3f00ed9e17f37b399f7e6dd343a85"><td class="memTemplParams" colspan="2">template&lt;&gt; </td></tr>
+<tr class="memitem:a25a3f00ed9e17f37b399f7e6dd343a85"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1IDataSet.html#a25a3f00ed9e17f37b399f7e6dd343a85">createAttribute</a> (const std::string &amp;name, const std::string &amp;data)</td></tr>
+<tr class="separator:a25a3f00ed9e17f37b399f7e6dd343a85"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Our derived dataset structure that includes utility functions. </p>
@@ -355,49 +355,6 @@ template&lt;typename T &gt; </div>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>Reference to scalar attribute value </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="aa6d7f34382ef00cad69dd778dc22656c"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void isce::io::IDataSet::createAttribute </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>name</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>data</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Creating and writing a string attribute. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>String scalar attribute </td></tr>
   </table>
   </dd>
 </dl>
@@ -646,6 +603,96 @@ template&lt;typename T , typename T2 , size_t S&gt; </div>
     <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">dims</td><td>Array containing the size of each dimension of the attribute </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>Raw pointer buffer to attribute data to write </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="abce0836dbc27e63eda15b2dc9d2e5746"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::createAttribute </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const H5::DataType &amp;&#160;</td>
+          <td class="paramname"><em>datatype</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const H5::DataSpace &amp;&#160;</td>
+          <td class="paramname"><em>dataspace</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string *&#160;</td>
+          <td class="paramname"><em>buffer</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the dataset attribute to create </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">datatype</td><td>H5 data type of the attribute </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dataspace</td><td>H5 data space of the attribute </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>of std::string values to write </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a25a3f00ed9e17f37b399f7e6dd343a85"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::createAttribute </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">name</td><td>Name of the attribute to create </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>String scalar attribute </td></tr>
   </table>
   </dd>
 </dl>
@@ -1052,19 +1099,19 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const int *&#160;</td>
-          <td class="paramname"><em>startIn</em> = <code>nullptr</code>, </td>
+          <td class="paramname"><em>start</em> = <code>nullptr</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const int *&#160;</td>
-          <td class="paramname"><em>countIn</em> = <code>nullptr</code>, </td>
+          <td class="paramname"><em>count</em> = <code>nullptr</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const int *&#160;</td>
-          <td class="paramname"><em>strideIn</em> = <code>nullptr</code>&#160;</td>
+          <td class="paramname"><em>stride</em> = <code>nullptr</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1082,17 +1129,17 @@ template&lt;typename T &gt; </div>
 <p>Reading multi-dimensional dataset in raw pointer. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">startIn</td><td>Raw pointer to array containing the read start location in each dimension. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">countIn</td><td>Raw pointer to array containing the number of elements to read in each dimension. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">strideIn</td><td>Raw pointer to array containing the reading stride in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">start</td><td>Raw pointer to array containing the read start location in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">count</td><td>Raw pointer to array containing the number of elements to read in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stride</td><td>Raw pointer to array containing the reading stride in each dimension. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">buffer</td><td>Raw pointer to array that will received the read data.</td></tr>
   </table>
   </dd>
 </dl>
-<p>buffer has to be adequately allocated by caller. startIn, countIn, strideIn must have a number of elements equals to the rank of the dataset. If startIn is nullptr, reading start location in each dimension is 0. If countIn is nullptr, full number of element in each dimension is read. If strideIn is nullptr, stride defaults to 1 in each dimension.</p>
+<p>buffer has to be adequately allocated by caller. start, count, stride must have a number of elements equals to the rank of the dataset. If start is nullptr, reading start location in each dimension is 0. If count is nullptr, full number of element in each dimension is read. If stride is nullptr, stride defaults to 1 in each dimension.</p>
 <p>Examples: Dataset contains a 3-bands raster. Dimensions are (100,100,3).</p>
-<p>To retrieve the full second band: startIn=[0,0,1], countIn=[100,100,1], strideIn=nullptr or [1,1,1].</p>
-<p>To retrieve the first band, but only every other elements in X direction: startIn=[0,0,0], countIn=[50,100,1], strideIn=[2,1,1]. </p>
+<p>To retrieve the full second band: start=[0,0,1], count=[100,100,1], stride=nullptr or [1,1,1].</p>
+<p>To retrieve the first band, but only every other elements in X direction: start=[0,0,0], count=[50,100,1], stride=[2,1,1]. </p>
 
 </div>
 </div>
@@ -1115,7 +1162,7 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; std::slice &gt; *&#160;</td>
-          <td class="paramname"><em>slicesIn</em>&#160;</td>
+          <td class="paramname"><em>slices</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1133,7 +1180,7 @@ template&lt;typename T &gt; </div>
 <p>Reading multi-dimensional dataset in raw pointer with std:slice subsetting. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">sliceIn</td><td>Vector containing an std::slice for each dimension of the dataset </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">slices</td><td>Vector containing an std::slice for each dimension of the dataset </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">buffer</td><td>Raw pointer to array that will received the read data.</td></tr>
   </table>
   </dd>
@@ -1242,19 +1289,19 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; int &gt; *&#160;</td>
-          <td class="paramname"><em>startIn</em>, </td>
+          <td class="paramname"><em>start</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; int &gt; *&#160;</td>
-          <td class="paramname"><em>countIn</em>, </td>
+          <td class="paramname"><em>count</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; int &gt; *&#160;</td>
-          <td class="paramname"><em>strideIn</em>&#160;</td>
+          <td class="paramname"><em>stride</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1272,15 +1319,15 @@ template&lt;typename T &gt; </div>
 <p>Reading multi-dimensional dataset in vector. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">startIn</td><td>std::vector containing the read start location in each dimension. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">countIn</td><td>std::vector containing the number of elements to read in each dimension. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">strideIn</td><td>std::vector containing the reading stride in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">start</td><td>std::vector containing the read start location in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">count</td><td>std::vector containing the number of elements to read in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stride</td><td>std::vector containing the reading stride in each dimension. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">buffer</td><td>std::vector that will received the read data.</td></tr>
   </table>
   </dd>
 </dl>
-<p>If the output container is undersized compared to the data to read the function will size it accordingly. If the container is larger than the data to be read, its size is unchanged. In both case the data read is stored at the beginning of the container.</p>
-<p>startIn, countIn, strideIn must have a number of elements equals to the rank of the dataset. If startIn is nullptr, reading start location in each dimension is 0. If countIn is nullptr, full number of element in each dimension is read. If strideIn is nullptr, stride defaults to 1 in each dimension. </p>
+<p>If the output container is undersized compared to the data to read the function will size it accordingly. If the container is larger than the data to be read, its size is unchanged. both case the data read is stored at the beginning of the container.</p>
+<p>start, count, stride must have a number of elements equals to the rank of the dataset. If start is nullptr, reading start location in each dimension is 0. If count is nullptr, full number of element in each dimension is read. If stride is nullptr, stride defaults to 1 in each dimension. </p>
 
 </div>
 </div>
@@ -1303,7 +1350,7 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; std::slice &gt; *&#160;</td>
-          <td class="paramname"><em>slicesIn</em>&#160;</td>
+          <td class="paramname"><em>slices</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1321,7 +1368,7 @@ template&lt;typename T &gt; </div>
 <p>Reading multi-dimensional dataset in vector with std:slice subsetting. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">sliceIn</td><td>Vector containing an std::slice for each dimension of the dataset </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">slices</td><td>Vector containing an std::slice for each dimension of the dataset </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">buffer</td><td>std::vector that will receive the read data.</td></tr>
   </table>
   </dd>
@@ -1430,19 +1477,19 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::valarray&lt; int &gt; *&#160;</td>
-          <td class="paramname"><em>startIn</em>, </td>
+          <td class="paramname"><em>start</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::valarray&lt; int &gt; *&#160;</td>
-          <td class="paramname"><em>countIn</em>, </td>
+          <td class="paramname"><em>count</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::valarray&lt; int &gt; *&#160;</td>
-          <td class="paramname"><em>strideIn</em>&#160;</td>
+          <td class="paramname"><em>stride</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1641,19 +1688,19 @@ template&lt;typename T , size_t S&gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::array&lt; int, S &gt; &amp;&#160;</td>
-          <td class="paramname"><em>startIn</em>, </td>
+          <td class="paramname"><em>start</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::array&lt; int, S &gt; &amp;&#160;</td>
-          <td class="paramname"><em>countIn</em>, </td>
+          <td class="paramname"><em>count</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::array&lt; int, S &gt; &amp;&#160;</td>
-          <td class="paramname"><em>strideIn</em>&#160;</td>
+          <td class="paramname"><em>stride</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1672,9 +1719,9 @@ template&lt;typename T , size_t S&gt; </div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">buf</td><td>std::vector of data to write to dataset. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">startIn</td><td>std::array containing the write start location in each dimension. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">countIn</td><td>std::array containing the number of elements to write in each dimension. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">strideIn</td><td>std::array containing the writing stride in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">start</td><td>std::array containing the write start location in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">count</td><td>std::array containing the number of elements to write in each dimension. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">stride</td><td>std::array containing the writing stride in each dimension. </td></tr>
   </table>
   </dd>
 </dl>
@@ -2147,6 +2194,39 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 <p>It the responsability of the caller to make sure that the size of the buffer inferred from the startIn/countIn/strideIn matches the actual size of the buffer. </p>
+
+</div>
+</div>
+<a class="anchor" id="a7ee874f73b0d040ee53f01dea375aeb6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void isce::io::IDataSet::write </td>
+          <td>(</td>
+          <td class="paramtype">const std::string *&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const H5::DataSpace &amp;&#160;</td>
+          <td class="paramname"><em>dspace</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pointer</td><td>to std::string buffer to write to dataset. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">DataSpace</td><td>object for locating where to write the data in the dataset. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
