@@ -2,7 +2,10 @@
 #error "FFT.icc is an implementation detail of FFT.h"
 #endif
 
+#include <algorithm>
+
 #include "detail/ConfigureFFTLayout.h"
+#include "detail/Threads.h"
 
 namespace isce { namespace fft {
 
@@ -26,8 +29,8 @@ FwdFFTPlan<T> planfft1d(std::complex<T> * out, std::complex<T> * in, const int (
 {
     int n, stride, dist, batch;
     detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
-
-    return FwdFFTPlan<T>(out, in, n, n, stride, dist, batch);
+    int threads = std::min(batch, detail::getMaxThreads());
+    return FwdFFTPlan<T>(out, in, n, n, stride, dist, batch, FFTW_MEASURE, threads);
 }
 
 template<typename T>
@@ -36,22 +39,22 @@ FwdFFTPlan<T> planfft1d(std::complex<T> * out, T * in, const int (&dims)[2], int
 {
     int n, stride, dist, batch;
     detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
-
-    return FwdFFTPlan<T>(out, in, n, n, stride, dist, batch);
+    int threads = std::min(batch, detail::getMaxThreads());
+    return FwdFFTPlan<T>(out, in, n, n, stride, dist, batch, FFTW_MEASURE, threads);
 }
 
 template<typename T>
 inline
 FwdFFTPlan<T> planfft2d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2])
 {
-    return FwdFFTPlan<T>(out, in, dims);
+    return FwdFFTPlan<T>(out, in, dims, 1, FFTW_MEASURE, detail::getMaxThreads());
 }
 
 template<typename T>
 inline
 FwdFFTPlan<T> planfft2d(std::complex<T> * out, T * in, const int (&dims)[2])
 {
-    return FwdFFTPlan<T>(out, in, dims);
+    return FwdFFTPlan<T>(out, in, dims, 1, FFTW_MEASURE, detail::getMaxThreads());
 }
 
 template<typename T>
@@ -74,8 +77,8 @@ InvFFTPlan<T> planifft1d(std::complex<T> * out, std::complex<T> * in, const int 
 {
     int n, stride, dist, batch;
     detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
-
-    return InvFFTPlan<T>(out, in, n, n, stride, dist, batch);
+    int threads = std::min(batch, detail::getMaxThreads());
+    return InvFFTPlan<T>(out, in, n, n, stride, dist, batch, FFTW_MEASURE, threads);
 }
 
 template<typename T>
@@ -84,22 +87,22 @@ InvFFTPlan<T> planifft1d(T * out, std::complex<T> * in, const int (&dims)[2], in
 {
     int n, stride, dist, batch;
     detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
-
-    return InvFFTPlan<T>(out, in, n, n, stride, dist, batch);
+    int threads = std::min(batch, detail::getMaxThreads());
+    return InvFFTPlan<T>(out, in, n, n, stride, dist, batch, FFTW_MEASURE, threads);
 }
 
 template<typename T>
 inline
 InvFFTPlan<T> planifft2d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2])
 {
-    return InvFFTPlan<T>(out, in, dims);
+    return InvFFTPlan<T>(out, in, dims, FFTW_MEASURE, detail::getMaxThreads());
 }
 
 template<typename T>
 inline
 InvFFTPlan<T> planifft2d(T * out, std::complex<T> * in, const int (&dims)[2])
 {
-    return InvFFTPlan<T>(out, in, dims);
+    return InvFFTPlan<T>(out, in, dims, FFTW_MEASURE, detail::getMaxThreads());
 }
 
 template<typename T>
@@ -124,8 +127,8 @@ void fft1d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2], in
 {
     int n, stride, dist, batch;
     detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
-
-    FwdFFTPlan<T> plan(out, in, n, n, stride, dist, batch, FFTW_ESTIMATE);
+    int threads = std::min(batch, detail::getMaxThreads());
+    FwdFFTPlan<T> plan(out, in, n, n, stride, dist, batch, FFTW_ESTIMATE, threads);
     plan.execute();
 }
 
@@ -135,8 +138,8 @@ void fft1d(std::complex<T> * out, T * in, const int (&dims)[2], int axis)
 {
     int n, stride, dist, batch;
     detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
-
-    FwdFFTPlan<T> plan(out, in, n, n, stride, dist, batch, FFTW_ESTIMATE);
+    int threads = std::min(batch, detail::getMaxThreads());
+    FwdFFTPlan<T> plan(out, in, n, n, stride, dist, batch, FFTW_ESTIMATE, threads);
     plan.execute();
 }
 
@@ -144,7 +147,7 @@ template<typename T>
 inline
 void fft2d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2])
 {
-    FwdFFTPlan<T> plan(out, in, dims, 1, FFTW_ESTIMATE);
+    FwdFFTPlan<T> plan(out, in, dims, 1, FFTW_ESTIMATE, detail::getMaxThreads());
     plan.execute();
 }
 
@@ -152,7 +155,7 @@ template<typename T>
 inline
 void fft2d(std::complex<T> * out, T * in, const int (&dims)[2])
 {
-    FwdFFTPlan<T> plan(out, in, dims, 1, FFTW_ESTIMATE);
+    FwdFFTPlan<T> plan(out, in, dims, 1, FFTW_ESTIMATE, detail::getMaxThreads());
     plan.execute();
 }
 
@@ -178,8 +181,8 @@ void ifft1d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2], i
 {
     int n, stride, dist, batch;
     detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
-
-    InvFFTPlan<T> plan(out, in, n, n, stride, dist, batch, FFTW_ESTIMATE);
+    int threads = std::min(batch, detail::getMaxThreads());
+    InvFFTPlan<T> plan(out, in, n, n, stride, dist, batch, FFTW_ESTIMATE, threads);
     plan.execute();
 }
 
@@ -189,8 +192,8 @@ void ifft1d(T * out, std::complex<T> * in, const int (&dims)[2], int axis)
 {
     int n, stride, dist, batch;
     detail::configureFFTLayout(&n, &stride, &dist, &batch, dims, axis);
-
-    InvFFTPlan<T> plan(out, in, n, n, stride, dist, batch, FFTW_ESTIMATE);
+    int threads = std::min(batch, detail::getMaxThreads());
+    InvFFTPlan<T> plan(out, in, n, n, stride, dist, batch, FFTW_ESTIMATE, threads);
     plan.execute();
 }
 
@@ -198,7 +201,7 @@ template<typename T>
 inline
 void ifft2d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2])
 {
-    InvFFTPlan<T> plan(out, in, dims, 1, FFTW_ESTIMATE);
+    InvFFTPlan<T> plan(out, in, dims, 1, FFTW_ESTIMATE, detail::getMaxThreads());
     plan.execute();
 }
 
@@ -206,7 +209,7 @@ template<typename T>
 inline
 void ifft2d(T * out, std::complex<T> * in, const int (&dims)[2])
 {
-    InvFFTPlan<T> plan(out, in, dims, 1, FFTW_ESTIMATE);
+    InvFFTPlan<T> plan(out, in, dims, 1, FFTW_ESTIMATE, detail::getMaxThreads());
     plan.execute();
 }
 

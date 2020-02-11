@@ -49,6 +49,7 @@ fft/detail/ConfigureFFTLayout.h
 fft/detail/FFTPlanBase.h
 fft/detail/FFTPlanBase.icc
 fft/detail/FFTWWrapper.h
+fft/detail/Threads.h
 fft/FFT.h
 fft/FFT.icc
 fft/FFTPlan.h
