@@ -95,14 +95,14 @@ template<typename T>
 inline
 InvFFTPlan<T> planifft2d(std::complex<T> * out, std::complex<T> * in, const int (&dims)[2])
 {
-    return InvFFTPlan<T>(out, in, dims, FFTW_MEASURE, detail::getMaxThreads());
+    return InvFFTPlan<T>(out, in, dims, 1, FFTW_MEASURE, detail::getMaxThreads());
 }
 
 template<typename T>
 inline
 InvFFTPlan<T> planifft2d(T * out, std::complex<T> * in, const int (&dims)[2])
 {
-    return InvFFTPlan<T>(out, in, dims, FFTW_MEASURE, detail::getMaxThreads());
+    return InvFFTPlan<T>(out, in, dims, 1, FFTW_MEASURE, detail::getMaxThreads());
 }
 
 template<typename T>
