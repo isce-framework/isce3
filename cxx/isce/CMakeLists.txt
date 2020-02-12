@@ -9,7 +9,6 @@ target_link_libraries(${LISCE} PUBLIC
     Eigen::Eigen
     ${GDAL_LIBRARY}
     ${HDF5_LIBRARY}
-    OpenMP::OpenMP_CXX_Optional
     pyre
     FFTW::Float
     FFTW::Double
@@ -17,8 +16,13 @@ target_link_libraries(${LISCE} PUBLIC
     FFTW::DoubleThreads
     )
 
+target_link_libraries(${LISCE} PRIVATE
+    OpenMP::OpenMP_CXX_Optional
+    )
+
 target_include_directories(${LISCE} PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}/..
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/..>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
     ${GDAL_INCLUDE_DIR}
     ${HDF5_INCLUDE_DIR}
     )
@@ -32,6 +36,7 @@ foreach(HEADER ${HEADERS})
 endforeach()
 
 # Install shared library
-install(TARGETS ${LISCE}
+install(TARGETS ${LISCE} cereal eigen pyre journal
+        EXPORT isce3-targets
         DESTINATION ${ISCE_LIBDIR}
         COMPONENT isce_libs)

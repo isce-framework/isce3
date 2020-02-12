@@ -64,7 +64,7 @@ function(pyre_pyreLib)
   # set the include directories
   target_include_directories(
     pyre PUBLIC
-    ${CMAKE_CURRENT_BINARY_DIR}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
     )
   # add the sources
   target_sources(pyre
