@@ -5,7 +5,6 @@ add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/testdata.h)
 include(isce/Sources.cmake)
 list(TRANSFORM TESTFILES PREPEND isce/)
 
-set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
 set(LIBS ${LISCE})
 
 if(WITH_CUDA)
