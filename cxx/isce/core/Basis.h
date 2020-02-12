@@ -26,7 +26,7 @@ class isce::core::Basis {
 
         /** Geocentric TCN constructor
          * @param[in] p position vector
-         * @param[in] v position vector */
+         * @param[in] v velocity vector */
         CUDA_HOSTDEV explicit Basis(const Vec3& p, const Vec3& v) {
             const Vec3 n =         -p.normalized();
             const Vec3 c = n.cross(v).normalized();

@@ -85,7 +85,7 @@ inline void isce::signal::Covariance<T>::radarGrid(
         isce::core::LUT2d<double> doppler, isce::core::DateTime refEpoch,
         double azimuthStartTime, double azimuthTimeInterval,
         int radarGridLength, double startingRange, double rangeSpacing,
-        int side, double wavelength, int radarGridWidth)
+        isce::core::LookSide side, double wavelength, int radarGridWidth)
 {
     _doppler = doppler;
     _radarGrid = isce::product::RadarGridParameters(

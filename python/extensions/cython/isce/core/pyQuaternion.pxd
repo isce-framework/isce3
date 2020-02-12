@@ -8,7 +8,6 @@ from libcpp cimport bool
 from Quaternion cimport Quaternion
 
 cdef class pyQuaternion:
-    cdef Quaternion * c_quaternion
-    cdef bool __owner
+    cdef Quaternion c_quaternion
 
 # end of file

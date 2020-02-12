@@ -6,6 +6,7 @@
 
 from libcpp cimport bool
 from Geocode cimport Geocode
+from LookSide cimport LookSide
 
 cdef class pyGeocodeBase:
 
@@ -31,7 +32,7 @@ cdef class pyGeocodeBase:
     cdef double rangeSpacing
     cdef double wavelength
     cdef int radarGridWidth
-    cdef int lookSide
+    cdef LookSide lookSide
 
     # Geographic grid parameters
     cdef double geoGridStartX

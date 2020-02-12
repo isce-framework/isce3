@@ -150,7 +150,7 @@ void isce::geometry::facetRTC(const isce::product::RadarGridParameters& radar_gr
 
     const isce::core::ProjectionBase* proj = isce::core::createProj(dem_interp.epsgCode());
 
-    int side = radar_grid.lookSide();
+    auto side = radar_grid.lookSide();
 
     // Loop over DEM facets
     #pragma omp parallel for schedule(dynamic)

@@ -14,6 +14,7 @@ def pyStringToBytes(s):
         raise ValueError('Input Python string not str or bytes')
 
 include "except/pyError.pyx"
+include "core/forward.pyx"
 
 # Include the io extensions
 include "io/pyGDAL.pyx"
@@ -21,6 +22,7 @@ include "io/pyRaster.pyx"
 include "io/pyIH5.pyx"
 
 # Include the core extensions
+include "core/pyLookSide.pyx"
 include "core/pyTimeDelta.pyx"
 include "core/pyDateTime.pyx"
 include "core/pyEulerAngles.pyx"

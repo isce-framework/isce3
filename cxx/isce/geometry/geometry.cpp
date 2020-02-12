@@ -18,17 +18,19 @@
 #include <isce/core/Poly2d.h>
 #include <isce/core/Vector.h>
 #include <isce/geometry/DEMInterpolator.h>
+#include <isce/core/LookSide.h>
 #include <isce/product/RadarGridParameters.h>
 #include <pyre/journal.h>
 
 // pull in useful isce::core namespace
 using namespace isce::core;
 using isce::product::RadarGridParameters;
+using isce::core::LookSide;
 
 int isce::geometry::
 rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp, Vec3 & targetLLH,
-        double wvl, int side, double threshold, int maxIter, int extraIter)
+        double wvl, LookSide side, double threshold, int maxIter, int extraIter)
 {
     // Interpolate Orbit to azimuth time, compute TCN basis, and estimate geographic
     // coordinates.
@@ -67,7 +69,7 @@ rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
 int isce::geometry::
 rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3& vel,
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp,
-        Vec3 & targetLLH, int side, double threshold, int maxIter, int extraIter)
+        Vec3 & targetLLH, LookSide side, double threshold, int maxIter, int extraIter)
 {
     // Assume orbit has been interpolated to correct azimuth time, then estimate geographic
     // coordinates.
@@ -120,9 +122,12 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
         // Compute TCN scale factors
         const double gamma = pixel.range() * costheta;
         const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
-        const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
-                                            * std::pow(sintheta, 2)
-                                            - std::pow(alpha, 2));
+        double beta = std::sqrt(
+            std::pow(pixel.range() * sintheta, 2) - std::pow(alpha, 2));
+        if (side == LookSide::Left) {
+            beta = -beta;
+        }
+
 
         // Compute vector from satellite to ground
         const Vec3 delta = alpha * that + beta * chat + gamma * nhat;
@@ -170,9 +175,11 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
     // Compute TCN scale factors
     const double gamma = pixel.range() * costheta;
     const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
-    const double beta = -side * std::sqrt(std::pow(pixel.range(), 2)
-                                        * std::pow(sintheta, 2)
-                                        - std::pow(alpha, 2));
+    double beta = std::sqrt(
+        std::pow(pixel.range() * sintheta, 2) - std::pow(alpha, 2));
+    if (side == LookSide::Left) {
+        beta = -beta;
+    }
 
     // Compute vector from satellite to ground
     const Vec3 delta = alpha * that + beta * chat + gamma * nhat;
@@ -214,7 +221,7 @@ double isce::geometry::
 int isce::geometry::
 _update_aztime(const Orbit & orbit,
                Vec3 satpos, Vec3 satvel, Vec3 inputXYZ,
-               int side, double & aztime, double & slantRange,
+               LookSide side, double & aztime, double & slantRange,
                double rangeMin, double rangeMax) {
 
     Vec3 dr;
@@ -245,8 +252,12 @@ _update_aztime(const Orbit & orbit,
         dr = inputXYZ - satpos;
 
         // Check look side (only first time)
-        if (k == 0 && dr.cross(satvel).dot(satpos)*side > 0)
-            return error; // wrong look side
+        if (k == 0) {
+            // (Left && positive) || (Right && negative)
+            if ((side == LookSide::Right) ^ (dr.cross(satvel).dot(satpos) > 0)) {
+                return error; // wrong look side
+            }
+        }
 
         slantRange = dr.norm();
         // Check validity
@@ -275,10 +286,8 @@ int isce::geometry::
 geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const Poly2d & doppler, double & aztime, double & slantRange,
         double wavelength, double startingRange, double rangePixelSpacing, size_t rwidth,
-        int side, double threshold, int maxIter, double deltaRange)
+        LookSide side, double threshold, int maxIter, double deltaRange)
 {
-
-    assert( side == 1 || side == -1 );
 
     Vec3 satpos, satvel, inputXYZ, dr;
 
@@ -309,8 +318,12 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         dr = inputXYZ - satpos;
 
         // Check look side (only first time)
-        if (i == 0 && dr.cross(satvel).dot(satpos)*side > 0)
-            return !converged; // wrong look side
+        if (i == 0) {
+            // (Left && positive) || (Right && negative)
+            if ((side == LookSide::Right) ^ (dr.cross(satvel).dot(satpos) > 0)) {
+                return !converged; // wrong look side
+            }
+        }
 
         slantRange = dr.norm();
         // Check convergence
@@ -334,10 +347,8 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
 int isce::geometry::
 geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const LUT2d<double> & doppler, double & aztime, double & slantRange,
-        double wavelength, int side, double threshold, int maxIter,
+        double wavelength, LookSide side, double threshold, int maxIter,
         double deltaRange) {
-
-    assert( side == 1 || side == -1 );
 
     Vec3 satpos, satvel, inputXYZ;
 
@@ -363,9 +374,13 @@ geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const Vec3 dr = inputXYZ - satpos;
         slantRange = dr.norm();
 
-        // Check look side
-        if (i == 0 && dr.cross(satvel).dot(satpos)*side > 0)
-            return !converged;
+        // Check look side (only first time)
+        if (i == 0) {
+            // (Left && positive) || (Right && negative)
+            if ((side == LookSide::Right) ^ (dr.cross(satvel).dot(satpos) > 0)) {
+                return !converged; // wrong look side
+            }
+        }
 
         // Check convergence
         if (std::abs(slantRange - slantRange_old) < threshold)
@@ -389,7 +404,7 @@ void isce::geometry::
 computeDEMBounds(const Orbit & orbit,
                  const Ellipsoid & ellipsoid,
                  const LUT2d<double> & doppler,
-                 int lookSide,
+                 isce::core::LookSide lookSide,
                  const RadarGridParameters & radarGrid,
                  size_t xoff,
                  size_t yoff,

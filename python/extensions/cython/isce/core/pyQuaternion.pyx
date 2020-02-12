@@ -9,7 +9,7 @@ from libcpp.string cimport string
 from libcpp cimport bool
 
 from Cartesian cimport cartesian_t, cartmat_t
-from Quaternion cimport Quaternion
+from Quaternion cimport Quaternion, saveQuaternionToH5, loadQuaternionFromH5
 import numpy as np
 cimport numpy as np
 
@@ -21,8 +21,7 @@ cdef class pyQuaternion:
         q (list or np.array(4)): List of quaternions.
     '''
 
-    cdef Quaternion * c_quaternion
-    cdef bool __owner
+    cdef Quaternion c_quaternion
 
     def __cinit__(self,
                   np.ndarray[np.float64_t, ndim=1] time,
@@ -40,12 +39,7 @@ cdef class pyQuaternion:
                 vquat[i*4+j] = quaternions[i,j]
 
         # Create Quaternion object
-        self.c_quaternion = new Quaternion(vtime, vquat)
-        self.__owner = True
-
-    def __dealloc__(self):
-        if self.__owner:
-            del self.c_quaternion
+        self.c_quaternion = Quaternion(vtime, vquat)
 
     def ypr(self, double t):
         '''
@@ -93,5 +87,20 @@ cdef class pyQuaternion:
                  Rview[ii][jj] = Rvec[ii][jj]
 
         return R
+
+    def saveToH5(self, group):
+        cdef hid_t groupid = group.id.id
+        cdef IGroup c_igroup = IGroup(groupid)
+        saveQuaternionToH5(c_igroup, self.c_quaternion)
+
+    @classmethod
+    def loadFromH5(cls, group):
+        cdef hid_t groupid = group.id.id
+        cdef IGroup c_igroup = IGroup(groupid)
+        t = np.zeros(1)
+        q = np.zeros(4)
+        pq = pyQuaternion(t, q)
+        loadQuaternionFromH5(c_igroup, pq.c_quaternion)
+        return pq
     
 # end of file

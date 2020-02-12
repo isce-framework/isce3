@@ -164,7 +164,7 @@ public:
      * direction
      * @param[in] startingRange starting slant range of the radar grid
      * @param[in] rangeSpacing range spacing
-     * @param[in] side +1 for left and -1 for right
+     * @param[in] side Left or Right
      * @param[in] wavelength Radar wavelength
      * @param[in] radarGridWidth number of pixels of the radar grid in range
      * direction
@@ -172,7 +172,8 @@ public:
     void radarGrid(isce::core::LUT2d<double> doppler,
                    isce::core::DateTime refEpoch, double azimuthStartTime,
                    double azimuthTimeInterval, int radarGridLength,
-                   double startingRange, double rangeSpacing, int side,
+                   double startingRange, double rangeSpacing,
+                   isce::core::LookSide side,
                    double wavelength, int radarGridWidth);
 
     /** Set number of looks in range direction for covariance estimation */

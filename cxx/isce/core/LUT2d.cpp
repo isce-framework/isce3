@@ -119,20 +119,18 @@ eval(double y, double x) const {
     double y_idx = (y - _ystart) / _dy;
 
     // Check bounds or clamp indices to valid values
-    if (_boundsError) {
-        if (x_idx < 0.0 || y_idx < 0.0 || x_idx >= _data.width() || y_idx >= _data.length()) {
-            pyre::journal::error_t errorChannel("isce.core.LUT2d");
-            errorChannel 
-                << "Out of bounds LUT2d evaluation at " << y << " " << x
-                << pyre::journal::newline
-                << " - bounds are " << _ystart << " " << _ystart + _dy*_data.length() << " "
-                << _xstart << " " << _xstart + _dx*_data.width()
-                << pyre::journal::endl;
-        }
-    } else {
-        x_idx = isce::core::clamp(x_idx, 0.0, _data.width() - 1.0);
-        y_idx = isce::core::clamp(y_idx, 0.0, _data.length() - 1.0);
-    } 
+    if (_boundsError && (x_idx < 0.0 || y_idx < 0.0
+            || x_idx >= _data.width() || y_idx >= _data.length())) {
+        pyre::journal::error_t errorChannel("isce.core.LUT2d");
+        errorChannel
+            << "Out of bounds LUT2d evaluation at " << y << " " << x
+            << pyre::journal::newline
+            << " - bounds are " << _ystart << " " << _ystart + _dy*_data.length() << " "
+            << _xstart << " " << _xstart + _dx*_data.width()
+            << pyre::journal::endl;
+    }
+    x_idx = isce::core::clamp(x_idx, 0.0, _data.width() - 1.0);
+    y_idx = isce::core::clamp(y_idx, 0.0, _data.length() - 1.0);
 
     // Call interpolator
     value = _interp->interpolate(x_idx, y_idx, _data);

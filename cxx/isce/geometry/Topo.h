@@ -151,7 +151,7 @@ public:
     // Get topo processing options
 
     /** Get lookSide used for processing */
-    int lookSide() const { return _lookSide; }
+    isce::core::LookSide lookSide() const { return _lookSide; }
 
     /** Get distance convergence threshold used for processing */
     double threshold() const { return _threshold; }
@@ -332,7 +332,7 @@ private:
     size_t _linesPerBlock = 1000; //Block size for processing
     bool _computeMask = true;     //Flag for generating shadow-layover mask
 
-    int _lookSide;
+    isce::core::LookSide _lookSide;
 
     isce::core::dataInterpMethod _demMethod;
 

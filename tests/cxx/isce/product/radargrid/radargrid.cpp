@@ -10,7 +10,10 @@
 #include <gtest/gtest.h>
 
 // isce::product
+#include <isce/core/LookSide.h>
 #include <isce/product/RadarGridParameters.h>
+
+using isce::core::LookSide;
 
 TEST(RadarGridTest, fromProduct) {
 
@@ -25,7 +28,7 @@ TEST(RadarGridTest, fromProduct) {
     isce::product::RadarGridParameters grid(product);
 
     // Check its values
-    ASSERT_EQ(grid.lookSide(), -1);
+    ASSERT_EQ(grid.lookSide(), LookSide::Right);
     ASSERT_NEAR(grid.startingRange(), 826988.6900674499, 1.0e-5);
     ASSERT_NEAR(grid.sensingStart(), 237330.843491759, 1.0e-5);
     ASSERT_NEAR(grid.wavelength(), isce::core::SPEED_OF_LIGHT/5.331004416e9, 1.0e-5);
@@ -46,10 +49,10 @@ TEST(RadarGridTest, fromSwath) {
     const isce::product::Swath &swath = product.swath('A');
 
     //Create radar grid from product
-    isce::product::RadarGridParameters grid(swath, -1);
+    isce::product::RadarGridParameters grid(swath, LookSide::Right);
 
     // Check its values
-    ASSERT_EQ(grid.lookSide(), -1);
+    ASSERT_EQ(grid.lookSide(), LookSide::Right);
     ASSERT_NEAR(grid.startingRange(), 826988.6900674499, 1.0e-5);
     ASSERT_NEAR(grid.sensingStart(), 237330.843491759, 1.0e-5);
     ASSERT_NEAR(grid.wavelength(), isce::core::SPEED_OF_LIGHT/5.331004416e9, 1.0e-5);
@@ -64,11 +67,11 @@ TEST(RadarGridTest, fromParametersSingeLook) {
     //Create radar grid from product
     isce::product::RadarGridParameters grid(10.0,
                                            0.06, 1729.0, 800000.,
-                                           10.0, 1, 24000, 6400,
+                                           10.0, LookSide::Left, 24000, 6400,
                                            t0);
 
     // Check its values
-    ASSERT_EQ(grid.lookSide(), 1);
+    ASSERT_EQ(grid.lookSide(), LookSide::Left);
     ASSERT_NEAR(grid.startingRange(), 800000., 1.0e-10);
     ASSERT_NEAR(grid.sensingStart(), 10.0, 1.0e-10);
     ASSERT_NEAR(grid.wavelength(), 0.06, 1.0e-10);
@@ -87,14 +90,14 @@ TEST(RadarGridTest, fromParametersMultiLook) {
     //Create radar grid from product
     isce::product::RadarGridParameters grid(10.0,
                                            0.06, 1729.0, 800000.,
-                                           10.0, 1, 8000, 1600,
+                                           10.0, LookSide::Left, 8000, 1600,
                                            t0);
 
     //Multilook
     isce::product::RadarGridParameters mlgrid = grid.multilook(3, 4);
 
     // Check its values
-    ASSERT_EQ(mlgrid.lookSide(), 1);
+    ASSERT_EQ(mlgrid.lookSide(), LookSide::Left);
     ASSERT_NEAR(mlgrid.startingRange(), 800000. + 1.5 * 10.0, 1.0e-9);
     ASSERT_NEAR(mlgrid.sensingStart(), 10.0 + 1.0 / 1729.0, 1.0e-9);
     ASSERT_NEAR(mlgrid.wavelength(), 0.06, 1.0e-10);
@@ -113,14 +116,14 @@ TEST(RadarGridTest, fromParametersCrop) {
     //Create radar grid from product
     isce::product::RadarGridParameters grid(10.0,
                                            0.06, 1729.0, 800000.,
-                                           10.0, 1, 8000, 1600,
+                                           10.0, LookSide::Left, 8000, 1600,
                                            t0);
 
     //Crop
     isce::product::RadarGridParameters mlgrid = grid.offsetAndResize(400, 500, 2000, 800);
 
     // Check its values
-    ASSERT_EQ(mlgrid.lookSide(), 1);
+    ASSERT_EQ(mlgrid.lookSide(), LookSide::Left);
     ASSERT_NEAR(mlgrid.startingRange(), grid.slantRange(500), 1.0e-9);
     ASSERT_NEAR(mlgrid.sensingStart(), grid.sensingTime(400), 1.0e-9);
     ASSERT_EQ(mlgrid.wavelength(), grid.wavelength());
@@ -141,7 +144,7 @@ TEST(RadarGridTest, singleLook)
     //Create radar grid from product
     isce::product::RadarGridParameters grid(10.0,
                                            0.06, 1729.0, 800000.,
-                                           10.0, 1, 8000, 1600,
+                                           10.0, LookSide::Left, 8000, 1600,
                                            t0);
 
     //Multilook
@@ -168,7 +171,7 @@ TEST(RadarGridTest, cropSame)
     //Create radar grid from product
     isce::product::RadarGridParameters grid(10.0,
                                            0.06, 1729.0, 800000.,
-                                           10.0, 1, 8000, 1600,
+                                           10.0, LookSide::Left, 8000, 1600,
                                            t0);
 
     //Multilook

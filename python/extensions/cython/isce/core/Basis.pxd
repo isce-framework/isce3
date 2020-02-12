@@ -14,6 +14,7 @@ cdef extern from "isce/core/Basis.h" namespace "isce::core":
         # Constructors
         Basis() except +
         Basis(cartesian_t &, cartesian_t &, cartesian_t &) except +
+        Basis(cartesian_t & position, cartesian_t & velocity) except +
 
         # Getters
         cartesian_t x0()

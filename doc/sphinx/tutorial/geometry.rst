@@ -79,7 +79,7 @@ A simple RadarGridParameters object can be created as shown below:
     grid = radarGridParameters()
     
     #lookSide
-    grid.lookSide = 1 #Left looking
+    grid.lookSide = "left"
 
     #Imaging wavelength
     grid.wavelength = 0.06
@@ -119,7 +119,7 @@ boxes on the ground.
 
     #Create radar grid, but sync referenceEpoch for fast computation
     grid = radarGridParameters()
-    grid.lookSide = 1 
+    grid.lookSide = "left"
     grid.wavelength = 0.06
     grid.startingRange = 8.0e5
     grid.rangePixelSpacing = 10.

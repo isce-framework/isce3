@@ -20,6 +20,7 @@ core/Interpolator.h
 core/Kernels.h
 core/Linspace.h
 core/Linspace.icc
+core/LookSide.h
 core/LUT1d.h
 core/LUT1d.icc
 core/LUT2d.h

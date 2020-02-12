@@ -29,6 +29,7 @@
 #include <isce/core/Metadata.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/Poly2d.h>
+#include <isce/core/Quaternion.h>
 #include <isce/core/LUT1d.h>
 #include <isce/core/LUT2d.h>
 #include <isce/core/StateVector.h>
@@ -303,6 +304,25 @@ inline void saveToH5(isce::io::IGroup & group, const EulerAngles & euler)
     // Save time and reference epoch attribute
     isce::io::saveToH5(group, "time", euler.time());
     isce::io::setRefEpoch(group, "time", euler.refEpoch());
+}
+
+// ------------------------------------------------------------------------
+// Serialization for Quaternion
+// ------------------------------------------------------------------------
+
+inline void loadFromH5(isce::io::IGroup & group, Quaternion & qs)
+{
+    std::vector<double> time, qvec;
+    isce::io::loadFromH5(group, "time", time);
+    isce::io::loadFromH5(group, "quaternions", qvec);
+    qs.data(time, qvec);
+}
+
+inline void saveToH5(isce::io::IGroup & group, const Quaternion & qs)
+{
+    std::array<size_t, 2> dims = {qs.nVectors(), 4};
+    isce::io::saveToH5(group, "time", qs.time());
+    isce::io::saveToH5(group, "quaternions", qs.qvec(), dims);
 }
 
 // ------------------------------------------------------------------------

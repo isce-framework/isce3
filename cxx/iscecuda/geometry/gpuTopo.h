@@ -18,7 +18,7 @@ namespace isce {
                             isce::geometry::DEMInterpolator & demInterp,
                             isce::geometry::TopoLayers & layers,
                             size_t lineStart,
-                            int lookSide,
+                            isce::core::LookSide lookSide,
                             int epsgOut,
                             double startAzUTCTime,
                             double wavelength,
