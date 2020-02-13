@@ -38,7 +38,7 @@ public:
                int n,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-complex forward transform
@@ -57,7 +57,7 @@ public:
                const int (&n)[Rank],
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D complex-to-complex forward transform
@@ -80,7 +80,7 @@ public:
                int dist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-complex forward transform
@@ -105,7 +105,7 @@ public:
                int dist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D complex-to-complex forward transform
@@ -134,7 +134,7 @@ public:
                int odist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-complex forward transform
@@ -165,7 +165,7 @@ public:
                int odist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 #endif
 
     /**
@@ -183,7 +183,7 @@ public:
                int n,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D real-to-complex forward transform
@@ -202,7 +202,7 @@ public:
                const int (&n)[Rank],
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D real-to-complex forward transform
@@ -225,7 +225,7 @@ public:
                int dist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D real-to-complex forward transform
@@ -250,7 +250,7 @@ public:
                int dist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D real-to-complex forward transform
@@ -279,7 +279,7 @@ public:
                int odist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D real-to-complex forward transform
@@ -310,7 +310,7 @@ public:
                int odist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     // the following are declared here just for the purpose of doxygenating them
     // they are actually defined in the base class
@@ -355,7 +355,7 @@ public:
                int n,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-complex inverse transform
@@ -374,7 +374,7 @@ public:
                const int (&n)[Rank],
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D complex-to-complex inverse transform
@@ -397,7 +397,7 @@ public:
                int dist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-complex inverse transform
@@ -422,7 +422,7 @@ public:
                int dist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D complex-to-complex inverse transform
@@ -451,7 +451,7 @@ public:
                int odist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-complex inverse transform
@@ -482,7 +482,7 @@ public:
                int odist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 #endif
 
     /**
@@ -500,7 +500,7 @@ public:
                int n,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-real inverse transform
@@ -519,7 +519,7 @@ public:
                const int (&n)[Rank],
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D complex-to-real inverse transform
@@ -542,7 +542,7 @@ public:
                int dist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-real inverse transform
@@ -567,7 +567,7 @@ public:
                int dist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D complex-to-real inverse transform
@@ -596,7 +596,7 @@ public:
                int odist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-real inverse transform
@@ -627,7 +627,7 @@ public:
                int odist,
                int batch = 1,
                unsigned flags = FFTW_MEASURE,
-               int threads = 1);
+               int threads = detail::getMaxThreads());
 
     // the following are declared here just for the purpose of doxygenating them
     // they are actually defined in the base class

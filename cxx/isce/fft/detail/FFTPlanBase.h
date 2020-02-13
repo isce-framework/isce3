@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include "FFTWWrapper.h"
+#include "Threads.h"
 
 namespace isce { namespace fft { namespace detail {
 
@@ -22,7 +23,7 @@ public:
                 int n,
                 int batch = 1,
                 unsigned flags = FFTW_MEASURE,
-                int threads = 1);
+                int threads = getMaxThreads());
 
     template<int Rank>
     FFTPlanBase(std::complex<T> * out,
@@ -30,7 +31,7 @@ public:
                 const int (&n)[Rank],
                 int batch = 1,
                 unsigned flags = FFTW_MEASURE,
-                int threads = 1);
+                int threads = getMaxThreads());
 
     FFTPlanBase(std::complex<T> * out,
                 std::complex<T> * in,
@@ -40,7 +41,7 @@ public:
                 int dist,
                 int batch = 1,
                 unsigned flags = FFTW_MEASURE,
-                int threads = 1);
+                int threads = getMaxThreads());
 
     template<int Rank>
     FFTPlanBase(std::complex<T> * out,
@@ -51,7 +52,7 @@ public:
                 int dist,
                 int batch = 1,
                 unsigned flags = FFTW_MEASURE,
-                int threads = 1);
+                int threads = getMaxThreads());
 
     FFTPlanBase(std::complex<T> * out,
                 std::complex<T> * in,
@@ -64,7 +65,7 @@ public:
                 int odist,
                 int batch = 1,
                 unsigned flags = FFTW_MEASURE,
-                int threads = 1);
+                int threads = getMaxThreads());
 
     template<int Rank>
     FFTPlanBase(std::complex<T> * out,
@@ -78,7 +79,7 @@ public:
                 int odist,
                 int batch = 1,
                 unsigned flags = FFTW_MEASURE,
-                int threads = 1);
+                int threads = getMaxThreads());
 
     explicit operator bool() const { return *_plan; }
 
