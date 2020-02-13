@@ -10,6 +10,7 @@ core/EulerAngles.cpp
 core/Interpolator.cpp
 core/Kernels.cpp
 core/LUT2d.cpp
+core/LookSide.cpp
 core/Metadata.cpp
 core/NearestNeighborInterpolator.cpp
 core/Orbit.cpp
@@ -26,6 +27,7 @@ except/Error.cpp
 geometry/boundingbox.cpp
 fft/detail/ConfigureFFTLayout.cpp
 fft/detail/FFTWWrapper.cpp
+focus/Chirp.cpp
 geometry/DEMInterpolator.cpp
 geometry/Geo2rdr.cpp
 geometry/Geocode.cpp

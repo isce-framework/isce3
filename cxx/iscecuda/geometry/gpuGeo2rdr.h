@@ -24,7 +24,8 @@ namespace isce {
                                size_t blockWidth, double t0, double r0, 
                                size_t length, size_t width, double prf, 
                                double rangePixelSpacing, double wavelength,
-                               int side, double threshold, double numiter,
+                               isce::core::LookSide side,
+                               double threshold, double numiter,
                                unsigned int & totalconv);
         }
     }

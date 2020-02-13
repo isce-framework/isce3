@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
 # Import the wrappers
-from .Rdr2geo import rdr2geo_point
+from .Rdr2geo import rdr2geo_point, rdr2geo_cone
 from .Geo2rdr import geo2rdr_point
 from .geometry import getGeoPerimeter
 

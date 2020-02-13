@@ -398,7 +398,11 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     const Vec3 satToGround = targetXYZ - pos;
 
     // Compute cross-track range
-    layers.crossTrack(line, bin, -_lookSide * satToGround.dot(TCNbasis.x1()));
+    if (_lookSide == isce::core::LookSide::Right) {
+        layers.crossTrack(line, bin, satToGround.dot(TCNbasis.x1()));
+    } else {
+        layers.crossTrack(line, bin, -satToGround.dot(TCNbasis.x1()));
+    }
 
     // Computation in ENU coordinates around target
     const Mat3 xyz2enu = Mat3::xyzToEnu(targetLLH[1], targetLLH[0]);
@@ -432,7 +436,10 @@ _setOutputTopoLayers(Vec3 & targetLLH, TopoLayers & layers, size_t line,
     layers.sim(line, bin, std::log10(std::abs(0.01 * costheta / (bb * bb * bb))));
 
     // Calculate psi angle between image plane and local slope
-    const Vec3 n_imghat = -_lookSide * satToGround.cross(vel).normalized();
+    Vec3 n_imghat = satToGround.cross(vel).normalized();
+    if (_lookSide == isce::core::LookSide::Left) {
+        n_imghat *= -1.0;
+    }
     Vec3 n_img_enu = xyz2enu.dot(n_imghat);
     const Vec3 n_trg_enu = -slopevec;
     const double cospsi = n_trg_enu.dot(n_img_enu)

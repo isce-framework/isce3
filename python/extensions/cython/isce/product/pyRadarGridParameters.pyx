@@ -6,6 +6,7 @@
 
 from DateTime cimport DateTime
 from RadarGridParameters cimport RadarGridParameters
+from LookSide cimport LookSide, to_string, parseLookSide
 
 cdef class pyRadarGridParameters:
     """
@@ -18,11 +19,14 @@ cdef class pyRadarGridParameters:
 
     def __cinit__(self,
                   pySwath swath=None,
-                  int side=-9999):
-        if swath is not None and side == -9999:
-            raise AttributeError("Invalid look direction.")
-        elif swath is not None: 
-            self.c_radargrid = new RadarGridParameters(deref(swath.c_swath), side)
+                  side = None):
+        cdef LookSide _side
+        if swath is not None:
+            if side is None:
+                raise AttributeError("Invalid look direction.")
+            _side = pyParseLookSide(side)
+            self.c_radargrid = new RadarGridParameters(
+                deref(swath.c_swath), _side)
             self.__owner = True
         else:
             self.c_radargrid = new RadarGridParameters()
@@ -47,14 +51,16 @@ cdef class pyRadarGridParameters:
     @property
     def lookSide(self):
         """
-        Returns look side
+        Returns look side ("left" or "right")
         """
-        cdef int n = self.c_radargrid.lookSide()
-        return n
+        return to_string(self.c_radargrid.lookSide())
 
     @lookSide.setter
-    def lookSide(self, int n):
-        self.c_radargrid.lookSide(n)
+    def lookSide(self, side):
+        """
+        Set look side from string "right" or "left"
+        """
+        self.c_radargrid.lookSide(parseLookSide(str(side)))
 
     @property
     def referenceEpoch(self):

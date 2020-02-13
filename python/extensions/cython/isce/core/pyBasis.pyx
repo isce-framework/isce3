@@ -5,8 +5,28 @@
 #
 
 from Basis cimport Basis
+from Cartesian cimport cartesian_t
 import numpy as np
 cimport numpy as np
+
+
+cdef cartesian_t toVec3(x):
+    assert len(x) == 3
+    cdef cartesian_t cx
+    cdef int ii
+    for ii in range(3):
+        cx[ii] = x[ii]
+    return cx
+
+
+cdef cartesian_t assertUnit(cartesian_t x, double tol=1e-8):
+    cdef int ii
+    cdef double xsum = 0.0
+    for ii in range(3):
+        xsum += x[ii]**2
+    assert abs(xsum - 1.0) < tol, 'Input basis vector not a unit vector'
+    return x
+
 
 cdef class pyBasis:
     '''
@@ -15,8 +35,20 @@ cdef class pyBasis:
 
     cdef Basis c_basis
 
-    def __cinit__(self):
-        self.c_basis = Basis()
+    def __cinit__(self, *args):
+        """
+        Basis()
+        Basis(position, velocity) -> TCN
+        Basis(x0, x1, x2)
+        """
+        if len(args) == 2:
+            self.c_basis = Basis(toVec3(args[0]), toVec3(args[1]))
+        else:
+            self.c_basis = Basis()
+            if len(args) == 3:
+                self.x0(args[0])
+                self.x1(args[1])
+                self.x2(args[2])
 
     @property
     def x0(self):
@@ -39,12 +71,7 @@ cdef class pyBasis:
         Args:
             x (list or numpy.array(3)): list of floats
         '''
-        self._checklist(x)
-        cdef cartesian_t cx
-        cdef int ii
-        for ii in range(3):
-            cx[ii] = x[ii]
-        self.c_basis.x0(cx)
+        self.c_basis.x0(assertUnit(toVec3(x)))
 
     @property
     def x1(self):
@@ -67,12 +94,7 @@ cdef class pyBasis:
         Args:
             x (list or numpy.array(3)): list of floats
         '''
-        self._checklist(x)
-        cdef cartesian_t cx
-        cdef int ii
-        for ii in range(3):
-            cx[ii] = x[ii]
-        self.c_basis.x1(cx)
+        self.c_basis.x1(assertUnit(toVec3(x)))
 
     @property
     def x2(self):
@@ -95,24 +117,4 @@ cdef class pyBasis:
         Args:
             x (list or numpy.array(3)): list of floats
         '''
-        self._checklist(x)
-        cdef cartesian_t cx
-        cdef int ii
-        for ii in range(3):
-            cx[ii] = x[ii]
-        self.c_basis.x2(cx)
-
-    @staticmethod
-    def _checklist(x):
-        """
-        Check the norm and length of the input list.
-        """
-        assert len(x) == 3, 'Input basis vector does not have three-elements'
-        cdef int ii
-        cdef double xsum = 0.0
-        for ii in range(3):
-            xsum += x[ii]**2
-        assert abs(xsum - 1.0) < 1.0e-8, 'Input basis vector not a unit vector'
-        return
-
-# end of file
+        self.c_basis.x2(assertUnit(toVec3(x)))

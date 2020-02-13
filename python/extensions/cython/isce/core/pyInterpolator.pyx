@@ -37,6 +37,15 @@ cdef Matrix[double] numpyToMatrix(np.ndarray[double, ndim=2] a):
     """
     cdef int nrows, ncols
     nrows, ncols = a.shape[0], a.shape[1] 
+    # FIXME Cython 0.29.3 screws this up by introducing temporaries, which
+    # interact badly with the _owner semantics of Matrix.  The matrix gets
+    # assigned to a temporary, which is a deep copy since it's const.  The
+    # temporary gets assigned to the return value, which is a shallow copy since
+    # it's not const.  When the temporary goes out of scope it frees its data,
+    # leaving the return value in an invalid state.  On my machine, the first
+    # two entries are set to roughly [0, 4e-317] and the rest are okay, at least
+    # initially.
+    raise NotImplementedError("cython cannot do this correctly")
     return Matrix[double](&a[0,0], nrows, ncols)
 
 cdef class pyInterpolator:
@@ -75,7 +84,8 @@ cdef class pyInterpolator:
             values (float or ndarray): Interpolated values
         """
         # Convert numpy array to isce::core::Matrix
-        cdef Matrix[double] zmat = numpyToMatrix(z)
+        #FIXME cdef Matrix[double] zmat = numpyToMatrix(z)
+        cdef Matrix[double] zmat = Matrix[double](&z[0,0], z.shape[0], z.shape[1])
 
         # Make sure coordinates are numpy arrays
         cdef np.ndarray[double, ndim=1] x_np = np.array(x).squeeze()

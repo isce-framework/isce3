@@ -7,6 +7,7 @@
 #pragma once
 
 #include "forward.h"
+#include "Common.h"
 
 /** Helper datastructure to handle slant range information for a pixel */
 class isce::core::Pixel {
@@ -14,7 +15,15 @@ class isce::core::Pixel {
     public:
         // Constructors
         CUDA_HOSTDEV Pixel() {};
-        CUDA_HOSTDEV Pixel(double r, double d, size_t b) : _range(r), _dopfact(d), _bin(b) {}
+        /** Pixel constructor
+         *
+         * @param[in] r         Range in meters.
+         * @param[in] dopfact   r*sin(squint), where squint is the complement of
+         *                      the angle between the velocity and look vector.
+         * @param[in] bin       Range bin number.
+         */
+        CUDA_HOSTDEV Pixel(double r, double dopfact, size_t bin) :
+            _range(r), _dopfact(dopfact), _bin(bin) {}
         // Getters
         CUDA_HOSTDEV double range() const { return _range; }
         CUDA_HOSTDEV double dopfact() const { return _dopfact; }

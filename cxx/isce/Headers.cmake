@@ -20,6 +20,7 @@ core/Interpolator.h
 core/Kernels.h
 core/Linspace.h
 core/Linspace.icc
+core/LookSide.h
 core/LUT1d.h
 core/LUT1d.icc
 core/LUT2d.h
@@ -52,6 +53,7 @@ fft/FFTPlan.h
 fft/FFTPlan.icc
 fft/FFTUtil.h
 fft/FFTUtil.icc
+focus/Chirp.h
 geometry/DEMInterpolator.h
 geometry/forward.h
 geometry/Shapes.h

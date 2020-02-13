@@ -8,6 +8,7 @@
 #include <isce/core/Basis.h>
 #include <isce/core/DenseMatrix.h>
 #include <isce/core/Ellipsoid.h>
+#include <isce/core/LookSide.h>
 #include <isce/core/Pixel.h>
 #include <isce/error/ErrorCode.h>
 #include <isce/geometry/TopoLayers.h>
@@ -27,6 +28,7 @@
 using isce::core::Vec3;
 using isce::core::Mat3;
 using isce::error::ErrorCode;
+using isce::core::LookSide;
 
 #define THRD_PER_BLOCK 96 // Number of threads per block (should always %32==0)
 
@@ -54,7 +56,7 @@ bool initAzimuthLine(size_t line,
 __device__
 void setOutputTopoLayers(const Vec3& targetLLH,
                          isce::cuda::geometry::gpuTopoLayers & layers,
-                         size_t index, int lookSide,
+                         size_t index, LookSide lookSide,
                          const isce::core::Pixel & pixel,
                          const Vec3& pos, const Vec3& vel,
                          const isce::core::Basis& TCNbasis,
@@ -83,7 +85,11 @@ void setOutputTopoLayers(const Vec3& targetLLH,
     const Vec3 satToGround = targetXYZ - pos;
 
     // Compute cross-track range
-    layers.crossTrack(index, -lookSide * satToGround.dot(TCNbasis.x1()));
+    if (lookSide == LookSide::Left) {
+        layers.crossTrack(index, -satToGround.dot(TCNbasis.x1()));
+    } else {
+        layers.crossTrack(index, satToGround.dot(TCNbasis.x1()));
+    }
 
     // Computation in ENU coordinates around target
     const Mat3 xyz2enu = Mat3::xyzToEnu(targetLLH[1], targetLLH[0]);
@@ -118,7 +124,10 @@ void setOutputTopoLayers(const Vec3& targetLLH,
 
     // Calculate psi angle between image plane and local slope
     Vec3 n_img_enu, n_trg_enu;
-    const Vec3 n_imghat = satToGround.cross(vel).normalized() * -lookSide;
+    Vec3 n_imghat = satToGround.cross(vel).normalized();
+    if (lookSide == LookSide::Left) {
+        n_imghat *= -1;
+    }
     n_img_enu = xyz2enu.dot(n_imghat);
     n_trg_enu[0] = -alpha;
     n_trg_enu[1] = -beta;
@@ -137,7 +146,7 @@ void runTopoBlock(isce::core::Ellipsoid ellipsoid,
                   isce::cuda::core::ProjectionBase ** projOutput,
                   isce::cuda::geometry::gpuTopoLayers layers,
                   size_t lineStart,
-                  int lookSide,
+                  LookSide lookSide,
                   double startAzUTCTime,
                   double wavelength,
                   double prf,
@@ -201,7 +210,7 @@ runGPUTopo(const isce::core::Ellipsoid & ellipsoid,
            isce::geometry::DEMInterpolator & demInterp,
            isce::geometry::TopoLayers & layers,
            size_t lineStart,
-           int lookSide,
+           LookSide lookSide,
            int epsgOut,
            double startAzUTCTime,
            double wavelength,

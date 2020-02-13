@@ -52,6 +52,7 @@ namespace isce {
         using cartesian_t = Vec3;
 
         // enum types
+        enum class LookSide;
         enum class OrbitInterpMethod;
         enum class OrbitInterpBorderMode;
     }

@@ -22,6 +22,7 @@ core/serialization/serializeOrbit.cpp
 fft/fft.cpp
 fft/fftplan.cpp
 fft/fftutil.cpp
+focus/chirp.cpp
 geometry/dem/dem.cpp
 geometry/geo2rdr/geo2rdr.cpp
 geometry/geocode/geocode.cpp
@@ -61,8 +62,8 @@ unwrap/icu/icu.cpp
 unwrap/phass/phass.cpp
 )
 
-#This is a temporary fix - since GDAL does not support 
-#expose virtualmemmap on OS X. This will be revisited 
+#This is a temporary fix - since GDAL does not support
+#expose virtualmemmap on OS X. This will be revisited
 #when GDAL adds the functionality or we update to add
 #preprocessor directives to handle this.
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")

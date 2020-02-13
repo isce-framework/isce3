@@ -1,5 +1,6 @@
 set(TESTFILES
 isce3/core/ellipsoid.py
+isce3/core/lut2d.py
 isce3/core/orbit.py
 isce3/core/testdatetime.py
 isce3/geometry/geometry_equator.py
