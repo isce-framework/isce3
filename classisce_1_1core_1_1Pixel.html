@@ -110,9 +110,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a6f9221635e1e496fe4ab4a522c047545"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6f9221635e1e496fe4ab4a522c047545"></a>
-CUDA_HOSTDEV&#160;</td><td class="memItemRight" valign="bottom"><b>Pixel</b> (double r, double d, size_t b)</td></tr>
-<tr class="separator:a6f9221635e1e496fe4ab4a522c047545"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c45e9900a46ab5f9436cf9d14d06c6a"><td class="memItemLeft" align="right" valign="top">CUDA_HOSTDEV&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Pixel.html#a8c45e9900a46ab5f9436cf9d14d06c6a">Pixel</a> (double r, double dopfact, size_t bin)</td></tr>
+<tr class="memdesc:a8c45e9900a46ab5f9436cf9d14d06c6a"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classisce_1_1core_1_1Pixel.html" title="Helper datastructure to handle slant range information for a pixel. ">Pixel</a> constructor.  <a href="#a8c45e9900a46ab5f9436cf9d14d06c6a">More...</a><br/></td></tr>
+<tr class="separator:a8c45e9900a46ab5f9436cf9d14d06c6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aebbdd2d6441fa9a83eb82d7b7c678015"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aebbdd2d6441fa9a83eb82d7b7c678015"></a>
 CUDA_HOSTDEV double&#160;</td><td class="memItemRight" valign="bottom"><b>range</b> () const </td></tr>
 <tr class="separator:aebbdd2d6441fa9a83eb82d7b7c678015"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -134,7 +134,58 @@ CUDA_HOSTDEV void&#160;</td><td class="memItemRight" valign="bottom"><b>bin</b> 
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Helper datastructure to handle slant range information for a pixel. </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a class="anchor" id="a8c45e9900a46ab5f9436cf9d14d06c6a"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">CUDA_HOSTDEV isce::core::Pixel::Pixel </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>r</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dopfact</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>bin</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classisce_1_1core_1_1Pixel.html" title="Helper datastructure to handle slant range information for a pixel. ">Pixel</a> constructor. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">r</td><td>Range in meters. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dopfact</td><td>r*sin(squint), where squint is the complement of the angle between the velocity and look vector. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bin</td><td>Range bin number. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
 <li>isce/cxx/isce/core/<a class="el" href="Pixel_8h_source.html">Pixel.h</a></li>
 </ul>
 </div><!-- contents -->

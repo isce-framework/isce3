@@ -146,7 +146,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <span class="comment">// Set the input radar grid from Doppler and RadarGridParameters objects</span></div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    <span class="keywordtype">void</span> radarGrid(<a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;double&gt;</a> doppler,</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                   <a class="code" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> rgparam,</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;                   <span class="keywordtype">int</span> lookSide);</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;                   <a class="code" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">isce::core::LookSide</a> lookSide);</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="comment">// Set the input radar grid from individual parameters</span></div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keywordtype">void</span> radarGrid(<a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;double&gt;</a> doppler,</div>
@@ -158,7 +158,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;                   <span class="keywordtype">double</span> rangeSpacing,</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                   <span class="keywordtype">double</span> wavelength,</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                   <span class="keywordtype">int</span> radarGridWidth,</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                   <span class="keywordtype">int</span> lookSide);</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                   <a class="code" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">isce::core::LookSide</a> lookSide);</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="comment">// Set interpolator</span></div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="keywordtype">void</span> interpolator(<a class="code" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> method) { _interp = isce::core::createInterpolator&lt;T&gt;(method); }</div>
@@ -211,7 +211,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="comment">// radar grids parameters</span></div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;double&gt;</a> _doppler;</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <a class="code" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> _radarGrid;</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <span class="keywordtype">int</span> _lookSide;</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <a class="code" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">isce::core::LookSide</a> _lookSide;</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="comment">// start X position for the output geocoded grid</span></div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="keywordtype">double</span> _geoGridStartX;</div>
@@ -252,8 +252,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &quot;Geocode.icc&quot;</span></div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;<span class="preprocessor">#undef ISCE_GEOMETRY_GEOCODE_ICC</span></div>
 <div class="ttc" id="classisce_1_1io_1_1Raster_html"><div class="ttname"><a href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a></div><div class="ttdoc">Data structure meant to handle Raster I/O operations. </div><div class="ttdef"><b>Definition:</b> Raster.h:32</div></div>
-<div class="ttc" id="classisce_1_1product_1_1RadarGridParameters_html"><div class="ttname"><a href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a></div><div class="ttdef"><b>Definition:</b> RadarGridParameters.h:20</div></div>
+<div class="ttc" id="classisce_1_1product_1_1RadarGridParameters_html"><div class="ttname"><a href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a></div><div class="ttdef"><b>Definition:</b> RadarGridParameters.h:21</div></div>
 <div class="ttc" id="classisce_1_1core_1_1DateTime_html"><div class="ttname"><a href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a></div><div class="ttdoc">Data structure to store date time to nano-sec precision. </div><div class="ttdef"><b>Definition:</b> DateTime.h:18</div></div>
+<div class="ttc" id="namespaceisce_1_1core_html_aba1a427bdca91d5630751382cbdf4be5"><div class="ttname"><a href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">isce::core::LookSide</a></div><div class="ttdeci">LookSide</div><div class="ttdoc">Side that radar looks at, Left or Right. </div><div class="ttdef"><b>Definition:</b> LookSide.h:13</div></div>
 <div class="ttc" id="classisce_1_1geometry_1_1Geocode_html_a1fd5d080a287018c66313cbb10c371f4"><div class="ttname"><a href="classisce_1_1geometry_1_1Geocode.html#a1fd5d080a287018c66313cbb10c371f4">isce::geometry::Geocode::geoGrid</a></div><div class="ttdeci">void geoGrid(double geoGridStartX, double geoGridStartY, double geoGridSpacingX, double geoGridSpacingY, double geoGridEndX, double geoGridEndY, int epsgcode)</div><div class="ttdoc">Set the output geocoded grid. </div><div class="ttdef"><b>Definition:</b> Geocode.icc:22</div></div>
 <div class="ttc" id="classisce_1_1core_1_1LUT2d_html"><div class="ttname"><a href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt; double &gt;</a></div></div>
 <div class="ttc" id="classisce_1_1core_1_1Interpolator_html"><div class="ttname"><a href="classisce_1_1core_1_1Interpolator.html">isce::core::Interpolator&lt; T &gt;</a></div></div>

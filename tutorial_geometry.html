@@ -153,7 +153,8 @@ Orbit</h1>
 <h1><a class="anchor" id="geomfwd"></a>
 Forward mapping - determining bounding boxes</h1>
 <p>In this example, we will demonstrate the forward mapping algorithm by using it to determine approximate bounding boxes on the ground. See <a class="el" href="overview_geometry.html">geometry overview</a> for details on the implemented algorithm.</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="geometry_8h.html">isce/geometry/geometry.h</a>&quot;</span></div>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;isce/core/LookSide.h&quot;</span></div>
+<div class="line"><span class="preprocessor">#include &quot;<a class="code" href="geometry_8h.html">isce/geometry/geometry.h</a>&quot;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;sstream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;fstream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -189,7 +190,7 @@ Forward mapping - determining bounding boxes</h1>
 <div class="line">    <span class="keywordtype">double</span> wvl = 0.06;</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Look side from metadata</span></div>
-<div class="line">    <span class="keywordtype">int</span> side = -1; <span class="comment">//Right-looking</span></div>
+<div class="line">    <span class="keyword">auto</span> side = <a class="code" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5a92b09c7c48c520c3c55e497875da437c">isce::core::LookSide::Right</a>;</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Container to store sets of returned results</span></div>
 <div class="line">    std::vector&lt;double&gt; lats;</div>
@@ -217,7 +218,7 @@ Forward mapping - determining bounding boxes</h1>
 <div class="line">                <a class="code" href="classisce_1_1geometry_1_1DEMInterpolator.html">isce::geometry::DEMInterpolator</a> constDEM(zrange[zz]);</div>
 <div class="line"></div>
 <div class="line">                <span class="comment">//Map target to DEM assuming Zero Doppler geometry</span></div>
-<div class="line">                <span class="keywordtype">int</span> status = <a class="code" href="namespaceisce_1_1geometry.html#a9d6ae859de6137a9c54ebec183c73a5e">isce::geometry::rdr2geo</a>(tintp,  <span class="comment">//aztime</span></div>
+<div class="line">                <span class="keywordtype">int</span> status = <a class="code" href="namespaceisce_1_1geometry.html#a2d8eb146b2a1e4ba77289c55f70fef65">isce::geometry::rdr2geo</a>(tintp,  <span class="comment">//aztime</span></div>
 <div class="line">                                        rng,    <span class="comment">//slant range</span></div>
 <div class="line">                                        0.,     <span class="comment">//doppler</span></div>
 <div class="line">                                        orbit,</div>
@@ -251,7 +252,8 @@ Forward mapping - determining bounding boxes</h1>
 </div><!-- fragment --><h1><a class="anchor" id="geominv"></a>
 Inverse mapping - locating corner reflectors</h1>
 <p>In this example, we will demonstrate the inverse mapping algorithm by using it to determine the location of a known target in a radar image.</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="geometry_8h.html">isce/geometry/geometry.h</a>&quot;</span></div>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;isce/core/LookSide.h&quot;</span></div>
+<div class="line"><span class="preprocessor">#include &quot;<a class="code" href="geometry_8h.html">isce/geometry/geometry.h</a>&quot;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;sstream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;fstream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -276,7 +278,7 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line">    <span class="keywordtype">double</span> wvl = 0.06;</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//Look side</span></div>
-<div class="line">    <span class="keywordtype">int</span> side = -1; <span class="comment">//Right-looking</span></div>
+<div class="line">    <span class="keyword">auto</span> side = <a class="code" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5a92b09c7c48c520c3c55e497875da437c">isce::core::LookSide::Right</a>;</div>
 <div class="line"></div>
 <div class="line">    <span class="comment">//We will create a fake product with relevant metadata for use</span></div>
 <div class="line">    isce::product::ImageMode mode;</div>
@@ -309,7 +311,7 @@ Inverse mapping - locating corner reflectors</h1>
 <div class="line">        llh[1] = targets[tt][1] * M_PI / 180.0;</div>
 <div class="line">        llh[2] = targets[tt][2];</div>
 <div class="line"></div>
-<div class="line">        <a class="code" href="namespaceisce_1_1geometry.html#a927c2bed9be438df9af7fd80769ea5b3">isce::geometry::geo2rdr</a>( llh,       <span class="comment">//Target location</span></div>
+<div class="line">        <a class="code" href="namespaceisce_1_1geometry.html#ae8f2b5411ca22a416e604dfadb093ae8">isce::geometry::geo2rdr</a>( llh,       <span class="comment">//Target location</span></div>
 <div class="line">                                 ellipse,   <span class="comment">//Ellipsoid</span></div>
 <div class="line">                                 orbit,     <span class="comment">//Orbit</span></div>
 <div class="line">                                 dop,       <span class="comment">//Doppler</span></div>

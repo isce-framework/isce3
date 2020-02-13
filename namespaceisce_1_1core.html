@@ -289,6 +289,11 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="memdesc:a40217f79c7a80c61137d3c154c6fc3ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration type to indicate output mode (for RTC) <br/></td></tr>
 <tr class="separator:a40217f79c7a80c61137d3c154c6fc3ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba1a427bdca91d5630751382cbdf4be5"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">LookSide</a> { <a class="el" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5a945d5e233cf7d6240f6b783b36a374ff">LookSide::Left</a> = 1, 
+<a class="el" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5a92b09c7c48c520c3c55e497875da437c">LookSide::Right</a> = -1
+ }</td></tr>
+<tr class="memdesc:aba1a427bdca91d5630751382cbdf4be5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Side that radar looks at, Left or Right.  <a href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">More...</a><br/></td></tr>
+<tr class="separator:aba1a427bdca91d5630751382cbdf4be5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d513bfc9f6f3ea87991acf73237dfc7"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a0d513bfc9f6f3ea87991acf73237dfc7">OrbitInterpMethod</a> { <a class="el" href="namespaceisce_1_1core.html#a0d513bfc9f6f3ea87991acf73237dfc7a70457be66a37fd77955ebfb026c57a24">OrbitInterpMethod::Hermite</a>, 
 <a class="el" href="namespaceisce_1_1core.html#a0d513bfc9f6f3ea87991acf73237dfc7af9d917a770fac9457858a6e6bfdd9d9c">OrbitInterpMethod::Legendre</a>
  }</td></tr>
@@ -359,6 +364,15 @@ template&lt;typename T , typename U &gt; </td></tr>
 template&lt;typename T , typename U &gt; </td></tr>
 <tr class="memitem:a54b8d1c7ca471448b0291e757f339ff6"><td class="memTemplItemLeft" align="right" valign="top">CUDA_HOSTDEV constexpr bool&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator!=</b> (const <a class="el" href="classisce_1_1core_1_1Linspace.html">Linspace</a>&lt; T &gt; &amp;, const <a class="el" href="classisce_1_1core_1_1Linspace.html">Linspace</a>&lt; U &gt; &amp;)</td></tr>
 <tr class="separator:a54b8d1c7ca471448b0291e757f339ff6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae62125754972c94761ef8dbee5067d2f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">LookSide</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#ae62125754972c94761ef8dbee5067d2f">parseLookSide</a> (const std::string &amp;str)</td></tr>
+<tr class="memdesc:ae62125754972c94761ef8dbee5067d2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse string (e.g., "left" or "right") to enum LookSide.  <a href="#ae62125754972c94761ef8dbee5067d2f">More...</a><br/></td></tr>
+<tr class="separator:ae62125754972c94761ef8dbee5067d2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adff41cf148b40ad982fe1fee376c34bc"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#adff41cf148b40ad982fe1fee376c34bc">to_string</a> (<a class="el" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">LookSide</a> d)</td></tr>
+<tr class="memdesc:adff41cf148b40ad982fe1fee376c34bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert enum LookSide to string ("left" or "right").  <a href="#adff41cf148b40ad982fe1fee376c34bc">More...</a><br/></td></tr>
+<tr class="separator:adff41cf148b40ad982fe1fee376c34bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af60db23f5313761ff79a10d3ca92bc30"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af60db23f5313761ff79a10d3ca92bc30"></a>
+std::ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (std::ostream &amp;out, const <a class="el" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">LookSide</a> d)</td></tr>
+<tr class="separator:af60db23f5313761ff79a10d3ca92bc30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad14792dfd426a50d4cc94d82ecfb92bc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad14792dfd426a50d4cc94d82ecfb92bc"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="classisce_1_1core_1_1Orbit.html">Orbit</a> &amp;lhs, const <a class="el" href="classisce_1_1core_1_1Orbit.html">Orbit</a> &amp;rhs)</td></tr>
 <tr class="separator:ad14792dfd426a50d4cc94d82ecfb92bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -414,6 +428,12 @@ template&lt;class Archive &gt; </td></tr>
 <tr class="memitem:a6832914cc2afcab0ec4a61a98d713913"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1core.html#a6832914cc2afcab0ec4a61a98d713913">saveToH5</a> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, const <a class="el" href="classisce_1_1core_1_1EulerAngles.html">EulerAngles</a> &amp;euler)</td></tr>
 <tr class="memdesc:a6832914cc2afcab0ec4a61a98d713913"><td class="mdescLeft">&#160;</td><td class="mdescRight">Save Euler angle data to HDF5 product.  <a href="#a6832914cc2afcab0ec4a61a98d713913">More...</a><br/></td></tr>
 <tr class="separator:a6832914cc2afcab0ec4a61a98d713913"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a856b8af10cc8b86f82106b98bdf43886"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a856b8af10cc8b86f82106b98bdf43886"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>loadFromH5</b> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, <a class="el" href="classisce_1_1core_1_1Quaternion.html">Quaternion</a> &amp;qs)</td></tr>
+<tr class="separator:a856b8af10cc8b86f82106b98bdf43886"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc4304c66379690dc2cd44e11fefd895"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc4304c66379690dc2cd44e11fefd895"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>saveToH5</b> (<a class="el" href="classisce_1_1io_1_1IGroup.html">isce::io::IGroup</a> &amp;group, const <a class="el" href="classisce_1_1core_1_1Quaternion.html">Quaternion</a> &amp;qs)</td></tr>
+<tr class="separator:afc4304c66379690dc2cd44e11fefd895"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c8e8c47768e808c75fb393e84905195"><td class="memTemplParams" colspan="2"><a class="anchor" id="a7c8e8c47768e808c75fb393e84905195"></a>
 template&lt;class Archive &gt; </td></tr>
 <tr class="memitem:a7c8e8c47768e808c75fb393e84905195"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>save</b> (Archive &amp;archive, const <a class="el" href="classisce_1_1core_1_1Metadata.html">Metadata</a> &amp;meta)</td></tr>
@@ -612,6 +632,36 @@ const int&#160;</td><td class="memItemRight" valign="bottom"><b>DAY_TO_HOUR</b> 
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The <a class="el" href="namespaceisce_1_1core.html" title="The isce::core namespace. ">isce::core</a> namespace. </p>
 </div><h2 class="groupheader">Enumeration Type Documentation</h2>
+<a class="anchor" id="aba1a427bdca91d5630751382cbdf4be5"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">isce::core::LookSide</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Side that radar looks at, Left or Right. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="aba1a427bdca91d5630751382cbdf4be5a945d5e233cf7d6240f6b783b36a374ff"></a>Left</em>&nbsp;</td><td class="fielddoc">
+<p>Radar points to left/port side of vehicle. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="aba1a427bdca91d5630751382cbdf4be5a92b09c7c48c520c3c55e497875da437c"></a>Right</em>&nbsp;</td><td class="fielddoc">
+<p>Radar points to right/starboard side of vehicle. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <a class="anchor" id="a8107565ed7c8dc1784adb506150f105b"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1604,6 +1654,24 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
+<a class="anchor" id="ae62125754972c94761ef8dbee5067d2f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">LookSide</a> isce::core::parseLookSide </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>str</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Parse string (e.g., "left" or "right") to enum LookSide. </p>
+
+</div>
+</div>
 <a class="anchor" id="a91878e1605f59499fe3bedb08a299b42"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1831,6 +1899,24 @@ template&lt;typename T &gt; </div>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a class="anchor" id="adff41cf148b40ad982fe1fee376c34bc"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string isce::core::to_string </td>
+          <td>(</td>
+          <td class="paramtype">LookSide&#160;</td>
+          <td class="paramname"><em>d</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Convert enum LookSide to string ("left" or "right"). </p>
 
 </div>
 </div>
