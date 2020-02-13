@@ -4,14 +4,13 @@
 #include <isce/core/Vector.h>
 
 #include <pybind11/chrono.h>
+#include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 
 #include <string>
 
 namespace py = pybind11;
 using isce::core::Orbit;
-
-#include <pybind11/eigen.h>
 
 static py::buffer_info toBuffer(const std::vector<isce::core::Vec3>& buf)
 {
