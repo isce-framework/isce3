@@ -1,4 +1,6 @@
 set(HEADERS
+container/RSD.h
+container/RSD.icc
 core/Attitude.h
 core/Baseline.h
 core/Basis.h

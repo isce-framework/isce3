@@ -1,0 +1,86 @@
+#ifndef ISCE_CONTAINER_RSD_ICC
+#error "RSD.icc is an implementation detail of RSD.h"
+#endif
+
+#include <isce/core/TimeDelta.h>
+#include <isce/except/Error.h>
+
+namespace isce { namespace container {
+
+RSD::RSD(const isce::io::gdal::Raster & signal_data,
+         const isce::core::DateTime & reference_epoch,
+         const std::vector<double> & azimuth_time,
+         double range_window_start,
+         double range_sampling_rate,
+         isce::core::LookSide look_side)
+:
+    _signal_data(signal_data),
+    _reference_epoch(reference_epoch),
+    _azimuth_time(azimuth_time),
+    _range_window_start(range_window_start),
+    _range_sampling_rate(range_sampling_rate),
+    _look_side(look_side)
+{
+    std::size_t lines = signal_data.length();
+    if (azimuth_time.size() != lines) {
+        std::string errmsg = "number of signal data lines must equal number of azimuth timepoints";
+        throw isce::except::LengthError(ISCE_SRCINFO(), errmsg);
+    }
+
+    GDALDataType dtype = signal_data.datatype();
+    if (dtype != GDT_CFloat32 && dtype != GDT_CFloat64) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "signal data must be complex-valued");
+    }
+
+    if (range_window_start <= 0.) {
+        throw isce::except::DomainError(ISCE_SRCINFO(), "range window start time must be > 0");
+    }
+
+    if (range_sampling_rate <= 0.) {
+        throw isce::except::DomainError(ISCE_SRCINFO(), "range sampling rate must be > 0");
+    }
+
+    for (int l = 1; l < lines; ++l) {
+        if (azimuth_time[l - 1] > azimuth_time[l]) {
+            std::string errmsg = "azimuth time must be monotonically increasing";
+            throw isce::except::InvalidArgument(ISCE_SRCINFO(), errmsg);
+        }
+    }
+}
+
+isce::core::DateTime RSD::startDateTime() const
+{
+    return referenceEpoch() + isce::core::TimeDelta(azimuthStartTime());
+}
+
+isce::core::DateTime RSD::midDateTime() const
+{
+    return referenceEpoch() + isce::core::TimeDelta(azimuthMidTime());
+}
+
+isce::core::DateTime RSD::endDateTime() const
+{
+    return referenceEpoch() + isce::core::TimeDelta(azimuthEndTime());
+}
+
+double RSD::rangeWindowMidTime() const
+{
+    return rangeWindowStartTime() + 0.5 * (samples() - 1) / rangeSamplingRate();
+}
+
+double RSD::rangeWindowEndTime() const
+{
+    return rangeWindowStartTime() + (samples() - 1) / rangeSamplingRate();
+}
+
+void RSD::readLine(std::complex<float> * dst, int line) const
+{
+    _signal_data.readLine(dst, line);
+}
+
+void RSD::readLines(std::complex<float> * dst, int first_line, int num_lines) const
+{
+    _signal_data.readLines(dst, first_line, num_lines);
+}
+
+}}
