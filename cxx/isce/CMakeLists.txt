@@ -10,14 +10,15 @@ target_link_libraries(${LISCE} PUBLIC
     ${GDAL_LIBRARY}
     ${HDF5_LIBRARY}
     pyre
-    FFTW::Float
-    FFTW::Double
-    FFTW::FloatThreads
-    FFTW::DoubleThreads
-    )
 
-target_link_libraries(${LISCE} PRIVATE
-    OpenMP::OpenMP_CXX_Optional
+    # These libraries are part of the interface but are not
+    # always needed. It's convenient to propagate them to other
+    # internal targets so we keep them in the build interface.
+    $<BUILD_INTERFACE:FFTW::Float>
+    $<BUILD_INTERFACE:FFTW::Double>
+    $<BUILD_INTERFACE:FFTW::FloatThreads>
+    $<BUILD_INTERFACE:FFTW::DoubleThreads>
+    $<BUILD_INTERFACE:OpenMP::OpenMP_CXX_Optional>
     )
 
 target_include_directories(${LISCE} PUBLIC
