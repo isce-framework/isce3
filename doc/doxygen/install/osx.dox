@@ -1,4 +1,4 @@
-/*! \page install_osx Installing ISCE on OS X with Macports
+/*! \page install_osx Installing ISCE on macOS (OS X) with Macports
 
 \tableofcontents
 
@@ -12,7 +12,7 @@ ISCE has the following dependencies
 <li> cmake 3.12 or above
 </ol>
 
-One can use any of the three package managers - Macports, Homebrew or Conda to install ISCE on OS X. <br>
+One can use any of the three package managers - Macports, Homebrew or Conda to install ISCE on macOS. <br>
 We will only walk through the installation steps using Macports. It is highly recommend to not mix <br>
 packages installed by different package managers as this typically leads to library incompatibility issues.
 
@@ -132,7 +132,7 @@ Note that ${ISCEHOME} can point to any directory on your machine.
 <li> Run cmake with the correct inputs
 \code{.sh}
 
-> CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX=${ISCEHOME}/tools/isce/install ${ISCEHOME}/tools/isce/src/isce
+> CC=clang CXX=clang++ cmake -DCMAKE_FIND_FRAMEWORK=NEVER -DCMAKE_INSTALL_PREFIX=${ISCEHOME}/tools/isce/install ${ISCEHOME}/tools/isce/src/isce
 
 \endcode
 
@@ -140,8 +140,6 @@ Other optional arguments can be added to the cmake line
 <table>
     <caption id="cmake_flags">Additional cmake options</caption>
     <tr><th>Option<th>Description
-    <tr><td>-DCMAKE_FIND_FRAMEWORK=LAST <td>CMake is designed to look for frameworks on OSX first. 
-    If your cmake consistently finds the wrong Python version, you can disable it with this option
     <tr><td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --dsymutil=yes --track-origins=yes" -DCMAKE_BUILD_TYPE=Debug<td>  
     <tr><td>Run tests with "-T memcheck" to check for memory leaks.
     <tr><td>valgrind needs to be installed.
