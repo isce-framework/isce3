@@ -12,11 +12,18 @@ target_link_libraries(${LISCE} PUBLIC
     pyre
     )
 
+
+# These libraries are part of the interface but are not
+# always needed. It's convenient to propagate them to other
+# internal targets so we keep them in the build interface.
+target_link_libraries(${LISCE} PUBLIC
+    $<BUILD_INTERFACE:FFTW::Float>
+    $<BUILD_INTERFACE:FFTW::Double>
+    $<BUILD_INTERFACE:FFTW::FloatThreads>
+    $<BUILD_INTERFACE:FFTW::DoubleThreads>
+    )
+
 target_link_libraries(${LISCE} PRIVATE
-    FFTW::Float
-    FFTW::Double
-    FFTW::FloatThreads
-    FFTW::DoubleThreads
     OpenMP::OpenMP_CXX_Optional
     )
 
