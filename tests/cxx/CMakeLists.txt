@@ -39,7 +39,7 @@ foreach(FILENAME ${TESTFILES})
 
     unset(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
 
-    target_link_libraries(${TARGET} PUBLIC ${LIBS} gtest)
+    target_link_libraries(${TARGET} PUBLIC ${LIBS} GTest::GTest)
 endforeach()
 
 set_tests_properties(test.cxx.isce.geometry.geo2rdr.geo2rdr PROPERTIES

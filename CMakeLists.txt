@@ -16,6 +16,8 @@ endif()
 project(ISCE VERSION 3.0
         LANGUAGES CXX)
 
+find_package(GTest)
+
 option(WITH_CUDA "Set ON|OFF (default=ON) to build CUDA library" OFF)
 set(ISCE_CUDA_ARCHS "Auto" CACHE STRING
     "Select target CUDA device architecture, options are:
@@ -79,7 +81,7 @@ CheckCXX()
 CheckISCEPython()
 
 ##Check for Pyre
-CheckPyre()
+find_package(pyre)
 
 ##Check for Cython
 include(useCython)
@@ -129,8 +131,17 @@ configure_file(
     doc/sphinx/conf.py
     )
 
+set(ISCE3_CMAKE_DIR "share/cmake/isce3" CACHE STRING
+    "Install directory for cmake files, relative to install prefix"
+    )
 install(EXPORT isce3-targets
         NAMESPACE ISCE3::
-        FILE ISCE3-config.cmake
-        DESTINATION lib/cmake/isce3
+        DESTINATION ${ISCE3_CMAKE_DIR}
         )
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+    ${PROJECT_SOURCE_DIR}/.cmake/ISCE3-config.cmake.in
+    ${PROJECT_BINARY_DIR}/ISCE3-config.cmake
+    INSTALL_DESTINATION ${ISCE3_CMAKE_DIR})
+install(FILES ${PROJECT_BINARY_DIR}/ISCE3-config.cmake
+        DESTINATION ${ISCE3_CMAKE_DIR})

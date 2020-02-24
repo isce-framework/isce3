@@ -9,7 +9,7 @@ target_link_libraries(${LISCE} PUBLIC
     Eigen::Eigen
     ${GDAL_LIBRARY}
     ${HDF5_LIBRARY}
-    pyre
+    pyre::pyre
     )
 
 
@@ -43,7 +43,7 @@ foreach(HEADER ${HEADERS})
 endforeach()
 
 # Install shared library
-install(TARGETS ${LISCE} cereal eigen pyre journal
+install(TARGETS ${LISCE} cereal eigen
         EXPORT isce3-targets
         DESTINATION ${ISCE_LIBDIR}
         COMPONENT isce_libs)

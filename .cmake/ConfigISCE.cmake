@@ -38,16 +38,6 @@ function(CheckISCEPython)
     find_package(Python 3.6 COMPONENTS Interpreter Development)
 endfunction()
 
-
-##Check for Pyre installation
-function(CheckPyre)
-    if(HAVE_PYRE)
-        find_package(Pyre REQUIRED)
-    else()
-        set(PYRE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include PARENT_SCOPE)
-    endif()
-endfunction()
-
 ##Check for GDAL installation
 function(CheckGDAL)
     find_package(GDAL 2.3 REQUIRED)
