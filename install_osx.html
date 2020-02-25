@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>ISCE: Installing ISCE on OS X with Macports</title>
+<title>ISCE: Installing ISCE on macOS (OS X) with Macports</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -85,7 +85,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">Installing ISCE on OS X with Macports </div>  </div>
+<div class="title">Installing ISCE on macOS (OS X) with Macports </div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="toc"><h3>Table of Contents</h3>
@@ -115,7 +115,7 @@ HDF5 1.10.2 or above with h5py </li>
 <li>
 cmake 3.12 or above </li>
 </ol>
-<p>One can use any of the three package managers - Macports, Homebrew or Conda to install ISCE on OS X. <br/>
+<p>One can use any of the three package managers - Macports, Homebrew or Conda to install ISCE on macOS. <br/>
  We will only walk through the installation steps using Macports. It is highly recommend to not mix <br/>
  packages installed by different package managers as this typically leads to library incompatibility issues.</p>
 <h1><a class="anchor" id="osxpack"></a>
@@ -247,14 +247,12 @@ Step 2: Build the software</h2>
 </li>
 <li>
 <p class="startli">Run cmake with the correct inputs </p>
-<div class="fragment"><div class="line">&gt; CC=clang CXX=clang++ cmake -DCMAKE_INSTALL_PREFIX=${ISCEHOME}/tools/isce/install ${ISCEHOME}/tools/isce/src/isce</div>
+<div class="fragment"><div class="line">&gt; CC=clang CXX=clang++ cmake -DCMAKE_FIND_FRAMEWORK=NEVER -DCMAKE_INSTALL_PREFIX=${ISCEHOME}/tools/isce/install ${ISCEHOME}/tools/isce/src/isce</div>
 </div><!-- fragment --><p>Other optional arguments can be added to the cmake line </p>
 <table class="doxtable">
 <caption id="cmake_flags" align="bottom">Additional cmake options</caption>
 <tr>
 <th>Option</th><th>Description </th></tr>
-<tr>
-<td>-DCMAKE_FIND_FRAMEWORK=LAST </td><td>CMake is designed to look for frameworks on OSX first. If your cmake consistently finds the wrong Python version, you can disable it with this option </td></tr>
 <tr>
 <td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --dsymutil=yes --track-origins=yes" -DCMAKE_BUILD_TYPE=Debug</td><td></td></tr>
 <tr>
