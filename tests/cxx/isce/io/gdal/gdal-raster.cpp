@@ -478,6 +478,35 @@ TEST_P(RasterTest, WriteAll)
     }
 }
 
+TEST_P(RasterTest, OutOfBoundsRead)
+{
+    RasterTestData testdata = GetParam();
+
+    Raster raster(testdata.sequence.path);
+
+    int col = raster.width() + 1;
+    int row = 0;
+
+    int val;
+    EXPECT_THROW( { raster.readPixel(&val, col, row); }, isce::except::OutOfRange );
+}
+
+TEST_P(RasterTest, OutOfBoundsWrite)
+{
+    RasterTestData testdata = GetParam();
+    std::string path = testdata.driver + "Raster-outofboundswrite";
+    int width = 4;
+    int length = 8;
+    GDALDataType datatype = GDT_Int32;
+    Raster raster(path, width, length, datatype, testdata.driver);
+
+    int col = width - 1;
+    int row = -1;
+
+    int val = 123;
+    EXPECT_THROW( { raster.writePixel(&val, col, row); }, isce::except::OutOfRange );
+}
+
 TEST_P(RasterTest, Memmap)
 {
     RasterTestData testdata = GetParam();

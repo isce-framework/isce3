@@ -2,8 +2,6 @@
 #error "Raster.icc is an implementation detail of Raster.h"
 #endif
 
-#include <cassert>
-
 #include <isce/except/Error.h>
 
 #include "Buffer.h"
@@ -269,13 +267,17 @@ CPLErr Raster::readwriteBlock(T * buf,
         throw isce::except::RuntimeError(ISCE_SRCINFO(), "type is not mappable to GDALDataType");
     }
 
-    // bounds checking - XXX throw exception instead?
-    assert( first_col >= 0 );
-    assert( first_row >= 0 );
-    assert( first_col + num_cols <= width() );
-    assert( first_row + num_rows <= length() );
-    assert( num_cols > 0 );
-    assert( num_rows > 0 );
+    if (num_cols <= 0) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "block width must be > 0");
+    }
+
+    if (num_rows <= 0) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(), "block length must be > 0");
+    }
+
+    if (first_col < 0 || first_row < 0 || first_col + num_cols > width() || first_row + num_rows > length()) {
+        throw isce::except::OutOfRange(ISCE_SRCINFO(), "out of bounds raster access");
+    }
 
     return _dataset._dataset->GetRasterBand(_band)->RasterIO(
             rwflag, first_col, first_row, num_cols, num_rows, buf, num_cols, num_rows, gdt, 0, 0);
