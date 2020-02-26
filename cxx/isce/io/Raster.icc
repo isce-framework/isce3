@@ -212,8 +212,11 @@ void isce::io::Raster::getSetValue(T & buffer,           // i/o buffer of type T
                                    size_t band,          // 1-indexed band number
                                    GDALRWFlag iodir) {   // i/o direction (GF_Read or GF_Write)
 
-  auto iostat = _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, 1, 1, &buffer,
-                                                        1, 1, asGDT<T>, 0, 0);
+    auto iostat = _dataset->GetRasterBand(band)->RasterIO(
+            iodir, xidx, yidx, 1, 1, &buffer, 1, 1, asGDT<T>, 0, 0);
+
+    if (iostat != CPLE_None) // RasterIO returned error
+        std::cout << "In isce::io::Raster::getSetValue() - error in RasterIO." << std::endl;
 }
 
 
