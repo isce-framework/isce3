@@ -77,7 +77,7 @@ TYPED_TEST(IH5Test, nochunk) {
         //Check contents of the HDF5 file
         ASSERT_EQ( img.width(), width); 
         ASSERT_EQ( img.length(), length); 
-        ASSERT_EQ( img.dtype(1), isce::io::GDT.at(typeid(TypeParam)));
+        ASSERT_EQ( img.dtype(1), isce::io::asGDT<TypeParam>);
 
 
         int hsum = GDALChecksumImage(img.dataset()->GetRasterBand(1),0,0,width,length);
@@ -127,7 +127,7 @@ TYPED_TEST(IH5Test, chunk) {
         //Check contents of the HDF5 file
         ASSERT_EQ( img.width(), width);
         ASSERT_EQ( img.length(), length);
-        ASSERT_EQ( img.dtype(1), isce::io::GDT.at(typeid(TypeParam)));
+        ASSERT_EQ( img.dtype(1), isce::io::asGDT<TypeParam>);
 
         int hsum = GDALChecksumImage(img.dataset()->GetRasterBand(1),120,120,10,10);
         ASSERT_EQ( hsum, matsum);

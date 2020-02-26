@@ -55,9 +55,9 @@ class isce::io::Raster {
       /** Create new raster object like another */
       Raster(const std::string& fname, const Raster& rast);
       template<typename T> Raster(const std::string& fname, const std::vector<T>& buffer,   size_t length) :
-            Raster(fname, buffer.size(), length, 1, GDT.at(typeid(T))) {}
+            Raster(fname, buffer.size(), length, 1, asGDT<T>) {}
       template<typename T> Raster(const std::string& fname, const std::valarray<T>& buffer, size_t length) :
-            Raster(fname, buffer.size(), length, 1, GDT.at(typeid(T))) {}
+            Raster(fname, buffer.size(), length, 1, asGDT<T>) {}
 
       /** Create a VRT raster dataset with collection of bands from Rasters */
       Raster(const std::string& fname, const std::vector<Raster>& rastVec);
