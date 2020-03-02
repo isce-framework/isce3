@@ -60,7 +60,7 @@ isce::io::Raster::Raster(isce::core::Matrix<T> &matrix)
 {
     auto byteoffset = matrix.byteoffset();
     initFromPointer(matrix.data(),
-                    isce::io::GDT.at(typeid(T)),
+                    asGDT<T>,
                     matrix.width(),
                     matrix.length(),
                     byteoffset[1],
@@ -121,7 +121,7 @@ isce::io::Raster::Raster(pyre::grid::View<T>& view)
     }
 
     initFromPointer(startoffset,
-                    isce::io::GDT.at(typeid(typename T::cell_type)),
+                    asGDT<typename T::cell_type>,
                     shape[1],
                     shape[0],
                     pixeloffset,
@@ -212,16 +212,11 @@ void isce::io::Raster::getSetValue(T & buffer,           // i/o buffer of type T
                                    size_t band,          // 1-indexed band number
                                    GDALRWFlag iodir) {   // i/o direction (GF_Read or GF_Write)
 
-  if (GDT.count(typeid(T))) { // buffer type is supported by GDAL
-      auto iostat = _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, 1, 1, &buffer,
-                                                            1, 1, GDT.at(typeid(T)), 0, 0);
+    auto iostat = _dataset->GetRasterBand(band)->RasterIO(
+            iodir, xidx, yidx, 1, 1, &buffer, 1, 1, asGDT<T>, 0, 0);
 
-      if (iostat != CPLE_None) // RasterIO returned error
-          std::cout << "In isce::io::Raster::getSetValue() - error in RasterIO." << std::endl;
-  } else
-      std::cout << "In isce::io::Raster::get/setValue() - Buffer datatype "
-                << typeid(T).name()
-                << " is not mappable to a GDALDataType." << std::endl;
+    if (iostat != CPLE_None) // RasterIO returned error
+        std::cout << "In isce::io::Raster::getSetValue() - error in RasterIO." << std::endl;
 }
 
 
@@ -266,19 +261,12 @@ void isce::io::Raster::getSetLine(T *buffer,          // i/o buffer of type T
                                   size_t band,        // band number (1-indexed)
                                   GDALRWFlag iodir) { // i/o direction (GF_Read or GF_Write)
 
-    if (GDT.count(typeid(T))) { // buffer type is supported by GDAL
-        size_t rdwidth = std::min(iowidth, width()); // read the requested iowidth up to width()
-        auto iostat = _dataset->GetRasterBand(band)->RasterIO(iodir, 0, yidx, rdwidth, 1, buffer,
-                                                              rdwidth, 1, GDT.at(typeid(T)), 0, 0);
+    size_t rdwidth = std::min(iowidth, width()); // read the requested iowidth up to width()
+    auto iostat = _dataset->GetRasterBand(band)->RasterIO(iodir, 0, yidx, rdwidth, 1, buffer,
+                                                          rdwidth, 1, asGDT<T>, 0, 0);
 
-        if (iostat != CPLE_None) // RasterIO returned errors
-            std::cout << "In isce::io::Raster::get/setLine() - error in RasterIO." << std::endl;
-    } else {
-        std::cout << "In isce::io::Raster::get/setLine() - Buffer datatype "
-                  << typeid(T).name()
-                  << " is not mappable to a GDALDataType." << std::endl;
-    }
-
+    if (iostat != CPLE_None) // RasterIO returned errors
+        std::cout << "In isce::io::Raster::get/setLine() - error in RasterIO." << std::endl;
 }
 
 
@@ -355,18 +343,13 @@ void isce::io::Raster::getSetBlock(T *buffer,            // i/o buffer of size i
                                    size_t band,          // band number (1-indexed)
                                    GDALRWFlag iodir) {   // i/o direction (GF_Read or GF_Write)
 
-    if (GDT.count(typeid(T))) { // buffer type is supported by GDAL
-        auto iostat = _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, iowidth,
-                                                              iolength, buffer, iowidth,
-                                                              iolength, GDT.at(typeid(T)),
-                                                              0, 0);
+    auto iostat = _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, iowidth,
+                                                          iolength, buffer, iowidth,
+                                                          iolength, asGDT<T>,
+                                                          0, 0);
 
-        if (iostat != CPLE_None) // RasterIO returned errors
-            std::cout << "In isce::io::Raster::get/setValue() - error in RasterIO." << std::endl;
-    } else
-        std::cout << "In isce::io::Raster::get/setBlock() - Buffer datatype "
-                  << typeid(T).name()
-                  << " is not mappable to a GDALDataType." << std::endl;
+    if (iostat != CPLE_None) // RasterIO returned errors
+        std::cout << "In isce::io::Raster::get/setValue() - error in RasterIO." << std::endl;
 }
 
 
@@ -533,16 +516,12 @@ void isce::io::Raster::getSetBlock(pyre::grid::View<T>& view, size_t xidx, size_
     //          << "Pixel offset: " << pixeloffset << "\n"
     //          << "Line offset: " << lineoffset << "\n";
 
-    if (isce::io::GDT.count(typeid(typename T::cell_type))) { // buffer type is supported by GDAL
-        auto iostat =  _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx, shape[1], shape[0], startoffset, shape[1], shape[0], isce::io::GDT.at(typeid(typename T::cell_type)), pixeloffset, lineoffset);
+    auto iostat =  _dataset->GetRasterBand(band)->RasterIO(iodir, xidx, yidx,
+            shape[1], shape[0], startoffset, shape[1], shape[0],
+            asGDT<typename T::cell_type>, pixeloffset, lineoffset);
 
-        if (iostat != CPLE_None) // RasterIO returned errors
-            std::cout << "In isce::io::Raster::get/setValue() - error in RasterIO." << std::endl;
-    } else {
-        std::cout << "In isce::io::Raster::get/setBlock() - Buffer datatype "
-                  << typeid(typename T::cell_type).name()
-                  << " is not mappable to a GDALDataType." << std::endl;
-    }
+    if (iostat != CPLE_None) // RasterIO returned errors
+        std::cout << "In isce::io::Raster::get/setValue() - error in RasterIO." << std::endl;
 }
 
 //Get block of data from given band

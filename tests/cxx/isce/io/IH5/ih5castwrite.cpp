@@ -101,7 +101,7 @@ TYPED_TEST(IH5Test, nochunk) {
     int matsum;
     {
         isce::io::Raster matRaster(_outmatrix); 
-        ASSERT_EQ( matRaster.dtype(1), isce::io::GDT.at(typeid(SecondParam)));
+        ASSERT_EQ( matRaster.dtype(1), isce::io::asGDT<SecondParam>);
         matsum = GDALChecksumImage(matRaster.dataset()->GetRasterBand(1), 0, 0, width, length); 
     }
 
@@ -123,7 +123,7 @@ TYPED_TEST(IH5Test, nochunk) {
         //Check contents of the HDF5 file
         ASSERT_EQ( img.width(), width); 
         ASSERT_EQ( img.length(), length); 
-        ASSERT_EQ( img.dtype(1), isce::io::GDT.at(typeid(SecondParam)));
+        ASSERT_EQ( img.dtype(1), isce::io::asGDT<SecondParam>);
 
         int hsum = GDALChecksumImage(img.dataset()->GetRasterBand(1),0,0,width,length);
         ASSERT_EQ( hsum, matsum);
@@ -163,7 +163,7 @@ TYPED_TEST(IH5Test, chunk) {
     int matsum;
     {
         isce::io::Raster matRaster(_outmatrix);
-        ASSERT_EQ( matRaster.dtype(1), isce::io::GDT.at(typeid(SecondParam)));
+        ASSERT_EQ( matRaster.dtype(1), isce::io::asGDT<SecondParam>);
         matsum = GDALChecksumImage(matRaster.dataset()->GetRasterBand(1), 0, 0, width, length);
     }
 
@@ -185,7 +185,7 @@ TYPED_TEST(IH5Test, chunk) {
         //Check contents of the HDF5 file
         ASSERT_EQ( img.width(), width);
         ASSERT_EQ( img.length(), length);
-        ASSERT_EQ( img.dtype(1), isce::io::GDT.at(typeid(SecondParam)));
+        ASSERT_EQ( img.dtype(1), isce::io::asGDT<SecondParam>);
 
         //Read data type with casting into another matrix
         //And compute check sum

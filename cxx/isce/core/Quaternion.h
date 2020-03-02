@@ -31,8 +31,8 @@ class isce::core::Quaternion : public isce::core::Attitude {
         Quaternion(const std::vector<double> & time, const std::vector<double> & quaternions);
 
         /** Set all quaternion elements from a vector*/
-        inline void data(const std::vector<double> & time,
-                         const std::vector<double> & quaternions);
+        void data(const std::vector<double> & time,
+                  const std::vector<double> & quaternions);
 
         /** Return yaw, pitch, roll*/
         void ypr(double tintp, double & yaw, double & pitch, double & roll);
