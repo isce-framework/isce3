@@ -105,29 +105,22 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;unordered_map&gt;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;gdal_priv.h&gt;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keyword">namespace </span>isce {</div>
-<div class="line"><a name="l00012"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html">   12</a></span>&#160;    <span class="keyword">namespace </span>io {</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;        <span class="comment">// Constants for Raster class</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a5f9c8f1f6d23cbf0ba9e6bcb8b4edd89">   16</a></span>&#160;<span class="comment"></span>        <span class="keyword">const</span> std::string <a class="code" href="namespaceisce_1_1io.html#a5f9c8f1f6d23cbf0ba9e6bcb8b4edd89">defaultGDALDriver</a> = <span class="stringliteral">&quot;VRT&quot;</span>;</div>
-<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a6c7ad9442efb45358a485a3d163aea44">   18</a></span>&#160;        <span class="keyword">const</span> GDALDataType <a class="code" href="namespaceisce_1_1io.html#a6c7ad9442efb45358a485a3d163aea44">defaultGDALDataType</a> = GDT_Float32;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;        <span class="comment">// Unordered_map to map typeids to GDALDataTypes</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;        <span class="keyword">const</span> std::unordered_map&lt;std::type_index, GDALDataType&gt; GDT =</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;          {{<span class="keyword">typeid</span>(uint8_t),               GDT_Byte},</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;           {<span class="keyword">typeid</span>(uint16_t),              GDT_UInt16},</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;           {<span class="keyword">typeid</span>(int16_t),               GDT_Int16},</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;           {<span class="keyword">typeid</span>(uint32_t),              GDT_UInt32},</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;           {<span class="keyword">typeid</span>(int32_t),               GDT_Int32},</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;           {<span class="keyword">typeid</span>(float),                 GDT_Float32},</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;           {<span class="keyword">typeid</span>(double),                GDT_Float64},</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;           {<span class="keyword">typeid</span>(std::complex&lt;int16_t&gt;), GDT_CInt16},</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;           {<span class="keyword">typeid</span>(std::complex&lt;int32_t&gt;), GDT_CInt32},</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;           {<span class="keyword">typeid</span>(std::complex&lt;float&gt;),   GDT_CFloat32},</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;           {<span class="keyword">typeid</span>(std::complex&lt;double&gt;),  GDT_CFloat64}};</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    }</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;}</div>
-<div class="ttc" id="namespaceisce_1_1io_html_a6c7ad9442efb45358a485a3d163aea44"><div class="ttname"><a href="namespaceisce_1_1io.html#a6c7ad9442efb45358a485a3d163aea44">isce::io::defaultGDALDataType</a></div><div class="ttdeci">const GDALDataType defaultGDALDataType</div><div class="ttdoc">Default GDAL data type used by Raster for creation. </div><div class="ttdef"><b>Definition:</b> Constants.h:18</div></div>
-<div class="ttc" id="namespaceisce_1_1io_html_a5f9c8f1f6d23cbf0ba9e6bcb8b4edd89"><div class="ttname"><a href="namespaceisce_1_1io.html#a5f9c8f1f6d23cbf0ba9e6bcb8b4edd89">isce::io::defaultGDALDriver</a></div><div class="ttdeci">const std::string defaultGDALDriver</div><div class="ttdoc">Default GDAL driver used by Raster for creation. </div><div class="ttdef"><b>Definition:</b> Constants.h:16</div></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;gdal/detail/GDALDataTypeUtil.h&quot;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">namespace </span>isce {</div>
+<div class="line"><a name="l00014"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html">   14</a></span>&#160;    <span class="keyword">namespace </span>io {</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;        <span class="comment">// Constants for Raster class</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a5f9c8f1f6d23cbf0ba9e6bcb8b4edd89">   18</a></span>&#160;<span class="comment"></span>        <span class="keyword">const</span> std::string <a class="code" href="namespaceisce_1_1io.html#a5f9c8f1f6d23cbf0ba9e6bcb8b4edd89">defaultGDALDriver</a> = <span class="stringliteral">&quot;VRT&quot;</span>;</div>
+<div class="line"><a name="l00020"></a><span class="lineno"><a class="line" href="namespaceisce_1_1io.html#a6c7ad9442efb45358a485a3d163aea44">   20</a></span>&#160;        <span class="keyword">const</span> GDALDataType <a class="code" href="namespaceisce_1_1io.html#a6c7ad9442efb45358a485a3d163aea44">defaultGDALDataType</a> = GDT_Float32;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;        <span class="keyword">auto</span> asGDT = <a class="code" href="structisce_1_1io_1_1gdal_1_1detail_1_1Type2GDALDataType.html">gdal::detail::Type2GDALDataType&lt;T&gt;::datatype</a>;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    }</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;}</div>
+<div class="ttc" id="namespaceisce_1_1io_html_a6c7ad9442efb45358a485a3d163aea44"><div class="ttname"><a href="namespaceisce_1_1io.html#a6c7ad9442efb45358a485a3d163aea44">isce::io::defaultGDALDataType</a></div><div class="ttdeci">const GDALDataType defaultGDALDataType</div><div class="ttdoc">Default GDAL data type used by Raster for creation. </div><div class="ttdef"><b>Definition:</b> Constants.h:20</div></div>
+<div class="ttc" id="structisce_1_1io_1_1gdal_1_1detail_1_1Type2GDALDataType_html"><div class="ttname"><a href="structisce_1_1io_1_1gdal_1_1detail_1_1Type2GDALDataType.html">isce::io::gdal::detail::Type2GDALDataType</a></div><div class="ttdef"><b>Definition:</b> GDALDataTypeUtil.h:21</div></div>
+<div class="ttc" id="namespaceisce_1_1io_html_a5f9c8f1f6d23cbf0ba9e6bcb8b4edd89"><div class="ttname"><a href="namespaceisce_1_1io.html#a5f9c8f1f6d23cbf0ba9e6bcb8b4edd89">isce::io::defaultGDALDriver</a></div><div class="ttdeci">const std::string defaultGDALDriver</div><div class="ttdoc">Default GDAL driver used by Raster for creation. </div><div class="ttdef"><b>Definition:</b> Constants.h:18</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by

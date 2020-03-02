@@ -225,10 +225,10 @@ const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="e
 const GDALDataType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1io.html#a6c7ad9442efb45358a485a3d163aea44">defaultGDALDataType</a> = GDT_Float32</td></tr>
 <tr class="memdesc:a6c7ad9442efb45358a485a3d163aea44"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default GDAL data type used by <a class="el" href="classisce_1_1io_1_1Raster.html" title="Data structure meant to handle Raster I/O operations. ">Raster</a> for creation. <br/></td></tr>
 <tr class="separator:a6c7ad9442efb45358a485a3d163aea44"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aabda05a94dbf57fad1ff5cde66ad21ba"><td class="memItemLeft" align="right" valign="top">const std::unordered_map<br class="typebreak"/>
-&lt; std::type_index, <br class="typebreak"/>
-GDALDataType &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>GDT</b></td></tr>
-<tr class="separator:aabda05a94dbf57fad1ff5cde66ad21ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a608cb10376790af7677373a695b25ec8"><td class="memTemplParams" colspan="2"><a class="anchor" id="a608cb10376790af7677373a695b25ec8"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a608cb10376790af7677373a695b25ec8"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>asGDT</b> = <a class="el" href="structisce_1_1io_1_1gdal_1_1detail_1_1Type2GDALDataType.html">gdal::detail::Type2GDALDataType</a>&lt;T&gt;::datatype</td></tr>
+<tr class="separator:a608cb10376790af7677373a695b25ec8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac7c3c6a47e5426bc8124dfd4f177a41"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aac7c3c6a47e5426bc8124dfd4f177a41"></a>
 const hsize_t&#160;</td><td class="memItemRight" valign="bottom"><b>chunkSizeX</b> = 128</td></tr>
 <tr class="separator:aac7c3c6a47e5426bc8124dfd4f177a41"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1033,30 +1033,6 @@ template&lt;typename H5obj &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Variable Documentation</h2>
-<a class="anchor" id="aabda05a94dbf57fad1ff5cde66ad21ba"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">const std::unordered_map&lt;std::type_index, GDALDataType&gt; isce::io::GDT</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">=</div>
-<div class="line">          {{<span class="keyword">typeid</span>(uint8_t),               GDT_Byte},</div>
-<div class="line">           {<span class="keyword">typeid</span>(uint16_t),              GDT_UInt16},</div>
-<div class="line">           {<span class="keyword">typeid</span>(int16_t),               GDT_Int16},</div>
-<div class="line">           {<span class="keyword">typeid</span>(uint32_t),              GDT_UInt32},</div>
-<div class="line">           {<span class="keyword">typeid</span>(int32_t),               GDT_Int32},</div>
-<div class="line">           {<span class="keyword">typeid</span>(float),                 GDT_Float32},</div>
-<div class="line">           {<span class="keyword">typeid</span>(double),                GDT_Float64},</div>
-<div class="line">           {<span class="keyword">typeid</span>(std::complex&lt;int16_t&gt;), GDT_CInt16},</div>
-<div class="line">           {<span class="keyword">typeid</span>(std::complex&lt;int32_t&gt;), GDT_CInt32},</div>
-<div class="line">           {<span class="keyword">typeid</span>(std::complex&lt;float&gt;),   GDT_CFloat32},</div>
-<div class="line">           {<span class="keyword">typeid</span>(std::complex&lt;double&gt;),  GDT_CFloat64}}</div>
-</div><!-- fragment -->
-</div>
-</div>
 <a class="anchor" id="acf8bc95398dd1ac5335ed578160f4263"></a>
 <div class="memitem">
 <div class="memproto">
