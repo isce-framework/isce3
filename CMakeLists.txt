@@ -128,3 +128,9 @@ configure_file(
     doc/sphinx/conf.py.in
     doc/sphinx/conf.py
     )
+
+install(EXPORT isce3-targets
+        NAMESPACE ISCE3::
+        FILE ISCE3-config.cmake
+        DESTINATION lib/cmake/isce3
+        )

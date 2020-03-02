@@ -1,8 +1,5 @@
 find_package(Numpy REQUIRED)
 
-# Set the name for the ISCE C++ library
-set(LISCE isce.${ISCE_VERSION_MAJOR}.${ISCE_VERSION_MINOR})
-
 set_source_files_properties(
     isceextension.pyx
     PROPERTIES CYTHON_IS_CXX TRUE

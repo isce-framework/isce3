@@ -52,7 +52,7 @@ function(pyre_journalLib)
   # set the include directories
   target_include_directories(
     journal PUBLIC
-    ${CMAKE_CURRENT_BINARY_DIR}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
     )
   # add the sources
   target_sources(journal
