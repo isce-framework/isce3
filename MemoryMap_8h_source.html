@@ -140,7 +140,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <a class="code" href="classisce_1_1io_1_1gdal_1_1detail_1_1MemoryMap.html">MemoryMap</a>(GDALRasterBand * raster, GDALAccess <a class="code" href="classisce_1_1io_1_1gdal_1_1Raster.html#a018636d8045272f3551dac6f12304cad">access</a>);</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    std::unique_ptr&lt;CPLVirtualMem, void(*)(CPLVirtualMem *)&gt; _mmap;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    std::shared_ptr&lt;CPLVirtualMem&gt; _mmap;</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    std::size_t _colstride = 0;</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    std::size_t _rowstride = 0;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;};</div>
