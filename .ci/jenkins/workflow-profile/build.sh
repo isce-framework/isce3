@@ -37,7 +37,8 @@ git clone --single-branch \
 
 # download test data in artifactory 
 cd /tmp
-curl -u gmanipon:${ART_CREDENTIALS} -O "https://cae-artifactory.jpl.nasa.gov/artifactory/general-develop/gov/nasa/jpl/nisar/adt/r0/ISCE/winnip_data.tar.gz"
+curl -O "https://cae-artifactory.jpl.nasa.gov/artifactory/general-develop/gov/nasa/jpl/nisar/adt/r0/ISCE/winnip_data.tar.gz"
+ls -al winnip_data.tar.gz
 tar xvzf winnip_data.tar.gz
 cd -
 ./run-profile.sh ${TAG} /tmp/winnip_data
