@@ -1,11 +1,15 @@
 #!/bin/bash
 set -ex
 
+#Get the tag from the end of the GIT_BRANCH
+ISCEBRANCH="${GIT_BRANCH##*/}"
+
 #Get repo path by removing http://*/ and .git from GIT_URL
 REPO="${GIT_URL#*://*/}"
 REPO="${REPO%.git}"
 #REPO="${REPO//\//_}"
 
+echo "ISCE BRANCH: $ISCE BRANCH"
 echo "REPO: $REPO"
 echo "WORKSPACE: $WORKSPACE"
 echo "GIT_OAUTH_TOKEN: $GIT_OAUTH_TOKEN"
@@ -32,7 +36,7 @@ curl -L -H "Accept: application/octet-stream" --output gcc7.tar.gz "https://${GI
 ./build-isce-src.sh ${TAG} ${WORKSPACE}
 ./build-isce-ops.sh ${TAG} ${WORKSPACE}
 
-git clone --single-branch \
+git clone --single-branch --branch ${ISCEBRANCH} \
   https://${GIT_OAUTH_TOKEN}@github-fn.jpl.nasa.gov/isce-3/isce.git 
 
 git clone --single-branch \
