@@ -33,7 +33,7 @@ git clone --single-branch --branch ${ISCEBRANCH} \
 git clone --single-branch \
   https://${GIT_OAUTH_TOKEN}@github-fn.jpl.nasa.gov/NISAR-ADT/WorkflowProfile.git
 
-./build-profile.sh  ${TAG} ${WORKSAPCE} WorkflowProfile
+./build-profile.sh  ${TAG} ${WORKSPACE} WorkflowProfile
 
 # download test data in artifactory 
 cd /tmp
