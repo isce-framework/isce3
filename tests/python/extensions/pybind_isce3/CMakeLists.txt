@@ -1,5 +1,6 @@
 set(TESTFILES
 core/datetime_.py
+core/ellipsoid.py
 core/LUT1d.py
 core/LUT2d.py
 core/orbit.py
