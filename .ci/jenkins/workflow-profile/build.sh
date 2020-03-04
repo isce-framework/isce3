@@ -4,13 +4,7 @@ set -ex
 #Get the tag from the end of the GIT_BRANCH
 ISCEBRANCH="${GIT_BRANCH##*/}"
 
-#Get repo path by removing http://*/ and .git from GIT_URL
-REPO="${GIT_URL#*://*/}"
-REPO="${REPO%.git}"
-#REPO="${REPO//\//_}"
-
 echo "ISCE BRANCH: $ISCEBRANCH"
-echo "REPO: $REPO"
 echo "WORKSPACE: $WORKSPACE"
 echo "GIT_OAUTH_TOKEN: $GIT_OAUTH_TOKEN"
 
@@ -20,9 +14,6 @@ echo "TAG: $TAG"
 
 # prune docker
 docker system prune -f
-
-# turn off valgrind
-memcheck=0
 
 # build base and dev images
 cd .ci/images/centos
