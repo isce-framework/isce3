@@ -9,7 +9,7 @@ REPO="${GIT_URL#*://*/}"
 REPO="${REPO%.git}"
 #REPO="${REPO//\//_}"
 
-echo "ISCE BRANCH: $ISCE BRANCH"
+echo "ISCE BRANCH: $ISCEBRANCH"
 echo "REPO: $REPO"
 echo "WORKSPACE: $WORKSPACE"
 echo "GIT_OAUTH_TOKEN: $GIT_OAUTH_TOKEN"
