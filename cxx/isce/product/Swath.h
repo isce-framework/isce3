@@ -58,7 +58,7 @@ class isce::product::Swath {
 
         /** Get processed wavelength */
         inline double processedWavelength() const {
-            return isce::core::speed_of_light<double> / _processedCenterFrequency;
+            return isce::core::speed_of_light / _processedCenterFrequency;
         }
 
         /** Get acquired range bandwidth */

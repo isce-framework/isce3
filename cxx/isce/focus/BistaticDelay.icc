@@ -11,7 +11,7 @@ double bistaticDelay(const isce::core::Vec3 & p,
                      const isce::core::Vec3 & v,
                      const isce::core::Vec3 & x)
 {
-    constexpr static double c = isce::core::speed_of_light<double>;
+    constexpr static double c = isce::core::speed_of_light;
     isce::core::Vec3 r = x - p;
     return 2. * (r.dot(v) - c * r.norm()) / (v.squaredNorm() - std::pow(c, 2));
 }

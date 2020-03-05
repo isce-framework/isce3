@@ -45,7 +45,7 @@ TEST(BistaticDelay, BistaticDelay)
         // compare to roundtrip delay using platform position at time = t + tau
         Vec3 p1 = orbit.position(t + tau);
         double d = (x - p).norm() + (p1 - x).norm();
-        double dt = d / isce::core::speed_of_light<double>;
+        double dt = d / isce::core::speed_of_light;
 
         EXPECT_DOUBLE_EQ(tau, dt);
     }

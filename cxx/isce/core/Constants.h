@@ -63,8 +63,7 @@ const double EarthSemiMajorAxis = 6378137.0;
 const double EarthEccentricitySquared = 0.0066943799901;
 
 /** Speed of light in vacuum (m/s) */
-template<typename T>
-constexpr static T speed_of_light = T(299792458.0);
+constexpr static double speed_of_light = 299792458.0;
 
 /** Global minimum height */
 const double GLOBAL_MIN_HEIGHT = -500.0;
