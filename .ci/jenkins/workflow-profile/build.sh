@@ -27,9 +27,6 @@ curl -L -H "Accept: application/octet-stream" --output gcc7.tar.gz "https://${GI
 ./build-isce-src.sh ${TAG} ${WORKSPACE}
 ./build-isce-ops.sh ${TAG} ${WORKSPACE}
 
-git clone --single-branch --branch ${ISCEBRANCH} \
-  https://${GIT_OAUTH_TOKEN}@github-fn.jpl.nasa.gov/isce-3/isce.git 
-
 git clone --single-branch \
   https://${GIT_OAUTH_TOKEN}@github-fn.jpl.nasa.gov/NISAR-ADT/WorkflowProfile.git
 
@@ -43,3 +40,9 @@ tar xvzf winnip_data.tar.gz
 cd -
 ./run-profile.sh ${TAG} /tmp/winnip_data
 docker image rm nisar/profile:${TAG}
+
+# check results
+if [[ (! -f profile_runs/test_gpu.yaml_crossmul.coh) || (! -f profile_runs/test_gpu.yaml_crossmul.int) ]]; then
+  echo "Error: no GPU interferogram or coherence results found"
+  exit 1
+fi
