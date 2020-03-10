@@ -6,7 +6,7 @@ SetCoverageOptions(${LISCE})
 
 target_link_libraries(${LISCE} PUBLIC
     Cereal::Cereal
-    Eigen::Eigen
+    Eigen3::Eigen
     ${GDAL_LIBRARY}
     ${HDF5_LIBRARY}
     pyre::pyre
@@ -43,7 +43,7 @@ foreach(HEADER ${HEADERS})
 endforeach()
 
 # Install shared library
-install(TARGETS ${LISCE} cereal eigen
+install(TARGETS ${LISCE}
         EXPORT isce3-targets
         DESTINATION ${ISCE_LIBDIR}
         COMPONENT isce_libs)

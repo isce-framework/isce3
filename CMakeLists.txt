@@ -16,8 +16,6 @@ endif()
 project(ISCE VERSION 3.0
         LANGUAGES CXX)
 
-find_package(GTest)
-
 option(WITH_CUDA "Set ON|OFF (default=ON) to build CUDA library" OFF)
 set(ISCE_CUDA_ARCHS "Auto" CACHE STRING
     "Select target CUDA device architecture, options are:
@@ -80,9 +78,6 @@ CheckCXX()
 ###Check if an appropriate python is installed
 CheckISCEPython()
 
-##Check for Pyre
-find_package(pyre)
-
 ##Check for Cython
 include(useCython)
 
@@ -109,11 +104,30 @@ find_package(FFTW REQUIRED COMPONENTS
 ###Layout same install directory structure as pyre
 InitInstallDirLayout()
 
-###Setup for gtest framework
-option(INSTALL_GTEST "Enable installation of googletest" OFF)
+# Dependencies
 
-# Setup for Eigen
-include_directories(SYSTEM extern/eigen3)
+find_package(Git)
+include(.cmake/GitCloneDep.cmake)
+
+find_package(Eigen3 QUIET NO_MODULE)
+if(NOT EIGEN3_FOUND)
+    git_clone_dep(gitlab.com libeigen eigen 3.3.7)
+    add_library(Eigen3::Eigen ALIAS eigen)
+endif()
+find_package(GTest QUIET)
+if(NOT GTEST_FOUND)
+    set(BUILD_GMOCK OFF CACHE INTERNAL "")
+    set(INSTALL_GTEST OFF CACHE INTERNAL "")
+    git_clone_dep(github.com google googletest release-1.10.0)
+    add_library(GTest::GTest ALIAS gtest)
+    add_library(GTest::Main ALIAS gtest_main)
+endif()
+find_package(pyre QUIET)
+if(NOT HAVE_PYRE)
+    # disable pyre's test suite
+    set(BUILD_TESTING OFF)
+    git_clone_dep(github.com pyre pyre master)
+endif()
 
 add_subdirectory(extern) # Contributed software (not maintained here)
 add_subdirectory(cxx)    # Core C++ library
