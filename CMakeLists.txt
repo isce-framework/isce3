@@ -111,6 +111,7 @@ include(.cmake/GitCloneDep.cmake)
 
 find_package(Eigen3 QUIET NO_MODULE)
 if(NOT EIGEN3_FOUND)
+    set(BUILD_TESTING OFF)
     git_clone_dep(gitlab.com libeigen eigen 3.3.7)
     add_library(Eigen3::Eigen ALIAS eigen)
 endif()
@@ -154,8 +155,8 @@ install(EXPORT isce3-targets
         )
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-    ${PROJECT_SOURCE_DIR}/.cmake/ISCE3-config.cmake.in
-    ${PROJECT_BINARY_DIR}/ISCE3-config.cmake
+    ${PROJECT_SOURCE_DIR}/.cmake/isce3-config.cmake.in
+    ${PROJECT_BINARY_DIR}/isce3-config.cmake
     INSTALL_DESTINATION ${ISCE3_CMAKE_DIR})
-install(FILES ${PROJECT_BINARY_DIR}/ISCE3-config.cmake
+install(FILES ${PROJECT_BINARY_DIR}/isce3-config.cmake
         DESTINATION ${ISCE3_CMAKE_DIR})
