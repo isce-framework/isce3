@@ -4,6 +4,7 @@
 # Copyright 2017-2019
 #
 
+from libcpp.string cimport string
 from DateTime cimport DateTime
 from RadarGridParameters cimport RadarGridParameters
 from LookSide cimport LookSide, to_string, parseLookSide
@@ -53,7 +54,8 @@ cdef class pyRadarGridParameters:
         """
         Returns look side ("left" or "right")
         """
-        return to_string(self.c_radargrid.lookSide())
+        cdef string s = to_string(self.c_radargrid.lookSide())
+        return s.decode('UTF-8')
 
     @lookSide.setter
     def lookSide(self, side):

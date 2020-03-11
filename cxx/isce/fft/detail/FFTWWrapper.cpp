@@ -1,17 +1,12 @@
 #include "FFTWWrapper.h"
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #include <isce/except/Error.h>
 
 namespace isce { namespace fft { namespace detail {
 
 static
-void setNumThreadsf()
+void setNumThreadsf(int threads)
 {
-#ifdef _OPENMP
     // perform one-time initialization required to use threads
     static bool initialized(false);
     if (!initialized) {
@@ -23,14 +18,12 @@ void setNumThreadsf()
     }
 
     // set max number of threads to use
-    fftwf_plan_with_nthreads(omp_get_max_threads());
-#endif
+    fftwf_plan_with_nthreads(threads);
 }
 
 static
-void setNumThreads()
+void setNumThreads(int threads)
 {
-#ifdef _OPENMP
     // perform one-time initialization required to use threads
     static bool initialized(false);
     if (!initialized) {
@@ -42,8 +35,7 @@ void setNumThreads()
     }
 
     // set max number of threads to use
-    fftw_plan_with_nthreads(omp_get_max_threads());
-#endif
+    fftw_plan_with_nthreads(threads);
 }
 
 fftwf_plan
@@ -52,9 +44,9 @@ initPlan(int rank, const int * n, int howmany,
          const int * inembed, int istride, int idist,
          std::complex<float> * out,
          const int * onembed, int ostride, int odist,
-         int sign, unsigned flags)
+         int sign, unsigned flags, int threads)
 {
-    setNumThreadsf();
+    setNumThreadsf(threads);
 
     return fftwf_plan_many_dft(
             rank, n, howmany,
@@ -71,9 +63,9 @@ initPlan(int rank, const int * n, int howmany,
          const int * inembed, int istride, int idist,
          std::complex<double> * out,
          const int * onembed, int ostride, int odist,
-         int sign, unsigned flags)
+         int sign, unsigned flags, int threads)
 {
-    setNumThreads();
+    setNumThreads(threads);
 
     return fftw_plan_many_dft(
             rank, n, howmany,
@@ -90,9 +82,9 @@ initPlan(int rank, const int * n, int howmany,
          const int * inembed, int istride, int idist,
          std::complex<float> * out,
          const int * onembed, int ostride, int odist,
-         int, unsigned flags)
+         int, unsigned flags, int threads)
 {
-    setNumThreadsf();
+    setNumThreadsf(threads);
 
     return fftwf_plan_many_dft_r2c(
             rank, n, howmany,
@@ -109,9 +101,9 @@ initPlan(int rank, const int * n, int howmany,
          const int * inembed, int istride, int idist,
          std::complex<double> * out,
          const int * onembed, int ostride, int odist,
-         int, unsigned flags)
+         int, unsigned flags, int threads)
 {
-    setNumThreads();
+    setNumThreads(threads);
 
     return fftw_plan_many_dft_r2c(
             rank, n, howmany,
@@ -128,9 +120,9 @@ initPlan(int rank, const int * n, int howmany,
          const int * inembed, int istride, int idist,
          float * out,
          const int * onembed, int ostride, int odist,
-         int, unsigned flags)
+         int, unsigned flags, int threads)
 {
-    setNumThreadsf();
+    setNumThreadsf(threads);
 
     return fftwf_plan_many_dft_c2r(
             rank, n, howmany,
@@ -147,9 +139,9 @@ initPlan(int rank, const int * n, int howmany,
          const int * inembed, int istride, int idist,
          double * out,
          const int * onembed, int ostride, int odist,
-         int, unsigned flags)
+         int, unsigned flags, int threads)
 {
-    setNumThreads();
+    setNumThreads(threads);
 
     return fftw_plan_many_dft_c2r(
             rank, n, howmany,

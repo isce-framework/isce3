@@ -19,9 +19,10 @@ FFTPlanBase<Sign, T>::FFTPlanBase(std::complex<T> * out,
                                   std::complex<T> * in,
                                   int n,
                                   int batch,
-                                  unsigned flags)
+                                  unsigned flags,
+                                  int threads)
 :
-    FFTPlanBase(out, in, &n, &n, 1, n, &n, 1, n, batch, flags, 1, Sign)
+    FFTPlanBase(out, in, &n, &n, 1, n, &n, 1, n, batch, flags, 1, Sign, threads)
 {}
 
 template<int Sign, typename T>
@@ -31,9 +32,10 @@ FFTPlanBase<Sign, T>::FFTPlanBase(std::complex<T> * out,
                                   std::complex<T> * in,
                                   const int (&n)[Rank],
                                   int batch,
-                                  unsigned flags)
+                                  unsigned flags,
+                                  int threads)
 :
-    FFTPlanBase(out, in, n, n, 1, product(n), n, 1, product(n), batch, flags, Rank, Sign)
+    FFTPlanBase(out, in, n, n, 1, product(n), n, 1, product(n), batch, flags, Rank, Sign, threads)
 {}
 
 template<int Sign, typename T>
@@ -45,9 +47,10 @@ FFTPlanBase<Sign, T>::FFTPlanBase(std::complex<T> * out,
                                   int stride,
                                   int dist,
                                   int batch,
-                                  unsigned flags)
+                                  unsigned flags,
+                                  int threads)
 :
-    FFTPlanBase(out, in, &n, &nembed, stride, dist, &nembed, stride, dist, batch, flags, 1, Sign)
+    FFTPlanBase(out, in, &n, &nembed, stride, dist, &nembed, stride, dist, batch, flags, 1, Sign, threads)
 {}
 
 template<int Sign, typename T>
@@ -60,9 +63,10 @@ FFTPlanBase<Sign, T>::FFTPlanBase(std::complex<T> * out,
                                   int stride,
                                   int dist,
                                   int batch,
-                                  unsigned flags)
+                                  unsigned flags,
+                                  int threads)
 :
-    FFTPlanBase(out, in, n, nembed, stride, dist, nembed, stride, dist, batch, flags, Rank, Sign)
+    FFTPlanBase(out, in, n, nembed, stride, dist, nembed, stride, dist, batch, flags, Rank, Sign, threads)
 {}
 
 template<int Sign, typename T>
@@ -77,9 +81,10 @@ FFTPlanBase<Sign, T>::FFTPlanBase(std::complex<T> * out,
                                   int ostride,
                                   int odist,
                                   int batch,
-                                  unsigned flags)
+                                  unsigned flags,
+                                  int threads)
 :
-    FFTPlanBase(out, in, &n, &inembed, istride, idist, &onembed, ostride, odist, batch, flags, 1, Sign)
+    FFTPlanBase(out, in, &n, &inembed, istride, idist, &onembed, ostride, odist, batch, flags, 1, Sign, threads)
 {}
 
 template<int Sign, typename T>
@@ -95,9 +100,10 @@ FFTPlanBase<Sign, T>::FFTPlanBase(std::complex<T> * out,
                                   int ostride,
                                   int odist,
                                   int batch,
-                                  unsigned flags)
+                                  unsigned flags,
+                                  int threads)
 :
-    FFTPlanBase(out, in, n, inembed, istride, idist, onembed, ostride, odist, batch, flags, Rank, Sign)
+    FFTPlanBase(out, in, n, inembed, istride, idist, onembed, ostride, odist, batch, flags, Rank, Sign, threads)
 {}
 
 template<int Sign, typename T>
@@ -121,7 +127,8 @@ FFTPlanBase<Sign, T>::FFTPlanBase(U * out,
                                   int batch,
                                   unsigned flags,
                                   int rank,
-                                  int sign)
+                                  int sign,
+                                  int threads)
 {
     // construct shared pointer with custom deleter to destroy the plan
     _plan = std::shared_ptr<fftw_plan_t>(new fftw_plan_t,
@@ -131,7 +138,7 @@ FFTPlanBase<Sign, T>::FFTPlanBase(U * out,
                 });
 
     // create plan
-    *_plan = initPlan(rank, n, batch, in, inembed, istride, idist, out, onembed, ostride, odist, sign, flags);
+    *_plan = initPlan(rank, n, batch, in, inembed, istride, idist, out, onembed, ostride, odist, sign, flags, threads);
 
     // make sure plan creation was successful
     if (!(*_plan)) {

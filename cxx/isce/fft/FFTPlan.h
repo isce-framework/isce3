@@ -31,12 +31,14 @@ public:
      * \param[in] n Transform size
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     FwdFFTPlan(std::complex<T> * out,
                std::complex<T> * in,
                int n,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-complex forward transform
@@ -47,13 +49,15 @@ public:
      * \param[in] n Size of each transform dimension
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     template<int Rank>
     FwdFFTPlan(std::complex<T> * out,
                std::complex<T> * in,
                const int (&n)[Rank],
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D complex-to-complex forward transform
@@ -66,6 +70,7 @@ public:
      * \param[in] dist Stride between adjacent batches in the input/output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     FwdFFTPlan(std::complex<T> * out,
                std::complex<T> * in,
@@ -74,7 +79,8 @@ public:
                int stride,
                int dist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-complex forward transform
@@ -88,6 +94,7 @@ public:
      * \param[in] dist Stride between adjacent batches in the input/output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     template<int Rank>
     FwdFFTPlan(std::complex<T> * out,
@@ -97,7 +104,8 @@ public:
                int stride,
                int dist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D complex-to-complex forward transform
@@ -113,6 +121,7 @@ public:
      * \param[in] odist Stride between adjacent batches in the output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     FwdFFTPlan(std::complex<T> * out,
                std::complex<T> * in,
@@ -124,7 +133,8 @@ public:
                int ostride,
                int odist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-complex forward transform
@@ -141,6 +151,7 @@ public:
      * \param[in] odist Stride between adjacent batches in the output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     template<int Rank>
     FwdFFTPlan(std::complex<T> * out,
@@ -153,7 +164,8 @@ public:
                int ostride,
                int odist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 #endif
 
     /**
@@ -164,12 +176,14 @@ public:
      * \param[in] n Transform size
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     FwdFFTPlan(std::complex<T> * out,
                T * in,
                int n,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D real-to-complex forward transform
@@ -180,13 +194,15 @@ public:
      * \param[in] n Size of each transform dimension
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     template<int Rank>
     FwdFFTPlan(std::complex<T> * out,
                T * in,
                const int (&n)[Rank],
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D real-to-complex forward transform
@@ -199,6 +215,7 @@ public:
      * \param[in] dist Stride between adjacent batches in the input/output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     FwdFFTPlan(std::complex<T> * out,
                T * in,
@@ -207,7 +224,8 @@ public:
                int stride,
                int dist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D real-to-complex forward transform
@@ -221,6 +239,7 @@ public:
      * \param[in] dist Stride between adjacent batches in the input/output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     template<int Rank>
     FwdFFTPlan(std::complex<T> * out,
@@ -230,7 +249,8 @@ public:
                int stride,
                int dist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D real-to-complex forward transform
@@ -246,6 +266,7 @@ public:
      * \param[in] odist Stride between adjacent batches in the output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     FwdFFTPlan(std::complex<T> * out,
                T * in,
@@ -257,7 +278,8 @@ public:
                int ostride,
                int odist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D real-to-complex forward transform
@@ -274,6 +296,7 @@ public:
      * \param[in] odist Stride between adjacent batches in the output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     template<int Rank>
     FwdFFTPlan(std::complex<T> * out,
@@ -286,7 +309,8 @@ public:
                int ostride,
                int odist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     // the following are declared here just for the purpose of doxygenating them
     // they are actually defined in the base class
@@ -324,12 +348,14 @@ public:
      * \param[in] n Transform size
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     InvFFTPlan(std::complex<T> * out,
                std::complex<T> * in,
                int n,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-complex inverse transform
@@ -340,13 +366,15 @@ public:
      * \param[in] n Size of each transform dimension
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     template<int Rank>
     InvFFTPlan(std::complex<T> * out,
                std::complex<T> * in,
                const int (&n)[Rank],
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D complex-to-complex inverse transform
@@ -359,6 +387,7 @@ public:
      * \param[in] dist Stride between adjacent batches in the input/output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     InvFFTPlan(std::complex<T> * out,
                std::complex<T> * in,
@@ -367,7 +396,8 @@ public:
                int stride,
                int dist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-complex inverse transform
@@ -381,6 +411,7 @@ public:
      * \param[in] dist Stride between adjacent batches in the input/output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     template<int Rank>
     InvFFTPlan(std::complex<T> * out,
@@ -390,7 +421,8 @@ public:
                int stride,
                int dist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D complex-to-complex inverse transform
@@ -406,6 +438,7 @@ public:
      * \param[in] odist Stride between adjacent batches in the output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     InvFFTPlan(std::complex<T> * out,
                std::complex<T> * in,
@@ -417,7 +450,8 @@ public:
                int ostride,
                int odist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-complex inverse transform
@@ -434,6 +468,7 @@ public:
      * \param[in] odist Stride between adjacent batches in the output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     template<int Rank>
     InvFFTPlan(std::complex<T> * out,
@@ -446,7 +481,8 @@ public:
                int ostride,
                int odist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 #endif
 
     /**
@@ -457,12 +493,14 @@ public:
      * \param[in] n Transform size
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     InvFFTPlan(T * out,
                std::complex<T> * in,
                int n,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-real inverse transform
@@ -473,13 +511,15 @@ public:
      * \param[in] n Size of each transform dimension
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     template<int Rank>
     InvFFTPlan(T * out,
                std::complex<T> * in,
                const int (&n)[Rank],
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D complex-to-real inverse transform
@@ -492,6 +532,7 @@ public:
      * \param[in] dist Stride between adjacent batches in the input/output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     InvFFTPlan(T * out,
                std::complex<T> * in,
@@ -500,7 +541,8 @@ public:
                int stride,
                int dist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-real inverse transform
@@ -514,6 +556,7 @@ public:
      * \param[in] dist Stride between adjacent batches in the input/output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     template<int Rank>
     InvFFTPlan(T * out,
@@ -523,7 +566,8 @@ public:
                int stride,
                int dist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * 1-D complex-to-real inverse transform
@@ -539,6 +583,7 @@ public:
      * \param[in] odist Stride between adjacent batches in the output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     InvFFTPlan(T * out,
                std::complex<T> * in,
@@ -550,7 +595,8 @@ public:
                int ostride,
                int odist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     /**
      * N-D complex-to-real inverse transform
@@ -567,6 +613,7 @@ public:
      * \param[in] odist Stride between adjacent batches in the output
      * \param[in] batch Batch size
      * \param[in] flags FFTW plan creation flags
+     * \param[in] threads Thread count for parallel execution
      */
     template<int Rank>
     InvFFTPlan(T * out,
@@ -579,7 +626,8 @@ public:
                int ostride,
                int odist,
                int batch = 1,
-               unsigned flags = FFTW_MEASURE);
+               unsigned flags = FFTW_MEASURE,
+               int threads = detail::getMaxThreads());
 
     // the following are declared here just for the purpose of doxygenating them
     // they are actually defined in the base class

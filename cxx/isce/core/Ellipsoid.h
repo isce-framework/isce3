@@ -82,7 +82,7 @@ class isce::core::Ellipsoid {
             return xyz;
         }
 
-        /** Transform ECEC xyz to Lon/Lat/Hgt */
+        /** Transform ECEF xyz to Lon/Lat/Hgt */
         CUDA_HOSTDEV
         void xyzToLonLat(const cartesian_t &xyz, cartesian_t &llh) const;
         CUDA_HOSTDEV Vec3 xyzToLonLat(const Vec3& xyz) const {

@@ -84,7 +84,6 @@ class Base(pyre.component,
                                          'lookDirection')
         lookDirection = None
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
-            lookDirectionObj = fid[lookDirectionPath] 
             lookDirection = fid[lookDirectionPath][()].decode()
         return swath.getRadarGridParameters(lookDirection)
 

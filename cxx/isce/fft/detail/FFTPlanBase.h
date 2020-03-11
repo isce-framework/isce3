@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include "FFTWWrapper.h"
+#include "Threads.h"
 
 namespace isce { namespace fft { namespace detail {
 
@@ -21,14 +22,16 @@ public:
                 std::complex<T> * in,
                 int n,
                 int batch = 1,
-                unsigned flags = FFTW_MEASURE);
+                unsigned flags = FFTW_MEASURE,
+                int threads = getMaxThreads());
 
     template<int Rank>
     FFTPlanBase(std::complex<T> * out,
                 std::complex<T> * in,
                 const int (&n)[Rank],
                 int batch = 1,
-                unsigned flags = FFTW_MEASURE);
+                unsigned flags = FFTW_MEASURE,
+                int threads = getMaxThreads());
 
     FFTPlanBase(std::complex<T> * out,
                 std::complex<T> * in,
@@ -37,7 +40,8 @@ public:
                 int stride,
                 int dist,
                 int batch = 1,
-                unsigned flags = FFTW_MEASURE);
+                unsigned flags = FFTW_MEASURE,
+                int threads = getMaxThreads());
 
     template<int Rank>
     FFTPlanBase(std::complex<T> * out,
@@ -47,7 +51,8 @@ public:
                 int stride,
                 int dist,
                 int batch = 1,
-                unsigned flags = FFTW_MEASURE);
+                unsigned flags = FFTW_MEASURE,
+                int threads = getMaxThreads());
 
     FFTPlanBase(std::complex<T> * out,
                 std::complex<T> * in,
@@ -59,7 +64,8 @@ public:
                 int ostride,
                 int odist,
                 int batch = 1,
-                unsigned flags = FFTW_MEASURE);
+                unsigned flags = FFTW_MEASURE,
+                int threads = getMaxThreads());
 
     template<int Rank>
     FFTPlanBase(std::complex<T> * out,
@@ -72,7 +78,8 @@ public:
                 int ostride,
                 int odist,
                 int batch = 1,
-                unsigned flags = FFTW_MEASURE);
+                unsigned flags = FFTW_MEASURE,
+                int threads = getMaxThreads());
 
     explicit operator bool() const { return *_plan; }
 
@@ -95,7 +102,8 @@ protected:
                 int batch,
                 unsigned flags,
                 int rank,
-                int sign);
+                int sign,
+                int threads);
 
     std::shared_ptr<fftw_plan_t> _plan;
 };

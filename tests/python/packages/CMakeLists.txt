@@ -11,6 +11,7 @@ nisar/workflows/rdr2geo.py
 nisar/workflows/geo2rdr.py
 nisar/workflows/crossmul.py
 nisar/workflows/resampSlc.py
+nisar/workflows/geocode.py
 )
 
 set(CUDA_TESTFILES
@@ -42,6 +43,8 @@ configure_file(nisar/products/swmr_test.h5 nisar/products COPYONLY)
 
 set_tests_properties(test.python.pkg.nisar.workflows.geo2rdr PROPERTIES
              DEPENDS test.python.pkg.nisar.workflows.rdr2geo)
+set_tests_properties(test.python.pkg.nisar.workflows.geocode PROPERTIES
+             DEPENDS test.python.pkg.nisar.workflows.crossmul)
 if(WITH_CUDA)
     set_tests_properties(test.python.pkg.nisar.workflows.cuGeo2rdr PROPERTIES
         DEPENDS test.python.pkg.nisar.workflows.cuRdr2geo)

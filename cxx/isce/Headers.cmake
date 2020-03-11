@@ -1,4 +1,6 @@
 set(HEADERS
+container/RSD.h
+container/RSD.icc
 core/Attitude.h
 core/Baseline.h
 core/Basis.h
@@ -47,12 +49,15 @@ fft/detail/ConfigureFFTLayout.h
 fft/detail/FFTPlanBase.h
 fft/detail/FFTPlanBase.icc
 fft/detail/FFTWWrapper.h
+fft/detail/Threads.h
 fft/FFT.h
 fft/FFT.icc
 fft/FFTPlan.h
 fft/FFTPlan.icc
 fft/FFTUtil.h
 fft/FFTUtil.icc
+focus/BistaticDelay.h
+focus/BistaticDelay.icc
 focus/Chirp.h
 geometry/DEMInterpolator.h
 geometry/forward.h

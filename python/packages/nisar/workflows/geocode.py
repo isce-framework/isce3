@@ -65,13 +65,13 @@ def main(opts):
     orbit = slc.getOrbit()
 
     # Make reference epochs consistent
-    orbit.referenceEpoch = radar_grid.refEpoch
+    orbit.referenceEpoch = radar_grid.referenceEpoch
 
     # Make a zero-Doppler LUT
     doppler = isce3.core.lut2d()
 
     # Compute DEM bounds for radar grid 
-    proj_win = isce3.geometry.getBoundsOnGround(orbit, ellps, doppler, radar_grid.lookSide,
+    proj_win = isce3.geometry.geometry.getBoundsOnGround(orbit, ellps, doppler, radar_grid.lookSide,
                                                 radar_grid, 0, 0, radar_grid.width, radar_grid.length,
                                                 margin=np.radians(0.01))
     # GDAL expects degrees
@@ -89,7 +89,7 @@ def main(opts):
 
     # Set radar grid
     geo.radarGrid(doppler,
-		radar_grid.refEpoch,
+		radar_grid.referenceEpoch,
 		radar_grid.sensingStart,
 		1.0/radar_grid.prf,
                 radar_grid.length,

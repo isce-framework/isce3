@@ -15,7 +15,7 @@ initPlan(int rank, const int * n, int howmany,
          const int * inembed, int istride, int idist,
          std::complex<float> * out,
          const int * onembed, int ostride, int odist,
-         int sign, unsigned flags);
+         int sign, unsigned flags, int threads);
 
 fftw_plan
 initPlan(int rank, const int * n, int howmany,
@@ -23,7 +23,7 @@ initPlan(int rank, const int * n, int howmany,
          const int * inembed, int istride, int idist,
          std::complex<double> * out,
          const int * onembed, int ostride, int odist,
-         int sign, unsigned flags);
+         int sign, unsigned flags, int threads);
 
 fftwf_plan
 initPlan(int rank, const int * n, int howmany,
@@ -31,7 +31,7 @@ initPlan(int rank, const int * n, int howmany,
          const int * inembed, int istride, int idist,
          std::complex<float> * out,
          const int * onembed, int ostride, int odist,
-         int sign, unsigned flags);
+         int sign, unsigned flags, int threads);
 
 fftw_plan
 initPlan(int rank, const int * n, int howmany,
@@ -39,7 +39,7 @@ initPlan(int rank, const int * n, int howmany,
          const int * inembed, int istride, int idist,
          std::complex<double> * out,
          const int * onembed, int ostride, int odist,
-         int sign, unsigned flags);
+         int sign, unsigned flags, int threads);
 
 fftwf_plan
 initPlan(int rank, const int * n, int howmany,
@@ -47,7 +47,7 @@ initPlan(int rank, const int * n, int howmany,
          const int * inembed, int istride, int idist,
          float * out,
          const int * onembed, int ostride, int odist,
-         int sign, unsigned flags);
+         int sign, unsigned flags, int threads);
 
 fftw_plan
 initPlan(int rank, const int * n, int howmany,
@@ -55,7 +55,7 @@ initPlan(int rank, const int * n, int howmany,
          const int * inembed, int istride, int idist,
          double * out,
          const int * onembed, int ostride, int odist,
-         int sign, unsigned flags);
+         int sign, unsigned flags, int threads);
 
 void executePlan(const fftwf_plan);
 void executePlan(const fftw_plan);

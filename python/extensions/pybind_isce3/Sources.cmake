@@ -1,6 +1,9 @@
 set(SRCS
 core/core.cpp
 core/DateTime.cpp
+core/Ellipsoid.cpp
+core/LUT1d.cpp
+core/LUT2d.cpp
 core/Orbit.cpp
 core/TimeDelta.cpp
 io/gdal/Dataset.cpp

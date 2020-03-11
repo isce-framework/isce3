@@ -1,4 +1,5 @@
 set(TESTFILES
+container/rsd.cpp
 core/attitude/euler.cpp
 core/cube/cube.cpp
 core/datetime/datetime.cpp
@@ -23,6 +24,7 @@ fft/fft.cpp
 fft/fftplan.cpp
 fft/fftutil.cpp
 focus/chirp.cpp
+focus/bistatic-delay.cpp
 geometry/dem/dem.cpp
 geometry/geo2rdr/geo2rdr.cpp
 geometry/geocode/geocode.cpp

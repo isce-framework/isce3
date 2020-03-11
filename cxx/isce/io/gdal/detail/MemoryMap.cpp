@@ -22,8 +22,7 @@ MemoryMap::MemoryMap(GDALRasterBand * raster, GDALAccess access)
         throw isce::except::RuntimeError(ISCE_SRCINFO(), "failed to memory map specified raster");
     }
 
-    _mmap = std::unique_ptr<CPLVirtualMem, void(*)(CPLVirtualMem *)>(
-                mmap, [](CPLVirtualMem * mmap) { CPLVirtualMemFree(mmap); });
+    _mmap = std::shared_ptr<CPLVirtualMem>(mmap, [](CPLVirtualMem * mmap) { CPLVirtualMemFree(mmap); });
 
     _colstride = std::size_t(colstride);
     _rowstride = std::size_t(rowstride);

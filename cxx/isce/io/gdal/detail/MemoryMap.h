@@ -41,7 +41,7 @@ private:
 
     MemoryMap(GDALRasterBand * raster, GDALAccess access);
 
-    std::unique_ptr<CPLVirtualMem, void(*)(CPLVirtualMem *)> _mmap;
+    std::shared_ptr<CPLVirtualMem> _mmap;
     std::size_t _colstride = 0;
     std::size_t _rowstride = 0;
 };
