@@ -36,5 +36,6 @@ endforeach()
 
 # Install shared library
 install(TARGETS ${LISCECUDA}
+        EXPORT isce3-targets
         DESTINATION ${ISCE_LIBDIR}
         COMPONENT ISCE_CUDA)
