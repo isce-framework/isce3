@@ -127,7 +127,8 @@ find_package(pyre QUIET)
 if(NOT HAVE_PYRE)
     # disable pyre's test suite
     set(BUILD_TESTING OFF)
-    git_clone_dep(github.com pyre pyre master)
+    git_clone_dep(github.com pyre pyre master
+        REV c444883dc8a35ae5c29712b833e98598bb1870c8)
 endif()
 
 add_subdirectory(extern) # Contributed software (not maintained here)
