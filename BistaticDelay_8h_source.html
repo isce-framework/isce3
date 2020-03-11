@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>ISCE: Namespace Members</title>
+<title>ISCE: isce/cxx/isce/focus/BistaticDelay.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -45,9 +45,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
-      <li class="current"><a href="namespaces.html"><span>Namespaces</span></a></li>
+      <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li><a href="annotated.html"><span>Classes</span></a></li>
-      <li><a href="files.html"><span>Files</span></a></li>
+      <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
       <li><a href="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li>
@@ -70,21 +70,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
-      <li><a href="namespaces.html"><span>Namespace&#160;List</span></a></li>
-      <li class="current"><a href="namespacemembers.html"><span>Namespace&#160;Members</span></a></li>
+      <li><a href="files.html"><span>File&#160;List</span></a></li>
     </ul>
   </div>
-  <div id="navrow3" class="tabs2">
-    <ul class="tablist">
-      <li><a href="namespacemembers.html"><span>All</span></a></li>
-      <li><a href="namespacemembers_func.html"><span>Functions</span></a></li>
-      <li class="current"><a href="namespacemembers_vars.html"><span>Variables</span></a></li>
-      <li><a href="namespacemembers_type.html"><span>Typedefs</span></a></li>
-      <li><a href="namespacemembers_enum.html"><span>Enumerations</span></a></li>
-      <li><a href="namespacemembers_eval.html"><span>Enumerator</span></a></li>
-    </ul>
-  </div>
-</div><!-- top -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
@@ -99,34 +87,33 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </iframe>
 </div>
 
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="dir_58f4997a0606e8afbe9d7eb91f442043.html">isce</a></li><li class="navelem"><a class="el" href="dir_3e54fbb9b7fb0cc03592820a9f80d38d.html">cxx</a></li><li class="navelem"><a class="el" href="dir_f70c12677d346dc89e8c3b4205414355.html">isce</a></li><li class="navelem"><a class="el" href="dir_030ef2ab9d72d86efaee77dc7e689e19.html">focus</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="headertitle">
+<div class="title">BistaticDelay.h</div>  </div>
+</div><!--header-->
 <div class="contents">
-&#160;<ul>
-<li>defaultGDALDataType
-: <a class="el" href="namespaceisce_1_1io.html#a6c7ad9442efb45358a485a3d163aea44">isce::io</a>
-</li>
-<li>defaultGDALDriver
-: <a class="el" href="namespaceisce_1_1io.html#a5f9c8f1f6d23cbf0ba9e6bcb8b4edd89">isce::io</a>
-</li>
-<li>EarthEccentricitySquared
-: <a class="el" href="namespaceisce_1_1core.html#ac44534ec97ee0514df2e8215d3706ddc">isce::core</a>
-</li>
-<li>EarthSemiMajorAxis
-: <a class="el" href="namespaceisce_1_1core.html#ab458d4a8610f8eea4267c4e0b0e028f3">isce::core</a>
-</li>
-<li>GLOBAL_MAX_HEIGHT
-: <a class="el" href="namespaceisce_1_1core.html#a4b53b899f68957efea6c97671f952a07">isce::core</a>
-</li>
-<li>GLOBAL_MIN_HEIGHT
-: <a class="el" href="namespaceisce_1_1core.html#a6e3f82b7601e178518db5945d07fd180">isce::core</a>
-</li>
-<li>SHADOW_VALUE
-: <a class="el" href="namespaceisce_1_1core.html#a5265c2ca41ceac4302d34abaa663f153">isce::core</a>
-</li>
-<li>SINC_HALF
-: <a class="el" href="namespaceisce_1_1core.html#a7257d73b8c42029e99427afae907ec73">isce::core</a>
-</li>
-</ul>
-</div><!-- contents -->
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;isce/core/Common.h&gt;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;isce/core/forward.h&gt;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="keyword">namespace </span>isce { <span class="keyword">namespace </span>focus {</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;CUDA_HOSTDEV</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keywordtype">double</span> bistaticDelay(<span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp; p,</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;                     <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp; v,</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;                     <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> &amp; x);</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;}}</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#include &quot;BistaticDelay.icc&quot;</span></div>
+<div class="ttc" id="classisce_1_1core_1_1Vector_html"><div class="ttname"><a href="classisce_1_1core_1_1Vector.html">isce::core::Vector&lt; 3 &gt;</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
 <a href="http://www.doxygen.org/index.html"><img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.8.5.
