@@ -25,6 +25,7 @@ fft/fftplan.cpp
 fft/fftutil.cpp
 focus/bistatic-delay.cpp
 focus/chirp.cpp
+focus/gaps.cpp
 focus/rangecomp.cpp
 geometry/dem/dem.cpp
 geometry/geo2rdr/geo2rdr.cpp
