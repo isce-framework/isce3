@@ -1,7 +1,7 @@
 function(git_clone_dep url user repo tag)
 
     set(opts)
-    set(onevalue REV)
+    set(onevalue REV PATCH)
     set(multivalue)
     cmake_parse_arguments(GCD "${opts}" "${onevalue}" "${multivalue}" ${ARGN})
 
@@ -41,6 +41,13 @@ function(git_clone_dep url user repo tag)
         if(DEFINED GCD_REV)
             execute_process_checked(
                 COMMAND ${GIT_EXECUTABLE} checkout ${GCD_REV} WORKING_DIRECTORY
+                ${CMAKE_CURRENT_BINARY_DIR}/${repo}-src
+                )
+        endif()
+        if(DEFINED GCD_PATCH)
+            execute_process_checked(
+                COMMAND ${GIT_EXECUTABLE} apply
+                ${CMAKE_CURRENT_SOURCE_DIR}/${GCD_PATCH} WORKING_DIRECTORY
                 ${CMAKE_CURRENT_BINARY_DIR}/${repo}-src
                 )
         endif()
