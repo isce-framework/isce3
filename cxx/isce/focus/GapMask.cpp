@@ -1,6 +1,7 @@
 #include "GapMask.h"
 #include <algorithm>
 #include <cmath>
+#include <climits>
 #include <isce/except/Error.h>
 
 namespace isce { namespace focus {
@@ -16,6 +17,10 @@ GapMask::GapMask(const std::vector<double> & azimuth_time, int samples,
     chirplen(chirp_duration),
     guard(guard)
 {
+    if (t.size() > INT_MAX) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+            "require azimuth_time.size() <= INT_MAX");
+    }
     for (int i = 1; i < t.size(); ++i) {
         if (t[i - 1] > t[i]) {
             std::string errmsg = "azimuth time must be monotonically increasing";
