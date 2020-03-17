@@ -23,8 +23,9 @@ core/serialization/serializeOrbit.cpp
 fft/fft.cpp
 fft/fftplan.cpp
 fft/fftutil.cpp
-focus/chirp.cpp
 focus/bistatic-delay.cpp
+focus/chirp.cpp
+focus/rangecomp.cpp
 geometry/dem/dem.cpp
 geometry/geo2rdr/geo2rdr.cpp
 geometry/geocode/geocode.cpp
