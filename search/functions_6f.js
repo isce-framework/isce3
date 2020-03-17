@@ -14,5 +14,6 @@ var searchData=
   ['orbit2',['orbit2',['../classisce_1_1core_1_1Baseline.html#adc3a8bc1ff84cd1596f7db3bbdfbacae',1,'isce::core::Baseline']]],
   ['orbitview',['OrbitView',['../classisce_1_1cuda_1_1core_1_1OrbitView.html#a61d989d9ee59bbc69440b473bf5542c6',1,'isce::cuda::core::OrbitView']]],
   ['ordinal',['ordinal',['../classisce_1_1core_1_1DateTime.html#a4323ef7ab2939debcb65150309d7c5e4',1,'isce::core::DateTime']]],
-  ['orientationangle',['orientationAngle',['../classisce_1_1signal_1_1Covariance.html#aab6e78e9c1ce8ce418fe1820f93efa11',1,'isce::signal::Covariance']]]
+  ['orientationangle',['orientationAngle',['../classisce_1_1signal_1_1Covariance.html#aab6e78e9c1ce8ce418fe1820f93efa11',1,'isce::signal::Covariance']]],
+  ['outputsize',['outputSize',['../classisce_1_1focus_1_1RangeComp.html#abef5c8182ebc8d7b91e9ccedbb38d920',1,'isce::focus::RangeComp']]]
 ];

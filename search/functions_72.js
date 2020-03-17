@@ -7,6 +7,8 @@ var searchData=
   ['radartoxyz',['radarToXYZ',['../structisce_1_1core_1_1Pegtrans.html#a6c45eea8b485e5798cd6e6e2a6b2ddec',1,'isce::core::Pegtrans']]],
   ['rangebandwidth',['rangeBandwidth',['../classisce_1_1cuda_1_1signal_1_1gpuCrossmul.html#a82f693f34e00aacd73dfbad9ed2ad41c',1,'isce::cuda::signal::gpuCrossmul::rangeBandwidth()'],['../classisce_1_1signal_1_1Covariance.html#a6a073da0678c8400075a30b77fd6f1af',1,'isce::signal::Covariance::rangeBandwidth()'],['../classisce_1_1signal_1_1Crossmul.html#aa82d9ba5824d32e96280f4ae5da7c23e',1,'isce::signal::Crossmul::rangeBandwidth()']]],
   ['rangecommonbandfilter',['rangeCommonBandFilter',['../classisce_1_1signal_1_1Crossmul.html#a70edc4030a0a6755e08161795edf23a1',1,'isce::signal::Crossmul']]],
+  ['rangecomp',['RangeComp',['../classisce_1_1focus_1_1RangeComp.html#a408f5106112ef89112a07dc0db3e0140',1,'isce::focus::RangeComp']]],
+  ['rangecompress',['rangecompress',['../classisce_1_1focus_1_1RangeComp.html#a6878615fd335c4e105c315d2f4bea3cb',1,'isce::focus::RangeComp']]],
   ['rangefft',['rangeFFT',['../classisce_1_1cuda_1_1signal_1_1gpuSignal.html#a39ff2e4db2c23012bd3fa94ee9590057',1,'isce::cuda::signal::gpuSignal']]],
   ['rangefrequencyshift',['rangeFrequencyShift',['../classisce_1_1signal_1_1Crossmul.html#a306fb4dfb90925defb55a6efc640deee',1,'isce::signal::Crossmul']]],
   ['rangelooks',['rangeLooks',['../classisce_1_1cuda_1_1signal_1_1gpuCrossmul.html#a6be54729c35b31ed9ffb9d277c575c88',1,'isce::cuda::signal::gpuCrossmul::rangeLooks()'],['../classisce_1_1signal_1_1Crossmul.html#a879f135d1f60b0c6cb0ae978b54c4a51',1,'isce::signal::Crossmul::rangeLooks()']]],

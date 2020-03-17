@@ -6,7 +6,9 @@ var searchData=
   ['fftplanbase',['FFTPlanBase',['../classisce_1_1cuda_1_1fft_1_1detail_1_1FFTPlanBase.html',1,'isce::cuda::fft::detail']]],
   ['fftplanbase_3c_20cufft_5fforward_2c_20t_20_3e',['FFTPlanBase&lt; CUFFT_FORWARD, T &gt;',['../classisce_1_1cuda_1_1fft_1_1detail_1_1FFTPlanBase.html',1,'isce::cuda::fft::detail']]],
   ['fftplanbase_3c_20cufft_5finverse_2c_20t_20_3e',['FFTPlanBase&lt; CUFFT_INVERSE, T &gt;',['../classisce_1_1cuda_1_1fft_1_1detail_1_1FFTPlanBase.html',1,'isce::cuda::fft::detail']]],
+  ['fftplanbase_3c_20fftw_5fbackward_2c_20float_20_3e',['FFTPlanBase&lt; FFTW_BACKWARD, float &gt;',['../classisce_1_1fft_1_1detail_1_1FFTPlanBase.html',1,'isce::fft::detail']]],
   ['fftplanbase_3c_20fftw_5fbackward_2c_20t_20_3e',['FFTPlanBase&lt; FFTW_BACKWARD, T &gt;',['../classisce_1_1fft_1_1detail_1_1FFTPlanBase.html',1,'isce::fft::detail']]],
+  ['fftplanbase_3c_20fftw_5fforward_2c_20float_20_3e',['FFTPlanBase&lt; FFTW_FORWARD, float &gt;',['../classisce_1_1fft_1_1detail_1_1FFTPlanBase.html',1,'isce::fft::detail']]],
   ['fftplanbase_3c_20fftw_5fforward_2c_20t_20_3e',['FFTPlanBase&lt; FFTW_FORWARD, T &gt;',['../classisce_1_1fft_1_1detail_1_1FFTPlanBase.html',1,'isce::fft::detail']]],
   ['fftw',['fftw',['../structisce_1_1fftw3cxx_1_1fftw.html',1,'isce::fftw3cxx']]],
   ['fftwplantype',['FFTWPlanType',['../structisce_1_1fft_1_1detail_1_1FFTWPlanType.html',1,'isce::fft::detail']]],
@@ -20,5 +22,6 @@ var searchData=
   ['flow',['Flow',['../structFlow.html',1,'']]],
   ['fstreamcallback',['fstreamCallback',['../classisce_1_1cuda_1_1io_1_1fstreamCallback.html',1,'isce::cuda::io']]],
   ['fwdfftplan',['FwdFFTPlan',['../classisce_1_1cuda_1_1fft_1_1FwdFFTPlan.html',1,'isce::cuda::fft']]],
-  ['fwdfftplan',['FwdFFTPlan',['../classisce_1_1fft_1_1FwdFFTPlan.html',1,'isce::fft']]]
+  ['fwdfftplan',['FwdFFTPlan',['../classisce_1_1fft_1_1FwdFFTPlan.html',1,'isce::fft']]],
+  ['fwdfftplan_3c_20float_20_3e',['FwdFFTPlan&lt; float &gt;',['../classisce_1_1fft_1_1FwdFFTPlan.html',1,'isce::fft']]]
 ];

@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['same',['Same',['../classisce_1_1focus_1_1RangeComp.html#a1e253b9b41acad8b1c598c952f3c93deac90a13d8ec8fe53c6bb33fe10af6f2fe',1,'isce::focus::RangeComp']]],
   ['samples',['samples',['../classisce_1_1container_1_1RSD.html#a3738fdef660260643c7f0ee13ed51ab4',1,'isce::container::RSD::samples()'],['../classisce_1_1product_1_1Swath.html#a1af6ab19523dc9e189770245b870be05',1,'isce::product::Swath::samples()']]],
   ['savecalgrid',['saveCalGrid',['../namespaceisce_1_1core.html#a91878e1605f59499fe3bedb08a299b42',1,'isce::core']]],
   ['savetoh5',['saveToH5',['../namespaceisce_1_1core.html#a6bf22fa5051240213f700ce075018053',1,'isce::core::saveToH5(isce::io::IGroup &amp;group, const Orbit &amp;orbit)'],['../namespaceisce_1_1core.html#a6832914cc2afcab0ec4a61a98d713913',1,'isce::core::saveToH5(isce::io::IGroup &amp;group, const EulerAngles &amp;euler)'],['../namespaceisce_1_1io.html#ac2b04ae9697fa2af3e24f53922362759',1,'isce::io::saveToH5(H5obj &amp;h5obj, const std::string &amp;datasetPath, const T &amp;val, const std::string &amp;units=&quot;&quot;)'],['../namespaceisce_1_1io.html#afcf9cedd0323d52df639b1e833dbc931',1,'isce::io::saveToH5(H5obj &amp;h5obj, const std::string &amp;datasetPath, const std::vector&lt; T &gt; &amp;v, const std::string &amp;units=&quot;&quot;)'],['../namespaceisce_1_1io.html#a7ad62deeacf74242e4ab73ab24cbcda5',1,'isce::io::saveToH5(H5obj &amp;h5obj, const std::string &amp;datasetPath, const std::valarray&lt; T &gt; &amp;v, const std::string &amp;units=&quot;&quot;)'],['../namespaceisce_1_1io.html#ab9dcdaef7ef216c43dfaccc2579417ee',1,'isce::io::saveToH5(H5obj &amp;h5obj, const std::string &amp;datasetPath, const std::vector&lt; T &gt; &amp;v, std::array&lt; size_t, S &gt; dims, const std::string &amp;units=&quot;&quot;)'],['../namespaceisce_1_1io.html#ad2433f714c893e8b0c43f9b01a055dac',1,'isce::io::saveToH5(H5obj &amp;h5obj, const std::string &amp;datasetPath, const std::valarray&lt; T &gt; &amp;v, std::array&lt; size_t, S &gt; dims, const std::string &amp;units=&quot;&quot;)'],['../namespaceisce_1_1io.html#a359378fe8ecbf3aa5d272dff7bd34323',1,'isce::io::saveToH5(H5obj &amp;h5obj, const std::string &amp;datasetPath, const isce::core::Matrix&lt; T &gt; &amp;mat, const std::string &amp;units=&quot;&quot;)']]],
@@ -17,8 +18,8 @@ var searchData=
   ['sensingstart',['sensingStart',['../classisce_1_1product_1_1RadarGridParameters.html#a4ad8c31c963962b88e16cc7a79e1c166',1,'isce::product::RadarGridParameters::sensingStart() const '],['../classisce_1_1product_1_1RadarGridParameters.html#af3178b62880a62b7c4f639d87afad3eb',1,'isce::product::RadarGridParameters::sensingStart(const double &amp;t)']]],
   ['sensingstop',['sensingStop',['../classisce_1_1product_1_1RadarGridParameters.html#aab90c0f25a76b73e187b5c792d2c803e',1,'isce::product::RadarGridParameters']]],
   ['sensingtime',['sensingTime',['../classisce_1_1product_1_1RadarGridParameters.html#a47ce172de25eeaff02a8553afe20ecaa',1,'isce::product::RadarGridParameters']]],
-  ['sequential',['Sequential',['../classampcor_1_1cuda_1_1correlators_1_1Sequential.html',1,'ampcor::cuda::correlators']]],
   ['sequential',['Sequential',['../classampcor_1_1correlators_1_1Sequential.html',1,'ampcor::correlators']]],
+  ['sequential',['Sequential',['../classampcor_1_1cuda_1_1correlators_1_1Sequential.html',1,'ampcor::cuda::correlators']]],
   ['serialization_2eh',['Serialization.h',['../io_2Serialization_8h.html',1,'']]],
   ['serialization_2eh',['Serialization.h',['../product_2Serialization_8h.html',1,'']]],
   ['serialization_2eh',['Serialization.h',['../core_2Serialization_8h.html',1,'']]],
@@ -39,8 +40,8 @@ var searchData=
   ['setvalue',['setValue',['../classisce_1_1io_1_1Raster.html#a291622cc0ce5cb441a959ea55ae746d2',1,'isce::io::Raster']]],
   ['shadow_5fvalue',['SHADOW_VALUE',['../namespaceisce_1_1core.html#a5265c2ca41ceac4302d34abaa663f153',1,'isce::core']]],
   ['shape',['shape',['../classisce_1_1core_1_1Cube.html#ac51ca91e3a66062ba76d9be93fbdff3f',1,'isce::core::Cube::shape()'],['../classisce_1_1core_1_1Matrix.html#a1eee59526142636d5116873f1c65113f',1,'isce::core::Matrix::shape()'],['../classisce_1_1io_1_1gdal_1_1Buffer.html#ad2daae65a1e90b9c31a74fc5b8140e02',1,'isce::io::gdal::Buffer::shape()'],['../classisce_1_1io_1_1gdal_1_1TypedBuffer.html#a7498997e9f27803f7267a49ece5f36af',1,'isce::io::gdal::TypedBuffer::shape()']]],
-  ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html',1,'isce::signal']]],
   ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html#afc9c8c9f9cfe1701558205600ab7b1f2',1,'isce::signal::Signal::Signal()'],['../classisce_1_1signal_1_1Signal.html#a759653d297ab23e66963aebec0cdafc0',1,'isce::signal::Signal::Signal(int nthreads)']]],
+  ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html',1,'isce::signal']]],
   ['signal_3c_20t_20_3e',['Signal&lt; T &gt;',['../classisce_1_1signal_1_1Signal.html',1,'isce::signal']]],
   ['signaldata',['signalData',['../classisce_1_1container_1_1RSD.html#a6bc20fd921645e6bf67b4a80f649bdee',1,'isce::container::RSD']]],
   ['sinc',['sinc',['../namespaceisce_1_1core.html#ae73b56f5a94e197486f4cd9f99fa2be3',1,'isce::core']]],
@@ -73,6 +74,6 @@ var searchData=
   ['subcube',['subcube',['../classisce_1_1core_1_1Cube.html#adb10437976e2dbcf06ca16bc7ec3d414',1,'isce::core::Cube']]],
   ['subinterval',['subinterval',['../classisce_1_1core_1_1Linspace.html#a283ca86811b5cebaca27be2a0d76976f',1,'isce::core::Linspace']]],
   ['submat',['submat',['../classisce_1_1core_1_1Matrix.html#a75d7751271ac4e7a9a969fd7bccee68d',1,'isce::core::Matrix']]],
-  ['swath',['Swath',['../classisce_1_1product_1_1Swath.html',1,'isce::product']]],
-  ['swath',['swath',['../classisce_1_1product_1_1Product.html#a0d56e2d23e6fef155b0f3c2fc88f2062',1,'isce::product::Product::swath(char freq) const '],['../classisce_1_1product_1_1Product.html#a28de8ff216a8bd92d20a1afbd682f186',1,'isce::product::Product::swath(char freq)'],['../classisce_1_1product_1_1Product.html#ab5f95b31981df1c2b3dfea494b153521',1,'isce::product::Product::swath(const Swath &amp;s, char freq)']]]
+  ['swath',['swath',['../classisce_1_1product_1_1Product.html#a0d56e2d23e6fef155b0f3c2fc88f2062',1,'isce::product::Product::swath(char freq) const '],['../classisce_1_1product_1_1Product.html#a28de8ff216a8bd92d20a1afbd682f186',1,'isce::product::Product::swath(char freq)'],['../classisce_1_1product_1_1Product.html#ab5f95b31981df1c2b3dfea494b153521',1,'isce::product::Product::swath(const Swath &amp;s, char freq)']]],
+  ['swath',['Swath',['../classisce_1_1product_1_1Swath.html',1,'isce::product']]]
 ];

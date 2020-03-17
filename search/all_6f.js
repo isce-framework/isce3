@@ -21,5 +21,6 @@ var searchData=
   ['order',['order',['../classisce_1_1core_1_1Poly1d.html#ad91b16f4030e6356eb2c47c4da7d5fe0',1,'isce::core::Poly1d']]],
   ['ordinal',['ordinal',['../classisce_1_1core_1_1DateTime.html#a4323ef7ab2939debcb65150309d7c5e4',1,'isce::core::DateTime']]],
   ['orientationangle',['orientationAngle',['../classisce_1_1signal_1_1Covariance.html#aab6e78e9c1ce8ce418fe1820f93efa11',1,'isce::signal::Covariance']]],
+  ['outputsize',['outputSize',['../classisce_1_1focus_1_1RangeComp.html#abef5c8182ebc8d7b91e9ccedbb38d920',1,'isce::focus::RangeComp']]],
   ['ov',['ov',['../structisce_1_1core_1_1Pegtrans.html#a72319e2e607b6bc2f5d030e618a87205',1,'isce::core::Pegtrans']]]
 ];
