@@ -1,6 +1,7 @@
 var searchData=
 [
   ['makemask',['makeMask',['../namespaceisce_1_1core.html#a55c1c561c113f7d0aeead8d9e772403e',1,'isce::core::makeMask(const std::valarray&lt; std::complex&lt; T &gt;&gt; &amp;v, std::complex&lt; T &gt; noDataValue)'],['../namespaceisce_1_1core.html#a1f15714f1c3862ea7655253bd0cf750e',1,'isce::core::makeMask(const std::valarray&lt; T &gt; &amp;v, T noDataValue)']]],
+  ['mask',['mask',['../classisce_1_1focus_1_1GapMask.html#a90f38c201818e4dc6ccb0c182d4fb4a3',1,'isce::focus::GapMask']]],
   ['mat',['mat',['../structisce_1_1core_1_1Pegtrans.html#aa9c4c83023ab8070cac394c7d640acd2',1,'isce::core::Pegtrans']]],
   ['match',['match',['../classisce_1_1io_1_1Raster.html#a5c2cadb24c0dc41ede85bfb4276d83dd',1,'isce::io::Raster']]],
   ['matinv',['matinv',['../structisce_1_1core_1_1Pegtrans.html#ad5ed255a751bdade332b89e9556f9024',1,'isce::core::Pegtrans']]],
@@ -18,7 +19,7 @@ var searchData=
   ['meanheight',['meanHeight',['../classisce_1_1geometry_1_1DEMInterpolator.html#a8bcf686c7db33c4a93c06bcb32655f0a',1,'isce::geometry::DEMInterpolator']]],
   ['memmap',['memmap',['../classisce_1_1io_1_1gdal_1_1Raster.html#ae4298836fc909e92369de48c97ce901b',1,'isce::io::gdal::Raster::memmap()'],['../classisce_1_1io_1_1gdal_1_1Raster.html#a415907d8ff49a06ae530ee044f7759c1',1,'isce::io::gdal::Raster::memmap()']]],
   ['memorymap',['MemoryMap',['../classisce_1_1io_1_1gdal_1_1detail_1_1MemoryMap.html',1,'isce::io::gdal::detail']]],
-  ['metadata',['metadata',['../classisce_1_1product_1_1Product.html#a416a1bece53f1859073b8c28c2c0d54b',1,'isce::product::Product::metadata() const '],['../classisce_1_1product_1_1Product.html#abf05a3527ff6bec26cf309551e1db7b1',1,'isce::product::Product::metadata()'],['../classisce_1_1product_1_1Metadata.html#a6f8c6110daedb73b995eee773ab5bd24',1,'isce::product::Metadata::Metadata()'],['../classisce_1_1product_1_1Metadata.html#a50579b32f8dda86fe8342a1225246b26',1,'isce::product::Metadata::Metadata(const Metadata &amp;)']]],
+  ['metadata',['Metadata',['../classisce_1_1product_1_1Metadata.html#a6f8c6110daedb73b995eee773ab5bd24',1,'isce::product::Metadata::Metadata()'],['../classisce_1_1product_1_1Metadata.html#a50579b32f8dda86fe8342a1225246b26',1,'isce::product::Metadata::Metadata(const Metadata &amp;)'],['../classisce_1_1product_1_1Product.html#a416a1bece53f1859073b8c28c2c0d54b',1,'isce::product::Product::metadata() const '],['../classisce_1_1product_1_1Product.html#abf05a3527ff6bec26cf309551e1db7b1',1,'isce::product::Product::metadata()']]],
   ['metadata',['Metadata',['../classisce_1_1core_1_1Metadata.html',1,'isce::core']]],
   ['metadata',['Metadata',['../classisce_1_1product_1_1Metadata.html',1,'isce::product']]],
   ['method',['method',['../classisce_1_1core_1_1Interpolator.html#a7614c87eb77086d644d4ce5b404bb3fe',1,'isce::core::Interpolator']]],
