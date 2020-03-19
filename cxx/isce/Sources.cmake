@@ -29,6 +29,7 @@ fft/detail/ConfigureFFTLayout.cpp
 fft/detail/FFTWWrapper.cpp
 fft/detail/Threads.cpp
 focus/Chirp.cpp
+focus/GapMask.cpp
 focus/RangeComp.cpp
 geometry/DEMInterpolator.cpp
 geometry/Geo2rdr.cpp

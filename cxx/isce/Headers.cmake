@@ -59,6 +59,7 @@ fft/FFTUtil.icc
 focus/BistaticDelay.h
 focus/BistaticDelay.icc
 focus/Chirp.h
+focus/GapMask.h
 focus/RangeComp.h
 geometry/DEMInterpolator.h
 geometry/forward.h
