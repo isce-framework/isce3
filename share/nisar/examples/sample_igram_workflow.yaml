@@ -1,7 +1,7 @@
-# path to HDF5 containing master SLC
-master: /home/lyu/projects/test_workflow/master.h5
-# path to HDF5 containing product/slave SLC
-product: /home/lyu/projects/test_workflow/slave.h5
+# path to HDF5 containing reference SLC
+reference: /home/lyu/projects/test_workflow/reference.h5
+# path to HDF5 containing product SLC
+product: /home/lyu/projects/test_workflow/product.h5
 # frequency of SLC
 frequency: A
 # polarization of SLC
@@ -14,6 +14,7 @@ dem: /home/lyu/projects/test_workflow/test.dem
 #alks: 12 #1
 # multilook in range
 #rlks: 3 #1
+# no multilook if alks == rlks == 1
 alks: 1
 rlks: 1
 # where to write output

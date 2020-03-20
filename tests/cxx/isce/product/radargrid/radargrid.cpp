@@ -31,7 +31,7 @@ TEST(RadarGridTest, fromProduct) {
     ASSERT_EQ(grid.lookSide(), LookSide::Right);
     ASSERT_NEAR(grid.startingRange(), 826988.6900674499, 1.0e-5);
     ASSERT_NEAR(grid.sensingStart(), 237330.843491759, 1.0e-5);
-    ASSERT_NEAR(grid.wavelength(), isce::core::SPEED_OF_LIGHT/5.331004416e9, 1.0e-5);
+    ASSERT_NEAR(grid.wavelength(), isce::core::speed_of_light/5.331004416e9, 1.0e-5);
     ASSERT_NEAR(grid.rangePixelSpacing(), 7.803973670948287, 1.0e-7);
     ASSERT_NEAR(grid.azimuthTimeInterval(), 6.051745968279355e-4, 1.0e-7);
 }
@@ -55,7 +55,7 @@ TEST(RadarGridTest, fromSwath) {
     ASSERT_EQ(grid.lookSide(), LookSide::Right);
     ASSERT_NEAR(grid.startingRange(), 826988.6900674499, 1.0e-5);
     ASSERT_NEAR(grid.sensingStart(), 237330.843491759, 1.0e-5);
-    ASSERT_NEAR(grid.wavelength(), isce::core::SPEED_OF_LIGHT/5.331004416e9, 1.0e-5);
+    ASSERT_NEAR(grid.wavelength(), isce::core::speed_of_light/5.331004416e9, 1.0e-5);
     ASSERT_NEAR(grid.rangePixelSpacing(), 7.803973670948287, 1.0e-7);
     ASSERT_NEAR(grid.azimuthTimeInterval(), 6.051745968279355e-4, 1.0e-7);
 }

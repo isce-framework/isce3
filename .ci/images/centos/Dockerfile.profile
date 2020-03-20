@@ -1,4 +1,4 @@
-FROM nisar/isce-ops:workflow
+FROM nisar/isce-ops:__TAG__
 
 # Set an encoding to make things work smoothly.
 ENV LANG en_US.UTF-8

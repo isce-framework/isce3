@@ -58,7 +58,7 @@ class isce::product::Swath {
 
         /** Get processed wavelength */
         inline double processedWavelength() const {
-            return isce::core::SPEED_OF_LIGHT / _processedCenterFrequency;
+            return isce::core::speed_of_light / _processedCenterFrequency;
         }
 
         /** Get acquired range bandwidth */
@@ -93,7 +93,7 @@ class isce::product::Swath {
         inline void sceneCenterGroundRangeSpacing(double s) {
             _sceneCenterGroundRangeSpacing = s;
         }
-        
+
         /** Get processed azimuth bandwidth */
         inline double processedAzimuthBandwidth() const { return _processedAzimuthBandwidth; }
         /** Set processed azimuth bandwidth */

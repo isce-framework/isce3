@@ -62,8 +62,8 @@ const double EarthSemiMajorAxis = 6378137.0;
 /** Eccentricity^2 for WGS84 */
 const double EarthEccentricitySquared = 0.0066943799901;
 
-/** Speed of light */
-const double SPEED_OF_LIGHT = 299792458.0;
+/** Speed of light in vacuum (m/s) */
+constexpr static double speed_of_light = 299792458.0;
 
 /** Global minimum height */
 const double GLOBAL_MIN_HEIGHT = -500.0;
