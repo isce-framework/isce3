@@ -106,21 +106,23 @@ InitInstallDirLayout()
 
 # Dependencies
 
-find_package(Git)
 include(.cmake/GitCloneDep.cmake)
 
 find_package(Eigen3 QUIET NO_MODULE)
 if(NOT EIGEN3_FOUND)
+    find_package(Git REQUIRED)
     set(BUILD_TESTING OFF)
-    git_clone_dep(gitlab.com libeigen eigen 3.3.7
-        PATCH extern/eigen-disable-testing.patch)
+    git_clone_dep(gitlab.com libeigen eigen
+        GIT_TAG 3.3.7
+        PATCH_COMMAND ${GIT_EXECUTABLE} apply
+            ${CMAKE_CURRENT_LIST_DIR}/extern/eigen-disable-testing.patch)
     add_library(Eigen3::Eigen ALIAS eigen)
 endif()
 find_package(GTest QUIET)
 if(NOT GTEST_FOUND)
     set(BUILD_GMOCK OFF CACHE INTERNAL "")
     set(INSTALL_GTEST OFF CACHE INTERNAL "")
-    git_clone_dep(github.com google googletest release-1.10.0)
+    git_clone_dep(github.com google googletest GIT_TAG release-1.10.0)
     add_library(GTest::GTest ALIAS gtest)
     add_library(GTest::Main ALIAS gtest_main)
 endif()
