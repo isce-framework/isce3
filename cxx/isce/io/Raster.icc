@@ -131,9 +131,18 @@ isce::io::Raster::Raster(pyre::grid::View<T>& view)
 
 // Copy constructor
 inline isce::io::Raster& isce::io::Raster::operator=(const Raster &rhs) {
-  dataset( rhs._dataset );      // weak-copy pointer
-  dataset()->Reference();       // increment GDALDataset reference counter
-  return *this;
+
+    if (not rhs._owner) {
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), "cannot copy non-owning raster");
+    }
+
+    if (_owner) {
+        GDALClose(_dataset);
+    }
+
+    dataset( rhs._dataset );      // weak-copy pointer
+    dataset()->Reference();       // increment GDALDataset reference counter
+    return *this;
 }
 
 

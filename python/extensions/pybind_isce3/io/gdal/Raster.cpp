@@ -135,7 +135,8 @@ void addbinding(py::class_<Raster> & pyRaster)
                 py::arg("datatype"),
                 py::arg("driver") = Raster::defaultDriver())
         .def(py::init([](py::buffer buf) { return std::make_unique<Raster>(toRaster(buf)); }))
-        .def("dataset", &Raster::dataset, "Get the dataset containing the raster")
+        .def("dataset", py::overload_cast<>(&Raster::dataset, py::const_),
+                "Get the dataset containing the raster")
         .def_property_readonly("band", &Raster::band, "Band index (1-based)")
         .def_property_readonly("datatype", &Raster::datatype, "Datatype identifier")
         .def_property_readonly("access", &Raster::access, "Access mode")

@@ -133,6 +133,9 @@ public:
     /** Get the dataset containing the raster */
     const Dataset & dataset() const { return _dataset; }
 
+    /** Get the dataset containing the raster */
+    Dataset & dataset() { return _dataset; }
+
     /** Band index (1-based) */
     int band() const { return _band; }
 

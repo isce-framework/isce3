@@ -22,6 +22,8 @@
 #include "Constants.h"
 #include <isce/core/Matrix.h>
 
+#include <isce/io/gdal/Raster.h>
+
 //#include <pyre/journal.h>
 
 /** Data structure meant to handle Raster I/O operations.
@@ -61,6 +63,9 @@ class isce::io::Raster {
 
       /** Create a VRT raster dataset with collection of bands from Rasters */
       Raster(const std::string& fname, const std::vector<Raster>& rastVec);
+
+      /** Create legacy raster reference to isce::io::gdal::Raster */
+      Raster(isce::io::gdal::Raster&);
 
       /** Copy constructor*/
       Raster(const Raster&);
@@ -185,7 +190,7 @@ class isce::io::Raster {
 
 private:
     GDALDataset * _dataset;
-
+    bool _owner = true;
 };
 
 #define ISCE_IO_RASTER_ICC
