@@ -28,8 +28,8 @@ inline bool exists(const std::string& name) {
 struct RasterTest : public ::testing::Test {
   const uint nc = 100;    // number of columns
   const uint nl = 200;    // number of lines
-  const uint nbx = 5;      // block side length in x 
-  const uint nby = 7;      //block size length in y 
+  const uint nbx = 5;      // block side length in x
+  const uint nby = 7;      //block size length in y
   const std::string latFilename = "lat.tif";
   const std::string lonFilename = "lon.vrt";
   const std::string incFilename = "inc.bin";
@@ -81,6 +81,16 @@ TEST_F(RasterTest, openVRTRasterReadOnlyMode_getValue) {
     lon.getValue( a, i, i, 1 );           // read double into a int
     ASSERT_EQ( a, i );                    // diagonal elements must be equal
   }
+}
+
+TEST_F(RasterTest, LegacyRasterReference)
+{
+    isce::io::gdal::Raster raster1(lonFilename);
+    isce::io::Raster raster2(raster1);
+
+    EXPECT_EQ( raster1.length(), raster2.length() );
+    EXPECT_EQ( raster1.width(), raster2.width() );
+    EXPECT_EQ( raster2.numBands(), 1 );
 }
 
 

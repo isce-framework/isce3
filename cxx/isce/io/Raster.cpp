@@ -88,12 +88,29 @@ isce::io::Raster::Raster(const std::string &fname, const Raster &rast) :
     isce::io::Raster(fname, rast.width(), rast.length(), rast.numBands(), rast.dtype()) {}
 
 
+isce::io::Raster::Raster(isce::io::gdal::Raster & src)
+:
+    _dataset(src.dataset().get()),
+    _owner(false)
+{
+    // isce::io::gdal::Raster represents a single raster band while
+    // isce::io::Raster can have one or more bands
+    // the conversion is ambiguous if the input dataset contains multiple bands
+    if (src.dataset().bands() > 1) {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                "source dataset must contain a single raster band");
+    }
+}
 
 /**
  * @param[in] rast Source raster.
  *
  * It increments GDAL's reference counter after weak-copying the pointer */
 isce::io::Raster::Raster(const Raster &rast) {
+    if (not rast._owner) {
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), "cannot copy non-owning raster");
+    }
+
     dataset( rast._dataset );
     dataset()->Reference();
 }
@@ -214,7 +231,9 @@ int isce::io::Raster::setEPSG(int epsgcode)
 // Destructor. When GDALOpenShared() is used the dataset is dereferenced
 // and closed only if the referenced count is less than 1.
 isce::io::Raster::~Raster() {
-    GDALClose( _dataset );
+    if (_owner) {
+        GDALClose( _dataset );
+    }
 }
 
 
