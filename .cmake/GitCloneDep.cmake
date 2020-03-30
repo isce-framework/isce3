@@ -1,6 +1,6 @@
 include(FetchContent)
 
-function(git_clone_dep repo)
+function(fetch_extern_repo repo)
 
     FetchContent_Declare(${repo} ${ARGN})
 

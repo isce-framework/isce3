@@ -124,7 +124,7 @@ find_package(Eigen3 QUIET NO_MODULE)
 if(NOT EIGEN3_FOUND)
     find_package(Git REQUIRED)
     set(BUILD_TESTING OFF)
-    git_clone_dep(eigen
+    fetch_extern_repo(eigen
         GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
         GIT_TAG 3.3.7
         GIT_SHALLOW TRUE
@@ -136,7 +136,7 @@ find_package(GTest QUIET CONFIG)
 if(NOT GTEST_FOUND)
     set(BUILD_GMOCK OFF CACHE INTERNAL "")
     set(INSTALL_GTEST OFF CACHE INTERNAL "")
-    git_clone_dep(gtest
+    fetch_extern_repo(gtest
         GIT_REPOSITORY https://github.com/google/googletest
         GIT_TAG release-1.10.0
         GIT_SHALLOW TRUE)
@@ -147,7 +147,7 @@ find_package(pyre QUIET)
 if(NOT HAVE_PYRE)
     # disable pyre's test suite
     set(BUILD_TESTING OFF)
-    git_clone_dep(pyre
+    fetch_extern_repo(pyre
         GIT_REPOSITORY https://github.com/rtburns-jpl/pyre
         GIT_TAG isce3-stable
         GIT_SHALLOW TRUE)
