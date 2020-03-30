@@ -118,7 +118,7 @@ InitInstallDirLayout()
 
 # Dependencies
 
-include(.cmake/GitCloneDep.cmake)
+include(.cmake/FetchExternRepo.cmake)
 
 find_package(Eigen3 QUIET NO_MODULE)
 if(NOT EIGEN3_FOUND)
