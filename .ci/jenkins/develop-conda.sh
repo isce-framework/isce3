@@ -43,7 +43,7 @@ $DOCKER rm $CONTAINER || true
 $DOCKER run --name $CONTAINER \
     -v `pwd`:$SRCDIR:ro \
     $IMAGE_ID/builder bash -c \
-    "cmake $SRCDIR -DWITH_CUDA=y -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    "cmake $SRCDIR -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                    -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc \
                    -DCMAKE_INSTALL_PREFIX=$PREFIX \
      && make -j`nproc` VERBOSE=y \

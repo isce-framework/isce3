@@ -16,7 +16,6 @@ endif()
 project(ISCE VERSION 3.0
         LANGUAGES CXX)
 
-option(WITH_CUDA "Set ON|OFF (default=ON) to build CUDA library" OFF)
 set(ISCE_CUDA_ARCHS "Auto" CACHE STRING
     "Select target CUDA device architecture, options are:
     - comma-separated compute capabilities (e.g. 3.5,5.0,5.2)
@@ -29,6 +28,19 @@ list(APPEND CMAKE_MODULE_PATH ${ISCE_SOURCE_DIR}/.cmake)
 # import some helper functions
 include(IsceCudaHelper)
 
+# Auto-detect cuda support by default
+if(NOT DEFINED WITH_CUDA)
+    set(WITH_CUDA Auto CACHE STRING "")
+endif()
+if(WITH_CUDA STREQUAL Auto)
+    include(CheckLanguage)
+    check_language(CUDA)
+    if(CMAKE_CUDA_COMPILER)
+        set(WITH_CUDA ON CACHE STRING "" FORCE)
+    else()
+        set(WITH_CUDA OFF CACHE STRING "" FORCE)
+    endif()
+endif()
 if (WITH_CUDA)
     enable_language(CUDA)
 

@@ -238,7 +238,9 @@ Other optional arguments can be added to the cmake line
 <table>
     <caption id="cmake_options">Additional cmake options</caption>
     <tr><th>Option <th>Description
-    <tr><td>-DWITH_CUDA=ON  <td>Build with CUDA support (will need CUDA libraries installed)
+    <tr><td>-DWITH_CUDA=OFF<td>Do not attempt to detect CUDA support
+                               (default "Auto" will auto-detect CUDA toolchain,
+                                but can be explicitly required/ignored with ON/OFF)
     <tr><td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE \<br>
                         -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --track-origins=yes" \<br>
                         -DCMAKE_BUILD_TYPE=Debug<td>  
