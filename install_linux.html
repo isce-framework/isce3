@@ -332,7 +332,7 @@ Step 2: Build the software</h2>
 <tr>
 <th>Option </th><th>Description </th></tr>
 <tr>
-<td>-DWITH_CUDA=ON </td><td>Build with CUDA support (will need CUDA libraries installed) </td></tr>
+<td>-DWITH_CUDA=OFF</td><td>Do not attempt to detect CUDA support (default "Auto" will auto-detect CUDA toolchain, but can be explicitly required/ignored with ON/OFF) </td></tr>
 <tr>
 <td rowspan="3">-DMEMORY_CHECK_COMMAND=PATH_TO_VALGRIND_EXECUTABLE &lt;br&gt; -DMEMORYCHECK_COMMAND_OPTIONS="--trace-children=yes --leak-check=full --track-origins=yes" &lt;br&gt; -DCMAKE_BUILD_TYPE=Debug</td><td></td></tr>
 <tr>
