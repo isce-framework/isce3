@@ -124,8 +124,10 @@ find_package(Eigen3 QUIET NO_MODULE)
 if(NOT EIGEN3_FOUND)
     find_package(Git REQUIRED)
     set(BUILD_TESTING OFF)
-    git_clone_dep(gitlab.com libeigen eigen
+    git_clone_dep(eigen
+        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
         GIT_TAG 3.3.7
+        GIT_SHALLOW TRUE
         PATCH_COMMAND ${GIT_EXECUTABLE} apply
             ${CMAKE_CURRENT_LIST_DIR}/extern/eigen-disable-testing.patch)
     add_library(Eigen3::Eigen ALIAS eigen)
@@ -134,7 +136,10 @@ find_package(GTest QUIET CONFIG)
 if(NOT GTEST_FOUND)
     set(BUILD_GMOCK OFF CACHE INTERNAL "")
     set(INSTALL_GTEST OFF CACHE INTERNAL "")
-    git_clone_dep(github.com google googletest GIT_TAG release-1.10.0)
+    git_clone_dep(gtest
+        GIT_REPOSITORY https://github.com/google/googletest
+        GIT_TAG release-1.10.0
+        GIT_SHALLOW TRUE)
     add_library(GTest::gtest ALIAS gtest)
     add_library(GTest::gtest_main ALIAS gtest_main)
 endif()
@@ -142,7 +147,10 @@ find_package(pyre QUIET)
 if(NOT HAVE_PYRE)
     # disable pyre's test suite
     set(BUILD_TESTING OFF)
-    git_clone_dep(github.com rtburns-jpl pyre GIT_TAG isce3-stable)
+    git_clone_dep(pyre
+        GIT_REPOSITORY https://github.com/rtburns-jpl/pyre
+        GIT_TAG isce3-stable
+        GIT_SHALLOW TRUE)
 endif()
 
 add_subdirectory(extern) # Contributed software (not maintained here)

@@ -1,10 +1,8 @@
 include(FetchContent)
 
-function(git_clone_dep url user repo)
+function(git_clone_dep repo)
 
-    FetchContent_Declare(${repo}
-        GIT_REPOSITORY https://${url}/${user}/${repo}.git
-        GIT_SHALLOW TRUE ${ARGN})
+    FetchContent_Declare(${repo} ${ARGN})
 
     FetchContent_GetProperties(${repo})
     if(NOT ${repo}_POPULATED)
