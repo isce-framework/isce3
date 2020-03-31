@@ -29,14 +29,14 @@ TEST(ProductTest, FromHDF5) {
     const isce::product::Swath & swath = product.swath('A');
 
     // Check its values
-    ASSERT_NEAR(swath.slantRange()[0], 826988.6900674499, 1.0e-5);
-    ASSERT_NEAR(swath.zeroDopplerTime()[0], 237330.843491759, 1.0e-5);
-    ASSERT_NEAR(swath.acquiredCenterFrequency(), 5.331004416e9, 1.0);
-    ASSERT_NEAR(swath.processedCenterFrequency(), 5.331004416e9, 1.0);
+    ASSERT_DOUBLE_EQ(swath.slantRange()[0], 826988.6900674499);
+    ASSERT_DOUBLE_EQ(swath.zeroDopplerTime()[0], 237330.843491759);
+    ASSERT_DOUBLE_EQ(swath.acquiredCenterFrequency(), 5.331004416e9);
+    ASSERT_DOUBLE_EQ(swath.processedCenterFrequency(), 5.331004416e9);
     ASSERT_NEAR(swath.acquiredRangeBandwidth(), 1.6e7, 0.1);
     ASSERT_NEAR(swath.processedRangeBandwidth(), 1.6e7, 0.1);
-    ASSERT_NEAR(swath.nominalAcquisitionPRF(), 1.0/6.051745968279355e-4, 1.0e-3);
-    ASSERT_NEAR(swath.sceneCenterGroundRangeSpacing(), 23.774273647897644, 1.0e-8);
+    ASSERT_DOUBLE_EQ(swath.nominalAcquisitionPRF(), 1.0/6.051745968279355e-4);
+    ASSERT_DOUBLE_EQ(swath.sceneCenterGroundRangeSpacing(), 23.774273647897644);
 }
 
 int main(int argc, char * argv[]) {

@@ -2,6 +2,7 @@ set(SRCS
 core/core.cpp
 core/DateTime.cpp
 core/Ellipsoid.cpp
+core/LookSide.cpp
 core/LUT1d.cpp
 core/LUT2d.cpp
 core/Orbit.cpp
@@ -12,5 +13,8 @@ io/gdal/GDALDataType.cpp
 io/gdal/gdal.cpp
 io/gdal/Raster.cpp
 io/io.cpp
+product/product.cpp
+product/RadarGridParameters.cpp
+product/Swath.cpp
 isce.cpp
 )

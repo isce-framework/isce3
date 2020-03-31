@@ -7,6 +7,8 @@ core/orbit.py
 core/timedelta.py
 io/gdal/dataset.py
 io/gdal/raster.py
+product/radargridparameters.py
+product/swath.py
 )
 
 foreach(TESTFILE ${TESTFILES})

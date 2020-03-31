@@ -107,13 +107,13 @@ class isce::product::RadarGridParameters {
         inline size_t length() const { return _rlength; }
         
         /** Set radar grid length */
-        inline void length(const double & t) { _rlength = t; }
+        inline void length(const size_t & t) { _rlength = t; }
 
         /** Get radar grid width */
         inline size_t width() const { return _rwidth; }
         
-        /** Set radar grid length */
-        inline void width(const double & t) { _rwidth = t; }
+        /** Set radar grid width */
+        inline void width(const size_t & t) { _rwidth = t; }
 
         /** Get total number of radar grid elements */
         inline size_t size() const { return _rlength * _rwidth; }
