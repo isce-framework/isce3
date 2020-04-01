@@ -111,6 +111,8 @@ matchtemplate/ampcor/dom/Raster.icc
 matchtemplate/ampcor/dom/SLC.h
 matchtemplate/ampcor/dom/SLC.icc
 math/Bessel.h
+math/Sinc.h
+math/Sinc.icc
 product/forward.h
 product/Metadata.h
 product/ProcessingInformation.h

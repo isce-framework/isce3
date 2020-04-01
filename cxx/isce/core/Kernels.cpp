@@ -5,18 +5,19 @@
 
 #include "Kernels.h"
 
-#include <isce/except/Error.h>
 #include <complex>
 #include <cmath>
+#include <isce/except/Error.h>
+#include <isce/math/Sinc.h>
 #include <type_traits>
 
 using isce::except::RuntimeError;
 using isce::except::LengthError;
 
-/* 
+/*
  * Bartlett
  */
- 
+
 // constructor
 template <typename T>
 isce::core::BartlettKernel<T>::
@@ -39,29 +40,11 @@ operator()(double t) const {
 template class isce::core::BartlettKernel<float>;
 template class isce::core::BartlettKernel<double>;
 
-/* 
+/*
  * Knab, sampling window from 1983 paper
  */
- 
-template <typename T>
-T
-isce::core::sinc(T t)
-{
-    static T const eps1 = std::sqrt(std::numeric_limits<T>::epsilon());
-    static T const eps2 = std::sqrt(eps1);
-    T x = M_PI * fabs(t);
-    if (x >= eps2) {
-        return sin(x) / x;
-    } else {
-        T out = static_cast<T>(1);
-        if (x > eps1) {
-            out -= x * x / 6;
-        }
-        return out;
-    }
-}
 
-template <typename T> 
+template <typename T>
 T
 _sampling_window(T t, T halfwidth, T bandwidth)
 {
@@ -91,18 +74,17 @@ template <typename T>
 T
 isce::core::KnabKernel<T>::
 operator()(double t) const {
-    auto st = isce::core::sinc<T>(t);
+    auto st = isce::math::sinc<T>(t);
     return _sampling_window(t, this->_halfwidth, this->_bandwidth) * st;
 }
 
 template class isce::core::KnabKernel<float>;
 template class isce::core::KnabKernel<double>;
-template double isce::core::sinc(double);
 
-/* 
+/*
  * NFFT
  */
- 
+
 // constructor
 template <typename T>
 isce::core::NFFTKernel<T>::

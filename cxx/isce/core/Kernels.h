@@ -10,12 +10,6 @@
 #include <valarray>
 #include <isce/math/Bessel.h>
 
-/** sinc function defined as \f$ \frac{\sin(\pi x)}{\pi x} \f$ */
-namespace isce { namespace core {
-    template<class T>
-    T sinc(T t);
-}}
-
 /** Abstract base class for all kernels.
  *
  * Basically just a closure around an arbitrary function and a width property.
@@ -88,12 +82,6 @@ class isce::core::KnabKernel : public isce::core::Kernel<T> {
         double _bandwidth;
 };
 
-/** sinc function defined as \f$ \frac{\sin(\pi x)}{\pi x} \f$ */
-template <typename T>
-T
-isce::core::sinc(T t);
-
-
 /** NFFT time-domain kernel.
  *
  * This is called \f$ \phi(x) \f$ in the NFFT papers @cite keiner2009 ,
@@ -136,7 +124,7 @@ class isce::core::TabulatedKernel : public isce::core::Kernel<T> {
         TabulatedKernel(const isce::core::Kernel<T> &kernel, int n);
 
         T operator()(double x) const override;
-    
+
     private:
         std::valarray<T> _table;
         int _imax;

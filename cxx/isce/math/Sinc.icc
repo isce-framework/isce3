@@ -1,0 +1,93 @@
+#include <cmath>
+#include <limits>
+#include <type_traits>
+
+namespace isce { namespace math {
+
+namespace detail {
+
+template<typename T>
+inline
+T root_epsilon()
+{
+    static constexpr T eps = std::numeric_limits<T>::epsilon();
+    return std::sqrt(eps);
+}
+
+template<>
+constexpr
+float root_epsilon<float>()
+{
+    return static_cast<float>(0.00034526698300124390839884978618400831996329879769945L);
+}
+
+template<>
+constexpr
+double root_epsilon<double>()
+{
+    return static_cast<double>(0.1490116119384765625e-7L);
+}
+
+template<>
+constexpr
+long double root_epsilon<long double>()
+{
+    return static_cast<long double>(0.32927225399135962333569506281281311031656150598474e-9L);
+}
+
+template<typename T>
+inline
+T fourth_root_epsilon()
+{
+    return std::sqrt(root_epsilon<T>());
+}
+
+template<>
+constexpr
+float fourth_root_epsilon<float>()
+{
+    return static_cast<float>(0.018581361171917516667460937040007436176452688944747L);
+}
+
+template<>
+constexpr
+double fourth_root_epsilon<double>()
+{
+    return static_cast<double>(0.0001220703125L);
+}
+
+template<>
+constexpr
+long double fourth_root_epsilon<long double>()
+{
+    return static_cast<long double>(0.18145860519450699870567321328132261891067079047605e-4L);
+}
+
+} // namespace detail
+
+template<typename T>
+CUDA_HOSTDEV
+inline
+T sinc(T t)
+{
+    static_assert(std::is_floating_point<T>::value);
+
+    using U = typename std::remove_cv<T>::type;
+    static constexpr auto eps1 = detail::root_epsilon<U>();
+    static constexpr auto eps2 = detail::fourth_root_epsilon<U>();
+
+    auto x = T(M_PI) * std::abs(t);
+
+    // approximate by Taylor series expansion near zero
+    if (x < eps2) {
+        auto out = static_cast<T>(1);
+        if (x > eps1) {
+            out -= x * x / static_cast<T>(6);
+        }
+        return out;
+    }
+
+    return std::sin(x) / x;
+}
+
+}}
