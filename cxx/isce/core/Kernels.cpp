@@ -130,8 +130,9 @@ template class isce::core::NFFTKernel<double>;
 
 // Constructor
 template <typename T>
+template <typename TI>
 isce::core::TabulatedKernel<T>::
-TabulatedKernel(const isce::core::Kernel<T> &kernel, int n)
+TabulatedKernel(const isce::core::Kernel<TI> &kernel, int n)
 {
     this->_halfwidth = kernel.width() / 2.0;
     // Need at least two points for linear interpolation.
@@ -147,7 +148,7 @@ TabulatedKernel(const isce::core::Kernel<T> &kernel, int n)
     _1_dx = 1.0 / dx;
     for (int i=0; i<n; ++i) {
         double x = i * dx;
-        _table[i] = kernel(x);
+        _table[i] = static_cast<T>(kernel(x));
     }
 }
 
@@ -172,12 +173,22 @@ operator()(double x) const
     return _table[i] + (axn - i) * (_table[i+1] - _table[i]);
 }
 
-template class isce::core::TabulatedKernel<float>;
-template class isce::core::TabulatedKernel<double>;
+namespace isce { namespace core {
+    template class TabulatedKernel<float>;
+    template class TabulatedKernel<double>;
+    template TabulatedKernel<float>::
+        TabulatedKernel(const Kernel<float> &, int);
+    template TabulatedKernel<double>::
+        TabulatedKernel(const Kernel<double> &, int);
+    // Allow construction of a float table from a double kernel
+    template TabulatedKernel<float>::
+        TabulatedKernel(const Kernel<double> &, int);
+}}
 
 template <typename T>
+template <typename Tin>
 isce::core::ChebyKernel<T>::
-ChebyKernel(const isce::core::Kernel<T> &kernel, int n)
+ChebyKernel(const isce::core::Kernel<Tin> &kernel, int n)
 {
     if (n < 1) {
         throw LengthError(ISCE_SRCINFO(), "Need at least one coefficient.");
@@ -192,7 +203,7 @@ ChebyKernel(const isce::core::Kernel<T> &kernel, int n)
         q[i] = M_PI * (2.0*i + 1.0) / (2.0*n);
         // shift & scale [-1,1] to [0,width/2].
         T x = (std::cos(q[i]) + 1.0) / _scale;
-        fx[i] = kernel(x);
+        fx[i] = static_cast<T>(kernel(x));
     }
     // FFTW provides DCT with plan_r2r(REDFT10) but this isn't exposed in
     // isce::core::signal.  Typically we're only fitting a few coefficients
@@ -233,5 +244,14 @@ operator()(double x) const
     return _coeffs[0] + q*bk1 - bk2;
 }
 
-template class isce::core::ChebyKernel<float>;
-template class isce::core::ChebyKernel<double>;
+namespace isce { namespace core {
+    template class ChebyKernel<float>;
+    template class ChebyKernel<double>;
+    template ChebyKernel<float>::
+        ChebyKernel(const Kernel<float> &, int);
+    template ChebyKernel<double>::
+        ChebyKernel(const Kernel<double> &, int);
+    // Allow construction of a float table from a double kernel
+    template ChebyKernel<float>::
+        ChebyKernel(const Kernel<double> &, int);
+}}

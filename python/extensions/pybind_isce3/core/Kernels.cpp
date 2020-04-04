@@ -70,22 +70,28 @@ void addbinding(py::class_<NFFTKernel<T>, Kernel<T>> & pyKernel)
 template void addbinding(py::class_<NFFTKernel<float>, Kernel<float>> & pyKernel);
 template void addbinding(py::class_<NFFTKernel<double>, Kernel<double>> & pyKernel);
 
-// Look up table metakernel
-template <typename T>
-void addbinding(py::class_<TabulatedKernel<T>, Kernel<T>> & pyKernel)
+// Look up table metakernel.  Allow double->float conversion.
+void addbinding(py::class_<TabulatedKernel<float>, Kernel<float>> & pyKernel)
 {
-    pyKernel.def(py::init<const Kernel<T>&, int>());
+    pyKernel
+        .def(py::init<const Kernel<float>&, int>())
+        .def(py::init<const Kernel<double>&, int>());
 }
 
-template void addbinding(py::class_<TabulatedKernel<float>, Kernel<float>> & pyKernel);
-template void addbinding(py::class_<TabulatedKernel<double>, Kernel<double>> & pyKernel);
-
-// Chebyshev polynomial metakernel
-template <typename T>
-void addbinding(py::class_<ChebyKernel<T>, Kernel<T>> & pyKernel)
+void addbinding(py::class_<TabulatedKernel<double>, Kernel<double>> & pyKernel)
 {
-    pyKernel.def(py::init<const Kernel<T>&, int>());
+    pyKernel.def(py::init<const Kernel<double>&, int>());
 }
 
-template void addbinding(py::class_<ChebyKernel<float>, Kernel<float>> & pyKernel);
-template void addbinding(py::class_<ChebyKernel<double>, Kernel<double>> & pyKernel);
+// Chebyshev polynomial metakernel.  Allow double->float conversion.
+void addbinding(py::class_<ChebyKernel<float>, Kernel<float>> & pyKernel)
+{
+    pyKernel
+        .def(py::init<const Kernel<float>&, int>())
+        .def(py::init<const Kernel<double>&, int>());
+}
+
+void addbinding(py::class_<ChebyKernel<double>, Kernel<double>> & pyKernel)
+{
+    pyKernel.def(py::init<const Kernel<double>&, int>());
+}

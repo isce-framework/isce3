@@ -121,7 +121,8 @@ class isce::core::TabulatedKernel : public isce::core::Kernel<T> {
          * @param[in] kernel    Kernel to sample.
          * @param[in] n         Table size.
          */
-        TabulatedKernel(const isce::core::Kernel<T> &kernel, int n);
+        template <typename Tin>
+        TabulatedKernel(const isce::core::Kernel<Tin> &kernel, int n);
 
         T operator()(double x) const override;
 
@@ -142,7 +143,8 @@ class isce::core::ChebyKernel : public isce::core::Kernel<T> {
          * @param[in] kernel    Kernel to fit (assumed even).
          * @param[in] n         Number of coefficients.
          */
-        ChebyKernel(const isce::core::Kernel<T> &kernel, int n);
+        template <typename Tin>
+        ChebyKernel(const isce::core::Kernel<Tin> &kernel, int n);
 
         T operator()(double x) const override;
 
