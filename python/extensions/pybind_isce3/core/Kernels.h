@@ -7,10 +7,11 @@
 template <typename T>
 class PyKernel : public isce::core::Kernel<T> {
 public:
-    // Can't figure out why this isn't working :(
-    // T operator()(double x) const override {
-    //     PYBIND11_OVERLOAD_PURE_NAME(T, isce::core::Kernel<T>, operator(), "__call__", x);
-    // }
+    using isce::core::Kernel<T>::Kernel;
+
+    T operator()(double x) const override {
+        PYBIND11_OVERLOAD_PURE_NAME(T, isce::core::Kernel<T>, "__call__", operator(), x);
+    }
 };
 
 template <typename T>

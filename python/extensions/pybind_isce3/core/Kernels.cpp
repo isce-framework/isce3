@@ -20,9 +20,9 @@ template <typename T>
 void addbinding(py::class_<Kernel<T>, PyKernel<T>> & pyKernel)
 {
     pyKernel
+        .def(py::init<>())
         .def("__call__", &Kernel<T>::operator())
-        .def_property_readonly("width", &Kernel<T>::width)
-        ;
+        .def_property_readonly("width", &Kernel<T>::width);
 }
 
 template void addbinding(py::class_<Kernel<float>, PyKernel<float>> & pyKernel);
