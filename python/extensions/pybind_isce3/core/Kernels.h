@@ -24,3 +24,12 @@ void addbinding(pybind11::class_<isce::core::LinearKernel<T>, isce::core::Kernel
 
 template <typename T>
 void addbinding(pybind11::class_<isce::core::KnabKernel<T>, isce::core::Kernel<T>> &);
+
+template <typename T>
+void addbinding(pybind11::class_<isce::core::NFFTKernel<T>, isce::core::Kernel<T>> &);
+
+template <typename T>
+void addbinding(pybind11::class_<isce::core::TabulatedKernel<T>, isce::core::Kernel<T>> &);
+
+template <typename T>
+void addbinding(pybind11::class_<isce::core::ChebyKernel<T>, isce::core::Kernel<T>> &);

@@ -15,6 +15,7 @@ namespace py = pybind11;
 
 using namespace isce::core;
 
+// Base class, inherit from "trampoline" class to allow inheritance in python
 template <typename T>
 void addbinding(py::class_<Kernel<T>, PyKernel<T>> & pyKernel)
 {
@@ -27,6 +28,7 @@ void addbinding(py::class_<Kernel<T>, PyKernel<T>> & pyKernel)
 template void addbinding(py::class_<Kernel<float>, PyKernel<float>> & pyKernel);
 template void addbinding(py::class_<Kernel<double>, PyKernel<double>> & pyKernel);
 
+// Bartlett
 template <typename T>
 void addbinding(py::class_<BartlettKernel<T>, Kernel<T>> & pyKernel)
 {
@@ -36,6 +38,7 @@ void addbinding(py::class_<BartlettKernel<T>, Kernel<T>> & pyKernel)
 template void addbinding(py::class_<BartlettKernel<float>, Kernel<float>> & pyKernel);
 template void addbinding(py::class_<BartlettKernel<double>, Kernel<double>> & pyKernel);
 
+// Linear
 template <typename T>
 void addbinding(py::class_<LinearKernel<T>, Kernel<T>> & pyKernel)
 {
@@ -45,6 +48,7 @@ void addbinding(py::class_<LinearKernel<T>, Kernel<T>> & pyKernel)
 template void addbinding(py::class_<LinearKernel<float>, Kernel<float>> & pyKernel);
 template void addbinding(py::class_<LinearKernel<double>, Kernel<double>> & pyKernel);
 
+// Knab
 template <typename T>
 void addbinding(py::class_<KnabKernel<T>, Kernel<T>> & pyKernel)
 {
@@ -55,3 +59,33 @@ void addbinding(py::class_<KnabKernel<T>, Kernel<T>> & pyKernel)
 
 template void addbinding(py::class_<KnabKernel<float>, Kernel<float>> & pyKernel);
 template void addbinding(py::class_<KnabKernel<double>, Kernel<double>> & pyKernel);
+
+// NFFT
+template <typename T>
+void addbinding(py::class_<NFFTKernel<T>, Kernel<T>> & pyKernel)
+{
+    pyKernel.def(py::init<int, int, int>());
+}
+
+template void addbinding(py::class_<NFFTKernel<float>, Kernel<float>> & pyKernel);
+template void addbinding(py::class_<NFFTKernel<double>, Kernel<double>> & pyKernel);
+
+// Look up table metakernel
+template <typename T>
+void addbinding(py::class_<TabulatedKernel<T>, Kernel<T>> & pyKernel)
+{
+    pyKernel.def(py::init<const Kernel<T>&, int>());
+}
+
+template void addbinding(py::class_<TabulatedKernel<float>, Kernel<float>> & pyKernel);
+template void addbinding(py::class_<TabulatedKernel<double>, Kernel<double>> & pyKernel);
+
+// Chebyshev polynomial metakernel
+template <typename T>
+void addbinding(py::class_<ChebyKernel<T>, Kernel<T>> & pyKernel)
+{
+    pyKernel.def(py::init<const Kernel<T>&, int>());
+}
+
+template void addbinding(py::class_<ChebyKernel<float>, Kernel<float>> & pyKernel);
+template void addbinding(py::class_<ChebyKernel<double>, Kernel<double>> & pyKernel);
