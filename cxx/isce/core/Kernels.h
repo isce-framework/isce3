@@ -9,6 +9,7 @@
 
 #include <valarray>
 #include <isce/math/Bessel.h>
+#include <cmath>
 
 /** Abstract base class for all kernels.
  *
@@ -20,6 +21,8 @@ template <typename T>
 class isce::core::Kernel {
 
     public:
+        Kernel(double width) : _halfwidth(fabs(width/2.0)) {}
+
         /** Virtual destructor (allow destruction of base Kernel pointer) */
         virtual ~Kernel() {}
 
@@ -42,7 +45,7 @@ class isce::core::BartlettKernel : public isce::core::Kernel<T> {
 
     public:
         /** Triangle function constructor. */
-        BartlettKernel(double width);
+        BartlettKernel(double width) : Kernel<T>(width) {}
         T operator()(double x) const override;
 };
 
@@ -71,7 +74,8 @@ class isce::core::KnabKernel : public isce::core::Kernel<T> {
          * @param[in] bandwidth Bandwidth of signal to be interpolated, as a
          *                      fraction of the sample rate (0 < bandwidth < 1).
          */
-        KnabKernel(double width, double bandwidth);
+        KnabKernel(double width, double bandwidth) :
+            Kernel<T>(width), _bandwidth(bandwidth) {}
 
         T operator()(double x) const override;
 

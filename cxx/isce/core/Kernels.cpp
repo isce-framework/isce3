@@ -18,13 +18,6 @@ using isce::except::LengthError;
  * Bartlett
  */
 
-// constructor
-template <typename T>
-isce::core::BartlettKernel<T>::
-BartlettKernel(double width) {
-    this->_halfwidth = fabs(width / 2);
-}
-
 // call
 template <typename T>
 T
@@ -61,14 +54,6 @@ _sampling_window(T t, T halfwidth, T bandwidth)
     return window;
 }
 
-// constructor
-template <typename T>
-isce::core::KnabKernel<T>::
-KnabKernel(double width, double bandwidth) {
-    this->_halfwidth = fabs(width / 2);
-    this->_bandwidth = bandwidth;
-}
-
 // call
 template <typename T>
 T
@@ -89,14 +74,13 @@ template class isce::core::KnabKernel<double>;
 template <typename T>
 isce::core::NFFTKernel<T>::
 NFFTKernel(int m, int n, int fft_size)
-    : _m(m), _n(n), _fft_size(fft_size)
+    : Kernel<T>(2*m+1), _m(m), _n(n), _fft_size(fft_size)
 {
     if ((m<1) || (n<1) || (fft_size<1)) {
         throw LengthError(ISCE_SRCINFO(), "NFFT parameters must be positive.");
     }
     _b = M_PI * (2.0 - 1.0*n/fft_size);
     _scale = 1.0 / (M_PI * isce::math::bessel_i0(_m*_b));
-    this->_halfwidth = fabs((2*m+1) / 2.0);
 }
 
 // call
@@ -132,9 +116,9 @@ template class isce::core::NFFTKernel<double>;
 template <typename T>
 template <typename TI>
 isce::core::TabulatedKernel<T>::
-TabulatedKernel(const isce::core::Kernel<TI> &kernel, int n)
+TabulatedKernel(const isce::core::Kernel<TI> &kernel, int n) :
+    Kernel<T>(kernel.width())
 {
-    this->_halfwidth = kernel.width() / 2.0;
     // Need at least two points for linear interpolation.
     if (n < 2) {
         throw LengthError(ISCE_SRCINFO(), "Require table size >= 2.");
@@ -188,12 +172,12 @@ namespace isce { namespace core {
 template <typename T>
 template <typename Tin>
 isce::core::ChebyKernel<T>::
-ChebyKernel(const isce::core::Kernel<Tin> &kernel, int n)
+ChebyKernel(const isce::core::Kernel<Tin> &kernel, int n) :
+    Kernel<T>(kernel.width())
 {
     if (n < 1) {
         throw LengthError(ISCE_SRCINFO(), "Need at least one coefficient.");
     }
-    this->_halfwidth = kernel.width() / 2.0;
     // Fit a kernel with DCT of fn at Chebyshev zeros.
     // Assume even function and fit on interval [0,width/2] to avoid a bunch
     // of zero coefficients.
