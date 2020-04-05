@@ -25,7 +25,6 @@ interp_duckt(const Kernel<TK> & kernel, py::buffer_info & info, py::object t)
     else if (py::isinstance<py::array_t<double>>(t)) {
         auto ta = py::array_t<double>(t).unchecked<1>();
         std::valarray<TD> out(ta.size());
-        #pragma omp parallel for
         for (size_t i=0; i < ta.size(); ++i) {
             out[i] = interp1d(kernel, data, n, stride, ta(i));
         }
