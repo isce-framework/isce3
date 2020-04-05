@@ -68,5 +68,12 @@ void addbinding_interp1d(py::module & m)
             return interp_duckbuf(*kernel, buf, t);
         }
         throw RuntimeError(ISCE_SRCINFO(), "Expected Kernel or KernelF32");
-    });
+    },
+    R"(
+        Interpolate a 1D sequence `data` at `time` using `kernel`.  The `time`
+        units are sample numbers (starting at zero), and `time` may be a
+        scalar or an array.  Complex data must be interpolated with a kernel of
+        a matching real type (e.g., KernelF32 for numpy.complex64 data).
+    )",
+    py::arg("kernel"), py::arg("data"), py::arg("time"));
 }
