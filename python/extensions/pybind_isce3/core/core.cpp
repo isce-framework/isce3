@@ -74,6 +74,5 @@ void addsubmodule_core(py::module & m)
     addbinding(pyTabulatedKernelF32);
     addbinding(pyChebyKernelF32);
 
-    addbinding_interp1d<float>(m_core, "interp1dF32");
-    addbinding_interp1d<double>(m_core, "interp1d");
+    addbinding_interp1d(m_core);
 }

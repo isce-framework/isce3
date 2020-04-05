@@ -14,7 +14,7 @@ using isce::except::RuntimeError;
 
 template <typename TK, typename TD>
 static py::object
-interp(const Kernel<TK> & kernel, py::buffer_info & info, py::object t)
+interp_duckt(const Kernel<TK> & kernel, py::buffer_info & info, py::object t)
 {
     TD * data = static_cast<TD *>(info.ptr);
     int stride = info.strides[0] / sizeof(TD);
@@ -36,27 +36,38 @@ interp(const Kernel<TK> & kernel, py::buffer_info & info, py::object t)
 }
 
 template <typename T>
-void addbinding_interp1d(py::module & m, const char * name)
+static py::object
+interp_duckbuf(Kernel<T> & kernel, py::buffer buf, py::object t)
 {
-    m.def(name, [](Kernel<T> & kernel, py::buffer buf, py::object t) {
-        py::buffer_info info = buf.request();
-        using CT = std::complex<T>;
-        if (info.ndim != 1) {
-            throw RuntimeError(ISCE_SRCINFO(), "data buffer must be 1-D");
-        }
-        if (info.format == py::format_descriptor<float>::format()) {
-            return interp<T,float>(kernel, info, t);
-        }
-        else if (info.format == py::format_descriptor<double>::format()) {
-            return interp<T,double>(kernel, info, t);
-        }
-        else if (info.format == py::format_descriptor<CT>::format()) {
-            // NOTE: not mixing float and double to avoid weird promotion rules
-            return interp<T,CT>(kernel, info, t);
-        }
-        throw RuntimeError(ISCE_SRCINFO(), "Unsupported types for interp1d");
-    });
+    py::buffer_info info = buf.request();
+    using CT = std::complex<T>;
+    if (info.ndim != 1) {
+        throw RuntimeError(ISCE_SRCINFO(), "data buffer must be 1-D");
+    }
+    if (info.format == py::format_descriptor<float>::format()) {
+        return interp_duckt<T,float>(kernel, info, t);
+    }
+    else if (info.format == py::format_descriptor<double>::format()) {
+        return interp_duckt<T,double>(kernel, info, t);
+    }
+    else if (info.format == py::format_descriptor<CT>::format()) {
+        // NOTE: not mixing float and double to avoid weird promotion rules
+        return interp_duckt<T,CT>(kernel, info, t);
+    }
+    throw RuntimeError(ISCE_SRCINFO(), "Unsupported types for interp1d");
 }
 
-template void addbinding_interp1d<float>(py::module & m, const char * name);
-template void addbinding_interp1d<double>(py::module & m, const char * name);
+void addbinding_interp1d(py::module & m)
+{
+    m.def("interp1d", [](py::object pyKernel, py::buffer buf, py::object t) {
+        if (py::isinstance<Kernel<float>>(pyKernel)) {
+            auto kernel = pyKernel.cast<Kernel<float> *>();
+            return interp_duckbuf(*kernel, buf, t);
+        }
+        else if (py::isinstance<Kernel<double>>(pyKernel)) {
+            auto kernel = pyKernel.cast<Kernel<double> *>();
+            return interp_duckbuf(*kernel, buf, t);
+        }
+        throw RuntimeError(ISCE_SRCINFO(), "Expected Kernel or KernelF32");
+    });
+}
