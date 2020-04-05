@@ -1,12 +1,6 @@
-#include "DateTime.h"
-
-#include <datetime.h>
-#include <memory>
-#include <pybind11/operators.h>
-#include <string>
-
-#include <isce/core/Kernels.h>
 #include "Kernels.h"
+#include <pybind11/operators.h>
+#include <isce/core/Kernels.h>
 
 template class PyKernel<float>;
 template class PyKernel<double>;
