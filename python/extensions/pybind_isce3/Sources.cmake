@@ -3,6 +3,7 @@ core/core.cpp
 core/Constants.cpp
 core/DateTime.cpp
 core/Ellipsoid.cpp
+core/Interp1d.cpp
 core/Kernels.cpp
 core/LookSide.cpp
 core/LUT1d.cpp

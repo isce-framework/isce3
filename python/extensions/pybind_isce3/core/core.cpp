@@ -3,6 +3,7 @@
 #include "Constants.h"
 #include "DateTime.h"
 #include "Ellipsoid.h"
+#include "Interp1d.h"
 #include "Kernels.h"
 #include "LookSide.h"
 #include "LUT1d.h"
@@ -72,4 +73,7 @@ void addsubmodule_core(py::module & m)
     addbinding(pyKernelF32);
     addbinding(pyTabulatedKernelF32);
     addbinding(pyChebyKernelF32);
+
+    addbinding_interp1d<float>(m_core, "interp1dF32");
+    addbinding_interp1d<double>(m_core, "interp1d");
 }
