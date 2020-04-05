@@ -8,6 +8,7 @@ template <typename T>
 class PyKernel : public isce::core::Kernel<T> {
 public:
     using isce::core::Kernel<T>::Kernel;
+    PyKernel(double width) : isce::core::Kernel<T>(width) {}
 
     T operator()(double x) const override {
         PYBIND11_OVERLOAD_PURE_NAME(T, isce::core::Kernel<T>, "__call__", operator(), x);

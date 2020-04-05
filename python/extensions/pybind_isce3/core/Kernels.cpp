@@ -14,7 +14,7 @@ template <typename T>
 void addbinding(py::class_<Kernel<T>, PyKernel<T>> & pyKernel)
 {
     pyKernel
-        .def(py::init<>())
+        .def(py::init<double>())
         .def("__call__", &Kernel<T>::operator())
         .def_property_readonly("width", &Kernel<T>::width);
 }
