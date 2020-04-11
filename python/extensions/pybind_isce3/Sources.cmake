@@ -1,5 +1,6 @@
 set(SRCS
 core/core.cpp
+core/Constants.cpp
 core/DateTime.cpp
 core/Ellipsoid.cpp
 core/LookSide.cpp
@@ -7,6 +8,8 @@ core/LUT1d.cpp
 core/LUT2d.cpp
 core/Orbit.cpp
 core/TimeDelta.cpp
+geometry/geometry.cpp
+geometry/DEMInterpolator.cpp
 io/gdal/Dataset.cpp
 io/gdal/GDALAccess.cpp
 io/gdal/GDALDataType.cpp

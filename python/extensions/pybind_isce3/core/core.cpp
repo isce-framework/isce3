@@ -1,5 +1,6 @@
 #include "core.h"
 
+#include "Constants.h"
 #include "DateTime.h"
 #include "Ellipsoid.h"
 #include "LookSide.h"
@@ -26,6 +27,7 @@ void addsubmodule_core(py::module & m)
     py::enum_<isce::core::LookSide> pyLookSide(m_core, "LookSide");
 
     // add bindings
+    add_constants(m_core);
     addbinding(pyDateTime);
     addbinding(pyEllipsoid);
     addbinding(pyLookSide);
