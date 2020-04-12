@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import pytest
 import pybind_isce3.geometry as m
 from pybind_isce3.core import dataInterpMethod
 
@@ -21,6 +22,12 @@ def test_dem():
 
     dem = m.DEMInterpolator(method="bicubic")
     assert dem.interpMethod == method
+
+    dem = m.DEMInterpolator(method="biCUBic")
+    assert dem.interpMethod == method
+
+    with pytest.raises(ValueError):
+        dem = m.DEMInterpolator(method="TigerKing")
 
     assert dem.haveRaster == False
 

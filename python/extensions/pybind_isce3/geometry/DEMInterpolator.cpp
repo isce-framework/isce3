@@ -1,8 +1,10 @@
 #include "DEMInterpolator.h"
 
+#include <isce/core/Constants.h>
 #include <isce/io/Raster.h>
 #include <Eigen/Dense>
 #include <stdexcept>
+#include <string>
 
 namespace py = pybind11;
 
@@ -16,14 +18,7 @@ void addbinding(pybind11::class_<DI> & pyDEMInterpolator)
             py::arg("method") = isce::core::BILINEAR_METHOD)
         // For convenience allow a string, too.
         .def(py::init([](double h, const std::string & method) {
-                using namespace isce::core;
-                auto m = BILINEAR_METHOD;
-                if      (method == "sinc")      m = SINC_METHOD;
-                else if (method == "bilinear")  m = BILINEAR_METHOD;
-                else if (method == "bicubic")   m = BICUBIC_METHOD;
-                else if (method == "nearest")   m = NEAREST_METHOD;
-                else if (method == "biquintic") m = BIQUINTIC_METHOD;
-                else throw std::invalid_argument("Unknown interp method");
+                auto m = parseDataInterpMethod(method);
                 return new DI(h, m);
             }),
             py::arg("height") = 0.0,
