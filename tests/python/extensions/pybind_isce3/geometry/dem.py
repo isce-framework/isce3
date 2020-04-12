@@ -7,16 +7,16 @@ def test_const():
     href = 10.
 
     dem = m.DEMInterpolator()
-    dem.refHeight = href
-    assert dem.refHeight == href
+    dem.ref_height = href
+    assert dem.ref_height == href
 
     dem = m.DEMInterpolator(href)
-    assert dem.refHeight == href
+    assert dem.ref_height == href
 
-    assert dem.interpolateXY(0, 0) == href
-    assert dem.interpolateLonLat(0, 0) == href
+    assert dem.interpolate_xy(0, 0) == href
+    assert dem.interpolate_lonlat(0, 0) == href
 
-    assert dem.haveRaster == False
+    assert dem.have_raster == False
 
 
 def test_methods():
@@ -25,16 +25,16 @@ def test_methods():
         # enum constructor
         method = getattr(DataInterpMethod, name)
         dem = m.DEMInterpolator(method=method)
-        assert dem.interpMethod == method
+        assert dem.interp_method == method
         # string constructor
         dem = m.DEMInterpolator(method=name)
-        assert dem.interpMethod == method
+        assert dem.interp_method == method
 
     dem = m.DEMInterpolator(method="bicubic")
-    assert dem.interpMethod == DataInterpMethod.BICUBIC
+    assert dem.interp_method == DataInterpMethod.BICUBIC
 
     dem = m.DEMInterpolator(method="biCUBic")
-    assert dem.interpMethod == DataInterpMethod.BICUBIC
+    assert dem.interp_method == DataInterpMethod.BICUBIC
 
     with pytest.raises(ValueError):
         dem = m.DEMInterpolator(method="TigerKing")

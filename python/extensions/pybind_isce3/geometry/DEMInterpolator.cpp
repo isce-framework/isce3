@@ -24,22 +24,22 @@ void addbinding(pybind11::class_<DI> & pyDEMInterpolator)
             py::arg("height") = 0.0,
             py::arg("method") = "bilinear")
 
-        .def("loadDEM",
+        .def("load_dem",
             py::overload_cast<isce::io::Raster&>(&DI::loadDEM))
-        .def("loadDEM",
+        .def("load_dem",
             py::overload_cast<isce::io::Raster&, double, double, double, double>
                 (&DI::loadDEM),
-            py::arg("raster"), py::arg("minX"), py::arg("maxX"),
-                py::arg("minY"), py::arg("maxY"))
+            py::arg("raster"), py::arg("min_x"), py::arg("max_x"),
+                py::arg("min_y"), py::arg("max_y"))
 
-        .def("interpolateLonLat", &DI::interpolateLonLat)
-        .def("interpolateXY", &DI::interpolateXY)
+        .def("interpolate_lonlat", &DI::interpolateLonLat)
+        .def("interpolate_xy", &DI::interpolateXY)
 
-        .def_property("refHeight",
+        .def_property("ref_height",
             py::overload_cast<>(&DI::refHeight, py::const_),
             py::overload_cast<double>(&DI::refHeight))
-        .def_property_readonly("haveRaster", &DI::haveRaster)
-        .def_property("interpMethod",
+        .def_property_readonly("have_raster", &DI::haveRaster)
+        .def_property("interp_method",
             py::overload_cast<>(&DI::interpMethod, py::const_),
             py::overload_cast<isce::core::dataInterpMethod>(&DI::interpMethod))
 
@@ -55,12 +55,12 @@ void addbinding(pybind11::class_<DI> & pyDEMInterpolator)
             Map<const MatF> mat(self.data(), self.length(), self.width());
             return mat;
         }, py::return_value_policy::reference_internal)
-        .def_property_readonly("xStart", py::overload_cast<>(&DI::xStart, py::const_))
-        .def_property_readonly("yStart", py::overload_cast<>(&DI::yStart, py::const_))
-        .def_property_readonly("deltaX", py::overload_cast<>(&DI::deltaX, py::const_))
-        .def_property_readonly("deltaY", py::overload_cast<>(&DI::deltaY, py::const_))
+        .def_property_readonly("x_start", py::overload_cast<>(&DI::xStart, py::const_))
+        .def_property_readonly("y_start", py::overload_cast<>(&DI::yStart, py::const_))
+        .def_property_readonly("delta_x", py::overload_cast<>(&DI::deltaX, py::const_))
+        .def_property_readonly("delta_y", py::overload_cast<>(&DI::deltaY, py::const_))
         .def_property_readonly("width", py::overload_cast<>(&DI::width, py::const_))
         .def_property_readonly("length", py::overload_cast<>(&DI::length, py::const_))
-        .def_property_readonly("epsgCode", py::overload_cast<>(&DI::epsgCode, py::const_))
+        .def_property_readonly("epsg_code", py::overload_cast<>(&DI::epsgCode, py::const_))
         ;
 }
