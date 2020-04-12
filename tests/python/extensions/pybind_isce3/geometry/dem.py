@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import pytest
 import pybind_isce3.geometry as m
-from pybind_isce3.core import dataInterpMethod
+from pybind_isce3.core import DataInterpMethod
 
-def test_dem():
+def test_const():
     href = 10.
 
     dem = m.DEMInterpolator()
@@ -16,19 +16,27 @@ def test_dem():
     assert dem.interpolateXY(0, 0) == href
     assert dem.interpolateLonLat(0, 0) == href
 
-    method = dataInterpMethod.bicubic
-    dem = m.DEMInterpolator(height=href, method=method)
-    assert dem.interpMethod == method
+    assert dem.haveRaster == False
+
+
+def test_methods():
+    # pybind11::enum_ is not iterable
+    for name in "SINC BILINEAR BICUBIC NEAREST BIQUINTIC".split():
+        # enum constructor
+        method = getattr(DataInterpMethod, name)
+        dem = m.DEMInterpolator(method=method)
+        assert dem.interpMethod == method
+        # string constructor
+        dem = m.DEMInterpolator(method=name)
+        assert dem.interpMethod == method
 
     dem = m.DEMInterpolator(method="bicubic")
-    assert dem.interpMethod == method
+    assert dem.interpMethod == DataInterpMethod.BICUBIC
 
     dem = m.DEMInterpolator(method="biCUBic")
-    assert dem.interpMethod == method
+    assert dem.interpMethod == DataInterpMethod.BICUBIC
 
     with pytest.raises(ValueError):
         dem = m.DEMInterpolator(method="TigerKing")
-
-    assert dem.haveRaster == False
 
     # TODO Test other methods once we have isce::io::Raster bindings.
