@@ -9,7 +9,6 @@ core/detail/BuildOrbit.cpp
 core/Ellipsoid.cpp
 core/EulerAngles.cpp
 core/Interpolator.cpp
-core/Kernels.cpp
 core/LUT2d.cpp
 core/LookSide.cpp
 core/Metadata.cpp

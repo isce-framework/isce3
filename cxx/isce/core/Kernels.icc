@@ -1,9 +1,6 @@
-//
-// Author: Brian Hawkins
-// Copyright 2019
-//
-
-#include "Kernels.h"
+#ifndef ISCE_CORE_KERNELS_ICC
+#error "Kernels.icc is an implementation detail of Linspace.h"
+#endif
 
 #include <complex>
 #include <cmath>
@@ -11,8 +8,6 @@
 #include <isce/math/Sinc.h>
 #include <type_traits>
 
-using isce::except::RuntimeError;
-using isce::except::LengthError;
 
 /*
  * Bartlett
@@ -30,9 +25,6 @@ operator()(double t) const {
     return T(1.0 - t2);
 }
 
-template class isce::core::BartlettKernel<float>;
-template class isce::core::BartlettKernel<double>;
-
 /*
  * Knab, sampling window from 1983 paper
  */
@@ -41,6 +33,7 @@ template <typename T>
 T
 _sampling_window(T t, T halfwidth, T bandwidth)
 {
+    using isce::except::RuntimeError;
     if (!((0.0 < bandwidth) && (bandwidth < 1.0))) {
         throw RuntimeError(ISCE_SRCINFO(), "Require 0 < bandwidth < 1");
     }
@@ -63,9 +56,6 @@ operator()(double t) const {
     return _sampling_window(t, this->_halfwidth, this->_bandwidth) * st;
 }
 
-template class isce::core::KnabKernel<float>;
-template class isce::core::KnabKernel<double>;
-
 /*
  * NFFT
  */
@@ -77,7 +67,8 @@ NFFTKernel(int m, int n, int fft_size)
     : Kernel<T>(2*m+1), _m(m), _n(n), _fft_size(fft_size)
 {
     if ((m<1) || (n<1) || (fft_size<1)) {
-        throw LengthError(ISCE_SRCINFO(), "NFFT parameters must be positive.");
+        throw isce::except::LengthError(ISCE_SRCINFO(),
+            "NFFT parameters must be positive.");
     }
     _b = M_PI * (2.0 - 1.0*n/fft_size);
     _scale = 1.0 / (M_PI * isce::math::bessel_i0(_m*_b));
@@ -105,9 +96,6 @@ operator()(double t) const
     return _scale * out;
 }
 
-template class isce::core::NFFTKernel<float>;
-template class isce::core::NFFTKernel<double>;
-
 /*
  * Tabulated kernel.
  */
@@ -121,7 +109,8 @@ TabulatedKernel(const isce::core::Kernel<TI> &kernel, int n) :
 {
     // Need at least two points for linear interpolation.
     if (n < 2) {
-        throw LengthError(ISCE_SRCINFO(), "Require table size >= 2.");
+        throw isce::except::LengthError(ISCE_SRCINFO(),
+            "Require table size >= 2.");
     }
     // Need i+1 < n so linear interp doesn't run off of table.
     _imax = n - 2;
@@ -157,18 +146,6 @@ operator()(double x) const
     return _table[i] + (axn - i) * (_table[i+1] - _table[i]);
 }
 
-namespace isce { namespace core {
-    template class TabulatedKernel<float>;
-    template class TabulatedKernel<double>;
-    template TabulatedKernel<float>::
-        TabulatedKernel(const Kernel<float> &, int);
-    template TabulatedKernel<double>::
-        TabulatedKernel(const Kernel<double> &, int);
-    // Allow construction of a float table from a double kernel
-    template TabulatedKernel<float>::
-        TabulatedKernel(const Kernel<double> &, int);
-}}
-
 template <typename T>
 template <typename Tin>
 isce::core::ChebyKernel<T>::
@@ -176,7 +153,8 @@ ChebyKernel(const isce::core::Kernel<Tin> &kernel, int n) :
     Kernel<T>(kernel.width())
 {
     if (n < 1) {
-        throw LengthError(ISCE_SRCINFO(), "Need at least one coefficient.");
+        throw isce::except::LengthError(ISCE_SRCINFO(),
+            "Need at least one coefficient.");
     }
     // Fit a kernel with DCT of fn at Chebyshev zeros.
     // Assume even function and fit on interval [0,width/2] to avoid a bunch
@@ -227,15 +205,3 @@ operator()(double x) const
     }
     return _coeffs[0] + q*bk1 - bk2;
 }
-
-namespace isce { namespace core {
-    template class ChebyKernel<float>;
-    template class ChebyKernel<double>;
-    template ChebyKernel<float>::
-        ChebyKernel(const Kernel<float> &, int);
-    template ChebyKernel<double>::
-        ChebyKernel(const Kernel<double> &, int);
-    // Allow construction of a float table from a double kernel
-    template ChebyKernel<float>::
-        ChebyKernel(const Kernel<double> &, int);
-}}

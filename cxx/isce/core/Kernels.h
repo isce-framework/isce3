@@ -156,3 +156,7 @@ class isce::core::ChebyKernel : public isce::core::Kernel<T> {
         std::valarray<T> _coeffs;
         T _scale;
 };
+
+#define ISCE_CORE_KERNELS_ICC
+#include "Kernels.icc"
+#undef ISCE_CORE_KERNELS_ICC
