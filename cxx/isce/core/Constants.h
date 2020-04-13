@@ -37,6 +37,9 @@ enum dataInterpMethod {
     BIQUINTIC_METHOD = 4
 };
 
+/** Convert string to dataInterpMethod */
+dataInterpMethod parseDataInterpMethod(const std::string & method);
+
 /**Enumeration type to indicate input terrain radiometry (for RTC)*/
 enum rtcInputRadiometry {
     BETA_NAUGHT = 0,

@@ -1,5 +1,6 @@
 #include "LUT2d.h"
 
+#include <isce/core/Constants.h>
 #include <isce/core/Matrix.h>
 #include <isce/except/Error.h>
 
@@ -12,22 +13,8 @@
 namespace py = pybind11;
 
 using isce::core::LUT2d;
+using isce::core::parseDataInterpMethod;
 
-auto getInterpMethod = [](const std::string & method)
-{
-    // check interp name strings to enum interp
-    if (method == "sinc")
-        return isce::core::SINC_METHOD;
-    if (method == "bilinear")
-        return isce::core::BILINEAR_METHOD;
-    if (method == "bicubic")
-        return isce::core::BICUBIC_METHOD;
-    if (method == "nearest")
-        return isce::core::NEAREST_METHOD;
-    if (method == "biquintic")
-        return isce::core::BIQUINTIC_METHOD;
-    throw isce::except::RuntimeError(ISCE_SRCINFO(), "unrecognized interpolation method");
-};
 
 template<typename T>
 void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
@@ -48,7 +35,7 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
                     std::memcpy(data.data(), py_data.data(), py_data.nbytes());
 
                     // get interp method
-                    auto interp_method = getInterpMethod(method);
+                    auto interp_method = parseDataInterpMethod(method);
 
                     // return LUT2d object
                     return isce::core::LUT2d<T>(xstart, ystart, dx, dy, data, interp_method, b_error);
@@ -74,7 +61,7 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
                     std::memcpy(data.data(), py_data.data(), py_data.nbytes());
 
                     // get interp method
-                    auto interp_method = getInterpMethod(method);
+                    auto interp_method = parseDataInterpMethod(method);
 
                     // return LUT2d object
                     return isce::core::LUT2d<T>(xcoord, ycoord, data, interp_method, b_error);
