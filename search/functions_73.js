@@ -32,7 +32,6 @@ var searchData=
   ['shape',['shape',['../classisce_1_1core_1_1Cube.html#ac51ca91e3a66062ba76d9be93fbdff3f',1,'isce::core::Cube::shape()'],['../classisce_1_1core_1_1Matrix.html#a1eee59526142636d5116873f1c65113f',1,'isce::core::Matrix::shape()'],['../classisce_1_1io_1_1gdal_1_1Buffer.html#ad2daae65a1e90b9c31a74fc5b8140e02',1,'isce::io::gdal::Buffer::shape()'],['../classisce_1_1io_1_1gdal_1_1TypedBuffer.html#a7498997e9f27803f7267a49ece5f36af',1,'isce::io::gdal::TypedBuffer::shape()']]],
   ['signal',['Signal',['../classisce_1_1signal_1_1Signal.html#afc9c8c9f9cfe1701558205600ab7b1f2',1,'isce::signal::Signal::Signal()'],['../classisce_1_1signal_1_1Signal.html#a759653d297ab23e66963aebec0cdafc0',1,'isce::signal::Signal::Signal(int nthreads)']]],
   ['signaldata',['signalData',['../classisce_1_1container_1_1RSD.html#a6bc20fd921645e6bf67b4a80f649bdee',1,'isce::container::RSD']]],
-  ['sinc',['sinc',['../namespaceisce_1_1core.html#ae73b56f5a94e197486f4cd9f99fa2be3',1,'isce::core']]],
   ['sinc2dinterpolator',['Sinc2dInterpolator',['../classisce_1_1core_1_1Sinc2dInterpolator.html#a623e07dc83dd6a14c7b976adfbcda11e',1,'isce::core::Sinc2dInterpolator']]],
   ['sinc_5feval',['sinc_eval',['../namespaceisce_1_1core.html#abb0055edd764350e6e27aa3cf77c3eb4',1,'isce::core']]],
   ['sinlook',['sinLook',['../classisce_1_1core_1_1Baseline.html#adb423fd3c5e96934feb1457d40e95f50',1,'isce::core::Baseline']]],
