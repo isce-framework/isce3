@@ -20,6 +20,7 @@ core/Interp1d.h
 core/Interp1d.icc
 core/Interpolator.h
 core/Kernels.h
+core/Kernels.icc
 core/Linspace.h
 core/Linspace.icc
 core/LookSide.h
