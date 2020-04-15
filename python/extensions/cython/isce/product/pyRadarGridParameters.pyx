@@ -62,7 +62,7 @@ cdef class pyRadarGridParameters:
         """
         Set look side from string "right" or "left"
         """
-        self.c_radargrid.lookSide(parseLookSide(str(side)))
+        self.c_radargrid.lookSide(parseLookSide(pyStringToBytes(side)))
 
     @property
     def referenceEpoch(self):
