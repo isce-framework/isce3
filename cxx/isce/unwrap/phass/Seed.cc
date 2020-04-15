@@ -14,7 +14,6 @@
 void read_seed_file(char *seed_file, int & nr_seeds, Seed **seeds) 
 {
   char *st = NULL, mystring[1024];
-  size_t size;
   nr_seeds = 0;
   FILE *fp = fopen(seed_file, "r");
   rewind(fp);

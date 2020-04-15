@@ -25,6 +25,11 @@ target_link_libraries(${LISCE} PUBLIC
 
 target_link_libraries(${LISCE} PRIVATE
     OpenMP::OpenMP_CXX_Optional
+    project_warnings
+    )
+
+target_compile_features(${LISCE} INTERFACE
+    cxx_std_14
     )
 
 target_include_directories(${LISCE} PUBLIC
@@ -43,7 +48,7 @@ foreach(HEADER ${HEADERS})
 endforeach()
 
 # Install shared library
-install(TARGETS ${LISCE} cereal eigen pyre journal
+install(TARGETS ${LISCE}
         EXPORT isce3-targets
         DESTINATION ${ISCE_LIBDIR}
         COMPONENT isce_libs)

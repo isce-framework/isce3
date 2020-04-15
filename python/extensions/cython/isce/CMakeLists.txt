@@ -39,7 +39,7 @@ target_include_directories(
         ${PYTHON_NUMPY_INCLUDE_DIR}
 )
 
-target_link_libraries(isceextension PUBLIC ${LISCE} m)
+target_link_libraries(isceextension PRIVATE ${LISCE})
 
 install(TARGETS isceextension
         DESTINATION ${ISCE_PACKAGESDIR}/isce3/extensions

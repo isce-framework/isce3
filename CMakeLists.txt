@@ -16,6 +16,13 @@ endif()
 project(ISCE VERSION 3.0
         LANGUAGES CXX)
 
+find_program(CCACHE ccache)
+if(CCACHE)
+    message(STATUS "Using ccache: ${CCACHE}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE})
+    set(CMAKE_CUDA_COMPILER_LAUNCHER ${CCACHE})
+endif()
+
 set(ISCE_CUDA_ARCHS "Auto" CACHE STRING
     "Select target CUDA device architecture, options are:
     - comma-separated compute capabilities (e.g. 3.5,5.0,5.2)
@@ -119,12 +126,17 @@ find_package(FFTW REQUIRED COMPONENTS
 ###Layout same install directory structure as pyre
 InitInstallDirLayout()
 
-###Setup for gtest framework
-option(INSTALL_GTEST "Enable installation of googletest" OFF)
-
-# Setup for Eigen
-include_directories(SYSTEM extern/eigen3)
-
+find_package(GTest QUIET CONFIG) # don't use FindGTest module
+find_package(Cereal QUIET)
+if(Cereal_FOUND)
+    # Needed to create target alias
+    set_target_properties(cereal PROPERTIES IMPORTED_GLOBAL TRUE)
+endif()
+find_package(Eigen3 QUIET)
+if(Eigen3_FOUND)
+    # Needed to create target alias
+    set_target_properties(Eigen3::Eigen PROPERTIES IMPORTED_GLOBAL TRUE)
+endif()
 add_subdirectory(extern) # Contributed software (not maintained here)
 add_subdirectory(cxx)    # Core C++ library
 add_subdirectory(python) # Python bindings
