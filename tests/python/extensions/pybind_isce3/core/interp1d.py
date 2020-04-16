@@ -36,12 +36,8 @@ def test_bindings():
     # Check interp1d
     i = 10
     t += i
-    # Complex type has to match kernel type.  Real data can be either.
-    f4 = ('f4', 'f8', 'c8')
-    f8 = ('f4', 'f8', 'c16')
     for kernel in (kernels + metakernels):
-        dtypes = f8 if isinstance(kernel, m.Kernel) else f4
-        for dtype in dtypes:
+        for dtype in ('f4', 'f8', 'c8', 'c16'):
             # Delta function to recover underlying kernel.
             x = np.zeros(2*i+1, dtype)
             x[i] = 1

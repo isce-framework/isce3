@@ -39,7 +39,8 @@ static py::object
 interp_duckbuf(Kernel<T> & kernel, py::buffer buf, py::object t)
 {
     py::buffer_info info = buf.request();
-    using CT = std::complex<T>;
+    using C8 = std::complex<float>;
+    using C16 = std::complex<double>;
     if (info.ndim != 1) {
         throw RuntimeError(ISCE_SRCINFO(), "data buffer must be 1-D");
     }
@@ -49,9 +50,11 @@ interp_duckbuf(Kernel<T> & kernel, py::buffer buf, py::object t)
     else if (info.format == py::format_descriptor<double>::format()) {
         return interp_duckt<T,double>(kernel, info, t);
     }
-    else if (info.format == py::format_descriptor<CT>::format()) {
-        // NOTE: not mixing float and double to avoid weird promotion rules
-        return interp_duckt<T,CT>(kernel, info, t);
+    else if (info.format == py::format_descriptor<C8>::format()) {
+        return interp_duckt<T,C8>(kernel, info, t);
+    }
+    else if (info.format == py::format_descriptor<C16>::format()) {
+        return interp_duckt<T,C16>(kernel, info, t);
     }
     throw RuntimeError(ISCE_SRCINFO(), "Unsupported types for interp1d");
 }
@@ -72,8 +75,7 @@ void addbinding_interp1d(py::module & m)
     R"(
         Interpolate a 1D sequence `data` at `time` using `kernel`.  The `time`
         units are sample numbers (starting at zero), and `time` may be a
-        scalar or an array.  Complex data must be interpolated with a kernel of
-        a matching real type (e.g., KernelF32 for numpy.complex64 data).
+        scalar or an array.
     )",
     py::arg("kernel"), py::arg("data"), py::arg("time"));
 }
