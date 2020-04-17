@@ -314,8 +314,10 @@ fi
 export PATH=${ISCEHOME}/python/miniconda3/bin:$PATH
 export LD_LIBRARY_PATH=${ISCEHOME}/python/miniconda3/lib:$LD_LIBRARY_PATH
 
-# cuda
+# cuda compiler
 export CUDACXX=/usr/local/cuda/bin/nvcc
+# cuda host compiler
+export CUDAHOSTCXX=/usr/bin/gcc-6
 
 # isce
 export PATH=$PATH:${ISCEHOME}/tools/isce/install/bin

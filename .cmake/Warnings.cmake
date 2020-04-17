@@ -23,15 +23,20 @@ function(set_warnings target)
         -Wpedantic # warn if non-standard C++ is used
         -Wconversion # warn on type conversions that may lose data
         -Wsign-conversion # warn on sign conversions
-        -Wnull-dereference # warn if a null dereference is detected
         -Wdouble-promotion # warn if float is implicit promoted to double
         -Wformat=2 # warn on security issues around functions that format output
                    # (ie printf)
         )
 
+    set(CUDA_WARNINGS
+        ${CXX_WARNINGS}
+        -Wno-pedantic
+        )
+
     set(CLANG_WARNINGS "")
 
     set(GCC_WARNINGS
+        -Wnull-dereference # warn if a null dereference is detected
         -Wmisleading-indentation # warn if identation implies blocks where
                                  # blocks do not exist
         -Wduplicated-cond # warn if if / else chain has duplicated conditions
@@ -68,11 +73,6 @@ function(set_warnings target)
         list(APPEND CXX_WARNINGS ${GCC_WARNINGS})
     endif()
 
-    set(CUDA_WARNINGS
-        ${CXX_WARNINGS}
-        -Wno-pedantic
-        -Wno-duplicated-branches
-        )
     list(TRANSFORM CUDA_WARNINGS PREPEND -Xcompiler=)
 
     target_compile_options(${target} INTERFACE
