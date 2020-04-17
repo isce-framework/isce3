@@ -9,6 +9,7 @@
 #error "Interp1d.icc is an implementation detail of class Interp1d"
 #endif
 
+#include <isce/math/ComplexMultiply.h>
 
 template <typename TK, typename TD>
 inline
@@ -17,6 +18,7 @@ isce::core::interp1d(const isce::core::Kernel<TK> &kernel,
                      const TD *x, size_t length, size_t stride, double t,
                      bool periodic)
 {
+    using namespace isce::math::complex_multiply;
     int _width = int(ceil(kernel.width()));
     long i0 = 0;
     if (_width % 2 == 0) {

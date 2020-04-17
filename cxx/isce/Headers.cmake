@@ -20,6 +20,7 @@ core/Interp1d.h
 core/Interp1d.icc
 core/Interpolator.h
 core/Kernels.h
+core/Kernels.icc
 core/Linspace.h
 core/Linspace.icc
 core/LookSide.h
@@ -111,6 +112,7 @@ matchtemplate/ampcor/dom/Raster.icc
 matchtemplate/ampcor/dom/SLC.h
 matchtemplate/ampcor/dom/SLC.icc
 math/Bessel.h
+math/ComplexMultiply.h
 math/Sinc.h
 math/Sinc.icc
 product/forward.h
