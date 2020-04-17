@@ -4,7 +4,7 @@ var searchData=
   ['band',['band',['../classisce_1_1io_1_1gdal_1_1Raster.html#a7bc40456a6266a7d74379c644e820f38',1,'isce::io::gdal::Raster']]],
   ['bands',['bands',['../classisce_1_1io_1_1gdal_1_1Dataset.html#ab5f3d3a84b6ed1dd3ece8252203e53cb',1,'isce::io::gdal::Dataset']]],
   ['bandwidth',['bandwidth',['../classisce_1_1core_1_1KnabKernel.html#ab384776a61abc05582a1f6c5f91b2856',1,'isce::core::KnabKernel']]],
-  ['bartlettkernel',['BartlettKernel',['../classisce_1_1core_1_1BartlettKernel.html#a6b0e4f30407956426cb0d315a8c53b07',1,'isce::core::BartlettKernel']]],
+  ['bartlettkernel',['BartlettKernel',['../classisce_1_1core_1_1BartlettKernel.html#aad50113aff48506d12e05d749a59da2d',1,'isce::core::BartlettKernel']]],
   ['basis',['Basis',['../classisce_1_1core_1_1Basis.html#ab16823535fbcbcee1228e6bd654638fa',1,'isce::core::Basis::Basis()'],['../classisce_1_1core_1_1Basis.html#a996035044956f0b968cf4157875f225f',1,'isce::core::Basis::Basis(const Vec3 &amp;x0, const Vec3 &amp;x1, const Vec3 &amp;x2)'],['../classisce_1_1core_1_1Basis.html#a1f8f1f566d7ccfd62c509bf81f567320',1,'isce::core::Basis::Basis(const Vec3 &amp;p, const Vec3 &amp;v)']]],
   ['beta',['beta',['../classisce_1_1cuda_1_1signal_1_1gpuCrossmul.html#a0d0a2b7ac9390857b064db197aaf6cc2',1,'isce::cuda::signal::gpuCrossmul::beta()'],['../classisce_1_1signal_1_1Crossmul.html#af251748003cb48812a1e884faee4715e',1,'isce::signal::Crossmul::beta()']]],
   ['bicubicinterpolator',['BicubicInterpolator',['../classisce_1_1core_1_1BicubicInterpolator.html#a14ba55881438ccb62445786af38fabab',1,'isce::core::BicubicInterpolator']]],

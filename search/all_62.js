@@ -5,7 +5,7 @@ var searchData=
   ['bands',['bands',['../classisce_1_1io_1_1gdal_1_1Dataset.html#ab5f3d3a84b6ed1dd3ece8252203e53cb',1,'isce::io::gdal::Dataset']]],
   ['bandwidth',['bandwidth',['../classisce_1_1core_1_1KnabKernel.html#ab384776a61abc05582a1f6c5f91b2856',1,'isce::core::KnabKernel']]],
   ['bartlettkernel',['BartlettKernel',['../classisce_1_1core_1_1BartlettKernel.html',1,'isce::core']]],
-  ['bartlettkernel',['BartlettKernel',['../classisce_1_1core_1_1BartlettKernel.html#a6b0e4f30407956426cb0d315a8c53b07',1,'isce::core::BartlettKernel']]],
+  ['bartlettkernel',['BartlettKernel',['../classisce_1_1core_1_1BartlettKernel.html#aad50113aff48506d12e05d749a59da2d',1,'isce::core::BartlettKernel']]],
   ['bartlettkernel_3c_20t_20_3e',['BartlettKernel&lt; T &gt;',['../classisce_1_1core_1_1BartlettKernel.html',1,'isce::core']]],
   ['baseline',['Baseline',['../classisce_1_1core_1_1Baseline.html',1,'isce::core']]],
   ['basis',['Basis',['../classisce_1_1core_1_1Basis.html',1,'isce::core']]],
