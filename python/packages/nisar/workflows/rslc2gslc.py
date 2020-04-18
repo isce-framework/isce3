@@ -79,6 +79,6 @@ if __name__ == '__main__':
     path_src = sys.argv[1]
     path_dst = sys.argv[2]
     
-    prep_gcov_h5(path_src, path_dst)
+    prep_gslc_h5(path_src, path_dst)
 
 # end of file
