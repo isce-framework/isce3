@@ -409,8 +409,10 @@ Step 3: Install and set environment variables</h2>
 <div class="line"><span class="preprocessor"></span>export PATH=${ISCEHOME}/python/miniconda3/bin:$PATH</div>
 <div class="line">export LD_LIBRARY_PATH=${ISCEHOME}/python/miniconda3/lib:$LD_LIBRARY_PATH</div>
 <div class="line"></div>
-<div class="line"><span class="preprocessor"># cuda</span></div>
+<div class="line"><span class="preprocessor"># cuda compiler</span></div>
 <div class="line"><span class="preprocessor"></span>export CUDACXX=/usr/local/cuda/bin/nvcc</div>
+<div class="line"><span class="preprocessor"># cuda host compiler</span></div>
+<div class="line"><span class="preprocessor"></span>export CUDAHOSTCXX=/usr/bin/gcc-6</div>
 <div class="line"></div>
 <div class="line"><span class="preprocessor"># isce</span></div>
 <div class="line"><span class="preprocessor"></span>export PATH=$PATH:${ISCEHOME}/tools/isce/install/bin</div>
