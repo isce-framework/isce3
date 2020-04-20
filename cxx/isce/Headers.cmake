@@ -17,6 +17,7 @@ core/detail/BuildOrbit.h
 core/detail/InterpolateOrbit.h
 core/detail/InterpolateOrbit.icc
 core/Ellipsoid.h
+core/EMatrix.h
 core/EulerAngles.h
 core/forward.h
 core/Interp1d.h
@@ -137,6 +138,7 @@ signal/Filter.h
 signal/forward.h
 signal/Looks.h
 signal/Looks.icc
+signal/multilook.h
 signal/NFFT.h
 signal/shiftSignal.h
 signal/Signal.h
