@@ -11,6 +11,7 @@ ISCE has the following dependencies
 <li> HDF5 1.10.2 or above with h5py
 <li> cmake 3.12 or above
 <li> CUDA 9.0 or above (for GPU-based processing)
+<li> ruamel.yaml
 </ol>
 
 Optional dependencies for unit testing and documentation generation are 
