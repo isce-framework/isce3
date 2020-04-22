@@ -2,83 +2,140 @@
 # Author: Liang Yu
 # Copyright 2019-
 
-def prep_gslc_h5(path_src, path_dst):
-    '''
-    Copies shared data from RSLC HDF5 to GSLC HDF5
 
-    Parameters:
-    -----------
-    path_src : str
-        Full path to source HDF5 file
-    path_dst : str
-        Full path to destination HDF5 file
+import nisar.workers.rslc2gslc as App
+
+
+class Workflow(object):
+    '''
+    This is the end-to-end workflow for the rslc2gslc NISAR SAS.
     '''
 
-    import h5py
-    import os
-    from nisar.h5 import cp_h5_meta_data
+    def __init__(self):
+        '''
+        Constructor.
+        '''
+        #State object
+        self.state = App.State()
 
-    # prelim setup
-    common_parent_path = 'science/LSAR'
-    src_h5 = h5py.File(path_src, 'r')
+        #Saved states folder
+        self.state_folder = 'PICKLE'
 
-    # rm anything and start from scratch
-    try:
-        os.remove(path_dst)
-    except FileNotFoundError:
-        pass
+        #Steps completed
+        self.steps_completed = []
 
-    dst_h5 = h5py.File(path_dst, 'w')
+    def saveState(self, step=None):
+        '''
+        Save state to pickle file.
+        '''
+        import shelve
+        import os
 
-    # simple copies of identification, metadata/orbit, metadata/attitude groups
-    cp_h5_meta_data(src_h5, dst_h5, os.path.join(common_parent_path, 'identification'))
-    cp_h5_meta_data(src_h5, dst_h5, os.path.join(common_parent_path, 'SLC/metadata/orbit'))
-    cp_h5_meta_data(src_h5, dst_h5, os.path.join(common_parent_path, 'SLC/metadata/attitude'))
+        self.steps_completed.append(step)
+        with shelve.open( os.path.join(self.state_folder, step), 'n') as db:
+            db['state'] = self.state
+            db['steps_completed'] = self.steps_completed
 
-    # copy calibration information group
-    cp_h5_meta_data(src_h5, dst_h5,
-            os.path.join(common_parent_path, 'SLC/metadata/calibrationInformation'),
-            os.path.join(common_parent_path, 'GSLC/metadata/calibrationInformation'),
-            excludes=['zeroDopplerTime', 'slantRange'])
-                
-    # copy processing information group
-    cp_h5_meta_data(src_h5, dst_h5,
-            os.path.join(common_parent_path, 'SLC/metadata/processingInformation'),
-            os.path.join(common_parent_path, 'GSLC/metadata/processingInformation'),
-            excludes=['l0bGranules', 'demFiles', 'zeroDopplerTime', 'slantRange'])
+    def loadState(self, step=None):
+        '''
+        Load state from pickle file.
+        '''
+        import shelve
+        import os
 
-    # copy radar grid information group
-    cp_h5_meta_data(src_h5, dst_h5,
-            os.path.join(common_parent_path, 'SLC/metadata/geolocationGrid'),
-            os.path.join(common_parent_path, 'GSLC/metadata/radarGrid'),
-            renames={'coordinateX':'xCoordinates',
-                'coordinateY':'yCoordinates',
-                'zeroDopplerTime':'zeroDopplerAzimuthTime'})
+        with shelve.open( os.path.join(self.state_folder, step), 'r') as db:
+            self.state = db['state']
+            self.steps_completed = db['steps_completed']
 
-    # copy radar imagery group; assumming shared data
-    # XXX option0: to be replaced with actual gcov code
-    # XXX option1: do not write GSLC data here; GSLC rasters can be appended to the GSLC HDF5
-    for freq in ['A', 'B']:
-        cp_h5_meta_data(src_h5, dst_h5,
-                os.path.join(common_parent_path, f'SLC/swaths/frequency{freq}'),
-                os.path.join(common_parent_path, f'GSLC/grids/frequency{freq}'),
-                excludes=['acquiredCenterFreqeuncy', 'acquiredAzimuthBandwidth', 
-                    'acquiredRangeBandwidth', 'nominalAcquisitionPRF', 'slantRange',
-                    'sceneCenterAlongTrackSpacing', 'sceneCenterGroundRangeSpacing',
-                    'HH', 'HV', 'VH', 'VV', 'RH', 'RV',
-                    'validSamplesSubSwath1', 'validSamplesSubSwath2',
-                    'validSamplesSubSwath3', 'validSamplesSubSwath4'],
-                renames={'processedCenterFrequency':'centerFrequency',
-                    'processedAzimuthBandwidth':'azimuthBandwidth',
-                    'processedRangeBandwidth':'rangeBandwidth'})
+    def loadYAML(self, ymlfile):
+        '''
+        Load yaml and return values.
+        '''
+
+        from ruamel.yaml import YAML
+
+        ###Read in the yaml file into inputs
+        yaml = YAML()
+        with open(ymlfile, 'r') as fid:
+            instr = fid.read()
+
+        inputs = yaml.load(instr)
+
+        return inputs
+
+
+    def run(self, args):
+        '''
+        Run the workflow with parser arguments.
+        '''
+        import os
+
+        os.makedirs(self.state_folder, exist_ok=True)
+ 
+        ##First step
+        userconfig, state = App.runValidateInputs(self, args.yml)
+        self.state = state
+        self.saveState('validateInputs')
+
+        ##Second step
+        self.loadState('validateInputs')
+        App.runVerifyDEM(self, userconfig)
+        self.saveState('verifyDEM')
+
+        ##Third step
+        self.loadState('verifyDEM')
+        App.runSubsetInputs(self, userconfig)
+        self.saveState('subsetInputs')
+
+        ##Fourth step
+        self.loadState('subsetInputs')
+        App.runPrepHDF5(self, userconfig)
+        self.saveState('prepHDF5')
+
+        ##Fifth step
+        self.loadState('prepHDF5')
+        App.runGeo2rdr(self, userconfig)
+        self.saveState('geo2rdr')
+
+        ##Sixth step
+        self.loadState('geo2rdr')
+        App.runResampleSLC(self, userconfig)
+        self.saveState('resampleSLC')
+
+        ##Seventh step
+        self.loadState('resampleSLC')
+        App.runFinalizeHDF5(self, userconfig)
+        self.saveState('finalizeHDF5')
+
+
+def cmdLineParse():
+    '''
+    Command line parser for rslc2gslc
+    '''
+    import argparse
+
+    parser = argparse.ArgumentParser(description='rslc2gslc.py - Generate GSLC from RSLC product')
+    parser.add_argument('-r', dest='yml', type=str,
+                              required=True,
+                              help='Input run config file')
+
+    return parser.parse_args()
+
 
 
 if __name__ == '__main__':
-    import sys
+    '''
+    Main driver.
+    '''
 
-    path_src = sys.argv[1]
-    path_dst = sys.argv[2]
-    
-    prep_gslc_h5(path_src, path_dst)
+    #Parse command line arguments
+    inps = cmdLineParse()
+
+
+    #Create state variable for workflow
+    workflow = Workflow()
+
+    #Execute workflow
+    workflow.run(inps)
 
 # end of file
