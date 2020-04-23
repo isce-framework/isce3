@@ -10,9 +10,8 @@
 /** @param[in] order Order of 2D spline */
 template <typename U>
 isce::core::Spline2dInterpolator<U>::
-Spline2dInterpolator(size_t order) : 
-    isce::core::Interpolator<U>(isce::core::BIQUINTIC_METHOD), 
-    _order{order} {
+Spline2dInterpolator(size_t order) :
+    super_t{BIQUINTIC_METHOD}, _order{order} {
 
     // Check validity of order
     if ((order < 3) || (order > 20)) {
@@ -33,11 +32,11 @@ Spline2dInterpolator(size_t order) :
 template <class U>
 U
 isce::core::Spline2dInterpolator<U>::
-interpolate(double x, double y, const isce::core::Matrix<U> & z) {
+interpolate(double x, double y, const Map& z) const {
 
     // Get array size
-    const int nx = z.width();
-    const int ny = z.length();
+    const int nx = z.cols();
+    const int ny = z.rows();
 
     // Get coordinates of start of spline window
     int i0, j0;
@@ -69,7 +68,7 @@ interpolate(double x, double y, const isce::core::Matrix<U> & z) {
 
 template <typename U>
 U isce::core::Spline2dInterpolator<U>::
-_spline(double x, const std::valarray<U> & Y, int n, const std::valarray<U> & R) {
+_spline(double x, const std::valarray<U> & Y, int n, const std::valarray<U> & R) const {
 
     const U denom = static_cast<U>(6.0);
     if (x < 1.0) {
@@ -88,7 +87,7 @@ _spline(double x, const std::valarray<U> & Y, int n, const std::valarray<U> & R)
 template <typename U>
 void isce::core::Spline2dInterpolator<U>::
 _initSpline(const std::valarray<U> & Y, int n, std::valarray<U> & R,
-            std::valarray<U> & Q) {
+            std::valarray<U> & Q) const {
     Q[0] = U(0.0);
     R[0] = U(0.0);
     for (int i = 1; i < n - 1; ++i) {

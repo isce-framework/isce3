@@ -9,23 +9,43 @@
 
 #include <valarray>
 #include "Constants.h"
+#include "EMatrix.h"
 #include "Matrix.h"
 
 /** Definition of parent Interpolator */
 template <typename U>
 class isce::core::Interpolator {
 
+    protected:
+
+        using Map = typename Eigen::Map<const EArray2D<U>>;
+
     // Public interface
     public:
         /** Virtual destructor (allow destruction of base Interpolator pointer) */
         virtual ~Interpolator() {}
 
+        /** Interpolate at a given coordinate for an input Eigen::Map */
+        virtual U interpolate(double x, double y, const Map& map) const = 0;
+
         /** Interpolate at a given coordinate for an input isce::core::Matrix */
-        virtual U interpolate(double x, double y, const Matrix<U> & z) = 0;
+        U interpolate(double x, double y, const Matrix<U> & z) const {
+            return interpolate(x, y, z.map());
+        }
 
         /** Interpolate at a given coordinate for data passed as a valarray */
-        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
-            isce::core::Matrix<U> z(z_data, width);
+        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) const {
+            const Map z{&z_data[0],
+                static_cast<Eigen::Index>(z_data.size() / width),
+                static_cast<Eigen::Index>(width)};
+            return interpolate(x, y, z);
+        }
+
+        /** Interpolate at a given coordinate for data passed as a vector */
+        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) const {
+            const Map z{&z_data[0],
+                static_cast<Eigen::Index>(z_data.size() / width),
+                static_cast<Eigen::Index>(width)};
             return interpolate(x, y, z);
         }
 
@@ -43,101 +63,72 @@ class isce::core::Interpolator {
 template <typename U>
 class isce::core::BilinearInterpolator : public isce::core::Interpolator<U> {
 
+    using super_t = Interpolator<U>;
+    using typename super_t::Map;
+
     public:
         /** Default constructor */
-        inline BilinearInterpolator() : 
-            isce::core::Interpolator<U>(isce::core::BILINEAR_METHOD) {}
+        BilinearInterpolator() : super_t{BILINEAR_METHOD} {}
 
         /** Interpolate at a given coordinate. */
-        U interpolate(double x, double y, const Matrix<U> & z);
+        U interpolate(double x, double y, const Map& z) const override;
 
-        /** Interpolate at a given coordinate for data passed as a valarray */
-        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
-            isce::core::Matrix<U> z(z_data, width);
-            return interpolate(x, y, z);
-        }
-
-        /** Interpolate at a given coordinate for data passed as a vector */
-        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
-            isce::core::Matrix<U> z(z_data, width);
-            return interpolate(x, y, z);
-        }
+        // Inherit overloads for other datatypes
+        using super_t::interpolate;
 };
 
 /** Definition of BicubicInterpolator */
 template <typename U>
 class isce::core::BicubicInterpolator : public isce::core::Interpolator<U> {
 
+    using super_t = Interpolator<U>;
+    using typename super_t::Map;
+
     public:
         /** Default constructor */
-        BicubicInterpolator();
+        BicubicInterpolator() : super_t{BICUBIC_METHOD} {}
 
         /** Interpolate at a given coordinate. */
-        U interpolate(double x, double y, const Matrix<U> & z);
+        U interpolate(double x, double y, const Map& z) const override;
 
-        /** Interpolate at a given coordinate for data passed as a valarray */
-        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
-            isce::core::Matrix<U> z(z_data, width);
-            return interpolate(x, y, z);
-        }
-
-        /** Interpolate at a given coordinate for data passed as a vector */
-        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
-            isce::core::Matrix<U> z(z_data, width);
-            return interpolate(x, y, z);
-        }
+        // Inherit overloads for other datatypes
+        using super_t::interpolate;
 };
 
 /** Definition of NearestNeighborInterpolator */
 template <typename U>
 class isce::core::NearestNeighborInterpolator : public isce::core::Interpolator<U> {
 
+    using super_t = Interpolator<U>;
+    using typename super_t::Map;
+
     public:
         /** Default constructor */
-        inline NearestNeighborInterpolator() : 
-            isce::core::Interpolator<U>(isce::core::NEAREST_METHOD) {}
+        NearestNeighborInterpolator() : super_t{NEAREST_METHOD} {}
 
         /** Interpolate at a given coordinate. */
-        U interpolate(double x, double y, const Matrix<U> & z);
+        U interpolate(double x, double y, const Map& z) const override;
 
-        /** Interpolate at a given coordinate for data passed as a valarray */
-        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
-            isce::core::Matrix<U> z(z_data, width);
-            return interpolate(x, y, z);
-        }
-
-        /** Interpolate at a given coordinate for data passed as a vector */
-        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
-            isce::core::Matrix<U> z(z_data, width);
-            return interpolate(x, y, z);
-        }
+        // Inherit overloads for other datatypes
+        using super_t::interpolate;
 };
 
 /** Definition of Spline2dInterpolator */
 template <typename U>
 class isce::core::Spline2dInterpolator : public isce::core::Interpolator<U> {
 
-    public:
-        using isce::core::Interpolator<U>::interpolate; 
+    using super_t = Interpolator<U>;
+    using typename super_t::Map;
 
     public:
         /** Default constructor. */
         Spline2dInterpolator(size_t order);
 
         /** Interpolate at a given coordinate. */
-        U interpolate(double x, double y, const Matrix<U> & z);
+        U interpolate(double x, double y, const Map& z) const override;
 
-        /** Interpolate at a given coordinate for data passed as a valarray */
-        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
-            isce::core::Matrix<U> z(z_data, width);
-            return interpolate(x, y, z);
-        }
-
-        /** Interpolate at a given coordinate for data passed as a vector */
-        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
-            isce::core::Matrix<U> z(z_data, width);
-            return interpolate(x, y, z);
-        }
+        // Inherit overloads for other datatypes
+        using super_t::interpolate;
 
     // Data members
     private:
@@ -148,45 +139,39 @@ class isce::core::Spline2dInterpolator : public isce::core::Interpolator<U> {
         void _initSpline(const std::valarray<U> &,
                          int,
                          std::valarray<U> &,
-                         std::valarray<U> &);
+                         std::valarray<U> &) const;
 
         U _spline(double,
                   const std::valarray<U> &,
                   int,
-                  const std::valarray<U> &);
+                  const std::valarray<U> &) const;
 };
 
 /** Definition of Sinc2dInterpolator */
 template <typename U>
 class isce::core::Sinc2dInterpolator : public isce::core::Interpolator<U> {
 
+    using super_t = Interpolator<U>;
+    using typename super_t::Map;
+
     public:
         /** Default constructor. */
         Sinc2dInterpolator(int sincLen, int sincSub);
 
         /** Interpolate at a given coordinate. */
-        U interpolate(double x, double y, const Matrix<U> & z);
+        U interpolate(double x, double y, const Map& z) const override;
 
-        /** Interpolate at a given coordinate for data passed as a valarray */
-        U interpolate(double x, double y, std::valarray<U> & z_data, size_t width) {
-            isce::core::Matrix<U> z(z_data, width);
-            return interpolate(x, y, z);
-        }
-
-        /** Interpolate at a given coordinate for data passed as a vector */
-        U interpolate(double x, double y, std::vector<U> & z_data, size_t width) {
-            isce::core::Matrix<U> z(z_data, width);
-            return interpolate(x, y, z);
-        }
+        // Inherit overloads for other datatypes
+        using super_t::interpolate;
 
     private:
         // Compute sinc coefficients 
         void _sinc_coef(double beta, double relfiltlen, int decfactor, double pedestal,
-                        int weight, std::valarray<double> & filter);
+                        int weight, std::valarray<double> & filter) const;
 
         // Evaluate sinc
-        U _sinc_eval_2d(const isce::core::Matrix<U> & z, int intpx, int intpy,
-                        double frpx, double frpy);
+        U _sinc_eval_2d(const Map& z, int intpx, int intpy,
+                        double frpx, double frpy) const;
 
     private:
         isce::core::Matrix<double> _kernel;

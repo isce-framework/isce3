@@ -13,6 +13,8 @@
 #include <vector>
 #include <pyre/grid.h>
 
+#include "EMatrix.h"
+
 /** Data structure for a 2D row-major matrix*/
 template <typename cell_t>
 class isce::core::Matrix {
@@ -122,6 +124,14 @@ class isce::core::Matrix {
 
         /** Get byteoffset for row and column for reading flat binary buffer */
         inline shape_t byteoffset() const;
+
+        auto map() const
+        {
+            return Eigen::Map<const EArray2D<cell_t>>{ _buffer,
+                static_cast<Eigen::Index>(_nrows),
+                static_cast<Eigen::Index>(_ncols)};
+        }
+
     // Data members
     private:
         // Shape information

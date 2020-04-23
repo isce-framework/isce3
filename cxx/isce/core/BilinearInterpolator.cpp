@@ -12,7 +12,7 @@
 template <class U>
 U
 isce::core::BilinearInterpolator<U>::
-interpolate(double x, double y, const isce::core::Matrix<U> & z) {
+interpolate(double x, double y, const Map& z) const {
 
     int x1 = std::floor(x);
     int x2 = std::ceil(x);

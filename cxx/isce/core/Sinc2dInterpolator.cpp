@@ -43,7 +43,7 @@ Sinc2dInterpolator(int sincLen, int sincSub) :
 template <class U>
 U
 isce::core::Sinc2dInterpolator<U>::
-interpolate(double x, double y, const isce::core::Matrix<U> & z) {
+interpolate(double x, double y, const Map& z) const {
 
     // Separate interpolation coordinates into integer and fractional components
     const int ix = static_cast<int>(std::floor(x));
@@ -53,9 +53,9 @@ interpolate(double x, double y, const isce::core::Matrix<U> & z) {
 
     // Check edge conditions
     U interpVal(0.0);
-    if ((ix < (_sincHalf - 1)) || (ix > (z.width() - _sincHalf - 1)))
+    if ((ix < (_sincHalf - 1)) || (ix > (z.cols() - _sincHalf - 1)))
         return interpVal;
-    if ((iy < (_sincHalf - 1)) || (iy > (z.length() - _sincHalf - 1)))
+    if ((iy < (_sincHalf - 1)) || (iy > (z.rows() - _sincHalf - 1)))
         return interpVal;
 
     // Modify integer interpolation coordinates for sinc evaluation
@@ -70,8 +70,8 @@ interpolate(double x, double y, const isce::core::Matrix<U> & z) {
 template <class U>
 U
 isce::core::Sinc2dInterpolator<U>::
-_sinc_eval_2d(const isce::core::Matrix<U> & arrin, int intpx, int intpy,
-              double frpx, double frpy) {
+_sinc_eval_2d(const Map& arrin, int intpx, int intpy,
+              double frpx, double frpy) const {
 
     // Initialize return value
     U ret(0.0);
@@ -97,7 +97,7 @@ template <class U>
 void
 isce::core::Sinc2dInterpolator<U>::
 _sinc_coef(double beta, double , int decfactor, double pedestal, int weight,
-           std::valarray<double> & filter) {
+           std::valarray<double> & filter) const {
  
     int filtercoef = int(filter.size());
     double wgthgt = (1.0 - pedestal) / 2.0;

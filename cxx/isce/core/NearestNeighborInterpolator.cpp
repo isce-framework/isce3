@@ -12,11 +12,11 @@
 template <class U>
 U
 isce::core::NearestNeighborInterpolator<U>::
-interpolate(double x, double y, const isce::core::Matrix<U> & z) {
+interpolate(double x, double y, const Map& z) const {
 
     // Nearest indices
-    const size_t row = static_cast<size_t>(std::round(y));
-    const size_t col = static_cast<size_t>(std::round(x));
+    const auto row = static_cast<Eigen::Index>(std::round(y));
+    const auto col = static_cast<Eigen::Index>(std::round(x));
 
     // No bounds check yet
     return z(row, col);
