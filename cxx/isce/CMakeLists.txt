@@ -25,6 +25,11 @@ target_link_libraries(${LISCE} PUBLIC
 
 target_link_libraries(${LISCE} PRIVATE
     OpenMP::OpenMP_CXX_Optional
+    project_warnings
+    )
+
+target_compile_features(${LISCE} INTERFACE
+    cxx_std_14
     )
 
 target_include_directories(${LISCE} PUBLIC

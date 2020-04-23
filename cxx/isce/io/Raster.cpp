@@ -33,9 +33,10 @@ isce::io::Raster::Raster(const std::string &fname,   // filename
 
 /**
  * @param[in] inputDataset Pointer to an existing dataset*/
-isce::io::Raster::Raster(GDALDataset * inputDataset) {
+isce::io::Raster::Raster(GDALDataset * inputDataset, bool owner) {
     GDALAllRegister();
     dataset(inputDataset);
+    _owner = owner;
 }
 
 

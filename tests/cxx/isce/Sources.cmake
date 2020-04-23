@@ -52,6 +52,7 @@ io/raster/rastermatrix.cpp
 io/raster/rasterview.cpp
 matchtemplate/ampcor/ampcor.cpp
 math/bessel/bessel53.cpp
+math/sinc.cpp
 product/serialization/serializeProduct.cpp
 product/serialization/serializeProductMetadata.cpp
 product/radargrid/radargrid.cpp

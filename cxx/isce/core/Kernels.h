@@ -9,12 +9,7 @@
 
 #include <valarray>
 #include <isce/math/Bessel.h>
-
-/** sinc function defined as \f$ \frac{\sin(\pi x)}{\pi x} \f$ */
-namespace isce { namespace core {
-    template<class T>
-    T sinc(T t);
-}}
+#include <cmath>
 
 /** Abstract base class for all kernels.
  *
@@ -26,6 +21,8 @@ template <typename T>
 class isce::core::Kernel {
 
     public:
+        Kernel(double width) : _halfwidth(fabs(width/2.0)) {}
+
         /** Virtual destructor (allow destruction of base Kernel pointer) */
         virtual ~Kernel() {}
 
@@ -48,7 +45,7 @@ class isce::core::BartlettKernel : public isce::core::Kernel<T> {
 
     public:
         /** Triangle function constructor. */
-        BartlettKernel(double width);
+        BartlettKernel(double width) : Kernel<T>(width) {}
         T operator()(double x) const override;
 };
 
@@ -77,7 +74,8 @@ class isce::core::KnabKernel : public isce::core::Kernel<T> {
          * @param[in] bandwidth Bandwidth of signal to be interpolated, as a
          *                      fraction of the sample rate (0 < bandwidth < 1).
          */
-        KnabKernel(double width, double bandwidth);
+        KnabKernel(double width, double bandwidth) :
+            Kernel<T>(width), _bandwidth(bandwidth) {}
 
         T operator()(double x) const override;
 
@@ -87,12 +85,6 @@ class isce::core::KnabKernel : public isce::core::Kernel<T> {
     private:
         double _bandwidth;
 };
-
-/** sinc function defined as \f$ \frac{\sin(\pi x)}{\pi x} \f$ */
-template <typename T>
-T
-isce::core::sinc(T t);
-
 
 /** NFFT time-domain kernel.
  *
@@ -133,10 +125,11 @@ class isce::core::TabulatedKernel : public isce::core::Kernel<T> {
          * @param[in] kernel    Kernel to sample.
          * @param[in] n         Table size.
          */
-        TabulatedKernel(const isce::core::Kernel<T> &kernel, int n);
+        template <typename Tin>
+        TabulatedKernel(const isce::core::Kernel<Tin> &kernel, int n);
 
         T operator()(double x) const override;
-    
+
     private:
         std::valarray<T> _table;
         int _imax;
@@ -154,7 +147,8 @@ class isce::core::ChebyKernel : public isce::core::Kernel<T> {
          * @param[in] kernel    Kernel to fit (assumed even).
          * @param[in] n         Number of coefficients.
          */
-        ChebyKernel(const isce::core::Kernel<T> &kernel, int n);
+        template <typename Tin>
+        ChebyKernel(const isce::core::Kernel<Tin> &kernel, int n);
 
         T operator()(double x) const override;
 
@@ -162,3 +156,7 @@ class isce::core::ChebyKernel : public isce::core::Kernel<T> {
         std::valarray<T> _coeffs;
         T _scale;
 };
+
+#define ISCE_CORE_KERNELS_ICC
+#include "Kernels.icc"
+#undef ISCE_CORE_KERNELS_ICC

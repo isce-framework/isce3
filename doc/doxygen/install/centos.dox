@@ -11,6 +11,7 @@ ISCE has the following dependencies
 <li> HDF5 1.10.2 or above with h5py
 <li> cmake 3.12 or above
 <li> CUDA 9.0 or above (for GPU-based processing)
+<li> ruamel.yaml
 </ol>
 
 Optional dependencies for unit testing and documentation generation are 
@@ -125,6 +126,7 @@ pyproj
 matplotlib
 pandas
 sphinx
+ruamel.yaml
 
 \endverbatim
 
@@ -313,8 +315,10 @@ fi
 export PATH=${ISCEHOME}/python/miniconda3/bin:$PATH
 export LD_LIBRARY_PATH=${ISCEHOME}/python/miniconda3/lib:$LD_LIBRARY_PATH
 
-# cuda
+# cuda compiler
 export CUDACXX=/usr/local/cuda/bin/nvcc
+# cuda host compiler
+export CUDAHOSTCXX=/usr/bin/gcc-6
 
 # isce
 export PATH=$PATH:${ISCEHOME}/tools/isce/install/bin

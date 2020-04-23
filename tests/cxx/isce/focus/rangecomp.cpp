@@ -3,13 +3,13 @@
 #include <gtest/gtest.h>
 #include <stdexcept>
 
-#include <isce/core/Kernels.h>
 #include <isce/focus/Chirp.h>
 #include <isce/focus/RangeComp.h>
+#include <isce/math/Sinc.h>
 
-using isce::core::sinc;
 using isce::focus::formLinearChirp;
 using isce::focus::RangeComp;
+using isce::math::sinc;
 
 template<typename T>
 auto maxAbsError(const std::vector<T>& a, const std::vector<T>& b)

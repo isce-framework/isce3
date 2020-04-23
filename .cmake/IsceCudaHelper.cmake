@@ -87,7 +87,7 @@ function(set_cuda_arch_flags TARGET_ARCHS)
         set(FLAGS "${FLAGS} -gencode=arch=compute_${ARCH},code=sm_${ARCH}")
     endforeach()
     # strip leading whitespace
-    string(STRIP ${FLAGS} FLAGS)
+    string(STRIP "${FLAGS}" FLAGS)
 
     # append new flags to CMAKE_CUDA_FLAGS
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${FLAGS}" PARENT_SCOPE)

@@ -83,7 +83,7 @@ TypedBuffer<T>::TypedBuffer(T * data,
                             const std::array<int, 2> & shape,
                             GDALAccess access)
 :
-    TypedBuffer(data, shape, {shape[1] * sizeof(T), sizeof(T)})
+    TypedBuffer(data, shape, {shape[1] * sizeof(T), sizeof(T)}, access)
 {}
 
 template<typename T>

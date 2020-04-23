@@ -10,6 +10,7 @@ ISCE has the following dependencies
 <li> GDAL 2.3 or above with Python bindings
 <li> HDF5 1.10.2 or above with h5py
 <li> cmake 3.12 or above
+<li> ruamel yaml for python3.7
 </ol>
 
 One can use any of the three package managers - Macports, Homebrew or Conda to install ISCE on macOS. <br>
@@ -61,6 +62,7 @@ The recommended options list is : +hdf4 +hdf5 +netcdf +openjpeg +postgresql10 . 
 If you plan to use gcc instead of clang, use gcc7 whenever the option is available to build those ports.
 </ul>
 <li>sudo port install py37-gdal
+<li>sudo port install py37-ruamel-yaml
 </ol>
 
 

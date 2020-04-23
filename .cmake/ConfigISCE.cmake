@@ -16,11 +16,22 @@ endfunction()
 # Check that compiler supports C++17
 # (Only checks GCC and Clang currently)
 function(CheckCXX)
-    if (CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
-        message(FATAL_ERROR "Insufficient GCC version. Version 6.0 or greater is required.")
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
-        message(FATAL_ERROR "Insufficient Clang version. Version 5 or greater is required.")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
+            message(FATAL_ERROR
+                "Insufficient GCC version - requires 6.0 or greater")
+        endif()
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
+            message(FATAL_ERROR
+                "Insufficient Clang version - requires 5.0 or greater")
+        endif()
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    else()
+        message(WARNING
+            "Unsupported compiler detected - courageously continuing")
     endif()
+
     # Require C++17 (no extensions) for host code
     set(CMAKE_CXX_STANDARD            17 PARENT_SCOPE)
     set(CMAKE_CXX_STANDARD_REQUIRED   ON PARENT_SCOPE)
@@ -29,7 +40,10 @@ function(CheckCXX)
     set(CMAKE_CUDA_STANDARD           14 PARENT_SCOPE)
     set(CMAKE_CUDA_STANDARD_REQUIRED  ON PARENT_SCOPE)
     set(CMAKE_CUDA_EXTENSIONS        OFF PARENT_SCOPE)
-    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wno-sign-compare ${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
+
+    add_library(project_warnings INTERFACE)
+    include(Warnings)
+    set_warnings(project_warnings)
 endfunction()
 
 

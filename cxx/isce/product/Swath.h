@@ -7,6 +7,7 @@
 #include <valarray>
 
 // isce::core
+#include <isce/core/DateTime.h>
 #include <isce/core/LUT2d.h>
 #include <isce/core/Constants.h>
 

@@ -3,7 +3,7 @@
 # Copyright 2019-
 
 import os
-from ruamel_yaml import YAML
+from ruamel.yaml import YAML
 
 
 def dictFromYaml(yaml_path):

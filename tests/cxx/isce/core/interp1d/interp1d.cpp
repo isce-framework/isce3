@@ -23,10 +23,11 @@
 #include <isce/core/Interp1d.h>
 #include <isce/core/Kernels.h>
 #include <isce/core/Utilities.h>
+#include <isce/math/Sinc.h>
 #include <isce/signal/NFFT.h>
 
 using isce::core::interp1d;
-using isce::core::sinc;
+using isce::math::sinc;
 
 double
 rad2deg(double x)

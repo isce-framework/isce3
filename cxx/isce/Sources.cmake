@@ -3,12 +3,12 @@ core/Attitude.cpp
 core/Baseline.cpp
 core/BicubicInterpolator.cpp
 core/BilinearInterpolator.cpp
+core/Constants.cpp
 core/DateTime.cpp
 core/detail/BuildOrbit.cpp
 core/Ellipsoid.cpp
 core/EulerAngles.cpp
 core/Interpolator.cpp
-core/Kernels.cpp
 core/LUT2d.cpp
 core/LookSide.cpp
 core/Metadata.cpp

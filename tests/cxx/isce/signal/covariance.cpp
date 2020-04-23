@@ -59,11 +59,7 @@ TEST(Covariance, DualpolRun)
 
     std::cout << "end" << std::endl;
 
-    
-    covarianceObj.numberOfRangeLooks(rngLooks);
-    covarianceObj.numberOfAzimuthLooks(azLooks);
-
-    covarianceObj.covariance(slcList, covList);
+    covarianceObj.covariance(slcList, covList, rngLooks, azLooks);
     
 }
 
@@ -85,7 +81,7 @@ TEST(Covariance, DualpolCheck)
     slcHV.getBlock(shv, 0, 0, width, length);
 
     // expected covarinace values
-    std::valarray<std::complex<float>>  expected_c_hh_hh(length*width);
+    std::valarray<std::complex<float>> expected_c_hh_hh(length*width);
     std::valarray<std::complex<float>> expected_c_hh_hv(length*width);
     std::valarray<std::complex<float>> expected_c_hv_hv(length*width);
 

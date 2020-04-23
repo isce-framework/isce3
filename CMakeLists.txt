@@ -16,6 +16,13 @@ endif()
 project(ISCE VERSION 3.0
         LANGUAGES CXX)
 
+find_program(CCACHE ccache)
+if(CCACHE)
+    message(STATUS "Using ccache: ${CCACHE}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE})
+    set(CMAKE_CUDA_COMPILER_LAUNCHER ${CCACHE})
+endif()
+
 set(ISCE_CUDA_ARCHS "Auto" CACHE STRING
     "Select target CUDA device architecture, options are:
     - comma-separated compute capabilities (e.g. 3.5,5.0,5.2)
@@ -120,8 +127,13 @@ InitInstallDirLayout()
 
 include(.cmake/FetchExternRepo.cmake)
 
+find_package(Cereal QUIET)
+if(Cereal_FOUND)
+    # Needed to create target alias
+    set_target_properties(cereal PROPERTIES IMPORTED_GLOBAL TRUE)
+endif()
 find_package(Eigen3 QUIET NO_MODULE)
-if(NOT EIGEN3_FOUND)
+if(NOT Eigen3_FOUND)
     find_package(Git REQUIRED)
     set(BUILD_TESTING OFF)
     fetch_extern_repo(eigen
