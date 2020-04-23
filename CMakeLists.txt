@@ -152,6 +152,7 @@ if(NOT GTEST_FOUND)
         GIT_REPOSITORY https://github.com/google/googletest
         GIT_TAG release-1.10.0
         GIT_SHALLOW TRUE)
+    set_target_properties(gtest gtest_main PROPERTIES EXCLUDE_FROM_ALL TRUE)
     add_library(GTest::gtest ALIAS gtest)
     add_library(GTest::gtest_main ALIAS gtest_main)
 endif()
