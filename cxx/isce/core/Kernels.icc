@@ -1,7 +1,3 @@
-#ifndef ISCE_CORE_KERNELS_ICC
-#error "Kernels.icc is an implementation detail of Linspace.h"
-#endif
-
 #include <complex>
 #include <cmath>
 #include <isce/except/Error.h>
