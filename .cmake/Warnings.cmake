@@ -42,7 +42,6 @@ function(set_warnings target)
         -Wduplicated-cond # warn if if / else chain has duplicated conditions
         -Wlogical-op # warn about logical operations being used where bitwise
                      # were probably wanted
-        -Wuseless-cast # warn if you perform a cast to the same type
         )
 
     # These should be fixed eventually but currently spew output
@@ -54,6 +53,9 @@ function(set_warnings target)
         -Wno-sign-compare
         -Wno-old-style-cast
         -Wno-shadow
+        )
+    list(APPEND GCC_WARNINGS
+        -Wno-useless-cast # warn if you perform a cast to the same type
         )
     list(APPEND CLANG_WARNINGS
         -Wno-mismatched-tags
