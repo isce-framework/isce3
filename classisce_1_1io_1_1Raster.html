@@ -149,9 +149,9 @@ template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a6554b879291ebb37c2c21e85cbc36df8"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#a6554b879291ebb37c2c21e85cbc36df8">Raster</a> (const <a class="el" href="classisce_1_1io_1_1Raster.html">Raster</a> &amp;)</td></tr>
 <tr class="memdesc:a6554b879291ebb37c2c21e85cbc36df8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy constructor.  <a href="#a6554b879291ebb37c2c21e85cbc36df8">More...</a><br/></td></tr>
 <tr class="separator:a6554b879291ebb37c2c21e85cbc36df8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab116eadccc58de410535de98a71a4812"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#ab116eadccc58de410535de98a71a4812">Raster</a> (GDALDataset *inputDataset)</td></tr>
-<tr class="memdesc:ab116eadccc58de410535de98a71a4812"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from an existing GDAL Dataset.  <a href="#ab116eadccc58de410535de98a71a4812">More...</a><br/></td></tr>
-<tr class="separator:ab116eadccc58de410535de98a71a4812"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada4453561e0e27fb485a2baf7b429ee8"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#ada4453561e0e27fb485a2baf7b429ee8">Raster</a> (GDALDataset *inputDataset, bool owner=true)</td></tr>
+<tr class="memdesc:ada4453561e0e27fb485a2baf7b429ee8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor from an existing GDAL Dataset.  <a href="#ada4453561e0e27fb485a2baf7b429ee8">More...</a><br/></td></tr>
+<tr class="separator:ada4453561e0e27fb485a2baf7b429ee8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7f0e5381ba751bf0548f0c3b98a4ca9e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7f0e5381ba751bf0548f0c3b98a4ca9e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1io_1_1Raster.html#a7f0e5381ba751bf0548f0c3b98a4ca9e">initFromPointer</a> (void *ptr, GDALDataType <a class="el" href="classisce_1_1io_1_1Raster.html#aff720b6289b635c4f968e08c03da5ef5">dtype</a>, size_t <a class="el" href="classisce_1_1io_1_1Raster.html#aaa87df1dcb49f43d16391bb1e5e42013">width</a>, size_t <a class="el" href="classisce_1_1io_1_1Raster.html#afd399d4c46850def6d5aac0d731486a3">length</a>, size_t pixeloffset, size_t lineoffset)</td></tr>
 <tr class="memdesc:a7f0e5381ba751bf0548f0c3b98a4ca9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct dataset for a 1 band dataset with raw pointer, dimensions and offsets. <br/></td></tr>
@@ -578,7 +578,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 
 </div>
 </div>
-<a class="anchor" id="ab116eadccc58de410535de98a71a4812"></a>
+<a class="anchor" id="ada4453561e0e27fb485a2baf7b429ee8"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -586,8 +586,18 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
           <td class="memname">isce::io::Raster::Raster </td>
           <td>(</td>
           <td class="paramtype">GDALDataset *&#160;</td>
-          <td class="paramname"><em>inputDataset</em></td><td>)</td>
+          <td class="paramname"><em>inputDataset</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>owner</em> = <code>true</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">

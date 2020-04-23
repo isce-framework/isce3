@@ -110,9 +110,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aac52152d4b3261942477a8f9f5af9c10"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#aac52152d4b3261942477a8f9f5af9c10">covariance</a> (std::map&lt; std::string, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &gt; &amp;slc, std::map&lt; std::pair&lt; std::string, std::string &gt;, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &gt; &amp;cov)</td></tr>
-<tr class="memdesc:aac52152d4b3261942477a8f9f5af9c10"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classisce_1_1signal_1_1Covariance.html" title="Covariance estimation from dual-polarization or quad-polarization data. ">Covariance</a> estimation.  <a href="#aac52152d4b3261942477a8f9f5af9c10">More...</a><br/></td></tr>
-<tr class="separator:aac52152d4b3261942477a8f9f5af9c10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a82e47ac92b9510e0f2a64085666107c5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a82e47ac92b9510e0f2a64085666107c5">covariance</a> (std::map&lt; std::string, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &gt; &amp;slc, std::map&lt; std::pair&lt; std::string, std::string &gt;, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &gt; &amp;cov, size_t rangeLooks=1, size_t azimuthLooks=1)</td></tr>
+<tr class="memdesc:a82e47ac92b9510e0f2a64085666107c5"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classisce_1_1signal_1_1Covariance.html" title="Covariance estimation from dual-polarization or quad-polarization data. ">Covariance</a> estimation.  <a href="#a82e47ac92b9510e0f2a64085666107c5">More...</a><br/></td></tr>
+<tr class="separator:a82e47ac92b9510e0f2a64085666107c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a354549ebbbaa7ff5d717000396cc3e88"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a354549ebbbaa7ff5d717000396cc3e88">faradayRotation</a> (std::map&lt; std::string, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &gt; &amp;slc, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;faradayAngleRaster, size_t rangeLooks, size_t azimuthLooks)</td></tr>
 <tr class="memdesc:a354549ebbbaa7ff5d717000396cc3e88"><td class="mdescLeft">&#160;</td><td class="mdescRight">Estimate the Faraday rotation angle from quad-pol data.  <a href="#a354549ebbbaa7ff5d717000396cc3e88">More...</a><br/></td></tr>
 <tr class="separator:a354549ebbbaa7ff5d717000396cc3e88"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -137,14 +137,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae6e519cf62cfb8027acc46a5500ebe2d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#ae6e519cf62cfb8027acc46a5500ebe2d">radarGrid</a> (<a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; <a class="el" href="classisce_1_1signal_1_1Covariance.html#a0da40641749dcff4d69b964c84e222f7">doppler</a>, <a class="el" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> refEpoch, double azimuthStartTime, double azimuthTimeInterval, int radarGridLength, double startingRange, double rangeSpacing, <a class="el" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">isce::core::LookSide</a> side, double <a class="el" href="classisce_1_1signal_1_1Covariance.html#aa2a6cf1b5b9b2b721e52e10347deb311">wavelength</a>, int radarGridWidth)</td></tr>
 <tr class="memdesc:ae6e519cf62cfb8027acc46a5500ebe2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the input radar grid.  <a href="#ae6e519cf62cfb8027acc46a5500ebe2d">More...</a><br/></td></tr>
 <tr class="separator:ae6e519cf62cfb8027acc46a5500ebe2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aacfc1f37352d8a2b8a0c0e9f0b148110"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aacfc1f37352d8a2b8a0c0e9f0b148110"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#aacfc1f37352d8a2b8a0c0e9f0b148110">numberOfRangeLooks</a> (int rngLooks)</td></tr>
-<tr class="memdesc:aacfc1f37352d8a2b8a0c0e9f0b148110"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set number of looks in range direction for covariance estimation. <br/></td></tr>
-<tr class="separator:aacfc1f37352d8a2b8a0c0e9f0b148110"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada11a555b7ccf164a369b1e462626ea2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ada11a555b7ccf164a369b1e462626ea2"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#ada11a555b7ccf164a369b1e462626ea2">numberOfAzimuthLooks</a> (int azimuthLooks)</td></tr>
-<tr class="memdesc:ada11a555b7ccf164a369b1e462626ea2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set number of looks in azimuth direction for covariance estimation. <br/></td></tr>
-<tr class="separator:ada11a555b7ccf164a369b1e462626ea2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1fd01f44ecd78cc0714432d6b53f0f02"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1signal_1_1Covariance.html#a1fd01f44ecd78cc0714432d6b53f0f02">prf</a> (double p)</td></tr>
 <tr class="memdesc:a1fd01f44ecd78cc0714432d6b53f0f02"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set pulse repetition frequency (PRF).  <a href="#a1fd01f44ecd78cc0714432d6b53f0f02">More...</a><br/></td></tr>
 <tr class="separator:a1fd01f44ecd78cc0714432d6b53f0f02"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -215,7 +207,7 @@ class isce::signal::Covariance&lt; T &gt;</h3>
 
 <p><a class="el" href="classisce_1_1signal_1_1Covariance.html" title="Covariance estimation from dual-polarization or quad-polarization data. ">Covariance</a> estimation from dual-polarization or quad-polarization data. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="aac52152d4b3261942477a8f9f5af9c10"></a>
+<a class="anchor" id="a82e47ac92b9510e0f2a64085666107c5"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -231,7 +223,19 @@ template&lt;class T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">std::map&lt; std::pair&lt; std::string, std::string &gt;, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>cov</em>&#160;</td>
+          <td class="paramname"><em>cov</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>rangeLooks</em> = <code>1</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>azimuthLooks</em> = <code>1</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
