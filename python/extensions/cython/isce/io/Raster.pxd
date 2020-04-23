@@ -27,8 +27,8 @@ cdef extern from "isce/io/Raster.h" namespace "isce::io":
         Raster(const string &, size_t, size_t) except +
         Raster(const string &, const Raster &) except +
         Raster(const Raster &) except +
-        Raster(const string &, const vector[Raster] &);
-        Raster(GDALDataset *) except +
+        Raster(const string &, const vector[Raster] &)
+        Raster(GDALDataset *, bool) except +
 
         # Getters
         Raster & operator=(const Raster &)

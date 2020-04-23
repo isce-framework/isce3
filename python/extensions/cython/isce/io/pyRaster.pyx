@@ -69,8 +69,7 @@ cdef class pyRaster:
             # Convert to cython GDALDataset
             gdal_dset = <GDALDataset *> swig_pointer
             # Make raster
-            self.c_raster = new Raster(gdal_dset)
-            self.__owner = False
+            self.c_raster = new Raster(gdal_dset, False)
             return
         
         # Convert the filename to a C++ string representation

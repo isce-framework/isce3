@@ -10,6 +10,8 @@ core/timedelta.py
 geometry/dem.py
 io/gdal/dataset.py
 io/gdal/raster.py
+io/raster.py
+signal/covariance.py
 product/radargridparameters.py
 product/swath.py
 )

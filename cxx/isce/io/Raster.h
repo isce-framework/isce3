@@ -71,7 +71,7 @@ class isce::io::Raster {
       Raster(const Raster&);
 
       /** Constructor from an existing GDAL Dataset*/
-      Raster(GDALDataset *inputDataset);
+      Raster(GDALDataset *inputDataset, bool owner=true);
 
       /** Construct dataset for a 1 band dataset with raw pointer, dimensions and offsets */
       inline void initFromPointer(void* ptr, GDALDataType dtype, size_t width, size_t length, size_t pixeloffset, size_t lineoffset);

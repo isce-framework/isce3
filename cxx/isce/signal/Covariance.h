@@ -44,7 +44,8 @@ public:
      */
     void covariance(std::map<std::string, isce::io::Raster> & slc,
                     std::map<std::pair<std::string, std::string>,
-                             isce::io::Raster> & cov);
+                             isce::io::Raster> & cov,
+                    size_t rangeLooks=1, size_t azimuthLooks=1);
 
     /**
      * Estimate the Faraday rotation angle from quad-pol data
@@ -176,12 +177,6 @@ public:
                    isce::core::LookSide side,
                    double wavelength, int radarGridWidth);
 
-    /** Set number of looks in range direction for covariance estimation */
-    void numberOfRangeLooks(int rngLooks) { _rangeLooks = rngLooks; }
-
-    /** Set number of looks in azimuth direction for covariance estimation */
-    void numberOfAzimuthLooks(int azimuthLooks) { _azimuthLooks = azimuthLooks; }
-
     /** Set pulse repetition frequency (PRF). */
     void prf(double p) { _prf = p; }
 
@@ -284,14 +279,6 @@ private:
                              std::valarray<std::complex<float>> & C31,
                              std::valarray<std::complex<float>> & C32,
                              std::valarray<std::complex<float>> & C33);
-
-    // following members are needed for crossmul
-
-    // number of range looks
-    int _rangeLooks = 1;
-
-    // number of azimuth looks
-    int _azimuthLooks = 1;
 
     // pulse repetition frequency
     double _prf;

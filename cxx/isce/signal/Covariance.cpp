@@ -16,7 +16,8 @@
 template<class T>
 void isce::signal::Covariance<T>::covariance(
         std::map<std::string, isce::io::Raster> & slc,
-        std::map<std::pair<std::string, std::string>, isce::io::Raster> & cov)
+        std::map<std::pair<std::string, std::string>, isce::io::Raster> & cov,
+        size_t rangeLooks, size_t azimuthLooks)
 {
     size_t numPolarizations = slc.size();
     size_t numCovElements = cov.size();
@@ -50,9 +51,9 @@ void isce::signal::Covariance<T>::covariance(
     isce::signal::Crossmul crsmul;
 
     // set up crossmul
-    crsmul.rangeLooks(_rangeLooks);
+    crsmul.rangeLooks(rangeLooks);
 
-    crsmul.azimuthLooks(_azimuthLooks);
+    crsmul.azimuthLooks(azimuthLooks);
 
     crsmul.doCommonAzimuthbandFiltering(false);
 
