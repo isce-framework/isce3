@@ -257,7 +257,7 @@ def addImagery(h5file, ldr, imgfile, pol):
             write_arr[:2*rshift] = inarr[-2*rshift:]
 
         if firstInPol:
-            inds = numpy.where(write_arr != MAX_INT16)
+            inds = numpy.where(write_arr != MAX_INT16)[0]
             if len(inds) > 1:
                 txgrp['validSamplesSubSwath1'][linnum-1] = [inds[0], inds[-1]+1]
 
