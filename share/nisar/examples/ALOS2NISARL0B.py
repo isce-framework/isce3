@@ -251,6 +251,11 @@ def addImagery(h5file, ldr, imgfile, pol):
 
         inarr = rec.SARRawSignalData[0,:].astype(numpy.int16)
 
+        left = 2 * rec.ActualCountOfLeftFillPixels
+        right = 2 * rec.ActualCountOfRightFillPixels
+        inarr[:left] = MAX_INT16
+        inarr[-right:] = MAX_INT16
+
         if rshift >= 0:
             write_arr[2*rshift:] = inarr[:2*(nPixels - rshift)]
         else:
