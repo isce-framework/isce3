@@ -223,11 +223,10 @@ def addImagery(h5file, ldr, imgfile, pol):
     ##Set up BFPQLUT
     bias = ldr.summary.DCBiasIComponent
     MAX_INT16 = 32767
-    rxlut = fid.create_dataset(os.path.join(rximgstr, 'BFPQLUT'), dtype=numpy.float32, shape=(MAX_INT16,))
-    lut = numpy.arange(MAX_INT16, dtype=numpy.float32)
-    lut[0:31] -= bias
-    lut[31:] = numpy.nan
-    rxlut[:] = lut
+    lut = numpy.arange(MAX_INT16 + 1, dtype=numpy.float32)
+    lut[:32] -= bias
+    lut[32:] = numpy.nan
+    rxlut = fid.create_dataset(os.path.join(rximgstr, 'BFPQLUT'), data=lut)
 
 
     #Create imagery layer
