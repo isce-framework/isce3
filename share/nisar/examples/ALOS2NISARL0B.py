@@ -230,8 +230,9 @@ def addImagery(h5file, ldr, imgfile, pol):
 
 
     #Create imagery layer
+    compress = dict(chunks=(4, 512), compression="gzip", compression_opts=9, shuffle=True)
     cpxtype = numpy.dtype([('r', numpy.int16), ('i', numpy.int16)])
-    rximg = fid.create_dataset(os.path.join(rximgstr, pol), dtype=cpxtype, shape=(nLines,nPixels), chunks=True)
+    rximg = fid.create_dataset(os.path.join(rximgstr, pol), dtype=cpxtype, shape=(nLines,nPixels), **compress)
 
     ##Start populating the imagery
 
