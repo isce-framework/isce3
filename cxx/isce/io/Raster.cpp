@@ -68,9 +68,10 @@ isce::io::Raster::Raster(const std::string &fname,          // filename
         addRawBandToVRT( fname, dtype );
         GDALClose( dataset() );
         dataset( static_cast<GDALDataset*>(GDALOpenShared( fname.c_str(), GA_Update )) ); ;
-    } else                       // if non-VRT, create dataset using user-defined driver
+    } else {                     // if non-VRT, create dataset using user-defined driver
         dataset( outputDriver->Create (fname.c_str(), width, length, numBands, dtype, NULL) );
-
+        _dataset->MarkAsShared();
+    }
 }
 
 /**

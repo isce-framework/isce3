@@ -7,8 +7,9 @@
 
 #include <numeric>
 #include <gtest/gtest.h>
+#include <vector>
 
-#include "isce/io/Raster.h"
+#include <isce/io/Raster.h>
 
 // Support function to check if file exists
 inline bool exists(const std::string& name) {
@@ -258,6 +259,18 @@ TEST_F(RasterTest, addRasterToVRT) {
       }
 }
 
+TEST_F(RasterTest, pushBack) {
+
+  std::remove(latFilename.c_str());
+  std::remove(lonFilename.c_str());
+
+  isce::io::Raster lat = isce::io::Raster( latFilename, nc, nl, 1, GDT_Float32, "GTiff" );
+  isce::io::Raster lon = isce::io::Raster( lonFilename, nc, nl, 1, GDT_Float64, "VRT" );
+
+  std::vector<isce::io::Raster> v;
+  v.push_back(lat);
+  v.push_back(lon);
+}
 
 
 // Main
