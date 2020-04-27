@@ -196,9 +196,9 @@ const <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;
 const <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Orbit.html#aa13f176b26a6b9286d530654a99372ad">velocity</a> (int idx) const </td></tr>
 <tr class="memdesc:aa13f176b26a6b9286d530654a99372ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the specified state vector velocity in ECEF coordinates (m/s) <br/></td></tr>
 <tr class="separator:aa13f176b26a6b9286d530654a99372ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac59a1422548231184b39ac1458d9060"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Orbit.html#aac59a1422548231184b39ac1458d9060">interpolate</a> (<a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> *<a class="el" href="classisce_1_1core_1_1Orbit.html#a2d18d57c44d6931e00a6c2baa7b40178">position</a>, <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> *<a class="el" href="classisce_1_1core_1_1Orbit.html#ab1f88d2e33cb0772403240878f7042dc">velocity</a>, double t, <a class="el" href="namespaceisce_1_1core.html#a8107565ed7c8dc1784adb506150f105b">OrbitInterpBorderMode</a> border_mode=<a class="el" href="namespaceisce_1_1core.html#a8107565ed7c8dc1784adb506150f105ba902b0d55fddef6f8d651fe1035b7d4bd">OrbitInterpBorderMode::Error</a>) const </td></tr>
-<tr class="memdesc:aac59a1422548231184b39ac1458d9060"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate platform position and/or velocity.  <a href="#aac59a1422548231184b39ac1458d9060">More...</a><br/></td></tr>
-<tr class="separator:aac59a1422548231184b39ac1458d9060"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67ac01d4d34af72b3cf30e1d2ab2a1e7"><td class="memItemLeft" align="right" valign="top">isce::error::ErrorCode&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Orbit.html#a67ac01d4d34af72b3cf30e1d2ab2a1e7">interpolate</a> (<a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> *<a class="el" href="classisce_1_1core_1_1Orbit.html#a2d18d57c44d6931e00a6c2baa7b40178">position</a>, <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> *<a class="el" href="classisce_1_1core_1_1Orbit.html#ab1f88d2e33cb0772403240878f7042dc">velocity</a>, double t, <a class="el" href="namespaceisce_1_1core.html#a8107565ed7c8dc1784adb506150f105b">OrbitInterpBorderMode</a> border_mode=<a class="el" href="namespaceisce_1_1core.html#a8107565ed7c8dc1784adb506150f105ba902b0d55fddef6f8d651fe1035b7d4bd">OrbitInterpBorderMode::Error</a>) const </td></tr>
+<tr class="memdesc:a67ac01d4d34af72b3cf30e1d2ab2a1e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate platform position and/or velocity.  <a href="#a67ac01d4d34af72b3cf30e1d2ab2a1e7">More...</a><br/></td></tr>
+<tr class="separator:a67ac01d4d34af72b3cf30e1d2ab2a1e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Sequence of platform ephemeris samples (state vectors) with uniform temporal spacing, supporting efficient lookup and interpolation. </p>
@@ -284,12 +284,12 @@ const <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="aac59a1422548231184b39ac1458d9060"></a>
+<a class="anchor" id="a67ac01d4d34af72b3cf30e1d2ab2a1e7"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void isce::core::Orbit::interpolate </td>
+          <td class="memname">ErrorCode isce::core::Orbit::interpolate </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> *&#160;</td>
           <td class="paramname"><em>position</em>, </td>
@@ -331,6 +331,7 @@ const <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> &amp;&#160;
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Error code indicating exit status </dd></dl>
 
 </div>
 </div>

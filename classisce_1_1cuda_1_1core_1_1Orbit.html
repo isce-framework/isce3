@@ -204,9 +204,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1cuda_1_1core_1_1Orbit.html#ad2fd4beb78bc8cbd3ccb2482fb06c0d7">velocity</a> (int idx) const </td></tr>
 <tr class="memdesc:ad2fd4beb78bc8cbd3ccb2482fb06c0d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the specified state vector velocity in ECEF coordinates (m/s) <br/></td></tr>
 <tr class="separator:ad2fd4beb78bc8cbd3ccb2482fb06c0d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ab6c3ca0909c38323d490082739df17"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1cuda_1_1core_1_1Orbit.html#a5ab6c3ca0909c38323d490082739df17">interpolate</a> (<a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> *<a class="el" href="classisce_1_1cuda_1_1core_1_1Orbit.html#ae9341404114d7b2b77cbd56c296d6cf8">position</a>, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> *<a class="el" href="classisce_1_1cuda_1_1core_1_1Orbit.html#a1ea71684bdebbe7f2b37b326980640a7">velocity</a>, double t, <a class="el" href="namespaceisce_1_1core.html#a8107565ed7c8dc1784adb506150f105b">isce::core::OrbitInterpBorderMode</a> border_mode=<a class="el" href="namespaceisce_1_1core.html#a8107565ed7c8dc1784adb506150f105ba902b0d55fddef6f8d651fe1035b7d4bd">isce::core::OrbitInterpBorderMode::Error</a>) const </td></tr>
-<tr class="memdesc:a5ab6c3ca0909c38323d490082739df17"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate platform position and/or velocity.  <a href="#a5ab6c3ca0909c38323d490082739df17">More...</a><br/></td></tr>
-<tr class="separator:a5ab6c3ca0909c38323d490082739df17"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf902ee8646a344a182c021131512c4a"><td class="memItemLeft" align="right" valign="top">isce::error::ErrorCode&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1cuda_1_1core_1_1Orbit.html#acf902ee8646a344a182c021131512c4a">interpolate</a> (<a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> *<a class="el" href="classisce_1_1cuda_1_1core_1_1Orbit.html#ae9341404114d7b2b77cbd56c296d6cf8">position</a>, <a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> *<a class="el" href="classisce_1_1cuda_1_1core_1_1Orbit.html#a1ea71684bdebbe7f2b37b326980640a7">velocity</a>, double t, <a class="el" href="namespaceisce_1_1core.html#a8107565ed7c8dc1784adb506150f105b">isce::core::OrbitInterpBorderMode</a> border_mode=<a class="el" href="namespaceisce_1_1core.html#a8107565ed7c8dc1784adb506150f105ba902b0d55fddef6f8d651fe1035b7d4bd">isce::core::OrbitInterpBorderMode::Error</a>) const </td></tr>
+<tr class="memdesc:acf902ee8646a344a182c021131512c4a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate platform position and/or velocity.  <a href="#acf902ee8646a344a182c021131512c4a">More...</a><br/></td></tr>
+<tr class="separator:acf902ee8646a344a182c021131512c4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>CUDA counterpart of <a class="el" href="classisce_1_1core_1_1Orbit.html" title="Sequence of platform ephemeris samples (state vectors) with uniform temporal spacing, supporting efficient lookup and interpolation. ">isce::core::Orbit</a>. </p>
@@ -291,12 +291,12 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a5ab6c3ca0909c38323d490082739df17"></a>
+<a class="anchor" id="acf902ee8646a344a182c021131512c4a"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void isce::cuda::core::Orbit::interpolate </td>
+          <td class="memname">isce::error::ErrorCode isce::cuda::core::Orbit::interpolate </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a> *&#160;</td>
           <td class="paramname"><em>position</em>, </td>
@@ -338,6 +338,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Error code indicating exit status </dd></dl>
 
 </div>
 </div>

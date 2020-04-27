@@ -105,25 +105,29 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1771d3188335130a48b8b43083a80e38"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1771d3188335130a48b8b43083a80e38"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>geocode</b> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;input, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;demRaster)</td></tr>
-<tr class="separator:a1771d3188335130a48b8b43083a80e38"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1fd5d080a287018c66313cbb10c371f4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1fd5d080a287018c66313cbb10c371f4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geocode.html#a1fd5d080a287018c66313cbb10c371f4">geoGrid</a> (double geoGridStartX, double geoGridStartY, double geoGridSpacingX, double geoGridSpacingY, double geoGridEndX, double geoGridEndY, int epsgcode)</td></tr>
-<tr class="memdesc:a1fd5d080a287018c66313cbb10c371f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the output geocoded grid. <br/></td></tr>
-<tr class="separator:a1fd5d080a287018c66313cbb10c371f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5fcb21418db1a1217e4d85cd3eccb9cd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5fcb21418db1a1217e4d85cd3eccb9cd"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>geoGrid</b> (double geoGridStartX, double geoGridStartY, double geoGridSpacingX, double geoGridSpacingY, int width, int length, int epsgcode)</td></tr>
+<tr class="memitem:a994bb4c37a085d0bee23f23c826eff32"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geocode.html#a994bb4c37a085d0bee23f23c826eff32">geocode</a> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radar_grid, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;input_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem_raster, <a class="el" href="namespaceisce_1_1geometry.html#af7de5226664e243acd368d5b40153485">isce::geometry::geocodeOutputMode</a> output_mode=isce::geometry::geocodeOutputMode::INTERP, double geogrid_upsampling=1, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">isce::geometry::rtcInputRadiometry</a> input_radiometry=isce::geometry::rtcInputRadiometry::BETA_NAUGHT, int exponent=0, float rtc_min_value_db=std::numeric_limits&lt; float &gt;::quiet_NaN(), double abs_cal_factor=1, float radar_grid_nlooks=1, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_vertices=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_grid=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_nlooks=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_rtc=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *input_rtc=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *output_rtc=nullptr, <a class="el" href="namespaceisce_1_1geometry.html#a45b6a680959063d1d834a218acf3827e">geocodeMemoryMode</a> geocode_memory_mode=geocodeMemoryMode::AUTO, <a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> interp_method=isce::core::dataInterpMethod::BIQUINTIC_METHOD, bool use_weights=false)</td></tr>
+<tr class="memdesc:a994bb4c37a085d0bee23f23c826eff32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Class constructor.  <a href="#a994bb4c37a085d0bee23f23c826eff32">More...</a><br/></td></tr>
+<tr class="separator:a994bb4c37a085d0bee23f23c826eff32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4e2ed18912a11d10e02b98e57613b8c"><td class="memTemplParams" colspan="2">template&lt;class T_out &gt; </td></tr>
+<tr class="memitem:ad4e2ed18912a11d10e02b98e57613b8c"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geocode.html#ad4e2ed18912a11d10e02b98e57613b8c">geocodeInterp</a> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radar_grid, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;input_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;demRaster)</td></tr>
+<tr class="memdesc:ad4e2ed18912a11d10e02b98e57613b8c"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classisce_1_1geometry_1_1Geocode.html">Geocode</a> using the interpolation algorithm.  <a href="#ad4e2ed18912a11d10e02b98e57613b8c">More...</a><br/></td></tr>
+<tr class="separator:ad4e2ed18912a11d10e02b98e57613b8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b3522fb8379986a24a178a257c226da"><td class="memTemplParams" colspan="2">template&lt;class T_out &gt; </td></tr>
+<tr class="memitem:a9b3522fb8379986a24a178a257c226da"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geocode.html#a9b3522fb8379986a24a178a257c226da">geocodeAreaProj</a> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radar_grid, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;input_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem_raster, <a class="el" href="namespaceisce_1_1geometry.html#af7de5226664e243acd368d5b40153485">isce::geometry::geocodeOutputMode</a> output_mode=isce::geometry::geocodeOutputMode::AREA_PROJECTION, double geogrid_upsampling=1, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">isce::geometry::rtcInputRadiometry</a> input_radiometry=isce::geometry::rtcInputRadiometry::BETA_NAUGHT, float rtc_min_value_db=std::numeric_limits&lt; float &gt;::quiet_NaN(), double abs_cal_factor=1, float radar_grid_nlooks=1, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_vertices=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_grid=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_nlooks=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_rtc=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *input_rtc=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *output_rtc=nullptr, <a class="el" href="namespaceisce_1_1geometry.html#a45b6a680959063d1d834a218acf3827e">geocodeMemoryMode</a> geocode_memory_mode=geocodeMemoryMode::AUTO, <a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> interp_method=isce::core::dataInterpMethod::BIQUINTIC_METHOD, bool use_weights=false)</td></tr>
+<tr class="memdesc:a9b3522fb8379986a24a178a257c226da"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classisce_1_1geometry_1_1Geocode.html">Geocode</a> using the area projection algorithm (adaptive multilooking)  <a href="#a9b3522fb8379986a24a178a257c226da">More...</a><br/></td></tr>
+<tr class="separator:a9b3522fb8379986a24a178a257c226da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5fcb21418db1a1217e4d85cd3eccb9cd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geocode.html#a5fcb21418db1a1217e4d85cd3eccb9cd">geoGrid</a> (double geoGridStartX, double geoGridStartY, double geoGridSpacingX, double geoGridSpacingY, int width, int length, int epsgcode)</td></tr>
+<tr class="memdesc:a5fcb21418db1a1217e4d85cd3eccb9cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the output geogrid.  <a href="#a5fcb21418db1a1217e4d85cd3eccb9cd">More...</a><br/></td></tr>
 <tr class="separator:a5fcb21418db1a1217e4d85cd3eccb9cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a459b8d52dd1121cb0a41431e0e86faa4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a459b8d52dd1121cb0a41431e0e86faa4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>radarGrid</b> (<a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; doppler, <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> rgparam, <a class="el" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">isce::core::LookSide</a> lookSide)</td></tr>
-<tr class="separator:a459b8d52dd1121cb0a41431e0e86faa4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05829ae167ea208c6f11b152668eae83"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a05829ae167ea208c6f11b152668eae83"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>radarGrid</b> (<a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; doppler, <a class="el" href="classisce_1_1core_1_1DateTime.html">isce::core::DateTime</a> refEpoch, double azimuthStartTime, double azimuthTimeInterval, int radarGridLength, double startingRange, double rangeSpacing, double wavelength, int radarGridWidth, <a class="el" href="namespaceisce_1_1core.html#aba1a427bdca91d5630751382cbdf4be5">isce::core::LookSide</a> lookSide)</td></tr>
-<tr class="separator:a05829ae167ea208c6f11b152668eae83"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb6969bb69de41d3a0941a110d8f9584"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1geometry_1_1Geocode.html#adb6969bb69de41d3a0941a110d8f9584">updateGeoGrid</a> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radar_grid, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem_raster)</td></tr>
+<tr class="memdesc:adb6969bb69de41d3a0941a110d8f9584"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update the output geogrid with radar grid and DEM attributes.  <a href="#adb6969bb69de41d3a0941a110d8f9584">More...</a><br/></td></tr>
+<tr class="separator:adb6969bb69de41d3a0941a110d8f9584"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af3c78727ee458ec14246ac76b9739076"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af3c78727ee458ec14246ac76b9739076"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>interpolator</b> (<a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> method)</td></tr>
 <tr class="separator:af3c78727ee458ec14246ac76b9739076"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad27a312056585138bef5bcd6ff5af85b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad27a312056585138bef5bcd6ff5af85b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>doppler</b> (<a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; doppler)</td></tr>
+<tr class="separator:ad27a312056585138bef5bcd6ff5af85b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8714dd4e803305a5c216c9f6289cc1d2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8714dd4e803305a5c216c9f6289cc1d2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>orbit</b> (<a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit)</td></tr>
 <tr class="separator:a8714dd4e803305a5c216c9f6289cc1d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -145,15 +149,514 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>demBlockMargin</b> (d
 <tr class="memitem:a32c970eaaaace8dc84f310b227735e5b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a32c970eaaaace8dc84f310b227735e5b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>radarBlockMargin</b> (int radarBlockMargin)</td></tr>
 <tr class="separator:a32c970eaaaace8dc84f310b227735e5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a20d248216447e4e5c60ad0e5a389da27"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a20d248216447e4e5c60ad0e5a389da27"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>interpolator</b> (<a class="el" href="classisce_1_1core_1_1Interpolator.html">isce::core::Interpolator</a>&lt; T &gt; *interp)</td></tr>
-<tr class="separator:a20d248216447e4e5c60ad0e5a389da27"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7965864925967871a98f02830d9bed74"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7965864925967871a98f02830d9bed74"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>geoGridStartX</b> () const </td></tr>
+<tr class="separator:a7965864925967871a98f02830d9bed74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe17a700c54956c94415332d58884924"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abe17a700c54956c94415332d58884924"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>geoGridStartY</b> () const </td></tr>
+<tr class="separator:abe17a700c54956c94415332d58884924"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6caf30d42ea13f91910f3cc985f9d14"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad6caf30d42ea13f91910f3cc985f9d14"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>geoGridSpacingX</b> () const </td></tr>
+<tr class="separator:ad6caf30d42ea13f91910f3cc985f9d14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97f674eefc5ab73438dcda68f0fce112"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a97f674eefc5ab73438dcda68f0fce112"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>geoGridSpacingY</b> () const </td></tr>
+<tr class="separator:a97f674eefc5ab73438dcda68f0fce112"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa437de74cc9aadff811566210c5557d4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa437de74cc9aadff811566210c5557d4"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>geoGridWidth</b> () const </td></tr>
+<tr class="separator:aa437de74cc9aadff811566210c5557d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15cd0f6b69a9904eed5c42b6c7670a8a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a15cd0f6b69a9904eed5c42b6c7670a8a"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>geoGridLength</b> () const </td></tr>
+<tr class="separator:a15cd0f6b69a9904eed5c42b6c7670a8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a994bb4c37a085d0bee23f23c826eff32"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1geometry_1_1Geocode.html">isce::geometry::Geocode</a>&lt; T &gt;::geocode </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;&#160;</td>
+          <td class="paramname"><em>radar_grid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>input_raster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>output_raster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>dem_raster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespaceisce_1_1geometry.html#af7de5226664e243acd368d5b40153485">isce::geometry::geocodeOutputMode</a>&#160;</td>
+          <td class="paramname"><em>output_mode</em> = <code>isce::geometry::geocodeOutputMode::INTERP</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>geogrid_upsampling</em> = <code>1</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">isce::geometry::rtcInputRadiometry</a>&#160;</td>
+          <td class="paramname"><em>input_radiometry</em> = <code>isce::geometry::rtcInputRadiometry::BETA_NAUGHT</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>exponent</em> = <code>0</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>rtc_min_value_db</em> = <code>std::numeric_limits&lt;float&gt;::quiet_NaN()</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>abs_cal_factor</em> = <code>1</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>radar_grid_nlooks</em> = <code>1</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
+          <td class="paramname"><em>out_geo_vertices</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
+          <td class="paramname"><em>out_geo_grid</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
+          <td class="paramname"><em>out_geo_nlooks</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
+          <td class="paramname"><em>out_geo_rtc</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
+          <td class="paramname"><em>input_rtc</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
+          <td class="paramname"><em>output_rtc</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespaceisce_1_1geometry.html#a45b6a680959063d1d834a218acf3827e">geocodeMemoryMode</a>&#160;</td>
+          <td class="paramname"><em>geocode_memory_mode</em> = <code>geocodeMemoryMode::AUTO</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a>&#160;</td>
+          <td class="paramname"><em>interp_method</em> = <code>isce::core::dataInterpMethod::BIQUINTIC_METHOD</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>use_weights</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Class constructor. </p>
+<p><a class="el" href="classisce_1_1geometry_1_1Geocode.html">Geocode</a> data from slant-range to map coordinates</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">radar_grid</td><td>Radar grid </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">input_raster</td><td>Input raster </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">output_raster</td><td>Output raster </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dem_raster</td><td>Input DEM raster </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">output_mode</td><td><a class="el" href="classisce_1_1geometry_1_1Geocode.html">Geocode</a> method </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">geogrid_upsampling</td><td>Geogrid upsampling (in each direction) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">input_radiometry</td><td>Terrain radiometry of the input raster </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">exponent</td><td>Exponent to be applied to the input data. The value 0 indicates that the the exponent is based on the data type of the input raster (1 for real and 2 for complex rasters). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rtc_min_value_db</td><td>Minimum value for the RTC area factor. Radar data with RTC area factor below this limit are ignored. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">abs_cal_factor</td><td>Absolute calibration factor. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">radar_grid_nlooks</td><td>Radar grid number of looks. This parameters determines the multilooking factor used to compute out_geo_nlooks. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_geo_vertices</td><td>Raster to which the radar-grid positions (range and azimuth) of the geogrid pixels vertices will be saved. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_geo_grid</td><td>Raster to which the radar-grid positions (range and azimuth) of the geogrid pixels center will be saved. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_nlooks</td><td>Raster to which the number of radar-grid looks associated with the geogrid will be saved. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_geo_rtc</td><td>Output RTC area factor (in geo-coordinates). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in_rtc</td><td>Input RTC area factor (in slant-range). </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_rtc</td><td>Output RTC area factor (in slant-range). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">geocode_memory_mode</td><td>Select memory mode </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">interp_method</td><td>Data interpolation method </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">use_weights</td><td>Distribute backscatter according to the RTC area factor </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a9b3522fb8379986a24a178a257c226da"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+<div class="memtemplate">
+template&lt;class T_out &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1geometry_1_1Geocode.html">isce::geometry::Geocode</a>&lt; T &gt;::geocodeAreaProj </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;&#160;</td>
+          <td class="paramname"><em>radar_grid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>input_raster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>output_raster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>dem_raster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespaceisce_1_1geometry.html#af7de5226664e243acd368d5b40153485">isce::geometry::geocodeOutputMode</a>&#160;</td>
+          <td class="paramname"><em>output_mode</em> = <code>isce::geometry::geocodeOutputMode::AREA_PROJECTION</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>geogrid_upsampling</em> = <code>1</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">isce::geometry::rtcInputRadiometry</a>&#160;</td>
+          <td class="paramname"><em>input_radiometry</em> = <code>isce::geometry::rtcInputRadiometry::BETA_NAUGHT</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>rtc_min_value_db</em> = <code>std::numeric_limits&lt;float&gt;::quiet_NaN()</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>abs_cal_factor</em> = <code>1</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>radar_grid_nlooks</em> = <code>1</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
+          <td class="paramname"><em>out_geo_vertices</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
+          <td class="paramname"><em>out_geo_grid</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
+          <td class="paramname"><em>out_geo_nlooks</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
+          <td class="paramname"><em>out_geo_rtc</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
+          <td class="paramname"><em>input_rtc</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
+          <td class="paramname"><em>output_rtc</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespaceisce_1_1geometry.html#a45b6a680959063d1d834a218acf3827e">geocodeMemoryMode</a>&#160;</td>
+          <td class="paramname"><em>geocode_memory_mode</em> = <code>geocodeMemoryMode::AUTO</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a>&#160;</td>
+          <td class="paramname"><em>interp_method</em> = <code>isce::core::dataInterpMethod::BIQUINTIC_METHOD</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>use_weights</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classisce_1_1geometry_1_1Geocode.html">Geocode</a> using the area projection algorithm (adaptive multilooking) </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">radar_grid</td><td>Radar grid </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">input_raster</td><td>Input raster </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">output_raster</td><td>Output raster </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dem_raster</td><td>Input DEM raster </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">output_mode</td><td>Output mode </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">geogrid_upsampling</td><td>Geogrid upsampling (in each direction) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">input_radiometry</td><td>Terrain radiometry of the input raster </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rtc_min_value_db</td><td>Minimum value for the RTC area factor. Radar data with RTC area factor below this limit are ignored. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">abs_cal_factor</td><td>Absolute calibration factor. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">radar_grid_nlooks</td><td>Radar grid number of looks. This parameters determines the multilooking factor used to compute out_nlooks. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_geo_vertices</td><td>Raster to which the radar-grid positions (range and azimuth) of the geogrid pixels vertices will be saved. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_geo_grid</td><td>Raster to which the radar-grid positions (range and azimuth) of the geogrid pixels center will be saved. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_geo_nlooks</td><td>Raster to which the number of radar-grid looks associated with the geogrid will be saved. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_geo_rtc</td><td>Output RTC area factor (in geo-coordinates). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">in_rtc</td><td>Input RTC area factor (in slant-range). </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_rtc</td><td>Output RTC area factor (in slant-range). </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">interp_method</td><td>Data interpolation method </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">geocode_memory_mode</td><td>Select memory mode </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">use_weights</td><td>Distribute backscatter according to the RTC area factor </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ad4e2ed18912a11d10e02b98e57613b8c"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+<div class="memtemplate">
+template&lt;class T_out &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1geometry_1_1Geocode.html">isce::geometry::Geocode</a>&lt; T &gt;::geocodeInterp </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;&#160;</td>
+          <td class="paramname"><em>radar_grid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>input_raster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>output_raster</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>demRaster</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classisce_1_1geometry_1_1Geocode.html">Geocode</a> using the interpolation algorithm. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">radar_grid</td><td>Radar grid </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">input_raster</td><td>Input raster </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">output_raster</td><td>Output raster </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dem_raster</td><td>Input DEM raster </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a5fcb21418db1a1217e4d85cd3eccb9cd"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1geometry_1_1Geocode.html">isce::geometry::Geocode</a>&lt; T &gt;::geoGrid </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>geoGridStartX</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>geoGridStartY</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>geoGridSpacingX</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>geoGridSpacingY</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>width</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>length</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>epsgcode</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the output geogrid. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">geoGridStartY</td><td>Starting lat/northing position </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">geoGridSpacingY</td><td>Lat/northing step size </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">geoGridStartX</td><td>Starting lon/easting position </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">geoGridSpacingX</td><td>Lon/easting step size </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">geogrid_width</td><td>Geographic width (number of pixels) in the lon/easting direction </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">geogrid_length</td><td>Geographic length (number of pixels) in the lat/northing direction </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">epsgcode</td><td>Output geographic grid EPSG </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="adb6969bb69de41d3a0941a110d8f9584"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classisce_1_1geometry_1_1Geocode.html">isce::geometry::Geocode</a>&lt; T &gt;::updateGeoGrid </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;&#160;</td>
+          <td class="paramname"><em>radar_grid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;&#160;</td>
+          <td class="paramname"><em>dem_raster</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Update the output geogrid with radar grid and DEM attributes. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">radar_grid</td><td>Radar grid </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dem_raster</td><td>Input DEM raster </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li>isce/cxx/isce/geometry/<a class="el" href="geometry_2forward_8h_source.html">forward.h</a></li>
 <li>isce/cxx/isce/geometry/<a class="el" href="Geocode_8h_source.html">Geocode.h</a></li>
 <li>isce/cxx/isce/geometry/Geocode.cpp</li>
-<li>isce/cxx/isce/geometry/Geocode.icc</li>
 </ul>
 </div><!-- contents -->
 <hr>

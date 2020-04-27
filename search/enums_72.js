@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['rtcinputradiometry',['rtcInputRadiometry',['../namespaceisce_1_1core.html#af2ee74031ed783775a308566a2802c93',1,'isce::core']]],
-  ['rtcoutputmode',['rtcOutputMode',['../namespaceisce_1_1core.html#a40217f79c7a80c61137d3c154c6fc3ef',1,'isce::core']]]
+  ['rtcalgorithm',['rtcAlgorithm',['../namespaceisce_1_1geometry.html#ac32a2e1679c20b6be2f98d2b91ea91ca',1,'isce::geometry']]],
+  ['rtcareamode',['rtcAreaMode',['../namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5',1,'isce::geometry']]],
+  ['rtcinputradiometry',['rtcInputRadiometry',['../namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0',1,'isce::geometry']]]
 ];
