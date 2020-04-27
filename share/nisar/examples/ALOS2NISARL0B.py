@@ -221,11 +221,11 @@ def addImagery(h5file, ldr, imgfile, pol):
     fid.create_group(rximgstr)
 
     ##Set up BFPQLUT
-    bias = ldr.summary.DCBiasIComponent
-    MAX_INT16 = 32767
-    lut = numpy.arange(MAX_INT16 + 1, dtype=numpy.float32)
-    lut[:32] -= bias
-    lut[32:] = numpy.nan
+    lut = numpy.arange(2**16, dtype=numpy.float32)
+    assert ldr.summary.DCBiasIComponent == ldr.summary.DCBiasQComponent
+    lut -= ldr.summary.DCBiasIComponent
+    BAD_VALUE = -2**15
+    lut[BAD_VALUE] = numpy.nan
     rxlut = fid.create_dataset(os.path.join(rximgstr, 'BFPQLUT'), data=lut)
 
 
@@ -248,14 +248,14 @@ def addImagery(h5file, ldr, imgfile, pol):
 
         #Adjust range line
         rshift = int(numpy.rint((rec.SlantRangeToFirstSampleInm - r0) / dr))
-        write_arr = numpy.full((2*nPixels), MAX_INT16, dtype=numpy.int16)
+        write_arr = numpy.full((2*nPixels), BAD_VALUE, dtype=numpy.int16)
 
         inarr = rec.SARRawSignalData[0,:].astype(numpy.int16)
 
         left = 2 * rec.ActualCountOfLeftFillPixels
         right = 2 * rec.ActualCountOfRightFillPixels
-        inarr[:left] = MAX_INT16
-        inarr[-right:] = MAX_INT16
+        inarr[:left] = BAD_VALUE
+        inarr[-right:] = BAD_VALUE
 
         if rshift >= 0:
             write_arr[2*rshift:] = inarr[:2*(nPixels - rshift)]
@@ -263,7 +263,7 @@ def addImagery(h5file, ldr, imgfile, pol):
             write_arr[:2*rshift] = inarr[-2*rshift:]
 
         if firstInPol:
-            inds = numpy.where(write_arr != MAX_INT16)[0]
+            inds = numpy.where(write_arr != BAD_VALUE)[0]
             if len(inds) > 1:
                 txgrp['validSamplesSubSwath1'][linnum-1] = [inds[0], inds[-1]+1]
 
