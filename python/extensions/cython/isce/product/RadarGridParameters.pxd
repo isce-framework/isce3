@@ -54,6 +54,9 @@ cdef extern from "isce/product/RadarGridParameters.h" namespace "isce::product":
         double rangePixelSpacing()
         void rangePixelSpacing(double)
 
+        # Azimuth time interval
+        double azimuthTimeInterval()
+
         # Radar grid length
         size_t length()
         void length(size_t)
@@ -87,5 +90,7 @@ cdef extern from "isce/product/RadarGridParameters.h" namespace "isce::product":
         double slantRange(double)
 
         RadarGridParameters multilook(size_t, size_t)
+
+        RadarGridParameters offsetAndResize(double, double, size_t, size_t)
 
 # end of file

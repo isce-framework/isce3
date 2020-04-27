@@ -8,11 +8,12 @@
 #include "Filter.h"
 
 /**
- * @param[in] signal a block of data to filte
- * @param[in] spectrum a block of spectrum, which is internally used for FFT computations
+ * @param[in] signal a block of data to filter
+ * @param[in] spectrum a block of spectrum, which is internally used for FFT
+ * computations
  * @param[in] ncols number of columns of the block of the data
  * @param[in] nrows number of rows of the block of the data
-*/
+ */
 
 template <class T>
 void
@@ -27,11 +28,12 @@ initiateRangeFilter(std::valarray<std::complex<T>> &signal,
 }
 
 /**
- * @param[in] signal a block of data to filte
- * @param[in] spectrum a block of spectrum, which is internally used for FFT computations
+ * @param[in] signal a block of data to filter
+ * @param[in] spectrum a block of spectrum, which is internally used for FFT
+ * computations
  * @param[in] ncols number of columns of the block of the data
  * @param[in] nrows number of rows of the block of the data
-*/
+ */
 template <class T>
 void
 isce::signal::Filter<T>::

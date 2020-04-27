@@ -6,6 +6,7 @@
 
 from libcpp cimport bool
 from libcpp.string cimport string
+from libcpp.vector cimport vector
 
 # Cython declarations for isce::core objects
 from Raster cimport Raster
@@ -19,9 +20,25 @@ from Ellipsoid cimport Ellipsoid
 from Orbit cimport Orbit
 from LUT2d cimport LUT2d
 from Interpolator cimport dataInterpMethod
+from RTC cimport rtcInputRadiometry
+
 from LookSide cimport LookSide
 
+# RadarGridParameters
+from RadarGridParameters cimport RadarGridParameters
+
+
 cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
+
+    cdef enum geocodeOutputMode:
+        INTERP = 0
+        AREA_PROJECTION = 1
+        AREA_PROJECTION_GAMMA_NAUGHT = 2
+
+    cdef enum geocodeMemoryMode:
+        AUTO = 0
+        RADAR_GRID_SINGLE_BLOCK = 1
+        RADAR_GRID_MULTIPLE_BLOCKS = 2
 
     # Geo2rdr class
     cdef cppclass Geocode[T]:
@@ -39,7 +56,7 @@ cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
         void radarBlockMargin(int margin)
         void interpolator(dataInterpMethod method)
 
-        # Set the geographic grid geometry
+        # Set the geogrid geometry
         void geoGrid(double geoGridStartX,
                      double geoGridStartY,
                      double geoGridSpacingX,
@@ -47,22 +64,52 @@ cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
                      int width,
                      int length,
                      int epsgcode)
-       
-        # Set the radar grid geometry 
-        void radarGrid(LUT2d[double] doppler,
-                       DateTime refEpoch,
-                       double azimuthStartTime,
-                       double azimuthTimeInterval,
-                       int radarGridLength,
-                       double startingRange,
-                       double rangeSpacing,
-                       double wavelength,
-                       int radarGridWidth,
-                       LookSide lookSide)
+
+        # Update geogrid
+        void updateGeoGrid(RadarGridParameters& radar_grid, 
+                           Raster & dem_raster)
 
         # Run geocoding
-        void geocode(Raster & inputRaster,
+        void geocode(RadarGridParameters& radar_grid, 
+                     Raster & inputRaster,
                      Raster & outputRaster,
-                     Raster & demRaster) 
+                     Raster & demRaster,
+                     geocodeOutputMode output_mode_enum,
+                     double upsampling, 
+                     rtcInputRadiometry input_radiometry,
+                     int exponent,
+                     float rtc_min_value_db,
+                     double abs_cal_factor,
+                     float radar_grid_nlooks,
+                     Raster * out_geo_vertices,
+                     Raster * out_geo_grid,
+                     Raster * out_geo_nlooks,
+                     Raster * out_geo_rtc,
+                     Raster * input_rtc,
+                     Raster * output_rtc,
+                     geocodeMemoryMode memory_mode_enum) 
+
+        double geoGridStartX()
+        double geoGridStartY()
+        double geoGridSpacingX()
+        double geoGridSpacingY()
+        int geoGridWidth()
+        int geoGridLength()
+
+    vector[float] getGeoAreaElementMean(
+        vector[double] & x_vect,
+        vector[double] & y_vect,
+        RadarGridParameters& radar_grid, 
+        Orbit& orbit,
+        LUT2d[double]& dop,
+        Raster& input_raster,
+        Raster& dem_raster, 
+        rtcInputRadiometry inputRadiometry,
+        int exponent,
+        geocodeOutputMode output_mode,
+        double dem_upsampling,
+        float rtc_min_value_db,
+        double abs_cal_factor,
+        float radar_grid_nlooks)
 
 # end of file

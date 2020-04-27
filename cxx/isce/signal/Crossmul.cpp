@@ -28,10 +28,10 @@ Crossmul(const isce::product::Product& referenceSlcProduct,
 */
 
 /**
-* @param[in] referenceSLC Raster object of refernce SLC
-* @param[in] secondarySLC Raster object of secondary SLC
-* @param[out] interferogram Raster object of output interferogram
-*/
+ * @param[in] referenceSLC Raster object of reference SLC
+ * @param[in] secondarySLC Raster object of secondary SLC
+ * @param[out] interferogram Raster object of output interferogram
+ */
 void isce::signal::Crossmul::
 crossmul(isce::io::Raster& referenceSLC,
         isce::io::Raster& secondarySLC,
@@ -52,13 +52,12 @@ crossmul(isce::io::Raster& referenceSLC,
 
 }
 
-
 /**
-* @param[in] referenceSLC Raster object of refernce SLC
-* @param[in] secondarySLC Raster object of secondary SLC
-* @param[out] interferogram Raster object of output interferogram
-* @param[out] coherence Raster object of output coherence
-*/
+ * @param[in] referenceSLC Raster object of reference SLC
+ * @param[in] secondarySLC Raster object of secondary SLC
+ * @param[out] interferogram Raster object of output interferogram
+ * @param[out] coherence Raster object of output coherence
+ */
 void isce::signal::Crossmul::
 crossmul(isce::io::Raster& referenceSLC,
         isce::io::Raster& secondarySLC,
@@ -77,12 +76,13 @@ crossmul(isce::io::Raster& referenceSLC,
 }
 
 /**
-* @param[in] referenceSLC Raster object of refernce SLC
-* @param[in] secondarySLC Raster object of secondary SLC
-* @param[in] rngOffsetRaster Raster object of range offsets between reference and secondary SLCs
-* @param[out] interferogram Raster object of output interferogram
-* @param[out] coherence Raster object of output coherence
-*/
+ * @param[in] referenceSLC Raster object of reference SLC
+ * @param[in] secondarySLC Raster object of secondary SLC
+ * @param[in] rngOffsetRaster Raster object of range offsets between reference
+ * and secondary SLCs
+ * @param[out] interferogram Raster object of output interferogram
+ * @param[out] coherence Raster object of output coherence
+ */
 void isce::signal::Crossmul::
 crossmul(isce::io::Raster& referenceSLC,
         isce::io::Raster& secondarySLC,
@@ -315,15 +315,25 @@ crossmul(isce::io::Raster& referenceSLC,
                                 fft_size);
                                 
         }
-        looksObj.ncols(fft_size);
-        // refAmplitudeLooked = sum(abs(refSlc)^2)
-        looksObj.multilook(refSlc, refAmplitudeLooked, 2);
-        looksObj.multilook(secSlc, secAmplitudeLooked, 2);
 
-        // upsample the refernce and secondary SLCs
-        refSignal.upsample(refSlc, refSlcUpsampled, blockRows, fft_size, oversample, shiftImpact);
-        secSignal.upsample(secSlc, secSlcUpsampled, blockRows, fft_size, oversample, shiftImpact);
-       
+        if (_computeCoherence) {
+            looksObj.ncols(fft_size);
+            // refAmplitudeLooked = sum(abs(refSlc)^2)
+            looksObj.multilook(refSlc, refAmplitudeLooked, 2);
+            looksObj.multilook(secSlc, secAmplitudeLooked, 2);
+        }
+
+        // upsample the reference and secondary SLCs
+        if (oversample == 1) {
+            refSlcUpsampled = refSlc;
+            secSlcUpsampled = secSlc;
+        } else {
+            refSignal.upsample(refSlc, refSlcUpsampled, blockRows, fft_size,
+                               oversample, shiftImpact);
+            secSignal.upsample(secSlc, secSlcUpsampled, blockRows, fft_size,
+                               oversample, shiftImpact);
+        }
+
         // Compute oversampled interferogram data
         #pragma omp parallel for
         for (size_t line = 0; line < blockRowsData; line++){
@@ -413,7 +423,8 @@ lookdownShiftImpact(size_t oversample, size_t fft_size, size_t blockRows,
                                                     std::sin(phase));
     }
 
-    // The imapct is the same for each range line. Therefore copying the line for the block
+    // The impact is the same for each range line. Therefore copying the line
+    // for the block
     for (size_t line = 0; line < blockRows; ++line){
             shiftImpact[std::slice(line*fft_size*oversample, fft_size*oversample, 1)] = shiftImpactLine;
     }
@@ -447,18 +458,18 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
     size_t vectorLength = refSlc.size();
 
     // Aligning the spectrum of the two SLCs
-    // Shifting the range spectrum of each image according to the local 
-    // (slope-dependent) wavenumber. This shift in frequency domain is 
+    // Shifting the range spectrum of each image according to the local
+    // (slope-dependent) wavenumber. This shift in frequency domain is
     // achieved by removing/adding the geometrical (representing topography)
-    // from/to refernce and secondary SLCs in time domain.
+    // from/to reference and secondary SLCs in time domain.
     refSlc *= geometryIfgramConj;
     secSlc *= geometryIfgram;
 
     // range frequency shift
     double frequencyShift = 0.0;
 
-    // determine the frequency shift based on the power spectral density of 
-    // the geometrical interferometric pphase using an emprirical approach
+    // determine the frequency shift based on the power spectral density of
+    // the geometrical interferometric phase using an empirical approach
     rangeFrequencyShift(refSpectrum,
                         secSpectrum,
                         rangeFrequencies,
@@ -470,7 +481,7 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
     std::cout << "range bandwidth: " << _rangeBandwidth << std::endl;
 
     // Since the spectrum of the ref and sec SLCs are already aligned,
-    // we design the low-pass filter as a band-apss at zero frequency with
+    // we design the low-pass filter as a band-pass at zero frequency with
     // bandwidth of (W - frequency shift)
     std::valarray<double> filterCenterFrequency{0.0};
     std::valarray<double> filterBandwidth{_rangeBandwidth - frequencyShift};
@@ -494,12 +505,13 @@ rangeCommonBandFilter(std::valarray<std::complex<float>> &refSlc,
     for (size_t i = 0; i < vectorLength; ++i){
 
         // Half phase due to baseline separation obtained from range difference
-        // from refernce and secondary antennas to the target (i.e., range offset derived from
-        // geometrical coregistration)
-        double halfPhase = std::arg(geometryIfgram[i])/2.0;
-        refSlc[i] *= std::complex<float> (std::cos(halfPhase), std::sin(halfPhase));
-        secSlc[i] *= std::complex<float> (std::cos(halfPhase), -1*std::sin(halfPhase));
-
+        // from reference and secondary antennas to the target (i.e., range
+        // offset derived from geometrical coregistration)
+        double halfPhase = std::arg(geometryIfgram[i]) / 2.0;
+        refSlc[i] *=
+                std::complex<float>(std::cos(halfPhase), std::sin(halfPhase));
+        secSlc[i] *= std::complex<float>(std::cos(halfPhase),
+                                         -1 * std::sin(halfPhase));
     }
 }
 

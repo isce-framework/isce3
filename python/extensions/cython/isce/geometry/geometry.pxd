@@ -45,7 +45,6 @@ cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
     void computeDEMBounds(const Orbit & orbit,
                           const Ellipsoid & ellipsoid,
                           const LUT2d[double] & doppler,
-                          LookSide lookSide,
                           const RadarGridParameters & radarGrid,
                           size_t xoff,
                           size_t yoff,

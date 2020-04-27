@@ -63,18 +63,46 @@ namespace isce{
     *
     * The output of this method is an OGREnvelope.
     */
-    BoundingBox
-    getGeoBoundingBox(const isce::product::RadarGridParameters &radarGrid,
-                      const isce::core::Orbit &orbit,
-                      const isce::core::ProjectionBase *proj,
-                      const isce::core::LUT2d<double> &doppler = {},
-                      const std::vector<double> &hgts = {isce::core::GLOBAL_MIN_HEIGHT, isce::core::GLOBAL_MAX_HEIGHT},
-                      const double margin = 0.0,
-                      const int pointsPerEdge = 11,
-                      const double threshold = 1.0e-8,
-                      const int numiter = 15);
+    BoundingBox getGeoBoundingBox(
+            const isce::product::RadarGridParameters& radarGrid,
+            const isce::core::Orbit& orbit,
+            const isce::core::ProjectionBase* proj,
+            const isce::core::LUT2d<double>& doppler = {},
+            const std::vector<double>& hgts = {isce::core::GLOBAL_MIN_HEIGHT,
+                                               isce::core::GLOBAL_MAX_HEIGHT},
+            const double margin = 0.0, const int pointsPerEdge = 11,
+            const double threshold = 1.0e-8, const int numiter = 15,
+            bool ignore_out_of_range_exception = false);
 
-
+    /** Compute bounding box with auto search within given min/ max height
+     * interval
+     *
+     * @param[in] radarGrid    RadarGridParameters object
+     * @param[in] orbit         Orbit object
+     * @param[in] proj          ProjectionBase object indicating desired
+     * projection of output.
+     * @param[in] doppler       LUT2d doppler model
+     * @param[in] minHeight     Height lower bound
+     * @param[in] maxHeight     Height upper bound
+     * @param[in] margin        Marging to add to estimated bounding box in
+     * decimal degrees
+     * @param[in] pointsPerEge  Number of points to use on each edge of radar
+     * grid
+     * @param[in] threshold     Slant range threshold for convergence
+     * @param[in] numiter       Max number of iterations for convergence
+     * @param[in] height_threshold Height threshold for convergence
+     * The output of this method is an OGREnvelope.
+     */
+    BoundingBox getGeoBoundingBoxHeightSearch(
+            const isce::product::RadarGridParameters& radarGrid,
+            const isce::core::Orbit& orbit,
+            const isce::core::ProjectionBase* proj,
+            const isce::core::LUT2d<double>& doppler = {},
+            double min_height = isce::core::GLOBAL_MIN_HEIGHT,
+            double max_height = isce::core::GLOBAL_MAX_HEIGHT,
+            const double margin = 0.0, const int pointsPerEdge = 11,
+            const double threshold = 1.0e-8, const int numiter = 15,
+            const double height_threshold = 100);
 }
 }
 //end of file

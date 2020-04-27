@@ -48,12 +48,13 @@ cdef class pyRadarGridParameters:
         new_grid.c_radargrid = new RadarGridParameters(radarGrid)
         new_grid.__owner = True
         return new_grid
-               
+
     @property
     def lookSide(self):
         """
         Returns look side ("left" or "right")
         """
+
         cdef string s = to_string(self.c_radargrid.lookSide())
         return s.decode('UTF-8')
 
@@ -132,6 +133,10 @@ cdef class pyRadarGridParameters:
         self.c_radargrid.rangePixelSpacing(val)
 
     @property
+    def azimuthTimeInterval(self):
+        return self.c_radargrid.azimuthTimeInterval()
+
+    @property
     def length(self):
         """
         Returns number of lines in grid
@@ -193,12 +198,16 @@ cdef class pyRadarGridParameters:
         cdef RadarGridParameters radar_grid = self.c_radargrid.multilook(az_looks, rg_looks)
         return pyRadarGridParameters.cbind(radar_grid)
 
+    def offsetAndResize(self, double yoff, double xoff, size_t ysize, 
+            size_t xsize):
+        cdef RadarGridParameters radar_grid = self.c_radargrid.offsetAndResize(
+            yoff, xoff, ysize, xsize)
+        return pyRadarGridParameters.cbind(radar_grid)
+
     def perimeter(*args, **kwds):
         """
         This is a pass through for isce3.geometry.getPerimeter. Returns parameter as geoJson.
         """
-
         return getGeoPerimeter(*args, **kwds)
-         
 
 # end of file 

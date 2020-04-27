@@ -22,7 +22,7 @@ class isce::product::RadarGridParameters {
 
     public:
         /** Default constructor */
-        inline RadarGridParameters() {}
+        inline RadarGridParameters();
 
         /** Constructor with a product */
         inline RadarGridParameters(const isce::product::Product & product,
@@ -51,7 +51,8 @@ class isce::product::RadarGridParameters {
         inline RadarGridParameters(const RadarGridParameters & rgparam);
 
         /** Assignment operator */
-        inline RadarGridParameters & operator=(const RadarGridParameters & rgparam);
+        inline RadarGridParameters&
+        operator=(const RadarGridParameters& rgparam);
 
         /** Get the look direction */
         inline isce::core::LookSide lookSide() const { return _lookSide; }
@@ -223,6 +224,11 @@ class isce::product::RadarGridParameters {
         inline void validate() const;
 };
 
+isce::product::RadarGridParameters::RadarGridParameters()
+    : _lookSide(isce::core::LookSide::Left), _sensingStart {0},
+      _wavelength {0}, _prf {0}, _startingRange {0},
+      _rangePixelSpacing {0}, _rlength {0}, _rwidth {0}, _refEpoch {1} {}
+
 // Constructor with a swath.
 /** @param[in] swath Input swath
   * @param[in] lookSide Indicate left (+1) or right (-1)*/
@@ -321,6 +327,7 @@ void
 isce::product::RadarGridParameters::
 validate() const
 {
+
     std::string errstr = "";
 
     if (wavelength() <= 0.)

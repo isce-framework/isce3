@@ -113,7 +113,6 @@ def py_rdr2geo_cone(
 def py_computeDEMBounds(pyOrbit orbit,
                         pyEllipsoid ellps,
                         pyLUT2d doppler,
-                        lookSide,
                         pyRadarGridParameters radarGrid,
                         unsigned int xoff,
                         unsigned int yoff,
@@ -127,11 +126,9 @@ def py_computeDEMBounds(pyOrbit orbit,
     cdef double max_lon = 0.0
     cdef double max_lat = 0.0
 
-    cdef LookSide side = pyParseLookSide(lookSide)
-
     # Call C++ computeDEMBounds
     computeDEMBounds(orbit.c_orbit, deref(ellps.c_ellipsoid), deref(doppler.c_lut),
-                     side, deref(radarGrid.c_radargrid), xoff, yoff, xsize, ysize,
+                     deref(radarGrid.c_radargrid), xoff, yoff, xsize, ysize,
                      margin, min_lon, min_lat, max_lon, max_lat)
 
     # Return GDAL projwin-like list [ulx, uly, lrx, lry]

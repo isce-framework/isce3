@@ -157,7 +157,6 @@ declare(int inLength, int inWidth,
     channel << "Output Image Dimensions: " << outLength << " lines, "
             << outWidth << " pixels"
             << pyre::journal::newline << pyre::journal::newline;
-    //channel << "Number of threads: " << omp_get_max_threads() << pyre::journal::newline;
     channel << "Complex data interpolation" << pyre::journal::newline;
 }
 

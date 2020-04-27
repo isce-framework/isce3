@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include <isce/error/ErrorCode.h>
 #include <isce/core/DateTime.h>
 #include <isce/core/Orbit.h>
 #include <isce/core/StateVector.h>
@@ -351,7 +352,7 @@ TEST_F(OrbitTest, OrbitInterpBorderMode)
 {
     Orbit orbit(statevecs);
 
-    // throw error on attempt to interpolate outside orbit domain
+    // throw exception on attempt to interpolate outside orbit domain
     {
         OrbitInterpBorderMode border_mode = OrbitInterpBorderMode::Error;
 

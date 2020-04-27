@@ -37,27 +37,14 @@ enum dataInterpMethod {
     BIQUINTIC_METHOD = 4
 };
 
-/** Convert string to dataInterpMethod */
-dataInterpMethod parseDataInterpMethod(const std::string & method);
-
-/**Enumeration type to indicate input terrain radiometry (for RTC)*/
-enum rtcInputRadiometry {
-    BETA_NAUGHT = 0,
-    SIGMA_NAUGHT = 1
-};
-
-/**Enumeration type to indicate output mode (for RTC)*/
-enum rtcOutputMode {
-    GAMMA_NAUGHT_AREA = 0,
-    GAMMA_NAUGHT_DIVISOR = 1
-};
-
-
 /** Default sinc parameters */
 const int SINC_HALF = 4;
 const int SINC_LEN = 8;
 const int SINC_ONE = 9;
 const int SINC_SUB = 8192;
+
+/** Convert string to dataInterpMethod */
+dataInterpMethod parseDataInterpMethod(const std::string & method);
 
 /** Semi-major axis for WGS84 */
 const double EarthSemiMajorAxis = 6378137.0;

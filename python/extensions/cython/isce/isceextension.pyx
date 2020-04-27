@@ -52,13 +52,14 @@ include "image/pyResampSlc.pyx"
 
 # Include the signal extensions
 include "signal/pyCrossmul.pyx"
+include "signal/pyLooks.pyx"
 
 # Include the geometry extensions
 include "geometry/pygeometry.pyx"
 include "geometry/pyTopo.pyx"
 include "geometry/pyGeo2rdr.pyx"
-include "geometry/pyGeocode.pyx"
 include "geometry/pyRTC.pyx"
+include "geometry/pyGeocode.pyx"
 include "geometry/pyDEMInterpolator.pyx"
 include "geometry/pyBoundingbox.pyx"
 

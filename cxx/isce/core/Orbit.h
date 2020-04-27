@@ -1,5 +1,6 @@
 #pragma once
 
+#include <isce/error/ErrorCode.h>
 #include <vector>
 
 #include "DateTime.h"
@@ -136,12 +137,14 @@ public:
      * \param[out] position Interpolated position
      * \param[out] velocity Interpolated velocity
      * \param[in] t Interpolation time
-     * \param[in] border_mode Mode for handling interpolation outside orbit domain
+     * \param[in] border_mode Mode for handling interpolation outside orbit
+     * domain
+     * \return Error code indicating exit status
      */
-    void interpolate(Vec3 * position,
-                     Vec3 * velocity,
-                     double t,
-                     OrbitInterpBorderMode border_mode = OrbitInterpBorderMode::Error) const;
+    isce::error::ErrorCode
+    interpolate(Vec3* position, Vec3* velocity, double t,
+                   OrbitInterpBorderMode border_mode =
+                           OrbitInterpBorderMode::Error) const;
 
 private:
     DateTime _reference_epoch;

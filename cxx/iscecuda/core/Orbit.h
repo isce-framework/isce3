@@ -120,11 +120,13 @@ public:
      * \param[out] velocity Interpolated velocity
      * \param[in] t Interpolation time
      * \param[in] border_mode Mode for handling interpolation outside orbit domain
+     * \return Error code indicating exit status
      */
-    void interpolate(isce::core::Vec3 * position,
-                     isce::core::Vec3 * velocity,
-                     double t,
-                     isce::core::OrbitInterpBorderMode border_mode = isce::core::OrbitInterpBorderMode::Error) const;
+    isce::error::ErrorCode
+    interpolate(isce::core::Vec3* position, isce::core::Vec3* velocity,
+                double t,
+                isce::core::OrbitInterpBorderMode border_mode =
+                        isce::core::OrbitInterpBorderMode::Error) const;
 
 private:
     isce::core::DateTime _reference_epoch;

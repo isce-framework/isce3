@@ -354,6 +354,7 @@ private:
     bool _correctOrientationFlag = true;
 
     // dualPol or Quadpol flags
+    bool _singlePol = false;
     bool _dualPol = false;
     bool _quadPol = false;
 

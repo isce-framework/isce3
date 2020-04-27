@@ -71,8 +71,10 @@ def main(opts):
     doppler = isce3.core.lut2d()
 
     # Compute DEM bounds for radar grid 
-    proj_win = isce3.geometry.geometry.getBoundsOnGround(orbit, ellps, doppler, radar_grid.lookSide,
-                                                radar_grid, 0, 0, radar_grid.width, radar_grid.length,
+    proj_win = isce3.geometry.geometry.getBoundsOnGround(orbit, ellps, doppler,
+                                                radar_grid, 0, 0, 
+                                                radar_grid.width, 
+                                                radar_grid.length,
                                                 margin=np.radians(0.01))
     # GDAL expects degrees
     proj_win = np.degrees(proj_win)
@@ -88,16 +90,16 @@ def main(opts):
             inputRaster=input_raster)
 
     # Set radar grid
-    geo.radarGrid(doppler,
-		radar_grid.referenceEpoch,
-		radar_grid.sensingStart,
-		1.0/radar_grid.prf,
-                radar_grid.length,
-		radar_grid.startingRange,
-		radar_grid.rangePixelSpacing,
-                radar_grid.wavelength,
-		radar_grid.width,
-		radar_grid.lookSide)
+    # geo.radarGrid(doppler,
+	# 	radar_grid.referenceEpoch,
+	# 	radar_grid.sensingStart,
+	# 	1.0/radar_grid.prf,
+    #             radar_grid.length,
+	# 	radar_grid.startingRange,
+	# 	radar_grid.rangePixelSpacing,
+    #             radar_grid.wavelength,
+	# 	radar_grid.width,
+	# 	radar_grid.lookSide)
 
     # Get DEM geotransform from DEM raster
     lon0, dlon, _, lat0, _, dlat = crop_dem_ds.GetGeoTransform()
@@ -115,11 +117,12 @@ def main(opts):
     # Create output raster
     if opts.outname == '':
         opts.outname = opts.raster + '.geo'
-    odset = driver.Create(opts.outname, nx_geo, ny_geo, 1, input_raster.getDatatype(band=1))
+    odset = driver.Create(opts.outname, nx_geo, ny_geo, 1, 
+                          input_raster.getDatatype(band=1))
     output_raster = Raster('', dataset=odset)
 
     # Run geocoding
-    geo.geocode(input_raster, output_raster, dem_raster)
+    geo.geocode(radar_grid, input_raster, output_raster, dem_raster)
 
     # Clean up
     crop_dem_ds = None

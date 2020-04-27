@@ -58,19 +58,21 @@ void Orbit::referenceEpoch(const DateTime & reference_epoch)
     _reference_epoch = reference_epoch;
 }
 
-void Orbit::interpolate(Vec3 * position,
-                        Vec3 * velocity,
-                        double t,
-                        OrbitInterpBorderMode border_mode) const
-{
+ErrorCode Orbit::interpolate(Vec3* position, Vec3* velocity, double t,
+                                  OrbitInterpBorderMode border_mode) const {
     // interpolate
-    ErrorCode status = detail::interpolateOrbit(position, velocity, *this, t, border_mode);
+    ErrorCode status =
+            detail::interpolateOrbit(position, velocity, *this, t, border_mode);
 
     // check for errors
-    if (status != ErrorCode::Success) {
+    if (status != ErrorCode::Success and
+            border_mode == OrbitInterpBorderMode::Error) {
+
         std::string errmsg = getErrorString(status);
         throw isce::except::OutOfRange(ISCE_SRCINFO(), errmsg);
     }
+
+    return status;
 }
 
 bool operator==(const Orbit & lhs, const Orbit & rhs)

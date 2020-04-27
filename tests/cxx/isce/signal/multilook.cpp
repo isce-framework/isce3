@@ -112,10 +112,11 @@ TEST(Looks, Multilook)
     ASSERT_NEAR(std::arg(cpxDataLooked[widthLooked*lengthLooked-1]), -0.880995, 1.0e-6);
 
     // check the first element of the multi-looked amplitude
-    ASSERT_NEAR(ampLooked[0], 9, 1.0e-6);
+    ASSERT_NEAR(ampLooked[0], 9 / (rngLooks * azLooks), 1.0e-6);
     // check the last element of the multi-looked amplitude
-    ASSERT_NEAR(ampLooked[widthLooked*lengthLooked-1], 9, 1.0e-6);
- 
+    ASSERT_NEAR(ampLooked[widthLooked * lengthLooked - 1],
+                9 / (rngLooks * azLooks), 1.0e-6);
+
     // check the multi-looked real data when accounted for no data values
     // first element
     ASSERT_NEAR(dataLookednoData[0], 2.25, 1.0e-6);

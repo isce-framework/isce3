@@ -31,6 +31,8 @@
 
 #include <isce/geometry/Geocode.h>
 
+std::set<std::string> geocode_mode_set = {"interp", "areaProj"};
+
 // Declaration for utility function to read metadata stream from VRT
 std::stringstream streamFromVRT(const char * filename, int bandNum=1);
 
@@ -71,34 +73,25 @@ TEST(GeocodeTest, RunGeocode) {
     double demBlockMargin = 0.1;
     int radarBlockMargin = 10;
 
-    double azimuthTimeInterval = 1.0/swath.nominalAcquisitionPRF();
-
     // output geocoded grid (can be different from DEM)
-    double geoGridStartX = -115.65;
-    double geoGridStartY = 34.84;
-    double geoGridSpacingX = 0.0002;
-    double geoGridSpacingY = -8.0e-5;
-    int geoGridLength = 500;
-    int geoGridWidth = 500;
+    double geoGridStartX = -115.6;
+    double geoGridStartY = 34.832;
+
+    int reduction_factor = 10;
+
+    double geoGridSpacingX = reduction_factor * 0.0002;
+    double geoGridSpacingY = reduction_factor * -8.0e-5;
+    int geoGridLength = 380 / reduction_factor;
+    int geoGridWidth = 400 / reduction_factor;
     int epsgcode = 4326;
 
     // The DEM to be used for geocoding
     isce::io::Raster demRaster("zeroHeightDEM.geo");
 
     // input raster in radar coordinates to be geocoded
-    isce::io::Raster radarRaster("x.rdr");
-
-    // geocoded raster
-    isce::io::Raster geocodedRaster("x.geo",
-                        geoGridWidth, geoGridLength,
-                        1, GDT_Float64, "ENVI");
-
-    int radarGridLength = radarRaster.length();
-    int radarGridWidth = radarRaster.width();
+    isce::io::Raster radarRasterX("x.rdr");
 
     // The interpolation method used for geocoding
-    //isce::core::dataInterpMethod method = isce::core::BICUBIC_METHOD;
-    //isce::core::dataInterpMethod method = isce::core::BILINEAR_METHOD;
     isce::core::dataInterpMethod method = isce::core::BIQUINTIC_METHOD;
 
     // Geocode object
@@ -107,110 +100,144 @@ TEST(GeocodeTest, RunGeocode) {
     // manually configure geoObj
 
     geoObj.orbit(orbit);
-
+    geoObj.doppler(doppler);
     geoObj.ellipsoid(ellipsoid);
-
     geoObj.thresholdGeo2rdr(threshold);
-
     geoObj.numiterGeo2rdr(numiter);
-
     geoObj.linesPerBlock(linesPerBlock);
-
     geoObj.demBlockMargin(demBlockMargin);
-
     geoObj.radarBlockMargin(radarBlockMargin);
-
     geoObj.interpolator(method);
 
-    geoObj.radarGrid(doppler,
-                      orbit.referenceEpoch(),
-                      swath.zeroDopplerTime()[0],
-                      azimuthTimeInterval,
-                      radarGridLength,
-                      swath.slantRange()[0],
-                      swath.rangePixelSpacing(),
-                      swath.processedWavelength(),
-                      radarGridWidth,
-                      lookSide);
+    isce::product::RadarGridParameters radar_grid(swath, lookSide);
 
-    geoObj.geoGrid(geoGridStartX, geoGridStartY,
-                  geoGridSpacingX, geoGridSpacingY,
-                  geoGridWidth, geoGridLength,
-                  epsgcode);
+    geoObj.geoGrid(geoGridStartX, geoGridStartY, geoGridSpacingX,
+                   geoGridSpacingY, geoGridWidth, geoGridLength, epsgcode);
 
-    // geocode the longitude data
-    geoObj.geocode(radarRaster, geocodedRaster, demRaster);
+    for (auto geocode_mode_str : geocode_mode_set) {
 
-    // create another raster for latitude data from Topo
-    isce::io::Raster radarRaster2("y.rdr");
+        std::cout << "geocode_mode: " << geocode_mode_str << std::endl;
 
-    // create output raster for geocoded latitude
-    isce::io::Raster geocodedRaster2("y.geo", geoGridWidth, geoGridLength,
-                1, GDT_Float64, "ENVI");
+        isce::geometry::geocodeOutputMode output_mode;
+        if (geocode_mode_str == "interp")
+            output_mode = isce::geometry::geocodeOutputMode::INTERP;
+        else
+            output_mode = isce::geometry::geocodeOutputMode::AREA_PROJECTION;
 
-    // geocode the latitude data using the same geocode object
-    geoObj.geocode(radarRaster2, geocodedRaster2, demRaster);
+        // geocoded raster
+        isce::io::Raster geocodedRasterInterpX("x." + geocode_mode_str + ".geo",
+                                               geoGridWidth, geoGridLength, 1,
+                                               GDT_Float64, "ENVI");
 
+        // geocode the longitude data
+        geoObj.geocode(radar_grid, radarRasterX, geocodedRasterInterpX,
+                       demRaster, output_mode);
+    }
+
+    for (auto geocode_mode_str : geocode_mode_set) {
+
+        isce::geometry::geocodeOutputMode output_mode;
+        if (geocode_mode_str == "interp")
+            output_mode = isce::geometry::geocodeOutputMode::INTERP;
+        else
+            output_mode = isce::geometry::geocodeOutputMode::AREA_PROJECTION;
+
+        // create another raster for latitude data from Topo
+        isce::io::Raster radarRasterY("y.rdr");
+
+        // create output raster for geocoded latitude
+        isce::io::Raster geocodedRasterInterpY("y." + geocode_mode_str + ".geo",
+                                               geoGridWidth, geoGridLength, 1,
+                                               GDT_Float64, "ENVI");
+
+        // geocode the latitude data using the same geocode object
+        geoObj.geocode(radar_grid, radarRasterY, geocodedRasterInterpY,
+                       demRaster, output_mode);
+    }
 }
 
 TEST(GeocodeTest, CheckGeocode) {
     // The geocoded latitude and longitude data should be
     // consistent with the geocoded pixel location.
 
-    isce::io::Raster xRaster("x.geo");
+    for (auto geocode_mode_str : geocode_mode_set) {
 
-    isce::io::Raster yRaster("y.geo");
+        isce::io::Raster xRaster("x." + geocode_mode_str + ".geo");
+        isce::io::Raster yRaster("y." + geocode_mode_str + ".geo");
+        size_t length = xRaster.length();
+        size_t width = xRaster.width();
 
-    double * geoTrans = new double[6];
-    xRaster.getGeoTransform(geoTrans);
+        double geoTrans[6];
+        xRaster.getGeoTransform(geoTrans);
 
-    double x0 = geoTrans[0] + geoTrans[1]/2.0;
-    double dx = geoTrans[1];
+        double x0 = geoTrans[0] + geoTrans[1] / 2.0;
+        double dx = geoTrans[1];
 
-    double y0 = geoTrans[3] + geoTrans[5]/2.0;
-    double dy = geoTrans[5];
+        double y0 = geoTrans[3] + geoTrans[5] / 2.0;
+        double dy = geoTrans[5];
 
-    size_t length = xRaster.length();
-    size_t width = xRaster.width();
+        double errX = 0.0;
+        double errY = 0.0;
+        double maxErrX = 0.0;
+        double maxErrY = 0.0;
+        double gridLat;
+        double gridLon;
 
-    std::valarray<double> geoX(length*width);
-    std::valarray<double> geoY(length*width);
+        std::valarray<double> geoX(length * width);
+        std::valarray<double> geoY(length * width);
 
-    xRaster.getBlock(geoX, 0 ,0 , width, length);
+        xRaster.getBlock(geoX, 0, 0, width, length);
+        yRaster.getBlock(geoY, 0, 0, width, length);
 
-    yRaster.getBlock(geoY, 0 ,0 , width, length);
+        double square_sum_x = 0; // sum of square differences
+        int nvalid_x = 0;
+        double square_sum_y = 0; // sum of square differences
+        int nvalid_y = 0;
 
-    double errX = 0.0;
-    double errY = 0.0;
-    double maxErrX = 0.0;
-    double maxErrY = 0.0;
-    double gridLat;
-    double gridLon;
-    for (size_t line = 0; line < length; ++line) {
-        for (size_t pixel = 0; pixel < width; ++pixel) {
-            if (geoX[line*width + pixel] != 0.0) {
-                gridLon = x0 + pixel * dx;
-                errX = geoX[line*width + pixel] - gridLon;
-
-                gridLat = y0 + line * dy;
-                errY = geoY[line*width + pixel] - gridLat;
-
-                if (std::abs(errX) > maxErrX){
-                    maxErrX = std::abs(errX);
+        for (size_t line = 0; line < length; ++line) {
+            for (size_t pixel = 0; pixel < width; ++pixel) {
+                if (!isnan(geoX[line * width + pixel])) {
+                    gridLon = x0 + pixel * dx;
+                    errX = geoX[line * width + pixel] - gridLon;
+                    square_sum_x += pow(errX, 2);
+                    nvalid_x++;
+                    if (std::abs(errX) > maxErrX) {
+                        maxErrX = std::abs(errX);
+                    }
                 }
-
-                if (std::abs(errY) > maxErrY){
-                    maxErrY = std::abs(errY);
+                if (!isnan(geoY[line * width + pixel])) {
+                    gridLat = y0 + line * dy;
+                    errY = geoY[line * width + pixel] - gridLat;
+                    square_sum_y += pow(errY, 2);
+                    nvalid_y++;
+                    if (std::abs(errY) > maxErrY) {
+                        maxErrY = std::abs(errY);
+                    }
                 }
-
             }
         }
 
+        double rmse_x = std::sqrt(square_sum_x / nvalid_x);
+        double rmse_y = std::sqrt(square_sum_y / nvalid_y);
+
+        std::cout << "geocode_mode: " << geocode_mode_str << std::endl;
+        std::cout << "  RMSE X: " << rmse_x << std::endl;
+        std::cout << "  RMSE Y: " << rmse_y << std::endl;
+        std::cout << "  maxErrX: " << maxErrX << std::endl;
+        std::cout << "  maxErrY: " << maxErrY << std::endl;
+        std::cout << "  dx: " << dx << std::endl;
+        std::cout << "  dy: " << dy << std::endl;
+
+        if (geocode_mode_str == "interp") {
+            // errors with interp algorithm are smaller because topo
+            // interpolates x and y at the center of the pixel
+            ASSERT_LT(maxErrX, 1.0e-8);
+            ASSERT_LT(maxErrY, 1.0e-8);
+        }
+
+        ASSERT_LT(rmse_x, 0.5 * dx);
+        ASSERT_LT(rmse_y, 0.5 * std::abs(dy));
     }
-
-    ASSERT_LT(maxErrX, 1.0e-8);
-    ASSERT_LT(maxErrY, 1.0e-8);
-
 }
 
 int main(int argc, char * argv[]) {

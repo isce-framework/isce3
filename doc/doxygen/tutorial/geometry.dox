@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
                                         5.0e-2, //distance threshold
                                         2,     //primary iterations
                                         0,     //secondary iterations,
-                                        isce::core::HERMITE_METHOD);
+                                        isce::core::Hermite);
 
                 //Convert to degrees
                 lons.push_back(llh[0] * 180.0/M_PI);

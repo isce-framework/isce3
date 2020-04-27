@@ -245,4 +245,13 @@ cdef class pyRaster:
         self.c_raster.getGeoTransform(<double*> res.data)
         return res
 
+
+cdef Raster * _getRaster(raster):
+
+    # Type-check output raster
+    if isinstance(raster, pyRaster):
+        return (<pyRaster>raster).c_raster
+
+    return NULL
+
 # end of file        

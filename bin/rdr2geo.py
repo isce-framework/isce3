@@ -47,10 +47,9 @@ def main(opts):
     ellipsoid = isce3.core.ellipsoid()
 
     rdr2geo = isce3.geometry.rdr2geo(radarGrid=radarGrid,
-                                    orbit=orbit, 
-                                    ellipsoid=ellipsoid, 
-                                    lookSide=slc.identification.lookDirection,
-                                    computeMask=opts.mask)
+                                     orbit=orbit, 
+                                     ellipsoid=ellipsoid, 
+                                     computeMask=opts.mask)
 
     # Read DEM raster
     demRaster = isce3.io.raster(filename=opts.dem)

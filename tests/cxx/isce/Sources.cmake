@@ -33,6 +33,7 @@ geometry/geocode/geocode.cpp
 geometry/geometry/geometry_constlat.cpp
 geometry/geometry/geometry.cpp
 geometry/geometry/geometry_equator.cpp
+geometry/rtc/rtc.cpp
 geometry/topo/topo.cpp
 geometry/bbox/geoperimeter_equator.cpp
 image/resampslc/resampslc.cpp

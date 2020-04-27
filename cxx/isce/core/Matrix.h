@@ -129,7 +129,7 @@ class isce::core::Matrix {
         size_t _ncols;
 
         // Dynamic memory data
-        cell_t * _buffer;
+        cell_t* _buffer = nullptr;
         bool _owner;
 
         // grid pointer for slicing support

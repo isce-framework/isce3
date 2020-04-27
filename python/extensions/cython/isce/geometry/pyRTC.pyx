@@ -1,66 +1,254 @@
 import numbers
 from cython.operator cimport dereference as deref
-from RTC cimport facetRTC, rtcInputRadiometry, rtcOutputMode
+from RTC cimport *
+from libc.math cimport NAN
 
-rtc_input_radiometry_dict = { 'BETA_NAUGHT': rtcInputRadiometry.BETA_NAUGHT,
-                              'SIGMA_NAUGHT': rtcInputRadiometry.SIGMA_NAUGHT}
+rtc_input_radiometry_dict = {'BETA_NAUGHT': rtcInputRadiometry.BETA_NAUGHT,
+                             'SIGMA_NAUGHT_ELLIPSOID': rtcInputRadiometry.SIGMA_NAUGHT_ELLIPSOID}
         
-rtc_output_mode_dict = {'GAMMA_NAUGHT_AREA': rtcOutputMode.GAMMA_NAUGHT_AREA,
-                        'GAMMA_NAUGHT_DIVISOR': rtcOutputMode.GAMMA_NAUGHT_DIVISOR}
+rtc_area_mode_dict = {'AREA': rtcAreaMode.AREA,
+                      'AREA_FACTOR': rtcAreaMode.AREA_FACTOR}
 
-def pyRTC_impl(pyProduct prod, pyRaster in_raster, pyRaster out_raster,
-               char frequency=b'A',
+rtc_algorithm_dict = {'RTC_DAVID_SMALL': rtcAlgorithm.RTC_DAVID_SMALL,
+                      'RTC_AREA_PROJECTION': rtcAlgorithm.RTC_AREA_PROJECTION}
+
+
+def enum_dict_decorator(enum_dict, default_key):
+    def decorated(f):
+        def wrapper(input_key):
+            input_enum = None
+            if input_key is None:
+                dict_key=default_key
+            elif isinstance(input_key, numbers.Number):
+                input_enum = input_key
+            else:
+                dict_key = input_key.upper().replace('-', '_')
+            if input_enum is None:
+                input_enum = enum_dict[dict_key]
+            return input_enum
+        return wrapper
+    return decorated
+
+@enum_dict_decorator(rtc_input_radiometry_dict, 'SIGMA_NAUGHT_ELLIPSOID')
+def getRtcInputRadiometry(*args, **kwargs):
+    pass
+
+@enum_dict_decorator(rtc_area_mode_dict, 'RTC_AREA_FACTOR')
+def getRtcAreaMode(*args, **kwargs):
+    pass
+
+@enum_dict_decorator(rtc_algorithm_dict, 'RTC_AREA_PROJECTION')
+def getRtcAlgorithm(*args, **kwargs):
+    pass
+
+def pyApplyRTC(pyRadarGridParameters radarGrid,
+               pyOrbit orbit,
+               pyLUT2d doppler,
+               pyRaster input_raster,
+               pyRaster dem_raster, 
+               out_rtc, 
                input_radiometry=None,
-               output_mode=None):
+               int exponent = 0,
+               rtc_area_mode = None,
+               rtc_algorithm = None,
+               dem_upsampling = NAN,
+               rtc_min_value_db = NAN,
+               double abs_cal_factor = 1,
+               float radar_grid_nlooks = 1,
+               out_nlooks = None,
+               input_rtc = None,
+               output_rtc = None):
 
     # input radiometry
-    rtc_input_radiometry = None
-    if input_radiometry is None:
-        input_radiometry_key='SIGMA_NAUGHT'
-    elif isinstance(input_radiometry, numbers.Number):
-        rtc_input_radiometry = input_radiometry
-    else:
-        input_radiometry_key = input_radiometry.upper().replace('-', '_')
-    if rtc_input_radiometry is None:
-        rtc_input_radiometry = rtc_input_radiometry_dict[input_radiometry_key]
- 
-    # output mode
-    rtc_output_mode = None
-    if output_mode is None:
-        output_mode_key='GAMMA_NAUGHT_AREA'
-    elif isinstance(output_mode, numbers.Number):
-        rtc_output_mode = output_mode
-    else:
-        output_mode_key = output_mode.upper().replace('-', '_')
-    if rtc_output_mode is None:
-        rtc_output_mode = rtc_output_mode_dict[output_mode_key]
+    rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+
+    # RTC area mode
+    rtc_area_mode_obj = getRtcAreaMode(rtc_area_mode)
+
+    # RTC algorithm
+    rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
+
+    # other attributes
+    out_nlooks_raster = _getRaster(out_nlooks)
+    input_rtc_raster = _getRaster(input_rtc)
+    output_rtc_raster = _getRaster(output_rtc)
+
+    out_raster = _getRaster(out_rtc)
+    if out_raster == NULL:
+        print('ERROR invalid output raster')
+        return
+  
+    applyRTC(deref(radarGrid.c_radargrid),
+             orbit.c_orbit,
+             deref(doppler.c_lut),
+             deref(input_raster.c_raster),
+             deref(dem_raster.c_raster),
+             deref(out_raster),
+             rtc_input_radiometry,
+             exponent,
+             rtc_area_mode_obj,
+             rtc_algorithm_obj,
+             dem_upsampling,
+             rtc_min_value_db,
+             abs_cal_factor,
+             radar_grid_nlooks,
+             out_nlooks_raster,
+             input_rtc_raster,
+             output_rtc_raster)
+
+def pyRTC(pyRadarGridParameters radarGrid,
+          pyOrbit orbit,
+          pyLUT2d doppler,
+          pyRaster dem_raster, 
+          out_rtc,
+          input_radiometry = None,
+          rtc_area_mode = None,
+          rtc_algorithm = None,
+          dem_upsampling = NAN,
+          rtc_min_value_db = NAN,
+          float radar_grid_nlooks = 1,
+          out_nlooks = None):
+
+    # input radiometry
+    rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+
+    # RTC area mode
+    rtc_area_mode_obj = getRtcAreaMode(rtc_area_mode)
+
+    # RTC algorithm
+    rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
+
+    # other attributes
+    width = dem_raster.width
+    length = dem_raster.length 
+    out_nlooks_raster = _getRaster(out_nlooks)
+
+    out_raster = _getRaster(out_rtc)
+    if out_raster == NULL:
+        print('ERROR invalid output raster')
+        return
+  
+    facetRTC(deref(radarGrid.c_radargrid),
+             orbit.c_orbit,
+             deref(doppler.c_lut),
+             deref(dem_raster.c_raster),
+             deref(out_raster),
+             rtc_input_radiometry,
+             rtc_area_mode_obj,
+             rtc_algorithm_obj,
+             dem_upsampling,
+             rtc_min_value_db,
+             radar_grid_nlooks,
+             out_nlooks_raster)
+
+def pyRTCBBox(pyRadarGridParameters radarGrid,
+              pyOrbit orbit,
+              pyLUT2d doppler,
+              pyRaster dem_raster, 
+              out_rtc,
+              double y0,
+              double dy,
+              double x0,
+              double dx,
+              int geogrid_length,
+              int geogrid_width,
+              int epsg,
+              input_radiometry = None,
+              rtc_area_mode = None,
+              rtc_algorithm = None,
+              dem_upsampling = NAN,
+              rtc_min_value_db = NAN,
+              float radar_grid_nlooks = 1,
+              out_geo_vertices = None,
+              out_geo_grid = None,
+              out_nlooks = None):
+
+    # input radiometry
+    rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+
+    # RTC area mode
+    rtc_area_mode_obj = getRtcAreaMode(rtc_area_mode)
+
+    # RTC algorithm
+    rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
+
+    # other attributes
+    width = dem_raster.width
+    length = dem_raster.length 
+    out_geo_vertices_raster = _getRaster(out_geo_vertices)
+    out_geo_grid_raster = _getRaster(out_geo_grid)
+    out_nlooks_raster = _getRaster(out_nlooks)
+    out_raster = _getRaster(out_rtc)
+    if out_raster == NULL:
+        print('ERROR invalid output raster')
+        return
+
+    facetRTC(deref(dem_raster.c_raster),
+             deref(out_raster),
+             deref(radarGrid.c_radargrid),
+             orbit.c_orbit,
+             deref(doppler.c_lut),
+             y0,
+             dy,
+             x0,
+             dx,
+             geogrid_length,
+             geogrid_width,
+             epsg,
+             rtc_input_radiometry,
+             rtc_area_mode_obj,
+             rtc_algorithm_obj,
+             dem_upsampling,
+             rtc_min_value_db,
+             radar_grid_nlooks,
+             out_geo_vertices_raster,
+             out_geo_grid_raster,
+             out_nlooks_raster)
+
+
+def pyRTCProd(pyProduct prod, 
+              pyRaster dem_raster, 
+              out_rtc,
+              char frequency = b'A',
+              bool native_doppler = False,
+              input_radiometry = None,
+              rtc_area_mode = None,
+              rtc_algorithm = None,
+              dem_upsampling = NAN,
+              rtc_min_value_db = NAN,
+              size_t nlooks_az = 1,
+              size_t nlooks_rg = 1,
+              out_nlooks = None):
+
+    # input radiometry
+    rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+
+    # RTC area mode
+    rtc_area_mode_obj = getRtcAreaMode(rtc_area_mode)
+
+    # RTC algorithm
+    rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
+
+    # other attributes
+    width = dem_raster.width
+    length = dem_raster.length 
+    out_nlooks_raster = _getRaster(out_nlooks)
+    out_raster = _getRaster(out_rtc)
+
+    if out_raster == NULL:
+        print('ERROR invalid output raster')
+        return
 
     facetRTC(deref(prod.c_product),
-             deref(in_raster.c_raster),
-             deref(out_raster.c_raster),
+             deref(dem_raster.c_raster),
+             deref(out_raster),
              frequency,
+             native_doppler,
              rtc_input_radiometry,
-             rtc_output_mode)
-
-# Wrapper to support output as filename or pyRaster
-def pyRTC(pyProduct prod, pyRaster in_raster, out_raster, 
-          char frequency=b'A',
-          input_radiometry=None,
-          output_mode=None):
-
-    # Type-check output raster
-    if type(out_raster) != pyRaster:
-        # Create output raster if filename is given
-        if type(out_raster) == str:
-            filename = out_raster
-            out_raster = pyRaster(filename, access=1, width=in_raster.width,
-                                                      length=in_raster.length)
-        else:
-            raise TypeError("must pass pyRaster or filename to pyRTC")
-    else:
-        # Enforce output raster is writable
-        if out_raster.access != 1:
-            raise ValueError("output raster must be writable")
-
-    pyRTC_impl(prod, in_raster, out_raster, frequency=frequency,
-               input_radiometry=input_radiometry, output_mode=output_mode)
+             rtc_area_mode_obj,
+             rtc_algorithm_obj,
+             dem_upsampling,
+             rtc_min_value_db,
+             nlooks_az,
+             nlooks_rg,
+             out_nlooks_raster)

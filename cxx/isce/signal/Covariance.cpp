@@ -26,8 +26,8 @@ void isce::signal::Covariance<T>::covariance(
     std::string crossPol;
 
     if (numPolarizations == 1) {
-        std::cout << "Covariance estimation needs at least two polarizations"
-                  << std::endl;
+        _singlePol = true;
+        _coPol = "hh";
     }
     else if (numPolarizations == 2 && numCovElements == 3) {
 
@@ -59,7 +59,10 @@ void isce::signal::Covariance<T>::covariance(
 
     crsmul.doCommonRangebandFiltering(false);
 
-    if (_dualPol) {
+    if (_singlePol) {
+        crsmul.crossmul(slc[_coPol], slc[_coPol],
+                        cov[std::make_pair(_coPol, _coPol)]);
+    } else if (_dualPol) {
 
         crsmul.crossmul(slc[_coPol], slc[_coPol],
                         cov[std::make_pair(_coPol, _coPol)]);
@@ -69,8 +72,7 @@ void isce::signal::Covariance<T>::covariance(
 
         crsmul.crossmul(slc[_crossPol], slc[_crossPol],
                         cov[std::make_pair(_crossPol, _crossPol)]);
-    }
-    else if (_quadPol) {
+    } else if (_quadPol) {
 
         crsmul.crossmul(slc["hh"], slc["hh"], cov[std::make_pair("hh", "hh")]);
 

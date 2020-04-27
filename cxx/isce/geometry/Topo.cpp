@@ -35,9 +35,8 @@ using isce::core::Vec3;
 using isce::io::Raster;
 
 // Main topo driver; internally create topo rasters
-void isce::geometry::Topo::
-topo(Raster & demRaster, const std::string & outdir)
-{
+template<typename T>
+void isce::geometry::Topo::_topo(T& dem, const std::string& outdir) {
     { // Topo scope for creating output rasters
         // Initialize a TopoLayers object to handle block data and raster data
         TopoLayers layers;
@@ -47,65 +46,61 @@ topo(Raster & demRaster, const std::string & outdir)
                            _computeMask);
 
         // Call topo with layers
-        topo(demRaster, layers);
+        topo(dem, layers);
     } // end Topo scope to release raster resources
 
     // Write out multi-band topo VRT
     std::vector<Raster> rasterTopoVec = {
-        Raster(outdir + "/x.rdr" ),
-        Raster(outdir + "/y.rdr" ),
-        Raster(outdir + "/z.rdr" ),
-        Raster(outdir + "/inc.rdr" ),
-        Raster(outdir + "/hdg.rdr" ),
-        Raster(outdir + "/localInc.rdr" ),
-        Raster(outdir + "/localPsi.rdr" ),
-        Raster(outdir + "/simamp.rdr" )
-    };
+            Raster(outdir + "/x.rdr"),        Raster(outdir + "/y.rdr"),
+            Raster(outdir + "/z.rdr"),        Raster(outdir + "/inc.rdr"),
+            Raster(outdir + "/hdg.rdr"),      Raster(outdir + "/localInc.rdr"),
+            Raster(outdir + "/localPsi.rdr"), Raster(outdir + "/simamp.rdr")};
 
     // Add optional mask raster
     if (_computeMask) {
-        rasterTopoVec.push_back(Raster(outdir + "/mask.rdr" ));
+        rasterTopoVec.push_back(Raster(outdir + "/mask.rdr"));
     };
 
-    Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec );
+    Raster vrt = Raster(outdir + "/topo.vrt", rasterTopoVec);
     // Set its EPSG code
     vrt.setEPSG(_epsgOut);
 }
 
-void isce::geometry::Topo::
-topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
-     Raster & incRaster, Raster & hdgRaster, Raster & localIncRaster, Raster & localPsiRaster,
-     Raster & simRaster, Raster & maskRaster)
-{
+template<typename T>
+void isce::geometry::Topo::_topo(T& dem, Raster& xRaster, Raster& yRaster,
+                                 Raster& heightRaster, Raster& incRaster,
+                                 Raster& hdgRaster, Raster& localIncRaster,
+                                 Raster& localPsiRaster, Raster& simRaster,
+                                 Raster& maskRaster) {
     // Initialize a TopoLayers object to handle block data and raster data
     TopoLayers layers;
 
     // Create rasters for individual layers (provide output raster sizes)
-    layers.setRasters(xRaster, yRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
-                      localPsiRaster, simRaster, maskRaster);
+    layers.setRasters(xRaster, yRaster, heightRaster, incRaster, hdgRaster,
+                      localIncRaster, localPsiRaster, simRaster, maskRaster);
     // Indicate a mask raster has been provided for writing
     computeMask(true);
 
     // Call topo with layers
-    topo(demRaster, layers);
+    topo(dem, layers);
 }
 
-void isce::geometry::Topo::
-topo(Raster & demRaster, Raster & xRaster, Raster & yRaster, Raster & heightRaster,
-     Raster & incRaster, Raster & hdgRaster, Raster & localIncRaster, Raster & localPsiRaster,
-     Raster & simRaster)
-{
+template<typename T>
+void isce::geometry::Topo::_topo(T& dem, Raster& xRaster, Raster& yRaster,
+                                 Raster& heightRaster, Raster& incRaster,
+                                 Raster& hdgRaster, Raster& localIncRaster,
+                                 Raster& localPsiRaster, Raster& simRaster) {
     // Initialize a TopoLayers object to handle block data and raster data
     TopoLayers layers;
 
     // Create rasters for individual layers (provide output raster sizes)
-    layers.setRasters(xRaster, yRaster, heightRaster, incRaster, hdgRaster, localIncRaster,
-                      localPsiRaster, simRaster);
+    layers.setRasters(xRaster, yRaster, heightRaster, incRaster, hdgRaster,
+                      localIncRaster, localPsiRaster, simRaster);
     // Indicate no mask raster has been provided for writing
     computeMask(false);
 
     // Call topo with layers
-    topo(demRaster, layers);
+    topo(dem, layers);
 }
 
 void isce::geometry::Topo::
@@ -237,6 +232,292 @@ topo(Raster & demRaster, TopoLayers & layers)
          << pyre::journal::newline;
 }
 
+void isce::geometry::Topo::topo(DEMInterpolator& demInterp,
+                                TopoLayers& layers) {
+    // Create reusable pyre::journal channels
+    pyre::journal::warning_t warning("isce.geometry.Topo");
+    pyre::journal::info_t info("isce.geometry.Topo");
+
+    // Create and start a timer
+    auto timerStart = std::chrono::steady_clock::now();
+
+    // Compute number of blocks needed to process image
+    size_t nBlocks = _radarGrid.length() / _linesPerBlock;
+    if ((_radarGrid.length() % _linesPerBlock) != 0)
+        nBlocks += 1;
+
+    // Cache range bounds for diagnostics
+    const double startingRange = _radarGrid.startingRange();
+    const double endingRange = _radarGrid.endingRange();
+    const double midRange = _radarGrid.midRange();
+
+    // Loop over blocks
+    size_t totalconv = 0;
+    for (size_t block = 0; block < nBlocks; ++block) {
+
+        // Get block extents
+        size_t lineStart, blockLength;
+        lineStart = block * _linesPerBlock;
+        if (block == (nBlocks - 1)) {
+            blockLength = _radarGrid.length() - lineStart;
+        } else {
+            blockLength = _linesPerBlock;
+        }
+
+        // Diagnostics
+        const double tblock = _radarGrid.sensingTime(lineStart);
+        info << "Processing block: " << block << " " << pyre::journal::newline
+             << "  - line start: " << lineStart << pyre::journal::newline
+             << "  - line end  : " << lineStart + blockLength
+             << pyre::journal::newline << "  - dopplers near mid far: "
+             << _doppler.eval(tblock, startingRange) << " "
+             << _doppler.eval(tblock, midRange) << " "
+             << _doppler.eval(tblock, endingRange) << " "
+             << pyre::journal::endl;
+
+        // Compute max and mean DEM height for the subset
+        float demmax, dem_avg;
+        demInterp.computeHeightStats(demmax, dem_avg, info);
+
+        // Set output block sizes in layers
+        layers.setBlockSize(blockLength, _radarGrid.width());
+
+        // Allocate vector for storing satellite position for each line
+        std::vector<Vec3> satPosition(blockLength);
+
+        // For each line in block
+        double tline;
+        for (size_t blockLine = 0; blockLine < blockLength; ++blockLine) {
+
+            // Global line index
+            size_t line = lineStart + blockLine;
+
+            // Initialize orbital data for this azimuth line
+            Basis TCNbasis;
+            Vec3 pos, vel;
+            _initAzimuthLine(line, tline, pos, vel, TCNbasis);
+            satPosition[blockLine] = pos;
+
+            // Compute velocity magnitude
+            const double satVmag = vel.norm();
+
+// For each slant range bin
+#pragma omp parallel for reduction(+ : totalconv)
+            for (size_t rbin = 0; rbin < _radarGrid.width(); ++rbin) {
+
+                // Get current slant range
+                const double rng = _radarGrid.slantRange(rbin);
+
+                // Get current Doppler value
+                const double dopfact = (0.5 * _radarGrid.wavelength() *
+                                        (_doppler.eval(tline, rng) / satVmag)) *
+                                       rng;
+
+                // Store slant range bin data in Pixel
+                Pixel pixel(rng, dopfact, rbin);
+
+                // Initialize LLH to middle of input DEM and average height
+                Vec3 llh = demInterp.midLonLat();
+
+                // Perform rdr->geo iterations
+                int geostat = rdr2geo(pixel, TCNbasis, pos, vel, _ellipsoid,
+                                      demInterp, llh, _lookSide, _threshold,
+                                      _numiter, _extraiter);
+                totalconv += geostat;
+
+                // Save data in output arrays
+                _setOutputTopoLayers(llh, layers, blockLine, pixel, pos, vel,
+                                     TCNbasis, demInterp);
+
+            } // end OMP for loop pixels in block
+        }     // end for loop lines in block
+
+        // Compute layover/shadow masks for the block
+        if (_computeMask) {
+            setLayoverShadow(layers, demInterp, satPosition);
+        }
+
+        // Write out block of data for all topo layers
+        layers.writeData(0, lineStart);
+
+    } // end for loop blocks
+
+    // Print out convergence statistics
+    info << "Total convergence: " << totalconv << " out of "
+         << _radarGrid.size() << pyre::journal::endl;
+
+    // Print out timing information and reset
+    auto timerEnd = std::chrono::steady_clock::now();
+    const double elapsed =
+            1.0e-3 * std::chrono::duration_cast<std::chrono::milliseconds>(
+                             timerEnd - timerStart)
+                             .count();
+    info << "Elapsed processing time: " << elapsed << " sec"
+         << pyre::journal::newline;
+}
+
+/**
+ * Main entry point for the module; internal creation of topo rasters
+ *
+ * This is the main topo driver. The pixel-by-pixel output file names are fixed
+ * for now <ul> <li> x.rdr - X coordinate in requested projection system (meters
+ * or degrees) <li> y.rdr - Y cooordinate in requested projection system (meters
+ * or degrees) <li> z.rdr - Height above ellipsoid (meters) <li> inc.rdr -
+ * Incidence angle (degrees) computed from vertical at target <li> hdg.rdr -
+ * Azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
+ * <li> localInc.rdr - Local incidence angle (degrees) at target
+ * <li> locaPsi.rdr - Local projection angle (degrees) at target
+ * <li> simamp.rdr - Simulated amplitude image.
+ * </ul>
+ *
+ * @param[in] demRaster input DEM raster
+ * @param[in] outdir  directory to write outputs to
+ */
+void isce::geometry::Topo::topo(isce::io::Raster& demRaster,
+                                const std::string& outdir) {
+    _topo(demRaster, outdir);
+}
+
+/**
+ * Run topo with externally created topo rasters; generate mask
+ *
+ * @param[in] demRaster input DEM raster
+ * @param[in] xRaster output raster for X coordinate in requested projection
+ * system (meters or degrees)
+ * @param[in] yRaster output raster for Y cooordinate in requested projection
+ * system (meters or degrees)
+ * @param[in] zRaster output raster for height above ellipsoid (meters)
+ * @param[in] incRaster output raster for incidence angle (degrees) computed
+ * from vertical at target
+ * @param[in] hdgRaster output raster for azimuth angle (degrees) computed
+ * anti-clockwise from EAST (Right hand rule)
+ * @param[in] localIncRaster output raster for local incidence angle (degrees)
+ * at target
+ * @param[in] localPsiRaster output raster for local projection angle (degrees)
+ * at target
+ * @param[in] simRaster output raster for simulated amplitude image.
+ * @param[in] maskRaster output raster for layover/shadow mask.
+ */
+void isce::geometry::Topo::topo(
+        isce::io::Raster& demRaster, isce::io::Raster& xRaster,
+        isce::io::Raster& yRaster, isce::io::Raster& heightRaster,
+        isce::io::Raster& incRaster, isce::io::Raster& hdgRaster,
+        isce::io::Raster& localIncRaster, isce::io::Raster& localPsiRaster,
+        isce::io::Raster& simRaster, isce::io::Raster& maskRaster) {
+    _topo(demRaster, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
+          localIncRaster, localPsiRaster, simRaster, maskRaster);
+}
+
+/**
+ * Run topo with externally created topo rasters; generate mask
+ *
+ * @param[in] demRaster input DEM raster
+ * @param[in] xRaster output raster for X coordinate in requested projection
+ * system (meters or degrees)
+ * @param[in] yRaster output raster for Y cooordinate in requested projection
+ * system (meters or degrees)
+ * @param[in] zRaster output raster for height above ellipsoid (meters)
+ * @param[in] incRaster output raster for incidence angle (degrees) computed
+ * from vertical at target
+ * @param[in] hdgRaster output raster for azimuth angle (degrees) computed
+ * anti-clockwise from EAST (Right hand rule)
+ * @param[in] localIncRaster output raster for local incidence angle (degrees)
+ * at target
+ * @param[in] localPsiRaster output raster for local projection angle (degrees)
+ * at target
+ * @param[in] simRaster output raster for simulated amplitude image.
+ */
+void isce::geometry::Topo::topo(
+        isce::io::Raster& demRaster, isce::io::Raster& xRaster,
+        isce::io::Raster& yRaster, isce::io::Raster& heightRaster,
+        isce::io::Raster& incRaster, isce::io::Raster& hdgRaster,
+        isce::io::Raster& localIncRaster, isce::io::Raster& localPsiRaster,
+        isce::io::Raster& simRaster) {
+    _topo(demRaster, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
+          localIncRaster, localPsiRaster, simRaster);
+}
+
+/**
+ * Main entry point for the module; internal creation of topo rasters
+ *
+ * This is the main topo driver. The pixel-by-pixel output file names are fixed
+ * for now <ul> <li> x.rdr - X coordinate in requested projection system (meters
+ * or degrees) <li> y.rdr - Y cooordinate in requested projection system (meters
+ * or degrees) <li> z.rdr - Height above ellipsoid (meters) <li> inc.rdr -
+ * Incidence angle (degrees) computed from vertical at target <li> hdg.rdr -
+ * Azimuth angle (degrees) computed anti-clockwise from EAST (Right hand rule)
+ * <li> localInc.rdr - Local incidence angle (degrees) at target
+ * <li> locaPsi.rdr - Local projection angle (degrees) at target
+ * <li> simamp.rdr - Simulated amplitude image.
+ * </ul>
+ *
+ * @param[in] demInterp input DEM interpolator
+ * @param[in] outdir  directory to write outputs to
+ */
+void isce::geometry::Topo::topo(isce::geometry::DEMInterpolator& demInterp,
+                                const std::string& outdir) {
+    _topo(demInterp, outdir);
+}
+
+/**
+ * Run topo with externally created topo rasters; generate mask
+ *
+ * @param[in] demInterp input DEM interpolator
+ * @param[in] xRaster output raster for X coordinate in requested projection
+ * system (meters or degrees)
+ * @param[in] yRaster output raster for Y cooordinate in requested projection
+ * system (meters or degrees)
+ * @param[in] zRaster output raster for height above ellipsoid (meters)
+ * @param[in] incRaster output raster for incidence angle (degrees) computed
+ * from vertical at target
+ * @param[in] hdgRaster output raster for azimuth angle (degrees) computed
+ * anti-clockwise from EAST (Right hand rule)
+ * @param[in] localIncRaster output raster for local incidence angle (degrees)
+ * at target
+ * @param[in] localPsiRaster output raster for local projection angle (degrees)
+ * at target
+ * @param[in] simRaster output raster for simulated amplitude image.
+ * @param[in] maskRaster output raster for layover/shadow mask.
+ */
+void isce::geometry::Topo::topo(
+        isce::geometry::DEMInterpolator& demInterp, isce::io::Raster& xRaster,
+        isce::io::Raster& yRaster, isce::io::Raster& heightRaster,
+        isce::io::Raster& incRaster, isce::io::Raster& hdgRaster,
+        isce::io::Raster& localIncRaster, isce::io::Raster& localPsiRaster,
+        isce::io::Raster& simRaster, isce::io::Raster& maskRaster) {
+    _topo(demInterp, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
+          localIncRaster, localPsiRaster, simRaster, maskRaster);
+}
+
+/**
+ * Run topo with externally created topo rasters; generate mask
+ *
+ * @param[in] demInterp input DEM interpolator
+ * @param[in] xRaster output raster for X coordinate in requested projection
+ * system (meters or degrees)
+ * @param[in] yRaster output raster for Y cooordinate in requested projection
+ * system (meters or degrees)
+ * @param[in] zRaster output raster for height above ellipsoid (meters)
+ * @param[in] incRaster output raster for incidence angle (degrees) computed
+ * from vertical at target
+ * @param[in] hdgRaster output raster for azimuth angle (degrees) computed
+ * anti-clockwise from EAST (Right hand rule)
+ * @param[in] localIncRaster output raster for local incidence angle (degrees)
+ * at target
+ * @param[in] localPsiRaster output raster for local projection angle (degrees)
+ * at target
+ * @param[in] simRaster output raster for simulated amplitude image.
+ */
+void isce::geometry::Topo::topo(
+        isce::geometry::DEMInterpolator& demInterp, isce::io::Raster& xRaster,
+        isce::io::Raster& yRaster, isce::io::Raster& heightRaster,
+        isce::io::Raster& incRaster, isce::io::Raster& hdgRaster,
+        isce::io::Raster& localIncRaster, isce::io::Raster& localPsiRaster,
+        isce::io::Raster& simRaster) {
+    _topo(demInterp, xRaster, yRaster, heightRaster, incRaster, hdgRaster,
+          localIncRaster, localPsiRaster, simRaster);
+}
+
 void isce::geometry::Topo::
 _initAzimuthLine(size_t line, double& tline, Vec3& pos, Vec3& vel, Basis& TCNbasis)
 {
@@ -244,7 +525,8 @@ _initAzimuthLine(size_t line, double& tline, Vec3& pos, Vec3& vel, Basis& TCNbas
     tline = _radarGrid.sensingTime(line);
 
     // Get state vector
-    _orbit.interpolate(&pos, &vel, tline);
+    _orbit.interpolate(&pos, &vel, tline,
+                       isce::core::OrbitInterpBorderMode::FillNaN);
 
     // Get geocentric TCN basis using satellite basis
     TCNbasis = Basis(pos, vel);

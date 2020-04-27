@@ -123,7 +123,7 @@ void interpOrbit(Vec3 * position,
     }
 }
 
-void Orbit::interpolate(Vec3 * position,
+ErrorCode Orbit::interpolate(Vec3 * position,
                         Vec3 * velocity,
                         double t,
                         OrbitInterpBorderMode border_mode) const
@@ -139,13 +139,17 @@ void Orbit::interpolate(Vec3 * position,
 
     // check return code
     ErrorCode status = d_stat[0];
-    if (status != ErrorCode::Success) {
+    if (status != ErrorCode::Success and
+            border_mode == OrbitInterpBorderMode::Error) {
+
         std::string errmsg = getErrorString(status);
-        throw isce::except::RuntimeError(ISCE_SRCINFO(), errmsg);
+        throw isce::except::OutOfRange(ISCE_SRCINFO(), errmsg);
     }
 
     if (position) { *position = d_pos[0]; }
     if (velocity) { *velocity = d_vel[0]; }
+
+    return status;
 }
 
 bool operator==(const Orbit & lhs, const Orbit & rhs)

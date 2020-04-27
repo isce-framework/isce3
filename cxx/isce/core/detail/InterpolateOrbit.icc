@@ -171,14 +171,13 @@ interpolateOrbit(Vec3 * position,
 
     // check if interpolation time is outside orbit domain
     if (t < orbit.startTime() || t > orbit.endTime()) {
-        if (border_mode == OrbitInterpBorderMode::Error) {
-            return isce::error::ErrorCode::OrbitInterpDomainError;
-        }
-        else if (border_mode == OrbitInterpBorderMode::FillNaN) {
+        if (border_mode == OrbitInterpBorderMode::FillNaN) {
             constexpr static double nan = std::numeric_limits<double>::quiet_NaN();
             if (position) { *position = {nan, nan, nan}; }
             if (velocity) { *velocity = {nan, nan, nan}; }
-            return isce::error::ErrorCode::Success;
+        }
+        if (border_mode != OrbitInterpBorderMode::Extrapolate) {
+            return isce::error::ErrorCode::OrbitInterpDomainError;
         }
     }
 

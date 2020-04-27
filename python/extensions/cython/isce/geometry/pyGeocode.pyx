@@ -7,11 +7,60 @@
 from libcpp cimport bool
 from libcpp.string cimport string
 from libcpp.complex cimport complex as complex_t
+from libcpp.vector cimport vector
+
 from cython.operator cimport dereference as deref
 cimport cython
-from LookSide cimport LookSide
+from libc.math cimport NAN
+from GDAL cimport GDALDataType as GDT
 
+from Raster cimport Raster
+from RTC cimport rtcInputRadiometry
+
+from LookSide cimport LookSide
 from Geocode cimport *
+
+
+rtc_input_radiometry_dict = {'BETA_NAUGHT': rtcInputRadiometry.BETA_NAUGHT,
+                             'SIGMA_NAUGHT_ELLIPSOID': rtcInputRadiometry.SIGMA_NAUGHT_ELLIPSOID}
+
+geocode_output_mode_dict = {'INTERP': geocodeOutputMode.INTERP,
+                            'AREA_PROJECTION': geocodeOutputMode.AREA_PROJECTION,
+                            'AREA_PROJECTION_GAMMA_NAUGHT': geocodeOutputMode.AREA_PROJECTION_GAMMA_NAUGHT}
+
+geocode_memory_mode_dict = {'AUTO': geocodeMemoryMode.AUTO,
+                            'RADAR_GRID_SINGLE_BLOCK': geocodeMemoryMode.RADAR_GRID_SINGLE_BLOCK,
+                            'RADAR_GRID_MULTIPLE_BLOCKS': geocodeMemoryMode.RADAR_GRID_MULTIPLE_BLOCKS}
+
+def enum_dict_decorator(enum_dict, default_key):
+    def decorated(f):
+        def wrapper(input_key):
+            input_enum = None
+            if input_key is None:
+                dict_key=default_key
+            elif isinstance(input_key, numbers.Number):
+                input_enum = input_key
+            else:
+                dict_key = input_key.upper().replace('-', '_')
+            if input_enum is None:
+                input_enum = enum_dict[dict_key]
+            return input_enum
+        return wrapper
+    return decorated
+
+@enum_dict_decorator(rtc_input_radiometry_dict, 'SIGMA_NAUGHT_ELLIPSOID')
+def getRtcInputRadiometry(*args, **kwargs):
+    pass
+
+@enum_dict_decorator(geocode_output_mode_dict, 'INTERP')
+def _getOutputMode(*args, **kwargs):
+    pass
+
+@enum_dict_decorator(geocode_memory_mode_dict, 'AUTO')
+def _getMemoryMode(*args, **kwargs):
+    pass
+
+
 
 cdef class pyGeocodeBase:
     """
@@ -56,15 +105,7 @@ cdef class pyGeocodeBase:
     cdef LookSide lookSide
 
     # Geographic grid parameters
-    cdef double geoGridStartX
-    cdef double geoGridStartY
-    cdef double geoGridSpacingX
-    cdef double geoGridSpacingY
-    cdef int width
-    cdef int length
     cdef int epsgcode
-    cdef int numberAzimuthLooks
-    cdef int numberRangeLooks
 
     # DEM interpolation methods
     demInterpMethods = {
@@ -75,6 +116,12 @@ cdef class pyGeocodeBase:
         'biquintic': dataInterpMethod.BIQUINTIC_METHOD
     }
 
+
+cdef class pyGeocodeFloat(pyGeocodeBase):
+
+    # Create Geocoding object
+    cdef Geocode[float] c_geocode
+    
     def __cinit__(self,
                   pyOrbit orbit,
                   pyEllipsoid ellps,
@@ -96,34 +143,17 @@ cdef class pyGeocodeBase:
         self.demBlockMargin = demBlockMargin
         self.radarBlockMargin = radarBlockMargin
         self.interpMethod = self.demInterpMethods[interpMethod]
+        self.c_geocode = Geocode[float]()
 
-        return
-
-    def radarGrid(self,
-                  pyLUT2d doppler,
-                  pyDateTime refEpoch,
-                  double azimuthStartTime,
-                  double azimuthTimeInterval,
-                  int radarGridLength,
-                  double startingRange,
-                  double rangeSpacing,
-                  double wavelength,
-                  int radarGridWidth,
-                  lookSide):
-        """
-        Save parameters for radar grid bounds and Doppler representation.
-        """
-        self.c_doppler = doppler.c_lut
-        self.refepoch_string = refEpoch.c_datetime.isoformat()
-        self.azimuthStartTime = azimuthStartTime
-        self.azimuthTimeInterval = azimuthTimeInterval
-        self.radarGridLength = radarGridLength
-        self.startingRange = startingRange
-        self.rangeSpacing = rangeSpacing
-        self.wavelength = wavelength
-        self.radarGridWidth = radarGridWidth
-        self.lookSide = pyParseLookSide(lookSide)
-        return
+        # Set properties
+        self.c_geocode.orbit(self.c_orbit)
+        self.c_geocode.ellipsoid(deref(self.c_ellipsoid))
+        self.c_geocode.thresholdGeo2rdr(self.threshold)
+        self.c_geocode.numiterGeo2rdr(self.numiter)
+        self.c_geocode.linesPerBlock(self.linesPerBlock)
+        self.c_geocode.demBlockMargin(self.demBlockMargin)
+        self.c_geocode.radarBlockMargin(self.radarBlockMargin)
+        self.c_geocode.interpolator(self.interpMethod)
 
     def geoGrid(self,
                 double geoGridStartX,
@@ -136,137 +166,551 @@ cdef class pyGeocodeBase:
         """
         Saves parameters for output geographic grid.
         """
-        self.geoGridStartX = geoGridStartX
-        self.geoGridStartY = geoGridStartY
-        self.geoGridSpacingX = geoGridSpacingX
-        self.geoGridSpacingY = geoGridSpacingY
-        self.width = width
-        self.length = length
         self.epsgcode = epsgcode
-        return
+        # Set geo grid
+        self.c_geocode.geoGrid(
+            geoGridStartX, geoGridStartY, geoGridSpacingX,
+            geoGridSpacingY, width, length, self.epsgcode)
 
-
-cdef class pyGeocodeFloat(pyGeocodeBase):
+    def updateGeoGrid(self,
+                      pyRadarGridParameters radarGrid,
+                      pyRaster demRaster):
+        """
+        Update geogrid with radar grid and DEM raster
+        """
+        self.c_geocode.updateGeoGrid(deref(radarGrid.c_radargrid), 
+                                     deref(demRaster.c_raster))
 
     def geocode(self,
+                pyRadarGridParameters radarGrid,
                 pyRaster inputRaster,
                 pyRaster outputRaster,
                 pyRaster demRaster,
-                int inputBand=1):
+                int inputBand = 1,
+                output_mode = None,
+                double upsampling = 1,
+                input_radiometry = None,
+                int exponent = 0,
+                rtc_min_value_db = NAN,
+                double abs_cal_factor = 1,
+                float radar_grid_nlooks = 1,
+                out_geo_vertices = None,
+                out_geo_grid = None,
+                out_geo_nlooks = None,
+                out_geo_rtc = None,
+                input_rtc = None,
+                output_rtc = None,
+                memory_mode = None):
         """
         Run geocoding.
         """
-        # Create Geocoding object
-        cdef Geocode[float] c_geocode
 
-        # Set properties
-        c_geocode.orbit(self.c_orbit)
-        c_geocode.ellipsoid(deref(self.c_ellipsoid))
-        c_geocode.thresholdGeo2rdr(self.threshold)
-        c_geocode.numiterGeo2rdr(self.numiter)
-        c_geocode.linesPerBlock(self.linesPerBlock)
-        c_geocode.demBlockMargin(self.demBlockMargin)
-        c_geocode.radarBlockMargin(self.radarBlockMargin)
-        c_geocode.interpolator(self.interpMethod)
-
-        # Set radar grid
-        cdef DateTime refEpoch = self.refepoch_string
-        c_geocode.radarGrid(deref(self.c_doppler), refEpoch,
-                            self.azimuthStartTime, self.azimuthTimeInterval,
-                            self.radarGridLength, self.startingRange, self.rangeSpacing,
-                            self.wavelength, self.radarGridWidth, self.lookSide)
-
-        # Set geo grid
-        c_geocode.geoGrid(self.geoGridStartX, self.geoGridStartY, self.geoGridSpacingX,
-                          self.geoGridSpacingY, self.width, self.length, self.epsgcode)
+        output_mode_enum = _getOutputMode(output_mode)
+        rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+        out_geo_vertices_raster = _getRaster(out_geo_vertices)
+        out_geo_grid_raster = _getRaster(out_geo_grid)
+        out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
+        out_geo_rtc_raster = _getRaster(out_geo_rtc)
+        input_rtc_raster = _getRaster(input_rtc)
+        output_rtc_raster = _getRaster(output_rtc)
+        memory_mode_enum = _getMemoryMode(memory_mode)
 
         # Run geocoding
-        c_geocode.geocode(deref(inputRaster.c_raster), deref(outputRaster.c_raster),
-                          deref(demRaster.c_raster))
-
-        return
+        self.c_geocode.geocode(deref(radarGrid.c_radargrid),
+                               deref(inputRaster.c_raster), 
+                               deref(outputRaster.c_raster),
+                               deref(demRaster.c_raster), 
+                               output_mode_enum, 
+                               upsampling,
+                               rtc_input_radiometry, 
+                               exponent,
+                               rtc_min_value_db,
+                               abs_cal_factor,
+                               radar_grid_nlooks,
+                               out_geo_vertices_raster,
+                               out_geo_grid_raster,
+                               out_geo_nlooks_raster,
+                               out_geo_rtc_raster,
+                               input_rtc_raster,
+                               output_rtc_raster,
+                               memory_mode_enum)
+    
+    @property
+    def geoGridStartX(self):
+        return self.c_geocode.geoGridStartX()
+    @property
+    def geoGridStartY(self):
+        return self.c_geocode.geoGridStartY()
+    @property
+    def geoGridSpacingX(self):
+        return self.c_geocode.geoGridSpacingX()
+    @property
+    def geoGridSpacingY(self):
+        return self.c_geocode.geoGridSpacingY()
+    @property
+    def geoGridWidth(self):
+        return self.c_geocode.geoGridWidth()
+    @property
+    def geoGridLength(self):
+        return self.c_geocode.geoGridLength()
 
 
 cdef class pyGeocodeDouble(pyGeocodeBase):
 
+    # Create Geocoding object
+    cdef Geocode[double] c_geocode
+    
+    def __cinit__(self,
+                  pyOrbit orbit,
+                  pyEllipsoid ellps,
+                  double threshold=1.0e-8,
+                  int numiter=25,
+                  int linesPerBlock=1000,
+                  double demBlockMargin=0.1,
+                  int radarBlockMargin=10,
+                  interpMethod='biquintic'):
+
+        # Save pointers to ISCE objects
+        self.c_orbit = orbit.c_orbit
+        self.c_ellipsoid = ellps.c_ellipsoid
+
+        # Save geocoding properties
+        self.threshold = threshold
+        self.numiter = numiter
+        self.linesPerBlock = linesPerBlock
+        self.demBlockMargin = demBlockMargin
+        self.radarBlockMargin = radarBlockMargin
+        self.interpMethod = self.demInterpMethods[interpMethod]
+        self.c_geocode = Geocode[double]()
+
+        # Set properties
+        self.c_geocode.orbit(self.c_orbit)
+        self.c_geocode.ellipsoid(deref(self.c_ellipsoid))
+        self.c_geocode.thresholdGeo2rdr(self.threshold)
+        self.c_geocode.numiterGeo2rdr(self.numiter)
+        self.c_geocode.linesPerBlock(self.linesPerBlock)
+        self.c_geocode.demBlockMargin(self.demBlockMargin)
+        self.c_geocode.radarBlockMargin(self.radarBlockMargin)
+        self.c_geocode.interpolator(self.interpMethod)
+
+    def geoGrid(self,
+                double geoGridStartX,
+                double geoGridStartY,
+                double geoGridSpacingX,
+                double geoGridSpacingY,
+                int width,
+                int length,
+                int epsgcode):
+        """
+        Saves parameters for output geographic grid.
+        """
+        self.epsgcode = epsgcode
+        # Set geo grid
+        self.c_geocode.geoGrid(
+            geoGridStartX, geoGridStartY, geoGridSpacingX,
+            geoGridSpacingY, width, length, self.epsgcode)
+
+    def updateGeoGrid(self,
+                      pyRadarGridParameters radarGrid,
+                      pyRaster demRaster):
+        """
+        Update geogrid with radar grid and DEM raster
+        """
+        self.c_geocode.updateGeoGrid(deref(radarGrid.c_radargrid), 
+                                     deref(demRaster.c_raster))
+
     def geocode(self,
+                pyRadarGridParameters radarGrid,
                 pyRaster inputRaster,
                 pyRaster outputRaster,
                 pyRaster demRaster,
-                int inputBand=1):
+                int inputBand = 1,
+                output_mode = None,
+                double upsampling = 1,
+                input_radiometry = None,
+                int exponent = 0,
+                rtc_min_value_db = NAN,
+                double abs_cal_factor = 1,
+                float radar_grid_nlooks = 1,
+                out_geo_vertices = None,
+                out_geo_grid = None,
+                out_geo_nlooks = None,
+                out_geo_rtc = None,
+                input_rtc = None,
+                output_rtc = None,
+                memory_mode = None):
         """
         Run geocoding.
         """
-        # Create Geocoding object
-        cdef Geocode[double] c_geocode
 
-        # Set properties
-        c_geocode.orbit(self.c_orbit)
-        c_geocode.ellipsoid(deref(self.c_ellipsoid))
-        c_geocode.thresholdGeo2rdr(self.threshold)
-        c_geocode.numiterGeo2rdr(self.numiter)
-        c_geocode.linesPerBlock(self.linesPerBlock)
-        c_geocode.demBlockMargin(self.demBlockMargin)
-        c_geocode.radarBlockMargin(self.radarBlockMargin)
-        c_geocode.interpolator(self.interpMethod)
-
-        # Set radar grid
-        cdef DateTime refEpoch = self.refepoch_string
-        c_geocode.radarGrid(deref(self.c_doppler), refEpoch,
-                            self.azimuthStartTime, self.azimuthTimeInterval,
-                            self.radarGridLength, self.startingRange, self.rangeSpacing,
-                            self.wavelength, self.radarGridWidth, self.lookSide)
-
-        # Set geo grid
-        c_geocode.geoGrid(self.geoGridStartX, self.geoGridStartY, self.geoGridSpacingX,
-                          self.geoGridSpacingY, self.width, self.length, self.epsgcode)
+        output_mode_enum = _getOutputMode(output_mode)
+        rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+        out_geo_vertices_raster = _getRaster(out_geo_vertices)
+        out_geo_grid_raster = _getRaster(out_geo_grid)
+        out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
+        out_geo_rtc_raster = _getRaster(out_geo_rtc)
+        input_rtc_raster = _getRaster(input_rtc)
+        output_rtc_raster = _getRaster(output_rtc)
+        memory_mode_enum = _getMemoryMode(memory_mode)
 
         # Run geocoding
-        c_geocode.geocode(deref(inputRaster.c_raster), deref(outputRaster.c_raster),
-                          deref(demRaster.c_raster))
+        self.c_geocode.geocode(deref(radarGrid.c_radargrid),
+                               deref(inputRaster.c_raster), 
+                               deref(outputRaster.c_raster),
+                               deref(demRaster.c_raster), 
+                               output_mode_enum, 
+                               upsampling,
+                               rtc_input_radiometry, 
+                               exponent,
+                               rtc_min_value_db,
+                               abs_cal_factor,
+                               radar_grid_nlooks,
+                               out_geo_vertices_raster,
+                               out_geo_grid_raster,
+                               out_geo_nlooks_raster,
+                               out_geo_rtc_raster,
+                               input_rtc_raster,
+                               output_rtc_raster,
+                               memory_mode_enum)
+    
+    @property
+    def geoGridStartX(self):
+        return self.c_geocode.geoGridStartX()
+    @property
+    def geoGridStartY(self):
+        return self.c_geocode.geoGridStartY()
+    @property
+    def geoGridSpacingX(self):
+        return self.c_geocode.geoGridSpacingX()
+    @property
+    def geoGridSpacingY(self):
+        return self.c_geocode.geoGridSpacingY()
+    @property
+    def geoGridWidth(self):
+        return self.c_geocode.geoGridWidth()
+    @property
+    def geoGridLength(self):
+        return self.c_geocode.geoGridLength()
 
-        return
 
 
 cdef class pyGeocodeComplexFloat(pyGeocodeBase):
 
+    # Create Geocoding object
+    cdef Geocode[complex_t[float]] c_geocode
+    
+    def __cinit__(self,
+                  pyOrbit orbit,
+                  pyEllipsoid ellps,
+                  double threshold=1.0e-8,
+                  int numiter=25,
+                  int linesPerBlock=1000,
+                  double demBlockMargin=0.1,
+                  int radarBlockMargin=10,
+                  interpMethod='biquintic'):
+
+        # Save pointers to ISCE objects
+        self.c_orbit = orbit.c_orbit
+        self.c_ellipsoid = ellps.c_ellipsoid
+
+        # Save geocoding properties
+        self.threshold = threshold
+        self.numiter = numiter
+        self.linesPerBlock = linesPerBlock
+        self.demBlockMargin = demBlockMargin
+        self.radarBlockMargin = radarBlockMargin
+        self.interpMethod = self.demInterpMethods[interpMethod]
+        self.c_geocode = Geocode[complex_t[float]]()
+        
+        # Set properties
+        self.c_geocode.orbit(self.c_orbit)
+        self.c_geocode.ellipsoid(deref(self.c_ellipsoid))
+        self.c_geocode.thresholdGeo2rdr(self.threshold)
+        self.c_geocode.numiterGeo2rdr(self.numiter)
+        self.c_geocode.linesPerBlock(self.linesPerBlock)
+        self.c_geocode.demBlockMargin(self.demBlockMargin)
+        self.c_geocode.radarBlockMargin(self.radarBlockMargin)
+        self.c_geocode.interpolator(self.interpMethod)
+
+    def geoGrid(self,
+                double geoGridStartX,
+                double geoGridStartY,
+                double geoGridSpacingX,
+                double geoGridSpacingY,
+                int width,
+                int length,
+                int epsgcode):
+        """
+        Saves parameters for output geographic grid.
+        """
+        self.epsgcode = epsgcode
+        # Set geo grid
+        self.c_geocode.geoGrid(
+            geoGridStartX, geoGridStartY, geoGridSpacingX,
+            geoGridSpacingY, width, length, self.epsgcode)
+
+    def updateGeoGrid(self,
+                      pyRadarGridParameters radarGrid,
+                      pyRaster demRaster):
+        """
+        Update geogrid with radar grid and DEM raster
+        """
+        self.c_geocode.updateGeoGrid(deref(radarGrid.c_radargrid), 
+                                     deref(demRaster.c_raster))
+
     def geocode(self,
+                pyRadarGridParameters radarGrid,
                 pyRaster inputRaster,
                 pyRaster outputRaster,
                 pyRaster demRaster,
-                int inputBand=1):
+                int inputBand = 1,
+                output_mode = None,
+                double upsampling = 1,
+                input_radiometry = None,
+                int exponent = 0,
+                rtc_min_value_db = NAN,
+                double abs_cal_factor = 1,
+                float radar_grid_nlooks = 1,
+                out_geo_vertices = None,
+                out_geo_grid = None,
+                out_geo_nlooks = None,
+                out_geo_rtc = None,
+                input_rtc = None,
+                output_rtc = None,
+                memory_mode = None):
         """
         Run geocoding.
         """
-        # Create Geocoding object
-        cdef Geocode[complex_t[float]] c_geocode
 
-        # Set properties
-        c_geocode.orbit(self.c_orbit)
-        c_geocode.ellipsoid(deref(self.c_ellipsoid))
-        c_geocode.thresholdGeo2rdr(self.threshold)
-        c_geocode.numiterGeo2rdr(self.numiter)
-        c_geocode.linesPerBlock(self.linesPerBlock)
-        c_geocode.demBlockMargin(self.demBlockMargin)
-        c_geocode.radarBlockMargin(self.radarBlockMargin)
-        c_geocode.interpolator(self.interpMethod)
-
-        # Set radar grid
-        cdef DateTime refEpoch = self.refepoch_string
-        c_geocode.radarGrid(deref(self.c_doppler), refEpoch,
-                            self.azimuthStartTime, self.azimuthTimeInterval,
-                            self.radarGridLength, self.startingRange, self.rangeSpacing,
-                            self.wavelength, self.radarGridWidth, self.lookSide)
-
-        # Set geo grid
-        c_geocode.geoGrid(self.geoGridStartX, self.geoGridStartY, self.geoGridSpacingX,
-                          self.geoGridSpacingY, self.width, self.length, self.epsgcode)
+        output_mode_enum = _getOutputMode(output_mode)
+        rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+        out_geo_vertices_raster = _getRaster(out_geo_vertices)
+        out_geo_grid_raster = _getRaster(out_geo_grid)
+        out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
+        out_geo_rtc_raster = _getRaster(out_geo_rtc)
+        input_rtc_raster = _getRaster(input_rtc)
+        output_rtc_raster = _getRaster(output_rtc)
+        memory_mode_enum = _getMemoryMode(memory_mode)
 
         # Run geocoding
-        c_geocode.geocode(deref(inputRaster.c_raster), deref(outputRaster.c_raster),
-                          deref(demRaster.c_raster))
+        self.c_geocode.geocode(deref(radarGrid.c_radargrid),
+                               deref(inputRaster.c_raster), 
+                               deref(outputRaster.c_raster),
+                               deref(demRaster.c_raster), 
+                               output_mode_enum, 
+                               upsampling,
+                               rtc_input_radiometry, 
+                               exponent,
+                               rtc_min_value_db,
+                               abs_cal_factor,
+                               radar_grid_nlooks,
+                               out_geo_vertices_raster,
+                               out_geo_grid_raster,
+                               out_geo_nlooks_raster,
+                               out_geo_rtc_raster,
+                               input_rtc_raster,
+                               output_rtc_raster,
+                               memory_mode_enum)
+    
+    @property
+    def geoGridStartX(self):
+        return self.c_geocode.geoGridStartX()
+    @property
+    def geoGridStartY(self):
+        return self.c_geocode.geoGridStartY()
+    @property
+    def geoGridSpacingX(self):
+        return self.c_geocode.geoGridSpacingX()
+    @property
+    def geoGridSpacingY(self):
+        return self.c_geocode.geoGridSpacingY()
+    @property
+    def geoGridWidth(self):
+        return self.c_geocode.geoGridWidth()
+    @property
+    def geoGridLength(self):
+        return self.c_geocode.geoGridLength()
 
-        return
 
+
+cdef class pyGeocodeComplexDouble(pyGeocodeBase):
+
+    # Create Geocoding object
+    cdef Geocode[complex_t[double]] c_geocode
+    
+    def __cinit__(self,
+                  pyOrbit orbit,
+                  pyEllipsoid ellps,
+                  double threshold=1.0e-8,
+                  int numiter=25,
+                  int linesPerBlock=1000,
+                  double demBlockMargin=0.1,
+                  int radarBlockMargin=10,
+                  interpMethod='biquintic'):
+
+        # Save pointers to ISCE objects
+        self.c_orbit = orbit.c_orbit
+        self.c_ellipsoid = ellps.c_ellipsoid
+
+        # Save geocoding properties
+        self.threshold = threshold
+        self.numiter = numiter
+        self.linesPerBlock = linesPerBlock
+        self.demBlockMargin = demBlockMargin
+        self.radarBlockMargin = radarBlockMargin
+        self.interpMethod = self.demInterpMethods[interpMethod]
+        self.c_geocode = Geocode[complex_t[double]]()
+
+        # Set properties
+        self.c_geocode.orbit(self.c_orbit)
+        self.c_geocode.ellipsoid(deref(self.c_ellipsoid))
+        self.c_geocode.thresholdGeo2rdr(self.threshold)
+        self.c_geocode.numiterGeo2rdr(self.numiter)
+        self.c_geocode.linesPerBlock(self.linesPerBlock)
+        self.c_geocode.demBlockMargin(self.demBlockMargin)
+        self.c_geocode.radarBlockMargin(self.radarBlockMargin)
+        self.c_geocode.interpolator(self.interpMethod)
+
+    def geoGrid(self,
+                double geoGridStartX,
+                double geoGridStartY,
+                double geoGridSpacingX,
+                double geoGridSpacingY,
+                int width,
+                int length,
+                int epsgcode):
+        """
+        Saves parameters for output geographic grid.
+        """
+        self.epsgcode = epsgcode
+        # Set geo grid
+        self.c_geocode.geoGrid(
+            geoGridStartX, geoGridStartY, geoGridSpacingX,
+            geoGridSpacingY, width, length, self.epsgcode)
+
+    def updateGeoGrid(self,
+                      pyRadarGridParameters radarGrid,
+                      pyRaster demRaster):
+        """
+        Update geogrid with radar grid and DEM raster
+        """
+        self.c_geocode.updateGeoGrid(deref(radarGrid.c_radargrid), 
+                                     deref(demRaster.c_raster))
+
+    def geocode(self,
+                pyRadarGridParameters radarGrid,
+                pyRaster inputRaster,
+                pyRaster outputRaster,
+                pyRaster demRaster,
+                int inputBand = 1,
+                output_mode = None,
+                double upsampling = 1,
+                input_radiometry = None,
+                int exponent = 0,
+                rtc_min_value_db = NAN,
+                double abs_cal_factor = 1,
+                float radar_grid_nlooks = 1,
+                out_geo_vertices = None,
+                out_geo_grid = None,
+                out_geo_nlooks = None,
+                out_geo_rtc = None,
+                input_rtc = None,
+                output_rtc = None,
+                memory_mode = None):
+        """
+        Run geocoding.
+        """
+
+        output_mode_enum = _getOutputMode(output_mode)
+        rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+        out_geo_vertices_raster = _getRaster(out_geo_vertices)
+        out_geo_grid_raster = _getRaster(out_geo_grid)
+        out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
+        out_geo_rtc_raster = _getRaster(out_geo_rtc)
+        input_rtc_raster = _getRaster(input_rtc)
+        output_rtc_raster = _getRaster(output_rtc)
+        memory_mode_enum = _getMemoryMode(memory_mode)
+
+        # Run geocoding
+        self.c_geocode.geocode(deref(radarGrid.c_radargrid),
+                               deref(inputRaster.c_raster), 
+                               deref(outputRaster.c_raster),
+                               deref(demRaster.c_raster), 
+                               output_mode_enum, 
+                               upsampling,
+                               rtc_input_radiometry, 
+                               exponent,
+                               rtc_min_value_db,
+                               abs_cal_factor,
+                               radar_grid_nlooks,
+                               out_geo_vertices_raster,
+                               out_geo_grid_raster,
+                               out_geo_nlooks_raster,
+                               out_geo_rtc_raster,
+                               input_rtc_raster,
+                               output_rtc_raster,
+                               memory_mode_enum)
+    
+    @property
+    def geoGridStartX(self):
+        return self.c_geocode.geoGridStartX()
+    @property
+    def geoGridStartY(self):
+        return self.c_geocode.geoGridStartY()
+    @property
+    def geoGridSpacingX(self):
+        return self.c_geocode.geoGridSpacingX()
+    @property
+    def geoGridSpacingY(self):
+        return self.c_geocode.geoGridSpacingY()
+    @property
+    def geoGridWidth(self):
+        return self.c_geocode.geoGridWidth()
+    @property
+    def geoGridLength(self):
+        return self.c_geocode.geoGridLength()
+
+def pyGetGeoAreaElementMean(
+        vector[double] x_vect,
+        vector[double] y_vect,
+        pyRadarGridParameters radarGrid,
+        pyOrbit orbit,
+        pyLUT2d doppler,
+        pyRaster input_raster,
+        pyRaster dem_raster, 
+        input_radiometry=None,
+        int exponent = 0,
+        output_mode = None,
+        dem_upsampling = NAN,
+        rtc_min_value_db = NAN,
+        abs_cal_factor = 1,
+        radar_grid_nlooks = 1):
+
+    # input radiometry
+    rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+
+    # output mode
+    output_mode_enum = _getOutputMode(output_mode)
+
+    width = dem_raster.width
+    length = dem_raster.length 
+
+    ret = getGeoAreaElementMean(        
+        x_vect,
+        y_vect,
+        deref(radarGrid.c_radargrid),
+        orbit.c_orbit,
+        deref(doppler.c_lut),
+        deref(input_raster.c_raster),
+        deref(dem_raster.c_raster),
+        rtc_input_radiometry,
+        exponent,
+        output_mode_enum,
+        dem_upsampling,
+        rtc_min_value_db,
+        abs_cal_factor,
+        radar_grid_nlooks)
+
+    return ret
 
 # end of file

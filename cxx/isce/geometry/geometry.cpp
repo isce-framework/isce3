@@ -100,6 +100,9 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
     const double radius = eta * satDist;
     const double hgt = (1.0 - eta) * satDist;
 
+    if (isnan(targetLLH[2]))
+        targetLLH[2] = hgt;
+
     // Iterate
     int converged = 0;
     double zrdr = targetLLH[2];
@@ -213,7 +216,6 @@ double isce::geometry::
     const double fnprime = c1 + c2 * dopfact;
 
     const double aztime_diff = fn / fnprime;
-    // std::cout << "aztime_diff: " << aztime_diff << ", az spacing: " << aztime_diff*satvel.norm() << std::endl;
 
     return aztime_diff;
 }
@@ -247,7 +249,8 @@ _update_aztime(const Orbit & orbit,
         aztime = tstart + k * delta_t;
         if (aztime < orbit.startTime() || aztime > orbit.endTime())
             continue;
-        orbit.interpolate(&satpos, &satvel, aztime);
+        orbit.interpolate(&satpos, &satvel, aztime,
+                          OrbitInterpBorderMode::FillNaN);
         // Compute slant range
         dr = inputXYZ - satpos;
 
@@ -404,7 +407,6 @@ void isce::geometry::
 computeDEMBounds(const Orbit & orbit,
                  const Ellipsoid & ellipsoid,
                  const LUT2d<double> & doppler,
-                 isce::core::LookSide lookSide,
                  const RadarGridParameters & radarGrid,
                  size_t xoff,
                  size_t yoff,
@@ -416,14 +418,16 @@ computeDEMBounds(const Orbit & orbit,
                  double & max_lon,
                  double & max_lat)
 {
+    // Initialize geographic bounds
+    min_lon = 1.0e64;
+    max_lon = -1.0e64;
+    min_lat = 1.0e64;
+    max_lat = -1.0e64;
+
     // Initialize journal
     pyre::journal::warning_t warning("isce.geometry.extractDEM");
 
-    // Initialize geographic bounds
-    min_lat = 10000.0;
-    max_lat = -10000.0;
-    min_lon = 10000.0;
-    max_lon = -10000.0;
+    isce::core::LookSide lookSide = radarGrid.lookSide();
 
     // Skip factors along azimuth and range
     const int askip = std::max((int) ysize / 10, 1);
@@ -464,7 +468,8 @@ computeDEMBounds(const Orbit & orbit,
 
         // Get state vector
         Vec3 xyzsat, velsat;
-        orbit.interpolate(&xyzsat, &velsat, tline);
+        orbit.interpolate(&xyzsat, &velsat, tline,
+                          OrbitInterpBorderMode::FillNaN);
         // Save state vector
         const Vec3 pos = xyzsat;
         const Vec3 vel = velsat;

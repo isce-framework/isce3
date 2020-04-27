@@ -46,7 +46,7 @@ cdef Matrix[double] numpyToMatrix(np.ndarray[double, ndim=2] a):
     # two entries are set to roughly [0, 4e-317] and the rest are okay, at least
     # initially.
     raise NotImplementedError("cython cannot do this correctly")
-    return Matrix[double](&a[0,0], nrows, ncols)
+    # return Matrix[double](&a[0,0], nrows, ncols)
 
 cdef class pyInterpolator:
     """
