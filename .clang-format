@@ -1,0 +1,61 @@
+Language:      Cpp
+BasedOnStyle:  LLVM
+
+# Includes
+SortIncludes:    true
+# Include group ordering:
+# forward.h or main header
+# system headers
+# contrib headers
+# isce headers with angle brackets
+# relative quote includes
+IncludeBlocks:   Regroup
+IncludeCategories:
+  - Regex:           '^.*forward\.h'
+    Priority:        0
+  - Regex:           '^(<|")(cereal|gtest|pyre|Eigen)/'
+    Priority:        2
+  - Regex:           '^<isce/'
+    Priority:        3
+  - Regex:           '^"'
+    Priority:        4
+  - Regex:           '.*'
+    Priority:        1
+
+# Indentation
+IndentWidth:   4
+TabWidth:      4
+UseTab:        Never
+ContinuationIndentWidth: 8
+AccessModifierOffset: -4
+IndentCaseLabels:           false
+IndentWrappedFunctionNames: false
+BreakInheritanceList: AfterColon
+AlignAfterOpenBracket: Align
+#AlwaysBreakTemplateDeclarations: Yes
+
+PointerAlignment: Left
+
+# Braces
+BreakBeforeBraces: WebKit
+BraceWrapping:
+    SplitEmptyFunction: false
+
+# Misc
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
+
+# Spaces
+SpaceAfterCStyleCast:              true
+SpaceAfterLogicalNot:              false
+SpaceAfterTemplateKeyword:         false
+SpaceBeforeAssignmentOperators:    true
+SpaceBeforeCpp11BracedList:        true
+SpaceBeforeCtorInitializerColon:   true
+SpaceBeforeInheritanceColon:       true
+SpaceBeforeParens:                 ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyParentheses:           false
+SpacesInAngles:                    false
+SpacesInContainerLiterals:         true
+SpacesInCStyleCastParentheses:     false
