@@ -6,10 +6,10 @@ SetCoverageOptions(${LISCE})
 
 target_link_libraries(${LISCE} PUBLIC
     Cereal::Cereal
-    Eigen::Eigen
+    Eigen3::Eigen
     ${GDAL_LIBRARY}
     ${HDF5_LIBRARY}
-    pyre
+    pyre::pyre
     )
 
 

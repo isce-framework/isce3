@@ -97,9 +97,6 @@ CheckCXX()
 ###Check if an appropriate python is installed
 CheckISCEPython()
 
-##Check for Pyre
-CheckPyre()
-
 ##Check for Cython
 include(useCython)
 
@@ -126,17 +123,49 @@ find_package(FFTW REQUIRED COMPONENTS
 ###Layout same install directory structure as pyre
 InitInstallDirLayout()
 
-find_package(GTest QUIET CONFIG) # don't use FindGTest module
+# Dependencies
+
+include(.cmake/FetchExternRepo.cmake)
+
 find_package(Cereal QUIET)
 if(Cereal_FOUND)
     # Needed to create target alias
     set_target_properties(cereal PROPERTIES IMPORTED_GLOBAL TRUE)
 endif()
-find_package(Eigen3 QUIET)
-if(Eigen3_FOUND)
-    # Needed to create target alias
-    set_target_properties(Eigen3::Eigen PROPERTIES IMPORTED_GLOBAL TRUE)
+find_package(Eigen3 QUIET NO_MODULE)
+if(NOT Eigen3_FOUND)
+    find_package(Git REQUIRED)
+    set(BUILD_TESTING OFF)
+    fetch_extern_repo(eigen
+        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
+        GIT_TAG 3.3.7
+        GIT_SHALLOW TRUE
+        PATCH_COMMAND ${GIT_EXECUTABLE} apply
+            ${CMAKE_CURRENT_LIST_DIR}/extern/eigen-disable-testing.patch)
+    add_library(Eigen3::Eigen ALIAS eigen)
 endif()
+find_package(GTest QUIET CONFIG)
+if(NOT GTEST_FOUND)
+    set(BUILD_GMOCK OFF CACHE INTERNAL "")
+    set(INSTALL_GTEST OFF CACHE INTERNAL "")
+    fetch_extern_repo(gtest
+        GIT_REPOSITORY https://github.com/google/googletest
+        GIT_TAG release-1.10.0
+        GIT_SHALLOW TRUE)
+    set_target_properties(gtest gtest_main PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    add_library(GTest::gtest ALIAS gtest)
+    add_library(GTest::gtest_main ALIAS gtest_main)
+endif()
+find_package(pyre QUIET)
+if(NOT HAVE_PYRE)
+    # disable pyre's test suite
+    set(BUILD_TESTING OFF)
+    fetch_extern_repo(pyre
+        GIT_REPOSITORY https://github.com/rtburns-jpl/pyre
+        GIT_TAG isce3-stable
+        GIT_SHALLOW TRUE)
+endif()
+
 add_subdirectory(extern) # Contributed software (not maintained here)
 add_subdirectory(cxx)    # Core C++ library
 add_subdirectory(python) # Python bindings
@@ -153,8 +182,17 @@ configure_file(
     doc/sphinx/conf.py
     )
 
+set(ISCE3_CMAKE_DIR "share/cmake/isce3" CACHE STRING
+    "Install directory for cmake files, relative to install prefix"
+    )
 install(EXPORT isce3-targets
         NAMESPACE ISCE3::
-        FILE ISCE3-config.cmake
-        DESTINATION lib/cmake/isce3
+        DESTINATION ${ISCE3_CMAKE_DIR}
         )
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+    ${PROJECT_SOURCE_DIR}/.cmake/isce3-config.cmake.in
+    ${PROJECT_BINARY_DIR}/isce3-config.cmake
+    INSTALL_DESTINATION ${ISCE3_CMAKE_DIR})
+install(FILES ${PROJECT_BINARY_DIR}/isce3-config.cmake
+        DESTINATION ${ISCE3_CMAKE_DIR})
