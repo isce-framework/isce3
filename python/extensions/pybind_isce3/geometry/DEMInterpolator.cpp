@@ -13,16 +13,18 @@ using DI = isce::geometry::DEMInterpolator;
 void addbinding(pybind11::class_<DI> & pyDEMInterpolator)
 {
     pyDEMInterpolator
-        .def(py::init<double, isce::core::dataInterpMethod>(),
+        .def(py::init<double, isce::core::dataInterpMethod, int>(),
             py::arg("height") = 0.0,
-            py::arg("method") = isce::core::BILINEAR_METHOD)
+            py::arg("method") = isce::core::BILINEAR_METHOD,
+            py::arg("epsg") = 4326)
         // For convenience allow a string, too.
-        .def(py::init([](double h, const std::string & method) {
+        .def(py::init([](double h, const std::string & method, int epsg) {
                 auto m = parseDataInterpMethod(method);
-                return new DI(h, m);
+                return new DI(h, m, epsg);
             }),
             py::arg("height") = 0.0,
-            py::arg("method") = "bilinear")
+            py::arg("method") = "bilinear",
+            py::arg("epsg") = 4326)
 
         .def("load_dem",
             py::overload_cast<isce::io::Raster&>(&DI::loadDEM))

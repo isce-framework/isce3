@@ -7,6 +7,8 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
+
 #include "Constants.h"
 #include "Ellipsoid.h"
 
@@ -15,19 +17,20 @@ namespace isce { namespace core {
     /** Abstract base class for individual projections
      *
      *Internally, every derived class is expected to provide two functions.
-     * forward - To convert llh (radians) to expected projection system 
+     * forward - To convert llh (radians) to expected projection system
      * inverse - To convert expected projection system to llh (radians) */
     class ProjectionBase {
         /** Ellipsoid object for projections - currently only WGS84 */
         Ellipsoid _ellipse;
-        
+
         /** Type of projection system. This can be used to check if projection systems are equal
          * Private member and should not be modified after initialization*/
         int _epsgcode;
-    
+
     public:
 
-        /** Value constructor with EPSG code as input. Ellipsoid is always initialized to standard WGS84 ellipse.*/
+        /** Value constructor with EPSG code as input. Ellipsoid is always
+         * initialized to standard WGS84 ellipse.*/
         ProjectionBase(int code) : _ellipse(6378137.,.0066943799901), _epsgcode(code) {}
 
         /** Return EPSG code */
@@ -39,15 +42,15 @@ namespace isce { namespace core {
         /** Print function for debugging */
         virtual void print() const = 0;
 
-        /** \brief Function for transforming from LLH. This is similar to fwd or fwd3d in PROJ.4 
-         * 
+        /** \brief Function for transforming from LLH. This is similar to fwd or fwd3d in PROJ.4
+         *
          * @param[in] llh Lon/Lat/Height - Lon and Lat are in radians
          * @param[out] xyz Coordinates in specified projection system */
         virtual int forward(const cartesian_t& llh, cartesian_t& xyz) const = 0 ;
 
         /** Function for transforming to LLH. This is similar to inv or inv3d in PROJ.4
          *
-         * @param[in] xyz Coordinates in specified projection system 
+         * @param[in] xyz Coordinates in specified projection system
          * @param[out] llh Lat/Lon/Height - Lon and Lat are in radians */
         virtual int inverse(const cartesian_t& xyz, cartesian_t& llh) const = 0 ;
         inline Vec3 inverse(const Vec3& native) const {
@@ -96,11 +99,11 @@ namespace isce { namespace core {
     public:
         // Value constructor
         Geocent() : ProjectionBase(4978) {}
-        
+
         inline void print() const;
         /** This is same as Ellipsoid::lonLatToXyz*/
         int forward(const cartesian_t& llh,cartesian_t& xyz) const;
-        
+
         /** This is same as Ellipsoid::xyzToLonLat*/
         int inverse(const cartesian_t& xyz,cartesian_t& llh) const;
     };
@@ -113,7 +116,7 @@ namespace isce { namespace core {
      *
      * EPSG 32601-32660 for Northern Hemisphere
      * EPSG 32701-32760 for Southern Hemisphere*/
-    class UTM : public ProjectionBase { 
+    class UTM : public ProjectionBase {
         // Constants related to the projection system
         double lon0;
         int zone;
@@ -135,8 +138,9 @@ namespace isce { namespace core {
     };
 
     inline void UTM::print() const {
-        std::cout << "Projection: UTM" << std::endl << "Zone: " << zone << (isnorth ? "N" : "S") << 
-                     std::endl << "EPSG: " << code() << std::endl;
+        std::cout << "Projection: UTM" << std::endl
+            << "Zone: " << zone << (isnorth ? "N" : "S") << std::endl
+            << "EPSG: " << code() << std::endl;
     }
 
     /** Polar stereographic extension of ProjBase
@@ -159,10 +163,11 @@ namespace isce { namespace core {
         /** Transform from Polar Stereo (m) to llh (rad)*/
         int inverse(const cartesian_t&,cartesian_t&) const;
     };
-    
+
     inline void PolarStereo::print() const {
-        std::cout << "Projection: " << (isnorth ? "North" : "South") << " Polar Stereographic" <<
-                     std::endl << "EPSG: " << code() << std::endl;
+        std::cout << "Projection: " << (isnorth ? "North" : "South")
+            << " Polar Stereographic" << std::endl
+            << "EPSG: " << code() << std::endl;
     }
 
     /** Equal Area Projection extension of ProjBase
@@ -181,18 +186,24 @@ namespace isce { namespace core {
 
         /** Transform from llh (rad) to CEA (m)*/
         int forward(const cartesian_t& llh,cartesian_t& xyz) const;
-        
+
         /** Transform from CEA (m) to LLH (rad)*/
         int inverse(const cartesian_t& xyz,cartesian_t& llh) const;
     };
 
     inline void CEA::print() const {
-        std::cout << "Projection: Cylindrical Equal Area" << std::endl << "EPSG: " << code() <<
-                     std::endl;
+        std::cout << "Projection: Cylindrical Equal Area" << std::endl
+            << "EPSG: " << code() << std::endl;
     }
 
     //This is to create a projection system from the EPSG code
     ProjectionBase* createProj(int epsg);
+
+    inline
+    std::unique_ptr<ProjectionBase> makeProjection(int epsg)
+    {
+        return std::unique_ptr<ProjectionBase>(createProj(epsg));
+    }
 
     // This is to transform a point from one coordinate system to another
     int projTransform(ProjectionBase* in, ProjectionBase *out, const Vec3& inpts,

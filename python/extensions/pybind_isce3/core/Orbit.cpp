@@ -8,6 +8,7 @@
 #include <pybind11/operators.h>
 
 #include <string>
+#include <utility>
 
 namespace py = pybind11;
 using isce::core::Orbit;
@@ -25,6 +26,9 @@ static py::buffer_info toBuffer(const std::vector<isce::core::Vec3>& buf)
 void addbinding(py::class_<Orbit> & pyOrbit)
 {
     pyOrbit
+        .def_property_readonly("reference_epoch",
+                py::overload_cast<>(&Orbit::referenceEpoch, py::const_))
+        .def_property_readonly("time", py::overload_cast<>(&Orbit::time, py::const_))
         .def_property_readonly("position", [](const Orbit & self) {
             return py::array{toBuffer(self.position()), py::cast(self)};
         })
@@ -32,26 +36,18 @@ void addbinding(py::class_<Orbit> & pyOrbit)
             return py::array{toBuffer(self.velocity()), py::cast(self)};
         })
 
-        /*
-         * XXX
-         * This is an inefficient helper method to load
-         * an orbit from an H5 file that isn't open yet.
-         * If you're loading many objects from the same file,
-         * don't use this pattern! Keep the file open!
-         */
-        .def_static("load_from_h5", [](std::string file_name,
-                                       std::string group_name) {
-            using namespace isce::io;
+        .def_static("load_from_h5", [](py::object h5py_group) {
 
-            // Get the H5 group
-            IH5File h5file{file_name};
-            auto igroup = h5file.openGroup(group_name);
+                auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
+                isce::io::IGroup group(id);
 
-            // Load the orbit
-            Orbit o;
-            isce::core::loadFromH5(igroup, o);
-            return o;
-        })
+                Orbit orbit;
+                isce::core::loadFromH5(group, orbit);
+
+                return orbit;
+            },
+            "De-serialize orbit from h5py.Group object",
+            py::arg("h5py_group"))
 
         // trivial member getters
         .def_property_readonly("spacing",        &Orbit::spacing)
@@ -61,5 +57,13 @@ void addbinding(py::class_<Orbit> & pyOrbit)
         .def_property_readonly("start_datetime", &Orbit::startDateTime)
         .def_property_readonly("mid_datetime",   &Orbit::midDateTime)
         .def_property_readonly("end_datetime",   &Orbit::endDateTime)
+
+        .def("interpolate", [](const Orbit& self, double t) {
+                isce::core::Vec3 p, v;
+                self.interpolate(&p, &v, t);
+                return std::make_pair(p, v);
+            },
+            "Interpolate platform position and velocity",
+            py::arg("t"))
         ;
 }

@@ -12,4 +12,6 @@ void add_constants(py::module & core)
         .value("NEAREST", isce::core::NEAREST_METHOD)
         .value("BIQUINTIC", isce::core::BIQUINTIC_METHOD);
         // nicer not to export_values() to parent namespace
+
+    core.attr("speed_of_light") = py::float_(isce::core::speed_of_light);
 }

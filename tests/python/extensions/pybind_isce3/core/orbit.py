@@ -6,14 +6,16 @@ def load_h5():
     from pybind_isce3.core import Orbit
     from iscetest import data
     from os import path
-    f = path.join(data, "envisat.h5")
-    return Orbit.load_from_h5(f, "/science/LSAR/SLC/metadata/orbit")
+    import h5py
+    f = h5py.File(path.join(data, "envisat.h5"), 'r')
+    return Orbit.load_from_h5(f["/science/LSAR/SLC/metadata/orbit"])
 
 o = load_h5();
 
 # Test that accessors exist
 def test_props():
     o = load_h5();
+    o.time
     o.position
     o.velocity
 

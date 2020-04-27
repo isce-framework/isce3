@@ -3,10 +3,12 @@ core/constants.py
 core/datetime_.py
 core/ellipsoid.py
 core/interp1d.py
+core/linspace.py
 core/LUT1d.py
 core/LUT2d.py
 core/orbit.py
 core/timedelta.py
+focus/backproject.py
 geometry/dem.py
 io/gdal/dataset.py
 io/gdal/raster.py

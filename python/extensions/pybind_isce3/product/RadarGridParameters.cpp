@@ -37,6 +37,31 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                 py::arg("length"),
                 py::arg("width"),
                 py::arg("ref_epoch"))
+        .def(py::init([](double sensing_start,
+                         double wavelength,
+                         double prf,
+                         double starting_range,
+                         double range_pixel_spacing,
+                         const std::string& look_side,
+                         size_t length,
+                         size_t width,
+                         const DateTime& ref_epoch) {
+
+                    LookSide side = isce::core::parseLookSide(look_side);
+
+                    return RadarGridParameters(sensing_start, wavelength, prf,
+                            starting_range, range_pixel_spacing, side, length,
+                            width, ref_epoch);
+                }),
+                py::arg("sensing_start"),
+                py::arg("wavelngth"),
+                py::arg("prf"),
+                py::arg("starting_range"),
+                py::arg("range_pixel_spacing"),
+                py::arg("look_side"),
+                py::arg("length"),
+                py::arg("width"),
+                py::arg("ref_epoch"))
         .def_property_readonly("size", &RadarGridParameters::size)
         .def_property_readonly("end_range", &RadarGridParameters::endingRange)
         .def_property_readonly("mid_range", &RadarGridParameters::midRange)

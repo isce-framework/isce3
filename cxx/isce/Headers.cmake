@@ -1,4 +1,7 @@
 set(HEADERS
+container/forward.h
+container/RadarGeometry.h
+container/RadarGeometry.icc
 container/RSD.h
 container/RSD.icc
 core/Attitude.h
@@ -57,9 +60,12 @@ fft/FFTPlan.h
 fft/FFTPlan.icc
 fft/FFTUtil.h
 fft/FFTUtil.icc
+focus/Backproject.h
 focus/BistaticDelay.h
 focus/BistaticDelay.icc
 focus/Chirp.h
+focus/DryTroposphereModel.h
+focus/DryTroposphereModel.icc
 focus/GapMask.h
 focus/RangeComp.h
 geometry/DEMInterpolator.h

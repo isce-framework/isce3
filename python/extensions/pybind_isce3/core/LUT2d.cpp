@@ -2,6 +2,7 @@
 
 #include <isce/core/Constants.h>
 #include <isce/core/Matrix.h>
+#include <isce/core/Serialization.h>
 #include <isce/except/Error.h>
 
 #include <cstring>
@@ -67,6 +68,23 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
                     return isce::core::LUT2d<T>(xcoord, ycoord, data, interp_method, b_error);
                 }),
                 py::arg("xcoord"), py::arg("ycoord"), py::arg("data"), py::arg("method"), py::arg("b_error")=true)
+
+
+        .def_static("load_from_h5", [](py::object h5py_group,
+                                       const std::string& dataset_name) {
+
+                auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
+                isce::io::IGroup group(id);
+
+                LUT2d<T> lut;
+                isce::core::loadCalGrid(group, dataset_name, lut);
+
+                return lut;
+            },
+            "De-serialize LUT from h5py.Group object",
+            py::arg("h5py_group"),
+            py::arg("dataset_name"))
+
         .def_property_readonly("x_start",   &LUT2d<T>::xStart)
         .def_property_readonly("y_start",   &LUT2d<T>::yStart)
         .def_property_readonly("x_spacing", &LUT2d<T>::xSpacing)

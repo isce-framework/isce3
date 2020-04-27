@@ -5,6 +5,7 @@
 #include "Ellipsoid.h"
 #include "Interp1d.h"
 #include "Kernels.h"
+#include "Linspace.h"
 #include "LookSide.h"
 #include "LUT1d.h"
 #include "LUT2d.h"
@@ -20,6 +21,7 @@ void addsubmodule_core(py::module & m)
     // forward declare bound classes
     py::class_<isce::core::DateTime> pyDateTime(m_core, "DateTime");
     py::class_<isce::core::Ellipsoid> pyEllipsoid(m_core, "Ellipsoid");
+    py::class_<isce::core::Linspace<double>> pyLinspace(m_core, "Linspace");
     py::class_<isce::core::LUT1d<double>> pyLUT1d(m_core, "LUT1d");
     py::class_<isce::core::LUT2d<double>> pyLUT2d(m_core, "LUT2d");
     py::class_<isce::core::Orbit> pyOrbit(m_core, "Orbit");
@@ -56,6 +58,7 @@ void addsubmodule_core(py::module & m)
     add_constants(m_core);
     addbinding(pyDateTime);
     addbinding(pyEllipsoid);
+    addbinding(pyLinspace);
     addbinding(pyLookSide);
     addbinding(pyLUT1d);
     addbinding(pyLUT2d);

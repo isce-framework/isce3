@@ -25,7 +25,7 @@ class isce::geometry::DEMInterpolator {
 
     public:
         /** Default constructor with reference height of 0, bilinear interpolation */
-        inline DEMInterpolator() : 
+        inline DEMInterpolator() :
             _haveRaster{false},
             _refHeight{0.0},
             _meanValue{0.0},
@@ -33,19 +33,23 @@ class isce::geometry::DEMInterpolator {
             _interpMethod{isce::core::BILINEAR_METHOD} {}
 
         /** Constructor with custom reference height and bilinear interpolation */
-        inline DEMInterpolator(float height) : 
+        inline DEMInterpolator(float height, int epsg = 4326) :
             _haveRaster{false},
             _refHeight{height},
             _meanValue{height},
             _maxValue{height},
+            _epsgcode{epsg},
             _interpMethod{isce::core::BILINEAR_METHOD} {}
 
         /** Constructor with custom reference height and custom interpolator method */
-        inline DEMInterpolator(float height, isce::core::dataInterpMethod method) : 
+        inline DEMInterpolator(float height,
+                               isce::core::dataInterpMethod method,
+                               int epsg = 4326) :
             _haveRaster{false},
             _refHeight{height},
             _meanValue{height},
             _maxValue{height},
+            _epsgcode{epsg},
             _interpMethod{method} {}
 
         /** Destructor */

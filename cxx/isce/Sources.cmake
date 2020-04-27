@@ -28,7 +28,9 @@ geometry/boundingbox.cpp
 fft/detail/ConfigureFFTLayout.cpp
 fft/detail/FFTWWrapper.cpp
 fft/detail/Threads.cpp
+focus/Backproject.cpp
 focus/Chirp.cpp
+focus/DryTroposphereModel.cpp
 focus/GapMask.cpp
 focus/RangeComp.cpp
 geometry/DEMInterpolator.cpp

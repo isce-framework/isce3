@@ -43,7 +43,7 @@ loadDEM(isce::io::Raster & demRaster, double minX, double maxX,
     // Use center of pixel as starting coordinate
     const double firstY = geoTransform[3] + 0.5 * deltaY;
     const double firstX = geoTransform[0] + 0.5 * deltaX;
-    // Compute ending coordinate 
+    // Compute ending coordinate
     const double lastY = firstY + (demRaster.length() - 2) * deltaY;
     const double lastX = firstX + (demRaster.width() - 2) * deltaX;
 
@@ -204,7 +204,7 @@ midLonLat() const {
 }
 
 /** @param[in] lon Longitude of interpolation point.
-  * @param[in] lat Latitude of interpolation point. 
+  * @param[in] lat Latitude of interpolation point.
   *
   * Interpolate DEM at a given longitude and latitude */
 double isce::geometry::DEMInterpolator::
