@@ -55,7 +55,7 @@ class Workflow(object):
         from ruamel.yaml import YAML
 
         ###Read in the yaml file into inputs
-        yaml = YAML()
+        yaml = YAML(type="safe")
         with open(ymlfile, 'r') as fid:
             instr = fid.read()
 
