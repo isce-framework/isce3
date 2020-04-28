@@ -121,6 +121,7 @@ find_package(FFTW REQUIRED COMPONENTS
 ##CheckArmadillo()
 
 ###Layout same install directory structure as pyre
+include(GNUInstallDirs)
 InitInstallDirLayout()
 
 # Dependencies

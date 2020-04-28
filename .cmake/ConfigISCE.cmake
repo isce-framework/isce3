@@ -102,7 +102,7 @@ function(InitInstallDirLayout)
 
     ###install/lib
     if (NOT ISCE_LIBDIR)
-        set (ISCE_LIBDIR lib CACHE STRING "isce/lib")
+        set (ISCE_LIBDIR ${CMAKE_INSTALL_LIBDIR} CACHE STRING "isce/lib")
     endif(NOT ISCE_LIBDIR)
 
     ###install/include

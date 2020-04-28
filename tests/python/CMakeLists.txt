@@ -3,7 +3,7 @@ set(PYTEST_PYTHONPATH
   ${CMAKE_INSTALL_PREFIX}/packages:${ISCE_BUILDPACKAGESDIR}:$ENV{PYTHONPATH}
   CACHE INTERNAL "python paths for pytest")
 
-set(PYTEST_LD_LIBRARY_PATH ${CMAKE_INSTALL_PREFIX}/lib)
+set(PYTEST_LD_LIBRARY_PATH ${CMAKE_INSTALL_FULL_LIBDIR})
 
 # build the custom configuration file
 configure_file(iscetest.py.in "${ISCE_BUILDPACKAGESDIR}/iscetest.py")
