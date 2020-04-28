@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>ISCE: isce/cxx/isce/container Directory Reference</title>
+<title>ISCE: isce/cxx/isce/focus/DryTroposphereModel.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -47,7 +47,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="namespaces.html"><span>Namespaces</span></a></li>
       <li><a href="annotated.html"><span>Classes</span></a></li>
-      <li><a href="files.html"><span>Files</span></a></li>
+      <li class="current"><a href="files.html"><span>Files</span></a></li>
       <li><a href="sphinx/html/index.html"><span>Python&#160;classes</span></a></li>
       <li><a href="https://github-fn.jpl.nasa.gov/isce-3/isce/issues/"><span>Issue&#160;Tracker</span></a></li>
       <li>
@@ -68,6 +68,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       </li>
     </ul>
   </div>
+  <div id="navrow2" class="tabs2">
+    <ul class="tablist">
+      <li><a href="files.html"><span>File&#160;List</span></a></li>
+    </ul>
+  </div>
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
@@ -84,29 +89,45 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_58f4997a0606e8afbe9d7eb91f442043.html">isce</a></li><li class="navelem"><a class="el" href="dir_3e54fbb9b7fb0cc03592820a9f80d38d.html">cxx</a></li><li class="navelem"><a class="el" href="dir_f70c12677d346dc89e8c3b4205414355.html">isce</a></li><li class="navelem"><a class="el" href="dir_2cb188d33183a6405cb6f9e01014ce4c.html">container</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_58f4997a0606e8afbe9d7eb91f442043.html">isce</a></li><li class="navelem"><a class="el" href="dir_3e54fbb9b7fb0cc03592820a9f80d38d.html">cxx</a></li><li class="navelem"><a class="el" href="dir_f70c12677d346dc89e8c3b4205414355.html">isce</a></li><li class="navelem"><a class="el" href="dir_030ef2ab9d72d86efaee77dc7e689e19.html">focus</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">container Directory Reference</div>  </div>
+<div class="title">DryTroposphereModel.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="files"></a>
-Files</h2></td></tr>
-<tr class="memitem:container_2forward_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><b>forward.h</b> <a href="container_2forward_8h_source.html">[code]</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:RadarGeometry_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><b>RadarGeometry.h</b> <a href="RadarGeometry_8h_source.html">[code]</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:RadarGeometry_8icc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><b>RadarGeometry.icc</b></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:RSD_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><b>RSD.h</b> <a href="RSD_8h_source.html">[code]</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:RSD_8icc"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><b>RSD.icc</b></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
-</div><!-- contents -->
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;isce/core/forward.h&gt;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;</div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;isce/core/Common.h&gt;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">namespace </span>isce {</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">namespace </span>focus {</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="keyword">enum class</span> DryTroposphereModel {</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    NoDelay = 0,</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    TSX,</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;};</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;std::string toString(DryTroposphereModel);</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;DryTroposphereModel parseDryTropoModel(<span class="keyword">const</span> std::string&amp; s);</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;CUDA_HOSTDEV</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="keywordtype">double</span> dryTropoDelayTSX(<span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a>&amp; p, <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Vector.html">isce::core::Vec3</a>&amp; llh,</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;                        <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a>&amp; ellipsoid);</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;} <span class="comment">// namespace focus</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;} <span class="comment">// namespace isce</span></div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="preprocessor">#include &quot;DryTroposphereModel.icc&quot;</span></div>
+<div class="ttc" id="classisce_1_1core_1_1Ellipsoid_html"><div class="ttname"><a href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a></div><div class="ttdoc">Data structure to store Ellipsoid information. </div><div class="ttdef"><b>Definition:</b> Ellipsoid.h:20</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Vector_html"><div class="ttname"><a href="classisce_1_1core_1_1Vector.html">isce::core::Vector&lt; 3 &gt;</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
 <hr>
 Generated for ISCE3.0 by
 <a href="http://www.doxygen.org/index.html"><img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.8.5.

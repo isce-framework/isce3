@@ -149,7 +149,7 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><b>size_transform</b> 
 class isce::signal::NFFT&lt; class &gt;</h3>
 
 <p>Non-equispaced fast Fourier transform (<a class="el" href="classisce_1_1signal_1_1NFFT.html" title="Non-equispaced fast Fourier transform (NFFT) ">NFFT</a>) </p>
-<p>Class implementing <a class="el" href="classisce_1_1signal_1_1NFFT.html" title="Non-equispaced fast Fourier transform (NFFT) ">NFFT</a> algorithm described in <a class="el" href="citelist.html#CITEREF_keiner2009">[3]</a> . It takes a uniformly sampled spectrum and produces time-domain samples at arbitrary locations.</p>
+<p>Class implementing <a class="el" href="classisce_1_1signal_1_1NFFT.html" title="Non-equispaced fast Fourier transform (NFFT) ">NFFT</a> algorithm described in <a class="el" href="citelist.html#CITEREF_keiner2009">[4]</a> . It takes a uniformly sampled spectrum and produces time-domain samples at arbitrary locations.</p>
 <p>Compared to the TU Chemnitz implementation there are some differences in conventions intended to make things simpler in the SAR context:</p>
 <ol type="1">
 <li>Sign conventions. <a class="el" href="classisce_1_1signal_1_1NFFT.html#a2dd2fd2871c5108171afaaddd20379d3" title="Execute a transform. ">NFFT.execute()</a> uses a positive phase (backward), while <a class="el" href="classisce_1_1signal_1_1NFFT.html#aa0943a0b30a0297c0b64f8ffbe7fdc6c" title="Execute an adjoint transform. ">NFFT.execute_adjoint()</a> uses a negative phase (forward). This consistent with uses where the frequency spectrum is uniformly sampled and the time domain is not.</li>
