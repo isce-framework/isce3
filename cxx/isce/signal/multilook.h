@@ -77,6 +77,38 @@ auto multilookSummed(const EigenType& input, int row_looks, int col_looks)
 }
 
 /**
+ * @brief Multilooks an input Eigen::Array
+ * by averaging contributions to each pixel.
+ *
+ * @param[in] input     The input array to multilook
+ * @param[in] row_looks The number of looks in the vertical direction
+ * @param[in] col_looks The number of looks in the horizontal direction
+ * @returns The multilooked output, as an Eigen::Array
+ */
+template<typename EigenType>
+auto multilookAveraged(const EigenType& input, int row_looks, int col_looks)
+{
+
+    const auto nrows = input.rows() / row_looks;
+    const auto ncols = input.cols() / col_looks;
+
+    using value_type = typename EigenType::value_type;
+    isce::core::EArray2D<value_type> output(nrows, ncols);
+
+    #pragma omp parallel for collapse(2)
+    for (int row = 0; row < nrows; ++row) {
+        for (int col = 0; col < ncols; ++col) {
+
+            output(row, col) = input.block(row * row_looks, col * col_looks,
+                                           row_looks, col_looks)
+                                       .mean();
+        }
+    }
+
+    return output;
+}
+
+/**
  * @brief Multilooks an input Eigen::Array by taking the average of
  * contributions to each pixel, while masking out a provided constant
  * no-data value.
@@ -120,7 +152,7 @@ auto multilookPow(const EigenInput& input, int row_looks, int col_looks,
                   const int exponent)
 {
 
-    return multilookSummed(input.abs().pow(exponent), row_looks, col_looks);
+    return multilookAveraged(input.abs().pow(exponent), row_looks, col_looks);
 }
 
 } // namespace signal
