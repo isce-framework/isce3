@@ -221,7 +221,10 @@ def addImagery(h5file, ldr, imgfile, pol):
     fid.create_group(rximgstr)
 
     ##Set up BFPQLUT
+    assert firstrec.SARRawSignalData.dtype.itemsize <= 2
     lut = numpy.arange(2**16, dtype=numpy.float32)
+    assert numpy.issubdtype(firstrec.SARRawSignalData.dtype, numpy.signedinteger)
+    lut[-2**15:] -= 2**16
     assert ldr.summary.DCBiasIComponent == ldr.summary.DCBiasQComponent
     lut -= ldr.summary.DCBiasIComponent
     BAD_VALUE = -2**15
