@@ -114,6 +114,7 @@ TEST(Looks, Multilook)
         a_dataLookedExp(line, 0) = 1. + 3 * line;
         float increment = 3*(1+line*3);
         for (size_t col = 1; col < widthLooked; ++col){
+
             dataLookedExp[line*widthLooked + col] = dataLookedExp[line*widthLooked]
                                             + col * increment;
             a_dataLookedExp(line, col) =
@@ -129,6 +130,7 @@ TEST(Looks, Multilook)
         if (err > max_err)
             max_err = err;
     }
+
     ASSERT_LT(max_err, 1.0e-6);
 
     max_err = (a_dataLookedExp - a_dataLooked).maxCoeff();
@@ -167,6 +169,8 @@ TEST(Looks, Multilook)
     ASSERT_NEAR(std::arg(cpxDataLookednoData[widthLooked*(lengthLooked-1)]), 0.161633, 1.0e-6);
     EXPECT_NEAR(std::arg(a_cpxDataLookednoData(lengthLooked - 1, 0)), 0.161633,
                 1.0e-6);
+
+
 }
 
 int main(int argc, char * argv[]) {
