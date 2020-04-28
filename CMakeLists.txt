@@ -162,8 +162,8 @@ if(NOT HAVE_PYRE)
     # disable pyre's test suite
     set(BUILD_TESTING OFF)
     fetch_extern_repo(pyre
-        GIT_REPOSITORY https://github.com/rtburns-jpl/pyre
-        GIT_TAG isce3-stable
+        GIT_REPOSITORY https://github.com/pyre/pyre
+        GIT_TAG v1.9.8
         GIT_SHALLOW TRUE)
 endif()
 
