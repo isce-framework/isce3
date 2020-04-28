@@ -31,21 +31,28 @@ DOCKER_BUILD_ARGS="\
     --build-arg DOCDIR=$DOCDIR \
     "
 
+DOCKER_RUN_ARGS="\
+    --network=host \
+    "
+
 # create base, build, and testing images
 IMAGE_DIR=.ci/images/$IMAGE_SUITE
 IMAGE_ID=isce-ci-$IMAGE_SUITE
-$DOCKER build $DOCKER_BUILD_ARGS $IMAGE_DIR/base.$(arch) -t $IMAGE_ID/base
+$DOCKER build $DOCKER_BUILD_ARGS $IMAGE_DIR/base.$(uname -m) -t $IMAGE_ID/base
 $DOCKER build $DOCKER_BUILD_ARGS $IMAGE_DIR/builder      -t $IMAGE_ID/builder
 $DOCKER build $DOCKER_BUILD_ARGS $IMAGE_DIR/tester       -t $IMAGE_ID/tester
 
 # build and install isce
 $DOCKER rm $CONTAINER || true
 $DOCKER run --name $CONTAINER \
+    $DOCKER_RUN_ARGS \
     -v `pwd`:$SRCDIR:ro \
     $IMAGE_ID/builder bash -c \
     "cmake $SRCDIR -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                    -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc \
                    -DCMAKE_INSTALL_PREFIX=$PREFIX \
+                   -DCMAKE_PREFIX_PATH=/usr/local/conda \
+                   -DISCE3_FETCH_DEPS=n \
      && make -j`nproc` VERBOSE=y \
      && make install"
 
@@ -53,12 +60,14 @@ $DOCKER run --name $CONTAINER \
 CPPCHECK_ARGS="--std=c++14 --enable=all --inconclusive --force --inline-suppr \
                --xml --xml-version=2"
 $DOCKER run --rm \
+    $DOCKER_RUN_ARGS \
     --volumes-from $CONTAINER \
     $IMAGE_ID/tester bash -c \
     "cppcheck $CPPCHECK_ARGS $SRCDIR/cxx 2> $BLDDIR/cppcheck.xml"
 
 # run tests
 $DOCKER run --rm \
+    $DOCKER_RUN_ARGS \
     --volumes-from $CONTAINER \
     $IMAGE_ID/tester bash -ic \
     "ctest -j`nproc` -T Test --verbose || true && \

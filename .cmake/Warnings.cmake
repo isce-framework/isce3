@@ -70,7 +70,7 @@ function(set_warnings target)
     else()
         if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7)
             # warn if if / else branches have duplicated code
-            list(APPEND GCC_WARNINGS -Wduplicated-branches)
+            #list(APPEND GCC_WARNINGS -Wduplicated-branches)
         endif()
         list(APPEND CXX_WARNINGS ${GCC_WARNINGS})
     endif()

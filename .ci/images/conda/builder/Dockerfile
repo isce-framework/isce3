@@ -4,9 +4,11 @@ FROM isce-ci-conda/base
 RUN conda install -q -y \
         cmake>=3.12 \
         cython \
+        eigen \
         fftw \
         gdal \
         git \
+        gtest \
         h5py \
         hdf5 \
         make \

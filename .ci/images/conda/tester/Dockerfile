@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
 RUN conda install -q -y \
         cmake>=3.12 \
         gdal \
+        gtest \
         h5py \
         numpy \
         pytest \

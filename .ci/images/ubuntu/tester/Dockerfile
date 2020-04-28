@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
         libcufft10 \
         libfftw3-3 \
         libgdal20 \
+        libgtest-dev \
         libhdf5-103 \
         libhdf5-cpp-103 \
         python3 \

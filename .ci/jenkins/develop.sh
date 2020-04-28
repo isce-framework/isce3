@@ -41,6 +41,7 @@ $DOCKER run --name $CONTAINER \
     isce-ci/builder bash -c \
     "cmake $SRCDIR -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                    -DCMAKE_INSTALL_PREFIX=$PREFIX \
+                   -DISCE3_FETCH_DEPS=n \
      && make -j`nproc` VERBOSE=y \
      && make install"
 
