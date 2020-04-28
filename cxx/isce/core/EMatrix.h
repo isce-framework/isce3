@@ -6,16 +6,14 @@ namespace isce {
 namespace core {
 
 /*
- * Let `EMatrix` be an alias for a dynamic-sized
- * heap-allocated row-major Eigen matrix.
+ * Convenience aliases for row-major Eigen datatypes
  */
-template<typename T>
-using EMatrix = typename Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic,
-                                       Eigen::RowMajor>;
 
-template<typename T>
-using EArray = typename Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic,
-                                     Eigen::RowMajor>;
+template<typename T, int rows = Eigen::Dynamic, int cols = Eigen::Dynamic>
+using EMatrix2D = typename Eigen::Matrix<T, rows, cols, Eigen::RowMajor>;
+
+template<typename T, int rows = Eigen::Dynamic, int cols = Eigen::Dynamic>
+using EArray2D = typename Eigen::Array<T, rows, cols, Eigen::RowMajor>;
 
 } // namespace core
 } // namespace isce

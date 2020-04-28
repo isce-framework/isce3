@@ -42,8 +42,8 @@ TEST(Looks, Multilook)
     std::valarray<std::complex<float>> cpxDataLookednoData(width*length);
 
     // Same, but using Eigen datatypes
-    isce::core::EArray<float> a_data(length, width);
-    isce::core::EArray<std::complex<float>> a_cpxData(length, width);
+    isce::core::EArray2D<float> a_data(length, width);
+    isce::core::EArray2D<std::complex<float>> a_cpxData(length, width);
 
     // fill the arrays
     for (size_t i = 0; i< length; ++i){
@@ -99,7 +99,7 @@ TEST(Looks, Multilook)
 
     //expected output for the multilooked array
     std::valarray<float> dataLookedExp(widthLooked*lengthLooked);
-    isce::core::EArray<float> a_dataLookedExp(lengthLooked, widthLooked);
+    isce::core::EArray2D<float> a_dataLookedExp(lengthLooked, widthLooked);
     // Given the number of looks in range and azimuth (3x3) 
     // and given data above, the multi-looked array
     // has the following values at the begining of each line
