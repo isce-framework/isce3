@@ -14,6 +14,9 @@ def extractScalar(h5grp, key, destType, logger=None, msg=None):
 
     try:
         val = h5grp.get(key)[()]
+        if getattr(val, "shape", ()) == (1,):  # hack for missionId = ["NISAR"]
+            assert len(val) == 1, "Not a scalar value"
+            val = val[0]
         val = destType(val)
     except KeyError:
         if logger:
