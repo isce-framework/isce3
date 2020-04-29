@@ -4,8 +4,10 @@
 # Copyright 2019-
 #
 
+import h5py
 import pyre
 from ..Base import Base
+from .Identification import Identification
 
 class SLC(Base, family='nisar.productreader.slc'):
     '''
@@ -23,5 +25,13 @@ class SLC(Base, family='nisar.productreader.slc'):
         ###Read base product information like Identification
         super().__init__(**kwds) 
 
+
+    def populateIdentification(self):
+        '''
+        Read in the Identification information and assert identity.
+        '''
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
+            h5grp = f[self.IdentificationPath]
+            self.identification = Identification(h5grp)
 
 # end of file

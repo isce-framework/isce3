@@ -62,37 +62,18 @@ class Identification(object):
         self.productType = extractScalar(h5grp, 'productType', 
                                       bytestring, self.context['error'],
                                       'Product type could not be determined')
-        self.absoluteOrbitNumber = extractScalar(h5grp, 'absoluteOrbitNumber',
-                                      int, self.context['info'],
-                                      'Absolute orbit number could not be identified')
-        self.trackNumber = extractScalar(h5grp, 'trackNumber',
-                                      int, self.context['info'],
-                                      'Track number could not be identified')
-        self.frameNumber = extractScalar(h5grp, 'frameNumber',
-                                      int, self.context['info'],
-                                      'Frame number could not be identified')
         self.lookDirection = extractScalar(h5grp, 'lookDirection',
                                       bytestring, self.context['error'],
                                       'Look direction could not be identified')
         self.orbitPassDirection = extractScalar(h5grp, 'orbitPassDirection',
                                       bytestring, self.context['info'],
                                       'Pass direction could not be identified')
-        self.zdStartTime = extractScalar(h5grp, 'zeroDopplerStartTime',
-                                      bytestring, self.context['error'])
-        self.zdStartTime = pyDateTime(self.zdStartTime)
-
-        self.zdEndTime = extractScalar(h5grp, 'zeroDopplerEndTime',
-                                      bytestring, self.context['error'])
-        self.zdEndTime = pyDateTime(self.zdEndTime)
-
-        self.boundingPolygon = extractScalar(h5grp, 'boundingPolygon',
-                                      bytestring, self.context['info'],
-                                      'No bounding polygon could be identified')
 
         self.listOfFrequencies = extractWithIterator(h5grp, 'listOfFrequencies',
                                       bytestring, self.context['error'],
                                       'List of frequencies could not be determined')
 
+        # SLC specific stuff in ..SLC.Identification
         ###Mission planning info to be added
         ###Processing type info to be added
 
