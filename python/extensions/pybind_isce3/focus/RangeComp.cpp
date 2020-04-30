@@ -1,0 +1,100 @@
+#include "RangeComp.h"
+#include <complex>
+#include <pybind11/complex.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
+#include <stdexcept>
+#include <vector>
+
+using namespace isce::focus;
+namespace py = pybind11;
+
+void addbinding(pybind11::enum_<RangeComp::Mode> & pyMode)
+{
+    pyMode
+        .value("Full", RangeComp::Mode::Full, R"(
+        The output contains the full discrete convolution of the input with
+        the matched filter.
+
+        For an input signal and chirp of size N and M, the output size is
+        (N + M - 1).)")
+
+        .value("Valid", RangeComp::Mode::Valid, R"(
+        The output contains only the valid discrete convolution of the input
+        with the matched filter.
+
+        For an input signal and chirp of size N and M, the output size is
+        (max(M, N) - min(M, N) + 1).
+        )")
+
+        .value("Same", RangeComp::Mode::Same, R"(
+        The output contains the discrete convolution of the input with the
+        matched filter, cropped to the same size as the input signal.
+        )");
+}
+
+void addbinding(py::class_<RangeComp>& pyRangeComp)
+{
+    using T = std::complex<float>;
+    using chirp_t = std::vector<T>;
+    using buf_t = py::array_t<T, py::array::c_style>;
+
+    pyRangeComp
+        .def(py::init<const chirp_t &, int, int, RangeComp::Mode>(),
+            py::arg("chirp"), py::arg("inputsize"),
+            py::arg("maxbatch") = 1, py::arg("mode") = RangeComp::Mode::Full,
+            R"(
+    Forms a matched filter from the time-reversed complex conjugate of the
+    chirp replica and creates FFT plans for frequency domain convolution
+    with the matched filter.
+
+    chirp     Time-domain replica of the transmitted chirp waveform
+    inputsize Number of range samples in the signal to be compressed
+    maxbatch  Max batch size
+    mode      Convolution output mode
+            )")
+
+        .def("rangecompress",
+            // Better to omit batch parameter and just use in.shape[0]?
+            [](RangeComp & self, buf_t & out, const buf_t & in, int batch) {
+                // XXX C++ method doesn't do any size/shape checks.
+                // Require 2D with matching slow dim if batched operation.
+                if (batch > 1) {
+                    if (in.ndim() != 2)
+                        throw std::length_error("require 2D input array for batch > 1");
+                    if (out.ndim() != 2)
+                        throw std::length_error("require 2D output array for batch > 1");
+                    if ((in.shape(0) != batch) or (out.shape(0) != batch))
+                        throw std::length_error("slow dim must equal batch size");
+                    if (in.shape(1) != self.inputSize())
+                        throw std::length_error("unexpected input length");
+                    if (out.shape(1) != self.outputSize())
+                        throw std::length_error("unexpected output length");
+                } else if (batch == 1) {
+                    if ((in.ndim() != 1) or (out.ndim() != 1))
+                        throw std::length_error("require 1D arrays for batch == 1");
+                    if (in.shape(0) != self.inputSize())
+                        throw std::length_error("unexpected input length");
+                    if (out.shape(0) != self.outputSize())
+                        throw std::length_error("unexpected output length");
+                } else {
+                    throw std::invalid_argument("require batch > 0");
+                }
+                self.rangecompress(out.mutable_data(), in.data(), batch);
+            }, py::arg("out"), py::arg("in"), py::arg("batch") = 1, R"(
+    Perform pulse compression on a batch of input signals
+
+    Computes the frequency domain convolution of the input with the reference
+    function.
+            )")
+
+        .def_property_readonly("chirp_size", &RangeComp::chirpSize)
+        .def_property_readonly("input_size", &RangeComp::inputSize)
+        .def_property_readonly("fft_size", &RangeComp::fftSize)
+        // one word for symmetry with ctor argument
+        .def_property_readonly("maxbatch", &RangeComp::maxBatch)
+        .def_property_readonly("mode", &RangeComp::mode)
+        .def_property_readonly("output_size", &RangeComp::outputSize)
+        .def_property_readonly("first_valid_sample", &RangeComp::firstValidSample)
+        ;
+}

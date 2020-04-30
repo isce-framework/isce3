@@ -16,6 +16,7 @@ core/TimeDelta.cpp
 focus/Backproject.cpp
 focus/DryTroposphereModel.cpp
 focus/focus.cpp
+focus/RangeComp.cpp
 geometry/geometry.cpp
 geometry/DEMInterpolator.cpp
 io/gdal/Dataset.cpp

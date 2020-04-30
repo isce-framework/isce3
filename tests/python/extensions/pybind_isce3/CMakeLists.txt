@@ -9,6 +9,7 @@ core/LUT2d.py
 core/orbit.py
 core/timedelta.py
 focus/backproject.py
+focus/rangecomp.py
 geometry/dem.py
 io/gdal/dataset.py
 io/gdal/raster.py
