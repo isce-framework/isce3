@@ -50,6 +50,9 @@ $DOCKER run --name $CONTAINER \
     $IMAGE_ID/builder bash -c \
     "cmake $SRCDIR -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                    -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc \
+                   -DCMAKE_C_COMPILER=gcc-6 \
+                   -DCMAKE_CXX_COMPILER=g++-6 \
+                   -DCMAKE_CUDA_HOST_COMPILER=g++-6 \
                    -DCMAKE_INSTALL_PREFIX=$PREFIX \
                    -DCMAKE_PREFIX_PATH=/usr/local/conda \
                    -DISCE3_FETCH_DEPS=n \
