@@ -15,7 +15,8 @@ RUN conda install -q -y \
         numpy \
  && conda clean --all --yes
 
-RUN apt-get update && apt-get install -y gcc g++ \
+RUN apt-get update && apt-get install -y \
+        g++-6 \
         cuda-cudart-dev-10-1 \
         cuda-cufft-dev-10-1 \
         cuda-nvcc-10-1 \
