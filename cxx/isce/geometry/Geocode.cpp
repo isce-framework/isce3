@@ -143,8 +143,8 @@ void Geocode<T>::geocode(
     if (output_mode == geocodeOutputMode::INTERP && !flag_complex_to_real)
         geocodeInterp<T>(radar_grid, input_raster, output_raster, dem_raster);
     else if (output_mode == geocodeOutputMode::INTERP &&
-             ((std::is_same_v<T, double> ||
-               std::is_same_v<T, std::complex<double>>) ))
+             (std::is_same<T, double>::value ||
+              std::is_same<T, std::complex<double>>::value))
         geocodeInterp<double>(radar_grid, input_raster, output_raster,
                               dem_raster);
     else if (output_mode == geocodeOutputMode::INTERP)
@@ -158,8 +158,8 @@ void Geocode<T>::geocode(
                            out_geo_nlooks, out_geo_rtc, input_rtc, output_rtc,
                            geocode_memory_mode,
                            interp_method, use_weights);
-    else if (std::is_same_v<T, double> ||
-             std::is_same_v<T, std::complex<double>>)
+    else if (std::is_same<T, double>::value ||
+             std::is_same<T, std::complex<double>>::value)
         geocodeAreaProj<double>(radar_grid, input_raster, output_raster,
                                 dem_raster, output_mode, geogrid_upsampling,
                                 input_radiometry, rtc_min_value_db,
@@ -329,13 +329,10 @@ void Geocode<T>::geocodeInterp(
             std::cout << "band: " << band << std::endl;
             // get a block of data
             std::cout << "get data block " << std::endl;
-            if ((std::is_same_v<T, std::complex<float>> ||
-                 std::is_same_v<
-                         T,
-                         std::complex<double>>) &&(std::is_same_v<T_out,
-                                                                  float> ||
-                                                   std::is_same_v<T_out,
-                                                                  double>) ) {
+            if ((std::is_same<T, std::complex<float>>::value ||
+                 std::is_same<T, std::complex<double>>::value)
+                    &&(std::is_same<T_out, float>::value ||
+                       std::is_same<T_out, double>::value) ) {
                 isce::core::Matrix<T> rdrDataBlockTemp(rdrBlockLength,
                                                        rdrBlockWidth);
                 inputRaster.getBlock(rdrDataBlockTemp.data(), rangeFirstPixel,
@@ -682,7 +679,7 @@ void Geocode<T>::geocodeAreaProj(
             info << "reading input raster band: " << band << pyre::journal::endl; 
             rdrData.emplace_back(std::make_unique<isce::core::Matrix<T_out>>(
                     radar_grid.length(), radar_grid.width()));
-            if (!std::is_same_v<T, T_out>) {
+            if (!std::is_same<T, T_out>::value) {
                 info << "converting band to output dtype..." << pyre::journal::endl;
                 isce::core::Matrix<T> radar_data_out( 
                     radar_grid.length(), radar_grid.width());
@@ -1092,7 +1089,7 @@ void Geocode<T>::_RunBlock(
             rdrDataBlock.emplace_back(std::make_unique<isce::core::Matrix<T_out>>(
                     radar_grid_block.length(), radar_grid_block.width()));
 
-            if (!std::is_same_v<T, T_out>) {
+            if (!std::is_same<T, T_out>::value) {
                 info << "converting band to output dtype..." << pyre::journal::endl;
                 isce::core::Matrix<T> radar_data_out( 
                     radar_grid_block.length(), radar_grid_block.width());
