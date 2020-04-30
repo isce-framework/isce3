@@ -8,7 +8,6 @@ RUN conda install -q -y \
         fftw \
         gdal \
         git \
-        gtest \
         h5py \
         hdf5 \
         make \

@@ -55,7 +55,7 @@ $DOCKER run --name $CONTAINER \
                    -DCMAKE_CUDA_HOST_COMPILER=g++-6 \
                    -DCMAKE_INSTALL_PREFIX=$PREFIX \
                    -DCMAKE_PREFIX_PATH=/usr/local/conda \
-                   -DISCE3_FETCH_DEPS=n \
+                   -DISCE3_FETCH_EIGEN=no \
      && make -j`nproc` VERBOSE=y \
      && make install"
 
