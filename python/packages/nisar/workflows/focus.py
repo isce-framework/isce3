@@ -48,9 +48,6 @@ class DataDecoder(object):
     complex32, complex64, and lookup table.  Indexing operatations always return
     data converted to complex64.
     """
-    table = None
-    decoder = lambda self, key: self.dataset[key]
-
     def __getitem__(self, key):
         return self.decoder(key)
 
@@ -65,6 +62,8 @@ class DataDecoder(object):
         return z
 
     def __init__(self, h5dataset):
+        self.table = None
+        self.decoder = lambda key: self.dataset[key]
         self.dataset = h5dataset
         self.shape = self.dataset.shape
         group = h5dataset.parent
@@ -103,6 +102,7 @@ class Raw(Base, family='nisar.productreader.raw'):
         '''
         Constructor to initialize product with HDF5 file.
         '''
+        log.info(f"Reading L0B file {kwds['hdf5file']}")
         super().__init__(**kwds)
 
     def parsePolarizations(self):
@@ -128,9 +128,12 @@ class Raw(Base, family='nisar.productreader.raw'):
                         pols.append(t + r)
                 self.polarizations[freq] = pols
 
+    def BandPath(self, frequency):
+        return f"{self.SwathPath}/frequency{frequency}"
+
     def _rawGroup(self, frequency, polarization):
         tx, rx = polarization[0], polarization[1]
-        return f"{self.SwathPath}/frequency{frequency}/tx{tx}/rx{rx}"
+        return f"{self.BandPath(frequency)}/tx{tx}/rx{rx}"
 
     def rawPath(self, frequency, polarization):
         tx, rx = polarization[0], polarization[1]
@@ -144,11 +147,63 @@ class Raw(Base, family='nisar.productreader.raw'):
         path = self.rawPath(frequency, polarization)
         return DataDecoder(fid[path])
 
+    def getChirp(self, frequency: str = 'A'):
+        """Return analytic chirp for a given frequency.
+        """
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
+            band = f[self.BandPath(frequency)]
+            T = band["chirpDuration"][()]
+            K = band["chirpSlope"][()]
+            fs = band["rangeSamplingFrequency"][()]
+        log.info(f"Chirp({K}, {T}, {fs})")
+        return np.asarray(isce.focus.form_linear_chirp(K, T, fs))
 
-class SlcWriter(h5py.File):
+
+class LoggingH5File(h5py.File):
     def create_dataset(self, *args, **kw):
         log.debug(f"Creating dataset {args[0]}")
         return super().create_dataset(*args, **kw)
+
+
+def cosine_window(n, pedestal):
+    b = 0.5 * (1 - pedestal)
+    t = np.arange(n) - (n - 1) / 2.0
+    return (1 - b) + b * np.cos(2 * np.pi * t / (n - 1))
+
+
+def get_window(win: Struct, msg=''):
+    """Return window function f(n) that return a window of length n
+    given runconfig group describing the window.
+    """
+    kind = win.kind.lower()
+    if kind == 'kaiser':
+        log.info(f"{msg}Kaiser(beta={win.shape})")
+        return lambda n: np.kaiser(n, win.shape)
+    elif kind == 'cosine':
+        log.info(f'{msg}Cosine(pedestal_height={win.shape})')
+        return lambda n: cosine_window(n, win.shape)
+    raise NotImplementedError(f"window {kind} not in (Kaiser, Cosine).")
+
+
+def get_chirp(cfg: Struct, raw: Raw, frequency: str):
+    if cfg.inputs.waveform:
+        log.warning("Ignoring input waveform file.  Using analytic chirp.")
+    chirp = raw.getChirp(frequency)
+    log.info(f"Chirp length = {len(chirp)}")
+    window = get_window(cfg.processing.range_window, msg="Range window: ")
+    chirp *= window(len(chirp))
+    log.info("Normalizing chirp to unit white noise gain.")
+    return chirp / np.linalg.norm(chirp)**2
+
+
+def parse_rangecomp_mode(mode: str):
+    lut = {"full": isce.focus.RangeComp.Mode.Full,
+           "same": isce.focus.RangeComp.Mode.Same,
+           "valid": isce.focus.RangeComp.Mode.Valid}
+    mode = mode.lower()
+    if mode not in lut:
+        raise ValueError(f"Invalid RangeComp mode {mode}")
+    return lut[mode]
 
 
 def focus(cfg):
@@ -159,40 +214,49 @@ def focus(cfg):
 
     raw = Raw(hdf5file=cfg.inputs.raw[0])
     dem = isce.geometry.DEMInterpolator(height=0.0, method='bilinear')
+
+    log.info(f"Creating output SLC product {cfg.outputs.slc}")
+    slc = LoggingH5File(cfg.outputs.slc, mode="w")
+
     log.info(f"Available polarizations: {raw.polarizations}")
     channels = [(f, p) for f in raw.polarizations for p in raw.polarizations[f]]
 
-    log.info(f"Creating output SLC product {cfg.outputs.slc}")
-    slc = SlcWriter(cfg.outputs.slc, mode="w")
-
     for frequency, pol in channels:
         log.info(f"Processing frequency{frequency} {pol}")
-        data = raw.getRawDataset(frequency, pol)
-        log.info(f"Raw data shape = {data.shape}")
+        rawdata = raw.getRawDataset(frequency, pol)
+        log.info(f"Raw data shape = {rawdata.shape}")
         r = raw.getSlantRange(frequency)
-        na = cfg.block_sizes.rangecomp.azimuth
-        nr = data.shape[1]
+        na = cfg.processing.rangecomp.block_size.azimuth
+        nr = rawdata.shape[1]
+
+        log.info("Generating chirp")
+        chirp = get_chirp(cfg, raw, frequency)
+
+        rcmode = parse_rangecomp_mode(cfg.processing.rangecomp.mode)
+        log.info(f"Preparing range compressor with {rcmode}")
+        rc = isce.focus.RangeComp(chirp, nr, maxbatch=na, mode=rcmode)
 
         name = str(Path(cfg.outputs.workdir) / "rangecomp")
         log.info(f"Writing range compressed data to {name}")
-        rc = Raster(name, nr, data.shape[0], GDT_CFloat32)
+        rcfile = Raster(name, rc.output_size, rawdata.shape[0], GDT_CFloat32)
+        log.info(f"Range compressed data shape = {rcfile.data.shape}")
 
-        for pulse in range(0, data.shape[0], na):
-            log.info(f"Reading block at pulse {pulse}")
-            z = data[pulse:pulse+na, :]
-            # TODO rangecomp
-            rc.data[pulse:pulse+na, :] = z
+        for pulse in range(0, rawdata.shape[0], na):
+            log.info(f"Range compressing block at pulse {pulse}")
+            block = np.s_[pulse:pulse+na, :]
+            batch = rawdata[block].shape[0]
+            rc.rangecompress(rcfile.data[block], rawdata[block], batch)
 
         name = f"/science/LSAR/RSLC/swaths/frequency{frequency}/{pol}"
-        ac = slc.create_dataset(name, dtype=complex32, shape=rc.data.shape)
+        acdata = slc.create_dataset(name, dtype=complex32, shape=rcfile.data.shape)
 
-        for pulse in range(0, rc.data.shape[0], na):
+        for pulse in range(0, rcfile.data.shape[0], na):
             block = np.s_[pulse:pulse+na, :]
-            z = rc.data[block]
+            z = rcfile.data[block]
             # TODO azcomp
             log.info(f"Writing block at pulse {pulse}")
             zf = to_complex32(z)
-            ac.write_direct(zf, dest_sel=block)
+            acdata.write_direct(zf, dest_sel=block)
 
 
 def main(argv):
