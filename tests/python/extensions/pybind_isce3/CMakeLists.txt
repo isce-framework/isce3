@@ -7,6 +7,7 @@ core/linspace.py
 core/LUT1d.py
 core/LUT2d.py
 core/orbit.py
+core/quaternion.py
 core/timedelta.py
 focus/backproject.py
 focus/chirp.py

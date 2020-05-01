@@ -10,6 +10,7 @@
 #include "LUT1d.h"
 #include "LUT2d.h"
 #include "Orbit.h"
+#include "Quaternion.h"
 #include "TimeDelta.h"
 
 namespace py = pybind11;
@@ -25,6 +26,7 @@ void addsubmodule_core(py::module & m)
     py::class_<isce::core::LUT1d<double>> pyLUT1d(m_core, "LUT1d");
     py::class_<isce::core::LUT2d<double>> pyLUT2d(m_core, "LUT2d");
     py::class_<isce::core::Orbit> pyOrbit(m_core, "Orbit");
+    py::class_<isce::core::Quaternion> pyQuaternion(m_core, "Quaternion");
     py::class_<isce::core::TimeDelta> pyTimeDelta(m_core, "TimeDelta");
 
     // Default to double for kernels
@@ -63,6 +65,7 @@ void addsubmodule_core(py::module & m)
     addbinding(pyLUT1d);
     addbinding(pyLUT2d);
     addbinding(pyOrbit);
+    addbinding(pyQuaternion);
     addbinding(pyTimeDelta);
 
     addbinding(pyKernel);

@@ -12,6 +12,7 @@ core/LookSide.cpp
 core/LUT1d.cpp
 core/LUT2d.cpp
 core/Orbit.cpp
+core/Quaternion.cpp
 core/TimeDelta.cpp
 focus/Backproject.cpp
 focus/Chirp.cpp
