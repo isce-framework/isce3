@@ -53,6 +53,8 @@ BraceWrapping:
     SplitEmptyRecord: false
     SplitEmptyNamespace: false
 
+CompactNamespaces: true
+
 # Misc
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: All
