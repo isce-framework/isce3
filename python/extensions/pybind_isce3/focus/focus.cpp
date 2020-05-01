@@ -1,6 +1,7 @@
 #include "focus.h"
 
 #include "Backproject.h"
+#include "Chirp.h"
 #include "DryTroposphereModel.h"
 #include "RangeComp.h"
 
@@ -21,5 +22,6 @@ void addsubmodule_focus(py::module & m)
     addbinding(pyMode);
 
     addbinding_backproject(m_focus);
+    addbinding_chirp(m_focus);
     addbinding(pyRangeComp);
 }

@@ -14,6 +14,7 @@ core/LUT2d.cpp
 core/Orbit.cpp
 core/TimeDelta.cpp
 focus/Backproject.cpp
+focus/Chirp.cpp
 focus/DryTroposphereModel.cpp
 focus/focus.cpp
 focus/RangeComp.cpp
