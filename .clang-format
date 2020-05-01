@@ -44,15 +44,14 @@ BraceWrapping:
     AfterEnum:       false
     AfterFunction:   true
     AfterNamespace:  false
-    AfterObjCDeclaration: false
     AfterStruct:     false
     AfterUnion:      false
     BeforeCatch:     false
     BeforeElse:      false
     IndentBraces:    false
     SplitEmptyFunction: false
-    SplitEmptyRecord: true
-    SplitEmptyNamespace: true
+    SplitEmptyRecord: false
+    SplitEmptyNamespace: false
 
 # Misc
 AllowShortCaseLabelsOnASingleLine: true
