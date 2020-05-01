@@ -6,7 +6,9 @@ RUN apt-get update && apt-get install -y \
         cython3 \
         fftw3-dev \
         git \
+        libeigen3-dev \
         libgdal-dev \
+        libgtest-dev \
         libhdf5-dev \
         locales \
         python3-dev \
