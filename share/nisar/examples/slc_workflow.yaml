@@ -3,6 +3,8 @@ inputs:
     raw:
     # - /mnt/ssd/Data/ALPSRP037370690.L0B.h5
     - /mnt/ssd/NISAR_ADT/REE_SRC/out16/REE_L0B_NISAR_DATA.h5
+    # - /mnt/ssd/NISAR_ADT/REE_SRC/hirad_dbf_dither2/REE_L0B_NISAR_DATA_DITHER.h5
+    # - /mnt/ssd/NISAR_ADT/REE_SRC/hirad_dbf_const/REE_L0B_NISAR_DATA_PASS2.h5
 
     # Digital elevation model, optional.
     # Defaults to h=0

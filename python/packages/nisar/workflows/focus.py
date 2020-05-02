@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import h5py
+import isce3 as cisce # TODO need to port rdr2geo_cone
 import logging
 from nisar.products.readers import Base
 from pathlib import Path
@@ -158,6 +159,24 @@ class Raw(Base, family='nisar.productreader.raw'):
         log.info(f"Chirp({K}, {T}, {fs})")
         return np.asarray(isce.focus.form_linear_chirp(K, T, fs))
 
+    @property
+    def TelemetryPath(self):
+        return f"{self.ProductPath}/telemetry"
+
+    # XXX Base.getOrbit has @pyre.export decorator.  What's that do?
+    # XXX Base uses SLC-specific path and returns Cython object.
+    def getOrbit(self):
+        path = f"{self.TelemetryPath}/orbit"
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
+            orbit = isce.core.Orbit.load_from_h5(f[path])
+        return orbit
+
+    def getAttitude(self):
+        path = f"{self.TelemetryPath}/attitude"
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
+            q = isce.core.Quaternion.load_from_h5(f[path])
+        return q
+
 
 class LoggingH5File(h5py.File):
     def create_dataset(self, *args, **kw):
@@ -206,6 +225,26 @@ def parse_rangecomp_mode(mode: str):
     return lut[mode]
 
 
+def get_orbit(cfg: Struct):
+    log.info("Loading orbit")
+    if cfg.inputs.orbit:
+        log.warning("Ignoring input orbit file.  Using L0B orbits.")
+    if len(cfg.inputs.raw) > 1:
+        raise NotImplementedError("Can't concatenate orbit data.")
+    raw = Raw(hdf5file=cfg.inputs.raw[0])
+    return raw.getOrbit()
+
+
+def get_attitude(cfg: Struct):
+    log.info("Loading attitude")
+    if cfg.inputs.pointing:
+        log.warning("Ignoring input pointing file.  Using L0B attitude.")
+    if len(cfg.inputs.raw) > 1:
+        raise NotImplementedError("Can't concatenate attitude data.")
+    raw = Raw(hdf5file=cfg.inputs.raw[0])
+    return raw.getAttitude()
+
+
 def focus(cfg):
     if len(cfg.inputs.raw) <= 0:
         raise IOError("need at least one raw data file")
@@ -214,6 +253,8 @@ def focus(cfg):
 
     raw = Raw(hdf5file=cfg.inputs.raw[0])
     dem = isce.geometry.DEMInterpolator(height=0.0, method='bilinear')
+    orbit = get_orbit(cfg)
+    attitude = get_attitude(cfg)
 
     log.info(f"Creating output SLC product {cfg.outputs.slc}")
     slc = LoggingH5File(cfg.outputs.slc, mode="w")
