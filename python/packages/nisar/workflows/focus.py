@@ -177,6 +177,29 @@ class Raw(Base, family='nisar.productreader.raw'):
             q = isce.core.Quaternion.load_from_h5(f[path])
         return q
 
+    # XXX C++ and Base.py assume SLC.  Grid less well defined for Raw case
+    # since PRF isn't necessarily constant.
+    def getRadarGrid(self, frequency='A', tx='H', prf=None):
+        bandpath = self.BandPath(frequency)
+        txpath = f"{bandpath}/tx{tx}"
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
+            name = "UTCtime"
+            t = np.asarray(f[txpath][name])
+            epoch = isce.io.get_ref_epoch(f[txpath], name)
+            r = np.asarray(f[bandpath]["slantRange"])
+            dr = f[bandpath]["slantRangeSpacing"][()]
+            fc = f[bandpath]["centerFrequency"][()]
+        wvl = isce.core.speed_of_light / fc
+        nt = len(t)
+        assert nt > 1
+        if prf:
+            nt = 1 + int(np.ceil((t[-1] - t[0]) * prf))
+        else:
+            prf = (nt - 1) / (t[-1] - t[0])
+        side = self.identification.lookDirection
+        return isce.product.RadarGridParameters(t[0], wvl, prf, r[0], dr, side,
+                                                nt, len(r), epoch)
+
 
 class LoggingH5File(h5py.File):
     def create_dataset(self, *args, **kw):
@@ -255,6 +278,8 @@ def focus(cfg):
     dem = isce.geometry.DEMInterpolator(height=0.0, method='bilinear')
     orbit = get_orbit(cfg)
     attitude = get_attitude(cfg)
+    grid = raw.getRadarGrid(frequency="A", tx="H")
+    log.info(f"grid={grid}")
 
     log.info(f"Creating output SLC product {cfg.outputs.slc}")
     slc = LoggingH5File(cfg.outputs.slc, mode="w")
