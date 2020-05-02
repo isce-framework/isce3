@@ -41,6 +41,15 @@ cdef extern from "isce/geometry/geometry.h" namespace "isce::geometry":
                 LookSide side, double threshold, int maxIter, int extraIter)
 
 
+    # "cone" variant
+    int rdr2geo(const cartesian_t & radarXYZ,
+                const cartesian_t & axis,
+                double angle,
+                double range,
+                const DEMInterpolator & demInterp,
+                cartesian_t & targetXYZ,
+                LookSide side, double threshold, int maxIter, int extraIter)
+
     # Utility function to compute geographic bounds for a radar grid
     void computeDEMBounds(const Orbit & orbit,
                           const Ellipsoid & ellipsoid,
