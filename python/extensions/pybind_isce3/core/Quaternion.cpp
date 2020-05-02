@@ -6,7 +6,9 @@
 #include <stdexcept>
 
 #include <isce/core/DenseMatrix.h>
+#include <isce/io/IH5.h>
 #include <isce/core/Quaternion.h>
+#include <isce/core/Serialization.h>
 
 using isce::core::Quaternion;
 
@@ -35,5 +37,14 @@ void addbinding(pybind11::class_<Quaternion>& pyQuaternion)
         .def("rotmat", [](Quaternion & self, double t) {
             return self.rotmat(t, "");
         })
+        .def_static("load_from_h5", [](py::object h5py_group) {
+            auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
+            isce::io::IGroup group(id);
+            Quaternion q;
+            isce::core::loadFromH5(group, q);
+            return q;
+        },
+        "De-serialize Quaternion from h5py.Group object",
+        py::arg("h5py_group"))
         ;
 }
