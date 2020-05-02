@@ -5,4 +5,4 @@ set -e
 export ISCEDIR=/opt/isce
 export PATH=$ISCEDIR/bin:$ISCEDIR/packages:$PATH
 export PYTHONPATH=$ISCEDIR/packages:$PYTHONPATH
-export LD_LIBRARY_PATH=$ISCEDIR/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$ISCEDIR/lib64:$LD_LIBRARY_PATH
