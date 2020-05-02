@@ -4,7 +4,7 @@ core/attitude/euler.cpp
 core/cube/cube.cpp
 core/datetime/datetime.cpp
 core/ellipsoid/ellipsoid.cpp
-core/interp1d/interp1d.cpp
+core/interp1d.cpp
 core/interpolator/interpolator.cpp
 core/linspace/linspace.cpp
 core/lut/lut1d.cpp

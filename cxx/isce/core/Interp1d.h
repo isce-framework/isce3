@@ -1,28 +1,10 @@
-//
-// Author: Brian Hawkins
-// Copyright 2019
-//
-
 #pragma once
-
-#include <valarray>
 
 #include "forward.h"
 
-// Declaration
-namespace isce {
-    namespace core {
-        template<typename TK, typename TD>
-        TD interp1d(const isce::core::Kernel<TK> &kernel,
-                    const std::valarray<TD> &x, double t,
-                    bool periodic = false);
+#include <valarray>
 
-        template<typename TK, typename TD>
-        TD interp1d(const isce::core::Kernel<TK> &kernel, const TD *x,
-                             size_t length, size_t stride, double t,
-                             bool periodic = false);
-    }
-}
+namespace isce { namespace core {
 
 /** Interpolate sequence x at point t
  *
@@ -38,9 +20,8 @@ namespace isce {
  * Template parameter TK is kernel element type, TD is data element type.
  */
 template<typename TK, typename TD>
-TD
-isce::core::interp1d(const isce::core::Kernel<TK> &kernel, const TD *x,
-                     size_t length, size_t stride, double t, bool periodic);
+TD interp1d(const Kernel<TK>& kernel, const TD* x, size_t length, size_t stride,
+            double t, bool periodic = false);
 
 /** Interpolate sequence x at point t
  *
@@ -53,11 +34,9 @@ isce::core::interp1d(const isce::core::Kernel<TK> &kernel, const TD *x,
  * Template parameter TK is kernel element type, TD is data element type.
  */
 template<typename TK, typename TD>
-TD
-isce::core::interp1d(const isce::core::Kernel<TK> &kernel,
-                     const std::valarray<TD> &x, double t, bool periodic);
+TD interp1d(const Kernel<TK>& kernel, const std::valarray<TD>& x, double t,
+            bool periodic = false);
 
-// Get inline implementations
-#define ISCE_CORE_INTERP1D_ICC
+}} // namespace isce::core
+
 #include "Interp1d.icc"
-#undef ISCE_CORE_INTERP1D_ICC
