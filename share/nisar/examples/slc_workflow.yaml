@@ -104,6 +104,26 @@ processing:
         # Transition width as a fraction of output bandwidth.
         width: 0.15
 
+    doppler:
+        # Offset between quaternion frame and antenna boresight in degrees.
+        # TBD This will likely be parameter in a separate cal file.
+        azimuth_boresight_deg: 0.9
+
+        # Postings for generated Doppler lookup table.
+        spacing:
+            # Lookup table range spacing in m
+            range: 2000.0
+            # Lookup table Azimuth spacing in s
+            azimuth: 1.0
+
+        rdr2geo:
+            # Slant range convergence threshold (m): float (default: 1e-8)
+            threshold: 1e-8
+            # Max number of primary iterations: int (default: 25)
+            maxiter: 25
+            # Max number of secondary iterations: int (default: 15)
+            extraiter: 15
+
     # Settings for range compression algorithm.
     rangecomp:
         # Convolution output mode: {"valid", "full", "same"} (default: "full")
