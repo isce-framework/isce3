@@ -1,5 +1,6 @@
 #include "io.h"
 #include "Raster.h"
+#include "serialization.h"
 
 #include "gdal/gdal.h"
 
@@ -12,4 +13,5 @@ void addsubmodule_io(py::module & m)
     py::class_<isce::io::Raster> pyRaster(m_io, "Raster");
 
     addbinding(pyRaster);
+    addbinding_serialization(m_io);
 }

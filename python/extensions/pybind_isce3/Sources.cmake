@@ -27,6 +27,7 @@ io/gdal/GDALDataType.cpp
 io/gdal/gdal.cpp
 io/gdal/Raster.cpp
 io/Raster.cpp
+io/serialization.cpp
 io/io.cpp
 signal/signal.cpp
 signal/Covariance.cpp
