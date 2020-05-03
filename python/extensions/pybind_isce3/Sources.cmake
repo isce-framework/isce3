@@ -21,6 +21,7 @@ focus/focus.cpp
 focus/RangeComp.cpp
 geometry/geometry.cpp
 geometry/DEMInterpolator.cpp
+geometry/rdr2geo.cpp
 io/gdal/Dataset.cpp
 io/gdal/GDALAccess.cpp
 io/gdal/GDALDataType.cpp
