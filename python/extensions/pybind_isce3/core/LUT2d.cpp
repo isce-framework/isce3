@@ -1,6 +1,7 @@
 #include "LUT2d.h"
 
 #include <isce/core/Constants.h>
+#include <isce/core/DateTime.h>
 #include <isce/core/Matrix.h>
 #include <isce/core/Serialization.h>
 #include <isce/except/Error.h>
@@ -84,6 +85,21 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
             "De-serialize LUT from h5py.Group object",
             py::arg("h5py_group"),
             py::arg("dataset_name"))
+
+        .def("save_to_h5", [](const LUT2d<T>& self, py::object h5py_group,
+                              const std::string& name,
+                              const isce::core::DateTime& epoch,
+                              const std::string& units) {
+
+                auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
+                isce::io::IGroup group(id);
+                isce::core::saveCalGrid(group, name, self, epoch, units);
+            },
+            "Serialize LUT2d to h5py.Group object (axes assumed range/time).",
+            py::arg("h5py_group"),
+            py::arg("dataset_name"),
+            py::arg("epoch"),
+            py::arg("units") = "")
 
         .def_property_readonly("x_start",   &LUT2d<T>::xStart)
         .def_property_readonly("y_start",   &LUT2d<T>::yStart)
