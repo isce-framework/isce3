@@ -7,8 +7,7 @@ inputs:
     # - /mnt/ssd/NISAR_ADT/REE_SRC/hirad_dbf_const/REE_L0B_NISAR_DATA_PASS2.h5
 
     # Digital elevation model, optional.
-    # Defaults to h=0
-    dem: dem.tif
+    dem: null # dem.tif
 
     # Refined orbit, optional.
     # Defaults to orbit within L0B product.
@@ -107,7 +106,10 @@ processing:
     doppler:
         # Offset between quaternion frame and antenna boresight in degrees.
         # TBD This will likely be parameter in a separate cal file.
-        azimuth_boresight_deg: 0.9
+        azimuth_boresight_deg: 0.0 # 0.9
+
+        # How to interpolate between samples in the LUT.
+        interp_method: bilinear
 
         # Postings for generated Doppler lookup table.
         spacing:
@@ -170,9 +172,13 @@ processing:
 
     dry_troposphere_model: TSX
 
-    # How to interpolate the digital elevation model.  One of
-    # nearest, bilinear, bicubic, biquintic, or sinc
-    dem_interp_method: biquintic
+    dem:
+        # Height (in meters) to use if DEM unavailable.
+        reference_height: 0.0
+
+        # How to interpolate the digital elevation model.  One of
+        # nearest, bilinear, bicubic, biquintic, or sinc
+        interp_method: biquintic
 
     # Nominal antenna dimensions to use for BLU, EAP, etc. when no antenna
     # pattern input file is provided or its contents are unsuitable.

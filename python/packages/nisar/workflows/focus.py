@@ -12,6 +12,7 @@ import pyre
 import re
 from ruamel.yaml import YAML
 import sys
+from typing import List
 
 # TODO some CSV logger
 log = logging.getLogger("focus")
@@ -177,19 +178,44 @@ class Raw(Base, family='nisar.productreader.raw'):
             q = isce.core.Quaternion.load_from_h5(f[path])
         return q
 
-    # XXX C++ and Base.py assume SLC.  Grid less well defined for Raw case
-    # since PRF isn't necessarily constant.
-    def getRadarGrid(self, frequency='A', tx='H', prf=None):
+    def getRanges(self, frequency='A'):
         bandpath = self.BandPath(frequency)
-        txpath = f"{bandpath}/tx{tx}"
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
+            r = np.asarray(f[bandpath]["slantRange"])
+            dr = f[bandpath]["slantRangeSpacing"][()]
+        nr = len(r)
+        out = isce.core.Linspace(r[0], dr, nr)
+        assert np.isclose(out[-1], r[-1])
+        return out
+
+
+    def TransmitPath(self, frequency='A', tx='H'):
+        return f"{self.BandPath(frequency)}/tx{tx}"
+
+
+    def getPulseTimes(self, frequency='A', tx='H'):
+        txpath = self.TransmitPath(frequency, tx)
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
             name = "UTCtime"
             t = np.asarray(f[txpath][name])
             epoch = isce.io.get_ref_epoch(f[txpath], name)
-            r = np.asarray(f[bandpath]["slantRange"])
-            dr = f[bandpath]["slantRangeSpacing"][()]
+        return epoch, t
+
+
+    def getCenterFrequency(self, frequency: str = 'A'):
+        bandpath = self.BandPath(frequency)
+        with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
             fc = f[bandpath]["centerFrequency"][()]
+        return fc
+
+
+    # XXX C++ and Base.py assume SLC.  Grid less well defined for Raw case
+    # since PRF isn't necessarily constant.
+    def getRadarGrid(self, frequency='A', tx='H', prf=None):
+        fc = self.getCenterFrequency(frequency)
         wvl = isce.core.speed_of_light / fc
+        r = self.getRanges(frequency)
+        epoch, t = self.getPulseTimes(frequency, tx)
         nt = len(t)
         assert nt > 1
         if prf:
@@ -197,8 +223,9 @@ class Raw(Base, family='nisar.productreader.raw'):
         else:
             prf = (nt - 1) / (t[-1] - t[0])
         side = self.identification.lookDirection
-        return isce.product.RadarGridParameters(t[0], wvl, prf, r[0], dr, side,
-                                                nt, len(r), epoch)
+        grid = isce.product.RadarGridParameters(
+            t[0], wvl, prf, r[0], r.spacing, side, nt, len(r), epoch)
+        return t, grid
 
 
 class LoggingH5File(h5py.File):
@@ -268,6 +295,96 @@ def get_attitude(cfg: Struct):
     return raw.getAttitude()
 
 
+def get_total_grid_bounds(rawfiles: List[str], frequency='A'):
+    times, ranges = [], []
+    for fn in rawfiles:
+        raw = Raw(hdf5file=fn)
+        pol = raw.polarizations[frequency][0]
+        ranges.append(raw.getRanges(frequency))
+        times.append(raw.getPulseTimes(frequency, pol[0]))
+    rmin = min(r[0] for r in ranges)
+    rmax = max(r[-1] for r in ranges)
+    dtmin = min(epoch + isce.core.TimeDelta(t[0]) for (epoch, t) in times)
+    dtmax = max(epoch + isce.core.TimeDelta(t[-1]) for (epoch, t) in times)
+    epoch = min(epoch for (epoch, t) in times)
+    tmin = (dtmin - epoch).total_seconds()
+    tmax = (dtmax - epoch).total_seconds()
+    return epoch, tmin, tmax, rmin, rmax
+
+
+def get_total_grid(rawfiles: List[str], dt, dr, frequency='A'):
+    epoch, tmin, tmax, rmin, rmax = get_total_grid_bounds(rawfiles, frequency)
+    nt = int(np.ceil((tmax - tmin) / dt))
+    nr = int(np.ceil((rmax - rmin) / dr))
+    t = isce.core.Linspace(tmin, dt, nt)
+    r = isce.core.Linspace(rmin, dr, nr)
+    return epoch, t, r
+
+
+def squint(t, r, orbit, attitude, side, angle=0.0, dem=None, **kw):
+    """Find squint angle given imaging time and range to target.
+    """
+    p, v = orbit.interpolate(t)
+    R = attitude.rotmat(t)
+    axis = R[:,0]
+    if dem is None:
+        dem = isce.geometry.DEMInterpolator()
+    xyz = isce.geometry.rdr2geo_cone(p, axis, angle, r, dem, side, **kw)
+    look = (xyz - p) / np.linalg.norm(xyz - p)
+    vhat = v / np.linalg.norm(v)
+    return np.arcsin(look.dot(vhat))
+
+
+def squint_to_doppler(squint, wvl, vmag):
+    return 2.0 / wvl * vmag * np.sin(squint)
+
+
+def convert_epoch(t: List[float], epoch_in, epoch_out):
+    TD = isce.core.TimeDelta
+    return [(epoch_in - epoch_out + TD(ti)).total_seconds() for ti in t]
+
+
+def get_dem(cfg: Struct):
+    dem = isce.geometry.DEMInterpolator(
+        height=cfg.processing.dem.reference_height,
+        method=cfg.processing.dem.interp_method)
+    fn = cfg.inputs.dem
+    if fn:
+        log.info(f"Loading DEM {fn}")
+        dem.load_dem(fn)
+    else:
+        log.warning("No DEM given, using height=0.")
+    return dem
+
+
+def make_doppler(cfg: Struct, frequency='A'):
+    log.info("Generating Doppler LUT from pointing")
+    orbit = get_orbit(cfg)
+    attitude = get_attitude(cfg)
+    dem = get_dem(cfg)
+    opt = cfg.processing.doppler
+    az = np.radians(opt.azimuth_boresight_deg)
+    raw = Raw(hdf5file=cfg.inputs.raw[0])
+    side = raw.identification.lookDirection
+    fc = raw.getCenterFrequency(frequency)
+    wvl = isce.core.speed_of_light / fc
+
+    epoch, t, r = get_total_grid(cfg.inputs.raw, opt.spacing.azimuth,
+                                 opt.spacing.range)
+    t = convert_epoch(t, epoch, orbit.reference_epoch)
+    dop = np.zeros((len(t), len(r)))
+    for i, ti in enumerate(t):
+        _, v = orbit.interpolate(ti)
+        vi = np.linalg.norm(v)
+        for j, rj in enumerate(r):
+            sq = squint(ti, rj, orbit, attitude, side, angle=az, dem=dem,
+                        **vars(opt.rdr2geo))
+            dop[i,j] = squint_to_doppler(sq, wvl, vi)
+    lut = isce.core.LUT2d(np.asarray(r), t, dop, opt.interp_method, False)
+    log.info(f"Constructed Doppler LUT for fc={fc} Hz.")
+    return fc, lut
+
+
 def focus(cfg):
     if len(cfg.inputs.raw) <= 0:
         raise IOError("need at least one raw data file")
@@ -275,17 +392,23 @@ def focus(cfg):
         raise NotImplementedError("mixed-mode processing not yet supported")
 
     raw = Raw(hdf5file=cfg.inputs.raw[0])
-    dem = isce.geometry.DEMInterpolator(height=0.0, method='bilinear')
+    dem = get_dem(cfg)
     orbit = get_orbit(cfg)
-    attitude = get_attitude(cfg)
-    grid = raw.getRadarGrid(frequency="A", tx="H")
-    log.info(f"grid={grid}")
+    pulse_times, igrid = raw.getRadarGrid(frequency="A", tx="H")
+    fc_ref, dop_ref = make_doppler(cfg)
 
     log.info(f"Creating output SLC product {cfg.outputs.slc}")
     slc = LoggingH5File(cfg.outputs.slc, mode="w")
 
     log.info(f"Available polarizations: {raw.polarizations}")
     channels = [(f, p) for f in raw.polarizations for p in raw.polarizations[f]]
+
+    # TODO Find common center frequencies after mode intersection.
+    # TODO Need a way to scale a LUT2d or at least get its data.
+    g = slc.create_group(
+        "/science/LSAR/RSLC/metadata/processingInformation/parameters")
+    g.create_group("frequencyA")  # FIXME?
+    dop_ref.save_to_h5(g, "frequencyA/dopplerCentroid", orbit.reference_epoch, "Hz")
 
     for frequency, pol in channels:
         log.info(f"Processing frequency{frequency} {pol}")
