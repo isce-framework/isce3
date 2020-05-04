@@ -135,5 +135,20 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                 shape[1] = self.width();
                 return shape;
         })
+        // FIXME Attribute names don't match ctor names.
+        .def("__str__", [](const py::object self) {
+                std::vector<std::string> keys {"sensing_start", "wavelength",
+                        "prf", "starting_range", "range_pixel_spacing",
+                        "lookside", "length", "width", "ref_epoch"};
+                std::string out("RadarGridParameters(");
+                for (auto it = keys.begin(); it != keys.end(); ++it) {
+                        auto key = *it;
+                        auto ckey = key.c_str();
+                        out += key + "=" + std::string(py::str(self.attr(ckey)));
+                        if (it != keys.end() - 1)
+                                out += ", ";
+                }
+                return out + ")";
+        })
         ;
 }

@@ -20,6 +20,7 @@ def test_radargridparameters():
     npt.assert_almost_equal(grid.az_time_interval, 6.051745968279355e-4)
 
     # Python-only utility functions.
+    assert str(grid).startswith("RadarGrid")
     assert grid.shape == (grid.length, grid.width)
     assert grid.copy() is not grid
     assert grid[:,:] is not grid
