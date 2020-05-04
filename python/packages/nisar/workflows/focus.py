@@ -5,6 +5,7 @@ import json
 import logging
 from pathlib import Path
 from nisar.products.readers.Raw import Raw, complex32
+from nisar.workflows import defaults
 import numpy as np
 import pybind_isce3 as isce
 from pybind_isce3.io.gdal import Raster, GDT_CFloat32
@@ -29,10 +30,22 @@ class Struct(object):
             return Struct(value) if isinstance(value, dict) else value
 
 
+# https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
+def deep_update(d, u):
+    for k, v in u.items():
+        if isinstance(v, dict):
+            d[k] = deep_update(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d
+
+
 def load_config(yaml):
-    # TODO load defaults first.
+    parser = YAML()
+    cfg = parser.load(defaults.focus.runconfig)
     with open(yaml) as f:
-        cfg = YAML().load(f)
+        user = parser.load(f)
+    deep_update(cfg, user)
     log.info(json.dumps(cfg, indent=2, default=str))
     return Struct(cfg)
 
