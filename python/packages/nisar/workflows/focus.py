@@ -353,16 +353,8 @@ def focus(cfg):
                 acdata.write_direct(zf, dest_sel=block)
 
 
-def main(argv):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("config")
-    args = parser.parse_args(argv)
 
-    cfg = validate_config(load_config(args.config))
-    focus(cfg)
-
-
-if __name__ == '__main__':
+def configure_logging():
     rlog = logging.getLogger("Raw")
     log_level = logging.DEBUG
     log.setLevel(log_level)
@@ -372,4 +364,15 @@ if __name__ == '__main__':
     log.addHandler(sh)
     rlog.addHandler(sh)
 
+
+def main(argv):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("config")
+    args = parser.parse_args(argv)
+    configure_logging()
+    cfg = validate_config(load_config(args.config))
+    focus(cfg)
+
+
+if __name__ == '__main__':
     main(sys.argv[1:])
