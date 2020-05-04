@@ -12,6 +12,7 @@ nisar/workflows/geo2rdr.py
 nisar/workflows/crossmul.py
 nisar/workflows/resampSlc.py
 nisar/workflows/geocode.py
+nisar/workflows/focus.py
 )
 
 set(CUDA_TESTFILES

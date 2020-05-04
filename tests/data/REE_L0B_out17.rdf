@@ -1,0 +1,536 @@
+! BPH generated 2020-05-15 with REE_SRC v14.6.2 and ReeUtilPy v1.6.0
+
+! Author : Hirad Ghaemi
+! Contact : Hirad.Ghaemi@jpl.nasa.gov
+! Copyright 2015, by the California Institute of Technology.
+! All RIGHTS RESERVED. United States Government Sponsorship acknowledged.
+! Any commercial use must be negotiated with the Office of Technology
+! transfer at the California Institute of Technology.
+! This software may be subject to U.S. export control laws and regulations.
+! By accepting this document, the user agrees to comply with all applicable
+! U.S. export laws and regulations. User has the responsibility to obtain
+! export licenses, or other export authority as may be required before
+! exporting such information to foreign countries or providing access to
+! foreign persons.
+
+
+! RDF FILE USED FOR "REE", FIRST STAGE POINT TARGET SIMULATOR ...
+! Important REMARKS : 
+! comments starts with "!"
+! Section start with "###" and the followed by a unique name.
+! field names and their units in each section shall be followed by equal sign "="
+! the values for each field name shall be separated by "," in case of multiple assignments
+! In case a field expects multiple values and only one value is assigned, that will be used for all 
+! The section and field names are case insensitive!
+
+
+### PLANET PARAMETERS
+
+Semi-major axis  (m) = 6378137.0 
+
+First eccentricity squared (-) =  669437.999014132e-8  !0.00669437999014
+
+Rotation Speed (rad/sec) =  7292115.1467e-11  !72722052.16643040e-12
+
+Gravitational Constant , GM product (m**3/sec**2) = 398600.4418e9
+
+Rotation axis in X,Y,Z (-,-,-) = 0.0,0.0,1.0
+
+
+### ORBIT PARAMETERS
+
+Semi-major axis  (m) = 7124137.0
+
+Longitude of ascending node (deg) = -90.0
+
+Inclination Angle (deg) = 98.0
+
+Eccentricity (-) = 0.0
+
+Argument of Perigee (deg) = 0.0
+
+Mean anomaly (deg) = 0.0
+
+
+### EPOCH-SIM PARAMETERS
+
+Reference of Epoch at starting rotation angle of planet,or GPS time (sec) = 0.0 
+
+Starting Rotation angle of planet at reference epoch (deg) = 0.0
+
+Start time of simulation wrt reference epoch, radar time (sec) = 12000.0
+
+Gregorian calendar date [and time] at reference epoch (year,month,day[,hour,minute,second]) = 2021,7,1,0,0,0
+
+Total simulation duration in radar time (sec) = 7.0004 ! multiple of PRI and gps_res + 2*pri - eps
+
+
+### S/C PARAMETERS 
+
+Mechanical boresight angle (deg) = 37.0
+
+Desired pointing Roll,Pitch,Yaw Angles (deg,deg,deg) = 0.0,0.0,0.0
+
+Order in Roll(R),pitch(P),yaw(Y) rotation (YPR,RPY,etc) =   YPR
+
+Looking direction (L:left or R:right) = R !R
+
+Type of zero-doppler steering (N:normal or C:center) = C !N
+
+Apply zero doppler steering (YES or NO) = YES
+
+User defined Peg point or Not, if NO will determined by software (YES or NO) = NO
+
+User defined Latitude, Longitude, and track angle for SCH (deg,deg,deg) = 6.202367,-91.302324,-11.920757
+
+
+
+### LUT-PVA PARAMETERS
+
+Whether or not use input file for S/C position,velocity, and attitude (YES or NO) = NO
+
+Name of the input S/C-PVA file and output LUT file (-) = LUT_SC_PVA.dat
+
+
+
+### ANTENNA PARAMETERS
+
+AZ (Y-Z plane) and EL (X-Z plane) rotation angles to get from XYZ to antenna fixed coordinate  (deg,deg) =  0.0,0.0
+
+Lever arm , location of origin of ant fixed coordinate in s/c coordinate "ijk" (m,m,m) = 0.0,0.0,0.0
+
+Grid type (EL-AND-AZ,EL-OVER-AZ,AZ-OVER-EL, or PHI-THETA) = EL-AND-AZ
+
+Input Filenames of H-pol and V-pol RX antenna patterns used for all channels (-,-) =  Lband_4g19c_grd1_12Beams_hpol.dat,Lband_4g19c_grd1_12Beams_vpol.dat !Lband_only_12Beams_hdr_hpol.dat,Lband_only_12Beams_hdr_vpol.dat  !Lband_only_12Beams_hdr_hpol_shifted.dat,Lband_only_12Beams_hdr_vpol_shifted.dat !Lband_only_12Beams_hdr_hpol.dat,Lband_only_12Beams_hdr_vpol.dat 
+
+Length of antenna in AZ and EL for generating sinc antenna patterns if desired (m,m) = 12.0,12.0
+
+
+
+### LUT-ANT PARAMETERS
+
+Whether or not use the input files for RX antenna patterns (YES or NO) = NO
+
+Desired number of output channels/beams out of available one starting from one (-) = 12
+
+Start,stop, and step of output AZ/PHI angle coverage (deg,deg,deg) = -3,3,0.0001 !-2.0,4.0,0.02 
+
+Start,stop, and step of output EL/THETA angle coverage (deg,deg,deg) = -6.5,6.5,0.02 !-7.3,4.4,0.02
+
+Name of output RX antenna patterns for H-pol and V-pol (-,-) = LUT_ANT_RX_HPOL.dat,LUT_ANT_RX_VPOL.dat
+
+Interpolation method used for interpolating output RX antenna patterns (LINEAR or SPLINE) = LINEAR
+
+
+### RADAR PARAMETERS
+
+Polarization mode of transmit (SINGLE,DUAL,or QUAD) = SINGLE !SINGLE !DUAL !SINGLE 
+
+Polarization type (V : vertical ,H : horizontal ,L : left-circular ,R : right-circular, S: linear-slant, or C: compact) = H !H
+
+Center frequency (MHz) = 1257.5 
+
+Nominal PRF  (Hz) = 1650.0515641113786 ! PRI = integer multiple of ADC clocks
+
+Type of PRF dithering around nominal one (RAMP,RANDOM, or CONST) = CONST !RAMP !RANDOM !CONST 
+
+Number of pulses for each PRF to dwell on in PRF dithering (-) = 1
+
+PRI resolution used in PRF dithering  (us) = 0.12
+
+Sweep time in PRF dithering (msec) = 620
+
+Whether or not mirror PRF dithered sequence (YES or NO) = NO
+
+Rms jitter value of PRF (ps) = 0.0
+
+Starting look angle used in DWP estimation (deg) = 36.3 !35.8 !38.2 !36.82 
+
+Whether DWP time shall be remained fixed or not (YES or NO)  = YES
+
+Total RX window length (us) = 130.0 !120.0 !724.0 !70.0 
+
+Guard time used in either side of TX pulse on receiver (us) = 1.0
+
+Max distance error in estimation of round-trip with no start-stop (m) = 0.003 
+
+Max number of iterations in round trip estimation with no start-stop (-) = 3
+
+Interpolation method used for round-trip estimation with no start-stop (LINEAR or SPLINE) = LINEAR
+
+Number of ambiguous pulses on either side of desired TX pulse used for range ambiguity in rx window (-) = 3 !1
+
+
+### ADC PARAMETERS
+
+Sampling frequency of ADC (MHz) = 24.0 !161.0
+
+Reference impedance at ADC (OHM) = 50.0
+
+Factor used for conversion from power to voltage , use 1.0 for peak voltage and 2.0 for RMS one (-) = 2.0
+
+RMS clock jitter of ADC clock (ps) = 0.0
+
+Peak differential voltage of ADC +/- (volt) = 1.0
+
+Number of bits in ADC (bits) = 12
+
+ENOB OF ADC (bits) = 12.0
+
+
+
+### TX-RF PARAMETERS
+
+H-pol Signal-path powers for all TX channels at ant port (watt)  = 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117
+
+H-pol Signal-path Phases of all TX channels at ant port (deg)  =  -96.6657000000,-72.9925000000,-49.3193000000,-25.6460000000,-1.9727700000,21.7005000000,45.3737000000,69.0470000000,92.7202000000,116.3930000000,140.0670000000,163.7400000000
+
+H-pol Calibration-path powers for all TX channels at ADC (milliwatt)  = 0.0005 !0.1
+
+H-pol Calibration-path Phases of all TX channels at ADC (deg)  = 0.0000000000
+
+V-pol Signal-path powers for all TX channels at ant port (watt)  = 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117
+
+V-pol Signal-path Phases of all TX channels at ant port (deg)  =  -96.6657000000,-72.9925000000,-49.3193000000,-25.6460000000,-1.9727700000,21.7005000000,45.3737000000,69.0470000000,92.7202000000,116.3930000000,140.0670000000,163.7400000000
+
+V-pol Calibration-path powers for all TX channels at ADC (milliwatt)  = 0.0005 !0.1
+
+V-pol Calibration-path Phases of all TX channels at ADC (deg)  = 0.0000000000
+
+Number of type of waveforms used for each channel (-)  = 1
+
+
+### LUT-TX-EVENT PARAMETERS
+
+Whether or not use input file for TX-EVENT LUT (YES or NO) = NO !YES !NO
+
+Name of the input/output TX-EVENT file/LUT (-) = LUT_TX_EVENT.dat 
+
+
+
+### TX-CHIRP PARAMETERS
+
+Number of frequency bands used for multi-band chirp, use 2 and above for split spectrum (-) = 1    ! 2
+
+All Chirp bandwidths in multi-band chirp (MHz) =  20.0 
+
+All chirp pulse widths in multi-band chirp (us) = 20.0
+
+All Center frequencies in multi-band chirp (MHz) = 1257.5
+
+Chirp slope used for all chirp bands (UP or DOWN) = UP
+
+Chirp side band used for all chirp bands (UPPER or LOWER) = UPPER
+
+
+    
+### LUT-TX-AWG PARAMETERS
+
+Whether or not use AWG input file for TX waveforms in all channels (YES or NO) = NO !YES !NO
+
+Name of the input AWG file and output AWG LUT = TX_AWG_LUT_hdr.dat
+
+
+
+### TARGET-DEM-SLOPE PARAMETERS
+
+Coordinate system for position and/or velocity of targets (ANT,LLH, or SCH) = ANT
+
+Three-element position of target (deg,deg,m) for ANT/LLH and (m,m,m) for SCH = 0.0,0.0,0.0  ! 0.0,0.908,0.0  ! 0.0,0.0,0.0
+
+Three-element velocity of target in "NED" used for ANT/LLH or "SCH" (m/s,m/s,m/s) = 0.0,0.0,0.0
+
+Amplitudes of polarimetric backscatter coefficients for {HH,VH,HV,VV} in linear scale (-,-,-,-) = 10.0,2.5,2.5,10.0
+
+Phases of polarimetric backscatter coefficients for {HH,VH,HV,VV} in (deg,deg,deg,deg)  = 0.0,0.0,0.0,0.0
+
+Target area (m**2) = 10000000.0 
+ 
+Cross-track surface slope at target location (deg)  = 0.0
+
+Whether or not use the SCH peg-point of S/C for target in SCH (YES or NO) = YES 
+
+Latitude,Longitude,and track angle of peg-point used for targets in SCH (deg,deg,deg) = 0.0,0.0,0.0 
+
+Max error in height estimation of target used for ANT frame only (m) = 1.0 
+
+Max number of iterations in estimation of target height used for ANT frame only (-) = 10
+
+Brightness temperature of planet surface used for all targets (Kelvin) = 0.0
+
+
+
+### LUT-TRG PARAMETERS
+
+Whether or not use input file for target parameters (YES or NO) = NO
+
+Name of the input target file and output target LUT (-) = targets_sch.dat !single_target_sch.dat !targets_sch.dat
+
+Min number of targets required to use parallel loop over targets (-) = 1000000
+
+
+
+### TF-BPF PARAMETERS
+
+ENBWs of Transfer functions for all H-pol receive channels (MHz) =  105.0
+
+ENBWs of Transfer functions for all V-pol receive channels (MHz) =  105.5
+
+Frequency centroids of Transfer functions for all H-pol receive channels (MHz) = 1257.5
+
+Frequency centroids of Transfer functions for all V-pol receive channels (MHz) = 1257.5
+
+Stop-band attenuation used for rejecting out-of ENBW frequencies in all receive channels (dB) = 40.0
+
+
+  
+### LUT-TFBP PARAMETERS
+
+Whether or not use input file for TF-BPF of all channels (YES or NO) = NO
+
+Name of H-pol and V-pol TF-BPF input files and output LUTs (-,-) = LUT_TF_BPF_HPOL_hdr.dat,LUT_TF_BPF_VPOL_hdr.dat
+
+Interpolation method used for interpolating input TF-BPF LUTs (linear or spline) =  spline !linear !spline 
+
+Min number of FFT points used in TF-BPF interpolation and filtering (-) = 32768
+
+ 
+
+### RX-RF PARAMETERS
+
+Ambient temperature used for receiver noise (kelvin) = 0.0 ! 290.0
+
+H-pol Echo-path gains of all RX channels (dB) =  60.0         
+
+V-POL Echo-path gains of all RX channels (dB) = 60.0
+
+H-POL Echo-path phases of all RX channels (deg) =  0.0      
+
+V-POL Echo-path phases of all RX channels(deg) = 0.0
+
+H-pol Calibration-path gains of all RX channels (dB) =   0.0    
+
+V-pol Calibration-path gains of all RX channels  (dB) = 0.0
+
+H-pol Calibration-path phases of all RX channels (deg) =  0.0         
+
+V-pol Calibration-path phases of all RX channels (deg) = 0.0
+
+H-pol Noise figures of all RX channels (dB) = -100 ! 3.5
+
+V-pol Noise figures of all RX channels (dB) = -100 ! 3.5
+
+H-pol Input 1-dB compression point powers of all RX channels (dBm) = -55.0
+
+V-pol Input 1-dB compression point powers of all RX channels (dBm) = -55.0
+
+H-pol ADC integer sample delays of all RX channels ,+/- lag/lead (-) = 0
+
+V-pol ADC integer sample delays of all RX channels ,+/- lag/lead (-) = 0
+
+
+
+### LUT-RXRF PARAMETERS
+
+Whether or not use input file for RX-RF parameters (YES or NO) = NO
+
+Name of the H-pol and V-pol input RX-RF files and output RX-RF LUT (-,-) = LUT_RX_RF_HPOL.dat,LUT_RX_RF_VPOL.dat 
+
+
+
+### LUT-NOISE PARAMETERS
+
+Number of random independent sets in noise LUTs (-) = 100
+
+Seed number for noise selection used in generating raw data (-) = 0
+
+Offset number for selected noise sequence used in generating raw data (-) = 0
+
+Name of the normal-distribution noise LUT (-) = LUT_NOISE_NORM.dat
+
+Name of the phase-noise LUT (-) = LUT_NOISE_PHNS.dat  
+
+
+
+### CALTONE PARAMETERS
+
+CW Frequency (MHz) = 1216.5 
+
+Start time of CW wrt edge of TX pulse (us) = 0.0 !11.0
+
+Duration of CW per min PRI (us) = 10.0 !800.0 !220.0 
+
+CW power level at source/waveform generator (milliwatt) = 0.0
+
+CW starting phase at source (deg) = 0.0 
+
+
+
+### LUT-CAL PARAMETERS
+
+Whether or not use input file for RX-CAL signal generation (YES or NO) = NO
+
+Name of the file of RX CAL signal and output Cal LUT (-) = LUT_CAL_SIG.dat
+
+
+### ATMOSPHERE PARAMETERS
+
+Faraday Rotation (deg) = 0.0
+
+The first and the second spectral slopes in two-component ionosphere turbulence model (-,-) = 3,5
+
+The inner and the outer scale irregularities in ionosphere turbulence model (km,km) = 0.5,10.0
+
+The percentage of TEC scintillation around its mean in ionosphere turbulence model (%) = 5.0
+
+The number of independent realizations of TEC scintillation in ionosphere turbulence model (-) = 200
+
+The scaling height in Chapman model of vertical electron density profile (km) = 50.0
+
+The start and stop heights of vertical Ionosphere profile with Chapman electron density (km,km) = 325.0,375.0
+
+Atmospheric one-way delay (m) = 0.0
+
+
+
+### LUT-ATMSP PARAMETERS
+
+Whether or not use input file for ionospheric calculation (YES or NO) = NO
+
+Name of the input files for Ionosphere TEC map and GMF map LUTs (-,-) = LUT_ION_TEC_MAP.dat, LUT_ION_GMF_MAP.dat
+
+Name of the output LUT file for all Ionosphere maps  (-) = LUT_ION_TEC_GMF.dat
+
+Name of the output LUT file for TEC scintillation in Ionosphere turbulence (-) = LUT_ION_TEC_TURB.dat
+
+Height of the ionosphere in TEC and GMF maps (km) = 350.0
+
+Angular resolutions for latitude and longitude in output LUT (deg,deg) = 0.5,0.5
+
+Interpolation method used for generating output LUT (LINEAR or SPLINE) = LINEAR
+
+Whether or not use input file for tropospheric calculation (YES or NO) = NO
+
+ 
+
+### INPUT-FILE PARAMETERS
+
+Path for all files = ./in/
+
+
+### OUTPUT-FILE PARAMETERS 
+
+Path for all files = ./out17/
+
+Endian type used for binary files (B : BIG_ENDIAN or L : LITTLE_ENDIAN) = L
+
+Name of the LOG file = PTS.log
+
+Print log on screen or not (YES or NO) = NO
+
+Max number of lines in log file = 3000
+
+Prefix name of raw data binary files for all channels , no ext = Raw_data
+
+Type of output binary raw data (R : real passband or C : complex baseband) = C !R !C !R
+
+  
+### LUT-DBF PARAMETERS 
+
+Names of DBF Coefficient LUT binary files for H-pol and V-pol (-,-) = DBF_COEF_LUT_HPOL.dat,DBF_COEF_LUT_VPOL.dat
+
+Name of TA LUT binary file used for all channels and pols = DBF_TA_LUT.dat
+
+Names of WD-WL LUT binary files used for all channels for H-pol and V-pol (-,-) = DBF_WD_WL_LUT_HPOL.dat,DBF_WD_WL_LUT_VPOL.dat
+
+Min,Max EL/THETA angles in DBF LUT file (deg,deg) =  -6.5,6.0  !-0.183,5.0 
+
+Number of angles in DBF LUT file (-) = 256
+
+Number of taps in DBF process (-) = 3
+
+Number of S/C positions at where the TA LUT is generated (-) = 1
+
+Whether or not adjust DBF timing values by total TX pulsewidth (YES or NO) = YES 
+
+
+### CONFIG-FILE PARAMETERS
+
+Mode number used in config files (-) =  10
+
+
+### TERRESTRIAL-RFI PARAMETERS
+
+Desired number of emitters (-) = 0 !5
+
+Type of location coordinates used for all emitters (LLH,ANT,or SCH) = ANT 
+
+Name of each emitter or radar ID (-) = CARSAR,CARSAR,ARSR3,ARSR4,ARSR3
+
+Latitude,angle or S coordinate of each emitter (deg or m) = 10.0,6.0,-3.0,0.0,7.0
+
+Longitude,angle or C coordinate of each emitter (deg or m) = 1.0,0.0,-1.0,3.0,-2.5 
+
+Height or H coordinate of each emitter (m) = 10.0,0.0,5.0,3.0,2.0
+
+Relative start time w.r.t. sim. start time for each emitter (msec) = -1.0,0.0,1.0,-.5,0.0
+
+Scan rate of each emitter in azimuth (rpm) = 5.0,0.0,5.0,2.0,0.0
+
+Start pointing angle of each emitter in azimuth (deg) = 90.0,180.0,-45.,20.0,0.0
+
+Type of pointing in elevation for each emitter (T:tracking, F:fixed, or S:scan) = F,T,F,S,F
+
+Nominal pointing angle in elevation for each radar (deg) = 40.0,5.0,10.0,45.0,70.0
+
+Transmit peak power of each emitter (dBw) = 34.0,40,51,32.0,44.0
+
+Nominal center frequency of each emitter (MHz) = 1250.0,1170.0,1235,1246,1299
+
+Frequency hopping for each emitter (Y : YES or N : NO) = N,N,Y,Y,N
+
+Nominal PRF for each emitter (Hz) = 300,2000.0,100.0,500,330
+
+Transmit bandwidth for each emitter (MHz) = 1.0,1.0,0.5,1.2,0.5
+
+Transmit pulsewidth for each emitter (us) = 100.0,100.0,200.0,10.0,200.0
+
+Fall-Rise time of transmit envelope for each emitter (ns) = 100.0,100.0,0.0,10.0,0.0
+
+Waveform type of each emitter (CW,CHIRP,BARKER,NLFM,or LUT) = CHIRP,CHIRP,NLFM,BARKER,LUT
+
+Chirp slope used for all chirp and NLFM emitters (UP or DOWN)  = UP
+
+Polarization type of each emitter (H:Horizontal,V:Vertical,or C:Circular) = H,C,V,C,C
+
+Antenna pattern type for each emitter (SIM or LUT) = SIM,SIM,LUT,LUT,SIM  
+
+Peak antenna gain for each emitter (dBi) = 50,50.0,52.0,20,52.0
+
+Aperture efficiency used for all SIM antenna patterns (-) = 1.0
+
+Elevation and azimuth angle resolutions for all output ant patterns (deg,deg) = 0.1,0.5 
+
+Period to update frequency and pointing for all emitters (msec) = 100.0 
+
+Prefix name for all input antenna LUTs (-) = LUT_RFI_ANT
+
+Prefix name for all input waveform LUTs (-) = LUT_RFI_WF
+
+Prefix name for all input frequency LUTs (-) = LUT_RFI_FRQ
+
+Prefix name for all input elevation pointing LUTs (-) = LUT_RFI_PNT
+
+
+
+
+
+
+
+ 
+ 
+
+
+
+
+ 
