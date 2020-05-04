@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import h5py
-import isce3 as cisce # TODO need to port rdr2geo_cone
+import json
 import logging
 from nisar.products.readers import Base
 from pathlib import Path
@@ -34,11 +34,14 @@ class Struct(object):
 def load_config(yaml):
     # TODO load defaults first.
     with open(yaml) as f:
-        return Struct(YAML().load(f))
+        cfg = YAML().load(f)
+    log.info(json.dumps(cfg, indent=2, default=str))
+    return Struct(cfg)
 
 
 def validate_config(x):
     # TODO
+    log.warning("Skipping input validation.")
     return x
 
 
@@ -210,7 +213,7 @@ class Raw(Base, family='nisar.productreader.raw'):
 
 
     # XXX C++ and Base.py assume SLC.  Grid less well defined for Raw case
-    # since PRF isn't necessarily constant.
+    # since PRF isn't necessarily constant.  Return pulse times with grid?
     def getRadarGrid(self, frequency='A', tx='H', prf=None):
         fc = self.getCenterFrequency(frequency)
         wvl = isce.core.speed_of_light / fc
@@ -232,6 +235,10 @@ class LoggingH5File(h5py.File):
     def create_dataset(self, *args, **kw):
         log.debug(f"Creating dataset {args[0]}")
         return super().create_dataset(*args, **kw)
+
+    def create_group(self, *args, **kw):
+        log.debug(f"Creating group {args[0]}")
+        return super().create_group(*args, **kw)
 
 
 def cosine_window(n, pedestal):
@@ -385,6 +392,56 @@ def make_doppler(cfg: Struct, frequency='A'):
     return fc, lut
 
 
+def make_output_grid(cfg: Struct, igrid):
+    t0 = t0in = igrid.sensing_start
+    t1 = t1in = t0 + igrid.length / igrid.prf
+    r0 = r0in = igrid.starting_range
+    r1 = r1in = r0 + igrid.width * igrid.range_pixel_spacing
+    # TODO crop chirp length, synthetic aperture, and reskew.
+    # TODO snap start time to standard interval
+    dr = igrid.range_pixel_spacing
+
+    p = cfg.processing.output_grid
+    DateTime = isce.core.DateTime
+    if p.start_time:
+        t0 = (DateTime(p.start_time) - igrid.ref_epoch).total_seconds()
+    if p.end_time:
+        t1 = (DateTime(p.end_time) - igrid.ref_epoch).total_seconds()
+    r0 = p.start_range or r0
+    r1 = p.end_range or r1
+    prf = p.output_prf or igrid.prf
+
+    if t1 < t0in:
+        raise ValueError(f"Output grid t1={t1} < input grid t0={t0in}")
+    if t0 > t1in:
+        raise ValueError(f"Output grid t0={t0} > input grid t1={t1in}")
+    if r1 < r0in:
+        raise ValueError(f"Output grid r1={r1} < input grid r0={r0in}")
+    if r0 > r1in:
+        raise ValueError(f"Output grid r0={r0} > input grid r1={r1in}")
+
+    nr = int(np.round((r1 - r0) / dr))
+    nt = int(np.round((t1 - t0) * prf))
+    assert (nr > 0) and (nt > 0)
+    ogrid = isce.product.RadarGridParameters(t0, igrid.wavelength, prf, r0,
+                                             dr, igrid.lookside, nt, nr,
+                                             igrid.ref_epoch)
+    return ogrid
+
+
+
+def get_kernel(cfg: Struct):
+    # TODO
+    opt = cfg.processing.azcomp.kernel
+    if opt.type.lower() != 'knab':
+        raise NotImplementedError("Only Knab kernel implemented.")
+    n = 1 + 2 * opt.halfwidth
+    kernel = isce.core.KnabKernel(n, 1 / 1.2)
+    assert opt.fit.lower() == "table"
+    table = isce.core.TabulatedKernelF32(kernel, opt.fit_order)
+    return table
+
+
 def focus(cfg):
     if len(cfg.inputs.raw) <= 0:
         raise IOError("need at least one raw data file")
@@ -394,8 +451,17 @@ def focus(cfg):
     raw = Raw(hdf5file=cfg.inputs.raw[0])
     dem = get_dem(cfg)
     orbit = get_orbit(cfg)
-    pulse_times, igrid = raw.getRadarGrid(frequency="A", tx="H")
+    pulse_times, raw_grid = raw.getRadarGrid(frequency="A", tx="H")
     fc_ref, dop_ref = make_doppler(cfg)
+    azres = cfg.processing.azcomp.azimuth_resolution
+    atmos = cfg.processing.dry_troposphere_model or "nodelay"
+    kernel = get_kernel(cfg)
+    scale = cfg.processing.encoding_scale_factor
+
+    log.info(f"len(pulses) = {len(pulse_times)}")
+    log.info("Raw grid is %s", raw_grid)
+    ogrid = make_output_grid(cfg, raw_grid)
+    log.info("Output grid is %s", ogrid)
 
     log.info(f"Creating output SLC product {cfg.outputs.slc}")
     slc = LoggingH5File(cfg.outputs.slc, mode="w")
@@ -415,6 +481,7 @@ def focus(cfg):
         rawdata = raw.getRawDataset(frequency, pol)
         log.info(f"Raw data shape = {rawdata.shape}")
         r = raw.getSlantRange(frequency)
+        fc = raw.getCenterFrequency()
         na = cfg.processing.rangecomp.block_size.azimuth
         nr = rawdata.shape[1]
 
@@ -424,6 +491,15 @@ def focus(cfg):
         rcmode = parse_rangecomp_mode(cfg.processing.rangecomp.mode)
         log.info(f"Preparing range compressor with {rcmode}")
         rc = isce.focus.RangeComp(chirp, nr, maxbatch=na, mode=rcmode)
+
+        # Rangecomp modifies range grid.  Also update wavelength.
+        rc_grid = raw_grid.copy()
+        rc_grid.starting_range -= (
+            rc_grid.range_pixel_spacing * rc.first_valid_sample)
+        rc_grid.width = rc.output_size
+        rc_grid.wavelength = isce.core.speed_of_light / fc
+        # TODO scale Doppler by fc/fc_ref
+        igeom = isce.container.RadarGeometry(rc_grid, orbit, dop_ref)
 
         name = str(Path(cfg.outputs.workdir) / "rangecomp")
         log.info(f"Writing range compressed data to {name}")
@@ -437,15 +513,25 @@ def focus(cfg):
             rc.rangecompress(rcfile.data[block], rawdata[block], batch)
 
         name = f"/science/LSAR/RSLC/swaths/frequency{frequency}/{pol}"
-        acdata = slc.create_dataset(name, dtype=complex32, shape=rcfile.data.shape)
+        acdata = slc.create_dataset(name, dtype=complex32, shape=ogrid.shape)
 
-        for pulse in range(0, rcfile.data.shape[0], na):
-            block = np.s_[pulse:pulse+na, :]
-            z = rcfile.data[block]
-            # TODO azcomp
-            log.info(f"Writing block at pulse {pulse}")
-            zf = to_complex32(z)
-            acdata.write_direct(zf, dest_sel=block)
+        nr = cfg.processing.azcomp.block_size.range
+        na = cfg.processing.azcomp.block_size.azimuth
+
+        for i in range(0, ogrid.length, na):
+            for j in range(0, ogrid.width, nr):
+                block = np.s_[i:i+na, j:j+nr]
+                log.info(f"Azcomp block at (i, j) = ({i}, {j})")
+                bgrid = ogrid[block]
+                # TODO scale doppler by fc/fc_ref
+                ogeom = isce.container.RadarGeometry(bgrid, orbit, dop_ref)
+                z = np.zeros(bgrid.shape, 'c8')
+                isce.focus.backproject(z, ogeom, rcfile.data, igeom, dem,
+                                       fc, azres, kernel, atmos,
+                                       vars(cfg.processing.azcomp.rdr2geo),
+                                       vars(cfg.processing.azcomp.geo2rdr))
+                zf = to_complex32(scale * z)
+                acdata.write_direct(zf, dest_sel=block)
 
 
 def main(argv):
