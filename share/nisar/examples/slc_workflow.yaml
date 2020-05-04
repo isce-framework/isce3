@@ -1,14 +1,10 @@
 inputs:
     # List of NISAR raw data products in L0B format.
     raw:
-    # - /mnt/ssd/Data/ALPSRP037370690.L0B.h5
-    # - /mnt/ssd/NISAR_ADT/REE_SRC/out16/REE_L0B_NISAR_DATA.h5
-    # - /mnt/ssd/NISAR_ADT/REE_SRC/hirad_dbf_dither2/REE_L0B_NISAR_DATA_DITHER.h5
-    # - /mnt/ssd/NISAR_ADT/REE_SRC/hirad_dbf_const/REE_L0B_NISAR_DATA_PASS2.h5
     - /mnt/ssd/NISAR_ADT/REE_SRC/out17/REE_L0B_out17_masked.h5
 
     # Digital elevation model, optional.
-    dem: null # dem.tif
+    dem: dem.tif
 
     # Refined orbit, optional.
     # Defaults to orbit within L0B product.
@@ -110,7 +106,7 @@ processing:
     doppler:
         # Offset between quaternion frame and antenna boresight in degrees.
         # TBD This will likely be parameter in a separate cal file.
-        azimuth_boresight_deg: 0.0 # 0.9
+        azimuth_boresight_deg: 0.9
 
         # How to interpolate between samples in the LUT.
         interp_method: bilinear
@@ -146,8 +142,8 @@ processing:
         # Azimuth compression can be tiled arbitrarily, though dimensions will
         # affect runtime.
         block_size:
-            range: 64
-            azimuth: 64
+            range: 0
+            azimuth: 1024
 
         # Desired azimuth resolution in meters.
         azimuth_resolution: 6.0
