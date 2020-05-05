@@ -32,14 +32,28 @@ IndentCaseLabels:           false
 IndentWrappedFunctionNames: false
 BreakInheritanceList: AfterColon
 AlignAfterOpenBracket: Align
-#AlwaysBreakTemplateDeclarations: Yes
+AlwaysBreakTemplateDeclarations: Yes
 
 PointerAlignment: Left
 
 # Braces
-BreakBeforeBraces: WebKit
+BreakBeforeBraces: Custom
 BraceWrapping:
+    AfterClass:      false
+    AfterControlStatement: false
+    AfterEnum:       false
+    AfterFunction:   true
+    AfterNamespace:  false
+    AfterStruct:     false
+    AfterUnion:      false
+    BeforeCatch:     false
+    BeforeElse:      false
+    IndentBraces:    false
     SplitEmptyFunction: false
+    SplitEmptyRecord: false
+    SplitEmptyNamespace: false
+
+CompactNamespaces: true
 
 # Misc
 AllowShortCaseLabelsOnASingleLine: true
