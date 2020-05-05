@@ -40,10 +40,10 @@ Sinc2dInterpolator(int sincLen, int sincSub) :
 /** @param[in] x X-coordinate to interpolate
   * @param[in] y Y-coordinate to interpolate
   * @param[in] z 2D matrix to interpolate. */
-template <class U>
-U
-isce::core::Sinc2dInterpolator<U>::
-interpolate(double x, double y, const Map& z) const {
+template<class U>
+U isce::core::Sinc2dInterpolator<U>::interpolate(double x, double y,
+                                                 const Map& z) const
+{
 
     // Separate interpolation coordinates into integer and fractional components
     const int ix = static_cast<int>(std::floor(x));
@@ -67,11 +67,11 @@ interpolate(double x, double y, const Map& z) const {
     return interpVal;
 }
 
-template <class U>
-U
-isce::core::Sinc2dInterpolator<U>::
-_sinc_eval_2d(const Map& arrin, int intpx, int intpy,
-              double frpx, double frpy) const {
+template<class U>
+U isce::core::Sinc2dInterpolator<U>::_sinc_eval_2d(const Map& arrin, int intpx,
+                                                   int intpy, double frpx,
+                                                   double frpy) const
+{
 
     // Initialize return value
     U ret(0.0);
@@ -93,12 +93,12 @@ _sinc_eval_2d(const Map& arrin, int intpx, int intpy,
     return ret;
 }
 
-template <class U>
-void
-isce::core::Sinc2dInterpolator<U>::
-_sinc_coef(double beta, double , int decfactor, double pedestal, int weight,
-           std::valarray<double> & filter) const {
- 
+template<class U>
+void isce::core::Sinc2dInterpolator<U>::_sinc_coef(
+        double beta, double, int decfactor, double pedestal, int weight,
+        std::valarray<double>& filter) const
+{
+
     int filtercoef = int(filter.size());
     double wgthgt = (1.0 - pedestal) / 2.0;
     double soff = (filtercoef - 1.) / 2.;

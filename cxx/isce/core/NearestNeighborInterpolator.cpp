@@ -9,10 +9,10 @@
 /** @param[in] x X-coordinate to interpolate
   * @param[in] y Y-coordinate to interpolate
   * @param[in] z 2D matrix to interpolate. */
-template <class U>
-U
-isce::core::NearestNeighborInterpolator<U>::
-interpolate(double x, double y, const Map& z) const {
+template<class U>
+U isce::core::NearestNeighborInterpolator<U>::interpolate(double x, double y,
+                                                          const Map& z) const
+{
 
     // Nearest indices
     const auto row = static_cast<Eigen::Index>(std::round(y));

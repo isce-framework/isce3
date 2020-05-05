@@ -9,10 +9,10 @@
 /** @param[in] x X-coordinate to interpolate
   * @param[in] y Y-coordinate to interpolate
   * @param[in] z 2D matrix to interpolate. */
-template <class U>
-U
-isce::core::BilinearInterpolator<U>::
-interpolate(double x, double y, const Map& z) const {
+template<class U>
+U isce::core::BilinearInterpolator<U>::interpolate(double x, double y,
+                                                   const Map& z) const
+{
 
     int x1 = std::floor(x);
     int x2 = std::ceil(x);

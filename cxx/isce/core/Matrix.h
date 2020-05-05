@@ -11,6 +11,7 @@
 #include <cmath>
 #include <valarray>
 #include <vector>
+
 #include <pyre/grid.h>
 
 #include "EMatrix.h"
@@ -127,9 +128,9 @@ class isce::core::Matrix {
 
         auto map() const
         {
-            return Eigen::Map<const EArray2D<cell_t>>{ _buffer,
-                static_cast<Eigen::Index>(_nrows),
-                static_cast<Eigen::Index>(_ncols)};
+            return Eigen::Map<const EArray2D<cell_t>> {
+                    _buffer, static_cast<Eigen::Index>(_nrows),
+                    static_cast<Eigen::Index>(_ncols)};
         }
 
     // Data members
