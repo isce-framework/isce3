@@ -44,6 +44,8 @@ TEST(TestRTC, RunRTC) {
     isce::core::LUT2d<double> dop =
             product.metadata().procInfo().dopplerCentroid(frequency);
 
+    dop.boundsError(false);
+
     // Set input parameters
     isce::geometry::rtcInputRadiometry inputRadiometry =
             isce::geometry::rtcInputRadiometry::BETA_NAUGHT;
