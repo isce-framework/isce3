@@ -1,0 +1,85 @@
+#!groovy
+
+pipeline {
+  options {
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '3'))
+  }
+  agent any
+  parameters {
+    credentials(name: 'GIT_OAUTH_TOKEN',
+                defaultValue: '76f208dd-33bd-4a08-86d3-f0f38ddb95da',
+                description: 'ID of Github-FN OAuth token.',
+                credentialType: 'com.cloudbees.plugins.credentials.impl.StringCredentialsImpl',
+                required: true)
+  }
+  stages {
+    stage("Build ISCEv3 docker image") {
+      agent any
+      steps {
+        echo "Build ISCEv3 docker image"
+        echo "WORKSPACE: ${WORKSPACE}"
+        withCredentials([string(credentialsId: params.GIT_OAUTH_TOKEN,
+                                variable: 'git_oauth_token')]) {
+          sh label: "Build ISCEv3 docker image", script: """
+            GIT_OAUTH_TOKEN=$git_oauth_token
+            bash .ci/jenkins/PR-isce-develop/build.sh
+          """
+          stash includes: '.ci/images/centos/cppcheck.xml', name: 'cppcheck_file'
+          stash includes: '.ci/images/centos/*.xml', name: 'ctest_files'
+        }
+      }
+    }
+  }
+  post {
+    always {
+      echo "Cleaning up workspace"
+      deleteDir()
+
+      echo "Publishing Cppcheck results"
+      echo "WORKSPACE: ${WORKSPACE}"
+      unstash 'cppcheck_file'
+      publishCppcheck (
+        pattern: ".ci/images/centos/cppcheck.xml",
+        ignoreBlankFiles: true,
+        allowNoReport: true
+      )
+
+      echo "Publishing xUnit test result report"
+      unstash 'ctest_files'
+      xunit (
+        thresholds: [
+          skipped (
+            unstableThreshold: '0',
+            unstableNewThreshold: '0'
+          ),
+          failed (
+            unstableThreshold: '0',
+            unstableNewThreshold: '0'
+          )
+        ],
+        tools: [
+          CTest (
+            pattern: '.ci/images/centos/*.xml',
+            skipNoTestFiles: false,
+            failIfNotNew: true,
+            deleteOutputFiles: true,
+            stopProcessingIfError: true
+          )
+        ]
+      )
+    }
+    success {
+      echo 'I succeeeded!'
+    }
+    unstable {
+      echo 'I am unstable :/'
+    }
+    failure {
+      echo 'I failed :('
+    }
+    changed {
+      echo 'Things were different before...'
+    }
+  }
+}
