@@ -6,7 +6,6 @@ if [ "$#" -ne 2 ]; then
   echo "      $0 my-test-tag 1"
   exit 1
 fi
-
 set -exu
 
 TAG=$1
@@ -37,7 +36,7 @@ else
           && ctest --nocompress-output --output-on-failure -T Test || true \
           && cp Testing/$(head -1 Testing/TAG)/Test.xml . \
           && ctest --no-compress-output --output-on-failure --timeout 10000 -T MemCheck \
-                -E test.cxx.iscecuda.core.stream. \
+                -E "(iscecuda.core.stream|backproject|workflows)" \
                 || true \
           && cp Testing/$(head -1 Testing/TAG)/DynamicAnalysis.xml .'
 fi
