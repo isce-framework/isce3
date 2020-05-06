@@ -55,13 +55,13 @@ protected:
         }
 
         /** Return interpolation method. */
-        isce::core::dataInterpMethod method() const { return _method; }
+        dataInterpMethod method() const { return _method; }
 
     // Protected constructor and data to be used by derived classes
     protected:
-        inline Interpolator(isce::core::dataInterpMethod method) :
+        inline Interpolator(dataInterpMethod method) :
             _method{method} {}
-        isce::core::dataInterpMethod _method;
+        dataInterpMethod _method;
 };
 
 /** Definition of BilinearInterpolator */
@@ -176,7 +176,7 @@ private:
                     double frpy) const;
 
 private:
-    isce::core::Matrix<double> _kernel;
+    Matrix<double> _kernel;
     int _kernelLength, _kernelWidth, _sincHalf;
 }; 
 
@@ -187,23 +187,23 @@ namespace isce {
         /** Utility function to create interpolator pointer given an interpolator enum type */
         template <typename U>
         inline Interpolator<U> * createInterpolator(
-            isce::core::dataInterpMethod method, size_t order = 6,
-            int sincLen = isce::core::SINC_LEN, int sincSub = isce::core::SINC_SUB
+            dataInterpMethod method, size_t order = 6,
+            int sincLen = SINC_LEN, int sincSub = SINC_SUB
             ) {
-            if (method == isce::core::BILINEAR_METHOD) {
-                return new isce::core::BilinearInterpolator<U>();
-            } else if (method == isce::core::BICUBIC_METHOD) {
-                return new isce::core::BicubicInterpolator<U>();
-            } else if (method == isce::core::BIQUINTIC_METHOD) {
-                return new isce::core::Spline2dInterpolator<U>(order);
-            } else if (method == isce::core::NEAREST_METHOD) {
-                return new isce::core::NearestNeighborInterpolator<U>();
-            } else if (method == isce::core::SINC_METHOD) {
-                return new isce::core::Sinc2dInterpolator<U>(
+            if (method == BILINEAR_METHOD) {
+                return new BilinearInterpolator<U>();
+            } else if (method == BICUBIC_METHOD) {
+                return new BicubicInterpolator<U>();
+            } else if (method == BIQUINTIC_METHOD) {
+                return new Spline2dInterpolator<U>(order);
+            } else if (method == NEAREST_METHOD) {
+                return new NearestNeighborInterpolator<U>();
+            } else if (method == SINC_METHOD) {
+                return new Sinc2dInterpolator<U>(
                     sincLen, sincSub
                 );
             } else {
-                return new isce::core::BilinearInterpolator<U>();
+                return new BilinearInterpolator<U>();
             }
         }
 
