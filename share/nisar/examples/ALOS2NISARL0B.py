@@ -211,20 +211,34 @@ def addImagery(h5file, ldr, imgfile, pol):
     else:
         txgrp = fid[txgrpstr]
 
-    ###Create imagery layer
+    ###Create imagery group
     rximgstr = os.path.join(txgrpstr, 'rx{0}'.format(rxP))
     if rximgstr in fid:
         fid.close()
         raise ValueError('Reparsing polarization {0}. Array already exists {1}'.format(pol, rximgstr))
 
     print('Dimensions: {0}L x {1}P'.format(nLines, nPixels))
-
-    cpxtype = numpy.dtype([('r', numpy.float16), ('i', numpy.float16)])
     fid.create_group(rximgstr)
-    rximg = fid.create_dataset(os.path.join(rximgstr, pol), dtype=cpxtype, shape=(nLines,nPixels), chunks=True)
+
+    ##Set up BFPQLUT
+    assert firstrec.SARRawSignalData.dtype.itemsize <= 2
+    lut = numpy.arange(2**16, dtype=numpy.float32)
+    assert numpy.issubdtype(firstrec.SARRawSignalData.dtype, numpy.signedinteger)
+    lut[-2**15:] -= 2**16
+    assert ldr.summary.DCBiasIComponent == ldr.summary.DCBiasQComponent
+    lut -= ldr.summary.DCBiasIComponent
+    BAD_VALUE = -2**15
+    lut[BAD_VALUE] = numpy.nan
+    rxlut = fid.create_dataset(os.path.join(rximgstr, 'BFPQLUT'), data=lut)
+
+
+    #Create imagery layer
+    compress = dict(chunks=(4, 512), compression="gzip", compression_opts=9, shuffle=True)
+    cpxtype = numpy.dtype([('r', numpy.int16), ('i', numpy.int16)])
+    rximg = fid.create_dataset(os.path.join(rximgstr, pol), dtype=cpxtype, shape=(nLines,nPixels), **compress)
 
     ##Start populating the imagery
-    bias = ldr.summary.DCBiasIComponent
+
     rec = firstrec
     for linnum in range(1, nLines+1):
         if (linnum % 1000 == 0):
@@ -237,18 +251,22 @@ def addImagery(h5file, ldr, imgfile, pol):
 
         #Adjust range line
         rshift = int(numpy.rint((rec.SlantRangeToFirstSampleInm - r0) / dr))
-        write_arr = numpy.full((2*nPixels), numpy.nan, dtype=numpy.float16)
+        write_arr = numpy.full((2*nPixels), BAD_VALUE, dtype=numpy.int16)
 
-        inarr = rec.SARRawSignalData[0,:].astype(numpy.float16)
-        inarr[inarr == 0] = numpy.nan
+        inarr = rec.SARRawSignalData[0,:].astype(numpy.int16)
+
+        left = 2 * rec.ActualCountOfLeftFillPixels
+        right = 2 * rec.ActualCountOfRightFillPixels
+        inarr[:left] = BAD_VALUE
+        inarr[-right:] = BAD_VALUE
 
         if rshift >= 0:
-            write_arr[2*rshift:] = inarr[:2*(nPixels - rshift)] - bias
+            write_arr[2*rshift:] = inarr[:2*(nPixels - rshift)]
         else:
-            write_arr[:2*rshift] = inarr[-2*rshift:] - bias
+            write_arr[:2*rshift] = inarr[-2*rshift:]
 
         if firstInPol:
-            inds = numpy.where(~numpy.isnan(write_arr))
+            inds = numpy.where(write_arr != BAD_VALUE)[0]
             if len(inds) > 1:
                 txgrp['validSamplesSubSwath1'][linnum-1] = [inds[0], inds[-1]+1]
 
