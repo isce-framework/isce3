@@ -7,7 +7,7 @@ var searchData=
   ['bartlettkernel',['BartlettKernel',['../classisce_1_1core_1_1BartlettKernel.html#aad50113aff48506d12e05d749a59da2d',1,'isce::core::BartlettKernel']]],
   ['basis',['Basis',['../classisce_1_1core_1_1Basis.html#ab16823535fbcbcee1228e6bd654638fa',1,'isce::core::Basis::Basis()'],['../classisce_1_1core_1_1Basis.html#a996035044956f0b968cf4157875f225f',1,'isce::core::Basis::Basis(const Vec3 &amp;x0, const Vec3 &amp;x1, const Vec3 &amp;x2)'],['../classisce_1_1core_1_1Basis.html#a1f8f1f566d7ccfd62c509bf81f567320',1,'isce::core::Basis::Basis(const Vec3 &amp;p, const Vec3 &amp;v)']]],
   ['beta',['beta',['../classisce_1_1cuda_1_1signal_1_1gpuCrossmul.html#a0d0a2b7ac9390857b064db197aaf6cc2',1,'isce::cuda::signal::gpuCrossmul::beta()'],['../classisce_1_1signal_1_1Crossmul.html#af251748003cb48812a1e884faee4715e',1,'isce::signal::Crossmul::beta()']]],
-  ['bicubicinterpolator',['BicubicInterpolator',['../classisce_1_1core_1_1BicubicInterpolator.html#a14ba55881438ccb62445786af38fabab',1,'isce::core::BicubicInterpolator']]],
+  ['bicubicinterpolator',['BicubicInterpolator',['../classisce_1_1core_1_1BicubicInterpolator.html#a6fca2740dc496919e8d2a4bc28570b57',1,'isce::core::BicubicInterpolator']]],
   ['bilinearinterpolator',['BilinearInterpolator',['../classisce_1_1core_1_1BilinearInterpolator.html#ac68f2cad210125f346a4bc9184fbb4d6',1,'isce::core::BilinearInterpolator']]],
   ['binarysearch',['binarySearch',['../namespaceisce_1_1core.html#aa58e4e7320500f1e24913e17c79b0b09',1,'isce::core']]],
   ['boundserror',['boundsError',['../classisce_1_1cuda_1_1core_1_1gpuLUT2d.html#a379ad1d63ba3575941ead5c5a41be44c',1,'isce::cuda::core::gpuLUT2d']]],
