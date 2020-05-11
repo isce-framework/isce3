@@ -46,7 +46,7 @@ outputs:
     log: log.csv
 
     # Where to write intermediate/temporary files
-    workdir: /tmp
+    workdir: .
 
 # TODO
 archive: {}

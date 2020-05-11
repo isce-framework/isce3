@@ -44,7 +44,7 @@ outputs:
     log: log.csv
 
     # Where to write intermediate/temporary files
-    workdir: '/dev/shm'
+    workdir: .
 
 archive:
     quicklook: True
