@@ -11,6 +11,7 @@ import pybind_isce3 as isce
 from pybind_isce3.io.gdal import Raster, GDT_CFloat32
 from ruamel.yaml import YAML
 import sys
+import tempfile
 from typing import List
 
 # TODO some CSV logger
@@ -333,9 +334,9 @@ def focus(cfg):
         # TODO scale Doppler by fc/fc_ref
         igeom = isce.container.RadarGeometry(rc_grid, orbit, dop_ref)
 
-        name = str(Path(cfg.outputs.workdir) / "rangecomp")
-        log.info(f"Writing range compressed data to {name}")
-        rcfile = Raster(name, rc.output_size, rawdata.shape[0], GDT_CFloat32)
+        fd = tempfile.NamedTemporaryFile(dir=cfg.outputs.workdir, suffix='.rc')
+        log.info(f"Writing range compressed data to {fd.name}")
+        rcfile = Raster(fd.name, rc.output_size, rawdata.shape[0], GDT_CFloat32)
         log.info(f"Range compressed data shape = {rcfile.data.shape}")
 
         for pulse in range(0, rawdata.shape[0], na):
