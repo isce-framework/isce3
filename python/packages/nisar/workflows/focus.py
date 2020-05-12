@@ -122,7 +122,9 @@ class SLCWriter(h5py.File):
         return dset
 
 
-def cosine_window(n, pedestal):
+def cosine_window(n: int, pedestal: float):
+    if not (0.0 <= pedestal <= 1.0):
+        raise ValueError(f"Expected pedestal between 0 and 1, got {pedestal}.")
     b = 0.5 * (1 - pedestal)
     t = np.arange(n) - (n - 1) / 2.0
     return (1 - b) + b * np.cos(2 * np.pi * t / (n - 1))
