@@ -360,7 +360,7 @@ def focus(cfg):
         rawdata = raw.getRawDataset(frequency, pol)
         log.info(f"Raw data shape = {rawdata.shape}")
         r = raw.getSlantRange(frequency)
-        fc = raw.getCenterFrequency()
+        fc = raw.getCenterFrequency(frequency)
         na = cfg.processing.rangecomp.block_size.azimuth
         nr = rawdata.shape[1]
 
