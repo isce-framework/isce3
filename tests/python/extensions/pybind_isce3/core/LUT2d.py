@@ -10,7 +10,14 @@ def test_LUT2d():
     xvec = yvec = np.arange(-5.01, 5.01, 0.25)
     xx, yy = np.meshgrid(xvec, xvec)
     M = np.sin(xx*xx + yy*yy)
+    method = isce.core.DataInterpMethod.BIQUINTIC
     lut2d = isce.core.LUT2d(xvec, yvec, M, "biquintic")
+    assert lut2d.interp_method == method
+    # try ctor with enum method
+    lut2d = isce.core.LUT2d(xvec, yvec, M, method)
+    assert lut2d.interp_method == method
+    # check data accessor
+    assert np.allclose(M, lut2d.data)
 
     # Load reference data
     f_ref = iscetest.data + 'interpolator/data.txt'
