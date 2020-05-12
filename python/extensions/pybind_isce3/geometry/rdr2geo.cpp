@@ -61,9 +61,9 @@ void addbinding_rdr2geo(py::module& m)
         dem         Digital elevation model, meters above ellipsoid,
         side        Radar look direction.  Can be string "left" or "right"
                     or pybind11_isce.core.LookSide object.
-        threshold   Range convergence threshold, meters, default=0.05.
-        maxiter     Maximum iterations, default=50.
-        extraiter   Additional iterations, default=50.
+        threshold   Range convergence threshold, meters.
+        maxiter     Maximum iterations.
+        extraiter   Additional iterations.
 
     Returns ECEF XYZ of target in meters.
     )");
