@@ -276,12 +276,17 @@ def make_doppler(cfg: Struct, frequency='A'):
 
 
 def zero_doppler_like(dop: LUT2d):
-    m, n = dop.length, dop.width
-    x = np.zeros((m, n), 'f8')
+    x = np.zeros_like(dop.data)
     # Assume we don't care about interp method or bounds when all values == 0.
     method, check_bounds = "nearest", False
     return LUT2d(dop.x_start, dop.y_start, dop.x_spacing, dop.y_spacing, x,
                  method, check_bounds)
+
+
+def scale_doppler(dop: LUT2d, c: float):
+    x = c * dop.data
+    return LUT2d(dop.x_start, dop.y_start, dop.x_spacing, dop.y_spacing, x,
+                 dop.interp_method, dop.bounds_error)
 
 
 def make_output_grid(cfg: Struct, igrid):
@@ -361,9 +366,12 @@ def focus(cfg):
     log.info(f"Available polarizations: {raw.polarizations}")
     channels = [(f, p) for f in raw.polarizations for p in raw.polarizations[f]]
 
-    # TODO Find common center frequencies after mode intersection.
-    # TODO Need a way to scale a LUT2d or at least get its data.
-    slc.set_doppler(dop_ref, orbit.reference_epoch, "A")
+    dop = dict()
+    for frequency in raw.frequencies:
+        # TODO Find center frequencies after mode intersection.
+        fc = raw.getCenterFrequency(frequency)
+        dop[frequency] = scale_doppler(dop_ref, fc / fc_ref)
+        slc.set_doppler(dop[frequency], orbit.reference_epoch, frequency)
 
     for frequency, pol in channels:
         log.info(f"Processing frequency{frequency} {pol}")
@@ -387,8 +395,7 @@ def focus(cfg):
             rc_grid.range_pixel_spacing * rc.first_valid_sample)
         rc_grid.width = rc.output_size
         rc_grid.wavelength = isce.core.speed_of_light / fc
-        # TODO scale Doppler by fc/fc_ref
-        igeom = isce.container.RadarGeometry(rc_grid, orbit, dop_ref)
+        igeom = isce.container.RadarGeometry(rc_grid, orbit, dop[frequency])
 
         fd = tempfile.NamedTemporaryFile(dir=cfg.outputs.workdir, suffix='.rc')
         log.info(f"Writing range compressed data to {fd.name}")
