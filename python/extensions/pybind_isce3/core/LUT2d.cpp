@@ -107,6 +107,10 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
         .def_property_readonly("y_spacing", &LUT2d<T>::ySpacing)
         .def_property_readonly("length",    &LUT2d<T>::length)
         .def_property_readonly("width",     &LUT2d<T>::width)
+        .def_property_readonly("interp_method",
+            py::overload_cast<>(&LUT2d<T>::interpMethod, py::const_))
+        .def_property_readonly("bounds_error",
+            py::overload_cast<>(&LUT2d<T>::boundsError, py::const_))
         .def("eval", &LUT2d<T>::eval)
         ;
 }
