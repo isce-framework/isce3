@@ -1,7 +1,6 @@
 import logging
+from nisar.types import complex32
 import numpy as np
-
-complex32 = np.dtype([('r', np.float16), ('i', np.float16)])
 
 # TODO some CSV logger
 log = logging.getLogger("Raw")

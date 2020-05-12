@@ -4,8 +4,9 @@ import h5py
 import json
 import logging
 from pathlib import Path
-from nisar.products.readers.Raw import Raw, complex32
+from nisar.products.readers.Raw import Raw
 from nisar.workflows import defaults
+from nisar.types import to_complex32
 import numpy as np
 import pybind_isce3 as isce
 from pybind_isce3.core import DateTime, LUT2d
@@ -56,13 +57,6 @@ def validate_config(x):
     # TODO
     log.warning("Skipping input validation.")
     return x
-
-
-def to_complex32(z):
-    zf = np.zeros(z.shape, dtype=complex32)
-    zf['r'] = z.real
-    zf['i'] = z.imag
-    return zf
 
 
 class SLCWriter(h5py.File):
