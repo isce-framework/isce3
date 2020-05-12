@@ -270,9 +270,18 @@ def make_doppler(cfg: Struct, frequency='A'):
             sq = squint(ti, rj, orbit, attitude, side, angle=az, dem=dem,
                         **vars(opt.rdr2geo))
             dop[i,j] = squint_to_doppler(sq, wvl, vi)
-    lut = isce.core.LUT2d(np.asarray(r), t, dop, opt.interp_method, False)
+    lut = LUT2d(np.asarray(r), t, dop, opt.interp_method, False)
     log.info(f"Constructed Doppler LUT for fc={fc} Hz.")
     return fc, lut
+
+
+def zero_doppler_like(dop: LUT2d):
+    m, n = dop.length, dop.width
+    x = np.zeros((m, n), 'f8')
+    # Assume we don't care about interp method or bounds when all values == 0.
+    method, check_bounds = "nearest", False
+    return LUT2d(dop.x_start, dop.y_start, dop.x_spacing, dop.y_spacing, x,
+                 method, check_bounds)
 
 
 def make_output_grid(cfg: Struct, igrid):
@@ -335,6 +344,7 @@ def focus(cfg):
     orbit = get_orbit(cfg)
     pulse_times, raw_grid = raw.getRadarGrid(frequency="A", tx="H")
     fc_ref, dop_ref = make_doppler(cfg)
+    zerodop = zero_doppler_like(dop_ref)
     azres = cfg.processing.azcomp.azimuth_resolution
     atmos = cfg.processing.dry_troposphere_model or "nodelay"
     kernel = get_kernel(cfg)
@@ -403,8 +413,7 @@ def focus(cfg):
                 block = np.s_[i:i+na, j:j+nr]
                 log.info(f"Azcomp block at (i, j) = ({i}, {j})")
                 bgrid = ogrid[block]
-                # TODO scale doppler by fc/fc_ref
-                ogeom = isce.container.RadarGeometry(bgrid, orbit, dop_ref)
+                ogeom = isce.container.RadarGeometry(bgrid, orbit, zerodop)
                 z = np.zeros(bgrid.shape, 'c8')
                 isce.focus.backproject(z, ogeom, rcfile.data, igeom, dem,
                                        fc, azres, kernel, atmos,
