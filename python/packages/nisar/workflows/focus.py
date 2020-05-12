@@ -8,6 +8,7 @@ from nisar.products.readers.Raw import Raw, complex32
 from nisar.workflows import defaults
 import numpy as np
 import pybind_isce3 as isce
+from pybind_isce3.core import DateTime, LUT2d
 from pybind_isce3.io.gdal import Raster, GDT_CFloat32
 from ruamel.yaml import YAML
 import sys
@@ -64,7 +65,20 @@ def to_complex32(z):
     return zf
 
 
-class LoggingH5File(h5py.File):
+class SLCWriter(h5py.File):
+    def __init__(self, *args, band="LSAR", product="RSLC", **kw):
+        super().__init__(*args, **kw)
+        self.band = band
+        self.product = product
+        self.root = self.create_group(f"/science/{band}/{product}")
+        self.idroot = self.create_group(f"/science/{band}/identification")
+        self.attrs["Conventions"] = np.string_("CF-1.7")
+        self.attrs["contact"] = np.string_("nisarops@jpl.nasa.gov")
+        self.attrs["institution"] = np.string_("NASA JPL")
+        self.attrs["mission_name"] = np.string_("NISAR")
+        self.attrs["reference_document"] = np.string_("TBD")
+        self.attrs["title"] = np.string_("NISAR L1 RSLC Product")
+
     def create_dataset(self, *args, **kw):
         log.debug(f"Creating dataset {args[0]}")
         return super().create_dataset(*args, **kw)
@@ -72,6 +86,40 @@ class LoggingH5File(h5py.File):
     def create_group(self, *args, **kw):
         log.debug(f"Creating group {args[0]}")
         return super().create_group(*args, **kw)
+
+    def set_doppler(self, dop: LUT2d, epoch: DateTime, frequency='A'):
+        log.info(f"Saving Doppler for frequency {frequency}")
+        g = self.root.require_group("metadata/processingInformation/parameters")
+        # Actual LUT goes into a subdirectory, not created by serialization.
+        name = f"frequency{frequency}"
+        g.require_group(name)
+        dop.save_to_h5(g, f"{name}/dopplerCentroid", epoch, "Hz")
+
+    def swath(self, frequency="A") -> h5py.Group:
+        return self.root.require_group(f"swaths/frequency{frequency}")
+
+    def require_polarization(self, frequency="A", pol="HH"):
+        assert len(pol) == 2 and pol[0] in "HVLR" and pol[1] in "HV"
+        g = self.swath(frequency)
+        name = "listOfPolarizations"
+        if name in g:
+            pols = np.array(g[name])
+            del g[name]
+        else:
+            pols = np.array([pol], dtype="S2")
+        dset = g.create_dataset(name, data=pols)
+        desc = f"List of polarization layers with frequecy {frequency}"
+        dset.attrs["description"] = np.string_(desc)
+
+    def create_image(self, frequency="A", pol="HH", **kw) -> h5py.Dataset:
+        log.info(f"Creating SLC image for frequency={frequency} pol={pol}")
+        assert len(pol) == 2 and pol[0] in "HVLR" and pol[1] in "HV"
+        self.require_polarization(frequency, pol)
+        kw.setdefault("dtype", complex32)
+        dset = self.swath(frequency).create_dataset(pol, **kw)
+        dset.attrs["description"] = np.string_(f"Focused SLC image ({pol})")
+        dset.attrs["units"] = np.string_("DN")
+        return dset
 
 
 def cosine_window(n, pedestal):
@@ -235,7 +283,6 @@ def make_output_grid(cfg: Struct, igrid):
     dr = igrid.range_pixel_spacing
 
     p = cfg.processing.output_grid
-    DateTime = isce.core.DateTime
     if p.start_time:
         t0 = (DateTime(p.start_time) - igrid.ref_epoch).total_seconds()
     if p.end_time:
@@ -297,17 +344,14 @@ def focus(cfg):
     log.info("Output grid is %s", ogrid)
 
     log.info(f"Creating output SLC product {cfg.outputs.slc}")
-    slc = LoggingH5File(cfg.outputs.slc, mode="w")
+    slc = SLCWriter(cfg.outputs.slc, mode="w")
 
     log.info(f"Available polarizations: {raw.polarizations}")
     channels = [(f, p) for f in raw.polarizations for p in raw.polarizations[f]]
 
     # TODO Find common center frequencies after mode intersection.
     # TODO Need a way to scale a LUT2d or at least get its data.
-    g = slc.create_group(
-        "/science/LSAR/RSLC/metadata/processingInformation/parameters")
-    g.create_group("frequencyA")  # FIXME?
-    dop_ref.save_to_h5(g, "frequencyA/dopplerCentroid", orbit.reference_epoch, "Hz")
+    slc.set_doppler(dop_ref, orbit.reference_epoch, "A")
 
     for frequency, pol in channels:
         log.info(f"Processing frequency{frequency} {pol}")
@@ -344,11 +388,13 @@ def focus(cfg):
             block = np.s_[pulse:pulse+na, :]
             rc.rangecompress(rcfile.data[block], rawdata[block])
 
-        name = f"/science/LSAR/RSLC/swaths/frequency{frequency}/{pol}"
-        acdata = slc.create_dataset(name, dtype=complex32, shape=ogrid.shape)
+        acdata = slc.create_image(frequency, pol, shape=ogrid.shape)
 
         nr = cfg.processing.azcomp.block_size.range
         na = cfg.processing.azcomp.block_size.azimuth
+
+        if not cfg.processing.is_enabled.azcomp:
+            continue
 
         for i in range(0, ogrid.length, na):
             for j in range(0, ogrid.width, nr):
