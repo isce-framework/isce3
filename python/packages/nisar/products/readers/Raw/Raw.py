@@ -39,7 +39,7 @@ class Raw(Base, family='nisar.productreader.raw'):
                 + ' without parsing Product Identification')
 
         txpat = re.compile("^tx[HVLR]$")
-        rxpat = re.compile("^rx[HVLR]$")
+        rxpat = re.compile("^rx[HV]$")
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as fid:
             for freq in frequencyList:
                 group = fid[f"{self.SwathPath}/frequency{freq}"]
