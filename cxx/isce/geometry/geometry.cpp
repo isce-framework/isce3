@@ -209,7 +209,7 @@ rdr2geo(const Vec3& radarXYZ, const Vec3& axis, double angle,
     Basis tcn(radarXYZ, axis);
     // Construct "doppler factor" with desired angle.
     Pixel pix{range, range * sin(angle), 0};
-    Vec3 llh;
+    Vec3 llh{0,0,0}; // XXX Initialize height guess of 0 m.
     int converged = isce::geometry::rdr2geo(pix, tcn, radarXYZ, axis, ell, dem,
                                     llh, side, threshold, maxIter, extraIter);
     if (converged)
