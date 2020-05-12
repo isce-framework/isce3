@@ -22,5 +22,5 @@ def test_rangecomp():
 
     x = np.arange(batch, dtype='c8').reshape((batch, 1))
     y = np.zeros_like(x)
-    rc.rangecompress(y, x, batch)
+    rc.rangecompress(y, x)
     assert np.allclose(y, x)

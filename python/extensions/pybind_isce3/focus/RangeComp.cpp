@@ -55,37 +55,36 @@ void addbinding(py::class_<RangeComp>& pyRangeComp)
             )")
 
         .def("rangecompress",
-            // Better to omit batch parameter and just use in.shape[0]?
-            [](RangeComp & self, buf_t & out, const buf_t & in, int batch) {
+            [](RangeComp & self, buf_t & out, const buf_t & in) {
+                if (in.ndim() != out.ndim())
+                    throw std::length_error(
+                        "require same ndim on input and output");
+                int batch = 1;
                 // XXX C++ method doesn't do any size/shape checks.
                 // Require 2D with matching slow dim if batched operation.
-                if (batch > 1) {
-                    if (in.ndim() != 2)
-                        throw std::length_error("require 2D input array for batch > 1");
-                    if (out.ndim() != 2)
-                        throw std::length_error("require 2D output array for batch > 1");
-                    if ((in.shape(0) != batch) or (out.shape(0) != batch))
-                        throw std::length_error("slow dim must equal batch size");
+                if (in.ndim() == 2) {
+                    batch = in.shape(0);
+                    if (in.shape(0) != out.shape(0))
+                        throw std::length_error(
+                            "require equal batch size on input and output");
                     if (in.shape(1) != self.inputSize())
                         throw std::length_error("unexpected input length");
                     if (out.shape(1) != self.outputSize())
                         throw std::length_error("unexpected output length");
-                } else if (batch == 1) {
-                    if ((in.ndim() != 1) or (out.ndim() != 1))
-                        throw std::length_error("require 1D arrays for batch == 1");
+                } else if (in.ndim() == 1) {
                     if (in.shape(0) != self.inputSize())
                         throw std::length_error("unexpected input length");
                     if (out.shape(0) != self.outputSize())
                         throw std::length_error("unexpected output length");
                 } else {
-                    throw std::invalid_argument("require batch > 0");
+                    throw std::invalid_argument("require 1D or 2D data");
                 }
                 self.rangecompress(out.mutable_data(), in.data(), batch);
-            }, py::arg("out"), py::arg("in"), py::arg("batch") = 1, R"(
+            }, py::arg("out"), py::arg("in"), R"(
     Perform pulse compression on a batch of input signals
 
     Computes the frequency domain convolution of the input with the reference
-    function.
+    function.  Batch size inferred from first dimension of 2D data (1 for 1D).
             )")
 
         .def_property_readonly("chirp_size", &RangeComp::chirpSize)

@@ -342,8 +342,7 @@ def focus(cfg):
         for pulse in range(0, rawdata.shape[0], na):
             log.info(f"Range compressing block at pulse {pulse}")
             block = np.s_[pulse:pulse+na, :]
-            batch = rawdata[block].shape[0]
-            rc.rangecompress(rcfile.data[block], rawdata[block], batch)
+            rc.rangecompress(rcfile.data[block], rawdata[block])
 
         name = f"/science/LSAR/RSLC/swaths/frequency{frequency}/{pol}"
         acdata = slc.create_dataset(name, dtype=complex32, shape=ogrid.shape)
