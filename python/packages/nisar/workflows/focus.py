@@ -299,9 +299,11 @@ def focus(cfg):
 
     log.info(f"len(pulses) = {len(pulse_times)}")
     log.info("Raw grid is %s", raw_grid)
+    # Different grids for frequency A and B.
     ogrid = dict(A = make_output_grid(cfg, raw_grid))
     log.info("Output grid A is %s", ogrid["A"])
     if "B" in raw.frequencies:
+        # Ensure aligned grids between A and B by just using an integer skip.
         # Sample rate of A is always an integer multiple of B.
         rskip = int(np.round(raw.getRanges("B") / raw.getRanges("A").spacing))
         ogrid["B"] = ogrid["A"][:, ::rskip]
@@ -310,13 +312,19 @@ def focus(cfg):
     log.info(f"Creating output SLC product {cfg.outputs.slc}")
     slc = SLC(cfg.outputs.slc, mode="w")
 
+    # store metadata for each frequency
     dop = dict()
     for frequency in raw.frequencies:
         # TODO Find center frequencies after mode intersection.
         fc = raw.getCenterFrequency(frequency)
         dop[frequency] = scale_doppler(dop_ref, fc / fc_ref)
         slc.set_doppler(dop[frequency], orbit.reference_epoch, frequency)
+        og = ogrid[frequency]
+        t = og.sensing_start + np.arange(og.length) / og.prf
+        r = og.starting_range + np.arange(og.width) * og.range_pixel_spacing
+        slc.update_swath(t, og.ref_epoch, r, fc, frequency)
 
+    # main processing loop
     channels = [(f, p) for f in raw.polarizations for p in raw.polarizations[f]]
     for frequency, pol in channels:
         log.info(f"Processing frequency{frequency} {pol}")

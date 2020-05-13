@@ -2,9 +2,20 @@ import h5py
 import logging
 import numpy as np
 from pybind_isce3.core import LUT2d, DateTime
+from pybind_isce3.product import RadarGridParameters
 from nisar.types import complex32
 
 log = logging.getLogger("SLCWriter")
+
+# TODO refactor isce::io::setRefEpoch
+def time_units(epoch: DateTime) -> str:
+    # XXX isce::io::*RefEpoch don't parse or serialize fraction.
+    if epoch.frac != 0.0:
+        raise ValueError("Reference epoch must have integer seconds.")
+    date = "{:04d}-{:02d}-{:02d}".format(epoch.year, epoch.month, epoch.day)
+    time = "{:02d}:{:02d}:{:02d}".format(epoch.hour, epoch.minute, epoch.second)
+    return "seconds since " + date + " " + time
+
 
 class SLC(h5py.File):
     def __init__(self, *args, band="LSAR", product="RSLC", **kw):
@@ -61,3 +72,49 @@ class SLC(h5py.File):
         dset.attrs["description"] = np.string_(f"Focused SLC image ({pol})")
         dset.attrs["units"] = np.string_("DN")
         return dset
+
+    def update_swath(self, t: np.array, epoch: DateTime, r: np.array,
+                     fc: float, frequency="A"):
+        g = self.swath(frequency)
+        # Time scale is in parent of group.  Use require_dataset to assert
+        # matching time scale on repeated calls.
+        d = g.parent.require_dataset("zeroDopplerTime", t.shape, t.dtype, data=t)
+        d.attrs["units"] = np.string_(time_units(epoch))
+        d.attrs["description"] = np.string_(
+            "CF compliant dimension associated with azimuth time")
+
+        d = g.parent.require_dataset("zeroDopplerTimeSpacing", (), float)
+        d[()] = t[1] - t[0]
+        d.attrs["units"] = np.string_("seconds")
+        d.attrs["description"] = np.string_("Time interval in the along track"
+            " direction for raster layers. This is same as the spacing between"
+            " consecutive entries in the zeroDopplerTime array")
+
+        d = g.require_dataset("slantRange", r.shape, r.dtype, data=r)
+        d.attrs["units"] = np.string_("meters")
+        d.attrs["description"] = np.string_("CF compliant dimension associated"
+                                            " with slant range")
+
+        d = g.require_dataset("slantRangeSpacing", (), float)
+        d[()] = r[1] - r[0]
+        d.attrs["units"] = np.string_("meters")
+        d.attrs["description"] = np.string_("Slant range spacing of grid. Same"
+            " as difference between consecutive samples in slantRange array")
+
+        d = g.require_dataset("processedCenterFrequency", (), float)
+        d[()] = fc
+        d.attrs["units"] = np.string_("Hz")
+        d.attrs["description"] = np.string_("Center frequency of the processed"
+                                            " image in Hz")
+
+        # TODO other parameters filled with bogus values for now, no units
+        g.require_dataset("acquiredCenterFrequency", (), float)[()] = fc
+        g.require_dataset("acquiredRangeBandwidth", (), float)[()] = 20e6
+        g.require_dataset("nominalAcquisitionPRF", (), float)[()] = 1910.
+        g.require_dataset("numberOfSubSwaths", (), int)[()] = 1
+        g.require_dataset("processedAzimuthBandwidth", (), float)[()] = 1200.
+        g.require_dataset("processedRangeBandwidth", (), float)[()] = 20e6
+        g.require_dataset("sceneCenterAlongTrackSpacing", (), float)[()] = 4.
+        g.require_dataset("sceneCenterGroundRangeSpacing", (), float)[()] = 12.
+        d = g.require_dataset("validSamplesSubSwath1", (len(t), 2), 'int32')
+        d[:] = (0, len(r))
