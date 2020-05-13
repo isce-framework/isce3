@@ -305,7 +305,8 @@ def focus(cfg):
     if "B" in raw.frequencies:
         # Ensure aligned grids between A and B by just using an integer skip.
         # Sample rate of A is always an integer multiple of B.
-        rskip = int(np.round(raw.getRanges("B") / raw.getRanges("A").spacing))
+        rskip = int(np.round(raw.getRanges("B").spacing
+            / raw.getRanges("A").spacing))
         ogrid["B"] = ogrid["A"][:, ::rskip]
         log.info("Output grid B is %s", ogrid["B"])
 
