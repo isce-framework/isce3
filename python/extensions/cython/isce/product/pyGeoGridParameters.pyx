@@ -47,7 +47,7 @@ cdef class pyGeoGridParameters:
         return self.c_geogrid.startX()
 
     @startX.setter
-    def startX(self, val):
+    def startX(self, double val):
         self.c_geogrid.startX(val)
 
     @property
@@ -58,7 +58,7 @@ cdef class pyGeoGridParameters:
         return self.c_geogrid.startY()
 
     @startY.setter
-    def startY(self, val):
+    def startY(self, double val):
         self.c_geogrid.startY(val)
 
     @property
@@ -69,7 +69,7 @@ cdef class pyGeoGridParameters:
         return self.c_geogrid.spacingX()
 
     @spacingX.setter
-    def spacingX(self, val):
+    def spacingX(self, double val):
         self.c_geogrid.spacingX(val)
 
     @property
@@ -80,7 +80,7 @@ cdef class pyGeoGridParameters:
         return self.c_geogrid.spacingY()
 
     @spacingY.setter
-    def spacingY(self, val):
+    def spacingY(self, double val):
         self.c_geogrid.spacingY(val)
 
     @property
@@ -88,7 +88,7 @@ cdef class pyGeoGridParameters:
         return self.c_geogrid.width()
 
     @width.setter
-    def width(self, val):
+    def width(self, int val):
         self.c_geogrid.width(val)
 
     @property
@@ -96,7 +96,7 @@ cdef class pyGeoGridParameters:
         return self.c_geogrid.length()
 
     @length.setter
-    def length(self, val):
+    def length(self, int val):
         self.c_geogrid.length(val)
 
     @property
@@ -104,6 +104,6 @@ cdef class pyGeoGridParameters:
         return self.c_geogrid.epsg()
 
     @epsg.setter
-    def epsg(self, val):
+    def epsg(self, int val):
         self.c_geogrid.epsg(val) 
 
