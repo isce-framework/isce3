@@ -119,10 +119,35 @@ class SLC(h5py.File):
         d = g.require_dataset("validSamplesSubSwath1", (len(t), 2), 'int32')
         d[:] = (0, len(r))
 
-    def set_orbit(self, orbit: Orbit):
+    def set_orbit(self, orbit: Orbit, accel=None, type="Custom"):
         log.info("Writing orbit to SLC")
         g = self.root.require_group("metadata/orbit")
         orbit.save_to_h5(g)
-        # TODO description attributes
-        # TODO acceleration
-        # TODO orbitType
+        # interpMethod not in L1 spec. Delete it?
+        # Add description attributes.  Should these go in saveToH5 method?
+        g["time"].attrs["description"] = np.string_("Time vector record. This"
+            " record contains the time corresponding to position, velocity,"
+            " acceleration records")
+        g["position"].attrs["description"] = np.string_("Position vector"
+            " record. This record contains the platform position data with"
+            " respect to WGS84 G1762 reference frame")
+        g["velocity"].attrs["description"] = np.string_("Velocity vector"
+            " record. This record contains the platform velocity data with"
+            " respect to WGS84 G1762 reference frame")
+
+        # Orbit source/type
+        d = g.require_dataset("orbitType", (), "S10", data=np.string_(type))
+        d.attrs["description"] = np.string_("PrOE (or) NOE (or) MOE (or) POE"
+                                            " (or) Custom")
+        # acceleration not stored in isce3 Orbit class.
+        if accel is None:
+            log.warning("Populating orbit/acceleration with zeros")
+            accel = np.zeros_like(orbit.velocity)
+        shape = orbit.velocity.shape
+        if accel.shape != shape:
+            raise ValueError("Acceleration dims must match orbit fields.")
+        d = g.require_dataset("acceleration", shape, float, data=accel)
+        d.attrs["description"] = np.string_("Acceleration vector record. This"
+            " record contains the platform acceleration data with respect to"
+            " WGS84 G1762 reference frame")
+        d.attrs["units"] = np.string_("meters per second squared")
