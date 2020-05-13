@@ -12,14 +12,7 @@ cdef class pyGeoGridParameters:
     cdef GeoGridParameters * c_geogrid
     cdef bool __owner
 
-    #def __cinit__(self, startX=None, startY=None,
-    #            spacingX=None, spacingY=None, 
-    #            width=None, length=None, 
-    #            epsg=None):
-
-    #    self.c_geogrid = new GeoGridParameters(startX, startY,
-    #                            spacingX, spacingY, width, length, epsg)
-    def __cinit__(self):
+   def __cinit__(self):
         self.c_geogrid = new GeoGridParameters()
         self.__owner = True
         return
@@ -27,16 +20,13 @@ cdef class pyGeoGridParameters:
     def __dealloc__(self):
         if self.__owner:
             del self.c_geogrid
-    
+
     @staticmethod
-    cdef cbind(GeoGridParameters geoGrid):
-        """
-        Creates a new pyGeoGridParameters instance from a C++ GeoGridParameters instance.
-        """
+    def bin(pyGeoGridParameters geogrid):
         new_grid = pyGeoGridParameters()
         del new_grid.c_geogrid
-        new_grid.c_geogrid = new GeoGridParameters(geoGrid)
-        new_grid.__owner = True
+        new_grid.c_geogrid = geogrid.c_geogrid
+        new_grid.__owner = False
         return new_grid
 
     @property
@@ -49,6 +39,7 @@ cdef class pyGeoGridParameters:
     @startX.setter
     def startX(self, double val):
         self.c_geogrid.startX(val)
+
 
     @property
     def startY(self):
