@@ -74,7 +74,7 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
         // the geometrical phase to be removed for flattening the SLC phase.
         std::valarray<std::complex<double>> geometricalPhase(blockSize);
 
-        #pragma omp parallel shared(azimuthFirstLine, rangeFirstPixel, azimuthLastLine, rangeLastPixel)
+        //#pragma omp parallel shared(azimuthFirstLine, rangeFirstPixel, azimuthLastLine, rangeLastPixel)
         {
             // Init thread-local swath extents
             int localAzimuthFirstLine = radarGrid.length() - 1;
@@ -83,7 +83,7 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
             int localRangeLastPixel = 0;
 
             // Loop over lines, samples of the output grid
-            #pragma omp for collapse(2)
+            //#pragma omp for collapse(2)
             for (size_t blockLine = 0; blockLine < geoBlockLength; ++blockLine) {
                 for (size_t pixel = 0; pixel < geoGrid.width(); ++pixel) {
 
@@ -97,8 +97,6 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
 
                     // x in the output geocoded Grid
                     double x = geoGrid.startX() + geoGrid.spacingX() * pixel;
-
-                    // Consistency check
 
                     // compute the azimuth time and slant range for the
                     // x,y coordinates in the output grid
@@ -148,7 +146,7 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
                 } // end loop over pixels of output grid
             } // end loops over lines of output grid
 
-            #pragma omp critical
+            //#pragma omp critical
             {
                 // Get min and max swath extents from among all threads
                 azimuthFirstLine = std::min(azimuthFirstLine, localAzimuthFirstLine);

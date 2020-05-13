@@ -12,7 +12,7 @@ cdef class pyGeoGridParameters:
     cdef GeoGridParameters * c_geogrid
     cdef bool __owner
 
-   def __cinit__(self):
+    def __cinit__(self):
         self.c_geogrid = new GeoGridParameters()
         self.__owner = True
         return

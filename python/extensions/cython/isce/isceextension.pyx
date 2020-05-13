@@ -55,6 +55,8 @@ include "image/pyResampSlc.pyx"
 include "signal/pyCrossmul.pyx"
 include "signal/pyLooks.pyx"
 
+include "geocode/pygeocodeSlc.pyx"
+
 # Include the geometry extensions
 include "geometry/pygeometry.pyx"
 include "geometry/pyTopo.pyx"
