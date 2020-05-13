@@ -311,6 +311,7 @@ def focus(cfg):
 
     log.info(f"Creating output SLC product {cfg.outputs.slc}")
     slc = SLC(cfg.outputs.slc, mode="w")
+    slc.set_orbit(orbit)
 
     # store metadata for each frequency
     dop = dict()

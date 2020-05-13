@@ -1,7 +1,7 @@
 import h5py
 import logging
 import numpy as np
-from pybind_isce3.core import LUT2d, DateTime
+from pybind_isce3.core import LUT2d, DateTime, Orbit
 from pybind_isce3.product import RadarGridParameters
 from nisar.types import complex32
 
@@ -118,3 +118,11 @@ class SLC(h5py.File):
         g.require_dataset("sceneCenterGroundRangeSpacing", (), float)[()] = 12.
         d = g.require_dataset("validSamplesSubSwath1", (len(t), 2), 'int32')
         d[:] = (0, len(r))
+
+    def set_orbit(self, orbit: Orbit):
+        log.info("Writing orbit to SLC")
+        g = self.root.require_group("metadata/orbit")
+        orbit.save_to_h5(g)
+        # TODO description attributes
+        # TODO acceleration
+        # TODO orbitType
