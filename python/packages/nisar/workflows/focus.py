@@ -285,7 +285,6 @@ def focus(cfg):
     raw = Raw(hdf5file=cfg.inputs.raw[0])
     dem = get_dem(cfg)
     orbit = get_orbit(cfg)
-    pulse_times, raw_grid = raw.getRadarGrid(frequency="A", tx="H")
     fc_ref, dop_ref = make_doppler(cfg)
     zerodop = zero_doppler_like(dop_ref)
     azres = cfg.processing.azcomp.azimuth_resolution
@@ -293,16 +292,23 @@ def focus(cfg):
     kernel = get_kernel(cfg)
     scale = cfg.processing.encoding_scale_factor
 
+    # Generate reference output grid based on highest bandwidth, always A.
+    log.info(f"Available polarizations: {raw.polarizations}")
+    txref = raw.polarizations["A"][0][0]
+    pulse_times, raw_grid = raw.getRadarGrid(frequency="A", tx=txref)
+
     log.info(f"len(pulses) = {len(pulse_times)}")
     log.info("Raw grid is %s", raw_grid)
-    ogrid = make_output_grid(cfg, raw_grid)
-    log.info("Output grid is %s", ogrid)
+    ogrid = dict(A = make_output_grid(cfg, raw_grid))
+    log.info("Output grid A is %s", ogrid["A"])
+    if "B" in raw.frequencies:
+        # Sample rate of A is always an integer multiple of B.
+        rskip = int(np.round(raw.getRanges("B") / raw.getRanges("A").spacing))
+        ogrid["B"] = ogrid["A"][:, ::rskip]
+        log.info("Output grid B is %s", ogrid["B"])
 
     log.info(f"Creating output SLC product {cfg.outputs.slc}")
     slc = SLC(cfg.outputs.slc, mode="w")
-
-    log.info(f"Available polarizations: {raw.polarizations}")
-    channels = [(f, p) for f in raw.polarizations for p in raw.polarizations[f]]
 
     dop = dict()
     for frequency in raw.frequencies:
@@ -311,11 +317,12 @@ def focus(cfg):
         dop[frequency] = scale_doppler(dop_ref, fc / fc_ref)
         slc.set_doppler(dop[frequency], orbit.reference_epoch, frequency)
 
+    channels = [(f, p) for f in raw.polarizations for p in raw.polarizations[f]]
     for frequency, pol in channels:
         log.info(f"Processing frequency{frequency} {pol}")
         rawdata = raw.getRawDataset(frequency, pol)
         log.info(f"Raw data shape = {rawdata.shape}")
-        r = raw.getSlantRange(frequency)
+        _, raw_grid = raw.getRadarGrid(frequency, tx=pol[0])
         fc = raw.getCenterFrequency(frequency)
         na = cfg.processing.rangecomp.block_size.azimuth
         nr = rawdata.shape[1]
@@ -345,7 +352,7 @@ def focus(cfg):
             block = np.s_[pulse:pulse+na, :]
             rc.rangecompress(rcfile.data[block], rawdata[block])
 
-        acdata = slc.create_image(frequency, pol, shape=ogrid.shape)
+        acdata = slc.create_image(frequency, pol, shape=ogrid[frequency].shape)
 
         nr = cfg.processing.azcomp.block_size.range
         na = cfg.processing.azcomp.block_size.azimuth
@@ -353,11 +360,11 @@ def focus(cfg):
         if not cfg.processing.is_enabled.azcomp:
             continue
 
-        for i in range(0, ogrid.length, na):
-            for j in range(0, ogrid.width, nr):
+        for i in range(0, ogrid[frequency].length, na):
+            for j in range(0, ogrid[frequency].width, nr):
                 block = np.s_[i:i+na, j:j+nr]
                 log.info(f"Azcomp block at (i, j) = ({i}, {j})")
-                bgrid = ogrid[block]
+                bgrid = ogrid[frequency][block]
                 ogeom = isce.container.RadarGeometry(bgrid, orbit, zerodop)
                 z = np.zeros(bgrid.shape, 'c8')
                 isce.focus.backproject(z, ogeom, rcfile.data, igeom, dem,
