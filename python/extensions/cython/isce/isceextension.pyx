@@ -46,6 +46,7 @@ include "product/pySwath.pyx"
 include "product/pyRadarGridParameters.pyx"
 include "product/pyMetadata.pyx"
 include "product/pyProduct.pyx"
+include "product/pyGeoGridParameters.pyx"
 
 # Include the image extensions
 include "image/pyResampSlc.pyx"

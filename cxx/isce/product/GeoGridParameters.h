@@ -13,7 +13,7 @@ class isce::product::GeoGridParameters {
 
     public:
 
-        //inline GeoGridParameters() {}
+        inline GeoGridParameters() {}
 
         inline GeoGridParameters(double geoGridStartX, double geoGridStartY,
                 double geoGridSpacingX, double geoGridSpacingY,
