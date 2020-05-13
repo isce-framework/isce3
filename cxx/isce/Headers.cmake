@@ -69,6 +69,11 @@ focus/DryTroposphereModel.h
 focus/DryTroposphereModel.icc
 focus/GapMask.h
 focus/RangeComp.h
+geocode/baseband.h
+geocode/geo2rdr.h
+geocode/geocodeSlc.h
+geocode/interpolate.h
+geocode/loadDem.h
 geometry/DEMInterpolator.h
 geometry/forward.h
 geometry/Shapes.h
@@ -123,6 +128,7 @@ math/ComplexMultiply.h
 math/Sinc.h
 math/Sinc.icc
 product/forward.h
+product/GeoGridParameters.h
 product/Metadata.h
 product/ProcessingInformation.h
 product/Product.h
