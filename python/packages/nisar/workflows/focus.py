@@ -285,6 +285,7 @@ def focus(cfg):
     raw = Raw(hdf5file=cfg.inputs.raw[0])
     dem = get_dem(cfg)
     orbit = get_orbit(cfg)
+    attitude = get_attitude(cfg)
     fc_ref, dop_ref = make_doppler(cfg)
     zerodop = zero_doppler_like(dop_ref)
     azres = cfg.processing.azcomp.azimuth_resolution
@@ -313,6 +314,7 @@ def focus(cfg):
     log.info(f"Creating output SLC product {cfg.outputs.slc}")
     slc = SLC(cfg.outputs.slc, mode="w")
     slc.set_orbit(orbit) # TODO acceleration, orbitType
+    slc.set_attitude(attitude, orbit.reference_epoch)
 
     # store metadata for each frequency
     dop = dict()

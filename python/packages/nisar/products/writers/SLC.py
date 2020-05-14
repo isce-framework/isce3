@@ -1,7 +1,7 @@
 import h5py
 import logging
 import numpy as np
-from pybind_isce3.core import LUT2d, DateTime, Orbit
+from pybind_isce3.core import LUT2d, DateTime, Orbit, Quaternion
 from pybind_isce3.product import RadarGridParameters
 from nisar.types import complex32
 
@@ -134,7 +134,6 @@ class SLC(h5py.File):
         g["velocity"].attrs["description"] = np.string_("Velocity vector"
             " record. This record contains the platform velocity data with"
             " respect to WGS84 G1762 reference frame")
-
         # Orbit source/type
         d = g.require_dataset("orbitType", (), "S10", data=np.string_(type))
         d.attrs["description"] = np.string_("PrOE (or) NOE (or) MOE (or) POE"
@@ -151,3 +150,34 @@ class SLC(h5py.File):
             " record contains the platform acceleration data with respect to"
             " WGS84 G1762 reference frame")
         d.attrs["units"] = np.string_("meters per second squared")
+
+    def set_attitude(self, attitude: Quaternion, epoch: DateTime, type="Custom"):
+        log.info("Writing attitude to SLC")
+        g = self.root.require_group("metadata/attitude")
+        d = g.require_dataset("attitudeType", (), "S10", data=np.string_(type))
+        d.attrs["description"] = np.string_("PrOE (or) NOE (or) MOE (or) POE"
+                                            " (or) Custom")
+        t = np.asarray(attitude.time)
+        d = g.require_dataset("time", t.shape, t.dtype, data=t)
+        d.attrs["description"] = np.string_("Time vector record. This record"
+            " contains the time corresponding to attitude and quaternion"
+            " records")
+        d.attrs["units"] = np.string_(time_units(epoch))
+        # TODO attitude rates
+        n = len(attitude.time)
+        qdot = np.zeros((n, 3))
+        d = g.require_dataset("angularVelocity", (n,3), float, data=qdot)
+        d.attrs["units"] = np.string_("radians per second")
+        d.attrs["description"] = np.string_("Attitude angular velocity vectors"
+                                            " (wx, wy, wz)")
+        q = attitude.qvec
+        d = g.require_dataset("quaternions", q.shape, q.dtype, data=q)
+        d.attrs["units"] = np.string_("unitless")
+        d.attrs["description"] = np.string_("Attitude quaternions"
+                                            " (q0, q1, q2, q3)")
+        ypr = np.array([attitude.ypr(t) for t in attitude.time])
+        rpy = ypr[:,::-1]
+        d = g.require_dataset("eulerAngles", rpy.shape, rpy.dtype, data=rpy)
+        d.attrs["units"] = np.string_("radians")
+        d.attrs["description"] = np.string_("Attitude Euler angles"
+                                            " (roll, pitch, yaw)")
