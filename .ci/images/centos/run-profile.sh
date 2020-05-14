@@ -20,7 +20,7 @@ CONTAINER_DATADIR=/tmp/data # don't put in home since input data will be owned b
 CONTAINER_TESTDIR=/home/conda/test
 
 ###Run the container
-nvidia-docker run \
+docker run \
   --mount type=bind,source=${DATA},target=${CONTAINER_DATADIR} \
   --name ${CONTAINERTAG} ${IMAGE}:${TAG} \
   /bin/bash -c "source /opt/docker/bin/entrypoint_source &&
