@@ -143,8 +143,9 @@ Enumerations</h2></td></tr>
 <tr class="memdesc:af7de5226664e243acd368d5b40153485"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration type to indicate the algorithm used for geocoding. <br/></td></tr>
 <tr class="separator:af7de5226664e243acd368d5b40153485"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a45b6a680959063d1d834a218acf3827e"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a45b6a680959063d1d834a218acf3827e">geocodeMemoryMode</a> { <b>AUTO</b> = 0, 
-<b>RADAR_GRID_SINGLE_BLOCK</b> = 1, 
-<b>RADAR_GRID_MULTIPLE_BLOCKS</b> = 2
+<b>SINGLE_BLOCK</b> = 1, 
+<b>BLOCKS_GEOGRID</b> = 2, 
+<b>BLOCKS_GEOGRID_AND_RADARGRID</b> = 3
  }</td></tr>
 <tr class="memdesc:a45b6a680959063d1d834a218acf3827e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration type to indicate memory management. <br/></td></tr>
 <tr class="separator:a45b6a680959063d1d834a218acf3827e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -153,6 +154,12 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="memdesc:a2981b33ceb68e221e4809d51776b30b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration type to indicate input terrain radiometry (for RTC) <br/></td></tr>
 <tr class="separator:a2981b33ceb68e221e4809d51776b30b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a23803b7afea3a21b7c07ea6aeb6e8e"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a7a23803b7afea3a21b7c07ea6aeb6e8e">rtcMemoryMode</a> { <b>RTC_AUTO</b> = 0, 
+<b>RTC_SINGLE_BLOCK</b> = 1, 
+<b>RTC_BLOCKS_GEOGRID</b> = 2
+ }</td></tr>
+<tr class="memdesc:a7a23803b7afea3a21b7c07ea6aeb6e8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration type to indicate memory management. <br/></td></tr>
+<tr class="separator:a7a23803b7afea3a21b7c07ea6aeb6e8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3aa8a8b9dcd5aed1636befe62df852a5"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> { <b>AREA</b> = 0, 
 <b>AREA_FACTOR</b> = 1
  }</td></tr>
@@ -239,42 +246,42 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>_omp_thread_count</b> 
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:aa45dc46013cffadc97854c1d03e607ef"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>_applyRTC</b> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;input_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;input_rtc, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, float rtc_min_value, double abs_cal_factor, pyre::journal::info_t &amp;info, bool flag_complex_to_real_squared)</td></tr>
 <tr class="separator:aa45dc46013cffadc97854c1d03e607ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af87c2788238c21205b82d2aa83e7ea52"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#af87c2788238c21205b82d2aa83e7ea52">applyRTC</a> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;input_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> inputRadiometry=rtcInputRadiometry::BETA_NAUGHT, int exponent=0, <a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> rtc_area_mode=rtcAreaMode::AREA_FACTOR, <a class="el" href="namespaceisce_1_1geometry.html#ac32a2e1679c20b6be2f98d2b91ea91ca">rtcAlgorithm</a> rtc_algorithm=rtcAlgorithm::RTC_AREA_PROJECTION, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), float rtc_min_value_db=std::numeric_limits&lt; float &gt;::quiet_NaN(), double abs_cal_factor=1, float radar_grid_nlooks=1, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *input_rtc=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *output_rtc=nullptr)</td></tr>
-<tr class="memdesc:af87c2788238c21205b82d2aa83e7ea52"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply radiometric terrain correction (RTC) over an input raster.  <a href="#af87c2788238c21205b82d2aa83e7ea52">More...</a><br/></td></tr>
-<tr class="separator:af87c2788238c21205b82d2aa83e7ea52"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1591fcbc20f897913c00c47cac52d778"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a1591fcbc20f897913c00c47cac52d778">applyRTC</a> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;input_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> inputRadiometry=rtcInputRadiometry::BETA_NAUGHT, int exponent=0, <a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> rtc_area_mode=rtcAreaMode::AREA_FACTOR, <a class="el" href="namespaceisce_1_1geometry.html#ac32a2e1679c20b6be2f98d2b91ea91ca">rtcAlgorithm</a> rtc_algorithm=rtcAlgorithm::RTC_AREA_PROJECTION, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), float rtc_min_value_db=std::numeric_limits&lt; float &gt;::quiet_NaN(), double abs_cal_factor=1, float radar_grid_nlooks=1, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *input_rtc=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *output_rtc=nullptr, <a class="el" href="namespaceisce_1_1geometry.html#a7a23803b7afea3a21b7c07ea6aeb6e8e">rtcMemoryMode</a> rtc_memory_mode=rtcMemoryMode::RTC_AUTO)</td></tr>
+<tr class="memdesc:a1591fcbc20f897913c00c47cac52d778"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply radiometric terrain correction (RTC) over an input raster.  <a href="#a1591fcbc20f897913c00c47cac52d778">More...</a><br/></td></tr>
+<tr class="separator:a1591fcbc20f897913c00c47cac52d778"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf01b4dc1816818c885623e3b5b8e885"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf01b4dc1816818c885623e3b5b8e885"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>computeUpsamplingFactor</b> (const <a class="el" href="classisce_1_1geometry_1_1DEMInterpolator.html">DEMInterpolator</a> &amp;dem_interp, const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radar_grid, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;ellps)</td></tr>
 <tr class="separator:abf01b4dc1816818c885623e3b5b8e885"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae16a0f5dfb8dcd42bfe283eece05a45d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae16a0f5dfb8dcd42bfe283eece05a45d"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>areaProjGetNBlocks</b> (int array_length, int *block_size, pyre::journal::info_t *channel)</td></tr>
-<tr class="separator:ae16a0f5dfb8dcd42bfe283eece05a45d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aecb716b37a4fcac22820e8527d060a2f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#aecb716b37a4fcac22820e8527d060a2f">facetRTC</a> (<a class="el" href="classisce_1_1product_1_1Product.html">isce::product::Product</a> &amp;product, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, char frequency= 'A', bool native_doppler=false, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> inputRadiometry=rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> rtc_area_mode=rtcAreaMode::AREA_FACTOR, <a class="el" href="namespaceisce_1_1geometry.html#ac32a2e1679c20b6be2f98d2b91ea91ca">rtcAlgorithm</a> rtc_algorithm=rtcAlgorithm::RTC_AREA_PROJECTION, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), float rtc_min_value_db=std::numeric_limits&lt; float &gt;::quiet_NaN(), size_t nlooks_az=1, size_t nlooks_rg=1, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr)</td></tr>
-<tr class="memdesc:aecb716b37a4fcac22820e8527d060a2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate radiometric terrain correction (RTC) area or area factor.  <a href="#aecb716b37a4fcac22820e8527d060a2f">More...</a><br/></td></tr>
-<tr class="separator:aecb716b37a4fcac22820e8527d060a2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43961b52b98b9faf1c2ba90685a20d74"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a43961b52b98b9faf1c2ba90685a20d74">facetRTC</a> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> inputRadiometry=rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> rtc_area_mode=rtcAreaMode::AREA_FACTOR, <a class="el" href="namespaceisce_1_1geometry.html#ac32a2e1679c20b6be2f98d2b91ea91ca">rtcAlgorithm</a> rtc_algorithm=rtcAlgorithm::RTC_AREA_PROJECTION, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), float rtc_min_value_db=std::numeric_limits&lt; float &gt;::quiet_NaN(), float radar_grid_nlooks=1, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr, <a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> interp_method=isce::core::dataInterpMethod::BIQUINTIC_METHOD, double threshold=1e-4, int num_iter=100, double delta_range=1e-4)</td></tr>
-<tr class="memdesc:a43961b52b98b9faf1c2ba90685a20d74"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate radiometric terrain correction (RTC) area or area factor.  <a href="#a43961b52b98b9faf1c2ba90685a20d74">More...</a><br/></td></tr>
-<tr class="separator:a43961b52b98b9faf1c2ba90685a20d74"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca4d7842f279ec44d826af200b72c6cd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#aca4d7842f279ec44d826af200b72c6cd">facetRTC</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, const double y0, const double dy, const double x0, const double dx, const int geogrid_length, const int geogrid_width, const int epsg=4326, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> inputRadiometry=rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> rtc_area_mode=rtcAreaMode::AREA_FACTOR, <a class="el" href="namespaceisce_1_1geometry.html#ac32a2e1679c20b6be2f98d2b91ea91ca">rtcAlgorithm</a> rtc_algorithm=rtcAlgorithm::RTC_AREA_PROJECTION, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), float rtc_min_value_db=std::numeric_limits&lt; float &gt;::quiet_NaN(), float radar_grid_nlooks=1, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_vertices=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_grid=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr, <a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> interp_method=isce::core::dataInterpMethod::BIQUINTIC_METHOD, double threshold=1e-4, int num_iter=100, double delta_range=1e-4)</td></tr>
-<tr class="memdesc:aca4d7842f279ec44d826af200b72c6cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate radiometric terrain correction (RTC) area or area factor.  <a href="#aca4d7842f279ec44d826af200b72c6cd">More...</a><br/></td></tr>
-<tr class="separator:aca4d7842f279ec44d826af200b72c6cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5224b25ece3218545b2218e08800c256"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5224b25ece3218545b2218e08800c256"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>areaProjIntegrateSegment</b> (double y1, double y2, double x1, double x2, int length, int width, <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; double &gt; &amp;w_arr, double &amp;nlooks)</td></tr>
-<tr class="separator:a5224b25ece3218545b2218e08800c256"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2386dd5d5c9d648907a5609d589475da"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2386dd5d5c9d648907a5609d589475da"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>_addArea</b> (double area, <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; float &gt; &amp;out_array, float radar_grid_nlooks, <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; float &gt; &amp;out_nlooks_array, int length, int width, int x_min, int y_min, int size_x, int size_y, <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; double &gt; &amp;w_arr, double nlooks, <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; double &gt; &amp;w_arr_out, double &amp;nlooks_out, double x_center, double x_left, double x_right, double y_center, double y_left, double y_right)</td></tr>
-<tr class="separator:a2386dd5d5c9d648907a5609d589475da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a1d6590369fc4a1f9f85e67075e48a7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5a1d6590369fc4a1f9f85e67075e48a7"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>areaProjGetNBlocks</b> (int array_length, pyre::journal::info_t *channel, int upsampling, int *block_length_with_upsampling, int *block_length, int min_block_length, int max_block_length)</td></tr>
+<tr class="separator:a5a1d6590369fc4a1f9f85e67075e48a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af769a99b7487c58d053c303ab0a5dc10"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#af769a99b7487c58d053c303ab0a5dc10">facetRTC</a> (<a class="el" href="classisce_1_1product_1_1Product.html">isce::product::Product</a> &amp;product, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, char frequency= 'A', bool native_doppler=false, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> inputRadiometry=rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> rtc_area_mode=rtcAreaMode::AREA_FACTOR, <a class="el" href="namespaceisce_1_1geometry.html#ac32a2e1679c20b6be2f98d2b91ea91ca">rtcAlgorithm</a> rtc_algorithm=rtcAlgorithm::RTC_AREA_PROJECTION, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), float rtc_min_value_db=std::numeric_limits&lt; float &gt;::quiet_NaN(), size_t nlooks_az=1, size_t nlooks_rg=1, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr, <a class="el" href="namespaceisce_1_1geometry.html#a7a23803b7afea3a21b7c07ea6aeb6e8e">rtcMemoryMode</a> rtc_memory_mode=rtcMemoryMode::RTC_AUTO)</td></tr>
+<tr class="memdesc:af769a99b7487c58d053c303ab0a5dc10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate radiometric terrain correction (RTC) area or area factor.  <a href="#af769a99b7487c58d053c303ab0a5dc10">More...</a><br/></td></tr>
+<tr class="separator:af769a99b7487c58d053c303ab0a5dc10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae2ce10921b2edd7f809c9996c3873ee6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#ae2ce10921b2edd7f809c9996c3873ee6">facetRTC</a> (const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> inputRadiometry=rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> rtc_area_mode=rtcAreaMode::AREA_FACTOR, <a class="el" href="namespaceisce_1_1geometry.html#ac32a2e1679c20b6be2f98d2b91ea91ca">rtcAlgorithm</a> rtc_algorithm=rtcAlgorithm::RTC_AREA_PROJECTION, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), float rtc_min_value_db=std::numeric_limits&lt; float &gt;::quiet_NaN(), float radar_grid_nlooks=1, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr, <a class="el" href="namespaceisce_1_1geometry.html#a7a23803b7afea3a21b7c07ea6aeb6e8e">rtcMemoryMode</a> rtc_memory_mode=rtcMemoryMode::RTC_AUTO, <a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> interp_method=isce::core::dataInterpMethod::BIQUINTIC_METHOD, double threshold=1e-4, int num_iter=100, double delta_range=1e-4)</td></tr>
+<tr class="memdesc:ae2ce10921b2edd7f809c9996c3873ee6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate radiometric terrain correction (RTC) area or area factor.  <a href="#ae2ce10921b2edd7f809c9996c3873ee6">More...</a><br/></td></tr>
+<tr class="separator:ae2ce10921b2edd7f809c9996c3873ee6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e192894666e5ea9d95728708a573868"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a7e192894666e5ea9d95728708a573868">facetRTC</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, const double y0, const double dy, const double x0, const double dx, const int geogrid_length, const int geogrid_width, const int epsg, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> inputRadiometry=rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> rtc_area_mode=rtcAreaMode::AREA_FACTOR, <a class="el" href="namespaceisce_1_1geometry.html#ac32a2e1679c20b6be2f98d2b91ea91ca">rtcAlgorithm</a> rtc_algorithm=rtcAlgorithm::RTC_AREA_PROJECTION, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), float rtc_min_value_db=std::numeric_limits&lt; float &gt;::quiet_NaN(), float radar_grid_nlooks=1, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_vertices=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_grid=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr, <a class="el" href="namespaceisce_1_1geometry.html#a7a23803b7afea3a21b7c07ea6aeb6e8e">rtcMemoryMode</a> rtc_memory_mode=rtcMemoryMode::RTC_AUTO, <a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> interp_method=isce::core::dataInterpMethod::BIQUINTIC_METHOD, double threshold=1e-4, int num_iter=100, double delta_range=1e-4)</td></tr>
+<tr class="memdesc:a7e192894666e5ea9d95728708a573868"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate radiometric terrain correction (RTC) area or area factor.  <a href="#a7e192894666e5ea9d95728708a573868">More...</a><br/></td></tr>
+<tr class="separator:a7e192894666e5ea9d95728708a573868"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8cfb052afdace9a06b389d060173b6e8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8cfb052afdace9a06b389d060173b6e8"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>areaProjIntegrateSegment</b> (double y1, double y2, double x1, double x2, int length, int width, <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; double &gt; &amp;w_arr, double &amp;nlooks, int plane_orientation)</td></tr>
+<tr class="separator:a8cfb052afdace9a06b389d060173b6e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a918b619d0e4830ad6573b13d37f53f51"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a918b619d0e4830ad6573b13d37f53f51"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>_addArea</b> (double area, <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; float &gt; &amp;out_array, float radar_grid_nlooks, <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; float &gt; &amp;out_nlooks_array, int length, int width, int x_min, int y_min, int size_x, int size_y, <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; double &gt; &amp;w_arr, double nlooks, <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; double &gt; &amp;w_arr_out, double &amp;nlooks_out, double x_center, double x_left, double x_right, double y_center, double y_left, double y_right, int plane_orientation)</td></tr>
+<tr class="separator:a918b619d0e4830ad6573b13d37f53f51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4db5df9906602f850cfc8fa5a0ffcea1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4db5df9906602f850cfc8fa5a0ffcea1"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>computeFacet</b> (<a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> xyz_center, <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> xyz_left, <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> xyz_right, <a class="el" href="classisce_1_1core_1_1Vector.html">Vec3</a> lookXYZ, double p1, double &amp;p3, double divisor, bool clockwise_direction)</td></tr>
 <tr class="separator:a4db5df9906602f850cfc8fa5a0ffcea1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad867ad65adcdfe903a855eb3d5e9d4ae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#ad867ad65adcdfe903a855eb3d5e9d4ae">facetRTCDavidSmall</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, const double y0, const double dy, const double x0, const double dx, const int geogrid_length, const int geogrid_width, const int epsg=4326, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> inputRadiometry=rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> rtc_area_mode=rtcAreaMode::AREA_FACTOR, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN())</td></tr>
-<tr class="memdesc:ad867ad65adcdfe903a855eb3d5e9d4ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate radiometric terrain correction (RTC) area or area factor using the David Small algorithm.  <a href="#ad867ad65adcdfe903a855eb3d5e9d4ae">More...</a><br/></td></tr>
-<tr class="separator:ad867ad65adcdfe903a855eb3d5e9d4ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9aa0ca1a7f6725cb6e958180f08dfd3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#ae9aa0ca1a7f6725cb6e958180f08dfd3">facetRTCDavidSmall</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, const double y0, const double dy, const double x0, const double dx, const int geogrid_length, const int geogrid_width, const int epsg, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> inputRadiometry=rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> rtc_area_mode=rtcAreaMode::AREA_FACTOR, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN())</td></tr>
+<tr class="memdesc:ae9aa0ca1a7f6725cb6e958180f08dfd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate radiometric terrain correction (RTC) area or area factor using the David Small algorithm.  <a href="#ae9aa0ca1a7f6725cb6e958180f08dfd3">More...</a><br/></td></tr>
+<tr class="separator:ae9aa0ca1a7f6725cb6e958180f08dfd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af8343eca4ae42d2016d76e84f52ecee1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af8343eca4ae42d2016d76e84f52ecee1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>_RunBlock</b> (const int jmax, int block_size, int block_size_with_upsampling, int block, int &amp;numdone, int progress_block, double geogrid_upsampling, <a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> interp_method, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem_raster, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_vertices, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_grid, const double start, const double pixazm, const double dr, double r0, int xbound, int ybound, const double y0, const double dy, const double x0, const double dx, const int geogrid_length, const int geogrid_width, const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radar_grid, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, const <a class="el" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a> &amp;ellipsoid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, double threshold, int num_iter, double delta_range, <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; float &gt; &amp;out_array, <a class="el" href="classisce_1_1core_1_1Matrix.html">isce::core::Matrix</a>&lt; float &gt; &amp;out_nlooks_array, <a class="el" href="classisce_1_1core_1_1ProjectionBase.html">isce::core::ProjectionBase</a> *proj, <a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> rtc_area_mode, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> input_radiometry, float radar_grid_nlooks)</td></tr>
 <tr class="separator:af8343eca4ae42d2016d76e84f52ecee1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3f819419b0aa179e797f9af50ac2ae6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#ad3f819419b0aa179e797f9af50ac2ae6">facetRTCAreaProj</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, const double y0, const double dy, const double x0, const double dx, const int geogrid_length, const int geogrid_width, const int epsg=4326, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> inputRadiometry=rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> rtc_area_mode=rtcAreaMode::AREA_FACTOR, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), float rtc_min_value_db=std::numeric_limits&lt; float &gt;::quiet_NaN(), float radar_grid_nlooks=1, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_vertices=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_grid=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr, <a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> interp_method=isce::core::dataInterpMethod::BIQUINTIC_METHOD, double threshold=1e-4, int num_iter=100, double delta_range=1e-4)</td></tr>
-<tr class="memdesc:ad3f819419b0aa179e797f9af50ac2ae6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate radiometric terrain correction (RTC) area or area factor using the area projection algorithms.  <a href="#ad3f819419b0aa179e797f9af50ac2ae6">More...</a><br/></td></tr>
-<tr class="separator:ad3f819419b0aa179e797f9af50ac2ae6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad523c5401b59905d649bb2a6fd3f6cda"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#ad523c5401b59905d649bb2a6fd3f6cda">facetRTCAreaProj</a> (<a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;dem, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> &amp;output_raster, const <a class="el" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a> &amp;radarGrid, const <a class="el" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a> &amp;orbit, const <a class="el" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d</a>&lt; double &gt; &amp;dop, const double y0, const double dy, const double x0, const double dx, const int geogrid_length, const int geogrid_width, const int epsg, <a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> inputRadiometry=rtcInputRadiometry::BETA_NAUGHT, <a class="el" href="namespaceisce_1_1geometry.html#a3aa8a8b9dcd5aed1636befe62df852a5">rtcAreaMode</a> rtc_area_mode=rtcAreaMode::AREA_FACTOR, double geogrid_upsampling=std::numeric_limits&lt; double &gt;::quiet_NaN(), float rtc_min_value_db=std::numeric_limits&lt; float &gt;::quiet_NaN(), float radar_grid_nlooks=1, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_vertices=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_geo_grid=nullptr, <a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *out_nlooks=nullptr, <a class="el" href="namespaceisce_1_1geometry.html#a7a23803b7afea3a21b7c07ea6aeb6e8e">rtcMemoryMode</a> rtc_memory_mode=rtcMemoryMode::RTC_AUTO, <a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a> interp_method=isce::core::dataInterpMethod::BIQUINTIC_METHOD, double threshold=1e-4, int num_iter=100, double delta_range=1e-4)</td></tr>
+<tr class="memdesc:ad523c5401b59905d649bb2a6fd3f6cda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate radiometric terrain correction (RTC) area or area factor using the area projection algorithms.  <a href="#ad523c5401b59905d649bb2a6fd3f6cda">More...</a><br/></td></tr>
+<tr class="separator:ad523c5401b59905d649bb2a6fd3f6cda"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a07adde15ccfd6b3282d2bc55ae6269cb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a07adde15ccfd6b3282d2bc55ae6269cb"></a>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceisce_1_1geometry.html#a07adde15ccfd6b3282d2bc55ae6269cb">get_input_radiometry_str</a> (<a class="el" href="namespaceisce_1_1geometry.html#a2981b33ceb68e221e4809d51776b30b0">rtcInputRadiometry</a> input_radiometry)</td></tr>
 <tr class="memdesc:a07adde15ccfd6b3282d2bc55ae6269cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert enum input_radiometry to string. <br/></td></tr>
@@ -360,7 +367,7 @@ template&lt;class Archive &gt; </td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="af87c2788238c21205b82d2aa83e7ea52"></a>
+<a class="anchor" id="a1591fcbc20f897913c00c47cac52d778"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -464,7 +471,13 @@ template&lt;class Archive &gt; </td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
-          <td class="paramname"><em>output_rtc</em> = <code>nullptr</code>&#160;</td>
+          <td class="paramname"><em>output_rtc</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">rtcMemoryMode&#160;</td>
+          <td class="paramname"><em>rtc_memory_mode</em> = <code>rtcMemoryMode::RTC_AUTO</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -494,6 +507,7 @@ template&lt;class Archive &gt; </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">out_nlooks</td><td>Raster to which the number of radar-grid looks associated with the geogrid will be saved </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">input_rtc</td><td>Raster containing pre-computed RTC area factor </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">output_rtc</td><td>Output RTC area factor </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rtc_memory_mode</td><td>Select memory mode </td></tr>
   </table>
   </dd>
 </dl>
@@ -613,7 +627,7 @@ template&lt;class Archive &gt; </td></tr>
 
 </div>
 </div>
-<a class="anchor" id="aecb716b37a4fcac22820e8527d060a2f"></a>
+<a class="anchor" id="af769a99b7487c58d053c303ab0a5dc10"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -693,7 +707,13 @@ template&lt;class Archive &gt; </td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
-          <td class="paramname"><em>out_nlooks</em> = <code>nullptr</code>&#160;</td>
+          <td class="paramname"><em>out_nlooks</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">rtcMemoryMode&#160;</td>
+          <td class="paramname"><em>rtc_memory_mode</em> = <code>rtcMemoryMode::RTC_AUTO</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -718,14 +738,15 @@ template&lt;class Archive &gt; </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">rtc_min_value_db</td><td>Minimum value for the RTC area factor. Radar data with RTC area factor below this limit are ignored. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nlooks_az</td><td>Number of azimuth looks. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nlooks_rg</td><td>Number of range looks. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">out_nlooks</td><td>Raster to which the number of radar-grid looks associated with the geogrid will be saved </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">out_nlooks</td><td>Raster to which the number of radar-grid </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rtc_memory_mode</td><td>Select memory mode looks associated with the geogrid will be saved </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a class="anchor" id="a43961b52b98b9faf1c2ba90685a20d74"></a>
+<a class="anchor" id="ae2ce10921b2edd7f809c9996c3873ee6"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -804,6 +825,12 @@ template&lt;class Archive &gt; </td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">rtcMemoryMode&#160;</td>
+          <td class="paramname"><em>rtc_memory_mode</em> = <code>rtcMemoryMode::RTC_AUTO</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype"><a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a>&#160;</td>
           <td class="paramname"><em>interp_method</em> = <code>isce::core::dataInterpMethod::BIQUINTIC_METHOD</code>, </td>
         </tr>
@@ -847,6 +874,7 @@ template&lt;class Archive &gt; </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">rtc_min_value_db</td><td>Minimum value for the RTC area factor. Radar data with RTC area factor below this limit are ignored. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">radar_grid_nlooks</td><td>Radar grid number of looks. This parameters determines the multilooking factor used to compute out_nlooks. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">out_nlooks</td><td>Raster to which the number of radar-grid looks associated with the geogrid will be saved </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rtc_memory_mode</td><td>Select memory mode </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">interp_method</td><td>Interpolation Method </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">threshold</td><td>Distance threshold for convergence </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">num_iter</td><td>Maximum number of Newton-Raphson iterations </td></tr>
@@ -857,7 +885,7 @@ template&lt;class Archive &gt; </td></tr>
 
 </div>
 </div>
-<a class="anchor" id="aca4d7842f279ec44d826af200b72c6cd"></a>
+<a class="anchor" id="a7e192894666e5ea9d95728708a573868"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -931,7 +959,7 @@ template&lt;class Archive &gt; </td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const int&#160;</td>
-          <td class="paramname"><em>epsg</em> = <code>4326</code>, </td>
+          <td class="paramname"><em>epsg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -990,6 +1018,12 @@ template&lt;class Archive &gt; </td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">rtcMemoryMode&#160;</td>
+          <td class="paramname"><em>rtc_memory_mode</em> = <code>rtcMemoryMode::RTC_AUTO</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype"><a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">isce::core::dataInterpMethod</a>&#160;</td>
           <td class="paramname"><em>interp_method</em> = <code>isce::core::dataInterpMethod::BIQUINTIC_METHOD</code>, </td>
         </tr>
@@ -1043,6 +1077,7 @@ template&lt;class Archive &gt; </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">out_geo_vertices</td><td>Raster to which the radar-grid positions (range and azimuth) of the geogrid pixels vertices will be saved. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">out_geo_grid</td><td>Raster to which the radar-grid positions (range and azimuth) of the geogrid pixels center will be saved. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">out_nlooks</td><td>Raster to which the number of radar-grid looks associated with the geogrid will be saved </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rtc_memory_mode</td><td>Select memory mode </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">interp_method</td><td>Interpolation Method </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">threshold</td><td>Distance threshold for convergence </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">num_iter</td><td>Maximum number of Newton-Raphson iterations </td></tr>
@@ -1053,7 +1088,7 @@ template&lt;class Archive &gt; </td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ad3f819419b0aa179e797f9af50ac2ae6"></a>
+<a class="anchor" id="ad523c5401b59905d649bb2a6fd3f6cda"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1127,7 +1162,7 @@ template&lt;class Archive &gt; </td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const int&#160;</td>
-          <td class="paramname"><em>epsg</em> = <code>4326</code>, </td>
+          <td class="paramname"><em>epsg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1176,6 +1211,12 @@ template&lt;class Archive &gt; </td></tr>
           <td></td>
           <td class="paramtype"><a class="el" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a> *&#160;</td>
           <td class="paramname"><em>out_nlooks</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">rtcMemoryMode&#160;</td>
+          <td class="paramname"><em>rtc_memory_mode</em> = <code>rtcMemoryMode::RTC_AUTO</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1235,6 +1276,7 @@ template&lt;class Archive &gt; </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">out_geo_vertices</td><td>Raster to which the radar-grid positions (range and azimuth) of the geogrid pixels vertices will be saved. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">out_geo_grid</td><td>Raster to which the radar-grid positions (range and azimuth) of the geogrid pixels center will be saved. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">out_nlooks</td><td>Raster to which the number of radar-grid looks associated with the geogrid will be saved </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">rtc_memory_mode</td><td>Select memory mode </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">interp_method</td><td>Interpolation Method </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">threshold</td><td>Distance threshold for convergence </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">num_iter</td><td>Maximum number of Newton-Raphson iterations </td></tr>
@@ -1245,7 +1287,7 @@ template&lt;class Archive &gt; </td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ad867ad65adcdfe903a855eb3d5e9d4ae"></a>
+<a class="anchor" id="ae9aa0ca1a7f6725cb6e958180f08dfd3"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1319,7 +1361,7 @@ template&lt;class Archive &gt; </td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const int&#160;</td>
-          <td class="paramname"><em>epsg</em> = <code>4326</code>, </td>
+          <td class="paramname"><em>epsg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
