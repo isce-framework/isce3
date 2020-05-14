@@ -26,6 +26,11 @@ cdef extern from "isce/geometry/RTC.h" namespace "isce::geometry":
         RTC_DAVID_SMALL = 0
         RTC_AREA_PROJECTION = 1
 
+    cdef enum rtcMemoryMode:
+        RTC_AUTO = 0
+        RTC_SINGLE_BLOCK = 1
+        RTC_BLOCKS_GEOGRID = 2
+
     void applyRTC(RadarGridParameters& radar_grid, 
                   Orbit& orbit,
                   LUT2d[double]& dop,
@@ -42,7 +47,8 @@ cdef extern from "isce/geometry/RTC.h" namespace "isce::geometry":
                   float radar_grid_nlooks,
                   Raster * out_nlooks_raster,
                   Raster * input_rtc_raster,
-                  Raster * output_rtc_raster)
+                  Raster * output_rtc_raster,
+                  rtcMemoryMode memory_mode_enum)  except +
 
     void facetRTC(RadarGridParameters& radar_grid, 
                   Orbit& orbit,
@@ -55,7 +61,8 @@ cdef extern from "isce/geometry/RTC.h" namespace "isce::geometry":
                   double dem_upsampling,
                   float rtc_min_value_db,
                   float radar_grid_nlooks,
-                  Raster * out_nlooks_raster)
+                  Raster * out_nlooks_raster,
+                  rtcMemoryMode memory_mode_enum)  except +
 
     void facetRTC(Raster& dem_raster, 
                   Raster& out_raster,
@@ -77,7 +84,8 @@ cdef extern from "isce/geometry/RTC.h" namespace "isce::geometry":
                   float radar_grid_nlooks,
                   Raster * out_geo_vertices_raster,
                   Raster * out_geo_grid_raster,
-                  Raster * out_nlooks_raster)
+                  Raster * out_nlooks_raster,
+                  rtcMemoryMode memory_mode_enum)  except +
 
     void facetRTC(Product& product, 
                   Raster& dem_raster, 
@@ -91,5 +99,6 @@ cdef extern from "isce/geometry/RTC.h" namespace "isce::geometry":
                   float rtc_min_value_db,
                   size_t nlooks_az,
                   size_t nlooks_rg,
-                  Raster * out_nlooks_raster)
+                  Raster * out_nlooks_raster,
+                  rtcMemoryMode memory_mode_enum)  except +
 

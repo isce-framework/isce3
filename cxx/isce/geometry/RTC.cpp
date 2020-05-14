@@ -69,8 +69,10 @@ void _applyRTC(isce::io::Raster& input_raster, isce::io::Raster& input_rtc,
     int width = input_raster.width();
     int length = input_raster.length();
 
+    int min_block_length = 32;
     int block_size;
-    int nblocks = areaProjGetNBlocks(length, &block_size, &info);
+    int nblocks = areaProjGetNBlocks(length, &info, 0,
+                                     &block_size, nullptr, min_block_length);
 
     if (std::isnan(rtc_min_value))
         rtc_min_value = 0;
@@ -170,7 +172,7 @@ void applyRTC(const isce::product::RadarGridParameters& radar_grid,
               double geogrid_upsampling, float rtc_min_value_db,
               double abs_cal_factor, float radar_grid_nlooks,
               isce::io::Raster* out_nlooks, isce::io::Raster* input_rtc,
-              isce::io::Raster* output_rtc) {
+              isce::io::Raster* output_rtc, rtcMemoryMode rtc_memory_mode) {
 
     if (exponent < 0 || exponent > 2) {
         std::string error_message =
@@ -207,7 +209,7 @@ void applyRTC(const isce::product::RadarGridParameters& radar_grid,
         facetRTC(radar_grid, orbit, input_dop, dem_raster, *rtc_raster,
                  input_radiometry, rtc_area_mode, rtc_algorithm,
                  geogrid_upsampling, rtc_min_value_db, radar_grid_nlooks,
-                 out_nlooks);
+                 out_nlooks, rtc_memory_mode);
     } else {
         info << "reading pre-computed RTC..." << pyre::journal::endl;
         rtc_raster = input_rtc;
@@ -284,35 +286,53 @@ computeUpsamplingFactor(const DEMInterpolator& dem_interp,
     return upsampling_factor;
 }
 
-int areaProjGetNBlocks(int array_length, int* block_size,
-                       pyre::journal::info_t* channel) {
+int areaProjGetNBlocks(int array_length, pyre::journal::info_t* channel,
+                       int upsampling, 
+                       int* block_length_with_upsampling, 
+                       int* block_length,
+                       int min_block_length, int max_block_length)
+{
 
-    const int MIN_BLOCK_SIZE = std::pow(2, 8);  // 256
-    const int MAX_BLOCK_SIZE = std::pow(2, 10); // 1024
+    auto n_threads = _omp_thread_count();
+    auto nblocks = 4 * n_threads;
+    auto min_block_length_eff = std::min(array_length, min_block_length);
 
-    int n_threads = _omp_thread_count();
-    int nblocks = 4 * n_threads;
-    if (block_size != nullptr) {
-        int min_block_size = std::min(array_length, MIN_BLOCK_SIZE);
+    // limiting block size
+    int _block_length_with_upsampling = std::min(
+            max_block_length,
+            std::max(min_block_length_eff,
+                     (int) std::ceil(((float) array_length) / nblocks)));
 
-        // limiting block size
-        *block_size = std::min(
-                MAX_BLOCK_SIZE,
-                std::max(min_block_size,
-                         (int) std::ceil(((float) array_length) / nblocks)));
+    int _block_length = _block_length_with_upsampling;
+
+    // snap (_block_length_with_upsampling multiple of upsampling)
+    if (upsampling > 0) {
+        _block_length = _block_length_with_upsampling / upsampling;
+        _block_length_with_upsampling = _block_length * upsampling;
     }
 
-    nblocks = std::ceil(((float) array_length) / *block_size);
+    nblocks = std::ceil(((float) array_length) / _block_length_with_upsampling);
 
     if (channel != nullptr) {
         *channel << "array length: " << array_length << pyre::journal::endl;
-        *channel << "number of threads: " << n_threads << pyre::journal::endl;
-        *channel << "number of blocks: " << nblocks << pyre::journal::endl;
+        *channel << "number of available thread(s): " << n_threads << pyre::journal::endl;
+        *channel << "number of block(s): " << nblocks << pyre::journal::endl;
     }
-    if (block_size != nullptr)
-        *block_size = (int) std::ceil(((float) array_length) / nblocks);
-    if (channel != nullptr)
-        *channel << "block size: " << *block_size << pyre::journal::endl;
+    
+    
+    if (block_length != nullptr) {
+        *block_length = _block_length;
+        if (channel != nullptr) {
+            *channel << "block length (without upsampling): " << *block_length
+                     << pyre::journal::endl;
+        }
+    }
+    if (block_length_with_upsampling != nullptr) {
+        *block_length_with_upsampling = _block_length_with_upsampling;
+        *channel << "block length: "
+                 << *block_length_with_upsampling << pyre::journal::endl;
+    }
+
     return nblocks;
 }
 
@@ -321,7 +341,8 @@ void facetRTC(isce::product::Product& product, isce::io::Raster& dem_raster,
               bool native_doppler, rtcInputRadiometry input_radiometry,
               rtcAreaMode rtc_area_mode, rtcAlgorithm rtc_algorithm,
               double geogrid_upsampling, float rtc_min_value_db,
-              size_t nlooks_az, size_t nlooks_rg, isce::io::Raster* out_nlooks) {
+              size_t nlooks_az, size_t nlooks_rg, isce::io::Raster* out_nlooks,
+              rtcMemoryMode rtc_memory_mode) {
 
     isce::core::Orbit orbit = product.metadata().orbit();
     isce::product::RadarGridParameters radar_grid(product, frequency);
@@ -337,7 +358,7 @@ void facetRTC(isce::product::Product& product, isce::io::Raster& dem_raster,
 
     facetRTC(radar_grid_ml, orbit, dop, dem_raster, output_raster,
              input_radiometry, rtc_area_mode, rtc_algorithm, geogrid_upsampling,
-             rtc_min_value_db, radar_grid_nlooks, out_nlooks);
+             rtc_min_value_db, radar_grid_nlooks, out_nlooks, rtc_memory_mode);
 }
 
 void facetRTC(const isce::product::RadarGridParameters& radar_grid,
@@ -347,7 +368,7 @@ void facetRTC(const isce::product::RadarGridParameters& radar_grid,
               rtcInputRadiometry input_radiometry, rtcAreaMode rtc_area_mode,
               rtcAlgorithm rtc_algorithm, double geogrid_upsampling,
               float rtc_min_value_db, float radar_grid_nlooks,
-              isce::io::Raster* out_nlooks,
+              isce::io::Raster* out_nlooks, rtcMemoryMode rtc_memory_mode,
               isce::core::dataInterpMethod interp_method, double threshold,
               int num_iter, double delta_range) {
 
@@ -377,8 +398,8 @@ void facetRTC(const isce::product::RadarGridParameters& radar_grid,
     facetRTC(dem_raster, output_raster, radar_grid, orbit, input_dop, y0, dy,
              x0, dx, geogrid_length, geogrid_width, epsg, input_radiometry,
              rtc_area_mode, rtc_algorithm, geogrid_upsampling, rtc_min_value_db,
-             radar_grid_nlooks, nullptr, nullptr, out_nlooks, interp_method,
-             threshold, num_iter, delta_range);
+             radar_grid_nlooks, nullptr, nullptr, out_nlooks, rtc_memory_mode,
+             interp_method, threshold, num_iter, delta_range);
 }
 
 void facetRTC(isce::io::Raster& dem_raster, isce::io::Raster& output_raster,
@@ -392,8 +413,10 @@ void facetRTC(isce::io::Raster& dem_raster, isce::io::Raster& output_raster,
               float rtc_min_value_db, float radar_grid_nlooks,
               isce::io::Raster* out_geo_vertices,
               isce::io::Raster* out_geo_grid, isce::io::Raster* out_nlooks,
+              rtcMemoryMode rtc_memory_mode,
               isce::core::dataInterpMethod interp_method, double threshold,
-              int num_iter, double delta_range) {
+              int num_iter, double delta_range)
+{
 
     if (rtc_algorithm == rtcAlgorithm::RTC_AREA_PROJECTION) {
         facetRTCAreaProj(
@@ -401,7 +424,8 @@ void facetRTC(isce::io::Raster& dem_raster, isce::io::Raster& output_raster,
                 x0, dx, geogrid_length, geogrid_width, epsg, input_radiometry,
                 rtc_area_mode, geogrid_upsampling, rtc_min_value_db,
                 radar_grid_nlooks, out_geo_vertices, out_geo_grid, out_nlooks,
-                interp_method, threshold, num_iter, delta_range);
+                rtc_memory_mode, interp_method, threshold, num_iter, 
+                delta_range);
     } else {
         facetRTCDavidSmall(dem_raster, output_raster, radar_grid, orbit,
                            input_dop, y0, dy, x0, dx, geogrid_length,
@@ -412,8 +436,9 @@ void facetRTC(isce::io::Raster& dem_raster, isce::io::Raster& output_raster,
 
 void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
                               int length, int width,
-                              isce::core::Matrix<double>& w_arr,
-                              double& nlooks) {
+                              isce::core::Matrix<double>& w_arr, double& nlooks,
+                              int plane_orientation)
+{
 
     // if line is vertical, return
     if (x2 == x1)
@@ -422,17 +447,17 @@ void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
     double slope = (y2 - y1) / (x2 - x1);
     double offset = y1 - slope * x1;
     double x_start, x_end;
-    int sign;
+    int segment_multiplier;
 
-    // define sign of the integration
+    // define segment_multiplier of the integration
     if (x2 - x1 > 0) {
         x_start = x1;
         x_end = x2;
-        sign = 1;
+        segment_multiplier = plane_orientation;
     } else {
         x_start = x2;
         x_end = x1;
-        sign = -1;
+        segment_multiplier = -plane_orientation;
     }
 
     while (x_start < x_end) {
@@ -464,7 +489,7 @@ void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
 
         // calculate area (trapezoid) to be added to current pixel
         const double y_center = (y_next + y_start - 2 * y_index) / 2;
-        const double area = sign * (x_next - x_start) * y_center;
+        const double area = segment_multiplier * (x_next - x_start) * y_center;
 
         w_arr(y_index, x_index) += area;
         nlooks += area;
@@ -472,7 +497,7 @@ void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
         // add area below current pixel
         while (y_index - 1 >= 0) {
             y_index -= 1;
-            const double area = sign * (x_next - x_start);
+            const double area = segment_multiplier * (x_next - x_start);
             w_arr(y_index, x_index) += area;
             nlooks += area;
         }
@@ -487,13 +512,13 @@ void _addArea(double area, isce::core::Matrix<float>& out_array,
               isce::core::Matrix<double>& w_arr, double nlooks,
               isce::core::Matrix<double>& w_arr_out, double& nlooks_out,
               double x_center, double x_left, double x_right, double y_center,
-              double y_left, double y_right) {
+              double y_left, double y_right, int plane_orientation) {
     areaProjIntegrateSegment(y_left, y_right, x_left, x_right, size_y, size_x,
-                             w_arr, nlooks);
+                             w_arr, nlooks, plane_orientation);
 
     nlooks_out = 0;
     areaProjIntegrateSegment(y_center, y_right, x_center, x_right, size_y,
-                             size_x, w_arr_out, nlooks_out);
+                             size_x, w_arr_out, nlooks_out, plane_orientation);
 
     for (int ii = 0; ii < size_y; ++ii)
         for (int jj = 0; jj < size_x; ++jj) {
@@ -505,6 +530,7 @@ void _addArea(double area, isce::core::Matrix<float>& out_array,
             int x = jj + x_min;
             if (x < 0 || y < 0 || y >= length || x >= width)
                 continue;
+
 #pragma omp critical
             {
                 if (out_nlooks_array.data() != nullptr)
@@ -864,13 +890,9 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
     // Convert margin to meters it not LonLat
     const double minX = x0;
     const double maxX = x0 + dx * geogrid_width;
-    double minY =
-            y0 +
-            std::max(((double) ii_0) / geogrid_upsampling, (double) 0) * dy;
-    double maxY =
-            y0 + std::min(((double) ii_0) / geogrid_upsampling + block_size,
-                          (double) geogrid_length) *
-                         dy;
+    double minY = y0 + (dy * ii_0) / geogrid_upsampling;
+    double maxY = y0 + (dy * (ii_0 + this_block_size_with_upsampling)) /
+                               geogrid_upsampling;
 
     const double margin_x = std::abs(dx) * 20;
     const double margin_y = std::abs(dy) * 20;
@@ -896,8 +918,8 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
 
     double dem_y1 = y0 + (dy * ii_0) / geogrid_upsampling;
 
-    for (int jj = -1; jj < jmax; ++jj) {
-        const double dem_x1 = x0 + dx * (1.0 + jj) / geogrid_upsampling;
+    for (int jj = 0; jj <= jmax; ++jj) {
+        const double dem_x1 = x0 + (dx * jj) / geogrid_upsampling;
         dem11 = {dem_x1, dem_y1,
                  dem_interp_block.interpolateXY(dem_x1, dem_y1)};
         int converged = geo2rdr(proj->inverse(dem11), ellipsoid, orbit, dop,
@@ -909,9 +931,9 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             continue;
         }
 
-        a_last[jj + 1] = a11;
-        r_last[jj + 1] = r11;
-        dem_last[jj + 1] = dem11;
+        a_last[jj] = a11;
+        r_last[jj] = r11;
+        dem_last[jj] = dem11;
     }
 
     a11 = radar_grid.sensingMid();
@@ -929,7 +951,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             r11 = r_last[1];
         }
 
-        const double dem_x1_0 = x0 + dx / geogrid_upsampling;
+        const double dem_x1_0 = x0;
         const double dem_y1 = y0 + dy * (1.0 + ii) / geogrid_upsampling;
         dem11 = {dem_x1_0, dem_y1,
                  dem_interp_block.interpolateXY(dem_x1_0, dem_y1)};
@@ -965,7 +987,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             const double r01 = r_last[jj + 1];
             const Vec3 dem01 = dem_last[jj + 1];
 
-            // update top arrays (left side)
+            // update "last" arrays (from lower left vertex)
             if (!std::isnan(a10)) {
                 a_last[jj] = a10;
                 r_last[jj] = r10;
@@ -995,7 +1017,16 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                 r11 = std::numeric_limits<double>::quiet_NaN();
                 continue;
             }
-            int MARGIN = 100; // margin in pixels
+
+            // if last column also update top-right "last" arrays (from lower
+            //   right vertex)
+            if (jj == jmax - 1) {
+                a_last[jj+1] = a11;
+                r_last[jj+1] = r11;
+                dem_last[jj+1] = dem11;
+            }
+
+            int MARGIN = 20; // margin in pixels
             // define slant-range window
             int y_min = std::floor((std::min(std::min(a00, a01),
                                              std::min(a10, a11)) -
@@ -1029,15 +1060,13 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             if (out_geo_vertices != nullptr)
 #pragma omp critical
             {
-
                 if (i == 0) {
-                    out_geo_vertices_a(i, jj + 1) =
-                            (a_last[jj + 1] - start) / pixazm;
-                    out_geo_vertices_r(i, jj + 1) = (r_last[jj + 1] - r0) / dr;
+                    out_geo_vertices_a(i, jj + 1) = (a01 - start) / pixazm;
+                    out_geo_vertices_r(i, jj + 1) = (a01 - r0) / dr;
                 }
                 if (i == 0 && jj == 0) {
-                    out_geo_vertices_a(i, jj) = (a_last[jj] - start) / pixazm;
-                    out_geo_vertices_r(i, jj) = (r_last[jj] - r0) / dr;
+                    out_geo_vertices_a(i, jj) = (a00 - start) / pixazm;
+                    out_geo_vertices_r(i, jj) = (r00 - r0) / dr;
                 }
                 if (jj == 0) {
                     out_geo_vertices_a((i + 1), jj) = (a10 - start) / pixazm;
@@ -1112,7 +1141,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
 
             bool clockwise_direction = (dem_interp_block.deltaY() > 0);
 
-            // Prepare call to _add_area()
+            // Prepare call to _addArea()
             int size_x = x_max - x_min + 1;
             int size_y = y_max - y_min + 1;
             isce::core::Matrix<double> w_arr_1(size_y, size_x);
@@ -1134,17 +1163,23 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             double x11 = (r11 - r0) / dr - x_min;
             double x_c = (r_c - r0) / dr - x_min;
 
+            int plane_orientation;
+            if (radar_grid.lookSide() == isce::core::LookSide::Left)
+                plane_orientation = -1;
+            else
+                plane_orientation = 1;
+
             areaProjIntegrateSegment(y_c, y00, x_c, x00, size_y, size_x,
-                                     w_arr_1, nlooks_1);
+                                     w_arr_1, nlooks_1, plane_orientation);
 
             // Compute the area (first facet)
             double area = computeFacet(xyz_c, xyz00, xyz01, lookXYZ, p00_c,
                                        p01_c, divisor, clockwise_direction);
             // Add area to output grid
-            _addArea(area, out_array, radar_grid_nlooks,
-                     out_nlooks_array, radar_grid.length(),
-                     radar_grid.width(), x_min, y_min, size_x, size_y, w_arr_1,
-                     nlooks_1, w_arr_2, nlooks_2, x_c, x00, x01, y_c, y00, y01);
+            _addArea(area, out_array, radar_grid_nlooks, out_nlooks_array,
+                     radar_grid.length(), radar_grid.width(), x_min, y_min,
+                     size_x, size_y, w_arr_1, nlooks_1, w_arr_2, nlooks_2, x_c,
+                     x00, x01, y_c, y00, y01, plane_orientation);
 
             // Compute the area (second facet)
             area = computeFacet(xyz_c, xyz01, xyz11, lookXYZ, p01_c, p11_c,
@@ -1154,7 +1189,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             _addArea(area, out_array, radar_grid_nlooks, out_nlooks_array,
                      radar_grid.length(), radar_grid.width(), x_min, y_min,
                      size_x, size_y, w_arr_2, nlooks_2, w_arr_1, nlooks_1, x_c,
-                     x01, x11, y_c, y01, y11);
+                     x01, x11, y_c, y01, y11, plane_orientation);
 
             // Compute the area (third facet)
             area = computeFacet(xyz_c, xyz11, xyz10, lookXYZ, p11_c, p10_c,
@@ -1164,7 +1199,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             _addArea(area, out_array, radar_grid_nlooks, out_nlooks_array,
                      radar_grid.length(), radar_grid.width(), x_min, y_min,
                      size_x, size_y, w_arr_1, nlooks_1, w_arr_2, nlooks_2, x_c,
-                     x11, x10, y_c, y11, y10);
+                     x11, x10, y_c, y11, y10, plane_orientation);
 
             // Compute the area (fourth facet)
             area = computeFacet(xyz_c, xyz10, xyz00, lookXYZ, p10_c, p00_c,
@@ -1174,7 +1209,7 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
             _addArea(area, out_array, radar_grid_nlooks, out_nlooks_array,
                      radar_grid.length(), radar_grid.width(), x_min, y_min,
                      size_x, size_y, w_arr_2, nlooks_2, w_arr_1, nlooks_1, x_c,
-                     x10, x00, y_c, y10, y00);
+                     x10, x00, y_c, y10, y00, plane_orientation);
         }
     }
 
@@ -1212,7 +1247,7 @@ void facetRTCAreaProj(
         double geogrid_upsampling, float rtc_min_value_db,
         float radar_grid_nlooks,
         isce::io::Raster* out_geo_vertices, isce::io::Raster* out_geo_grid,
-        isce::io::Raster* out_nlooks,
+        isce::io::Raster* out_nlooks, rtcMemoryMode rtc_memory_mode,
         isce::core::dataInterpMethod interp_method, double threshold,
         int num_iter, double delta_range) {
     /*
@@ -1220,7 +1255,6 @@ void facetRTCAreaProj(
     */
 
     pyre::journal::info_t info("isce.geometry.facetRTCAreaProj");
-    pyre::journal::debug_t debug("isce.geometry.facetRTCAreaProj");
 
     if (std::isnan(geogrid_upsampling))
         geogrid_upsampling = 2;
@@ -1263,11 +1297,24 @@ void facetRTCAreaProj(
 
     const int progress_block = imax * jmax / 100;
     int numdone = 0;
+    int min_block_length = 32;
+    int block_size, block_size_with_upsampling;
 
-    int block_size;
-    int nblocks = areaProjGetNBlocks(imax, &block_size, &info);
-    int block_size_with_upsampling = std::ceil(block_size * geogrid_upsampling);
-    int nblocks_done = 0;
+    int nblocks;
+
+    if (rtc_memory_mode == rtcMemoryMode::RTC_SINGLE_BLOCK) {
+        nblocks = 1;
+        block_size_with_upsampling = imax;
+        block_size = geogrid_length;
+    } else {
+        nblocks = areaProjGetNBlocks(imax, &info, geogrid_upsampling,
+                                     &block_size_with_upsampling, &block_size,
+                                     min_block_length);
+    }
+
+    info << "block size: " << block_size << pyre::journal::endl;
+    info << "block size (with upsampling): " << block_size_with_upsampling
+         << pyre::journal::endl;
 
 #pragma omp parallel for schedule(dynamic)
     for (int block = 0; block < nblocks; ++block) {
@@ -1278,14 +1325,6 @@ void facetRTCAreaProj(
                   radar_grid, input_dop, ellipsoid, orbit, threshold, num_iter,
                   delta_range, out_array, out_nlooks_array, proj.get(),
                   rtc_area_mode, input_radiometry, radar_grid_nlooks);
-        if (nblocks > 1) {
-#pragma omp critical
-            {
-                nblocks_done++;
-                debug << "processed " << nblocks_done << " out of " << nblocks
-                      << " blocks" << pyre::journal::endl;
-            }
-        }
     }
 
     printf("\rRTC progress: 100%%\n");

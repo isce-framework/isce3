@@ -40,8 +40,9 @@ enum geocodeOutputMode {
 /** Enumeration type to indicate memory management */
 enum geocodeMemoryMode {
     AUTO = 0,
-    RADAR_GRID_SINGLE_BLOCK = 1,
-    RADAR_GRID_MULTIPLE_BLOCKS = 2
+    SINGLE_BLOCK = 1,
+    BLOCKS_GEOGRID = 2,
+    BLOCKS_GEOGRID_AND_RADARGRID = 3
 };
 
 template<class T> class Geocode {
@@ -63,15 +64,23 @@ public:
      * the input raster (1 for real and 2 for complex rasters).
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
      * Radar data with RTC area factor below this limit are ignored.
+     * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling (in each direction)
+     * used to compute the radiometric terrain correction RTC.
+     * @param[in]  rtc_algorithm       RTC algorithm (RTC_DAVID_SMALL or
+     * RTC_AREA_PROJECTION)
      * @param[in]  abs_cal_factor      Absolute calibration factor.
+     * @param[in]  clip_min            Clip (limit) minimum output values
+     * @param[in]  clip_max            Clip (limit) maximum output values
+     * @param[in]  min_nlooks          Minimum number of looks. Geogrid data
+     * below this limit will be set to NaN 
      * @param[in]  radar_grid_nlooks   Radar grid number of looks. This
      * parameters determines the multilooking factor used to compute
      * out_geo_nlooks.
-     * @param[out] out_geo_vertices       Raster to which the radar-grid
+     * @param[out] out_geo_vertices      Raster to which the radar-grid
      * positions (range and azimuth) of the geogrid pixels vertices will be
      * saved.
-     * @param[out] out_geo_grid        Raster to which the radar-grid positions
-     * (range and azimuth) of the geogrid pixels center will be saved.
+     * @param[out] out_dem_vertices     Raster to which the interpolated DEM
+     * will be saved.
      * @param[out] out_nlooks          Raster to which the number of radar-grid
      * looks associated with the geogrid will be saved.
      * @param[out] out_geo_rtc         Output RTC area factor (in
@@ -80,8 +89,6 @@ public:
      * @param[out] out_rtc              Output RTC area factor (in slant-range).
      * @param[in]  geocode_memory_mode  Select memory mode 
      * @param[in]  interp_method        Data interpolation method
-     * @param[in]  use_weights          Distribute backscatter according to the
-     * RTC area factor
      */
     void
     geocode(const isce::product::RadarGridParameters& radar_grid,
@@ -94,18 +101,23 @@ public:
                     isce::geometry::rtcInputRadiometry::BETA_NAUGHT,
             int exponent = 0,
             float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
+            double rtc_geogrid_upsampling = 
+                std::numeric_limits<double>::quiet_NaN(),
+            rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
             double abs_cal_factor = 1,
+            float clip_min = std::numeric_limits<float>::quiet_NaN(),
+            float clip_max = std::numeric_limits<float>::quiet_NaN(),
+            float min_nlooks = std::numeric_limits<float>::quiet_NaN(),
             float radar_grid_nlooks = 1,
             isce::io::Raster* out_geo_vertices = nullptr,
-            isce::io::Raster* out_geo_grid = nullptr,
+            isce::io::Raster* out_dem_vertices = nullptr,
             isce::io::Raster* out_geo_nlooks = nullptr,
             isce::io::Raster* out_geo_rtc = nullptr,
             isce::io::Raster* input_rtc = nullptr,
             isce::io::Raster* output_rtc = nullptr,
             geocodeMemoryMode geocode_memory_mode = geocodeMemoryMode::AUTO,
             isce::core::dataInterpMethod interp_method =
-                    isce::core::dataInterpMethod::BIQUINTIC_METHOD,
-            bool use_weights = false);
+                    isce::core::dataInterpMethod::BIQUINTIC_METHOD);
 
     /** Geocode using the interpolation algorithm.
      *
@@ -131,14 +143,22 @@ public:
      * @param[in]  input_radiometry    Terrain radiometry of the input raster
      * @param[in]  rtc_min_value_db    Minimum value for the RTC area factor.
      * Radar data with RTC area factor below this limit are ignored.
+     * @param[in]  rtc_geogrid_upsampling  Geogrid upsampling (in each direction)
+     * used to compute the radiometric terrain correction RTC.
+     * @param[in]  rtc_algorithm       RTC algorithm (RTC_DAVID_SMALL or
+     * RTC_AREA_PROJECTION)
      * @param[in]  abs_cal_factor      Absolute calibration factor.
+     * @param[in]  clip_min            Clip (limit) minimum output values
+     * @param[in]  clip_max            Clip (limit) maximum output values
+     * @param[in]  min_nlooks          Minimum number of looks. Geogrid data
+     * below this limit will be set to NaN 
      * @param[in]  radar_grid_nlooks   Radar grid number of looks. This
      * parameters determines the multilooking factor used to compute out_nlooks.
      * @param[out] out_geo_vertices       Raster to which the radar-grid
      * positions (range and azimuth) of the geogrid pixels vertices will be
      * saved.
-     * @param[out] out_geo_grid        Raster to which the radar-grid positions
-     * (range and azimuth) of the geogrid pixels center will be saved.
+     * @param[out] out_dem_vertices     Raster to which the interpolated DEM
+     * will be saved.
      * @param[out] out_geo_nlooks      Raster to which the number of radar-grid
      * looks associated with the geogrid will be saved.
      * @param[out] out_geo_rtc         Output RTC area factor (in
@@ -147,8 +167,6 @@ public:
      * @param[out] out_rtc             Output RTC area factor (in slant-range).
      * @param[in]  interp_method       Data interpolation method
      * @param[in]  geocode_memory_mode Select memory mode
-     * @param[in]  use_weights         Distribute backscatter according to the
-     * RTC area factor
      */
     template<class T_out>
     void geocodeAreaProj(
@@ -161,17 +179,23 @@ public:
             isce::geometry::rtcInputRadiometry input_radiometry =
                     isce::geometry::rtcInputRadiometry::BETA_NAUGHT,
             float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
-            double abs_cal_factor = 1, float radar_grid_nlooks = 1,
+            double rtc_geogrid_upsampling = 
+                std::numeric_limits<double>::quiet_NaN(),
+            rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
+            double abs_cal_factor = 1, 
+            float clip_min = std::numeric_limits<float>::quiet_NaN(),
+            float clip_max = std::numeric_limits<float>::quiet_NaN(),
+            float min_nlooks = std::numeric_limits<float>::quiet_NaN(),
+            float radar_grid_nlooks = 1,
             isce::io::Raster* out_geo_vertices = nullptr,
-            isce::io::Raster* out_geo_grid = nullptr,
+            isce::io::Raster* out_dem_vertices = nullptr,
             isce::io::Raster* out_geo_nlooks = nullptr,
             isce::io::Raster* out_geo_rtc = nullptr,
             isce::io::Raster* input_rtc = nullptr,
             isce::io::Raster* output_rtc = nullptr,
             geocodeMemoryMode geocode_memory_mode = geocodeMemoryMode::AUTO,
             isce::core::dataInterpMethod interp_method =
-                    isce::core::dataInterpMethod::BIQUINTIC_METHOD,
-            bool use_weights = false);
+                    isce::core::dataInterpMethod::BIQUINTIC_METHOD);
 
     /** Set the output geogrid
      * @param[in]  geoGridStartY       Starting lat/northing position
@@ -259,16 +283,17 @@ private:
               double geogrid_upsampling, int nbands,
               isce::core::dataInterpMethod interp_method,
               isce::io::Raster& dem_raster, isce::io::Raster* out_geo_vertices,
-              isce::io::Raster* out_geo_grid, isce::io::Raster* out_geo_nlooks,
-              isce::io::Raster* out_geo_rtc, const double start,
-              const double pixazm, const double dr, double r0, int xbound,
-              int ybound, isce::core::ProjectionBase* proj,
+              isce::io::Raster* out_dem_vertices,
+              isce::io::Raster* out_geo_nlooks, isce::io::Raster* out_geo_rtc,
+              const double start, const double pixazm, const double dr,
+              double r0, int xbound, int ybound,
+              isce::core::ProjectionBase* proj,
               isce::core::Matrix<float>& rtc_area,
               isce::io::Raster& input_raster, isce::io::Raster& output_raster,
-              isce::geometry::geocodeOutputMode output_mode, bool use_weights,
-              isce::geometry::rtcInputRadiometry input_radiometry,
-              float rtc_min_value, double abs_cal_factor,
-              float radar_grid_nlooks, pyre::journal::info_t& info);
+              isce::geometry::geocodeOutputMode output_mode,
+              float rtc_min_value, double abs_cal_factor, float clip_min,
+              float clip_max, float min_nlooks, float radar_grid_nlooks,
+              pyre::journal::info_t& info);
 
     void _loadDEM(isce::io::Raster& demRaster, DEMInterpolator& demInterp,
                   isce::core::ProjectionBase* _proj, int lineStart,
@@ -313,10 +338,10 @@ private:
     double _geoGridSpacingY = std::numeric_limits<double>::quiet_NaN();
 
     // number of pixels in east-west direction (X direction)
-    int _geoGridWidth = -9999;
+    int _geoGridWidth = -32768;
 
     // number of lines in north-south direction (Y direction)
-    int _geoGridLength = -9999;
+    int _geoGridLength = -32768;
 
     // epsg code for the output geogrid
     int _epsgOut = 0;

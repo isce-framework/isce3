@@ -29,8 +29,12 @@ geocode_output_mode_dict = {'INTERP': geocodeOutputMode.INTERP,
                             'AREA_PROJECTION_GAMMA_NAUGHT': geocodeOutputMode.AREA_PROJECTION_GAMMA_NAUGHT}
 
 geocode_memory_mode_dict = {'AUTO': geocodeMemoryMode.AUTO,
-                            'RADAR_GRID_SINGLE_BLOCK': geocodeMemoryMode.RADAR_GRID_SINGLE_BLOCK,
-                            'RADAR_GRID_MULTIPLE_BLOCKS': geocodeMemoryMode.RADAR_GRID_MULTIPLE_BLOCKS}
+                            'SINGLE_BLOCK': geocodeMemoryMode.SINGLE_BLOCK,
+                            'BLOCKS_GEOGRID': geocodeMemoryMode.BLOCKS_GEOGRID,
+                            'BLOCKS_GEOGRID_AND_RADARGRID': geocodeMemoryMode.BLOCKS_GEOGRID_AND_RADARGRID}
+
+rtc_algorithm_dict = {'RTC_DAVID_SMALL': rtcAlgorithm.RTC_DAVID_SMALL,
+                      'RTC_AREA_PROJECTION': rtcAlgorithm.RTC_AREA_PROJECTION}
 
 def enum_dict_decorator(enum_dict, default_key):
     def decorated(f):
@@ -53,11 +57,15 @@ def getRtcInputRadiometry(*args, **kwargs):
     pass
 
 @enum_dict_decorator(geocode_output_mode_dict, 'INTERP')
-def _getOutputMode(*args, **kwargs):
+def getOutputMode(*args, **kwargs):
     pass
 
 @enum_dict_decorator(geocode_memory_mode_dict, 'AUTO')
-def _getMemoryMode(*args, **kwargs):
+def getMemoryMode(*args, **kwargs):
+    pass
+
+@enum_dict_decorator(rtc_algorithm_dict, 'RTC_AREA_PROJECTION')
+def getRtcAlgorithm(*args, **kwargs):
     pass
 
 
@@ -192,28 +200,37 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
                 input_radiometry = None,
                 int exponent = 0,
                 rtc_min_value_db = NAN,
+                double rtc_upsampling = NAN,
+                rtc_algorithm = None,
                 double abs_cal_factor = 1,
+                float clip_min = NAN,
+                float clip_max = NAN,
+                float min_nlooks = NAN,
                 float radar_grid_nlooks = 1,
                 out_geo_vertices = None,
-                out_geo_grid = None,
+                out_dem_vertices = None,
                 out_geo_nlooks = None,
                 out_geo_rtc = None,
                 input_rtc = None,
                 output_rtc = None,
-                memory_mode = None):
+                memory_mode = 'AUTO'):
         """
         Run geocoding.
         """
 
-        output_mode_enum = _getOutputMode(output_mode)
+        output_mode_enum = getOutputMode(output_mode)
         rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+
+        # RTC algorithm
+        rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
+
         out_geo_vertices_raster = _getRaster(out_geo_vertices)
-        out_geo_grid_raster = _getRaster(out_geo_grid)
+        out_dem_vertices_raster = _getRaster(out_dem_vertices)
         out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
         out_geo_rtc_raster = _getRaster(out_geo_rtc)
         input_rtc_raster = _getRaster(input_rtc)
         output_rtc_raster = _getRaster(output_rtc)
-        memory_mode_enum = _getMemoryMode(memory_mode)
+        memory_mode_enum = getMemoryMode(memory_mode)
 
         # Run geocoding
         self.c_geocode.geocode(deref(radarGrid.c_radargrid),
@@ -225,10 +242,15 @@ cdef class pyGeocodeFloat(pyGeocodeBase):
                                rtc_input_radiometry, 
                                exponent,
                                rtc_min_value_db,
+                               rtc_upsampling,
+                               rtc_algorithm_obj,
                                abs_cal_factor,
+                               clip_min,
+                               clip_max,
+                               min_nlooks,
                                radar_grid_nlooks,
                                out_geo_vertices_raster,
-                               out_geo_grid_raster,
+                               out_dem_vertices_raster,
                                out_geo_nlooks_raster,
                                out_geo_rtc_raster,
                                input_rtc_raster,
@@ -330,28 +352,37 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
                 input_radiometry = None,
                 int exponent = 0,
                 rtc_min_value_db = NAN,
+                double rtc_upsampling = NAN,
+                rtc_algorithm = None,
                 double abs_cal_factor = 1,
+                float clip_min = NAN,
+                float clip_max = NAN,
+                float min_nlooks = NAN,
                 float radar_grid_nlooks = 1,
                 out_geo_vertices = None,
-                out_geo_grid = None,
+                out_dem_vertices = None,
                 out_geo_nlooks = None,
                 out_geo_rtc = None,
                 input_rtc = None,
                 output_rtc = None,
-                memory_mode = None):
+                memory_mode = 'AUTO'):
         """
         Run geocoding.
         """
 
-        output_mode_enum = _getOutputMode(output_mode)
+        output_mode_enum = getOutputMode(output_mode)
         rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+
+        # RTC algorithm
+        rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
+
         out_geo_vertices_raster = _getRaster(out_geo_vertices)
-        out_geo_grid_raster = _getRaster(out_geo_grid)
+        out_dem_vertices_raster = _getRaster(out_dem_vertices)
         out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
         out_geo_rtc_raster = _getRaster(out_geo_rtc)
         input_rtc_raster = _getRaster(input_rtc)
         output_rtc_raster = _getRaster(output_rtc)
-        memory_mode_enum = _getMemoryMode(memory_mode)
+        memory_mode_enum = getMemoryMode(memory_mode)
 
         # Run geocoding
         self.c_geocode.geocode(deref(radarGrid.c_radargrid),
@@ -363,10 +394,15 @@ cdef class pyGeocodeDouble(pyGeocodeBase):
                                rtc_input_radiometry, 
                                exponent,
                                rtc_min_value_db,
+                               rtc_upsampling,
+                               rtc_algorithm_obj,
                                abs_cal_factor,
+                               clip_min,
+                               clip_max,
+                               min_nlooks,
                                radar_grid_nlooks,
                                out_geo_vertices_raster,
-                               out_geo_grid_raster,
+                               out_dem_vertices_raster,
                                out_geo_nlooks_raster,
                                out_geo_rtc_raster,
                                input_rtc_raster,
@@ -469,28 +505,37 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
                 input_radiometry = None,
                 int exponent = 0,
                 rtc_min_value_db = NAN,
+                double rtc_upsampling = NAN,
+                rtc_algorithm = None,
                 double abs_cal_factor = 1,
+                float clip_min = NAN,
+                float clip_max = NAN,
+                float min_nlooks = NAN,
                 float radar_grid_nlooks = 1,
                 out_geo_vertices = None,
-                out_geo_grid = None,
+                out_dem_vertices = None,
                 out_geo_nlooks = None,
                 out_geo_rtc = None,
                 input_rtc = None,
                 output_rtc = None,
-                memory_mode = None):
+                memory_mode = 'AUTO'):
         """
         Run geocoding.
         """
 
-        output_mode_enum = _getOutputMode(output_mode)
+        output_mode_enum = getOutputMode(output_mode)
         rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+
+        # RTC algorithm
+        rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
+
         out_geo_vertices_raster = _getRaster(out_geo_vertices)
-        out_geo_grid_raster = _getRaster(out_geo_grid)
+        out_dem_vertices_raster = _getRaster(out_dem_vertices)
         out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
         out_geo_rtc_raster = _getRaster(out_geo_rtc)
         input_rtc_raster = _getRaster(input_rtc)
         output_rtc_raster = _getRaster(output_rtc)
-        memory_mode_enum = _getMemoryMode(memory_mode)
+        memory_mode_enum = getMemoryMode(memory_mode)
 
         # Run geocoding
         self.c_geocode.geocode(deref(radarGrid.c_radargrid),
@@ -502,10 +547,15 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
                                rtc_input_radiometry, 
                                exponent,
                                rtc_min_value_db,
+                               rtc_upsampling,
+                               rtc_algorithm_obj,
                                abs_cal_factor,
+                               clip_min,
+                               clip_max,
+                               min_nlooks,
                                radar_grid_nlooks,
                                out_geo_vertices_raster,
-                               out_geo_grid_raster,
+                               out_dem_vertices_raster,
                                out_geo_nlooks_raster,
                                out_geo_rtc_raster,
                                input_rtc_raster,
@@ -530,7 +580,6 @@ cdef class pyGeocodeComplexFloat(pyGeocodeBase):
     @property
     def geoGridLength(self):
         return self.c_geocode.geoGridLength()
-
 
 
 cdef class pyGeocodeComplexDouble(pyGeocodeBase):
@@ -608,28 +657,37 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
                 input_radiometry = None,
                 int exponent = 0,
                 rtc_min_value_db = NAN,
+                double rtc_upsampling = NAN,
+                rtc_algorithm = None,
                 double abs_cal_factor = 1,
+                float clip_min = NAN,
+                float clip_max = NAN,
+                float min_nlooks = NAN,
                 float radar_grid_nlooks = 1,
                 out_geo_vertices = None,
-                out_geo_grid = None,
+                out_dem_vertices = None,
                 out_geo_nlooks = None,
                 out_geo_rtc = None,
                 input_rtc = None,
                 output_rtc = None,
-                memory_mode = None):
+                memory_mode = 'AUTO'):
         """
         Run geocoding.
         """
 
-        output_mode_enum = _getOutputMode(output_mode)
+        output_mode_enum = getOutputMode(output_mode)
         rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
+
+        # RTC algorithm
+        rtc_algorithm_obj = getRtcAlgorithm(rtc_algorithm)
+
         out_geo_vertices_raster = _getRaster(out_geo_vertices)
-        out_geo_grid_raster = _getRaster(out_geo_grid)
+        out_dem_vertices_raster = _getRaster(out_dem_vertices)
         out_geo_nlooks_raster = _getRaster(out_geo_nlooks)
         out_geo_rtc_raster = _getRaster(out_geo_rtc)
         input_rtc_raster = _getRaster(input_rtc)
         output_rtc_raster = _getRaster(output_rtc)
-        memory_mode_enum = _getMemoryMode(memory_mode)
+        memory_mode_enum = getMemoryMode(memory_mode)
 
         # Run geocoding
         self.c_geocode.geocode(deref(radarGrid.c_radargrid),
@@ -641,10 +699,15 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
                                rtc_input_radiometry, 
                                exponent,
                                rtc_min_value_db,
+                               rtc_upsampling,
+                               rtc_algorithm_obj,
                                abs_cal_factor,
+                               clip_min,
+                               clip_max,
+                               min_nlooks,
                                radar_grid_nlooks,
                                out_geo_vertices_raster,
-                               out_geo_grid_raster,
+                               out_dem_vertices_raster,
                                out_geo_nlooks_raster,
                                out_geo_rtc_raster,
                                input_rtc_raster,
@@ -690,10 +753,7 @@ def pyGetGeoAreaElementMean(
     rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
 
     # output mode
-    output_mode_enum = _getOutputMode(output_mode)
-
-    width = dem_raster.width
-    length = dem_raster.length 
+    output_mode_enum = getOutputMode(output_mode)
 
     ret = getGeoAreaElementMean(        
         x_vect,

@@ -121,9 +121,19 @@ cdef class pyLUT2d:
         '''
         return self.eval(y, x)
     
+
     @property
     def xStart(self):
         return self.c_lut.xStart()
+
+    @property
+    def boundsError(self):
+        return self.c_lut.boundsError()
+
+    @boundsError.setter
+    def boundsError(self, bool value):
+        print('*** setting boundsError with: ', value)
+        self.c_lut.boundsError(value)
 
     @staticmethod
     def loadCalGrid(h5Group, dsetName):

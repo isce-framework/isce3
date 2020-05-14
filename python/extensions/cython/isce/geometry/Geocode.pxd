@@ -20,7 +20,7 @@ from Ellipsoid cimport Ellipsoid
 from Orbit cimport Orbit
 from LUT2d cimport LUT2d
 from Interpolator cimport dataInterpMethod
-from RTC cimport rtcInputRadiometry
+from RTC cimport rtcInputRadiometry, rtcAlgorithm
 
 from LookSide cimport LookSide
 
@@ -37,8 +37,9 @@ cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
 
     cdef enum geocodeMemoryMode:
         AUTO = 0
-        RADAR_GRID_SINGLE_BLOCK = 1
-        RADAR_GRID_MULTIPLE_BLOCKS = 2
+        SINGLE_BLOCK = 1
+        BLOCKS_GEOGRID = 2
+        BLOCKS_GEOGRID_AND_RADARGRID = 3
 
     # Geo2rdr class
     cdef cppclass Geocode[T]:
@@ -63,11 +64,11 @@ cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
                      double geoGridSpacingY,
                      int width,
                      int length,
-                     int epsgcode)
+                     int epsgcode) except +
 
         # Update geogrid
         void updateGeoGrid(RadarGridParameters& radar_grid, 
-                           Raster & dem_raster)
+                           Raster & dem_raster) except +
 
         # Run geocoding
         void geocode(RadarGridParameters& radar_grid, 
@@ -79,15 +80,20 @@ cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
                      rtcInputRadiometry input_radiometry,
                      int exponent,
                      float rtc_min_value_db,
+                     double rtc_upsampling,
+                     rtcAlgorithm rtc_algorithm,
                      double abs_cal_factor,
+                     float clip_min,
+                     float clip_max,
+                     float min_nlooks,
                      float radar_grid_nlooks,
                      Raster * out_geo_vertices,
-                     Raster * out_geo_grid,
+                     Raster * out_dem_vertices,
                      Raster * out_geo_nlooks,
                      Raster * out_geo_rtc,
                      Raster * input_rtc,
                      Raster * output_rtc,
-                     geocodeMemoryMode memory_mode_enum) 
+                     geocodeMemoryMode memory_mode_enum) except +
 
         double geoGridStartX()
         double geoGridStartY()
@@ -110,6 +116,6 @@ cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
         double dem_upsampling,
         float rtc_min_value_db,
         double abs_cal_factor,
-        float radar_grid_nlooks)
+        float radar_grid_nlooks) except +
 
 # end of file

@@ -12,6 +12,10 @@ rtc_area_mode_dict = {'AREA': rtcAreaMode.AREA,
 rtc_algorithm_dict = {'RTC_DAVID_SMALL': rtcAlgorithm.RTC_DAVID_SMALL,
                       'RTC_AREA_PROJECTION': rtcAlgorithm.RTC_AREA_PROJECTION}
 
+rtc_memory_mode_dict = {'AUTO': geocodeMemoryMode.AUTO,
+                        'SINGLE_BLOCK': geocodeMemoryMode.SINGLE_BLOCK,
+                        'BLOCKS_GEOGRID': geocodeMemoryMode.BLOCKS_GEOGRID}
+
 
 def enum_dict_decorator(enum_dict, default_key):
     def decorated(f):
@@ -41,6 +45,10 @@ def getRtcAreaMode(*args, **kwargs):
 def getRtcAlgorithm(*args, **kwargs):
     pass
 
+@enum_dict_decorator(rtc_memory_mode_dict, 'AUTO')
+def getMemoryMode(*args, **kwargs):
+    pass
+
 def pyApplyRTC(pyRadarGridParameters radarGrid,
                pyOrbit orbit,
                pyLUT2d doppler,
@@ -57,7 +65,8 @@ def pyApplyRTC(pyRadarGridParameters radarGrid,
                float radar_grid_nlooks = 1,
                out_nlooks = None,
                input_rtc = None,
-               output_rtc = None):
+               output_rtc = None,
+               memory_mode = 'AUTO'):
 
     # input radiometry
     rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
@@ -77,6 +86,8 @@ def pyApplyRTC(pyRadarGridParameters radarGrid,
     if out_raster == NULL:
         print('ERROR invalid output raster')
         return
+
+    memory_mode_enum = getMemoryMode(memory_mode)
   
     applyRTC(deref(radarGrid.c_radargrid),
              orbit.c_orbit,
@@ -94,7 +105,8 @@ def pyApplyRTC(pyRadarGridParameters radarGrid,
              radar_grid_nlooks,
              out_nlooks_raster,
              input_rtc_raster,
-             output_rtc_raster)
+             output_rtc_raster,
+             memory_mode_enum)
 
 def pyRTC(pyRadarGridParameters radarGrid,
           pyOrbit orbit,
@@ -107,7 +119,8 @@ def pyRTC(pyRadarGridParameters radarGrid,
           dem_upsampling = NAN,
           rtc_min_value_db = NAN,
           float radar_grid_nlooks = 1,
-          out_nlooks = None):
+          out_nlooks = None,
+          memory_mode = 'AUTO'):
 
     # input radiometry
     rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
@@ -127,6 +140,8 @@ def pyRTC(pyRadarGridParameters radarGrid,
     if out_raster == NULL:
         print('ERROR invalid output raster')
         return
+    
+    memory_mode_enum = getMemoryMode(memory_mode)
   
     facetRTC(deref(radarGrid.c_radargrid),
              orbit.c_orbit,
@@ -139,7 +154,8 @@ def pyRTC(pyRadarGridParameters radarGrid,
              dem_upsampling,
              rtc_min_value_db,
              radar_grid_nlooks,
-             out_nlooks_raster)
+             out_nlooks_raster,
+             memory_mode_enum)
 
 def pyRTCBBox(pyRadarGridParameters radarGrid,
               pyOrbit orbit,
@@ -161,7 +177,8 @@ def pyRTCBBox(pyRadarGridParameters radarGrid,
               float radar_grid_nlooks = 1,
               out_geo_vertices = None,
               out_geo_grid = None,
-              out_nlooks = None):
+              out_nlooks = None,
+              memory_mode = 'AUTO'):
 
     # input radiometry
     rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
@@ -183,6 +200,8 @@ def pyRTCBBox(pyRadarGridParameters radarGrid,
         print('ERROR invalid output raster')
         return
 
+    memory_mode_enum = getMemoryMode(memory_mode)
+
     facetRTC(deref(dem_raster.c_raster),
              deref(out_raster),
              deref(radarGrid.c_radargrid),
@@ -203,7 +222,8 @@ def pyRTCBBox(pyRadarGridParameters radarGrid,
              radar_grid_nlooks,
              out_geo_vertices_raster,
              out_geo_grid_raster,
-             out_nlooks_raster)
+             out_nlooks_raster,
+             memory_mode_enum)
 
 
 def pyRTCProd(pyProduct prod, 
@@ -218,7 +238,8 @@ def pyRTCProd(pyProduct prod,
               rtc_min_value_db = NAN,
               size_t nlooks_az = 1,
               size_t nlooks_rg = 1,
-              out_nlooks = None):
+              out_nlooks = None,
+              memory_mode = 'AUTO'):
 
     # input radiometry
     rtc_input_radiometry = getRtcInputRadiometry(input_radiometry)
@@ -239,6 +260,8 @@ def pyRTCProd(pyProduct prod,
         print('ERROR invalid output raster')
         return
 
+    memory_mode_enum = getMemoryMode(memory_mode) 
+
     facetRTC(deref(prod.c_product),
              deref(dem_raster.c_raster),
              deref(out_raster),
@@ -251,4 +274,5 @@ def pyRTCProd(pyProduct prod,
              rtc_min_value_db,
              nlooks_az,
              nlooks_rg,
-             out_nlooks_raster)
+             out_nlooks_raster,
+             memory_mode_enum)
