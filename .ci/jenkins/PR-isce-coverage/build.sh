@@ -20,11 +20,11 @@ IMAGENAME="nisar/isce-cu1904-coverage"
 ###Replace TAG with correct isce-src tag
 sed -i "s/__TAG__/${TAG}/" ${WORKSPACE}/.ci/images/ubuntu-systemlibs/Dockerfile.isce-coverage
 
-nvidia-docker build . -t $IMAGENAME:$TAG \
+docker build . -t $IMAGENAME:$TAG \
     -f $WORKSPACE/.ci/images/ubuntu-systemlibs/Dockerfile.isce-coverage
 
 # Get the coverage output XML for Cobertura
-nvidia-docker run --rm $IMAGENAME:$TAG cat /coverage.xml > coverage.xml
+docker run --rm $IMAGENAME:$TAG cat /coverage.xml > coverage.xml
 
 #Clean up the image created
 docker rmi $IMAGENAME:$TAG
