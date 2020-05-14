@@ -322,7 +322,7 @@ def focus(cfg):
         # TODO Find center frequencies after mode intersection.
         fc = raw.getCenterFrequency(frequency)
         dop[frequency] = scale_doppler(dop_ref, fc / fc_ref)
-        slc.set_doppler(dop[frequency], orbit.reference_epoch, frequency)
+        slc.set_parameters(dop[frequency], orbit.reference_epoch, frequency)
         og = ogrid[frequency]
         t = og.sensing_start + np.arange(og.length) / og.prf
         r = og.starting_range + np.arange(og.width) * og.range_pixel_spacing

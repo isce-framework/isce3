@@ -39,13 +39,18 @@ class SLC(h5py.File):
         log.debug(f"Creating group {args[0]}")
         return super().create_group(*args, **kw)
 
-    def set_doppler(self, dop: LUT2d, epoch: DateTime, frequency='A'):
+    def set_parameters(self, dop: LUT2d, epoch: DateTime, frequency='A'):
         log.info(f"Saving Doppler for frequency {frequency}")
         g = self.root.require_group("metadata/processingInformation/parameters")
         # Actual LUT goes into a subdirectory, not created by serialization.
         name = f"frequency{frequency}"
-        g.require_group(name)
+        fg = g.require_group(name)
         dop.save_to_h5(g, f"{name}/dopplerCentroid", epoch, "Hz")
+        # TODO veff, fmrate not used anywhere afaict except product io.
+        v = np.zeros_like(dop.data)
+        g.require_dataset("effectiveVelocity", v.shape, v.dtype, data=v)
+        fg.require_dataset("azimuthFMRate", v.shape, v.dtype, data=v)
+        # TODO weighting, ref height
 
     def swath(self, frequency="A") -> h5py.Group:
         return self.root.require_group(f"swaths/frequency{frequency}")
