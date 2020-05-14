@@ -37,6 +37,15 @@ void addbinding(pybind11::class_<Quaternion>& pyQuaternion)
         .def("rotmat", [](Quaternion & self, double t) {
             return self.rotmat(t, "");
         })
+        .def("ypr", [](Quaternion & self, double t) {
+            double yaw{0}, pitch{0}, roll{0};
+            self.ypr(t, yaw, pitch, roll);
+            auto out = py::tuple(3);
+            out[0] = yaw;
+            out[1] = pitch;
+            out[2] = roll;
+            return out;
+        })
         .def_static("load_from_h5", [](py::object h5py_group) {
             auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
             isce::io::IGroup group(id);
@@ -46,5 +55,12 @@ void addbinding(pybind11::class_<Quaternion>& pyQuaternion)
         },
         "De-serialize Quaternion from h5py.Group object",
         py::arg("h5py_group"))
+
+        .def_property_readonly("time", &Quaternion::time)
+        .def_property_readonly("qvec", [](const Quaternion& self) {
+            using namespace Eigen;
+            using T = Array<double, Dynamic, Dynamic, RowMajor>;
+            return Map<const T>(self.qvec().data(), self.nVectors(), 4);
+        })
         ;
 }
