@@ -83,6 +83,11 @@ processing:
         # Defaults to input PRF.
         output_prf: null
 
+        # Interval for azimuth grid alignment in seconds.  See docs.
+        # Typically want 1 second and integer PRF (in Hz).  Will not override
+        # user-provided start_time.
+        time_snap_interval: 1.0
+
     # Range spectral window, optional.  Defaults to no weighting.
     range_window:
         # Kaiser or Cosine
@@ -213,6 +218,4 @@ processing:
         range_cor: True
         # azimuth compression
         azcomp: True
-        # atmosphere correction
-        dry_troposphere: True
 """
