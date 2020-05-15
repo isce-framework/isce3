@@ -55,7 +55,7 @@ archive: {}
 qaqc: {}
 
 identification:
-    absolute_orbit_number: 1
+    product: RSLC   # Handy to set to "SLC" until other ISCE tools updated.
     frame: 1
     track: 1
 

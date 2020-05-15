@@ -9,6 +9,9 @@ outputs:
 worker:
     gpu_enabled: False
 
+identification:
+    product: SLC
+
 processing:
     output_grid:
         start_time: 2021-07-01T03:20:03.461103958

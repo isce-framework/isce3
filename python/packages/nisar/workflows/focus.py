@@ -315,7 +315,7 @@ def focus(cfg):
                                                   zerodop, dem)
 
     log.info(f"Creating output SLC product {cfg.outputs.slc}")
-    slc = SLC(cfg.outputs.slc, mode="w")
+    slc = SLC(cfg.outputs.slc, mode="w", product=cfg.identification.product)
     slc.set_orbit(orbit) # TODO acceleration, orbitType
     slc.set_attitude(attitude, orbit.reference_epoch)
     slc.copy_identification(raw, track=cfg.identification.track,
