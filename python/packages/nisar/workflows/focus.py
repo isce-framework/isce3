@@ -289,9 +289,16 @@ def focus(cfg):
     raw = Raw(hdf5file=cfg.inputs.raw[0])
     dem = get_dem(cfg)
     orbit = get_orbit(cfg)
-    attitude = get_attitude(cfg)
-    fc_ref, dop_ref = make_doppler(cfg)
-    zerodop = zero_doppler_like(dop_ref)
+    try:
+        attitude = get_attitude(cfg)
+    except:
+        log.error("Could not load attitude data.  Assuming zero Doppler.")
+        attitude = None
+        # XXX This makes for zero-sized dimensions in the Doppler metadata.
+        fc_ref, dop_ref = 1.0, isce.core.LUT2d()
+    else:
+        fc_ref, dop_ref = make_doppler(cfg)
+    zerodop = isce.core.LUT2d()
     azres = cfg.processing.azcomp.azimuth_resolution
     atmos = cfg.processing.dry_troposphere_model or "nodelay"
     kernel = get_kernel(cfg)
@@ -321,7 +328,8 @@ def focus(cfg):
     log.info(f"Creating output SLC product {cfg.outputs.slc}")
     slc = SLC(cfg.outputs.slc, mode="w", product=cfg.identification.product)
     slc.set_orbit(orbit) # TODO acceleration, orbitType
-    slc.set_attitude(attitude, orbit.reference_epoch)
+    if attitude:
+        slc.set_attitude(attitude, orbit.reference_epoch)
     slc.copy_identification(raw, track=cfg.identification.track,
         frame=cfg.identification.frame, polygon=polygon)
 
