@@ -184,7 +184,7 @@ def addImagery(h5file, ldr, imgfile, pol):
         freqA.create_dataset('centerFrequency', data=SOL / (ldr.summary.RadarWavelengthInm))
         freqA.create_dataset('rangeBandwidth', data=ldr.calibration.header.BandwidthInMHz * 1.0e6)
         freqA.create_dataset('chirpDuration', data=firstrec.ChirpLengthInns * 1.0e-9)
-        freqA.create_dataset('chirpSlope', data=-((freqA['rangeBandwidth'][()]*1.0e6)/(freqA['chirpDuration'][()]*1.0e-9)))
+        freqA.create_dataset('chirpSlope', data=-((freqA['rangeBandwidth'][()])/(freqA['chirpDuration'][()])))
         freqA.create_dataset('nominalAcquisitionPRF', data=firstrec.PRFInmHz / 1000./ (1 + (ldr.summary.NumberOfSARChannels == 4)))
         freqA.create_dataset('slantRangeSpacing', data=dr)
         freqA.create_dataset('slantRange', data=r0 + numpy.arange(nPixels) * dr)

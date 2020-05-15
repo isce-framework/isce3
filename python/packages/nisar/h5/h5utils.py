@@ -2,6 +2,8 @@
 '''
 This file contains utility methods for serializing / deserializing of basic data types from HDF5 files.
 '''
+import h5py
+import numpy as np
 
 
 bytestring = lambda x: x.decode('utf-8')
@@ -14,6 +16,9 @@ def extractScalar(h5grp, key, destType, logger=None, msg=None):
 
     try:
         val = h5grp.get(key)[()]
+        if getattr(val, "shape", ()) == (1,):  # hack for missionId = ["NISAR"]
+            assert len(val) == 1, "Not a scalar value"
+            val = val[0]
         val = destType(val)
     except KeyError:
         if logger:
@@ -46,4 +51,9 @@ def extractWithIterator(h5grp, key, iterType, logger=None, msg=None):
 
     return val
 
-# end of file
+
+def set_string(group: h5py.Group, name: str, data: str) -> h5py.Dataset:
+    "Simplify updates of fixed-length strings."
+    if name in group:
+        del group[name]
+    return group.create_dataset(name, data=np.string_(data))

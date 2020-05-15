@@ -16,6 +16,7 @@
 #include <isce/core/Peg.h>
 #include <isce/core/Pixel.h>
 #include <isce/core/Poly2d.h>
+#include <isce/core/Projections.h>
 #include <isce/core/Vector.h>
 #include <isce/geometry/DEMInterpolator.h>
 #include <isce/core/LookSide.h>
@@ -25,7 +26,6 @@
 // pull in useful isce::core namespace
 using namespace isce::core;
 using isce::product::RadarGridParameters;
-using isce::core::LookSide;
 
 int isce::geometry::
 rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
@@ -194,6 +194,29 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
     // Return convergence flag
     return converged;
 }
+
+
+int isce::geometry::
+rdr2geo(const Vec3& radarXYZ, const Vec3& axis, double angle,
+        double range, const DEMInterpolator& dem, Vec3& targetXYZ,
+        LookSide side, double threshold, int maxIter, int extraIter)
+{
+    if (range <= 0.0)
+        return 0;
+    int epsg = dem.epsgCode();
+    Ellipsoid ell = makeProjection(epsg)->ellipsoid();
+    // Generate TCN basis using the given axis as the velocity.
+    Basis tcn(radarXYZ, axis);
+    // Construct "doppler factor" with desired angle.
+    Pixel pix{range, range * sin(angle), 0};
+    Vec3 llh{0,0,0}; // XXX Initialize height guess of 0 m.
+    int converged = isce::geometry::rdr2geo(pix, tcn, radarXYZ, axis, ell, dem,
+                                    llh, side, threshold, maxIter, extraIter);
+    if (converged)
+        ell.lonLatToXyz(llh, targetXYZ);
+    return converged;
+}
+
 
 template <class T>
 double isce::geometry::

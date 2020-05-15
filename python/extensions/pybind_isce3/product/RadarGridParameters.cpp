@@ -1,5 +1,6 @@
 #include "RadarGridParameters.h"
 
+#include <stdexcept>
 #include <string>
 
 #include <isce/core/DateTime.h>
@@ -97,5 +98,57 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                 py::arg("azlooks"), py::arg("rglooks"))
         .def("slant_range", &RadarGridParameters::slantRange,
                 py::arg("sample"))
+        // slice to get subset of RGP
+        .def("__getitem__", [](const RadarGridParameters& self, py::tuple key) {
+                if (key.size() != 2) {
+                        throw std::invalid_argument("require 2 slices");
+                }
+                auto islice = key[0].cast<py::slice>();
+                auto jslice = key[1].cast<py::slice>();
+                py::ssize_t start, stop, step, slicelen;
+
+                if (!islice.compute(self.length(), &start, &stop, &step, &slicelen))
+                        throw std::invalid_argument("bad row slice");
+                if (step <= 0)
+                        throw py::index_error("cannot reverse grid");
+                double prf = self.prf() / step;
+                double t0 = self.sensingStart() + start / self.prf();
+                auto nt = slicelen;
+
+                if (!jslice.compute(self.length(), &start, &stop, &step, &slicelen))
+                        throw std::invalid_argument("bad column slice");
+                if (step <= 0)
+                        throw py::index_error("cannot reverse grid");
+                double dr = self.rangePixelSpacing() * step;
+                double r0 = self.startingRange() + start * self.rangePixelSpacing();
+                auto nr = slicelen;
+
+                return RadarGridParameters(t0, self.wavelength(), prf, r0, dr,
+                        self.lookSide(), nt, nr, self.refEpoch());
+        })
+        .def("copy", [](const RadarGridParameters& self) {
+                return RadarGridParameters(self);
+        })
+        .def_property_readonly("shape", [](const RadarGridParameters& self) {
+                auto shape = py::tuple(2);
+                shape[0] = self.length();
+                shape[1] = self.width();
+                return shape;
+        })
+        // FIXME Attribute names don't match ctor names.
+        .def("__str__", [](const py::object self) {
+                std::vector<std::string> keys {"sensing_start", "wavelength",
+                        "prf", "starting_range", "range_pixel_spacing",
+                        "lookside", "length", "width", "ref_epoch"};
+                std::string out("RadarGridParameters(");
+                for (auto it = keys.begin(); it != keys.end(); ++it) {
+                        auto key = *it;
+                        auto ckey = key.c_str();
+                        out += key + "=" + std::string(py::str(self.attr(ckey)));
+                        if (it != keys.end() - 1)
+                                out += ", ";
+                }
+                return out + ")";
+        })
         ;
 }

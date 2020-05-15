@@ -1,6 +1,7 @@
 #include "LUT2d.h"
 
 #include <isce/core/Constants.h>
+#include <isce/core/DateTime.h>
 #include <isce/core/Matrix.h>
 #include <isce/core/Serialization.h>
 #include <isce/except/Error.h>
@@ -10,12 +11,25 @@
 #include <valarray>
 
 #include <pybind11/eigen.h>
+#include <pybind11/numpy.h>
 
 namespace py = pybind11;
 
 using isce::core::LUT2d;
-using isce::core::parseDataInterpMethod;
 
+static dataInterpMethod duck_method(py::object method)
+{
+    using isce::core::dataInterpMethod;
+    using isce::core::parseDataInterpMethod;
+    if (py::isinstance<py::str>(method)) {
+        return parseDataInterpMethod(py::str(method));
+    } else if (py::isinstance<dataInterpMethod>(method)) {
+        return method.cast<dataInterpMethod>();
+    } else {
+        throw isce::except::InvalidArgument(ISCE_SRCINFO(),
+                                            "invalid type for interp method");
+    }
+}
 
 template<typename T>
 void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
@@ -26,7 +40,7 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
         .def(py::init([](double xstart, double ystart,
                     double dx, double dy,
                     py::array_t<T, py::array::c_style | py::array::forcecast> & py_data,
-                    std::string &method, bool b_error)
+                    py::object method, bool b_error)
                 {
                     // memcpy because ndarray not auto converted to eigen type for some reason
                     if (py_data.ndim() != 2) {
@@ -36,7 +50,7 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
                     std::memcpy(data.data(), py_data.data(), py_data.nbytes());
 
                     // get interp method
-                    auto interp_method = parseDataInterpMethod(method);
+                    auto interp_method = duck_method(method);
 
                     // return LUT2d object
                     return isce::core::LUT2d<T>(xstart, ystart, dx, dy, data, interp_method, b_error);
@@ -46,7 +60,7 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
         .def(py::init([](py::array_t<double, py::array::c_style | py::array::forcecast> & py_xcoord,
                         py::array_t<double, py::array::c_style | py::array::forcecast> & py_ycoord,
                         py::array_t<T, py::array::c_style | py::array::forcecast> & py_data,
-                        std::string &method, bool b_error)
+                        py::object method, bool b_error)
                 {
                     // memcpy ndarrays because they're not auto converted to eigen type for some reason
                     std::valarray<double> xcoord(py_xcoord.size());
@@ -62,7 +76,7 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
                     std::memcpy(data.data(), py_data.data(), py_data.nbytes());
 
                     // get interp method
-                    auto interp_method = parseDataInterpMethod(method);
+                    auto interp_method = duck_method(method);
 
                     // return LUT2d object
                     return isce::core::LUT2d<T>(xcoord, ycoord, data, interp_method, b_error);
@@ -85,12 +99,36 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
             py::arg("h5py_group"),
             py::arg("dataset_name"))
 
+        .def("save_to_h5", [](const LUT2d<T>& self, py::object h5py_group,
+                              const std::string& name,
+                              const isce::core::DateTime& epoch,
+                              const std::string& units) {
+
+                auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
+                isce::io::IGroup group(id);
+                isce::core::saveCalGrid(group, name, self, epoch, units);
+            },
+            "Serialize LUT2d to h5py.Group object (axes assumed range/time).",
+            py::arg("h5py_group"),
+            py::arg("dataset_name"),
+            py::arg("epoch"),
+            py::arg("units") = "")
+
+        .def_property_readonly("have_data", &LUT2d<T>::haveData)
+        .def_property_readonly("ref_value", &LUT2d<T>::refValue)
         .def_property_readonly("x_start",   &LUT2d<T>::xStart)
         .def_property_readonly("y_start",   &LUT2d<T>::yStart)
         .def_property_readonly("x_spacing", &LUT2d<T>::xSpacing)
         .def_property_readonly("y_spacing", &LUT2d<T>::ySpacing)
         .def_property_readonly("length",    &LUT2d<T>::length)
         .def_property_readonly("width",     &LUT2d<T>::width)
+        .def_property_readonly("interp_method",
+            py::overload_cast<>(&LUT2d<T>::interpMethod, py::const_))
+        .def_property_readonly("bounds_error",
+            py::overload_cast<>(&LUT2d<T>::boundsError, py::const_))
+        .def_property_readonly("data", [](const LUT2d<T>& self) {
+            return self.data().map();
+        })
         .def("eval", &LUT2d<T>::eval)
         ;
 }

@@ -59,14 +59,12 @@ def rdr2geo_cone(**kw):
 
     These are optional:
         angle           Complement of cone angle, radians, default=0 (plane).
-        ellipsoid       Ellipsoid of planet, type=pyEllipsoid, default=WGS84.
         demInterp       Digital elevation model, meters above ellipsoid,
                         type=pyDEMInterpolator, default=ellipsoid surface.
         threshold       Range convergence threshold, meters, default=0.05.
         maxIter         Maximum iterations, default=50.
         extraIter       Additional iterations, default=50.
 
-    Returns [longitude, latitude, height] of target relative to input ellipsoid,
-    with units [radians, radians, meters].
+    Returns ECEF [X,Y,Z] of target in meters.
     """
     return isceextension.py_rdr2geo_cone(**kw)
