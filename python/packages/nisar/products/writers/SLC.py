@@ -3,7 +3,9 @@ import logging
 import numpy as np
 from pybind_isce3.core import LUT2d, DateTime, Orbit, Quaternion
 from pybind_isce3.product import RadarGridParameters
+from nisar.h5 import set_string
 from nisar.types import complex32
+from nisar.products.readers.Raw import Raw
 
 log = logging.getLogger("SLCWriter")
 
@@ -23,7 +25,7 @@ class SLC(h5py.File):
         self.band = band
         self.product = product
         self.root = self.create_group(f"/science/{band}/{product}")
-        self.idroot = self.create_group(f"/science/{band}/identification")
+        self.idpath = f"/science/{band}/identification"
         self.attrs["Conventions"] = np.string_("CF-1.7")
         self.attrs["contact"] = np.string_("nisarops@jpl.nasa.gov")
         self.attrs["institution"] = np.string_("NASA JPL")
@@ -186,3 +188,35 @@ class SLC(h5py.File):
         d.attrs["units"] = np.string_("radians")
         d.attrs["description"] = np.string_("Attitude Euler angles"
                                             " (roll, pitch, yaw)")
+
+    def copy_identification(self, raw: Raw, track: int = 0, frame: int = 0,
+                            polygon: str = None):
+        """Copy the identification metadata from a L0B product.  Bounding
+        polygon will be updated if not None.
+        """
+        log.info(f"Populating identification based on {raw.filename}")
+        # Most parameters are just copies of input ID.
+        if self.idpath in self.root:
+            del self.root[self.idpath]
+        with h5py.File(raw.filename, 'r', libver='latest', swmr=True) as fd:
+            self.root.copy(fd[raw.IdentificationPath], self.idpath)
+        g = self.root[self.idpath]
+        # Of course product type is different.
+        d = set_string(g, "productType", self.product)
+        d.attrs["description"] = np.string_("Product type")
+        # L0B doesn't know about track/frame, so have to add it.
+        d = g.require_dataset("trackNumber", (), 'uint8', data=track)
+        d.attrs["units"] = np.string_("unitless")
+        d.attrs["description"] = np.string_("Track number")
+        d = g.require_dataset("frameNumber", (), 'uint16', data=frame)
+        d.attrs["units"] = np.string_("unitless")
+        d.attrs["description"] = np.string_("Frame number")
+        # Polygon different due to reskew and possibly multiple input L0Bs.
+        if polygon is not None:
+            d = set_string(g, "boundingPolygon", polygon)
+            d.attrs["epsg"] = 4326
+            d.attrs["description"] = np.string_("OGR compatible WKT"
+                " representation of bounding polygon of the image")
+            d.attrs["ogr_geometry"] = np.string_("polygon")
+        else:
+            log.warning("SLC bounding polygon not updated.  Using L0B polygon.")

@@ -311,10 +311,15 @@ def focus(cfg):
         ogrid["B"] = ogrid["A"][:, ::rskip]
         log.info("Output grid B is %s", ogrid["B"])
 
+    polygon = isce.geometry.get_geo_perimeter_wkt(ogrid["A"], orbit,
+                                                  zerodop, dem)
+
     log.info(f"Creating output SLC product {cfg.outputs.slc}")
     slc = SLC(cfg.outputs.slc, mode="w")
     slc.set_orbit(orbit) # TODO acceleration, orbitType
     slc.set_attitude(attitude, orbit.reference_epoch)
+    slc.copy_identification(raw, track=cfg.identification.track,
+        frame=cfg.identification.frame, polygon=polygon)
 
     # store metadata for each frequency
     dop = dict()
