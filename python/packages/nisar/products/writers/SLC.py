@@ -69,7 +69,7 @@ class SLC(h5py.File):
         else:
             pols = np.array([pol], dtype="S2")
         dset = g.create_dataset(name, data=pols)
-        desc = f"List of polarization layers with frequecy {frequency}"
+        desc = f"List of polarization layers with frequency{frequency}"
         dset.attrs["description"] = np.string_(desc)
 
     def create_image(self, frequency="A", pol="HH", **kw) -> h5py.Dataset:
