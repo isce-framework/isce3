@@ -1,5 +1,6 @@
 #include "geometry.h"
 
+#include "boundingbox.h"
 #include "DEMInterpolator.h"
 #include "rdr2geo.h"
 
@@ -16,4 +17,5 @@ void addsubmodule_geometry(py::module & m)
     // add bindings
     addbinding(pyDEMInterpolator);
     addbinding_rdr2geo(geometry);
+    addbinding_boundingbox(geometry);
 }

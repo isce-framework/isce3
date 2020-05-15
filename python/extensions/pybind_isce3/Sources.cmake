@@ -19,6 +19,7 @@ focus/Chirp.cpp
 focus/DryTroposphereModel.cpp
 focus/focus.cpp
 focus/RangeComp.cpp
+geometry/boundingbox.cpp
 geometry/geometry.cpp
 geometry/DEMInterpolator.cpp
 geometry/rdr2geo.cpp
