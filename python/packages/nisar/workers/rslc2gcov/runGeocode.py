@@ -437,7 +437,6 @@ def _runGeocodeFrequency(self, frequency):
             del hdf5_obj[h5_ds]
         xds = hdf5_obj.create_dataset(h5_ds, data=x_vect)
         h5_ds_list.append(h5_ds)
-        xds.make_scale()
 
         # yCoordinates
         h5_ds = os.path.join(root_ds, 'yCoordinates') # float64
@@ -446,7 +445,6 @@ def _runGeocodeFrequency(self, frequency):
             del hdf5_obj[h5_ds]
         yds = hdf5_obj.create_dataset(h5_ds, data=y_vect)
         h5_ds_list.append(h5_ds)
-        yds.make_scale()
 
         #Associate grid mapping with data - projection created later
         h5_ds = os.path.join(root_ds, "projection")
@@ -590,7 +588,6 @@ def _runGeocodeFrequency(self, frequency):
         else:
             raise NotImplementedError('Waiting for implementation / Not supported in ISCE3')
 
-        print('*** output_radiometry_str: ', output_radiometry_str)
         # save GCOV diagonal elements
         cov_elements_list = [p.upper()+p.upper() for p in pol_list]
         _save_hdf5_dataset(self, 'output_file', hdf5_obj, root_ds,
@@ -644,7 +641,6 @@ def _runGeocodeFrequency(self, frequency):
                 del hdf5_obj[h5_ds]
             xds_vertices = hdf5_obj.create_dataset(h5_ds, data=x_vect_vertices)
             h5_ds_list.append(h5_ds)
-            xds_vertices.make_scale()
 
             # yCoordinates
             h5_ds = os.path.join(root_ds, 'yCoordinatesVertices') # float64
@@ -653,7 +649,6 @@ def _runGeocodeFrequency(self, frequency):
                 del hdf5_obj[h5_ds]
             yds_vertices = hdf5_obj.create_dataset(h5_ds, data=y_vect_vertices)
             h5_ds_list.append(h5_ds)
-            yds_vertices.make_scale()
 
             # save geo grid
             _save_hdf5_dataset(self, 'out_dem_vertices', hdf5_obj, root_ds, 

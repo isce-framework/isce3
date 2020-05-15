@@ -132,7 +132,6 @@ cdef class pyLUT2d:
 
     @boundsError.setter
     def boundsError(self, bool value):
-        print('*** setting boundsError with: ', value)
         self.c_lut.boundsError(value)
 
     @staticmethod
