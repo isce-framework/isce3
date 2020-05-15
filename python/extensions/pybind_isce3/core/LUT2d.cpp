@@ -114,6 +114,8 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
             py::arg("epoch"),
             py::arg("units") = "")
 
+        .def_property_readonly("have_data", &LUT2d<T>::haveData)
+        .def_property_readonly("ref_value", &LUT2d<T>::refValue)
         .def_property_readonly("x_start",   &LUT2d<T>::xStart)
         .def_property_readonly("y_start",   &LUT2d<T>::yStart)
         .def_property_readonly("x_spacing", &LUT2d<T>::xSpacing)
