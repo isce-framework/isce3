@@ -12,6 +12,13 @@ log = logging.getLogger("Raw")
 
 PRODUCT = "RRSD"
 
+def find_case_insensitive(group: h5py.Group, name: str) -> str:
+    for key in group:
+        if key.lower() == name.lower():
+            return key
+    raise ValueError(f"{name} not found in HDF5 group {group.name}")
+
+
 class Raw(Base, family='nisar.productreader.raw'):
     '''
     Class for parsing NISAR L0B products into isce structures.
@@ -77,7 +84,8 @@ class Raw(Base, family='nisar.productreader.raw'):
             band = f[self.BandPath(frequency)]
             T = band["chirpDuration"][()]
             K = band["chirpSlope"][()]
-            fs = band["rangeSamplingFrequency"][()]
+            dr = band["slantRangeSpacing"][()]
+            fs = isce.core.speed_of_light / 2 / dr
         log.info(f"Chirp({K}, {T}, {fs})")
         return np.asarray(isce.focus.form_linear_chirp(K, T, fs))
 
@@ -117,7 +125,8 @@ class Raw(Base, family='nisar.productreader.raw'):
     def getPulseTimes(self, frequency='A', tx='H'):
         txpath = self.TransmitPath(frequency, tx)
         with h5py.File(self.filename, 'r', libver='latest', swmr=True) as f:
-            name = "UTCtime"
+            # FIXME REE uses wrong case for UTCTime
+            name = find_case_insensitive(f[txpath], "UTCTime")
             t = np.asarray(f[txpath][name])
             epoch = isce.io.get_ref_epoch(f[txpath], name)
         return epoch, t

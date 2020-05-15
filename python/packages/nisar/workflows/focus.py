@@ -222,9 +222,13 @@ def zero_doppler_like(dop: LUT2d):
 
 
 def scale_doppler(dop: LUT2d, c: float):
-    x = c * dop.data
-    return LUT2d(dop.x_start, dop.y_start, dop.x_spacing, dop.y_spacing, x,
-                 dop.interp_method, dop.bounds_error)
+    if dop.have_data:
+        x = c * dop.data
+        return LUT2d(dop.x_start, dop.y_start, dop.x_spacing, dop.y_spacing, x,
+                    dop.interp_method, dop.bounds_error)
+    if dop.ref_value == 0.0:
+        return LUT2d()
+    raise NotImplementedError("No way to scale Doppler with nonzero ref_value")
 
 
 def make_output_grid(cfg: Struct, igrid):
