@@ -403,6 +403,7 @@ def focus(cfg):
                                        fc, azres, kernel, atmos,
                                        vars(cfg.processing.azcomp.rdr2geo),
                                        vars(cfg.processing.azcomp.geo2rdr))
+                log.debug(f"max(abs(z)) = {np.max(np.abs(z))}")
                 zf = to_complex32(scale * z)
                 acdata.write_direct(zf, dest_sel=block)
 
