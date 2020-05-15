@@ -63,6 +63,8 @@ class SLC(h5py.File):
         name = "listOfPolarizations"
         if name in g:
             pols = np.array(g[name])
+            assert(pol not in pols)
+            pols = np.append(pols, [pol])
             del g[name]
         else:
             pols = np.array([pol], dtype="S2")
