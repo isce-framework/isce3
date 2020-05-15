@@ -2,7 +2,7 @@
 # Author: Liang Yu
 # Copyright 2019-
 
-def runPrepHDF5(self, userconfig, defaults=None):
+def runPrepHDF5(self):
     '''
     Copies shared data from RSLC HDF5 to GSLC HDF5
 
@@ -18,17 +18,19 @@ def runPrepHDF5(self, userconfig, defaults=None):
     import os
     from nisar.h5 import cp_h5_meta_data
 
+    state = self.state
+
     # prelim setup
     common_parent_path = 'science/LSAR'
-    src_h5 = h5py.File(userconfig['inputs']['rslc'], 'r')
+    src_h5 = h5py.File(state.input_hdf5, 'r')
 
     # rm anything and start from scratch
     try:
-        os.remove(userconfig['outputs']['gslc'])
+        os.remove(state.output_hdf5)
     except FileNotFoundError:
         pass
 
-    dst_h5 = h5py.File(userconfig['outputs']['gslc'], 'w')
+    dst_h5 = h5py.File(state.output_hdf5, 'w')
 
     # simple copies of identification, metadata/orbit, metadata/attitude groups
     cp_h5_meta_data(src_h5, dst_h5, os.path.join(common_parent_path, 'identification'))
