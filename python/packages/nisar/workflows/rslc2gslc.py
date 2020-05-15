@@ -121,7 +121,7 @@ class Workflow(object):
                        'verifyDEM',
                        'subsetInputs',
                        'prepHDF5',
-                       'geocodeSLC_{frequency}',
+                       'geocodeSLC', #_{frequency}',
                        'finalizeHDF5']
 
         self.verbose = args.verbose

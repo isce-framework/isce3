@@ -1,6 +1,10 @@
 #!/usr/bin/env python3 #
-# Author: Liang Yu
-# Copyright 2019-
+
+import h5py
+import os
+from nisar.h5 import cp_h5_meta_data
+import numpy as np
+import isce3.extensions.isceextension as temp_isce3
 
 def runPrepHDF5(self):
     '''
@@ -13,10 +17,6 @@ def runPrepHDF5(self):
     path_dst : str
         Full path to destination HDF5 file
     '''
-
-    import h5py
-    import os
-    from nisar.h5 import cp_h5_meta_data
 
     state = self.state
 
@@ -34,8 +34,13 @@ def runPrepHDF5(self):
 
     # simple copies of identification, metadata/orbit, metadata/attitude groups
     cp_h5_meta_data(src_h5, dst_h5, os.path.join(common_parent_path, 'identification'))
-    cp_h5_meta_data(src_h5, dst_h5, os.path.join(common_parent_path, 'SLC/metadata/orbit'))
-    cp_h5_meta_data(src_h5, dst_h5, os.path.join(common_parent_path, 'SLC/metadata/attitude'))
+    cp_h5_meta_data(src_h5, dst_h5, 
+                    os.path.join(common_parent_path, 'SLC/metadata/orbit'),
+                    os.path.join(common_parent_path, 'GSLC/metadata/orbit'))
+
+    cp_h5_meta_data(src_h5, dst_h5, 
+                    os.path.join(common_parent_path, 'SLC/metadata/attitude'),
+                    os.path.join(common_parent_path, 'GSLC/metadata/attitude'))
 
     # copy calibration information group
     cp_h5_meta_data(src_h5, dst_h5,
@@ -73,5 +78,65 @@ def runPrepHDF5(self):
                 renames={'processedCenterFrequency':'centerFrequency',
                     'processedAzimuthBandwidth':'azimuthBandwidth',
                     'processedRangeBandwidth':'rangeBandwidth'})
+
+
+    self.geogrid_dict = {}
+    for freq in state.subset_dict.keys():
+        frequency = "frequency{}".format(freq)
+        self.geogrid_dict[frequency] = _createGeoGrid(self.userconfig, frequency)
+        pol_list = state.subset_dict[freq]
+        shape=(self.geogrid_dict[frequency].length, self.geogrid_dict[frequency].width)
+
+        for polarization in pol_list:
+            _createDatasets(dst_h5, common_parent_path, frequency, polarization, shape, chunks=(128, 128))
+    
+    dst_h5.close()
+
+def _createGeoGrid(userconfig, frequency):
+    
+    # For production we only fix epsgcode and snap value and will 
+    # rely on the rslc product metadta to compute the bounding box of the geocoded products
+    # there is a place holder in SLC product for compute Bounding box
+    # when that method is populated we should be able to simply say
+    # bbox = self.slc_obj.computeBoundingBox(epsg=state.epsg)
+
+    #for now let's rely on the run config input  
+    x_start = userconfig['processing']['geocode']['top_left']['x_abs']
+    y_start = userconfig['processing']['geocode']['top_left']['y_abs']
+    x_end = userconfig['processing']['geocode']['bottom_right']['x_abs']
+    y_end = userconfig['processing']['geocode']['bottom_right']['y_abs']
+    x_step = userconfig['processing']['geocode']['output_posting'][frequency]['x_posting']
+    y_step = -1.0*userconfig['processing']['geocode']['output_posting'][frequency]['y_posting']
+    epsg_code = userconfig['processing']['geocode']['outputEPSG']
+    y_size = int(np.round((y_end-y_start)/y_step))
+    x_size = int(np.round((x_end-x_start)/x_step))
+
+    geo_grid = temp_isce3.pyGeoGridParameters()
+    geo_grid.startX = x_start
+    geo_grid.startY = y_start
+    geo_grid.spacingX = x_step
+    geo_grid.spacingY = y_step
+    geo_grid.width = x_size
+    geo_grid.length = y_size
+    geo_grid.epsg = epsg_code
+    
+    return geo_grid
+    
+def _createDatasets(dst_h5, common_parent_path, frequency, polarization, shape, chunks=(128, 128)):
+
+    dtype = np.complex64
+    print("create empty dataset for frequency: {} polarization: {}".format(frequency, polarization))
+    dataset_path = os.path.join(common_parent_path, f'GSLC/grids/{frequency}')
+    grp = dst_h5[dataset_path]
+    if chunks<shape:
+        ds = grp.create_dataset(polarization, dtype=dtype, shape=shape, chunks=chunks)
+    else:
+        ds = grp.create_dataset(polarization, dtype=dtype, shape=shape)
+
+    ds.attrs['description'] = np.string_(
+                                      'Geocoded SLC for {} channel'.format(polarization))
+    ds.attrs['units'] = np.string_('')
+
+    return None
 
 # end of file
