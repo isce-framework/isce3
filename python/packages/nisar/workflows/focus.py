@@ -379,7 +379,10 @@ def focus(cfg):
         for pulse in range(0, rawdata.shape[0], na):
             log.info(f"Range compressing block at pulse {pulse}")
             block = np.s_[pulse:pulse+na, :]
-            rc.rangecompress(rcfile.data[block], rawdata[block])
+            # TODO fill invalid data during presum.
+            ps = rawdata[block]
+            ps[np.isnan(ps)] = 0.0
+            rc.rangecompress(rcfile.data[block], ps)
 
         acdata = slc.create_image(frequency, pol, shape=ogrid[frequency].shape)
 
