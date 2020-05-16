@@ -2,8 +2,9 @@
 
 import h5py
 import os
-from nisar.h5 import cp_h5_meta_data
+import osr
 import numpy as np
+from nisar.h5 import cp_h5_meta_data
 import isce3.extensions.isceextension as temp_isce3
 
 def runPrepHDF5(self):
@@ -63,7 +64,7 @@ def runPrepHDF5(self):
                 'zeroDopplerTime':'zeroDopplerAzimuthTime'})
 
     # copy radar imagery group; assumming shared data
-    # XXX option0: to be replaced with actual gcov code
+    # XXX option0: to be replaced with actual gslc code
     # XXX option1: do not write GSLC data here; GSLC rasters can be appended to the GSLC HDF5
     for freq in ['A', 'B']:
         cp_h5_meta_data(src_h5, dst_h5,
@@ -80,16 +81,21 @@ def runPrepHDF5(self):
                     'processedRangeBandwidth':'rangeBandwidth'})
 
 
+    # create the datasets in the output hdf5
     self.geogrid_dict = {}
     for freq in state.subset_dict.keys():
-        frequency = "frequency{}".format(freq)
-        self.geogrid_dict[frequency] = _createGeoGrid(self.userconfig, frequency)
+        frequency = f'frequency{freq}'
         pol_list = state.subset_dict[freq]
+        self.geogrid_dict[frequency] = _createGeoGrid(self.userconfig, frequency)
         shape=(self.geogrid_dict[frequency].length, self.geogrid_dict[frequency].width)
-
         for polarization in pol_list:
             _createDatasets(dst_h5, common_parent_path, frequency, polarization, shape, chunks=(128, 128))
-    
+   
+    # adding geogrid and projection information
+    for freq in state.subset_dict.keys():
+        frequency = f'frequency{freq}'
+        _addGeoInformation(dst_h5, common_parent_path, frequency, self.geogrid_dict[frequency])
+
     dst_h5.close()
 
 def _createGeoGrid(userconfig, frequency):
@@ -140,3 +146,169 @@ def _createDatasets(dst_h5, common_parent_path, frequency, polarization, shape, 
     return None
 
 # end of file
+
+def _addGeoInformation(hdf5_obj, common_parent_path, frequency, geo_grid):
+    
+    epsg_code = geo_grid.epsg
+
+    dx = geo_grid.spacingX
+    x0 = geo_grid.startX + 0.5*dx
+    xf = x0 + geo_grid.width*dx
+    x_vect = np.arange(x0, xf, dx, dtype=np.float64)
+
+    dy = geo_grid.spacingY
+    y0 = geo_grid.startY + 0.5*dy
+    yf = y0 + geo_grid.length*dy
+    y_vect = np.arange(y0, yf, dy, dtype=np.float64)
+
+    hdf5_obj.attrs['Conventions'] = np.string_("CF-1.8")
+    root_ds = os.path.join(common_parent_path, 'GSLC', 'grids',
+                               f'{frequency}')
+
+    # xCoordinates
+    h5_ds = os.path.join(root_ds, 'xCoordinates') # float64
+    xds = hdf5_obj.create_dataset(h5_ds, data=x_vect)
+
+    # yCoordinates
+    h5_ds = os.path.join(root_ds, 'yCoordinates') # float64
+    yds = hdf5_obj.create_dataset(h5_ds, data=y_vect)
+
+    #Associate grid mapping with data - projection created later
+    h5_ds = os.path.join(root_ds, "projection")
+
+    #Set up osr for wkt
+    srs = osr.SpatialReference()
+    srs.ImportFromEPSG(epsg_code)
+
+    ###Create a new single int dataset for projections
+    projds = hdf5_obj.create_dataset(h5_ds, (), dtype='i')
+    projds[()] = epsg_code
+
+    #h5_ds_list.append(h5_ds)
+
+    ##WGS84 ellipsoid
+    projds.attrs['semi_major_axis'] = 6378137.0
+    projds.attrs['inverse_flattening'] = 298.257223563
+    projds.attrs['ellipsoid'] = np.string_("WGS84")
+
+    ##Additional fields
+    projds.attrs['epsg_code'] = epsg_code
+
+    ##CF 1.7+ requires this attribute to be named "crs_wkt"
+    ##spatial_ref is old GDAL way. Using that for testing only.
+    ##For NISAR replace with "crs_wkt"
+    projds.attrs['spatial_ref'] = np.string_(srs.ExportToWkt())
+
+    ##Here we have handcoded the attributes for the different cases
+    ##Recommended method is to use pyproj.CRS.to_cf() as shown above
+    ##To get complete set of attributes.
+
+    ###Geodetic latitude / longitude
+    if epsg_code == 4326:
+            #Set up grid mapping
+            projds.attrs['grid_mapping_name'] = np.string_('latitude_longitude')
+            projds.attrs['longitude_of_prime_meridian'] = 0.0
+
+            #Setup units for x and y
+            xds.attrs['standard_name'] = np.string_("longitude")
+            xds.attrs['units'] = np.string_("degrees_east")
+
+            yds.attrs['standard_name'] = np.string_("latitude")
+            yds.attrs['units'] = np.string_("degrees_north")
+
+    ### UTM zones
+    elif ((epsg_code > 32600 and
+               epsg_code < 32661) or
+              (epsg_code > 32700 and
+               epsg_code < 32761)):
+            #Set up grid mapping
+            projds.attrs['grid_mapping_name'] = np.string_('universal_transverse_mercator')
+            projds.attrs['utm_zone_number'] = self.state.output_epsg % 100
+
+            #Setup units for x and y
+            xds.attrs['standard_name'] = np.string_("projection_x_coordinate")
+            xds.attrs['long_name'] = np.string_("x coordinate of projection")
+            xds.attrs['units'] = np.string_("m")
+
+            yds.attrs['standard_name'] = np.string_("projection_y_coordinate")
+            yds.attrs['long_name'] = np.string_("y coordinate of projection")
+            yds.attrs['units'] = np.string_("m")
+
+    ### Polar Stereo North
+    elif epsg_code == 3413:
+            #Set up grid mapping
+            projds.attrs['grid_mapping_name'] = np.string_("polar_stereographic")
+            projds.attrs['latitude_of_projection_origin'] = 90.0
+            projds.attrs['standard_parallel'] = 70.0
+            projds.attrs['straight_vertical_longitude_from_pole'] = -45.0
+            projds.attrs['false_easting'] = 0.0
+            projds.attrs['false_northing'] = 0.0
+
+            #Setup units for x and y
+            xds.attrs['standard_name'] = np.string_("projection_x_coordinate")
+            xds.attrs['long_name'] = np.string_("x coordinate of projection")
+            xds.attrs['units'] = np.string_("m")
+
+            yds.attrs['standard_name'] = np.string_("projection_y_coordinate")
+            yds.attrs['long_name'] = np.string_("y coordinate of projection")
+            yds.attrs['units'] = np.string_("m")
+
+    ### Polar Stereo south
+    elif epsg_code == 3031:
+            #Set up grid mapping
+            projds.attrs['grid_mapping_name'] = np.string_("polar_stereographic")
+            projds.attrs['latitude_of_projection_origin'] = -90.0
+            projds.attrs['standard_parallel'] = -71.0
+            projds.attrs['straight_vertical_longitude_from_pole'] = 0.0
+            projds.attrs['false_easting'] = 0.0
+            projds.attrs['false_northing'] = 0.0
+
+            #Setup units for x and y
+            xds.attrs['standard_name'] = np.string_("projection_x_coordinate")
+            xds.attrs['long_name'] = np.string_("x coordinate of projection")
+            xds.attrs['units'] = np.string_("m")
+
+            yds.attrs['standard_name'] = np.string_("projection_y_coordinate")
+            yds.attrs['long_name'] = np.string_("y coordinate of projection")
+            yds.attrs['units'] = np.string_("m")
+
+    ### EASE 2 for soil moisture L3
+    elif epsg_code == 6933:
+            #Set up grid mapping
+            projds.attrs['grid_mapping_name'] = np.string_("lambert_cylindrical_equal_area")
+            projds.attrs['longitude_of_central_meridian'] = 0.0
+            projds.attrs['standard_parallel'] = 30.0
+            projds.attrs['false_easting'] = 0.0
+            projds.attrs['false_northing'] = 0.0
+
+            #Setup units for x and y
+            xds.attrs['standard_name'] = np.string_("projection_x_coordinate")
+            xds.attrs['long_name'] = np.string_("x coordinate of projection")
+            xds.attrs['units'] = np.string_("m")
+
+            yds.attrs['standard_name'] = np.string_("projection_y_coordinate")
+            yds.attrs['long_name'] = np.string_("y coordinate of projection")
+            yds.attrs['units'] = np.string_("m")
+
+    ### Europe Equal Area for Deformation map (to be implemented in isce3)
+    elif epsg_code == 3035:
+            #Set up grid mapping
+            projds.attrs['grid_mapping_name'] = np.string_("lambert_azimuthal_equal_area")
+            projds.attrs['longitude_of_projection_origin']= 10.0
+            projds.attrs['latitude_of_projection_origin'] = 52.0
+            projds.attrs['standard_parallel'] = -71.0
+            projds.attrs['straight_vertical_longitude_from_pole'] = 0.0
+            projds.attrs['false_easting'] = 4321000.0
+            projds.attrs['false_northing'] = 3210000.0
+
+            #Setup units for x and y
+            xds.attrs['standard_name'] = np.string_("projection_x_coordinate")
+            xds.attrs['long_name'] = np.string_("x coordinate of projection")
+            xds.attrs['units'] = np.string_("m")
+
+            yds.attrs['standard_name'] = np.string_("projection_y_coordinate")
+            yds.attrs['long_name'] = np.string_("y coordinate of projection")
+            yds.attrs['units'] = np.string_("m")
+
+    else:
+            raise NotImplementedError('Waiting for implementation / Not supported in ISCE3')

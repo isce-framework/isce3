@@ -11,7 +11,8 @@ import numpy as np
 from collections import defaultdict
 import isce3
 from nisar.products.readers import SLC
-#this is a temporary import. Needs to be removed
+
+#this is a temporary import. Needs to be remove when all functionalities exist with isce3
 import isce3.extensions.isceextension as temp_isce3
 
 
@@ -87,6 +88,8 @@ def runGeocodeSLC(self):
                     sincLength, flatten)
 
             #save the output gslc to the HDF5
+            # This is not needed when we figure out the pyraster construction from H5 itself
+            # or if we use a buffer and not a rster like SLC workflow
             dst_h5 = h5py.File(state.output_hdf5, 'a')
             dataset_path = 'science/LSAR/GSLC/grids/{frequency}/{polarization}'.format(
                             frequency=frequency, polarization=polarization)
