@@ -74,18 +74,19 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
         // the geometrical phase to be removed for flattening the SLC phase.
         std::valarray<std::complex<double>> geometricalPhase(blockSize);
 
-        //#pragma omp parallel shared(azimuthFirstLine, rangeFirstPixel, azimuthLastLine, rangeLastPixel)
         {
-            // Init thread-local swath extents
             int localAzimuthFirstLine = radarGrid.length() - 1;
             int localAzimuthLastLine = 0;
             int localRangeFirstPixel = radarGrid.width() - 1;
             int localRangeLastPixel = 0;
 
+            size_t geoGridWidth = geoGrid.width();
             // Loop over lines, samples of the output grid
-            //#pragma omp for collapse(2)
-            for (size_t blockLine = 0; blockLine < geoBlockLength; ++blockLine) {
-                for (size_t pixel = 0; pixel < geoGrid.width(); ++pixel) {
+            #pragma omp parallel for
+            for (size_t kk = 0; kk < geoBlockLength * geoGridWidth; ++kk) {
+
+                size_t blockLine = kk / geoGridWidth;
+                size_t pixel = kk % geoGridWidth;
 
                     // numDone++;
 
@@ -140,11 +141,8 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
                     const std::complex<double> cpxPhase(std::cos(phase), std::sin(phase));
 
                     geometricalPhase[blockLine * geoGrid.width() + pixel] = cpxPhase;
-                    //radarX[blockLine * geoGrid.width() + pixel] = srange;
-                    //radarY[blockLine * geoGrid.width() + pixel] = aztime;
 
-                } // end loop over pixels of output grid
-            } // end loops over lines of output grid
+            } // end loops over lines and pixel of output grid
 
             //#pragma omp critical
             {
