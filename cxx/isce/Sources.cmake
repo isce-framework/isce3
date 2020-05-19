@@ -34,7 +34,6 @@ focus/DryTroposphereModel.cpp
 focus/GapMask.cpp
 focus/RangeComp.cpp
 geocode/baseband.cpp
-geocode/geo2rdr.cpp
 geocode/geocodeSlc.cpp
 geocode/interpolate.cpp
 geocode/loadDem.cpp

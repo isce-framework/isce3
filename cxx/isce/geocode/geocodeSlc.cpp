@@ -1,4 +1,5 @@
 #include "geocodeSlc.h"
+#include <memory>
 
 void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
         isce::io::Raster & inputRaster,
@@ -20,22 +21,22 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
     size_t nbands = inputRaster.numBands();
     std::cout << "nbands: "<< nbands << std::endl;
     // create projection based on _epsg code
-    isce::core::ProjectionBase * proj = isce::core::createProj(geoGrid.epsg());
-    
+    std::unique_ptr<isce::core::ProjectionBase> proj(
+                isce::core::createProj(geoGrid.epsg()));
+
     // instantiate the DEMInterpolator
-    isce::geometry::DEMInterpolator demInterp;
+    //isce::geometry::DEMInterpolator demInterp;
 
-    std::cout << "instatntiate the interpolator" << std::endl;
     // Interpolator pointer
-    isce::core::Interpolator<std::complex<float>> * interp;
-    interp = new isce::core::Sinc2dInterpolator<std::complex<float>>(
-                    sincLength-1, isce::core::SINC_SUB);
+    auto interp = std::make_unique<isce::core::Sinc2dInterpolator<
+                        std::complex<float>>>(sincLength - 1, isce::core::SINC_SUB);
 
-    std::cout << "interpolator instantiated" << std::endl;
     // Compute number of blocks in the output geocoded grid
-    size_t nBlocks = geoGrid.length() / linesPerBlock;
-    if ((geoGrid.length() % linesPerBlock) != 0)
-        nBlocks += 1;
+    size_t nBlocks = (geoGrid.length() + linesPerBlock - 1) / linesPerBlock;
+
+    //size_t nBlocks = geoGrid.length() / linesPerBlock;
+    //if ((geoGrid.length() % linesPerBlock) != 0)
+    //    nBlocks += 1;
 
     std::cout << "nBlocks: " << nBlocks << std::endl;
     //loop over the blocks of the geocoded Grid
@@ -59,8 +60,9 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
         int rangeFirstPixel = radarGrid.width()-1;
         int rangeLastPixel = 0;
 
-        // load a block of DEM for the current geocoded grid
-        isce::geocode::loadDEM(demRaster, demInterp, proj, geoGrid,
+        // get a DEM interpolator for a block of DEM for the current geocoded grid
+        isce::geometry::DEMInterpolator demInterp = isce::geocode::loadDEM(
+                demRaster, proj.get(), geoGrid,
                 lineStart, geoBlockLength, geoGrid.width(),
                 demBlockMargin);
 
@@ -68,27 +70,24 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
         // X and Y indices (in the radar coordinates) for the
         // geocoded pixels (after geo2rdr computation)
         std::valarray<double> radarX(blockSize);
-    	std::valarray<double> radarY(blockSize);
+        std::valarray<double> radarY(blockSize);
 
         // container for the sum of the carrier phase (Doppler) to be added back and 
         // the geometrical phase to be removed for flattening the SLC phase.
         std::valarray<std::complex<double>> geometricalPhase(blockSize);
 
-        {
-            int localAzimuthFirstLine = radarGrid.length() - 1;
-            int localAzimuthLastLine = 0;
-            int localRangeFirstPixel = radarGrid.width() - 1;
-            int localRangeLastPixel = 0;
+        int localAzimuthFirstLine = radarGrid.length() - 1;
+        int localAzimuthLastLine = 0;
+        int localRangeFirstPixel = radarGrid.width() - 1;
+        int localRangeLastPixel = 0;
 
-            size_t geoGridWidth = geoGrid.width();
-            // Loop over lines, samples of the output grid
-            #pragma omp parallel for
+        size_t geoGridWidth = geoGrid.width();
+        // Loop over lines, samples of the output grid
+        #pragma omp parallel for
             for (size_t kk = 0; kk < geoBlockLength * geoGridWidth; ++kk) {
 
                 size_t blockLine = kk / geoGridWidth;
                 size_t pixel = kk % geoGridWidth;
-
-                    // numDone++;
 
                     // Global line index
                     const size_t line = lineStart + blockLine;
@@ -102,28 +101,45 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
                     // compute the azimuth time and slant range for the
                     // x,y coordinates in the output grid
                     double aztime, srange;
-                    isce::geocode::geo2rdr(x, y, aztime, srange, demInterp, proj, 
-                            orbit, imageGridDoppler, ellipsoid, 
-                            radarGrid.wavelength(), radarGrid.lookSide(),
-                            thresholdGeo2rdr, numiterGeo2rdr);
+                    aztime = radarGrid.sensingMid();
+
+                    // coordinate in the output projection system
+                    const isce::core::Vec3 xyz{x, y, 0.0};
+
+                    // transform the xyz in the output projection system to llh
+                    isce::core::Vec3 llh = proj->inverse(xyz);
+
+                    // interpolate the height from the DEM for this pixel
+                    llh[2] = demInterp.interpolateLonLat(llh[0], llh[1]);
+
+                    // Perform geo->rdr iterations
+                    int geostat = isce::geometry::geo2rdr(
+                            llh, ellipsoid, orbit, imageGridDoppler,
+                            aztime, srange, radarGrid.wavelength(),
+                            radarGrid.lookSide(), thresholdGeo2rdr, numiterGeo2rdr, 1.0e-8);
+
+                    // Check convergence
+                    if (geostat == 0) {
+                        aztime = std::numeric_limits<double>::quiet_NaN();
+                        srange = std::numeric_limits<double>::quiet_NaN();
+                    }
 
                     if (std::isnan(aztime) || std::isnan(srange))
                         continue;
 
                     // get the row and column index in the radar grid
-                    double rdrX, rdrY;
-                    rdrY = (aztime - radarGrid.sensingStart()) * radarGrid.prf();
+                    double rdrY = (aztime - radarGrid.sensingStart()) * radarGrid.prf();
 
-                    rdrX = (srange - radarGrid.startingRange()) / radarGrid.rangePixelSpacing();
+                    double rdrX = (srange - radarGrid.startingRange()) / radarGrid.rangePixelSpacing();
 
                     if (rdrY < 0 || rdrX < 0 || rdrY >= radarGrid.length() ||
                         rdrX >= radarGrid.width())
                         continue;
 
-                    localAzimuthFirstLine = std::min(localAzimuthFirstLine, (int)std::floor(rdrY));
-                    localAzimuthLastLine = std::max(localAzimuthLastLine, (int)std::ceil(rdrY) - 1);
-                    localRangeFirstPixel = std::min(localRangeFirstPixel, (int)std::floor(rdrX));
-                    localRangeLastPixel = std::max(localRangeLastPixel, (int)std::ceil(rdrX) - 1);
+                    localAzimuthFirstLine = std::min(localAzimuthFirstLine, static_cast<int>(std::floor(rdrY)));
+                    localAzimuthLastLine = std::max(localAzimuthLastLine, static_cast<int>(std::ceil(rdrY) - 1));
+                    localRangeFirstPixel = std::min(localRangeFirstPixel, static_cast<int>(std::floor(rdrX)));
+                    localRangeLastPixel = std::max(localRangeLastPixel, static_cast<int>(std::ceil(rdrX) - 1));
 
                     //store the adjusted X and Y indices
                     radarX[blockLine * geoGrid.width() + pixel] = rdrX;
@@ -137,22 +153,17 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
                        phase += (4.0 * (M_PI/radarGrid.wavelength())) * srange;
                     }
 
-                    phase = modulo_f(phase, 2.0*M_PI);
                     const std::complex<double> cpxPhase(std::cos(phase), std::sin(phase));
 
                     geometricalPhase[blockLine * geoGrid.width() + pixel] = cpxPhase;
 
             } // end loops over lines and pixel of output grid
 
-            //#pragma omp critical
-            {
-                // Get min and max swath extents from among all threads
-                azimuthFirstLine = std::min(azimuthFirstLine, localAzimuthFirstLine);
-                azimuthLastLine = std::max(azimuthLastLine, localAzimuthLastLine);
-                rangeFirstPixel = std::min(rangeFirstPixel, localRangeFirstPixel);
-                rangeLastPixel = std::max(rangeLastPixel, localRangeLastPixel);
-            }
-        }
+        // Get min and max swath extents from among all threads
+        azimuthFirstLine = std::min(azimuthFirstLine, localAzimuthFirstLine);
+        azimuthLastLine = std::max(azimuthLastLine, localAzimuthLastLine);
+        rangeFirstPixel = std::min(rangeFirstPixel, localRangeFirstPixel);
+        rangeLastPixel = std::max(rangeLastPixel, localRangeLastPixel);
 
         if (azimuthFirstLine > azimuthLastLine || rangeFirstPixel > rangeLastPixel)
             continue;
@@ -196,7 +207,7 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
             isce::geocode::interpolate(rdrDataBlock, geoDataBlock, 
                         radarX, radarY, geometricalPhase,
                          rdrBlockWidth, rdrBlockLength,
-                         azimuthFirstLine, rangeFirstPixel, interp);
+                         azimuthFirstLine, rangeFirstPixel, interp.get());
 
             // set output
             std::cout << "set output " << std::endl;

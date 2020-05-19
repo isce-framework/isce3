@@ -1,9 +1,11 @@
 #include "baseband.h"
+#include <isce/core/Matrix.h>
+#include <isce/core/LUT2d.h>
 
 void isce::geocode::baseband(isce::core::Matrix<std::complex<float>> &data,
-                    const double startingRange, const double sensingStart,
-                    const double rangePixelSpacing, const double prf,
-                    const isce::core::LUT2d<double>& dopplerLUT)
+                    const double starting_range, const double sensing_start,
+                    const double range_pixel_spacing, const double prf,
+                    const isce::core::LUT2d<double>& doppler_lut)
 {
 
     size_t length = data.length();
@@ -13,11 +15,11 @@ void isce::geocode::baseband(isce::core::Matrix<std::complex<float>> &data,
 
         size_t line = kk / width;
         size_t col = kk % width;
-        const double azTime = sensingStart + line/prf;
-        const double rng = startingRange + col * rangePixelSpacing;
-        const double phase = dopplerLUT.eval(azTime, rng) * 2*M_PI * azTime;
-        const std::complex<float> cpxPhase(std::cos(phase), -std::sin(phase));
-        data(line,col) *= cpxPhase;
+        const double azimuth_time = sensing_start + line/prf;
+        const double slant_range = starting_range + col * range_pixel_spacing;
+        const double phase = doppler_lut.eval(azimuth_time, slant_range) * 2*M_PI * azimuth_time;
+        const std::complex<float> cpx_phase(std::cos(phase), -std::sin(phase));
+        data(line,col) *= cpx_phase;
 
     }
 }

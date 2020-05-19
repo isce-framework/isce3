@@ -24,33 +24,31 @@
 #include <isce/geocode/interpolate.h>
 #include <isce/geocode/loadDem.h>
 
-#define modulo_f(a,b) fmod(fmod(a,b)+(b),(b))
 const int SINC_ONE = isce::core::SINC_ONE;
 const int SINC_HALF = isce::core::SINC_HALF;
 
-
-/**
- * Geocode SLC 
- * \param[out] outputRaster  output raster for the geocoded SLC
- * \param[in]  inputRaster   input raster of the SLC to be geocoded
- * \param[in]  demRaster     raster object of the DEM
- * \param[in]  radarGrid     radar grid parameters
- * \param[in]  geoGrid       geo grid parameters
- * \param[in]  orbit             orbit 
- * \param[in]  nativeDoppler     2D LUT Doppler of the SLC image (used for interpolations and resampling)
- * \param[in]  imageGridDoppler  2D LUT Doppler of the image grid used for geometrical computations (is zero for zero Doppler SLCs)
- * \param[in]  ellipsoid         ellipsoid object
- * \param[in]  thresholdGeo2rdr  threshold for geo2rdr computations
- * \param[in]  numiterGeo2rdr    maximum number of iterations for Geo2rdr convergence
- * \param[in]  linesPerBlock     number lines in each block
- * \param[in]  demBlockMargin    margin of the DEM
- * \param[in]  sincLength        length of the sinc interpolator used in geocoding
- * \param[in]  flatten           flag which determines if the geocoded SLC needs to be flattened
- */
 namespace isce { namespace geocode {
 
+    /**
+    * Geocode SLC 
+    * \param[out] outputRaster  output raster for the geocoded SLC
+    * \param[in]  inputRaster   input raster of the SLC to be geocoded
+    * \param[in]  demRaster     raster object of the DEM
+    * \param[in]  radarGrid     radar grid parameters
+    * \param[in]  geoGrid       geo grid parameters
+    * \param[in]  orbit             orbit 
+    * \param[in]  nativeDoppler     2D LUT Doppler of the SLC image (used for interpolations and resampling)
+    * \param[in]  imageGridDoppler  2D LUT Doppler of the image grid used for geometrical computations (is zero for zero Doppler SLCs)
+    * \param[in]  ellipsoid         ellipsoid object
+    * \param[in]  thresholdGeo2rdr  threshold for geo2rdr computations
+    * \param[in]  numiterGeo2rdr    maximum number of iterations for Geo2rdr convergence
+    * \param[in]  linesPerBlock     number lines in each block
+    * \param[in]  demBlockMargin    margin of the DEM
+    * \param[in]  sincLength        length of the sinc interpolator used in geocoding
+    * \param[in]  flatten           flag which determines if the geocoded SLC needs to be flattened
+    */
     void geocodeSlc(isce::io::Raster & outputRaster,
-            isce::io::Raster & inputRaster,
+        isce::io::Raster & inputRaster,
         isce::io::Raster & demRaster,
         const isce::product::RadarGridParameters & radarGrid,
         const isce::product::GeoGridParameters & geoGrid,
@@ -62,7 +60,7 @@ namespace isce { namespace geocode {
         const int & numiterGeo2rdr,
         const size_t & linesPerBlock,
         const double & demBlockMargin,
-        const int sincLength,
+        const int sincLength = isce::core::SINC_ONE,
         const bool flatten = true);
 
 }

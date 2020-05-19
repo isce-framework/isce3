@@ -1,27 +1,30 @@
 #include "loadDem.h"
 
-void isce::geocode::loadDEM(isce::io::Raster demRaster,
-        isce::geometry::DEMInterpolator & demInterp,
+isce::geometry::DEMInterpolator isce::geocode::loadDEM(
+        isce::io::Raster demRaster,
         isce::core::ProjectionBase * proj,
         const isce::product::GeoGridParameters & geoGrid,
         int lineStart, int blockLength,
         int blockWidth, double demMargin)
 {
+    isce::geometry::DEMInterpolator demInterp;
     //Create projection for DEM
     int epsgcode = demRaster.getEPSG();
 
     //Initialize bounds
-    double minX = -1.0e64;
-    double maxX = 1.0e64;
-    double minY = -1.0e64;
-    double maxY = 1.0e64;
+    double minX = std::numeric_limits<double>::min();
+    double maxX = std::numeric_limits<double>::max();
+    double minY = std::numeric_limits<double>::min();
+    double maxY = std::numeric_limits<double>::max();
 
     //Projection systems are different
-    if (epsgcode != proj->code())
+    if (epsgcode != geoGrid.epsg())
     {
 
         //Create transformer to match the DEM
-        isce::core::ProjectionBase *demproj = isce::core::createProj(epsgcode);
+        //isce::core::ProjectionBase *demproj = isce::core::createProj(epsgcode);
+        std::unique_ptr<isce::core::ProjectionBase> demproj(
+                isce::core::createProj(epsgcode));
 
         //Skip factors
         const int askip = std::max( static_cast<int>(blockLength / 10.), 1);
@@ -63,7 +66,7 @@ void isce::geocode::loadDEM(isce::io::Raster demRaster,
                            0.0};
 
             isce::core::Vec3 dempt;
-            if (!projTransform(proj, demproj, outpt, dempt))
+            if (!projTransform(proj, demproj.get(), outpt, dempt))
             {
                 minX = std::min(minX, dempt[0]);
                 maxX = std::max(maxX, dempt[0]);
@@ -102,4 +105,6 @@ void isce::geocode::loadDEM(isce::io::Raster demRaster,
 
     // declare the dem interpolator
     demInterp.declare();
+
+    return demInterp;
 }

@@ -70,7 +70,6 @@ focus/DryTroposphereModel.icc
 focus/GapMask.h
 focus/RangeComp.h
 geocode/baseband.h
-geocode/geo2rdr.h
 geocode/geocodeSlc.h
 geocode/interpolate.h
 geocode/loadDem.h

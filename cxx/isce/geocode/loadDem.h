@@ -8,7 +8,6 @@ namespace isce { namespace geocode {
 
     /** load DEM for a block of data
      * @param[in] demRaster a raster of the DEM
-     * @param[in] demInterp DEM interpolator object
      * @param[in] proj projection object
      * @param[in] geoGrid  geo grid parameters
      * @param[in] lineStart start line 
@@ -16,8 +15,7 @@ namespace isce { namespace geocode {
      * @param[in] blockWidth  width of the block
      * @param[in] demMargin  extra margin
      */
-    void loadDEM(isce::io::Raster demRaster,
-            isce::geometry::DEMInterpolator & demInterp,
+    isce::geometry::DEMInterpolator loadDEM(isce::io::Raster demRaster,
             isce::core::ProjectionBase * proj,
             const isce::product::GeoGridParameters & geoGrid,
             int lineStart, int blockLength,

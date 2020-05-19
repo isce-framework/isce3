@@ -13,25 +13,25 @@ class isce::product::GeoGridParameters {
 
     public:
 
-        inline GeoGridParameters() {}
+        GeoGridParameters() = default;
 
         inline GeoGridParameters(double geoGridStartX, double geoGridStartY,
                 double geoGridSpacingX, double geoGridSpacingY,
                 int width, int height, int epsgcode);
 
-        inline void startX(double & x0) {_startX = x0;}
+        inline void startX(double x0) {_startX = x0;}
 
-        inline void startY(double & y0) {_startY = y0;}
+        inline void startY(double y0) {_startY = y0;}
 
-        inline void spacingX(double & dx) {_spacingX = dx;}
+        inline void spacingX(double dx) {_spacingX = dx;}
 
-        inline void spacingY(double & dy) {_spacingY = dy;}
+        inline void spacingY(double dy) {_spacingY = dy;}
 
-        inline void length(int & l) {_length = l;};
+        inline void length(int l) {_length = l;};
 
-        inline void width(int & w) {_width = w;};
+        inline void width(int w) {_width = w;};
 
-        inline void epsg(int & e) {_epsg = e;};
+        inline void epsg(int e) {_epsg = e;};
 
         /** Get */
         inline double startX() const { return _startX; };
@@ -67,13 +67,13 @@ class isce::product::GeoGridParameters {
         double _spacingY = 0.0;
 
         // number of pixels in east-west direction (X direction)
-        int _width = 0.0;
+        int _width = 0;
 
         // number of lines in north-south direction (Y direction)
-        int _length = 0.0;
+        int _length = 0;
 
         // geoTransform array (gdal style)
-        double * _geoTrans=new double[6];
+        double * _geoTrans = new double[6];
 
         // epsg code for the output geocoded grid
         int _epsg;
