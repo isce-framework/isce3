@@ -9,6 +9,9 @@ namespace isce { namespace geocode {
      * param[in] starting_range starting range of the data block
      * param[in] sensing_start  starting azimuth time of the data block
      * param[in] range_pixel_spacing spacing of the slant range
+     * param[in] startingRange starting range of the data block
+     * param[in] sensingStart  starting azimuth time of the data block
+     * param[in] rangePixelSpacing spacing of the slant range
      * param[in] prf pulse repetition frequency
      * param[in] doppler_lut 2D LUT of the image Doppler
      */
