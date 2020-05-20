@@ -13,7 +13,7 @@ TEST(CheckCudaErrors, BasicThrow) {
 // Check that a non-zero cufftResult throws an error
 // Make sure an error is thrown when executing an FFT before setting up a plan
 TEST(CheckCudaErrors, CufftResult) {
-    cufftHandle plan;
+    cufftHandle plan{};
     thrust::device_vector<cufftComplex> signal;
     cufftComplex* data = signal.data().get();
     EXPECT_THROW(checkCudaErrors(cufftExecC2C(plan, data, data, CUFFT_FORWARD)),
