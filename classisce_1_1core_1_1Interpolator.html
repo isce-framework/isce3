@@ -117,10 +117,10 @@ Public Member Functions</h2></td></tr>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Interpolator.html#a96241501630bb8a9c72b5627f1372acd">~Interpolator</a> ()</td></tr>
 <tr class="memdesc:a96241501630bb8a9c72b5627f1372acd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Virtual destructor (allow destruction of base <a class="el" href="classisce_1_1core_1_1Interpolator.html" title="Definition of parent Interpolator. ">Interpolator</a> pointer) <br/></td></tr>
 <tr class="separator:a96241501630bb8a9c72b5627f1372acd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a09f3981bb9c418566f1229fc38926bc8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a09f3981bb9c418566f1229fc38926bc8"></a>
-virtual U&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Interpolator.html#a09f3981bb9c418566f1229fc38926bc8">interpolate</a> (double x, double y, const Map &amp;map) const =0</td></tr>
-<tr class="memdesc:a09f3981bb9c418566f1229fc38926bc8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate at a given coordinate for an input Eigen::Map. <br/></td></tr>
-<tr class="separator:a09f3981bb9c418566f1229fc38926bc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b8adf532dc7ef32be304f48be37e203"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9b8adf532dc7ef32be304f48be37e203"></a>
+U&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Interpolator.html#a9b8adf532dc7ef32be304f48be37e203">interpolate</a> (double x, double y, const Map &amp;map) const </td></tr>
+<tr class="memdesc:a9b8adf532dc7ef32be304f48be37e203"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate at a given coordinate for an input Eigen::Map. <br/></td></tr>
+<tr class="separator:a9b8adf532dc7ef32be304f48be37e203"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5ad715565d6633647e1d61119247364"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad5ad715565d6633647e1d61119247364"></a>
 U&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Interpolator.html#ad5ad715565d6633647e1d61119247364">interpolate</a> (double x, double y, const <a class="el" href="classisce_1_1core_1_1Matrix.html">Matrix</a>&lt; U &gt; &amp;z) const </td></tr>
 <tr class="memdesc:ad5ad715565d6633647e1d61119247364"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate at a given coordinate for an input <a class="el" href="classisce_1_1core_1_1Matrix.html" title="Data structure for a 2D row-major matrix. ">isce::core::Matrix</a>. <br/></td></tr>
@@ -145,6 +145,10 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>Map</b> = typename E
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
+<tr class="memitem:a5e895e840f4d405b106d7390d85526fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5e895e840f4d405b106d7390d85526fb"></a>
+virtual U&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Interpolator.html#a5e895e840f4d405b106d7390d85526fb">interp_impl</a> (double x, double y, const Map &amp;map) const =0</td></tr>
+<tr class="memdesc:a5e895e840f4d405b106d7390d85526fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Base implementation for all types. <br/></td></tr>
+<tr class="separator:a5e895e840f4d405b106d7390d85526fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac530fb7864c72cc554311d755785bcdf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac530fb7864c72cc554311d755785bcdf"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Interpolator</b> (<a class="el" href="namespaceisce_1_1core.html#ac8c4ed7d6044fe311697bb08d76de33e">dataInterpMethod</a> <a class="el" href="classisce_1_1core_1_1Interpolator.html#ad06702d4947c30a1405c1e44ac8a1736">method</a>)</td></tr>
 <tr class="separator:ac530fb7864c72cc554311d755785bcdf"><td class="memSeparator" colspan="2">&#160;</td></tr>

@@ -122,14 +122,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac667aaa2f1ebdca2394b9c0a9cd121ab"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Spline2dInterpolator.html#ac667aaa2f1ebdca2394b9c0a9cd121ab">Spline2dInterpolator</a> (size_t order)</td></tr>
 <tr class="memdesc:ac667aaa2f1ebdca2394b9c0a9cd121ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default constructor.  <a href="#ac667aaa2f1ebdca2394b9c0a9cd121ab">More...</a><br/></td></tr>
 <tr class="separator:ac667aaa2f1ebdca2394b9c0a9cd121ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa3e55d01f4f102d3ec87e04e0d15b59a"><td class="memItemLeft" align="right" valign="top">U&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Spline2dInterpolator.html#aa3e55d01f4f102d3ec87e04e0d15b59a">interpolate</a> (double x, double y, const Map &amp;z) const override</td></tr>
-<tr class="memdesc:aa3e55d01f4f102d3ec87e04e0d15b59a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate at a given coordinate.  <a href="#aa3e55d01f4f102d3ec87e04e0d15b59a">More...</a><br/></td></tr>
-<tr class="separator:aa3e55d01f4f102d3ec87e04e0d15b59a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acee56974888b7c1ffbffafc135d851bc"><td class="memItemLeft" align="right" valign="top">U&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Spline2dInterpolator.html#acee56974888b7c1ffbffafc135d851bc">interp_impl</a> (double x, double y, const Map &amp;z) const override</td></tr>
+<tr class="memdesc:acee56974888b7c1ffbffafc135d851bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate at a given coordinate.  <a href="#acee56974888b7c1ffbffafc135d851bc">More...</a><br/></td></tr>
+<tr class="separator:acee56974888b7c1ffbffafc135d851bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classisce_1_1core_1_1Interpolator"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classisce_1_1core_1_1Interpolator')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classisce_1_1core_1_1Interpolator.html">isce::core::Interpolator&lt; U &gt;</a></td></tr>
 <tr class="memitem:a96241501630bb8a9c72b5627f1372acd inherit pub_methods_classisce_1_1core_1_1Interpolator"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a96241501630bb8a9c72b5627f1372acd"></a>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Interpolator.html#a96241501630bb8a9c72b5627f1372acd">~Interpolator</a> ()</td></tr>
 <tr class="memdesc:a96241501630bb8a9c72b5627f1372acd inherit pub_methods_classisce_1_1core_1_1Interpolator"><td class="mdescLeft">&#160;</td><td class="mdescRight">Virtual destructor (allow destruction of base Interpolator pointer) <br/></td></tr>
 <tr class="separator:a96241501630bb8a9c72b5627f1372acd inherit pub_methods_classisce_1_1core_1_1Interpolator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b8adf532dc7ef32be304f48be37e203 inherit pub_methods_classisce_1_1core_1_1Interpolator"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9b8adf532dc7ef32be304f48be37e203"></a>
+U&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Interpolator.html#a9b8adf532dc7ef32be304f48be37e203">interpolate</a> (double x, double y, const Map &amp;map) const</td></tr>
+<tr class="memdesc:a9b8adf532dc7ef32be304f48be37e203 inherit pub_methods_classisce_1_1core_1_1Interpolator"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate at a given coordinate for an input Eigen::Map. <br/></td></tr>
+<tr class="separator:a9b8adf532dc7ef32be304f48be37e203 inherit pub_methods_classisce_1_1core_1_1Interpolator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5ad715565d6633647e1d61119247364 inherit pub_methods_classisce_1_1core_1_1Interpolator"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad5ad715565d6633647e1d61119247364"></a>
 U&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classisce_1_1core_1_1Interpolator.html#ad5ad715565d6633647e1d61119247364">interpolate</a> (double x, double y, const <a class="el" href="classisce_1_1core_1_1Matrix.html">Matrix</a>&lt; U &gt; &amp;z) const</td></tr>
 <tr class="memdesc:ad5ad715565d6633647e1d61119247364 inherit pub_methods_classisce_1_1core_1_1Interpolator"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate at a given coordinate for an input <a class="el" href="classisce_1_1core_1_1Matrix.html" title="Data structure for a 2D row-major matrix. ">isce::core::Matrix</a>. <br/></td></tr>
@@ -194,7 +198,7 @@ template&lt;typename U &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="aa3e55d01f4f102d3ec87e04e0d15b59a"></a>
+<a class="anchor" id="acee56974888b7c1ffbffafc135d851bc"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -204,7 +208,7 @@ template&lt;class U &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">U <a class="el" href="classisce_1_1core_1_1Spline2dInterpolator.html">isce::core::Spline2dInterpolator</a>&lt; U &gt;::interpolate </td>
+          <td class="memname">U <a class="el" href="classisce_1_1core_1_1Spline2dInterpolator.html">isce::core::Spline2dInterpolator</a>&lt; U &gt;::interp_impl </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>x</em>, </td>
@@ -244,7 +248,7 @@ template&lt;class U &gt; </div>
   </dd>
 </dl>
 
-<p>Implements <a class="el" href="classisce_1_1core_1_1Interpolator.html#a09f3981bb9c418566f1229fc38926bc8">isce::core::Interpolator&lt; U &gt;</a>.</p>
+<p>Implements <a class="el" href="classisce_1_1core_1_1Interpolator.html#a5e895e840f4d405b106d7390d85526fb">isce::core::Interpolator&lt; U &gt;</a>.</p>
 
 </div>
 </div>
