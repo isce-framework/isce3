@@ -17,7 +17,8 @@ namespace isce{ namespace cuda{ namespace core{
 template <class U>
     class gpuInterpolator {
         public:
-            CUDA_HOSTDEV gpuInterpolator(){};
+            CUDA_HOSTDEV gpuInterpolator() {}
+            CUDA_HOSTDEV virtual ~gpuInterpolator() {}
             CUDA_DEV virtual U interpolate(double, double, const U*, size_t, size_t) = 0;
     };
 
