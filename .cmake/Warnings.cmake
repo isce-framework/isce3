@@ -28,11 +28,6 @@ function(set_warnings target)
                    # (ie printf)
         )
 
-    set(CUDA_WARNINGS
-        ${CXX_WARNINGS}
-        -Wno-pedantic
-        )
-
     set(CLANG_WARNINGS "")
 
     set(GCC_WARNINGS
@@ -54,6 +49,12 @@ function(set_warnings target)
         -Wno-old-style-cast
         -Wno-shadow
         )
+
+    set(CUDA_WARNINGS
+        ${CXX_WARNINGS}
+        -Wno-pedantic
+        )
+
     list(APPEND GCC_WARNINGS
         -Wno-useless-cast # warn if you perform a cast to the same type
         )
