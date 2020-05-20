@@ -42,7 +42,7 @@ T cubicInterpolate(T p0, T p1, T p2, T p3, const double tfrac) {
   * @param[in] y Y-coordinate to interpolate
   * @param[in] z 2D matrix to interpolate. */
 template<class U>
-U isce::core::BicubicInterpolator<U>::interpolate(double x, double y,
+U isce::core::BicubicInterpolator<U>::interp_impl(double x, double y,
                                                   const Map& z) const
 {
     // the closest pixel to the point of interest
