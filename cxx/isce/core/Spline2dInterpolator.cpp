@@ -30,7 +30,7 @@ isce::core::Spline2dInterpolator<U>::Spline2dInterpolator(size_t order)
   * @param[in] y Y-coordinate to interpolate
   * @param[in] z 2D matrix to interpolate. */
 template<class U>
-U isce::core::Spline2dInterpolator<U>::interpolate(double x, double y,
+U isce::core::Spline2dInterpolator<U>::interp_impl(double x, double y,
                                                    const Map& z) const
 {
 

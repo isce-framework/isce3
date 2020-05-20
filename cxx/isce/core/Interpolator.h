@@ -25,13 +25,22 @@ public:
     /** Virtual destructor (allow destruction of base Interpolator pointer) */
     virtual ~Interpolator() {}
 
+protected:
+    /** Base implementation for all types */
+    virtual U interp_impl(double x, double y, const Map& map) const = 0;
+
+public:
+
     /** Interpolate at a given coordinate for an input Eigen::Map */
-    virtual U interpolate(double x, double y, const Map& map) const = 0;
+    U interpolate(double x, double y, const Map& map) const
+    {
+        return interp_impl(x, y, map);
+    }
 
     /** Interpolate at a given coordinate for an input isce::core::Matrix */
     U interpolate(double x, double y, const Matrix<U>& z) const
     {
-        return interpolate(x, y, z.map());
+        return interp_impl(x, y, z.map());
     }
 
     /** Interpolate at a given coordinate for data passed as a valarray */
@@ -41,7 +50,7 @@ public:
         const Map z {&z_data[0],
                      static_cast<Eigen::Index>(z_data.size() / width),
                      static_cast<Eigen::Index>(width)};
-        return interpolate(x, y, z);
+        return interp_impl(x, y, z);
     }
 
     /** Interpolate at a given coordinate for data passed as a vector */
@@ -51,7 +60,7 @@ public:
         const Map z {&z_data[0],
                      static_cast<Eigen::Index>(z_data.size() / width),
                      static_cast<Eigen::Index>(width)};
-        return interpolate(x, y, z);
+        return interp_impl(x, y, z);
     }
 
     /** Return interpolation method. */
@@ -70,12 +79,12 @@ class isce::core::BilinearInterpolator : public isce::core::Interpolator<U> {
     using super_t = Interpolator<U>;
     using typename super_t::Map;
 
+    /** Interpolate at a given coordinate. */
+    U interp_impl(double x, double y, const Map& z) const override;
+
 public:
     /** Default constructor */
     BilinearInterpolator() : super_t {BILINEAR_METHOD} {}
-
-    /** Interpolate at a given coordinate. */
-    U interpolate(double x, double y, const Map& z) const override;
 
     // Inherit overloads for other datatypes
     using super_t::interpolate;
@@ -88,12 +97,12 @@ class isce::core::BicubicInterpolator : public isce::core::Interpolator<U> {
     using super_t = Interpolator<U>;
     using typename super_t::Map;
 
+    /** Interpolate at a given coordinate. */
+    U interp_impl(double x, double y, const Map& z) const override;
+
 public:
     /** Default constructor */
     BicubicInterpolator() : super_t {BICUBIC_METHOD} {}
-
-    /** Interpolate at a given coordinate. */
-    U interpolate(double x, double y, const Map& z) const override;
 
     // Inherit overloads for other datatypes
     using super_t::interpolate;
@@ -107,12 +116,12 @@ class isce::core::NearestNeighborInterpolator :
     using super_t = Interpolator<U>;
     using typename super_t::Map;
 
+    /** Interpolate at a given coordinate. */
+    U interp_impl(double x, double y, const Map& z) const override;
+
 public:
     /** Default constructor */
     NearestNeighborInterpolator() : super_t {NEAREST_METHOD} {}
-
-    /** Interpolate at a given coordinate. */
-    U interpolate(double x, double y, const Map& z) const override;
 
     // Inherit overloads for other datatypes
     using super_t::interpolate;
@@ -130,7 +139,7 @@ public:
     Spline2dInterpolator(size_t order);
 
     /** Interpolate at a given coordinate. */
-    U interpolate(double x, double y, const Map& z) const override;
+    U interp_impl(double x, double y, const Map& z) const override;
 
     // Inherit overloads for other datatypes
     using super_t::interpolate;
@@ -155,12 +164,12 @@ class isce::core::Sinc2dInterpolator : public isce::core::Interpolator<U> {
     using super_t = Interpolator<U>;
     using typename super_t::Map;
 
+    /** Interpolate at a given coordinate. */
+    U interp_impl(double x, double y, const Map& z) const override;
+
 public:
     /** Default constructor. */
     Sinc2dInterpolator(int sincLen, int sincSub);
-
-    /** Interpolate at a given coordinate. */
-    U interpolate(double x, double y, const Map& z) const override;
 
     // Inherit overloads for other datatypes
     using super_t::interpolate;
