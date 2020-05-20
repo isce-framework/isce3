@@ -20,7 +20,6 @@
 #include <isce/geometry/geometry.h>
 
 #include <isce/geocode/baseband.h>
-#include <isce/geocode/geo2rdr.h>
 #include <isce/geocode/interpolate.h>
 #include <isce/geocode/loadDem.h>
 
