@@ -41,7 +41,6 @@ namespace isce { namespace geocode {
     * \param[in]  numiterGeo2rdr    maximum number of iterations for Geo2rdr convergence
     * \param[in]  linesPerBlock     number lines in each block
     * \param[in]  demBlockMargin    margin of the DEM
-    * \param[in]  sincLength        length of the sinc interpolator used in geocoding
     * \param[in]  flatten           flag which determines if the geocoded SLC needs to be flattened
     */
     void geocodeSlc(isce::io::Raster & outputRaster,
@@ -57,7 +56,6 @@ namespace isce { namespace geocode {
         const int & numiterGeo2rdr,
         const size_t & linesPerBlock,
         const double & demBlockMargin,
-        const int sincLength = isce::core::SINC_ONE,
         const bool flatten = true);
 
 }

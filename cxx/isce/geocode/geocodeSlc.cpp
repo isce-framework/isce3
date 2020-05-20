@@ -14,7 +14,6 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
         const int & numiterGeo2rdr,
         const size_t & linesPerBlock,
         const double & demBlockMargin,
-        const int sincLength,
         const bool flatten) {
 
     // number of bands in the input raster
@@ -29,8 +28,8 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
 
     // Interpolator pointer
     auto interp = std::make_unique<isce::core::Sinc2dInterpolator<
-                        std::complex<float>>>(sincLength - 1, isce::core::SINC_SUB);
-
+                        std::complex<float>>>(isce::core::SINC_LEN, isce::core::SINC_SUB);
+                        //std::complex<float>>>(sincLength - 1, isce::core::SINC_SUB);
     // Compute number of blocks in the output geocoded grid
     size_t nBlocks = (geoGrid.length() + linesPerBlock - 1) / linesPerBlock;
 

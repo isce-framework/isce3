@@ -106,7 +106,7 @@ TEST(geocodeTest, TestGeocodeSlc) {
                             geoGridWidth, geoGridLength,
                             1, GDT_CFloat32, "ENVI");
 
-      int sincLength = isce::core::SINC_ONE;
+//      int sincLength = isce::core::SINC_ONE;
 
       bool flatten = false;
 
@@ -123,7 +123,7 @@ TEST(geocodeTest, TestGeocodeSlc) {
           numiterGeo2rdr,
           linesPerBlock,
           demBlockMargin,
-          sincLength,
+  //        sincLength,
           flatten);
 
       isce::io::Raster inputSlcY("y.slc", GA_ReadOnly);
@@ -145,7 +145,7 @@ TEST(geocodeTest, TestGeocodeSlc) {
             numiterGeo2rdr,
             linesPerBlock,
             demBlockMargin,
-            sincLength,
+    //        sincLength,
             flatten);
 
         double * _geoTrans = new double[6];

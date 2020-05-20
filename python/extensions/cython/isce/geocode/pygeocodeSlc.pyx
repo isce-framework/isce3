@@ -14,7 +14,6 @@ def pygeocodeSlc(pyRaster outputGSlc,
         int numiterGeo2rdr,
         size_t linesPerBlock,
         double demBlockMargin,
-        int sincLength,
         bool flatten):
 
     
@@ -32,7 +31,6 @@ def pygeocodeSlc(pyRaster outputGSlc,
             numiterGeo2rdr,
             linesPerBlock,
             demBlockMargin,
-            sincLength,
             flatten)
 
     return 

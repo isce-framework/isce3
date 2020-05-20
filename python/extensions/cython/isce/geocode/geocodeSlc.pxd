@@ -27,6 +27,5 @@ cdef extern from "isce/geocode/geocodeSlc.h" namespace "isce::geocode":
         const int & numiterGeo2rdr,
         const size_t & linesPerBlock,
         const double & demBlockMargin,
-        const int sincLength,
         const bool flatten)
 

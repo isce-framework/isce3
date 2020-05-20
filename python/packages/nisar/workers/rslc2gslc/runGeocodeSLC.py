@@ -74,7 +74,6 @@ def runGeocodeSLC(self):
             linesPerBlock = 1000;
             demBlockMargin = 0.1;
 
-            sincLength = 9;
             flatten = True;
 
             # run geocodeSlc : This should become isce3.geocode.geocodeSlc(...)
@@ -85,7 +84,7 @@ def runGeocodeSLC(self):
                     ellipsoid,
                     thresholdGeo2rdr, numiterGeo2rdr,
                     linesPerBlock, demBlockMargin,
-                    sincLength, flatten)
+                    flatten)
 
             #save the output gslc to the HDF5
             # This is not needed when we figure out the pyraster construction from H5 itself

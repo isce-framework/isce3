@@ -19,7 +19,6 @@ namespace isce { namespace geocode {
      * @param[in] rangeFirstPixel  range of the first sample
      * @param[in] interp interpolator object
      */
-        //const double phase = dop*az; //modulo_f(dop*az, 2.0*M_PI);
     void interpolate(const isce::core::Matrix<std::complex<float>>& rdrDataBlock,
             isce::core::Matrix<std::complex<float>>& geoDataBlock,
             const std::valarray<double>& radarX, 

@@ -11,7 +11,7 @@ void isce::geocode::interpolate(const isce::core::Matrix<std::complex<float>>& r
 
     size_t length = geoDataBlock.length();
     size_t width = geoDataBlock.width();
-    double extraMargin = 4.0;
+    int extraMargin = isce::core::SINC_HALF;
 
     #pragma omp parallel for
     for (size_t kk = 0; kk < length*width; ++kk) {
