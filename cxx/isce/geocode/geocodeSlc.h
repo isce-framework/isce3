@@ -24,9 +24,6 @@
 #include <isce/geocode/interpolate.h>
 #include <isce/geocode/loadDem.h>
 
-const int SINC_ONE = isce::core::SINC_ONE;
-const int SINC_HALF = isce::core::SINC_HALF;
-
 namespace isce { namespace geocode {
 
     /**

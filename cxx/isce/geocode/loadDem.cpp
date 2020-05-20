@@ -2,25 +2,27 @@
 
 isce::geometry::DEMInterpolator isce::geocode::loadDEM(
         isce::io::Raster demRaster,
-        isce::core::ProjectionBase * proj,
         const isce::product::GeoGridParameters & geoGrid,
         int lineStart, int blockLength,
         int blockWidth, double demMargin)
 {
+    // DEM interpolator
     isce::geometry::DEMInterpolator demInterp;
-    //Create projection for DEM
+
+    // the epsg code of the input DEM
     int epsgcode = demRaster.getEPSG();
 
     //Initialize bounds
-    double minX = std::numeric_limits<double>::min();
-    double maxX = std::numeric_limits<double>::max();
-    double minY = std::numeric_limits<double>::min();
-    double maxY = std::numeric_limits<double>::max();
+    double minX = std::numeric_limits<double>::max();
+    double maxX = std::numeric_limits<double>::min();
+    double minY = std::numeric_limits<double>::max();
+    double maxY = std::numeric_limits<double>::min();
 
-    //Projection systems are different
+    //If the projection systems are different
     if (epsgcode != geoGrid.epsg())
     {
-
+        std::unique_ptr<isce::core::ProjectionBase> proj(
+                isce::core::createProj(geoGrid.epsg()));
         //Create transformer to match the DEM
         //isce::core::ProjectionBase *demproj = isce::core::createProj(epsgcode);
         std::unique_ptr<isce::core::ProjectionBase> demproj(
@@ -66,7 +68,7 @@ isce::geometry::DEMInterpolator isce::geocode::loadDEM(
                            0.0};
 
             isce::core::Vec3 dempt;
-            if (!projTransform(proj, demproj.get(), outpt, dempt))
+            if (!projTransform(proj.get(), demproj.get(), outpt, dempt))
             {
                 minX = std::min(minX, dempt[0]);
                 maxX = std::max(maxX, dempt[0]);

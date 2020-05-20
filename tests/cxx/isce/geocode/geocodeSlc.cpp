@@ -46,19 +46,25 @@ TEST(geocodeTest, TestGeocodeSlc) {
     std::cout << "create the product" << std::endl;
     isce::product::Product product(file);
 
-    std::cout << "get the swath" << std::endl;
-    const isce::product::Swath & swath = product.swath('A');
+    //std::cout << "get the swath" << std::endl;
+    //const isce::product::Swath & swath = product.swath('A');
     isce::core::Orbit orbit = product.metadata().orbit();
 
     std::cout << "construct the ellipsoid" << std::endl;
     isce::core::Ellipsoid ellipsoid;
 
     std::cout << "get Doppler" << std::endl;
-    isce::core::LUT2d<double> imageGridDoppler = product.metadata().procInfo().dopplerCentroid('A');
+    //This test relies on that SLC test data in the repo to compute 
+    //lat, lon, height. In the simulation however I have not added any 
+    //Carrier so the simulated SLC phase is zero Doppler but its grid is 
+    //native Doppler. accordingly we can setup the Dopplers as follows. 
+    //In future we may want to simulate an SLC which has Carrier 
+    isce::core::LUT2d<double> imageGridDoppler = 
+                    product.metadata().procInfo().dopplerCentroid('A');
 
     //construct a zero 2D LUT
-    isce::core::Matrix<double> M(imageGridDoppler.width(), imageGridDoppler.length());
-
+    isce::core::Matrix<double> M(imageGridDoppler.width(), 
+            imageGridDoppler.length());
 
     M.zeros();
     isce::core::LUT2d<double> nativeDoppler(imageGridDoppler.xStart(), 
@@ -67,7 +73,7 @@ TEST(geocodeTest, TestGeocodeSlc) {
                                             imageGridDoppler.ySpacing(),
                                             M);
 
-    auto lookSide = product.lookSide();
+    //auto lookSide = product.lookSide();
 
     double thresholdGeo2rdr = 1.0e-9 ;
     int numiterGeo2rdr = 25;
@@ -122,7 +128,7 @@ TEST(geocodeTest, TestGeocodeSlc) {
 
       isce::io::Raster inputSlcY("y.slc", GA_ReadOnly);
 
-        isce::io::Raster geocodedSlcY("yslc.geo",
+      isce::io::Raster geocodedSlcY("yslc.geo",
                               geoGridWidth, geoGridLength,
                               1, GDT_CFloat32, "ENVI");
 
@@ -142,6 +148,15 @@ TEST(geocodeTest, TestGeocodeSlc) {
             sincLength,
             flatten);
 
+        double * _geoTrans = new double[6];
+        _geoTrans[0] = geoGridStartX;
+        _geoTrans[1] = geoGridSpacingX;
+        _geoTrans[2] = 0.0;
+        _geoTrans[3] = geoGridStartY;
+        _geoTrans[4] = 0.0;
+        _geoTrans[5] = geoGridSpacingY;
+        geocodedSlcY.setGeoTransform(_geoTrans);
+        geocodedSlc.setGeoTransform(_geoTrans);
 }
 
 TEST(GeocodeTest, CheckGeocode) {

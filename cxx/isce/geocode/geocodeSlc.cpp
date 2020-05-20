@@ -62,7 +62,7 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
 
         // get a DEM interpolator for a block of DEM for the current geocoded grid
         isce::geometry::DEMInterpolator demInterp = isce::geocode::loadDEM(
-                demRaster, proj.get(), geoGrid,
+                demRaster, geoGrid,
                 lineStart, geoBlockLength, geoGrid.width(),
                 demBlockMargin);
 
@@ -83,7 +83,7 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
 
         size_t geoGridWidth = geoGrid.width();
         // Loop over lines, samples of the output grid
-        #pragma omp parallel for
+        #pragma omp parallel for reduction(min:localAzimuthFirstLine,localRangeFirstPixel) reduction(max:localAzimuthLastLine,localRangeLastPixel)
             for (size_t kk = 0; kk < geoBlockLength * geoGridWidth; ++kk) {
 
                 size_t blockLine = kk / geoGridWidth;
@@ -216,9 +216,6 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
         }
         // set output block of data
     } // end loop over block of output grid
-
-    outputRaster.setGeoTransform(geoGrid.geotransform());
-    outputRaster.setEPSG(geoGrid.epsg());
 }
 
 

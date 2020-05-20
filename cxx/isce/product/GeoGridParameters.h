@@ -3,14 +3,9 @@
 
 #pragma once
 
-namespace isce {
-    namespace product {
-        class GeoGridParameters; 
-    }
-}
-
-class isce::product::GeoGridParameters {
-
+namespace isce { namespace product {
+    
+    class GeoGridParameters {
     public:
 
         GeoGridParameters() = default;
@@ -51,8 +46,6 @@ class isce::product::GeoGridParameters {
 
         inline int epsg() const {return _epsg; };
 
-        inline double* geotransform() const {return _geoTrans; }; 
-
     protected:
         // start X position for the geocoded grid
         double _startX = 0.0;
@@ -72,16 +65,13 @@ class isce::product::GeoGridParameters {
         // number of lines in north-south direction (Y direction)
         int _length = 0;
 
-        // geoTransform array (gdal style)
-        double * _geoTrans = new double[6];
-
         // epsg code for the output geocoded grid
         int _epsg;
 
-};
+    };
+}}
 
-isce::product::GeoGridParameters::
-GeoGridParameters(double geoGridStartX, double geoGridStartY,
+inline isce::product::GeoGridParameters::GeoGridParameters(double geoGridStartX, double geoGridStartY,
                 double geoGridSpacingX, double geoGridSpacingY,
                 int width, int length, int epsgcode) :
     // Assumption: origin is the top-left corner of the top-left pixel of the grid
@@ -107,13 +97,5 @@ GeoGridParameters(double geoGridStartX, double geoGridStartY,
     _length(length),
 
     // Save the EPSG code
-    _epsg(epsgcode) {
-        // Assumption: origin is the top-left corner of the top-left pixel of the grid
-        _geoTrans[0] = geoGridStartX;
-        _geoTrans[1] = geoGridSpacingX;
-        _geoTrans[2] = 0.0;
-        _geoTrans[3] = geoGridStartY;
-        _geoTrans[4] = 0.0;
-        _geoTrans[5] = geoGridSpacingY;}
-     
+    _epsg(epsgcode){} 
 
