@@ -152,6 +152,13 @@ TEST_F(InterpolatorTest, Bicubic) {
         const double x = (true_values(i,0) - start) / delta;
         const double y = (true_values(i,1) - start) / delta;
         const double zref = true_values(i,5);
+        // Avoid out of bounds accesses
+        if (x < 1 or y < 1) {
+            continue;
+        }
+        if (x >= M.width() - 2 or y >= M.length() - 2) {
+            continue;
+        }
         // Perform interpolation
         double z = interp.interpolate(x, y, M);
         // Accumulate error
@@ -290,6 +297,13 @@ TEST_F(InterpolatorTest, BicubicComplex) {
         // Unpack location to interpolate
         const double x = (true_values(i,0) - start) / delta;
         const double y = (true_values(i,1) - start) / delta;
+        // Avoid out of bounds accesses
+        if (x < 1 or y < 1) {
+            continue;
+        }
+        if (x >= M_cpx.width() - 2 or y >= M_cpx.length() - 2) {
+            continue;
+        }
         // Perform interpolation
         const std::complex<double> z = interp.interpolate(x, y, M_cpx);
         // Compute reference
