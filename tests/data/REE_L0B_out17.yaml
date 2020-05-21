@@ -3,8 +3,8 @@ inputs:
     - REE_L0B_out17.h5
 
 outputs:
-    slc: /tmp/slc.h5
-    workdir: /tmp
+    slc: ./slc.h5
+    workdir: .
 
 worker:
     gpu_enabled: False
