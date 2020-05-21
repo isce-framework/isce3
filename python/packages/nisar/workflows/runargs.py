@@ -12,6 +12,7 @@ def dictFromYaml(yaml_path):
     """
     yaml = YAML()
     arg_dict = yaml.load(open(yaml_path, 'r'))
+    arg_dict['cfgdir'] = os.path.dirname(yaml_path)
     return arg_dict
 
 
@@ -23,13 +24,21 @@ class RunArgs:
         to be inherited workflow specific derived arg classes
         """
 
+        # Helper to allow relative paths in config file
+        def cfg_relpath(path):
+            # Expand out home directory if applicable
+            path = os.path.expanduser(path)
+            # Convert relative path to absolute path, relative to config file
+            # This emulates abspath, but with cfgdir instead of cwd
+            return os.path.normpath(os.path.join(arg_dict['cfgdir'], path))
+
         # init required args shared across workflows to empty string
-        self.reference = os.path.expanduser(arg_dict['reference'])
-        self.product = os.path.expanduser(arg_dict['product'])
+        self.reference = cfg_relpath(arg_dict['reference'])
+        self.product = cfg_relpath(arg_dict['product'])
         self.slcpath = arg_dict['slcpath']
         self.frequency = arg_dict['frequency']
         self.polarization = arg_dict['polarization']
-        self.dem = os.path.expanduser(arg_dict['dem'])
+        self.dem = cfg_relpath(arg_dict['dem'])
         self.alks = arg_dict['alks']
         self.rlks = arg_dict['rlks']
         self.workflow_outdir = arg_dict['outdir']
