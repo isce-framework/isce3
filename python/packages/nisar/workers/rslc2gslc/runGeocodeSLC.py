@@ -38,7 +38,7 @@ def runGeocodeSLC(self):
         radar_grid = self.radar_grid_list[freq]
         geo_grid = self.geogrid_dict[frequency]
         for polarization in pol_list: 
-            self._print("working on frequency: {} and polarization: {}".format(freq, polarization))
+            self._print("working on frequency: {}, polarization: {}".format(freq, polarization))
             # get doppler centroid
             native_doppler = slc.getDopplerCentroid(frequency=freq)
 
@@ -51,23 +51,16 @@ def runGeocodeSLC(self):
             slc_dataset = self.slc_obj.getSlcDataset(freq, polarization)
             slc_raster = isce3.io.raster(filename='', h5=slc_dataset)
 
-            # Needs to be constructed from HDF5 
-            #dst_h5 = h5py.File(state.output_hdf5, 'a')
-            #dataset_path = 'science/LSAR/GSLC/grids/{frequency}/{polarization}'.format(frequency="frequencyA", polarization="HH")
-            #gslc_dataset = dst_h5[dataset_path]
-            #gslc_raster = isce3.io.raster(filename='', h5=gslc_dataset, access=gdal.GA_Update)
+            # access the HDF5 dataset for a given frequency and polarization
+            dst_h5 = h5py.File(state.output_hdf5, 'a')
+            dataset_path = 'science/LSAR/GSLC/grids/{frequency}/{polarization}'.format(
+                    frequency=frequency, polarization=polarization)
+            gslc_dataset = dst_h5[dataset_path]
 
-            driver = gdal.GetDriverByName('ENVI')
-            output = os.path.join(output_dir, "gslc.bin")
-            gslc_dataset = driver.Create(output, 
-                                geo_grid.width, 
-                                geo_grid.length, 
-                                1, 
-                                gdal.GDT_CFloat32)
-
-            gslc_raster = isce3.io.raster(filename='', 
-                                dataset=gslc_dataset)
-    
+            # Construct the output ratster directly from HDF5 dataset
+            gslc_raster = isce3.io.raster(filename='', h5=gslc_dataset, 
+                                access=gdal.GA_Update)
+            
             # Needs to be determined somewhere else
             thresholdGeo2rdr = 1.0e-9 ;
             numiterGeo2rdr = 25;
@@ -86,12 +79,9 @@ def runGeocodeSLC(self):
                     linesPerBlock, demBlockMargin,
                     flatten)
 
-            #save the output gslc to the HDF5
-            # This is not needed when we figure out the pyraster construction from H5 itself
-            # or if we use a buffer and not a rster like SLC workflow
-            dst_h5 = h5py.File(state.output_hdf5, 'a')
-            dataset_path = 'science/LSAR/GSLC/grids/{frequency}/{polarization}'.format(
-                            frequency=frequency, polarization=polarization)
-            dst_h5[dataset_path][:] = gslc_dataset.GetRasterBand(1).ReadAsArray()
+            # the rasters need to be deleted
+            del gslc_raster
+            del slc_raster
+
             dst_h5.close()
 
