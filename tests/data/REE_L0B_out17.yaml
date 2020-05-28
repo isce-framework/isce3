@@ -15,9 +15,9 @@ identification:
 processing:
     output_grid:
         start_time: 2021-07-01T03:20:03.461103958
-        end_time: 2021-07-01T03:20:03.538677292
+        end_time: 2021-07-01T03:20:03.539283375
         start_range: 967124.5530972595
-        end_range: 967923.9996519261
+        end_range: 967930.2453281345
 
     range_window:
         kind: Kaiser
