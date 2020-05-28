@@ -115,7 +115,7 @@ void addbinding(pybind11::class_<RadarGridParameters> & pyRadarGridParameters)
                 double t0 = self.sensingStart() + start / self.prf();
                 auto nt = slicelen;
 
-                if (!jslice.compute(self.length(), &start, &stop, &step, &slicelen))
+                if (!jslice.compute(self.width(), &start, &stop, &step, &slicelen))
                         throw std::invalid_argument("bad column slice");
                 if (step <= 0)
                         throw py::index_error("cannot reverse grid");

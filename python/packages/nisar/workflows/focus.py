@@ -393,8 +393,12 @@ def focus(cfg):
             continue
 
         for i in range(0, ogrid[frequency].length, na):
+            # h5py doesn't follow usual slice rules, raises exception
+            # if dest_sel slices extend past dataset shape.
+            imax = min(i + na, ogrid[frequency].length)
             for j in range(0, ogrid[frequency].width, nr):
-                block = np.s_[i:i+na, j:j+nr]
+                jmax = min(j + nr, ogrid[frequency].width)
+                block = np.s_[i:imax, j:jmax]
                 log.info(f"Azcomp block at (i, j) = ({i}, {j})")
                 bgrid = ogrid[frequency][block]
                 ogeom = isce.container.RadarGeometry(bgrid, orbit, zerodop)
