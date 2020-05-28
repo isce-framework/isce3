@@ -34,3 +34,6 @@ def test_radargridparameters():
     assert grid[1:,:].length == grid.length - 1
     assert grid[:,1:].range_pixel_spacing == grid.range_pixel_spacing
     assert grid[:,1:].width == grid.width - 1
+    # Check case of length != width.
+    rect = grid[:10, :11]
+    assert rect[:,10:11].shape == (10, 1)
