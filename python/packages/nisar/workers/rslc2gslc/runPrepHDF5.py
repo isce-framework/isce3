@@ -80,6 +80,9 @@ def runPrepHDF5(self):
                     'processedAzimuthBandwidth':'azimuthBandwidth',
                     'processedRangeBandwidth':'rangeBandwidth'})
 
+    
+    ctype = h5py.h5t.py_create(np.complex64)
+    ctype.commit(dst_h5['/'].id, np.string_('complex64'))
 
     # create the datasets in the output hdf5
     self.geogrid_dict = {}
@@ -87,6 +90,7 @@ def runPrepHDF5(self):
         frequency = f'frequency{freq}'
         pol_list = state.subset_dict[freq]
         self.geogrid_dict[frequency] = _createGeoGrid(self.userconfig, frequency)
+        dataset_path = os.path.join(common_parent_path, f'GSLC/grids/{frequency}')
         shape=(self.geogrid_dict[frequency].length, self.geogrid_dict[frequency].width)
         for polarization in pol_list:
             _createDatasets(dst_h5, common_parent_path, frequency, polarization, shape, chunks=(128, 128))
@@ -130,18 +134,22 @@ def _createGeoGrid(userconfig, frequency):
     
 def _createDatasets(dst_h5, common_parent_path, frequency, polarization, shape, chunks=(128, 128)):
 
-    dtype = np.complex64
     print("create empty dataset for frequency: {} polarization: {}".format(frequency, polarization))
     dataset_path = os.path.join(common_parent_path, f'GSLC/grids/{frequency}')
     grp = dst_h5[dataset_path]
+    
+    ctype = h5py.h5t.py_create(np.complex64)
+
     if chunks<shape:
-        ds = grp.create_dataset(polarization, dtype=dtype, shape=shape, chunks=chunks)
+        ds = grp.create_dataset(polarization, dtype=ctype, shape=shape, chunks=chunks)
     else:
-        ds = grp.create_dataset(polarization, dtype=dtype, shape=shape)
+        ds = grp.create_dataset(polarization, dtype=ctype, shape=shape)
 
     ds.attrs['description'] = np.string_(
                                       'Geocoded SLC for {} channel'.format(polarization))
     ds.attrs['units'] = np.string_('')
+    
+    ds.attrs['grid_mapping'] = np.string_("projection")
 
     return None
 
@@ -172,6 +180,9 @@ def _addGeoInformation(hdf5_obj, common_parent_path, frequency, geo_grid):
     # yCoordinates
     h5_ds = os.path.join(root_ds, 'yCoordinates') # float64
     yds = hdf5_obj.create_dataset(h5_ds, data=y_vect)
+
+    xds.make_scale()
+    yds.make_scale()  
 
     #Associate grid mapping with data - projection created later
     h5_ds = os.path.join(root_ds, "projection")
@@ -223,7 +234,7 @@ def _addGeoInformation(hdf5_obj, common_parent_path, frequency, geo_grid):
                epsg_code < 32761)):
             #Set up grid mapping
             projds.attrs['grid_mapping_name'] = np.string_('universal_transverse_mercator')
-            projds.attrs['utm_zone_number'] = self.state.output_epsg % 100
+            projds.attrs['utm_zone_number'] = epsg_code % 100 #self.state.output_epsg % 100
 
             #Setup units for x and y
             xds.attrs['standard_name'] = np.string_("projection_x_coordinate")

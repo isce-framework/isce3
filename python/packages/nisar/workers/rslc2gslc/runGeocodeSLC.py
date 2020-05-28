@@ -38,7 +38,8 @@ def runGeocodeSLC(self):
         radar_grid = self.radar_grid_list[freq]
         geo_grid = self.geogrid_dict[frequency]
         for polarization in pol_list: 
-            self._print("working on frequency: {}, polarization: {}".format(freq, polarization))
+            #self._print("working on frequency: {}, polarization: {}".format(freq, polarization))
+            self._print("working on frequency: {freq}, polarization: {polarization}")
             # get doppler centroid
             native_doppler = slc.getDopplerCentroid(frequency=freq)
 
@@ -55,6 +56,7 @@ def runGeocodeSLC(self):
             dst_h5 = h5py.File(state.output_hdf5, 'a')
             dataset_path = 'science/LSAR/GSLC/grids/{frequency}/{polarization}'.format(
                     frequency=frequency, polarization=polarization)
+
             gslc_dataset = dst_h5[dataset_path]
 
             # Construct the output ratster directly from HDF5 dataset
