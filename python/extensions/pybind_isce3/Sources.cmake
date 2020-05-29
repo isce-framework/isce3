@@ -20,9 +20,11 @@ focus/DryTroposphereModel.cpp
 focus/focus.cpp
 focus/RangeComp.cpp
 geometry/boundingbox.cpp
-geometry/geometry.cpp
 geometry/DEMInterpolator.cpp
+geometry/Geocode.cpp
+geometry/geometry.cpp
 geometry/rdr2geo.cpp
+geometry/RTC.cpp
 io/gdal/Dataset.cpp
 io/gdal/GDALAccess.cpp
 io/gdal/GDALDataType.cpp

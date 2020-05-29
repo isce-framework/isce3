@@ -14,6 +14,7 @@ focus/chirp.py
 focus/rangecomp.py
 geometry/bbox.py
 geometry/dem.py
+geometry/geocode.py
 io/gdal/dataset.py
 io/gdal/raster.py
 io/raster.py

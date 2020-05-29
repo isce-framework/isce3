@@ -55,8 +55,13 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
                     // return LUT2d object
                     return isce::core::LUT2d<T>(xstart, ystart, dx, dy, data, interp_method, b_error);
                 }),
-                py::arg("xstart"), py::arg("ystart"), py::arg("dx"), py::arg("dy"),
-                py::arg("data"), py::arg("method"), py::arg("b_error")=true)
+                py::arg("xstart"),
+                py::arg("ystart"),
+                py::arg("dx"),
+                py::arg("dy"),
+                py::arg("data"),
+                py::arg("method")="bilinear",
+                py::arg("b_error")=true)
         .def(py::init([](py::array_t<double, py::array::c_style | py::array::forcecast> & py_xcoord,
                         py::array_t<double, py::array::c_style | py::array::forcecast> & py_ycoord,
                         py::array_t<T, py::array::c_style | py::array::forcecast> & py_data,
@@ -81,7 +86,11 @@ void addbinding(py::class_<LUT2d<T>> &pyLUT2d)
                     // return LUT2d object
                     return isce::core::LUT2d<T>(xcoord, ycoord, data, interp_method, b_error);
                 }),
-                py::arg("xcoord"), py::arg("ycoord"), py::arg("data"), py::arg("method"), py::arg("b_error")=true)
+                py::arg("xcoord"),
+                py::arg("ycoord"),
+                py::arg("data"),
+                py::arg("method")="bilinear",
+                py::arg("b_error")=true)
 
 
         .def_static("load_from_h5", [](py::object h5py_group,

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #!/usr/bin/env python3
 
 import os
@@ -15,7 +13,7 @@ def runGeocode(self, frequency):
     '''
     This step maps locations on a DEM to slant range and azimuth time.
     '''
-    
+
     # only execute worker if frequency is listed in subset_dict
     if frequency not in self.state.subset_dict.keys():
         self._print(f'skipping frequency {frequency} because it'
@@ -26,7 +24,7 @@ def runGeocode(self, frequency):
         return 1
     _runGeocodeFrequency(self, frequency)
 
-    
+
 def _runGeocodeFrequency(self, frequency):
 
     self._print(f'starting geocode module for frequency: {frequency}')
@@ -101,11 +99,11 @@ def _runGeocodeFrequency(self, frequency):
     step = geocode_dict['output_posting']
 
     # fix types
-    rtc_min_value_db = self.cast_input(rtc_min_value_db, dtype=float, 
+    rtc_min_value_db = self.cast_input(rtc_min_value_db, dtype=float,
                                        frequency=frequency)
-    state.output_epsg = self.cast_input(state.output_epsg, dtype=int, 
+    state.output_epsg = self.cast_input(state.output_epsg, dtype=int,
                                         frequency=frequency)
-    geogrid_upsampling = self.cast_input(geogrid_upsampling, dtype=float, 
+    geogrid_upsampling = self.cast_input(geogrid_upsampling, dtype=float,
                                          frequency=frequency)
     rtc_geogrid_upsampling = self.cast_input(rtc_geogrid_upsampling,
                                              dtype=float, frequency=frequency)
@@ -169,7 +167,7 @@ def _runGeocodeFrequency(self, frequency):
         size_y = int(np.round((y_min - y_max)/step_y))
     else:
         size_y = -32768
-    if (_is_valid(x_max) and _is_valid(x_min) and 
+    if (_is_valid(x_max) and _is_valid(x_min) and
             _is_valid(step_x)):
         size_x = int(np.round((x_max - x_min)/step_x))
     else:
@@ -177,12 +175,12 @@ def _runGeocodeFrequency(self, frequency):
 
     # if Geogrid is not fully determined, let Geocode find the missing values
     if (size_x == -32768 or size_y == -32768):
-        geo.geoGrid(x_min, y_max,  step_x, step_y,
+        geo.geoGrid(x_min, y_max, step_x, step_y,
                     size_x, size_y, state.output_epsg)
         geo.updateGeoGrid(radar_grid, dem_raster)
 
         # update only missing values
-        if not _is_valid(x_min): 
+        if not _is_valid(x_min):
             x_min = geo.geoGridStartX
         if not _is_valid(y_max):
             y_max = geo.geoGridStartY
@@ -205,7 +203,7 @@ def _runGeocodeFrequency(self, frequency):
     size_y = int(np.round((y_min - y_max)/step_y))
     size_x = int(np.round((x_max - x_min)/step_x))
 
-    geo.geoGrid(x_min, y_max,  step_x, step_y,
+    geo.geoGrid(x_min, y_max, step_x, step_y,
                 size_x, size_y, state.output_epsg)
 
     output_dir = os.path.dirname(output_file)
@@ -242,7 +240,7 @@ def _runGeocodeFrequency(self, frequency):
         geocoded_dict['out_geo_nlooks'] = out_geo_nlooks
     else:
         out_geo_nlooks_obj = None
-    
+
     if flag_save_rtc:
         out_geo_rtc_obj = isce3.pyRaster(out_geo_rtc,
                                          gdal.GA_Update,
@@ -253,7 +251,7 @@ def _runGeocodeFrequency(self, frequency):
                                          "ENVI")
         geocoded_dict['out_geo_rtc'] = out_geo_rtc
     else:
-        out_geo_rtc_obj = None 
+        out_geo_rtc_obj = None
 
     if flag_save_dem_vertices:
         out_dem_vertices_obj = isce3.pyRaster(out_dem_vertices,
@@ -281,7 +279,7 @@ def _runGeocodeFrequency(self, frequency):
     
 
     # Run geocoding
-    flag_apply_rtc =  (rtc_output_type and 
+    flag_apply_rtc =  (rtc_output_type and
                        rtc_output_type != input_terrain_radiometry and
                        'gamma' in rtc_output_type)
     geotransform = [x_min, step_x, 0, y_max, 0, step_y]
@@ -362,14 +360,6 @@ def _runGeocodeFrequency(self, frequency):
                 out_geo_vertices=out_geo_vertices_obj,
                 **kwargs)
 
-
-
-
-
-
-
-
-
     del output_raster_obj
 
     if flag_save_nlooks:
@@ -384,17 +374,9 @@ def _runGeocodeFrequency(self, frequency):
     if flag_save_geo_vertices:
         del out_geo_vertices_obj
 
-
-
-    # del input_raster_obj
     self._print(f'removing temporary file: {input_temp}')
     _remove(input_temp)
-    # del output_raster_obj
-    # return geocoded_dict
-    # output_file = geocoded_dict['output_file']
-    # state = self.state
     output_hdf5 = state.output_hdf5
-    # pol_list = state.subset_dict[frequency]
 
     h5_ds_list = []
 
@@ -413,7 +395,6 @@ def _runGeocodeFrequency(self, frequency):
         dset.attrs['description'] = np.string_(
             'List of processed polarization layers with frequency ' + 
             frequency)
-
 
         h5_ds = os.path.join(root_ds, 'radiometricTerrainCorrectionFlag')
         if h5_ds in hdf5_obj:
@@ -592,7 +573,7 @@ def _runGeocodeFrequency(self, frequency):
         cov_elements_list = [p.upper()+p.upper() for p in pol_list]
         _save_hdf5_dataset(self, 'output_file', hdf5_obj, root_ds,
                            h5_ds_list, geocoded_dict, frequency, yds, xds,
-                           cov_elements_list, 
+                           cov_elements_list,
                            standard_name = output_radiometry_str,
                            long_name = output_radiometry_str, 
                            units = 'unitless',
@@ -600,7 +581,7 @@ def _runGeocodeFrequency(self, frequency):
                            valid_min = clip_min, 
                            valid_max = clip_max)
 
-        # save nlookss
+        # save nlooks
         _save_hdf5_dataset(self, 'out_geo_nlooks', hdf5_obj, root_ds, 
                            h5_ds_list, geocoded_dict, frequency, yds, xds, 
                            'nlooks',
@@ -682,11 +663,15 @@ def _is_valid(data):
     return data is not None and np.isfinite(data)
 
 def _remove(filename):
-    if os.path.isfile(filename):
+    try:
         os.remove(filename)
+    except FileNotFoundError:
+        pass
     header_file = filename.replace('.bin', '.hdr')
-    if filename.endswith('.bin') and os.path.isfile(header_file):
-        os.remove(header_file)   
+    try:
+        os.remove(header_file)
+    except FileNotFoundError:
+        pass
 
 def _save_hdf5_dataset(self, name, hdf5_obj, root_ds, h5_ds_list, geocoded_dict,
                        frequency, yds, xds, ds_name=None, standard_name=None,
