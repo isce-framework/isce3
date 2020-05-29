@@ -8,9 +8,8 @@ def runSubsetInputs(self):
     '''
 
     state = self.state
-    subset_dict = self.get_value(['parameters',
+    subset_dict = self.get_value(['processing',
         'input_subset', 'list_of_frequencies'])
-
     if isinstance(subset_dict, str):
         state.subset_dict = collections.OrderedDict()
         state.subset_dict[subset_dict] = None
