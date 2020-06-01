@@ -5,7 +5,7 @@ import os
 import osr
 import numpy as np
 from nisar.h5 import cp_h5_meta_data
-import isce3.extensions.isceextension as temp_isce3
+import isce3
 
 def runPrepHDF5(self):
     '''
@@ -121,7 +121,7 @@ def _createGeoGrid(userconfig, frequency):
     y_size = int(np.round((y_end-y_start)/y_step))
     x_size = int(np.round((x_end-x_start)/x_step))
 
-    geo_grid = temp_isce3.pyGeoGridParameters()
+    geo_grid = isce3.product.geoGridParameters() 
     geo_grid.startX = x_start
     geo_grid.startY = y_start
     geo_grid.spacingX = x_step

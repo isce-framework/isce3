@@ -12,10 +12,6 @@ from collections import defaultdict
 import isce3
 from nisar.products.readers import SLC
 
-#this is a temporary import. Needs to be remove when all functionalities exist with isce3
-import isce3.extensions.isceextension as temp_isce3
-
-
 def runGeocodeSLC(self):
     self._print('starting geocode module')
 
@@ -70,8 +66,8 @@ def runGeocodeSLC(self):
 
             flatten = True;
 
-            # run geocodeSlc : This should become isce3.geocode.geocodeSlc(...)
-            temp_isce3.pygeocodeSlc(gslc_raster, slc_raster, dem_raster,
+            # run geocodeSlc : 
+            isce3.geocode.geocodeSlc(gslc_raster, slc_raster, dem_raster,
                     radar_grid, geo_grid,
                     orbit,
                     native_doppler, image_grid_doppler,
