@@ -49,7 +49,7 @@ cdef class pyRaster:
         if h5 is not None:
             assert isinstance(h5, h5py.Dataset), \
                 'h5 must be a h5py.Dataset instance.'
-            
+
             GDALRegister_IH5()
             dsname = pyStringToBytes('IH5:::ID={0}'.format(h5.id.id))
             if (access):
@@ -71,11 +71,11 @@ cdef class pyRaster:
             # Make raster
             self.c_raster = new Raster(gdal_dset, False)
             return
-        
+
         # Convert the filename to a C++ string representation
         cdef string str_filename = pyStringToBytes(filename)
         cdef string drivername = pyStringToBytes(driver)
-        
+
         # Convert datatypes
         cdef GDT gdtype
         if (dtype == GDT.GDT_Unknown):
@@ -110,7 +110,7 @@ cdef class pyRaster:
 
             self.c_raster = new Raster(str_filename, rasterlist)
             return
-        
+
         # Read-only
         if access == 0:
             self.c_raster = new Raster(str_filename)
@@ -120,7 +120,7 @@ cdef class pyRaster:
             if drivername.empty():
                 if gdtype == GDT.GDT_Unknown and width != 0 and length != 0:
                     self.c_raster = new Raster(str_filename, width, length)
-        
+
                 elif gdtype == GDT.GDT_Unknown and width != 0 and length != 0 and numBands != 0:
                     self.c_raster = new Raster(str_filename, width, length, numBands)
 

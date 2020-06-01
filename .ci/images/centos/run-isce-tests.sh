@@ -24,13 +24,13 @@ fi
 
 # Run the container
 if [ "$MEMCHECK" = "0" ]; then
-    nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
+    docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
         'source /opt/docker/bin/entrypoint_source \
           && cd build \
           && ctest -j `nproc` --nocompress-output --output-on-failure -T Test || true \
           && cp Testing/$(head -1 Testing/TAG)/Test.xml .'
 else
-    nvidia-docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
+    docker run --name ${CONTAINERTAG} ${IMAGE}:${TAG} /bin/bash -ex -c \
         'source /opt/docker/bin/entrypoint_source \
           && cd build \
           && ctest --nocompress-output --output-on-failure -T Test || true \
@@ -51,7 +51,7 @@ SPHX_CACHE=$SPHX_DIR/_doctrees
 SPHX_HTML=$SPHX_DIR/html
 
 DOCSTAG=isce-centos-docs-latest-$TAG
-nvidia-docker run --name $DOCSTAG $IMAGE:$TAG bash -exc \
+docker run --name $DOCSTAG $IMAGE:$TAG bash -exc \
     "PYTHONPATH=$BLDDIR/packages/isce3/extensions \
      sphinx-build -q -b html -c $SPHX_CONF -d $SPHX_CACHE $SPHX_SRC $SPHX_HTML \
      && doxygen $BLDDIR/doc/doxygen/Doxyfile"

@@ -20,6 +20,7 @@
 #include <isce/geometry/DEMInterpolator.h>
 #include <isce/geometry/RTC.h>
 #include <isce/geometry/Topo.h>
+#include <isce/product/Product.h>
 
 #include <isce/cuda/core/gpuLUT1d.h>
 #include <isce/cuda/core/Orbit.h>

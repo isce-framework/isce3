@@ -101,11 +101,19 @@ void addbinding(py::class_<Raster> & pyRaster)
             {
                 return self.access() == 0;
             })
+        .def("get_geotransform", [](Raster & self)
+            {
+                std::vector<double> transform(6);
+                self.getGeoTransform(transform);
+                return transform;
+            })
         .def("datatype", [](Raster & self, int i)
             {
                 return cxx2PyDtype(self.dtype(i));
             },
             py::arg("band")=1)
+        .def("get_epsg", &Raster::getEPSG)
+        .def("set_epsg", &Raster::setEPSG)
     ;
 
 }

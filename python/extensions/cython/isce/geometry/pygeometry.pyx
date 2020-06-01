@@ -91,23 +91,12 @@ def py_rdr2geo_cone(
     cdef DEMInterpolator dem
     if demInterp is not None:
         dem = deref(demInterp.c_deminterp)
-    # NOTE The C++ interface is kind of busted since DEMInterpolator has its own
-    # implicit ellipsoid (but only when its loadDEM method has been called) and
-    # the Ellipsoid argument is assumed to describe the same one.  Usually
-    # everything is WGS84, at least.
-    cdef Ellipsoid ell
-    if ellipsoid is not None:
-        ell = deref(ellipsoid.c_ellipsoid)
-
-    # Generate TCN basis using the given axis as the velocity.
-    cdef Basis tcn = Basis(p, v)
-    # Using this "doppler factor" accomplishes the desired task.
-    cdef Pixel pix = Pixel(slantRange, slantRange*sin(angle), 0)
-
-    # Call C++ and return a Python array.
-    cdef cartesian_t llh
-    rdr2geo(pix, tcn, p, v, ell, dem, llh, _side,threshold, maxIter, extraIter)
-    return [llh[i] for i in range(3)]
+    cdef cartesian_t xyz
+    cdef int converged = rdr2geo(p, v, angle, slantRange, dem, xyz, _side,
+                                 threshold, maxIter, extraIter)
+    if not converged:
+        raise RuntimeError("rdr2geo failed to converge")
+    return [xyz[i] for i in range(3)]
 
 
 def py_computeDEMBounds(pyOrbit orbit,

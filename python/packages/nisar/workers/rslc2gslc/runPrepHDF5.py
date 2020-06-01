@@ -67,10 +67,13 @@ def runPrepHDF5(self):
     # XXX option0: to be replaced with actual gslc code
     # XXX option1: do not write GSLC data here; GSLC rasters can be appended to the GSLC HDF5
     for freq in ['A', 'B']:
+        ds_ref = os.path.join(common_parent_path, f'SLC/swaths/frequency{freq}')
+        if ds_ref not in src_h5:
+            continue
         cp_h5_meta_data(src_h5, dst_h5,
-                os.path.join(common_parent_path, f'SLC/swaths/frequency{freq}'),
+                ds_ref,
                 os.path.join(common_parent_path, f'GSLC/grids/frequency{freq}'),
-                excludes=['acquiredCenterFreqeuncy', 'acquiredAzimuthBandwidth', 
+                excludes=['acquiredCenterFrequency', 'acquiredAzimuthBandwidth', 
                     'acquiredRangeBandwidth', 'nominalAcquisitionPRF', 'slantRange',
                     'sceneCenterAlongTrackSpacing', 'sceneCenterGroundRangeSpacing',
                     'HH', 'HV', 'VH', 'VV', 'RH', 'RV',

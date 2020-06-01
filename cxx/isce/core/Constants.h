@@ -5,18 +5,9 @@
 
 #pragma once
 
-#include <array>
 #include <complex>
 #include <cstdint>
-#include <gdal.h>
-#include <gdal_priv.h>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
 #include <string>
-#include <typeindex>
-#include <unordered_map>
-#include <vector>
 
 // Macro wrapper to check vector lengths (adds calling function and variable name information to the
 // exception)

@@ -12,6 +12,7 @@
 // isce::product
 #include <isce/core/LookSide.h>
 #include <isce/product/RadarGridParameters.h>
+#include <isce/product/Product.h>
 
 using isce::core::LookSide;
 

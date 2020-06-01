@@ -8,14 +8,13 @@
 
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
 #include <valarray>
 #include <complex>
-#include <gdal.h>
-#include <gdal_priv.h>
 
 // Macro wrappers to check vector lengths 
 // (adds calling function and variable name information to the exception)
@@ -214,30 +213,7 @@ namespace isce { namespace core {
       * @param[in] filename VRT product filename
       * @param[in] bandNum Band number to retrieve metadata from 
       * @param[out] meta std::string containing metadata */
-    inline std::string stringFromVRT(const char * filename, int bandNum=1) {
-
-        // Register GDAL drivers
-        GDALAllRegister();
-
-        // Open the VRT dataset
-        GDALDataset * dataset = (GDALDataset *) GDALOpen(filename, GA_ReadOnly);
-        if (dataset == NULL) {
-            std::cout << "Cannot open dataset " << filename << std::endl;
-            exit(1);
-        }
-
-        // Read the metadata
-        char **metadata_str = dataset->GetRasterBand(bandNum)->GetMetadata("xml:isce");
-
-        // The cereal-relevant XML is the first element in the list
-        std::string meta{metadata_str[0]};
-
-        // Close the VRT dataset
-        GDALClose(dataset);
-
-        // All done
-        return meta;
-    }
+    std::string stringFromVRT(const char * filename, int bandNum=1);
 
     /** Combined absolute and relative tolerance test 
      * @param[in] first first value

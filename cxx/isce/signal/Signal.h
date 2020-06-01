@@ -10,8 +10,8 @@
 #include "forward.h"
 
 #include <cmath>
+#include <memory>
 #include <valarray>
-//#include <cstring>
 
 #include <isce/core/Constants.h>
 

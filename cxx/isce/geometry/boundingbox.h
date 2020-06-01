@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <isce/core/LUT2d.h>
+
 //isce::product
 #include <isce/product/RadarGridParameters.h>
 

@@ -8,6 +8,8 @@
 
 #include <complex>
 
+#include "Interpolator.h"
+
 // Constructor with coordinate starting values and spacing
 /** @param[in] xstart Starting X-coordinate
   * @param[in] ystart Starting Y-coordinate
@@ -135,6 +137,40 @@ eval(double y, double x) const {
     // Call interpolator
     value = _interp->interpolate(x_idx, y_idx, _data);
     return value;
+}
+
+template <typename T>
+void
+isce::core::LUT2d<T>::
+_setInterpolator(isce::core::dataInterpMethod method)
+{
+    // If biquintic, set the order
+    if (method == isce::core::BIQUINTIC_METHOD) {
+        _interp = isce::core::createInterpolator<T>(isce::core::BIQUINTIC_METHOD, 6);
+
+    // If sinc, set the window sizes
+    } else if (method == isce::core::SINC_METHOD) {
+        _interp = isce::core::createInterpolator<T>(
+            isce::core::SINC_METHOD,
+            6, isce::core::SINC_LEN, isce::core::SINC_SUB
+        );
+
+    // Otherwise, just pass the interpolation method
+    } else {
+        _interp = isce::core::createInterpolator<T>(method);
+    }
+}
+
+template<typename T>
+isce::core::dataInterpMethod isce::core::LUT2d<T>::interpMethod() const
+{
+    return _interp->method();
+}
+
+template<typename T>
+void isce::core::LUT2d<T>::interpMethod(dataInterpMethod method)
+{
+    _setInterpolator(method);
 }
 
 // Forward declaration of classes

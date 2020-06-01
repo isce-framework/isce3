@@ -21,7 +21,7 @@ docker run --runtime=nvidia -u $ID:$(id -g) nisar/base:<tag>
 ```
 or
 ```
-nvidia-docker run -u $ID:$(id -g) nisar/base:<tag>
+docker run -u $ID:$(id -g) nisar/base:<tag>
 ```
 
 ## nisar/dev
@@ -45,7 +45,7 @@ docker run --runtime=nvidia -u $ID:$(id -g) nisar/dev:<tag>
 ```
 or
 ```
-nvidia-docker run -u $ID:$(id -g) nisar/dev:<tag>
+docker run -u $ID:$(id -g) nisar/dev:<tag>
 ```
 
 ## nisar/isce-ops
@@ -71,6 +71,6 @@ docker run --runtime=nvidia -u $ID:$(id -g) nisar/isce-ops:<tag>
 ```
 or
 ```
-nvidia-docker run -u $ID:$(id -g) nisar/isce-ops:<tag>
+docker run -u $ID:$(id -g) nisar/isce-ops:<tag>
 ```
 

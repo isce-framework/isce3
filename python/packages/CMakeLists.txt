@@ -10,3 +10,10 @@ file(COPY nisar
 install(
     DIRECTORY nisar
     DESTINATION ${ISCE_PACKAGESDIR})
+
+##pybind nisar package
+file(COPY pybind_nisar
+     DESTINATION ${ISCE_BUILDPACKAGESDIR})
+install(
+    DIRECTORY pybind_nisar
+    DESTINATION ${ISCE_PACKAGESDIR})

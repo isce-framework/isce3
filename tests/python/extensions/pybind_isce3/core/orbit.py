@@ -12,6 +12,15 @@ def load_h5():
 
 o = load_h5();
 
+def test_save():
+    import h5py
+    import tempfile
+    o = load_h5()
+    _, name = tempfile.mkstemp()
+    with h5py.File(name, "w") as h5:
+        g = h5.create_group("/orbit")
+        o.save_to_h5(g)
+
 # Test that accessors exist
 def test_props():
     o = load_h5();

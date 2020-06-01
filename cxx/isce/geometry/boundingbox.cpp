@@ -240,9 +240,11 @@ isce::geometry::BoundingBox isce::geometry::getGeoBoundingBox(
 }
 
 static bool _isValid(isce::geometry::BoundingBox bbox) {
-    return (!isnan(bbox.MinX) && !isinf(bbox.MinX) && !isnan(bbox.MaxX) &&
-            !isinf(bbox.MaxX) && !isnan(bbox.MinY) && !isinf(bbox.MinY) &&
-            !isnan(bbox.MaxY) && !isinf(bbox.MaxY));
+    auto valid = [](double x) {
+        return not (std::isnan(x) or std::isinf(x));
+    };
+    return valid(bbox.MinX) and valid(bbox.MaxX)
+       and valid(bbox.MinY) and valid(bbox.MaxY);
 }
 
 static isce::geometry::BoundingBox _getGeoBoundingBoxBinarySearch(

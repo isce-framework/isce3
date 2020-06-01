@@ -9,7 +9,7 @@
 
 #include <valarray>
 #include "Constants.h"
-#include "Interpolator.h"
+#include "Matrix.h"
 #include "Utilities.h"
 
 /** Data structure to store 2D Lookup table.
@@ -43,14 +43,10 @@ class isce::core::LUT2d {
                          const isce::core::Matrix<T> & data);
 
         // Get interpolator method
-        inline isce::core::dataInterpMethod interpMethod() const {
-            return _interp->method();
-        }
-    
+        isce::core::dataInterpMethod interpMethod() const;
+
         // Set interpolator method
-        inline void interpMethod(isce::core::dataInterpMethod method) {
-            _setInterpolator(method);
-        }
+        void interpMethod(isce::core::dataInterpMethod method);
 
         // Get starting X-coordinate
         inline double xStart() const { return _xstart; }
@@ -90,7 +86,11 @@ class isce::core::LUT2d {
         isce::core::Interpolator<T> * _interp;
 
     private:
-        inline void _setInterpolator(isce::core::dataInterpMethod method);
+        /** @internal
+         * Set interpolator method
+         * @param[in] method Data interpolation method
+         */
+        void _setInterpolator(dataInterpMethod method);
 
     // BVR: I'm placing the comparison operator implementations inline here because
     // it wasn't clear to me how to handle the template arguments out-of-line
@@ -191,28 +191,4 @@ operator=(const LUT2d<T> & lut) {
     _boundsError = lut.boundsError();
     _setInterpolator(lut.interpMethod());
     return *this;
-}
-
-// Set interpolator method
-/** @param[in] method Data interpolation method */
-template <typename T>
-void
-isce::core::LUT2d<T>::
-_setInterpolator(isce::core::dataInterpMethod method) {
-
-    // If biquintic, set the order
-    if (method == isce::core::BIQUINTIC_METHOD) {
-        _interp = isce::core::createInterpolator<T>(isce::core::BIQUINTIC_METHOD, 6);
-
-    // If sinc, set the window sizes
-    } else if (method == isce::core::SINC_METHOD) {
-        _interp = isce::core::createInterpolator<T>(
-            isce::core::SINC_METHOD,
-            6, isce::core::SINC_LEN, isce::core::SINC_SUB
-        );
-
-    // Otherwise, just pass the interpolation method
-    } else {
-        _interp = isce::core::createInterpolator<T>(method);
-    }
 }

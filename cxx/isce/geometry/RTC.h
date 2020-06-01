@@ -1,6 +1,9 @@
 #pragma once
 
 #include "forward.h"
+
+#include <limits>
+
 #include <isce/core/forward.h>
 #include <isce/io/forward.h>
 #include <isce/product/forward.h>
@@ -16,6 +19,13 @@ namespace isce { namespace geometry {
 enum rtcInputRadiometry {
     BETA_NAUGHT = 0,
     SIGMA_NAUGHT_ELLIPSOID = 1,
+};
+
+/** Enumeration type to indicate memory management */
+enum rtcMemoryMode {
+    RTC_AUTO = 0,
+    RTC_SINGLE_BLOCK = 1,
+    RTC_BLOCKS_GEOGRID = 2,
 };
 
 /**Enumeration type to indicate RTC area mode (AREA or AREA_FACTOR) */
@@ -51,6 +61,7 @@ enum rtcAlgorithm { RTC_DAVID_SMALL = 0, RTC_AREA_PROJECTION = 1 };
  * @param[in]  input_rtc           Raster containing pre-computed RTC area
  * factor
  * @param[out] output_rtc          Output RTC area factor
+ * @param[in]  rtc_memory_mode     Select memory mode
  * */
 void applyRTC(
         const isce::product::RadarGridParameters& radarGrid,
@@ -65,7 +76,8 @@ void applyRTC(
         double abs_cal_factor = 1, float radar_grid_nlooks = 1,
         isce::io::Raster* out_nlooks = nullptr,
         isce::io::Raster* input_rtc = nullptr,
-        isce::io::Raster* output_rtc = nullptr);
+        isce::io::Raster* output_rtc = nullptr,
+        rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO);
 
 /** Generate radiometric terrain correction (RTC) area or area factor
  *
@@ -84,6 +96,7 @@ void applyRTC(
  * @param[in]  nlooks_az           Number of azimuth looks.
  * @param[in]  nlooks_rg           Number of range looks.
  * @param[out] out_nlooks          Raster to which the number of radar-grid
+ * @param[in]  rtc_memory_mode     Select memory mode
  * looks associated with the geogrid will be saved
  * */
 void facetRTC(
@@ -96,7 +109,8 @@ void facetRTC(
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         size_t nlooks_az = 1, size_t nlooks_rg = 1,
-        isce::io::Raster* out_nlooks = nullptr);
+        isce::io::Raster* out_nlooks = nullptr,
+        rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO);
 
 /** Generate radiometric terrain correction (RTC) area or area factor
  *
@@ -115,6 +129,7 @@ void facetRTC(
  * parameters determines the multilooking factor used to compute out_nlooks.
  * @param[out] out_nlooks          Raster to which the number of radar-grid
  * looks associated with the geogrid will be saved
+ * @param[in] rtc_memory_mode     Select memory mode
  * @param[in] interp_method        Interpolation Method
  * @param[in] threshold            Distance threshold for convergence
  * @param[in] num_iter             Maximum number of Newton-Raphson iterations
@@ -132,6 +147,7 @@ void facetRTC(
         float rtc_min_value_db = std::numeric_limits<float>::quiet_NaN(),
         float radar_grid_nlooks = 1,
         isce::io::Raster* out_nlooks = nullptr,
+        rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO,
         isce::core::dataInterpMethod interp_method =
                 isce::core::dataInterpMethod::BIQUINTIC_METHOD,
         double threshold = 1e-4, int num_iter = 100, double delta_range = 1e-4);
@@ -167,6 +183,7 @@ void facetRTC(
  * (range and azimuth) of the geogrid pixels center will be saved.
  * @param[out] out_nlooks          Raster to which the number of radar-grid
  * looks associated with the geogrid will be saved
+ * @param[in] rtc_memory_mode      Select memory mode
  * @param[in] interp_method        Interpolation Method
  * @param[in] threshold            Distance threshold for convergence
  * @param[in] num_iter             Maximum number of Newton-Raphson iterations
@@ -179,7 +196,7 @@ void facetRTC(
         const isce::core::Orbit& orbit, const isce::core::LUT2d<double>& dop,
         const double y0, const double dy, const double x0, const double dx,
         const int geogrid_length, const int geogrid_width,
-        const int epsg = 4326,
+        const int epsg,
         rtcInputRadiometry inputRadiometry = rtcInputRadiometry::BETA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         rtcAlgorithm rtc_algorithm = rtcAlgorithm::RTC_AREA_PROJECTION,
@@ -189,6 +206,7 @@ void facetRTC(
         isce::io::Raster* out_geo_vertices = nullptr,
         isce::io::Raster* out_geo_grid = nullptr,
         isce::io::Raster* out_nlooks = nullptr,
+        rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO,
         isce::core::dataInterpMethod interp_method =
                 isce::core::dataInterpMethod::BIQUINTIC_METHOD,
         double threshold = 1e-4, int num_iter = 100, double delta_range = 1e-4);
@@ -220,7 +238,7 @@ void facetRTCDavidSmall(
         const isce::core::Orbit& orbit, const isce::core::LUT2d<double>& dop,
         const double y0, const double dy, const double x0, const double dx,
         const int geogrid_length, const int geogrid_width,
-        const int epsg = 4326,
+        const int epsg,
         rtcInputRadiometry inputRadiometry = rtcInputRadiometry::BETA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN());
@@ -259,6 +277,7 @@ void facetRTCDavidSmall(
  * (range and azimuth) of the geogrid pixels center will be saved.
  * @param[out] out_nlooks          Raster to which the number of radar-grid
  * looks associated with the geogrid will be saved
+ * @param[in] rtc_memory_mode      Select memory mode
  * @param[in] interp_method        Interpolation Method
  * @param[in] threshold            Distance threshold for convergence
  * @param[in] num_iter             Maximum number of Newton-Raphson iterations
@@ -271,7 +290,7 @@ void facetRTCAreaProj(
         const isce::core::Orbit& orbit, const isce::core::LUT2d<double>& dop,
         const double y0, const double dy, const double x0, const double dx,
         const int geogrid_length, const int geogrid_width,
-        const int epsg = 4326,
+        const int epsg,
         rtcInputRadiometry inputRadiometry = rtcInputRadiometry::BETA_NAUGHT,
         rtcAreaMode rtc_area_mode = rtcAreaMode::AREA_FACTOR,
         double geogrid_upsampling = std::numeric_limits<double>::quiet_NaN(),
@@ -280,6 +299,7 @@ void facetRTCAreaProj(
         isce::io::Raster* out_geo_vertices = nullptr,
         isce::io::Raster* out_geo_grid = nullptr,
         isce::io::Raster* out_nlooks = nullptr,
+        rtcMemoryMode rtc_memory_mode = rtcMemoryMode::RTC_AUTO,
         isce::core::dataInterpMethod interp_method =
                 isce::core::dataInterpMethod::BIQUINTIC_METHOD,
         double threshold = 1e-4, int num_iter = 100, double delta_range = 1e-4);
@@ -287,10 +307,15 @@ void facetRTCAreaProj(
 void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
                               int length, int width,
                               isce::core::Matrix<double>& w_arr,
-                              double& w_total);
+                              double& w_total, int plane_orientation);
 
-int areaProjGetNBlocks(int array_length, int* block_size = nullptr,
-                       pyre::journal::info_t* channel = nullptr);
+int areaProjGetNBlocks(int array_length,
+                       pyre::journal::info_t* channel = nullptr,
+                       int upsampling = 0,
+                       int* block_length_with_upsampling = nullptr, 
+                       int* block_length = nullptr,
+                       int min_block_length = std::pow(2, 8),  // 256
+                       int max_block_length = std::pow(2, 10)); // 1024
 
 double
 computeUpsamplingFactor(const DEMInterpolator& dem_interp,

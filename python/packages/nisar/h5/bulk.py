@@ -3,15 +3,15 @@
 # Copyright 2019-
 
 def cp_h5_meta_data(src_h5, dst_h5, src_path, dst_path='',
-        excludes=[], renames={}): 
+        excludes=None, renames=None): 
     '''
     Copy HDF5 node contents
 
     Parameters:
     -----------
-    src_h5 : str
+    src_h5 : h5py object
         h5py object from source HDF5 file
-    dst_h5 : str
+    dst_h5 : h5py object
         h5py object from destination HDF5 file
     src_path : str
         Full path in source HDF5 to be copied
@@ -49,19 +49,19 @@ def cp_h5_meta_data(src_h5, dst_h5, src_path, dst_path='',
 
         for subnode_src in src_group.keys(): 
             # check conditions while copying piecemeal
-            if subnode_src in excludes:
+            if excludes is not None and subnode_src in excludes:
                 continue
             subnode_dst = subnode_src
-            if subnode_src in renames:
+            if renames is not None and subnode_src in renames:
                 subnode_dst = renames[subnode_src]
 
             src_sub_path = os.path.join(src_path, subnode_src)
             node_obj = src_h5[src_sub_path]
 
-            if type(node_obj) == h5py._hl.group.Group:
+            if isinstance(node_obj, h5py.Group):
                 # copy group
                 dst_group.copy(node_obj, subnode_dst)
-            elif type(node_obj) == h5py._hl.dataset.Dataset:
+            elif isinstance(node_obj, h5py.Dataset):
                 # copy dataset
                 dst_group.create_dataset(subnode_dst, data=node_obj)
     else:

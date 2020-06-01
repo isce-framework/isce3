@@ -9,7 +9,7 @@ set(PYTEST_LD_LIBRARY_PATH ${CMAKE_INSTALL_FULL_LIBDIR})
 configure_file(iscetest.py.in "${ISCE_BUILDPACKAGESDIR}/iscetest.py")
 
 # TODO check if pytest is importable
-set(PYTEST_EXECUTABLE ${Python_EXECUTABLE} -m pytest)
+set(PYTEST_EXECUTABLE ${Python_EXECUTABLE} -m pytest -r apP)
 
 # recurse
 add_subdirectory(extensions)
