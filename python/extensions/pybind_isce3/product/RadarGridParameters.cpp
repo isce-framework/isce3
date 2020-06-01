@@ -5,6 +5,7 @@
 
 #include <isce/core/DateTime.h>
 #include <isce/core/LookSide.h>
+#include <isce/product/Product.h>
 
 namespace py = pybind11;
 

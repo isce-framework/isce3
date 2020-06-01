@@ -8,6 +8,7 @@
 #error "Covariance.icc is an implementation detail of class Covariance"
 #endif
 
+#include <isce/core/Interpolator.h>
 #include <isce/core/Projections.h>
 
 template<class T>

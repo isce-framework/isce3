@@ -1,6 +1,9 @@
 #pragma once
 
 #include "forward.h"
+
+#include <limits>
+
 #include <isce/core/forward.h>
 #include <isce/io/forward.h>
 #include <isce/product/forward.h>

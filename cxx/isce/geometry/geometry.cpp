@@ -9,6 +9,8 @@
 
 #include <cmath>
 #include <cstdio>
+#include <limits>
+
 #include <isce/core/Basis.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/LUT2d.h>
@@ -100,7 +102,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
     const double radius = eta * satDist;
     const double hgt = (1.0 - eta) * satDist;
 
-    if (isnan(targetLLH[2]))
+    if (std::isnan(targetLLH[2]))
         targetLLH[2] = hgt;
 
     // Iterate
@@ -243,11 +245,15 @@ double isce::geometry::
     return aztime_diff;
 }
 
-int isce::geometry::
+namespace isce::geometry {
+namespace {
+int
 _update_aztime(const Orbit & orbit,
                Vec3 satpos, Vec3 satvel, Vec3 inputXYZ,
                LookSide side, double & aztime, double & slantRange,
-               double rangeMin, double rangeMax) {
+               double rangeMin = std::numeric_limits<double>::quiet_NaN(),
+               double rangeMax = std::numeric_limits<double>::quiet_NaN())
+{
 
     Vec3 dr;
 
@@ -305,7 +311,9 @@ _update_aztime(const Orbit & orbit,
     else
         aztime = aztime_closest;
     return !error;
- }
+}
+} // anonymous namespace
+} // isce::geometry
 
 
 int isce::geometry::

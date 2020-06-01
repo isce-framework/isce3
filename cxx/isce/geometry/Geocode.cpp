@@ -588,13 +588,13 @@ void Geocode<T>::geocodeAreaProj(
              << pyre::journal::endl;
     }
 
-    if (!isnan(clip_min))
+    if (!std::isnan(clip_min))
         info << "clip min: " << clip_min << pyre::journal::endl; 
 
-    if (!isnan(clip_max))
+    if (!std::isnan(clip_max))
         info << "clip max: " << clip_max << pyre::journal::endl;
 
-    if (!isnan(min_nlooks))
+    if (!std::isnan(min_nlooks))
         info << "nlooks min: " << min_nlooks << pyre::journal::endl;     
 
     isce::core::Matrix<float> rtc_area;
@@ -624,7 +624,7 @@ void Geocode<T>::geocodeAreaProj(
             isce::geometry::rtcAreaMode rtc_area_mode =
                     isce::geometry::rtcAreaMode::AREA_FACTOR;
 
-            if (isnan(rtc_geogrid_upsampling))
+            if (std::isnan(rtc_geogrid_upsampling))
                 rtc_geogrid_upsampling = 2 * geogrid_upsampling;
 
             isce::geometry::rtcMemoryMode rtc_memory_mode;
@@ -1301,12 +1301,12 @@ void Geocode<T>::_RunBlock(
                     continue;
                 }
             } else if (i >= this_block_size_with_upsampling - 1 &&
-                       !isnan(a_bottom[jj + 1]) && !isnan(r_bottom[jj + 1])) {
+                       !std::isnan(a_bottom[jj + 1]) && !std::isnan(r_bottom[jj + 1])) {
                 a11 = a_bottom[jj + 1];
                 r11 = r_bottom[jj + 1];
                 dem11 = dem_bottom[jj + 1];
-            } else if (jj >= jmax - 1 && !isnan(a_right[i]) &&
-                       !isnan(r_right[i])) {
+            } else if (jj >= jmax - 1 && !std::isnan(a_right[i]) &&
+                       !std::isnan(r_right[i])) {
                 a11 = a_right[i];
                 r11 = r_right[i];
                 dem11 = dem_right[i];
@@ -1437,13 +1437,13 @@ void Geocode<T>::_RunBlock(
                         }
                     }
                 }
-                if (isnan(nlooks))
+                if (std::isnan(nlooks))
                     break;
             }
 
             // ignoring boundary or low-sampled area elements
-            if (isnan(nlooks) || std::abs(nlooks) < 0.75 * std::abs(w_total) ||
-                    (!isnan(min_nlooks) && nlooks <= min_nlooks))
+            if (std::isnan(nlooks) || std::abs(nlooks) < 0.75 * std::abs(w_total) ||
+                    (!std::isnan(min_nlooks) && nlooks <= min_nlooks))
                 continue;
 
             // save geo-edges
@@ -1497,13 +1497,13 @@ void Geocode<T>::_RunBlock(
             }
 
             // save nlooks
-            if (out_geo_nlooks != nullptr && isnan(out_geo_nlooks_array(y, x)))
+            if (out_geo_nlooks != nullptr && std::isnan(out_geo_nlooks_array(y, x)))
                 out_geo_nlooks_array(y, x) = (radar_grid_nlooks * nlooks);
             else if (out_geo_nlooks != nullptr)
                 out_geo_nlooks_array(y, x) += (radar_grid_nlooks * nlooks);
 
             // save rtc
-            if (out_geo_rtc != nullptr && isnan(out_geo_rtc_array(y, x)))
+            if (out_geo_rtc != nullptr && std::isnan(out_geo_rtc_array(y, x)))
                 out_geo_rtc_array(y, x) = (area_total/ (geogrid_upsampling *
                                    geogrid_upsampling));
             else if (out_geo_rtc != nullptr)
@@ -1525,9 +1525,9 @@ void Geocode<T>::_RunBlock(
         for (int i = 0; i < this_block_size_with_upsampling; ++i)
             for (int jj = 0; jj < (int) jmax; ++jj) {
                 T_out geo_value = geoDataBlock[band].get()->operator()(i, jj);
-                if (!isnan(clip_min) && std::abs(geo_value) < clip_min)
+                if (!std::isnan(clip_min) && std::abs(geo_value) < clip_min)
                     geoDataBlock[band].get()->operator()(i, jj) = clip_min;
-                else if (!isnan(clip_max) && std::abs(geo_value) > clip_max)
+                else if (!std::isnan(clip_max) && std::abs(geo_value) > clip_max)
                     geoDataBlock[band].get()->operator()(i, jj) = clip_max;
                 else if (std::abs(geo_value) == 0)
                     geoDataBlock[band].get()->operator()(i, jj) =

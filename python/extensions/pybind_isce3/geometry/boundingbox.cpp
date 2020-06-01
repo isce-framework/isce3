@@ -4,6 +4,8 @@
 #include <ogr_geometry.h>
 #include <string>
 
+#include <isce/core/Orbit.h>
+#include <isce/core/Projections.h>
 #include <isce/geometry/DEMInterpolator.h>
 #include <isce/geometry/boundingbox.h>
 #include <isce/product/RadarGridParameters.h>

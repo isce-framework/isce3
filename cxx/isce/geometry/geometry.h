@@ -15,12 +15,9 @@
 
 #include "forward.h"
 
-#include <limits>
-
 #include <isce/core/forward.h>
-#include <isce/core/Constants.h>
-
 #include <isce/product/forward.h>
+#include <isce/core/Constants.h>
 
 // Declaration
 namespace isce {
@@ -220,12 +217,5 @@ double _compute_doppler_aztime_diff(isce::core::Vec3 dr, isce::core::Vec3 satvel
                                     T & doppler, double wavelength,
                                     double aztime, double slantRange,
                                     double deltaRange);
-
-int _update_aztime(const isce::core::Orbit & orbit,
-                   isce::core::Vec3 satpos, isce::core::Vec3 satvel,
-                   isce::core::Vec3 inputXYZ, isce::core::LookSide side,
-                   double & aztime, double & slantRange,
-                   double rangeMin=std::numeric_limits<double>::quiet_NaN(),
-                   double rangeMax=std::numeric_limits<double>::quiet_NaN());
 }
 }
