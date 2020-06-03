@@ -23,6 +23,8 @@
 #include <isce/core/DenseMatrix.h>
 #include <isce/core/Utilities.h>
 
+#include <isce/product/Product.h>
+
 // isce::geometry
 #include "DEMInterpolator.h"
 #include "TopoLayers.h"
@@ -33,6 +35,28 @@ using isce::core::Mat3;
 using isce::core::Pixel;
 using isce::core::Vec3;
 using isce::io::Raster;
+
+isce::geometry::Topo::
+Topo(const isce::product::Product & product,
+     char frequency,
+     bool nativeDoppler)
+:
+    _radarGrid(product, frequency)
+{
+    // Copy orbit and doppler
+    _orbit = product.metadata().orbit();
+    if (nativeDoppler) {
+        _doppler = product.metadata().procInfo().dopplerCentroid(frequency);
+    }
+
+    // Make an ellipsoid manually
+    _ellipsoid = isce::core::Ellipsoid(isce::core::EarthSemiMajorAxis,
+                                       isce::core::EarthEccentricitySquared);
+    _lookSide = product.lookSide();
+
+    // Adjust block length based in input SLC length
+    _linesPerBlock = std::min(_radarGrid.length(), _linesPerBlock);
+}
 
 // Main topo driver; internally create topo rasters
 template<typename T>

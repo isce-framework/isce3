@@ -49,6 +49,14 @@ void addbinding(py::class_<Orbit> & pyOrbit)
             "De-serialize orbit from h5py.Group object",
             py::arg("h5py_group"))
 
+        .def("save_to_h5", [](const Orbit& self, py::object h5py_group) {
+                auto id = h5py_group.attr("id").attr("id").cast<hid_t>();
+                isce::io::IGroup group(id);
+                isce::core::saveToH5(group, self);
+            },
+            "Serialize Orbit to h5py.Group object.",
+            py::arg("h5py_group"))
+
         // trivial member getters
         .def_property_readonly("spacing",        &Orbit::spacing)
         .def_property_readonly("size",           &Orbit::size)

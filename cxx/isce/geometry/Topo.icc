@@ -12,29 +12,6 @@
 
 inline
 isce::geometry::Topo::
-Topo(const isce::product::Product & product,
-     char frequency,
-     bool nativeDoppler)
-:
-    _radarGrid(product, frequency)
-{
-    // Copy orbit and doppler
-    _orbit = product.metadata().orbit();
-    if (nativeDoppler) {
-        _doppler = product.metadata().procInfo().dopplerCentroid(frequency);
-    }
-
-    // Make an ellipsoid manually
-    _ellipsoid = isce::core::Ellipsoid(isce::core::EarthSemiMajorAxis,
-                                       isce::core::EarthEccentricitySquared);
-    _lookSide = product.lookSide();
-
-    // Adjust block length based in input SLC length
-    _linesPerBlock = std::min(_radarGrid.length(), _linesPerBlock);
-}
-
-inline
-isce::geometry::Topo::
 Topo(const isce::product::RadarGridParameters & radarGrid,
      const isce::core::Orbit & orbit,
      const isce::core::Ellipsoid & ellipsoid,

@@ -21,5 +21,5 @@ if [ ! -d "${WORKSPACE}/.ci" ]; then
   exit 1
 fi
 
-nvidia-docker build --rm --force-rm --network=host -t ${IMAGE}:${TAG}  \
+docker build --rm --force-rm --network=host -t ${IMAGE}:${TAG}  \
   -f ${WORKSPACE}/.ci/images/centos/Dockerfile.isce-src $WORKSPACE

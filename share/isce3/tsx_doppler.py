@@ -147,11 +147,10 @@ def squint2(t, r, orbit, attitude, side, sin_az=0.0, h=0.0):
     R = attitude.rotmat(t)
     axis = R[:,0]
     angle = np.arcsin(sin_az)
-    ell = ie.pyEllipsoid()
     dem = ie.pyDEMInterpolator(height=h)
-    llh = rdr2geo_cone(axis=axis, angle=angle, slantRange=r, position=p,
-                       ellipsoid=ell, demInterp=dem, side=side)
-    xyz = ell.lonLatToXyz(llh)
+    xyz = rdr2geo_cone(axis=axis, angle=angle, slantRange=r, position=p,
+                       demInterp=dem, side=side)
+    xyz = np.asarray(xyz)
     look = (xyz - p) / np.linalg.norm(xyz - p)
     vhat = v / np.linalg.norm(v)
     return np.arcsin(look.dot(vhat))

@@ -1,7 +1,9 @@
 #include "focus.h"
 
 #include "Backproject.h"
+#include "Chirp.h"
 #include "DryTroposphereModel.h"
+#include "RangeComp.h"
 
 namespace py = pybind11;
 
@@ -12,8 +14,14 @@ void addsubmodule_focus(py::module & m)
     // forward declare bound enums
     py::enum_<isce::focus::DryTroposphereModel> pyDryTropoModel(m_focus, "DryTroposphereModel");
 
+    py::class_<isce::focus::RangeComp> pyRangeComp(m_focus, "RangeComp");
+    py::enum_<isce::focus::RangeComp::Mode> pyMode(pyRangeComp, "Mode");
+
     // add bindings
     addbinding(pyDryTropoModel);
+    addbinding(pyMode);
 
     addbinding_backproject(m_focus);
+    addbinding_chirp(m_focus);
+    addbinding(pyRangeComp);
 }

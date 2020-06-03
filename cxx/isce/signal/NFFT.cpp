@@ -10,6 +10,7 @@
 #include <isce/except/Error.h>
 #include <isce/core/Interp1d.h>
 #include <cmath>
+#include <memory>
 
 using isce::except::LengthError;
 

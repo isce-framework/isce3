@@ -7,6 +7,7 @@
 
 #include "Quaternion.h"
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <cmath>
@@ -47,11 +48,9 @@ isce::core::Quaternion::_interp(double t) const
 
     // Find interval containing desired point.
     // _time setter guarantees monotonic.
-    // FIXME Use binary search or require equal time steps.
-    int i;
-    for (i = 1; i < n; ++i)
-        if (_time[i] >= t)
-            break;
+    // Offsets at start and end implement extrapolation w/o explicit logic.
+    auto it = std::lower_bound(_time.begin() + 1, _time.end() - 1, t);
+    auto i = it - _time.begin();
 
     // Slerp between the nearest data points.
     const double tq = (t - _time[i-1]) / (_time[i] - _time[i-1]);

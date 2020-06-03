@@ -15,12 +15,9 @@
 
 #include "forward.h"
 
-#include <limits>
-
 #include <isce/core/forward.h>
-#include <isce/core/Constants.h>
-
 #include <isce/product/forward.h>
+#include <isce/core/Constants.h>
 
 // Declaration
 namespace isce {
@@ -88,6 +85,39 @@ int rdr2geo(const isce::core::Pixel & pixel,
             const DEMInterpolator & demInterp,
             isce::core::Vec3 & targetLLH,
             isce::core::LookSide side,
+            double threshold, int maxIter, int extraIter);
+
+/** "Cone" interface to rdr2geo.
+ *
+ *  Solve for target position given radar position, range, and cone angle.
+ *  The cone is described by a generating axis and the complement of the angle
+ *  to that axis (e.g., angle=0 means a plane perpendicular to the axis).  The
+ *  vertex of the cone is at the radar position, as is the center of the range
+ *  sphere.
+ *
+ *  Typically `axis` is the velocity vector and `angle` is the squint angle.
+ *  However, with this interface you can also set `axis` equal to the long
+ *  axis of the antenna, in which case `angle` is an azimuth angle.  In this
+ *  manner one can determine where the antenna boresight intersects the ground
+ *  at a given range and therefore determine the Doppler from pointing.
+ *
+ *  @param[in]  radarXYZ  Position of antenna phase center, meters ECEF XYZ.
+ *  @param[in]  axis      Cone generating axis (typically velocity), ECEF XYZ.
+ *  @param[in]  angle     Complement of cone angle, radians.
+ *  @param[in]  range     Range to target, meters.
+ *  @param[in]  dem       Digital elevation model, meters above ellipsoid,
+ *  @param[out] targetXYZ Target position, ECEF XYZ.
+ *  @param[in]  side      Radar look direction
+ *  @param[in]  threshold Range convergence threshold, meters.
+ *  @param[in]  maxIter   Maximum iterations.
+ *  @param[in]  extraIter Additional iterations.
+ *
+ *  @returns non-zero when iterations successfully converge.
+ */
+int rdr2geo(const isce::core::Vec3& radarXYZ,
+            const isce::core::Vec3& axis, double angle,
+            double range, const DEMInterpolator& dem,
+            isce::core::Vec3& targetXYZ, isce::core::LookSide side,
             double threshold, int maxIter, int extraIter);
 
 /**
@@ -187,12 +217,5 @@ double _compute_doppler_aztime_diff(isce::core::Vec3 dr, isce::core::Vec3 satvel
                                     T & doppler, double wavelength,
                                     double aztime, double slantRange,
                                     double deltaRange);
-
-int _update_aztime(const isce::core::Orbit & orbit,
-                   isce::core::Vec3 satpos, isce::core::Vec3 satvel,
-                   isce::core::Vec3 inputXYZ, isce::core::LookSide side,
-                   double & aztime, double & slantRange,
-                   double rangeMin=std::numeric_limits<double>::quiet_NaN(),
-                   double rangeMax=std::numeric_limits<double>::quiet_NaN());
 }
 }

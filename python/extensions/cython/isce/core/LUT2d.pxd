@@ -29,6 +29,8 @@ cdef extern from "isce/core/LUT2d.h" namespace "isce::core":
         T eval(double y, double x)
 
         double xStart()
+        bool boundsError()
+        void boundsError(bool val)
 
 # Wrapper around isce::core serialization defined in <isce/core/Serialization.h
 cdef extern from "isce/core/Serialization.h" namespace "isce::core":

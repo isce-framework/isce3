@@ -10,6 +10,7 @@
 
 #include <isce/core/forward.h>
 #include <isce/core/Ellipsoid.h>
+#include <isce/core/LUT2d.h>
 #include <isce/core/Orbit.h>
 
 // isce::io

@@ -9,6 +9,8 @@
 
 #include <cmath>
 #include <cstdio>
+#include <limits>
+
 #include <isce/core/Basis.h>
 #include <isce/core/Ellipsoid.h>
 #include <isce/core/LUT2d.h>
@@ -16,6 +18,7 @@
 #include <isce/core/Peg.h>
 #include <isce/core/Pixel.h>
 #include <isce/core/Poly2d.h>
+#include <isce/core/Projections.h>
 #include <isce/core/Vector.h>
 #include <isce/geometry/DEMInterpolator.h>
 #include <isce/core/LookSide.h>
@@ -25,7 +28,6 @@
 // pull in useful isce::core namespace
 using namespace isce::core;
 using isce::product::RadarGridParameters;
-using isce::core::LookSide;
 
 int isce::geometry::
 rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
@@ -100,7 +102,7 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
     const double radius = eta * satDist;
     const double hgt = (1.0 - eta) * satDist;
 
-    if (isnan(targetLLH[2]))
+    if (std::isnan(targetLLH[2]))
         targetLLH[2] = hgt;
 
     // Iterate
@@ -195,6 +197,29 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
     return converged;
 }
 
+
+int isce::geometry::
+rdr2geo(const Vec3& radarXYZ, const Vec3& axis, double angle,
+        double range, const DEMInterpolator& dem, Vec3& targetXYZ,
+        LookSide side, double threshold, int maxIter, int extraIter)
+{
+    if (range <= 0.0)
+        return 0;
+    int epsg = dem.epsgCode();
+    Ellipsoid ell = makeProjection(epsg)->ellipsoid();
+    // Generate TCN basis using the given axis as the velocity.
+    Basis tcn(radarXYZ, axis);
+    // Construct "doppler factor" with desired angle.
+    Pixel pix{range, range * sin(angle), 0};
+    Vec3 llh{0,0,0}; // XXX Initialize height guess of 0 m.
+    int converged = isce::geometry::rdr2geo(pix, tcn, radarXYZ, axis, ell, dem,
+                                    llh, side, threshold, maxIter, extraIter);
+    if (converged)
+        ell.lonLatToXyz(llh, targetXYZ);
+    return converged;
+}
+
+
 template <class T>
 double isce::geometry::
     _compute_doppler_aztime_diff(Vec3 dr, Vec3 satvel,
@@ -220,11 +245,15 @@ double isce::geometry::
     return aztime_diff;
 }
 
-int isce::geometry::
+namespace isce::geometry {
+namespace {
+int
 _update_aztime(const Orbit & orbit,
                Vec3 satpos, Vec3 satvel, Vec3 inputXYZ,
                LookSide side, double & aztime, double & slantRange,
-               double rangeMin, double rangeMax) {
+               double rangeMin = std::numeric_limits<double>::quiet_NaN(),
+               double rangeMax = std::numeric_limits<double>::quiet_NaN())
+{
 
     Vec3 dr;
 
@@ -282,7 +311,9 @@ _update_aztime(const Orbit & orbit,
     else
         aztime = aztime_closest;
     return !error;
- }
+}
+} // anonymous namespace
+} // isce::geometry
 
 
 int isce::geometry::

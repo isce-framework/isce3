@@ -3,20 +3,14 @@
 
 #pragma once
 
+#include "forward.h"
+
 // isce::core
 #include <isce/core/Metadata.h>
 #include <isce/core/DateTime.h>
 #include <isce/core/LookSide.h>
 #include <isce/core/TimeDelta.h>
-
-// isce::product
-#include <isce/product/Product.h>
-
-namespace isce {
-    namespace product {
-        class RadarGridParameters; 
-    }
-}
+#include <isce/except/Error.h>
 
 class isce::product::RadarGridParameters {
 
@@ -24,13 +18,21 @@ class isce::product::RadarGridParameters {
         /** Default constructor */
         inline RadarGridParameters();
 
-        /** Constructor with a product */
-        inline RadarGridParameters(const isce::product::Product & product,
-                                   char frequency = 'A');
+        /**
+         * Constructor with a product
+         * @param[in] product Input Product
+         * @param[in] frequency Frequency designation
+         */
+        RadarGridParameters(const isce::product::Product & product,
+                            char frequency = 'A');
 
-        /** Constructor with a swath. */
-        inline RadarGridParameters(const isce::product::Swath & swath,
-                                   isce::core::LookSide lookSide);
+        /**
+         * Constructor with a swath
+         * @param[in] swath Input swath
+         * @param[in] lookSide Indicate left (+1) or right (-1)
+         */
+        RadarGridParameters(const isce::product::Swath & swath,
+                            isce::core::LookSide lookSide);
 
         /** Constructor from an isce::core::Metadata object. */
         inline RadarGridParameters(const isce::core::Metadata & meta,
@@ -228,30 +230,6 @@ isce::product::RadarGridParameters::RadarGridParameters()
     : _lookSide(isce::core::LookSide::Left), _sensingStart {0},
       _wavelength {0}, _prf {0}, _startingRange {0},
       _rangePixelSpacing {0}, _rlength {0}, _rwidth {0}, _refEpoch {1} {}
-
-// Constructor with a swath.
-/** @param[in] swath Input swath
-  * @param[in] lookSide Indicate left (+1) or right (-1)*/
-isce::product::RadarGridParameters::
-RadarGridParameters(const isce::product::Swath & swath,
-                    isce::core::LookSide lookSide) :
-    _lookSide(lookSide),
-    _sensingStart(swath.zeroDopplerTime()[0]),
-    _wavelength(swath.processedWavelength()),
-    _prf(swath.nominalAcquisitionPRF()),
-    _startingRange(swath.slantRange()[0]),
-    _rangePixelSpacing(swath.rangePixelSpacing()),
-    _rlength(swath.lines()),
-    _rwidth(swath.samples()),
-    _refEpoch(swath.refEpoch()){ validate(); }
-
-// Constructor with a product
-/** @param[in] product Input Product
-  * @param[in] frequency Frequency designation */
-isce::product::RadarGridParameters::
-RadarGridParameters(const isce::product::Product & product,
-                    char frequency) :
-    RadarGridParameters(product.swath(frequency), product.lookSide()){ validate(); }
 
 // Constructor from an isce::core::Metadata object.
 /** @param[in] meta isce::core::Metadata object
