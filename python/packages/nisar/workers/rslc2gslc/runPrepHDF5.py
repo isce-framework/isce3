@@ -138,10 +138,10 @@ def _createGeoGrid(userconfig, frequency, src_h5):
 
 
     # snap coordinates
-    x_start = _snap_coordinate(x_start, x_snap, x_step, np.floor)
-    y_start = _snap_coordinate(y_start, y_snap, y_step, np.ceil)
-    x_end = _snap_coordinate(x_end, x_snap, x_step, np.ceil)
-    y_end = _snap_coordinate(y_end, y_snap, y_step, np.floor)
+    x_start = _snap_coordinate(x_start, x_snap, np.floor)
+    y_start = _snap_coordinate(y_start, y_snap, np.ceil)
+    x_end = _snap_coordinate(x_end, x_snap, np.ceil)
+    y_end = _snap_coordinate(y_end, y_snap, np.floor)
 
     y_size = int(np.round((y_end-y_start)/y_step))
     x_size = int(np.round((x_end-x_start)/x_step))
@@ -184,11 +184,11 @@ def _y_step():
 
     return y_step
 
-def _snap_coordinate(val, snap, round_function, dtype=float):
+def _snap_coordinate(val, snap, round_function):
     if np.isnan(snap):
-        new_val = dtype(val)
+        new_val = val
     else:
-        new_val = dtype(round_function(float(val) / snap) * snap)
+        new_val = round_function(float(val) / snap) * snap
 
     return new_val
 
