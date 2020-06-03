@@ -89,20 +89,23 @@ def runPrepHDF5(self):
     for freq in state.subset_dict.keys():
         frequency = f'frequency{freq}'
         pol_list = state.subset_dict[freq]
-        self.geogrid_dict[frequency] = _createGeoGrid(self.userconfig, frequency)
+        self.geogrid_dict[frequency] = _createGeoGrid(self.userconfig, frequency, src_h5)
         dataset_path = os.path.join(common_parent_path, f'GSLC/grids/{frequency}')
         shape=(self.geogrid_dict[frequency].length, self.geogrid_dict[frequency].width)
         for polarization in pol_list:
-            _createDatasets(dst_h5, common_parent_path, frequency, polarization, shape, chunks=(128, 128))
+            _createDatasets(dst_h5, common_parent_path, 
+                    frequency, polarization, shape, chunks=(128, 128))
    
     # adding geogrid and projection information
     for freq in state.subset_dict.keys():
         frequency = f'frequency{freq}'
-        _addGeoInformation(dst_h5, common_parent_path, frequency, self.geogrid_dict[frequency])
+        _addGeoInformation(dst_h5, common_parent_path, 
+                frequency, self.geogrid_dict[frequency])
 
     dst_h5.close()
+    src_h5.close()
 
-def _createGeoGrid(userconfig, frequency):
+def _createGeoGrid(userconfig, frequency, src_h5):
     
     # For production we only fix epsgcode and snap value and will 
     # rely on the rslc product metadta to compute the bounding box of the geocoded products
@@ -117,7 +120,28 @@ def _createGeoGrid(userconfig, frequency):
     y_end = userconfig['processing']['geocode']['bottom_right']['y_abs']
     x_step = userconfig['processing']['geocode']['output_posting'][frequency]['x_posting']
     y_step = -1.0*userconfig['processing']['geocode']['output_posting'][frequency]['y_posting']
-    epsg_code = userconfig['processing']['geocode']['outputEPSG']
+
+    if not x_step:
+        print("determine x_step based on input data range bandwidth")
+        x_step = _x_step(src_h5, frequency)
+
+    if not y_step:
+        y_step = _y_step(src_h5, frequency)
+
+    #top_left_x_snap = userconfig['processing']['geocode']['top_left']['x_snap']
+    #top_left_y_snap = userconfig['processing']['geocode']['top_left']['y_snap']
+    #bottom_right_x_snap = userconfig['processing']['geocode']['bottom_right']['x_snap']
+    #bottom_right_y_snap = userconfig['processing']['geocode']['bottom_right']['y_snap']
+
+    epsg_code = userconfig['processing']['geocode']['output_epsg']
+
+
+    # snap coordinates
+    #x_start = _snap_coordinate(x_start, top_left_x_snap, x_step, np.floor)
+    #y_start = _snap_coordinate(y_start, top_left_y_snap, y_step, np.ceil)
+    #x_end = _snap_coordinate(x_end, bottom_right_x_snap, x_step, np.ceil)
+    #y_end = _snap_coordinate(y_end, bottom_right_y_snap, y_step, np.floor)
+
     y_size = int(np.round((y_end-y_start)/y_step))
     x_size = int(np.round((x_end-x_start)/x_step))
 
@@ -131,7 +155,35 @@ def _createGeoGrid(userconfig, frequency):
     geo_grid.epsg = epsg_code
     
     return geo_grid
+
+def _x_step(src_h5, frequency):
     
+    # Posting in east direction for different modes(range bandwidths)
+    # based on Table 2-3 in current GSLC spec document
+    # x_spacing_dict[rangeBandiwth [MHz]] = east_spacing [meters]
+    x_spacing_dict = {5:40, 20:10, 40:5, 80:2.5}
+
+    range_bandwidth = int(src_h5[
+        f'science/LSAR/SLC/swaths/{frequency}/processedRangeBandwidth'][()]/1e6)
+
+    x_step = x_spacing_dict.get(range_bandwidth) or x_spacing_dict[
+          min(x_spacing_dict.keys(), key = lambda key: abs(key-range_bandwidth))] 
+   
+    print(f'range bandwidth: {range_bandwidth} MHz')
+    print(f'spacing in easting: {x_step} m')
+
+    return x_step
+
+def _y_step(): 
+
+    # Posting in east direction for different modes
+    # based on Table 2-3 in current GSLC spec
+    y_step = 5.0 # meters
+    print(f'spacing in easting: {y_step} m')
+
+    return y_step
+
+
 def _createDatasets(dst_h5, common_parent_path, frequency, polarization, shape, chunks=(128, 128)):
 
     print("create empty dataset for frequency: {} polarization: {}".format(frequency, polarization))
