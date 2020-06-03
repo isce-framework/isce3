@@ -131,19 +131,17 @@ def _createGeoGrid(userconfig, frequency, src_h5):
     if not y_step:
         y_step = _y_step(src_h5, frequency)
 
-    #top_left_x_snap = userconfig['processing']['geocode']['top_left']['x_snap']
-    #top_left_y_snap = userconfig['processing']['geocode']['top_left']['y_snap']
-    #bottom_right_x_snap = userconfig['processing']['geocode']['bottom_right']['x_snap']
-    #bottom_right_y_snap = userconfig['processing']['geocode']['bottom_right']['y_snap']
+    x_snap = userconfig['processing']['geocode']['x_snap']
+    y_snap = userconfig['processing']['geocode']['y_snap']
 
     epsg_code = userconfig['processing']['geocode']['output_epsg']
 
 
     # snap coordinates
-    #x_start = _snap_coordinate(x_start, top_left_x_snap, x_step, np.floor)
-    #y_start = _snap_coordinate(y_start, top_left_y_snap, y_step, np.ceil)
-    #x_end = _snap_coordinate(x_end, bottom_right_x_snap, x_step, np.ceil)
-    #y_end = _snap_coordinate(y_end, bottom_right_y_snap, y_step, np.floor)
+    x_start = _snap_coordinate(x_start, x_snap, x_step, np.floor)
+    y_start = _snap_coordinate(y_start, y_snap, y_step, np.ceil)
+    x_end = _snap_coordinate(x_end, x_snap, x_step, np.ceil)
+    y_end = _snap_coordinate(y_end, y_snap, y_step, np.floor)
 
     y_size = int(np.round((y_end-y_start)/y_step))
     x_size = int(np.round((x_end-x_start)/x_step))
@@ -186,6 +184,13 @@ def _y_step():
 
     return y_step
 
+def _snap_coordinate(val, snap, round_function, dtype=float):
+    if np.isnan(snap):
+        new_val = dtype(val)
+    else:
+        new_val = dtype(round_function(float(val) / snap) * snap)
+
+    return new_val
 
 def _createDatasets(dst_h5, common_parent_path, frequency, polarization, shape, chunks=(128, 128)):
 
