@@ -8,7 +8,8 @@ def runSubsetInputs(self):
     '''
 
     state = self.state
-    subset_dict = self.get_value(['processing',
+
+    subset_dict = self.get_value(['runconfig', 'groups', 'processing',
         'input_subset', 'list_of_frequencies'])
     if isinstance(subset_dict, str):
         state.subset_dict = collections.OrderedDict()

@@ -15,11 +15,15 @@ def runValidateInputs(self):
     ##Update state if needed / flag errors in inputs
 
     state = self.state
-    state.input_hdf5 = self.get_value(['inputs', 'rslc'])
+    input_hdf5 = self.get_value(['runconfig', 'groups', 'InputFileGroup', 'InputFilePath'])
+    if len(input_hdf5)>1:
+        self._print("Multiple input RSLC is provided. Only the first of the list is considered for further processing")
+
+    state.input_hdf5 = input_hdf5[0]
     if not state.input_hdf5:
         raise AttributeError('ERROR the following argument is required:'
-                             'inputs.rslc')
-    state.output_hdf5 = self.get_value(['outputs', 'gslc'])
+                             'InputFilePath')
+    state.output_hdf5 = self.get_value(['runconfig', 'groups', 'ProductPathGroup', 'SASOutputFile'])
 
     # nlooks
     #nlooks_az = self.get_value(['parameters', 'pre_process', 'azimuth_looks'])

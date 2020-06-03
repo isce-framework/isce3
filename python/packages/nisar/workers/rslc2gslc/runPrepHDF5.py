@@ -117,12 +117,12 @@ def _createGeoGrid(userconfig, frequency, src_h5):
     # bbox = self.slc_obj.computeBoundingBox(epsg=state.epsg)
 
     #for now let's rely on the run config input  
-    x_start = userconfig['processing']['geocode']['top_left']['x_abs']
-    y_start = userconfig['processing']['geocode']['top_left']['y_abs']
-    x_end = userconfig['processing']['geocode']['bottom_right']['x_abs']
-    y_end = userconfig['processing']['geocode']['bottom_right']['y_abs']
-    x_step = userconfig['processing']['geocode']['output_posting'][frequency]['x_posting']
-    y_step = -1.0*userconfig['processing']['geocode']['output_posting'][frequency]['y_posting']
+    x_start = userconfig['runconfig']['groups']['processing']['geocode']['top_left']['x_abs']
+    y_start = userconfig['runconfig']['groups']['processing']['geocode']['top_left']['y_abs']
+    x_end = userconfig['runconfig']['groups']['processing']['geocode']['bottom_right']['x_abs']
+    y_end = userconfig['runconfig']['groups']['processing']['geocode']['bottom_right']['y_abs']
+    x_step = userconfig['runconfig']['groups']['processing']['geocode']['output_posting'][frequency]['x_posting']
+    y_step = -1.0*userconfig['runconfig']['groups']['processing']['geocode']['output_posting'][frequency]['y_posting']
 
     if not x_step:
         print("determine x_step based on input data range bandwidth")
@@ -131,10 +131,10 @@ def _createGeoGrid(userconfig, frequency, src_h5):
     if not y_step:
         y_step = _y_step(src_h5, frequency)
 
-    x_snap = userconfig['processing']['geocode']['x_snap']
-    y_snap = userconfig['processing']['geocode']['y_snap']
+    x_snap = userconfig['runconfig']['groups']['processing']['geocode']['x_snap']
+    y_snap = userconfig['runconfig']['groups']['processing']['geocode']['y_snap']
 
-    epsg_code = userconfig['processing']['geocode']['output_epsg']
+    epsg_code = userconfig['runconfig']['groups']['processing']['geocode']['output_epsg']
 
 
     # snap coordinates
