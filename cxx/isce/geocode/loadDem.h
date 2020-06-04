@@ -1,3 +1,4 @@
+#pragma once
 #include <isce/core/forward.h>
 #include <isce/io/Raster.h>
 #include <isce/geometry/DEMInterpolator.h>
