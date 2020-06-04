@@ -21,6 +21,7 @@ IncludeCategories:
     Priority:        4
   - Regex:           '.*'
     Priority:        1
+IncludeIsMainSourceRegex: '(\.cu)$'
 
 # Indentation
 IndentWidth:   4

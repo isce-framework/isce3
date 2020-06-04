@@ -1,107 +1,105 @@
-//
-// Author: Bryan Riel
-// Copyright 2017-2019
-//
-
 #pragma once
 
 #include "forward.h"
-
-#include <cmath>
 #include <isce/core/forward.h>
-#include <isce/core/Common.h>
-#include <isce/core/Constants.h>
 #include <isce/cuda/core/forward.h>
 
-// gpuLUT2d declaration
-template <typename T>
-class isce::cuda::core::gpuLUT2d {
+#include <cmath>
 
-    public:
-        // Disallow default constructor
-        CUDA_HOSTDEV gpuLUT2d() = delete;
-    
-        /** Deep copy constructor from CPU LUT1d */
-        CUDA_HOST gpuLUT2d(const isce::core::LUT2d<T> &);
+#include <isce/core/Common.h>
+#include <isce/core/Constants.h>
 
-        /** Shallow copy constructor on device */
-        CUDA_HOSTDEV gpuLUT2d(gpuLUT2d<T> &);
+namespace isce { namespace cuda { namespace core {
 
-        /** Shallow assignment operator on device */
-        CUDA_HOSTDEV gpuLUT2d & operator=(gpuLUT2d<T> &);
+template<typename T>
+class gpuLUT2d {
+public:
+    /** Deep copy constructor from CPU LUT1d */
+    gpuLUT2d(const isce::core::LUT2d<T>&);
 
-        /** Destructor */
-        ~gpuLUT2d();
- 
-        /** Get starting X-coordinate */
-        CUDA_HOSTDEV inline double xStart() const { return _xstart; }
+    /** Shallow copy constructor on device */
+    CUDA_HOSTDEV gpuLUT2d(gpuLUT2d<T>&);
 
-        /** Get starting Y-coordinate */
-        CUDA_HOSTDEV inline double yStart() const { return _ystart; }
+    /** Shallow assignment operator on device */
+    CUDA_HOSTDEV gpuLUT2d& operator=(gpuLUT2d<T>&);
 
-        /** Get X-spacing */
-        CUDA_HOSTDEV inline double xSpacing() const { return _dx; }
+    /** Destructor */
+    ~gpuLUT2d();
 
-        /** Get Y-spacing */
-        CUDA_HOSTDEV inline double ySpacing() const { return _dy; }
+    /** Get starting X-coordinate */
+    CUDA_HOSTDEV double xStart() const { return _xstart; }
 
-        /** Get LUT length (number of lines) */
-        CUDA_HOSTDEV inline size_t length() const { return _length; }
+    /** Get starting Y-coordinate */
+    CUDA_HOSTDEV double yStart() const { return _ystart; }
 
-        /** Get LUT width (number of samples) */
-        CUDA_HOSTDEV inline size_t width() const { return _width; }
+    /** Get X-spacing */
+    CUDA_HOSTDEV double xSpacing() const { return _dx; }
 
-        /** Get the reference value */
-        CUDA_HOSTDEV inline T refValue() const { return _refValue; }
+    /** Get Y-spacing */
+    CUDA_HOSTDEV double ySpacing() const { return _dy; }
 
-        /** Get flag for having data */
-        CUDA_HOSTDEV inline bool haveData() const { return _haveData; }
+    /** Get LUT length (number of lines) */
+    CUDA_HOSTDEV size_t length() const { return _length; }
 
-        /** Get bounds error flag */
-        CUDA_HOSTDEV inline bool boundsError() const { return _boundsError; }
+    /** Get LUT width (number of samples) */
+    CUDA_HOSTDEV size_t width() const { return _width; }
 
-        /** Get pointer to interpolator */
-        CUDA_HOSTDEV inline isce::cuda::core::gpuInterpolator<T> ** interp() const {
-            return _interp;
-        }
+    /** Get the reference value */
+    CUDA_HOSTDEV T refValue() const { return _refValue; }
 
-        /** Access to data values */
-        CUDA_HOSTDEV inline T * data() { return _data; }
+    /** Get flag for having data */
+    CUDA_HOSTDEV bool haveData() const { return _haveData; }
 
-        /** Read-only access to data values */
-        CUDA_HOSTDEV inline const T * data() const { return _data; }
+    /** Get bounds error flag */
+    CUDA_HOSTDEV bool boundsError() const { return _boundsError; }
 
-        /** Set the data values pointer */
-        CUDA_HOSTDEV inline void data(T * v) { _data = v; }
+    /** Get pointer to interpolator */
+    CUDA_HOSTDEV gpuInterpolator<T>** interp() const { return _interp; }
 
-        /** Evaluate the LUT */
-        CUDA_DEV T eval(double y, double x) const;
+    /** Access to data values */
+    CUDA_HOSTDEV T* data() { return _data; }
 
-        /** Evaluate the LUT from host (test function) */
-        CUDA_HOST T eval_h(double y, double x);
+    /** Read-only access to data values */
+    CUDA_HOSTDEV const T* data() const { return _data; }
 
-    // Data members
-    private:
-        // Flags
-        bool _haveData;
-        bool _boundsError;
-        T _refValue;
-        // Coordinates
-        double _xstart, _ystart, _dx, _dy;
-        // LUT data
-        size_t _length, _width;
-        T * _data;
-        // Interpolator pointer
-        isce::core::dataInterpMethod _interpMethod;
-        isce::cuda::core::gpuInterpolator<T> ** _interp;
-        // Do I own data?
-        bool _owner;
+    /** Set the data values pointer */
+    CUDA_HOSTDEV void data(T* v) { _data = v; }
+
+    /**
+     * Evaluate the LUT
+     *
+     * \param[in] y Y-coordinate for evaluation
+     * \param[in] x X-coordinate for evaluation
+     * \returns     Interpolated value
+     */
+    CUDA_DEV T eval(double y, double x) const;
+
+    /** Evaluate the LUT from host (test function) */
+    T eval_h(double y, double x);
+
+private:
+    // Flags
+    bool _haveData;
+    bool _boundsError;
+    T _refValue;
+    // Coordinates
+    double _xstart, _ystart, _dx, _dy;
+    // LUT data
+    size_t _length, _width;
+    T* _data;
+    // Interpolator pointer
+    isce::core::dataInterpMethod _interpMethod;
+    gpuInterpolator<T>** _interp;
+    // Do I own data?
+    bool _owner;
 
     // Interpolation pointer handlers
-    private:
-        /** Initialize interpolation object on device. */
-        CUDA_HOST void _initInterp();
 
-        /** Finalize/delete interpolation object on device. */
-        CUDA_HOST void _finalizeInterp();
+    /** Initialize interpolation object on device. */
+    void _initInterp();
+
+    /** Finalize/delete interpolation object on device. */
+    void _finalizeInterp();
 };
+
+}}} // namespace isce::cuda::core
