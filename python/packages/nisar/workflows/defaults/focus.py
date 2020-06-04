@@ -1,52 +1,60 @@
 # goofy but portable
 
 runconfig = """
-inputs:
-    # REQUIRED List of NISAR raw data products in L0B format.
-    raw: []
+# Structure inherited from L0 PGEs covers inputs, outputs, and identification.
+runconfig:
+    groups:
+        InputFileGroup:
+            # REQUIRED List of NISAR raw data products in L0B format.
+            InputFilePath:
+            - /tmp/ALPSRP037370690.L0B.h5
 
-    # Digital elevation model, optional.
-    dem: null
+        DynamicAncillaryFileGroup:
+            # Digital elevation model, optional.
+            DEMFile: null
 
-    # Refined orbit, optional.
-    # Defaults to orbit within L0B product.
-    orbit: null
+            # Refined orbit, optional.
+            # Defaults to orbit within L0B product.
+            Orbit: null
 
-    # Refined pointing, optional.
-    # Defaults to attitude within L0B product.
-    pointing: null
+            # Refined pointing, optional.
+            # Defaults to attitude within L0B product.
+            Pointing: null
 
-    # External calibration data, optional.
-    # Defaults to no extra calibration gain, phase, delay, etc.
-    external_calibration: null
+            # External calibration data, optional.
+            # Defaults to no extra calibration gain, phase, delay, etc.
+            ExternalCalibration: null
 
-    # Internal calibration tables, optional.
-    # If not provided, no secondary elevation antenna pattern correction.
-    internal_calibration: null
+            # Internal calibration tables, optional.
+            # If not provided, no secondary elevation antenna pattern correction.
+            InternalCalibration: null
 
-    # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
-    # If not provided, no polarimetric calibration performed.
-    polarimetric_calibration: null
+            # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
+            # If not provided, no polarimetric calibration performed.
+            PolarimetricCalibration: null
 
-    # Pre- and post-data take calibration data products, optional.
-    bookend_calibration: null
+            # Pre- and post-data take calibration data products, optional.
+            BookendCalibration: null
 
-    # Antenna pattern data, optional.
-    # Defaults to sinc^4 pattern using nominal antenna dimensions.
-    antenna_pattern: null
+            # Antenna pattern data, optional.
+            # Defaults to sinc^4 pattern using nominal antenna dimensions.
+            AntennaPattern: null
 
-    # Chirp replica file, optional.
-    # If absent will generate LFM chirp using parameters in L0B product.
-    waveform: null
+            # Chirp replica file, optional.
+            # If absent will generate LFM chirp using parameters in L0B product.
+            Waveform: null
 
-outputs:
-    # Output Level 1 NISAR SLC product file name (full path)
-    slc: slc.h5
-
-    log: log.csv
-
-    # Where to write intermediate/temporary files
-    workdir: .
+        ProductPathGroup:
+            # Directory where PGE will place results. Irrelevant to SAS.
+            ProductPath: /out
+            # Directory where SAS can write temporary data
+            ScratchPath: .
+            # SAS writes output product to the following file. PGE may rename.
+            # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
+            SASOutputFile: ./slc.h5
+        Geometry:
+            RelativeOrbitNumber: 1
+            FrameNumber: 1
 
 # TODO
 archive: {}
@@ -56,8 +64,6 @@ qaqc: {}
 
 identification:
     product: RSLC   # Handy to set to "SLC" until other ISCE tools updated.
-    frame: 1
-    track: 1
 
 # Whether or not to use GPU, optional. Defaults to True if available.
 worker:

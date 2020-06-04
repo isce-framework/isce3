@@ -1,50 +1,57 @@
-inputs:
-    # List of NISAR raw data products in L0B format.
-    raw:
-    - /mnt/ssd/NISAR_ADT/REE_SRC/out17/REE_L0B_out17_masked.h5
+# Structure inherited from L0 PGEs covers inputs, outputs, and identification.
+runconfig:
+    groups:
+        InputFileGroup:
+            # REQUIRED List of NISAR raw data products in L0B format.
+            InputFilePath:
+            - /mnt/ssd/NISAR_ADT/REE_SRC/out17/REE_L0B_out17_masked.h5
 
-    # Digital elevation model, optional.
-    dem: dem.tif
+        DynamicAncillaryFileGroup:
+            # Digital elevation model, optional.
+            DEMFile: dem.tif
 
-    # Refined orbit, optional.
-    # Defaults to orbit within L0B product.
-    orbit: orbit.xml
+            # Refined orbit, optional.
+            # Defaults to orbit within L0B product.
+            Orbit: orbit.xml
 
-    # Refined pointing, optional.
-    # Defaults to attitude within L0B product.
-    pointing: pointing.xml
+            # Refined pointing, optional.
+            # Defaults to attitude within L0B product.
+            Pointing: attitude.xml
 
-    # External calibration data, optional.
-    # Defaults to no extra calibration gain, phase, delay, etc.
-    external_calibration: cal.xml
+            # External calibration data, optional.
+            # Defaults to no extra calibration gain, phase, delay, etc.
+            ExternalCalibration: cal.xml
 
-    # Internal calibration tables, optional.
-    # If not provided, no secondary elevation antenna pattern correction.
-    internal_calibration: type7table.xml
+            # Internal calibration tables, optional.
+            # If not provided, no secondary elevation antenna pattern correction.
+            InternalCalibration: type7table.xml
 
-    # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
-    # If not provided, no polarimetric calibration performed.
-    polarimetric_calibration: polcal.h5
+            # Polarimetric calibration data, optional.  Crosstalk, relative phases, etc.
+            # If not provided, no polarimetric calibration performed.
+            PolarimetricCalibration: polcal.h5
 
-    # Pre- and post-data take calibration data products, optional.
-    bookend_calibration: pre_post_cal.h5
+            # Pre- and post-data take calibration data products, optional.
+            BookendCalibration: pre_post_cal.L0B.h5
 
-    # Antenna pattern data, optional.
-    # Defaults to sinc^4 pattern using nominal antenna dimensions.
-    antenna_pattern: antenna.h5
+            # Antenna pattern data, optional.
+            # Defaults to sinc^4 pattern using nominal antenna dimensions.
+            AntennaPattern: antenna.h5
 
-    # Chirp replica file, optional.
-    # If absent will generate LFM chirp using parameters in L0B product.
-    waveform: waveform.xml
+            # Chirp replica file, optional.
+            # If absent will generate LFM chirp using parameters in L0B product.
+            Waveform: chirp.xml
 
-outputs:
-    # Output Level 1 NISAR SLC product file name (full path)
-    slc: slc.h5
-
-    log: log.csv
-
-    # Where to write intermediate/temporary files
-    workdir: .
+        ProductPathGroup:
+            # Directory where PGE will place results. Irrelevant to SAS.
+            ProductPath: /out
+            # Directory where SAS can write temporary data
+            ScratchPath: .
+            # SAS writes output product to the following file. PGE may rename.
+            # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
+            SASOutputFile: ./slc.h5
+        Geometry:
+            RelativeOrbitNumber: 1
+            FrameNumber: 150
 
 archive:
     quicklook: True
@@ -54,11 +61,6 @@ qaqc:
     tests:
         - test1
         - test2
-
-identification:
-    absolute_orbit_number: 1
-    frame: 1
-    track: 1
 
 # Whether or not to use GPU, optional. Defaults to True if available.
 worker:
@@ -214,5 +216,3 @@ processing:
         range_cor: True
         # azimuth compression
         azcomp: True
-        # atmosphere correction
-        dry_troposphere: True

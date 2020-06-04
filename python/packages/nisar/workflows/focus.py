@@ -83,7 +83,7 @@ def get_window(win: Struct, msg=''):
 
 
 def get_chirp(cfg: Struct, raw: Raw, frequency: str):
-    if cfg.inputs.waveform:
+    if cfg.runconfig.groups.DynamicAncillaryFileGroup.Waveform:
         log.warning("Ignoring input waveform file.  Using analytic chirp.")
     chirp = raw.getChirp(frequency)
     log.info(f"Chirp length = {len(chirp)}")
@@ -105,21 +105,23 @@ def parse_rangecomp_mode(mode: str):
 
 def get_orbit(cfg: Struct):
     log.info("Loading orbit")
-    if cfg.inputs.orbit:
+    if cfg.runconfig.groups.DynamicAncillaryFileGroup.Orbit:
         log.warning("Ignoring input orbit file.  Using L0B orbits.")
-    if len(cfg.inputs.raw) > 1:
+    rawfiles = cfg.runconfig.groups.InputFileGroup.InputFilePath
+    if len(rawfiles) > 1:
         raise NotImplementedError("Can't concatenate orbit data.")
-    raw = Raw(hdf5file=cfg.inputs.raw[0])
+    raw = Raw(hdf5file=rawfiles[0])
     return raw.getOrbit()
 
 
 def get_attitude(cfg: Struct):
     log.info("Loading attitude")
-    if cfg.inputs.pointing:
+    if cfg.runconfig.groups.DynamicAncillaryFileGroup.Pointing:
         log.warning("Ignoring input pointing file.  Using L0B attitude.")
-    if len(cfg.inputs.raw) > 1:
+    rawfiles = cfg.runconfig.groups.InputFileGroup.InputFilePath
+    if len(rawfiles) > 1:
         raise NotImplementedError("Can't concatenate attitude data.")
-    raw = Raw(hdf5file=cfg.inputs.raw[0])
+    raw = Raw(hdf5file=rawfiles[0])
     return raw.getAttitude()
 
 
@@ -176,7 +178,7 @@ def get_dem(cfg: Struct):
     dem = isce.geometry.DEMInterpolator(
         height=cfg.processing.dem.reference_height,
         method=cfg.processing.dem.interp_method)
-    fn = cfg.inputs.dem
+    fn = cfg.runconfig.groups.DynamicAncillaryFileGroup.DEMFile
     if fn:
         log.info(f"Loading DEM {fn}")
         dem.load_dem(fn)
@@ -192,12 +194,13 @@ def make_doppler(cfg: Struct, frequency='A'):
     dem = get_dem(cfg)
     opt = cfg.processing.doppler
     az = np.radians(opt.azimuth_boresight_deg)
-    raw = Raw(hdf5file=cfg.inputs.raw[0])
+    rawfiles = cfg.runconfig.groups.InputFileGroup.InputFilePath
+    raw = Raw(hdf5file=rawfiles[0])
     side = raw.identification.lookDirection
     fc = raw.getCenterFrequency(frequency)
     wvl = isce.core.speed_of_light / fc
 
-    epoch, t, r = get_total_grid(cfg.inputs.raw, opt.spacing.azimuth,
+    epoch, t, r = get_total_grid(rawfiles, opt.spacing.azimuth,
                                  opt.spacing.range)
     t = convert_epoch(t, epoch, orbit.reference_epoch)
     dop = np.zeros((len(t), len(r)))
@@ -281,12 +284,13 @@ def get_kernel(cfg: Struct):
 
 
 def focus(cfg):
-    if len(cfg.inputs.raw) <= 0:
+    rawfiles = cfg.runconfig.groups.InputFileGroup.InputFilePath
+    if len(rawfiles) <= 0:
         raise IOError("need at least one raw data file")
-    if len(cfg.inputs.raw) > 1:
+    if len(rawfiles) > 1:
         raise NotImplementedError("mixed-mode processing not yet supported")
 
-    raw = Raw(hdf5file=cfg.inputs.raw[0])
+    raw = Raw(hdf5file=rawfiles[0])
     dem = get_dem(cfg)
     orbit = get_orbit(cfg)
     try:
@@ -325,13 +329,15 @@ def focus(cfg):
     polygon = isce.geometry.get_geo_perimeter_wkt(ogrid["A"], orbit,
                                                   zerodop, dem)
 
-    log.info(f"Creating output SLC product {cfg.outputs.slc}")
-    slc = SLC(cfg.outputs.slc, mode="w", product=cfg.identification.product)
+    fn = cfg.runconfig.groups.ProductPathGroup.SASOutputFile
+    log.info(f"Creating output SLC product {fn}")
+    slc = SLC(fn, mode="w", product=cfg.identification.product)
     slc.set_orbit(orbit) # TODO acceleration, orbitType
     if attitude:
         slc.set_attitude(attitude, orbit.reference_epoch)
-    slc.copy_identification(raw, track=cfg.identification.track,
-        frame=cfg.identification.frame, polygon=polygon)
+    slc.copy_identification(raw, polygon=polygon,
+        track=cfg.runconfig.groups.Geometry.RelativeOrbitNumber, # XXX verify
+        frame=cfg.runconfig.groups.Geometry.FrameNumber)
 
     # store metadata for each frequency
     dop = dict()
@@ -371,7 +377,8 @@ def focus(cfg):
         rc_grid.wavelength = isce.core.speed_of_light / fc
         igeom = isce.container.RadarGeometry(rc_grid, orbit, dop[frequency])
 
-        fd = tempfile.NamedTemporaryFile(dir=cfg.outputs.workdir, suffix='.rc')
+        scratch = cfg.runconfig.groups.ProductPathGroup.ScratchPath
+        fd = tempfile.NamedTemporaryFile(dir=scratch, suffix='.rc')
         log.info(f"Writing range compressed data to {fd.name}")
         rcfile = Raster(fd.name, rc.output_size, rawdata.shape[0], GDT_CFloat32)
         log.info(f"Range compressed data shape = {rcfile.data.shape}")

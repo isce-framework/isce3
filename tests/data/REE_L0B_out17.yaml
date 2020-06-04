@@ -1,10 +1,14 @@
-inputs:
-    raw:
-    - REE_L0B_out17.h5
-
-outputs:
-    slc: ./slc.h5
-    workdir: .
+runconfig:
+    groups:
+        InputFileGroup:
+            InputFilePath:
+            - REE_L0B_out17.h5
+        ProductPathGroup:
+            # Directory where SAS can write temporary data
+            ScratchPath: .
+            # SAS writes output product to the following file. PGE may rename.
+            # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
+            SASOutputFile: ./slc.h5
 
 worker:
     gpu_enabled: False
