@@ -422,12 +422,16 @@ def focus(runconfig):
                 acdata.write_direct(zf, dest_sel=block)
 
 
-
 def configure_logging():
     log_level = logging.DEBUG
     log.setLevel(log_level)
+    # Format from L0B PGE Design Document, section 9.  Kludging error code = 1.
+    msgfmt = ('%(asctime)s.%(msecs)03d, %(levelname)s, RSLC, %(module)s, 1, '
+        '%(pathname)s:%(lineno)d, "%(message)s"')
+    fmt = logging.Formatter(msgfmt, "%Y-%m-%d %H:%M:%S")
     sh = logging.StreamHandler()
     sh.setLevel(log_level)
+    sh.setFormatter(fmt)
     log.addHandler(sh)
     for friend in ("Raw", "SLCWriter"):
         l = logging.getLogger(friend)
