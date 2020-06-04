@@ -83,7 +83,7 @@ def get_window(win: Struct, msg=''):
 
 
 def get_chirp(cfg: Struct, raw: Raw, frequency: str):
-    if cfg.runconfig.groups.DynamicAncillaryFileGroup.Waveform:
+    if cfg.DynamicAncillaryFileGroup.Waveform:
         log.warning("Ignoring input waveform file.  Using analytic chirp.")
     chirp = raw.getChirp(frequency)
     log.info(f"Chirp length = {len(chirp)}")
@@ -105,9 +105,9 @@ def parse_rangecomp_mode(mode: str):
 
 def get_orbit(cfg: Struct):
     log.info("Loading orbit")
-    if cfg.runconfig.groups.DynamicAncillaryFileGroup.Orbit:
+    if cfg.DynamicAncillaryFileGroup.Orbit:
         log.warning("Ignoring input orbit file.  Using L0B orbits.")
-    rawfiles = cfg.runconfig.groups.InputFileGroup.InputFilePath
+    rawfiles = cfg.InputFileGroup.InputFilePath
     if len(rawfiles) > 1:
         raise NotImplementedError("Can't concatenate orbit data.")
     raw = Raw(hdf5file=rawfiles[0])
@@ -116,9 +116,9 @@ def get_orbit(cfg: Struct):
 
 def get_attitude(cfg: Struct):
     log.info("Loading attitude")
-    if cfg.runconfig.groups.DynamicAncillaryFileGroup.Pointing:
+    if cfg.DynamicAncillaryFileGroup.Pointing:
         log.warning("Ignoring input pointing file.  Using L0B attitude.")
-    rawfiles = cfg.runconfig.groups.InputFileGroup.InputFilePath
+    rawfiles = cfg.InputFileGroup.InputFilePath
     if len(rawfiles) > 1:
         raise NotImplementedError("Can't concatenate attitude data.")
     raw = Raw(hdf5file=rawfiles[0])
@@ -178,7 +178,7 @@ def get_dem(cfg: Struct):
     dem = isce.geometry.DEMInterpolator(
         height=cfg.processing.dem.reference_height,
         method=cfg.processing.dem.interp_method)
-    fn = cfg.runconfig.groups.DynamicAncillaryFileGroup.DEMFile
+    fn = cfg.DynamicAncillaryFileGroup.DEMFile
     if fn:
         log.info(f"Loading DEM {fn}")
         dem.load_dem(fn)
@@ -194,7 +194,7 @@ def make_doppler(cfg: Struct, frequency='A'):
     dem = get_dem(cfg)
     opt = cfg.processing.doppler
     az = np.radians(opt.azimuth_boresight_deg)
-    rawfiles = cfg.runconfig.groups.InputFileGroup.InputFilePath
+    rawfiles = cfg.InputFileGroup.InputFilePath
     raw = Raw(hdf5file=rawfiles[0])
     side = raw.identification.lookDirection
     fc = raw.getCenterFrequency(frequency)
@@ -283,8 +283,10 @@ def get_kernel(cfg: Struct):
     return table
 
 
-def focus(cfg):
-    rawfiles = cfg.runconfig.groups.InputFileGroup.InputFilePath
+def focus(runconfig):
+    # Strip off two leading namespaces.
+    cfg = runconfig.runconfig.groups
+    rawfiles = cfg.InputFileGroup.InputFilePath
     if len(rawfiles) <= 0:
         raise IOError("need at least one raw data file")
     if len(rawfiles) > 1:
@@ -329,16 +331,16 @@ def focus(cfg):
     polygon = isce.geometry.get_geo_perimeter_wkt(ogrid["A"], orbit,
                                                   zerodop, dem)
 
-    fn = cfg.runconfig.groups.ProductPathGroup.SASOutputFile
-    product = cfg.runconfig.groups.PrimaryExecutable.ProductType
+    fn = cfg.ProductPathGroup.SASOutputFile
+    product = cfg.PrimaryExecutable.ProductType
     log.info(f"Creating output {product} product {fn}")
     slc = SLC(fn, mode="w", product=product)
     slc.set_orbit(orbit) # TODO acceleration, orbitType
     if attitude:
         slc.set_attitude(attitude, orbit.reference_epoch)
     slc.copy_identification(raw, polygon=polygon,
-        track=cfg.runconfig.groups.Geometry.RelativeOrbitNumber, # XXX verify
-        frame=cfg.runconfig.groups.Geometry.FrameNumber)
+        track=cfg.Geometry.RelativeOrbitNumber,
+        frame=cfg.Geometry.FrameNumber)
 
     # store metadata for each frequency
     dop = dict()
@@ -378,7 +380,7 @@ def focus(cfg):
         rc_grid.wavelength = isce.core.speed_of_light / fc
         igeom = isce.container.RadarGeometry(rc_grid, orbit, dop[frequency])
 
-        scratch = cfg.runconfig.groups.ProductPathGroup.ScratchPath
+        scratch = cfg.ProductPathGroup.ScratchPath
         fd = tempfile.NamedTemporaryFile(dir=scratch, suffix='.rc')
         log.info(f"Writing range compressed data to {fd.name}")
         rcfile = Raster(fd.name, rc.output_size, rawdata.shape[0], GDT_CFloat32)
