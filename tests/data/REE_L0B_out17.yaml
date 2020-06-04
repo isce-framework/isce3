@@ -3,6 +3,7 @@ runconfig:
         InputFileGroup:
             InputFilePath:
             - REE_L0B_out17.h5
+
         ProductPathGroup:
             # Directory where SAS can write temporary data
             ScratchPath: .
@@ -10,11 +11,11 @@ runconfig:
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
             SASOutputFile: ./slc.h5
 
+        PrimaryExecutable:
+            ProductType: SLC
+
 worker:
     gpu_enabled: False
-
-identification:
-    product: SLC
 
 processing:
     output_grid:

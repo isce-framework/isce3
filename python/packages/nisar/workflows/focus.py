@@ -330,8 +330,9 @@ def focus(cfg):
                                                   zerodop, dem)
 
     fn = cfg.runconfig.groups.ProductPathGroup.SASOutputFile
-    log.info(f"Creating output SLC product {fn}")
-    slc = SLC(fn, mode="w", product=cfg.identification.product)
+    product = cfg.runconfig.groups.PrimaryExecutable.ProductType
+    log.info(f"Creating output {product} product {fn}")
+    slc = SLC(fn, mode="w", product=product)
     slc.set_orbit(orbit) # TODO acceleration, orbitType
     if attitude:
         slc.set_attitude(attitude, orbit.reference_epoch)

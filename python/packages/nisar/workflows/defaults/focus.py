@@ -52,6 +52,11 @@ runconfig:
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
             SASOutputFile: ./slc.h5
+
+        PrimaryExecutable:
+            # Handy to set to "SLC" until other ISCE tools updated.
+            ProductType: RSLC
+
         Geometry:
             RelativeOrbitNumber: 1
             FrameNumber: 1
@@ -61,9 +66,6 @@ archive: {}
 
 # TODO
 qaqc: {}
-
-identification:
-    product: RSLC   # Handy to set to "SLC" until other ISCE tools updated.
 
 # Whether or not to use GPU, optional. Defaults to True if available.
 worker:
