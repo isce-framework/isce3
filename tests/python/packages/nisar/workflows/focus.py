@@ -7,5 +7,5 @@ def test_focus():
     rawname = os.path.join(iscetest.data, "REE_L0B_out17.h5")
     cfgname = rawname.replace(".h5", ".yaml")
     cfg = focus.load_config(cfgname)
-    cfg.inputs.raw = [rawname]
+    cfg.runconfig.groups.InputFileGroup.InputFilePath = [rawname]
     focus.focus(cfg)
