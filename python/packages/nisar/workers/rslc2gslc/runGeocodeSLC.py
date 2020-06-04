@@ -26,7 +26,7 @@ def runGeocodeSLC(self):
     # construct ellipsoid which is by default WGS84
     ellipsoid = isce3.core.ellipsoid()
 
-    
+
     slc = SLC(hdf5file=self.state.input_hdf5)
     for freq in state.subset_dict.keys():
         frequency = "frequency{}".format(freq)
@@ -58,13 +58,30 @@ def runGeocodeSLC(self):
             gslc_raster = isce3.io.raster(filename='', h5=gslc_dataset, 
                                 access=gdal.GA_Update)
             
-            # Needs to be determined somewhere else
-            thresholdGeo2rdr = 1.0e-9 ;
-            numiterGeo2rdr = 25;
-            linesPerBlock = 1000;
-            demBlockMargin = 0.1;
+            # This whole section requires better sanity check and handling defaults
+            threshold_geo2rdr = self.userconfig['runconfig']['groups']['processing']['geo2rdr']['threshold']
+            iteration_geo2rdr = self.userconfig['runconfig']['groups']['processing']['geo2rdr']['maxiter']
+            lines_per_block = self.userconfig['runconfig']['groups']['processing']['blocksize']['y']
+            dem_block_margin = self.userconfig['runconfig']['groups']['processing']['dem_margin']
+            flatten = self.userconfig['runconfig']['groups']['processing']['flatten']
 
-            flatten = True;
+            # this may not be the best way. needs to be revised
+            if flatten:
+                self._print("flattening is True")
+            else:
+                self._print("flattening is False")
+
+            if np.isnan(threshold_geo2rdr):
+                threshold_geo2rdr = 1.0e-9 ;
+
+            if np.isnan(iteration_geo2rdr):
+                iteration_geo2rdr = 25;
+
+            if np.isnan(lines_per_block):
+                lines_per_block = 1000;
+
+            if np.isnan(dem_block_margin):
+                dem_block_margin = 0.1;
 
             # run geocodeSlc : 
             isce3.geocode.geocodeSlc(gslc_raster, slc_raster, dem_raster,
@@ -72,8 +89,8 @@ def runGeocodeSLC(self):
                     orbit,
                     native_doppler, image_grid_doppler,
                     ellipsoid,
-                    thresholdGeo2rdr, numiterGeo2rdr,
-                    linesPerBlock, demBlockMargin,
+                    threshold_geo2rdr, iteration_geo2rdr,
+                    lines_per_block, dem_block_margin,
                     flatten)
 
             # the rasters need to be deleted
