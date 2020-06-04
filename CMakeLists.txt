@@ -146,15 +146,21 @@ if(NOT ISCE3_FETCH_EIGEN)
 endif()
 find_package(Eigen3 ${REQUIRE_EIGEN} NO_MODULE)
 if(NOT Eigen3_FOUND)
-    find_package(Git REQUIRED)
-    set(BUILD_TESTING OFF)
-    fetch_extern_repo(eigen
+    include(FetchContent)
+    FetchContent_Declare(eigen
         GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
         GIT_TAG 3.3.7
-        GIT_SHALLOW TRUE
-        PATCH_COMMAND ${GIT_EXECUTABLE} apply
-            ${CMAKE_CURRENT_LIST_DIR}/extern/eigen-disable-testing.patch)
+        GIT_SHALLOW TRUE)
+    FetchContent_GetProperties(eigen)
+    if(NOT eigen_POPULATED)
+        FetchContent_Populate(eigen)
+    endif()
+    add_library(eigen INTERFACE)
     add_library(Eigen3::Eigen ALIAS eigen)
+    target_include_directories(eigen SYSTEM INTERFACE
+        $<BUILD_INTERFACE:${eigen_SOURCE_DIR}>
+        $<INSTALL_INTERFACE:include>)
+    install(TARGETS eigen EXPORT isce3-targets)
 endif()
 set(REQUIRE_GTEST)
 if(NOT ISCE3_FETCH_GTEST)
