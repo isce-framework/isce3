@@ -49,8 +49,6 @@ def runGeocodeSLC(self):
 
             # access the HDF5 dataset for a given frequency and polarization
             dst_h5 = h5py.File(state.output_hdf5, 'a')
-            #dataset_path = 'science/LSAR/GSLC/grids/{frequency}/{polarization}'.format(
-            #        frequency=frequency, polarization=polarization)
             dataset_path = f'science/LSAR/GSLC/grids/{frequency}/{polarization}'
             gslc_dataset = dst_h5[dataset_path]
 

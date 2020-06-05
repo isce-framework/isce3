@@ -5,6 +5,7 @@
 #include <cmath>
 #include <complex>
 #include <gtest/gtest.h>
+
 #include <isce/io/Raster.h>
 #include <isce/io/IH5.h>
 
@@ -16,7 +17,7 @@
 #include <isce/core/Orbit.h>
 #include <isce/core/LUT2d.h>
 #include <isce/core/Ellipsoid.h>
-// isce::geometry
+
 #include <isce/geometry/Serialization.h>
 #include <isce/geometry/Topo.h>
 
@@ -106,7 +107,6 @@ TEST(geocodeTest, TestGeocodeSlc) {
                             geoGridWidth, geoGridLength,
                             1, GDT_CFloat32, "ENVI");
 
-//      int sincLength = isce::core::SINC_ONE;
 
       bool flatten = false;
 
@@ -123,7 +123,6 @@ TEST(geocodeTest, TestGeocodeSlc) {
           numiterGeo2rdr,
           linesPerBlock,
           demBlockMargin,
-  //        sincLength,
           flatten);
 
       isce::io::Raster inputSlcY("y.slc", GA_ReadOnly);
@@ -145,7 +144,6 @@ TEST(geocodeTest, TestGeocodeSlc) {
             numiterGeo2rdr,
             linesPerBlock,
             demBlockMargin,
-    //        sincLength,
             flatten);
 
         double * _geoTrans = new double[6];

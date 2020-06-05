@@ -1,8 +1,7 @@
 #pragma once
-#include <isce/core/forward.h>
+//#include <isce/core/forward.h>
 #include <isce/io/Raster.h>
 #include <isce/geometry/DEMInterpolator.h>
-#include <isce/core/Projections.h>
 #include <isce/product/GeoGridParameters.h>
 
 namespace isce { namespace geocode {
@@ -17,8 +16,7 @@ namespace isce { namespace geocode {
      * @param[in] blockWidth  width of the block of interest in the eocoded grid
      * @param[in] demMargin  extra margin for the dem relative to the geocoded grid block. The extra margin ensures that enough data exists for interpolation at boundaries
      */
-    isce::geometry::DEMInterpolator loadDEM(isce::io::Raster demRaster,
-            //isce::core::ProjectionBase * proj,
+    isce::geometry::DEMInterpolator loadDEM(isce::io::Raster & demRaster,
             const isce::product::GeoGridParameters & geoGrid,
             int lineStart, int blockLength,
             int blockWidth, double demMargin); 

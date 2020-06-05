@@ -6,8 +6,7 @@
 #include <isce/core/LUT2d.h>
 #include <isce/core/Constants.h>
 #include <isce/core/Projections.h>
-#include <isce/geometry/DEMInterpolator.h>
-#include <isce/geometry/geometry.h>
+
 // isce::io
 #include <isce/io/Raster.h>
 
@@ -18,6 +17,7 @@
 
 // isce::geometry
 #include <isce/geometry/geometry.h>
+#include <isce/geometry/DEMInterpolator.h>
 
 #include <isce/geocode/baseband.h>
 #include <isce/geocode/interpolate.h>

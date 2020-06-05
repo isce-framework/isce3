@@ -32,7 +32,7 @@ void isce::geocode::interpolate(const isce::core::Matrix<std::complex<float>>& r
 
         // Interpolate chip
         const std::complex<double> cval = interp->interpolate(
-                rdrX, rdrY, rdrDataBlock); //chip);
+                rdrX, rdrY, rdrDataBlock);
 
         // geometricalPhase is the sum of carrier (Doppler) phase to be added back and
         // the geometrical phase to be removed: exp(1J* (carrier - 4.0*PI*slantRange/wavelength))

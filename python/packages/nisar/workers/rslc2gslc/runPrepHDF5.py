@@ -194,19 +194,18 @@ def _snap_coordinate(val, snap, round_function):
 
 def _createDatasets(dst_h5, common_parent_path, frequency, polarization, shape, chunks=(128, 128)):
 
-    print("create empty dataset for frequency: {} polarization: {}".format(frequency, polarization))
+    print(f"create empty dataset for frequency: {frequency} polarization: {polarization}")
     dataset_path = os.path.join(common_parent_path, f'GSLC/grids/{frequency}')
     grp = dst_h5[dataset_path]
     
     ctype = h5py.h5t.py_create(np.complex64)
 
-    if chunks<shape:
+    if chunks[0]<shape[0] and chunks[1]<shape[1]:
         ds = grp.create_dataset(polarization, dtype=ctype, shape=shape, chunks=chunks)
     else:
         ds = grp.create_dataset(polarization, dtype=ctype, shape=shape)
 
-    ds.attrs['description'] = np.string_(
-                                      'Geocoded SLC for {} channel'.format(polarization))
+    ds.attrs['description'] = np.string_(f'Geocoded SLC for {polarization} channel')
     ds.attrs['units'] = np.string_('')
     
     ds.attrs['grid_mapping'] = np.string_("projection")

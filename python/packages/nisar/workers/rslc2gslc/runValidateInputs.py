@@ -25,12 +25,4 @@ def runValidateInputs(self):
                              'InputFilePath')
     state.output_hdf5 = self.get_value(['runconfig', 'groups', 'ProductPathGroup', 'SASOutputFile'])
 
-    # nlooks
-    #nlooks_az = self.get_value(['parameters', 'pre_process', 'azimuth_looks'])
-    #nlooks_rg = self.get_value(['parameters', 'pre_process', 'range_looks'])
-    #state.nlooks_az = self.cast_input(nlooks_az, dtype=int, 
-    #    default=1)
-    #state.nlooks_rg = self.cast_input(nlooks_rg, dtype=int, 
-    #    default=1)
-
 # end of file

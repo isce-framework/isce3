@@ -23,19 +23,12 @@ void isce::geocode::geocodeSlc(isce::io::Raster & outputRaster,
     std::unique_ptr<isce::core::ProjectionBase> proj(
                 isce::core::createProj(geoGrid.epsg()));
 
-    // instantiate the DEMInterpolator
-    //isce::geometry::DEMInterpolator demInterp;
-
     // Interpolator pointer
     auto interp = std::make_unique<isce::core::Sinc2dInterpolator<
                         std::complex<float>>>(isce::core::SINC_LEN, isce::core::SINC_SUB);
-                        //std::complex<float>>>(sincLength - 1, isce::core::SINC_SUB);
+
     // Compute number of blocks in the output geocoded grid
     size_t nBlocks = (geoGrid.length() + linesPerBlock - 1) / linesPerBlock;
-
-    //size_t nBlocks = geoGrid.length() / linesPerBlock;
-    //if ((geoGrid.length() % linesPerBlock) != 0)
-    //    nBlocks += 1;
 
     std::cout << "nBlocks: " << nBlocks << std::endl;
     //loop over the blocks of the geocoded Grid

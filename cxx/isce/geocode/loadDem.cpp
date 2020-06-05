@@ -1,7 +1,8 @@
+#include <isce/core/forward.h>
 #include "loadDem.h"
 
 isce::geometry::DEMInterpolator isce::geocode::loadDEM(
-        isce::io::Raster demRaster,
+        isce::io::Raster & demRaster,
         const isce::product::GeoGridParameters & geoGrid,
         int lineStart, int blockLength,
         int blockWidth, double demMargin)
@@ -23,8 +24,8 @@ isce::geometry::DEMInterpolator isce::geocode::loadDEM(
     {
         std::unique_ptr<isce::core::ProjectionBase> proj(
                 isce::core::createProj(geoGrid.epsg()));
+
         //Create transformer to match the DEM
-        //isce::core::ProjectionBase *demproj = isce::core::createProj(epsgcode);
         std::unique_ptr<isce::core::ProjectionBase> demproj(
                 isce::core::createProj(epsgcode));
 
