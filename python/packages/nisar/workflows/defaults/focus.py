@@ -52,6 +52,8 @@ runconfig:
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
             SASOutputFile: ./slc.h5
+            # Echo processor config (including defaults) to file.
+            SASConfigFile: null
 
         PrimaryExecutable:
             # Handy to set to "SLC" until other ISCE tools updated.

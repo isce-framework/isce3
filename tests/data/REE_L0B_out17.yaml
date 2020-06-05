@@ -9,7 +9,8 @@ runconfig:
             ScratchPath: .
             # SAS writes output product to the following file. PGE may rename.
             # NOTE: R2 needs to handle mixed-mode case with multiple outputs.
-            SASOutputFile: ./slc.h5
+            SASOutputFile: ./rslc.h5
+            SASConfigFile: ./rslc_config.yaml
 
         PrimaryExecutable:
             ProductType: SLC
