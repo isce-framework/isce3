@@ -1,27 +1,8 @@
 #pragma once
 
-// isce::core
-#include <isce/core/Orbit.h>
-#include <isce/core/Ellipsoid.h>
-#include <isce/core/LUT2d.h>
-#include <isce/core/Constants.h>
-#include <isce/core/Projections.h>
-
-// isce::io
-#include <isce/io/Raster.h>
-
-// isce::product
-#include <isce/product/Product.h>
-#include <isce/product/RadarGridParameters.h>
-#include <isce/product/GeoGridParameters.h>
-
-// isce::geometry
-#include <isce/geometry/geometry.h>
-#include <isce/geometry/DEMInterpolator.h>
-
-#include <isce/geocode/baseband.h>
-#include <isce/geocode/interpolate.h>
-#include <isce/geocode/loadDem.h>
+#include <isce/core/forward.h>
+#include <isce/io/forward.h>
+#include <isce/product/forward.h>
 
 namespace isce { namespace geocode {
 
