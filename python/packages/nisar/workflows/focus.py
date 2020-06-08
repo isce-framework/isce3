@@ -45,13 +45,27 @@ def deep_update(d, u):
 
 
 def load_config(yaml):
+    "Load default runconfig, override with user input, and convert to Struct"
     parser = YAML()
     cfg = parser.load(defaults.focus.runconfig)
     with open(yaml) as f:
         user = parser.load(f)
     deep_update(cfg, user)
-    log.info(json.dumps(cfg, indent=2, default=str))
     return Struct(cfg)
+
+
+def dump_config(cfg: Struct, filename):
+    def struct2dict(s: Struct):
+        d = s.__dict__.copy()
+        for k in d:
+            if isinstance(d[k], Struct):
+                d[k] = struct2dict(d[k])
+        return d
+    parser = YAML()
+    parser.indent = 4
+    with open(filename, 'w') as f:
+        d = struct2dict(cfg)
+        parser.dump(d, f)
 
 
 def validate_config(x):
@@ -422,12 +436,16 @@ def focus(runconfig):
                 acdata.write_direct(zf, dest_sel=block)
 
 
-
 def configure_logging():
     log_level = logging.DEBUG
     log.setLevel(log_level)
+    # Format from L0B PGE Design Document, section 9.  Kludging error code.
+    msgfmt = ('%(asctime)s.%(msecs)03d, %(levelname)s, RSLC, %(module)s, '
+        '999999, %(pathname)s:%(lineno)d, "%(message)s"')
+    fmt = logging.Formatter(msgfmt, "%Y-%m-%d %H:%M:%S")
     sh = logging.StreamHandler()
     sh.setLevel(log_level)
+    sh.setFormatter(fmt)
     log.addHandler(sh)
     for friend in ("Raw", "SLCWriter"):
         l = logging.getLogger(friend)
@@ -441,6 +459,10 @@ def main(argv):
     args = parser.parse_args(argv)
     configure_logging()
     cfg = validate_config(load_config(args.config))
+    echofile = cfg.runconfig.groups.ProductPathGroup.SASConfigFile
+    if echofile:
+        log.info(f"Logging configuration to file {echofile}.")
+        dump_config(cfg, echofile)
     focus(cfg)
 
 
