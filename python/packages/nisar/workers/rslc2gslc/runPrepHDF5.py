@@ -35,6 +35,11 @@ def runPrepHDF5(self):
 
     # simple copies of identification, metadata/orbit, metadata/attitude groups
     cp_h5_meta_data(src_h5, dst_h5, os.path.join(common_parent_path, 'identification'))
+    ident = dst_h5[os.path.join(common_parent_path, 'identification')]
+    dset = ident.create_dataset('isGeocoded', data=np.string_("True"))
+    desc = f"Flag to indicate radar geometry or geocoded product"
+    dset.attrs["description"] = np.string_(desc)
+
     cp_h5_meta_data(src_h5, dst_h5, 
                     os.path.join(common_parent_path, 'SLC/metadata/orbit'),
                     os.path.join(common_parent_path, 'GSLC/metadata/orbit'))
@@ -44,12 +49,16 @@ def runPrepHDF5(self):
                     os.path.join(common_parent_path, 'GSLC/metadata/attitude'))
 
     # copy calibration information group
-    cp_h5_meta_data(src_h5, dst_h5,
-            os.path.join(common_parent_path, 'SLC/metadata/calibrationInformation'),
-            os.path.join(common_parent_path, 'GSLC/metadata/calibrationInformation'),
-            excludes=['zeroDopplerTime', 'slantRange'])
-                
-    # copy processing information group
+    for freq in state.subset_dict.keys():
+          frequency = f'frequency{freq}'
+          pol_list = state.subset_dict[freq]
+          for polarization in pol_list:
+              cp_h5_meta_data(src_h5, dst_h5,
+              os.path.join(common_parent_path, 
+                  f'SLC/metadata/calibrationInformation/{frequency}/{polarization}'),
+              os.path.join(common_parent_path, 
+                  f'GSLC/metadata/calibrationInformation/{frequency}/{polarization}'))
+
     cp_h5_meta_data(src_h5, dst_h5,
             os.path.join(common_parent_path, 'SLC/metadata/processingInformation'),
             os.path.join(common_parent_path, 'GSLC/metadata/processingInformation'),
@@ -63,6 +72,13 @@ def runPrepHDF5(self):
                 'coordinateY':'yCoordinates',
                 'zeroDopplerTime':'zeroDopplerAzimuthTime'})
 
+    input_grp = dst_h5[os.path.join(common_parent_path, 
+            'GSLC/metadata/processingInformation/inputs')]
+    dset = input_grp.create_dataset("l1SlcGranules", data=np.string_([state.input_hdf5]))
+    desc = f"List of input L1 products used"
+    dset.attrs["description"] = np.string_(desc)
+
+    
     # copy radar imagery group; assumming shared data
     # XXX option0: to be replaced with actual gslc code
     # XXX option1: do not write GSLC data here; GSLC rasters can be appended to the GSLC HDF5
@@ -78,7 +94,8 @@ def runPrepHDF5(self):
                     'sceneCenterAlongTrackSpacing', 'sceneCenterGroundRangeSpacing',
                     'HH', 'HV', 'VH', 'VV', 'RH', 'RV',
                     'validSamplesSubSwath1', 'validSamplesSubSwath2',
-                    'validSamplesSubSwath3', 'validSamplesSubSwath4'],
+                    'validSamplesSubSwath3', 'validSamplesSubSwath4',
+                    'listOfPolarizations'],
                 renames={'processedCenterFrequency':'centerFrequency',
                     'processedAzimuthBandwidth':'azimuthBandwidth',
                     'processedRangeBandwidth':'rangeBandwidth'})
@@ -98,7 +115,9 @@ def runPrepHDF5(self):
         for polarization in pol_list:
             _createDatasets(dst_h5, common_parent_path, 
                     frequency, polarization, shape, chunks=(128, 128))
-   
+
+        _addPolarizationList(dst_h5, common_parent_path, frequency, pol_list)
+
     # adding geogrid and projection information
     for freq in state.subset_dict.keys():
         frequency = f'frequency{freq}'
@@ -213,6 +232,20 @@ def _createDatasets(dst_h5, common_parent_path, frequency, polarization, shape, 
     return None
 
 # end of file
+
+def _addPolarizationList(dst_h5, common_parent_path, frequency, pols):
+
+    for pol in pols:
+        assert len(pol) == 2 and pol[0] in "HVLR" and pol[1] in "HV"
+    dataset_path = os.path.join(common_parent_path, f'GSLC/grids/{frequency}')
+    grp = dst_h5[dataset_path]
+    name = "listOfPolarizations"
+    polsArray = np.array(pols, dtype="S2")
+    dset = grp.create_dataset(name, data=polsArray)
+    desc = f"List of polarization layers with frequency{frequency}"
+    dset.attrs["description"] = np.string_(desc)
+
+    return None
 
 def _addGeoInformation(hdf5_obj, common_parent_path, frequency, geo_grid):
     
