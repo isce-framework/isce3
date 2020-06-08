@@ -439,9 +439,9 @@ def focus(runconfig):
 def configure_logging():
     log_level = logging.DEBUG
     log.setLevel(log_level)
-    # Format from L0B PGE Design Document, section 9.  Kludging error code = 1.
-    msgfmt = ('%(asctime)s.%(msecs)03d, %(levelname)s, RSLC, %(module)s, 1, '
-        '%(pathname)s:%(lineno)d, "%(message)s"')
+    # Format from L0B PGE Design Document, section 9.  Kludging error code.
+    msgfmt = ('%(asctime)s.%(msecs)03d, %(levelname)s, RSLC, %(module)s, '
+        '999999, %(pathname)s:%(lineno)d, "%(message)s"')
     fmt = logging.Formatter(msgfmt, "%Y-%m-%d %H:%M:%S")
     sh = logging.StreamHandler()
     sh.setLevel(log_level)
