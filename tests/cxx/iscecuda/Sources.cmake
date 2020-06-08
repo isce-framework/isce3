@@ -1,5 +1,6 @@
 set(CUDA_TESTFILES
 core/ellipsoid/gpuEllipsoid.cu
+core/cuda-interp1d.cu
 core/interpolator/gpuInterpolator.cpp
 core/lut/gpuLUT1d.cpp
 core/lut/gpuLUT2d.cpp

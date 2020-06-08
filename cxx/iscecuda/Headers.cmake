@@ -7,6 +7,10 @@ core/gpuLUT1d.h
 core/gpuLUT2d.h
 core/gpuPoly2d.h
 core/gpuProjections.h
+core/Interp1d.h
+core/Interp1d.icc
+core/Kernels.h
+core/Kernels.icc
 core/Orbit.h
 core/OrbitView.h
 core/OrbitView.icc
@@ -39,6 +43,7 @@ matchtemplate/ampcor/kernels.h
 matchtemplate/ampcor/public.h
 matchtemplate/ampcor/Sequential.h
 matchtemplate/ampcor/Sequential.icc
+math/ComplexMultiply.h
 signal/forward.h
 signal/gpuCrossMul.h
 signal/gpuFilter.h

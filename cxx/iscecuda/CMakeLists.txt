@@ -13,7 +13,9 @@ set_target_properties(${LISCECUDA} PROPERTIES CUDA_HOST_COMPILATION_CPP ON)
 
 # Allow calling host constexpr functions from device code
 target_compile_options(${LISCECUDA} PUBLIC
-        $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+    $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
+    $<$<COMPILE_LANGUAGE:CUDA>:-Werror=cross-execution-space-call>
+    )
 
 # Add library dependencies
 find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})

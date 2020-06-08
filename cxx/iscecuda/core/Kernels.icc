@@ -1,0 +1,186 @@
+#include <vector>
+
+#include <isce/except/Error.h>
+#include <isce/math/Sinc.h>
+
+namespace isce { namespace cuda { namespace core {
+
+namespace detail {
+
+template<typename T>
+CUDA_HOSTDEV inline T samplingWindow(T t, T halfwidth, T bandwidth)
+{
+    auto c = T(M_PI) * halfwidth * (1 - bandwidth);
+    auto tf = t / halfwidth;
+    auto y = std::sqrt(1 - tf * tf);
+    return std::cosh(c * y) / std::cosh(c);
+}
+
+} // namespace detail
+
+template<typename T, class Derived>
+CUDA_HOSTDEV T Kernel<T, Derived>::operator()(double t) const
+{
+    return static_cast<const Derived*>(this)->eval(t);
+}
+
+template<typename T>
+constexpr T BartlettKernel<T>::eval(double t) const
+{
+    double t2 = std::abs(t / Base::halfwidth());
+    return (t2 > 1.) ? T(0.) : T(1. - t2);
+}
+
+template<typename T>
+constexpr KnabKernel<T>::KnabKernel(double width, double bandwidth)
+    : Base(width), _bandwidth(bandwidth)
+{
+    if (bandwidth < 0. or bandwidth > 1.) {
+        throw isce::except::RuntimeError(ISCE_SRCINFO(),
+                                         "Require 0 < bandwidth < 1");
+    }
+}
+
+template<typename T>
+CUDA_HOSTDEV inline T KnabKernel<T>::eval(double t) const
+{
+    using isce::math::sinc;
+    auto x = static_cast<T>(t);
+    return sinc(x) * detail::samplingWindow(t, Base::halfwidth(), bandwidth());
+}
+
+template<typename T>
+TabulatedKernelView<T>::TabulatedKernelView(const TabulatedKernel<T>& kernel)
+    : Base(kernel.width()), _table(kernel._table.data().get()),
+      _imax(kernel._imax), _rdx(kernel._rdx)
+{}
+
+template<typename T>
+CUDA_DEV inline T TabulatedKernelView<T>::eval(double t) const
+{
+    // return zero outside table
+    auto at = std::abs(t);
+    if (at > Base::halfwidth()) {
+        return T(0.);
+    }
+
+    // normalize to table sample index
+    auto x = at * _rdx;
+
+    // determine left side of interval
+    auto i = static_cast<int>(std::floor(x));
+    i = std::min(i, _imax);
+
+    // linear interpolation
+    auto y0 = _table[i];
+    auto y1 = _table[i + 1];
+    return y0 + (x - i) * (y1 - y0);
+}
+
+template<typename T>
+template<class OtherKernel>
+TabulatedKernel<T>::TabulatedKernel(const OtherKernel& kernel, int n)
+    : Base(kernel.width())
+{
+    if (n < 2) {
+        throw isce::except::LengthError(ISCE_SRCINFO(),
+                                        "Require table size >= 2");
+    }
+
+    // need i+1 < n so linear interp doesn't run off of table
+    _imax = n - 2;
+
+    // assume kernel is even and fill table with f(x) for 0 <= x <= halfwidth
+    auto dx = Base::halfwidth() / (n - 1.);
+    _rdx = 1. / dx;
+
+    std::vector<T> h_table(n);
+    for (int i = 0; i < n; ++i) {
+        double x = i * dx;
+        h_table[i] = static_cast<T>(kernel(x));
+    }
+
+    // copy table to device
+    _table = h_table;
+}
+
+template<typename T>
+CUDA_DEV inline T TabulatedKernel<T>::eval(double t) const
+{
+    return TabulatedKernelView<T>(*this).eval(t);
+}
+
+template<typename T>
+ChebyKernelView<T>::ChebyKernelView(const ChebyKernel<T>& kernel)
+    : Base(kernel.width()), _coeffs(kernel._coeffs.data().get()),
+      _n(static_cast<int>(kernel._coeffs.size())), _scale(kernel._scale)
+{}
+
+template<typename T>
+CUDA_DEV inline T ChebyKernelView<T>::eval(double t) const
+{
+    // careful to avoid weird stuff outside [-1, 1] definition
+    auto at = std::abs(t);
+    if (at > Base::halfwidth()) {
+        return T(0.);
+    }
+
+    // map [0, L/2] to [-1, 1]
+    auto q = (T(at) * _scale) - T(1.);
+    auto twoq = T(2.) * q;
+
+    // Clenshaw algorithm for two term recurrence
+    T bk = 0., bk1 = 0., bk2 = 0.;
+    for (int i = _n - 1; i > 0; --i) {
+        bk = _coeffs[i] + twoq * bk1 - bk2;
+        bk2 = bk1;
+        bk1 = bk;
+    }
+    return _coeffs[0] + q * bk1 - bk2;
+}
+
+template<typename T>
+template<class OtherKernel>
+ChebyKernel<T>::ChebyKernel(const OtherKernel& kernel, int n)
+    : Base(kernel.width()), _scale(4. / kernel.width())
+{
+    if (n < 2) {
+        throw isce::except::LengthError(ISCE_SRCINFO(),
+                                        "Need at least one coefficient");
+    }
+
+    // Fit a kernel with DCT of fn at Chebyshev zeros.
+    // Assume evenfunction and fit on interval [0, width/2] to avoid a bunch
+    // of zero coefficients.
+    std::vector<T> q(n), fx(n);
+    for (int i = 0; i < n; ++i) {
+        q[i] = M_PI * (2. * i + 1.) / (2. * n);
+
+        // shift & scale [-1, 1] to [0, width/2]
+        auto x = (std::cos(q[i]) + 1.) / _scale;
+
+        fx[i] = static_cast<T>(kernel(x));
+    }
+
+    std::vector<T> h_coeffs(n);
+    for (int i = 0; i < n; ++i) {
+        h_coeffs[i] = 0.;
+        for (int j = 0; j < n; ++j) {
+            T w = std::cos(i * q[j]);
+            h_coeffs[i] += w * fx[j];
+        }
+        h_coeffs[i] *= 2. / n;
+    }
+    h_coeffs[0] *= 0.5;
+
+    // copy coeffs to device
+    _coeffs = h_coeffs;
+}
+
+template<typename T>
+CUDA_DEV inline T ChebyKernel<T>::eval(double t) const
+{
+    return ChebyKernelView<T>(*this).eval(t);
+}
+
+}}} // namespace isce::cuda::core
