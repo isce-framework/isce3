@@ -9,6 +9,7 @@ RUN set -ex \
  && source /opt/docker/bin/entrypoint_source \
  && mkdir -p rpm-build/opt \
  && sudo mv /opt/isce rpm-build/opt \
+ && export PATH=/home/conda/.rvm/gems/ruby-2.3.0/bin:/home/conda/.rvm/gems/ruby-2.3.0@global/wrappers/:$PATH \
  && fpm -s dir -t rpm -C rpm-build --name isce \
       --prefix=/ --version=3.0 --provides=isce \
       --maintainer=piyush.agram@jpl.nasa.gov \
