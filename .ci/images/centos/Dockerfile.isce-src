@@ -12,7 +12,13 @@ RUN set -ex \
  && sudo yum update -y \
  && sudo yum install -y \
       make ruby-devel rpm-build rubygems \
- && sudo gem install --no-ri --no-rdoc fpm
+      which autoconf automake bison libffi-devel libtool readline-devel sqlite-devel zlib-devel openssl-devel \
+ && command curl -sSL https://rvm.io/pkuczynski.asc | gpg2 --import - \
+ && curl -L get.rvm.io | bash -s stable \
+ && source /home/conda/.rvm/scripts/rvm \
+ && sudo /home/conda/.rvm/bin/rvm install 2.3.0 \
+ && export PATH=/home/conda/.rvm/gems/ruby-2.3.0/bin:/home/conda/.rvm/gems/ruby-2.3.0@global/wrappers/:$PATH \
+ && sudo gem install --no-ri --no-rdoc fpm 
 
 # install doxygen and sphinx for doc generation;
 # install valgrind for memory leak check
