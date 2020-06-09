@@ -70,16 +70,16 @@ def runGeocodeSLC(self):
                 self._print("flattening is False")
 
             if np.isnan(threshold_geo2rdr):
-                threshold_geo2rdr = 1.0e-9 ;
+                threshold_geo2rdr = 1.0e-9
 
             if np.isnan(iteration_geo2rdr):
-                iteration_geo2rdr = 25;
+                iteration_geo2rdr = 25
 
             if np.isnan(lines_per_block):
-                lines_per_block = 1000;
+                lines_per_block = 1000
 
             if np.isnan(dem_block_margin):
-                dem_block_margin = 0.1;
+                dem_block_margin = 0.1
 
             # run geocodeSlc : 
             isce3.geocode.geocodeSlc(gslc_raster, slc_raster, dem_raster,

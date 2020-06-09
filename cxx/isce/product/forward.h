@@ -6,5 +6,5 @@ namespace isce { namespace product {
     class RadarGridParameters;
     class GeoGridParameters;
     class Swath;
-  
+
 }}
