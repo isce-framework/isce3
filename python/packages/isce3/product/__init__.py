@@ -13,4 +13,10 @@ def radarGridParameters(**kwds):
 
     return RadarGridParameters(**kwds)
 
+def geoGridParameters(**kwds):
+    """A factory for radar grid parameters"""
+    from .GeoGridParameters import GeoGridParameters
+
+    return GeoGridParameters(**kwds)
+
 # end of file
