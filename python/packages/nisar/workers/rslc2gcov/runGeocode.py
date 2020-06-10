@@ -37,7 +37,7 @@ def _runGeocodeFrequency(self, frequency):
     raster_ref_list = []
     for pol in pol_list:
         h5_ds = f'//science/LSAR/SLC/swaths/frequency{frequency}/{pol}'
-        raster_ref = f'HDF5:{state.input_hdf5}:{h5_ds}'
+        raster_ref = f'HDF5:"{state.input_hdf5}":{h5_ds}'
         raster_ref_list.append(raster_ref)
 
     self._print('raster list:', raster_ref_list)
@@ -45,22 +45,26 @@ def _runGeocodeFrequency(self, frequency):
 
     # set temporary files
     time_id = str(time.time())
-    input_temp = f'temp_rslc2gcov_{frequency}_{time_id}.vrt'
-    output_file = f'temp_rslc2gcov_{frequency}_{time_id}.bin'
-    out_geo_nlooks = f'temp_geo_nlooks_{time_id}.bin'
-    out_geo_rtc = f'temp_geo_rtc_{time_id}.bin'
-    out_dem_vertices = f'temp_dem_vertices_{time_id}.bin'
-    out_geo_vertices = f'temp_geo_vertices_{time_id}.bin'
+    input_temp = os.path.join(state.scratch_path,
+        f'temp_rslc2gcov_{frequency}_{time_id}.vrt')
+    output_file = os.path.join(state.scratch_path,
+        f'temp_rslc2gcov_{frequency}_{time_id}.bin')
+    out_geo_nlooks = os.path.join(state.scratch_path,
+        f'temp_geo_nlooks_{time_id}.bin')
+    out_geo_rtc = os.path.join(state.scratch_path,
+        f'temp_geo_rtc_{time_id}.bin')
+    out_dem_vertices = os.path.join(state.scratch_path,
+        f'temp_dem_vertices_{time_id}.bin')
+    out_geo_vertices = os.path.join(state.scratch_path,
+        f'temp_geo_vertices_{time_id}.bin')
 
     # build input VRT
     gdal.BuildVRT(input_temp, raster_ref_list, separate=True)
-
-    # build_vrt(raster_ref_list, input_temp)
-    input_raster_obj = isce3.pyRaster(input_temp)
+    input_raster_obj = isce3.pyRaster(input_temp) 
     ellps = isce3.pyEllipsoid()
 
     # RTC
-    rtc_dict = self.get_value(['parameters', 'rtc'])
+    rtc_dict = self.get_value(['processing', 'rtc'])
     rtc_output_type = rtc_dict['output_type']
     rtc_geogrid_upsampling = rtc_dict['geogrid_upsampling'] 
     rtc_algorithm_type = rtc_dict['algorithm_type']
@@ -69,7 +73,7 @@ def _runGeocodeFrequency(self, frequency):
     rtc_min_value_db = rtc_dict['rtc_min_value_db']
 
     # Geocode
-    geocode_dict = self.get_value(['parameters', 'geocode'])
+    geocode_dict = self.get_value(['processing', 'geocode'])
 
     geocode_algorithm_type = geocode_dict['algorithm_type']
     memory_mode = geocode_dict['memory_mode']
@@ -87,15 +91,14 @@ def _runGeocodeFrequency(self, frequency):
     
     # Geogrid
     state.output_epsg = geocode_dict['outputEPSG']
+    y_snap = geocode_dict['y_snap']
+    x_snap = geocode_dict['x_snap']
+
     y_max = geocode_dict['top_left']['y_abs']
     x_min = geocode_dict['top_left']['x_abs']
-    top_left_x_snap = geocode_dict['top_left']['x_snap']
-    top_left_y_snap = geocode_dict['top_left']['y_snap']
 
     y_min = geocode_dict['bottom_right']['y_abs']
     x_max = geocode_dict['bottom_right']['x_abs']
-    bottom_right_x_snap = geocode_dict['bottom_right']['x_snap']
-    bottom_right_y_snap = geocode_dict['bottom_right']['y_snap']
     step = geocode_dict['output_posting']
 
     # fix types
@@ -116,24 +119,19 @@ def _runGeocodeFrequency(self, frequency):
                                      frequency=frequency)
     min_nlooks = self.cast_input(min_nlooks, dtype=float,
                                      frequency=frequency)
+    y_snap = self.cast_input(y_snap, dtype=float, 
+                             default=np.nan, frequency=frequency)
+    x_snap = self.cast_input(x_snap, dtype=float, 
+                             default=np.nan, frequency=frequency)
 
     y_max = self.cast_input(y_max, dtype=float, default=np.nan, 
                             frequency=frequency)
     x_min = self.cast_input(x_min, dtype=float, default=np.nan, 
                             frequency=frequency)
-    top_left_x_snap = self.cast_input(top_left_x_snap, dtype=float, 
-                                      default=np.nan, frequency=frequency)
-    top_left_y_snap = self.cast_input(top_left_y_snap, dtype=float, 
-                                      default=np.nan, frequency=frequency)
-
     y_min = self.cast_input(y_min, dtype=float,
                                        default=np.nan, frequency=frequency)
     x_max = self.cast_input(x_max, dtype=float, 
                                        default=np.nan, frequency=frequency)
-    bottom_right_x_snap = self.cast_input(bottom_right_x_snap, dtype=float, 
-                                          default=np.nan, frequency=frequency)
-    bottom_right_snap = self.cast_input(bottom_right_y_snap, dtype=float, 
-                                        default=np.nan, frequency=frequency)
 
     step_x = self.cast_input(step, dtype=float, default=np.nan, 
                              frequency=frequency)
@@ -195,10 +193,10 @@ def _runGeocodeFrequency(self, frequency):
         if not _is_valid(y_min):
             y_min = geo.geoGridStartY + geo.geoGridSpacingY * geo.geoGridLength 
 
-    x_min = _snap_coordinate(x_min, top_left_x_snap, step_x, np.floor)
-    y_max = _snap_coordinate(y_max, top_left_y_snap, step_y, np.ceil)
-    x_max = _snap_coordinate(x_max, bottom_right_x_snap, step_x, np.ceil)
-    y_min = _snap_coordinate(y_min, bottom_right_y_snap, step_y, np.floor)
+    x_min = _snap_coordinate(x_min, x_snap, np.floor)
+    y_max = _snap_coordinate(y_max, y_snap, np.ceil)
+    x_max = _snap_coordinate(x_max, x_snap, np.ceil)
+    y_min = _snap_coordinate(y_min, y_snap, np.floor)
 
     size_y = int(np.round((y_min - y_max)/step_y))
     size_x = int(np.round((x_max - x_min)/step_x))
@@ -282,6 +280,8 @@ def _runGeocodeFrequency(self, frequency):
     flag_apply_rtc =  (rtc_output_type and
                        rtc_output_type != input_terrain_radiometry and
                        'gamma' in rtc_output_type)
+    if flag_apply_rtc is None:
+        flag_apply_rtc = False
     geotransform = [x_min, step_x, 0, y_max, 0, step_y]
     state.geotransform_dict[frequency] = geotransform
 
@@ -399,7 +399,7 @@ def _runGeocodeFrequency(self, frequency):
         h5_ds = os.path.join(root_ds, 'radiometricTerrainCorrectionFlag')
         if h5_ds in hdf5_obj:
             del hdf5_obj[h5_ds]
-        dset = hdf5_obj.create_dataset(h5_ds, data=bool(flag_apply_rtc))
+        dset = hdf5_obj.create_dataset(h5_ds, data=np.string_(str(flag_apply_rtc)))
         h5_ds_list.append(h5_ds)
 
         # X and Y coordinates
@@ -408,24 +408,32 @@ def _runGeocodeFrequency(self, frequency):
         dy = geotransform[5]
         x0 = geotransform[0] + 0.5 * dx
         y0 = geotransform[3] + 0.5 * dy
-        xf = geotransform[0] + size_x * dx
-        yf = geotransform[3] + size_y * dy
+        xf = x0 + (size_x - 1) * dx
+        yf = y0 + (size_y - 1) * dy
 
         # xCoordinates
         h5_ds = os.path.join(root_ds, 'xCoordinates') # float64
-        x_vect = np.arange(x0, xf, dx, dtype=np.float64)
+        x_vect = np.linspace(x0, xf, size_x, dtype=np.float64)
         if h5_ds in hdf5_obj:
             del hdf5_obj[h5_ds]
         xds = hdf5_obj.create_dataset(h5_ds, data=x_vect)
         h5_ds_list.append(h5_ds)
+        try:	
+            xds.make_scale()	
+        except AttributeError:	
+            pass
 
         # yCoordinates
         h5_ds = os.path.join(root_ds, 'yCoordinates') # float64
-        y_vect = np.arange(y0, yf, dy, dtype=np.float64)
+        y_vect = np.linspace(y0, yf, size_y, dtype=np.float64)
         if h5_ds in hdf5_obj:
             del hdf5_obj[h5_ds]
         yds = hdf5_obj.create_dataset(h5_ds, data=y_vect)
         h5_ds_list.append(h5_ds)
+        try:	
+            yds.make_scale()	
+        except AttributeError:	
+            pass
 
         #Associate grid mapping with data - projection created later
         h5_ds = os.path.join(root_ds, "projection")
@@ -584,24 +592,24 @@ def _runGeocodeFrequency(self, frequency):
         # save nlooks
         _save_hdf5_dataset(self, 'out_geo_nlooks', hdf5_obj, root_ds, 
                            h5_ds_list, geocoded_dict, frequency, yds, xds, 
-                           'nlooks',
-                           standard_name = 'nlooks',
+                           'numberOfLooks',
+                           standard_name = 'numberOfLooks',
                            long_name = 'number of looks', 
                            units = 'looks',
                            fill_value = np.nan, 
                            valid_min = 0)
 
         # save rtc
-        _save_hdf5_dataset(self, 'out_geo_rtc', hdf5_obj, root_ds, 
-                           h5_ds_list, geocoded_dict, frequency, yds, xds, 
-                           'rtc',
-                           standard_name = 'rtc_area_factor',
-                           long_name = 'RTC area factor', 
-                           units = 'unitless',
-                           fill_value = np.nan, 
-                           valid_min = 0,
-                           valid_max = 2)
-
+        if flag_apply_rtc:
+            _save_hdf5_dataset(self, 'out_geo_rtc', hdf5_obj, root_ds, 
+                            h5_ds_list, geocoded_dict, frequency, yds, xds, 
+                            'areaNormalizationFactor',
+                            standard_name = 'areaNormalizationFactor',
+                            long_name = 'RTC area factor', 
+                            units = 'unitless',
+                            fill_value = np.nan, 
+                            valid_min = 0,
+                            valid_max = 2)
 
         if ('out_dem_vertices' in geocoded_dict or 
             'out_geo_vertices' in  geocoded_dict):
@@ -612,31 +620,39 @@ def _runGeocodeFrequency(self, frequency):
             dy = geotransform[5]
             x0 = geotransform[0] 
             y0 = geotransform[3]
-            xf = geotransform[0] + (size_x + 1) * dx
-            yf = geotransform[3] + (size_y + 1) * dy
+            xf = xf + size_x * dx
+            yf = yf + size_y * dy
 
             # xCoordinates
             h5_ds = os.path.join(root_ds, 'xCoordinatesVertices') # float64
-            x_vect_vertices = np.arange(x0, xf, dx, dtype=np.float64)
+            x_vect_vertices = np.linspace(x0, xf, size_x + 1, dtype=np.float64)
             if h5_ds in hdf5_obj:
                 del hdf5_obj[h5_ds]
             xds_vertices = hdf5_obj.create_dataset(h5_ds, data=x_vect_vertices)
             h5_ds_list.append(h5_ds)
+            try:	
+                xds_vertices.make_scale()	
+            except AttributeError:	
+                pass
 
             # yCoordinates
             h5_ds = os.path.join(root_ds, 'yCoordinatesVertices') # float64
-            y_vect_vertices = np.arange(y0, yf, dy, dtype=np.float64)
+            y_vect_vertices = np.linspace(y0, yf, size_y + 1, dtype=np.float64)
             if h5_ds in hdf5_obj:
                 del hdf5_obj[h5_ds]
             yds_vertices = hdf5_obj.create_dataset(h5_ds, data=y_vect_vertices)
             h5_ds_list.append(h5_ds)
+            try:	
+                yds_vertices.make_scale()	
+            except AttributeError:	
+                pass
 
             # save geo grid
             _save_hdf5_dataset(self, 'out_dem_vertices', hdf5_obj, root_ds, 
                             h5_ds_list, geocoded_dict, frequency, 
                             yds_vertices, xds_vertices, 
-                            'interpolated_dem',
-                            standard_name = 'interpolated_dem',
+                            'interpolatedDem',
+                            standard_name = 'interpolatedDem',
                             long_name = 'interpolated dem', 
                             units = 'meters',
                             fill_value = np.nan, 
@@ -653,10 +669,10 @@ def _runGeocodeFrequency(self, frequency):
         h5_ref = f'HDF5:{output_hdf5}:{h5_ds_str}'
         state.outputList[frequency].append(h5_ref)
 
-def _snap_coordinate(val, snap, step, round_function, dtype=float):
-    abs_step = np.absolute(step)
-    offset = np.remainder(float(snap), abs_step)
-    new_val = round_function(float(val - offset) / abs_step) * abs_step + offset
+def _snap_coordinate(val, snap, round_function, dtype=float):
+    if np.isnan(snap):
+        return dtype(val)
+    new_val = round_function(float(val) / snap) * snap
     return dtype(new_val)
 
 def _is_valid(data):

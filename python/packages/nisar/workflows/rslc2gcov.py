@@ -31,9 +31,8 @@ class Workflow(object):
         self.state = App.State()
 
         #Saved states folder
-        self.state_folder = 'rslc2gcov_completed_steps'
-        self.current_state_filename = os.path.join(
-            self.state_folder, 'currentState')
+        self.state_folder = None
+        self.current_state_filename = None
 
         #Steps completed
         self.steps_completed = []
@@ -128,11 +127,15 @@ class Workflow(object):
         if args.run_config_filename:
             self._print(f'run_config: {args.run_config_filename}')
         self._print('')
-        os.makedirs(self.state_folder, exist_ok=True)
+
 
         #Parse yaml
         self.userconfig = self.loadYAML(args.run_config_filename)
-
+        if 'runconfig' in self.userconfig.keys():
+            self.userconfig = self.userconfig['runconfig']
+        if 'groups' in self.userconfig.keys():
+            self.userconfig = self.userconfig['groups']
+        
         ###Create initial state
         if args.resume_from_step is not None:
             self._print(f'resume from step: {args.resume_from_step}')
@@ -143,6 +146,21 @@ class Workflow(object):
             self.load_state(state_filename=self.current_state_filename)
         else:
             self.state = State()
+
+        self.state.product_path = self.get_value(['ProductPathGroup', 
+            'ProductPath'])
+        
+        # temporary directory
+        self.state.scratch_path = self.get_value(['ProductPathGroup',
+            'ScratchPath'])
+        os.makedirs(self.state.scratch_path, exist_ok=True) 
+
+        # state folder
+        self.state_folder = os.path.join(self.state.scratch_path,
+            'rslc2gcov_completed_steps')  
+        os.makedirs(self.state_folder, exist_ok=True)
+        self.current_state_filename = os.path.join(
+            self.state_folder, 'currentState')
 
         state_counter = 1
 

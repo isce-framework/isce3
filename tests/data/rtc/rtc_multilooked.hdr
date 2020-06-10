@@ -1,4 +1,6 @@
 ENVI
+description = {
+/Users/shiroma/tools/isce/src/isce3-fn-develop-pr/tests/data/rtc/rtc_multilooked.bin}
 samples = 100
 lines   = 100
 bands   = 1
@@ -7,3 +9,5 @@ file type = ENVI Standard
 data type = 4
 interleave = bsq
 byte order = 0
+band names = {
+Band 1}

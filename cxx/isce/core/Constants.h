@@ -61,6 +61,10 @@ struct FixedString {
 const short SHADOW_VALUE = 1;
 const short LAYOVER_VALUE = 2;
 
+/** Area projection algorithm radar grid margin **/
+const int AREA_PROJECTION_RADAR_GRID_MARGIN = 100;
+const float AREA_PROJECTION_MIN_VALID_SAMPLES_RATIO = 0.75;
+
 /** Convert decimal degrees to meters approximately */
 double inline decimaldeg2meters(double deg) { return deg * (M_PI/180.0) * 6.37e6; }
 

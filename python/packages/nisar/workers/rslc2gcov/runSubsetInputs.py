@@ -8,7 +8,7 @@ def runSubsetInputs(self):
     '''
 
     state = self.state
-    subset_dict = self.get_value(['parameters',
+    subset_dict = self.get_value(['processing',
         'input_subset', 'list_of_frequencies'])
 
     if isinstance(subset_dict, str):
@@ -25,12 +25,18 @@ def runSubsetInputs(self):
         state.outputList = collections.OrderedDict()
 
     self._radar_grid_list = collections.OrderedDict()
-    for frequency in state.subset_dict.keys():
+    frequency_list = state.subset_dict.keys()
+    for frequency in frequency_list:
         if not state.subset_dict[frequency]:
             current_key = (f'//science/LSAR/SLC/swaths/'
                         f'frequency{frequency}/listOfPolarizations')
             hdf5_obj = h5py.File(state.input_hdf5, 'r')
-            state.subset_dict[frequency] = [s.decode() 
+            if current_key not in hdf5_obj:
+                print(f'ERROR key {current_key} not found in'
+                      f' {state.input_hdf5}. Ignoring frequency {frequency}.')
+                del state.subset_dict[frequency]
+                continue
+            state.subset_dict[frequency] = [s.decode().upper() 
                 for s in hdf5_obj[current_key]]
             hdf5_obj.close()
 

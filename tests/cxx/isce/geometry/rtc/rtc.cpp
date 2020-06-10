@@ -113,10 +113,10 @@ TEST(TestRTC, CheckResults) {
                 continue;
             } else if (rtc_algorithm ==
                        isce::geometry::rtcAlgorithm::RTC_DAVID_SMALL) {
-                max_rmse = 0.5;
+                max_rmse = 0.7;
                 filename = "./rtc_david_small_" + radar_grid_str + ".bin";
             } else {
-                max_rmse = 0.07;
+                max_rmse = 0.1;
                 filename = "./rtc_area_proj_" + radar_grid_str + ".bin";
             }
 

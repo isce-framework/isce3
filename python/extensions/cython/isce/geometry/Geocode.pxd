@@ -41,7 +41,7 @@ cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
         BLOCKS_GEOGRID = 2
         BLOCKS_GEOGRID_AND_RADARGRID = 3
 
-    # Geo2rdr class
+    # Geocode class
     cdef cppclass Geocode[T]:
 
         # Constructor
@@ -101,7 +101,7 @@ cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
         double geoGridSpacingY()
         int geoGridWidth()
         int geoGridLength()
-
+        
     vector[float] getGeoAreaElementMean(
         vector[double] & x_vect,
         vector[double] & y_vect,
@@ -117,5 +117,5 @@ cdef extern from "isce/geometry/Geocode.h" namespace "isce::geometry":
         float rtc_min_value_db,
         double abs_cal_factor,
         float radar_grid_nlooks) except +
-
-# end of file
+        
+ # end of file

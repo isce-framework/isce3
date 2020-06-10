@@ -733,6 +733,7 @@ cdef class pyGeocodeComplexDouble(pyGeocodeBase):
     def geoGridLength(self):
         return self.c_geocode.geoGridLength()
 
+
 def pyGetGeoAreaElementMean(
         vector[double] x_vect,
         vector[double] y_vect,

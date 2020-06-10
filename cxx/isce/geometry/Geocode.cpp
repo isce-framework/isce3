@@ -1325,36 +1325,40 @@ void Geocode<T>::_RunBlock(
                 dem_last[jj+1] = dem11;
             }
 
-            const int MARGIN = 20; // margin in pixels
-
             // define slant-range window
             const int y_min = std::floor((std::min(std::min(a00, a01),
                                                    std::min(a10, a11)) -
                                           start) /
                                          pixazm) -
                               1;
-            if (y_min < -MARGIN || y_min > ybound + 1)
+            if (y_min < -isce::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
+                    y_min > ybound + 1)
                 continue;
             const int x_min = std::floor((std::min(std::min(r00, r01),
                                                    std::min(r10, r11)) -
                                           r0) /
                                          dr) -
                               1;
-            if (x_min < -MARGIN || x_min > xbound + 1)
+            if (x_min < -isce::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
+                    x_min > xbound + 1)
                 continue;
             const int y_max = std::ceil((std::max(std::max(a00, a01),
                                                   std::max(a10, a11)) -
                                          start) /
                                         pixazm) +
                               1;
-            if (y_max > ybound + 1 + MARGIN || y_max < -1 || y_max < y_min)
+            if (y_max > ybound + 1 + 
+                isce::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
+                    y_max < -1 || y_max < y_min)
                 continue;
             const int x_max = std::ceil((std::max(std::max(r00, r01),
                                                   std::max(r10, r11)) -
                                          r0) /
                                         dr) +
                               1;
-            if (x_max > xbound + 1 + MARGIN || x_max < -1 || x_max < x_min)
+            if (x_max > xbound + 1 + 
+                isce::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
+                    x_max < -1 || x_max < x_min)
                 continue;
 
             const double y00 = (a00 - start) / pixazm - y_min;
@@ -1400,13 +1404,14 @@ void Geocode<T>::_RunBlock(
                     double w = w_arr(yy, xx);
                     int y = yy + y_min;
                     int x = xx + x_min;
-                    if (w == 0)
+                    if (w == 0 || w * w_total < 0)
                         continue;
                     else if (y < 0 || x < 0 || y >= radar_grid.length() ||
                              x >= radar_grid.width()) {
                         nlooks = std::numeric_limits<double>::quiet_NaN();
                         break;
                     }
+                    w = std::abs(w);
                     if (output_mode == geocodeOutputMode::
                                                AREA_PROJECTION_GAMMA_NAUGHT) {
                         float rtc_value = rtc_area(y, x);
@@ -1442,7 +1447,9 @@ void Geocode<T>::_RunBlock(
             }
 
             // ignoring boundary or low-sampled area elements
-            if (std::isnan(nlooks) || std::abs(nlooks) < 0.75 * std::abs(w_total) ||
+            if (std::isnan(nlooks) || 
+                nlooks < isce::core::AREA_PROJECTION_MIN_VALID_SAMPLES_RATIO * 
+                std::abs(w_total) ||
                     (!std::isnan(min_nlooks) && nlooks <= min_nlooks))
                 continue;
 
@@ -1581,6 +1588,7 @@ template class Geocode<float>;
 template class Geocode<double>;
 template class Geocode<std::complex<float>>;
 template class Geocode<std::complex<double>>;
+
 
 // template <typename T>
 std::vector<float> getGeoAreaElementMean(
@@ -1886,6 +1894,10 @@ std::vector<float> _getGeoAreaElementMean(
 
     return cumulative_sum;
 }
+
+
+
+
 
 } // namespace geometry
 } // namespace isce

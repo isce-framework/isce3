@@ -440,8 +440,10 @@ void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
                               int plane_orientation)
 {
 
-    // if line is vertical, return
-    if (x2 == x1)
+    // if line is vertical or out of boundaries, return
+    if (x2 == x1 || (x1 < 0 && x2 < 0) ||
+        (x1 >= width - 1 && x2 >= width - 1) || (y1 < 0 && y2 < 0) ||
+        (y1 >= length - 1 && y2 >= length - 1))
         return;
 
     double slope = (y2 - y1) / (x2 - x1);
@@ -460,10 +462,26 @@ void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
         segment_multiplier = -plane_orientation;
     }
 
+    if (x_start < 0)
+        x_start = 0;
+
+    const double x_increment_margin = 0.000001;
+
     while (x_start < x_end) {
         const double y_start = slope * x_start + offset;
+        const double y_start_next = slope * (x_start + x_increment_margin) + offset;
         const int x_index = std::floor(x_start);
-        int y_index = std::floor(y_start);
+        int y_index = std::floor(y_start_next);
+
+        if (y_index < 0 ) {
+            x_start = -offset / slope;
+            continue;
+        }
+
+        if (y_index > length - 1) {
+            x_start = (length - 1 - offset) / slope;
+            continue;
+        }
 
         // set the integration end point
         double x_next;
@@ -476,14 +494,8 @@ void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
             x_next = std::min((y_index - offset) / slope, (double) x_index + 1);
         x_next = std::min(x_next, x_end);
 
-        if (x_start == x_next)
+        if (x_start == x_next || x_index > width - 1)
             break;
-
-        if (x_index < 0 || y_index < 0 || x_index > width - 1 ||
-            y_index > length - 1) {
-            x_start = x_next + 0.000001;
-            continue;
-        }
 
         const double y_next = slope * x_next + offset;
 
@@ -501,7 +513,7 @@ void areaProjIntegrateSegment(double y1, double y2, double x1, double x2,
             w_arr(y_index, x_index) += area;
             nlooks += area;
         }
-        x_start = x_next + 0.000001;
+        x_start = x_next;
     }
 }
 
@@ -524,7 +536,7 @@ void _addArea(double area, isce::core::Matrix<float>& out_array,
         for (int jj = 0; jj < size_x; ++jj) {
             double w = w_arr(ii, jj) - w_arr_out(ii, jj);
             w_arr(ii, jj) = 0;
-            if (w == 0 || area <= 0)
+            if (w == 0 || w * area < 0)
                 continue;
             int y = ii + y_min;
             int x = jj + x_min;
@@ -1026,35 +1038,40 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                 dem_last[jj+1] = dem11;
             }
 
-            int MARGIN = 20; // margin in pixels
             // define slant-range window
             int y_min = std::floor((std::min(std::min(a00, a01),
                                              std::min(a10, a11)) -
                                     start) /
                                    pixazm) -
                         1;
-            if (y_min < -MARGIN || y_min > ybound + 1)
+            if (y_min < -isce::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
+                    y_min > ybound + 1)
                 continue;
             int x_min = std::floor((std::min(std::min(r00, r01),
                                              std::min(r10, r11)) -
                                     r0) /
                                    dr) -
                         1;
-            if (x_min < -MARGIN || x_min > xbound + 1)
+            if (x_min < -isce::core::AREA_PROJECTION_RADAR_GRID_MARGIN ||
+                    x_min > xbound + 1)
                 continue;
             int y_max = std::ceil((std::max(std::max(a00, a01),
                                             std::max(a10, a11)) -
                                    start) /
                                   pixazm) +
                         1;
-            if (y_max > ybound + 1 + MARGIN || y_max < -1 || y_max < y_min)
+            if (y_max > ybound + 1 + 
+                isce::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
+                    y_max < -1 || y_max < y_min)
                 continue;
             int x_max = std::ceil((std::max(std::max(r00, r01),
                                             std::max(r10, r11)) -
                                    r0) /
                                   dr) +
                         1;
-            if (x_max > xbound + 1 + MARGIN || x_max < -1 || x_max < x_min)
+            if (x_max > xbound + 1 +
+                isce::core::AREA_PROJECTION_RADAR_GRID_MARGIN || 
+                    x_max < -1 || x_max < x_min)
                 continue;
 
             if (out_geo_vertices != nullptr)

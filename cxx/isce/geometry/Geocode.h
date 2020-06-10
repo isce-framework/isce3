@@ -47,8 +47,6 @@ enum geocodeMemoryMode {
 
 template<class T> class Geocode {
 public:
-    /** Class constructor **/
-    // Geocode() {}
 
     /** Geocode data from slant-range to map coordinates
      *
