@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>EulerAngles &#8212; ISCE  documentation</title>
@@ -44,11 +44,11 @@
 </div>
 <div class="section" id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="isce3.core.EulerAngles.EulerAngles">
 <em class="property">class </em><code class="sig-prename descclassname">isce3.core.EulerAngles.</code><code class="sig-name descname">EulerAngles</code><a class="headerlink" href="#isce3.core.EulerAngles.EulerAngles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper for pyEulerAngles.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.EulerAngles.EulerAngles.bind">
 <em class="property">static </em><code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">pyEulerAngles euler</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.EulerAngles.EulerAngles.bind" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new pyEulerAngles instance with C++ EulerAngles attribute shallow copied from
@@ -70,9 +70,9 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.EulerAngles.EulerAngles.loadFromH5">
-<em class="property">static </em><code class="sig-name descname">loadFromH5</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">h5Group</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.EulerAngles.EulerAngles.loadFromH5" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">loadFromH5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span></em>, <em class="sig-param"><span class="n">h5Group</span></em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.EulerAngles.EulerAngles.loadFromH5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load EulerAngles from an HDF5 group</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -84,7 +84,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="isce3.core.EulerAngles.EulerAngles.pitch">
 <code class="sig-name descname">pitch</code><a class="headerlink" href="#isce3.core.EulerAngles.EulerAngles.pitch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return pitch angles in radians.</p>
@@ -95,7 +95,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.EulerAngles.EulerAngles.quaternion">
 <code class="sig-name descname">quaternion</code><span class="sig-paren">(</span><em class="sig-param">double t</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.EulerAngles.EulerAngles.quaternion" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return quaternion representation of given euler angles at a given time.</p>
@@ -106,7 +106,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="isce3.core.EulerAngles.EulerAngles.roll">
 <code class="sig-name descname">roll</code><a class="headerlink" href="#isce3.core.EulerAngles.EulerAngles.roll" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return roll angles in radians.</p>
@@ -117,7 +117,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.EulerAngles.EulerAngles.rotmat">
 <code class="sig-name descname">rotmat</code><span class="sig-paren">(</span><em class="sig-param">double t</em>, <em class="sig-param">sequence</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.EulerAngles.EulerAngles.rotmat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return rotation matrix corresponding to angle sequence at a given time.</p>
@@ -131,9 +131,9 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.EulerAngles.EulerAngles.saveToH5">
-<code class="sig-name descname">saveToH5</code><span class="sig-paren">(</span><em class="sig-param">h5Group</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.EulerAngles.EulerAngles.saveToH5" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">saveToH5</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">h5Group</span></em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.EulerAngles.EulerAngles.saveToH5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save EulerAngles to an HDF5 group</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -145,7 +145,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="isce3.core.EulerAngles.EulerAngles.yaw">
 <code class="sig-name descname">yaw</code><a class="headerlink" href="#isce3.core.EulerAngles.EulerAngles.yaw" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return yaw angles in radians.</p>
@@ -156,7 +156,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.EulerAngles.EulerAngles.ypr">
 <code class="sig-name descname">ypr</code><span class="sig-paren">(</span><em class="sig-param">double t</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.EulerAngles.EulerAngles.ypr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return yaw, pitch and roll euler angles at a given time.</p>
@@ -222,7 +222,7 @@ another C++ EulerAngles attribute contained in a separate instance.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.4.
     </div>
   </body>
 </html>

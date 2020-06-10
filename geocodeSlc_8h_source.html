@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>ISCE: isce/cxx/isce/product/forward.h Source File</title>
+<title>ISCE: isce/cxx/isce/geocode/geocodeSlc.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -89,27 +89,40 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_58f4997a0606e8afbe9d7eb91f442043.html">isce</a></li><li class="navelem"><a class="el" href="dir_3e54fbb9b7fb0cc03592820a9f80d38d.html">cxx</a></li><li class="navelem"><a class="el" href="dir_f70c12677d346dc89e8c3b4205414355.html">isce</a></li><li class="navelem"><a class="el" href="dir_ad874569fb4499d6745364b5a611a81c.html">product</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_58f4997a0606e8afbe9d7eb91f442043.html">isce</a></li><li class="navelem"><a class="el" href="dir_3e54fbb9b7fb0cc03592820a9f80d38d.html">cxx</a></li><li class="navelem"><a class="el" href="dir_f70c12677d346dc89e8c3b4205414355.html">isce</a></li><li class="navelem"><a class="el" href="dir_9b7719b4fd66a4c003b576d08329ad3e.html">geocode</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">forward.h</div>  </div>
+<div class="title">geocodeSlc.h</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00003"></a><span class="lineno"><a class="line" href="namespaceisce_1_1product.html">    3</a></span>&#160;<span class="keyword">namespace </span>isce { <span class="keyword">namespace </span>product {</div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;</div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;    <span class="keyword">class </span><a class="code" href="classisce_1_1product_1_1Product.html">Product</a>;</div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;    <span class="keyword">class </span><a class="code" href="classisce_1_1product_1_1RadarGridParameters.html">RadarGridParameters</a>;</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;    <span class="keyword">class </span><a class="code" href="classisce_1_1product_1_1GeoGridParameters.html">GeoGridParameters</a>;</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;    <span class="keyword">class </span><a class="code" href="classisce_1_1product_1_1Swath.html">Swath</a>;</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;}}</div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &lt;cstddef&gt;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;isce/core/forward.h&gt;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;isce/io/forward.h&gt;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;isce/product/forward.h&gt;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">namespace </span>isce { <span class="keyword">namespace </span>geocode {</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keywordtype">void</span> geocodeSlc(<a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; outputRaster, <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; inputRaster,</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;                <a class="code" href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a>&amp; demRaster,</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;                <span class="keyword">const</span> <a class="code" href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a>&amp; radarGrid,</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;                <span class="keyword">const</span> <a class="code" href="classisce_1_1product_1_1GeoGridParameters.html">isce::product::GeoGridParameters</a>&amp; geoGrid,</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;                <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a>&amp; orbit,</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;                <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;double&gt;</a>&amp; nativeDoppler,</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;                <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt;double&gt;</a>&amp; imageGridDoppler,</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;                <span class="keyword">const</span> <a class="code" href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a>&amp; ellipsoid,</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;                <span class="keyword">const</span> <span class="keywordtype">double</span>&amp; thresholdGeo2rdr, <span class="keyword">const</span> <span class="keywordtype">int</span>&amp; numiterGeo2rdr,</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;                <span class="keyword">const</span> <span class="keywordtype">size_t</span>&amp; linesPerBlock, <span class="keyword">const</span> <span class="keywordtype">double</span>&amp; demBlockMargin,</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;                <span class="keyword">const</span> <span class="keywordtype">bool</span> flatten = <span class="keyword">true</span>);</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;}} <span class="comment">// namespace isce::geocode</span></div>
+<div class="ttc" id="classisce_1_1io_1_1Raster_html"><div class="ttname"><a href="classisce_1_1io_1_1Raster.html">isce::io::Raster</a></div><div class="ttdoc">Data structure meant to handle Raster I/O operations. </div><div class="ttdef"><b>Definition:</b> Raster.h:34</div></div>
 <div class="ttc" id="classisce_1_1product_1_1RadarGridParameters_html"><div class="ttname"><a href="classisce_1_1product_1_1RadarGridParameters.html">isce::product::RadarGridParameters</a></div><div class="ttdef"><b>Definition:</b> RadarGridParameters.h:15</div></div>
-<div class="ttc" id="classisce_1_1product_1_1Swath_html"><div class="ttname"><a href="classisce_1_1product_1_1Swath.html">isce::product::Swath</a></div><div class="ttdef"><b>Definition:</b> Swath.h:25</div></div>
-<div class="ttc" id="classisce_1_1product_1_1Product_html"><div class="ttname"><a href="classisce_1_1product_1_1Product.html">isce::product::Product</a></div><div class="ttdef"><b>Definition:</b> Product.h:29</div></div>
+<div class="ttc" id="classisce_1_1core_1_1LUT2d_html"><div class="ttname"><a href="classisce_1_1core_1_1LUT2d.html">isce::core::LUT2d&lt; double &gt;</a></div></div>
+<div class="ttc" id="classisce_1_1core_1_1Ellipsoid_html"><div class="ttname"><a href="classisce_1_1core_1_1Ellipsoid.html">isce::core::Ellipsoid</a></div><div class="ttdoc">Data structure to store Ellipsoid information. </div><div class="ttdef"><b>Definition:</b> Ellipsoid.h:20</div></div>
+<div class="ttc" id="classisce_1_1core_1_1Orbit_html"><div class="ttname"><a href="classisce_1_1core_1_1Orbit.html">isce::core::Orbit</a></div><div class="ttdoc">Sequence of platform ephemeris samples (state vectors) with uniform temporal spacing, supporting efficient lookup and interpolation. </div><div class="ttdef"><b>Definition:</b> Orbit.h:43</div></div>
 <div class="ttc" id="classisce_1_1product_1_1GeoGridParameters_html"><div class="ttname"><a href="classisce_1_1product_1_1GeoGridParameters.html">isce::product::GeoGridParameters</a></div><div class="ttdef"><b>Definition:</b> GeoGridParameters.h:6</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <hr>

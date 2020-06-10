@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>ResampSlc &#8212; ISCE  documentation</title>
@@ -37,23 +37,23 @@
 rubber-sheet transformation of SLC rasters.</p>
 <div class="section" id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="isce3.image.ResampSlc.ResampSlc">
 <em class="property">class </em><code class="sig-prename descclassname">isce3.image.ResampSlc.</code><code class="sig-name descname">ResampSlc</code><a class="headerlink" href="#isce3.image.ResampSlc.ResampSlc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper for pyResample</p>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="isce3.image.ResampSlc.ResampSlc.doppler">
 <code class="sig-name descname">doppler</code><a class="headerlink" href="#isce3.image.ResampSlc.ResampSlc.doppler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the content Doppler LUT for the product to be resampled.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="isce3.image.ResampSlc.ResampSlc.linesPerTile">
 <code class="sig-name descname">linesPerTile</code><a class="headerlink" href="#isce3.image.ResampSlc.ResampSlc.linesPerTile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of lines per processing tile.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.image.ResampSlc.ResampSlc.resamp">
 <code class="sig-name descname">resamp</code><span class="sig-paren">(</span><em class="sig-param">pyRaster inSlc=None</em>, <em class="sig-param">pyRaster outSlc=None</em>, <em class="sig-param">pyRaster rgoffRaster=None</em>, <em class="sig-param">pyRaster azoffRaster=None</em>, <em class="sig-param">infile=None</em>, <em class="sig-param">outfile=None</em>, <em class="sig-param">rgfile=None</em>, <em class="sig-param">azfile=None</em>, <em class="sig-param">int inputBand=1</em>, <em class="sig-param">bool flatten=False</em>, <em class="sig-param">bool isComplex=True</em>, <em class="sig-param">int rowBuffer=40</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.image.ResampSlc.ResampSlc.resamp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run resamp on complex image data stored in HDF5 product or specified
@@ -81,7 +81,7 @@ as an external file.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.image.ResampSlc.ResampSlc.setReferenceProduct">
 <code class="sig-name descname">setReferenceProduct</code><span class="sig-paren">(</span><em class="sig-param">pyProduct refProduct</em>, <em class="sig-param">freq=u'A'</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.image.ResampSlc.ResampSlc.setReferenceProduct" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a reference product for flattening.</p>
@@ -138,7 +138,7 @@ as an external file.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.4.
     </div>
   </body>
 </html>

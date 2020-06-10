@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>Poly2d &#8212; ISCE  documentation</title>
@@ -53,11 +53,11 @@
 </div>
 <div class="section" id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="isce3.core.Poly2d.Poly2d">
 <em class="property">class </em><code class="sig-prename descclassname">isce3.core.Poly2d.</code><code class="sig-name descname">Poly2d</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper for pyPoly2d.</p>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="isce3.core.Poly2d.Poly2d.azimuthMean">
 <code class="sig-name descname">azimuthMean</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.azimuthMean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return azimuth mean.</p>
@@ -71,7 +71,7 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="isce3.core.Poly2d.Poly2d.azimuthNorm">
 <code class="sig-name descname">azimuthNorm</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.azimuthNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return azimuth norm.</p>
@@ -85,7 +85,7 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="isce3.core.Poly2d.Poly2d.azimuthOrder">
 <code class="sig-name descname">azimuthOrder</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.azimuthOrder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns azimuth order.</p>
@@ -99,14 +99,14 @@
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.Poly2d.Poly2d.bind">
 <em class="property">static </em><code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">pyPoly2d poly</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.bind" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a pyPoly2d object that acts as a reference to an existing
 pyPoly2d instance.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="isce3.core.Poly2d.Poly2d.coeffs">
 <code class="sig-name descname">coeffs</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.coeffs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return polynomial coefficients.</p>
@@ -124,7 +124,7 @@ pyPoly2d instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.Poly2d.Poly2d.dPrint">
 <code class="sig-name descname">dPrint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.dPrint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Debug print of underlying C++ structure.</p>
@@ -135,7 +135,7 @@ pyPoly2d instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.Poly2d.Poly2d.eval">
 <code class="sig-name descname">eval</code><span class="sig-paren">(</span><em class="sig-param">double azi</em>, <em class="sig-param">double rng</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.eval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate polynomial at given point.</p>
@@ -155,7 +155,7 @@ pyPoly2d instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.Poly2d.Poly2d.getCoeff">
 <code class="sig-name descname">getCoeff</code><span class="sig-paren">(</span><em class="sig-param">int row</em>, <em class="sig-param">int col</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.getCoeff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get polynomial coefficient using row and col indices.</p>
@@ -175,13 +175,13 @@ pyPoly2d instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.Poly2d.Poly2d.printPoly">
 <code class="sig-name descname">printPoly</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.printPoly" title="Permalink to this definition">¶</a></dt>
 <dd><p>Debug print function of underlying C++ structure.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="isce3.core.Poly2d.Poly2d.rangeMean">
 <code class="sig-name descname">rangeMean</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.rangeMean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return range mean.</p>
@@ -195,7 +195,7 @@ pyPoly2d instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="isce3.core.Poly2d.Poly2d.rangeNorm">
 <code class="sig-name descname">rangeNorm</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.rangeNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return range norm</p>
@@ -209,7 +209,7 @@ pyPoly2d instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="isce3.core.Poly2d.Poly2d.rangeOrder">
 <code class="sig-name descname">rangeOrder</code><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.rangeOrder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the range order of polynomial.</p>
@@ -223,7 +223,7 @@ pyPoly2d instance.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.Poly2d.Poly2d.setCoeff">
 <code class="sig-name descname">setCoeff</code><span class="sig-paren">(</span><em class="sig-param">int row</em>, <em class="sig-param">int col</em>, <em class="sig-param">double val</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.Poly2d.Poly2d.setCoeff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set polynomial coefficient using row and col indices.</p>
@@ -293,7 +293,7 @@ pyPoly2d instance.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.4.
     </div>
   </body>
 </html>

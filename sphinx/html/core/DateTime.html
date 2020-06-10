@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>DateTime &#8212; ISCE  documentation</title>
@@ -48,11 +48,11 @@
 </div>
 <div class="section" id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="isce3.core.DateTime.DateTime">
 <em class="property">class </em><code class="sig-prename descclassname">isce3.core.DateTime.</code><code class="sig-name descname">DateTime</code><a class="headerlink" href="#isce3.core.DateTime.DateTime" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper for pyDateTime.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.DateTime.DateTime.__add__">
 <code class="sig-name descname">__add__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.DateTime.DateTime.__add__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Addition operator.</p>
@@ -72,7 +72,7 @@
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.DateTime.DateTime.__sub__">
 <code class="sig-name descname">__sub__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.DateTime.DateTime.__sub__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Time difference operator.</p>
@@ -92,7 +92,7 @@
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.DateTime.DateTime.bind">
 <em class="property">static </em><code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">pyDateTime dt</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.DateTime.DateTime.bind" title="Permalink to this definition">¶</a></dt>
 <dd><p>Binds the current pyEllipsoid instance to another C++ DateTime pointer.</p>
@@ -103,7 +103,7 @@
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.DateTime.DateTime.isoformat">
 <code class="sig-name descname">isoformat</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.DateTime.DateTime.isoformat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a string in ISO-8601 format.</p>
@@ -117,9 +117,9 @@
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.DateTime.DateTime.set">
-<code class="sig-name descname">set</code><span class="sig-paren">(</span><em class="sig-param">dt</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.DateTime.DateTime.set" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">set</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.DateTime.DateTime.set" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set pyDateTime using datetime.datetime or str object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -128,9 +128,9 @@
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="isce3.core.DateTime.DateTime.strptime">
-<code class="sig-name descname">strptime</code><span class="sig-paren">(</span><em class="sig-param">pydatestr</em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.DateTime.DateTime.strptime" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">strptime</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pydatestr</span></em><span class="sig-paren">)</span><a class="headerlink" href="#isce3.core.DateTime.DateTime.strptime" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets underlying C++ DateTime object using time tag in ISO-8601 format</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -191,7 +191,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, JPL/Caltech.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.4.
     </div>
   </body>
 </html>
