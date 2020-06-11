@@ -130,7 +130,6 @@ class Workflow(object):
         if args.run_config_filename:
             self._print(f'run_config: {args.run_config_filename}')
         self._print('')
-        #os.makedirs(self.state_folder, exist_ok=True)
 
         #Parse yaml
         self.userconfig = self.loadYAML(args.run_config_filename)
