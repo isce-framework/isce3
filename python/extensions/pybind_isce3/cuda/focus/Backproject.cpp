@@ -3,21 +3,22 @@
 #include <isce/container/RadarGeometry.h>
 #include <isce/core/Kernels.h>
 #include <isce/except/Error.h>
-#include <isce/focus/Backproject.h>
+#include <isce/cuda/focus/Backproject.h>
 #include <isce/focus/DryTroposphereModel.h>
 #include <isce/geometry/DEMInterpolator.h>
 #include <pybind11/numpy.h>
 
 namespace py = pybind11;
 
-using namespace isce::focus;
+using namespace isce::cuda::focus;
+using namespace isce::except;
 
 using isce::container::RadarGeometry;
 using isce::core::Kernel;
-using isce::except::InvalidArgument;
+using isce::focus::parseDryTropoModel;
 using isce::geometry::DEMInterpolator;
 
-void addbinding_backproject(py::module& m)
+void addbinding_cuda_backproject(py::module& m)
 {
     m.def("backproject", [](
                 py::array_t<std::complex<float>, py::array::c_style> out,
@@ -30,7 +31,8 @@ void addbinding_backproject(py::module& m)
                 const Kernel<float>& kernel,
                 const std::string& dry_tropo_model,
                 py::dict rdr2geo_params,
-                py::dict geo2rdr_params) {
+                py::dict geo2rdr_params,
+                int batch) {
 
             if (out.ndim() != 2) {
                 throw InvalidArgument(ISCE_SRCINFO(), "output array must be 2-D");
@@ -83,8 +85,13 @@ void addbinding_backproject(py::module& m)
                 g2rparams.delta_range = py::float_(geo2rdr_params["dr"]);
             }
 
+            if (batch < 1) {
+                throw DomainError(ISCE_SRCINFO(), "batch size must be > 0");
+            }
+
             backproject(out_data, out_geometry, in_data, in_geometry, dem, fc,
-                    ds, kernel, atm, r2gparams, g2rparams);
+                        ds, kernel, atm, r2gparams, g2rparams, batch);
+
             },
             R"(
                 Focus in azimuth via time-domain backprojection.
@@ -99,5 +106,6 @@ void addbinding_backproject(py::module& m)
             py::arg("kernel"),
             py::arg("dry_tropo_model") = "tsx",
             py::arg("rdr2geo_params") = py::dict(),
-            py::arg("geo2rdr_params") = py::dict());
+            py::arg("geo2rdr_params") = py::dict(),
+            py::arg("batch") = 1024);
 }

@@ -105,6 +105,17 @@ TabulatedKernel<T>::TabulatedKernel(const OtherKernel& kernel, int n)
 }
 
 template<typename T>
+TabulatedKernel<T>::TabulatedKernel(const isce::core::TabulatedKernel<T>& other)
+    : Base(other.width()), _table(other.table())
+{
+    auto n = static_cast<int>(other.table().size());
+    _imax = n - 2;
+
+    auto dx = Base::halfwidth() / (n - 1.);
+    _rdx = 1. / dx;
+}
+
+template<typename T>
 CUDA_DEV inline T TabulatedKernel<T>::eval(double t) const
 {
     return TabulatedKernelView<T>(*this).eval(t);

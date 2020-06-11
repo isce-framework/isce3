@@ -13,9 +13,14 @@ std::string getErrorString(ErrorCode status)
             return "interpolation point outside orbit domain";
         case ErrorCode::OrbitInterpUnknownMethod:
             return "unexpected orbit interpolation method";
+        case ErrorCode::FailedToConverge:
+            return "optimization routine failed to converge within the maximum "
+                   "number of iterations";
+        case ErrorCode::WrongLookSide:
+            return "wrong look side";
         default:
             return "unknown error code";
     }
 }
 
-}}
+}} // namespace isce::error

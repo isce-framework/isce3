@@ -10,9 +10,11 @@ enum class ErrorCode {
     OrbitInterpSizeError,
     OrbitInterpDomainError,
     OrbitInterpUnknownMethod,
+    FailedToConverge,
+    WrongLookSide,
 };
 
 /** Return a string describing the error code */
 std::string getErrorString(ErrorCode);
 
-}}
+}} // namespace isce::error

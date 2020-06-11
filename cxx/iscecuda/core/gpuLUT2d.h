@@ -17,6 +17,9 @@ public:
     /** Deep copy constructor from CPU LUT1d */
     gpuLUT2d(const isce::core::LUT2d<T>&);
 
+    /** Deep copy constructor */
+    gpuLUT2d(const gpuLUT2d<T>&);
+
     /** Shallow copy constructor on device */
     CUDA_HOSTDEV gpuLUT2d(gpuLUT2d<T>&);
 
@@ -52,6 +55,10 @@ public:
 
     /** Get bounds error flag */
     CUDA_HOSTDEV bool boundsError() const { return _boundsError; }
+
+    /** Get interp method */
+    CUDA_HOSTDEV
+    isce::core::dataInterpMethod interpMethod() const { return _interpMethod; }
 
     /** Get pointer to interpolator */
     CUDA_HOSTDEV gpuInterpolator<T>** interp() const { return _interp; }

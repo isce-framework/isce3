@@ -8,13 +8,19 @@
 #include <isce/cuda/core/Orbit.h>
 #include <isce/cuda/core/OrbitView.h>
 #include <isce/cuda/core/gpuLUT1d.h>
+#include <isce/cuda/core/gpuLUT2d.h>
 #include <isce/cuda/except/Error.h>
 #include <isce/cuda/geometry/gpuDEMInterpolator.h>
+#include <isce/geometry/detail/Geo2Rdr.h>
+#include <isce/geometry/detail/Rdr2Geo.h>
+
+namespace detail = isce::geometry::detail;
 
 using isce::core::Basis;
 using isce::core::LookSide;
 using isce::core::OrbitInterpBorderMode;
 using isce::core::Vec3;
+using isce::error::ErrorCode;
 
 namespace isce { namespace cuda { namespace geometry {
 
@@ -25,126 +31,11 @@ int rdr2geo(const isce::core::Pixel& pixel, const Basis& TCNbasis,
             const gpuDEMInterpolator& demInterp, Vec3& targetLLH, LookSide side,
             double threshold, int maxIter, int extraIter)
 {
-    // Initialization
-    Vec3 targetLLH_old, targetVec_old, lookVec;
-
-    // Compute normalized velocity
-    const Vec3 vhat = vel.normalized();
-
-    // Unpack TCN basis vectors to pointers
-    const auto& that = TCNbasis.x0();
-    const auto& chat = TCNbasis.x1();
-    const auto& nhat = TCNbasis.x2();
-
-    // Pre-compute TCN vector products
-    const double ndotv = nhat.dot(vhat);
-    const double vdott = vhat.dot(that);
-
-    // Compute major and minor axes of ellipsoid
-    const double major = ellipsoid.a();
-    const double minor = major * std::sqrt(1.0 - ellipsoid.e2());
-
-    // Set up orthonormal system right below satellite
-    const double satDist = pos.norm();
-    const double eta = 1.0 / std::sqrt(std::pow(pos[0] / major, 2) +
-                                       std::pow(pos[1] / major, 2) +
-                                       std::pow(pos[2] / minor, 2));
-    const double radius = eta * satDist;
-    const double hgt = (1.0 - eta) * satDist;
-
-    // Iterate
-    int converged = 0;
-    double zrdr = targetLLH[2];
-    for (int i = 0; i < (maxIter + extraIter); ++i) {
-
-        // Near nadir test
-        if ((hgt - zrdr) >= pixel.range())
-            break;
-
-        // Cache the previous solution
-        for (int k = 0; k < 3; ++k) {
-            targetLLH_old[k] = targetLLH[k];
-        }
-
-        // Compute angles
-        const double a = satDist;
-        const double b = radius + zrdr;
-        const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a -
-                                       (b / a) * (b / pixel.range()));
-        const double sintheta = std::sqrt(1.0 - costheta * costheta);
-
-        // Compute TCN scale factors
-        const double gamma = pixel.range() * costheta;
-        const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
-        double beta =
-                std::sqrt(std::pow(pixel.range(), 2) * std::pow(sintheta, 2) -
-                          std::pow(alpha, 2));
-        if (side == LookSide::Left) {
-            beta = -beta;
-        }
-
-        // Compute vector from satellite to ground
-        const Vec3 delta = alpha * that + beta * chat + gamma * nhat;
-        Vec3 targetVec = pos + delta;
-
-        // Compute LLH of ground point
-        ellipsoid.xyzToLonLat(targetVec, targetLLH);
-
-        // Interpolate DEM at current lat/lon point
-        targetLLH[2] = demInterp.interpolateLonLat(targetLLH[0], targetLLH[1]);
-
-        // Convert back to XYZ with interpolated height
-        ellipsoid.lonLatToXyz(targetLLH, targetVec);
-        // Compute updated target height
-        zrdr = targetVec.norm() - radius;
-
-        // Check convergence
-        lookVec = pos - targetVec;
-        const double rdiff = pixel.range() - lookVec.norm();
-        if (std::abs(rdiff) < threshold) {
-            converged = 1;
-            break;
-        } else if (i > maxIter) {
-            // XYZ position of old solution
-            ellipsoid.lonLatToXyz(targetLLH_old, targetVec_old);
-            // XYZ position of updated solution
-            for (int idx = 0; idx < 3; ++idx)
-                targetVec[idx] = 0.5 * (targetVec_old[idx] + targetVec[idx]);
-            // Repopulate lat, lon, z
-            ellipsoid.xyzToLonLat(targetVec, targetLLH);
-            // Compute updated target height
-            zrdr = targetVec.norm() - radius;
-        }
-    }
-
-    // ----- Final computation: output points exactly at range pixel if
-    // converged
-
-    // Compute angles
-    const double a = satDist;
-    const double b = radius + zrdr;
-    const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a -
-                                   (b / a) * (b / pixel.range()));
-    const double sintheta = std::sqrt(1.0 - costheta * costheta);
-
-    // Compute TCN scale factors
-    const double gamma = pixel.range() * costheta;
-    const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
-    double beta = std::sqrt(std::pow(pixel.range(), 2) * std::pow(sintheta, 2) -
-                            std::pow(alpha, 2));
-    if (side == LookSide::Left) {
-        beta = -beta;
-    }
-
-    // Compute vector from satellite to ground
-    const Vec3 delta = alpha * that + beta * chat + gamma * nhat;
-    const Vec3 targetVec = pos + delta;
-
-    // Compute LLH of ground point
-    targetLLH = ellipsoid.xyzToLonLat(targetVec);
-
-    // Return convergence flag
-    return converged;
+    double h0 = targetLLH[2];
+    detail::Rdr2GeoParams params = {threshold, maxIter, extraIter};
+    auto status = detail::rdr2geo(&targetLLH, pixel, TCNbasis, pos, vel,
+                                  demInterp, ellipsoid, side, h0, params);
+    return (status == ErrorCode::Success);
 }
 
 __device__ int rdr2geo(double aztime, double slant_range, double doppler,
@@ -154,30 +45,12 @@ __device__ int rdr2geo(double aztime, double slant_range, double doppler,
                        double wvl, LookSide side, double threshold,
                        int max_iter, int extra_iter)
 {
-    /*
-     * Interpolate Orbit to azimuth time, compute TCN basis,
-     * and estimate geographic coordinates.
-     */
-
-    // Interpolate orbit to get state vector
-    Vec3 pos, vel;
-    orbit.interpolate(&pos, &vel, aztime, OrbitInterpBorderMode::FillNaN);
-
-    // Set up geocentric TCN basis
-    const Basis tcn_basis(pos, vel);
-
-    // Compute satellite velocity magnitude
-    const double vmag = vel.norm();
-
-    // Compute Doppler factor
-    const double dopfact = 0.5 * wvl * doppler * slant_range / vmag;
-
-    // Wrap range and Doppler factor in a Pixel object
-    isce::core::Pixel pixel(slant_range, dopfact, 0);
-
-    // Finally, call rdr2geo
-    return rdr2geo(pixel, tcn_basis, pos, vel, ellipsoid, dem_interp,
-                   target_llh, side, threshold, max_iter, extra_iter);
+    double h0 = target_llh[2];
+    detail::Rdr2GeoParams params = {threshold, max_iter, extra_iter};
+    auto status =
+            detail::rdr2geo(&target_llh, aztime, slant_range, doppler, orbit,
+                            dem_interp, ellipsoid, wvl, side, h0, params);
+    return (status == ErrorCode::Success);
 }
 
 CUDA_DEV
@@ -254,6 +127,22 @@ int geo2rdr(const Vec3& inputLLH, const isce::core::Ellipsoid& ellipsoid,
     *slantRange_result = slantRange;
     *aztime_result = aztime;
     return converged;
+}
+
+CUDA_DEV int geo2rdr(const isce::core::Vec3& inputLLH,
+                     const isce::core::Ellipsoid& ellipsoid,
+                     const isce::cuda::core::OrbitView& orbit,
+                     const isce::cuda::core::gpuLUT2d<double>& doppler,
+                     double* aztime, double* slantRange, double wavelength,
+                     isce::core::LookSide side, double threshold, int maxIter,
+                     double deltaRange)
+{
+    double t0 = *aztime;
+    detail::Geo2RdrParams params = {threshold, maxIter, deltaRange};
+    auto status =
+            detail::geo2rdr(aztime, slantRange, inputLLH, ellipsoid, orbit,
+                            doppler, wavelength, side, t0, params);
+    return (status == ErrorCode::Success);
 }
 
 }}} // namespace isce::cuda::geometry

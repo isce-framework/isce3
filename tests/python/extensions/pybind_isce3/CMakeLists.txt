@@ -23,6 +23,10 @@ product/radargridparameters.py
 product/swath.py
 )
 
+if(WITH_CUDA)
+    list(APPEND TESTFILES cuda/focus/backproject.py)
+endif()
+
 foreach(TESTFILE ${TESTFILES})
     get_filename_component(NAMEWE ${TESTFILE} NAME_WE)
     get_filename_component(DIR ${TESTFILE} DIRECTORY)

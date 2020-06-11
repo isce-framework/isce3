@@ -119,6 +119,9 @@ class isce::geometry::DEMInterpolator {
         /** Get pointer to underlying DEM data */
         float * data() { return _dem.data(); }
 
+        /** Get pointer to underlying DEM data */
+        const float* data() const { return _dem.data(); }
+
         /** Get width of DEM data used for interpolation */
         inline size_t width() const { return (_haveRaster ? _dem.width() : _width); }
         /** Set width of DEM data used for interpolation */

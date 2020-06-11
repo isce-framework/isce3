@@ -81,6 +81,34 @@ CUDA_DEV int geo2rdr(const isce::core::Vec3& inputLLH,
                      isce::core::LookSide side, double threshold, int maxIter,
                      double deltaRange);
 
+/**
+ * Map coordinates to radar geometry coordinates transformer
+ *
+ * @param[in] inputLLH Lon/Lat/Hae of target of interest
+ * @param[in] ellipsoid Ellipsoid object
+ * @param[in] orbit gpuOrbit object
+ * @param[in] doppler gpuLUT2d Doppler model
+ * @param[out] aztime azimuth time of inputLLH w.r.t reference epoch of the
+ * orbit
+ * @param[out] slantRange slant range to inputLLH
+ * @param[in] wavelength Radar wavelength
+ * @param[in] threshold slant range convergence threshold in meters
+ * @param[in] maxIter Maximum number of Newton-Raphson iterations
+ * @param[in] deltaRange step size used for computing derivative of doppler
+ *
+ * This is the elementary device-side transformation from map geometry to radar
+ * geometry. The transformation is applicable for a single lon/lat/h coordinate
+ * (i.e., a single point target). For algorithmic details, see \ref
+ * overview_geometry "geometry overview".
+ */
+CUDA_DEV int geo2rdr(const isce::core::Vec3& inputLLH,
+                     const isce::core::Ellipsoid& ellipsoid,
+                     const isce::cuda::core::OrbitView& orbit,
+                     const isce::cuda::core::gpuLUT2d<double>& doppler,
+                     double* aztime, double* slantRange, double wavelength,
+                     isce::core::LookSide side, double threshold, int maxIter,
+                     double deltaRange);
+
 /** Radar geometry coordinates to map coordinates transformer (host testing) */
 CUDA_HOST int rdr2geo_h(const isce::core::Pixel&, const isce::core::Basis&,
                         const isce::core::Vec3& pos,

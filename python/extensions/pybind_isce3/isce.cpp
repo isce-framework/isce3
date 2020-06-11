@@ -8,6 +8,10 @@
 #include "signal/signal.h"
 #include "product/product.h"
 
+#ifdef ISCE3_CUDA
+#include "cuda/cuda.h"
+#endif
+
 PYBIND11_MODULE(pybind_isce3, m) {
     m.doc() = "InSAR Scientific Computing Environment (ISCE)";
 
@@ -18,4 +22,8 @@ PYBIND11_MODULE(pybind_isce3, m) {
     addsubmodule_product(m);
     addsubmodule_container(m);
     addsubmodule_focus(m);
+
+#ifdef ISCE3_CUDA
+    addsubmodule_cuda(m);
+#endif
 }

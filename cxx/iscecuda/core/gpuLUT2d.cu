@@ -43,6 +43,7 @@ void gpuLUT2d<T>::_initInterp()
 
     // Check for any kernel errors
     checkCudaErrors(cudaPeekAtLastError());
+    checkCudaErrors(cudaStreamSynchronize(cudaStreamDefault));
 }
 
 // Kernel for deleting interpolation objects on device.
@@ -94,6 +95,25 @@ gpuLUT2d<T>::gpuLUT2d(const isce::core::LUT2d<T>& lut)
     // Create interpolator
     _initInterp();
     _owner = true;
+}
+
+template<typename T>
+gpuLUT2d<T>::gpuLUT2d(const gpuLUT2d<T>& other)
+    : _haveData(other.haveData()), _boundsError(other.boundsError()),
+      _refValue(other.refValue()), _xstart(other.xStart()),
+      _ystart(other.yStart()), _dx(other.xSpacing()), _dy(other.ySpacing()),
+      _length(other.length()), _width(other.width()),
+      _interpMethod(other.interpMethod()), _owner(true)
+{
+    if (haveData()) {
+        // allocate device storage for LUT data & copy
+        size_t bytes = length() * width() * sizeof(T);
+        checkCudaErrors(cudaMalloc(&_data, bytes));
+        checkCudaErrors(cudaMemcpy(_data, other.data(), bytes,
+                                   cudaMemcpyDeviceToDevice));
+
+        _initInterp();
+    }
 }
 
 // Shallow copy constructor on device

@@ -3,7 +3,7 @@
 #include "forward.h"
 
 #include <cmath>
-#include <valarray>
+#include <vector>
 
 #include <isce/math/Bessel.h>
 
@@ -123,8 +123,10 @@ public:
 
     T operator()(double x) const override;
 
+    const std::vector<T>& table() const { return _table; }
+
 private:
-    std::valarray<T> _table;
+    std::vector<T> _table;
     int _imax;
     T _1_dx;
 };
@@ -143,8 +145,10 @@ public:
 
     T operator()(double x) const override;
 
+    const std::vector<T>& coeffs() const { return _coeffs; }
+
 private:
-    std::valarray<T> _coeffs;
+    std::vector<T> _coeffs;
     T _scale;
 };
 

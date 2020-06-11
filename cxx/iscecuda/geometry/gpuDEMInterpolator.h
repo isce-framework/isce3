@@ -23,7 +23,7 @@ class isce::cuda::geometry::gpuDEMInterpolator {
             _xstart(0.0), _ystart(0.0), _deltax(1.0), _deltay(1.0), _owner(false) {}
 
         /** Constructor with a constant height .*/
-        CUDA_HOSTDEV inline gpuDEMInterpolator(float height) : 
+        CUDA_HOSTDEV inline gpuDEMInterpolator(float height) :
             _haveRaster(false), _refHeight(height), _interpMethod(isce::core::BILINEAR_METHOD),
             _xstart(0.0), _ystart(0.0), _deltax(1.0), _deltay(1.0), _owner(false) {}
 
@@ -31,7 +31,7 @@ class isce::cuda::geometry::gpuDEMInterpolator {
         ~gpuDEMInterpolator();
 
         /** Copy constructor from CPU DEMInterpolator. */
-        CUDA_HOST gpuDEMInterpolator(isce::geometry::DEMInterpolator &);
+        CUDA_HOST gpuDEMInterpolator(const isce::geometry::DEMInterpolator&);
 
         /** Copy constructor on device. */
         CUDA_HOSTDEV gpuDEMInterpolator(gpuDEMInterpolator &);

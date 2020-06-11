@@ -25,8 +25,12 @@
 #include <isce/product/RadarGridParameters.h>
 #include <pyre/journal.h>
 
+#include "detail/Geo2Rdr.h"
+#include "detail/Rdr2Geo.h"
+
 // pull in useful isce::core namespace
 using namespace isce::core;
+using isce::error::ErrorCode;
 using isce::product::RadarGridParameters;
 
 int isce::geometry::
@@ -34,38 +38,12 @@ rdr2geo(double aztime, double slantRange, double doppler, const Orbit & orbit,
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp, Vec3 & targetLLH,
         double wvl, LookSide side, double threshold, int maxIter, int extraIter)
 {
-    // Interpolate Orbit to azimuth time, compute TCN basis, and estimate geographic
-    // coordinates.
-
-    // Interpolate orbit to get state vector
-    if (aztime < orbit.startTime() || aztime > orbit.endTime()) {
-        pyre::journal::warning_t warning("isce.geometry.Geometry.rdr2geo");
-        warning
-            << pyre::journal::at(__HERE__)
-            << "Error in getting state vector for bounds computation."
-            << pyre::journal::newline
-            << " - requested time: " << aztime << pyre::journal::newline
-            << " - bounds: " << orbit.startTime() << " -> " << orbit.endTime()
-            << pyre::journal::endl;
-    }
-    Vec3 pos, vel;
-    orbit.interpolate(&pos, &vel, aztime, OrbitInterpBorderMode::FillNaN);
-
-    // Setup geocentric TCN basis
-    Basis TCNbasis(pos, vel);
-
-    // Compute satellite velocity magnitude
-    const double vmag = vel.norm();
-    // Compute Doppler factor
-    const double dopfact = 0.5 * wvl * doppler * slantRange / vmag;
-
-    // Wrap range and Doppler factor in a Pixel object
-    Pixel pixel(slantRange, dopfact, 0);
-
-    // Finally, call rdr2geo
-    int stat = rdr2geo(pixel, TCNbasis, pos, vel, ellipsoid, demInterp, targetLLH, side,
-                       threshold, maxIter, extraIter);
-    return stat;
+    double h0 = targetLLH[2];
+    detail::Rdr2GeoParams params = {threshold, maxIter, extraIter};
+    auto status =
+            detail::rdr2geo(&targetLLH, aztime, slantRange, doppler, orbit,
+                            demInterp, ellipsoid, wvl, side, h0, params);
+    return (status == ErrorCode::Success);
 }
 
 int isce::geometry::
@@ -73,128 +51,11 @@ rdr2geo(const Pixel & pixel, const Basis & TCNbasis, const Vec3& pos, const Vec3
         const Ellipsoid & ellipsoid, const DEMInterpolator & demInterp,
         Vec3 & targetLLH, LookSide side, double threshold, int maxIter, int extraIter)
 {
-    // Assume orbit has been interpolated to correct azimuth time, then estimate geographic
-    // coordinates.
-
-    // Compute normalized velocity
-    const Vec3 vhat = vel.normalized();
-
-    // Unpack TCN basis vectors
-    const Vec3& that = TCNbasis.x0();
-    const Vec3& chat = TCNbasis.x1();
-    const Vec3& nhat = TCNbasis.x2();
-
-    // Pre-compute TCN vector products
-    const double ndotv = nhat.dot(vhat);
-    const double vdott = vhat.dot(that);
-
-    // Compute major and minor axes of ellipsoid
-    const double major = ellipsoid.a();
-    const double minor = major * std::sqrt(1.0 - ellipsoid.e2());
-
-    // Set up orthonormal system right below satellite
-    const double satDist = pos.norm();
-    const double eta = 1.0 / std::sqrt(
-        std::pow(pos[0] / major, 2) +
-        std::pow(pos[1] / major, 2) +
-        std::pow(pos[2] / minor, 2)
-    );
-    const double radius = eta * satDist;
-    const double hgt = (1.0 - eta) * satDist;
-
-    if (std::isnan(targetLLH[2]))
-        targetLLH[2] = hgt;
-
-    // Iterate
-    int converged = 0;
-    double zrdr = targetLLH[2];
-    for (int i = 0; i < (maxIter + extraIter); ++i) {
-
-        // Near nadir test
-        if ((hgt - zrdr) >= pixel.range())
-            break;
-
-        // Cache the previous solution
-        const Vec3 targetLLH_old = targetLLH;
-
-        // Compute angles
-        const double a = satDist;
-        const double b = radius + zrdr;
-        const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a
-                              - (b/a) * (b/pixel.range()));
-        const double sintheta = std::sqrt(1.0 - costheta*costheta);
-
-        // Compute TCN scale factors
-        const double gamma = pixel.range() * costheta;
-        const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
-        double beta = std::sqrt(
-            std::pow(pixel.range() * sintheta, 2) - std::pow(alpha, 2));
-        if (side == LookSide::Left) {
-            beta = -beta;
-        }
-
-
-        // Compute vector from satellite to ground
-        const Vec3 delta = alpha * that + beta * chat + gamma * nhat;
-        const Vec3 targetVec_guess = pos + delta;
-
-        // Compute LLH of ground point
-        ellipsoid.xyzToLonLat(targetVec_guess, targetLLH);
-
-        // Interpolate DEM at current lat/lon point
-        targetLLH[2] = demInterp.interpolateLonLat(targetLLH[0], targetLLH[1]);
-
-        // Convert back to XYZ with interpolated height
-        const Vec3 targetVec_new = ellipsoid.lonLatToXyz(targetLLH);
-        // Compute updated target height
-        zrdr = targetVec_new.norm() - radius;
-
-        // Check convergence
-        const Vec3 lookVec = pos - targetVec_new;
-        const double rdiff = pixel.range() - lookVec.norm();
-        if (std::abs(rdiff) < threshold) {
-            converged = 1;
-            break;
-        // May need to perform extra iterations
-        } else if (i > maxIter) {
-            // XYZ position of old solution
-            const Vec3 targetVec_old = ellipsoid.lonLatToXyz(targetLLH_old);
-            // XYZ position of updated solution
-            const Vec3 targetVec_avg = 0.5 * (targetVec_old + targetVec_new);
-            // Repopulate lat, lon, z
-            ellipsoid.xyzToLonLat(targetVec_avg, targetLLH);
-            // Compute updated target height
-            zrdr = targetVec_avg.norm() - radius;
-        }
-    }
-
-    // ----- Final computation: output points exactly at range pixel if converged
-
-    // Compute angles
-    const double a = satDist;
-    const double b = radius + zrdr;
-    const double costheta = 0.5 * (a / pixel.range() + pixel.range() / a
-                          - (b/a) * (b/pixel.range()));
-    const double sintheta = std::sqrt(1.0 - costheta*costheta);
-
-    // Compute TCN scale factors
-    const double gamma = pixel.range() * costheta;
-    const double alpha = (pixel.dopfact() - gamma * ndotv) / vdott;
-    double beta = std::sqrt(
-        std::pow(pixel.range() * sintheta, 2) - std::pow(alpha, 2));
-    if (side == LookSide::Left) {
-        beta = -beta;
-    }
-
-    // Compute vector from satellite to ground
-    const Vec3 delta = alpha * that + beta * chat + gamma * nhat;
-    const Vec3 targetVec = pos + delta;
-
-    // Compute LLH of ground point
-    ellipsoid.xyzToLonLat(targetVec, targetLLH);
-
-    // Return convergence flag
-    return converged;
+    double h0 = targetLLH[2];
+    detail::Rdr2GeoParams params = {threshold, maxIter, extraIter};
+    auto status = detail::rdr2geo(&targetLLH, pixel, TCNbasis, pos, vel,
+                                  demInterp, ellipsoid, side, h0, params);
+    return (status == ErrorCode::Success);
 }
 
 
@@ -382,55 +243,14 @@ int isce::geometry::
 geo2rdr(const Vec3 & inputLLH, const Ellipsoid & ellipsoid, const Orbit & orbit,
         const LUT2d<double> & doppler, double & aztime, double & slantRange,
         double wavelength, LookSide side, double threshold, int maxIter,
-        double deltaRange) {
-
-    Vec3 satpos, satvel, inputXYZ;
-
-    // Convert LLH to XYZ
-    ellipsoid.lonLatToXyz(inputLLH, inputXYZ);
-
-    // Use mid-orbit epoch as initial guess
-    int converged = 1;
-    int error = _update_aztime(orbit,
-                               satpos, satvel, inputXYZ, side, aztime,
-                               slantRange);
-    if (error)
-        return !converged;
-
-    // Begin iterations
-    double slantRange_old = 0.0;
-    for (int i = 0; i < maxIter; ++i) {
-
-        // Interpolate the orbit to current estimate of azimuth time
-        orbit.interpolate(&satpos, &satvel, aztime, OrbitInterpBorderMode::FillNaN);
-
-        // Compute slant range from satellite to ground point
-        const Vec3 dr = inputXYZ - satpos;
-        slantRange = dr.norm();
-
-        // Check look side (only first time)
-        if (i == 0) {
-            // (Left && positive) || (Right && negative)
-            if ((side == LookSide::Right) ^ (dr.cross(satvel).dot(satpos) > 0)) {
-                return !converged; // wrong look side
-            }
-        }
-
-        // Check convergence
-        if (std::abs(slantRange - slantRange_old) < threshold)
-            return converged;
-        else
-            slantRange_old = slantRange;
-
-        // Update guess for azimuth time
-        const double aztime_diff = _compute_doppler_aztime_diff(dr, satvel,
-                                                                doppler, wavelength,
-                                                                aztime,
-                                                                slantRange, deltaRange);
-        aztime -= aztime_diff;
-    }
-    // If we reach this point, no convergence for specified threshold
-    return !converged;
+        double deltaRange)
+{
+    double t0 = aztime;
+    detail::Geo2RdrParams params = {threshold, maxIter, deltaRange};
+    auto status =
+            detail::geo2rdr(&aztime, &slantRange, inputLLH, ellipsoid, orbit,
+                            doppler, wavelength, side, t0, params);
+    return (status == ErrorCode::Success);
 }
 
 // Utility function to compute geographic bounds for a radar grid

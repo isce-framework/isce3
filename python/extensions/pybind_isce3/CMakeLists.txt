@@ -19,11 +19,12 @@ set_target_properties(${ISCEEXTENSION}
 target_include_directories(${ISCEEXTENSION} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/..)
 
 # dependencies
-target_link_libraries(${ISCEEXTENSION}
-    PUBLIC
-        ${LISCE}
-        $<$<BOOL:${WITH_CUDA}>:${LISCECUDA}>
-    )
+target_link_libraries(${ISCEEXTENSION} PUBLIC ${LISCE})
+
+if(WITH_CUDA)
+    include(IsceCuda)
+    target_link_libraries(${ISCEEXTENSION} PUBLIC ${LISCECUDA})
+endif()
 
 # install
 install(TARGETS ${ISCEEXTENSION}

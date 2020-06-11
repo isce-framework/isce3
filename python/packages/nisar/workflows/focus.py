@@ -74,6 +74,19 @@ def validate_config(x):
     return x
 
 
+def check_gpu_enabled(cfg: Struct):
+    use_gpu = cfg.worker.gpu_enabled
+    has_cuda = hasattr(isce, "cuda")
+    # if GPU option was unspecified, default to True if GPU support available
+    if use_gpu is None:
+        return has_cuda
+    if use_gpu and not has_cuda:
+        log.error("GPU processing was requested but not available")
+        # XXX logging an error does not halt execution
+        raise ValueError("GPU processing was requested but not available")
+    return use_gpu
+
+
 def cosine_window(n: int, pedestal: float):
     if not (0.0 <= pedestal <= 1.0):
         raise ValueError(f"Expected pedestal between 0 and 1, got {pedestal}.")
@@ -312,7 +325,7 @@ def focus(runconfig):
     try:
         attitude = get_attitude(cfg)
     except:
-        log.error("Could not load attitude data.  Assuming zero Doppler.")
+        log.warning("Could not load attitude data.  Assuming zero Doppler.")
         attitude = None
         # XXX This makes for zero-sized dimensions in the Doppler metadata.
         fc_ref, dop_ref = 1.0, isce.core.LUT2d()
@@ -323,6 +336,12 @@ def focus(runconfig):
     atmos = cfg.processing.dry_troposphere_model or "nodelay"
     kernel = get_kernel(cfg)
     scale = cfg.processing.encoding_scale_factor
+
+    use_gpu = check_gpu_enabled(cfg)
+    if use_gpu:
+        backproject = isce.cuda.focus.backproject
+    else:
+        backproject = isce.focus.backproject
 
     # Generate reference output grid based on highest bandwidth, always A.
     log.info(f"Available polarizations: {raw.polarizations}")
@@ -413,6 +432,9 @@ def focus(runconfig):
         nr = cfg.processing.azcomp.block_size.range
         na = cfg.processing.azcomp.block_size.azimuth
 
+        if nr < 1:
+            nr = ogrid[frequency].width
+
         if not cfg.processing.is_enabled.azcomp:
             continue
 
@@ -427,10 +449,9 @@ def focus(runconfig):
                 bgrid = ogrid[frequency][block]
                 ogeom = isce.container.RadarGeometry(bgrid, orbit, zerodop)
                 z = np.zeros(bgrid.shape, 'c8')
-                isce.focus.backproject(z, ogeom, rcfile.data, igeom, dem,
-                                       fc, azres, kernel, atmos,
-                                       vars(cfg.processing.azcomp.rdr2geo),
-                                       vars(cfg.processing.azcomp.geo2rdr))
+                backproject(z, ogeom, rcfile.data, igeom, dem, fc, azres,
+                            kernel, atmos, vars(cfg.processing.azcomp.rdr2geo),
+                            vars(cfg.processing.azcomp.geo2rdr))
                 log.debug(f"max(abs(z)) = {np.max(np.abs(z))}")
                 zf = to_complex32(scale * z)
                 acdata.write_direct(zf, dest_sel=block)

@@ -39,6 +39,11 @@ target_include_directories(${LISCE} PUBLIC
     ${HDF5_INCLUDE_DIR}
     )
 
+# Define the preprocessor macro "ISCE3_CUDA" if CUDA is enabled
+if(WITH_CUDA)
+    target_compile_definitions(${LISCE} PUBLIC ISCE3_CUDA)
+endif()
+
 # Install public headers
 foreach(HEADER ${HEADERS})
     get_filename_component(DIR ${HEADER} DIRECTORY)

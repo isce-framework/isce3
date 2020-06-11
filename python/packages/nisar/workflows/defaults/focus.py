@@ -71,7 +71,7 @@ runconfig:
 
         # Whether or not to use GPU, optional. Defaults to True if available.
         worker:
-            gpu_enabled: True
+            gpu_enabled: null
 
         # TODO
         profiler: {}
@@ -157,8 +157,8 @@ runconfig:
                 # Azimuth compression can be tiled arbitrarily, though
                 # dimensions will affect runtime.
                 block_size:
-                    range: 64
-                    azimuth: 64
+                    range: 2048
+                    azimuth: 2048
 
                 # Desired azimuth resolution in meters.
                 azimuth_resolution: 6.0

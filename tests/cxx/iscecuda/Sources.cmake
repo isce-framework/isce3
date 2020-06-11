@@ -1,4 +1,5 @@
 set(CUDA_TESTFILES
+container/cuda-radargeometry.cu
 core/ellipsoid/gpuEllipsoid.cu
 core/cuda-interp1d.cu
 core/interpolator/gpuInterpolator.cpp

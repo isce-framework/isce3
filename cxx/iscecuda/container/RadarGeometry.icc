@@ -1,0 +1,63 @@
+#include <limits>
+
+#include <isce/except/Error.h>
+
+namespace isce { namespace cuda { namespace container {
+
+namespace detail {
+
+template<typename To, typename From>
+constexpr bool checkOverflow(From x)
+{
+    return x > static_cast<From>(std::numeric_limits<To>::max());
+}
+
+} // namespace detail
+
+inline RadarGeometry::RadarGeometry(const RadarGridParameters& radar_grid,
+                                    const DeviceOrbit& orbit,
+                                    const DeviceLUT2d<double>& doppler)
+    : _radar_grid(radar_grid), _orbit(orbit), _doppler(doppler)
+{
+    if (_radar_grid.refEpoch() != _orbit.referenceEpoch()) {
+        auto old_refepoch = _radar_grid.refEpoch();
+        auto new_refepoch = _orbit.referenceEpoch();
+
+        auto old_sensing_start = _radar_grid.sensingStart();
+        auto dt = (old_refepoch - new_refepoch).getTotalSeconds();
+        auto new_sensing_start = old_sensing_start + dt;
+
+        _radar_grid.refEpoch(new_refepoch);
+        _radar_grid.sensingStart(new_sensing_start);
+    }
+}
+
+inline isce::core::Linspace<double> RadarGeometry::sensingTime() const
+{
+    auto t0 = radarGrid().sensingStart();
+    auto dt = radarGrid().azimuthTimeInterval();
+    auto lines = gridLength();
+
+    if (detail::checkOverflow<int>(lines)) {
+        throw isce::except::OverflowError(ISCE_SRCINFO(),
+                                          "grid length exceeds max int");
+    }
+
+    return {t0, dt, static_cast<int>(lines)};
+}
+
+inline isce::core::Linspace<double> RadarGeometry::slantRange() const
+{
+    auto r0 = radarGrid().startingRange();
+    auto dr = radarGrid().rangePixelSpacing();
+    auto samples = gridWidth();
+
+    if (detail::checkOverflow<int>(samples)) {
+        throw isce::except::OverflowError(ISCE_SRCINFO(),
+                                          "grid width exceeds max int");
+    }
+
+    return {r0, dr, static_cast<int>(samples)};
+}
+
+}}} // namespace isce::cuda::container

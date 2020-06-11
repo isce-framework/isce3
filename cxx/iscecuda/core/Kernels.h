@@ -6,6 +6,7 @@
 #include <thrust/device_vector.h>
 
 #include <isce/core/Common.h>
+#include <isce/core/Kernels.h>
 
 namespace isce { namespace cuda { namespace core {
 
@@ -59,6 +60,11 @@ public:
     /** Construct a new BartlettKernel object. */
     explicit constexpr BartlettKernel(double width) : Base(width) {}
 
+    /** Construct from corresponding host kernel object */
+    BartlettKernel(const isce::core::BartlettKernel<T>& other)
+        : BartlettKernel(other.width())
+    {}
+
 protected:
     /** \internal Implementation of \p operator() */
     constexpr T eval(double t) const;
@@ -75,6 +81,9 @@ public:
 
     /** Construct a new LinearKernel object. */
     constexpr LinearKernel() : Base(2.) {}
+
+    /** Construct from corresponding host kernel object */
+    LinearKernel(const isce::core::LinearKernel<T>&) : LinearKernel() {}
 };
 
 /**
@@ -99,6 +108,11 @@ public:
      *                      fraction of the sample rate (0 < bandwidth < 1).
      */
     constexpr KnabKernel(double width, double bandwidth);
+
+    /** Construct from corresponding host kernel object */
+    KnabKernel(const isce::core::KnabKernel<T>& other)
+        : Base(other.width()), _bandwidth(other.bandwidth())
+    {}
 
     /** Get bandwidth of the kernel. */
     constexpr double bandwidth() const noexcept { return _bandwidth; }
@@ -164,6 +178,9 @@ public:
      */
     template<class OtherKernel>
     TabulatedKernel(const OtherKernel& kernel, int n);
+
+    /** Construct from corresponding host kernel object */
+    TabulatedKernel(const isce::core::TabulatedKernel<T>&);
 
     /**
      * Evaluate the kernel at a given location in [-halfwidth, halfwidth].
@@ -235,6 +252,12 @@ public:
      */
     template<class OtherKernel>
     ChebyKernel(const OtherKernel& kernel, int n);
+
+    /** Construct from corresponding host kernel object */
+    ChebyKernel(const isce::core::ChebyKernel<T>& other)
+        : Base(other.width()), _scale(4. / other.width()),
+          _coeffs(other.coeffs())
+    {}
 
     /**
      * Evaluate the kernel at a given location in [-halfwidth, halfwidth].

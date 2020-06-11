@@ -1,4 +1,7 @@
 set(HEADERS
+container/forward.h
+container/RadarGeometry.h
+container/RadarGeometry.icc
 core/Event.h
 core/forward.h
 core/gpuBasis.h
@@ -16,6 +19,7 @@ core/OrbitView.h
 core/OrbitView.icc
 core/Stream.h
 except/Error.h
+focus/Backproject.h
 fft/detail/CufftWrapper.h
 fft/detail/FFTPlanBase.h
 fft/detail/FFTPlanBase.icc

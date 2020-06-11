@@ -40,3 +40,11 @@ product/RadarGridParameters.cpp
 product/Swath.cpp
 isce.cpp
 )
+
+if(WITH_CUDA)
+    list(APPEND SRCS
+         cuda/cuda.cpp
+         cuda/focus/Backproject.cpp
+         cuda/focus/focus.cpp
+         )
+endif()
