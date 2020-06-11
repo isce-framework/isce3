@@ -34,9 +34,8 @@ class Workflow(object):
         self.state = App.State()
 
         #Saved states folder
-        self.state_folder = 'rslc2gslc_completed_steps'
-        self.current_state_filename = os.path.join(
-            self.state_folder, 'currentState')
+        self.state_folder = None 
+        self.current_state_filename = None 
 
         #Steps completed
         self.steps_completed = []
@@ -131,11 +130,24 @@ class Workflow(object):
         if args.run_config_filename:
             self._print(f'run_config: {args.run_config_filename}')
         self._print('')
-        os.makedirs(self.state_folder, exist_ok=True)
+        #os.makedirs(self.state_folder, exist_ok=True)
 
         #Parse yaml
         self.userconfig = self.loadYAML(args.run_config_filename)
-        
+
+        #Set up the path to store the completed steps 
+        self.state.scratch_path = self.get_value(['runconfig', 'groups', 
+            'ProductPathGroup', 'ScratchPath'])
+        self._print("scratch path: ", self.state.scratch_path)
+        os.makedirs(self.state.scratch_path, exist_ok=True)
+
+        self.state_folder = os.path.join(self.state.scratch_path,
+            'rslc2gslc_completed_steps')
+        self._print("rslc2gslc_completed_steps folder: ", self.state_folder)
+        os.makedirs(self.state_folder, exist_ok=True)
+        self.current_state_filename = os.path.join(
+            self.state_folder, 'currentState')
+
         ###Create initial state
         if args.resume_from_step is not None:
             self._print(f'resume from step: {args.resume_from_step}')
