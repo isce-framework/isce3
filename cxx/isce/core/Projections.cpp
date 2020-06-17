@@ -1,15 +1,13 @@
-//
-// Source Author: Piyush Agram
-// Co-Author: Joshua Cohen
-// Copyright 2017
-//
-
 #include <cmath>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include <iostream>
+
 #include "Projections.h"
+
+#include <isce/except/Error.h>
+
 using isce::core::CEA;
 using isce::core::Geocent;
 using isce::core::LonLat;
@@ -388,7 +386,7 @@ ProjectionBase* isce::core::createProj(int epsgcode)
     }
     else
     {
-        throw "Unknown EPSG code in factory";
+        throw isce::except::RuntimeError(ISCE_SRCINFO(), "Unknown EPSG code in factory");
     }
 }
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

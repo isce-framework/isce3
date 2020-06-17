@@ -71,7 +71,7 @@ class Base(pyre.component,
         '''
         Return radarGridParameters object
         '''
-        return isce3.product.RadarGridParameters(self.filename)
+        return isce3.product.RadarGridParameters(self.filename, frequency)
 
     @pyre.export
     def getGridMetadata(self, frequency='A'):
