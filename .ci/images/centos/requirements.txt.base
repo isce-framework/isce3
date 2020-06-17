@@ -8,3 +8,5 @@ libstdcxx-ng
 numpy
 python>=3.6
 ruamel.yaml
+matplotlib
+scipy
