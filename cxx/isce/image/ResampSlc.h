@@ -32,8 +32,6 @@ class isce::image::ResampSlc {
     // Public data members
     public:
         typedef Tile<std::complex<float>> Tile_t;
-        const int SINC_ONE = isce::core::SINC_ONE;
-        const int SINC_HALF = isce::core::SINC_HALF;
 
     // Meta-methods
     public:

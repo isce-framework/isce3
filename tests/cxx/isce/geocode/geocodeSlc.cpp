@@ -69,8 +69,6 @@ TEST(geocodeTest, TestGeocodeSlc)
             imageGridDoppler.xStart(), imageGridDoppler.yStart(),
             imageGridDoppler.xSpacing(), imageGridDoppler.ySpacing(), M);
 
-    // auto lookSide = product.lookSide();
-
     double thresholdGeo2rdr = 1.0e-9;
     int numiterGeo2rdr = 25;
     size_t linesPerBlock = 1000;

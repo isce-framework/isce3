@@ -19,6 +19,8 @@ focus/Chirp.cpp
 focus/DryTroposphereModel.cpp
 focus/focus.cpp
 focus/RangeComp.cpp
+geocode/geocode.cpp
+geocode/GeocodeSlc.cpp
 geometry/boundingbox.cpp
 geometry/DEMInterpolator.cpp
 geometry/Geocode.cpp
@@ -35,6 +37,7 @@ io/serialization.cpp
 io/io.cpp
 signal/signal.cpp
 signal/Covariance.cpp
+product/GeoGridParameters.cpp
 product/product.cpp
 product/RadarGridParameters.cpp
 product/Swath.cpp

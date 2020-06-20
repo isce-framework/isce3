@@ -326,7 +326,7 @@ _transformTile(Tile_t & tile,
 
             // Interpolate chip
             const std::complex<float> cval = _interp->interpolate(
-                SINC_HALF + fracRg, SINC_HALF + fracAz, chip
+                isce::core::SINC_HALF + fracRg, isce::core::SINC_HALF + fracAz, chip
             );
 
             // Add doppler to interpolated value and save

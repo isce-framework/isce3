@@ -12,6 +12,7 @@ core/timedelta.py
 focus/backproject.py
 focus/chirp.py
 focus/rangecomp.py
+geocode/geocodeSlc.py
 geometry/bbox.py
 geometry/dem.py
 geometry/geocode.py

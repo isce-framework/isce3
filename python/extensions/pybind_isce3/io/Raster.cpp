@@ -107,6 +107,10 @@ void addbinding(py::class_<Raster> & pyRaster)
                 self.getGeoTransform(transform);
                 return transform;
             })
+        .def("set_geotransform", [](Raster & self, std::vector<double> transform)
+            {
+                self.setGeoTransform(transform);
+            })
         .def("datatype", [](Raster & self, int i)
             {
                 return cxx2PyDtype(self.dtype(i));

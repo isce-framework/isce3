@@ -3,6 +3,7 @@
 #include "container/container.h"
 #include "core/core.h"
 #include "focus/focus.h"
+#include "geocode/geocode.h"
 #include "geometry/geometry.h"
 #include "io/io.h"
 #include "signal/signal.h"
@@ -16,6 +17,7 @@ PYBIND11_MODULE(pybind_isce3, m) {
     m.doc() = "InSAR Scientific Computing Environment (ISCE)";
 
     addsubmodule_core(m);
+    addsubmodule_geocode(m);
     addsubmodule_geometry(m);
     addsubmodule_io(m);
     addsubmodule_signal(m);
