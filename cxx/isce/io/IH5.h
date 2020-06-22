@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <typeindex>
 #include <valarray>
+#include <array>
 #include <vector>
 
 namespace isce {
