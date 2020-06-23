@@ -45,7 +45,9 @@ https://github-fn.jpl.nasa.gov/pages/isce-3/isce/annotated.html)
 
 ## Contributing
 
-Contributions are welcome. Please let us know if you encounter a bug by
+Contributions are welcome. Refer to the [contributing guide](CONTRIBUTING.md)
+for tips on getting started and guidelines for contributions. Please let us know
+if you encounter a bug by
 [filing an issue](https://github-fn.jpl.nasa.gov/isce-3/isce/issues).
 
 ## License
