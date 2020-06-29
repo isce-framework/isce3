@@ -542,16 +542,14 @@ void _addArea(double area, isce::core::Matrix<float>& out_array,
             int x = jj + x_min;
             if (x < 0 || y < 0 || y >= length || x >= width)
                 continue;
-
-#pragma omp critical
-            {
-                if (out_nlooks_array.data() != nullptr)
-                    out_nlooks_array(y, x) +=
-                            (radar_grid_nlooks *
-                             std::abs(w * (nlooks - nlooks_out)));
-                w /= nlooks - nlooks_out;
-                out_array(y, x) += w * area;
+            if (out_nlooks_array.data() != nullptr) {
+                const auto out_nlooks = radar_grid_nlooks * std::abs(w * (nlooks - nlooks_out));
+                _Pragma("omp atomic")
+                out_nlooks_array(y, x) += out_nlooks;
             }
+            w /= nlooks - nlooks_out;
+            _Pragma("omp atomic")
+            out_array(y, x) += w * area;
         }
 }
 
@@ -1075,7 +1073,6 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                 continue;
 
             if (out_geo_vertices != nullptr)
-#pragma omp critical
             {
                 if (i == 0) {
                     out_geo_vertices_a(i, jj + 1) = (a01 - start) / pixazm;
@@ -1089,7 +1086,6 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                     out_geo_vertices_a((i + 1), jj) = (a10 - start) / pixazm;
                     out_geo_vertices_r((i + 1), jj) = (r10 - r0) / dr;
                 }
-
                 out_geo_vertices_a((i + 1), jj + 1) = (a11 - start) / pixazm;
                 out_geo_vertices_r((i + 1), jj + 1) = (r11 - r0) / dr;
             }
@@ -1115,11 +1111,8 @@ void _RunBlock(const int jmax, int block_size, int block_size_with_upsampling,
                 r_c = std::numeric_limits<double>::quiet_NaN();
             }
             if (out_geo_grid != nullptr) {
-#pragma omp critical
-                {
-                    out_geo_grid_a(i, jj) = (a_c - start) / pixazm;
-                    out_geo_grid_r(i, jj) = (r_c - r0) / dr;
-                }
+                out_geo_grid_a(i, jj) = (a_c - start) / pixazm;
+                out_geo_grid_r(i, jj) = (r_c - r0) / dr;
             }
             if (!converged)
                 continue;

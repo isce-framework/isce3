@@ -1455,7 +1455,6 @@ void Geocode<T>::_RunBlock(
 
             // save geo-edges
             if (out_geo_vertices != nullptr)
-            #pragma omp critical
             {
                 if (i == 0) {
                     out_geo_vertices_a(i, jj + 1) = (a01 - start) / pixazm;
@@ -1476,7 +1475,6 @@ void Geocode<T>::_RunBlock(
 
             // save geo-edges
             if (out_dem_vertices != nullptr)
-            #pragma omp critical
             {
                 if (i == 0) {
                     out_dem_vertices_array(i, jj + 1) = dem01[2];
@@ -1490,7 +1488,6 @@ void Geocode<T>::_RunBlock(
 
                 out_dem_vertices_array(i + 1, jj + 1) = dem11[2];
             }
-
 
             // x, y positions are binned by integer quotient (floor)
             const int x = (int) jj / geogrid_upsampling;
@@ -1529,8 +1526,8 @@ void Geocode<T>::_RunBlock(
     }
 
     for (int band = 0; band < nbands; ++band) {
-        for (int i = 0; i < this_block_size_with_upsampling; ++i)
-            for (int jj = 0; jj < (int) jmax; ++jj) {
+        for (int i = 0; i < this_block_size; ++i)
+            for (int jj = 0; jj < (int) _geoGridWidth; ++jj) {
                 T_out geo_value = geoDataBlock[band].get()->operator()(i, jj);
                 if (!std::isnan(clip_min) && std::abs(geo_value) < clip_min)
                     geoDataBlock[band].get()->operator()(i, jj) = clip_min;
