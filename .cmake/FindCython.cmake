@@ -3,6 +3,8 @@
 # This code sets the following variables:
 #
 #  CYTHON_EXECUTABLE
+#  CYTHON_FOUND
+#  CYTHON_VERSION
 #
 # See also UseCython.cmake
 
@@ -22,23 +24,30 @@
 # limitations under the License.
 #=============================================================================
 
-# Use the Cython executable that lives next to the Python executable
-# if it is a local installation.
-find_package(Python 3.6)
-if(Python_Interpreter_FOUND)
-  get_filename_component( _python_path ${Python_EXECUTABLE} PATH )
-  find_program( CYTHON_EXECUTABLE
-      NAMES cython${Python_VERSION_MAJOR} cython-${Python_VERSION_MAJOR}.${Python_VERSION_MINOR} cython cython.bat
-    HINTS ${_python_path}
-    )
-else()
-  find_program( CYTHON_EXECUTABLE
-    NAMES cython3 cython cython.bat
-    )
+# Require that the project first defines the python interpreter path in order to
+# find a compatible version of cython. Previous versions of this searched for a
+# cython executable in the filesystem but this may be unreliable.
+if(NOT DEFINED Python_EXECUTABLE)
+    message(FATAL_ERROR "find_package(Cython) requires that the "
+                        "Python_EXECUTABLE path must first be defined, e.g. "
+                        "by using find_package(Python)")
 endif()
 
+set(CYTHON_EXECUTABLE ${Python_EXECUTABLE} -m cython CACHE INTERNAL "")
 
-include( FindPackageHandleStandardArgs )
-FIND_PACKAGE_HANDLE_STANDARD_ARGS( Cython REQUIRED_VARS CYTHON_EXECUTABLE )
+# Check Cython version
+execute_process(COMMAND ${CYTHON_EXECUTABLE} --version
+                ERROR_VARIABLE CYTHON_VERSION
+                RESULT_VARIABLE _EXIT_STATUS
+                )
+if(NOT _EXIT_STATUS EQUAL 0)
+    message(SEND_ERROR "Cython command failed")
+endif()
+string(REGEX MATCH "([0-9]|\\.)+" CYTHON_VERSION ${CYTHON_VERSION})
 
-mark_as_advanced( CYTHON_EXECUTABLE )
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Cython
+    VERSION_VAR   CYTHON_VERSION
+    REQUIRED_VARS CYTHON_EXECUTABLE CYTHON_VERSION)
+
+mark_as_advanced(CYTHON_EXECUTABLE CYTHON_VERSION)

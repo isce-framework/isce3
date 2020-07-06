@@ -54,19 +54,6 @@ set( CYTHON_FLAGS "" CACHE STRING
   "Extra flags to the cython compiler." )
 mark_as_advanced( CYTHON_ANNOTATE CYTHON_NO_DOCSTRINGS CYTHON_FLAGS )
 
-find_package(Cython REQUIRED)
-find_package(Python REQUIRED COMPONENTS Development)
-
-# Check the version of Cython
-execute_process( COMMAND ${CYTHON_EXECUTABLE} --version
-                 OUTPUT_VARIABLE CYTHON_VERSION ERROR_VARIABLE CYTHON_VERSION )
-string(REGEX MATCH "([0-9]|\\.)+" CYTHON_VERSION ${CYTHON_VERSION})
-if((CYTHON_VERSION VERSION_GREATER_EQUAL 0.28.1))
-  message(STATUS "Found Cython:  ${CYTHON_VERSION}")
-else()
-  message(FATAL_ERROR "Could not find Cython version >= 0.28.1")
-endif()
-
 # Create a *.cxx file from a *.pyx file.
 # Input the generated file basename.  The generate file will put into the variable
 # placed in the "generated_file" argument. Finally all the *.py and *.pyx files.

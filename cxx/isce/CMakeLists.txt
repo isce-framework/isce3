@@ -7,11 +7,10 @@ SetCoverageOptions(${LISCE})
 target_link_libraries(${LISCE} PUBLIC
     Cereal::Cereal
     Eigen3::Eigen
-    ${GDAL_LIBRARY}
-    ${HDF5_LIBRARY}
+    GDAL::GDAL
+    HDF5::HDF5
     pyre::pyre
     )
-
 
 # These libraries are part of the interface but are not
 # always needed. It's convenient to propagate them to other
@@ -35,8 +34,6 @@ target_compile_features(${LISCE} INTERFACE
 target_include_directories(${LISCE} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/..>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
-    ${GDAL_INCLUDE_DIR}
-    ${HDF5_INCLUDE_DIR}
     )
 
 # Define the preprocessor macro "ISCE3_CUDA" if CUDA is enabled

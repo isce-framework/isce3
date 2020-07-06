@@ -47,43 +47,6 @@ function(CheckCXX)
 endfunction()
 
 
-##Make sure that a reasonable version of Python is installed
-function(CheckISCEPython)
-    find_package(Python 3.6 COMPONENTS Interpreter Development)
-endfunction()
-
-##Check for GDAL installation
-function(CheckGDAL)
-    find_package(GDAL 2.3 REQUIRED)
-    message(STATUS "Found GDAL: ${GDAL_VERSION}")
-endfunction()
-
-##Check for HDF5 installation
-function(CheckHDF5)
-    FIND_PACKAGE(HDF5 REQUIRED COMPONENTS CXX)
-    message(STATUS "Found HDF5: ${HDF5_VERSION} ${HDF5_CXX_LIBRARIES}")
-    if (HDF5_VERSION VERSION_LESS "1.10.2")
-        message(FATAL_ERROR "Did not find HDF5 version >= 1.10.2")
-    endif()
-
-    # check whether the hdf5 library includes parallel support
-    if ((HDF5_IS_PARALLEL))
-        # look for MPI
-        FIND_PACKAGE(MPI REQUIRED COMPONENTS CXX)
-        list(APPEND HDF5_INCLUDE_DIRS ${MPI_CXX_INCLUDE_DIRS})
-        list(APPEND HDF5_CXX_LIBRARIES ${MPI_CXX_LIBRARIES})
-    endif()
-    # Use more standard names to propagate variables
-    set(HDF5_INCLUDE_DIR ${HDF5_INCLUDE_DIRS} CACHE PATH "HDF5 include directory")
-    set(HDF5_LIBRARY "${HDF5_CXX_LIBRARIES}" CACHE STRING "HDF5 libraries")
-endfunction()
-
-##Check for Armadillo installation
-function(CheckArmadillo)
-    FIND_PACKAGE(Armadillo REQUIRED)
-    message (STATUS "Found Armadillo:  ${ARMADILLO_VERSION_STRING}")
-endfunction()
-
 function(InitInstallDirLayout)
     ###install/bin
     if (NOT ISCE_BINDIR)

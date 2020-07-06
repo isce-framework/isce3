@@ -94,31 +94,8 @@ AssureOutOfSourceBuilds()
 ####Check CXX Version and Standard to C++17
 CheckCXX()
 
-###Check if an appropriate python is installed
-CheckISCEPython()
-
-##Check for Cython
+# Define some utilities for creating cython modules
 include(useCython)
-
-# Check for OpenMP (optional dependency).
-# If not found, default to an empty placeholder target.
-find_package(OpenMP OPTIONAL_COMPONENTS CXX)
-add_library(OpenMP::OpenMP_CXX_Optional INTERFACE IMPORTED)
-if(TARGET OpenMP::OpenMP_CXX)
-    target_link_libraries(OpenMP::OpenMP_CXX_Optional INTERFACE OpenMP::OpenMP_CXX)
-endif()
-
-##Check for GDAL
-CheckGDAL()
-
-##Check for HDF5
-CheckHDF5()
-
-#Check FFTW3
-find_package(FFTW REQUIRED COMPONENTS
-    Float Double FloatThreads DoubleThreads)
-##Check for Armadillo
-##CheckArmadillo()
 
 ###Layout same install directory structure as pyre
 include(GNUInstallDirs)
@@ -135,67 +112,23 @@ cmake_dependent_option(ISCE3_FETCH_GTEST "Fetch googletest at build time" ON
 
 include(.cmake/FetchExternRepo.cmake)
 
-find_package(Cereal)
-if(Cereal_FOUND)
-    # Needed to create target alias
-    set_target_properties(cereal PROPERTIES IMPORTED_GLOBAL TRUE)
-endif()
-set(REQUIRE_EIGEN)
-if(NOT ISCE3_FETCH_EIGEN)
-    set(REQUIRE_EIGEN REQUIRED)
-endif()
-find_package(Eigen3 ${REQUIRE_EIGEN} NO_MODULE)
-if(NOT Eigen3_FOUND)
-    include(FetchContent)
-    FetchContent_Declare(eigen
-        GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-        GIT_TAG 3.3.7
-        GIT_SHALLOW TRUE)
-    FetchContent_GetProperties(eigen)
-    if(NOT eigen_POPULATED)
-        FetchContent_Populate(eigen)
-    endif()
-    add_library(eigen INTERFACE)
-    add_library(Eigen3::Eigen ALIAS eigen)
-    target_include_directories(eigen SYSTEM INTERFACE
-        $<BUILD_INTERFACE:${eigen_SOURCE_DIR}>
-        $<INSTALL_INTERFACE:include>)
-    install(TARGETS eigen EXPORT isce3-targets)
-endif()
-set(REQUIRE_GTEST)
-if(NOT ISCE3_FETCH_GTEST)
-    set(REQUIRE_GTEST REQUIRED)
-endif()
-find_package(GTest ${REQUIRE_GTEST})
-if(GTEST_FOUND)
-    if(TARGET GTest::gtest AND NOT TARGET GTest::GTest)
-        add_library(GTest::GTest ALIAS GTest::gtest)
-    endif()
-    if(TARGET GTest::gtest_main AND NOT TARGET GTest::Main)
-        add_library(GTest::Main ALIAS GTest::gtest_main)
-    endif()
-else()
-    set(BUILD_GMOCK OFF CACHE INTERNAL "")
-    set(INSTALL_GTEST OFF CACHE INTERNAL "")
-    fetch_extern_repo(gtest
-        GIT_REPOSITORY https://github.com/google/googletest
-        GIT_TAG release-1.10.0
-        GIT_SHALLOW TRUE)
-    set_target_properties(gtest gtest_main PROPERTIES EXCLUDE_FROM_ALL TRUE)
-    add_library(GTest::GTest ALIAS gtest)
-    add_library(GTest::Main ALIAS gtest_main)
-endif()
-find_package(pyre)
-if(NOT HAVE_PYRE)
-    # disable pyre's test suite
-    set(BUILD_TESTING OFF)
-    fetch_extern_repo(pyre
-        GIT_REPOSITORY https://github.com/pyre/pyre
-        GIT_TAG v1.9.8
-        GIT_SHALLOW TRUE)
-endif()
+add_subdirectory(extern)
+getpackage_cereal()
+getpackage_eigen()
+getpackage_fftw()
+getpackage_gdal()
+getpackage_googletest()
+getpackage_hdf5()
+getpackage_openmp_optional()
+getpackage_pyre()
 
-add_subdirectory(extern) # Contributed software (not maintained here)
+# These packages required only for the python API. getpackage_python() should
+# be executed first in order to ensure a sufficient version of Python is used.
+getpackage_python()
+getpackage_cython()
+getpackage_numpy()
+getpackage_pybind11()
+
 add_subdirectory(cxx)    # Core C++ library
 add_subdirectory(python) # Python bindings
 add_subdirectory(tests)  # Unit tests

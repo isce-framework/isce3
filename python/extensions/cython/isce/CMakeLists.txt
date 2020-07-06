@@ -1,5 +1,3 @@
-find_package(Numpy REQUIRED)
-
 set_source_files_properties(
     isceextension.pyx
     PROPERTIES CYTHON_IS_CXX TRUE
