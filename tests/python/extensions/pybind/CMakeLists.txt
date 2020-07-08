@@ -31,7 +31,7 @@ endif()
 foreach(TESTFILE ${TESTFILES})
     get_filename_component(NAMEWE ${TESTFILE} NAME_WE)
     get_filename_component(DIR ${TESTFILE} DIRECTORY)
-    string(REPLACE "/" "." TESTNAME test.python.pybind_isce3.${DIR}.${NAMEWE})
+    string(REPLACE "/" "." TESTNAME test.python.pybind.${DIR}.${NAMEWE})
 
     add_test(${TESTNAME} ${PYTEST_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/${TESTFILE})
     set_property(TEST ${TESTNAME} PROPERTY ENVIRONMENT

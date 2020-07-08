@@ -7,66 +7,10 @@ from iscetest import data as test_data_dir
 from pathlib import Path
 import json
 
-from point_target_info import analyze_point_target, tofloatvals
+from ...focus.backproject import load_h5
+from ...focus.point_target_info import analyze_point_target, tofloatvals
 
 c = isce.core.speed_of_light
-
-def load_h5(filename):
-    filename = str(filename)
-    f = h5py.File(filename, 'r')
-
-    # load range-compressed signal data
-    signal_data = f["data"][()]
-
-    # load orbit
-    orbit = isce.core.Orbit.load_from_h5(f["orbit"])
-
-    # load Doppler
-    doppler = isce.core.LUT2d.load_from_h5(f["doppler"], "doppler")
-
-    # load radar grid parameters
-    lines, samples = signal_data.shape
-    sensing_start_time = f["time_of_first_pulse"][()]
-    azimuth_spacing = f["pulse_spacing"][()]
-    two_way_range_delay = f["two_way_range_delay"][()]
-    range_sampling_rate = f["range_sample_rate"][()]
-    center_frequency = f["center_frequency"][()]
-    look_side = f["look_side"][()]
-
-    near_range = c / 2. * two_way_range_delay
-    range_spacing = c / (2. * range_sampling_rate)
-    wavelength = c / center_frequency
-    prf = 1. / azimuth_spacing
-
-    radar_grid = isce.product.RadarGridParameters(
-            sensing_start_time, wavelength, prf, near_range, range_spacing,
-            look_side, lines, samples, orbit.reference_epoch)
-
-    # load fixed-height DEM
-    terrain_height = f["terrain_height"][()]
-    dem = isce.geometry.DEMInterpolator(terrain_height)
-
-    # apply dry troposphere model?
-    apply_atm_model = f["atmosphere_model"][()]
-    if apply_atm_model:
-        dry_tropo_model = "tsx"
-    else:
-        dry_tropo_model = "nodelay"
-
-    # load point target position
-    target_azimuth = f["target_azimuth"][()]
-    target_range = f["target_range"][()]
-
-    return {"signal_data": signal_data,
-            "radar_grid": radar_grid,
-            "orbit": orbit,
-            "doppler": doppler,
-            "center_frequency": center_frequency,
-            "range_sampling_rate": range_sampling_rate,
-            "dem": dem,
-            "dry_tropo_model": dry_tropo_model,
-            "target_azimuth": target_azimuth,
-            "target_range": target_range}
 
 def test_backproject():
     # load point target simulation data
@@ -119,8 +63,8 @@ def test_backproject():
     out_geometry = isce.container.RadarGeometry(out_grid, orbit, doppler)
 
     # focus to output grid
-    isce.focus.backproject(out, out_geometry, signal_data, in_geometry, dem,
-            center_frequency, azimuth_res, kernel, dry_tropo_model)
+    isce.cuda.focus.backproject(out, out_geometry, signal_data, in_geometry,
+            dem, center_frequency, azimuth_res, kernel, dry_tropo_model)
 
     # remove range carrier
     kr = 4. * np.pi / out_grid.wavelength

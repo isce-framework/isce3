@@ -7,7 +7,7 @@ from iscetest import data as test_data_dir
 from pathlib import Path
 import json
 
-from point_target_info import analyze_point_target, tofloatvals
+from .point_target_info import analyze_point_target, tofloatvals
 
 c = isce.core.speed_of_light
 
@@ -119,8 +119,8 @@ def test_backproject():
     out_geometry = isce.container.RadarGeometry(out_grid, orbit, doppler)
 
     # focus to output grid
-    isce.cuda.focus.backproject(out, out_geometry, signal_data, in_geometry,
-            dem, center_frequency, azimuth_res, kernel, dry_tropo_model)
+    isce.focus.backproject(out, out_geometry, signal_data, in_geometry, dem,
+            center_frequency, azimuth_res, kernel, dry_tropo_model)
 
     # remove range carrier
     kr = 4. * np.pi / out_grid.wavelength

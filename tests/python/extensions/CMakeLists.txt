@@ -1,2 +1,2 @@
 add_subdirectory(cython)
-add_subdirectory(pybind_isce3)
+add_subdirectory(pybind)
