@@ -129,6 +129,7 @@ getpackage_cython()
 getpackage_numpy()
 getpackage_pybind11()
 
+add_subdirectory(bin)
 add_subdirectory(cxx)    # Core C++ library
 add_subdirectory(python) # Python bindings
 add_subdirectory(tests)  # Unit tests
